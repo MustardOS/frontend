@@ -14,6 +14,8 @@ struct macro_entry macro_list[MACRO_MAX];
 int macro_count = 0;
 
 static char base_dir[MACRO_PATH_MAX] = "";
+static int macro_lookup[MACRO_MAX];
+static int macro_lookup_count = 0;
 
 #define MACRO_GROUP "macro"
 
@@ -91,10 +93,36 @@ static int next_free_index(void) {
     return max_index + 1;
 }
 
-static int macros_position_from_index(const int index) {
-    for (int i = 0; i < macro_count; i++) {
-        if (macro_list[i].index == index) return i;
+static void macros_rebuild_lookup(void) {
+    macro_lookup_count = macro_count;
+
+    for (int i = 0; i < macro_lookup_count; i++) {
+        int at = i;
+        while (at > 0 && macro_list[macro_lookup[at - 1]].index > macro_list[i].index) {
+            macro_lookup[at] = macro_lookup[at - 1];
+            at--;
+        }
+        macro_lookup[at] = i;
     }
+}
+
+static int macros_position_from_index(const int index) {
+    int low = 0;
+    int high = macro_lookup_count - 1;
+
+    while (low <= high) {
+        const int middle = low + (high - low) / 2;
+        const int position = macro_lookup[middle];
+        const int found = macro_list[position].index;
+
+        if (found == index) return position;
+        if (found < index) {
+            low = middle + 1;
+        } else {
+            high = middle - 1;
+        }
+    }
+
     return -1;
 }
 
@@ -117,6 +145,7 @@ void macros_init(const char *macro_dir) {
     create_directories(base_dir, 0);
 
     macro_count = 0;
+    macro_lookup_count = 0;
     relish_registry_load(base_dir);
 
     DIR *dir = opendir(base_dir);
@@ -196,6 +225,7 @@ void macros_init(const char *macro_dir) {
     relish_registry_finalise(macro_list, macro_count, base_dir);
 
     qsort(macro_list, (size_t) macro_count, sizeof(struct macro_entry), macro_cmp);
+    macros_rebuild_lookup();
 }
 
 int macros_create(const char *name) {
@@ -219,6 +249,7 @@ int macros_create(const char *name) {
     write_manifest_entry(entry);
 
     macro_count++;
+    macros_rebuild_lookup();
     return position;
 }
 
@@ -248,6 +279,7 @@ int macros_delete(const int position) {
         macro_list[i] = macro_list[i + 1];
     }
     macro_count--;
+    macros_rebuild_lookup();
 
     return 0;
 }

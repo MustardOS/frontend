@@ -12,7 +12,7 @@
 #include "../core/muxretro.h"
 #include "../input/core_input_meta.h"
 #include "../input/rumble.h"
-#include "../state/macro.h"
+#include "../macro/macro.h"
 #include "../video/overlay_bridge.h"
 #include "../core/paths.h"
 #include "../core/perf.h"

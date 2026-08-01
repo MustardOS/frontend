@@ -6,7 +6,7 @@
 #include "../../common/ui/osk.h"
 #include "../../common/randname.h"
 #include "../../module/muxshare.h"
-#include "../state/macro.h"
+#include "macro.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
 #include "../settings/settings.h"
@@ -468,7 +468,6 @@ static void capture_tick(void) {
         const uint64_t new_bits = mask & ~capture_prev_mask;
         capture_prev_mask = mask;
 
-        // Buttons only here - a step's chord is a digital mask, so a stick push has nowhere to go in it
         uint64_t candidate_mask = 0;
         for (int i = 0; i < PORT_DIGITAL_COUNT; i++) {
             const mux_input_type type = (mux_input_type) session_settings_source_types[i];

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define MACRO_MAX      32
 #define MACRO_STEP_MAX 32
@@ -11,13 +12,41 @@
 #define MACRO_HOLD_MS_DEFAULT    96
 #define MACRO_REPEAT_DEFAULT     1
 #define MACRO_LOOP_COUNT_DEFAULT 2
-#define MACRO_ERROR_MAX          128
+#define MACRO_ERROR_MAX          192
+#define MACRO_VAR_MAX            8
+#define MACRO_CALL_DEPTH_MAX     8
+#define MACRO_VALUE_SCALE        1000
+#define MACRO_VALUE_LIMIT        65535000
+#define MACRO_CONTROL_BUDGET     (MACRO_STEP_MAX * 4)
 
-enum { macro_step_button = 0, macro_step_goto, macro_step_loop, macro_step_if };
+enum {
+    macro_step_button = 0,
+    macro_step_goto,
+    macro_step_loop,
+    macro_step_if,
+    macro_step_setvar,
+    macro_step_stick,
+    macro_step_call,
+    macro_step_return
+};
 
-enum { if_test_button_held = 0, if_test_count_compare };
+enum { if_test_button_held = 0, if_test_count_compare, if_test_random, if_test_var_compare };
 
 enum { if_op_equals = 0, if_op_notequals, if_op_less, if_op_greater, if_op_atleast, if_op_atmost };
+
+enum {
+    var_op_set = 0,
+    var_op_add,
+    var_op_subtract,
+    var_op_multiply,
+    var_op_divide,
+    var_op_modulo,
+    var_op_sine,
+    var_op_cosine,
+    var_op_tangent,
+    var_op_floor,
+    var_op_ceiling
+};
 
 struct macro_step {
     int kind;
@@ -31,6 +60,18 @@ struct macro_step {
     int if_negate;
     int if_op;
     int if_loop_ref;
+    int wait_rand_ms;
+    int hold_rand_ms;
+    int var_index;
+    int32_t var_value;
+    int var_op;
+    int var_rhs_is_var;
+    int var_rhs_index;
+    int if_rhs_is_var;
+    int if_rhs_var_index;
+    int stick_index;
+    int axis_x;
+    int axis_y;
 };
 
 struct macro_entry {

@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="Proposed Network Play and RetroAchievements implementation specification for Pickles, the MustardOS libretro frontend.">
+    <title>Pickles Network Play &amp; RetroAchievements — Implementation Specification</title>
+    <style>
+        :root {
+            --mustard: #d8b800;
+            --mustard-bright: #f2d21b;
+            --mustard-deep: #8f7900;
+            --ink: #070808;
+            --surface: #101313;
+            --surface-2: #171b1b;
+            --surface-3: #202626;
+            --line: #343b3b;
+            --text: #f4f5f2;
+            --muted: #abb2ad;
+            --good: #58d68d;
+            --warn: #f5b942;
+            --bad: #ff6b6b;
+            --info: #63b3ed;
+            --radius: 14px;
+            --shadow: 0 18px 48px rgb(0 0 0 / 32%);
+            --content: 1180px;
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behaviour: smooth; }
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 78% -10%, rgb(216 184 0 / 13%), transparent 30rem),
+                linear-gradient(180deg, #0b0d0d, var(--ink) 34rem);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 16px;
+            line-height: 1.62;
+        }
+
+        a { color: var(--mustard-bright); text-underline-offset: 0.2em; }
+        a:hover { color: #fff0a0; }
+        a:focus-visible, summary:focus-visible {
+            outline: 3px solid var(--mustard-bright);
+            outline-offset: 4px;
+            border-radius: 4px;
+        }
+        img, svg { max-width: 100%; }
+        code {
+            padding: 0.12rem 0.35rem;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            background: #080a0a;
+            color: #f7e684;
+            font: 0.91em ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+        strong { color: #fff; }
+
+        .skip-link {
+            position: fixed;
+            z-index: 999;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.75rem 1rem;
+            transform: translateY(-180%);
+            border-radius: 8px;
+            background: var(--mustard);
+            color: #080808;
+            font-weight: 800;
+        }
+        .skip-link:focus { transform: none; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: auto;
+            padding: 1.6rem 1.35rem;
+            border-right: 1px solid var(--line);
+            background: rgb(8 10 10 / 92%);
+            backdrop-filter: blur(14px);
+        }
+        .brand {
+            display: flex;
+            gap: 0.7rem;
+            align-items: center;
+            margin-bottom: 1.6rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .brand-mark {
+            display: grid;
+            width: 2.35rem;
+            height: 2.35rem;
+            place-items: center;
+            border-radius: 10px;
+            background: var(--mustard);
+            color: #060606;
+            font-size: 1.35rem;
+            font-weight: 950;
+            box-shadow: 0 0 0 4px rgb(216 184 0 / 12%);
+        }
+        .brand-name { font-size: 1rem; font-weight: 850; letter-spacing: 0.01em; }
+        .brand-sub { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; }
+        .sidebar h2 {
+            margin: 0 0 0.65rem;
+            color: var(--muted);
+            font-size: 0.68rem;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+        .sidebar nav ol { margin: 0; padding: 0; list-style: none; }
+        .sidebar nav li { margin: 0.15rem 0; }
+        .sidebar nav a {
+            display: block;
+            padding: 0.42rem 0.6rem;
+            border-radius: 7px;
+            color: #cdd2ce;
+            font-size: 0.82rem;
+            text-decoration: none;
+        }
+        .sidebar nav a:hover { background: var(--surface-2); color: #fff; }
+        .sidebar-note {
+            margin-top: 1.5rem;
+            padding: 0.8rem;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            color: var(--muted);
+            font-size: 0.74rem;
+        }
+
+        main { min-width: 0; }
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 6.5rem max(2rem, calc((100vw - 270px - var(--content)) / 2)) 5rem;
+            border-bottom: 1px solid var(--line);
+        }
+        .hero::after {
+            position: absolute;
+            right: -5rem;
+            bottom: -8rem;
+            width: 30rem;
+            height: 30rem;
+            border: 4rem solid rgb(216 184 0 / 5%);
+            border-radius: 50%;
+            content: "";
+        }
+        .eyebrow {
+            display: inline-flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.3rem;
+            color: var(--mustard-bright);
+            font-size: 0.75rem;
+            font-weight: 850;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+        .eyebrow::before { width: 2rem; height: 2px; background: var(--mustard); content: ""; }
+        h1 {
+            max-width: 900px;
+            margin: 0;
+            font-size: clamp(2.6rem, 6vw, 5.2rem);
+            line-height: 0.98;
+            letter-spacing: -0.055em;
+        }
+        h1 span { color: var(--mustard-bright); }
+        .hero-lead {
+            max-width: 780px;
+            margin: 1.7rem 0 2.2rem;
+            color: #c7cdc8;
+            font-size: clamp(1.05rem, 2vw, 1.3rem);
+        }
+        .meta-row { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+        .meta-pill {
+            padding: 0.42rem 0.72rem;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgb(23 27 27 / 72%);
+            color: #dfe2df;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+        .meta-pill.status { border-color: var(--mustard-deep); color: #f5df67; }
+
+        .content {
+            width: min(var(--content), calc(100% - 4rem));
+            margin: 0 auto;
+            padding: 4.5rem 0 8rem;
+        }
+        section { scroll-margin-top: 1.5rem; margin: 0 0 5.5rem; }
+        .section-kicker {
+            margin: 0 0 0.35rem;
+            color: var(--mustard-bright);
+            font-size: 0.74rem;
+            font-weight: 850;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h2 {
+            margin: 0 0 1.1rem;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            line-height: 1.1;
+            letter-spacing: -0.035em;
+        }
+        h3 { margin: 2rem 0 0.6rem; font-size: 1.22rem; line-height: 1.3; }
+        h4 { margin: 1.3rem 0 0.35rem; color: #fff0a0; font-size: 1rem; }
+        .section-intro { max-width: 820px; margin-bottom: 2rem; color: var(--muted); font-size: 1.05rem; }
+
+        .grid { display: grid; gap: 1rem; }
+        .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .card {
+            padding: 1.3rem;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: linear-gradient(145deg, rgb(29 34 34 / 88%), rgb(15 18 18 / 88%));
+            box-shadow: 0 12px 30px rgb(0 0 0 / 16%);
+        }
+        .card h3 { margin-top: 0; }
+        .card p:last-child { margin-bottom: 0; }
+        .card-number {
+            display: grid;
+            width: 2rem;
+            height: 2rem;
+            margin-bottom: 0.85rem;
+            place-items: center;
+            border-radius: 8px;
+            background: var(--mustard);
+            color: #060606;
+            font-weight: 900;
+        }
+        .decision { border-top: 3px solid var(--mustard); }
+        .decision .label { color: var(--muted); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+        .decision .value { margin: 0.25rem 0; color: #fff; font-size: 1.05rem; font-weight: 850; }
+
+        .callout {
+            margin: 1.5rem 0;
+            padding: 1.1rem 1.25rem;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--info);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            background: rgb(99 179 237 / 7%);
+        }
+        .callout strong { display: block; margin-bottom: 0.25rem; color: #abd8f7; }
+        .callout.security { border-left-color: var(--warn); background: rgb(245 185 66 / 7%); }
+        .callout.security strong { color: #ffd77d; }
+        .callout.performance { border-left-color: var(--good); background: rgb(88 214 141 / 7%); }
+        .callout.performance strong { color: #94ebb8; }
+
+        ul, ol { padding-left: 1.25rem; }
+        li { margin: 0.38rem 0; }
+        .checklist { padding: 0; list-style: none; }
+        .checklist li { position: relative; padding-left: 1.7rem; }
+        .checklist li::before { position: absolute; left: 0; color: var(--mustard); content: "✓"; font-weight: 900; }
+
+        .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; min-width: 680px; background: rgb(13 16 16 / 70%); }
+        th, td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+        th { background: var(--surface-3); color: #fff0a0; font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; }
+        tr:last-child td { border-bottom: 0; }
+
+        .diagram {
+            padding: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: #0c0f0f;
+            box-shadow: var(--shadow);
+        }
+        .diagram svg { display: block; width: 100%; height: auto; }
+        .diagram figcaption { padding: 0.8rem 0.3rem 0.2rem; color: var(--muted); font-size: 0.82rem; }
+
+        .mockup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; }
+        .mockup-figure { margin: 0; }
+        .device {
+            padding: 0.7rem;
+            border: 1px solid #3d4444;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #292e2e, #0d0f0f);
+            box-shadow: var(--shadow);
+        }
+        .screen {
+            position: relative;
+            display: flex;
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+            flex-direction: column;
+            border: 2px solid #000;
+            border-radius: 11px;
+            background:
+                linear-gradient(rgb(255 255 255 / 2%) 1px, transparent 1px),
+                linear-gradient(90deg, rgb(255 255 255 / 2%) 1px, transparent 1px),
+                #080a0b;
+            background-size: 16px 16px;
+            color: #f7f7f2;
+            font-family: "Trebuchet MS", ui-sans-serif, sans-serif;
+        }
+        .screen-header {
+            display: flex;
+            min-height: 12%;
+            padding: 0.5rem 0.65rem;
+            align-items: centre;
+            justify-content: space-between;
+            border-bottom: 1px solid #323838;
+            background: #050606;
+            font-size: clamp(0.55rem, 1.3vw, 0.78rem);
+            font-weight: 800;
+        }
+        .screen-title {
+            padding: 0.48rem 0.7rem;
+            background: var(--mustard);
+            color: #080808;
+            font-size: clamp(0.62rem, 1.65vw, 0.95rem);
+            font-weight: 950;
+            letter-spacing: 0.02em;
+        }
+        .screen-body { display: flex; min-height: 0; padding: 0.55rem 0.65rem; flex: 1; flex-direction: column; gap: 0.28rem; }
+        .screen-footer {
+            display: flex;
+            padding: 0.38rem 0.6rem;
+            align-items: centre;
+            gap: 0.65rem;
+            border-top: 1px solid #323838;
+            background: #050606;
+            color: #ddd;
+            font-size: clamp(0.47rem, 1.16vw, 0.68rem);
+        }
+        .button-glyph {
+            display: inline-grid;
+            width: 1.1rem;
+            height: 1.1rem;
+            margin-right: 0.18rem;
+            place-items: centre;
+            border-radius: 50%;
+            background: var(--mustard);
+            color: #050505;
+            font-size: 0.68rem;
+            font-weight: 950;
+        }
+        .menu-row {
+            display: grid;
+            min-height: 1.65rem;
+            padding: 0.32rem 0.48rem;
+            grid-template-columns: 1.25rem 1fr auto;
+            align-items: centre;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: rgb(30 35 35 / 72%);
+            color: #e2e6e2;
+            font-size: clamp(0.5rem, 1.35vw, 0.78rem);
+        }
+        .menu-row.selected { background: var(--mustard); color: #080808; font-weight: 900; }
+        .menu-row .icon { opacity: 0.8; }
+        .menu-row .value { font-size: 0.88em; opacity: 0.76; }
+        .session-row {
+            display: grid;
+            padding: 0.4rem 0.5rem;
+            grid-template-columns: 1.4rem 1fr auto;
+            align-items: centre;
+            border-radius: 7px;
+            background: #1b2020;
+            font-size: clamp(0.48rem, 1.3vw, 0.74rem);
+        }
+        .session-row.selected { outline: 2px solid var(--mustard); }
+        .signal { color: var(--good); letter-spacing: -0.18em; }
+        .tag {
+            display: inline-block;
+            padding: 0.1rem 0.34rem;
+            border-radius: 999px;
+            background: rgb(99 179 237 / 18%);
+            color: #a6d6f8;
+            font-size: 0.75em;
+            font-weight: 800;
+        }
+        .tag.good { background: rgb(88 214 141 / 16%); color: #8eebb5; }
+        .tag.warn { background: rgb(245 185 66 / 18%); color: #ffda86; }
+        .pair-code { margin: auto; color: var(--mustard-bright); font: 950 clamp(1.7rem, 6vw, 3rem) ui-monospace, monospace; letter-spacing: 0.14em; }
+        .pair-note { max-width: 88%; margin: 0 auto 0.35rem; color: #bbc1bd; text-align: centre; font-size: clamp(0.45rem, 1.15vw, 0.69rem); }
+        .player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.32rem; }
+        .player {
+            padding: 0.43rem;
+            border-left: 3px solid var(--mustard);
+            border-radius: 5px;
+            background: #1b2020;
+            font-size: clamp(0.46rem, 1.12vw, 0.68rem);
+        }
+        .stats-strip { display: flex; margin-top: auto; padding: 0.4rem; justify-content: space-around; border-radius: 7px; background: #121616; font-size: clamp(0.42rem, 1.06vw, 0.63rem); }
+        .stats-strip b { display: block; color: var(--mustard-bright); font-size: 1.18em; }
+        .form-line { display: grid; padding: 0.36rem 0.48rem; grid-template-columns: 40% 1fr; border-radius: 6px; background: #1a1f1f; font-size: clamp(0.48rem, 1.2vw, 0.72rem); }
+        .form-line span:last-child { color: #dce1dc; text-align: right; }
+        .form-line.selected { outline: 2px solid var(--mustard); }
+        .profile { display: grid; padding: 0.5rem; grid-template-columns: 2.5rem 1fr auto; gap: 0.55rem; align-items: centre; border-radius: 8px; background: #171c1c; }
+        .avatar { display: grid; aspect-ratio: 1; place-items: centre; border-radius: 50%; background: var(--mustard); color: #080808; font-weight: 950; }
+        .profile-name { font-size: clamp(0.52rem, 1.3vw, 0.78rem); font-weight: 900; }
+        .profile-sub { color: #aeb5af; font-size: clamp(0.4rem, 1vw, 0.58rem); }
+        .achievement { display: grid; padding: 0.35rem; grid-template-columns: 2.2rem 1fr auto; gap: 0.45rem; align-items: centre; border-radius: 7px; background: #191e1e; }
+        .badge { display: grid; aspect-ratio: 1; place-items: centre; border: 2px solid var(--mustard-deep); border-radius: 5px; background: linear-gradient(145deg, #4e4520, #16150d); color: var(--mustard-bright); font-size: 1rem; }
+        .achievement-name { font-size: clamp(0.46rem, 1.17vw, 0.69rem); font-weight: 900; }
+        .achievement-desc { color: #abb1ad; font-size: clamp(0.37rem, 0.92vw, 0.54rem); }
+        .points { color: var(--mustard-bright); font-size: clamp(0.42rem, 1vw, 0.6rem); font-weight: 900; }
+        .toast-demo { position: relative; overflow: hidden; flex: 1; border-radius: 5px; background: radial-gradient(circle at 70% 25%, #34384d, #10131c 48%, #050607); }
+        .pixel-scene { position: absolute; inset: 0; opacity: 0.6; background: linear-gradient(170deg, transparent 52%, #273c29 53% 66%, #172619 67%); }
+        .achievement-toast {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            display: grid;
+            width: 78%;
+            padding: 0.45rem;
+            transform: translateX(-50%);
+            grid-template-columns: 2.3rem 1fr;
+            gap: 0.5rem;
+            align-items: centre;
+            border: 1px solid var(--mustard-deep);
+            border-radius: 9px;
+            background: rgb(7 9 9 / 94%);
+            box-shadow: 0 10px 24px #000;
+        }
+        .toast-title { color: var(--mustard-bright); font-size: clamp(0.48rem, 1.22vw, 0.72rem); font-weight: 950; }
+        .toast-sub { font-size: clamp(0.39rem, 0.95vw, 0.56rem); }
+        .tracker { position: absolute; right: 3%; bottom: 5%; padding: 0.35rem 0.45rem; border-radius: 6px; background: rgb(5 6 6 / 88%); font-size: clamp(0.4rem, 1vw, 0.6rem); }
+        .dialog-backdrop { display: grid; position: absolute; inset: 0; place-items: centre; background: rgb(0 0 0 / 72%); }
+        .dialog { width: 78%; padding: 0.7rem; border: 2px solid var(--mustard); border-radius: 10px; background: #111515; box-shadow: 0 18px 40px #000; }
+        .dialog h4 { margin: 0 0 0.35rem; color: var(--mustard-bright); font-size: clamp(0.58rem, 1.4vw, 0.82rem); }
+        .dialog p { margin: 0 0 0.45rem; color: #c7ccc8; font-size: clamp(0.4rem, 1vw, 0.6rem); line-height: 1.35; }
+        .dialog-actions { display: flex; gap: 0.35rem; justify-content: flex-end; }
+        .dialog-button { padding: 0.25rem 0.45rem; border-radius: 5px; background: #282e2e; font-size: clamp(0.4rem, 0.95vw, 0.58rem); font-weight: 800; }
+        .dialog-button.primary { background: var(--mustard); color: #080808; }
+        .mockup-figure figcaption { padding: 0.65rem 0.2rem 0; color: var(--muted); font-size: 0.8rem; }
+
+        .timeline { display: grid; position: relative; gap: 0.85rem; }
+        .timeline::before { position: absolute; top: 1rem; bottom: 1rem; left: 1rem; width: 2px; background: var(--line); content: ""; }
+        .phase { display: grid; position: relative; padding: 1rem 1rem 1rem 3.2rem; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+        .phase-number { position: absolute; top: 0.9rem; left: 0.42rem; display: grid; width: 1.2rem; height: 1.2rem; place-items: centre; border-radius: 50%; background: var(--mustard); color: #080808; font-size: 0.68rem; font-weight: 950; }
+        .phase h3 { margin: 0; font-size: 1rem; }
+        .phase p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.86rem; }
+
+        details { margin: 0.65rem 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+        summary { padding: 0.8rem 1rem; cursor: pointer; color: #fff; font-weight: 800; }
+        details > div { padding: 0 1rem 0.9rem; color: #c8cdc9; }
+
+        .source-list li { margin: 0.65rem 0; }
+        .document-footer { padding: 2rem; border-top: 1px solid var(--line); color: var(--muted); text-align: centre; font-size: 0.8rem; }
+
+        @media (max-width: 1050px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { position: static; width: 100%; height: auto; padding: 1rem 1.25rem; border-right: 0; border-bottom: 1px solid var(--line); }
+            .sidebar nav ol { display: flex; overflow-x: auto; gap: 0.25rem; padding-bottom: 0.25rem; }
+            .sidebar nav li { flex: 0 0 auto; }
+            .sidebar h2, .sidebar-note { display: none; }
+            .brand { margin-bottom: 0.8rem; }
+            .hero { padding: 5rem 2rem 4rem; }
+            .grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 760px) {
+            .content { width: min(100% - 2rem, var(--content)); padding-top: 3rem; }
+            .hero { padding-inline: 1rem; }
+            .grid.two, .grid.three, .grid.four, .mockup-grid { grid-template-columns: 1fr; }
+            section { margin-bottom: 4rem; }
+            .mockup-grid { max-width: 640px; margin-inline: auto; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behaviour: auto !important; transition: none !important; animation: none !important; }
+        }
+        @media print {
+            :root { --text: #111; --muted: #444; --line: #aaa; }
+            body { background: #fff; color: #111; font-size: 10pt; }
+            .layout { display: block; }
+            .sidebar, .skip-link { display: none; }
+            .hero { padding: 1.5cm 0 1cm; border-bottom: 2px solid #111; }
+            .hero::after { display: none; }
+            .content { width: 100%; padding: 1cm 0; }
+            .card, .callout, .diagram, .device, details, .phase { break-inside: avoid; box-shadow: none; background: #fff; }
+            section { margin-bottom: 1.6cm; }
+            h1 { font-size: 32pt; }
+            h2 { font-size: 21pt; }
+            a { color: #111; }
+            a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; overflow-wrap: anywhere; }
+            .screen { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .document-footer { color: #333; }
+        }
+    </style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to specification</a>
+<div class="layout">
+    <aside class="sidebar" aria-label="Document navigation">
+        <a class="brand" href="#top">
+            <span class="brand-mark" aria-hidden="true">P</span>
+            <span class="brand-name">Pickles <span class="brand-sub">MustardOS libretro frontend</span></span>
+        </a>
+        <h2>Contents</h2>
+        <nav>
+            <ol>
+                <li><a href="#overview">01 — Overview</a></li>
+                <li><a href="#decisions">02 — Agreed decisions</a></li>
+                <li><a href="#experience">03 — User experience</a></li>
+                <li><a href="#architecture">04 — Architecture</a></li>
+                <li><a href="#network-play">05 — Network Play</a></li>
+                <li><a href="#achievements">06 — RetroAchievements</a></li>
+                <li><a href="#hardcore">07 — Hardcore</a></li>
+                <li><a href="#states">08 — State compatibility</a></li>
+                <li><a href="#interfaces">09 — Interfaces</a></li>
+                <li><a href="#delivery">10 — Delivery</a></li>
+                <li><a href="#testing">11 — Testing</a></li>
+                <li><a href="#boundaries">12 — Boundaries</a></li>
+                <li><a href="#references">13 — References</a></li>
+            </ol>
+        </nav>
+        <div class="sidebar-note">
+            Proposed implementation specification.<br>
+            Product and engineering audience.<br>
+            Australian English.
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <header class="hero" id="top">
+            <div class="eyebrow">Implementation specification</div>
+            <h1>Network Play <span>&amp;</span><br>RetroAchievements</h1>
+            <p class="hero-lead">
+                A production-safe plan for bringing responsive multiplayer and a complete achievements experience to
+                Pickles while preserving the performance-first character of MustardOS.
+            </p>
+            <div class="meta-row" aria-label="Document metadata">
+                <span class="meta-pill status">Status: Proposed</span>
+                <span class="meta-pill">Version 1.0</span>
+                <span class="meta-pill">1 August 2026</span>
+                <span class="meta-pill">Product + Engineering</span>
+                <span class="meta-pill">Pickles</span>
+            </div>
+        </header>
+
+        <div class="content">
+            <section id="overview">
+                <p class="section-kicker">01 — Executive overview</p>
+                <h2>Two connected features, one performance budget</h2>
+                <p class="section-intro">
+                    Network Play and RetroAchievements will be implemented as independent, opt-in subsystems over shared
+                    asynchronous networking, content identity, state capture and feature-arbitration foundations. Routine
+                    network, HTTP and image work must never block emulation, audio, video or LVGL.
+                </p>
+                <div class="grid three">
+                    <article class="card">
+                        <div class="card-number">N</div>
+                        <h3>Network Play</h3>
+                        <p>Up to four Pickles players over LAN discovery or direct address, with encrypted pairing, adaptive rollback and safe fixed-delay fallback.</p>
+                    </article>
+                    <article class="card">
+                        <div class="card-number">A</div>
+                        <h3>RetroAchievements</h3>
+                        <p>A full themed experience using the official rcheevos client: identification, badges, progress, leaderboards, Softcore and validated Hardcore.</p>
+                    </article>
+                    <article class="card">
+                        <div class="card-number">P</div>
+                        <h3>Performance first</h3>
+                        <p>Bounded queues, reusable state buffers, measured rollback eligibility and zero frame-time regression when the features are disabled.</p>
+                    </article>
+                </div>
+                <div class="callout performance">
+                    <strong>Release principle</strong>
+                    Unsupported or expensive core/content combinations fall back clearly or decline the feature. They never
+                    jeopardise normal gameplay quality to make a compatibility claim.
+                </div>
+            </section>
+
+            <section id="decisions">
+                <p class="section-kicker">02 — Agreed product decisions</p>
+                <h2>The first-release contract</h2>
+                <div class="grid four">
+                    <article class="card decision"><div class="label">Peer compatibility</div><div class="value">Pickles to Pickles</div><p>Purpose-built protocol with no initial RetroArch interoperability.</p></article>
+                    <article class="card decision"><div class="label">Connection</div><div class="value">LAN + direct address</div><p>Local discovery and manual joining without a public service.</p></article>
+                    <article class="card decision"><div class="label">Synchronisation</div><div class="value">Adaptive rollback</div><p>Automatic fixed-delay fallback for expensive or unsuitable cores.</p></article>
+                    <article class="card decision"><div class="label">Players</div><div class="value">Up to four</div><p>Matching the four input ports already available in Pickles.</p></article>
+                    <article class="card decision"><div class="label">Session security</div><div class="value">Pairing + encryption</div><p>Ephemeral mutual identity and matching verification codes.</p></article>
+                    <article class="card decision"><div class="label">Achievement launch</div><div class="value">Softcore first</div><p>Hardcore follows compliance and public-client validation.</p></article>
+                    <article class="card decision"><div class="label">Account scope</div><div class="value">Global MustardOS</div><p>One protected account shared by Pickles sessions.</p></article>
+                    <article class="card decision"><div class="label">Combined use</div><div class="value">Achievements paused</div><p>RetroAchievements remains inactive throughout Network Play.</p></article>
+                </div>
+            </section>
+
+            <section id="experience">
+                <p class="section-kicker">03 — Proposed user experience</p>
+                <h2>Familiar MustardOS screens, clear system state</h2>
+                <p class="section-intro">
+                    These concepts demonstrate information hierarchy and interaction flow at a 640×480 target. Final spacing,
+                    glyphs, typefaces and colours remain controlled by the active MustardOS theme.
+                </p>
+                <div class="mockup-grid">
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept screen showing the Network Play landing menu">
+                                <div class="screen-header"><span>9:41 PM</span><span>Pickles</span><span>83% ▰</span></div>
+                                <div class="screen-title">NETWORK PLAY</div>
+                                <div class="screen-body">
+                                    <div class="menu-row selected"><span class="icon">◆</span><span>Host Game</span><span class="value">Ready</span></div>
+                                    <div class="menu-row"><span class="icon">⌁</span><span>Join LAN Game</span><span class="value">3 found</span></div>
+                                    <div class="menu-row"><span class="icon">→</span><span>Join Direct Address</span><span class="value"></span></div>
+                                    <div class="menu-row"><span class="icon">⚙</span><span>Player Assignments</span><span class="value">4 ports</span></div>
+                                    <div class="menu-row"><span class="icon">ⓘ</span><span>Compatibility</span><span class="value">Eligible</span></div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Select</span><span><span class="button-glyph">B</span>Back</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept A — Network Play is a first-class Pickles pause-menu destination.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept screen showing discoverable LAN sessions">
+                                <div class="screen-header"><span>9:41 PM</span><span>Local network</span><span>Wi-Fi ●</span></div>
+                                <div class="screen-title">JOIN LAN GAME</div>
+                                <div class="screen-body">
+                                    <div class="session-row selected"><span class="signal">▮▮▮</span><span><strong>Kitchen Handheld</strong><br><small>Tekken 3 · Player 2 available</small></span><span class="tag good">8 ms</span></div>
+                                    <div class="session-row"><span class="signal">▮▮▮</span><span><strong>Lounge Console</strong><br><small>Micro Machines · 2 slots</small></span><span class="tag good">12 ms</span></div>
+                                    <div class="session-row"><span class="signal">▮▮</span><span><strong>Garden Deck</strong><br><small>Bomberman '94 · 3 slots</small></span><span class="tag warn">31 ms</span></div>
+                                    <div class="stats-strip"><span><b>3</b>sessions</span><span><b>LAN</b>encrypted</span><span><b>PKNP/1</b>protocol</span></div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Join</span><span><span class="button-glyph">X</span>Refresh</span><span><span class="button-glyph">B</span>Back</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept B — Discovery exposes only the detail needed to choose a session.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept screen showing encrypted peer verification">
+                                <div class="screen-header"><span>9:42 PM</span><span>Secure pairing</span><span>🔒</span></div>
+                                <div class="screen-title">VERIFY CONNECTION</div>
+                                <div class="screen-body">
+                                    <p class="pair-note">Confirm that this code matches on both devices. No game state or input is shared until both players approve.</p>
+                                    <div class="pair-code">482 731</div>
+                                    <div class="menu-row selected"><span>✓</span><span>Codes Match</span><span></span></div>
+                                    <div class="menu-row"><span>×</span><span>Cancel Connection</span><span></span></div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Confirm</span><span><span class="button-glyph">B</span>Cancel</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept C — A short authentication code makes encrypted pairing understandable.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept screen showing an active four-player Network Play session">
+                                <div class="screen-header"><span>9:45 PM</span><span>Session active</span><span>● Excellent</span></div>
+                                <div class="screen-title">PLAYERS &amp; CONNECTION</div>
+                                <div class="screen-body">
+                                    <div class="player-grid">
+                                        <div class="player"><strong>P1 · Host</strong><br>Kitchen Handheld</div>
+                                        <div class="player"><strong>P2</strong><br>Lounge Console</div>
+                                        <div class="player"><strong>P3</strong><br>Garden Deck</div>
+                                        <div class="player"><strong>P4</strong><br>Available</div>
+                                    </div>
+                                    <div class="stats-strip"><span><b>12 ms</b>round trip</span><span><b>1</b>delay frame</span><span><b>3</b>rollbacks</span></div>
+                                    <div class="form-line"><span>Synchronisation</span><span>Adaptive rollback</span></div>
+                                    <div class="form-line"><span>State</span><span>Frame 18,942 confirmed</span></div>
+                                    <div class="form-line selected"><span>Disconnect</span><span>Host session</span></div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Select</span><span><span class="button-glyph">B</span>Resume</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept D — Useful connection health is visible without turning the UI into a debug console.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept screen showing global RetroAchievements account settings">
+                                <div class="screen-header"><span>9:48 PM</span><span>MustardOS</span><span>Online ●</span></div>
+                                <div class="screen-title">RETROACHIEVEMENTS</div>
+                                <div class="screen-body">
+                                    <div class="profile"><div class="avatar">M</div><div><div class="profile-name">MustardPlayer</div><div class="profile-sub">12,480 points · Signed in</div></div><span class="tag good">Active</span></div>
+                                    <div class="form-line selected"><span>Achievements</span><span>Enabled</span></div>
+                                    <div class="form-line"><span>Preferred Mode</span><span>Softcore</span></div>
+                                    <div class="form-line"><span>Unofficial Sets</span><span>Disabled</span></div>
+                                    <div class="form-line"><span>Notifications</span><span>Full</span></div>
+                                    <div class="form-line"><span>Sign Out</span><span></span></div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Change</span><span><span class="button-glyph">B</span>Back</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept E — Credentials are managed globally while game details live in Pickles.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept screen showing an achievement list with badges and points">
+                                <div class="screen-header"><span>9:51 PM</span><span>Tekken 3</span><span>Softcore</span></div>
+                                <div class="screen-title">ACHIEVEMENTS · 12 / 40</div>
+                                <div class="screen-body">
+                                    <div class="achievement"><div class="badge">★</div><div><div class="achievement-name">The King of Iron Fist</div><div class="achievement-desc">Complete Arcade Mode without continuing</div></div><div class="points">25 pts</div></div>
+                                    <div class="achievement"><div class="badge">⚡</div><div><div class="achievement-name">Ten-Hit Wonder</div><div class="achievement-desc">Perform a ten-hit combination · 70%</div></div><div class="points">10 pts</div></div>
+                                    <div class="achievement"><div class="badge">◆</div><div><div class="achievement-name">Doctor B</div><div class="achievement-desc">Unlock the mysterious doctor</div></div><div class="points">5 pts</div></div>
+                                    <div class="menu-row selected"><span>▣</span><span>View Leaderboards</span><span class="value">4 active</span></div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Details</span><span><span class="button-glyph">Y</span>Filter</span><span><span class="button-glyph">B</span>Back</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept F — Grouped achievements retain badge, progress and points at handheld scale.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept gameplay screen showing an achievement unlock and progress tracker">
+                                <div class="screen-header"><span>9:54 PM</span><span>Pickles</span><span>60 FPS</span></div>
+                                <div class="toast-demo">
+                                    <div class="pixel-scene"></div>
+                                    <div class="achievement-toast"><div class="badge">★</div><div><div class="toast-title">ACHIEVEMENT UNLOCKED</div><div class="toast-sub">The King of Iron Fist · 25 points</div></div></div>
+                                    <div class="tracker"><strong>Ten-Hit Wonder</strong><br>7 / 10 hits</div>
+                                </div>
+                                <div class="screen-footer"><span>RetroAchievements · Softcore</span><span style="margin-left:auto">Online ●</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept G — Gameplay overlays are informative, bounded and theme-aware.</figcaption>
+                    </figure>
+
+                    <figure class="mockup-figure">
+                        <div class="device">
+                            <div class="screen" role="img" aria-label="Concept confirmation dialogue explaining Hardcore restrictions">
+                                <div class="screen-header"><span>9:56 PM</span><span>RetroAchievements</span><span>Softcore</span></div>
+                                <div class="toast-demo">
+                                    <div class="pixel-scene"></div>
+                                    <div class="dialog-backdrop">
+                                        <div class="dialog">
+                                            <h4>Enable Hardcore?</h4>
+                                            <p>Pickles will reset the content and temporarily suspend state loading, cheats, patches, macros, turbo and slow motion.</p>
+                                            <p>Your saved settings will return when Hardcore ends.</p>
+                                            <div class="dialog-actions"><span class="dialog-button">Cancel</span><span class="dialog-button primary">Enable &amp; Reset</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="screen-footer"><span><span class="button-glyph">A</span>Confirm</span><span><span class="button-glyph">B</span>Cancel</span></div>
+                            </div>
+                        </div>
+                        <figcaption>Concept H — Hardcore restrictions are explicit and reversible before the reset occurs.</figcaption>
+                    </figure>
+                </div>
+            </section>
+
+            <section id="architecture">
+                <p class="section-kicker">04 — Shared architecture</p>
+                <h2>Keep slow work away from the frame loop</h2>
+                <p class="section-intro">
+                    The existing main loop remains the sole owner of core execution and visible UI state. Dedicated workers
+                    own sockets, TLS, cURL and badge transfers, communicating through bounded queues with explicit shutdown.
+                </p>
+                <figure class="diagram">
+                    <svg viewBox="0 0 1100 460" role="img" aria-labelledby="arch-title arch-desc">
+                        <title id="arch-title">Proposed Pickles Network Play and RetroAchievements architecture</title>
+                        <desc id="arch-desc">The Pickles main thread owns the core, input, state capture, achievements runtime and LVGL. Bounded queues connect it to network and HTTP workers.</desc>
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d8b800"/></marker>
+                        </defs>
+                        <rect x="30" y="40" width="690" height="370" rx="18" fill="#141919" stroke="#d8b800" stroke-width="2"/>
+                        <text x="60" y="82" fill="#f2d21b" font-size="22" font-weight="800">PICKLES MAIN THREAD</text>
+                        <rect x="65" y="115" width="190" height="92" rx="12" fill="#242b2b" stroke="#4c5656"/>
+                        <text x="160" y="150" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">Input snapshots</text>
+                        <text x="160" y="177" fill="#abb2ad" font-size="13" text-anchor="middle">4 ports · frame epoch</text>
+                        <rect x="280" y="115" width="190" height="92" rx="12" fill="#242b2b" stroke="#4c5656"/>
+                        <text x="375" y="150" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">libretro core</text>
+                        <text x="375" y="177" fill="#abb2ad" font-size="13" text-anchor="middle">retro_run · callbacks</text>
+                        <rect x="495" y="115" width="190" height="92" rx="12" fill="#242b2b" stroke="#4c5656"/>
+                        <text x="590" y="150" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">Snapshot service</text>
+                        <text x="590" y="177" fill="#abb2ad" font-size="13" text-anchor="middle">state ring · replay</text>
+                        <rect x="65" y="245" width="190" height="92" rx="12" fill="#242b2b" stroke="#4c5656"/>
+                        <text x="160" y="280" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">Network session</text>
+                        <text x="160" y="307" fill="#abb2ad" font-size="13" text-anchor="middle">timeline · peers</text>
+                        <rect x="280" y="245" width="190" height="92" rx="12" fill="#242b2b" stroke="#4c5656"/>
+                        <text x="375" y="280" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">rcheevos client</text>
+                        <text x="375" y="307" fill="#abb2ad" font-size="13" text-anchor="middle">memory · events</text>
+                        <rect x="495" y="245" width="190" height="92" rx="12" fill="#242b2b" stroke="#4c5656"/>
+                        <text x="590" y="280" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">LVGL interface</text>
+                        <text x="590" y="307" fill="#abb2ad" font-size="13" text-anchor="middle">menus · overlays</text>
+                        <path d="M255 161 H278" stroke="#d8b800" stroke-width="2" marker-end="url(#arrow)"/>
+                        <path d="M470 161 H493" stroke="#d8b800" stroke-width="2" marker-end="url(#arrow)"/>
+                        <path d="M375 207 V243" stroke="#d8b800" stroke-width="2" marker-end="url(#arrow)"/>
+                        <path d="M255 291 H278" stroke="#d8b800" stroke-width="2" marker-end="url(#arrow)"/>
+                        <path d="M470 291 H493" stroke="#d8b800" stroke-width="2" marker-end="url(#arrow)"/>
+                        <rect x="785" y="55" width="280" height="155" rx="16" fill="#172026" stroke="#63b3ed" stroke-width="2"/>
+                        <text x="925" y="92" fill="#9ed4f7" font-size="20" text-anchor="middle" font-weight="800">NETWORK WORKER</text>
+                        <text x="925" y="128" fill="#fff" font-size="15" text-anchor="middle">TCP/TLS peer connections</text>
+                        <text x="925" y="155" fill="#fff" font-size="15" text-anchor="middle">UDP LAN discovery</text>
+                        <text x="925" y="182" fill="#abb2ad" font-size="13" text-anchor="middle">Bounded packet queues</text>
+                        <rect x="785" y="250" width="280" height="155" rx="16" fill="#1d1c14" stroke="#f5b942" stroke-width="2"/>
+                        <text x="925" y="287" fill="#ffd77d" font-size="20" text-anchor="middle" font-weight="800">HTTP WORKER</text>
+                        <text x="925" y="323" fill="#fff" font-size="15" text-anchor="middle">rcheevos server requests</text>
+                        <text x="925" y="350" fill="#fff" font-size="15" text-anchor="middle">Badges and placards</text>
+                        <text x="925" y="377" fill="#abb2ad" font-size="13" text-anchor="middle">cURL · proxy · TLS</text>
+                        <path d="M720 150 H783" stroke="#63b3ed" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                        <path d="M720 330 H783" stroke="#f5b942" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                    </svg>
+                    <figcaption>Core calls and visible UI stay on the main thread; workers exchange bounded, owned messages only.</figcaption>
+                </figure>
+
+                <div class="grid two">
+                    <article class="card">
+                        <h3>Shared services</h3>
+                        <ul>
+                            <li>Asynchronous network and HTTP request service.</li>
+                            <li>Content and core identity cache.</li>
+                            <li>Reusable in-memory snapshot pool.</li>
+                            <li>Versioned save-state envelope.</li>
+                            <li>Feature compatibility and suspension policy.</li>
+                        </ul>
+                    </article>
+                    <article class="card">
+                        <h3>Non-negotiable invariants</h3>
+                        <ul>
+                            <li>No core, LVGL or renderer calls from workers.</li>
+                            <li>Every queue has byte and item limits.</li>
+                            <li>Shutdown cancels and joins outstanding work.</li>
+                            <li>Feature-disabled paths remain effectively free.</li>
+                            <li>Secrets never enter normal diagnostic logs.</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <section id="network-play">
+                <p class="section-kicker">05 — Network Play</p>
+                <h2>Secure, host-authoritative and latency aware</h2>
+
+                <h3>Transport and pairing</h3>
+                <ul>
+                    <li>Define a bounded, endian-independent <code>PKNP/1</code> frame containing message type, payload length, session identifier, sequence number and emulated frame number.</li>
+                    <li>Use TLS 1.3 over a <code>TCP_NODELAY</code> connection for each peer and rate-limited UDP announcements for LAN discovery.</li>
+                    <li>Generate ephemeral mutual certificates for every hosted session. Derive the displayed six-digit code from both certificates and nonces.</li>
+                    <li>Transmit no state or input until both devices confirm the matching code and the host approves the player.</li>
+                    <li>Reject oversized, stale, unauthorised or structurally invalid messages before allocation or state mutation.</li>
+                </ul>
+                <div class="callout security">
+                    <strong>Security boundary</strong>
+                    Discovery announces only the host label, protocol version, connection port and available slots. It never
+                    publishes pairing material, content paths, account details or save data.
+                </div>
+
+                <h3>Compatibility handshake</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Compared item</th><th>Purpose</th><th>Failure behaviour</th></tr></thead>
+                        <tbody>
+                            <tr><td>Pickles protocol and state versions</td><td>Guarantee compatible wire and snapshot formats.</td><td>Reject with an upgrade/version message.</td></tr>
+                            <tr><td>Core name, version and binary SHA-256</td><td>Avoid implementation-level divergence.</td><td>Reject and identify the differing core.</td></tr>
+                            <tr><td>Effective content/media manifest</td><td>Verify the same game and disc set without transferring content.</td><td>Reject and identify content mismatch.</td></tr>
+                            <tr><td>Patches and emulation-relevant options</td><td>Prevent deterministic differences.</td><td>List the incompatible setting or patch.</td></tr>
+                            <tr><td>Controller types and port count</td><td>Build a shared input model.</td><td>Offer a valid reassignment or reject.</td></tr>
+                            <tr><td>Serialisation and deterministic probe</td><td>Prove that synchronisation can be maintained.</td><td>Fall back safely or mark the combination unsupported.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Input and rollback</h3>
+                <ul>
+                    <li>The host owns the canonical timeline, player-to-port assignments, pause, restart, reset, disc changes and resynchronisation.</li>
+                    <li>Each player owns one exclusive emulated port. Shared-input and spectator modes are deferred.</li>
+                    <li>Transmit final post-mapping Retropad values, including analogue axes. Physical mappings, deadzones, turbo and RELISH evaluation remain local.</li>
+                    <li>Begin at one frame of input delay with an eight-frame maximum rollback window.</li>
+                    <li>Cap the rollback pool at 64 MiB by default and 128 MiB absolutely. Require space for at least two states.</li>
+                    <li>Predict missing remote input by repeating its last confirmed value.</li>
+                    <li>Correct from the earliest changed frame, replaying with video, audio, rumble, achievements and UI events suppressed.</li>
+                    <li>Benchmark state capture, restore and replay before joining. Automatically use a two-to-eight-frame fixed delay if rollback would exceed the device budget.</li>
+                </ul>
+                <div class="callout performance">
+                    <strong>Hardware-rendered cores</strong>
+                    Every serialise, restore and replay call uses the established hardware-context guard. Large 3D states are
+                    measured rather than assumed suitable; normal gameplay remains more important than enabling rollback.
+                </div>
+
+                <h3>Session integrity</h3>
+                <ul>
+                    <li>Disable run-ahead, fast-forward, slow motion and local state loading while connected.</li>
+                    <li>Compare canonical state digests every 60 confirmed frames.</li>
+                    <li>Attempt one host-driven resynchronisation after a mismatch; disconnect with a clear report if it repeats.</li>
+                    <li>Pause briefly for peer reconnection. The host chooses whether to continue with neutral input for a departed port.</li>
+                    <li>Synchronise host pause, reset and media changes at agreed frame boundaries.</li>
+                    <li>Support <code>RETRO_ENVIRONMENT_GET_NETPLAY_CLIENT_INDEX</code> and negotiate the libretro netpacket interface as a distinct core-managed mode.</li>
+                    <li>Never combine frontend rollback with core-managed packets in the same session.</li>
+                </ul>
+            </section>
+
+            <section id="achievements">
+                <p class="section-kicker">06 — RetroAchievements</p>
+                <h2>Official runtime, complete MustardOS presentation</h2>
+                <p class="section-intro">
+                    Integrate a pinned stable rcheevos release rather than reproducing achievement logic. Pickles supplies
+                    the networking, memory access, persistence and themed interface that the runtime intentionally leaves to
+                    the frontend.
+                </p>
+
+                <h3>Account and dependency policy</h3>
+                <ul>
+                    <li>Vendor the official <code>rc_client</code>, <code>rhash</code> and libretro memory helper with version and MIT licence notices.</li>
+                    <li>Provide global MustardOS settings for sign-in, sign-out, preferred mode, unofficial sets and notification visibility.</li>
+                    <li>Use the password only for initial login, clear it immediately and persist only the returned username and token.</li>
+                    <li>Write credentials atomically with owner-only permissions and redact them from logs.</li>
+                    <li>Do not import, change or expose RetroArch credentials.</li>
+                </ul>
+
+                <h3>Content and runtime lifecycle</h3>
+                <ol>
+                    <li>Create one <code>rc_client</code> with a libretro memory reader, asynchronous server callback and validated Pickles User-Agent.</li>
+                    <li>Capture <code>RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS</code> and copy memory descriptors supplied through <code>RETRO_ENVIRONMENT_SET_MEMORY_MAPS</code>.</li>
+                    <li>Identify content with <code>rhash</code>, including supported archives, playlists, CHD and disc layouts. Do not substitute the existing raw-file CRC.</li>
+                    <li>Hold the first emulated frame behind a responsive “Content is starting…” screen until identification completes. After ten seconds, offer Retry or Play Without Achievements.</li>
+                    <li>Call <code>rc_client_do_frame</code> after every canonical emulated frame, including non-rendered and fast-forward frames, but never after a Pickles run-ahead replay.</li>
+                    <li>Call <code>rc_client_idle</code> at least once per second while paused and notify the client on multi-disc media changes.</li>
+                    <li>Store rcheevos progress in new-format save states and reset hit-count progress safely after loading a legacy state.</li>
+                </ol>
+
+                <h3>Network and cache behaviour</h3>
+                <ul>
+                    <li>Use asynchronous cURL requests with MustardOS proxy settings, certificate verification, redirect restrictions, size limits and explicit timeouts.</li>
+                    <li>Complete each rcheevos server callback exactly once, including cancellation and shutdown.</li>
+                    <li>Cache successful content identities and cap the on-disk badge cache at 64 MiB using least-recently-used eviction.</li>
+                    <li>Decode only visible images into RAM; missing or corrupt images use a themed placeholder.</li>
+                    <li>Follow rcheevos retry and disconnected-session semantics rather than inventing unverifiable offline unlock submissions.</li>
+                </ul>
+
+                <h3>Visible experience</h3>
+                <div class="grid three">
+                    <article class="card"><h3>Before play</h3><p>Account status, identification progress, game placard, supported set and unlocked summary.</p></article>
+                    <article class="card"><h3>During play</h3><p>Unlocks, measured progress, challenge indicators, leaderboard trackers and server status.</p></article>
+                    <article class="card"><h3>In the pause menu</h3><p>Grouped achievement list, badges, points, rarity, descriptions, leaderboards and completion state.</p></article>
+                </div>
+            </section>
+
+            <section id="hardcore">
+                <p class="section-kicker">07 — Hardcore phase</p>
+                <h2>Competitive integrity without losing settings</h2>
+                <p class="section-intro">
+                    Softcore ships first. Hardcore becomes publicly available only after compliance testing and
+                    RetroAchievements validation of the Pickles client identity and behaviour.
+                </p>
+                <div class="grid two">
+                    <article class="card">
+                        <h3>Temporarily suspended</h3>
+                        <ul class="checklist">
+                            <li>State loading and timeline restore</li>
+                            <li>Automatic state resume</li>
+                            <li>Cheats and gameplay patches</li>
+                            <li>RELISH macros and turbo</li>
+                            <li>Slow motion and frame advance</li>
+                            <li>Disallowed core options</li>
+                        </ul>
+                    </article>
+                    <article class="card">
+                        <h3>Permitted with safeguards</h3>
+                        <ul class="checklist">
+                            <li>Normal-speed play</li>
+                            <li>Fast-forward</li>
+                            <li>Creating states that cannot be loaded in Hardcore</li>
+                            <li>Run-ahead after canonical-frame validation</li>
+                            <li>Normal display scaling and theme UI</li>
+                            <li>Pausing when <code>rc_client_can_pause</code> permits it</li>
+                        </ul>
+                    </article>
+                </div>
+                <ul>
+                    <li>Explain restrictions, require confirmation and reset content when Hardcore begins.</li>
+                    <li>Keep suspended values in memory without rewriting the user’s saved configuration.</li>
+                    <li>Restore those values when Hardcore ends.</li>
+                    <li>If a conflicting feature is selected later, pause Hardcore before applying it.</li>
+                    <li>Keep Hardcore and all achievement processing unavailable during Network Play.</li>
+                </ul>
+            </section>
+
+            <section id="states">
+                <p class="section-kicker">08 — Save-state compatibility</p>
+                <h2>A versioned envelope with a legacy path</h2>
+                <p class="section-intro">
+                    Existing Pickles states contain only the opaque core payload. A small envelope allows independent
+                    achievement progress and future metadata while retaining backwards compatibility.
+                </p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Chunk</th><th>Contents</th><th>Validation</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>HEAD</code></td><td><code>PKST</code> magic, envelope version, flags and declared lengths.</td><td>Strict version, size and overflow checks.</td></tr>
+                            <tr><td><code>CORE</code></td><td>Opaque bytes produced by <code>retro_serialize</code>.</td><td>Length limit and payload integrity digest.</td></tr>
+                            <tr><td><code>RACH</code></td><td>Optional <code>rc_client</code> progress and hit-count state.</td><td>Independent version, size and integrity check.</td></tr>
+                            <tr><td>Future chunks</td><td>Length-delimited optional data.</td><td>Unknown optional chunks may be skipped safely.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <ul>
+                    <li>Continue using atomic temporary-file replacement and directory synchronisation.</li>
+                    <li>Keep screenshot sidecars unchanged.</li>
+                    <li>Detect old raw files by the absence of <code>PKST</code> and pass only that payload to the core.</li>
+                    <li>In Softcore, loading a legacy state resets achievement progress safely because exact hit counts are unavailable.</li>
+                    <li>In Hardcore, all legacy and new state loads are rejected before reading or mutating core state.</li>
+                </ul>
+            </section>
+
+            <section id="interfaces">
+                <p class="section-kicker">09 — States, interfaces and diagnostics</p>
+                <h2>Stable boundaries for UI and testing</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Interface</th><th>Required states or fields</th><th>Consumers</th></tr></thead>
+                        <tbody>
+                            <tr><td>Network session</td><td>Idle, discovering, pairing, checking, synchronising, playing, reconnecting, failed.</td><td>Main loop, pause menu, loading overlay.</td></tr>
+                            <tr><td>Network mode</td><td>Rollback, fixed delay, core packet.</td><td>Negotiation, HUD, diagnostics.</td></tr>
+                            <tr><td>Peer status</td><td>Player, port, ping, jitter, confirmed frame, connection state.</td><td>Host controls and session screen.</td></tr>
+                            <tr><td>Achievements</td><td>Disabled, signed out, identifying, Softcore, Hardcore, offline, unsupported, failed.</td><td>Global settings, placard, HUD.</td></tr>
+                            <tr><td>Feature policy</td><td>Allow, deny or suspend; localised reason; values to restore.</td><td>Hardcore, netplay, settings and hotkeys.</td></tr>
+                            <tr><td>Snapshot service</td><td>Capacity, payload size, owner, generation and validity.</td><td>Network Play, save states and run-ahead.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Opt-in diagnostics</h3>
+                <div class="grid two">
+                    <article class="card">
+                        <h3>Network counters</h3>
+                        <p>Queue depth, round-trip time, jitter, input delay, rollback count/depth, replay cost, rejected packets, resynchronisations and disconnect reason.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Achievement counters</h3>
+                        <p>Hash/load duration, HTTP time, memory-read failures, frame evaluation time, cache use and dropped presentation events.</p>
+                    </article>
+                </div>
+                <div class="callout security">
+                    <strong>Redaction</strong>
+                    Never log passwords, tokens, complete request bodies, private pairing material or full local content paths
+                    in public diagnostic exports.
+                </div>
+            </section>
+
+            <section id="delivery">
+                <p class="section-kicker">10 — Delivery sequence</p>
+                <h2>Small, independently testable increments</h2>
+                <div class="timeline">
+                    <article class="phase"><span class="phase-number">1</span><h3>Shared foundations</h3><p>Async networking, identity cache, state envelope, snapshot pool and feature arbitration.</p></article>
+                    <article class="phase"><span class="phase-number">2</span><h3>RetroAchievements Softcore runtime</h3><p>Account flow, memory mapping, content identification and mocked server integration.</p></article>
+                    <article class="phase"><span class="phase-number">3</span><h3>Complete achievement experience</h3><p>Placards, lists, badge cache, progress, leaderboards and save-state progress.</p></article>
+                    <article class="phase"><span class="phase-number">4</span><h3>Network transport baseline</h3><p>Two-player pairing, compatibility checks, fixed-delay input and deterministic test core.</p></article>
+                    <article class="phase"><span class="phase-number">5</span><h3>Adaptive rollback</h3><p>Replay, performance calibration, desynchronisation recovery and hardware-core validation.</p></article>
+                    <article class="phase"><span class="phase-number">6</span><h3>Full Network Play scope</h3><p>Four players, LAN discovery, disc control, reconnection and core netpacket mode.</p></article>
+                    <article class="phase"><span class="phase-number">7</span><h3>Hardcore validation</h3><p>Restriction enforcement, security review and RetroAchievements client approval.</p></article>
+                    <article class="phase"><span class="phase-number">8</span><h3>Staged public release</h3><p>Documentation, translations, device matrix, diagnostics review and feature-gate removal.</p></article>
+                </div>
+                <p>Both systems remain behind independent build and runtime gates until their relevant acceptance suites pass.</p>
+            </section>
+
+            <section id="testing">
+                <p class="section-kicker">11 — Verification</p>
+                <h2>Correctness, security and frame-time acceptance</h2>
+                <details open>
+                    <summary>Automated protocol and rollback tests</summary>
+                    <div>
+                        <ul>
+                            <li>Protocol encoding, bounds, malformed input, stale sequences, pairing state and compatibility manifests.</li>
+                            <li>Deterministic fake core covering prediction, correction, four ports, pause/reset/disc events and resynchronisation.</li>
+                            <li>Simulated latency, jitter, fragmentation, bandwidth limits, disconnect and reconnect.</li>
+                            <li>Fuzzing of every unauthenticated discovery and pre-pairing parser.</li>
+                        </ul>
+                    </div>
+                </details>
+                <details open>
+                    <summary>RetroAchievements integration tests</summary>
+                    <div>
+                        <ul>
+                            <li>Mock login, token expiry, no-game, unsupported-core, timeout, retry, malformed response and shutdown outcomes.</li>
+                            <li>Memory maps with mirrors, offsets, disconnect masks, null ranges and fallback regions.</li>
+                            <li>One evaluation per canonical frame during normal play, hidden rendering, fast-forward and run-ahead.</li>
+                            <li>Legacy/new states, disc changes, corrupt badges, cache eviction and credential permissions.</li>
+                            <li>Every Hardcore suspension and restoration path.</li>
+                        </ul>
+                    </div>
+                </details>
+                <details open>
+                    <summary>Target-device and performance tests</summary>
+                    <div>
+                        <ul>
+                            <li>Representative lightweight 2D cores plus hardware-rendered SwanStation and DuckStation content.</li>
+                            <li>Two- and four-device LAN sessions and direct-address sessions with injected latency and jitter.</li>
+                            <li>Large states, GL context restore/replay, audio continuity, rumble suppression and colour correctness.</li>
+                            <li>Menu responsiveness during hashing, HTTP, pairing and state transfer.</li>
+                            <li>Four-hour soak runs with reconnects, disc changes and repeated pause/resume.</li>
+                            <li>No measurable frame-time regression when both features are disabled.</li>
+                        </ul>
+                    </div>
+                </details>
+                <details open>
+                    <summary>Release acceptance</summary>
+                    <div>
+                        <ul>
+                            <li>No unauthorised join and no persistent credential exposure.</li>
+                            <li>No achievement submission from speculative or replayed frames.</li>
+                            <li>No repeatable desynchronisation on combinations declared supported.</li>
+                            <li>No regression to existing raw save-state loading.</li>
+                            <li>No routine socket, TLS, HTTP or image work on the emulation thread.</li>
+                            <li>Native AddressSanitizer, UndefinedBehaviourSanitizer and race-oriented checks pass.</li>
+                        </ul>
+                    </div>
+                </details>
+            </section>
+
+            <section id="boundaries">
+                <p class="section-kicker">12 — Scope boundaries and defaults</p>
+                <h2>What the first release does not promise</h2>
+                <div class="grid two">
+                    <article class="card">
+                        <h3>Explicitly deferred</h3>
+                        <ul>
+                            <li>RetroArch network interoperability.</li>
+                            <li>Public lobby, relay and managed NAT traversal.</li>
+                            <li>Spectators and shared-input ports.</li>
+                            <li>ROM, BIOS, patch or core transfer.</li>
+                            <li>Voice chat, text chat and friend services.</li>
+                            <li>Hardcore achievements during Network Play.</li>
+                        </ul>
+                    </article>
+                    <article class="card">
+                        <h3>Default behaviour</h3>
+                        <ul>
+                            <li>Both features are independent and opt-in.</li>
+                            <li>Network Play uses encryption and adaptive rollback where measured suitable.</li>
+                            <li>RetroAchievements starts in Softcore.</li>
+                            <li>Global MustardOS credentials are authoritative.</li>
+                            <li>Achievements pause for the complete Network Play session.</li>
+                            <li>Existing Pickles behaviour is unchanged when disabled.</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
+            <section id="references">
+                <p class="section-kicker">13 — Primary references</p>
+                <h2>Standards and integration guidance</h2>
+                <ol class="source-list">
+                    <li><a href="https://docs.libretro.com/development/retroarch/netplay/">Libretro documentation — Netplay</a>: rollback model, determinism, state synchronisation and input exchange.</li>
+                    <li><a href="https://github.com/RetroAchievements/rcheevos">RetroAchievements — rcheevos</a>: official runtime and hashing implementation.</li>
+                    <li><a href="https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration">rcheevos — rc_client integration guide</a>: HTTP contract, login, content loading, events, frame processing, state progress and Hardcore guidance.</li>
+                    <li><a href="https://github.com/libretro/libretro-common/blob/master/include/libretro.h">libretro API header</a>: memory maps, achievement support, netpacket interface and netplay client index contracts.</li>
+                </ol>
+                <p>Product names and official API identifiers retain their published spelling. All explanatory material uses Australian English.</p>
+            </section>
+        </div>
+
+        <footer class="document-footer">
+            Pickles Network Play &amp; RetroAchievements · Proposed implementation specification · MustardOS · 1 August 2026
+        </footer>
+    </main>
+</div>
+</body>
+</html>

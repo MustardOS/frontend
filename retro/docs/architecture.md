@@ -8,6 +8,7 @@ retro/
   video/     frame pipeline, hardware render, colour grading, video UI screens
   audio/     audio bridge and sound settings screen
   input/     input/rumble/hotkey bridges and their UI screens
+  macro/     macro persistence, playback, editing and Relish scripting
   state/     save states, SRAM, VFS, softpatching, BIOS checks
   settings/  session settings model, submenu engine, settings UI screens
   ui/        pause menu, core options, information, disc control, cheats
@@ -53,7 +54,7 @@ retro/
 
 | File                                      | Purpose                                                                                                                                                                                                                                                                                          |
 |-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `input_bridge.c`                          | Input poll/state callbacks with epoch-based snapshotting (deterministic within a frame), analog deadzone/sensitivity transforms, multi-port support, suppress-until-release, per-port macro step playback.                                                                                       |
+| `input_bridge.c`                          | Input poll/state callbacks with epoch-based snapshotting (deterministic within a frame), analogue deadzone/sensitivity transforms, multi-port support and suppress-until-release.                                                                                                                |
 | `hotkeys.c` / `hotkeys.h`                 | MENU+X combo dispatcher (see [Hotkeys](settings.md#hotkeys)).                                                                                                                                                                                                                                    |
 | `rumble.c` / `rumble.h`                   | Rumble bridge with board-specific on/off magnitude quirks and menu/replay suppression.                                                                                                                                                                                                           |
 | `nav_repeat.c` / `nav_repeat.h`           | Shared d-pad hold-to-repeat helper used by every UI screen.                                                                                                                                                                                                                                      |
@@ -62,8 +63,16 @@ retro/
 | `ui_inputsettings.c`                      | Input hub screen (Port 1-4, Auto Assign, Controller Options, Reset Input).                                                                                                                                                                                                                       |
 | `ui_inputport.c`                          | Per-port screen (Controller, Core Device, Button Mapping, Macros, Reset Port).                                                                                                                                                                                                                   |
 | `ui_buttonmapping.c`                      | Per-port physical-input -> RetroPad target mapping, with L/R turbo-rate (ms) cycling per row. `A` captures a button press or a stick push; `X` opens a target picker listing Unbound plus all 24 targets, which is the only route to the 8 stick directions on a pad that has no sticks to push. |
-| `ui_controlleroptions.c`                  | Controller Options screen (rumble, analog deadzone/anti-deadzone/sensitivity/invert Y).                                                                                                                                                                                                          |
-| `ui_macros.c`                             | Macros screen - per-port macro list and step editor (see [Macros](macros.md)).                                                                                                                                                                                                                   |
+| `ui_controlleroptions.c`                  | Controller Options screen (rumble, analogue deadzone/anti-deadzone/sensitivity/invert Y).                                                                                                                                                                                                        |
+
+## macro/
+
+| File                      | Purpose                                                                                                                                                                     |
+|---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `macro.c` / `macro.h`     | Per-port macro definitions, persistence and indexed lookup (see [Macros](macros.md)).                                                                                       |
+| `runtime.c` / `runtime.h` | Low-overhead macro playback, timing, looping, conditions, variables and analogue-stick output.                                                                              |
+| `relish.c` / `relish.h`   | Compiler for the Relish (`.rls`) scripting language, including includes, tokenisation, label resolution, validation and stable indices (see [Relish scripting](relish.md)). |
+| `ui_macros.c`             | Per-port macro list, binding and on device step editor.                                                                                                                     |
 
 ## state/
 
@@ -76,8 +85,6 @@ retro/
 | `content_hash.c` / `content_hash.h` | Background-threaded CRC32 of the content file, cached by size+mtime.                                                                                                                                                                           |
 | `patch.c` / `patch.h`               | Softpatch engine - IPS, BPS, and UPS appliers, stacking numbered patches (`.ips`, `.1.ips`, ...).                                                                                                                                              |
 | `bios_check.c` / `bios_check.h`     | Reads the core's RetroArch-style `.info` file for `firmware*` entries and checks presence.                                                                                                                                                     |
-| `macro.c` / `macro.h`               | Per-port macro definitions - named button sequences with a per-step hold duration in milliseconds, persisted alongside save states (see [Macros](macros.md)). Also compiles `.rls` Relish scripts via `relish.c` into the same representation. |
-| `relish.c` / `relish.h`             | Compiler for the Relish (`.rls`) macro scripting language - tokenizer, label resolution, jump-safety validation, and the on device index-stability registry (see [Relish scripting](relish.md)).                                               |
 | `manual.c` / `manual.h`             | Locates a core/content's bundled manual and tracks read position, font size, and word-wrap preference.                                                                                                                                         |
 | `ui_gamestate.c`                    | Game State screen (slots, naming, preview mode).                                                                                                                                                                                               |
 | `ui_storagesettings.c`              | Storage screen (auto save, SRAM flush interval).                                                                                                                                                                                               |

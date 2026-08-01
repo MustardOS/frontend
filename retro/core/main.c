@@ -21,7 +21,7 @@
 #include "../ui/cheats.h"
 #include "../state/content_hash.h"
 #include "../state/gamestate.h"
-#include "../state/macro.h"
+#include "../macro/macro.h"
 #include "../state/manual.h"
 #include "../state/patch.h"
 #include "../input/hotkeys.h"

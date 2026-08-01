@@ -25,9 +25,10 @@ SRC := $(wildcard coredef/*.c) core/main.c core/core.c core/environment.c core/r
        audio/audio.c audio/ui_soundsettings.c \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
        input/ui_inputsettings.c input/ui_controlleroptions.c input/ui_inputport.c \
-       input/ui_buttonmapping.c input/ui_macros.c input/nav_repeat.c input/core_input_meta.c \
-       state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c state/macro.c \
-       state/relish.c state/content_hash.c state/bios_check.c state/sram.c \
+       input/ui_buttonmapping.c input/nav_repeat.c input/core_input_meta.c \
+       macro/macro.c macro/relish.c macro/runtime.c macro/ui_macros.c \
+       state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
+       state/content_hash.c state/bios_check.c state/sram.c \
        state/patch.c state/ui_storagesettings.c state/manual.c \
        settings/settings.c settings/submenu.c settings/ui_settings.c \
        settings/ui_performancesettings.c settings/ui_hudsettings.c \

@@ -32,26 +32,26 @@ That's [Relish](relish.md), the companion scripting language. This page just cov
   Mapping, so a macro can be triggered by any of the sixteen buttons _or_ by a stick push - flick the stick and that
   direction becomes the trigger. Binding a direction this way turns that whole stick digital, exactly as binding one to
   a normal target does. On a Relish sourced macro, the dialogue is skipped entirely and `A` goes straight to Bind, since
-  Edit is never available for one anyway. Assigning a macro to a button is mutually exclusive with that buttons normal
+  Edit is never available for one anyway. Assigning a macro to a button is mutually exclusive with that button's normal
   target/turbo binding so assigning one clears the other.
 - Pressing the bound physical button triggers the macro. It plays through to completion on its own, regardless of
   whether the button is still held or released partway through. It is a fire once and run, not a hold to play type of
   macro run. Pressing the trigger button again while a macro is still running restarts it from the top. A Button step
   with Repeat > 1 always gets at least one frame of release between presses, even if Wait is set to 0ms, so the repeats
   never merge into a single continuous hold.
-- Macros persist per content next to save states (`state/macro.c`), and the button mapper shows `Macro: <name>` in place
+- Macros persist per content next to save states (`macro/macro.c`), and the button mapper shows `Macro: <name>` in place
   of the usual target label for any row bound to one.
 
 ## What a macro sends vs. what the game registers
 
-Pickles guarantees the _output_ is exactly that. Steps with Hold 768ms and Repeat 20 sends exactly 20 clean,
+Pickles guarantees the _output_ is exactly that. A step with Hold 768ms and Repeat 20 sends exactly 20 clean,
 individually timed presses to the core, _every time_. It has no visibility into, or control over, what the running game
 then does with those presses. A game samples input on its own schedule and often imposes its own cooldown on a given
 action (an attack or jump that cannot retrigger for a fixed number of frames, for example). So 20 presses sent can
 easily look like only ~10 "worked" in practice because the game itself is ignoring the presses that land inside its own
-cooldown window. That's just up to what the core and content does it's not a Pickles thing.
+cooldown window. That is up to what the core and content do; it is not a Pickles issue.
 
-If a macro seems to under deliver what it should do, that's the first thing to check, and it's usually the game
+If a macro seems to under-deliver, that is the first thing to check, and it is usually the game's
 behaviour to work around (e.g. lengthening Wait so each press lands outside the cooldown) rather than something to fix
 by changing Hold.
 
@@ -59,7 +59,8 @@ by changing Hold.
 
 Power users can manually create a macro off device as a plain text **Relish** script (use the extension `.rls`) and drop
 it into the same per content macro folder. Pickles will compile it on device into the same step representation, with
-real structure the on device editor doesn't offer: loops, conditions, `BREAK`, and forward-referencing jumps. Relish
+real structure the on-device editor doesn't offer: loops, conditions, `BREAK`, `STOP`, and forward-referencing jumps.
+Relish
 sourced macros show a distinct glyph in the list and can be bound/deleted but never edited on device. Any broken scripts
 show as a selectable, deletable "Broken Script" entry with a somewhat helpful compile error message.
 
