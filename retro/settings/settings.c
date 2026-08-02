@@ -1105,6 +1105,7 @@ void session_settings_cycle_audio_period(const int direction) {
 
     idx = (idx + direction + AUDIO_PERIOD_CHOICE_COUNT) % AUDIO_PERIOD_CHOICE_COUNT;
     session_settings.audio_period_frames = audio_period_choices[idx];
+    audio_bridge_reset_period_floor();
 
     LOG_INFO(mux_module, "Audio Period changed to %d frames", session_settings.audio_period_frames);
     audio_bridge_apply_sample_rate();
@@ -1963,6 +1964,26 @@ void session_settings_reset_input(void) {
     session_settings.stick_invert_y = defaults.stick_invert_y;
 
     input_bridge_apply_controller_ports();
+}
+
+void session_settings_apply_performance_first(void) {
+    session_settings.texture_filter = texture_filter_nearest;
+    session_settings.shimmer_fix = 0;
+
+    session_settings.colour_filter = 0;
+    session_settings.colour_shader = 0;
+    session_settings.colour_brightness = defaults.colour_brightness;
+    session_settings.colour_contrast = defaults.colour_contrast;
+    session_settings.colour_saturation = defaults.colour_saturation;
+    session_settings.colour_hueshift = defaults.colour_hueshift;
+    session_settings.colour_gamma = defaults.colour_gamma;
+
+    session_settings.overlay_source = overlay_source_off;
+
+    video_bridge_apply_filter();
+    video_bridge_apply_scaling();
+    colour_refresh();
+    overlay_bridge_apply();
 }
 
 void session_settings_reset_viewport(void) {

@@ -68,6 +68,8 @@ typedef struct {
 static monitor_t monitor;
 
 static uint32_t last_saver_exit = 0;
+static int (*idle_saver_suppressed_query)(void) = NULL;
+static int idle_saver_was_suppressed = 0;
 static uint8_t display_fade_alpha = 0;
 static int gradient_captured = 0;
 static display_overlay_fn video_overlay_fn_ptr = NULL;
@@ -1057,9 +1059,7 @@ void display_set_composite_suppressed(const int suppressed) {
     composite_suppressed = suppressed;
 }
 
-int display_capture_clean_frame(const char *path) {
-    if (!monitor.renderer || !monitor.texture) return -1;
-
+static SDL_Texture *capture_target(void) {
     static SDL_Texture *capture_tex = NULL;
     static int capture_w = 0;
     static int capture_h = 0;
@@ -1076,7 +1076,7 @@ int display_capture_clean_frame(const char *path) {
             capture_w = 0;
             capture_h = 0;
             LOG_ERROR("video", "Failed to create capture texture: %s", SDL_GetError());
-            return -1;
+            return NULL;
         }
 
         SDL_SetTextureBlendMode(capture_tex, SDL_BLENDMODE_NONE);
@@ -1091,14 +1091,44 @@ int display_capture_clean_frame(const char *path) {
 
     composite_to(capture_tex, 0);
     SDL_RenderFlush(monitor.renderer);
+
+    return capture_tex;
+}
+
+int display_capture_clean_frame(const char *path) {
+    if (!monitor.renderer || !monitor.texture) return -1;
+    if (!capture_target()) return -1;
+
     const int ret = screenshot_save_renderer(monitor.renderer, path, (screenshot_hue) {0, 0, 0});
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 
     return ret;
 }
 
+int display_capture_clean_pixels(uint8_t *rgb, const int width, const int height) {
+    if (!monitor.renderer || !monitor.texture || !rgb) return -1;
+    if (width != device.screen.width || height != device.screen.height) return -1;
+    if (!capture_target()) return -1;
+
+    const int ret = SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_RGB24, rgb, width * 3);
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+
+    return ret == 0 ? 0 : -1;
+}
+
 void display_check_idle_saver(void) {
     if (!monitor.renderer) return;
+
+    const int saver_suppressed = idle_saver_suppressed_query && idle_saver_suppressed_query();
+    if (saver_suppressed) {
+        idle_saver_was_suppressed = 1;
+        last_saver_exit = SDL_GetTicks();
+        return;
+    }
+    if (idle_saver_was_suppressed) {
+        idle_saver_was_suppressed = 0;
+        last_saver_exit = SDL_GetTicks();
+    }
 
     {
         static unsigned last_saver_type_seen = 0;
@@ -1136,6 +1166,10 @@ void display_check_idle_saver(void) {
             }
         }
     }
+}
+
+void display_set_idle_saver_suppressed_query(int (*fn)(void)) {
+    idle_saver_suppressed_query = fn;
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {

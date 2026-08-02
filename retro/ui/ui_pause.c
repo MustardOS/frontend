@@ -22,9 +22,11 @@
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
 #include "../core/core.h"
+#include "../core/perf.h"
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
+#include "../video/image_writer.h"
 #include "cheats.h"
 #include "ui_loading.h"
 
@@ -567,7 +569,8 @@ int pause_menu_is_active(void) {
     return active;
 }
 
-int pause_menu_capture_clean_screenshot(const char *path, const int restore_visibility) {
+static int capture_clean_frame(const char *path, uint8_t *pixels, const int restore_visibility) {
+    const uint64_t capture_start = perf_begin();
     const int fps_was_visible = ui_lbl_fps && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     const int header_was_visible = ui_pnl_header && !lv_obj_has_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
     const int toast_was_visible = ui_pnl_message && !lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
@@ -580,17 +583,46 @@ int pause_menu_capture_clean_screenshot(const char *path, const int restore_visi
     display_set_composite_suppressed(1);
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
-    const int result = display_capture_clean_frame(path);
+    const int result = pixels ? display_capture_clean_pixels(pixels, device.screen.width, device.screen.height)
+                              : display_capture_clean_frame(path);
     display_set_composite_suppressed(0);
 
-    if (!restore_visibility) return result;
+    if (!restore_visibility) {
+        perf_end(perf_stage_screenshot, capture_start);
+        return result;
+    }
 
     if (fps_was_visible) lv_obj_clear_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
     if (toast_was_visible) lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
 
     if (fps_was_visible || header_was_visible || toast_was_visible) lv_obj_invalidate(ui_screen);
+
+    perf_end(perf_stage_screenshot, capture_start);
     return result;
+}
+
+int pause_menu_capture_clean_screenshot(const char *path, const int restore_visibility) {
+    return capture_clean_frame(path, NULL, restore_visibility);
+}
+
+int pause_menu_capture_clean_pixels(uint8_t *pixels, const int restore_visibility) {
+    return pixels ? capture_clean_frame(NULL, pixels, restore_visibility) : -1;
+}
+
+int pause_menu_store_clean_screenshot(const char *path, const int restore_visibility) {
+    if (!path || !*path) return -1;
+
+    uint8_t *pixels = image_writer_available() ? image_writer_claim(device.screen.width, device.screen.height) : NULL;
+    if (!pixels) return capture_clean_frame(path, NULL, restore_visibility);
+
+    if (capture_clean_frame(NULL, pixels, restore_visibility) != 0) {
+        image_writer_release();
+        return -1;
+    }
+
+    image_writer_commit(path, NULL, 0);
+    return 0;
 }
 
 void pause_menu_toggle(void) {

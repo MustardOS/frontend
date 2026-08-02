@@ -13,6 +13,10 @@
 
 #define CORE_MIN_LATENCY_CEILING_MS 512
 
+#define AUDIO_PERIOD_SAFE_FRAMES        512
+#define AUDIO_PERIOD_SETTLE_MS          3000
+#define AUDIO_PERIOD_UNDERRUN_TOLERANCE 8
+
 #define AUDIO_FADE_IN_MS            8
 #define AUDIO_UNDERRUN_RAMP_MS      1
 #define AUDIO_RESUME_PREFILL_MIN_MS 20
@@ -30,6 +34,8 @@ static SDL_AudioDeviceID audio_dev = 0;
 static int opened_freq = 0;
 static int opened_channels = 0;
 static int opened_period_frames = 0;
+static int period_floor_frames = 0;
+static uint32_t opened_at_ms = 0;
 static int device_paused = 0;
 static int resume_pending = 0;
 static int audio_muted = 0;
@@ -384,7 +390,11 @@ int audio_bridge_open(const double core_sample_rate) {
     want.freq = (int) want_rate;
     want.format = AUDIO_S16SYS;
     want.channels = 2;
-    want.samples = (Uint16) (session_settings.audio_period_frames > 0 ? session_settings.audio_period_frames : 512);
+
+    int want_period = session_settings.audio_period_frames > 0 ? session_settings.audio_period_frames : 512;
+    if (period_floor_frames > want_period) want_period = period_floor_frames;
+
+    want.samples = (Uint16) want_period;
     want.callback = audio_callback;
     want.userdata = NULL;
 
@@ -408,6 +418,7 @@ int audio_bridge_open(const double core_sample_rate) {
     ring_write_index = 0;
     ring_read_index = 0;
     underrun_count = 0;
+    opened_at_ms = SDL_GetTicks();
     fade_in_remaining = 0;
     fade_in_total = 0;
 
@@ -637,7 +648,30 @@ static void audio_bridge_maybe_finish_resume(void) {
     LOG_DEBUG(mux_module, "Audio resumed with %ums queued (target %ums)", queued_ms, target_ms);
 }
 
+static void period_stability_check(void) {
+    if (!audio_dev || opened_period_frames <= 0 || opened_period_frames >= AUDIO_PERIOD_SAFE_FRAMES) return;
+    if (SDL_GetTicks() - opened_at_ms < AUDIO_PERIOD_SETTLE_MS) return;
+    const uint32_t underruns = underrun_count;
+    if (underruns <= AUDIO_PERIOD_UNDERRUN_TOLERANCE) return;
+
+    int stepped = opened_period_frames * 2;
+    if (stepped > AUDIO_PERIOD_SAFE_FRAMES) stepped = AUDIO_PERIOD_SAFE_FRAMES;
+
+    LOG_WARN(
+        mux_module, "Audio period of %d frames underran %u times; using %d frames for the rest of this session",
+        opened_period_frames, underruns, stepped
+    );
+
+    period_floor_frames = stepped;
+    audio_bridge_apply_sample_rate();
+}
+
+void audio_bridge_reset_period_floor(void) {
+    period_floor_frames = 0;
+}
+
 void audio_bridge_drc_tick(void) {
+    period_stability_check();
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
 
     const double max_deviation = (double) session_settings.audio_rate_control / 10000.0;

@@ -34,11 +34,7 @@ typedef enum {
     cheevo_sort_count
 } cheevo_achievement_sort;
 
-typedef enum {
-    cheevo_view_achievements = 0,
-    cheevo_view_leaderboards,
-    cheevo_view_count
-} cheevo_achievement_view;
+typedef enum { cheevo_view_achievements = 0, cheevo_view_leaderboards, cheevo_view_count } cheevo_achievement_view;
 
 typedef struct {
     int enabled;
@@ -55,10 +51,7 @@ typedef struct {
     uint32_t total;
 } cheevo_info;
 
-typedef enum {
-    cheevo_game_entry_achievement = 0,
-    cheevo_game_entry_leaderboard
-} cheevo_game_entry_type;
+typedef enum { cheevo_game_entry_achievement = 0, cheevo_game_entry_leaderboard } cheevo_game_entry_type;
 
 typedef struct {
     cheevo_game_entry_type type;
@@ -92,6 +85,8 @@ int cheevo_init(const char *content_path);
 void cheevo_shutdown(void);
 
 void cheevo_tick(void);
+
+void cheevo_present_tick(void);
 
 void cheevo_do_frame(void);
 

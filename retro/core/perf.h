@@ -14,6 +14,12 @@ enum perf_stage {
     perf_stage_input_present,
     perf_stage_present_to_poll,
     perf_stage_frame_delay,
+    perf_stage_gl_enter,
+    perf_stage_gl_leave,
+    perf_stage_netplay_digest,
+    perf_stage_cheevo_callback,
+    perf_stage_screenshot,
+    perf_stage_state_save,
     perf_stage_count
 };
 
@@ -44,6 +50,8 @@ void perf_note_poll(void);
 void perf_note_batch(unsigned frames);
 
 void perf_note_present(void);
+
+unsigned perf_missed_refreshes(void);
 
 void perf_format_hud(char *buf, size_t len, double fps);
 

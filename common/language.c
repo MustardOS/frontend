@@ -1758,6 +1758,8 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.settings_screen.audio_rate_control), lang_specific, "Rate Control"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.audio_rate_control_off), lang_specific, "Off"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.game_renderer), lang_specific, "Game Renderer"},
+    {"muxretro", LANG_OFF(muxretro.settings_screen.performance_first), lang_specific, "Performance First"},
+    {"muxretro", LANG_OFF(muxretro.settings_screen.performance_first_applied), lang_specific, "All visual effects reset!"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.game_renderer_hardware), lang_specific, "Hardware"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.game_renderer_software), lang_specific, "Software"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.game_renderer_restart), lang_specific, "Render changes require a restart!"},

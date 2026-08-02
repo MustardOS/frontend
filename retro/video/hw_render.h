@@ -8,6 +8,8 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb);
 
 int hw_render_bridge_active(void);
 
+int hw_render_bridge_owns_context(void);
+
 const char *hw_render_bridge_description(void);
 
 void hw_render_bridge_flush_core_commands(void);

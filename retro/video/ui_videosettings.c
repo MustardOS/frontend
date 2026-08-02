@@ -17,6 +17,7 @@ enum {
     row_shimmer_fix,
     row_border,
     row_game_renderer,
+    row_performance_first,
     row_max
 };
 
@@ -32,12 +33,13 @@ static const char *all_labels[row_max] = {
     lang.muxretro.settings_screen.texture_filter,
     lang.muxretro.settings_screen.shimmer_fix,
     lang.muxretro.settings_screen.border_colour,
-    lang.muxretro.settings_screen.game_renderer
+    lang.muxretro.settings_screen.game_renderer,
+    lang.muxretro.settings_screen.performance_first
 };
 
-static const char *all_glyphs[row_max] = {"viewport",      "display",    "overlay",     "scaling",
-                                          "rotate",        "mirrored",   "aspectratio", "integerscale",
-                                          "texturefilter", "shimmerfix", "border",      "gamerenderer"};
+static const char *all_glyphs[row_max] = {"viewport", "display",      "overlay",      "scaling",       "rotate",
+                                          "mirrored", "aspectratio",  "integerscale", "texturefilter", "shimmerfix",
+                                          "border",   "gamerenderer", "performance"};
 
 // The renderer choice only means anything to a core that asked for hardware rendering!
 static const char *row_labels[row_max];
@@ -132,9 +134,11 @@ static void cycle_row(const int display_index, const int direction) {
     }
 }
 
+static submenu self;
+
 static int row_is_action(const int display_index) {
     const int index = row_map[display_index];
-    return index == row_viewport || index == row_display || index == row_overlay;
+    return index == row_viewport || index == row_display || index == row_overlay || index == row_performance_first;
 }
 
 static void row_action(const int display_index) {
@@ -147,6 +151,11 @@ static void row_action(const int display_index) {
             break;
         case row_overlay:
             overlay_menu_open();
+            break;
+        case row_performance_first:
+            session_settings_apply_performance_first();
+            submenu_refresh_values(&self);
+            pause_menu_show_toast(lang.muxretro.settings_screen.performance_first_applied);
             break;
         default:
             break;
@@ -175,8 +184,6 @@ static int child_tick(void) {
 static void closed(void) {
     settings_menu_reopen_video();
 }
-
-static submenu self;
 
 static submenu_def def = {
     .labels = row_labels,

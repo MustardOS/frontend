@@ -35,6 +35,7 @@
 #include "governor_boost.h"
 #include "runahead.h"
 #include "../video/hw_render.h"
+#include "../video/image_writer.h"
 #include "../video/overlay_bridge.h"
 #include "paths.h"
 #include "perf.h"
@@ -44,6 +45,7 @@
 
 #define RESUME_COOLDOWN_MS 1500
 #define AUDIO_MAX_CATCHUP  3
+#define POWER_SAVE_READY   RUN_PATH "muxretro_save_ready"
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -54,6 +56,8 @@ static char macro_dir[MAX_BUFFER_SIZE];
 
 static volatile sig_atomic_t pending_sleep_signal = 0;
 static volatile sig_atomic_t pending_wake_signal = 0;
+static volatile sig_atomic_t pending_exit_signal = 0;
+static int power_save_prepared = 0;
 static double target_fps = 60.0;
 
 static double startup_elapsed_ms(const uint64_t start) {
@@ -83,6 +87,10 @@ static void handle_wake_signal(const int sig) {
     pending_wake_signal = 1;
 }
 
+static void handle_exit_signal(const int sig) {
+    pending_exit_signal = sig;
+}
+
 static void install_suspend_signal_handlers(void) {
     struct sigaction sa = {0};
     sa.sa_flags = SA_RESTART;
@@ -92,24 +100,77 @@ static void install_suspend_signal_handlers(void) {
 
     sa.sa_handler = handle_wake_signal;
     sigaction(SIGUSR2, &sa, NULL);
+
+    sa.sa_handler = handle_exit_signal;
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+
+    unlink(POWER_SAVE_READY);
 }
 
-static void handle_pending_suspend_signals(void) {
+static void acknowledge_power_save(void) {
+    const int fd = open(POWER_SAVE_READY, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (fd < 0) {
+        LOG_WARN(mux_module, "Could not acknowledge power save: %s", strerror(errno));
+        return;
+    }
+
+    char value[32];
+    const int length = snprintf(value, sizeof(value), "%ld\n", (long) getpid());
+    if (length <= 0 || write(fd, value, (size_t) length) != length)
+        LOG_WARN(mux_module, "Could not complete power-save acknowledgement");
+    close(fd);
+}
+
+static void prepare_power_save(const char *reason) {
+    LOG_INFO(mux_module, "Preparing content for %s", reason);
+
+    if (netplay_is_active()) netplay_disconnect();
+
+    int state_saved = 1;
+    if (state_saves_supported()) {
+        gamestate_capture_pending(1);
+        if (gamestate_autosave_save() == 0)
+            LOG_SUCCESS(mux_module, "Auto save completed before %s", reason);
+        else {
+            LOG_WARN(mux_module, "Auto save could not be completed before %s", reason);
+            state_saved = 0;
+        }
+    }
+
+    sram_bridge_save();
+    sram_bridge_flush();
+    power_save_prepared = state_saved;
+}
+
+static int handle_pending_suspend_signals(void) {
     if (pending_sleep_signal) {
         pending_sleep_signal = 0;
 
-        LOG_INFO(mux_module, "Received sleep-prepare signal (SIGUSR1): saving SRAM");
-        sram_bridge_save();
-        if (!netplay_is_active() && session_settings_auto_save_on_idle()) gamestate_autosave_save();
+        prepare_power_save("suspend");
         if (!pause_menu_is_active()) pause_menu_toggle();
+        image_writer_flush();
+        acknowledge_power_save();
     }
 
     if (pending_wake_signal) {
         pending_wake_signal = 0;
         LOG_INFO(mux_module, "Received resume signal (SIGUSR2)");
+        power_save_prepared = 0;
+        unlink(POWER_SAVE_READY);
 
         if (pause_menu_is_active()) pause_menu_toggle();
     }
+
+    if (pending_exit_signal) {
+        const int signal_number = pending_exit_signal;
+        pending_exit_signal = 0;
+        LOG_INFO(mux_module, "Received exit signal %d", signal_number);
+        if (!power_save_prepared) prepare_power_save("shutdown");
+        return 1;
+    }
+
+    return 0;
 }
 
 static void precache_content(const char *content_path) {
@@ -439,6 +500,7 @@ int main(const int argc, char *argv[]) {
 
     video_bridge_apply_fps_limit();
     display_set_hard_sync_query(hard_sync_enabled);
+    display_set_idle_saver_suppressed_query(netplay_is_active);
 
     struct retro_system_av_info av_info = {0};
     current_core.retro_get_system_av_info(&av_info);
@@ -601,7 +663,10 @@ int main(const int argc, char *argv[]) {
             netplay_governor_active = netplay_active;
         }
         idle_poll();
-        handle_pending_suspend_signals();
+        if (handle_pending_suspend_signals()) {
+            quit = 1;
+            continue;
+        }
         display_check_idle_saver();
         hotkeys_volume_bright_task();
 
@@ -781,6 +846,7 @@ int main(const int argc, char *argv[]) {
         if (core_ran) perf_note_present();
 
         frame_pacer_after_present();
+        cheevo_present_tick();
 
         if (core_ran) pace_core_output();
         perf_frame_complete(core_ran);
@@ -791,6 +857,7 @@ int main(const int argc, char *argv[]) {
     pause_menu_shutdown();
     netplay_shutdown();
     cheevo_shutdown();
+    image_writer_shutdown();
     governor_boost_shutdown();
     runahead_shutdown();
     video_bridge_shutdown();

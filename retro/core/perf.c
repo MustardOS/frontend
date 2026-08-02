@@ -5,6 +5,7 @@
 #include "../../common/display.h"
 #include "perf.h"
 #include "muxretro.h"
+#include "../video/hw_render.h"
 
 #define PERF_HISTORY 1024
 
@@ -27,6 +28,8 @@ static double pending_draw_ms;
 static double pending_flip_ms;
 static int pending_present_timing;
 static double ticks_to_ms;
+static unsigned missed_refreshes;
+static unsigned frames_observed;
 static int hud_active;
 static int capture_active;
 static int enabled;
@@ -65,14 +68,22 @@ static int compare_sample(const void *a, const void *b) {
     return x < y ? -1 : x > y;
 }
 
-static double percentile95(const perf_series *s) {
+static double percentile(const perf_series *s, const unsigned rank) {
     if (!s->count) return 0.0;
 
     static float sorted[PERF_HISTORY];
     memcpy(sorted, s->samples, sizeof(float) * s->count);
     qsort(sorted, s->count, sizeof(float), compare_sample);
 
-    return sorted[(s->count - 1) * 95 / 100];
+    return sorted[(s->count - 1) * rank / 100];
+}
+
+static double percentile95(const perf_series *s) {
+    return percentile(s, 95);
+}
+
+static double percentile99(const perf_series *s) {
+    return percentile(s, 99);
 }
 
 static void reset(void) {
@@ -84,6 +95,8 @@ static void reset(void) {
     batch_frames = 0;
     batch_frames_peak = 0;
     batch_catchup = 0;
+    missed_refreshes = 0;
+    frames_observed = 0;
     pending_present_timing = 0;
 }
 
@@ -158,8 +171,19 @@ void perf_frame_complete(const int record) {
     if (!enabled) return;
 
     const uint64_t now = SDL_GetPerformanceCounter();
-    if (record && frame_start) push(&series[perf_stage_frame], (double) (now - frame_start) * ticks_to_ms);
+    if (record && frame_start) {
+        const double frame_ms = (double) (now - frame_start) * ticks_to_ms;
+        push(&series[perf_stage_frame], frame_ms);
+        frames_observed++;
+
+        const double refresh_hz = frame_pacer_get_refresh_hz();
+        if (refresh_hz > 0.0 && frame_ms > 1000.0 / refresh_hz * 1.5) missed_refreshes++;
+    }
     frame_start = now;
+}
+
+unsigned perf_missed_refreshes(void) {
+    return missed_refreshes;
 }
 
 void perf_note_input_change(void) {
@@ -211,30 +235,36 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
         snprintf(lag_text, sizeof(lag_text), "n/a");
     }
 
+    const double gl_ms = mean(&series[perf_stage_gl_enter]) + mean(&series[perf_stage_gl_leave]);
+
     snprintf(
         buf, len,
-        "%.2f FPS\nFrame %.2f/%.2f ms\nCore %.2f  Video %.2f ms\nDraw %.2f  Flip %.2f ms\nAudio %.2f ms  Lag %s\nIdle "
-        "%.2f ms  Delay %.2f ms\nQueue %u ms",
-        fps, mean(&series[perf_stage_frame]), percentile95(&series[perf_stage_frame]), mean(&series[perf_stage_core]),
-        mean(&series[perf_stage_video]), mean(&series[perf_stage_present_draw]), mean(&series[perf_stage_present_flip]),
+        "%.2f FPS\nFrame %.2f/%.2f/%.2f ms\nCore %.2f  Video %.2f ms\nDraw %.2f  Flip %.2f ms\nAudio %.2f ms  Lag "
+        "%s\nIdle %.2f ms  Delay %.2f ms\nQueue %u ms  GL %.2f ms\nMissed %u",
+        fps, mean(&series[perf_stage_frame]), percentile95(&series[perf_stage_frame]),
+        percentile99(&series[perf_stage_frame]), mean(&series[perf_stage_core]), mean(&series[perf_stage_video]),
+        mean(&series[perf_stage_present_draw]), mean(&series[perf_stage_present_flip]),
         mean(&series[perf_stage_audio_wait]), lag_text, mean(&series[perf_stage_present_to_poll]),
-        mean(&series[perf_stage_frame_delay]), audio_bridge_queued_ms()
+        mean(&series[perf_stage_frame_delay]), audio_bridge_queued_ms(), gl_ms, missed_refreshes
     );
 }
 
 int perf_export_trace(const char *path) {
-    static const char *names[perf_stage_count] = {"frame",           "core",         "video",      "present",
-                                                  "present_draw",    "present_flip", "audio_wait", "input_present",
-                                                  "present_to_poll", "frame_delay"};
+    static const char *names[perf_stage_count] = {
+        "frame",        "core",       "video",          "present",         "present_draw",
+        "present_flip", "audio_wait", "input_present",  "present_to_poll", "frame_delay",
+        "gl_enter",     "gl_leave",   "netplay_digest", "cheevo_callback", "screenshot",
+        "state_save"
+    };
 
     FILE *f = fopen(path, "w");
     if (!f) return -1;
 
-    fputs("stage,mean_ms,p95_ms,peak_ms,samples\n", f);
+    fputs("stage,mean_ms,p95_ms,p99_ms,peak_ms,samples\n", f);
     for (int i = 0; i < perf_stage_count; i++)
         fprintf(
-            f, "%s,%.4f,%.4f,%.4f,%u\n", names[i], mean(&series[i]), percentile95(&series[i]), peak(&series[i]),
-            series[i].count
+            f, "%s,%.4f,%.4f,%.4f,%.4f,%u\n", names[i], mean(&series[i]), percentile95(&series[i]),
+            percentile99(&series[i]), peak(&series[i]), series[i].count
         );
 
     fputs("\nmetric,value\n", f);
@@ -242,6 +272,15 @@ int perf_export_trace(const char *path) {
     fprintf(f, "core_batch_peak_frames,%u\n", batch_frames_peak);
     fprintf(f, "core_batch_catchup_percent,%.2f\n", batch_catchup_percent());
     fprintf(f, "refresh_hz,%.4f\n", (double) frame_pacer_get_refresh_hz());
+    fprintf(f, "frames_observed,%u\n", frames_observed);
+    fprintf(f, "missed_refreshes,%u\n", missed_refreshes);
+    fprintf(
+        f, "missed_refresh_percent,%.2f\n",
+        frames_observed ? 100.0 * (double) missed_refreshes / (double) frames_observed : 0.0
+    );
+    const char *gl_context = "none";
+    if (hw_render_bridge_active()) gl_context = hw_render_bridge_owns_context() ? "dedicated" : "shared";
+    fprintf(f, "gl_context,%s\n", gl_context);
 
     fclose(f);
     return 0;

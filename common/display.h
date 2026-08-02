@@ -16,6 +16,8 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 
 void display_check_idle_saver(void);
 
+void display_set_idle_saver_suppressed_query(int (*fn)(void));
+
 void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);
@@ -31,6 +33,8 @@ int display_video_fast_path_allowed(void);
 void display_set_composite_suppressed(int suppressed);
 
 int display_capture_clean_frame(const char *path);
+
+int display_capture_clean_pixels(uint8_t *rgb, int width, int height);
 
 SDL_Renderer *display_get_renderer(void);
 

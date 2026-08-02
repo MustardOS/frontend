@@ -475,6 +475,8 @@ void session_settings_reset_input(void);
 
 void session_settings_auto_assign_controllers(void);
 
+void session_settings_apply_performance_first(void);
+
 void session_settings_reset_viewport(void);
 
 int session_settings_is_dirty(void);

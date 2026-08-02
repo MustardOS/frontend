@@ -56,6 +56,8 @@ int audio_bridge_open(double core_sample_rate);
 
 void audio_bridge_apply_sample_rate(void);
 
+void audio_bridge_reset_period_floor(void);
+
 void audio_bridge_reconfigure_rate(double new_core_rate);
 
 void audio_bridge_close(void);
@@ -203,6 +205,10 @@ int pause_menu_gameplay_hud_active(void);
 void pause_menu_apply_header_visibility(void);
 
 int pause_menu_capture_clean_screenshot(const char *path, int restore_visibility);
+
+int pause_menu_capture_clean_pixels(uint8_t *pixels, int restore_visibility);
+
+int pause_menu_store_clean_screenshot(const char *path, int restore_visibility);
 
 int pause_menu_tick(void);
 

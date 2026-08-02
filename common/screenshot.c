@@ -568,6 +568,15 @@ static int capture_drm(const char *path) {
     return -1;
 }
 
+int screenshot_write_rgb(const char *path, uint8_t *rgb, const uint32_t width, const uint32_t height) {
+    if (!path || !*path || !rgb || !width || !height) return -1;
+
+    stbi_write_png_compression_level = 1;
+    stbi_write_force_png_filter = 0;
+
+    return stbi_write_png(path, (int) width, (int) height, 3, rgb, (int) (width * 3U)) ? 0 : -1;
+}
+
 int screenshot_save_renderer(SDL_Renderer *renderer, const char *path, const screenshot_hue hue) {
     if (!renderer || !path || !*path) return -1;
 

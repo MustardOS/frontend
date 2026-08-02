@@ -8,6 +8,7 @@
 #include "../../common/ui/osk.h"
 #include "../../common/randname.h"
 #include "../../module/muxshare.h"
+#include "../video/image_writer.h"
 #include "gamestate.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
@@ -354,6 +355,8 @@ void gamestate_menu_init(void) {
 void gamestate_menu_open(void) {
     active = 1;
     prev_nav_mask = current_nav_mask();
+
+    image_writer_flush();
 
     lv_obj_clear_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
 

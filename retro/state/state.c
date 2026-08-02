@@ -13,6 +13,7 @@
 #include "../../common/ui/nav.h"
 #include "../core/core.h"
 #include "../core/governor_boost.h"
+#include "../core/perf.h"
 #include "../core/muxretro.h"
 #include "../core/runahead.h"
 #include "../cheevo/cheevo.h"
@@ -146,6 +147,7 @@ int state_save(const char *path) {
     if (!saves_supported) return -1;
     if (!current_core.retro_serialize_size || !current_core.retro_serialize) return -1;
 
+    const uint64_t save_start = perf_begin();
     governor_boost_begin("state save");
 
     hw_render_bridge_enter_core_call();
@@ -217,6 +219,7 @@ int state_save(const char *path) {
         mux_module, "Saved state to '%s' (%zu core bytes, %zu achievement bytes)", path, core_size, cheevo_size
     );
     governor_boost_end();
+    perf_end(perf_stage_state_save, save_start);
     return 0;
 }
 

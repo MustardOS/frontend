@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/eventfd.h>
 #include <limits.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
@@ -29,6 +30,7 @@
 #include "../../common/randname.h"
 #include "../cheevo/cheevo.h"
 #include "../core/core.h"
+#include "../core/perf.h"
 #include "../core/muxretro.h"
 #include "../core/paths.h"
 #include "../core/runahead.h"
@@ -45,6 +47,8 @@
 #define NETPLAY_STATE_CAP              (128U * 1024U * 1024U)
 #define NETPLAY_IO_TIMEOUT_MS          30000U
 #define NETPLAY_DIGEST_INTERVAL        300U
+#define NETPLAY_DIGEST_INTERVAL_MAX    3600U
+#define NETPLAY_DIGEST_BUDGET_MS       4.0
 #define NETPLAY_CLIENT_CAPACITY        3U
 #define NETPLAY_HASH_CACHE             RETRO_HSH_PATH "/netplay"
 #define NETPLAY_SETTINGS_DIR           RETRO_SET_PATH "/netplay"
@@ -121,6 +125,8 @@ typedef struct {
     int sent_menu_state_valid;
     uint64_t sent_menu_state_generation;
     uint64_t sent_menu_pause_generation;
+    int wake_fd;
+    uint8_t rx_control[NETPLAY_CONTROL_CAP];
 } netplay_peer;
 
 typedef struct {
@@ -196,6 +202,9 @@ typedef struct {
     uint64_t menu_pause_frame;
     uint64_t menu_pause_generation;
     uint64_t local_digest_frame;
+    uint64_t digest_next_frame;
+    unsigned digest_interval;
+    double digest_serialise_ms;
     uint8_t local_digest[SHA256_DIGEST_LENGTH];
     int remote_digest_pending[NETPLAY_PORT_COUNT];
     uint64_t remote_digest_frame[NETPLAY_PORT_COUNT];
@@ -203,6 +212,20 @@ typedef struct {
     unsigned resynchronisations;
     uint8_t *digest_state;
     size_t digest_state_capacity;
+    pthread_t digest_thread;
+    int digest_thread_running;
+    pthread_mutex_t digest_mutex;
+    pthread_cond_t digest_wake;
+    atomic_int digest_stop;
+    int digest_job_pending;
+    int digest_job_busy;
+    int digest_ready;
+    uint64_t digest_job_frame;
+    uint64_t digest_ready_frame;
+    uint8_t digest_ready_value[SHA256_DIGEST_LENGTH];
+    uint8_t *digest_hash_state;
+    size_t digest_hash_size;
+    size_t digest_hash_capacity;
     int failure_announced;
 } netplay_context;
 
@@ -476,8 +499,7 @@ static int prepare_manifest(void) {
     pthread_mutex_unlock(&netplay.mutex);
     if (ready) return 0;
 
-    netplay_manifest manifest;
-    memset(&manifest, 0, sizeof(manifest));
+    netplay_manifest manifest = {0};
     pthread_mutex_lock(&netplay.mutex);
     snprintf(manifest.core_name, sizeof(manifest.core_name), "%s", netplay.manifest.core_name);
     snprintf(manifest.core_version, sizeof(manifest.core_version), "%s", netplay.manifest.core_version);
@@ -573,6 +595,28 @@ static int wait_socket(const int fd, const short events, const uint32_t timeout_
     return 0;
 }
 
+static int wait_socket_or_wake(const netplay_peer *peer, const short events, const uint32_t timeout_ms) {
+    if (peer->wake_fd < 0) return wait_socket(peer->socket_fd, events, timeout_ms);
+
+    struct pollfd poll_fds[2] = {{peer->socket_fd, events, 0}, {peer->wake_fd, POLLIN, 0}};
+    const int result = poll(poll_fds, 2, (int) timeout_ms);
+    if (result <= 0) return result;
+
+    if (poll_fds[1].revents & POLLIN) {
+        uint64_t drained;
+        while (read(peer->wake_fd, &drained, sizeof(drained)) > 0) {
+        }
+    }
+
+    if (poll_fds[0].revents & events) return 1;
+    if (poll_fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        errno = ECONNRESET;
+        return -1;
+    }
+
+    return 0;
+}
+
 static int peer_read_ready(const netplay_peer *peer, const uint32_t timeout_ms) {
     uint8_t byte;
     for (int attempt = 0; attempt < 3; attempt++) {
@@ -585,7 +629,7 @@ static int peer_read_ready(const netplay_peer *peer, const uint32_t timeout_ms) 
             return -1;
         }
         const int ready =
-            wait_socket(peer->socket_fd, error == SSL_ERROR_WANT_READ ? POLLIN : POLLOUT, attempt ? 0 : timeout_ms);
+            wait_socket_or_wake(peer, error == SSL_ERROR_WANT_READ ? POLLIN : POLLOUT, attempt ? 0 : timeout_ms);
         if (ready <= 0) return ready;
     }
     return 0;
@@ -808,9 +852,12 @@ static int receive_message(netplay_peer *peer) {
         return -1;
     peer->rx_sequence = sequence;
 
-    uint8_t *payload = size ? malloc(size) : NULL;
+    const int payload_kept = type == netplay_message_state || type == netplay_message_netpacket;
+
+    uint8_t *owned = size && payload_kept ? malloc(size) : NULL;
+    uint8_t *payload = size ? (payload_kept ? owned : peer->rx_control) : NULL;
     if (size && (!payload || ssl_transfer(peer->ssl, peer->socket_fd, payload, size, 0) != 0)) {
-        free(payload);
+        free(owned);
         return -1;
     }
 
@@ -854,14 +901,14 @@ static int receive_message(netplay_peer *peer) {
     } else if (type == netplay_message_state && netplay.role == netplay_role_client && size > 0) {
         pthread_mutex_lock(&netplay.mutex);
         free(peer->rx_state);
-        peer->rx_state = payload;
+        peer->rx_state = owned;
         peer->rx_state_size = size;
         peer->rx_state_frame = frame;
         peer->rx_state_pending = 1;
         netplay.status = netplay_status_synchronising;
         netplay.public_info.status = netplay_status_synchronising;
         peer->ready_received = 0;
-        payload = NULL;
+        owned = NULL;
         pthread_mutex_unlock(&netplay.mutex);
         atomic_store(&netplay_fast_status, netplay_status_synchronising);
     } else if (type == netplay_message_ready && size == 0) {
@@ -957,9 +1004,9 @@ static int receive_message(netplay_peer *peer) {
             result = -1;
         } else {
             const unsigned tail = (netplay.incoming_head + netplay.incoming_count) % NETPLAY_PACKET_QUEUE_CAP;
-            netplay.incoming_packets[tail] = (netplay_packet) {payload, size};
+            netplay.incoming_packets[tail] = (netplay_packet) {owned, size};
             netplay.incoming_count++;
-            payload = NULL;
+            owned = NULL;
         }
         pthread_mutex_unlock(&netplay.mutex);
     } else if (type == netplay_message_delay && netplay.role == netplay_role_client && size == 1 && payload[0] >= 2
@@ -979,7 +1026,7 @@ static int receive_message(netplay_peer *peer) {
 
     if (result != 0 && !errno) errno = EPROTO;
 
-    free(payload);
+    free(owned);
     return result;
 }
 
@@ -1270,12 +1317,25 @@ static void *peer_thread(void *userdata) {
     return NULL;
 }
 
+static void wake_peers(void) {
+    for (unsigned index = 0; index < NETPLAY_CLIENT_CAPACITY; index++) {
+        const int wake_fd = netplay.peers[index].wake_fd;
+        if (wake_fd < 0) continue;
+
+        const uint64_t one = 1;
+        ssize_t written = write(wake_fd, &one, sizeof(one));
+        if (written < 0 && errno == EINTR) written = write(wake_fd, &one, sizeof(one));
+        (void) written;
+    }
+}
+
 static int peer_start(const int socket_fd, const int server, const unsigned index) {
     if (index >= NETPLAY_CLIENT_CAPACITY) return -1;
     netplay_peer *peer = &netplay.peers[index];
     pthread_mutex_lock(&netplay.mutex);
     memset(peer, 0, sizeof(*peer));
     peer->socket_fd = socket_fd;
+    peer->wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     peer->owner_port = server ? index + 1U : 1U;
     if (netplay.peer_count <= index) netplay.peer_count = index + 1U;
     pthread_mutex_unlock(&netplay.mutex);
@@ -1407,7 +1467,10 @@ static void *accept_thread(void *unused) {
         pthread_mutex_unlock(&netplay.mutex);
         if (index >= netplay.host_slots || peer_start(socket_fd, 1, index) != 0) {
             close(socket_fd);
-            if (index < NETPLAY_CLIENT_CAPACITY) netplay.peers[index].socket_fd = -1;
+            if (index < NETPLAY_CLIENT_CAPACITY) {
+                netplay.peers[index].socket_fd = -1;
+                netplay.peers[index].wake_fd = -1;
+            }
             set_failure(lang.muxretro.netplay.secure_connection_failed);
             break;
         }
@@ -1464,6 +1527,7 @@ static void *connect_thread(void *unused) {
     if (peer_start(socket_fd, 0, 0) != 0) {
         close(socket_fd);
         netplay.peers[0].socket_fd = -1;
+        netplay.peers[0].wake_fd = -1;
         set_failure(lang.muxretro.netplay.secure_connection_failed);
     }
     return NULL;
@@ -1471,6 +1535,7 @@ static void *connect_thread(void *unused) {
 
 static int queue_host_state(void) {
     if (!current_core.retro_serialize_size || !current_core.retro_serialize) return -1;
+
     hw_render_bridge_enter_core_call();
     const size_t size = current_core.retro_serialize_size();
     if (!size || size > NETPLAY_STATE_CAP) {
@@ -1513,8 +1578,84 @@ static int queue_host_state(void) {
     return 0;
 }
 
-static int compute_state_digest(uint8_t digest[SHA256_DIGEST_LENGTH]) {
+static void *digest_worker(void *argument) {
+    (void) argument;
+
+    for (;;) {
+        pthread_mutex_lock(&netplay.digest_mutex);
+        while (!netplay.digest_job_pending && !atomic_load(&netplay.digest_stop))
+            pthread_cond_wait(&netplay.digest_wake, &netplay.digest_mutex);
+
+        if (atomic_load(&netplay.digest_stop)) {
+            pthread_mutex_unlock(&netplay.digest_mutex);
+            break;
+        }
+
+        netplay.digest_job_pending = 0;
+        netplay.digest_job_busy = 1;
+        const size_t size = netplay.digest_hash_size;
+        const uint64_t frame = netplay.digest_job_frame;
+        uint8_t *state = netplay.digest_hash_state;
+        pthread_mutex_unlock(&netplay.digest_mutex);
+
+        uint8_t digest[SHA256_DIGEST_LENGTH];
+        SHA256(state, size, digest);
+
+        pthread_mutex_lock(&netplay.digest_mutex);
+        memcpy(netplay.digest_ready_value, digest, sizeof(digest));
+        netplay.digest_ready_frame = frame;
+        netplay.digest_ready = 1;
+        netplay.digest_job_busy = 0;
+        pthread_mutex_unlock(&netplay.digest_mutex);
+    }
+
+    return NULL;
+}
+
+static int digest_worker_start(void) {
+    if (netplay.digest_thread_running) return 0;
+
+    pthread_mutex_init(&netplay.digest_mutex, NULL);
+    pthread_cond_init(&netplay.digest_wake, NULL);
+    atomic_store(&netplay.digest_stop, 0);
+    netplay.digest_job_pending = 0;
+    netplay.digest_job_busy = 0;
+    netplay.digest_ready = 0;
+
+    if (pthread_create(&netplay.digest_thread, NULL, digest_worker, NULL) != 0) {
+        pthread_mutex_destroy(&netplay.digest_mutex);
+        pthread_cond_destroy(&netplay.digest_wake);
+        return -1;
+    }
+
+    netplay.digest_thread_running = 1;
+    return 0;
+}
+
+static void digest_worker_stop(void) {
+    if (!netplay.digest_thread_running) return;
+
+    atomic_store(&netplay.digest_stop, 1);
+    pthread_mutex_lock(&netplay.digest_mutex);
+    pthread_cond_signal(&netplay.digest_wake);
+    pthread_mutex_unlock(&netplay.digest_mutex);
+    pthread_join(netplay.digest_thread, NULL);
+    pthread_mutex_destroy(&netplay.digest_mutex);
+    pthread_cond_destroy(&netplay.digest_wake);
+    netplay.digest_thread_running = 0;
+}
+
+static int queue_state_digest(const uint64_t frame) {
     if (!current_core.retro_serialize_size || !current_core.retro_serialize) return -1;
+    if (digest_worker_start() != 0) return -1;
+
+    pthread_mutex_lock(&netplay.digest_mutex);
+    const int busy = netplay.digest_job_pending || netplay.digest_job_busy;
+    pthread_mutex_unlock(&netplay.digest_mutex);
+    if (busy) return 0;
+
+    const uint64_t digest_start = perf_begin();
+
     hw_render_bridge_enter_core_call();
     const size_t size = current_core.retro_serialize_size();
     if (!size || size > NETPLAY_STATE_CAP) {
@@ -1530,10 +1671,47 @@ static int compute_state_digest(uint8_t digest[SHA256_DIGEST_LENGTH]) {
         netplay.digest_state = grown;
         netplay.digest_state_capacity = size;
     }
+    const uint64_t serialise_start = SDL_GetPerformanceCounter();
     const int okay = current_core.retro_serialize(netplay.digest_state, size);
+    const double serialise_ms =
+        (double) (SDL_GetPerformanceCounter() - serialise_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
     hw_render_bridge_exit_core_call();
     if (!okay) return -1;
-    SHA256(netplay.digest_state, size, digest);
+
+    pthread_mutex_lock(&netplay.mutex);
+    netplay.digest_serialise_ms =
+        netplay.digest_serialise_ms <= 0.0 ? serialise_ms : netplay.digest_serialise_ms * 0.5 + serialise_ms * 0.5;
+
+    unsigned interval = NETPLAY_DIGEST_INTERVAL;
+    if (netplay.digest_serialise_ms > NETPLAY_DIGEST_BUDGET_MS) {
+        const double scale = netplay.digest_serialise_ms / NETPLAY_DIGEST_BUDGET_MS;
+        const double scaled = (double) NETPLAY_DIGEST_INTERVAL * scale;
+        interval = scaled >= (double) NETPLAY_DIGEST_INTERVAL_MAX ? NETPLAY_DIGEST_INTERVAL_MAX : (unsigned) scaled;
+    }
+    if (interval != netplay.digest_interval) {
+        LOG_INFO(
+            mux_module, "netplay: state digest costs %.1f ms to serialise, checking every %u frames",
+            netplay.digest_serialise_ms, interval
+        );
+        netplay.digest_interval = interval;
+    }
+    netplay.digest_next_frame = netplay.frame + interval;
+    pthread_mutex_unlock(&netplay.mutex);
+
+    pthread_mutex_lock(&netplay.digest_mutex);
+    uint8_t *const state = netplay.digest_state;
+    const size_t capacity = netplay.digest_state_capacity;
+    netplay.digest_state = netplay.digest_hash_state;
+    netplay.digest_state_capacity = netplay.digest_hash_capacity;
+    netplay.digest_hash_state = state;
+    netplay.digest_hash_capacity = capacity;
+    netplay.digest_hash_size = size;
+    netplay.digest_job_frame = frame;
+    netplay.digest_job_pending = 1;
+    pthread_cond_signal(&netplay.digest_wake);
+    pthread_mutex_unlock(&netplay.digest_mutex);
+
+    perf_end(perf_stage_netplay_digest, digest_start);
     return 0;
 }
 
@@ -1669,8 +1847,10 @@ int netplay_init(const char *core_path, const char *content_path) {
     atomic_init(&netplay.discovery_stop, 0);
     netplay_initialised = 1;
     netplay.listen_fd = -1;
-    for (unsigned index = 0; index < NETPLAY_CLIENT_CAPACITY; index++)
+    for (unsigned index = 0; index < NETPLAY_CLIENT_CAPACITY; index++) {
         netplay.peers[index].socket_fd = -1;
+        netplay.peers[index].wake_fd = -1;
+    }
     netplay.status = netplay_status_idle;
     netplay.public_info.status = netplay_status_idle;
     atomic_store(&netplay_fast_status, netplay_status_idle);
@@ -1877,10 +2057,14 @@ void netplay_disconnect(void) {
         netplay_peer *peer = &netplay.peers[index];
         if (peer->ssl) SSL_free(peer->ssl);
         if (peer->socket_fd >= 0) close(peer->socket_fd);
+        if (peer->wake_fd >= 0) close(peer->wake_fd);
+        peer->wake_fd = -1;
         free(peer->rx_state);
     }
     if (netplay.listen_fd >= 0) close(netplay.listen_fd);
+    digest_worker_stop();
     free(netplay.digest_state);
+    free(netplay.digest_hash_state);
     free(netplay.sync_state);
     for (unsigned index = 0; index < NETPLAY_PACKET_QUEUE_CAP; index++) {
         free(netplay.outgoing_packets[index].data);
@@ -1889,8 +2073,10 @@ void netplay_disconnect(void) {
         memset(&netplay.incoming_packets[index], 0, sizeof(netplay.incoming_packets[index]));
     }
     memset(netplay.peers, 0, sizeof(netplay.peers));
-    for (unsigned index = 0; index < NETPLAY_CLIENT_CAPACITY; index++)
+    for (unsigned index = 0; index < NETPLAY_CLIENT_CAPACITY; index++) {
         netplay.peers[index].socket_fd = -1;
+        netplay.peers[index].wake_fd = -1;
+    }
     netplay.peer_count = 0;
     netplay.listen_fd = -1;
     netplay.accept_running = 0;
@@ -1915,6 +2101,9 @@ void netplay_disconnect(void) {
     memset(netplay.local_history, 0, sizeof(netplay.local_history));
     memset(netplay.remote_history, 0, sizeof(netplay.remote_history));
     netplay.digest_due = 0;
+    netplay.digest_interval = hw_render_bridge_active() ? NETPLAY_DIGEST_INTERVAL * 4 : NETPLAY_DIGEST_INTERVAL;
+    netplay.digest_next_frame = 0;
+    netplay.digest_serialise_ms = 0.0;
     netplay.digest_send_generation = 0;
     netplay.delay_send_generation = 0;
     netplay.delay_change_pending = 0;
@@ -1935,6 +2124,14 @@ void netplay_disconnect(void) {
     netplay.incoming_count = 0;
     netplay.digest_state = NULL;
     netplay.digest_state_capacity = 0;
+    netplay.digest_hash_state = NULL;
+    netplay.digest_hash_capacity = 0;
+    netplay.digest_hash_size = 0;
+    netplay.digest_job_pending = 0;
+    netplay.digest_job_busy = 0;
+    netplay.digest_ready = 0;
+    netplay.digest_ready_frame = 0;
+    netplay.digest_job_frame = 0;
     input_bridge_set_netplay_state(0, 0);
     cheevo_set_netplay_active(0);
     cheats_set_suppressed(cheevo_restricted());
@@ -2127,17 +2324,36 @@ void netplay_tick(void) {
     }
 
     if (status == netplay_status_playing && digest_due) {
-        uint8_t digest[SHA256_DIGEST_LENGTH];
-        if (compute_state_digest(digest) != 0) {
+        pthread_mutex_lock(&netplay.mutex);
+        const uint64_t digest_frame = netplay.frame;
+        netplay.digest_due = 0;
+        pthread_mutex_unlock(&netplay.mutex);
+
+        if (queue_state_digest(digest_frame) != 0) {
             set_failure(lang.muxretro.netplay.digest_create_failed);
             return;
         }
-        pthread_mutex_lock(&netplay.mutex);
-        memcpy(netplay.local_digest, digest, sizeof(digest));
-        netplay.local_digest_frame = netplay.frame;
-        netplay.digest_due = 0;
-        netplay.digest_send_generation++;
-        pthread_mutex_unlock(&netplay.mutex);
+    }
+
+    if (status == netplay_status_playing && netplay.digest_thread_running) {
+        pthread_mutex_lock(&netplay.digest_mutex);
+        const int ready = netplay.digest_ready;
+        uint8_t digest[SHA256_DIGEST_LENGTH];
+        uint64_t frame = 0;
+        if (ready) {
+            memcpy(digest, netplay.digest_ready_value, sizeof(digest));
+            frame = netplay.digest_ready_frame;
+            netplay.digest_ready = 0;
+        }
+        pthread_mutex_unlock(&netplay.digest_mutex);
+
+        if (ready) {
+            pthread_mutex_lock(&netplay.mutex);
+            memcpy(netplay.local_digest, digest, sizeof(digest));
+            netplay.local_digest_frame = frame;
+            netplay.digest_send_generation++;
+            pthread_mutex_unlock(&netplay.mutex);
+        }
     }
 
     int repeated_mismatch = 0;
@@ -2224,10 +2440,12 @@ int netplay_before_frame(void) {
     const unsigned player_count = netplay.public_info.player_count;
     const netplay_mode mode = netplay.mode;
     netplay_input_history *current = &netplay.local_history[frame % NETPLAY_INPUT_HISTORY_CAPACITY];
+    int input_published = 0;
     if (!current->valid || current->frame != frame) {
         netplay.local_input_frame = frame;
         netplay.local_input_generation++;
         *current = (netplay_input_history) {frame, physical, 1};
+        input_published = 1;
     }
 
     netplay_pad_state delayed_local = {0};
@@ -2237,6 +2455,7 @@ int netplay_before_frame(void) {
         const netplay_input_history *local = &netplay.local_history[target % NETPLAY_INPUT_HISTORY_CAPACITY];
         if (!local->valid || local->frame != target) {
             pthread_mutex_unlock(&netplay.mutex);
+            if (input_published) wake_peers();
             return 0;
         }
         delayed_local = local->input;
@@ -2246,12 +2465,14 @@ int netplay_before_frame(void) {
                 &netplay.remote_history[port][target % NETPLAY_INPUT_HISTORY_CAPACITY];
             if (!remote->valid || remote->frame != target) {
                 pthread_mutex_unlock(&netplay.mutex);
+                if (input_published) wake_peers();
                 return 0;
             }
             delayed_remote[port] = remote->input;
         }
     }
     pthread_mutex_unlock(&netplay.mutex);
+    if (input_published) wake_peers();
 
     if (mode == netplay_mode_play_together) {
         netplay_pad_state merged = delayed_local;
@@ -2274,7 +2495,12 @@ void netplay_after_frame(void) {
     pthread_mutex_lock(&netplay.mutex);
     netplay.frame++;
     netplay.public_info.frame = netplay.frame;
-    if (!netplay.netpacket_available && netplay.frame % NETPLAY_DIGEST_INTERVAL == 0) netplay.digest_due = 1;
+    if (!netplay.digest_interval) netplay.digest_interval = NETPLAY_DIGEST_INTERVAL;
+    if (!netplay.digest_next_frame) netplay.digest_next_frame = netplay.digest_interval;
+    if (!netplay.netpacket_available && netplay.frame >= netplay.digest_next_frame) {
+        netplay.digest_due = 1;
+        netplay.digest_next_frame = netplay.frame + netplay.digest_interval;
+    }
     pthread_mutex_unlock(&netplay.mutex);
 }
 

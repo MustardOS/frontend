@@ -353,6 +353,15 @@ void sram_bridge_save(void) {
     }
 }
 
+void sram_bridge_flush(void) {
+    if (!sram_thread_running) return;
+
+    pthread_mutex_lock(&sram_mutex);
+    while (job_pending || write_in_flight)
+        pthread_cond_wait(&sram_cond, &sram_mutex);
+    pthread_mutex_unlock(&sram_mutex);
+}
+
 void sram_bridge_shutdown(void) {
     if (!sram_thread_running) return;
 

@@ -13,6 +13,7 @@
 #include <openssl/rand.h>
 #include <SDL2/SDL.h>
 #include "../../common/config.h"
+#include "../../common/device.h"
 #include "../../common/fileio.h"
 #include "../../common/init.h"
 #include "../../common/language.h"
@@ -21,29 +22,34 @@
 #include "../../common/ui/nav.h"
 #include "../core/core.h"
 #include "../core/paths.h"
+#include "../core/perf.h"
 #include "../core/runahead.h"
 #include "../ui/ui_loading.h"
 #include "../ui/cheats.h"
 #include "../state/patch.h"
 #include "../core/muxretro.h"
 #include "../video/hw_render.h"
+#include "../video/image_writer.h"
 #include "cheevo.h"
 #include "vendor/rcheevos/include/rc_client.h"
 #include "vendor/rcheevos/include/rc_error.h"
 #include "vendor/rcheevos/src/rc_libretro.h"
 
-#define CHEEVO_ACCOUNT_DIR  STORAGE_NETWORK "/cheevo"
-#define CHEEVO_ACCOUNT_FILE "account.ini"
-#define CHEEVO_PREVIEW_DIR  CHEEVO_ACCOUNT_DIR "/previews"
-#define CHEEVO_CACHE_DIR    CHEEVO_ACCOUNT_DIR "/cache"
-#define CHEEVO_PREVIEW_CAP  16
-#define CHEEVO_HTTP_CAP     (2U * 1024U * 1024U)
-#define CHEEVO_QUEUE_CAP    8
-#define CHEEVO_PROGRESS_CAP (16U * 1024U * 1024U)
-#define CHEEVO_CACHE_CAP    (32U * 1024U * 1024U)
-#define CHEEVO_CACHE_AGE    (30 * 24 * 60 * 60)
+#define CHEEVO_ACCOUNT_DIR              STORAGE_NETWORK "/cheevo"
+#define CHEEVO_ACCOUNT_FILE             "account.ini"
+#define CHEEVO_PREVIEW_DIR              CHEEVO_ACCOUNT_DIR "/previews"
+#define CHEEVO_CACHE_DIR                CHEEVO_ACCOUNT_DIR "/cache"
+#define CHEEVO_PREVIEW_CAP              16
+#define CHEEVO_HTTP_CAP                 (2U * 1024U * 1024U)
+#define CHEEVO_QUEUE_CAP                8
+#define CHEEVO_PROGRESS_CAP             (16U * 1024U * 1024U)
+#define CHEEVO_CACHE_CAP                (32U * 1024U * 1024U)
+#define CHEEVO_CACHE_AGE                (30 * 24 * 60 * 60)
 #define CHEEVO_UNKNOWN_EMULATOR_WARNING "Warning: Unknown Emulator"
-#define CHEEVO_LEADERBOARD_CAP 10
+#define CHEEVO_LEADERBOARD_CAP          10
+
+#define CHEEVO_FRAME_COMPLETIONS   1
+#define CHEEVO_STARTUP_COMPLETIONS 4
 
 typedef struct {
     char *url;
@@ -128,9 +134,7 @@ static int text_safe(const char *value) {
     return value && !strchr(value, '\n') && !strchr(value, '\r');
 }
 
-static void preview_path(
-    char *path, const size_t path_size, const uint32_t game_id, const uint32_t achievement_id
-) {
+static void preview_path(char *path, const size_t path_size, const uint32_t game_id, const uint32_t achievement_id) {
     snprintf(path, path_size, "%s/%u/%u.png", CHEEVO_PREVIEW_DIR, game_id, achievement_id);
 }
 
@@ -160,16 +164,43 @@ static void preview_capture(void) {
 
     char first_path[PATH_MAX];
     preview_path(first_path, sizeof(first_path), preview_game_id, preview_achievement_ids[0]);
-    if (pause_menu_capture_clean_screenshot(first_path, 1) == 0) {
-        LOG_INFO(mux_module, "cheevo: saved achievement preview '%s'", first_path);
-        for (unsigned index = 1; index < preview_achievement_count; index++) {
-            char path[PATH_MAX];
-            preview_path(path, sizeof(path), preview_game_id, preview_achievement_ids[index]);
-            copy_file(first_path, path);
+
+    uint8_t *pixels = image_writer_available() ? image_writer_claim(device.screen.width, device.screen.height) : NULL;
+
+    if (!pixels) {
+        if (image_writer_available()) return;
+
+        if (pause_menu_capture_clean_screenshot(first_path, 1) == 0) {
+            for (unsigned index = 1; index < preview_achievement_count; index++) {
+                char path[PATH_MAX];
+                preview_path(path, sizeof(path), preview_game_id, preview_achievement_ids[index]);
+                copy_file(first_path, path);
+            }
+        } else {
+            LOG_WARN(mux_module, "cheevo: achievement preview capture failed");
         }
-    } else {
-        LOG_WARN(mux_module, "cheevo: achievement preview capture failed");
+        preview_achievement_count = 0;
+        return;
     }
+
+    if (pause_menu_capture_clean_pixels(pixels, 1) != 0) {
+        image_writer_release();
+        LOG_WARN(mux_module, "cheevo: achievement preview capture failed");
+        preview_achievement_count = 0;
+        return;
+    }
+
+    static char copies[IMAGE_WRITER_COPY_MAX][IMAGE_WRITER_PATH_MAX];
+    static const char *copy_list[IMAGE_WRITER_COPY_MAX];
+    unsigned copy_count = 0;
+    for (unsigned index = 1; index < preview_achievement_count && copy_count < IMAGE_WRITER_COPY_MAX; index++) {
+        preview_path(copies[copy_count], sizeof(copies[copy_count]), preview_game_id, preview_achievement_ids[index]);
+        copy_list[copy_count] = copies[copy_count];
+        copy_count++;
+    }
+
+    image_writer_commit(first_path, copy_list, copy_count);
+    LOG_INFO(mux_module, "cheevo: capturing achievement preview '%s'", first_path);
     preview_achievement_count = 0;
 }
 
@@ -204,8 +235,8 @@ static void account_load(void) {
     close(directory);
     if (account_fd < 0) return;
     struct stat account_stat;
-    if (fstat(account_fd, &account_stat) != 0 || !S_ISREG(account_stat.st_mode)
-        || account_stat.st_uid != geteuid() || account_stat.st_nlink != 1 || account_stat.st_size > 4096) {
+    if (fstat(account_fd, &account_stat) != 0 || !S_ISREG(account_stat.st_mode) || account_stat.st_uid != geteuid()
+        || account_stat.st_nlink != 1 || account_stat.st_size > 4096) {
         LOG_WARN(mux_module, "cheevo: refusing an insecure or invalid account file");
         close(account_fd);
         return;
@@ -225,9 +256,12 @@ static void account_load(void) {
         if (!equals) continue;
         *equals++ = '\0';
 
-        if (strcmp(line, "enabled") == 0) enabled = atoi(equals) != 0;
-        else if (strcmp(line, "hardcore") == 0) hardcore_preference = atoi(equals) != 0;
-        else if (strcmp(line, "unofficial") == 0) unofficial = atoi(equals) != 0;
+        if (strcmp(line, "enabled") == 0)
+            enabled = atoi(equals) != 0;
+        else if (strcmp(line, "hardcore") == 0)
+            hardcore_preference = atoi(equals) != 0;
+        else if (strcmp(line, "unofficial") == 0)
+            unofficial = atoi(equals) != 0;
         else if (strcmp(line, "notifications") == 0) {
             notifications = atoi(equals);
             if (notifications < cheevo_notifications_disabled)
@@ -236,15 +270,16 @@ static void account_load(void) {
                 notifications = cheevo_notifications_detailed;
         } else if (strcmp(line, "achievement_sort") == 0) {
             achievement_sort = (cheevo_achievement_sort) atoi(equals);
-            if (achievement_sort < cheevo_sort_alphanumeric_ascending
-                || achievement_sort >= cheevo_sort_count)
+            if (achievement_sort < cheevo_sort_alphanumeric_ascending || achievement_sort >= cheevo_sort_count)
                 achievement_sort = cheevo_sort_alphanumeric_ascending;
         } else if (strcmp(line, "achievement_view") == 0) {
             achievement_view = (cheevo_achievement_view) atoi(equals);
             if (achievement_view < cheevo_view_achievements || achievement_view >= cheevo_view_count)
                 achievement_view = cheevo_view_achievements;
-        } else if (strcmp(line, "username") == 0) snprintf(username, sizeof(username), "%s", equals);
-        else if (strcmp(line, "token") == 0) snprintf(token, sizeof(token), "%s", equals);
+        } else if (strcmp(line, "username") == 0)
+            snprintf(username, sizeof(username), "%s", equals);
+        else if (strcmp(line, "token") == 0)
+            snprintf(token, sizeof(token), "%s", equals);
     }
 
     fclose(file);
@@ -271,8 +306,8 @@ static int account_save(void) {
     }
     fchmod(fd, 0600);
     struct stat temporary_stat;
-    if (fstat(fd, &temporary_stat) != 0 || !S_ISREG(temporary_stat.st_mode)
-        || temporary_stat.st_uid != geteuid() || temporary_stat.st_nlink != 1) {
+    if (fstat(fd, &temporary_stat) != 0 || !S_ISREG(temporary_stat.st_mode) || temporary_stat.st_uid != geteuid()
+        || temporary_stat.st_nlink != 1) {
         close(fd);
         unlinkat(directory, temporary, 0);
         close(directory);
@@ -287,13 +322,14 @@ static int account_save(void) {
         return -1;
     }
 
-    int okay = fprintf(
-                   file,
-                   "enabled=%d\nhardcore=%d\nunofficial=%d\nnotifications=%d\nachievement_sort=%d\nachievement_view=%d\nusername=%s\ntoken=%s\n",
-                   enabled, hardcore_preference, unofficial, notifications, achievement_sort, achievement_view,
-                   username, token
-               ) > 0
-               && fflush(file) == 0 && fsync(fd) == 0;
+    int okay =
+        fprintf(
+            file,
+            "enabled=%d\nhardcore=%d\nunofficial=%d\nnotifications=%d\nachievement_sort=%d\nachievement_view=%"
+            "d\nusername=%s\ntoken=%s\n",
+            enabled, hardcore_preference, unofficial, notifications, achievement_sort, achievement_view, username, token
+        ) > 0
+        && fflush(file) == 0 && fsync(fd) == 0;
     if (fclose(file) != 0) okay = 0;
 
     if (!okay || renameat(directory, temporary, directory, CHEEVO_ACCOUNT_FILE) != 0) {
@@ -336,8 +372,8 @@ static int cache_name_valid(const char *name) {
     if (length < 11 || length >= 96 || strcmp(name + length - 5, ".json") != 0) return 0;
     for (size_t index = 5; index < length - 5; index++) {
         const char value = name[index];
-        if (!((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z')
-              || (value >= '0' && value <= '9') || value == '-'))
+        if (!((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') || (value >= '0' && value <= '9')
+              || value == '-'))
             return 0;
     }
     return 1;
@@ -350,8 +386,7 @@ static int form_value(const char *form, const char *key, char *value, const size
     while (*field) {
         const char *end = strchr(field, '&');
         if (!end) end = field + strlen(field);
-        if ((size_t) (end - field) > key_length && memcmp(field, key, key_length) == 0
-            && field[key_length] == '=') {
+        if ((size_t) (end - field) > key_length && memcmp(field, key, key_length) == 0 && field[key_length] == '=') {
             const size_t length = (size_t) (end - field) - key_length - 1;
             if (!length || length >= value_size) return 0;
             memcpy(value, field + key_length + 1, length);
@@ -384,9 +419,7 @@ static int cache_request_name(const char *post, char *name, const size_t name_si
             || (form_value(post, "o", offset, sizeof(offset)) && !decimal_value(offset))
             || form_value(post, "u", ignored, sizeof(ignored)))
             return 0;
-        const int written = snprintf(
-            name, name_size, "data-leaderboard-%s-%s-%s.json", identity, offset, count
-        );
+        const int written = snprintf(name, name_size, "data-leaderboard-%s-%s-%s.json", identity, offset, count);
         return written > 0 && (size_t) written < name_size && cache_name_valid(name) ? 2 : 0;
     }
 
@@ -403,8 +436,7 @@ static int cache_request_name(const char *post, char *name, const size_t name_si
     }
     for (size_t index = 0; identity[index]; index++) {
         const char value = identity[index];
-        if (!((value >= 'a' && value <= 'f') || (value >= 'A' && value <= 'F')
-              || (value >= '0' && value <= '9')))
+        if (!((value >= 'a' && value <= 'f') || (value >= 'A' && value <= 'F') || (value >= '0' && value <= '9')))
             return 0;
     }
 
@@ -488,8 +520,7 @@ static void cache_trim(const int directory) {
         while ((entry = readdir(scan))) {
             if (!cache_name_valid(entry->d_name)) continue;
             struct stat file_stat;
-            if (fstatat(directory, entry->d_name, &file_stat, AT_SYMLINK_NOFOLLOW) != 0
-                || !S_ISREG(file_stat.st_mode))
+            if (fstatat(directory, entry->d_name, &file_stat, AT_SYMLINK_NOFOLLOW) != 0 || !S_ISREG(file_stat.st_mode))
                 continue;
             total += file_stat.st_size;
             if (!oldest_name[0] || file_stat.st_mtime < oldest_time) {
@@ -550,7 +581,8 @@ static size_t http_write(void *data, const size_t size, const size_t count, void
     const size_t needed = buffer->size + incoming + 1;
     if (needed > buffer->cap) {
         size_t cap = buffer->cap ? buffer->cap : 4096;
-        while (cap < needed && cap < CHEEVO_HTTP_CAP + 1) cap *= 2;
+        while (cap < needed && cap < CHEEVO_HTTP_CAP + 1)
+            cap *= 2;
         if (cap > CHEEVO_HTTP_CAP + 1) cap = CHEEVO_HTTP_CAP + 1;
         char *grown = realloc(buffer->data, cap);
         if (!grown) {
@@ -587,8 +619,7 @@ static cheevo_http_completion request_perform(cheevo_http_request *request) {
     completion.callback = request->callback;
     completion.callback_data = request->callback_data;
 
-    if (request->cache_read
-        && cache_load(request->cache_name, &completion.body, &completion.body_size) == 0) {
+    if (request->cache_read && cache_load(request->cache_name, &completion.body, &completion.body_size) == 0) {
         completion.status = 200;
         return completion;
     }
@@ -659,8 +690,9 @@ static cheevo_http_completion request_perform(cheevo_http_request *request) {
     if (result != CURLE_OK) {
         snprintf(
             completion.error, sizeof(completion.error), "%s",
-            buffer.failed ? lang.muxretro.cheevo.response_too_large
-                          : curl_error[0] ? curl_error : curl_easy_strerror(result)
+            buffer.failed   ? lang.muxretro.cheevo.response_too_large
+            : curl_error[0] ? curl_error
+                            : curl_easy_strerror(result)
         );
     }
 
@@ -689,7 +721,8 @@ static void *http_thread(void *userdata) {
 
     for (;;) {
         pthread_mutex_lock(&worker->mutex);
-        while (!worker->request_count && !atomic_load(&worker->stop)) pthread_cond_wait(&worker->wake, &worker->mutex);
+        while (!worker->request_count && !atomic_load(&worker->stop))
+            pthread_cond_wait(&worker->wake, &worker->mutex);
         if (!worker->request_count && atomic_load(&worker->stop)) {
             pthread_mutex_unlock(&worker->mutex);
             break;
@@ -763,8 +796,8 @@ static void server_call(
 
     const int cache_policy = cache_request_name(queued.post, queued.cache_name, sizeof(queued.cache_name));
     if (cache_policy) {
-        queued.cache_read = (cache_policy == 1 && !cache_refresh_pending)
-                            || (cache_policy == 2 && status == cheevo_status_offline);
+        queued.cache_read =
+            (cache_policy == 1 && !cache_refresh_pending) || (cache_policy == 2 && status == cheevo_status_offline);
         queued.cache_write = 1;
         queued.cache_fallback = cache_policy == 2;
         if (cache_policy == 1) cache_refresh_pending = 0;
@@ -785,9 +818,12 @@ static void server_call(
     pthread_mutex_unlock(&http_worker.mutex);
 }
 
-static int http_drain(void) {
+static int http_drain_limited(const unsigned budget) {
     int drained = 0;
+    unsigned taken = 0;
     for (;;) {
+        if (budget && taken >= budget) break;
+
         pthread_mutex_lock(&http_worker.mutex);
         if (!http_worker.completion_count) {
             pthread_mutex_unlock(&http_worker.mutex);
@@ -807,14 +843,21 @@ static int http_drain(void) {
             LOG_WARN(mux_module, "cheevo: RetroAchievements returned HTTP %ld", completion.status);
         response.body = completion.error[0] ? completion.error : completion.body;
         response.body_length = completion.error[0] ? strlen(completion.error) : completion.body_size;
-        response.http_status_code = completion.error[0] ? RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR
-                                                        : (int) completion.status;
+        response.http_status_code =
+            completion.error[0] ? RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR : (int) completion.status;
+        const uint64_t callback_start = perf_begin();
         completion.callback(&response, completion.callback_data);
+        perf_end(perf_stage_cheevo_callback, callback_start);
         if (completion.body) explicit_bzero(completion.body, completion.body_size);
         free(completion.body);
         drained = 1;
+        taken++;
     }
     return drained;
+}
+
+static int http_drain(void) {
+    return http_drain_limited(0);
 }
 
 static void http_stop(void) {
@@ -856,9 +899,8 @@ static int memory_init(rc_client_t *runtime_client) {
     const rc_client_game_t *game = rc_client_get_game_info(runtime_client);
     const uint32_t console_id = game ? game->console_id : 0;
     struct retro_memory_map map = {memory_descriptors, memory_descriptor_count};
-    memory_available = rc_libretro_memory_init(
-        &memory_regions, memory_descriptor_count ? &map : NULL, get_core_memory, console_id
-    );
+    memory_available =
+        rc_libretro_memory_init(&memory_regions, memory_descriptor_count ? &map : NULL, get_core_memory, console_id);
     if (memory_available)
         LOG_INFO(
             mux_module, "cheevo: mapped %u achievement memory region(s), %zu bytes", memory_regions.count,
@@ -872,9 +914,8 @@ void cheevo_refresh_memory(void) {
     memory_init(client);
 }
 
-static uint32_t read_memory(
-    const uint32_t address, uint8_t *buffer, const uint32_t bytes, rc_client_t *runtime_client
-) {
+static uint32_t
+read_memory(const uint32_t address, uint8_t *buffer, const uint32_t bytes, rc_client_t *runtime_client) {
     if (!runtime_client || !buffer) return 0;
     if (!memory_available && !memory_initialisation_deferred && !memory_init(runtime_client))
         memory_initialisation_deferred = 1;
@@ -967,8 +1008,7 @@ static void login_complete(const int result, const char *error, rc_client_t *unu
         if (account_save() != 0) {
             account_delete();
             LOG_WARN(mux_module, "cheevo: logged in, but the account token could not be stored securely");
-            if (notifications)
-                pause_menu_show_toast_timed(lang.muxretro.cheevo.account_save_failed, tst_wait_s);
+            if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.account_save_failed, tst_wait_s);
         }
     }
     begin_game();
@@ -1047,15 +1087,12 @@ static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
             pause_menu_show_toast_timed(lang.muxretro.cheevo.offline_retry, tst_wait_s);
             break;
         case RC_CLIENT_EVENT_RECONNECTED:
-            status = rc_client_get_hardcore_enabled(client) ? cheevo_status_active_hardcore
-                                                           : cheevo_status_active_softcore;
+            status =
+                rc_client_get_hardcore_enabled(client) ? cheevo_status_active_hardcore : cheevo_status_active_softcore;
             pause_menu_show_toast_timed(lang.muxretro.cheevo.reconnected, tst_wait_s);
             break;
         case RC_CLIENT_EVENT_SERVER_ERROR:
-            LOG_WARN(
-                mux_module, "cheevo: %s failed: %s", event->server_error->api,
-                event->server_error->error_message
-            );
+            LOG_WARN(mux_module, "cheevo: %s failed: %s", event->server_error->api, event->server_error->error_message);
             break;
         default:
             break;
@@ -1063,8 +1100,7 @@ static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
 }
 
 static void RC_CCONV leaderboard_entries_loaded(
-    const int result, const char *error, rc_client_leaderboard_entry_list_t *list, rc_client_t *unused,
-    void *userdata
+    const int result, const char *error, rc_client_leaderboard_entry_list_t *list, rc_client_t *unused, void *userdata
 ) {
     (void) unused;
     (void) userdata;
@@ -1079,9 +1115,7 @@ static void RC_CCONV leaderboard_entries_loaded(
     }
 
     leaderboard_total = list->total_entries;
-    leaderboard_rank_count = list->num_entries < CHEEVO_LEADERBOARD_CAP
-                                 ? list->num_entries
-                                 : CHEEVO_LEADERBOARD_CAP;
+    leaderboard_rank_count = list->num_entries < CHEEVO_LEADERBOARD_CAP ? list->num_entries : CHEEVO_LEADERBOARD_CAP;
     for (unsigned index = 0; index < leaderboard_rank_count; index++) {
         const rc_client_leaderboard_entry_t *source = &list->entries[index];
         cheevo_leaderboard_rank *entry = &leaderboard_ranks[index];
@@ -1185,11 +1219,15 @@ void cheevo_shutdown(void) {
     status = cheevo_status_disabled;
 }
 
+void cheevo_present_tick(void) {
+    if (!client || cheevo_is_starting()) return;
+    http_drain_limited(CHEEVO_FRAME_COMPLETIONS);
+    preview_capture();
+}
+
 void cheevo_tick(void) {
     if (!client) return;
-    const int network_completed = http_drain();
-    if (network_completed && cheevo_is_starting()) rc_client_idle(client);
-    preview_capture();
+    if (cheevo_is_starting() && http_drain_limited(CHEEVO_STARTUP_COMPLETIONS)) rc_client_idle(client);
     if (reset_pending) {
         reset_pending = 0;
         hw_render_bridge_enter_core_call();
@@ -1311,19 +1349,16 @@ void cheevo_get_info(cheevo_info *info) {
     info->total = summary.num_core_achievements;
 }
 
-unsigned cheevo_game_entries(
-    const cheevo_game_entry_type type, cheevo_game_entry *entries, const unsigned capacity
-) {
+unsigned cheevo_game_entries(const cheevo_game_entry_type type, cheevo_game_entry *entries, const unsigned capacity) {
     if (!client || !entries || !capacity || !rc_client_is_game_loaded(client)) return 0;
 
     unsigned count = 0;
     const rc_client_game_t *game = rc_client_get_game_info(client);
     if (type == cheevo_game_entry_achievement) {
-        const int category = unofficial ? RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE_AND_UNOFFICIAL
-                                        : RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE;
-        rc_client_achievement_list_t *achievements = rc_client_create_achievement_list(
-            client, category, RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_PROGRESS
-        );
+        const int category =
+            unofficial ? RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE_AND_UNOFFICIAL : RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE;
+        rc_client_achievement_list_t *achievements =
+            rc_client_create_achievement_list(client, category, RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_PROGRESS);
         if (achievements) {
             for (uint32_t bucket = 0; bucket < achievements->num_buckets && count < capacity; bucket++) {
                 const rc_client_achievement_bucket_t *group = &achievements->buckets[bucket];
@@ -1348,9 +1383,8 @@ unsigned cheevo_game_entries(
                     entry->points = source->points;
                     const int hardcore = cheevo_hardcore_active();
                     entry->rarity = hardcore ? source->rarity_hardcore : source->rarity;
-                    entry->unlocked = hardcore
-                                          ? (source->unlocked & RC_CLIENT_ACHIEVEMENT_UNLOCKED_HARDCORE) != 0
-                                          : source->unlocked != RC_CLIENT_ACHIEVEMENT_UNLOCKED_NONE;
+                    entry->unlocked = hardcore ? (source->unlocked & RC_CLIENT_ACHIEVEMENT_UNLOCKED_HARDCORE) != 0
+                                               : source->unlocked != RC_CLIENT_ACHIEVEMENT_UNLOCKED_NONE;
                     if (game && game->id)
                         preview_path(entry->preview_path, sizeof(entry->preview_path), game->id, source->id);
                 }
@@ -1360,9 +1394,8 @@ unsigned cheevo_game_entries(
         return count;
     }
 
-    rc_client_leaderboard_list_t *leaderboards = rc_client_create_leaderboard_list(
-        client, RC_CLIENT_LEADERBOARD_LIST_GROUPING_TRACKING
-    );
+    rc_client_leaderboard_list_t *leaderboards =
+        rc_client_create_leaderboard_list(client, RC_CLIENT_LEADERBOARD_LIST_GROUPING_TRACKING);
     if (leaderboards) {
         for (uint32_t bucket = 0; bucket < leaderboards->num_buckets && count < capacity; bucket++) {
             const rc_client_leaderboard_bucket_t *group = &leaderboards->buckets[bucket];
@@ -1378,12 +1411,10 @@ unsigned cheevo_game_entries(
                     source->title ? source->title : lang.muxretro.cheevo.leaderboard
                 );
                 snprintf(
-                    entry->description, sizeof(entry->description), "%s",
-                    source->description ? source->description : ""
+                    entry->description, sizeof(entry->description), "%s", source->description ? source->description : ""
                 );
                 snprintf(
-                    entry->progress, sizeof(entry->progress), "%s",
-                    source->tracker_value ? source->tracker_value : ""
+                    entry->progress, sizeof(entry->progress), "%s", source->tracker_value ? source->tracker_value : ""
                 );
                 entry->active = source->state == RC_CLIENT_LEADERBOARD_STATE_ACTIVE
                                 || source->state == RC_CLIENT_LEADERBOARD_STATE_TRACKING;
@@ -1415,9 +1446,7 @@ cheevo_leaderboard_state cheevo_leaderboard_get_state(void) {
     return leaderboard_state;
 }
 
-unsigned cheevo_leaderboard_ranks(
-    cheevo_leaderboard_rank *entries, const unsigned capacity, unsigned *total
-) {
+unsigned cheevo_leaderboard_ranks(cheevo_leaderboard_rank *entries, const unsigned capacity, unsigned *total) {
     if (total) *total = leaderboard_total;
     if (leaderboard_state != cheevo_leaderboard_ready || !entries || !capacity) return 0;
     const unsigned count = leaderboard_rank_count < capacity ? leaderboard_rank_count : capacity;
@@ -1463,8 +1492,7 @@ int cheevo_set_enabled(const int new_enabled) {
 }
 
 int cheevo_set_hardcore(const int new_enabled) {
-    if (!client || !rc_client_is_game_loaded(client) || netplay_active
-        || (new_enabled && core_active_patch_count > 0))
+    if (!client || !rc_client_is_game_loaded(client) || netplay_active || (new_enabled && core_active_patch_count > 0))
         return -1;
     hardcore_preference = new_enabled != 0;
     rc_client_set_hardcore_enabled(client, hardcore_preference);
@@ -1503,15 +1531,12 @@ cheevo_achievement_view cheevo_get_achievement_view(void) {
     return achievement_view;
 }
 
-int cheevo_set_achievement_preferences(
-    const cheevo_achievement_sort sort, const cheevo_achievement_view view
-) {
+int cheevo_set_achievement_preferences(const cheevo_achievement_sort sort, const cheevo_achievement_view view) {
     cheevo_achievement_sort next_sort = sort;
     if (next_sort < cheevo_sort_alphanumeric_ascending || next_sort >= cheevo_sort_count)
         next_sort = cheevo_sort_alphanumeric_ascending;
     cheevo_achievement_view next_view = view;
-    if (next_view < cheevo_view_achievements || next_view >= cheevo_view_count)
-        next_view = cheevo_view_achievements;
+    if (next_view < cheevo_view_achievements || next_view >= cheevo_view_count) next_view = cheevo_view_achievements;
     if (achievement_sort == next_sort && achievement_view == next_view) return 0;
     achievement_sort = next_sort;
     achievement_view = next_view;
@@ -1519,8 +1544,7 @@ int cheevo_set_achievement_preferences(
 }
 
 int cheevo_refresh_data(void) {
-    if (!client || !username[0] || !content_file[0] || netplay_active || !core_supports_cheevo
-        || cheevo_is_starting())
+    if (!client || !username[0] || !content_file[0] || netplay_active || !core_supports_cheevo || cheevo_is_starting())
         return -1;
     cache_refresh_pending = 1;
     rc_client_unload_game(client);
@@ -1573,15 +1597,25 @@ void cheevo_progress_reset(void) {
 
 const char *cheevo_status_name(const cheevo_status value) {
     switch (value) {
-        case cheevo_status_disabled: return lang.muxretro.cheevo.status_disabled;
-        case cheevo_status_signed_out: return lang.muxretro.cheevo.signed_out;
-        case cheevo_status_signing_in: return lang.muxretro.cheevo.signing_in;
-        case cheevo_status_identifying: return lang.muxretro.cheevo.status_identifying;
-        case cheevo_status_active_softcore: return lang.muxretro.cheevo.softcore;
-        case cheevo_status_active_hardcore: return lang.muxretro.cheevo.hardcore;
-        case cheevo_status_offline: return lang.muxretro.cheevo.status_offline;
-        case cheevo_status_unsupported: return lang.muxretro.cheevo.status_unsupported;
-        case cheevo_status_failed: return lang.muxretro.cheevo.status_unavailable;
-        default: return lang.generic.unknown;
+        case cheevo_status_disabled:
+            return lang.muxretro.cheevo.status_disabled;
+        case cheevo_status_signed_out:
+            return lang.muxretro.cheevo.signed_out;
+        case cheevo_status_signing_in:
+            return lang.muxretro.cheevo.signing_in;
+        case cheevo_status_identifying:
+            return lang.muxretro.cheevo.status_identifying;
+        case cheevo_status_active_softcore:
+            return lang.muxretro.cheevo.softcore;
+        case cheevo_status_active_hardcore:
+            return lang.muxretro.cheevo.hardcore;
+        case cheevo_status_offline:
+            return lang.muxretro.cheevo.status_offline;
+        case cheevo_status_unsupported:
+            return lang.muxretro.cheevo.status_unsupported;
+        case cheevo_status_failed:
+            return lang.muxretro.cheevo.status_unavailable;
+        default:
+            return lang.generic.unknown;
     }
 }

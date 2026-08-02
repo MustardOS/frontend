@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <GLES2/gl2.h>
@@ -10,6 +11,7 @@
 #include "hw_render.h"
 #include "overlay_bridge.h"
 #include "../core/governor_boost.h"
+#include "../core/perf.h"
 #include "../settings/settings.h"
 
 #ifndef GL_READ_FRAMEBUFFER
@@ -380,6 +382,11 @@ static void destroy_shared_context(void) {
     core_ctx = NULL;
 }
 
+static int force_shared_context(void) {
+    const char *value = getenv("MUX_RETRO_FORCE_SHARED_GL");
+    return value && *value && *value != '0';
+}
+
 static int shared_context_usable(const int profile, const int major, const int minor) {
     SDL_GL_MakeCurrent(gl_window, core_ctx);
 
@@ -414,6 +421,10 @@ static int shared_context_usable(const int profile, const int major, const int m
 }
 
 static char backend_desc[64] = "";
+
+int hw_render_bridge_owns_context(void) {
+    return active && gl_funcs_ready && owns_context();
+}
 
 int hw_render_bridge_active(void) {
     return active;
@@ -478,8 +489,12 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
     if (!load_gl_functions()) return 0;
 
     const int ui_context_compatible = current_context_is(profile, major, minor);
+    const int forced_shared = force_shared_context();
+    if (forced_shared)
+        LOG_WARN(mux_module, "hw_render: MUX_RETRO_FORCE_SHARED_GL is set - skipping the dedicated context");
+
     const int dedicated_context_ready =
-        create_shared_context(profile, major, minor) && shared_context_usable(profile, major, minor);
+        !forced_shared && create_shared_context(profile, major, minor) && shared_context_usable(profile, major, minor);
 
     if (dedicated_context_ready) {
         LOG_INFO(mux_module, "hw_render: using a dedicated shared-object context for %s %d.%d", label, major, minor);
@@ -907,13 +922,16 @@ static void gl_state_apply(const gl_host_state_t *s) {
 }
 
 static void enter_core_gl(void) {
+    const uint64_t start = perf_begin();
+
     if (owns_context()) {
         SDL_GL_MakeCurrent(gl_window, core_ctx);
-        return;
+    } else {
+        gl_state_capture(&sdl_state);
+        gl_state_apply(&core_state);
     }
 
-    gl_state_capture(&sdl_state);
-    gl_state_apply(&core_state);
+    perf_end(perf_stage_gl_enter, start);
 }
 
 static void gl_reset_es3_state(void) {
@@ -932,16 +950,17 @@ static void gl_reset_es3_state(void) {
 }
 
 static void leave_core_gl(void) {
+    const uint64_t start = perf_begin();
+
     if (owns_context()) {
         SDL_GL_MakeCurrent(gl_window, sdl_ctx);
-        return;
+    } else if (sdl_state.valid) {
+        gl_state_capture(&core_state);
+        gl_reset_es3_state();
+        gl_state_apply(&sdl_state);
     }
 
-    if (!sdl_state.valid) return;
-
-    gl_state_capture(&core_state);
-    gl_reset_es3_state();
-    gl_state_apply(&sdl_state);
+    perf_end(perf_stage_gl_leave, start);
 }
 
 void hw_render_bridge_flush_core_commands(void) {
@@ -952,12 +971,15 @@ void hw_render_bridge_flush_core_commands(void) {
 void hw_render_bridge_context_save(void) {
     if (!active || !gl_funcs_ready) return;
 
+    const uint64_t start = perf_begin();
+
     if (owns_context()) {
         SDL_GL_MakeCurrent(gl_window, core_ctx);
-        return;
+    } else {
+        gl_state_capture(&sdl_state);
     }
 
-    gl_state_capture(&sdl_state);
+    perf_end(perf_stage_gl_enter, start);
 }
 
 void hw_render_bridge_context_restore(void) {

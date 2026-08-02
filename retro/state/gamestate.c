@@ -6,6 +6,7 @@
 #include "../../common/init.h"
 #include "../../common/language.h"
 #include "../../common/log.h"
+#include "../video/image_writer.h"
 #include "gamestate.h"
 #include "content_hash.h"
 #include "../core/core.h"
@@ -220,7 +221,7 @@ void gamestate_init(const char *state_dir) {
 
 void gamestate_capture_pending(const int restore_visibility) {
     if (!base_dir[0] || !state_saves_supported()) return;
-    pause_menu_capture_clean_screenshot(pending_path, restore_visibility);
+    pause_menu_store_clean_screenshot(pending_path, restore_visibility);
 }
 
 static int next_free_index(void) {
@@ -246,6 +247,7 @@ int gamestate_create(const char *name) {
         return -1;
     }
 
+    image_writer_flush();
     copy_file(pending_path, slot->thumb_path);
 
     slot->created = (long long) time(NULL);
@@ -303,14 +305,15 @@ int gamestate_load(const int index) {
     return state_load(gamestate_slots[index].state_path);
 }
 
-void gamestate_autosave_save(void) {
-    if (!base_dir[0] || !state_saves_supported()) return;
+int gamestate_autosave_save(void) {
+    if (!base_dir[0] || !state_saves_supported()) return -1;
 
     if (state_save(autosave_state_path) != 0) {
         LOG_ERROR(mux_module, "gamestate_autosave_save: failed to save state to '%s'", autosave_state_path);
-        return;
+        return -1;
     }
 
+    image_writer_flush();
     copy_file(pending_path, autosave_thumb_path);
 
     gamestate_autosave.created = (long long) time(NULL);
@@ -329,6 +332,7 @@ void gamestate_autosave_save(void) {
     write_manifest_group("autosave", gamestate_autosave.name, gamestate_autosave.created, &gamestate_autosave);
 
     gamestate_autosave_exists = 1;
+    return 0;
 }
 
 int gamestate_autosave_load(void) {
@@ -362,7 +366,7 @@ int gamestate_quicksave_save(void) {
         return -1;
     }
 
-    pause_menu_capture_clean_screenshot(quicksave_thumb_path, 1);
+    pause_menu_store_clean_screenshot(quicksave_thumb_path, 1);
     gamestate_quicksave.created = (long long) time(NULL);
 
     char created_str[32];
@@ -439,7 +443,7 @@ int gamestate_timeline_save(void) {
         return -1;
     }
 
-    pause_menu_capture_clean_screenshot(t->thumb_path, 1);
+    pause_menu_store_clean_screenshot(t->thumb_path, 1);
     t->created = (long long) time(NULL);
 
     char created_str[32];

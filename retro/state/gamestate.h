@@ -38,7 +38,7 @@ int gamestate_delete(int index);
 
 int gamestate_load(int index);
 
-void gamestate_autosave_save(void);
+int gamestate_autosave_save(void);
 
 int gamestate_autosave_load(void);
 
