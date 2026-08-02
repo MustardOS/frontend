@@ -2451,9 +2451,13 @@ void load_lang(struct mux_lang *lang) {
     for (size_t i = 0; i < sizeof(lang_fields) / sizeof(lang_fields[0]); i++) {
         const lang_field *f = &lang_fields[i];
         const int is_common = strcmp(f->module, "system") == 0 || strcmp(f->module, "generic") == 0;
-        if (!is_common && strcmp(f->module, mux_module) != 0) continue;
 
         char *field_ptr = (char *) lang + f->offset;
+
+        if (!is_common && strcmp(f->module, mux_module) != 0) {
+            if (!field_ptr[0]) snprintf(field_ptr, MAX_BUFFER_SIZE, "%s", f->default_str);
+            continue;
+        }
 
         switch (f->type) {
             case lang_system:

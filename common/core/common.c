@@ -42,7 +42,10 @@ void get_catalogue_name(
 
     char path[MAX_BUFFER_SIZE];
 
-    snprintf(path, sizeof(path), INFO_CON_PATH "/%s%s.cfg", sys_dir_lower, strip_ext(content_label));
+    char *label_no_ext = strip_ext(content_label);
+    snprintf(path, sizeof(path), INFO_CON_PATH "/%s%s.cfg", sys_dir_lower, label_no_ext);
+    free(label_no_ext);
+
     if (read_catalogue(path, content_catalogue, catalogue_name, catalogue_name_size)) {
         LOG_INFO(mux_module, "Reading Configuration: %s", path);
         return;
@@ -55,6 +58,20 @@ void get_catalogue_name(
     }
 
     catalogue_name[0] = '\0';
+}
+
+void get_catalogue_name_for_content(const char *content_path, char *catalogue_name, const size_t catalogue_name_size) {
+    catalogue_name[0] = '\0';
+    if (!content_path || !content_path[0]) return;
+
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s", content_path);
+
+    char *content_dir = get_content_path(path);
+    if (!content_dir) return;
+
+    get_catalogue_name(content_dir, get_file_name(path), catalogue_name, catalogue_name_size);
+    free(content_dir);
 }
 
 char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
@@ -555,7 +572,7 @@ int core_uses_muxretro(const char *assign_dir, const char *item_name) {
     snprintf(exec_path, sizeof(exec_path), "%s", get_ini_string(core_config, "launch", "exec", ""));
     mini_free(core_config);
 
-    return strstr(exec_path, "mu-general.sh") != NULL;
+    return strncmp(get_file_name(exec_path), "mu-", 3) == 0;
 }
 
 static const char *format_retroarch_core(const char *ra_core) {

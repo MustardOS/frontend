@@ -63,7 +63,7 @@ static void set_grid_catalogue_and_program_name(const int index, char *catalogue
 
     if (items[index].content_type == content_type_item) {
         if (strcmp(mux_module, "muxcollect") == 0 || strcmp(mux_module, "muxhistory") == 0) {
-            char *item_dir = strip_dir(items[index].extra_data);
+            char *item_dir = get_content_path(items[index].extra_data);
 
             char file_path[MAX_BUFFER_SIZE];
             snprintf(file_path, sizeof(file_path), "%s", items[index].extra_data);
@@ -80,13 +80,11 @@ static void set_grid_catalogue_and_program_name(const int index, char *catalogue
 
             free(item_dir);
         } else {
-            char sys_dir_copy[MAX_BUFFER_SIZE];
-            snprintf(sys_dir_copy, sizeof(sys_dir_copy), "%s", sys_dir);
+            get_catalogue_name_for_content(items[index].extra_data, catalogue_name, MAX_BUFFER_SIZE);
 
-            get_catalogue_name(sys_dir_copy, items[index].name, catalogue_name, MAX_BUFFER_SIZE);
-
-            char *item_no_ext = strip_ext(items[index].name);
-            snprintf(program, MAX_BUFFER_SIZE, "%s", item_no_ext ? item_no_ext : items[index].name);
+            const char *item_file = get_file_name(items[index].name);
+            char *item_no_ext = strip_ext(item_file);
+            snprintf(program, MAX_BUFFER_SIZE, "%s", item_no_ext ? item_no_ext : item_file);
             free(item_no_ext);
         }
 
@@ -126,7 +124,7 @@ void update_grid_image_paths(const int index) {
     alt_name[0] = '\0';
 
     if (strcmp(mux_module, "muxplore") == 0) {
-        const char *rom_cat = get_catalogue_name_from_rom_path(sys_dir, items[index].name);
+        const char *rom_cat = get_catalogue_name_from_rom_path(sys_dir, get_file_name(items[index].name));
         if (rom_cat && rom_cat[0]) snprintf(alt_name, sizeof(alt_name), "%s", rom_cat);
     }
 
@@ -492,7 +490,8 @@ int init_grid_static(const int count, char *item_labels[], char *item_grid_label
             mux_dim, mux_module, glyph_names[i], grid_img, sizeof(grid_img), grid_img_foc, sizeof(grid_img_foc)
         );
 
-        content_item *new_item = add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", content_type_item);
+        content_item *new_item =
+            add_item(&items, &item_count, item_labels[i], item_grid_labels[i], "", content_type_item);
 
         new_item->glyph_icon = strdup(glyph_names[i]);
         new_item->grid_image = strdup(grid_img);

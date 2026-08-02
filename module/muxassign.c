@@ -559,7 +559,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
 
-    is_dir = dir_exist(rom_dir);
+    is_dir = dir_exist(rom_dir) && !folder_is_content(dir, name);
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
     prefer_directory_scope = 0;
@@ -572,7 +572,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
         }
     }
 
-    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_name, sizeof(rom_name), "%s", get_file_name(name));
     snprintf(explore_dir, sizeof(explore_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 

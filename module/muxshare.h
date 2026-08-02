@@ -164,6 +164,8 @@ char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_j
 
 int folder_has_launch_file(char *base_dir, char *dir_name);
 
+int folder_is_content(const char *base_dir, const char *dir_name);
+
 void update_title(
     const char *folder_path, int fn_valid, struct json fn_json, const char *label, const char *module_path
 );

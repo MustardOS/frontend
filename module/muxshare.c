@@ -483,6 +483,30 @@ int folder_has_launch_file(char *base_dir, char *dir_name) {
     return 0;
 }
 
+static int launch_file_exists(const char *base_dir, const char *dir_name, const char *ext) {
+    char file_path[MAX_BUFFER_SIZE];
+
+    if (ext) {
+        snprintf(file_path, sizeof(file_path), "%s/%s/%s.%s", base_dir, dir_name, dir_name, ext);
+    } else {
+        snprintf(file_path, sizeof(file_path), "%s/%s/%s", base_dir, dir_name, dir_name);
+    }
+
+    return file_exist(file_path);
+}
+
+int folder_is_content(const char *base_dir, const char *dir_name) {
+    if (!base_dir || !dir_name || !dir_name[0]) return 0;
+
+    if (launch_file_exists(base_dir, dir_name, NULL)) return 1;
+    if (launch_file_exists(base_dir, dir_name, "scummvm")) return 1;
+    if (launch_file_exists(base_dir, dir_name, "m3u")) return 1;
+    if (launch_file_exists(base_dir, dir_name, "cue")) return 1;
+    if (launch_file_exists(base_dir, dir_name, "gdi")) return 1;
+
+    return 0;
+}
+
 void update_title(
     const char *folder_path, const int fn_valid, const struct json fn_json, const char *label, const char *module_path
 ) {

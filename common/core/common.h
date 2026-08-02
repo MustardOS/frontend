@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../mini/mini.h"
+#include "../mini/mini.h" // IWYU pragma: keep
 
 enum gen_type { casn_single, casn_dir, casn_parent, casn_dir_nowipe };
 
 void get_catalogue_name(char *sys_dir, const char *content_label, char *catalogue_name, size_t catalogue_name_size);
+
+void get_catalogue_name_for_content(const char *content_path, char *catalogue_name, size_t catalogue_name_size);
 
 char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label);
 

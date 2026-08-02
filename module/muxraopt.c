@@ -181,7 +181,7 @@ static void init_elements(void) {
 
 void muxraopt_main(const int auto_assign, const char *name, const char *dir, const char *sys, const int app) {
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
-    is_dir = dir_exist(rom_dir) && !app;
+    is_dir = dir_exist(rom_dir) && !app && !folder_is_content(dir, name);
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
     snprintf(rom_name, sizeof(rom_name), "%s", get_file_name(name));
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
