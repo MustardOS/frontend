@@ -480,7 +480,7 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
 
-    if (device.board.has_network) cheevo_init(content_path);
+    if (device.board.has_network) cheevo_init(core_resolved_content_path);
 
     sram_bridge_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
@@ -490,7 +490,7 @@ int main(const int argc, char *argv[]) {
     build_macro_dir(core_path_arg, content_path);
     macros_init(macro_dir);
 
-    content_hash_request(content_path);
+    content_hash_request(content_path, core_resolved_content_path);
 
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);

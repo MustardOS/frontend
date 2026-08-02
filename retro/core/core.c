@@ -21,6 +21,7 @@
 struct core_cbs current_core = {0};
 char core_content_path[PATH_MAX] = "";
 char core_content_load_method[32] = "";
+char core_resolved_content_path[PATH_MAX] = "";
 char core_active_patches[1024] = "";
 int core_active_patch_count = 0;
 char core_file_path[PATH_MAX] = "";
@@ -421,6 +422,7 @@ static int write_patched_content(const void *data, const size_t size, const char
 
 int core_load_content(const char *content_path) {
     snprintf(core_content_path, sizeof(core_content_path), "%s", content_path);
+    snprintf(core_resolved_content_path, sizeof(core_resolved_content_path), "%s", content_path);
     core_active_patches[0] = '\0';
     core_active_patch_count = 0;
     if (dir_exist(RETRO_EXT_PATH)) remove_directory_recursive(RETRO_EXT_PATH);
@@ -513,12 +515,14 @@ int core_load_content(const char *content_path) {
         if (find_entry_in_archive(content_path, entry_name) == 0) {
             snprintf(resolved_path, sizeof(resolved_path), "%s#%s", content_path, entry_name);
 
-            struct retro_game_info game_info = {.path = resolved_path};
+            const struct retro_game_info game_info = {.path = resolved_path};
             if (current_core.retro_load_game(&game_info)) {
-                snprintf(
-                    core_content_load_method, sizeof(core_content_load_method), "%s",
-                    lang.muxretro.information_screen.vfs_stream
-                );
+                const char *method = vfs_bridge_archive_mode() == vfs_archive_streamed
+                                         ? lang.muxretro.information_screen.vfs_stream
+                                         : lang.muxretro.information_screen.extracted;
+
+                snprintf(core_content_load_method, sizeof(core_content_load_method), "%s", method);
+                snprintf(core_resolved_content_path, sizeof(core_resolved_content_path), "%s", resolved_path);
                 LOG_SUCCESS(mux_module, "Content loaded: %s", content_path);
                 return 0;
             }
@@ -571,6 +575,7 @@ int core_load_content(const char *content_path) {
     snprintf(
         core_content_load_method, sizeof(core_content_load_method), "%s", lang.muxretro.information_screen.extracted
     );
+    snprintf(core_resolved_content_path, sizeof(core_resolved_content_path), "%s", resolved_path);
     LOG_SUCCESS(mux_module, "Content loaded: %s", content_path);
     return 0;
 }

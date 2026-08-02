@@ -31,8 +31,10 @@
 #include "../video/hw_render.h"
 #include "../video/image_writer.h"
 #include "cheevo.h"
+#include "../state/vfs.h"
 #include "vendor/rcheevos/include/rc_client.h"
 #include "vendor/rcheevos/include/rc_error.h"
+#include "vendor/rcheevos/include/rc_hash.h"
 #include "vendor/rcheevos/src/rc_libretro.h"
 
 #define CHEEVO_ACCOUNT_DIR              STORAGE_NETWORK "/cheevo"
@@ -1139,6 +1141,54 @@ static void leaderboard_reset(void) {
     memset(leaderboard_ranks, 0, sizeof(leaderboard_ranks));
 }
 
+static void *hash_file_open(const char *path) {
+    return vfs_bridge_interface()->open(path, RETRO_VFS_FILE_ACCESS_READ, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+}
+
+static void hash_file_seek(void *file_handle, const int64_t offset, const int origin) {
+    const int position = origin == SEEK_CUR   ? RETRO_VFS_SEEK_POSITION_CURRENT
+                         : origin == SEEK_END ? RETRO_VFS_SEEK_POSITION_END
+                                              : RETRO_VFS_SEEK_POSITION_START;
+
+    vfs_bridge_interface()->seek(file_handle, offset, position);
+}
+
+static int64_t hash_file_tell(void *file_handle) {
+    return vfs_bridge_interface()->tell(file_handle);
+}
+
+static size_t hash_file_read(void *file_handle, void *buffer, const size_t requested_bytes) {
+    const int64_t got = vfs_bridge_interface()->read(file_handle, buffer, requested_bytes);
+    return got < 0 ? 0 : (size_t) got;
+}
+
+static void hash_file_close(void *file_handle) {
+    vfs_bridge_interface()->close(file_handle);
+}
+
+static rc_hash_filereader_t hash_reader = {
+    .open = hash_file_open,
+    .seek = hash_file_seek,
+    .tell = hash_file_tell,
+    .read = hash_file_read,
+    .close = hash_file_close,
+};
+
+int cheevo_hash_content(const char *content_path, char out[33]) {
+    out[0] = '\0';
+    if (!content_path || !content_path[0]) return 0;
+
+    rc_hash_iterator_t iterator;
+    rc_hash_initialize_iterator(&iterator, content_path, NULL, 0);
+
+    memcpy(&iterator.callbacks.filereader, &hash_reader, sizeof(hash_reader));
+
+    const int ok = rc_hash_iterate(out, &iterator);
+    rc_hash_destroy_iterator(&iterator);
+
+    return ok;
+}
+
 static int runtime_start(void) {
     if (client) return 0;
     if (!curl_ready) {
@@ -1162,6 +1212,8 @@ static int runtime_start(void) {
         snprintf(failure, sizeof(failure), "%s", lang.muxretro.cheevo.client_failed);
         return -1;
     }
+
+    rc_hash_init_custom_filereader(&hash_reader);
 
     rc_client_enable_logging(client, RC_CLIENT_LOG_LEVEL_WARN, log_message);
     rc_libretro_init_verbose_message_callback(memory_log_message);

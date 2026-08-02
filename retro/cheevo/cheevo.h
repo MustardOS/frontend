@@ -82,6 +82,8 @@ typedef struct {
 
 int cheevo_init(const char *content_path);
 
+int cheevo_hash_content(const char *content_path, char out[33]);
+
 void cheevo_shutdown(void);
 
 void cheevo_tick(void);

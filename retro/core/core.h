@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits.h> // IWYU pragma: keep
 #include <stdbool.h>
 #include <stddef.h>
 #include "libretro.h"
@@ -38,6 +39,8 @@ extern char core_content_path[PATH_MAX];
 extern char core_file_path[PATH_MAX];
 
 extern char core_content_load_method[32];
+
+extern char core_resolved_content_path[PATH_MAX];
 
 extern char core_active_patches[1024];
 

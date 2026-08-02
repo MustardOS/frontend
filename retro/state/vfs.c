@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 #include "../../common/fileio.h"
 #include "../../common/init.h"
@@ -20,9 +21,13 @@
 #define VFS_CACHE_DIR_CAP_BYTES   ((uint64_t) 2LL * 1024 * 1024 * 1024)
 #define VFS_CACHE_MAX_TRACKED     512
 
+#define ZIP_LOCAL_HEADER_BYTES 30
+
 struct retro_vfs_file_handle {
     char *path;
     FILE *fp;
+    int64_t base;
+    int64_t length;
 };
 
 struct retro_vfs_dir_handle {
@@ -32,6 +37,7 @@ struct retro_vfs_dir_handle {
 
 static int vfs_active = 0;
 static int cache_dir_ready = 0;
+static enum vfs_archive_mode archive_mode = vfs_archive_none;
 
 static int split_archive_path(const char *path, char *zip_path, char *entry_name) {
     const char *sep = strrchr(path, ARCHIVE_SEPARATOR);
@@ -155,8 +161,9 @@ static int extract_entry_to_file(const char *zip_path, const char *entry_name, c
             break;
         }
 
+        // the hash worker can be extracting the same entry as the core, so each writer needs its own scratch file
         char tmp_path[MAX_BUFFER_SIZE];
-        snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", dest_path);
+        snprintf(tmp_path, sizeof(tmp_path), "%s.%ld.tmp", dest_path, (long) syscall(SYS_gettid));
 
         FILE *out = fopen(tmp_path, "wb");
         if (!out) {
@@ -194,6 +201,43 @@ static int extract_entry_to_file(const char *zip_path, const char *entry_name, c
     return result;
 }
 
+static int zip_stored_entry_window(const char *zip_path, const char *entry_name, int64_t *base, int64_t *length) {
+    mz_zip_archive zip;
+    mz_zip_zero_struct(&zip);
+
+    if (!mz_zip_reader_init_file(&zip, zip_path, 0)) return -1;
+
+    int result = -1;
+
+    mz_zip_archive_file_stat entry;
+    const int index = mz_zip_reader_locate_file(&zip, entry_name, NULL, 0);
+
+    if (index >= 0 && mz_zip_reader_file_stat(&zip, (mz_uint) index, &entry) && entry.m_method == 0
+        && !entry.m_is_directory && !entry.m_is_encrypted) {
+        FILE *fp = fopen(zip_path, "rb");
+
+        if (fp) {
+            unsigned char header[ZIP_LOCAL_HEADER_BYTES];
+
+            if (fseek(fp, (long) entry.m_local_header_ofs, SEEK_SET) == 0
+                && fread(header, 1, sizeof(header), fp) == sizeof(header) && header[0] == 'P' && header[1] == 'K'
+                && header[2] == 3 && header[3] == 4) {
+                const unsigned name_len = (unsigned) header[26] | (unsigned) header[27] << 8;
+                const unsigned extra_len = (unsigned) header[28] | (unsigned) header[29] << 8;
+
+                *base = (int64_t) entry.m_local_header_ofs + ZIP_LOCAL_HEADER_BYTES + name_len + extra_len;
+                *length = (int64_t) entry.m_uncomp_size;
+                result = 0;
+            }
+
+            fclose(fp);
+        }
+    }
+
+    mz_zip_reader_end(&zip);
+    return result;
+}
+
 static int vfs_cache_ensure(const char *zip_path, const char *entry_name, char *out_path, const size_t out_size) {
     ensure_cache_dir();
     compute_cache_path(zip_path, entry_name, out_path, out_size);
@@ -216,6 +260,7 @@ static struct retro_vfs_file_handle *vfs_open(const char *path, const unsigned m
     if (!handle) return NULL;
 
     handle->path = strdup(path);
+    handle->length = -1;
 
     char zip_path[512];
     char entry_name[256];
@@ -226,6 +271,25 @@ static struct retro_vfs_file_handle *vfs_open(const char *path, const unsigned m
             free(handle->path);
             free(handle);
             return NULL;
+        }
+
+        int64_t base = 0;
+        int64_t length = 0;
+
+        if (zip_stored_entry_window(zip_path, entry_name, &base, &length) == 0) {
+            handle->fp = fopen(zip_path, "rb");
+
+            if (handle->fp && fseek(handle->fp, base, SEEK_SET) == 0) {
+                handle->base = base;
+                handle->length = length;
+                archive_mode = vfs_archive_streamed;
+
+                LOG_INFO(mux_module, "vfs_open: streaming stored entry '%s' from '%s'", entry_name, zip_path);
+                return handle;
+            }
+
+            if (handle->fp) fclose(handle->fp);
+            handle->fp = NULL;
         }
 
         char cache_path[MAX_BUFFER_SIZE];
@@ -243,6 +307,7 @@ static struct retro_vfs_file_handle *vfs_open(const char *path, const unsigned m
             return NULL;
         }
 
+        archive_mode = vfs_archive_extracted;
         return handle;
     }
 
@@ -275,6 +340,7 @@ static int vfs_close(struct retro_vfs_file_handle *stream) {
 
 static int64_t vfs_size(struct retro_vfs_file_handle *stream) {
     if (!stream || !stream->fp) return -1;
+    if (stream->length >= 0) return stream->length;
 
     const long cur = ftell(stream->fp);
     fseek(stream->fp, 0, SEEK_END);
@@ -284,26 +350,56 @@ static int64_t vfs_size(struct retro_vfs_file_handle *stream) {
 }
 
 static int64_t vfs_tell(struct retro_vfs_file_handle *stream) {
-    return stream && stream->fp ? ftell(stream->fp) : -1;
+    if (!stream || !stream->fp) return -1;
+
+    const long pos = ftell(stream->fp);
+    return pos < 0 ? -1 : (int64_t) pos - stream->base;
 }
 
 static int64_t vfs_seek(struct retro_vfs_file_handle *stream, const int64_t offset, const int seek_position) {
     if (!stream || !stream->fp) return -1;
 
-    const int whence = seek_position == RETRO_VFS_SEEK_POSITION_CURRENT ? SEEK_CUR
-                       : seek_position == RETRO_VFS_SEEK_POSITION_END   ? SEEK_END
-                                                                        : SEEK_SET;
-    if (fseek(stream->fp, offset, whence) != 0) return -1;
-    return ftell(stream->fp);
+    if (stream->length < 0) {
+        const int whence = seek_position == RETRO_VFS_SEEK_POSITION_CURRENT ? SEEK_CUR
+                           : seek_position == RETRO_VFS_SEEK_POSITION_END   ? SEEK_END
+                                                                            : SEEK_SET;
+        return fseek(stream->fp, offset, whence) == 0 ? 0 : -1;
+    }
+
+    int64_t target;
+    if (seek_position == RETRO_VFS_SEEK_POSITION_CURRENT) {
+        const long cur = ftell(stream->fp);
+        if (cur < 0) return -1;
+        target = (int64_t) cur - stream->base + offset;
+    } else if (seek_position == RETRO_VFS_SEEK_POSITION_END) {
+        target = stream->length + offset;
+    } else {
+        target = offset;
+    }
+
+    if (target < 0) return -1;
+    return fseek(stream->fp, stream->base + target, SEEK_SET) == 0 ? 0 : -1;
 }
 
 static int64_t vfs_read(struct retro_vfs_file_handle *stream, void *s, const uint64_t len) {
     if (!stream || !s || !stream->fp) return -1;
-    return (int64_t) fread(s, 1, len, stream->fp);
+    if (stream->length < 0) return (int64_t) fread(s, 1, len, stream->fp);
+
+    const long cur = ftell(stream->fp);
+    if (cur < 0) return -1;
+
+    // reads have to stop at the end of the entry so the next one in the archive never leaks in
+    const int64_t remaining = stream->base + stream->length - (int64_t) cur;
+    if (remaining <= 0) return 0;
+
+    const uint64_t want = len > (uint64_t) remaining ? (uint64_t) remaining : len;
+    return (int64_t) fread(s, 1, want, stream->fp);
 }
 
 static int64_t vfs_write(struct retro_vfs_file_handle *stream, const void *s, const uint64_t len) {
     if (!stream || !s || !stream->fp) return -1;
+    if (stream->length >= 0) return -1;
+
     return (int64_t) fwrite(s, 1, len, stream->fp);
 }
 
@@ -313,6 +409,7 @@ static int vfs_flush(struct retro_vfs_file_handle *stream) {
 
 static int64_t vfs_truncate(struct retro_vfs_file_handle *stream, const int64_t length) {
     if (!stream || !stream->fp) return -1;
+    if (stream->length >= 0) return -1;
     if (ftruncate(fileno(stream->fp), length) != 0) return -1;
     return 0;
 }
@@ -413,4 +510,12 @@ bool vfs_bridge_get_interface(struct retro_vfs_interface_info *info) {
 
 int vfs_bridge_is_active(void) {
     return vfs_active;
+}
+
+enum vfs_archive_mode vfs_bridge_archive_mode(void) {
+    return archive_mode;
+}
+
+const struct retro_vfs_interface *vfs_bridge_interface(void) {
+    return &vfs_iface;
 }

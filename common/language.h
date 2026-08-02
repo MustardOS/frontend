@@ -2016,7 +2016,24 @@ struct mux_lang {
         struct {
             char core_name[MAX_BUFFER_SIZE];
             char core_version[MAX_BUFFER_SIZE];
+            char section_core[MAX_BUFFER_SIZE];
+            char section_content[MAX_BUFFER_SIZE];
+            char section_hash[MAX_BUFFER_SIZE];
+            char section_video[MAX_BUFFER_SIZE];
+            char section_audio[MAX_BUFFER_SIZE];
+            char core_api[MAX_BUFFER_SIZE];
+            char extensions[MAX_BUFFER_SIZE];
+            char save_states[MAX_BUFFER_SIZE];
+            char save_memory[MAX_BUFFER_SIZE];
+            char content_size[MAX_BUFFER_SIZE];
+            char content_location[MAX_BUFFER_SIZE];
+            char max_resolution[MAX_BUFFER_SIZE];
+            char pixel_format[MAX_BUFFER_SIZE];
+            char audio_buffer[MAX_BUFFER_SIZE];
+            char not_supported[MAX_BUFFER_SIZE];
+            char archive_hash[MAX_BUFFER_SIZE];
             char content_hash[MAX_BUFFER_SIZE];
+            char cheevo_hash[MAX_BUFFER_SIZE];
             char loaded_via[MAX_BUFFER_SIZE];
             char active_patches[MAX_BUFFER_SIZE];
             char patches_none[MAX_BUFFER_SIZE];

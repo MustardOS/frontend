@@ -50,7 +50,9 @@ static void current_metadata(
 ) {
     crc[0] = core[0] = version[0] = '\0';
 
-    if (content_hash_is_ready()) snprintf(crc, crc_len, "%s", content_hash_get());
+    if (content_hash_is_ready(content_hash_archive)) {
+        snprintf(crc, crc_len, "%s", content_hash_get(content_hash_archive));
+    }
 
     if (current_core.retro_get_system_info) {
         struct retro_system_info info = {0};

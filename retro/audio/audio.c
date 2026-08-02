@@ -17,6 +17,9 @@
 #define AUDIO_PERIOD_SETTLE_MS          3000
 #define AUDIO_PERIOD_UNDERRUN_TOLERANCE 8
 
+#define AUDIO_AUTO_RATE_FROM 48000
+#define AUDIO_AUTO_RATE_TO   44100
+
 #define AUDIO_FADE_IN_MS            8
 #define AUDIO_UNDERRUN_RAMP_MS      1
 #define AUDIO_RESUME_PREFILL_MIN_MS 20
@@ -384,8 +387,10 @@ int audio_bridge_open(const double core_sample_rate) {
         return -1;
     }
 
-    const double want_rate =
-        session_settings.sample_rate > 0 ? (double) session_settings.sample_rate : core_sample_rate;
+    double want_rate = session_settings.sample_rate > 0 ? (double) session_settings.sample_rate : core_sample_rate;
+    if (session_settings.sample_rate <= 0 && (int) want_rate == AUDIO_AUTO_RATE_FROM) {
+        want_rate = (double) AUDIO_AUTO_RATE_TO;
+    }
 
     want.freq = (int) want_rate;
     want.format = AUDIO_S16SYS;
