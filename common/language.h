@@ -1525,6 +1525,7 @@ struct mux_lang {
         char cheats[MAX_BUFFER_SIZE];
         char patches[MAX_BUFFER_SIZE];
         char settings[MAX_BUFFER_SIZE];
+        char save_settings[MAX_BUFFER_SIZE];
         char display[MAX_BUFFER_SIZE];
         char information[MAX_BUFFER_SIZE];
         char restart[MAX_BUFFER_SIZE];
@@ -1981,8 +1982,12 @@ struct mux_lang {
             char viewport[MAX_BUFFER_SIZE];
         } display_screen;
         struct {
+            char adjustment[MAX_BUFFER_SIZE];
+            char cropping[MAX_BUFFER_SIZE];
             char offset_x[MAX_BUFFER_SIZE];
             char offset_y[MAX_BUFFER_SIZE];
+            char stretch_x[MAX_BUFFER_SIZE];
+            char stretch_y[MAX_BUFFER_SIZE];
             char zoom[MAX_BUFFER_SIZE];
             char crop_top[MAX_BUFFER_SIZE];
             char crop_bottom[MAX_BUFFER_SIZE];

@@ -244,8 +244,6 @@ void settings_menu_tick(void);
 
 void settings_menu_reopen_hotkeys(void);
 
-void settings_menu_reopen_display(void);
-
 void settings_menu_reopen_video(void);
 
 void settings_menu_reopen_sound(void);
@@ -269,6 +267,10 @@ int video_menu_is_active(void);
 void video_menu_tick(void);
 
 void video_menu_reopen_viewport(void);
+
+void video_menu_reopen_display(void);
+
+void video_menu_reopen_overlay(void);
 
 void sound_menu_init(void);
 
@@ -362,6 +364,14 @@ void display_menu_reopen_filter(void);
 
 void display_menu_reopen_shader(void);
 
+void overlay_menu_init(void);
+
+void overlay_menu_open(void);
+
+int overlay_menu_is_active(void);
+
+void overlay_menu_tick(void);
+
 void colfilter_menu_init(void);
 
 void colfilter_menu_open(void);
@@ -385,6 +395,26 @@ void viewport_menu_open(void);
 int viewport_menu_is_active(void);
 
 void viewport_menu_tick(void);
+
+void viewport_menu_reopen_adjustment(void);
+
+void viewport_menu_reopen_cropping(void);
+
+void viewport_adjust_menu_init(void);
+
+void viewport_adjust_menu_open(void);
+
+int viewport_adjust_menu_is_active(void);
+
+void viewport_adjust_menu_tick(void);
+
+void viewport_crop_menu_init(void);
+
+void viewport_crop_menu_open(void);
+
+int viewport_crop_menu_is_active(void);
+
+void viewport_crop_menu_tick(void);
 
 void hotkeys_menu_init(void);
 

@@ -379,6 +379,11 @@ static void recompute_dest_rect(void) {
         dest_rect.h = dest_rect.h * session_settings.viewport_zoom / 100;
     }
 
+    dest_rect.w += session_settings.viewport_stretch_x;
+    dest_rect.h += session_settings.viewport_stretch_y;
+    if (dest_rect.w < 1) dest_rect.w = 1;
+    if (dest_rect.h < 1) dest_rect.h = 1;
+
     dest_rect.x = (canvas_w - dest_rect.w) / 2 + session_settings.viewport_offset_x;
     dest_rect.y = (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y;
 

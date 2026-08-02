@@ -4,30 +4,16 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum {
-    row_filter = 0,
-    row_shader,
-    row_brightness,
-    row_contrast,
-    row_saturation,
-    row_hue_shift,
-    row_gamma,
-    row_overlay_source,
-    row_overlay_pattern,
-    row_overlay_opacity,
-    row_count
-};
+enum { row_filter = 0, row_shader, row_brightness, row_contrast, row_saturation, row_hue_shift, row_gamma, row_count };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.display_screen.filter,          lang.muxretro.display_screen.shaders,
-    lang.muxretro.display_screen.brightness,      lang.muxretro.display_screen.contrast,
-    lang.muxretro.display_screen.saturation,      lang.muxretro.display_screen.hue_shift,
-    lang.muxretro.display_screen.gamma,           lang.muxretro.display_screen.overlay,
-    lang.muxretro.display_screen.overlay_pattern, lang.muxretro.display_screen.overlay_opacity
+    lang.muxretro.display_screen.filter,     lang.muxretro.display_screen.shaders,
+    lang.muxretro.display_screen.brightness, lang.muxretro.display_screen.contrast,
+    lang.muxretro.display_screen.saturation, lang.muxretro.display_screen.hue_shift,
+    lang.muxretro.display_screen.gamma
 };
 
-static const char *row_glyphs[row_count] = {"filter", "shader", "brightness", "contrast",       "saturation",
-                                            "hue",    "gamma",  "overlay",    "overlaypattern", "overlayopacity"};
+static const char *row_glyphs[row_count] = {"filter", "shader", "brightness", "contrast", "saturation", "hue", "gamma"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -52,15 +38,6 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
         case row_gamma:
             snprintf(buf, buf_len, "%s", session_settings_colour_gamma_name(session_settings.colour_gamma));
             break;
-        case row_overlay_source:
-            snprintf(buf, buf_len, "%s", session_settings_overlay_source_name(session_settings.overlay_source));
-            break;
-        case row_overlay_pattern:
-            snprintf(buf, buf_len, "%s", session_settings_overlay_pattern_name(session_settings.overlay_pattern));
-            break;
-        case row_overlay_opacity:
-            snprintf(buf, buf_len, "%s", session_settings_overlay_opacity_name(session_settings.overlay_opacity));
-            break;
         default:
             buf[0] = '\0';
             break;
@@ -83,15 +60,6 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_gamma:
             session_settings_cycle_colour_gamma(direction);
-            break;
-        case row_overlay_source:
-            session_settings_cycle_overlay_source(direction);
-            break;
-        case row_overlay_pattern:
-            session_settings_cycle_overlay_pattern(direction);
-            break;
-        case row_overlay_opacity:
-            session_settings_cycle_overlay_opacity(direction);
             break;
         default:
             break;
@@ -125,7 +93,7 @@ static int child_tick(void) {
 }
 
 static void closed(void) {
-    settings_menu_reopen_display();
+    video_menu_reopen_display();
 }
 
 static submenu self;

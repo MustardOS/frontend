@@ -14,7 +14,9 @@
 static submenu *submenu_stack[SUBMENU_STACK_MAX];
 static int submenu_stack_depth = 0;
 
-#define SUBMENU_NAV_X_BIT BIT(6)
+#define SUBMENU_NAV_X_BIT  BIT(6)
+#define SUBMENU_NAV_L2_BIT BIT(14)
+#define SUBMENU_NAV_R2_BIT BIT(15)
 
 static int row_is_action(const submenu *m, const int index) {
     return m->def->row_is_action ? m->def->row_is_action(index) : 0;
@@ -35,7 +37,9 @@ static const char *row_action_label(const submenu *m, const int index) {
 }
 
 static uint64_t submenu_nav_mask(void) {
-    return nav_mask_standard() | (mux_input_pressed(mux_input_x) ? SUBMENU_NAV_X_BIT : 0);
+    return nav_mask_standard() | (mux_input_pressed(mux_input_x) ? SUBMENU_NAV_X_BIT : 0)
+           | (mux_input_pressed(mux_input_l2) ? SUBMENU_NAV_L2_BIT : 0)
+           | (mux_input_pressed(mux_input_r2) ? SUBMENU_NAV_R2_BIT : 0);
 }
 
 static void nav_show_x(const int show, const char *text) {
@@ -215,6 +219,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->def = def;
     m->active = 0;
     m->save_dialogue_active = 0;
+    m->save_all_dialogue_active = 0;
     m->nav_row_class = -1;
     m->nav_action_label = NULL;
     m->nav_extra_label = NULL;
@@ -224,6 +229,12 @@ void submenu_init(submenu *m, const submenu_def *def) {
         &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 5, lang.generic.select,
         lang.generic.cancel
     );
+
+    if (def->row_is_save)
+        dialogue_init(
+            &m->save_all_dlg, &theme, ui_screen, lang.muxretro.save_settings, def->save_desc, save_options, 3,
+            lang.generic.select, lang.generic.cancel
+        );
 }
 
 void submenu_open(submenu *m) {
@@ -259,6 +270,27 @@ int submenu_is_active(const submenu *m) {
     return m->active;
 }
 
+static int coarse_step_tick(submenu *m, const uint64_t edge, const uint64_t mask) {
+    if (m->save_dialogue_active || m->save_all_dialogue_active) return 0;
+
+    const int step = m->def->row_coarse_step ? m->def->row_coarse_step(current_item_index) : 0;
+    if (step <= 0 || !row_can_cycle(m, current_item_index)) return 0;
+
+    const uint32_t now = SDL_GetTicks();
+    const int down =
+        nav_repeat_step(&m->rpt_l2, (edge & SUBMENU_NAV_L2_BIT) != 0, (mask & SUBMENU_NAV_L2_BIT) != 0, 1, now);
+    const int up =
+        nav_repeat_step(&m->rpt_r2, (edge & SUBMENU_NAV_R2_BIT) != 0, (mask & SUBMENU_NAV_R2_BIT) != 0, 1, now);
+
+    if (!down && !up) return 0;
+
+    m->def->cycle(current_item_index, up ? step : -step);
+    refresh_row(m, current_item_index, up ? nav_dir_right : nav_dir_left);
+    play_sound(snd_option);
+
+    return 1;
+}
+
 void submenu_tick(submenu *m) {
     if (m->def->child_tick && m->def->child_tick()) return;
 
@@ -266,6 +298,7 @@ void submenu_tick(submenu *m) {
     const uint64_t edge = mask & ~m->prev_nav_mask;
     m->prev_nav_mask = mask;
 
+    if (coarse_step_tick(m, edge, mask)) return;
     if (nav_input_halted()) return;
 
     if (m->save_dialogue_active) {
@@ -295,6 +328,22 @@ void submenu_tick(submenu *m) {
         } else if (edge & BIT(5)) {
             m->pending_action_row = -1;
             dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
+        }
+        return;
+    }
+
+    if (m->save_all_dialogue_active) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&m->save_all_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const int opt = m->save_all_dlg.selected;
+            dialogue_dismiss(&m->save_all_dialogue_active, &m->save_all_dlg);
+            play_sound(snd_confirm);
+
+            session_settings_apply_save_choice(opt);
+            submenu_stack_resync();
+        } else if (edge & BIT(5)) {
+            dialogue_dismiss(&m->save_all_dialogue_active, &m->save_all_dlg);
         }
         return;
     }
@@ -329,7 +378,10 @@ void submenu_tick(submenu *m) {
     } else if (nav_page_tick(edge, mask, 2)) {
         submenu_nav(m, 0);
     } else if (edge & BIT(4)) {
-        if (row_is_action(m, current_item_index) && m->def->action) {
+        if (m->def->row_is_save && m->def->row_is_save(current_item_index)) {
+            play_sound(snd_confirm);
+            dialogue_open(&m->save_all_dialogue_active, &m->save_all_dlg, &theme);
+        } else if (row_is_action(m, current_item_index) && m->def->action) {
             if (m->def->child_tick && memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {
                 play_sound(snd_confirm);
                 m->pending_action_row = current_item_index;

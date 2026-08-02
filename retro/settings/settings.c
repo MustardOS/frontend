@@ -64,6 +64,8 @@ static const struct session_settings_t defaults = {
     .overlay_opacity = 100,
     .viewport_offset_x = 0,
     .viewport_offset_y = 0,
+    .viewport_stretch_x = 0,
+    .viewport_stretch_y = 0,
     .viewport_zoom = 100,
     .viewport_crop_top = 0,
     .viewport_crop_bottom = 0,
@@ -136,6 +138,7 @@ static const int default_button_map[16] = {
 #define COLOUR_STEP           5
 
 #define VIEWPORT_OFFSET_STEP   1
+#define VIEWPORT_STRETCH_STEP  1
 #define VIEWPORT_ZOOM_MIN      25
 #define VIEWPORT_ZOOM_MAX      300
 #define VIEWPORT_ZOOM_STEP     5
@@ -486,6 +489,12 @@ const char *session_settings_viewport_offset_y_name(const int value) {
     return buf;
 }
 
+const char *session_settings_viewport_stretch_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%+dpx", value);
+    return buf;
+}
+
 const char *session_settings_viewport_zoom_name(const int value) {
     static char buf[16];
     snprintf(buf, sizeof(buf), "%d%%", value);
@@ -700,6 +709,12 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "viewport_offset_y", offset_y_max + 1);
     if (v >= -offset_y_max && v <= offset_y_max) session_settings.viewport_offset_y = (int) v;
 
+    v = mini_get_int(ini, "settings", "viewport_stretch_x", offset_x_max + 1);
+    if (v >= -offset_x_max && v <= offset_x_max) session_settings.viewport_stretch_x = (int) v;
+
+    v = mini_get_int(ini, "settings", "viewport_stretch_y", offset_y_max + 1);
+    if (v >= -offset_y_max && v <= offset_y_max) session_settings.viewport_stretch_y = (int) v;
+
     v = mini_get_int(ini, "settings", "viewport_zoom", VIEWPORT_ZOOM_MIN - 1);
     if (v >= VIEWPORT_ZOOM_MIN && v <= VIEWPORT_ZOOM_MAX) session_settings.viewport_zoom = (int) v;
 
@@ -879,6 +894,8 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(overlay_opacity);
     DELTA(viewport_offset_x);
     DELTA(viewport_offset_y);
+    DELTA(viewport_stretch_x);
+    DELTA(viewport_stretch_y);
     DELTA(viewport_zoom);
     DELTA(viewport_crop_top);
     DELTA(viewport_crop_bottom);
@@ -1313,6 +1330,22 @@ void session_settings_cycle_viewport_offset_y(const int direction) {
     video_bridge_apply_scaling();
 }
 
+void session_settings_cycle_viewport_stretch_x(const int direction) {
+    const int max = device.mux.width / 2;
+    session_settings.viewport_stretch_x += direction * VIEWPORT_STRETCH_STEP;
+    if (session_settings.viewport_stretch_x < -max) session_settings.viewport_stretch_x = -max;
+    if (session_settings.viewport_stretch_x > max) session_settings.viewport_stretch_x = max;
+    video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_viewport_stretch_y(const int direction) {
+    const int max = device.mux.height / 2;
+    session_settings.viewport_stretch_y += direction * VIEWPORT_STRETCH_STEP;
+    if (session_settings.viewport_stretch_y < -max) session_settings.viewport_stretch_y = -max;
+    if (session_settings.viewport_stretch_y > max) session_settings.viewport_stretch_y = max;
+    video_bridge_apply_scaling();
+}
+
 void session_settings_cycle_viewport_zoom(const int direction) {
     session_settings.viewport_zoom += direction * VIEWPORT_ZOOM_STEP;
     if (session_settings.viewport_zoom < VIEWPORT_ZOOM_MIN) session_settings.viewport_zoom = VIEWPORT_ZOOM_MIN;
@@ -1490,9 +1523,14 @@ void session_settings_port_summary(const int port, char *buf, const size_t len) 
         return;
     }
 
+    const int fell_back = session_settings_resolve_port_source(port) == 0;
+
     switch (session_settings.port_assignment[port]) {
         case port_assignment_none:
-            snprintf(buf, len, "%s", lang.muxretro.settings_screen.port_none);
+            snprintf(
+                buf, len, "%s",
+                fell_back ? lang.muxretro.settings_screen.built_in_controls : lang.muxretro.settings_screen.port_none
+            );
             return;
 
         case port_assignment_remembered:
@@ -1500,17 +1538,15 @@ void session_settings_port_summary(const int port, char *buf, const size_t len) 
                 mux_input_source_info info;
                 if (!mux_input_source_get(s, &info)) continue;
                 if (strcmp(info.stable_key, session_settings.port_device_key[port]) != 0) continue;
-
-                if (!info.connected) {
-                    snprintf(buf, len, "%s", lang.generic.not_connected);
-                    return;
-                }
+                if (!info.connected) break;
 
                 snprintf(buf, len, "%s", info.is_builtin ? lang.muxretro.settings_screen.built_in_controls : info.name);
                 return;
             }
 
-            snprintf(buf, len, "%s", lang.generic.not_connected);
+            snprintf(
+                buf, len, "%s", fell_back ? lang.muxretro.settings_screen.built_in_controls : lang.generic.not_connected
+            );
             return;
 
         default:
@@ -1581,11 +1617,10 @@ void session_settings_port_device_summary(const int port, char *buf, const size_
     snprintf(buf, len, "#%d", id);
 }
 
-int session_settings_resolve_port_source(const int port) {
-    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return -1;
+void session_settings_resolve_port_sources(int *resolved) {
+    if (!resolved) return;
 
-    int resolved[MUX_INPUT_PORT_COUNT];
-    int claimed[MUX_INPUT_PORT_COUNT] = {0};
+    int claimed[MUX_INPUT_PORT_COUNT] = {0}; // indexed by mux_input_source index, not port index!
 
     for (int p = 0; p < MUX_INPUT_PORT_COUNT; p++) {
         resolved[p] = -1;
@@ -1603,8 +1638,17 @@ int session_settings_resolve_port_source(const int port) {
         }
     }
 
+    // port one keeps the built-in controls unless another port was told to use them!
+    if (!claimed[0] && resolved[0] < 0) {
+        mux_input_source_info builtin;
+        if (mux_input_source_get(0, &builtin) && builtin.connected) {
+            resolved[0] = 0;
+            claimed[0] = 1;
+        }
+    }
+
     for (int p = 0; p < MUX_INPUT_PORT_COUNT; p++) {
-        if (session_settings.port_assignment[p] != port_assignment_auto) continue;
+        if (resolved[p] >= 0 || session_settings.port_assignment[p] != port_assignment_auto) continue;
 
         for (int s = 0; s < mux_input_source_count(); s++) {
             mux_input_source_info info;
@@ -1615,6 +1659,13 @@ int session_settings_resolve_port_source(const int port) {
             break;
         }
     }
+}
+
+int session_settings_resolve_port_source(const int port) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return -1;
+
+    int resolved[MUX_INPUT_PORT_COUNT];
+    session_settings_resolve_port_sources(resolved);
 
     return resolved[port];
 }
@@ -1917,6 +1968,8 @@ void session_settings_reset_input(void) {
 void session_settings_reset_viewport(void) {
     session_settings.viewport_offset_x = 0;
     session_settings.viewport_offset_y = 0;
+    session_settings.viewport_stretch_x = 0;
+    session_settings.viewport_stretch_y = 0;
     session_settings.viewport_zoom = 100;
     session_settings.viewport_crop_top = 0;
     session_settings.viewport_crop_bottom = 0;

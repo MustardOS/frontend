@@ -16,6 +16,8 @@ typedef struct {
     void (*cycle)(int index, int direction);
     int (*row_can_cycle)(int index);
     int (*row_is_action)(int index);
+    int (*row_is_save)(int index);
+    int (*row_coarse_step)(int index);
     const char *(*action_label)(int index);
     void (*action)(int index);
     const char *(*extra_label)(int index);
@@ -31,12 +33,14 @@ typedef struct {
     const submenu_def *def;
     int active;
     uint64_t prev_nav_mask;
-    nav_repeat_t rpt_up, rpt_down, rpt_left, rpt_right;
+    nav_repeat_t rpt_up, rpt_down, rpt_left, rpt_right, rpt_l2, rpt_r2;
     int nav_row_class;
     const char *nav_action_label;
     const char *nav_extra_label;
     int save_dialogue_active;
     mux_dialogue save_dlg;
+    int save_all_dialogue_active;
+    mux_dialogue save_all_dlg;
     struct session_settings_t entry_snapshot;
     int pending_action_row;
 } submenu;

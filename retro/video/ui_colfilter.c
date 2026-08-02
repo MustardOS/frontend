@@ -89,11 +89,11 @@ static void close_screen(void) {
 void colfilter_menu_init(void) {
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
-        lang.generic.discard
+        lang.muxretro.save.session_save, lang.generic.discard
     };
     dialogue_init(
         &save_dlg, &theme, ui_screen, lang.muxretro.save.display_title, lang.muxretro.save.display_desc, save_options,
-        4, lang.generic.select, lang.generic.cancel
+        5, lang.generic.select, lang.generic.cancel
     );
 }
 
@@ -132,7 +132,7 @@ void colfilter_menu_tick(void) {
             dialogue_dismiss(&save_dialogue_active, &save_dlg);
             play_sound(snd_confirm);
 
-            session_settings_apply_save_choice(opt);
+            if (opt != 3) session_settings_apply_save_choice(opt);
             submenu_stack_resync();
 
             close_screen();

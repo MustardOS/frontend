@@ -213,39 +213,6 @@ void input_bridge_set_netplay_state(unsigned player_count, const int routes_inpu
 
 static int resolved_source[MUX_RETRO_PORT_COUNT];
 
-static void resolve_port_assignments(void) {
-    int claimed[MUX_RETRO_PORT_COUNT] = {0}; // indexed by mux_input_source index, not port index!
-
-    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
-        resolved_source[port] = -1;
-        if (session_settings.port_assignment[port] != port_assignment_remembered) continue;
-
-        for (int s = 0; s < mux_input_source_count(); s++) {
-            mux_input_source_info info;
-            if (!mux_input_source_get(s, &info) || !info.connected || claimed[s]) continue;
-
-            if (strcmp(info.stable_key, session_settings.port_device_key[port]) == 0) {
-                resolved_source[port] = s;
-                claimed[s] = 1;
-                break;
-            }
-        }
-    }
-
-    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
-        if (session_settings.port_assignment[port] != port_assignment_auto) continue;
-
-        for (int s = 0; s < mux_input_source_count(); s++) {
-            mux_input_source_info info;
-            if (!mux_input_source_get(s, &info) || !info.connected || claimed[s]) continue;
-
-            resolved_source[port] = s;
-            claimed[s] = 1;
-            break;
-        }
-    }
-}
-
 static uint32_t resolve_cached_generation = (uint32_t) -1;
 static int resolve_cached_assignment[MUX_RETRO_PORT_COUNT];
 static char resolve_cached_keys[MUX_RETRO_PORT_COUNT][64];
@@ -258,7 +225,7 @@ static void resolve_port_assignments_cached(void) {
         && memcmp(resolve_cached_keys, session_settings.port_device_key, sizeof(resolve_cached_keys)) == 0)
         return;
 
-    resolve_port_assignments();
+    session_settings_resolve_port_sources(resolved_source);
 
     resolve_cached_generation = generation;
     memcpy(resolve_cached_assignment, session_settings.port_assignment, sizeof(resolve_cached_assignment));

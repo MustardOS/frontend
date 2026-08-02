@@ -6,35 +6,39 @@
 enum {
     row_hotkey_controls = 0,
     row_video,
-    row_display,
     row_sound,
     row_input,
     row_performance,
     row_hud,
     row_storage,
     row_cheevo,
+    row_save,
     row_count
 };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys,
     lang.muxretro.settings_screen.category_video,
-    lang.muxretro.display,
     lang.muxretro.settings_screen.category_sound,
     lang.muxretro.settings_screen.category_input,
     lang.muxretro.settings_screen.category_performance,
     lang.muxretro.settings_screen.category_hud,
     lang.muxretro.settings_screen.category_storage,
     lang.muxretro.retroachievements,
+    lang.muxretro.save_settings,
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys",       "videosettings",   "display",
-                                            "soundsettings", "inputsettings",   "performance",
-                                            "screeninfo",    "storagesettings", "trophy"};
+static const char *row_glyphs[row_count] = {"hotkeys",         "videosettings", "soundsettings",
+                                            "inputsettings",   "performance",   "screeninfo",
+                                            "storagesettings", "trophy",        "settings"};
 
 static int row_is_action(const int index) {
     (void) index;
     return 1;
+}
+
+static int row_is_save(const int index) {
+    return index == row_save;
 }
 
 static void row_action(const int index) {
@@ -44,9 +48,6 @@ static void row_action(const int index) {
             break;
         case row_video:
             video_menu_open();
-            break;
-        case row_display:
-            display_menu_open();
             break;
         case row_sound:
             sound_menu_open();
@@ -79,11 +80,6 @@ static int child_tick(void) {
 
     if (video_menu_is_active()) {
         video_menu_tick();
-        return 1;
-    }
-
-    if (display_menu_is_active()) {
-        display_menu_tick();
         return 1;
     }
 
@@ -135,6 +131,7 @@ static const submenu_def def = {
     .glyphs = row_glyphs,
     .row_count = row_count,
     .row_is_action = row_is_action,
+    .row_is_save = row_is_save,
     .action = row_action,
     .child_tick = child_tick,
     .closed = closed,
@@ -147,7 +144,6 @@ void settings_menu_init(void) {
 
     hotkeys_menu_init();
     video_menu_init();
-    display_menu_init();
     sound_menu_init();
     input_menu_init();
     performance_menu_init();
@@ -173,10 +169,6 @@ void settings_menu_reopen_hotkeys(void) {
 
 void settings_menu_reopen_video(void) {
     submenu_reopen_at(&self, row_video);
-}
-
-void settings_menu_reopen_display(void) {
-    submenu_reopen_at(&self, row_display);
 }
 
 void settings_menu_reopen_sound(void) {

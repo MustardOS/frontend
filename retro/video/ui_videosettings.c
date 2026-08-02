@@ -6,6 +6,8 @@
 
 enum {
     row_viewport = 0,
+    row_display,
+    row_overlay,
     row_scaling,
     row_rotate,
     row_mirrored,
@@ -20,6 +22,8 @@ enum {
 
 static const char *all_labels[row_max] = {
     lang.muxretro.display_screen.viewport,
+    lang.muxretro.display,
+    lang.muxretro.display_screen.overlay,
     lang.muxretro.settings_screen.scaling_mode,
     lang.muxretro.settings_screen.rotate,
     lang.muxretro.settings_screen.mirrored,
@@ -31,8 +35,9 @@ static const char *all_labels[row_max] = {
     lang.muxretro.settings_screen.game_renderer
 };
 
-static const char *all_glyphs[row_max] = {"viewport",     "scaling",       "rotate",     "mirrored", "aspectratio",
-                                          "integerscale", "texturefilter", "shimmerfix", "border",   "gamerenderer"};
+static const char *all_glyphs[row_max] = {"viewport",      "display",    "overlay",     "scaling",
+                                          "rotate",        "mirrored",   "aspectratio", "integerscale",
+                                          "texturefilter", "shimmerfix", "border",      "gamerenderer"};
 
 // The renderer choice only means anything to a core that asked for hardware rendering!
 static const char *row_labels[row_max];
@@ -128,11 +133,24 @@ static void cycle_row(const int display_index, const int direction) {
 }
 
 static int row_is_action(const int display_index) {
-    return row_map[display_index] == row_viewport;
+    const int index = row_map[display_index];
+    return index == row_viewport || index == row_display || index == row_overlay;
 }
 
 static void row_action(const int display_index) {
-    if (row_map[display_index] == row_viewport) viewport_menu_open();
+    switch (row_map[display_index]) {
+        case row_viewport:
+            viewport_menu_open();
+            break;
+        case row_display:
+            display_menu_open();
+            break;
+        case row_overlay:
+            overlay_menu_open();
+            break;
+        default:
+            break;
+    }
 }
 
 static int child_tick(void) {
@@ -140,6 +158,17 @@ static int child_tick(void) {
         viewport_menu_tick();
         return 1;
     }
+
+    if (display_menu_is_active()) {
+        display_menu_tick();
+        return 1;
+    }
+
+    if (overlay_menu_is_active()) {
+        overlay_menu_tick();
+        return 1;
+    }
+
     return 0;
 }
 
@@ -168,7 +197,10 @@ void video_menu_init(void) {
     def.row_count = row_total;
 
     submenu_init(&self, &def);
+
     viewport_menu_init();
+    display_menu_init();
+    overlay_menu_init();
 }
 
 void video_menu_open(void) {
@@ -188,4 +220,12 @@ void video_menu_tick(void) {
 
 void video_menu_reopen_viewport(void) {
     submenu_reopen_at(&self, row_viewport);
+}
+
+void video_menu_reopen_display(void) {
+    submenu_reopen_at(&self, row_display);
+}
+
+void video_menu_reopen_overlay(void) {
+    submenu_reopen_at(&self, row_overlay);
 }

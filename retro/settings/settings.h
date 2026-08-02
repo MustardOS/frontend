@@ -153,6 +153,8 @@ struct session_settings_t {
     int overlay_opacity;
     int viewport_offset_x;
     int viewport_offset_y;
+    int viewport_stretch_x;
+    int viewport_stretch_y;
     int viewport_zoom;
     int viewport_crop_top;
     int viewport_crop_bottom;
@@ -264,6 +266,8 @@ const char *session_settings_overlay_opacity_name(int value);
 const char *session_settings_viewport_offset_x_name(int value);
 
 const char *session_settings_viewport_offset_y_name(int value);
+
+const char *session_settings_viewport_stretch_name(int value);
 
 const char *session_settings_viewport_zoom_name(int value);
 
@@ -379,6 +383,10 @@ void session_settings_cycle_viewport_offset_x(int direction);
 
 void session_settings_cycle_viewport_offset_y(int direction);
 
+void session_settings_cycle_viewport_stretch_x(int direction);
+
+void session_settings_cycle_viewport_stretch_y(int direction);
+
 void session_settings_cycle_viewport_zoom(int direction);
 
 void session_settings_cycle_viewport_crop_top(int direction);
@@ -422,6 +430,8 @@ void session_settings_port_summary(int port, char *buf, size_t len);
 void session_settings_cycle_port_device(int port, int direction);
 
 void session_settings_port_device_summary(int port, char *buf, size_t len);
+
+void session_settings_resolve_port_sources(int *resolved);
 
 int session_settings_resolve_port_source(int port);
 
