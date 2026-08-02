@@ -1854,10 +1854,10 @@ struct mux_lang {
             char overlay_pattern_mode[MAX_BUFFER_SIZE];
             char overlay_catalogue_mode[MAX_BUFFER_SIZE];
             char frame_delay[MAX_BUFFER_SIZE];
-            char analog_deadzone[MAX_BUFFER_SIZE];
-            char analog_anti_deadzone[MAX_BUFFER_SIZE];
-            char analog_sensitivity[MAX_BUFFER_SIZE];
-            char analog_invert_y[MAX_BUFFER_SIZE];
+            char stick_deadzone[MAX_BUFFER_SIZE];
+            char stick_anti_deadzone[MAX_BUFFER_SIZE];
+            char stick_sensitivity[MAX_BUFFER_SIZE];
+            char stick_invert_y[MAX_BUFFER_SIZE];
             char audio_latency[MAX_BUFFER_SIZE];
             char audio_latency_low[MAX_BUFFER_SIZE];
             char audio_latency_balanced[MAX_BUFFER_SIZE];

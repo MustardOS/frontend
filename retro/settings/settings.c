@@ -73,10 +73,10 @@ static const struct session_settings_t defaults = {
     .viewport_crop_right = 0,
     .viewport_centre_crop = 0,
     .frame_delay_ms = FRAME_DELAY_AUTO,
-    .analog_deadzone = 15,
-    .analog_anti_deadzone = 0,
-    .analog_sensitivity = 100,
-    .analog_invert_y = 0,
+    .stick_deadzone = 15,
+    .stick_anti_deadzone = 0,
+    .stick_sensitivity = 100,
+    .stick_invert_y = 0,
     .audio_latency_profile = audio_latency_balanced,
     .audio_period_frames = 512,
     .audio_filter = audio_filter_none,
@@ -146,13 +146,13 @@ static const int default_button_map[16] = {
 #define VIEWPORT_CROP_MAX      512
 #define VIEWPORT_CROP_MIN_KEEP 16
 
-#define ANALOG_DEADZONE_MIN      0
-#define ANALOG_DEADZONE_MAX      50
-#define ANALOG_ANTI_DEADZONE_MIN 0
-#define ANALOG_ANTI_DEADZONE_MAX 50
-#define ANALOG_SENSITIVITY_MIN   50
-#define ANALOG_SENSITIVITY_MAX   200
-#define ANALOG_STEP              5
+#define STICK_DEADZONE_MIN      0
+#define STICK_DEADZONE_MAX      50
+#define STICK_ANTI_DEADZONE_MIN 0
+#define STICK_ANTI_DEADZONE_MAX 50
+#define STICK_SENSITIVITY_MIN   50
+#define STICK_SENSITIVITY_MAX   200
+#define STICK_STEP              5
 
 struct session_settings_t session_settings;
 static struct session_settings_t baseline_settings;
@@ -516,19 +516,19 @@ const char *session_settings_frame_delay_name(const int value) {
     return buf;
 }
 
-const char *session_settings_analog_deadzone_name(const int value) {
+const char *session_settings_stick_deadzone_name(const int value) {
     static char buf[16];
     snprintf(buf, sizeof(buf), "%d%%", value);
     return buf;
 }
 
-const char *session_settings_analog_anti_deadzone_name(const int value) {
+const char *session_settings_stick_anti_deadzone_name(const int value) {
     static char buf[16];
     snprintf(buf, sizeof(buf), "%d%%", value);
     return buf;
 }
 
-const char *session_settings_analog_sensitivity_name(const int value) {
+const char *session_settings_stick_sensitivity_name(const int value) {
     static char buf[16];
     snprintf(buf, sizeof(buf), "%d%%", value);
     return buf;
@@ -741,17 +741,17 @@ static void apply_ini(const char *path) {
         }
     }
 
-    v = mini_get_int(ini, "settings", "analog_deadzone", ANALOG_DEADZONE_MIN - 1);
-    if (v >= ANALOG_DEADZONE_MIN && v <= ANALOG_DEADZONE_MAX) session_settings.analog_deadzone = (int) v;
+    v = mini_get_int(ini, "settings", "stick_deadzone", STICK_DEADZONE_MIN - 1);
+    if (v >= STICK_DEADZONE_MIN && v <= STICK_DEADZONE_MAX) session_settings.stick_deadzone = (int) v;
 
-    v = mini_get_int(ini, "settings", "analog_anti_deadzone", ANALOG_ANTI_DEADZONE_MIN - 1);
-    if (v >= ANALOG_ANTI_DEADZONE_MIN && v <= ANALOG_ANTI_DEADZONE_MAX) session_settings.analog_anti_deadzone = (int) v;
+    v = mini_get_int(ini, "settings", "stick_anti_deadzone", STICK_ANTI_DEADZONE_MIN - 1);
+    if (v >= STICK_ANTI_DEADZONE_MIN && v <= STICK_ANTI_DEADZONE_MAX) session_settings.stick_anti_deadzone = (int) v;
 
-    v = mini_get_int(ini, "settings", "analog_sensitivity", ANALOG_SENSITIVITY_MIN - 1);
-    if (v >= ANALOG_SENSITIVITY_MIN && v <= ANALOG_SENSITIVITY_MAX) session_settings.analog_sensitivity = (int) v;
+    v = mini_get_int(ini, "settings", "stick_sensitivity", STICK_SENSITIVITY_MIN - 1);
+    if (v >= STICK_SENSITIVITY_MIN && v <= STICK_SENSITIVITY_MAX) session_settings.stick_sensitivity = (int) v;
 
-    v = mini_get_int(ini, "settings", "analog_invert_y", -1);
-    if (v == 0 || v == 1) session_settings.analog_invert_y = (int) v;
+    v = mini_get_int(ini, "settings", "stick_invert_y", -1);
+    if (v == 0 || v == 1) session_settings.stick_invert_y = (int) v;
 
     v = mini_get_int(ini, "settings", "audio_latency_profile", -1);
     if (v >= 0 && v < audio_latency_count) session_settings.audio_latency_profile = (int) v;
@@ -903,10 +903,10 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(viewport_crop_right);
     DELTA(viewport_centre_crop);
     DELTA(frame_delay_ms);
-    DELTA(analog_deadzone);
-    DELTA(analog_anti_deadzone);
-    DELTA(analog_sensitivity);
-    DELTA(analog_invert_y);
+    DELTA(stick_deadzone);
+    DELTA(stick_anti_deadzone);
+    DELTA(stick_sensitivity);
+    DELTA(stick_invert_y);
     DELTA(audio_latency_profile);
     DELTA(audio_period_frames);
     DELTA(audio_filter);
@@ -1412,31 +1412,31 @@ void session_settings_cycle_frame_delay(const int direction) {
     session_settings.frame_delay_ms = frame_delay_choices[idx];
 }
 
-void session_settings_cycle_analog_deadzone(const int direction) {
-    session_settings.analog_deadzone += direction * ANALOG_STEP;
-    if (session_settings.analog_deadzone < ANALOG_DEADZONE_MIN) session_settings.analog_deadzone = ANALOG_DEADZONE_MIN;
-    if (session_settings.analog_deadzone > ANALOG_DEADZONE_MAX) session_settings.analog_deadzone = ANALOG_DEADZONE_MAX;
+void session_settings_cycle_stick_deadzone(const int direction) {
+    session_settings.stick_deadzone += direction * STICK_STEP;
+    if (session_settings.stick_deadzone < STICK_DEADZONE_MIN) session_settings.stick_deadzone = STICK_DEADZONE_MIN;
+    if (session_settings.stick_deadzone > STICK_DEADZONE_MAX) session_settings.stick_deadzone = STICK_DEADZONE_MAX;
 }
 
-void session_settings_cycle_analog_anti_deadzone(const int direction) {
-    session_settings.analog_anti_deadzone += direction * ANALOG_STEP;
-    if (session_settings.analog_anti_deadzone < ANALOG_ANTI_DEADZONE_MIN)
-        session_settings.analog_anti_deadzone = ANALOG_ANTI_DEADZONE_MIN;
-    if (session_settings.analog_anti_deadzone > ANALOG_ANTI_DEADZONE_MAX)
-        session_settings.analog_anti_deadzone = ANALOG_ANTI_DEADZONE_MAX;
+void session_settings_cycle_stick_anti_deadzone(const int direction) {
+    session_settings.stick_anti_deadzone += direction * STICK_STEP;
+    if (session_settings.stick_anti_deadzone < STICK_ANTI_DEADZONE_MIN)
+        session_settings.stick_anti_deadzone = STICK_ANTI_DEADZONE_MIN;
+    if (session_settings.stick_anti_deadzone > STICK_ANTI_DEADZONE_MAX)
+        session_settings.stick_anti_deadzone = STICK_ANTI_DEADZONE_MAX;
 }
 
-void session_settings_cycle_analog_sensitivity(const int direction) {
-    session_settings.analog_sensitivity += direction * ANALOG_STEP;
-    if (session_settings.analog_sensitivity < ANALOG_SENSITIVITY_MIN)
-        session_settings.analog_sensitivity = ANALOG_SENSITIVITY_MIN;
-    if (session_settings.analog_sensitivity > ANALOG_SENSITIVITY_MAX)
-        session_settings.analog_sensitivity = ANALOG_SENSITIVITY_MAX;
+void session_settings_cycle_stick_sensitivity(const int direction) {
+    session_settings.stick_sensitivity += direction * STICK_STEP;
+    if (session_settings.stick_sensitivity < STICK_SENSITIVITY_MIN)
+        session_settings.stick_sensitivity = STICK_SENSITIVITY_MIN;
+    if (session_settings.stick_sensitivity > STICK_SENSITIVITY_MAX)
+        session_settings.stick_sensitivity = STICK_SENSITIVITY_MAX;
 }
 
-void session_settings_cycle_analog_invert_y(const int direction) {
+void session_settings_cycle_stick_invert_y(const int direction) {
     (void) direction;
-    session_settings.analog_invert_y = !session_settings.analog_invert_y;
+    session_settings.stick_invert_y = !session_settings.stick_invert_y;
 }
 
 void session_settings_cycle_audio_latency(const int direction) {
@@ -1957,10 +1957,10 @@ void session_settings_reset_input(void) {
     session_settings_auto_assign_controllers();
 
     session_settings.rumble_enabled = defaults.rumble_enabled;
-    session_settings.analog_deadzone = defaults.analog_deadzone;
-    session_settings.analog_anti_deadzone = defaults.analog_anti_deadzone;
-    session_settings.analog_sensitivity = defaults.analog_sensitivity;
-    session_settings.analog_invert_y = defaults.analog_invert_y;
+    session_settings.stick_deadzone = defaults.stick_deadzone;
+    session_settings.stick_anti_deadzone = defaults.stick_anti_deadzone;
+    session_settings.stick_sensitivity = defaults.stick_sensitivity;
+    session_settings.stick_invert_y = defaults.stick_invert_y;
 
     input_bridge_apply_controller_ports();
 }

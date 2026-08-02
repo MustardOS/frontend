@@ -137,10 +137,10 @@ static int stick_has_bound_direction(const int port, const int stick) {
     return 0;
 }
 
-static int16_t apply_analog_transform(const int16_t raw) {
-    const double dz = (double) session_settings.analog_deadzone / 100.0;
-    const double adz = (double) session_settings.analog_anti_deadzone / 100.0;
-    const double sens = (double) session_settings.analog_sensitivity / 100.0;
+static int16_t apply_stick_transform(const int16_t raw) {
+    const double dz = (double) session_settings.stick_deadzone / 100.0;
+    const double adz = (double) session_settings.stick_anti_deadzone / 100.0;
+    const double sens = (double) session_settings.stick_sensitivity / 100.0;
 
     double v = (double) raw / 32767.0;
     if (v > 1.0) v = 1.0;
@@ -157,7 +157,7 @@ static int16_t apply_analog_transform(const int16_t raw) {
 }
 
 static int16_t invert_y_if_needed(const int16_t y) {
-    if (!session_settings.analog_invert_y) return y;
+    if (!session_settings.stick_invert_y) return y;
     return y == INT16_MIN ? INT16_MAX : (int16_t) -y;
 }
 
@@ -267,7 +267,7 @@ static void input_bridge_build_snapshot(void) {
             build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0, restricted);
 
         for (int s = 0; s < 2; s++) {
-            // A playing analogue stick macro owns that stick outright and ignores any axis transform
+            // A playing stick macro owns that stick outright and ignores any axis transform
             if (!restricted && macro_runtime_stick(port, s, &port_stick_x[port][s], &port_stick_y[port][s])) continue;
 
             // A button bound to a axis direction takes the stick over only while it is actually held
@@ -285,8 +285,8 @@ static void input_bridge_build_snapshot(void) {
 
             int16_t x, y;
             mux_input_source_stick(source, s, &x, &y);
-            port_stick_x[port][s] = apply_analog_transform(x);
-            port_stick_y[port][s] = invert_y_if_needed(apply_analog_transform(y));
+            port_stick_x[port][s] = apply_stick_transform(x);
+            port_stick_y[port][s] = invert_y_if_needed(apply_stick_transform(y));
         }
     }
 

@@ -898,6 +898,8 @@ static submenu_def definition = {
 };
 
 void cheevo_menu_init(void) {
+    if (!device.board.has_network) return;
+
     login_labels[login_row_username] = lang.muxretro.cheevo.username;
     login_labels[login_row_password] = lang.muxretro.cheevo.password;
     login_labels[login_row_submit] = lang.muxretro.cheevo.sign_in;
@@ -972,6 +974,7 @@ void cheevo_menu_init(void) {
 }
 
 void cheevo_menu_open(void) {
+    if (!device.board.has_network) return;
     details_open();
 }
 
@@ -1001,6 +1004,7 @@ void cheevo_menu_tick(void) {
 }
 
 void cheevo_settings_menu_open(void) {
+    if (!device.board.has_network) return;
     if (!self_initialised) {
         submenu_init(&self, &definition);
         self_initialised = 1;

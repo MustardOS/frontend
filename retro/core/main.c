@@ -419,7 +419,7 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
 
-    cheevo_init(content_path);
+    if (device.board.has_network) cheevo_init(content_path);
 
     sram_bridge_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
@@ -434,7 +434,7 @@ int main(const int argc, char *argv[]) {
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
 
-    if (netplay_init(core_path_arg, content_path) != 0)
+    if (device.board.has_network && netplay_init(core_path_arg, content_path) != 0)
         LOG_WARN(mux_module, "Network Play secure transport could not be initialised");
 
     video_bridge_apply_fps_limit();
@@ -527,13 +527,16 @@ int main(const int argc, char *argv[]) {
     if (cheevo_connecting_background)
         pause_menu_show_toast_timed(lang.muxretro.cheevo.connecting_background, tst_wait_s);
 
-    if (start_netplay_invalid) {
-        pause_menu_show_toast(lang.muxretro.netplay.startup_invalid);
-    } else if (start_netplay_host) {
-        if (netplay_host(start_netplay_port) != 0) pause_menu_show_toast(lang.muxretro.netplay.hosting_start_failed);
-    } else if (start_netplay_address[0]) {
-        if (netplay_join(start_netplay_address, start_netplay_port) != 0)
-            pause_menu_show_toast(lang.muxretro.netplay.startup_join_failed);
+    if (device.board.has_network) {
+        if (start_netplay_invalid) {
+            pause_menu_show_toast(lang.muxretro.netplay.startup_invalid);
+        } else if (start_netplay_host) {
+            if (netplay_host(start_netplay_port) != 0)
+                pause_menu_show_toast(lang.muxretro.netplay.hosting_start_failed);
+        } else if (start_netplay_address[0]) {
+            if (netplay_join(start_netplay_address, start_netplay_port) != 0)
+                pause_menu_show_toast(lang.muxretro.netplay.startup_join_failed);
+        }
     }
     LOG_DEBUG(
         mux_module, "pause_menu_init done: ui_screen=%p ui_pnl_header=%p ui_pnl_content=%p ui_pnl_footer=%p",

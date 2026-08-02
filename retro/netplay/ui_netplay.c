@@ -566,6 +566,8 @@ static submenu_def join_definition = {
 };
 
 void netplay_menu_init(void) {
+    if (!device.board.has_network) return;
+
     root_labels[root_row_host] = lang.muxretro.netplay.host_network;
     root_labels[root_row_join] = lang.muxretro.netplay.join_network;
     root_labels[root_row_status] = lang.muxretro.netplay.status;
@@ -602,6 +604,7 @@ void netplay_menu_init(void) {
 }
 
 void netplay_menu_open(void) {
+    if (!device.board.has_network) return;
     if (!menus_initialised) netplay_menu_init();
     pairing_focused = 0;
     submenu_open(&root_menu);

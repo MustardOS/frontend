@@ -70,8 +70,8 @@ static void compute_row_indices(void) {
     row_resume = i++;
     row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
     row_options = !netplay_is_active() ? i++ : -1;
-    row_netplay = i++;
-    row_cheevo = cheevo_is_configured() ? i++ : -1;
+    row_netplay = device.board.has_network ? i++ : -1;
+    row_cheevo = device.board.has_network && cheevo_is_configured() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
     row_cheats = cheats_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
     row_patches = patch_manual_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
@@ -406,7 +406,7 @@ void pause_menu_rebuild(void) {
     gen_label("muxretro", "resume", lang.muxretro.resume);
     if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
     if (row_options >= 0) gen_label("muxretro", "core", lang.muxretro.core_options);
-    gen_label("muxretro", "network", lang.muxretro.network_play);
+    if (row_netplay >= 0) gen_label("muxretro", "network", lang.muxretro.network_play);
     if (row_cheevo >= 0) gen_label("muxretro", "trophy", lang.muxretro.cheevo.achievements);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
     if (row_cheats >= 0) gen_label("muxretro", "cheat", lang.muxretro.cheats);
@@ -542,8 +542,10 @@ void pause_menu_init(void) {
     patch_menu_init();
     manual_menu_init();
     options_menu_init();
-    netplay_menu_init();
-    cheevo_menu_init();
+    if (device.board.has_network) {
+        netplay_menu_init();
+        cheevo_menu_init();
+    }
 
     pause_menu_rebuild();
 
@@ -721,7 +723,7 @@ int pause_menu_tick(void) {
         } else if (current_item_index == row_options) {
             play_sound(snd_confirm);
             options_menu_open();
-        } else if (current_item_index == row_netplay) {
+        } else if (row_netplay >= 0 && current_item_index == row_netplay) {
             play_sound(snd_confirm);
             netplay_menu_open();
         } else if (row_cheevo >= 0 && current_item_index == row_cheevo) {

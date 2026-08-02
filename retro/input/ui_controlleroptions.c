@@ -6,21 +6,21 @@
 
 enum {
     row_rumble = 0,
-    row_analog_deadzone,
-    row_analog_anti_deadzone,
-    row_analog_sensitivity,
-    row_analog_invert_y,
+    row_stick_deadzone,
+    row_stick_anti_deadzone,
+    row_stick_sensitivity,
+    row_stick_invert_y,
     row_count
 };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.rumble, lang.muxretro.settings_screen.analog_deadzone,
-    lang.muxretro.settings_screen.analog_anti_deadzone, lang.muxretro.settings_screen.analog_sensitivity,
-    lang.muxretro.settings_screen.analog_invert_y
+    lang.muxretro.settings_screen.rumble, lang.muxretro.settings_screen.stick_deadzone,
+    lang.muxretro.settings_screen.stick_anti_deadzone, lang.muxretro.settings_screen.stick_sensitivity,
+    lang.muxretro.settings_screen.stick_invert_y
 };
 
 static const char *row_glyphs[row_count] = {
-    "rumble", "analogdeadzone", "analogantideadzone", "analogsensitivity", "analoginverty"
+    "rumble", "stickdeadzone", "stickantideadzone", "sticksensitivity", "stickinverty"
 };
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
@@ -30,20 +30,20 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
                 buf, buf_len, "%s", session_settings.rumble_enabled ? lang.generic.enabled : lang.generic.disabled
             );
             break;
-        case row_analog_deadzone:
-            snprintf(buf, buf_len, "%s", session_settings_analog_deadzone_name(session_settings.analog_deadzone));
+        case row_stick_deadzone:
+            snprintf(buf, buf_len, "%s", session_settings_stick_deadzone_name(session_settings.stick_deadzone));
             break;
-        case row_analog_anti_deadzone:
+        case row_stick_anti_deadzone:
             snprintf(
-                buf, buf_len, "%s", session_settings_analog_anti_deadzone_name(session_settings.analog_anti_deadzone)
+                buf, buf_len, "%s", session_settings_stick_anti_deadzone_name(session_settings.stick_anti_deadzone)
             );
             break;
-        case row_analog_sensitivity:
-            snprintf(buf, buf_len, "%s", session_settings_analog_sensitivity_name(session_settings.analog_sensitivity));
+        case row_stick_sensitivity:
+            snprintf(buf, buf_len, "%s", session_settings_stick_sensitivity_name(session_settings.stick_sensitivity));
             break;
-        case row_analog_invert_y:
+        case row_stick_invert_y:
             snprintf(
-                buf, buf_len, "%s", session_settings.analog_invert_y ? lang.generic.enabled : lang.generic.disabled
+                buf, buf_len, "%s", session_settings.stick_invert_y ? lang.generic.enabled : lang.generic.disabled
             );
             break;
         default:
@@ -57,17 +57,17 @@ static void cycle_row(const int index, const int direction) {
         case row_rumble:
             session_settings_cycle_rumble(direction);
             break;
-        case row_analog_deadzone:
-            session_settings_cycle_analog_deadzone(direction);
+        case row_stick_deadzone:
+            session_settings_cycle_stick_deadzone(direction);
             break;
-        case row_analog_anti_deadzone:
-            session_settings_cycle_analog_anti_deadzone(direction);
+        case row_stick_anti_deadzone:
+            session_settings_cycle_stick_anti_deadzone(direction);
             break;
-        case row_analog_sensitivity:
-            session_settings_cycle_analog_sensitivity(direction);
+        case row_stick_sensitivity:
+            session_settings_cycle_stick_sensitivity(direction);
             break;
-        case row_analog_invert_y:
-            session_settings_cycle_analog_invert_y(direction);
+        case row_stick_invert_y:
+            session_settings_cycle_stick_invert_y(direction);
             break;
         default:
             break;

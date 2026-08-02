@@ -3,68 +3,73 @@
 #include "../core/muxretro.h"
 #include "submenu.h"
 
-enum {
-    row_hotkey_controls = 0,
-    row_video,
-    row_sound,
-    row_input,
-    row_performance,
-    row_hud,
-    row_storage,
-    row_cheevo,
-    row_save,
-    row_count
-};
+typedef enum {
+    settings_item_hotkey_controls = 0,
+    settings_item_video,
+    settings_item_sound,
+    settings_item_input,
+    settings_item_performance,
+    settings_item_hud,
+    settings_item_storage,
+    settings_item_cheevo,
+    settings_item_save,
+    settings_item_count
+} settings_item;
 
-static const char *row_labels[row_count] = {
-    lang.muxretro.hotkeys,
-    lang.muxretro.settings_screen.category_video,
-    lang.muxretro.settings_screen.category_sound,
-    lang.muxretro.settings_screen.category_input,
-    lang.muxretro.settings_screen.category_performance,
-    lang.muxretro.settings_screen.category_hud,
-    lang.muxretro.settings_screen.category_storage,
-    lang.muxretro.retroachievements,
-    lang.muxretro.save_settings,
-};
+static const char *row_labels[settings_item_count];
+static const char *row_glyphs[settings_item_count];
+static settings_item row_items[settings_item_count];
+static int row_count;
 
-static const char *row_glyphs[row_count] = {"hotkeys",         "videosettings", "soundsettings",
-                                            "inputsettings",   "performance",   "screeninfo",
-                                            "storagesettings", "trophy",        "settings"};
+static void add_row(const settings_item item, const char *label, const char *glyph) {
+    row_items[row_count] = item;
+    row_labels[row_count] = label;
+    row_glyphs[row_count] = glyph;
+    row_count++;
+}
+
+static settings_item row_item(const int index) {
+    return index >= 0 && index < row_count ? row_items[index] : settings_item_count;
+}
+
+static int row_for_item(const settings_item item) {
+    for (int index = 0; index < row_count; index++)
+        if (row_items[index] == item) return index;
+    return -1;
+}
 
 static int row_is_action(const int index) {
-    (void) index;
-    return 1;
+    return row_item(index) != settings_item_count;
 }
 
 static int row_is_save(const int index) {
-    return index == row_save;
+    return row_item(index) == settings_item_save;
 }
 
 static void row_action(const int index) {
-    switch (index) {
-        case row_hotkey_controls:
+    switch (row_item(index)) {
+        case settings_item_hotkey_controls:
             hotkeys_menu_open();
             break;
-        case row_video:
+        case settings_item_video:
             video_menu_open();
             break;
-        case row_sound:
+        case settings_item_sound:
             sound_menu_open();
             break;
-        case row_input:
+        case settings_item_input:
             input_menu_open();
             break;
-        case row_performance:
+        case settings_item_performance:
             performance_menu_open();
             break;
-        case row_hud:
+        case settings_item_hud:
             hud_menu_open();
             break;
-        case row_storage:
+        case settings_item_storage:
             storage_menu_open();
             break;
-        case row_cheevo:
+        case settings_item_cheevo:
             cheevo_settings_menu_open();
             break;
         default:
@@ -126,10 +131,10 @@ static void closed(void) {
 
 static submenu self;
 
-static const submenu_def def = {
+static submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
-    .row_count = row_count,
+    .row_count = 0,
     .row_is_action = row_is_action,
     .row_is_save = row_is_save,
     .action = row_action,
@@ -140,6 +145,19 @@ static const submenu_def def = {
 };
 
 void settings_menu_init(void) {
+    row_count = 0;
+    add_row(settings_item_hotkey_controls, lang.muxretro.hotkeys, "hotkeys");
+    add_row(settings_item_video, lang.muxretro.settings_screen.category_video, "videosettings");
+    add_row(settings_item_sound, lang.muxretro.settings_screen.category_sound, "soundsettings");
+    add_row(settings_item_input, lang.muxretro.settings_screen.category_input, "inputsettings");
+    add_row(settings_item_performance, lang.muxretro.settings_screen.category_performance, "performance");
+    add_row(settings_item_hud, lang.muxretro.settings_screen.category_hud, "screeninfo");
+    add_row(settings_item_storage, lang.muxretro.settings_screen.category_storage, "storagesettings");
+    if (device.board.has_network)
+        add_row(settings_item_cheevo, lang.muxretro.retroachievements, "trophy");
+    add_row(settings_item_save, lang.muxretro.save_settings, "settings");
+    def.row_count = row_count;
+
     submenu_init(&self, &def);
 
     hotkeys_menu_init();
@@ -164,33 +182,34 @@ void settings_menu_tick(void) {
 }
 
 void settings_menu_reopen_hotkeys(void) {
-    submenu_reopen_at(&self, row_hotkey_controls);
+    submenu_reopen_at(&self, row_for_item(settings_item_hotkey_controls));
 }
 
 void settings_menu_reopen_video(void) {
-    submenu_reopen_at(&self, row_video);
+    submenu_reopen_at(&self, row_for_item(settings_item_video));
 }
 
 void settings_menu_reopen_sound(void) {
-    submenu_reopen_at(&self, row_sound);
+    submenu_reopen_at(&self, row_for_item(settings_item_sound));
 }
 
 void settings_menu_reopen_input(void) {
-    submenu_reopen_at(&self, row_input);
+    submenu_reopen_at(&self, row_for_item(settings_item_input));
 }
 
 void settings_menu_reopen_performance(void) {
-    submenu_reopen_at(&self, row_performance);
+    submenu_reopen_at(&self, row_for_item(settings_item_performance));
 }
 
 void settings_menu_reopen_hud(void) {
-    submenu_reopen_at(&self, row_hud);
+    submenu_reopen_at(&self, row_for_item(settings_item_hud));
 }
 
 void settings_menu_reopen_storage(void) {
-    submenu_reopen_at(&self, row_storage);
+    submenu_reopen_at(&self, row_for_item(settings_item_storage));
 }
 
 void settings_menu_reopen_cheevo(void) {
-    submenu_reopen_at(&self, row_cheevo);
+    const int row = row_for_item(settings_item_cheevo);
+    if (row >= 0) submenu_reopen_at(&self, row);
 }

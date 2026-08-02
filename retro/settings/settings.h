@@ -162,10 +162,10 @@ struct session_settings_t {
     int viewport_crop_right;
     int viewport_centre_crop;
     int frame_delay_ms;
-    int analog_deadzone;
-    int analog_anti_deadzone;
-    int analog_sensitivity;
-    int analog_invert_y;
+    int stick_deadzone;
+    int stick_anti_deadzone;
+    int stick_sensitivity;
+    int stick_invert_y;
     int audio_latency_profile;
     int audio_period_frames;
     int audio_filter;
@@ -275,11 +275,11 @@ const char *session_settings_viewport_crop_name(int value);
 
 const char *session_settings_frame_delay_name(int value);
 
-const char *session_settings_analog_deadzone_name(int value);
+const char *session_settings_stick_deadzone_name(int value);
 
-const char *session_settings_analog_anti_deadzone_name(int value);
+const char *session_settings_stick_anti_deadzone_name(int value);
 
-const char *session_settings_analog_sensitivity_name(int value);
+const char *session_settings_stick_sensitivity_name(int value);
 
 const char *session_settings_audio_latency_name(int mode);
 
@@ -401,13 +401,13 @@ void session_settings_cycle_viewport_centre_crop(int direction);
 
 void session_settings_cycle_frame_delay(int direction);
 
-void session_settings_cycle_analog_deadzone(int direction);
+void session_settings_cycle_stick_deadzone(int direction);
 
-void session_settings_cycle_analog_anti_deadzone(int direction);
+void session_settings_cycle_stick_anti_deadzone(int direction);
 
-void session_settings_cycle_analog_sensitivity(int direction);
+void session_settings_cycle_stick_sensitivity(int direction);
 
-void session_settings_cycle_analog_invert_y(int direction);
+void session_settings_cycle_stick_invert_y(int direction);
 
 void session_settings_cycle_audio_latency(int direction);
 
