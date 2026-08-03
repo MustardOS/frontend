@@ -2540,6 +2540,8 @@ struct mux_lang {
         char clock[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char bluetooth[MAX_BUFFER_SIZE];
+        char sortorder[MAX_BUFFER_SIZE];
+        char tagorder[MAX_BUFFER_SIZE];
         char headertitle[MAX_BUFFER_SIZE];
         char elementtransition[MAX_BUFFER_SIZE];
         char dash[MAX_BUFFER_SIZE];
@@ -2622,6 +2624,8 @@ struct mux_lang {
             char clock[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char bluetooth[MAX_BUFFER_SIZE];
+            char sort_order[MAX_BUFFER_SIZE];
+            char tag_order[MAX_BUFFER_SIZE];
             char header_title[MAX_BUFFER_SIZE];
             char element_transition[MAX_BUFFER_SIZE];
             char dash[MAX_BUFFER_SIZE];

@@ -777,7 +777,10 @@ void init_ui_common_screen(
     lv_obj_add_flag(ui_sta_tag, LV_OBJ_FLAG_HIDDEN);
 
     ui_sta_order = create_header_glyph(ui_con_tag, theme);
+    lv_obj_set_style_pad_left(ui_sta_order, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_flag(ui_sta_order, LV_OBJ_FLAG_HIDDEN);
+
+    lv_obj_set_style_pad_column(ui_con_tag, 6, MU_OBJ_MAIN_DEFAULT);
 
     ui_con_glyphs = lv_obj_create(ui_pnl_header);
     lv_obj_set_width(ui_con_glyphs, device->mux.width);
@@ -1692,8 +1695,8 @@ static int header_extra_glyph(
 void update_header_extras(const struct theme_config *theme, const char *tag, const char *order) {
     if (!ui_sta_tag || !ui_sta_order || !ui_lbl_datetime) return;
 
-    const int has_tag = header_extra_glyph(ui_sta_tag, theme, "muxtag", tag);
-    const int has_order = header_extra_glyph(ui_sta_order, theme, "muxorder", order);
+    const int has_tag = header_extra_glyph(ui_sta_tag, theme, "muxtag", config.visual.tag_order ? tag : NULL);
+    const int has_order = header_extra_glyph(ui_sta_order, theme, "muxorder", config.visual.sort_order ? order : NULL);
 
     lv_coord_t used = 0;
 
@@ -1703,6 +1706,7 @@ void update_header_extras(const struct theme_config *theme, const char *tag, con
 
         if (has_tag) used += lv_obj_get_width(ui_sta_tag);
         if (has_order) used += lv_obj_get_width(ui_sta_order);
+        if (has_tag && has_order) used += 6;
 
         used += 6;
     }

@@ -19,6 +19,8 @@ typedef enum {
 extern order_method order_active;
 extern int order_variants[order_count];
 
+int order_is_default(void);
+
 extern int order_scope_directory;
 
 const char *order_method_name(order_method method);

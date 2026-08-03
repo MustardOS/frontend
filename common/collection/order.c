@@ -102,6 +102,10 @@ const char *order_variant_name(const order_method method, const int variant) {
     }
 }
 
+int order_is_default(void) {
+    return order_active == order_natural && order_variants[order_natural] == 0;
+}
+
 void order_reset_defaults(void) {
     // Alphasort is what users expect most from a fresh install!
     order_active = order_natural;

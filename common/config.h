@@ -299,6 +299,8 @@ struct mux_config {
         int16_t element_transition;
         int16_t bluetooth;
         int16_t clock;
+        int16_t sort_order;
+        int16_t tag_order;
         int16_t overlay_image;
         int16_t overlay_transparency;
         int16_t grid_mode_content;

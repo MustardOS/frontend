@@ -547,6 +547,8 @@
     VISUAL(clock, "clock")                                                                                             \
     VISUAL(network, "network")                                                                                         \
     VISUAL(bluetooth, "bluetooth")                                                                                     \
+    VISUAL(sort_order, "sortorder")                                                                                    \
+    VISUAL(tag_order, "tagorder")                                                                                      \
     VISUAL(header_title, "headertitle")                                                                                \
     VISUAL(element_transition, "elementtransition")                                                                    \
     VISUAL(name, "name")                                                                                               \

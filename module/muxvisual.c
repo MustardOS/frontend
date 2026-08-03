@@ -88,6 +88,8 @@ static void save_visual_options(void) {
     CHECK_AND_SAVE_STD(visual, clock, "visual/clock", INT, 0);
     CHECK_AND_SAVE_STD(visual, network, "visual/network", INT, 0);
     CHECK_AND_SAVE_STD(visual, bluetooth, "visual/bluetooth", INT, 0);
+    CHECK_AND_SAVE_STD(visual, sort_order, "visual/sortorder", INT, 0);
+    CHECK_AND_SAVE_STD(visual, tag_order, "visual/tagorder", INT, 0);
     CHECK_AND_SAVE_STD(visual, header_title, "visual/headertitle", INT, 0);
     CHECK_AND_SAVE_STD(visual, element_transition, "visual/elementtransition", INT, 0);
     CHECK_AND_SAVE_STD(visual, name, "visual/name", INT, 0);
@@ -172,6 +174,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, clock, lang.muxvisual.clock, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, network, lang.muxvisual.network, "network", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, bluetooth, lang.muxvisual.bluetooth, "bluetooth", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, sort_order, lang.muxvisual.sortorder, "sortorder", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, tag_order, lang.muxvisual.tagorder, "tagorder", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, header_title, lang.muxvisual.headertitle, "headertitle", hidden_visible, 2);
     INIT_OPTION_ITEM(
         -1, visual, element_transition, lang.muxvisual.elementtransition, "elementtransition", element_transition, 14

@@ -1545,7 +1545,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_menu, lang.generic.actions, 0},
                                   {NULL, NULL, 0}});
 
-    update_header_extras(&theme, NULL, order_method_glyph(order_active));
+    update_header_extras(&theme, NULL, order_is_default() ? NULL : order_method_glyph(order_active));
 
     overlay_display();
 }
