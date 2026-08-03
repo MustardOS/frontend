@@ -6,6 +6,7 @@ static lv_obj_t *ui_viewport_objects[7];
 
 static int remove_mode = 0;
 static int skip_confirm = 0;
+static int remove_pending = 0;
 static mux_dialogue remove_dlg;
 
 static int actions_mode = 0;
@@ -437,6 +438,9 @@ load_end:
 }
 
 static void do_remove(void) {
+    if (remove_pending) return;
+    if (!items || !ui_count_static || current_item_index < 0 || (size_t) current_item_index >= item_count) return;
+
     char name_no_ext[MAX_BUFFER_SIZE];
     snprintf(name_no_ext, sizeof(name_no_ext), "%s", items[current_item_index].name);
 
@@ -451,6 +455,8 @@ static void do_remove(void) {
         play_sound(snd_muos);
         remove(history_file);
         mark_history_dirty();
+
+        remove_pending = 1;
         load_mux("history");
         mux_input_stop();
     } else {
@@ -756,6 +762,8 @@ static void handle_x(void) {
     char *last_slash = strrchr(content_dir, '/');
     if (last_slash) *last_slash = '\0';
 
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
     write_text_to_file(MUOS_OPT_FROM, "w", CHAR, "history");
     write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
@@ -861,6 +869,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 
 int muxhistory_main(const int his_index) {
     exit_status = 0;
+    remove_pending = 0;
     file_count = 0;
     starter_image = 0;
     splash_valid = 0;

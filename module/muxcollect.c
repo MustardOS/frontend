@@ -47,6 +47,8 @@ static char *load_content_description(void) {
     return lang.generic.no_info;
 }
 
+static void adjust_panels(void);
+
 static void image_refresh(const char *image_type) {
     if (!ui_count_static) return;
     if (strcasecmp(image_type, "box") == 0 && config.visual.box_art == 8) return;
@@ -280,6 +282,22 @@ static void update_footer_glyph(void) {
     );
 }
 
+static void update_option_nav(void) {
+    if (add_mode || is_ksk(kiosk.collect.remove)) return;
+
+    const int folder = !ui_count_static || items[current_item_index].content_type == content_type_folder;
+
+    if (folder) {
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    adjust_panels();
+}
+
 static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
     lv_label_set_text(ui_lbl_item, items[index].display_name);
 
@@ -374,6 +392,7 @@ static void list_nav_move(const int steps, const int direction) {
     }
 
     update_footer_glyph();
+    update_option_nav();
     nav_moved = 1;
 }
 
@@ -386,6 +405,7 @@ static void list_nav_next(const int steps) {
 }
 
 static int remove_mode = 0;
+static int remove_pending = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
 
@@ -450,6 +470,9 @@ static void hide_remove_dialog(void) {
 }
 
 static void do_remove(void) {
+    if (remove_pending) return;
+    if (!items || !ui_count_static || current_item_index < 0 || (size_t) current_item_index >= item_count) return;
+
     if (items[current_item_index].content_type == content_type_folder) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
             play_sound(snd_error);
@@ -491,6 +514,8 @@ static void do_remove(void) {
         remove(collection_file);
         mark_collection_dirty();
     }
+
+    remove_pending = 1;
 
     load_mux("collection");
     mux_input_stop();
@@ -906,6 +931,8 @@ static void handle_x(void) {
     char *last_slash = strrchr(content_dir, '/');
     if (last_slash) *last_slash = '\0';
 
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
     write_text_to_file(MUOS_OPT_FROM, "w", CHAR, "collection");
     write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
@@ -1228,6 +1255,7 @@ static void on_key_event(const struct input_event ev) {
 int muxcollect_main(const int add, const char *dir, const int last_index) {
     exit_status = 0;
     add_mode = add;
+    remove_pending = 0;
     sys_index = last_index;
     current_item_index = 0;
     file_count = 0;
@@ -1356,6 +1384,8 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
 
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
+
+    update_option_nav();
 
     if (is_ksk(kiosk.collect.remove)) {
         lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
