@@ -4,8 +4,7 @@
 #include "submenu.h"
 
 typedef enum {
-    settings_item_hotkey_controls = 0,
-    settings_item_video,
+    settings_item_video = 0,
     settings_item_sound,
     settings_item_input,
     settings_item_performance,
@@ -48,9 +47,6 @@ static int row_is_save(const int index) {
 
 static void row_action(const int index) {
     switch (row_item(index)) {
-        case settings_item_hotkey_controls:
-            hotkeys_menu_open();
-            break;
         case settings_item_video:
             video_menu_open();
             break;
@@ -78,11 +74,6 @@ static void row_action(const int index) {
 }
 
 static int child_tick(void) {
-    if (hotkeys_menu_is_active()) {
-        hotkeys_menu_tick();
-        return 1;
-    }
-
     if (video_menu_is_active()) {
         video_menu_tick();
         return 1;
@@ -146,7 +137,6 @@ static submenu_def def = {
 
 void settings_menu_init(void) {
     row_count = 0;
-    add_row(settings_item_hotkey_controls, lang.muxretro.hotkeys, "hotkeys");
     add_row(settings_item_video, lang.muxretro.settings_screen.category_video, "videosettings");
     add_row(settings_item_sound, lang.muxretro.settings_screen.category_sound, "soundsettings");
     add_row(settings_item_input, lang.muxretro.settings_screen.category_input, "inputsettings");
@@ -160,7 +150,6 @@ void settings_menu_init(void) {
 
     submenu_init(&self, &def);
 
-    hotkeys_menu_init();
     video_menu_init();
     sound_menu_init();
     input_menu_init();
@@ -179,10 +168,6 @@ int settings_menu_is_active(void) {
 
 void settings_menu_tick(void) {
     submenu_tick(&self);
-}
-
-void settings_menu_reopen_hotkeys(void) {
-    submenu_reopen_at(&self, row_for_item(settings_item_hotkey_controls));
 }
 
 void settings_menu_reopen_video(void) {

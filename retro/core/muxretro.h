@@ -252,7 +252,7 @@ int settings_menu_is_active(void);
 
 void settings_menu_tick(void);
 
-void settings_menu_reopen_hotkeys(void);
+void input_menu_reopen_hotkeys(void);
 
 void settings_menu_reopen_video(void);
 

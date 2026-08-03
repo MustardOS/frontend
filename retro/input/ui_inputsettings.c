@@ -4,7 +4,8 @@
 #include "../settings/submenu.h"
 
 enum {
-    row_port_1 = 0,
+    row_hotkeys = 0,
+    row_port_1,
     row_port_2,
     row_port_3,
     row_port_4,
@@ -15,14 +16,15 @@ enum {
 };
 
 static const char *row_labels[row_count] = {
+    lang.muxretro.hotkeys,
     lang.muxretro.settings_screen.port_1,      lang.muxretro.settings_screen.port_2,
     lang.muxretro.settings_screen.port_3,      lang.muxretro.settings_screen.port_4,
     lang.muxretro.settings_screen.auto_assign, lang.muxretro.settings_screen.controller_options,
     lang.muxretro.settings_screen.reset_input,
 };
 
-static const char *row_glyphs[row_count] = {"port1",     "port2", "port3", "port4", "autoassign", "controlleroptions",
-                                            "inputreset"};
+static const char *row_glyphs[row_count] = {"hotkeys",    "port1",      "port2",             "port3", "port4",
+                                            "autoassign", "controlleroptions", "inputreset"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     if (index >= row_port_1 && index <= row_port_4) {
@@ -42,6 +44,9 @@ static submenu self;
 
 static void row_action(const int index) {
     switch (index) {
+        case row_hotkeys:
+            hotkeys_menu_open();
+            break;
         case row_port_1:
         case row_port_2:
         case row_port_3:
@@ -65,6 +70,11 @@ static void row_action(const int index) {
 }
 
 static int child_tick(void) {
+    if (hotkeys_menu_is_active()) {
+        hotkeys_menu_tick();
+        return 1;
+    }
+
     if (input_port_menu_is_active()) {
         input_port_menu_tick();
         return 1;
@@ -97,6 +107,7 @@ static const submenu_def def = {
 
 void input_menu_init(void) {
     submenu_init(&self, &def);
+    hotkeys_menu_init();
     controller_options_menu_init();
     input_port_menu_init_all();
 }
@@ -119,4 +130,8 @@ void input_menu_reopen_port(const int port) {
 
 void input_menu_reopen_controller_options(void) {
     submenu_reopen_at(&self, row_controller_options);
+}
+
+void input_menu_reopen_hotkeys(void) {
+    submenu_reopen_at(&self, row_hotkeys);
 }

@@ -160,7 +160,7 @@ static void cycle_row(const int index, const int direction) {
 }
 
 static void closed(void) {
-    settings_menu_reopen_hotkeys();
+    input_menu_reopen_hotkeys();
 }
 
 static submenu self;
