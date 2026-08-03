@@ -50,6 +50,7 @@
 #define CHEEVO_UNKNOWN_EMULATOR_WARNING "Warning: Unknown Emulator"
 #define CHEEVO_LEADERBOARD_CAP          10
 
+#define CHEEVO_MEMORY_WAIT_FRAMES  120
 #define CHEEVO_UNLOCK_TOAST_MS     3192
 #define CHEEVO_FRAME_COMPLETIONS   1
 #define CHEEVO_STARTUP_COMPLETIONS 4
@@ -124,6 +125,7 @@ static unsigned preview_achievement_count;
 static int cache_refresh_pending;
 static int memory_available;
 static int memory_initialisation_deferred;
+static int memory_wait_frames;
 static rc_client_async_handle_t *leaderboard_fetch_handle;
 static cheevo_leaderboard_state leaderboard_state;
 static cheevo_leaderboard_rank leaderboard_ranks[CHEEVO_LEADERBOARD_CAP];
@@ -981,14 +983,32 @@ static void game_loaded(const int result, const char *error, rc_client_t *unused
     if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.active, tst_wait_s);
 }
 
-static void begin_game(void) {
-    if (!client || !content_file[0] || netplay_active || !core_supports_cheevo) return;
+static int core_memory_ready(void) {
+    if (memory_descriptor_count > 0) return 1;
+    return current_core.retro_get_memory_data && current_core.retro_get_memory_data(RETRO_MEMORY_SYSTEM_RAM) != NULL;
+}
+
+static void begin_game_now(void) {
     leaderboard_reset();
     rc_libretro_memory_destroy(&memory_regions);
     memory_available = 0;
     memory_initialisation_deferred = 0;
+    memory_wait_frames = 0;
     status = cheevo_status_identifying;
     rc_client_begin_identify_and_load_game(client, RC_CONSOLE_UNKNOWN, content_file, NULL, 0, game_loaded, NULL);
+}
+
+static void begin_game(void) {
+    if (!client || !content_file[0] || netplay_active || !core_supports_cheevo) return;
+
+    if (!core_memory_ready()) {
+        memory_wait_frames = CHEEVO_MEMORY_WAIT_FRAMES;
+        status = cheevo_status_identifying;
+        LOG_INFO(mux_module, "cheevo: waiting for the core to map its memory before identifying");
+        return;
+    }
+
+    begin_game_now();
 }
 
 static void login_complete(const int result, const char *error, rc_client_t *unused, void *userdata) {
@@ -1292,8 +1312,26 @@ void cheevo_tick(void) {
     }
 }
 
+static void memory_wait_tick(void) {
+    if (memory_wait_frames <= 0) return;
+
+    if (core_memory_ready()) {
+        LOG_INFO(mux_module, "cheevo: core memory is mapped, identifying now");
+        begin_game_now();
+        return;
+    }
+
+    if (--memory_wait_frames > 0) return;
+
+    LOG_WARN(mux_module, "cheevo: core never mapped its memory, identifying anyway");
+    begin_game_now();
+}
+
 void cheevo_do_frame(void) {
     if (!client || netplay_active) return;
+
+    memory_wait_tick();
+
     if (status == cheevo_status_active_softcore || status == cheevo_status_active_hardcore
         || status == cheevo_status_offline)
         rc_client_do_frame(client);
