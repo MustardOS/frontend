@@ -50,6 +50,7 @@
 #define CHEEVO_UNKNOWN_EMULATOR_WARNING "Warning: Unknown Emulator"
 #define CHEEVO_LEADERBOARD_CAP          10
 
+#define CHEEVO_UNLOCK_TOAST_MS     3192
 #define CHEEVO_FRAME_COMPLETIONS   1
 #define CHEEVO_STARTUP_COMPLETIONS 4
 
@@ -1035,7 +1036,7 @@ static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
                 message, sizeof(message), lang.muxretro.cheevo.unlock, event->achievement->title,
                 event->achievement->points
             );
-            pause_menu_show_glyph_toast_timed(message, "trophy", tst_wait_s);
+            pause_menu_show_glyph_toast_timed(message, "trophy", CHEEVO_UNLOCK_TOAST_MS);
             break;
         case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
         case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
