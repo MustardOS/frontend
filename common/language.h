@@ -1807,6 +1807,7 @@ struct mux_lang {
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];
+            char show_playtime[MAX_BUFFER_SIZE];
             char show_fps_simple[MAX_BUFFER_SIZE];
             char show_fps_detailed[MAX_BUFFER_SIZE];
             char border_colour[MAX_BUFFER_SIZE];

@@ -480,6 +480,8 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
 
+    pause_menu_playtime_reset();
+
     if (device.board.has_network) cheevo_init(core_resolved_content_path);
 
     sram_bridge_init(core_path_arg, content_path);
@@ -816,6 +818,7 @@ int main(const int argc, char *argv[]) {
         }
 
         pause_menu_toast_tick();
+        pause_menu_playtime_tick();
         pause_menu_header_fade_tick();
 
         const int paused_now = pause_menu_is_active();

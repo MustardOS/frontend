@@ -184,6 +184,10 @@ void pause_menu_focus_cheevo_item(void);
 
 void pause_menu_set_fps_visible(int visible);
 
+void pause_menu_playtime_tick(void);
+
+void pause_menu_playtime_reset(void);
+
 void pause_menu_set_fps_text(const char *text);
 
 void pause_menu_set_speed_indicator(const char *text, const char *glyph);

@@ -28,6 +28,7 @@ static const struct session_settings_t defaults = {
     .rumble_enabled = 1,
     .volume = 100,
     .show_fps = 0,
+    .show_playtime = 0,
     .content_precache = content_precache_off,
     .border_colour = border_colour_theme,
     .sample_rate = 0,
@@ -589,6 +590,9 @@ static void apply_ini(const char *path) {
     v = mini_get_int(ini, "settings", "show_fps", -1);
     if (v >= 0 && v < show_fps_count) session_settings.show_fps = (int) v;
 
+    v = mini_get_int(ini, "settings", "show_playtime", -1);
+    if (v >= 0) session_settings.show_playtime = v != 0;
+
     v = mini_get_int(ini, "settings", "content_precache", -1);
     if (v >= 0 && v < content_precache_count) session_settings.content_precache = (int) v;
 
@@ -858,6 +862,7 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     DELTA(rumble_enabled);
     DELTA(volume);
     DELTA(show_fps);
+    DELTA(show_playtime);
     DELTA(content_precache);
     DELTA(border_colour);
     DELTA(sample_rate);
@@ -1066,6 +1071,11 @@ void session_settings_cycle_fps(const int direction) {
     const int step = direction ? direction : 1;
     session_settings.show_fps = (session_settings.show_fps + step + show_fps_count) % show_fps_count;
     session_settings_apply_fps_mode();
+}
+
+void session_settings_cycle_show_playtime(const int direction) {
+    (void) direction;
+    session_settings.show_playtime = !session_settings.show_playtime;
 }
 
 void session_settings_cycle_content_precache(const int direction) {

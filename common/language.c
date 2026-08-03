@@ -1695,6 +1695,7 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.settings_screen.rumble), lang_specific, "Rumble"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.volume), lang_specific, "Volume"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.show_fps), lang_specific, "Show FPS"},
+    {"muxretro", LANG_OFF(muxretro.settings_screen.show_playtime), lang_specific, "Current Playtime"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.show_fps_simple), lang_specific, "Simple"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.show_fps_detailed), lang_specific, "Detailed"},
     {"muxretro", LANG_OFF(muxretro.settings_screen.border_colour), lang_specific, "Border Colour"},

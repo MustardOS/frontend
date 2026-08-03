@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "../../common/audio.h"
 #include "../../common/battery.h"
 #include "../../common/config.h"
@@ -47,6 +48,11 @@ static lv_obj_t *dim_overlay = NULL;
 static lv_obj_t *ui_lbl_fps = NULL;
 static lv_obj_t *ui_img_fps_glyph = NULL;
 static lv_obj_t *ui_lbl_speed_mode = NULL;
+static lv_obj_t *ui_lbl_playtime = NULL;
+static lv_obj_t *ui_img_playtime_glyph = NULL;
+static lv_obj_t *ui_lbl_break = NULL;
+static uint32_t playtime_started = 0;
+static uint32_t playtime_shown = UINT32_MAX;
 static lv_obj_t *ui_img_speed_glyph = NULL;
 static lv_obj_t *ui_img_toast_glyph = NULL;
 
@@ -180,6 +186,155 @@ void pause_menu_set_fps_text(const char *text) {
     lv_label_set_text(ui_lbl_fps, text);
 }
 
+static lv_coord_t stack_panel(lv_obj_t *label, const lv_coord_t offset) {
+    if (!label) return offset;
+
+    lv_obj_t *panel = lv_obj_get_parent(label);
+    if (lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN)) return offset;
+
+    lv_obj_align(panel, LV_ALIGN_BOTTOM_RIGHT, -4, offset);
+    lv_obj_update_layout(panel);
+
+    return offset - lv_obj_get_height(panel) - 4;
+}
+
+static void reflow_bottom_right(void) {
+    lv_coord_t offset = -4;
+
+    offset = stack_panel(ui_lbl_playtime, offset);
+    offset = stack_panel(ui_lbl_break, offset);
+
+    if (ui_lbl_speed_mode) lv_obj_align(lv_obj_get_parent(ui_lbl_speed_mode), LV_ALIGN_BOTTOM_RIGHT, -4, offset);
+}
+
+static void format_playtime(const uint32_t seconds, char *buf, const size_t buf_len) {
+    const uint32_t days = seconds / 86400;
+    const uint32_t hours = seconds / 3600 % 24;
+    const uint32_t minutes = seconds / 60 % 60;
+
+    if (days > 0) {
+        snprintf(buf, buf_len, "%ud %02u:%02u:%02u", days, hours, minutes, seconds % 60);
+    } else if (seconds >= 3600) {
+        snprintf(buf, buf_len, "%02u:%02u:%02u", hours, minutes, seconds % 60);
+    } else {
+        snprintf(buf, buf_len, "%02u:%02u", minutes, seconds % 60);
+    }
+}
+
+static const char break_notice_hex[] = "506c656173652074616b65206120627265616b21";
+
+static int hex_nibble(const char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+
+    return -1;
+}
+
+static void decode_hex(const char *hex, char *out, const size_t out_len) {
+    size_t written = 0;
+
+    while (hex[0] && hex[1] && written + 1 < out_len) {
+        const int high = hex_nibble(hex[0]);
+        const int low = hex_nibble(hex[1]);
+        if (high < 0 || low < 0) break;
+
+        out[written++] = (char) (high << 4 | low);
+        hex += 2;
+    }
+
+    out[written] = '\0';
+}
+
+static void create_break_label(void) {
+    lv_obj_t *glyph = NULL;
+    lv_obj_t *panel = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, -4, &glyph);
+    lv_obj_add_flag(glyph, LV_OBJ_FLAG_HIDDEN);
+
+    ui_lbl_break = lv_label_create(panel);
+    lv_obj_set_style_text_font(ui_lbl_break, LV_FONT_DEFAULT, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lbl_break, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_break, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    char notice[32];
+    decode_hex(break_notice_hex, notice, sizeof(notice));
+    lv_label_set_text(ui_lbl_break, notice);
+
+    lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void create_playtime_label(void) {
+    lv_obj_t *ui_pnl_playtime = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, -4, &ui_img_playtime_glyph);
+    set_corner_glyph(ui_img_playtime_glyph, "playtime");
+    load_font_section(FONT_FOOTER_DIR, ui_pnl_playtime);
+
+    ui_lbl_playtime = lv_label_create(ui_pnl_playtime);
+    lv_obj_set_style_text_color(ui_lbl_playtime, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_playtime, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_label_set_text(ui_lbl_playtime, "00:00:00");
+
+    if (!session_settings.show_playtime) lv_obj_add_flag(ui_pnl_playtime, LV_OBJ_FLAG_HIDDEN);
+}
+
+void pause_menu_playtime_reset(void) {
+    playtime_started = SDL_GetTicks();
+    playtime_shown = UINT32_MAX;
+
+    const char *offset = getenv("MUX_RETRO_PLAYTIME_OFFSET");
+    if (!offset || !*offset) return;
+
+    const long seconds = strtol(offset, NULL, 10);
+    if (seconds <= 0 || seconds > 4000000) return;
+
+    playtime_started -= (uint32_t) seconds * 1000U;
+    LOG_WARN(mux_module, "playtime: MUX_RETRO_PLAYTIME_OFFSET is set, starting the counter at %ld seconds", seconds);
+}
+
+void pause_menu_playtime_tick(void) {
+    if (!ui_lbl_playtime) return;
+
+    lv_obj_t *panel = lv_obj_get_parent(ui_lbl_playtime);
+    lv_obj_t *notice = ui_lbl_break ? lv_obj_get_parent(ui_lbl_break) : NULL;
+
+    const int want_visible = session_settings.show_playtime && !active;
+    const int is_visible = !lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN);
+
+    if (want_visible != is_visible) {
+        if (want_visible) {
+            lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
+            playtime_shown = UINT32_MAX;
+        } else {
+            lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
+            if (notice) lv_obj_add_flag(notice, LV_OBJ_FLAG_HIDDEN);
+        }
+
+        reflow_bottom_right();
+    }
+
+    if (!want_visible) return;
+
+    const uint32_t elapsed = (SDL_GetTicks() - playtime_started) / 1000;
+    if (elapsed == playtime_shown) return;
+    playtime_shown = elapsed;
+
+    char buf[24];
+    format_playtime(elapsed, buf, sizeof(buf));
+    lv_label_set_text(ui_lbl_playtime, buf);
+
+    if (!notice) return;
+
+    const int earned = elapsed >= 86400;
+    const int shown = !lv_obj_has_flag(notice, LV_OBJ_FLAG_HIDDEN);
+    if (earned == shown) return;
+
+    if (earned) {
+        lv_obj_clear_flag(notice, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(notice, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    reflow_bottom_right();
+}
+
 static void create_speed_mode_label(void) {
     lv_obj_t *ui_pnl_speed_mode = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, -4, &ui_img_speed_glyph);
     load_font_section(FONT_FOOTER_DIR, ui_pnl_speed_mode);
@@ -204,6 +359,7 @@ void pause_menu_set_speed_indicator(const char *text, const char *glyph) {
     if (glyph) set_corner_glyph(ui_img_speed_glyph, glyph);
 
     lv_label_set_text(ui_lbl_speed_mode, text);
+    reflow_bottom_right();
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
 }
 
@@ -388,6 +544,10 @@ int pause_menu_gameplay_hud_active(void) {
 
     if (ui_lbl_speed_mode && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_speed_mode), LV_OBJ_FLAG_HIDDEN)) return 1;
 
+    if (session_settings.show_playtime && ui_lbl_playtime
+        && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_playtime), LV_OBJ_FLAG_HIDDEN))
+        return 1;
+
     if (ui_pnl_progress_volume && !lv_obj_has_flag(ui_pnl_progress_volume, LV_OBJ_FLAG_HIDDEN)) return 1;
     if (ui_pnl_progress_brightness && !lv_obj_has_flag(ui_pnl_progress_brightness, LV_OBJ_FLAG_HIDDEN)) return 1;
 
@@ -537,6 +697,8 @@ void pause_menu_init(void) {
 
     create_dim_overlay();
     create_fps_label();
+    create_break_label();
+    create_playtime_label();
     create_speed_mode_label();
     gamestate_menu_init();
     settings_menu_init();

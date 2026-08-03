@@ -4,18 +4,22 @@
 #include "settings.h"
 #include "submenu.h"
 
-enum { row_fps = 0, row_header_visibility, row_count };
+enum { row_fps = 0, row_playtime, row_header_visibility, row_count };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.show_fps, lang.muxretro.settings_screen.header_visibility
+    lang.muxretro.settings_screen.show_fps, lang.muxretro.settings_screen.show_playtime,
+    lang.muxretro.settings_screen.header_visibility
 };
 
-static const char *row_glyphs[row_count] = {"fpscounter", "header"};
+static const char *row_glyphs[row_count] = {"fpscounter", "playtime", "header"};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_fps:
             snprintf(buf, buf_len, "%s", session_settings_show_fps_name(session_settings.show_fps));
+            break;
+        case row_playtime:
+            snprintf(buf, buf_len, "%s", session_settings.show_playtime ? lang.generic.enabled : lang.generic.disabled);
             break;
         case row_header_visibility:
             snprintf(buf, buf_len, "%s", session_settings_header_visibility_name(session_settings.header_visibility));
@@ -30,6 +34,9 @@ static void cycle_row(const int index, const int direction) {
     switch (index) {
         case row_fps:
             session_settings_cycle_fps(direction);
+            break;
+        case row_playtime:
+            session_settings_cycle_show_playtime(direction);
             break;
         case row_header_visibility:
             session_settings_cycle_header_visibility(direction);

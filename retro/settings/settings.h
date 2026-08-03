@@ -117,6 +117,7 @@ struct session_settings_t {
     int rumble_enabled;
     int volume;
     int show_fps;
+    int show_playtime;
     int content_precache;
     int border_colour;
     int sample_rate;
@@ -212,6 +213,8 @@ const char *session_settings_sample_rate_name(int rate);
 const char *session_settings_fps_limit_name(int mode);
 
 const char *session_settings_show_fps_name(int mode);
+
+void session_settings_cycle_show_playtime(int direction);
 
 const char *session_settings_content_precache_name(int mode);
 
