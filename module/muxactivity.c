@@ -1799,7 +1799,7 @@ static void hide_remove_dialog(void) {
 }
 
 static void do_remove(void) {
-    if (overview_item_index < 0 || (size_t) overview_item_index >= activity_count) return;
+    if (!activity_items || overview_item_index < 0 || (size_t) overview_item_index >= activity_count) return;
 
     LOG_INFO(mux_module, "Purging Playtime Entry: %s", activity_items[overview_item_index].path);
 
@@ -1808,6 +1808,10 @@ static void do_remove(void) {
         free_activity_items();
         load_activity_items();
         last_sort_mode = -1;
+
+        if (overview_item_index >= (int) activity_count)
+            overview_item_index = activity_count > 0 ? (int) activity_count - 1 : 0;
+
         handle_b();
     } else {
         toast_message(lang.generic.remove_fail, tst_wait_s);
