@@ -248,6 +248,8 @@ static GLuint depth_stencil_rb = 0;
 static int target_count = 1;
 static int render_index = 0;
 static int display_index = 0;
+static int target_queried = 0;
+static int handed_index = 0;
 static int target_w = 0;
 static int target_h = 0;
 
@@ -613,6 +615,8 @@ static void destroy_target(void) {
 
     render_index = 0;
     display_index = 0;
+    target_queried = 0;
+    handed_index = 0;
     target_count = 1;
     target_w = 0;
     target_h = 0;
@@ -759,6 +763,8 @@ void hw_render_bridge_apply_filter(void) {
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
+    target_queried = 1;
+    handed_index = render_index;
     return fbo[render_index];
 }
 
@@ -769,8 +775,16 @@ retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
     if (width == 0 || height == 0) return;
 
+    if (target_count > 1 && !target_queried) {
+        LOG_WARN(mux_module, "hw_render: core reuses a cached framebuffer; pinning to a single render target!");
+        target_count = 1;
+        render_index = handed_index;
+    }
+
     display_index = render_index;
-    render_index = (render_index + 1) % target_count;
+    if (target_count > 1) render_index = (render_index + 1) % target_count;
+
+    target_queried = 0;
 
     frame_valid_w = width;
     frame_valid_h = height;
