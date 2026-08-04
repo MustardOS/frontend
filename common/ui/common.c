@@ -2065,7 +2065,7 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
     lv_obj_set_style_bg_color(
         ui_pnl_grid_current_item, lv_color_hex(theme->grid.current_item_label.background), MU_OBJ_MAIN_DEFAULT
     );
-    if (theme->grid.current_item_label.background_alpha < LV_OPA_COVER) {
+    if (theme->grid.current_item_label.background_alpha > LV_OPA_TRANSP && theme->grid.current_item_label.background_alpha < LV_OPA_COVER) {
         lv_obj_set_style_opa_layered(
             ui_pnl_grid_current_item, (lv_opa_t) theme->grid.current_item_label.background_alpha, MU_OBJ_MAIN_DEFAULT
         );
@@ -2189,7 +2189,7 @@ void create_grid_item(
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->grid.cell_default.background), MU_OBJ_MAIN_DEFAULT);
     /* opa_layered renders bg+children into an off-screen layer so semi-transparent
      * cells composite correctly via premultiplied alpha over the video background. */
-    if (theme->grid.cell_default.background_alpha < LV_OPA_COVER) {
+    if (theme->grid.cell_default.background_alpha > LV_OPA_TRANSP && theme->grid.cell_default.background_alpha < LV_OPA_COVER) {
         lv_obj_set_style_opa_layered(
             cell_pnl, (lv_opa_t) theme->grid.cell_default.background_alpha, MU_OBJ_MAIN_DEFAULT
         );
@@ -2217,7 +2217,7 @@ void create_grid_item(
     lv_obj_set_style_img_recolor_opa(cell_image, theme->grid.cell_default.image_recolour_alpha, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->grid.cell_focus.background), MU_OBJ_MAIN_FOCUS);
-    if (theme->grid.cell_focus.background_alpha < LV_OPA_COVER) {
+    if (theme->grid.cell_focus.background_alpha > LV_OPA_TRANSP && theme->grid.cell_focus.background_alpha < LV_OPA_COVER) {
         lv_obj_set_style_opa_layered(cell_pnl, (lv_opa_t) theme->grid.cell_focus.background_alpha, MU_OBJ_MAIN_FOCUS);
         lv_obj_set_style_bg_opa(cell_pnl, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
     } else {
