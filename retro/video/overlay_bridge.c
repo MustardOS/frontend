@@ -78,12 +78,18 @@ void overlay_bridge_apply(void) {
     }
 }
 
+static int overlay_suppressed;
+
+void overlay_bridge_set_suppressed(const int suppressed) {
+    overlay_suppressed = suppressed;
+}
+
 int overlay_bridge_active(void) {
-    return current_overlay_tex != NULL;
+    return !overlay_suppressed && current_overlay_tex != NULL;
 }
 
 void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int canvas_h) {
-    if (!current_overlay_tex) return;
+    if (overlay_suppressed || !current_overlay_tex) return;
 
     const SDL_Rect dst = {
         (canvas_w - current_overlay_w) / 2, (canvas_h - current_overlay_h) / 2, current_overlay_w, current_overlay_h

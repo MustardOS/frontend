@@ -450,7 +450,14 @@ void colour_refresh(void) {
     filter_loaded_index = -1;
 }
 
+static int pass_suppressed;
+
+void colour_set_suppressed(const int suppressed) {
+    pass_suppressed = suppressed;
+}
+
 int colour_pass_needed(void) {
+    if (pass_suppressed) return 0;
     if (session_settings.colour_brightness != 0) return 1;
     if (session_settings.colour_contrast != 100) return 1;
     if (session_settings.colour_saturation != 100) return 1;

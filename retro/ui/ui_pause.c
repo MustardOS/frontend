@@ -27,7 +27,9 @@
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
+#include "../video/colour.h"
 #include "../video/image_writer.h"
+#include "../video/overlay_bridge.h"
 #include "cheats.h"
 #include "ui_loading.h"
 
@@ -743,10 +745,18 @@ static int capture_clean_frame(const char *path, uint8_t *pixels, const int rest
 
     // Keep the frame off the screen so the markers do not blink
     display_set_composite_suppressed(1);
+
+    // The savestate screenshots should not keep the fancy graphics
+    colour_set_suppressed(1);
+    overlay_bridge_set_suppressed(1);
+
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
     const int result = pixels ? display_capture_clean_pixels(pixels, device.screen.width, device.screen.height)
                               : display_capture_clean_frame(path);
+
+    colour_set_suppressed(0);
+    overlay_bridge_set_suppressed(0);
     display_set_composite_suppressed(0);
 
     if (!restore_visibility) {
