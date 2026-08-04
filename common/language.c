@@ -1418,7 +1418,7 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.content_restarting), lang_specific, "Content is restarting…"},
     {"muxretro", LANG_OFF(muxretro.resume), lang_specific, "Resume"},
     {"muxretro", LANG_OFF(muxretro.game_state), lang_specific, "Game State"},
-    {"muxretro", LANG_OFF(muxretro.core_options), lang_specific, "Core Options"},
+    {"muxretro", LANG_OFF(muxretro.core_options), lang_specific, "Core"},
     {"muxretro", LANG_OFF(muxretro.network_play), lang_specific, "Network Play"},
     {"muxretro", LANG_OFF(muxretro.retroachievements), lang_specific, "RetroAchievements"},
     {"muxretro", LANG_OFF(muxretro.disc_control), lang_specific, "Disc Control"},

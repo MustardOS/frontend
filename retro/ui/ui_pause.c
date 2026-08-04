@@ -61,7 +61,6 @@ static lv_obj_t *ui_img_toast_glyph = NULL;
 static int has_disc_control = 0;
 static int row_resume;
 static int row_game_state;
-static int row_options;
 static int row_netplay;
 static int row_cheevo;
 static int row_disc_control;
@@ -79,7 +78,6 @@ static void compute_row_indices(void) {
     int i = 0;
     row_resume = i++;
     row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
-    row_options = !netplay_is_active() ? i++ : -1;
     row_netplay = device.board.has_network ? i++ : -1;
     row_cheevo = device.board.has_network && cheevo_is_configured() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
@@ -569,7 +567,6 @@ void pause_menu_rebuild(void) {
 
     gen_label("muxretro", "resume", lang.muxretro.resume);
     if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
-    if (row_options >= 0) gen_label("muxretro", "core", lang.muxretro.core_options);
     if (row_netplay >= 0) gen_label("muxretro", "network", lang.muxretro.network_play);
     if (row_cheevo >= 0) gen_label("muxretro", "trophy", lang.muxretro.cheevo.achievements);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
@@ -623,10 +620,6 @@ static void focus_item(const int index) {
     update_scroll_position(
         theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
     );
-}
-
-void pause_menu_focus_options_item(void) {
-    focus_item(row_options);
 }
 
 void pause_menu_focus_gamestate_item(void) {
@@ -707,7 +700,6 @@ void pause_menu_init(void) {
     cheats_menu_init();
     patch_menu_init();
     manual_menu_init();
-    options_menu_init();
     if (device.board.has_network) {
         netplay_menu_init();
         cheevo_menu_init();
@@ -838,11 +830,6 @@ int pause_menu_tick(void) {
         return 0;
     }
 
-    if (options_menu_is_active()) {
-        options_menu_tick();
-        return 0;
-    }
-
     if (gamestate_menu_is_active()) {
         gamestate_menu_tick();
         return 0;
@@ -924,9 +911,6 @@ int pause_menu_tick(void) {
         } else if (current_item_index == row_game_state) {
             play_sound(snd_confirm);
             gamestate_menu_open();
-        } else if (current_item_index == row_options) {
-            play_sound(snd_confirm);
-            options_menu_open();
         } else if (row_netplay >= 0 && current_item_index == row_netplay) {
             play_sound(snd_confirm);
             netplay_menu_open();

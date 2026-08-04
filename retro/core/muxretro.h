@@ -164,7 +164,7 @@ void pause_menu_fix_nav_order(void);
 
 void pause_menu_sync_input_mask(void);
 
-void pause_menu_focus_options_item(void);
+void settings_menu_reopen_core_options(void);
 
 void pause_menu_focus_gamestate_item(void);
 

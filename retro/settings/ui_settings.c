@@ -1,10 +1,12 @@
 #include "../../module/muxshare.h"
 #include "../cheevo/ui_cheevo.h"
+#include "../netplay/netplay.h"
 #include "../core/muxretro.h"
 #include "submenu.h"
 
 typedef enum {
-    settings_item_video = 0,
+    settings_item_core_options = 0,
+    settings_item_video,
     settings_item_sound,
     settings_item_input,
     settings_item_performance,
@@ -47,6 +49,9 @@ static int row_is_save(const int index) {
 
 static void row_action(const int index) {
     switch (row_item(index)) {
+        case settings_item_core_options:
+            options_menu_open();
+            break;
         case settings_item_video:
             video_menu_open();
             break;
@@ -74,6 +79,11 @@ static void row_action(const int index) {
 }
 
 static int child_tick(void) {
+    if (options_menu_is_active()) {
+        options_menu_tick();
+        return 1;
+    }
+
     if (video_menu_is_active()) {
         video_menu_tick();
         return 1;
@@ -135,8 +145,9 @@ static submenu_def def = {
     .save_desc = lang.muxretro.save.settings_desc,
 };
 
-void settings_menu_init(void) {
+static void build_rows(void) {
     row_count = 0;
+    if (!netplay_is_active()) add_row(settings_item_core_options, lang.muxretro.core_options, "core");
     add_row(settings_item_video, lang.muxretro.settings_screen.category_video, "videosettings");
     add_row(settings_item_sound, lang.muxretro.settings_screen.category_sound, "soundsettings");
     add_row(settings_item_input, lang.muxretro.settings_screen.category_input, "inputsettings");
@@ -147,8 +158,14 @@ void settings_menu_init(void) {
         add_row(settings_item_cheevo, lang.muxretro.retroachievements, "trophy");
     add_row(settings_item_save, lang.muxretro.save_settings, "settings");
     def.row_count = row_count;
+}
+
+void settings_menu_init(void) {
+    build_rows();
 
     submenu_init(&self, &def);
+
+    options_menu_init();
 
     video_menu_init();
     sound_menu_init();
@@ -159,7 +176,12 @@ void settings_menu_init(void) {
 }
 
 void settings_menu_open(void) {
+    build_rows();
     submenu_open(&self);
+}
+
+void settings_menu_reopen_core_options(void) {
+    submenu_reopen_at(&self, row_for_item(settings_item_core_options));
 }
 
 int settings_menu_is_active(void) {

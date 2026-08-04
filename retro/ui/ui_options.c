@@ -180,11 +180,7 @@ static uint64_t current_nav_mask(void) {
 static void close_options(void) {
     active = 0;
 
-    pause_menu_rebuild();
-    pause_menu_focus_options_item();
-    pause_menu_show_nav_hints();
-
-    pause_menu_sync_input_mask();
+    settings_menu_reopen_core_options();
 }
 
 void options_menu_init(void) {
