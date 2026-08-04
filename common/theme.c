@@ -1287,6 +1287,11 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         if (glyph_center < half_auto) glyph_center = half_auto;
         theme->list_default.glyph_padding_left = (int16_t) (glyph_center + 4);
     }
+
+    const int16_t max_radius = theme->mux.item.height / 2;
+    if (theme->list_default.radius > max_radius) {
+        theme->list_default.radius = max_radius;
+    }
 }
 
 static void apply_label_scroll_speed(lv_obj_t *ui_lbl_item, const int is_bounce) {
