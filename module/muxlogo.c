@@ -4,6 +4,7 @@
 #include "../common/task_exec.h"
 #include "../common/ui/task_progress.h"
 #include "../common/image.h"
+#include "../common/ui/notify.h"
 
 static int task_pending = 0;
 
@@ -27,6 +28,44 @@ static void hide_fit_dialog(void) {
 
 static int reset_mode = 0;
 static mux_dialogue reset_dlg;
+
+static int remove_mode = 0;
+static int skip_confirm = 0;
+static mux_dialogue remove_dlg;
+
+static void show_remove_dialog(void) {
+    remove_mode = 1;
+    remove_dlg.selected = mux_remove_nah;
+
+    dialogue_show(&remove_dlg);
+    dialogue_refresh(&remove_dlg, &theme);
+}
+
+static void hide_remove_dialog(void) {
+    remove_mode = 0;
+    dialogue_hide(&remove_dlg);
+}
+
+static void remove_logo(void) {
+    if (!ui_count_static) return;
+
+    const char *path = items[current_item_index].extra_data;
+
+    if (!path || strncmp(path, INTERNAL_LOGOS, strlen(INTERNAL_LOGOS)) == 0) {
+        notify_send(notify_warning, lang.generic.failed);
+        return;
+    }
+
+    if (remove(path) != 0) {
+        notify_send(notify_warning, lang.generic.failed);
+        return;
+    }
+
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, get_index_on_delete(current_item_index, ui_count_static - 1));
+
+    load_mux("logo");
+    mux_input_stop();
+}
 
 static void show_reset_dialog(void) {
     reset_mode = 1;
@@ -74,6 +113,8 @@ static void show_help(void) {
 }
 
 static void create_logo_items(void) {
+    free_items(&items, &item_count);
+
     const char *sources[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
 
     for (size_t s = 0; s < A_SIZE(sources) + 1; s++) {
@@ -204,6 +245,18 @@ static void handle_a(void) {
         return;
     }
 
+    if (remove_mode) {
+        const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
+        hide_remove_dialog();
+
+        play_sound(opt == mux_remove_nah ? snd_back : snd_confirm);
+
+        if (opt == mux_remove_skip) skip_confirm = 1;
+        if (opt != mux_remove_nah) remove_logo();
+
+        return;
+    }
+
     if (reset_mode) {
         const int confirmed = reset_dlg.selected == 0;
         hide_reset_dialog();
@@ -231,6 +284,11 @@ static void handle_a(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (remove_mode) {
+        dialogue_handle_dpad(&remove_dlg, &theme, -1, 1);
+        return;
+    }
+
     if (reset_mode) {
         dialogue_handle_dpad(&reset_dlg, &theme, -1, 1);
         return;
@@ -245,6 +303,11 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (remove_mode) {
+        dialogue_handle_dpad(&remove_dlg, &theme, +1, 1);
+        return;
+    }
+
     if (reset_mode) {
         dialogue_handle_dpad(&reset_dlg, &theme, +1, 1);
         return;
@@ -259,6 +322,11 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, 1);
+        return;
+    }
+
     if (reset_mode) {
         dialogue_handle_dpad_hold(&reset_dlg, &theme, -1, 1);
         return;
@@ -273,6 +341,11 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
+    if (remove_mode) {
+        dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, 1);
+        return;
+    }
+
     if (reset_mode) {
         dialogue_handle_dpad_hold(&reset_dlg, &theme, +1, 1);
         return;
@@ -302,6 +375,13 @@ static void handle_b(void) {
     if (task_progress_handle_b()) return;
     if (hold_call) return;
 
+    if (remove_mode) {
+        hide_remove_dialog();
+        play_sound(snd_back);
+
+        return;
+    }
+
     if (reset_mode) {
         hide_reset_dialog();
         play_sound(snd_back);
@@ -329,7 +409,21 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (fit_mode || reset_mode || msgbox_active || task_progress_active() || hold_call) return;
+    if (fit_mode || reset_mode || remove_mode || msgbox_active || task_progress_active() || hold_call) return;
+    if (!ui_count_static) return;
+
+    play_sound(snd_confirm);
+
+    if (config.settings.advanced.trust_remove || skip_confirm) {
+        remove_logo();
+        return;
+    }
+
+    show_remove_dialog();
+}
+
+static void handle_y(void) {
+    if (fit_mode || reset_mode || remove_mode || msgbox_active || task_progress_active() || hold_call) return;
 
     play_sound(snd_confirm);
     show_reset_dialog();
@@ -350,15 +444,20 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.generic.reset, 0},
+                                  {ui_lbl_nav_x, lang.generic.remove, 0},
+                                  {ui_lbl_nav_y_glyph, "", 0},
+                                  {ui_lbl_nav_y, lang.generic.reset, 0},
                                   {NULL, NULL, 0}});
 
     overlay_display();
 
     if (!ui_count_static) {
         empty_state_show(lang.muxlogo.none, lang.muxlogo.guidance);
+
         lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
@@ -388,6 +487,8 @@ int muxlogo_main(void) {
 
     const char *reset_labels[] = {lang.generic.yes, lang.generic.no};
 
+    dialogue_init_remove(&remove_dlg, &theme, ui_screen, lang.muxlogo.remove.message, lang.generic.select, NULL);
+
     dialogue_init(
         &reset_dlg, &theme, ui_screen, lang.muxlogo.reset.title, lang.muxlogo.reset.message, reset_labels,
         A_SIZE(reset_labels), lang.generic.select, NULL
@@ -411,6 +512,7 @@ int muxlogo_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
+                [mux_input_y] = handle_y,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_list_nav_page_up,

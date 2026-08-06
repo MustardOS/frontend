@@ -1153,6 +1153,7 @@ static const lang_field lang_fields[] = {
     {"muxlogo", LANG_OFF(muxlogo.fit.original), lang_specific, "Original"},
     {"muxlogo", LANG_OFF(muxlogo.reset.title), lang_specific, "Reset Boot Logo"},
     {"muxlogo", LANG_OFF(muxlogo.reset.message), lang_specific, "This will discard the boot logo you chose and put the one from your current theme back."},
+    {"muxlogo", LANG_OFF(muxlogo.remove.message), lang_specific, "Delete this image from your storage? The boot logo currently in use is not affected."},
     {"muxlogo", LANG_OFF(muxlogo.task.set), lang_specific, "Setting Boot Logo"},
     {"muxlogo", LANG_OFF(muxlogo.task.reset), lang_specific, "Resetting Boot Logo"},
 
@@ -1465,8 +1466,11 @@ static const lang_field lang_fields[] = {
     {"muxpicker", LANG_OFF(muxpicker.protected), lang_specific, "This theme is protected from deletion!"},
     {"muxpicker", LANG_OFF(muxpicker.none.credit), lang_specific, "There are no attributed credits!"},
     {"muxpicker", LANG_OFF(muxpicker.none.custom), lang_specific, "No Custom Packages Found"},
+    {"muxpicker", LANG_OFF(muxpicker.none.custom_hint), lang_specific, "Custom packages go in the MUOS/package directory on any storage, and use the MUXCUS extension."},
     {"muxpicker", LANG_OFF(muxpicker.none.catalogue), lang_specific, "No Catalogue Packages Found"},
+    {"muxpicker", LANG_OFF(muxpicker.none.catalogue_hint), lang_specific, "Catalogue packages go in the MUOS/package/catalogue directory on any storage. Each one is a MUXCAT file that adds box art, previews and text for your content."},
     {"muxpicker", LANG_OFF(muxpicker.none.config), lang_specific, "No Configuration Packages Found"},
+    {"muxpicker", LANG_OFF(muxpicker.none.config_hint), lang_specific, "RetroArch configuration packages go in the MUOS/package/config directory on any storage. Each one is a MUXCFG file holding core settings, remaps and shaders."},
     {"muxpicker", LANG_OFF(muxpicker.none.theme), lang_specific, "No Theme Packages Found"},
 
     // muxplore

@@ -1436,6 +1436,9 @@ static void handle_a(void) {
     switch (entry->action) {
         case menu_catalogue:
         case menu_config:
+            navigate_to_submenu(entry, "picker");
+            break;
+
         case menu_logo:
             navigate_to_submenu(entry, "logo");
             break;

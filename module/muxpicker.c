@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/empty_state.h"
 #include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 #include "../common/ui/more.h"
@@ -504,15 +505,18 @@ int muxpicker_main(char *type, char *ex_dir) {
         lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
 
-        const char *message_text = NULL;
+        const char *message_text = lang.muxpicker.none.custom;
+        const char *message_hint = lang.muxpicker.none.custom_hint;
+
         if (strcasecmp(picker_type, "package/catalogue") == 0) {
             message_text = lang.muxpicker.none.catalogue;
+            message_hint = lang.muxpicker.none.catalogue_hint;
         } else if (strcasecmp(picker_type, "package/config") == 0) {
             message_text = lang.muxpicker.none.config;
-        } else {
-            message_text = lang.muxpicker.none.custom;
+            message_hint = lang.muxpicker.none.config_hint;
         }
-        lv_label_set_text(ui_lbl_screen_message, message_text);
+
+        empty_state_show(message_text, message_hint);
     }
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);

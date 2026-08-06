@@ -1216,6 +1216,9 @@ struct mux_lang {
             char message[MAX_BUFFER_SIZE];
         } reset;
         struct {
+            char message[MAX_BUFFER_SIZE];
+        } remove;
+        struct {
             char set[MAX_BUFFER_SIZE];
             char reset[MAX_BUFFER_SIZE];
         } task;
@@ -1557,8 +1560,11 @@ struct mux_lang {
         struct {
             char credit[MAX_BUFFER_SIZE];
             char custom[MAX_BUFFER_SIZE];
+            char custom_hint[MAX_BUFFER_SIZE];
             char catalogue[MAX_BUFFER_SIZE];
+            char catalogue_hint[MAX_BUFFER_SIZE];
             char config[MAX_BUFFER_SIZE];
+            char config_hint[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
         } none;
     } muxpicker;
