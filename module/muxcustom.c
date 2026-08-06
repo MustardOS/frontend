@@ -549,6 +549,8 @@ static void init_navigation_group(void) {
         lang.generic.brief, lang.generic.normal, lang.generic.long_wait, lang.generic.extended
     };
 
+    char *page_skip_options[] = {lang.muxvisual.skip.page, lang.muxvisual.skip.letter};
+
     char *shake_direction[] = {
         lang.generic.up, lang.generic.down, lang.generic.left, lang.generic.right, lang.generic.all
     };
@@ -663,6 +665,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(
         -1, visual, video_preview, lang.muxcontent.video_preview.title, "videopreview", video_preview_options, 4
     );
+    INIT_OPTION_ITEM(-1, visual, page_skip, lang.muxvisual.pageskip, "pageskip", page_skip_options, 2);
     INIT_OPTION_ITEM(-1, visual, box_art, lang.muxcontent.box_art.title, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, visual, box_art_align, lang.muxcontent.box_art.align.title, "align", boxart_align, 9);
     INIT_OPTION_ITEM(
@@ -799,11 +802,11 @@ static void init_navigation_group(void) {
     static const list_frame frames[] = {
         {lang.muxvisual.section.header_bar, 0, 7},  {lang.muxvisual.section.appearance, 7, 8},
         {lang.muxvisual.section.labels, 15, 7},     {lang.muxvisual.section.font, 22, 6},
-        {lang.muxvisual.section.folders, 28, 5},    {lang.muxvisual.section.content, 33, 7},
-        {lang.muxvisual.section.box_art, 40, 8},    {lang.muxvisual.section.launching, 48, 3},
-        {lang.muxcustom.section.packages, 51, 3},   {lang.muxcustom.section.theme, 54, 4},
-        {lang.muxcustom.section.layout, 58, 4},     {lang.muxcustom.section.glyphs, 62, 4},
-        {lang.muxcustom.section.background, 66, 3}, {lang.muxcustom.section.audio, 69, 5},
+        {lang.muxvisual.section.folders, 28, 6},    {lang.muxvisual.section.content, 34, 8},
+        {lang.muxvisual.section.box_art, 42, 8},    {lang.muxvisual.section.launching, 50, 3},
+        {lang.muxcustom.section.packages, 53, 3},   {lang.muxcustom.section.theme, 56, 4},
+        {lang.muxcustom.section.layout, 60, 4},     {lang.muxcustom.section.glyphs, 64, 4},
+        {lang.muxcustom.section.background, 68, 3}, {lang.muxcustom.section.audio, 71, 5},
     };
 
     list_frame_init(
@@ -1081,6 +1084,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, box_art, "visual/boxart", INT, 0);
     CHECK_AND_SAVE_STD(visual, box_art_align, "visual/boxartalign", INT, 1);
     CHECK_AND_SAVE_STD(visual, content_width, "visual/contentwidth", INT, 0);
+    CHECK_AND_SAVE_STD(visual, page_skip, "visual/pageskip", INT, 0);
     CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
 
@@ -1294,6 +1298,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // forward_history
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_width
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // video_preview
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // page_skip
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_align
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_transition

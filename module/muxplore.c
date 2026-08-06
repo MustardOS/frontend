@@ -1177,6 +1177,9 @@ load_end:
     mux_input_stop();
 }
 
+static void handle_random_select(void);
+static void handle_y(void);
+
 static void handle_a(void) {
     if (hold_call) return;
 
@@ -1194,6 +1197,10 @@ static void handle_a(void) {
             go_top_level();
         } else if (opt == more_sort) {
             show_sort_order();
+        } else if (opt == more_random) {
+            handle_random_select();
+        } else if (opt == more_collect) {
+            handle_y();
         }
         return;
     }
@@ -1359,13 +1366,16 @@ static void show_module_help(void) {
 static void show_actions_dialog(void) {
     const int at_root = union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR);
 
-    more_entry entries[5];
+    more_entry entries[more_count];
     int count = 0;
 
     if (ui_count_static) entries[count++] = (more_entry) {more_information, 1};
     entries[count++] = (more_entry) {more_search, 1};
     entries[count++] = (more_entry) {more_sort, 1};
     if (!at_root) entries[count++] = (more_entry) {more_top_level, 1};
+
+    if (ui_count_static > 1 && config.visual.shuffle) entries[count++] = (more_entry) {more_random, 1};
+    if (ui_count_static) entries[count++] = (more_entry) {more_collect, 1};
 
     entries[count++] = (more_entry) {more_help, 1};
 

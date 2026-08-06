@@ -2768,6 +2768,11 @@ struct mux_lang {
         char selectionstyle[MAX_BUFFER_SIZE];
         char rendershadows[MAX_BUFFER_SIZE];
         char notifytime[MAX_BUFFER_SIZE];
+        char pageskip[MAX_BUFFER_SIZE];
+        struct {
+            char page[MAX_BUFFER_SIZE];
+            char letter[MAX_BUFFER_SIZE];
+        } skip;
         struct {
             char disabled[MAX_BUFFER_SIZE];
             char continuous[MAX_BUFFER_SIZE];
@@ -2866,6 +2871,7 @@ struct mux_lang {
             char box_art_placeholder[MAX_BUFFER_SIZE];
             char video_preview[MAX_BUFFER_SIZE];
             char content_width[MAX_BUFFER_SIZE];
+            char page_skip[MAX_BUFFER_SIZE];
             char launchsplash[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];
             char box_art_hide[MAX_BUFFER_SIZE];

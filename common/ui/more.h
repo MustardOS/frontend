@@ -8,7 +8,9 @@ typedef enum {
     more_sort,
     more_filter,
     more_location,
+    more_random,
     more_top_level,
+    more_collect,
     more_remove,
     more_help,
     more_count

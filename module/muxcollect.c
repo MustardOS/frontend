@@ -436,7 +436,7 @@ static void show_module_help(void) {
 }
 
 static void show_actions_dialog(void) {
-    more_entry entries[5];
+    more_entry entries[more_count];
     int count = 0;
 
     const int has_items = ui_count_static > 0;
@@ -446,6 +446,8 @@ static void show_actions_dialog(void) {
     entries[count++] = (more_entry) {more_filter, 1};
     if (has_items && !is_folder) entries[count++] = (more_entry) {more_location, 1};
     if (has_items) entries[count++] = (more_entry) {more_remove, 1};
+
+    if (has_items && ui_count_static > 1 && config.visual.shuffle) entries[count++] = (more_entry) {more_random, 1};
 
     entries[count++] = (more_entry) {more_help, 1};
 
@@ -730,6 +732,8 @@ load_end:
     mux_input_stop();
 }
 
+static void handle_random_select(void);
+
 static void handle_a(void) {
     if (actions_mode) {
         const more_id opt = more_selected(&actions_dlg);
@@ -752,6 +756,8 @@ static void handle_a(void) {
             show_location();
         } else if (opt == more_filter) {
             show_tag_sort();
+        } else if (opt == more_random) {
+            handle_random_select();
         } else if (opt == more_remove) {
             start_remove();
         }

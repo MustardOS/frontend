@@ -590,6 +590,7 @@
     VISUAL(mixed_content, "mixedcontent")                                                                              \
     VISUAL(forward_history, "forwardhistory")                                                                          \
     VISUAL(content_width, "width")                                                                                     \
+    VISUAL(page_skip, "pageskip")                                                                                      \
     VISUAL(video_preview, "videopreview")                                                                              \
     VISUAL(box_art, "boxart")                                                                                          \
     VISUAL(box_art_align, "align")                                                                                     \

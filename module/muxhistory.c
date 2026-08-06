@@ -41,7 +41,7 @@ static void show_module_help(void) {
 }
 
 static void show_actions_dialog(void) {
-    more_entry entries[5];
+    more_entry entries[more_count];
     int count = 0;
 
     const int has_items = ui_count_static > 0;
@@ -50,6 +50,9 @@ static void show_actions_dialog(void) {
     entries[count++] = (more_entry) {more_filter, 1};
     if (has_items) entries[count++] = (more_entry) {more_location, 1};
     if (has_items) entries[count++] = (more_entry) {more_remove, 1};
+
+    if (has_items && ui_count_static > 1 && config.visual.shuffle) entries[count++] = (more_entry) {more_random, 1};
+    if (has_items) entries[count++] = (more_entry) {more_collect, 1};
 
     entries[count++] = (more_entry) {more_help, 1};
 
@@ -612,6 +615,9 @@ static void handle_dpad_right_hold(void) {
     handle_list_nav_right_hold();
 }
 
+static void handle_random_select(void);
+static void handle_y(void);
+
 static void handle_a(void) {
     if (hold_call) return;
 
@@ -637,6 +643,10 @@ static void handle_a(void) {
             show_location();
         } else if (opt == more_filter) {
             show_tag_sort();
+        } else if (opt == more_random) {
+            handle_random_select();
+        } else if (opt == more_collect) {
+            handle_y();
         } else if (opt == more_remove) {
             start_remove();
         }

@@ -334,6 +334,8 @@ struct mux_config {
         int16_t reduce_motion;
         int16_t high_contrast;
         int16_t bold_focus;
+
+        int16_t page_skip;
         int16_t content_collect;
         int16_t content_history;
         int16_t mixed_content;

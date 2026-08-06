@@ -15,8 +15,12 @@ static const char *more_label(const more_id id) {
             return lang.generic.tag_sort;
         case more_location:
             return lang.generic.location;
+        case more_random:
+            return lang.generic.random;
         case more_top_level:
             return lang.generic.top_level;
+        case more_collect:
+            return lang.generic.collect;
         case more_remove:
             return lang.generic.remove;
         case more_help:

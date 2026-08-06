@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include "list_nav.h"
 #include "../config.h"
 #include "../language.h"
@@ -6,6 +7,7 @@
 #include "../ui/grid.h"
 #include "../ui/nav.h"
 #include "../theme.h"
+#include "../../module/muxshare.h"
 
 static void (*list_nav_prev_cb)(int) = NULL;
 
@@ -244,6 +246,42 @@ void handle_list_nav_right_hold(void) {
     }
 }
 
+static char lead_key(const char *name) {
+    if (!name || !*name) return '#';
+
+    const unsigned char c = (unsigned char) *name;
+
+    return isalpha(c) ? (char) toupper(c) : '#';
+}
+
+static int steps_to_next_lead(const int direction) {
+    if (!items || item_count == 0) return 0;
+    if (current_item_index < 0 || current_item_index >= (int) item_count) return 0;
+
+    const char here = lead_key(items[current_item_index].display_name);
+
+    for (int i = 1; i < (int) item_count; i++) {
+        const int at = direction > 0 ? current_item_index + i : current_item_index - i;
+        if (at < 0 || at >= (int) item_count) break;
+
+        if (lead_key(items[at].display_name) == here) continue;
+
+        if (direction < 0) {
+            const char found = lead_key(items[at].display_name);
+            int first = at;
+
+            while (first > 0 && lead_key(items[first - 1].display_name) == found)
+                first--;
+
+            return current_item_index - first;
+        }
+
+        return i;
+    }
+
+    return 0;
+}
+
 void handle_list_nav_page_up(void) {
     if (msgbox_active) {
         scroll_help_content(1, 1);
@@ -251,6 +289,13 @@ void handle_list_nav_page_up(void) {
     }
 
     if (ui_count_static < 2 || block_input || page_nav_blocked) return;
+
+    if (config.visual.page_skip) {
+        const int jump = steps_to_next_lead(-1);
+        if (jump > 0) handle_list_nav_prev_with_dir(jump, nav_dir_up);
+
+        return;
+    }
 
     int steps;
     if (grid_mode_enabled) {
@@ -271,6 +316,13 @@ void handle_list_nav_page_down(void) {
     }
 
     if (ui_count_static < 2 || block_input || page_nav_blocked) return;
+
+    if (config.visual.page_skip) {
+        const int jump = steps_to_next_lead(+1);
+        if (jump > 0) handle_list_nav_next_with_dir(jump, nav_dir_down);
+
+        return;
+    }
 
     int steps;
     if (grid_mode_enabled) {
