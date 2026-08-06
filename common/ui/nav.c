@@ -325,6 +325,10 @@ void move_option(lv_obj_t *element, const int count) {
     next %= total;
 
     lv_dropdown_set_selected(element, (uint16_t) next);
+
+    apply_option_value_long_dot(element);
+    set_option_value_scroll_mode(element);
+
     nav_play_shake(element, count < 0 ? nav_dir_left : nav_dir_right);
 }
 
