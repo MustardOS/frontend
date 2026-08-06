@@ -59,10 +59,13 @@ static int any_tweakgen_modified(void) {
     return 0;
 }
 
+#define AUDIO_SINK_LIST RUN_PATH "audio_sinks"
+
 static int audio_overdrive = 100;
 static char **audio_sinks = NULL;
 static int audio_sink_count = 0;
 static int audio_sink_refresh_ticks = 0;
+static long audio_sink_stamp = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -88,28 +91,7 @@ static int visible_audiosink(void) {
     return !lv_obj_has_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
-static void tweakgen_refresh_task(lv_timer_t *timer) {
-    ui_gen_refresh_task(timer);
-
-    if (audio_sink_count <= 0 || save_mode || warn_mode) return;
-    if (++audio_sink_refresh_ticks < 60) return;
-    audio_sink_refresh_ticks = 0;
-
-    const int cur_sel = lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen);
-    if (cur_sel != audio_sink_original) return;
-
-    const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
-    if (live_sink < 0 || live_sink == cur_sel) return;
-
-    if (live_sink < audio_sink_count) {
-        lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, live_sink);
-        audio_sink_original = live_sink;
-        return;
-    }
-
-    const char *sink_args[] = {OPT_PATH "script/mux/audio_sink.sh", "list", NULL};
-    run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
-
+static void reload_audio_sinks(void) {
     if (audio_sinks) {
         for (int i = 0; i < audio_sink_count; i++)
             free(audio_sinks[i]);
@@ -119,15 +101,50 @@ static void tweakgen_refresh_task(lv_timer_t *timer) {
         audio_sink_count = 0;
     }
 
-    audio_sinks = str_parse_file("/run/muos/audio_sinks", &audio_sink_count, parse_lines);
+    audio_sinks = str_parse_file(AUDIO_SINK_LIST, &audio_sink_count, parse_lines);
+    if (audio_sink_count <= 0) return;
 
-    if (audio_sink_count > 0) {
-        add_drop_down_options(ui_dro_audio_sink_tweakgen, audio_sinks, audio_sink_count);
-        lv_obj_clear_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
-        const int clamped = clamp_range(live_sink, 0, audio_sink_count - 1);
-        lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamped);
-        audio_sink_original = clamped;
+    add_drop_down_options(ui_dro_audio_sink_tweakgen, audio_sinks, audio_sink_count);
+    lv_obj_clear_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void tweakgen_refresh_task(lv_timer_t *timer) {
+    ui_gen_refresh_task(timer);
+
+    if (save_mode || warn_mode) return;
+    if (++audio_sink_refresh_ticks < 30) return;
+    audio_sink_refresh_ticks = 0;
+
+    if (lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen) != audio_sink_original) return;
+
+    struct stat st;
+    const long stamp = stat(AUDIO_SINK_LIST, &st) == 0 ? st.st_mtime : 0;
+
+    if (stamp != audio_sink_stamp) {
+        audio_sink_stamp = stamp;
+        reload_audio_sinks();
     }
+
+    const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
+    if (live_sink < 0 || audio_sink_count <= 0) return;
+
+    if (live_sink >= audio_sink_count) {
+        const char *sink_args[] = {OPT_PATH "script/mux/audio_sink.sh", "list", NULL};
+        run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
+
+        audio_sink_stamp = stat(AUDIO_SINK_LIST, &st) == 0 ? st.st_mtime : 0;
+        reload_audio_sinks();
+
+        if (live_sink >= audio_sink_count) return;
+    }
+
+    if (live_sink == lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen)) return;
+
+    lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, live_sink);
+    apply_option_value_long_dot(ui_dro_audio_sink_tweakgen);
+    set_option_value_scroll_mode(ui_dro_audio_sink_tweakgen);
+
+    audio_sink_original = live_sink;
 }
 
 static int visible_rgb(void) {
