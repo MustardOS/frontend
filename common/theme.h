@@ -408,6 +408,9 @@ struct theme_config {
         int16_t radius;
         uint32_t text;
         int16_t text_alpha;
+        uint32_t level_success;
+        uint32_t level_warning;
+        uint32_t level_error;
     } message;
 
     struct {

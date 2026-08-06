@@ -53,6 +53,8 @@ int current_volume = 0;
 int is_blank = 0;
 int config_auth = 0;
 int idle_state_exists = 0;
+int notify_drop_exists = 0;
+unsigned notify_drop_changes = 0;
 int safe_quit_exists = 0;
 int hdmi_refresh_exists = 0;
 int blank_exists = 0;
@@ -83,6 +85,7 @@ void inotify_init(void) {
     if (!ino_proc) return;
 
     inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, &idle_state_changes);
+    inotify_track(ino_proc, "/run/muos", "notify", &notify_drop_exists, &notify_drop_changes);
     inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists, 0);
     inotify_track(ino_proc, "/run/muos", "hdmi_refresh", &hdmi_refresh_exists, 0);
     inotify_track(ino_proc, "/run/muos", "blank", &blank_exists, 0);

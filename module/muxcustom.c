@@ -545,6 +545,10 @@ static void init_navigation_group(void) {
     char *selection_animation[] = {lang.generic.disabled, lang.generic.minimal, lang.generic.low,
                                    lang.generic.medium,   lang.generic.high,    lang.generic.maximum};
 
+    char *notify_time_options[] = {
+        lang.generic.brief, lang.generic.normal, lang.generic.long_wait, lang.generic.extended
+    };
+
     char *shake_direction[] = {
         lang.generic.up, lang.generic.down, lang.generic.left, lang.generic.right, lang.generic.all
     };
@@ -614,6 +618,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, selection_style, lang.muxvisual.selectionstyle, "selectionstyle", shake_direction, 5);
     INIT_OPTION_ITEM(-1, visual, list_glyph, lang.muxvisual.listglyph, "listglyph", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, render_shadows, lang.muxvisual.rendershadows, "shadow", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, notify_time, lang.muxvisual.notifytime, "notifytime", notify_time_options, 4);
     INIT_OPTION_ITEM(-1, visual, overlay_image, lang.muxvisual.overlay.image, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(
         -1, visual, overlay_transparency, lang.muxvisual.overlay.transparency, "overlaytransparency", NULL, 0
@@ -792,17 +797,17 @@ static void init_navigation_group(void) {
     reset_ui_groups();
 
     static const list_frame frames[] = {
-        {lang.muxvisual.section.header_bar, 0, 7},  {lang.muxvisual.section.appearance, 7, 7},
-        {lang.muxvisual.section.labels, 14, 7},     {lang.muxvisual.section.font, 21, 6},
-        {lang.muxvisual.section.folders, 27, 5},    {lang.muxvisual.section.content, 32, 7},
-        {lang.muxvisual.section.box_art, 39, 8},    {lang.muxvisual.section.launching, 47, 3},
-        {lang.muxcustom.section.packages, 50, 3},   {lang.muxcustom.section.theme, 53, 4},
-        {lang.muxcustom.section.layout, 57, 4},     {lang.muxcustom.section.glyphs, 61, 4},
-        {lang.muxcustom.section.background, 65, 3}, {lang.muxcustom.section.audio, 68, 5},
+        {lang.muxvisual.section.header_bar, 0, 7},  {lang.muxvisual.section.appearance, 7, 8},
+        {lang.muxvisual.section.labels, 15, 7},     {lang.muxvisual.section.font, 22, 6},
+        {lang.muxvisual.section.folders, 28, 5},    {lang.muxvisual.section.content, 33, 7},
+        {lang.muxvisual.section.box_art, 40, 8},    {lang.muxvisual.section.launching, 48, 3},
+        {lang.muxcustom.section.packages, 51, 3},   {lang.muxcustom.section.theme, 54, 4},
+        {lang.muxcustom.section.layout, 58, 4},     {lang.muxcustom.section.glyphs, 62, 4},
+        {lang.muxcustom.section.background, 66, 3}, {lang.muxcustom.section.audio, 69, 5},
     };
 
     list_frame_init(
-        &theme, ui_pnl_content, frames, (int) A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
+        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
         ui_objects_value, ui_count_dynamic
     );
     list_frame_apply();
@@ -1051,6 +1056,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, selection_animation, "visual/selectionanimation", INT, 0);
     CHECK_AND_SAVE_STD(visual, selection_style, "visual/selectionstyle", INT, 0);
     CHECK_AND_SAVE_STD(visual, render_shadows, "visual/shadow", INT, 0);
+    CHECK_AND_SAVE_STD(visual, notify_time, "visual/notifytime", INT, 0);
 
     {
         const int oi_current = lv_dropdown_get_selected(ui_dro_overlay_image_visual);
@@ -1260,6 +1266,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // selection_style
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // list_glyph
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // render_shadows
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // notify_time
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // overlay_image
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // overlay_transparency
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // name_scroll

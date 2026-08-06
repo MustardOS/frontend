@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 #include "../common/download.h"
 #include "../common/ui/task_progress.h"
@@ -115,7 +116,7 @@ static void refresh_language_data_finished(const int result) {
             task_progress_show();
         } else {
             play_sound(snd_error);
-            toast_message(lang.generic.failed, tst_wait_m);
+            notify_send(notify_warning, lang.generic.failed);
         }
     } else {
         play_sound(snd_error);
@@ -150,6 +151,7 @@ static void handle_a(void) {
 
     update_font_for_language(items[current_item_index].name);
 
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");
     if (config.boot.factory_reset) load_mux("installer");
 
     refresh_config = 1;
@@ -172,6 +174,7 @@ static void handle_b(void) {
 
     play_sound(snd_back);
 
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");
     if (config.boot.factory_reset) load_mux("installer");
 
     mux_input_stop();

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 
 size_t item_count = 0;
@@ -256,7 +257,8 @@ char *specify_asset(char *val, const char *def_val, const char *label) {
 }
 
 static char *load_content_asset(
-    char *sys_dir, const char *pointer, int force, int run_quit, const char *ext, const char *label, int is_app
+    char *sys_dir, const char *pointer, const int force, const int run_quit, const char *ext, const char *label,
+    const int is_app
 ) {
     char path[MAX_BUFFER_SIZE];
     if (!sys_dir) return NULL;
@@ -276,7 +278,7 @@ static char *load_content_asset(
     union_get_relative_path(sys_dir, rel_path, sizeof(rel_path));
 
     if (strncasecmp(rel_path, MAIN_ROM_DIR, 4) == 0) {
-        char *p = rel_path + 4;
+        const char *p = rel_path + 4;
         while (*p == '/')
             p++;
         memmove(rel_path, p, strlen(p) + 1);
@@ -634,6 +636,8 @@ void adjust_gen_panel(void) {
 }
 
 void ui_gen_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    notify_tick();
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();

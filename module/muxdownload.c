@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 #include "../common/download.h"
 #include "../common/ui/task_progress.h"
@@ -135,7 +136,7 @@ static void download_finished(const int result) {
             task_progress_show();
         } else {
             play_sound(snd_error);
-            toast_message(lang.generic.failed, tst_wait_m);
+            notify_send(notify_warning, lang.generic.failed);
         }
     } else {
         play_sound(snd_error);

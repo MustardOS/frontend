@@ -545,6 +545,7 @@ static void handle_idle(void) {
 
 static void handle_quit(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
+    if (config.boot.factory_reset) load_mux("installer");
 
     mux_input_stop();
 }

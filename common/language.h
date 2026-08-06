@@ -103,6 +103,10 @@ struct mux_lang {
         char tour_offer_desc[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char no_help[MAX_BUFFER_SIZE];
+        char brief[MAX_BUFFER_SIZE];
+        char normal[MAX_BUFFER_SIZE];
+        char long_wait[MAX_BUFFER_SIZE];
+        char extended[MAX_BUFFER_SIZE];
         char section_help[MAX_BUFFER_SIZE];
         char no_info[MAX_BUFFER_SIZE];
         char no_load[MAX_BUFFER_SIZE];
@@ -479,6 +483,7 @@ struct mux_lang {
         char connect[MAX_BUFFER_SIZE];
         char custom[MAX_BUFFER_SIZE];
         char general[MAX_BUFFER_SIZE];
+        char access[MAX_BUFFER_SIZE];
         char language[MAX_BUFFER_SIZE];
         char storage[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
@@ -489,6 +494,7 @@ struct mux_lang {
             char connect[MAX_BUFFER_SIZE];
             char custom[MAX_BUFFER_SIZE];
             char general[MAX_BUFFER_SIZE];
+            char access[MAX_BUFFER_SIZE];
             char language[MAX_BUFFER_SIZE];
             char storage[MAX_BUFFER_SIZE];
             char power[MAX_BUFFER_SIZE];
@@ -497,6 +503,29 @@ struct mux_lang {
         } help;
         char overview[MAX_BUFFER_SIZE];
     } muxconfig;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char reducemotion[MAX_BUFFER_SIZE];
+        char highcontrast[MAX_BUFFER_SIZE];
+        char boldfocus[MAX_BUFFER_SIZE];
+        char textsize[MAX_BUFFER_SIZE];
+        char legiblefont[MAX_BUFFER_SIZE];
+        struct {
+            char theme[MAX_BUFFER_SIZE];
+            char large[MAX_BUFFER_SIZE];
+            char larger[MAX_BUFFER_SIZE];
+            char largest[MAX_BUFFER_SIZE];
+        } size;
+        struct {
+            char reduce_motion[MAX_BUFFER_SIZE];
+            char high_contrast[MAX_BUFFER_SIZE];
+            char bold_focus[MAX_BUFFER_SIZE];
+            char text_size[MAX_BUFFER_SIZE];
+            char legible_font[MAX_BUFFER_SIZE];
+        } help;
+    } muxaccess;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -992,17 +1021,27 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char rtc[MAX_BUFFER_SIZE];
         char language[MAX_BUFFER_SIZE];
+        char access[MAX_BUFFER_SIZE];
+        char tester[MAX_BUFFER_SIZE];
         char install[MAX_BUFFER_SIZE];
         char shutdown[MAX_BUFFER_SIZE];
         struct {
             char rtc[MAX_BUFFER_SIZE];
             char language[MAX_BUFFER_SIZE];
+            char access[MAX_BUFFER_SIZE];
+            char tester[MAX_BUFFER_SIZE];
             char install[MAX_BUFFER_SIZE];
             char shutdown[MAX_BUFFER_SIZE];
         } abbr;
         struct {
+            char shutdown[MAX_BUFFER_SIZE];
+            char install[MAX_BUFFER_SIZE];
+        } confirm;
+        struct {
             char rtc[MAX_BUFFER_SIZE];
             char language[MAX_BUFFER_SIZE];
+            char access[MAX_BUFFER_SIZE];
+            char tester[MAX_BUFFER_SIZE];
             char install[MAX_BUFFER_SIZE];
             char shutdown[MAX_BUFFER_SIZE];
         } help;
@@ -1051,10 +1090,10 @@ struct mux_lang {
         char overlay[MAX_BUFFER_SIZE];
         struct {
             char main[MAX_BUFFER_SIZE];
+            char access[MAX_BUFFER_SIZE];
             char add_content[MAX_BUFFER_SIZE];
             char new_dir[MAX_BUFFER_SIZE];
             char remove[MAX_BUFFER_SIZE];
-            char access[MAX_BUFFER_SIZE];
         } collection;
         struct {
             char main[MAX_BUFFER_SIZE];
@@ -2728,6 +2767,7 @@ struct mux_lang {
         char selectionanimation[MAX_BUFFER_SIZE];
         char selectionstyle[MAX_BUFFER_SIZE];
         char rendershadows[MAX_BUFFER_SIZE];
+        char notifytime[MAX_BUFFER_SIZE];
         struct {
             char disabled[MAX_BUFFER_SIZE];
             char continuous[MAX_BUFFER_SIZE];
@@ -2813,6 +2853,7 @@ struct mux_lang {
             char selection_animation[MAX_BUFFER_SIZE];
             char selection_style[MAX_BUFFER_SIZE];
             char render_shadows[MAX_BUFFER_SIZE];
+            char notify_time[MAX_BUFFER_SIZE];
             char overlay_image[MAX_BUFFER_SIZE];
             char overlay_transparency[MAX_BUFFER_SIZE];
             char launch_swap[MAX_BUFFER_SIZE];

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 #include "../common/ui/empty_state.h"
 #include "../common/ui/more.h"
@@ -342,7 +343,7 @@ static void handle_a(void) {
             extract_pending = 1;
             task_progress_show();
         } else {
-            toast_message(lang.generic.failed, tst_wait_m);
+            notify_send(notify_warning, lang.generic.failed);
         }
 
         skip_confirm = 0;

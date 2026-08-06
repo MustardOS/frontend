@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 #include "../common/ui/more.h"
 #include "../common/ui/task_progress.h"
@@ -240,7 +241,7 @@ static void handle_a(void) {
             return;
         }
 
-        toast_message(lang.generic.failed, tst_wait_m);
+        notify_send(notify_warning, lang.generic.failed);
         return;
     }
 
@@ -349,7 +350,7 @@ static void handle_y(void) {
         task_pending = 1;
         task_progress_show();
     } else {
-        toast_message(lang.generic.failed, tst_wait_m);
+        notify_send(notify_warning, lang.generic.failed);
     }
 }
 

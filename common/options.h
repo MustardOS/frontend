@@ -79,6 +79,7 @@
 #define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"
 
 #define IDLE_STATE   RUN_PATH "idle_state"
+#define NOTIFY_DROP  RUN_PATH "notify"
 #define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
 
 #define RGBLED_BIN OPT_PATH "frontend/murgb"

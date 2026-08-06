@@ -22,16 +22,14 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    char *item_labels[] = {
-        lang.muxinstall.rtc, lang.muxinstall.language, lang.muxinstall.shutdown, lang.muxinstall.install
-    };
+    char *item_labels[] = {lang.muxinstall.rtc,    lang.muxinstall.language, lang.muxinstall.access,
+                           lang.muxinstall.tester, lang.muxinstall.shutdown, lang.muxinstall.install};
 
-    char *item_labels_short[] = {
-        lang.muxinstall.abbr.rtc, lang.muxinstall.abbr.language, lang.muxinstall.abbr.shutdown,
-        lang.muxinstall.abbr.install
-    };
+    char *item_labels_short[] = {lang.muxinstall.abbr.rtc,      lang.muxinstall.abbr.language,
+                                 lang.muxinstall.abbr.access,   lang.muxinstall.abbr.tester,
+                                 lang.muxinstall.abbr.shutdown, lang.muxinstall.abbr.install};
 
-    char *glyph_names[] = {"clock", "language", "shutdown", "install"};
+    char *glyph_names[] = {"clock", "language", "access", "tester", "shutdown", "install"};
 
     reset_ui_groups();
 
@@ -40,8 +38,10 @@ static void init_navigation_group(void) {
     } else {
         INIT_STATIC_ITEM(-1, install, rtc, item_labels[0], glyph_names[0], 0);
         INIT_STATIC_ITEM(-1, install, language, item_labels[1], glyph_names[1], 0);
-        INIT_STATIC_ITEM(-1, install, shutdown, item_labels[2], glyph_names[2], 0);
-        INIT_STATIC_ITEM(-1, install, install, item_labels[3], glyph_names[3], 0);
+        INIT_STATIC_ITEM(-1, install, access, item_labels[2], glyph_names[2], 0);
+        INIT_STATIC_ITEM(-1, install, tester, item_labels[3], glyph_names[3], 0);
+        INIT_STATIC_ITEM(-1, install, shutdown, item_labels[4], glyph_names[4], 0);
+        INIT_STATIC_ITEM(-1, install, install, item_labels[5], glyph_names[5], 0);
 
         add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
         list_nav_move(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1);
@@ -94,36 +94,100 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
+static int confirm_mode = 0;
+static mux_dialogue confirm_shutdown_dlg;
+static mux_dialogue confirm_install_dlg;
+static mux_dialogue *confirm_dlg = NULL;
+static char confirm_target[32];
+
+static void run_action(const char *mux_name) {
+    if (strcmp(mux_name, "shutdown") == 0) {
+        toast_message(lang.generic.shutting_down, tst_wait_f);
+    } else {
+        play_sound(snd_confirm);
+    }
+
+    load_mux(mux_name);
+    mux_input_stop();
+}
+
+static void show_confirm(const char *mux_name, mux_dialogue *dlg) {
+    snprintf(confirm_target, sizeof(confirm_target), "%s", mux_name);
+
+    confirm_dlg = dlg;
+    confirm_mode = 1;
+
+    confirm_dlg->selected = 1;
+
+    dialogue_show(confirm_dlg);
+    dialogue_refresh(confirm_dlg, &theme);
+}
+
+static void hide_confirm(void) {
+    confirm_mode = 0;
+
+    if (confirm_dlg) dialogue_hide(confirm_dlg);
+    confirm_dlg = NULL;
+}
+
 static void handle_a(void) {
+    if (confirm_mode) {
+        const int yes = confirm_dlg && confirm_dlg->selected == 0;
+        hide_confirm();
+
+        if (!yes) {
+            play_sound(snd_back);
+            return;
+        }
+
+        run_action(confirm_target);
+
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     const struct {
         const char *glyph_name;
         const char *mux_name;
-    } elements[] = {{"clock", "rtc"}, {"language", "language"}, {"shutdown", "shutdown"}, {"install", "install"}};
+    } elements[] = {{"clock", "rtc"},     {"language", "language"}, {"access", "access"},
+                    {"tester", "tester"}, {"shutdown", "shutdown"}, {"install", "install"}};
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     const char *u_data = lv_obj_get_user_data(e_focused);
 
     for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
-            if (strcmp(elements[i].mux_name, "fti-shutdown") != 0) {
-                play_sound(snd_confirm);
-            } else {
-                toast_message(lang.generic.shutting_down, tst_wait_f);
-            }
+        if (strcasecmp(u_data, elements[i].glyph_name) != 0) continue;
 
-            load_mux(elements[i].mux_name);
+        if (strcmp(elements[i].mux_name, "shutdown") == 0) {
+            play_sound(snd_confirm);
+            show_confirm(elements[i].mux_name, &confirm_shutdown_dlg);
 
-            break;
+            return;
         }
-    }
 
-    mux_input_stop();
+        if (strcmp(elements[i].mux_name, "install") == 0) {
+            play_sound(snd_confirm);
+            show_confirm(elements[i].mux_name, &confirm_install_dlg);
+
+            return;
+        }
+
+        run_action(elements[i].mux_name);
+
+        return;
+    }
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (confirm_mode) {
+        hide_confirm();
+        play_sound(snd_back);
+
+        return;
+    }
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -138,6 +202,11 @@ static void handle_help(void) {
 }
 
 static void handle_up(void) {
+    if (confirm_mode) {
+        if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, -1, 1);
+        return;
+    }
+
     if (msgbox_active) return;
 
     set_nav_input_dir(nav_dir_up);
@@ -155,6 +224,11 @@ static void handle_up(void) {
 }
 
 static void handle_down(void) {
+    if (confirm_mode) {
+        if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, +1, 1);
+        return;
+    }
+
     if (msgbox_active) return;
 
     set_nav_input_dir(nav_dir_down);
@@ -198,6 +272,11 @@ static void handle_down_hold(void) { // next
 }
 
 static void handle_left(void) {
+    if (confirm_mode) {
+        if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, -1, 1);
+        return;
+    }
+
     if (msgbox_active) return;
 
     set_nav_input_dir(nav_dir_left);
@@ -210,6 +289,11 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
+    if (confirm_mode) {
+        if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, +1, 1);
+        return;
+    }
+
     if (msgbox_active) return;
 
     set_nav_input_dir(nav_dir_right);
@@ -222,12 +306,22 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
+    if (confirm_mode) {
+        if (confirm_dlg) dialogue_handle_dpad_hold(confirm_dlg, &theme, -1, 1);
+        return;
+    }
+
     if (msgbox_active) return;
 
     if (grid_row_hold_left_ok()) handle_left();
 }
 
 static void handle_right_hold(void) {
+    if (confirm_mode) {
+        if (confirm_dlg) dialogue_handle_dpad_hold(confirm_dlg, &theme, +1, 1);
+        return;
+    }
+
     if (msgbox_active) return;
 
     if (grid_row_hold_right_ok()) handle_right();
@@ -262,6 +356,18 @@ int muxinstall_main(void) {
     init_navigation_group();
 
     adjust_wallpaper_element(ui_group, 0, wall_general);
+
+    const char *confirm_labels[] = {lang.generic.yes, lang.generic.no};
+
+    dialogue_init(
+        &confirm_shutdown_dlg, &theme, ui_screen, lang.muxinstall.shutdown, lang.muxinstall.confirm.shutdown,
+        confirm_labels, 2, lang.generic.select, NULL
+    );
+
+    dialogue_init(
+        &confirm_install_dlg, &theme, ui_screen, lang.muxinstall.install, lang.muxinstall.confirm.install,
+        confirm_labels, 2, lang.generic.select, NULL
+    );
 
     init_timer(ui_gen_refresh_task, NULL);
 

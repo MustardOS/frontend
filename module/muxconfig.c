@@ -34,6 +34,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
     INIT_STATIC_ITEM(-1, config, general, lang.muxconfig.general, "general", 0);
+    INIT_STATIC_ITEM(-1, config, access, lang.muxconfig.access, "access", 0);
     INIT_STATIC_ITEM(-1, config, connect, lang.muxconfig.connect, "connect", 0);
     INIT_STATIC_ITEM(-1, config, custom, lang.muxconfig.custom, "custom", 0);
     INIT_STATIC_ITEM(-1, config, language, lang.muxconfig.language, "language", 0);
@@ -61,10 +62,16 @@ static void handle_a(void) {
         visible_fn visible;
     } menu_entry;
 
+    static int16_t kiosk_pass = 0;
+
     static const menu_entry entries[] = {
-        {"tweakgen", &kiosk.setting.general, NULL},    {"connect", &kiosk.config.connectivity, connectivity_available},
-        {"custom", &kiosk.config.customisation, NULL}, {"language", &kiosk.config.language, NULL},
-        {"power", &kiosk.setting.power, NULL},         {"storage", &kiosk.config.storage, storage_available},
+        {"tweakgen", &kiosk.setting.general, NULL},
+        {"access", &kiosk_pass, NULL},
+        {"connect", &kiosk.config.connectivity, connectivity_available},
+        {"custom", &kiosk.config.customisation, NULL},
+        {"language", &kiosk.config.language, NULL},
+        {"power", &kiosk.setting.power, NULL},
+        {"storage", &kiosk.config.storage, storage_available},
         {"backup", &kiosk.config.backup, NULL},
     };
 

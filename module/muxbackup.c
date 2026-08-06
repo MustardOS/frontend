@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/list_frame.h"
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxbackup.h"
@@ -338,7 +339,7 @@ static void start_backup(lv_obj_t *e_focused) {
         task_pending = 1;
         task_progress_show();
     } else {
-        toast_message(lang.generic.failed, tst_wait_m);
+        notify_send(notify_warning, lang.generic.failed);
     }
 }
 

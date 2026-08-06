@@ -483,11 +483,8 @@ static void handle_b(void) {
 
     play_sound(snd_back);
 
-    if (config.boot.factory_reset) {
-        write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
-    } else {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
-    }
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
+    if (config.boot.factory_reset) write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
 
     save_and_exit(lang.generic.saving);
 }

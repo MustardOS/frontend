@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxstorage.h"
 #include "../common/ui/task_progress.h"
@@ -170,7 +171,7 @@ static void handle_a(void) {
         task_pending = 1;
         task_progress_show();
     } else {
-        toast_message(lang.generic.failed, tst_wait_m);
+        notify_send(notify_warning, lang.generic.failed);
     }
 }
 
@@ -240,9 +241,9 @@ int muxstorage_main(void) {
         .swap_axis = theme.misc.navigation_type == 1,
         .press_handler =
             {
+                [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
-                [mux_input_x] = handle_a,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_l1] = handle_list_nav_page_up,

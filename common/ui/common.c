@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <unistd.h>
 #include "common.h"
+#include "notify.h"
 #include "empty_state.h"
 #include "nav.h"
 #include "grid.h"
@@ -529,6 +530,43 @@ void fade_out_screen(void) {
     }
 }
 
+lv_obj_t *build_message_panel(const struct theme_config *theme, const struct mux_device *device, lv_obj_t **label_out) {
+    lv_obj_t *panel = lv_obj_create(ui_screen);
+    lv_obj_set_width(panel, device->mux.width - 25);
+    lv_obj_set_height(panel, LV_SIZE_CONTENT);
+    lv_obj_set_x(panel, 0);
+    lv_obj_set_y(panel, -theme->footer.height - 5);
+    lv_obj_set_align(panel, LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(panel, theme->message.radius, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(theme->message.background), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(panel, theme->message.background_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(panel, lv_color_hex(theme->message.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(panel, theme->message.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(panel, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(panel, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_t *label = lv_label_create(panel);
+    lv_obj_set_width(label, device->mux.width - 50);
+    lv_obj_set_height(label, LV_SIZE_CONTENT);
+    lv_obj_set_align(label, LV_ALIGN_CENTER);
+    lv_label_set_text(label, "");
+    lv_label_set_recolor(label, 1);
+    lv_obj_set_style_text_color(label, lv_color_hex(theme->message.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(label, theme->message.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_left(label, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(label, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(label, theme->font.message_pad_top, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(label, theme->font.message_pad_bottom, MU_OBJ_MAIN_DEFAULT);
+
+    if (label_out) *label_out = label;
+
+    return panel;
+}
+
 void init_ui_common_screen(
     const struct theme_config *theme, const struct mux_device *device, const struct mux_lang *lang, const char *title
 ) {
@@ -930,36 +968,7 @@ void init_ui_common_screen(
     lv_obj_set_style_text_color(ui_lbl_screen_message, lv_color_hex(0xF8E008), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_text_opa(ui_lbl_screen_message, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
 
-    ui_pnl_message = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnl_message, device->mux.width - 25);
-    lv_obj_set_height(ui_pnl_message, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_pnl_message, 0);
-    lv_obj_set_y(ui_pnl_message, -theme->footer.height - 5);
-    lv_obj_set_align(ui_pnl_message, LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_flex_flow(ui_pnl_message, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnl_message, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(ui_pnl_message, theme->message.radius, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnl_message, lv_color_hex(theme->message.background), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnl_message, theme->message.background_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnl_message, lv_color_hex(theme->message.border), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnl_message, theme->message.border_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnl_message, 2, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnl_message, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
-
-    ui_lbl_message = lv_label_create(ui_pnl_message);
-    lv_obj_set_width(ui_lbl_message, device->mux.width - 50);
-    lv_obj_set_height(ui_lbl_message, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lbl_message, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lbl_message, "");
-    lv_label_set_recolor(ui_lbl_message, 1);
-    lv_obj_set_style_text_color(ui_lbl_message, lv_color_hex(theme->message.text), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lbl_message, theme->message.text_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lbl_message, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lbl_message, 4, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lbl_message, theme->font.message_pad_top, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lbl_message, theme->font.message_pad_bottom, MU_OBJ_MAIN_DEFAULT);
+    ui_pnl_message = build_message_panel(theme, device, &ui_lbl_message);
 
     ui_pnl_help = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnl_help, device->mux.width);
@@ -1873,7 +1882,9 @@ show_message(lv_obj_t *panel, lv_obj_t *label, const char *msg, const uint32_t d
     }
 }
 
-void toast_message(const char *msg, const uint32_t delay) {
+void toast_present(const char *msg, const uint32_t delay, const uint32_t border) {
+    lv_obj_set_style_border_color(ui_pnl_message, lv_color_hex(border), MU_OBJ_MAIN_DEFAULT);
+
     show_message(ui_pnl_message, ui_lbl_message, msg, delay, &toast_timer);
 
     if (delay == tst_wait_f) {
@@ -1881,6 +1892,17 @@ void toast_message(const char *msg, const uint32_t delay) {
         refresh_screen(ui_screen, 3);
         usleep(256);
     }
+}
+
+void toast_message(const char *msg, const uint32_t delay) {
+    if (delay == tst_wait_f) {
+        notify_reset();
+        toast_present(msg, delay, theme.message.border);
+
+        return;
+    }
+
+    notify_send_for(notify_info, msg, delay);
 }
 
 void counter_message(lv_obj_t *ui_lbl_counter, const char *msg, const uint32_t delay) {

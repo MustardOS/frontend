@@ -238,6 +238,8 @@ void resolve_content_artwork_names(char *h_core_artwork, size_t core_size, char 
 
 void refresh_theme_preview_image(char *base_path, char *name, int *preview_index);
 
+int muxaccess_main();
+
 int muxactivity_main();
 
 int muxapp_main();

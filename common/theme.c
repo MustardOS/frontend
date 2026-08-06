@@ -279,7 +279,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->grid.current_item_label.width = (int16_t) (device->mux.width * .8);
     theme->grid.current_item_label.height = 0;
     theme->grid.current_item_label.offset_x = 0;
-    theme->grid.current_item_label.offset_y = (int16_t) - (theme->footer.height * 2);
+    theme->grid.current_item_label.offset_y = (int16_t) -(theme->footer.height * 2);
     theme->grid.current_item_label.radius = 10;
     theme->grid.current_item_label.border_width = 5;
     theme->grid.current_item_label.border = 0xF7E318;
@@ -456,6 +456,9 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->message.radius = 3;
     theme->message.text = 0xFFFFFF;
     theme->message.text_alpha = 255;
+    theme->message.level_success = 0x4D9E4D;
+    theme->message.level_warning = 0xD9A33A;
+    theme->message.level_error = 0xC24B4B;
 
     theme->bar.panel_width = (int16_t) (device->mux.width - 25);
     theme->bar.panel_height = 42;
@@ -920,6 +923,9 @@ static const theme_field theme_fields[] = {
     {"notification", "MSG_RADIUS", THEME_OFF(message.radius), theme_int},
     {"notification", "MSG_TEXT", THEME_OFF(message.text), theme_hex},
     {"notification", "MSG_TEXT_ALPHA", THEME_OFF(message.text_alpha), theme_int},
+    {"notification", "MSG_LEVEL_SUCCESS", THEME_OFF(message.level_success), theme_hex},
+    {"notification", "MSG_LEVEL_WARNING", THEME_OFF(message.level_warning), theme_hex},
+    {"notification", "MSG_LEVEL_ERROR", THEME_OFF(message.level_error), theme_hex},
 
     // bar
     {"bar", "BAR_WIDTH", THEME_OFF(bar.panel_width), theme_int},
@@ -1164,6 +1170,63 @@ void scale_theme(struct mux_device *device) {
     }
 }
 
+static void apply_accessibility(struct theme_config *theme) {
+    if (config.visual.high_contrast) {
+        theme->list_default.text = 0xFFFFFF;
+        theme->list_default.text_alpha = 255;
+        theme->list_default.background_alpha = 0;
+
+        theme->list_focus.text = 0x000000;
+        theme->list_focus.text_alpha = 255;
+        theme->list_focus.background = 0xFFFFFF;
+        theme->list_focus.background_alpha = 255;
+
+        theme->list_disabled.text_alpha = 130;
+
+        theme->header.text = 0xFFFFFF;
+        theme->header.text_alpha = 255;
+        theme->footer.text = 0xFFFFFF;
+        theme->footer.text_alpha = 255;
+
+        theme->grid.cell_default.text = 0xFFFFFF;
+        theme->grid.cell_default.text_alpha = 255;
+        theme->grid.cell_default.background = 0x000000;
+        theme->grid.cell_default.background_alpha = 255;
+        theme->grid.cell_default.background_gradient_color = 0x000000;
+        theme->grid.cell_default.border = 0xFFFFFF;
+        theme->grid.cell_default.border_alpha = 130;
+        theme->grid.cell_default.image_recolour_alpha = 0;
+
+        theme->grid.cell_focus.text = 0x000000;
+        theme->grid.cell_focus.text_alpha = 255;
+        theme->grid.cell_focus.background = 0xFFFFFF;
+        theme->grid.cell_focus.background_alpha = 255;
+        theme->grid.cell_focus.background_gradient_color = 0xFFFFFF;
+        theme->grid.cell_focus.border = 0xFFFFFF;
+        theme->grid.cell_focus.border_alpha = 255;
+        theme->grid.cell_focus.image_recolour_alpha = 0;
+    }
+
+    if (config.visual.bold_focus) {
+        theme->list_focus.border_width = 6;
+
+        theme->list_focus.indicator_alpha = 255;
+        theme->list_focus.glyph_alpha = 255;
+
+        theme->grid.cell_focus.border_alpha = 255;
+        theme->grid.cell_focus.image_alpha = 255;
+
+        theme->list_focus.shadow_colour = theme->list_focus.text;
+        theme->list_focus.shadow_alpha = 255;
+        theme->list_focus.shadow_x_offset = 1;
+        theme->list_focus.shadow_y_offset = 0;
+
+        theme->list_default.shadow_alpha = 0;
+
+        theme->grid.cell_focus.text_alpha = 255;
+    }
+}
+
 void load_theme(struct theme_config *theme, const struct mux_config *config, struct mux_device *device) {
     char scheme[MAX_BUFFER_SIZE];
     snprintf(mux_dim, sizeof(mux_dim), "%dx%d/", device->mux.width, device->mux.height);
@@ -1292,6 +1355,8 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     if (theme->list_default.radius > max_radius) {
         theme->list_default.radius = max_radius;
     }
+
+    apply_accessibility(theme);
 }
 
 static void apply_label_scroll_speed(lv_obj_t *ui_lbl_item, const int is_bounce) {

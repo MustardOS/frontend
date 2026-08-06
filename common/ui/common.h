@@ -90,6 +90,10 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
 
 void toast_message(const char *msg, uint32_t delay);
 
+void toast_present(const char *msg, uint32_t delay, uint32_t border);
+
+lv_obj_t *build_message_panel(const struct theme_config *theme, const struct mux_device *device, lv_obj_t **label_out);
+
 void counter_message(lv_obj_t *ui_lbl_counter, const char *msg, uint32_t delay);
 
 void adjust_panel_priority(lv_obj_t *panels[]);

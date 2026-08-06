@@ -53,6 +53,13 @@
         lv_obj_set_style_bg_opa(ui_bar_##NAME##_##MODULE, LV_OPA_COVER, MU_OBJ_INDI_DEFAULT);                          \
     } while (0)
 
+#define ACCESS_ELEMENTS                                                                                                \
+    ACCESS(reduce_motion, "reducemotion")                                                                              \
+    ACCESS(high_contrast, "highcontrast")                                                                              \
+    ACCESS(bold_focus, "boldfocus")                                                                                    \
+    ACCESS(text_size, "textsize")                                                                                      \
+    ACCESS(legible_font, "legiblefont")
+
 #define APPCON_ELEMENTS                                                                                                \
     APPCON(governor, "governor")                                                                                       \
     APPCON(control, "control")
@@ -129,6 +136,7 @@
 
 #define CONFIG_ELEMENTS                                                                                                \
     CONFIG(general, "general")                                                                                         \
+    CONFIG(access, "access")                                                                                           \
     CONFIG(connect, "connect")                                                                                         \
     CONFIG(custom, "custom")                                                                                           \
     CONFIG(language, "language")                                                                                       \
@@ -248,6 +256,8 @@
 #define INSTALL_ELEMENTS                                                                                               \
     INSTALL(rtc, "clock")                                                                                              \
     INSTALL(language, "language")                                                                                      \
+    INSTALL(access, "access")                                                                                          \
+    INSTALL(tester, "tester")                                                                                          \
     INSTALL(shutdown, "shutdown")                                                                                      \
     INSTALL(install, "install")
 
@@ -560,6 +570,7 @@
     VISUAL(selection_style, "selectionstyle")                                                                          \
     VISUAL(list_glyph, "listglyph")                                                                                    \
     VISUAL(render_shadows, "rendershadows")                                                                            \
+    VISUAL(notify_time, "notifytime")                                                                                  \
     VISUAL(overlay_image, "overlayimage")                                                                              \
     VISUAL(overlay_transparency, "overlaytransparency")                                                                \
     VISUAL(name, "name")                                                                                               \
