@@ -1,4 +1,6 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/empty_state.h"
 
 static void show_help(void) {
     show_info_box(lang.muxnetwork.title, lang.muxnetwork.help, 0);
@@ -301,6 +303,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -450,7 +454,8 @@ int muxnetwork_main(void) {
     init_navigation_group();
     init_elements();
 
-    if (ui_count_static == 0) lv_label_set_text(ui_lbl_screen_message, lang.muxnetwork.none);
+    if (ui_count_static == 0)
+        empty_state_show_action(lang.muxnetwork.none, lang.muxnetwork.none_hint, "x", lang.generic.scan);
 
     init_timer(ui_gen_refresh_task, NULL);
 
@@ -485,6 +490,8 @@ int muxnetwork_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);
+
+    orientation_introduce(mux_module, lang.muxnetwork.title, lang.muxnetwork.overview);
 
     mux_input_task(&input_opts);
 

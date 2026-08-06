@@ -1,4 +1,6 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/empty_state.h"
 #include "ui/ui_muxbtall.h"
 
 #define BTALL(NAME, UDATA) 1,
@@ -42,6 +44,8 @@ static void save_btall_options(void) {
 }
 
 static void check_focus(void);
+
+static int bti_index = -1;
 
 static void list_nav_next(int steps);
 
@@ -136,7 +140,15 @@ static void bt_poll_task(lv_timer_t *t) {
     hide_bounce_progress_bar();
     populate_paired_device_list();
 
-    lv_label_set_text(ui_lbl_screen_message, ui_count_static <= ui_count_dynamic ? lang.muxbtall.none : "");
+    if (bti_index > -1 && bti_index < ui_count_static) {
+        gen_step_movement(bti_index, +1, 1, 0, 1);
+        bti_index = -1;
+    }
+
+    if (ui_count_static <= ui_count_dynamic)
+        empty_state_show_action(lang.muxbtall.none, lang.muxbtall.none_hint, "x", lang.generic.scan);
+    else
+        empty_state_hide();
 
     if (ui_count_static > ui_count_dynamic) {
         nav_silent = 1;
@@ -152,8 +164,13 @@ static int has_paired_bt_devices(void) {
 }
 
 static void create_paired_device_items(void) {
+    if (file_exist(MUOS_BTI_LOAD)) {
+        bti_index = read_line_int_from(MUOS_BTI_LOAD, 1);
+        remove(MUOS_BTI_LOAD);
+    }
+
     if (!has_paired_bt_devices()) {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxbtall.none);
+        empty_state_show_action(lang.muxbtall.none, lang.muxbtall.none_hint, "x", lang.generic.scan);
         return;
     }
 
@@ -262,6 +279,7 @@ static void handle_a(void) {
     run_exec(info_args, A_SIZE(info_args), 0, 1, NULL, NULL);
 
     write_text_to_file(CONF_CONFIG_PATH "bluetooth/selected", "w", CHAR, mac_copy);
+    write_text_to_file(MUOS_BTI_LOAD, "w", INT, current_item_index);
     load_mux("btdev");
     mux_input_stop();
 }
@@ -277,6 +295,8 @@ static void cancel_bt_poll(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -403,6 +423,8 @@ int muxbtall_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+
+    orientation_introduce(mux_module, lang.muxbtall.title, lang.muxbtall.overview);
 
     mux_input_task(&input_opts);
 

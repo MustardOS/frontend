@@ -57,6 +57,7 @@ void timer_resume_all(void);
 void timer_destroy_all(void);
 
 void init_fonts(void);
+void init_fonts_preview(void);
 
 void init_theme(int panel_init, int long_mode);
 

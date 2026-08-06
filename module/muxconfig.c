@@ -1,9 +1,14 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxconfig.h"
 
 #define CONFIG(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(CONFIG_ELEMENTS) };
 #undef CONFIG
+
+static void handle_x(void) {
+    orientation_handle_skip();
+}
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
@@ -31,7 +36,6 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, config, general, lang.muxconfig.general, "general", 0);
     INIT_STATIC_ITEM(-1, config, connect, lang.muxconfig.connect, "connect", 0);
     INIT_STATIC_ITEM(-1, config, custom, lang.muxconfig.custom, "custom", 0);
-    INIT_STATIC_ITEM(-1, config, interface, lang.muxconfig.interface, "interface", 0);
     INIT_STATIC_ITEM(-1, config, language, lang.muxconfig.language, "language", 0);
     INIT_STATIC_ITEM(-1, config, power, lang.muxconfig.power, "power", 0);
     INIT_STATIC_ITEM(-1, config, storage, lang.muxconfig.storage, "storage", 0);
@@ -58,13 +62,9 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[] = {
-        {"tweakgen", &kiosk.setting.general, NULL},
-        {"connect", &kiosk.config.connectivity, connectivity_available},
-        {"custom", &kiosk.config.customisation, NULL},
-        {"visual", &kiosk.setting.visual, NULL},
-        {"language", &kiosk.config.language, NULL},
-        {"power", &kiosk.setting.power, NULL},
-        {"storage", &kiosk.config.storage, storage_available},
+        {"tweakgen", &kiosk.setting.general, NULL},    {"connect", &kiosk.config.connectivity, connectivity_available},
+        {"custom", &kiosk.config.customisation, NULL}, {"language", &kiosk.config.language, NULL},
+        {"power", &kiosk.setting.power, NULL},         {"storage", &kiosk.config.storage, storage_available},
         {"backup", &kiosk.config.backup, NULL},
     };
 
@@ -144,6 +144,7 @@ int muxconfig_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_l1] = handle_list_nav_page_up,
@@ -160,6 +161,8 @@ int muxconfig_main(void) {
             [mux_input_r1] = handle_list_nav_page_down,
         }
     };
+
+    orientation_introduce(mux_module, lang.muxconfig.title, lang.muxconfig.overview);
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);

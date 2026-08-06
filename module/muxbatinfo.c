@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxbatinfo.h"
 #include "../common/battery.h"
 
@@ -217,6 +218,10 @@ static void handle_back(void) {
     mux_input_stop();
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -271,6 +276,7 @@ int muxbatinfo_main(void) {
         .press_handler =
             {
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_l1] = handle_list_nav_page_up,
@@ -290,6 +296,8 @@ int muxbatinfo_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxbatinfo.title, lang.muxbatinfo.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

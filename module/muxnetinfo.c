@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxnetinfo.h"
 
 #define NETINFO(NAME, UDATA) 1,
@@ -535,6 +536,8 @@ static void handle_start(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     if (key_show) {
@@ -698,6 +701,8 @@ int muxnetinfo_main(void) {
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
+    orientation_introduce(mux_module, lang.muxnetinfo.title, lang.muxnetinfo.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

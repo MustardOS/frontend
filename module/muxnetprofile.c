@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxnetprofile.h"
 #include <sys/wait.h>
 
@@ -1182,6 +1183,8 @@ static void handle_start(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (forget_dlg_active || msgbox_active || hold_call || ui_network_locked) return;
 
     if (key_show) {
@@ -1528,6 +1531,8 @@ int muxnetprofile_main(void) {
     init_input(&input_opts, 1);
 
     register_key_event_callback(on_key_event);
+    orientation_introduce(mux_module, lang.muxnetprofile.title, lang.muxnetprofile.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

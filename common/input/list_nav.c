@@ -1,4 +1,6 @@
 #include "list_nav.h"
+#include "../config.h"
+#include "../language.h"
 #include "../init.h"
 #include "../ui/common.h"
 #include "../ui/grid.h"
@@ -19,7 +21,7 @@ void list_nav_set_callbacks(void (*prev)(int), void (*next)(int)) {
     list_nav_next_cb = next;
 }
 
-static int list_nav_wrap_index(const int index) {
+int list_nav_wrap_index(const int index) {
     if (ui_count_static <= 0) return 0;
 
     int wrapped = index % ui_count_static;
@@ -100,7 +102,6 @@ void handle_list_nav_up(void) {
     }
 
     if (ui_count_static < 2 || block_input) return;
-
     if (grid_mode_enabled && theme.grid.navigation_type == 4 && get_grid_column_index(current_item_index) == 0) {
         handle_list_nav_next_with_dir(
             get_grid_row_index(current_item_index) == grid_info.last_row_index ? grid_info.last_row_item_count - 1
@@ -119,7 +120,6 @@ void handle_list_nav_down(void) {
     }
 
     if (ui_count_static < 2 || block_input) return;
-
     if (grid_mode_enabled && theme.grid.navigation_type == 4
         && get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1) {
         handle_list_nav_prev_with_dir(get_grid_row_item_count(current_item_index) - 1, nav_dir_down);

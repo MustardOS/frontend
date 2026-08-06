@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "../common/download.h"
 
 #define NEWS_TEXT_BUF (MAX_BUFFER_SIZE * 4)
@@ -428,6 +429,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (download_in_progress || msgbox_active || hold_call) return;
 
     if (device.board.has_network && is_network_connected()) {
@@ -579,6 +582,8 @@ int muxnews_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxnews.title, lang.muxnews.overview);
+
     mux_input_task(&input_opts);
 
     free_topics();

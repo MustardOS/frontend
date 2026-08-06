@@ -134,6 +134,10 @@ void nav_show_a(int show, const char *text);
 
 void nav_show_lr(int show);
 
+void set_preview_hint(int visible);
+
+int preview_hint_active(void);
+
 void header_and_footer_setup();
 
 void overlay_display();
@@ -276,8 +280,6 @@ int muxdistemp_main();
 
 int muxdownload_main(char *type);
 
-int muxfont_main();
-
 void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxhdmi_main();
@@ -293,6 +295,7 @@ int muxkiosk_main();
 int muxlanguage_main();
 
 int muxlaunch_main();
+int muxlogo_main();
 
 int muxnetadv_main();
 
@@ -362,10 +365,6 @@ int muxthemedown_main();
 
 int muxthemefilter_main();
 
-int muxcontent_main();
-
-int muxthemeopt_main();
-
 int muxtester_main();
 
 int muxtimezone_main();
@@ -373,8 +372,6 @@ int muxtimezone_main();
 int muxtweakadv_main();
 
 int muxtweakgen_main();
-
-int muxvisual_main();
 
 int muxwebserv_main();
 

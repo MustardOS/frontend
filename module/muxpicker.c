@@ -1,11 +1,20 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/more.h"
+#include "../common/ui/task_progress.h"
 
 static char base_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
 
 static int remove_mode = 0;
+static mux_more more_menu;
+
+static int remove_allowed(void);
+static void start_remove(void);
 static int skip_confirm = 0;
+static int task_pending = 0;
+static const char *task_title = NULL;
 static mux_dialogue remove_dlg;
 
 static void show_remove_dialog(void) {
@@ -148,8 +157,33 @@ static void do_remove(void) {
     mux_input_stop();
 }
 
+static void finish_task(void) {
+    task_pending = 0;
+
+    load_mux("picker");
+    mux_input_stop();
+}
+
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (task_pending && !task_progress_active()) finish_task();
+        return;
+    }
+
     if (msgbox_active || !ui_count_static || hold_call) return;
+
+    if (more_active(&more_menu)) {
+        const more_id opt = more_current(&more_menu);
+        more_close(&more_menu);
+
+        if (opt == more_remove) {
+            start_remove();
+        } else if (opt == more_help) {
+            play_sound(snd_info_open);
+            show_help();
+        }
+        return;
+    }
 
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
@@ -189,16 +223,25 @@ static void handle_a(void) {
             snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s", relative_path, selected_item);
         }
 
-        size_t exec_count;
-        const char *args[] = {picker_script, "install", relative_zip_path, NULL};
-        const char **exec = build_term_exec(args, &exec_count);
+        const char *argv[] = {picker_script, "install", relative_zip_path, NULL};
 
-        if (exec) {
-            fade_out_screen();
+        const task_exec_spec spec = {
+            .argv = argv,
+            .argc = 3,
+            .mode = task_mode_progress,
+            .can_cancel = 0,
+            .turbo = 1,
+            .title = task_title,
+        };
 
-            run_exec(exec, exec_count, 0, 1, NULL, NULL);
+        if (task_exec_start(&spec) == 0) {
+            task_pending = 1;
+            task_progress_show();
+            return;
         }
-        free(exec);
+
+        toast_message(lang.generic.failed, tst_wait_m);
+        return;
     }
 
     load_mux("picker");
@@ -206,17 +249,16 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
-static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || remove_mode
-        || items[current_item_index].content_type == content_type_folder
+static int remove_allowed(void) {
+    if (!ui_count_static || items[current_item_index].content_type == content_type_folder
         || items[current_item_index].content_type == content_type_menu) {
-        return;
+        return 0;
     }
 
-    if (strcasecmp(picker_extension, "muxcat") != 0 && strcasecmp(picker_extension, "muxcfg") != 0) {
-        return;
-    }
+    return strcasecmp(picker_extension, "muxcat") == 0 || strcasecmp(picker_extension, "muxcfg") == 0;
+}
 
+static void start_remove(void) {
     if (config.settings.advanced.trust_remove || skip_confirm) {
         do_remove();
         return;
@@ -226,8 +268,27 @@ static void handle_x(void) {
     show_remove_dialog();
 }
 
+static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
+    if (msgbox_active || remove_mode || more_active(&more_menu) || !remove_allowed()) return;
+
+    start_remove();
+}
+
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (task_pending && !task_progress_active()) finish_task();
+        return;
+    }
+
     if (hold_call) return;
+
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_close(&more_menu);
+        return;
+    }
 
     if (remove_mode) {
         hide_remove_dialog();
@@ -273,22 +334,29 @@ static void handle_y(void) {
         picker_script, sizeof(picker_script), OPT_PATH "/script/package/%s.sh", get_last_subdir(picker_type, '/', 1)
     );
 
-    size_t exec_count;
-    const char *args[] = {picker_script, "save", "-", NULL};
-    const char **exec = build_term_exec(args, &exec_count);
+    const char *argv[] = {picker_script, "save", "-", NULL};
 
-    if (exec) {
-        fade_out_screen();
-        run_exec(exec, exec_count, 0, 1, NULL, NULL);
+    const task_exec_spec spec = {
+        .argv = argv,
+        .argc = 3,
+        .mode = task_mode_progress,
+        .can_cancel = 0,
+        .turbo = 1,
+        .title = task_title,
+    };
+
+    if (task_exec_start(&spec) == 0) {
+        task_pending = 1;
+        task_progress_show();
+    } else {
+        toast_message(lang.generic.failed, tst_wait_m);
     }
-    free(exec);
-
-    load_mux("picker");
-
-    mux_input_stop();
 }
 
 static void handle_dpad_up(void) {
+    if (task_progress_handle_dpad(-1)) return;
+    if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad(&remove_dlg, &theme, -1, !swap_axis);
         return;
@@ -297,6 +365,9 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (task_progress_handle_dpad(+1)) return;
+    if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad(&remove_dlg, &theme, +1, !swap_axis);
         return;
@@ -305,6 +376,9 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
+    if (task_progress_handle_dpad_hold(-1)) return;
+    if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
@@ -313,6 +387,9 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
+    if (task_progress_handle_dpad_hold(+1)) return;
+    if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
@@ -322,9 +399,16 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (remove_mode || more_active(&more_menu)) return;
+
+    more_entry entries[2];
+    int count = 0;
+
+    if (remove_allowed()) entries[count++] = (more_entry) {more_remove, 1};
+    entries[count++] = (more_entry) {more_help, 1};
 
     play_sound(snd_info_open);
-    show_help();
+    more_open(&more_menu, &theme, ui_screen, entries, count);
 }
 
 static void init_elements(void) {
@@ -351,6 +435,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    task_progress_tick();
+
     if (ui_count_static > 0 && nav_moved) {
         adjust_gen_panel();
 
@@ -381,6 +467,8 @@ int muxpicker_main(char *type, char *ex_dir) {
         picker_extension = "muxcus";
         picker_title = lang.muxpicker.custom;
     }
+
+    task_title = picker_title;
 
     init_ui_common_screen(&theme, &device, &lang, picker_title);
 
@@ -427,6 +515,7 @@ int muxpicker_main(char *type, char *ex_dir) {
     }
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -456,6 +545,8 @@ int muxpicker_main(char *type, char *ex_dir) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, task_title, lang.muxpicker.overview);
+
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

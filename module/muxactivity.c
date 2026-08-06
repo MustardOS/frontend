@@ -1,4 +1,7 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/empty_state.h"
+#include "../common/ui/more.h"
 #include "ui/ui_muxactivity.h"
 
 static lv_obj_t *ui_viewport_objects[7];
@@ -1071,7 +1074,7 @@ static void refresh_activity_labels(void) {
     current_item_index = 0;
 
     if (ui_count_static == 0) {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxactivity.none);
+        empty_state_show(lang.muxactivity.none, lang.muxactivity.none_hint);
 
         lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -1730,9 +1733,9 @@ static void list_nav_move(const int steps, const int direction) {
         }
 
         if (direction < 0) {
-            current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+            current_item_index = list_nav_wrap_index(current_item_index - 1);
         } else {
-            current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+            current_item_index = list_nav_wrap_index(current_item_index + 1);
         }
 
         if (multi_list) {
@@ -1782,13 +1785,17 @@ static void list_nav_next(const int steps) {
 
 static int remove_mode = 0;
 static int skip_confirm = 0;
+static mux_more more_menu;
+
+static int remove_allowed(void);
+static void start_remove(void);
 static mux_dialogue remove_dlg;
 
 static void handle_b(void);
 
 static void show_remove_dialog(void) {
     remove_mode = 1;
-    remove_dlg.selected = 0;
+    remove_dlg.selected = mux_remove_nah;
     dialogue_show(&remove_dlg);
     dialogue_refresh(&remove_dlg, &theme);
 }
@@ -1842,6 +1849,19 @@ static void show_nav(void) {
 }
 
 static void handle_a(void) {
+    if (more_active(&more_menu)) {
+        const more_id opt = more_current(&more_menu);
+        more_close(&more_menu);
+
+        if (opt == more_remove) {
+            start_remove();
+        } else if (opt == more_help) {
+            play_sound(snd_info_open);
+            show_help();
+        }
+        return;
+    }
+
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         hide_remove_dialog();
@@ -1870,6 +1890,12 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_close(&more_menu);
+        return;
+    }
+
     if (remove_mode) {
         hide_remove_dialog();
         return;
@@ -1929,19 +1955,27 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static int remove_allowed(void) {
+    return in_detail_view && !remove_mode && overview_item_index >= 0 && (size_t) overview_item_index < activity_count;
+}
+
+static void start_remove(void) {
+    if (config.settings.advanced.trust_remove || skip_confirm) {
+        do_remove();
+        return;
+    }
+
+    play_sound(snd_confirm);
+    show_remove_dialog();
+}
+
 static void handle_x(void) {
-    if (msgbox_active || !ui_count_static) return;
+    if (orientation_handle_skip()) return;
+
+    if (msgbox_active || !ui_count_static || more_active(&more_menu)) return;
 
     if (in_detail_view) {
-        if (remove_mode || overview_item_index < 0 || (size_t) overview_item_index >= activity_count) return;
-
-        if (config.settings.advanced.trust_remove || skip_confirm) {
-            do_remove();
-            return;
-        }
-
-        play_sound(snd_confirm);
-        show_remove_dialog();
+        if (remove_allowed()) start_remove();
         return;
     }
 
@@ -1980,6 +2014,8 @@ static void handle_y(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -1992,6 +2028,8 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -2004,6 +2042,8 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
+    if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
@@ -2013,6 +2053,8 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
+    if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
@@ -2023,9 +2065,16 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (remove_mode || more_active(&more_menu)) return;
+
+    more_entry entries[2];
+    int count = 0;
+
+    if (remove_allowed()) entries[count++] = (more_entry) {more_remove, 1};
+    entries[count++] = (more_entry) {more_help, 1};
 
     play_sound(snd_info_open);
-    show_help();
+    more_open(&more_menu, &theme, ui_screen, entries, count);
 }
 
 static void adjust_panels(void) {
@@ -2043,7 +2092,7 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                  {ui_lbl_nav_a, lang.muxactivity.info, 0},
+                                  {ui_lbl_nav_a, lang.generic.information, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
@@ -2104,7 +2153,7 @@ int muxactivity_main() {
         lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
 
-        lv_label_set_text(ui_lbl_screen_message, lang.muxactivity.none);
+        empty_state_show(lang.muxactivity.none, lang.muxactivity.none_hint);
     } else {
         if (config.visual.box_art < 4) {
             image_refresh();
@@ -2143,6 +2192,12 @@ int muxactivity_main() {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+
+    if (orientation_should_show(mux_module)) {
+        orientation_mark_shown(mux_module);
+        show_help();
+    }
+
     mux_input_task(&input_opts);
 
     transition_box_art_destroy();

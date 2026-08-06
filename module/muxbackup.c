@@ -1,5 +1,8 @@
 #include "muxshare.h"
+#include "../common/ui/list_frame.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxbackup.h"
+#include "../common/ui/task_progress.h"
 
 #define BACKUP(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(BACKUP_ELEMENTS), storage_count = ui_count_dynamic - 3 };
@@ -10,6 +13,12 @@ BACKUP_ELEMENTS
 #undef BACKUP
 
 static void show_help(void) {
+    if (list_frame_focused()) {
+        list_frame_help();
+
+        return;
+    }
+
     const struct help_msg help_messages[] = {
 #define BACKUP(NAME, UDATA) {UDATA, lang.muxbackup.help.NAME},
         BACKUP_ELEMENTS
@@ -58,27 +67,27 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_OPTION_ITEM(-1, backup, track, lang.muxbackup.track, "track", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, apps, lang.muxbackup.apps, "application", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, music, lang.muxbackup.music, "music", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, collection, lang.muxbackup.collection, "collection", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, name, lang.muxbackup.name, "name", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, history, lang.muxbackup.history, "history", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, catalogue, lang.muxbackup.catalogue, "catalogue", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, network, lang.muxbackup.network, "network", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, cheats, lang.muxbackup.cheats, "cheats", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, config, lang.muxbackup.config, "config", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, overlays, lang.muxbackup.overlays, "overlays", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, shaders, lang.muxbackup.shaders, "shaders", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, name, lang.muxbackup.name, "name", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, save, lang.muxbackup.save, "save", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, screenshot, lang.muxbackup.screenshot, "screenshot", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, syncthing, lang.muxbackup.syncthing, "syncthing", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, track, lang.muxbackup.track, "track", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, apps, lang.muxbackup.apps, "application", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, bios, lang.muxbackup.bios, "bios", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, config, lang.muxbackup.config, "config", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, init, lang.muxbackup.init, "init", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, network, lang.muxbackup.network, "network", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, syncthing, lang.muxbackup.syncthing, "syncthing", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, music, lang.muxbackup.music, "music", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, overlays, lang.muxbackup.overlays, "overlays", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, shaders, lang.muxbackup.shaders, "shaders", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, cheats, lang.muxbackup.cheats, "cheats", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);
     INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);
@@ -95,7 +104,18 @@ static void init_navigation_group(void) {
     }
 
     reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
+    static const list_frame frames[] = {
+        {lang.muxbackup.section.content, 0, 8},
+        {lang.muxbackup.section.system, 8, 7},
+        {lang.muxbackup.section.custom, 15, 6},
+        {lang.muxbackup.section.action, 21, 3},
+    };
+
+    list_frame_init(
+        &theme, ui_pnl_content, frames, (int) A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
+        ui_objects_value, ui_count_dynamic
+    );
+    list_frame_apply();
 
     int dbi_index = 0;
     if (file_exist(MUOS_DBI_LOAD)) {
@@ -108,8 +128,35 @@ static void init_navigation_group(void) {
     }
 }
 
+static void handle_frame_prev(void) {
+    if (msgbox_active) return;
+
+    if (list_frame_move(-1)) {
+        play_sound(snd_option);
+        gen_step_movement(0, +1, 0, 0, 0);
+    }
+}
+
+static void handle_frame_next(void) {
+    if (msgbox_active) return;
+
+    if (list_frame_move(+1)) {
+        play_sound(snd_option);
+        gen_step_movement(0, +1, 0, 0, 0);
+    }
+}
+
 static void handle_option_prev(void) {
     if (msgbox_active) return;
+
+    if (list_frame_focused()) {
+        if (list_frame_move(-1)) {
+            play_sound(snd_option);
+            gen_step_movement(0, +1, 2, 0, 0);
+        }
+
+        return;
+    }
 
     move_option(lv_group_get_focused(ui_group_value), -1);
 }
@@ -117,17 +164,37 @@ static void handle_option_prev(void) {
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
+    if (list_frame_focused()) {
+        if (list_frame_move(+1)) {
+            play_sound(snd_option);
+            gen_step_movement(0, +1, 2, 0, 0);
+        }
+
+        return;
+    }
+
     move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
+static int task_pending = 0;
+
+static void finish_task(void) {
+    task_pending = 0;
+
+    load_mux("backup");
+    mux_input_stop();
+}
+
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (task_pending && !task_progress_active()) finish_task();
+        return;
+    }
+
     if (hold_call) return;
 
     if (msgbox_active) {
-        play_sound(snd_confirm);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        handle_msgbox_dismiss();
         return;
     }
 
@@ -135,12 +202,18 @@ static void handle_b(void) {
 
     save_backup_options();
 
+    list_frame_remember_section();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "backup");
 
     mux_input_stop();
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (task_pending && !task_progress_active()) finish_task();
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -197,24 +270,31 @@ static void handle_a(void) {
     char backup_script_path[FILENAME_MAX];
     snprintf(backup_script_path, sizeof(backup_script_path), OPT_PATH "script/mux/backup.sh");
 
-    const char *args[] = {backup_script_path, do_merge, NULL};
-    size_t exec_count;
-    const char **exec = build_term_exec(args, &exec_count);
-
-    if (exec) {
-        fade_out_screen();
-        run_exec(exec, exec_count, 0, 1, NULL, NULL);
-    }
-    free(exec);
-
     write_text_to_file(MUOS_DBI_LOAD, "w", INT, current_item_index);
 
-    load_mux("backup");
+    const char *argv[] = {backup_script_path, do_merge, NULL};
 
-    mux_input_stop();
+    // A half written archive is worse than none! So this one runs to the end.
+    const task_exec_spec spec = {
+        .argv = argv,
+        .argc = 2,
+        .mode = task_mode_progress,
+        .can_cancel = 0,
+        .turbo = 1,
+        .title = lang.muxbackup.title,
+    };
+
+    if (task_exec_start(&spec) == 0) {
+        task_pending = 1;
+        task_progress_show();
+    } else {
+        toast_message(lang.generic.failed, tst_wait_m);
+    }
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -255,6 +335,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    task_progress_tick();
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();
@@ -293,6 +375,7 @@ int muxbackup_main(void) {
     restore_backup_options();
     init_dropdown_settings();
 
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -306,8 +389,8 @@ int muxbackup_main(void) {
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_l1] = handle_frame_prev,
+                [mux_input_r1] = handle_frame_next,
             },
         .release_handler =
             {
@@ -318,13 +401,15 @@ int muxbackup_main(void) {
             [mux_input_dpad_right] = handle_option_next,
             [mux_input_dpad_up] = handle_list_nav_up_hold,
             [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_l1] = handle_frame_prev,
+            [mux_input_r1] = handle_frame_next,
         }
     };
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxbackup.title, lang.muxbackup.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

@@ -101,6 +101,9 @@
 #define OPTION_SKIP "/tmp/skip_opt"
 
 #define INTERNAL_FONTS OPT_PATH "share/font/internal"
+#define USER_FONTS "MUOS/font" // Fonts the user supplies on any storage
+#define USER_LOGOS "MUOS/logo" // Boot logos the user supplies on any storage
+#define INTERNAL_LOGOS OPT_PATH "share/logo"
 #define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
 
@@ -186,12 +189,14 @@
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_ASS_SYSP "/tmp/ass_sp" // Core/System Assignment Force System Picker
+#define MUOS_BTI_LOAD "/tmp/bti_go" // Bluetooth Paired Last Index
 #define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 #define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
 #define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
 #define MUOS_CRS_LOAD "/tmp/crs_go" // Crash Module Information
 #define MUOS_PWR_LOSS "/tmp/pwr_no" // Unexpected Power Loss Alert
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
+#define MUOS_SFI_LOAD "/tmp/sfi_" // Section Frame Last Index, one per module
 #define MUOS_FLT_LOAD "/tmp/flt_go" // Colour Filter Name
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
 #define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index

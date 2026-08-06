@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxnetproxy.h"
 
 #define PROXY(NAME, UDATA) 1,
@@ -326,6 +327,8 @@ static void handle_start(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (save_dlg_active || reboot_dlg_active || msgbox_active || hold_call) return;
 
     if (key_show) {
@@ -635,6 +638,8 @@ int muxnetproxy_main(void) {
     init_input(&input_opts, 1);
 
     register_key_event_callback(on_key_event);
+    orientation_introduce(mux_module, lang.muxnetproxy.title, lang.muxnetproxy.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

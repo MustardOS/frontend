@@ -10,6 +10,7 @@
 #include "exec.h"
 #include "log.h"
 #include "language.h"
+#include "task_exec.h"
 #include "ui/common.h"
 #include "ui/image.h"
 #include "theme.h"
@@ -62,28 +63,20 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     return exec;
 }
 
-void extract_archive(const char *filename, const char *screen) {
-    size_t exec_count;
-    const char *args[] = {OPT_PATH "script/mux/extract.sh", filename, screen, NULL};
-    const char **exec = build_term_exec(args, &exec_count);
+int extract_archive(const char *filename, const char *screen, const char *title) {
+    const char *argv[] = {OPT_PATH "script/mux/extract.sh", filename, screen, NULL};
 
-    if (exec) {
-        fade_out_screen();
-        run_exec(exec, exec_count, 0, 1, NULL, NULL);
-    }
-    free(exec);
-}
+    // We don't want half extracted archives leaving the system in a state we cannot recover from!
+    const task_exec_spec spec = {
+        .argv = argv,
+        .argc = 3,
+        .mode = task_mode_progress,
+        .can_cancel = 0,
+        .turbo = 1,
+        .title = title,
+    };
 
-void update_bootlogo(const char *next_screen) {
-    size_t exec_count;
-    const char *args[] = {OPT_PATH "script/package/theme.sh", "bootlogo", next_screen, NULL};
-    const char **exec = build_term_exec(args, &exec_count);
-
-    if (exec) {
-        fade_out_screen();
-        run_exec(exec, exec_count, 0, 1, NULL, NULL);
-    }
-    free(exec);
+    return task_exec_start(&spec);
 }
 
 void load_assign(

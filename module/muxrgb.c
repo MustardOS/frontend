@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxrgb.h"
 #include "../common/rgb.h"
 
@@ -533,7 +534,12 @@ static void handle_b(void) {
         return;
     }
 
-    if (msgbox_active || block_input || hold_call) return;
+    if (msgbox_active) {
+        handle_msgbox_dismiss();
+        return;
+    }
+
+    if (block_input || hold_call) return;
 
     play_sound(snd_back);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "rgb");
@@ -542,6 +548,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (current_mode != RGB_MODE_STATIC || reset_dlg_active || msgbox_active || block_input || hold_call) return;
 
     play_sound(snd_info_open);
@@ -656,6 +664,8 @@ int muxrgb_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxrgb.title, lang.muxrgb.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

@@ -243,4 +243,8 @@ mux_nav_type get_sticknav_mask(int sticknav_setting);
 
 void register_key_event_callback(key_event_callback cb);
 
+typedef int (*mux_input_gate)(mux_input_type type);
+
+void mux_input_set_gate(mux_input_gate gate);
+
 void ep_wait_wake(void);

@@ -1,4 +1,8 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/empty_state.h"
+#include "../common/task_exec.h"
+#include "../common/ui/task_progress.h"
 
 static char base_dir[PATH_MAX];
 
@@ -66,6 +70,8 @@ static void create_task_items(void) {
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) return;
+
     if (msgbox_active || !ui_count_static || hold_call) return;
 
     play_sound(snd_confirm);
@@ -80,6 +86,36 @@ static void handle_a(void) {
 
         static char task_script[MAX_BUFFER_SIZE];
         snprintf(task_script, sizeof(task_script), "%s/%s.sh", sys_dir, items[current_item_index].name);
+
+        char *mode = get_script_value(task_script, "EXECUTION_MODE", "terminal");
+        char *cancel = get_script_value(task_script, "CAN_CANCEL", "0");
+        const int native = strcasecmp(mode, "progress") == 0 || strcasecmp(mode, "prompt") == 0;
+
+        if (native) {
+            const char *argv[] = {task_script, NULL};
+            const task_exec_spec spec = {
+                .argv = argv,
+                .argc = 1,
+                .mode = strcasecmp(mode, "prompt") == 0 ? task_mode_prompt : task_mode_progress,
+                .can_cancel = strcmp(cancel, "1") == 0,
+                .turbo = 1,
+                .title = items[current_item_index].display_name,
+            };
+
+            free(mode);
+            free(cancel);
+
+            if (task_exec_start(&spec) == 0) {
+                task_progress_show();
+                return;
+            }
+
+            toast_message(lang.generic.failed, tst_wait_m);
+            return;
+        }
+
+        free(mode);
+        free(cancel);
 
         size_t exec_count;
         const char *args[] = {task_script, NULL};
@@ -97,7 +133,12 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
+    if (task_progress_handle_b()) return;
     if (hold_call) return;
 
     if (msgbox_active) {
@@ -123,6 +164,30 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_dpad_up(void) {
+    if (task_progress_handle_dpad(-1)) return;
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (task_progress_handle_dpad(+1)) return;
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (task_progress_handle_dpad_hold(-1)) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (task_progress_handle_dpad_hold(+1)) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
@@ -143,6 +208,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    task_progress_tick();
+
     if (ui_count_static > 0 && nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -179,6 +246,7 @@ int muxtask_main(char *ex_dir) {
     init_fonts();
     create_task_items();
     init_elements();
+    task_progress_init(&theme, ui_screen);
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
@@ -205,9 +273,8 @@ int muxtask_main(char *ex_dir) {
     } else {
         lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_label_set_text(ui_lbl_screen_message, lang.muxtask.none);
+        empty_state_show(lang.muxtask.none, lang.muxtask.none_hint);
     }
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -216,8 +283,9 @@ int muxtask_main(char *ex_dir) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
             },
@@ -226,8 +294,8 @@ int muxtask_main(char *ex_dir) {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
             [mux_input_l1] = handle_list_nav_page_up,
             [mux_input_r1] = handle_list_nav_page_down,
         }
@@ -235,6 +303,8 @@ int muxtask_main(char *ex_dir) {
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxtask.title, lang.muxtask.overview);
+
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

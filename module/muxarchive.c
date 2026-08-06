@@ -1,15 +1,27 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/empty_state.h"
+#include "../common/ui/more.h"
+#include "../common/ui/task_progress.h"
 
 static int mount_points_init = 0;
+static int extract_pending = 0;
 static const char *mount_points[4];
 
-const char *subdirs[] = {"/backup", "/archive"};
+static const char *subdirs[] = {"/backup", "/archive"};
 
-const char *mount_labels[] = {"SD1", "SD2", "USB", "THM"};
+static const char *mount_labels[] = {"SD1", "SD2", "USB", "THM"};
 
-const char *mux_archive[] = {".muxupd", ".muxapp", ".muxzip", ".muxthm", ".muxcat", ".muxcfg"};
+static const char *mux_archive[] = {".muxupd", ".muxapp", ".muxzip", ".muxthm", ".muxcat", ".muxcfg"};
 
-const char *del_marked[] = {LANG_ARCHIVE};
+static const char *del_marked[] = {LANG_ARCHIVE};
+
+static void finish_extract(void) {
+    extract_pending = 0;
+
+    load_mux("archive");
+    mux_input_stop();
+}
 
 static void show_help(void) {
     show_info_box(lang.muxarchive.title, lang.muxarchive.help, 0);
@@ -202,10 +214,14 @@ static void list_nav_next(const int steps) {
 static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
+static mux_more more_menu;
+
+static int remove_allowed(void);
+static void start_remove(void);
 
 static void show_remove_dialog(void) {
     remove_mode = 1;
-    remove_dlg.selected = 0;
+    remove_dlg.selected = mux_remove_nah;
     dialogue_show(&remove_dlg);
     dialogue_refresh(&remove_dlg, &theme);
 }
@@ -235,6 +251,8 @@ static void do_remove(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -247,6 +265,8 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -259,6 +279,8 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
+    if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
@@ -268,6 +290,8 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
+    if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
@@ -277,6 +301,24 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
+    if (more_active(&more_menu)) {
+        const more_id opt = more_current(&more_menu);
+        more_close(&more_menu);
+
+        if (opt == more_remove) {
+            start_remove();
+        } else if (opt == more_help) {
+            play_sound(snd_info_open);
+            show_help();
+        }
+        return;
+    }
+
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         hide_remove_dialog();
@@ -296,18 +338,22 @@ static void handle_a(void) {
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-        extract_archive(items[current_item_index].name, "archive");
-
-        load_mux("archive");
+        if (extract_archive(items[current_item_index].name, "archive", lang.muxarchive.title) == 0) {
+            extract_pending = 1;
+            task_progress_show();
+        } else {
+            toast_message(lang.generic.failed, tst_wait_m);
+        }
 
         skip_confirm = 0;
-        mux_input_stop();
     }
 }
 
-static void handle_x(void) {
-    if (msgbox_active || !ui_count_static || remove_mode) return;
+static int remove_allowed(void) {
+    return ui_count_static > 0;
+}
 
+static void start_remove(void) {
     if (config.settings.advanced.trust_remove || skip_confirm) {
         do_remove();
         return;
@@ -317,8 +363,27 @@ static void handle_x(void) {
     show_remove_dialog();
 }
 
+static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
+    if (msgbox_active || remove_mode || more_active(&more_menu) || !remove_allowed()) return;
+
+    start_remove();
+}
+
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (hold_call) return;
+
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_close(&more_menu);
+        return;
+    }
 
     if (remove_mode) {
         hide_remove_dialog();
@@ -338,9 +403,16 @@ static void handle_b(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (remove_mode || more_active(&more_menu)) return;
+
+    more_entry entries[2];
+    int count = 0;
+
+    if (remove_allowed()) entries[count++] = (more_entry) {more_remove, 1};
+    entries[count++] = (more_entry) {more_help, 1};
 
     play_sound(snd_info_open);
-    show_help();
+    more_open(&more_menu, &theme, ui_screen, entries, count);
 }
 
 static void init_elements(void) {
@@ -363,6 +435,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    task_progress_tick();
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -408,13 +482,14 @@ int muxarchive_main(void) {
             list_win_focus_initial(update_list_item);
         }
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxarchive.none);
+        empty_state_show(lang.muxarchive.none, lang.muxarchive.none_hint);
     }
 
     const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_hidden}, {ui_lbl_nav_a_glyph, nav_hidden}};
     set_nav_flags(nav_e, A_SIZE(nav_e));
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -443,6 +518,8 @@ int muxarchive_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxarchive.title, lang.muxarchive.overview);
+
     mux_input_task(&input_opts);
 
     if (item_count > 0) free_items(&items, &item_count);

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxoverlay.h"
 
 #define OVERLAY(NAME, UDATA) 1,
@@ -220,6 +221,10 @@ static void handle_a(void) {
     dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -360,6 +365,7 @@ void muxoverlay_main(const int auto_assign, const char *name, const char *dir, c
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_dpad_up,
@@ -383,5 +389,7 @@ void muxoverlay_main(const int auto_assign, const char *name, const char *dir, c
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxoverlay.title, lang.muxoverlay.overview);
+
     mux_input_task(&input_opts);
 }

@@ -9,6 +9,7 @@
 #include "device.h"
 #include "board.h"
 #include "input.h"
+#include "video.h"
 #include "ui/osk.h"
 #include "log.h"
 #include "display.h"
@@ -980,10 +981,26 @@ static void update_hold_modifier(const mux_input_options *opts) {
     hold_call = hold_active;
 }
 
+static mux_input_gate input_gate = NULL;
+
+void mux_input_set_gate(const mux_input_gate gate) {
+    input_gate = gate;
+}
+
 static void dispatch_input(const mux_input_options *opts, mux_input_type mux_type, const mux_input_action action) {
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
+
+    // A dialogue that owns the screen decides what reaches the module underneath.
+    // We typically want to gate straight to the dialogue box instead of anything else.
+    if (input_gate && !input_gate(mux_type)) return;
+
+    // Any press dismisses a playing preview, and that press does nothing else
+    if (action == mux_input_press && video_preview_active()) {
+        video_preview_cancel();
+        return;
+    }
 
     // Route through the alt layer for inputs whose press happened while the modifier was held,
     // so press/hold/release stay on the same layer even if the modifier is released mid-gesture.

@@ -1,11 +1,14 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "../common/download.h"
+#include "../common/ui/task_progress.h"
 
 static char data_local_path[MAX_BUFFER_SIZE];
 static char data_type[MAX_BUFFER_SIZE];
 
 static int exit_status = 0;
 static int starter_image = 0;
+static int extract_pending = 0;
 
 static void sanitise_download_name(char *dest, const char *src) {
     size_t j = 0;
@@ -109,6 +112,13 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
+static void finish_extract(void) {
+    extract_pending = 0;
+
+    load_mux("coredown");
+    mux_input_stop();
+}
+
 static void download_finished(const int result) {
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
     lv_label_set_text(ui_lbl_nav_a, is_downloaded(current_item_index) ? lang.generic.remove : lang.generic.download);
@@ -116,7 +126,17 @@ static void download_finished(const int result) {
     if (result == 0) {
         char file_path[MAX_BUFFER_SIZE];
         resolve_muxzip_path(items[current_item_index].name, file_path);
-        extract_archive(file_path, "coredown");
+        if (extract_archive(
+                file_path, "coredown",
+                strcmp(data_type, "core") == 0 ? lang.muxdownload.title.core : lang.muxdownload.title.app
+            )
+            == 0) {
+            extract_pending = 1;
+            task_progress_show();
+        } else {
+            play_sound(snd_error);
+            toast_message(lang.generic.failed, tst_wait_m);
+        }
     } else {
         play_sound(snd_error);
         toast_message(lang.muxdownload.error_get_data, tst_wait_s);
@@ -142,6 +162,11 @@ static void update_extra_data(void) {
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (download_in_progress || !ui_count_static || hold_call) return;
 
     play_sound(snd_confirm);
@@ -162,6 +187,11 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (hold_call) return;
 
     if (msgbox_active) {
@@ -192,6 +222,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
 
     play_sound(snd_confirm);
@@ -231,6 +263,7 @@ static void init_elements(void) {
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     download_poll();
+    task_progress_tick();
 
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, wall_general);
@@ -294,6 +327,7 @@ int muxdownload_main(char *type) {
         list_nav_move(sys_index, +1);
     }
 
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     if (!file_exist(data_local_path)) update_extra_data();
@@ -328,6 +362,11 @@ int muxdownload_main(char *type) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(
+        mux_module, strcmp(data_type, "core") == 0 ? lang.muxdownload.title.core : lang.muxdownload.title.app,
+        lang.muxdownload.overview
+    );
+
     mux_input_task(&input_opts);
 
     if (ui_count_static > 0) free_items(&items, &item_count);

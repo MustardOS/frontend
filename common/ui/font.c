@@ -10,6 +10,7 @@
 #include "../log.h"
 #include "../config.h"
 #include "../device.h"
+#include "../strutil.h"
 #include "../input/list_nav.h"
 
 #define DEFAULT_NAME "Noto Sans"
@@ -32,6 +33,7 @@
 
 static int font_cache_count = 0;
 static uint32_t last_font_key_hash = 0;
+static int cached_theme_font_scalable = -1;
 static int cached_has_theme_font = -1;
 
 // Open address hash table for the font cache
@@ -53,12 +55,10 @@ typedef struct {
 
 static font_cache_t font_cache[FONT_CACHE_SLOTS];
 
-int theme_has_font(void) {
-    if (cached_has_theme_font >= 0) return cached_has_theme_font;
+static int theme_font_scan(const int ttf_only) {
 
     const char *dims[] = {mux_dim, "", NULL};
 
-    cached_has_theme_font = 0;
     for (int d = 0; dims[d] != NULL; d++) {
         char dir[MAX_BUFFER_SIZE];
         snprintf(dir, sizeof(dir), "%s/%sfont", theme_base, dims[d]);
@@ -71,10 +71,11 @@ int theme_has_font(void) {
         for (int i = 0; i < n; i++) {
             if (!found) {
                 const char *exts[] = {".ttf", ".bin"};
+                const int ext_count = ttf_only ? 1 : 2;
                 const char *name = entries[i]->d_name;
                 const size_t len = strlen(name);
 
-                for (int e = 0; e < 2; e++) {
+                for (int e = 0; e < ext_count; e++) {
                     if (len > 4 && strcasecmp(name + len - 4, exts[e]) == 0) {
                         found = 1;
                         break;
@@ -93,7 +94,7 @@ int theme_has_font(void) {
                             if (!found) {
                                 const char *s_name = sub_entries[j]->d_name;
                                 const size_t s_len = strlen(s_name);
-                                for (int e = 0; e < 2; e++) {
+                                for (int e = 0; e < ext_count; e++) {
                                     if (s_len > 4 && strcasecmp(s_name + s_len - 4, exts[e]) == 0) {
                                         found = 1;
                                         break;
@@ -111,16 +112,74 @@ int theme_has_font(void) {
         free(entries);
 
         if (found) {
-            cached_has_theme_font = 1;
+            return 1;
             break;
         }
     }
 
+    return 0;
+}
+
+int user_font_path(const char *name, char *out, const size_t out_size) {
+    if (!name || !*name) return 0;
+
+    const char *mounts[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
+
+    for (size_t i = 0; i < sizeof(mounts) / sizeof(mounts[0]); i++) {
+        if (!mounts[i] || !*mounts[i]) continue;
+
+        snprintf(out, out_size, "%s/%s/%s.ttf", mounts[i], USER_FONTS, name);
+        remove_double_slashes(out);
+
+        if (file_exist(out)) return 1;
+    }
+
+    return 0;
+}
+
+int user_font_count(void) {
+    const char *mounts[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
+
+    int total = 0;
+    for (size_t i = 0; i < sizeof(mounts) / sizeof(mounts[0]); i++) {
+        if (!mounts[i] || !*mounts[i]) continue;
+
+        char dir[MAX_BUFFER_SIZE];
+        snprintf(dir, sizeof(dir), "%s/%s", mounts[i], USER_FONTS);
+        remove_double_slashes(dir);
+
+        struct dirent **entries;
+        const int n = scandir(dir, &entries, NULL, alphasort);
+        if (n < 0) continue;
+
+        for (int e = 0; e < n; e++) {
+            const size_t len = strlen(entries[e]->d_name);
+            if (len > 4 && strcasecmp(entries[e]->d_name + len - 4, ".ttf") == 0) total++;
+
+            free(entries[e]);
+        }
+
+        free(entries);
+    }
+
+    return total;
+}
+
+int theme_has_font(void) {
+    if (cached_has_theme_font < 0) cached_has_theme_font = theme_font_scan(0);
+
     return cached_has_theme_font;
+}
+
+int theme_font_is_scalable(void) {
+    if (cached_theme_font_scalable < 0) cached_theme_font_scalable = theme_font_scan(1);
+
+    return cached_theme_font_scalable;
 }
 
 static int effective_type(void) {
     if (config.settings.advanced.font == 1 && !theme_has_font()) return 2;
+    if (config.settings.advanced.font == 3 && user_font_count() == 0) return 2;
     return config.settings.advanced.font;
 }
 
@@ -493,7 +552,7 @@ void load_font_text(lv_obj_t *screen) {
     const int eff_type = effective_type();
 
     int lang_size;
-    if (eff_type == 0 && config.settings.font.list_size > 0) {
+    if (config.settings.font.list_size > 0) {
         lang_size = config.settings.font.list_size;
     } else if (theme.font.font_list_size > 0) {
         lang_size = (int) theme.font.font_list_size;
@@ -501,11 +560,12 @@ void load_font_text(lv_obj_t *screen) {
         lang_size = get_font_size();
     }
 
-    if (eff_type == 2) {
+    if (eff_type == 2 || eff_type == 3) {
         const char *name = config.settings.font.name[0] ? config.settings.font.name : DEFAULT_NAME;
 
         char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
+        if (eff_type != 3 || !user_font_path(name, path, sizeof(path)))
+            snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         int size;
         if (config.settings.font.list_size > 0) {
@@ -554,10 +614,11 @@ void load_font_text(lv_obj_t *screen) {
 void load_font_section(const char *section, lv_obj_t *element) {
     const int eff_type = effective_type();
 
-    if (eff_type == 2) {
+    if (eff_type == 2 || eff_type == 3) {
         const char *name = config.settings.font.name[0] ? config.settings.font.name : DEFAULT_NAME;
         char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
+        if (eff_type != 3 || !user_font_path(name, path, sizeof(path)))
+            snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
 
         const int size = get_custom_section_size(section);
         lv_font_t *font = load_font_cached_ttf(path, size, 1);
@@ -623,6 +684,18 @@ int font_context_changed(void) {
 
     h ^= (uint32_t) config.settings.advanced.font;
     h *= 16777619u;
+
+    h ^= fnv_hash_str(config.settings.font.name);
+    h *= 16777619u;
+
+    const int16_t sizes[] = {
+        config.settings.font.list_size, config.settings.font.header_size, config.settings.font.footer_size,
+        config.settings.font.panel_size
+    };
+    for (size_t i = 0; i < sizeof(sizes) / sizeof(sizes[0]); i++) {
+        h ^= (uint32_t) sizes[i];
+        h *= 16777619u;
+    }
 
     if (h == last_font_key_hash) return 0;
     last_font_key_hash = h;

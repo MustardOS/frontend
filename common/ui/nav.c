@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include "../init.h"
+#include <limits.h>
 #include "common.h"
 #include "nav.h"
+#include "modal.h"
+#include "orientation.h"
 #include "grid.h"
 #include "transition.h"
 #include "../audio.h"
@@ -69,21 +72,39 @@ static void help_hide_ready_cb(lv_anim_t *a) {
 void footer_nav_check_scroll(void) {
     if (!ui_pnl_footer) return;
 
+    static lv_coord_t last_content_w = -1;
+    static lv_coord_t last_inner_w = -1;
+    static const lv_obj_t *last_footer = NULL;
+
+    if (ui_pnl_footer != last_footer) {
+        last_footer = ui_pnl_footer;
+        last_content_w = -1;
+        last_inner_w = -1;
+    }
+
+    lv_obj_update_layout(ui_pnl_footer);
+
+    lv_coord_t measured_w = 0;
+    const uint32_t children = lv_obj_get_child_cnt(ui_pnl_footer);
+    for (uint32_t i = 0; i < children; i++) {
+        lv_obj_t *c = lv_obj_get_child(ui_pnl_footer, (int32_t) i);
+        if (!c) continue;
+        if (lv_obj_has_flag_any(c, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
+        measured_w += lv_obj_get_width(c);
+    }
+
+    const lv_coord_t measured_inner = lv_obj_get_width(ui_pnl_footer);
+    if (measured_w == last_content_w && measured_inner == last_inner_w) return;
+
+    last_content_w = measured_w;
+    last_inner_w = measured_inner;
+
     lv_anim_del(ui_pnl_footer, footer_scroll_anim_cb);
 
     const lv_coord_t cur = lv_obj_get_scroll_x(ui_pnl_footer);
     if (cur != 0) lv_obj_scroll_by(ui_pnl_footer, cur, 0, LV_ANIM_OFF);
 
-    lv_obj_update_layout(ui_pnl_footer);
-
-    lv_coord_t content_w = 0;
-    const uint32_t n = lv_obj_get_child_cnt(ui_pnl_footer);
-    for (uint32_t i = 0; i < n; i++) {
-        lv_obj_t *c = lv_obj_get_child(ui_pnl_footer, (int32_t) i);
-        if (!c) continue;
-        if (lv_obj_has_flag_any(c, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
-        content_w += lv_obj_get_width(c);
-    }
+    const lv_coord_t content_w = measured_w;
 
     const lv_coord_t pad_left = lv_obj_get_style_pad_left(ui_pnl_footer, LV_PART_MAIN);
     const lv_coord_t pad_right = lv_obj_get_style_pad_right(ui_pnl_footer, LV_PART_MAIN);
@@ -112,6 +133,8 @@ void footer_nav_check_scroll(void) {
 
 void show_info_box(const char *title, const char *content, const int is_content) {
     if (msgbox_active == 0) {
+        modal_claim(MODAL_MASK_MESSAGE);
+
         lv_anim_del(ui_pnl_help, help_dim_opa_cb);
         lv_anim_del(ui_pnl_help, help_panel_opa_cb);
         lv_anim_del(ui_pnl_help_message, help_panel_y_cb);
@@ -124,6 +147,7 @@ void show_info_box(const char *title, const char *content, const int is_content)
         lv_obj_set_style_opa(ui_pnl_help_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 
         lv_obj_clear_flag(ui_pnl_help, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_pnl_help);
 
         if (is_content) {
             lv_obj_add_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
@@ -140,6 +164,24 @@ void show_info_box(const char *title, const char *content, const int is_content)
 
         lv_obj_t *ui_pnl_item = lv_obj_get_parent(ui_lbl_help_content);
         lv_obj_scroll_to_y(ui_pnl_item, 0, LV_ANIM_OFF);
+        lv_obj_update_layout(ui_pnl_help_message);
+        const int can_scroll = lv_obj_get_scroll_bottom(ui_pnl_item) > 0;
+
+        if (can_scroll) {
+            lv_obj_clear_flag(ui_lbl_help_nav_ud_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lbl_help_nav_ud, MU_OBJ_FLAG_HIDE_FLOAT);
+        } else {
+            lv_obj_add_flag(ui_lbl_help_nav_ud_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lbl_help_nav_ud, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
+
+        if (orientation_showing()) {
+            lv_obj_clear_flag(ui_lbl_help_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_clear_flag(ui_lbl_help_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        } else {
+            lv_obj_add_flag(ui_lbl_help_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+            lv_obj_add_flag(ui_lbl_help_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
 
         const int trans = config.visual.element_transition;
 
@@ -226,6 +268,8 @@ void show_info_box(const char *title, const char *content, const int is_content)
 
 void hide_info_box(void) {
     if (!ui_pnl_help) return;
+
+    modal_release();
 
     lv_anim_del(ui_pnl_help, help_dim_opa_cb);
     lv_anim_del(ui_pnl_help_message, help_panel_y_cb);
@@ -409,6 +453,7 @@ void update_scroll_position(
     }
 
     const int content_panel_y = (int) round(scroll_multiplier * mux_item_panel);
+
     lv_obj_scroll_to_y(ui_pnl_content, content_panel_y, LV_ANIM_OFF);
     lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
 }
@@ -681,20 +726,54 @@ int map_drop_down_to_value(const int selected_index, const int *options, const i
 
 void show_progress_bar(char *message) {
     progress_bar_value = 0;
-    progress_bar_last_value = -1; // reset so a fresh session always renders its first tick
+    progress_bar_last_value = INT_MIN;
+
+    lv_bar_set_mode(ui_bar_progress, LV_BAR_MODE_NORMAL);
     snprintf(progress_bar_message, sizeof(progress_bar_message), "%s", message);
     timer_update_progress = lv_timer_create(update_progress_bar, TIMER_REFRESH, NULL);
 }
 
 void update_progress_bar(lv_timer_t *timer) {
     (void) timer;
-    if (progress_bar_last_value == progress_bar_value) return;
-    progress_bar_last_value = progress_bar_value;
-    lv_bar_set_value(ui_bar_progress, progress_bar_value, LV_ANIM_OFF);
 
-    char buf[256];
-    snprintf(buf, sizeof(buf), "%s: %d%%", progress_bar_message, progress_bar_value);
-    lv_label_set_text(ui_lbl_progress, buf);
+    const int indeterminate = progress_bar_value == PROGRESS_INDETERMINATE;
+    const int was_indeterminate = progress_bar_last_value == PROGRESS_INDETERMINATE;
+
+    if (!indeterminate && progress_bar_last_value == progress_bar_value) return;
+
+    if (indeterminate != was_indeterminate) {
+        lv_bar_set_mode(ui_bar_progress, indeterminate ? LV_BAR_MODE_RANGE : LV_BAR_MODE_NORMAL);
+
+        if (indeterminate) {
+            bounce_pos = 0;
+            bounce_direction = 1;
+        }
+    }
+
+    progress_bar_last_value = progress_bar_value;
+
+    if (indeterminate) {
+        bounce_pos += bounce_direction * BOUNCE_STEP;
+
+        if (bounce_pos >= 100 - BOUNCE_SEGMENT_WIDTH) {
+            bounce_pos = 100 - BOUNCE_SEGMENT_WIDTH;
+            bounce_direction = -1;
+        } else if (bounce_pos <= 0) {
+            bounce_pos = 0;
+            bounce_direction = 1;
+        }
+
+        lv_bar_set_start_value(ui_bar_progress, bounce_pos, LV_ANIM_OFF);
+        lv_bar_set_value(ui_bar_progress, bounce_pos + BOUNCE_SEGMENT_WIDTH, LV_ANIM_OFF);
+        lv_label_set_text(ui_lbl_progress, progress_bar_message);
+    } else {
+        lv_bar_set_value(ui_bar_progress, progress_bar_value, LV_ANIM_OFF);
+
+        char buf[256];
+        snprintf(buf, sizeof(buf), "%s: %d%%", progress_bar_message, progress_bar_value);
+        lv_label_set_text(ui_lbl_progress, buf);
+    }
+
     if (lv_obj_has_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN)) {
         lv_obj_clear_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN);
         lv_obj_move_foreground(ui_pnl_progress);
@@ -707,6 +786,7 @@ void hide_progress_bar(void) {
         timer_update_progress = NULL;
     }
 
+    lv_bar_set_mode(ui_bar_progress, LV_BAR_MODE_NORMAL);
     lv_obj_add_flag(ui_pnl_progress, LV_OBJ_FLAG_HIDDEN);
 }
 

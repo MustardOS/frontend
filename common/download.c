@@ -61,6 +61,8 @@ progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_
     if (dltotal > 0) {
         int percent = (int) ((dlnow * 100) / dltotal);
         if (progress_bar_value != percent) progress_bar_value = percent;
+    } else if (dlnow > 0) {
+        progress_bar_value = PROGRESS_INDETERMINATE;
     }
 
     return 0;

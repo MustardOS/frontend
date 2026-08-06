@@ -1,7 +1,10 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "../common/download.h"
+#include "../common/ui/task_progress.h"
 
 static char language_data_local_path[MAX_BUFFER_SIZE];
+static int extract_pending = 0;
 
 static void update_font_for_language(const char *new_language) {
     char dir[MAX_BUFFER_SIZE];
@@ -98,9 +101,22 @@ static void create_language_items(void) {
     }
 }
 
+static void finish_extract(void) {
+    extract_pending = 0;
+
+    load_mux("language");
+    mux_input_stop();
+}
+
 static void refresh_language_data_finished(const int result) {
     if (result == 0) {
-        extract_archive(language_data_local_path, "language");
+        if (extract_archive(language_data_local_path, "language", lang.muxlanguage.title) == 0) {
+            extract_pending = 1;
+            task_progress_show();
+        } else {
+            play_sound(snd_error);
+            toast_message(lang.generic.failed, tst_wait_m);
+        }
     } else {
         play_sound(snd_error);
         toast_message(lang.muxlanguage.error_get_data, tst_wait_f);
@@ -119,6 +135,11 @@ static void update_language_data(void) {
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (download_in_progress || msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -137,6 +158,11 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (download_in_progress || hold_call) return;
 
     if (msgbox_active) {
@@ -152,6 +178,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (download_in_progress || msgbox_active || hold_call || !device.board.has_network) return;
 
     if (is_network_connected()) {
@@ -172,6 +200,7 @@ static void handle_help(void) {
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     download_poll();
+    task_progress_tick();
 }
 
 static void init_elements(void) {
@@ -214,6 +243,7 @@ int muxlanguage_main(void) {
         lv_label_set_text(ui_lbl_screen_message, lang.muxlanguage.none);
     }
 
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -242,6 +272,8 @@ int muxlanguage_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxlanguage.title, lang.muxlanguage.overview);
+
     mux_input_task(&input_opts);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");

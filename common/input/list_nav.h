@@ -8,6 +8,8 @@ void handle_list_nav_next(int steps);
 
 void list_nav_set_callbacks(void (*prev)(int), void (*next)(int));
 
+int list_nav_wrap_index(int index);
+
 void handle_list_nav_up(void);
 
 void handle_list_nav_down(void);

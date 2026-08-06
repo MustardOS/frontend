@@ -58,27 +58,27 @@
     APPCON(control, "control")
 
 #define BACKUP_ELEMENTS                                                                                                \
-    BACKUP(track, "track")                                                                                             \
-    BACKUP(apps, "application")                                                                                        \
-    BACKUP(music, "music")                                                                                             \
     BACKUP(content, "content")                                                                                         \
     BACKUP(collection, "collection")                                                                                   \
-    BACKUP(override, "override")                                                                                       \
-    BACKUP(package, "package")                                                                                         \
-    BACKUP(name, "name")                                                                                               \
     BACKUP(history, "history")                                                                                         \
     BACKUP(catalogue, "catalogue")                                                                                     \
-    BACKUP(network, "network")                                                                                         \
-    BACKUP(cheats, "cheats")                                                                                           \
-    BACKUP(config, "config")                                                                                           \
-    BACKUP(overlays, "overlays")                                                                                       \
-    BACKUP(shaders, "shaders")                                                                                         \
+    BACKUP(name, "name")                                                                                               \
     BACKUP(save, "save")                                                                                               \
     BACKUP(screenshot, "screenshot")                                                                                   \
-    BACKUP(syncthing, "syncthing")                                                                                     \
+    BACKUP(track, "track")                                                                                             \
+    BACKUP(apps, "application")                                                                                        \
     BACKUP(bios, "bios")                                                                                               \
-    BACKUP(theme, "theme")                                                                                             \
+    BACKUP(config, "config")                                                                                           \
     BACKUP(init, "init")                                                                                               \
+    BACKUP(network, "network")                                                                                         \
+    BACKUP(syncthing, "syncthing")                                                                                     \
+    BACKUP(package, "package")                                                                                         \
+    BACKUP(theme, "theme")                                                                                             \
+    BACKUP(music, "music")                                                                                             \
+    BACKUP(overlays, "overlays")                                                                                       \
+    BACKUP(shaders, "shaders")                                                                                         \
+    BACKUP(override, "override")                                                                                       \
+    BACKUP(cheats, "cheats")                                                                                           \
     BACKUP(target, "target")                                                                                           \
     BACKUP(merge, "merge")                                                                                             \
     BACKUP(start, "start")
@@ -131,7 +131,6 @@
     CONFIG(general, "general")                                                                                         \
     CONFIG(connect, "connect")                                                                                         \
     CONFIG(custom, "custom")                                                                                           \
-    CONFIG(interface, "interface")                                                                                     \
     CONFIG(language, "language")                                                                                       \
     CONFIG(power, "power")                                                                                             \
     CONFIG(storage, "storage")                                                                                         \
@@ -162,18 +161,25 @@
 #define CUSTOM_ELEMENTS                                                                                                \
     CUSTOM(catalogue, "catalogue")                                                                                     \
     CUSTOM(config, "config")                                                                                           \
-    CUSTOM(content_options, "content")                                                                                 \
-    CUSTOM(font, "font")                                                                                               \
-    CUSTOM(theme_opt, "themeopt")                                                                                      \
+    CUSTOM(logo, "logo")                                                                                               \
+    CUSTOM(sort, "sort")                                                                                               \
     CUSTOM(theme, "theme")                                                                                             \
     CUSTOM(theme_resolution, "resolution")                                                                             \
     CUSTOM(theme_scaling, "scaling")                                                                                   \
     CUSTOM(theme_alternate, "alternate")                                                                               \
+    CUSTOM(header_height, "headerheight")                                                                              \
+    CUSTOM(footer_height, "footerheight")                                                                              \
+    CUSTOM(content_item_count, "count")                                                                                \
+    CUSTOM(label_width, "labelwidth")                                                                                  \
+    CUSTOM(glyph_list, "glyphlist")                                                                                    \
+    CUSTOM(glyph_header, "glyphheader")                                                                                \
+    CUSTOM(glyph_footer, "glyphfooter")                                                                                \
+    CUSTOM(glyph_grid, "glyphgrid")                                                                                    \
     CUSTOM(video_wallpaper, "videowallpaper")                                                                          \
     CUSTOM(background_scale, "backgroundscale")                                                                        \
+    CUSTOM(black_fade, "blackfade")                                                                                    \
     CUSTOM(music, "music")                                                                                             \
     CUSTOM(music_volume, "musicvolume")                                                                                \
-    CUSTOM(black_fade, "blackfade")                                                                                    \
     CUSTOM(sound, "sound")                                                                                             \
     CUSTOM(sound_volume, "soundvolume")                                                                                \
     CUSTOM(chime, "chime")
@@ -214,7 +220,7 @@
 
 #define FONT_ELEMENTS                                                                                                  \
     FONT(type, "type")                                                                                                 \
-    FONT(name, "name")                                                                                                 \
+    FONT(font_name, "fontname")                                                                                        \
     FONT(list_size, "listsize")                                                                                        \
     FONT(header_size, "headersize")                                                                                    \
     FONT(footer_size, "footersize")                                                                                    \
@@ -490,41 +496,41 @@
     TWEAKADV(accelerate, "accelerate")                                                                                 \
     TWEAKADV(repeat_delay, "repeat")                                                                                   \
     TWEAKADV(stick_nav, "sticknav")                                                                                    \
-    TWEAKADV(volume, "volume")                                                                                         \
-    TWEAKADV(brightness, "brightness")                                                                                 \
-    TWEAKADV(thermal, "thermal")                                                                                       \
-    TWEAKADV(led, "led")                                                                                               \
-    TWEAKADV(random_theme, "randomtheme")                                                                              \
-    TWEAKADV(retro_wait, "retrowait")                                                                                  \
-    TWEAKADV(retro_free, "retrofree")                                                                                  \
-    TWEAKADV(retro_cache, "retrocache")                                                                                \
-    TWEAKADV(activity, "activity")                                                                                     \
-    TWEAKADV(verbose, "verbose")                                                                                       \
-    TWEAKADV(debug_log, "debuglog")                                                                                    \
-    TWEAKADV(rumble, "rumble")                                                                                         \
-    TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(dpad_swap, "dpadswap")                                                                                    \
-    TWEAKADV(overdrive, "overdrive")                                                                                   \
-    TWEAKADV(lid_switch, "lidswitch")                                                                                  \
+    TWEAKADV(rumble, "rumble")                                                                                         \
+    TWEAKADV(brightness, "brightness")                                                                                 \
+    TWEAKADV(inc_bright, "incbright")                                                                                  \
     TWEAKADV(disp_suspend, "dispsuspend")                                                                              \
+    TWEAKADV(lid_switch, "lidswitch")                                                                                  \
     TWEAKADV(stage_overlay, "stageoverlay")                                                                            \
+    TWEAKADV(box_art_pad_div, "boxartpaddiv")                                                                          \
+    TWEAKADV(volume, "volume")                                                                                         \
+    TWEAKADV(inc_volume, "incvolume")                                                                                  \
+    TWEAKADV(audio_ready, "audioready")                                                                                \
+    TWEAKADV(audio_swap, "audioswap")                                                                                  \
+    TWEAKADV(audio_suspend, "audiosuspend")                                                                            \
+    TWEAKADV(thermal, "thermal")                                                                                       \
+    TWEAKADV(overdrive, "overdrive")                                                                                   \
+    TWEAKADV(max_gpu, "maxgpu")                                                                                        \
+    TWEAKADV(double_buffer, "doublebuffer")                                                                            \
     TWEAKADV(swapfile, "swapfile")                                                                                     \
     TWEAKADV(zramfile, "zramfile")                                                                                     \
     TWEAKADV(second_part, "secondpart")                                                                                \
     TWEAKADV(usb_part, "usbpart")                                                                                      \
-    TWEAKADV(inc_bright, "incbright")                                                                                  \
-    TWEAKADV(inc_volume, "incvolume")                                                                                  \
-    TWEAKADV(max_gpu, "maxgpu")                                                                                        \
-    TWEAKADV(double_buffer, "doublebuffer")                                                                            \
-    TWEAKADV(audio_ready, "audioready")                                                                                \
-    TWEAKADV(audio_swap, "audioswap")                                                                                  \
-    TWEAKADV(audio_suspend, "audiosuspend")                                                                            \
+    TWEAKADV(usb_function, "usbfunction")                                                                              \
+    TWEAKADV(retro_wait, "retrowait")                                                                                  \
+    TWEAKADV(retro_free, "retrofree")                                                                                  \
+    TWEAKADV(retro_cache, "retrocache")                                                                                \
+    TWEAKADV(led, "led")                                                                                               \
+    TWEAKADV(random_theme, "randomtheme")                                                                              \
+    TWEAKADV(activity, "activity")                                                                                     \
+    TWEAKADV(verbose, "verbose")                                                                                       \
+    TWEAKADV(debug_log, "debuglog")                                                                                    \
+    TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
     TWEAKADV(trust_modify, "trustmodify")                                                                              \
     TWEAKADV(trust_power, "trustpower")                                                                                \
-    TWEAKADV(trust_remove, "trustremove")                                                                              \
-    TWEAKADV(usb_function, "usbfunction")                                                                              \
-    TWEAKADV(box_art_pad_div, "boxartpaddiv")
+    TWEAKADV(trust_remove, "trustremove")
 
 #define TWEAKGEN_ELEMENTS                                                                                              \
     TWEAKGEN(rtc, "clock")                                                                                             \
@@ -541,8 +547,7 @@
     TWEAKGEN(hk_shot, "hkshot")                                                                                        \
     TWEAKGEN(startup, "startup")
 
-#define VISUAL_ELEMENTS                                                                                                \
-    VISUAL(sort, "sort")                                                                                               \
+#define VISUAL_CONFIG_ELEMENTS                                                                                         \
     VISUAL(battery, "battery")                                                                                         \
     VISUAL(clock, "clock")                                                                                             \
     VISUAL(network, "network")                                                                                         \
@@ -551,28 +556,43 @@
     VISUAL(tag_order, "tagorder")                                                                                      \
     VISUAL(header_title, "headertitle")                                                                                \
     VISUAL(element_transition, "elementtransition")                                                                    \
+    VISUAL(selection_animation, "selectionanimation")                                                                  \
+    VISUAL(selection_style, "selectionstyle")                                                                          \
+    VISUAL(list_glyph, "listglyph")                                                                                    \
+    VISUAL(render_shadows, "rendershadows")                                                                            \
+    VISUAL(overlay_image, "overlayimage")                                                                              \
+    VISUAL(overlay_transparency, "overlaytransparency")                                                                \
     VISUAL(name, "name")                                                                                               \
     VISUAL(name_scroll, "namescroll")                                                                                  \
     VISUAL(label_scroll_speed, "labelscrollspeed")                                                                     \
-    VISUAL(list_glyph, "listglyph")                                                                                    \
-    VISUAL(selection_animation, "selectionanimation")                                                                  \
-    VISUAL(selection_style, "selectionstyle")                                                                          \
     VISUAL(dash, "dash")                                                                                               \
     VISUAL(friendly_folder, "friendlyfolder")                                                                          \
     VISUAL(the_title_format, "thetitleformat")                                                                         \
     VISUAL(title_include_root_drive, "titleincluderootdrive")                                                          \
     VISUAL(folder_item_count, "folderitemcount")                                                                       \
-    VISUAL(display_empty_folder, "folderempty")                                                                        \
-    VISUAL(menu_counter_folder, "counterfolder")                                                                       \
-    VISUAL(menu_counter_file, "counterfile")                                                                           \
+    VISUAL(display_empty_folder, "displayemptyfolder")                                                                 \
+    VISUAL(menu_counter_folder, "menucounterfolder")                                                                   \
+    VISUAL(menu_counter_file, "menucounterfile")                                                                       \
     VISUAL(hidden, "hidden")                                                                                           \
     VISUAL(content_collect, "contentcollect")                                                                          \
     VISUAL(content_history, "contenthistory")                                                                          \
     VISUAL(mixed_content, "mixedcontent")                                                                              \
     VISUAL(forward_history, "forwardhistory")                                                                          \
-    VISUAL(overlay_image, "overlayimage")                                                                              \
-    VISUAL(overlay_transparency, "overlaytransparency")                                                                \
-    VISUAL(render_shadows, "rendershadows")
+    VISUAL(content_width, "width")                                                                                     \
+    VISUAL(video_preview, "videopreview")                                                                              \
+    VISUAL(box_art, "boxart")                                                                                          \
+    VISUAL(box_art_align, "align")                                                                                     \
+    VISUAL(box_art_transition, "boxarttransition")                                                                     \
+    VISUAL(box_art_scale, "boxartscale")                                                                               \
+    VISUAL(box_art_padding, "boxartpadding")                                                                           \
+    VISUAL(box_art_placeholder, "boxartplaceholder")                                                                   \
+    VISUAL(grid_mode_content, "gridmodecontent")                                                                       \
+    VISUAL(box_art_hide, "boxarthide")                                                                                 \
+    VISUAL(launch_swap, "launch_swap")                                                                                 \
+    VISUAL(shuffle, "shuffle")                                                                                         \
+    VISUAL(launchsplash, "splash")
+
+#define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS
 
 #define WEBSERV_ELEMENTS                                                                                               \
     WEBSERV(sshd, "sshd")                                                                                              \

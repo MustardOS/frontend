@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxkiosk.h"
 
 #define KIOSK(NAME, UDATA) 1,
@@ -200,6 +201,10 @@ static void handle_option_next(void) {
     move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -229,7 +234,7 @@ static void init_elements(void) {
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                   {ui_lbl_nav_lr, lang.generic.change, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.save, 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
 
 #define KIOSK(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_kiosk, UDATA);
@@ -266,6 +271,7 @@ int muxkiosk_main(void) {
             {
                 [mux_input_a] = handle_option_next,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_list_nav_up,
@@ -289,6 +295,8 @@ int muxkiosk_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxkiosk.title, lang.muxkiosk.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

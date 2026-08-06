@@ -259,6 +259,10 @@ void order_prepare(content_item *content_items, const size_t count, const char *
     if (!content_items || count == 0) return;
 
     const unsigned int seed = session_seed();
+    const int wants_file_meta = order_active == order_recently_added || order_active == order_file_size;
+
+    const int wants_playtime =
+        order_active == order_play_time || order_active == order_times_played || order_active == order_last_played;
 
     char playtime_path[MAX_BUFFER_SIZE];
     snprintf(playtime_path, sizeof(playtime_path), INFO_ACT_PATH "/" PLAYTIME_DATA);
@@ -267,7 +271,7 @@ void order_prepare(content_item *content_items, const size_t count, const char *
     struct json playtime_root = {0};
     int playtime_valid = 0;
 
-    if (file_exist(playtime_path)) {
+    if (wants_playtime && file_exist(playtime_path)) {
         playtime_raw = read_all_char_from(playtime_path);
         if (playtime_raw && json_valid(playtime_raw)) {
             playtime_root = json_parse(playtime_raw);
@@ -286,6 +290,8 @@ void order_prepare(content_item *content_items, const size_t count, const char *
 
         if (it->display_name) title_curiosities(key, it->display_name);
 
+        if (!wants_file_meta && !playtime_valid) continue;
+
         const char *path = it->extra_data;
         char full_path[PATH_MAX];
 
@@ -296,11 +302,13 @@ void order_prepare(content_item *content_items, const size_t count, const char *
 
         if (!path || !*path) continue;
 
-        struct stat st;
+        if (wants_file_meta) {
+            struct stat st;
 
-        if (stat(path, &st) == 0) {
-            key->added = st.st_mtime;
-            key->file_size = st.st_size;
+            if (stat(path, &st) == 0) {
+                key->added = st.st_mtime;
+                key->file_size = st.st_size;
+            }
         }
 
         if (!playtime_valid) continue;

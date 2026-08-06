@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <unistd.h>
 #include "common.h"
+#include "empty_state.h"
 #include "nav.h"
 #include "grid.h"
 #include "glyph.h"
@@ -85,6 +86,8 @@ lv_obj_t *ui_lbl_help_nav_ud_glyph;
 lv_obj_t *ui_lbl_help_nav_ud;
 lv_obj_t *ui_lbl_help_nav_b_glyph;
 lv_obj_t *ui_lbl_help_nav_b;
+lv_obj_t *ui_lbl_help_nav_x_glyph;
+lv_obj_t *ui_lbl_help_nav_x;
 lv_obj_t *ui_lbl_preview_header_glyph;
 lv_obj_t *ui_lbl_preview_header;
 lv_obj_t *ui_pnl_help_preview;
@@ -987,25 +990,34 @@ void init_ui_common_screen(
     lv_obj_set_flex_flow(ui_pnl_help_message, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(ui_pnl_help_message, (int32_t) round(device->mux.height * .03), 0);
 
+    lv_obj_set_style_pad_hor(ui_pnl_help_message, (int32_t) round(device->mux.width * .025), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_ver(ui_pnl_help_message, 0, MU_OBJ_MAIN_DEFAULT);
+
     ui_lbl_help_header = lv_label_create(ui_pnl_help_message);
-    lv_obj_set_width(ui_lbl_help_header, (int) round(device->mux.width * .9) - 60);
+    lv_obj_set_width(ui_lbl_help_header, lv_pct(100));
     lv_obj_set_height(ui_lbl_help_header, LV_SIZE_CONTENT);
-    lv_obj_align(ui_lbl_help_header, LV_ALIGN_TOP_LEFT, 15, 15);
     lv_label_set_long_mode(ui_lbl_help_header, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lbl_help_header, "");
     lv_obj_set_style_text_color(ui_lbl_help_header, lv_color_hex(theme->help.title), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbl_help_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_align(ui_lbl_help_header, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lbl_help_header, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lbl_help_header, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_lbl_help_header, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_lbl_help_header, lv_color_hex(theme->help.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lbl_help_header, theme->help.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_lbl_help_header, 1, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnl_help_content = lv_obj_create(ui_pnl_help_message);
     lv_obj_set_align(ui_pnl_help_content, LV_ALIGN_CENTER);
-    lv_obj_set_width(ui_pnl_help_content, (int) round(device->mux.width * .9) - 60);
+    lv_obj_set_width(ui_pnl_help_content, lv_pct(100));
     lv_obj_set_flex_grow(ui_pnl_help_content, 1);
     lv_obj_clear_flag(ui_pnl_help_content, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(ui_pnl_help_content, LV_DIR_VER);
     lv_obj_set_scroll_snap_y(ui_pnl_help_content, LV_SCROLL_SNAP_NONE);
 
     ui_lbl_help_content = lv_label_create(ui_pnl_help_content);
-    lv_obj_set_width(ui_lbl_help_content, (int) round(device->mux.width * .9) - 60);
+    lv_obj_set_width(ui_lbl_help_content, lv_pct(100));
     lv_obj_set_height(ui_lbl_help_content, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lbl_help_content, LV_ALIGN_TOP_LEFT);
     lv_label_set_long_mode(ui_lbl_help_content, LV_LABEL_LONG_WRAP);
@@ -1017,11 +1029,11 @@ void init_ui_common_screen(
     lv_obj_set_style_text_line_space(ui_lbl_help_content, 5, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnl_help_extra = lv_obj_create(ui_pnl_help_message);
-    lv_obj_set_width(ui_pnl_help_extra, (int) round(device->mux.width * .9) - 60);
-    lv_obj_set_height(ui_pnl_help_extra, theme->footer.height);
+    lv_obj_set_width(ui_pnl_help_extra, lv_pct(100));
+    lv_obj_set_height(ui_pnl_help_extra, LV_SIZE_CONTENT);
     lv_obj_align(ui_pnl_help_extra, LV_ALIGN_BOTTOM_LEFT, 15, 0);
     lv_obj_set_flex_flow(ui_pnl_help_extra, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnl_help_extra, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(ui_pnl_help_extra, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(
         ui_pnl_help_extra, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE
                                | LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE
@@ -1031,6 +1043,12 @@ void init_ui_common_screen(
     lv_obj_set_style_bg_color(ui_pnl_help_extra, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnl_help_extra, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnl_help_extra, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnl_help_extra, lv_color_hex(theme->help.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnl_help_extra, theme->help.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnl_help_extra, 1, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_pnl_help_extra, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnl_help_extra, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnl_help_extra, 8, MU_OBJ_MAIN_DEFAULT);
 
     ui_lbl_help_nav_ud_glyph = create_footer_glyph(ui_pnl_help_extra, theme, "ud", theme->nav.ud, 0);
     ui_lbl_help_nav_ud = create_footer_text(ui_pnl_help_extra, theme, theme->nav.ud.text, theme->nav.ud.text_alpha, 0);
@@ -1048,6 +1066,13 @@ void init_ui_common_screen(
     ui_lbl_help_nav_b = create_footer_text(ui_pnl_help_extra, theme, theme->nav.b.text, theme->nav.b.text_alpha, 0);
     lv_label_set_text(ui_lbl_help_nav_b, lang->generic.close);
 
+    ui_lbl_help_nav_x_glyph = create_footer_glyph(ui_pnl_help_extra, theme, "x", theme->nav.x, 0);
+    ui_lbl_help_nav_x = create_footer_text(ui_pnl_help_extra, theme, theme->nav.x.text, theme->nav.x.text_alpha, 0);
+    lv_label_set_text(ui_lbl_help_nav_x, lang->generic.skip_tour);
+
+    lv_obj_add_flag(ui_lbl_help_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_help_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+
     ui_pnl_help_preview = lv_obj_create(ui_pnl_help);
     lv_obj_set_width(ui_pnl_help_preview, (int) round(device->mux.width * .9));
     lv_obj_set_height(ui_pnl_help_preview, (int) round(device->mux.height * .9));
@@ -1062,17 +1087,27 @@ void init_ui_common_screen(
     lv_obj_set_style_border_width(ui_pnl_help_preview, 2, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnl_help_preview, LV_BORDER_SIDE_FULL, MU_OBJ_MAIN_DEFAULT);
 
+    lv_obj_set_style_pad_hor(ui_pnl_help_preview, (int32_t) round(device->mux.width * .025), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_ver(ui_pnl_help_preview, 0, MU_OBJ_MAIN_DEFAULT);
+
     ui_lbl_help_preview_header = lv_label_create(ui_pnl_help_preview);
-    lv_obj_set_width(ui_lbl_help_preview_header, (int) round(device->mux.width * .9) - 60);
+    lv_obj_set_width(ui_lbl_help_preview_header, lv_pct(100));
     lv_obj_set_height(ui_lbl_help_preview_header, LV_SIZE_CONTENT);
-    lv_obj_align(ui_lbl_help_preview_header, LV_ALIGN_TOP_LEFT, 15, 15);
+    lv_obj_align(ui_lbl_help_preview_header, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_label_set_long_mode(ui_lbl_help_preview_header, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lbl_help_preview_header, "");
     lv_obj_set_style_text_color(ui_lbl_help_preview_header, lv_color_hex(theme->help.title), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbl_help_preview_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_align(ui_lbl_help_preview_header, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lbl_help_preview_header, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lbl_help_preview_header, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(ui_lbl_help_preview_header, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_lbl_help_preview_header, lv_color_hex(theme->help.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lbl_help_preview_header, theme->help.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_lbl_help_preview_header, 1, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnl_help_preview_image = lv_obj_create(ui_pnl_help_preview);
-    lv_obj_set_width(ui_pnl_help_preview_image, (int) round(device->mux.width * .9) - 60);
+    lv_obj_set_width(ui_pnl_help_preview_image, lv_pct(100));
     lv_obj_set_height(ui_pnl_help_preview_image, (int) round(device->mux.height * .9) - 120);
     lv_obj_set_align(ui_pnl_help_preview_image, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnl_help_preview_image, LV_OBJ_FLAG_SCROLLABLE);
@@ -1101,16 +1136,22 @@ void init_ui_common_screen(
     );
 
     ui_pnl_help_preview_info = lv_obj_create(ui_pnl_help_preview);
-    lv_obj_set_width(ui_pnl_help_preview_info, (int) round(device->mux.width * .9) - 60);
-    lv_obj_set_height(ui_pnl_help_preview_info, theme->footer.height);
-    lv_obj_align(ui_pnl_help_preview_info, LV_ALIGN_BOTTOM_LEFT, 15, 0);
+    lv_obj_set_width(ui_pnl_help_preview_info, lv_pct(100));
+    lv_obj_set_height(ui_pnl_help_preview_info, LV_SIZE_CONTENT);
+    lv_obj_align(ui_pnl_help_preview_info, LV_ALIGN_BOTTOM_LEFT, 0, 0);
     lv_obj_set_flex_flow(ui_pnl_help_preview_info, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnl_help_preview_info, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(ui_pnl_help_preview_info, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnl_help_preview_info, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnl_help_preview_info, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnl_help_preview_info, lv_color_hex(0xFFFFFF), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnl_help_preview_info, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_side(ui_pnl_help_preview_info, LV_BORDER_SIDE_TOP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnl_help_preview_info, lv_color_hex(theme->help.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnl_help_preview_info, theme->help.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnl_help_preview_info, 1, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(ui_pnl_help_preview_info, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnl_help_preview_info, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnl_help_preview_info, 8, MU_OBJ_MAIN_DEFAULT);
 
     ui_lbl_help_preview_info_glyph =
         create_footer_glyph(ui_pnl_help_preview_info, theme, config.settings.remap.layout ? "b" : "a", theme->nav.a, 0);
@@ -1253,6 +1294,7 @@ void init_ui_common_screen(
     lv_obj_set_style_text_color(ui_lbl_progress, lv_color_hex(theme->message.text), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbl_progress, theme->message.text_alpha, MU_OBJ_MAIN_DEFAULT);
 
+    empty_state_init((struct theme_config *) theme, (struct mux_device *) device, ui_screen);
     lv_disp_load_scr(ui_screen_container);
 
     if (config.visual.blackfade && !fade_in_done) gen_black(LV_OPA_COVER);
@@ -2065,7 +2107,8 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
     lv_obj_set_style_bg_color(
         ui_pnl_grid_current_item, lv_color_hex(theme->grid.current_item_label.background), MU_OBJ_MAIN_DEFAULT
     );
-    if (theme->grid.current_item_label.background_alpha > LV_OPA_TRANSP && theme->grid.current_item_label.background_alpha < LV_OPA_COVER) {
+    if (theme->grid.current_item_label.background_alpha > LV_OPA_TRANSP
+        && theme->grid.current_item_label.background_alpha < LV_OPA_COVER) {
         lv_obj_set_style_opa_layered(
             ui_pnl_grid_current_item, (lv_opa_t) theme->grid.current_item_label.background_alpha, MU_OBJ_MAIN_DEFAULT
         );
@@ -2189,7 +2232,8 @@ void create_grid_item(
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->grid.cell_default.background), MU_OBJ_MAIN_DEFAULT);
     /* opa_layered renders bg+children into an off-screen layer so semi-transparent
      * cells composite correctly via premultiplied alpha over the video background. */
-    if (theme->grid.cell_default.background_alpha > LV_OPA_TRANSP && theme->grid.cell_default.background_alpha < LV_OPA_COVER) {
+    if (theme->grid.cell_default.background_alpha > LV_OPA_TRANSP
+        && theme->grid.cell_default.background_alpha < LV_OPA_COVER) {
         lv_obj_set_style_opa_layered(
             cell_pnl, (lv_opa_t) theme->grid.cell_default.background_alpha, MU_OBJ_MAIN_DEFAULT
         );
@@ -2217,7 +2261,8 @@ void create_grid_item(
     lv_obj_set_style_img_recolor_opa(cell_image, theme->grid.cell_default.image_recolour_alpha, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->grid.cell_focus.background), MU_OBJ_MAIN_FOCUS);
-    if (theme->grid.cell_focus.background_alpha > LV_OPA_TRANSP && theme->grid.cell_focus.background_alpha < LV_OPA_COVER) {
+    if (theme->grid.cell_focus.background_alpha > LV_OPA_TRANSP
+        && theme->grid.cell_focus.background_alpha < LV_OPA_COVER) {
         lv_obj_set_style_opa_layered(cell_pnl, (lv_opa_t) theme->grid.cell_focus.background_alpha, MU_OBJ_MAIN_FOCUS);
         lv_obj_set_style_bg_opa(cell_pnl, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
     } else {

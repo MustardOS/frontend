@@ -6,9 +6,7 @@ typedef void (*exec_callback)(int exit_code);
 
 const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
-void extract_archive(const char *filename, const char *screen);
-
-void update_bootlogo(const char *next_screen);
+int extract_archive(const char *filename, const char *screen, const char *title);
 
 void load_assign(const char *loader, const char *rom, const char *dir, const char *sys, int forced, int app);
 

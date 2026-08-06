@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxsearch.h"
 
 #define SEARCH(NAME, UDATA) 1,
@@ -177,9 +178,9 @@ static void list_nav_move(const int steps, const int direction) {
         }
 
         if (direction < 0) {
-            current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+            current_item_index = list_nav_wrap_index(current_item_index - 1);
         } else {
-            current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+            current_item_index = list_nav_wrap_index(current_item_index + 1);
         }
 
         nav_move(ui_group, direction);
@@ -648,6 +649,8 @@ static void handle_b_hold(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call || video_preview_active()) return;
 
     if (key_show) {
@@ -932,6 +935,8 @@ int muxsearch_main(char *dir) {
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
+    orientation_introduce(mux_module, lang.muxsearch.title, lang.muxsearch.overview);
+
     mux_input_task(&input_opts);
 
     transition_box_art_destroy();

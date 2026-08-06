@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxpass.h"
 
 #define PASSCODE_LEN 6
@@ -67,7 +68,16 @@ static void handle_a(void) {
     }
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
+    if (msgbox_active) {
+        handle_msgbox_dismiss();
+        return;
+    }
+
     if (p_type != pct_boot) play_sound(snd_back);
 
     exit_status_muxpass = 2;
@@ -75,6 +85,11 @@ static void handle_b(void) {
 }
 
 static void handle_up(void) {
+    if (msgbox_active) {
+        scroll_help_content(1, 0);
+        return;
+    }
+
     play_sound(snd_navigate);
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -82,6 +97,11 @@ static void handle_up(void) {
 }
 
 static void handle_down(void) {
+    if (msgbox_active) {
+        scroll_help_content(-1, 0);
+        return;
+    }
+
     play_sound(snd_navigate);
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -176,6 +196,7 @@ int muxpass_main(const int auth_type) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_up,
                 [mux_input_dpad_down] = handle_down,
                 [mux_input_dpad_left] = handle_left,
@@ -191,6 +212,8 @@ int muxpass_main(const int auth_type) {
     };
 
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxpass.title, lang.muxpass.overview);
+
     mux_input_task(&input_opts);
 
     return exit_status_muxpass;

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxspace.h"
 
 #define SPACE(NAME, UDATA) 1,
@@ -12,9 +13,9 @@ enum { ui_count_dynamic = E_SIZE(SPACE_ELEMENTS) };
 #define SPACE_COLOR_WARN 0xE0A020
 #define SPACE_COLOR_FULL 0xEE3F3F
 
-#define SPACE_BAR_BASE_PX  24
-#define SPACE_BAR_BOOST_PX 0
-#define SPACE_DETAIL_ROWS  5
+#define SPACE_BAR_BASE_PX     24
+#define SPACE_BAR_EXPANDED_PX 14
+#define SPACE_DETAIL_ROWS     5
 
 static int show_details = 0;
 
@@ -324,7 +325,7 @@ static void update_storage_info() {
                 hide_detail_rows(&details_ui[i]);
             }
 
-            const lv_coord_t target_h = show_for_this ? SPACE_BAR_BASE_PX + SPACE_BAR_BOOST_PX : SPACE_BAR_BASE_PX;
+            const lv_coord_t target_h = show_for_this ? SPACE_BAR_EXPANDED_PX : SPACE_BAR_BASE_PX;
 
             if (lv_obj_get_height(storage_info[i].bar_panel) != target_h) {
                 lv_obj_set_height(storage_info[i].bar_panel, target_h);
@@ -379,6 +380,10 @@ static void list_nav_prev(const int steps) {
 
 static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
 }
 
 static void handle_b(void) {
@@ -454,6 +459,7 @@ int muxspace_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_l1] = handle_list_nav_page_up,
@@ -473,6 +479,8 @@ int muxspace_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxspace.title, lang.muxspace.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

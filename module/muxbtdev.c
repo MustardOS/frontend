@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxbtdev.h"
 
 #define BTDEV(NAME, UDATA) 1,
@@ -111,7 +112,7 @@ static mux_dialogue forget_dlg;
 
 static void show_forget_dialog(void) {
     forget_mode = 1;
-    forget_dlg.selected = 0;
+    forget_dlg.selected = mux_confirm_nah;
     dialogue_show(&forget_dlg);
     dialogue_refresh(&forget_dlg, &theme);
 }
@@ -279,6 +280,8 @@ static void handle_start(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (key_show) {
         key_show = 0;
         close_osk(key_entry, ui_group, ui_txt_entry_btdev, ui_pnl_entry_btdev);
@@ -621,6 +624,8 @@ int muxbtdev_main(void) {
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
+    orientation_introduce(mux_module, lang.muxbtdev.title, lang.muxbtdev.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

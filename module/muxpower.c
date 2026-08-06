@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxpower.h"
 
 static int save_mode = 0;
@@ -572,6 +573,8 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call || save_mode) return;
 
     const lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
@@ -679,6 +682,8 @@ int muxpower_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxpower.title, lang.muxpower.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

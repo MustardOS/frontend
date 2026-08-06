@@ -8,12 +8,14 @@
 #include "../lvgl/src/draw/sdl/lv_draw_sdl.h"
 #include "display.h"
 #include "init.h"
+#include "ui/modal.h"
 #include "input.h"
 #include "inotify.h"
 #include "ui/font.h"
 #include "ui/cache.h"
 #include "log.h"
 #include "ui/common.h"
+#include "ui/nav.h"
 #include "language.h"
 #include "options.h"
 #include "config.h"
@@ -152,6 +154,7 @@ void safe_quit(const int exit_status) {
 }
 
 void init_module(const char *module) {
+    modal_reset();
     snprintf(mux_module, sizeof(mux_module), "%s", module_from_func(module));
     set_process_name(mux_module);
     load_lang(&lang);
@@ -289,28 +292,32 @@ void init_input(mux_input_options *opts, const int def_combo) {
 
         for (size_t i = 0; i < sizeof(bright_mods) / sizeof(bright_mods[0]); i++) {
             append_combo(
-                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
-                                         .press_handler = ui_common_handle_bright_up,
-                                         .hold_handler = ui_common_handle_bright_up}
+                opts, (mux_input_combo
+                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
+                        .press_handler = ui_common_handle_bright_up,
+                        .hold_handler = ui_common_handle_bright_up}
             );
 
             append_combo(
-                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
-                                         .press_handler = ui_common_handle_bright_down,
-                                         .hold_handler = ui_common_handle_bright_down}
+                opts, (mux_input_combo
+                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
+                        .press_handler = ui_common_handle_bright_down,
+                        .hold_handler = ui_common_handle_bright_down}
             );
         }
 
         append_combo(
-            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_up),
-                                     .press_handler = ui_common_handle_volume_up,
-                                     .hold_handler = ui_common_handle_volume_up}
+            opts, (mux_input_combo
+                  ){.type_mask = BIT(mux_input_vol_up),
+                    .press_handler = ui_common_handle_volume_up,
+                    .hold_handler = ui_common_handle_volume_up}
         );
 
         append_combo(
-            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_down),
-                                     .press_handler = ui_common_handle_volume_down,
-                                     .hold_handler = ui_common_handle_volume_down}
+            opts, (mux_input_combo
+                  ){.type_mask = BIT(mux_input_vol_down),
+                    .press_handler = ui_common_handle_volume_down,
+                    .hold_handler = ui_common_handle_volume_down}
         );
     }
 
@@ -374,6 +381,8 @@ static void status_tick(lv_timer_t *timer) {
     status_task(timer);
     if (status_sysinfo_cb && ticks % 2u == 1) status_sysinfo_cb(timer);
 
+    footer_nav_check_scroll();
+
     if (ticks % 4u == 0 && device.board.has_network && config.visual.network) network_task(timer);
     if (ticks % 4u == 2 && device.board.has_bluetooth && config.visual.bluetooth) bluetooth_task(timer);
     if (ticks % 8u == 3 && config.visual.clock) datetime_task(timer);
@@ -405,7 +414,7 @@ void timer_destroy_all(void) {
 static char last_theme_name[MAX_BUFFER_SIZE] = "";
 static int init_fonts_first_call = 1;
 
-void init_fonts(void) {
+static void init_fonts_ex(const int allow_clear) {
     if (strcmp(last_theme_name, config.theme.active) != 0) {
         snprintf(last_theme_name, sizeof(last_theme_name), "%s", config.theme.active);
         if (!init_fonts_first_call) {
@@ -434,7 +443,7 @@ void init_fonts(void) {
     );
 
     const int font_context = font_context_changed();
-    if (font_context) font_cache_clear();
+    if (font_context && allow_clear) font_cache_clear();
 
     load_font_text(ui_screen);
 
@@ -447,6 +456,14 @@ void init_fonts(void) {
 
     if (prev_shadow != new_shadow) lv_obj_invalidate(ui_screen);
     prev_shadow = new_shadow;
+}
+
+void init_fonts(void) {
+    init_fonts_ex(1);
+}
+
+void init_fonts_preview(void) {
+    init_fonts_ex(0);
 }
 
 void init_theme(const int panel_init, const int long_mode) {

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 
 static int default_original;
 static int collection_original;
@@ -190,7 +191,7 @@ static void handle_a(void) {
         if (opt == mux_unsaved_save) save_sort_options();
 
         play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
 
         mux_input_stop();
         return;
@@ -199,6 +200,10 @@ static void handle_a(void) {
     if (msgbox_active) return;
 
     handle_option_next();
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
 }
 
 static void handle_b(void) {
@@ -222,7 +227,7 @@ static void handle_b(void) {
     play_sound(snd_back);
     save_sort_options();
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
 
     mux_input_stop();
 }
@@ -321,6 +326,7 @@ int muxsort_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_dpad_up,
@@ -344,6 +350,8 @@ int muxsort_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxsort.title, lang.muxsort.overview);
+
     mux_input_task(&input_opts);
 
     free_tag_items(&tag_items, &tag_item_count);

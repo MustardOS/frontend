@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxthemefilter.h"
 
 #define THEMEFILTER(NAME, UDATA) 1,
@@ -177,6 +178,8 @@ static void handle_a(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     if (key_show) close_osk(key_entry, ui_group, ui_txt_entry_themefilter, ui_pnl_entry_themefilter);
@@ -287,7 +290,7 @@ static void init_elements(void) {
                                   {ui_lbl_nav_a_glyph, "", 0},
                                   {ui_lbl_nav_a, lang.generic.select, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.save, 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
 
     check_focus();
@@ -355,6 +358,8 @@ int muxthemefilter_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxthemefilter.title, lang.muxthemefilter.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

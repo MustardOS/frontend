@@ -161,6 +161,8 @@ extern lv_obj_t *ui_lbl_help_nav_ud_glyph;
 extern lv_obj_t *ui_lbl_help_nav_ud;
 extern lv_obj_t *ui_lbl_help_nav_b_glyph;
 extern lv_obj_t *ui_lbl_help_nav_b;
+extern lv_obj_t *ui_lbl_help_nav_x_glyph;
+extern lv_obj_t *ui_lbl_help_nav_x;
 extern lv_obj_t *ui_lbl_preview_header_glyph;
 extern lv_obj_t *ui_lbl_preview_header;
 extern lv_obj_t *ui_pnl_help_preview;

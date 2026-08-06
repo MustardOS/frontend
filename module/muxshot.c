@@ -1,4 +1,7 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/empty_state.h"
+#include "../common/ui/more.h"
 
 lv_obj_t *ui_img_screenshot;
 static int is_fullscreen = 0;
@@ -6,10 +9,13 @@ static int is_fullscreen = 0;
 static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
+static mux_more more_menu;
+
+static void start_remove(void);
 
 static void show_remove_dialog(void) {
     remove_mode = 1;
-    remove_dlg.selected = 0;
+    remove_dlg.selected = mux_remove_nah;
     dialogue_show(&remove_dlg);
     dialogue_refresh(&remove_dlg, &theme);
 }
@@ -145,6 +151,8 @@ static void do_remove(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -157,6 +165,8 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -169,6 +179,8 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
+    if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
@@ -178,6 +190,8 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
+    if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
+
     if (remove_mode) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
@@ -188,6 +202,19 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_a(void) {
     if (msgbox_active || !ui_count_static || hold_call) return;
+
+    if (more_active(&more_menu)) {
+        const more_id opt = more_current(&more_menu);
+        more_close(&more_menu);
+
+        if (opt == more_remove) {
+            start_remove();
+        } else if (opt == more_help) {
+            play_sound(snd_info_open);
+            show_help();
+        }
+        return;
+    }
 
     if (remove_mode) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
@@ -223,6 +250,12 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_close(&more_menu);
+        return;
+    }
+
     if (remove_mode) {
         hide_remove_dialog();
         return;
@@ -240,9 +273,7 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_x(void) {
-    if (msgbox_active || is_fullscreen || !ui_count_static || remove_mode) return;
-
+static void start_remove(void) {
     if (config.settings.advanced.trust_remove || skip_confirm) {
         do_remove();
         return;
@@ -252,11 +283,26 @@ static void handle_x(void) {
     show_remove_dialog();
 }
 
+static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
+    if (msgbox_active || is_fullscreen || !ui_count_static || remove_mode || more_active(&more_menu)) return;
+
+    start_remove();
+}
+
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || is_fullscreen || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || is_fullscreen || hold_call) return;
+    if (remove_mode || more_active(&more_menu)) return;
+
+    more_entry entries[2];
+    int count = 0;
+
+    if (ui_count_static) entries[count++] = (more_entry) {more_remove, 1};
+    entries[count++] = (more_entry) {more_help, 1};
 
     play_sound(snd_info_open);
-    show_help();
+    more_open(&more_menu, &theme, ui_screen, entries, count);
 }
 
 static void init_elements(void) {
@@ -326,7 +372,7 @@ int muxshot_main(void) {
     if (ui_count_static > 0) {
         nav_hidden = 1;
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxshot.none);
+        empty_state_show(lang.muxshot.none, lang.muxshot.none_hint);
     }
 
     const struct nav_flag nav_e[] = {
@@ -371,6 +417,8 @@ int muxshot_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxshot.title, lang.muxshot.overview);
+
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

@@ -1,8 +1,12 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxlaunch.h"
 
 static int confirm_mode = 0;
 static mux_dialogue confirm_dlg;
+
+static int tour_mode = 0;
+static mux_dialogue tour_dlg;
 static int pending_power_action = 0;
 
 static void show_confirm_dialog(const char *title) {
@@ -15,6 +19,23 @@ static void show_confirm_dialog(const char *title) {
 
 static void hide_confirm_dialog(void) {
     dialogue_dismiss(&confirm_mode, &confirm_dlg);
+}
+
+static void show_tour_offer(void) {
+    tour_mode = 1;
+    dialogue_open(&tour_mode, &tour_dlg, &theme);
+}
+
+static void answer_tour_offer(const int accepted) {
+    dialogue_dismiss(&tour_mode, &tour_dlg);
+
+    if (accepted) {
+        orientation_accept();
+        orientation_introduce(mux_module, lang.muxlaunch.title, lang.muxlaunch.overview);
+        return;
+    }
+
+    orientation_decline();
 }
 
 #define LAUNCH(NAME, UDATA) 1,
@@ -115,6 +136,12 @@ static void list_nav_next(const int steps) {
 }
 
 static void handle_a(void) {
+    if (tour_mode) {
+        play_sound(snd_confirm);
+        answer_tour_offer(tour_dlg.selected == mux_confirm_yep);
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     if (confirm_mode) {
@@ -204,6 +231,7 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (tour_mode) return;
     if (hold_call) return;
 
     if (confirm_mode) {
@@ -219,7 +247,17 @@ static void handle_b(void) {
     if (current_item_index != 0) list_nav_move(current_item_index, -1);
 }
 
+static void handle_x_press(void) {
+    if (tour_mode) return;
+
+    orientation_handle_skip();
+}
+
 static void handle_x(void) {
+    if (tour_mode) return;
+
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     if (current_item_index == 5) {
@@ -238,6 +276,11 @@ static void handle_help(void) {
 }
 
 static void handle_up(void) {
+    if (tour_mode) {
+        dialogue_handle_dpad(&tour_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
     if (msgbox_active) return;
 
     if (confirm_mode) {
@@ -264,6 +307,11 @@ static void handle_up(void) {
 }
 
 static void handle_down(void) {
+    if (tour_mode) {
+        dialogue_handle_dpad(&tour_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
     if (msgbox_active) return;
 
     if (confirm_mode) {
@@ -290,6 +338,11 @@ static void handle_down(void) {
 }
 
 static void handle_up_hold(void) { // prev
+    if (tour_mode) {
+        dialogue_handle_dpad_hold(&tour_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
     if (confirm_mode) {
         dialogue_handle_dpad_hold(&confirm_dlg, &theme, -1, !swap_axis);
         return;
@@ -310,6 +363,11 @@ static void handle_up_hold(void) { // prev
 }
 
 static void handle_down_hold(void) { // next
+    if (tour_mode) {
+        dialogue_handle_dpad_hold(&tour_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
     if (confirm_mode) {
         dialogue_handle_dpad_hold(&confirm_dlg, &theme, +1, !swap_axis);
         return;
@@ -331,6 +389,11 @@ static void handle_down_hold(void) { // next
 }
 
 static void handle_left(void) {
+    if (tour_mode) {
+        dialogue_handle_dpad(&tour_dlg, &theme, -1, swap_axis);
+        return;
+    }
+
     if (msgbox_active) return;
 
     if (confirm_mode) {
@@ -370,6 +433,11 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
+    if (tour_mode) {
+        dialogue_handle_dpad(&tour_dlg, &theme, +1, swap_axis);
+        return;
+    }
+
     if (msgbox_active) return;
 
     if (confirm_mode) {
@@ -407,13 +475,13 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (msgbox_active || confirm_mode) return;
+    if (tour_mode || msgbox_active || confirm_mode) return;
 
     if (grid_row_hold_left_ok()) handle_left();
 }
 
 static void handle_right_hold(void) {
-    if (msgbox_active || confirm_mode) return;
+    if (tour_mode || msgbox_active || confirm_mode) return;
 
     if (grid_row_hold_right_ok()) handle_right();
 }
@@ -451,6 +519,13 @@ int muxlaunch_main(void) {
         lang.generic.select, lang.generic.cancel
     );
 
+    dialogue_init_confirm(
+        &tour_dlg, &theme, ui_screen, lang.generic.tour_offer, lang.generic.tour_offer_desc, lang.generic.yes,
+        lang.generic.no, lang.generic.select, NULL
+    );
+
+    tour_dlg.safe_default = mux_confirm_yep;
+
     adjust_wallpaper_element(ui_group, 0, wall_general);
 
     init_timer(ui_gen_refresh_task, NULL);
@@ -462,6 +537,7 @@ int muxlaunch_main(void) {
                      || (!theme.grid.enabled && theme.misc.navigation_type >= 1 && theme.misc.navigation_type <= 5),
         .press_handler =
             {
+                [mux_input_x] = handle_x_press,
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_dpad_up] = handle_up,
@@ -483,6 +559,12 @@ int muxlaunch_main(void) {
     };
 
     init_input(&input_opts, 1);
+
+    if (orientation_pending())
+        show_tour_offer();
+    else
+        orientation_introduce(mux_module, lang.muxlaunch.title, lang.muxlaunch.overview);
+
     mux_input_task(&input_opts);
 
     if (item_count > 0) free_items(&items, &item_count);

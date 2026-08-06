@@ -1,4 +1,6 @@
 #include "muxshare.h"
+#include "../common/ui/empty_state.h"
+#include "../common/ui/orientation.h"
 
 typedef struct {
     char *name;
@@ -18,11 +20,35 @@ static int16_t *flag_task(void) {
 }
 
 static mux_apps app[] = {
-    {"Archive Manager", "archive", "Archive", "", flag_archive},
-    {"Task Toolkit", "task", "Toolkit", "", flag_task},
+    {.name = "Archive Manager", .icon = "archive", .grid = "Archive", .help = "", .kiosk_flag = flag_archive},
+    {.name = "Task Toolkit", .icon = "task", .grid = "Toolkit", .help = "", .kiosk_flag = flag_task},
 };
 
-const char *app_paths[3];
+static const char *app_paths[3];
+static const char *pinned[] = {"Archive Manager", "Task Toolkit", "vTree Gold"};
+
+static size_t pinned_shown = 0;
+
+static int pinned_rank(const char *name) {
+    if (!name) return A_SIZE(pinned);
+
+    for (size_t i = 0; i < A_SIZE(pinned); i++)
+        if (strcasecmp(name, pinned[i]) == 0) return (int) i;
+
+    return A_SIZE(pinned);
+}
+
+static int app_compare(const void *a, const void *b) {
+    const char *left = *(const char *const *) a;
+    const char *right = *(const char *const *) b;
+
+    const int lr = pinned_rank(left);
+    const int rr = pinned_rank(right);
+
+    if (lr != rr) return lr - rr;
+
+    return str_compare(a, b);
+}
 
 static mux_apps *get_mux_app(const char *name) {
     if (!name) return NULL;
@@ -192,7 +218,11 @@ static void create_app_items(void) {
 
     if (!dir_names) return;
 
-    qsort(dir_names, dir_count, sizeof(char *), str_compare);
+    qsort(dir_names, dir_count, sizeof(char *), app_compare);
+
+    pinned_shown = 0;
+    for (size_t i = 0; i < dir_count; i++)
+        if (dir_names[i] && pinned_rank(dir_names[i]) < (int) A_SIZE(pinned)) pinned_shown++;
 
     reset_ui_groups();
 
@@ -476,6 +506,8 @@ static void handle_help(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || !ui_count_static || hold_call) return;
 
     char *extra_data_dup = strdup(items[current_item_index].extra_data);
@@ -562,9 +594,8 @@ int muxapp_main(void) {
 
         first_open = 0;
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxapp.no_app);
+        empty_state_show(lang.muxapp.no_app, lang.muxapp.none_hint);
     }
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -598,6 +629,8 @@ int muxapp_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxapp.title, lang.muxapp.overview);
+
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

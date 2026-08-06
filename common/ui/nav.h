@@ -3,13 +3,18 @@
 #include "../options.h"
 #include "../init.h"
 
+#define PROGRESS_INDETERMINATE (-1)
+
 extern char progress_bar_message[MAX_BUFFER_SIZE];
+
 extern volatile int progress_bar_value;
 extern lv_timer_t *timer_update_progress;
 
 enum visual_type { vis_clock, vis_bluetooth, vis_network, vis_battery, vis_headertitle };
 
 enum toast_wait { tst_wait_f, tst_wait_s = 1000, tst_wait_m = 1750, tst_wait_l = 2500 };
+
+enum nav_direction { nav_dir_up, nav_dir_down, nav_dir_left, nav_dir_right };
 
 struct nav_flag {
     lv_obj_t *element;
@@ -91,8 +96,6 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count_static, int *nav_m
 void nav_suppress_next_shake(void);
 
 void nav_unsuppress_shake(void);
-
-enum nav_direction { nav_dir_up, nav_dir_down, nav_dir_left, nav_dir_right };
 
 void nav_set_last_dir(enum nav_direction dir);
 

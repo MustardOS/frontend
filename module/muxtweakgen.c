@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxtweakgen.h"
 
 static int save_mode = 0;
@@ -635,6 +636,10 @@ static void handle_a(void) {
     handle_menu_dispatch();
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
     if (block_input || hold_call) return;
 
@@ -804,6 +809,7 @@ int muxtweakgen_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_dpad_up,
@@ -832,6 +838,8 @@ int muxtweakgen_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxtweakgen.title, lang.muxtweakgen.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

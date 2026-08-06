@@ -1,4 +1,5 @@
 #include "dialogue.h"
+#include "modal.h"
 #include "common.h"
 #include "../audio.h"
 #include "../config.h"
@@ -96,6 +97,10 @@ void dialogue_init(
     lv_obj_set_style_pad_all(dlg->title_label, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(dlg->title_label, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(dlg->title_label, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(dlg->title_label, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(dlg->title_label, 1, MU_OBJ_MAIN_DEFAULT);
 
     dlg->description_label = NULL;
     if (description) {
@@ -106,18 +111,21 @@ void dialogue_init(
         lv_obj_set_style_text_color(dlg->description_label, lv_color_hex(t->dialogue.content), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(dlg->description_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_pad_all(dlg->description_label, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_top(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_pad_bottom(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
         lv_label_set_long_mode(dlg->description_label, LV_LABEL_LONG_WRAP);
     }
 
-    lv_obj_t *sep_top = lv_obj_create(dlg->panel);
-    lv_obj_set_size(sep_top, LV_PCT(100), 1);
-    lv_obj_clear_flag(sep_top, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(sep_top, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(sep_top, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_radius(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_all(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+    if (description) {
+        lv_obj_t *sep_top = lv_obj_create(dlg->panel);
+        lv_obj_set_size(sep_top, LV_PCT(100), 1);
+        lv_obj_clear_flag(sep_top, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_bg_color(sep_top, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(sep_top, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_width(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_radius(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_all(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+    }
 
     lv_obj_t *gap_top = lv_obj_create(dlg->panel);
     lv_obj_set_size(gap_top, LV_PCT(100), 8);
@@ -169,12 +177,20 @@ void dialogue_init(
     lv_obj_t *label_a = create_footer_text(footer_row, t, t->nav.a.text, t->nav.a.text_alpha, 0);
     lv_label_set_text(label_a, nav_a);
 
-    const lv_obj_t *glyph_b = create_footer_glyph(footer_row, t, "b", t->nav.b, 0);
+    lv_obj_t *glyph_b = create_footer_glyph(footer_row, t, "b", t->nav.b, 0);
     lv_obj_t *label_b = create_footer_text(footer_row, t, t->nav.b.text, t->nav.b.text_alpha, 0);
-    lv_label_set_text(label_b, nav_b);
+
+    if (nav_b && nav_b[0]) {
+        lv_label_set_text(label_b, nav_b);
+    } else {
+        lv_obj_add_flag(glyph_b, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(label_b, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 
     (void) glyph_a;
-    (void) glyph_b;
+
+    dlg->safe_default = 0;
+    dlg->claimed = 0;
 }
 
 void dialogue_init_unsaved(
@@ -191,6 +207,9 @@ void dialogue_init_confirm(
 ) {
     const char *opts[mux_confirm_cnt] = {confirm_label, cancel_label};
     dialogue_init(dlg, t, parent, title, description, opts, mux_confirm_cnt, nav_a, nav_b);
+
+    dlg->safe_default = mux_confirm_nah;
+    dlg->selected = mux_confirm_nah;
 }
 
 void dialogue_init_assign_scope(
@@ -239,6 +258,9 @@ void dialogue_init_remove(
 ) {
     const char *opts[mux_remove_cnt] = {lang.generic.remove, lang.generic.skip_confirm, lang.generic.cancel};
     dialogue_init(dlg, t, parent, lang.generic.confirm, description, opts, mux_remove_cnt, nav_a, nav_b);
+
+    dlg->safe_default = mux_remove_nah;
+    dlg->selected = mux_remove_nah;
 }
 
 void dialogue_init_message(
@@ -291,6 +313,10 @@ void dialogue_init_message(
     lv_obj_set_style_pad_all(dlg->title_label, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(dlg->title_label, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(dlg->title_label, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(dlg->title_label, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(dlg->title_label, 1, MU_OBJ_MAIN_DEFAULT);
 
     dlg->description_label = NULL;
     if (description) {
@@ -301,18 +327,21 @@ void dialogue_init_message(
         lv_obj_set_style_text_color(dlg->description_label, lv_color_hex(t->dialogue.content), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(dlg->description_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_pad_all(dlg->description_label, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_top(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_pad_bottom(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
         lv_label_set_long_mode(dlg->description_label, LV_LABEL_LONG_WRAP);
     }
 
-    lv_obj_t *sep_top = lv_obj_create(dlg->panel);
-    lv_obj_set_size(sep_top, LV_PCT(100), 1);
-    lv_obj_clear_flag(sep_top, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(sep_top, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(sep_top, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_border_width(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_radius(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_all(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+    if (description) {
+        lv_obj_t *sep_top = lv_obj_create(dlg->panel);
+        lv_obj_set_size(sep_top, LV_PCT(100), 1);
+        lv_obj_clear_flag(sep_top, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_bg_color(sep_top, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(sep_top, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_border_width(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_radius(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_all(sep_top, 0, MU_OBJ_MAIN_DEFAULT);
+    }
 
     lv_obj_t *gap_top = lv_obj_create(dlg->panel);
     lv_obj_set_size(gap_top, LV_PCT(100), 8);
@@ -416,6 +445,10 @@ void dialogue_init_accept(
     lv_obj_set_style_pad_all(dlg->title_label, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(dlg->title_label, 8, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_side(dlg->title_label, LV_BORDER_SIDE_BOTTOM, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(dlg->title_label, lv_color_hex(t->dialogue.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_opa(dlg->title_label, t->dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(dlg->title_label, 1, MU_OBJ_MAIN_DEFAULT);
 
     dlg->description_label = NULL;
     if (description) {
@@ -426,6 +459,7 @@ void dialogue_init_accept(
         lv_obj_set_style_text_color(dlg->description_label, lv_color_hex(t->dialogue.content), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(dlg->description_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_pad_all(dlg->description_label, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_top(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_pad_bottom(dlg->description_label, 8, MU_OBJ_MAIN_DEFAULT);
         lv_label_set_long_mode(dlg->description_label, LV_LABEL_LONG_WRAP);
     }
@@ -465,6 +499,11 @@ void dialogue_init_accept(
 }
 
 void dialogue_show(mux_dialogue *dlg) {
+    if (!dlg->claimed) {
+        modal_claim(MODAL_MASK_DIALOGUE);
+        dlg->claimed = 1;
+    }
+
     lv_anim_del(dlg->panel, panel_anim_y_cb);
     lv_anim_del(dlg->panel, panel_anim_x_cb);
     lv_anim_del(dlg->panel, panel_anim_opa_cb);
@@ -580,7 +619,12 @@ void dialogue_show(mux_dialogue *dlg) {
 skip_panel_anim:;
 }
 
-void dialogue_hide_chained(const mux_dialogue *dlg) {
+void dialogue_hide_chained(mux_dialogue *dlg) {
+    if (dlg->claimed) {
+        modal_release();
+        dlg->claimed = 0;
+    }
+
     lv_anim_del(dlg->panel, panel_anim_y_cb);
     lv_anim_del(dlg->panel, panel_anim_x_cb);
     lv_anim_del(dlg->panel, panel_anim_opa_cb);
@@ -592,7 +636,12 @@ void dialogue_hide_chained(const mux_dialogue *dlg) {
     lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
 }
 
-void dialogue_hide(const mux_dialogue *dlg) {
+void dialogue_hide(mux_dialogue *dlg) {
+    if (dlg->claimed) {
+        modal_release();
+        dlg->claimed = 0;
+    }
+
     page_nav_blocked = 0;
     lv_anim_del(dlg->panel, panel_anim_y_cb);
     lv_anim_del(dlg->panel, panel_anim_x_cb);
@@ -645,12 +694,12 @@ void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t) {
 
 void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t) {
     *active = 1;
-    dlg->selected = 0;
+    dlg->selected = dlg->safe_default;
     dialogue_show(dlg);
     dialogue_refresh(dlg, t);
 }
 
-void dialogue_dismiss(int *active, const mux_dialogue *dlg) {
+void dialogue_dismiss(int *active, mux_dialogue *dlg) {
     *active = 0;
     dialogue_hide(dlg);
 }

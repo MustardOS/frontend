@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxchrony.h"
 
 #define CHRONY(NAME, UDATA) 1,
@@ -133,6 +134,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -208,6 +211,8 @@ int muxchrony_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxchrony.title, lang.muxchrony.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

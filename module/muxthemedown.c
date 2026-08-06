@@ -1,6 +1,8 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "../common/collection/theme.h"
 #include "../common/download.h"
+#include "../common/ui/task_progress.h"
 
 static int theme_extracting = 0;
 static char theme_data_local_path[MAX_BUFFER_SIZE];
@@ -15,6 +17,7 @@ static int preview_index = -1;
 
 static int schedule_theme_update = 0;
 static int pending_download_switch = 0;
+static int extract_pending = 0;
 
 static int theme_extract_done = 0;
 static int theme_extract_error = 0;
@@ -183,9 +186,9 @@ static void list_nav_move(const int steps, const int direction) {
         apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
-            current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+            current_item_index = list_nav_wrap_index(current_item_index - 1);
         } else {
-            current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+            current_item_index = list_nav_wrap_index(current_item_index + 1);
         }
 
         nav_move(ui_group, direction);
@@ -262,10 +265,20 @@ static void theme_download_finished(const int result) {
     extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
 }
 
+static void finish_extract(void) {
+    extract_pending = 0;
+    pending_download_switch = 1;
+}
+
 static void refresh_theme_previews_finished(const int result) {
     if (result == 0) {
-        extract_archive(preview_zip_path, "themedwn");
-        pending_download_switch = 1;
+        if (extract_archive(preview_zip_path, "themedwn", lang.muxthemedown.title) == 0) {
+            extract_pending = 1;
+            task_progress_show();
+        } else {
+            play_sound(snd_error);
+            toast_message(lang.generic.failed, tst_wait_m);
+        }
     } else {
         play_sound(snd_error);
         toast_message(lang.muxthemedown.error_get_data, tst_wait_f);
@@ -290,6 +303,11 @@ static void update_theme_data(void) {
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (msg_mode || download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
 
     play_sound(snd_confirm);
@@ -315,6 +333,11 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (extract_pending && !task_progress_active()) finish_extract();
+        return;
+    }
+
     if (msg_mode) {
         play_sound(snd_back);
         hide_message_dialog();
@@ -355,6 +378,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
     play_sound(snd_confirm);
     update_theme_data();
@@ -388,7 +413,7 @@ static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 1},
-                                  {ui_lbl_nav_a, lang.muxthemedown.download, 1},
+                                  {ui_lbl_nav_a, lang.generic.download, 1},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
@@ -403,6 +428,7 @@ static void init_elements(void) {
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     download_poll();
     extraction_poll();
+    task_progress_tick();
 
     if (theme_extract_done) {
         theme_extract_done = 0;
@@ -515,6 +541,7 @@ int muxthemedown_main(void) {
 
     update_file_counter(ui_lbl_counter_explore, ui_count_static);
 
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     if (!file_exist(theme_data_local_path)) {
@@ -555,6 +582,8 @@ int muxthemedown_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxthemedown.title, lang.muxthemedown.overview);
+
     mux_input_task(&input_opts);
 
     if (ui_count_static > 0) free_theme_items(&theme_items, &theme_item_count);

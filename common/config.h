@@ -184,6 +184,7 @@ struct mux_config {
             int16_t hkdpad;
             int16_t hkshot;
             int16_t audiosink;
+            int16_t orientation;
         } general;
         struct {
             int16_t resolution;

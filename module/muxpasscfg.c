@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxpasscfg.h"
 
 static struct mux_passcode passcfg;
@@ -223,6 +224,8 @@ static void handle_b_hold(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || hold_call) return;
 
     if (key_show) {
@@ -402,6 +405,8 @@ int muxpasscfg_main(void) {
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
+    orientation_introduce(mux_module, lang.muxpasscfg.title, lang.muxpasscfg.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

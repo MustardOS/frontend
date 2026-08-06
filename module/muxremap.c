@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include <SDL2/SDL.h>
 
 #define EMPTY_SLOT "---"
@@ -656,6 +657,11 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call || capture_active) return;
 
+    if (msgbox_active) {
+        handle_msgbox_dismiss();
+        return;
+    }
+
     if (save_mode) {
         hide_save_dialog();
         return;
@@ -673,6 +679,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (hold_call || capture_active || save_mode) return;
 
     const int slot = focused_slot();
@@ -958,6 +966,8 @@ int muxremap_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxremap.title, lang.muxremap.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

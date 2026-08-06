@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxrtc.h"
 
 #define RTC(NAME, UDATA) 1,
@@ -594,6 +595,8 @@ static void handle_r1(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (!key_show) return;
 
     close_osk(key_entry, ui_group, ui_txt_entry_rtc, ui_pnl_entry_rtc);
@@ -717,6 +720,8 @@ int muxrtc_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxrtc.title, lang.muxrtc.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

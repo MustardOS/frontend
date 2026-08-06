@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxsysinfo.h"
 
 #define SYSINFO(NAME, UDATA) 1,
@@ -616,6 +617,10 @@ static void handle_a(void) {
     refresh_screen(ui_screen, 1);
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -689,6 +694,7 @@ int muxsysinfo_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_list_nav_page_up,
@@ -709,6 +715,8 @@ int muxsysinfo_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxsysinfo.title, lang.muxsysinfo.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

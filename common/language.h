@@ -92,7 +92,18 @@ struct mux_lang {
         char new[MAX_BUFFER_SIZE];
         char noglyph[MAX_BUFFER_SIZE];
         char not_connected[MAX_BUFFER_SIZE];
+        char completed[MAX_BUFFER_SIZE];
+        char failed[MAX_BUFFER_SIZE];
+        char cancelled[MAX_BUFFER_SIZE];
+        char cancel_task[MAX_BUFFER_SIZE];
+        char finished_in[MAX_BUFFER_SIZE];
+        char stopped_after[MAX_BUFFER_SIZE];
+        char skip_tour[MAX_BUFFER_SIZE];
+        char tour_offer[MAX_BUFFER_SIZE];
+        char tour_offer_desc[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
         char no_help[MAX_BUFFER_SIZE];
+        char section_help[MAX_BUFFER_SIZE];
         char no_info[MAX_BUFFER_SIZE];
         char no_load[MAX_BUFFER_SIZE];
         char no_slideshow_image[MAX_BUFFER_SIZE];
@@ -140,6 +151,9 @@ struct mux_lang {
         char friday[MAX_BUFFER_SIZE];
         char saturday[MAX_BUFFER_SIZE];
         char cancel[MAX_BUFFER_SIZE];
+        char yes[MAX_BUFFER_SIZE];
+        char no[MAX_BUFFER_SIZE];
+        char section_options[MAX_BUFFER_SIZE];
         char understand[MAX_BUFFER_SIZE];
         char warning[MAX_BUFFER_SIZE];
         char skip_confirm[MAX_BUFFER_SIZE];
@@ -182,6 +196,7 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
         char info[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
         char time[MAX_BUFFER_SIZE];
@@ -256,13 +271,16 @@ struct mux_lang {
     struct {
         char load_app[MAX_BUFFER_SIZE];
         char no_app[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
         char archive[MAX_BUFFER_SIZE];
         char task[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
     } muxapp;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char governor[MAX_BUFFER_SIZE];
         char control[MAX_BUFFER_SIZE];
@@ -274,13 +292,16 @@ struct mux_lang {
 
     struct {
         char help[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char installed[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
     } muxarchive;
 
     struct {
         char dir[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char file[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
@@ -291,6 +312,13 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        struct {
+            char content[MAX_BUFFER_SIZE];
+            char system[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
+            char action[MAX_BUFFER_SIZE];
+        } section;
+        char overview[MAX_BUFFER_SIZE];
         char apps[MAX_BUFFER_SIZE];
         char bios[MAX_BUFFER_SIZE];
         char catalogue[MAX_BUFFER_SIZE];
@@ -345,6 +373,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char capacity[MAX_BUFFER_SIZE];
         char voltage[MAX_BUFFER_SIZE];
         char status[MAX_BUFFER_SIZE];
@@ -376,6 +405,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char reference[MAX_BUFFER_SIZE];
         char stratum[MAX_BUFFER_SIZE];
         char ref_time[MAX_BUFFER_SIZE];
@@ -404,6 +434,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char schedule[MAX_BUFFER_SIZE];
         char sunrise_temp[MAX_BUFFER_SIZE];
         char sunset_temp[MAX_BUFFER_SIZE];
@@ -423,6 +454,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
     } muxcolfilter;
@@ -430,6 +462,8 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
         struct {
             char remove_file[MAX_BUFFER_SIZE];
             char remove_dir[MAX_BUFFER_SIZE];
@@ -457,10 +491,12 @@ struct mux_lang {
             char interface[MAX_BUFFER_SIZE];
             char backup[MAX_BUFFER_SIZE];
         } help;
+        char overview[MAX_BUFFER_SIZE];
     } muxconfig;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char bluetooth[MAX_BUFFER_SIZE];
         char net_adv[MAX_BUFFER_SIZE];
         char proxy[MAX_BUFFER_SIZE];
@@ -477,6 +513,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char enabled[MAX_BUFFER_SIZE];
         char type[MAX_BUFFER_SIZE];
         char server[MAX_BUFFER_SIZE];
@@ -502,8 +539,10 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char auto_connect[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
         char loading[MAX_BUFFER_SIZE];
         char forget[MAX_BUFFER_SIZE];
         char connect[MAX_BUFFER_SIZE];
@@ -518,6 +557,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char scan[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char info[MAX_BUFFER_SIZE];
@@ -528,6 +568,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char friendly_name[MAX_BUFFER_SIZE];
         char type[MAX_BUFFER_SIZE];
         char battery[MAX_BUFFER_SIZE];
@@ -571,6 +612,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char shuffle[MAX_BUFFER_SIZE];
         char full_width[MAX_BUFFER_SIZE];
         char launch_splash[MAX_BUFFER_SIZE];
@@ -647,12 +689,15 @@ struct mux_lang {
 
     struct {
         char help[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
     } muxcontrol;
 
     struct {
         char catalogue[MAX_BUFFER_SIZE];
+        char logo[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char config[MAX_BUFFER_SIZE];
         char gridmodecontent[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
@@ -662,6 +707,15 @@ struct mux_lang {
         char screen[MAX_BUFFER_SIZE];
         char themealternate[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
+        struct {
+            char content[MAX_BUFFER_SIZE];
+            char theme[MAX_BUFFER_SIZE];
+            char packages[MAX_BUFFER_SIZE];
+            char layout[MAX_BUFFER_SIZE];
+            char glyphs[MAX_BUFFER_SIZE];
+            char background[MAX_BUFFER_SIZE];
+            char audio[MAX_BUFFER_SIZE];
+        } section;
         char videowallpaper[MAX_BUFFER_SIZE];
         char backgroundscale[MAX_BUFFER_SIZE];
         char blackfade[MAX_BUFFER_SIZE];
@@ -747,13 +801,24 @@ struct mux_lang {
             char sound_volume[MAX_BUFFER_SIZE];
             char chime[MAX_BUFFER_SIZE];
             char content_options[MAX_BUFFER_SIZE];
+            char header_height[MAX_BUFFER_SIZE];
+            char footer_height[MAX_BUFFER_SIZE];
+            char content_item_count[MAX_BUFFER_SIZE];
+            char label_width[MAX_BUFFER_SIZE];
+            char glyph_list[MAX_BUFFER_SIZE];
+            char glyph_header[MAX_BUFFER_SIZE];
+            char glyph_footer[MAX_BUFFER_SIZE];
+            char glyph_grid[MAX_BUFFER_SIZE];
+            char sort[MAX_BUFFER_SIZE];
+            char logo[MAX_BUFFER_SIZE];
         } help;
     } muxcustom;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char type[MAX_BUFFER_SIZE];
-        char name[MAX_BUFFER_SIZE];
+        char font_name[MAX_BUFFER_SIZE];
         char list_size[MAX_BUFFER_SIZE];
         char header_size[MAX_BUFFER_SIZE];
         char footer_size[MAX_BUFFER_SIZE];
@@ -764,10 +829,11 @@ struct mux_lang {
             char language[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
             char internal[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
         } type_options;
         struct {
             char type[MAX_BUFFER_SIZE];
-            char name[MAX_BUFFER_SIZE];
+            char font_name[MAX_BUFFER_SIZE];
             char list_size[MAX_BUFFER_SIZE];
             char header_size[MAX_BUFFER_SIZE];
             char footer_size[MAX_BUFFER_SIZE];
@@ -777,6 +843,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char vmswap[MAX_BUFFER_SIZE];
         char dirtyratio[MAX_BUFFER_SIZE];
         char dirtyback[MAX_BUFFER_SIZE];
@@ -814,6 +881,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char hasbluetooth[MAX_BUFFER_SIZE];
         char hasrgb[MAX_BUFFER_SIZE];
         char hasdebugfs[MAX_BUFFER_SIZE];
@@ -834,6 +902,7 @@ struct mux_lang {
 
     struct {
         char error_get_data[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char archive_removed[MAX_BUFFER_SIZE];
         struct {
             char archive[MAX_BUFFER_SIZE];
@@ -854,6 +923,8 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
         struct {
             char no_core[MAX_BUFFER_SIZE];
         } error;
@@ -861,6 +932,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char resolution[MAX_BUFFER_SIZE];
         struct {
             char depth[MAX_BUFFER_SIZE];
@@ -887,6 +959,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char news[MAX_BUFFER_SIZE];
         char sysinfo[MAX_BUFFER_SIZE];
         char batinfo[MAX_BUFFER_SIZE];
@@ -933,6 +1006,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char enable[MAX_BUFFER_SIZE];
         char message[MAX_BUFFER_SIZE];
         char archive[MAX_BUFFER_SIZE];
@@ -1033,6 +1107,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
@@ -1076,10 +1151,36 @@ struct mux_lang {
             char shutdown[MAX_BUFFER_SIZE];
             char reboot[MAX_BUFFER_SIZE];
         } help;
+        char overview[MAX_BUFFER_SIZE];
     } muxlaunch;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
+        char none[MAX_BUFFER_SIZE];
+        char guidance[MAX_BUFFER_SIZE];
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char message[MAX_BUFFER_SIZE];
+            char fullscreen[MAX_BUFFER_SIZE];
+            char stretch[MAX_BUFFER_SIZE];
+            char crop[MAX_BUFFER_SIZE];
+            char original[MAX_BUFFER_SIZE];
+        } fit;
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char message[MAX_BUFFER_SIZE];
+        } reset;
+        struct {
+            char set[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
+        } task;
+    } muxlogo;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char system_dns[MAX_BUFFER_SIZE];
         char monitor[MAX_BUFFER_SIZE];
         char boot[MAX_BUFFER_SIZE];
@@ -1110,6 +1211,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char hostname[MAX_BUFFER_SIZE];
         char mac[MAX_BUFFER_SIZE];
         char ip[MAX_BUFFER_SIZE];
@@ -1148,6 +1250,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char connect[MAX_BUFFER_SIZE];
         char disconnect[MAX_BUFFER_SIZE];
         char connected[MAX_BUFFER_SIZE];
@@ -1203,6 +1306,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char scan[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
@@ -1210,7 +1314,9 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
         char connected[MAX_BUFFER_SIZE];
         char autom[MAX_BUFFER_SIZE];
         char manual[MAX_BUFFER_SIZE];
@@ -1219,6 +1325,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char download[MAX_BUFFER_SIZE];
         char error[MAX_BUFFER_SIZE];
@@ -1227,6 +1334,7 @@ struct mux_lang {
 
     struct {
         char title_main[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char title_info[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char time[MAX_BUFFER_SIZE];
@@ -1273,6 +1381,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char active[MAX_BUFFER_SIZE];
         char reset[MAX_BUFFER_SIZE];
@@ -1312,6 +1421,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         struct {
             struct {
                 char left[MAX_BUFFER_SIZE];
@@ -1364,11 +1474,13 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char shutdown[MAX_BUFFER_SIZE];
     } muxpass;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char bootcode[MAX_BUFFER_SIZE];
         char bootmsg[MAX_BUFFER_SIZE];
         char launchcode[MAX_BUFFER_SIZE];
@@ -1391,6 +1503,7 @@ struct mux_lang {
 
     struct {
         char custom[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char catalogue[MAX_BUFFER_SIZE];
         char config[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
@@ -1410,6 +1523,8 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
         struct {
             char no_folder[MAX_BUFFER_SIZE];
             char no_core[MAX_BUFFER_SIZE];
@@ -1419,6 +1534,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char low_battery[MAX_BUFFER_SIZE];
         struct {
             struct {
@@ -1499,6 +1615,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char waiting[MAX_BUFFER_SIZE];
         char saved[MAX_BUFFER_SIZE];
@@ -2063,6 +2180,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char mode[MAX_BUFFER_SIZE];
         char colour[MAX_BUFFER_SIZE];
         char bright[MAX_BUFFER_SIZE];
@@ -2102,6 +2220,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char day[MAX_BUFFER_SIZE];
         char month[MAX_BUFFER_SIZE];
         char year[MAX_BUFFER_SIZE];
@@ -2122,6 +2241,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char global[MAX_BUFFER_SIZE];
         char local[MAX_BUFFER_SIZE];
         char lookup[MAX_BUFFER_SIZE];
@@ -2136,18 +2256,22 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
     } muxshader;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
     } muxshot;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
         char primary[MAX_BUFFER_SIZE];
         char secondary[MAX_BUFFER_SIZE];
@@ -2172,6 +2296,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char apps[MAX_BUFFER_SIZE];
         char bios[MAX_BUFFER_SIZE];
         char catalogue[MAX_BUFFER_SIZE];
@@ -2208,6 +2333,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char day[MAX_BUFFER_SIZE];
         char hour[MAX_BUFFER_SIZE];
         char minute[MAX_BUFFER_SIZE];
@@ -2255,6 +2381,7 @@ struct mux_lang {
 
     struct {
         char help[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char no_match[MAX_BUFFER_SIZE];
         char sort[MAX_BUFFER_SIZE];
@@ -2264,7 +2391,9 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
     } muxtask;
 
     struct {
@@ -2275,6 +2404,9 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char none[MAX_BUFFER_SIZE];
+        char none_hint[MAX_BUFFER_SIZE];
         char theme_down[MAX_BUFFER_SIZE];
         char invalid_ver[MAX_BUFFER_SIZE];
         char invalid_res[MAX_BUFFER_SIZE];
@@ -2284,6 +2416,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char theme_removed[MAX_BUFFER_SIZE];
         char theme_extracting[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
@@ -2300,6 +2433,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char grid[MAX_BUFFER_SIZE];
         char hdmi[MAX_BUFFER_SIZE];
         char language[MAX_BUFFER_SIZE];
@@ -2320,6 +2454,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char header_height[MAX_BUFFER_SIZE];
         char footer_height[MAX_BUFFER_SIZE];
         char content_item_count[MAX_BUFFER_SIZE];
@@ -2345,6 +2480,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
@@ -2352,6 +2488,17 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        struct {
+            char input[MAX_BUFFER_SIZE];
+            char display[MAX_BUFFER_SIZE];
+            char audio[MAX_BUFFER_SIZE];
+            char performance[MAX_BUFFER_SIZE];
+            char storage[MAX_BUFFER_SIZE];
+            char retroarch[MAX_BUFFER_SIZE];
+            char system[MAX_BUFFER_SIZE];
+            char confirmations[MAX_BUFFER_SIZE];
+        } section;
+        char overview[MAX_BUFFER_SIZE];
         char accelerate[MAX_BUFFER_SIZE];
         char repeatdelay[MAX_BUFFER_SIZE];
         char thermal[MAX_BUFFER_SIZE];
@@ -2464,6 +2611,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char rtc[MAX_BUFFER_SIZE];
         char brightness[MAX_BUFFER_SIZE];
         char brightness_set[MAX_BUFFER_SIZE];
@@ -2509,6 +2657,7 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char dflt[MAX_BUFFER_SIZE];
         char collection[MAX_BUFFER_SIZE];
         char history[MAX_BUFFER_SIZE];
@@ -2535,6 +2684,18 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        struct {
+            char header_bar[MAX_BUFFER_SIZE];
+            char appearance[MAX_BUFFER_SIZE];
+            char labels[MAX_BUFFER_SIZE];
+            char folders[MAX_BUFFER_SIZE];
+            char content[MAX_BUFFER_SIZE];
+            char box_art[MAX_BUFFER_SIZE];
+            char grid[MAX_BUFFER_SIZE];
+            char launching[MAX_BUFFER_SIZE];
+            char font[MAX_BUFFER_SIZE];
+        } section;
+        char overview[MAX_BUFFER_SIZE];
         char sort[MAX_BUFFER_SIZE];
         char battery[MAX_BUFFER_SIZE];
         char clock[MAX_BUFFER_SIZE];
@@ -2650,11 +2811,26 @@ struct mux_lang {
             char render_shadows[MAX_BUFFER_SIZE];
             char overlay_image[MAX_BUFFER_SIZE];
             char overlay_transparency[MAX_BUFFER_SIZE];
+            char launch_swap[MAX_BUFFER_SIZE];
+            char shuffle[MAX_BUFFER_SIZE];
+            char box_art[MAX_BUFFER_SIZE];
+            char box_art_align[MAX_BUFFER_SIZE];
+            char box_art_transition[MAX_BUFFER_SIZE];
+            char box_art_scale[MAX_BUFFER_SIZE];
+            char box_art_padding[MAX_BUFFER_SIZE];
+            char box_art_placeholder[MAX_BUFFER_SIZE];
+            char video_preview[MAX_BUFFER_SIZE];
+            char content_width[MAX_BUFFER_SIZE];
+            char launchsplash[MAX_BUFFER_SIZE];
+            char grid_mode_content[MAX_BUFFER_SIZE];
+            char box_art_hide[MAX_BUFFER_SIZE];
+            char font[MAX_BUFFER_SIZE];
         } help;
     } muxvisual;
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char ttyd[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char sshd[MAX_BUFFER_SIZE];

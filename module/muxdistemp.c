@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxdistemp.h"
 
 #define DISTEMP(NAME, UDATA) 1,
@@ -352,6 +353,8 @@ static void handle_help(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (save_mode || msgbox_active || hold_call) return;
     if (!is_temp_row()) return;
 
@@ -443,6 +446,8 @@ int muxdistemp_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxdistemp.title, lang.muxdistemp.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

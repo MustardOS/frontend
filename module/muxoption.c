@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxoption.h"
 
 #define OPTION(NAME, UDATA) 1,
@@ -533,7 +534,7 @@ static mux_dialogue remove_dlg;
 
 static void show_remove_dialog(void) {
     remove_mode = 1;
-    remove_dlg.selected = 0;
+    remove_dlg.selected = mux_confirm_nah;
     dialogue_show(&remove_dlg);
     dialogue_refresh(&remove_dlg, &theme);
 }
@@ -795,6 +796,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (current_view != view_options) return;
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
@@ -935,5 +938,7 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxoption.title_main, lang.muxoption.overview);
+
     mux_input_task(&input_opts);
 }

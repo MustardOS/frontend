@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxnetadv.h"
 
 #define NETADV(NAME, UDATA) 1,
@@ -76,8 +77,10 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    char *dns_options[] = {lang.muxnetadv.dns_name.def, lang.muxnetadv.dns_name.cloudflare,
-                           lang.muxnetadv.dns_name.google, lang.muxnetadv.dns_name.quad9};
+    char *dns_options[] = {
+        lang.muxnetadv.dns_name.def, lang.muxnetadv.dns_name.cloudflare, lang.muxnetadv.dns_name.google,
+        lang.muxnetadv.dns_name.quad9
+    };
 
     INIT_OPTION_ITEM(-1, netadv, system_dns, lang.muxnetadv.system_dns, "systemdns", dns_options, 4);
     INIT_OPTION_ITEM(-1, netadv, monitor, lang.muxnetadv.monitor, "monitor", disabled_enabled, 2);
@@ -132,6 +135,10 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     handle_option_next();
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
 }
 
 static void handle_b(void) {
@@ -248,6 +255,7 @@ int muxnetadv_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_dpad_up,
@@ -271,6 +279,8 @@ int muxnetadv_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxnetadv.title, lang.muxnetadv.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

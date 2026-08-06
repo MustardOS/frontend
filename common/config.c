@@ -150,6 +150,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/general", "volume", CFG_OFF(settings.general.volume), 0, {.i = 75}},
     {CONF_CONFIG_PATH "settings/general", "rgb", CFG_OFF(settings.general.rgb), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/general", "audiosink", CFG_OFF(settings.general.audiosink), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/general", "orientation", CFG_OFF(settings.general.orientation), 0, {.i = 2}},
     {CONF_CONFIG_PATH "settings/general", "theme_resolution", CFG_OFF(settings.general.theme_resolution), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/general", "theme_scaling", CFG_OFF(settings.general.theme_scaling), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/general", "startup", CFG_OFF(settings.general.startup), 1, {.s = "launcher"}},

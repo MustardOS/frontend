@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
@@ -201,6 +202,10 @@ static void handle_a(void) {
     dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
 }
 
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -342,6 +347,7 @@ void muxcolfilter_main(const int auto_assign, const char *name, const char *dir,
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_page_up,
@@ -361,6 +367,8 @@ void muxcolfilter_main(const int auto_assign, const char *name, const char *dir,
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxcolfilter.title, lang.muxcolfilter.overview);
+
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);

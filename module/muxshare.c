@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 
 size_t item_count = 0;
 content_item *items = NULL;
@@ -191,6 +192,23 @@ void nav_show_lr(const int show) {
         lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+}
+
+static int preview_hint_visible = 0;
+
+void set_preview_hint(const int visible) {
+    preview_hint_visible = visible;
+    lv_label_set_text(ui_lbl_preview_header, visible ? lang.generic.switch_image : "");
+
+    if (visible) {
+        lv_obj_clear_flag(ui_lbl_preview_header_glyph, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_lbl_preview_header_glyph, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+int preview_hint_active(void) {
+    return preview_hint_visible;
 }
 
 void header_and_footer_setup(void) {
@@ -579,6 +597,11 @@ int launch_flag(int mode, const int held) {
 }
 
 void reset_ui_groups(void) {
+    if (ui_group) lv_group_del(ui_group);
+    if (ui_group_value) lv_group_del(ui_group_value);
+    if (ui_group_glyph) lv_group_del(ui_group_glyph);
+    if (ui_group_panel) lv_group_del(ui_group_panel);
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -641,9 +664,9 @@ void gen_step_movement(
         }
 
         if (direction < 0) {
-            current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+            current_item_index = list_nav_wrap_index(current_item_index - 1);
         } else {
-            current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+            current_item_index = list_nav_wrap_index(current_item_index + 1);
         }
 
         update_scroll_position(
@@ -691,6 +714,8 @@ void list_nav_cb_next_nowrap(const int steps) {
 void handle_msgbox_dismiss(void) {
     msgbox_active = 0;
     progress_onscreen = 0;
+
+    orientation_clear_showing();
 
     if (crash_ui_dismiss()) {
         play_sound(snd_confirm);

@@ -279,7 +279,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->grid.current_item_label.width = (int16_t) (device->mux.width * .8);
     theme->grid.current_item_label.height = 0;
     theme->grid.current_item_label.offset_x = 0;
-    theme->grid.current_item_label.offset_y = (int16_t) -(theme->footer.height * 2);
+    theme->grid.current_item_label.offset_y = (int16_t) - (theme->footer.height * 2);
     theme->grid.current_item_label.radius = 10;
     theme->grid.current_item_label.border_width = 5;
     theme->grid.current_item_label.border = 0xF7E318;

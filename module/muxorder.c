@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 
 static lv_obj_t *ui_objects_label[order_count];
 static lv_obj_t *ui_objects_value[order_count];
@@ -7,7 +8,6 @@ static lv_obj_t *ui_objects_panel[order_count];
 
 static char order_dir[MAX_BUFFER_SIZE];
 
-// Applying asks where the choice should live, since a directory always beats the global order
 typedef enum { scope_directory = 0, scope_global, scope_count } scope_opt;
 
 static int scope_mode = 0;
@@ -16,7 +16,6 @@ static mux_dialogue scope_dlg;
 static void show_scope_dialog(void) {
     scope_mode = 1;
 
-    // Land on whichever scope is already in force so repeating a choice is a single press
     scope_dlg.selected = order_scope_directory ? scope_directory : scope_global;
 
     dialogue_show(&scope_dlg);
@@ -72,9 +71,7 @@ static void init_navigation_group(void) {
         add_order_item(i);
     }
 
-    // The values have to join the value group or they never pick up the focused theme colours
     add_ui_groups(ui_objects_label, ui_objects_value, ui_objects_glyph, ui_objects_panel, 1);
-
     refresh_rows();
 }
 
@@ -115,7 +112,6 @@ static void handle_y(void) {
     refresh_rows();
 }
 
-// Feeling Lucky has a handful of variants, so Left and Right cycle rather than toggle
 static void cycle_variant(const int delta) {
     const order_method method = (order_method) current_item_index;
     const int total = order_variant_count(method);
@@ -124,6 +120,10 @@ static void cycle_variant(const int delta) {
 
     play_sound(snd_navigate);
     refresh_rows();
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
 }
 
 static void handle_b(void) {
@@ -140,7 +140,6 @@ static void handle_b(void) {
         return;
     }
 
-    // Nothing is written until a scope is chosen, so leaving simply discards
     play_sound(snd_back);
     leave_module();
 }
@@ -286,6 +285,7 @@ int muxorder_main(void) {
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_y] = handle_y,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
@@ -308,6 +308,8 @@ int muxorder_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxorder.title, lang.muxorder.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

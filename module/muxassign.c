@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 
 static char explore_dir[PATH_MAX];
 
@@ -308,6 +309,10 @@ static void load_return_module() {
         remove(MUOS_ASS_FROM);
         remove(MUOS_SYS_LOAD);
     }
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
 }
 
 static void handle_b(void) {
@@ -659,6 +664,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
             {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_page_up,
@@ -678,5 +684,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxassign.title, lang.muxassign.overview);
+
     mux_input_task(&input_opts);
 }

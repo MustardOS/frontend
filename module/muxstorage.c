@@ -1,5 +1,7 @@
 #include "muxshare.h"
+#include "../common/ui/orientation.h"
 #include "ui/ui_muxstorage.h"
+#include "../common/ui/task_progress.h"
 
 #define STORAGE(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(STORAGE_ELEMENTS) };
@@ -99,7 +101,25 @@ static void init_navigation_group(void) {
     }
 }
 
+static int task_pending = 0;
+
+static void finish_task(void) {
+    task_pending = 0;
+
+    load_mux("storage");
+    mux_input_stop();
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
+}
+
 static void handle_b(void) {
+    if (task_progress_handle_b()) {
+        if (task_pending && !task_progress_active()) finish_task();
+        return;
+    }
+
     if (hold_call) return;
 
     if (msgbox_active) {
@@ -115,6 +135,11 @@ static void handle_b(void) {
 }
 
 static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (task_pending && !task_progress_active()) finish_task();
+        return;
+    }
+
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -128,21 +153,25 @@ static void handle_a(void) {
         snprintf(storage_script, sizeof(storage_script), "%s/script/mux/migrate.sh", OPT_PATH);
     }
 
-    size_t exec_count;
-    const char *args[] = {storage_script, storage_path[current_item_index].path_suffix, NULL};
-    const char **exec = build_term_exec(args, &exec_count);
-
-    if (exec) {
-        fade_out_screen();
-        run_exec(exec, exec_count, 0, 1, NULL, NULL);
-    }
-    free(exec);
-
     write_text_to_file(MUOS_SIN_LOAD, "w", INT, current_item_index);
 
-    load_mux("storage");
+    const char *argv[] = {storage_script, storage_path[current_item_index].path_suffix, NULL};
 
-    mux_input_stop();
+    const task_exec_spec spec = {
+        .argv = argv,
+        .argc = 2,
+        .mode = task_mode_progress,
+        .can_cancel = 1,
+        .turbo = 1,
+        .title = lang.muxstorage.title,
+    };
+
+    if (task_exec_start(&spec) == 0) {
+        task_pending = 1;
+        task_progress_show();
+    } else {
+        toast_message(lang.generic.failed, tst_wait_m);
+    }
 }
 
 static void handle_help(void) {
@@ -169,6 +198,8 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    task_progress_tick();
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();
@@ -202,6 +233,7 @@ int muxstorage_main(void) {
     init_navigation_group();
     update_storage_info();
 
+    task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -209,6 +241,7 @@ int muxstorage_main(void) {
         .press_handler =
             {
                 [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
                 [mux_input_x] = handle_a,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
@@ -229,6 +262,8 @@ int muxstorage_main(void) {
 
     list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
+    orientation_introduce(mux_module, lang.muxstorage.title, lang.muxstorage.overview);
+
     mux_input_task(&input_opts);
 
     return 0;

@@ -1,4 +1,7 @@
 #include "muxshare.h"
+#include "../common/ui/empty_state.h"
+#include "../common/ui/orientation.h"
+#include "../common/ui/more.h"
 
 #define LARGE_CONTENT_LOAD 512
 
@@ -23,20 +26,14 @@ static int union_dir_item_count_len = 0;
 
 static int actions_mode = 0;
 
-static mux_dialogue actions_item_dlg;
-static mux_dialogue actions_item_root_dlg;
-static mux_dialogue actions_empty_dlg;
-static mux_dialogue actions_empty_root_dlg;
-static mux_dialogue *actions_dlg = NULL;
-
-typedef enum { act_information = 0, act_search, act_top_level, act_sort_order, act_count } actions_opt;
+static mux_dialogue actions_dlg;
 
 static void navigate_to_dir(const char *new_dir, int restore_index);
 static void show_information(void);
 static void show_search(void);
 static void go_top_level(void);
 static void hide_actions_dialog(void);
-static actions_opt actions_selected(void);
+static void show_module_help(void);
 static void show_sort_order(void);
 
 static void assign_item_buckets(void) {
@@ -894,9 +891,9 @@ static void focus_initial(void) {
 
 static void move_index(const int direction) {
     if (direction < 0) {
-        current_item_index = current_item_index == 0 ? ui_count_static - 1 : current_item_index - 1;
+        current_item_index = list_nav_wrap_index(current_item_index - 1);
     } else {
-        current_item_index = current_item_index == ui_count_static - 1 ? 0 : current_item_index + 1;
+        current_item_index = list_nav_wrap_index(current_item_index + 1);
     }
 }
 
@@ -1100,6 +1097,8 @@ static void process_load(const int from_start) {
     if (!ui_count_static || hold_call) return;
 
     if (msgbox_active) {
+        if (!preview_hint_active()) return;
+
         play_sound(snd_info_close);
         if (lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnl_help_message, LV_OBJ_FLAG_HIDDEN);
@@ -1182,16 +1181,18 @@ static void handle_a(void) {
     if (hold_call) return;
 
     if (actions_mode) {
-        const actions_opt opt = actions_selected();
+        const more_id opt = more_selected(&actions_dlg);
         hide_actions_dialog();
 
-        if (opt == act_information) {
+        if (opt == more_help) {
+            show_module_help();
+        } else if (opt == more_information) {
             show_information();
-        } else if (opt == act_search) {
+        } else if (opt == more_search) {
             show_search();
-        } else if (opt == act_top_level) {
+        } else if (opt == more_top_level) {
             go_top_level();
-        } else {
+        } else if (opt == more_sort) {
             show_sort_order();
         }
         return;
@@ -1257,6 +1258,8 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
+    if (orientation_handle_skip()) return;
+
     if (msgbox_active || !ui_count_static || hold_call || video_preview_active()) return;
 
     play_sound(snd_confirm);
@@ -1341,56 +1344,43 @@ static void show_search(void) {
 
 static void show_information(void) {
     play_sound(snd_info_open);
+    set_preview_hint(1);
     image_refresh("preview");
 
     show_info_box(items[current_item_index].display_name, load_content_description(), 1);
 }
 
-static void init_actions_dialog(mux_dialogue *dlg, const int with_information, const int with_top_level) {
-    const char *opts[act_count];
-    int n = 0;
-
-    if (with_information) {
-        dlg->option_data[n] = act_information;
-        opts[n++] = lang.generic.information;
-    }
-
-    dlg->option_data[n] = act_search;
-    opts[n++] = lang.generic.search;
-
-    if (with_top_level) {
-        dlg->option_data[n] = act_top_level;
-        opts[n++] = lang.generic.top_level;
-    }
-
-    dlg->option_data[n] = act_sort_order;
-    opts[n++] = lang.generic.sort_order;
-
-    dialogue_init(
-        dlg, &theme, ui_screen, lang.generic.actions, NULL, opts, n, lang.generic.select, lang.generic.cancel
-    );
+static void show_module_help(void) {
+    play_sound(snd_info_open);
+    set_preview_hint(0);
+    show_info_box(lang.muxplore.title, lang.muxplore.help, 0);
 }
 
 static void show_actions_dialog(void) {
     const int at_root = union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR);
 
-    if (ui_count_static) {
-        actions_dlg = at_root ? &actions_item_root_dlg : &actions_item_dlg;
-    } else {
-        actions_dlg = at_root ? &actions_empty_root_dlg : &actions_empty_dlg;
-    }
+    more_entry entries[5];
+    int count = 0;
+
+    if (ui_count_static) entries[count++] = (more_entry) {more_information, 1};
+    entries[count++] = (more_entry) {more_search, 1};
+    entries[count++] = (more_entry) {more_sort, 1};
+    if (!at_root) entries[count++] = (more_entry) {more_top_level, 1};
+
+    entries[count++] = (more_entry) {more_help, 1};
+
+    more_init(&actions_dlg, &theme, ui_screen, entries, count);
 
     actions_mode = 1;
-    actions_dlg->selected = 0;
+    actions_dlg.selected = 0;
 
-    dialogue_show(actions_dlg);
-    dialogue_refresh(actions_dlg, &theme);
+    dialogue_show(&actions_dlg);
+    dialogue_refresh(&actions_dlg, &theme);
 }
 
 static void hide_actions_dialog(void) {
     actions_mode = 0;
-    if (actions_dlg) dialogue_hide(actions_dlg);
-    actions_dlg = NULL;
+    dialogue_hide(&actions_dlg);
 }
 
 static void show_sort_order(void) {
@@ -1404,10 +1394,6 @@ static void show_sort_order(void) {
     mux_input_stop();
 }
 
-static actions_opt actions_selected(void) {
-    return (actions_opt) actions_dlg->option_data[actions_dlg->selected];
-}
-
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || hold_call || video_preview_active()) return;
     if (actions_mode) return;
@@ -1418,7 +1404,7 @@ static void handle_help(void) {
 
 static void handle_nav_up(void) {
     if (actions_mode) {
-        dialogue_handle_dpad(actions_dlg, &theme, -1, !swap_axis);
+        dialogue_handle_dpad(&actions_dlg, &theme, -1, !swap_axis);
         return;
     }
     handle_list_nav_up();
@@ -1426,7 +1412,7 @@ static void handle_nav_up(void) {
 
 static void handle_nav_down(void) {
     if (actions_mode) {
-        dialogue_handle_dpad(actions_dlg, &theme, +1, !swap_axis);
+        dialogue_handle_dpad(&actions_dlg, &theme, +1, !swap_axis);
         return;
     }
     handle_list_nav_down();
@@ -1434,7 +1420,7 @@ static void handle_nav_down(void) {
 
 static void handle_nav_left(void) {
     if (actions_mode) {
-        dialogue_handle_dpad(actions_dlg, &theme, -1, swap_axis);
+        dialogue_handle_dpad(&actions_dlg, &theme, -1, swap_axis);
         return;
     }
     handle_list_nav_left();
@@ -1442,7 +1428,7 @@ static void handle_nav_left(void) {
 
 static void handle_nav_right(void) {
     if (actions_mode) {
-        dialogue_handle_dpad(actions_dlg, &theme, +1, swap_axis);
+        dialogue_handle_dpad(&actions_dlg, &theme, +1, swap_axis);
         return;
     }
     handle_list_nav_right();
@@ -1450,7 +1436,7 @@ static void handle_nav_right(void) {
 
 static void handle_nav_up_hold(void) {
     if (actions_mode) {
-        dialogue_handle_dpad_hold(actions_dlg, &theme, -1, !swap_axis);
+        dialogue_handle_dpad_hold(&actions_dlg, &theme, -1, !swap_axis);
         return;
     }
     handle_list_nav_up_hold();
@@ -1458,7 +1444,7 @@ static void handle_nav_up_hold(void) {
 
 static void handle_nav_down_hold(void) {
     if (actions_mode) {
-        dialogue_handle_dpad_hold(actions_dlg, &theme, +1, !swap_axis);
+        dialogue_handle_dpad_hold(&actions_dlg, &theme, +1, !swap_axis);
         return;
     }
     handle_list_nav_down_hold();
@@ -1466,7 +1452,7 @@ static void handle_nav_down_hold(void) {
 
 static void handle_nav_left_hold(void) {
     if (actions_mode) {
-        dialogue_handle_dpad_hold(actions_dlg, &theme, -1, swap_axis);
+        dialogue_handle_dpad_hold(&actions_dlg, &theme, -1, swap_axis);
         return;
     }
     handle_list_nav_left_hold();
@@ -1474,7 +1460,7 @@ static void handle_nav_left_hold(void) {
 
 static void handle_nav_right_hold(void) {
     if (actions_mode) {
-        dialogue_handle_dpad_hold(actions_dlg, &theme, +1, swap_axis);
+        dialogue_handle_dpad_hold(&actions_dlg, &theme, +1, swap_axis);
         return;
     }
     handle_list_nav_right_hold();
@@ -1530,8 +1516,6 @@ static void init_elements(void) {
     adjust_box_art();
     adjust_panels();
     header_and_footer_setup();
-    lv_label_set_text(ui_lbl_preview_header, lang.generic.switch_image);
-    lv_obj_clear_flag(ui_lbl_preview_header_glyph, LV_OBJ_FLAG_HIDDEN);
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 1},
                                   {ui_lbl_nav_a, lang.generic.open, 1},
@@ -1667,6 +1651,7 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
 
     if (nav_vis) {
         lv_obj_add_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);
+        empty_state_hide();
 
         focus_initial();
         first_open = 0;
@@ -1675,7 +1660,7 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
 
         nav_moved = 1;
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxplore.none);
+        empty_state_show(lang.muxplore.none, lang.muxplore.none_hint);
         lv_obj_clear_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);
 
         current_content_label[0] = '\0';
@@ -1778,7 +1763,7 @@ int muxplore_main(const int index, char *dir) {
 
         collect_vis = items[current_item_index].content_type == content_type_item;
     } else {
-        lv_label_set_text(ui_lbl_screen_message, lang.muxplore.none);
+        empty_state_show(lang.muxplore.none, lang.muxplore.none_hint);
         lv_obj_clear_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);
 
         clear_box_image();
@@ -1813,12 +1798,6 @@ int muxplore_main(const int index, char *dir) {
         free(done_content);
         remove(ADD_MODE_DONE);
     }
-
-    init_actions_dialog(&actions_item_dlg, 1, 1);
-    init_actions_dialog(&actions_item_root_dlg, 1, 0);
-    init_actions_dialog(&actions_empty_dlg, 0, 1);
-    init_actions_dialog(&actions_empty_root_dlg, 0, 0);
-
     init_timer(ui_refresh_task, NULL);
     transition_box_art_init(image_refresh_transition);
 
@@ -1862,6 +1841,11 @@ int muxplore_main(const int index, char *dir) {
             [mux_input_r2] = handle_random_select,
         }
     };
+
+    if (orientation_should_show(mux_module)) {
+        orientation_mark_shown(mux_module);
+        show_module_help();
+    }
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);

@@ -12,6 +12,7 @@
 #include <libavutil/channel_layout.h>
 #include <libavutil/version.h>
 #include "video.h"
+#include "ui/modal.h"
 #include "display.h"
 #include "config.h"
 
@@ -916,10 +917,18 @@ fail:
     cleanup();
 }
 
-static void preview_timer_cb(lv_timer_t *t __attribute__((unused))) {
+static int video_preview_blocked(void) {
+    return modal_active();
+}
 
+static void preview_timer_cb(lv_timer_t *t __attribute__((unused))) {
     lv_timer_pause(preview_timer);
     if (!preview_pending_path[0]) return;
+
+    if (video_preview_blocked()) {
+        preview_pending_path[0] = '\0';
+        return;
+    }
 
     snprintf(video_path, sizeof(video_path), "%s", preview_pending_path);
     preview_pending_path[0] = '\0';
@@ -1028,6 +1037,8 @@ int video_wallpaper_active(void) {
 }
 
 void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img) {
+    if (video_preview_blocked()) return;
+
     (void) container;
     (void) box_img;
 
