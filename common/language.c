@@ -408,6 +408,8 @@ static const lang_field lang_fields[] = {
 
     // muxbackup
     {"muxbackup", LANG_OFF(muxbackup.title), lang_specific, "DEVICE BACKUP"},
+    {"muxbackup", LANG_OFF(muxbackup.bulk.title), lang_specific, "Back Up Everything"},
+    {"muxbackup", LANG_OFF(muxbackup.bulk.message), lang_specific, "Every category is included, so this backup could be very large and take a long while to finish. Continue?"},
     {"muxbackup", LANG_OFF(muxbackup.section.content), lang_specific, "Content"},
     {"muxbackup", LANG_OFF(muxbackup.section.system), lang_specific, "System"},
     {"muxbackup", LANG_OFF(muxbackup.section.custom), lang_specific, "Customisation"},

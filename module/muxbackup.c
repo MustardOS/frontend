@@ -61,12 +61,12 @@ static void save_backup_options(void) {
     }
 }
 
-static void init_navigation_group(void) {
-    static lv_obj_t *ui_objects[ui_count_dynamic];
-    static lv_obj_t *ui_objects_value[ui_count_dynamic];
-    static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
-    static lv_obj_t *ui_objects_panel[ui_count_dynamic];
+static lv_obj_t *ui_objects[ui_count_dynamic];
+static lv_obj_t *ui_objects_value[ui_count_dynamic];
+static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
+static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
+static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, collection, lang.muxbackup.collection, "collection", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, history, lang.muxbackup.history, "history", excluded_included, 2);
@@ -112,7 +112,7 @@ static void init_navigation_group(void) {
     };
 
     list_frame_init(
-        &theme, ui_pnl_content, frames, (int) A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
+        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
         ui_objects_value, ui_count_dynamic
     );
     list_frame_apply();
@@ -127,6 +127,31 @@ static void init_navigation_group(void) {
         gen_step_movement(dbi_index, 1, 0, 0, 1);
     }
 }
+
+static int everything_included(void) {
+    for (int i = 0; i < storage_count; i++)
+        if (lv_dropdown_get_selected(ui_objects_value[i]) == 0) return 0;
+
+    return 1;
+}
+
+static int bulk_mode = 0;
+static mux_dialogue bulk_dlg;
+
+static void show_bulk_dialog(void) {
+    bulk_mode = 1;
+    bulk_dlg.selected = 1;
+
+    dialogue_show(&bulk_dlg);
+    dialogue_refresh(&bulk_dlg, &theme);
+}
+
+static void hide_bulk_dialog(void) {
+    bulk_mode = 0;
+    dialogue_hide(&bulk_dlg);
+}
+
+static void start_backup(lv_obj_t *e_focused);
 
 static void handle_frame_prev(void) {
     if (msgbox_active) return;
@@ -186,6 +211,13 @@ static void finish_task(void) {
 }
 
 static void handle_b(void) {
+
+    if (bulk_mode) {
+        hide_bulk_dialog();
+        play_sound(snd_back);
+
+        return;
+    }
     if (task_progress_handle_b()) {
         if (task_pending && !task_progress_active()) finish_task();
         return;
@@ -216,14 +248,35 @@ static void handle_a(void) {
 
     if (msgbox_active || hold_call) return;
 
+    if (bulk_mode) {
+        const int confirmed = bulk_dlg.selected == 0;
+        hide_bulk_dialog();
+
+        play_sound(confirmed ? snd_confirm : snd_back);
+        if (confirmed) start_backup(ui_lbl_start_backup);
+
+        return;
+    }
+
     lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-    // Return if backup set to Excluded or if on Toggle Target Storage
-    if (e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup
+    if (list_frame_focused() || e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup
         || (e_focused != ui_lbl_start_backup && lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) == 0))
         return;
 
+    // Everything at once can be quite huge, which is worth saying before it starts!
+    if (e_focused == ui_lbl_start_backup && everything_included()) {
+        play_sound(snd_confirm);
+        show_bulk_dialog();
+
+        return;
+    }
+
     play_sound(snd_confirm);
+    start_backup(e_focused);
+}
+
+static void start_backup(lv_obj_t *e_focused) {
 
     save_backup_options();
 
@@ -249,13 +302,10 @@ static void handle_a(void) {
         fprintf(fp, "%s %s\n", "BATCH", target_value);
 
         for (int i = 0; i < storage_count; i++) {
-            const lv_obj_t *ui_pnl_item = lv_obj_get_child(ui_pnl_content, i);
-            lv_obj_t *ui_lbl_item = lv_obj_get_child(ui_pnl_item, 0);
-            const lv_obj_t *ui_dro_item = lv_obj_get_child(ui_pnl_item, 2);
-            const int value = lv_dropdown_get_selected(ui_dro_item);
             // Skip if set to NONE
-            if (value == 0) continue;
-            char *runner = lv_obj_get_user_data(ui_lbl_item);
+            if (lv_dropdown_get_selected(ui_objects_value[i]) == 0) continue;
+
+            char *runner = lv_obj_get_user_data(ui_objects[i]);
             fprintf(fp, "%s %s\n", target_value, runner);
         }
     } else { // For other backup paths, write the focused label and its path suffix
@@ -343,7 +393,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 
         const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
-        if (e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup) {
+        if (list_frame_focused() || e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup) {
             lv_obj_add_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
         } else {
@@ -374,6 +424,11 @@ int muxbackup_main(void) {
     init_navigation_group();
     restore_backup_options();
     init_dropdown_settings();
+
+    dialogue_init(
+        &bulk_dlg, &theme, ui_screen, lang.muxbackup.bulk.title, lang.muxbackup.bulk.message,
+        (const char *[]) {lang.generic.yes, lang.generic.no}, 2, lang.generic.select, NULL
+    );
 
     task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);

@@ -390,7 +390,7 @@ int muxlogo_main(void) {
 
     dialogue_init(
         &reset_dlg, &theme, ui_screen, lang.muxlogo.reset.title, lang.muxlogo.reset.message, reset_labels,
-        A_SIZE(reset_labels), lang.generic.select, lang.generic.cancel
+        A_SIZE(reset_labels), lang.generic.select, NULL
     );
 
     task_progress_init(&theme, ui_screen);

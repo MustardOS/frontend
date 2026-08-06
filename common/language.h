@@ -311,6 +311,10 @@ struct mux_lang {
     } muxassign;
 
     struct {
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char message[MAX_BUFFER_SIZE];
+        } bulk;
         char title[MAX_BUFFER_SIZE];
         struct {
             char content[MAX_BUFFER_SIZE];
