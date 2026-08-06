@@ -591,6 +591,7 @@
     VISUAL(forward_history, "forwardhistory")                                                                          \
     VISUAL(content_width, "width")                                                                                     \
     VISUAL(page_skip, "pageskip")                                                                                      \
+    VISUAL(group_content, "groupcontent")                                                                              \
     VISUAL(video_preview, "videopreview")                                                                              \
     VISUAL(box_art, "boxart")                                                                                          \
     VISUAL(box_art_align, "align")                                                                                     \

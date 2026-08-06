@@ -258,6 +258,8 @@ static int steps_to_next_lead(const int direction) {
     if (!items || item_count == 0) return 0;
     if (current_item_index < 0 || current_item_index >= (int) item_count) return 0;
 
+    if (config.visual.group_content && items[current_item_index].content_type == content_type_menu) return 0;
+
     const char here = lead_key(items[current_item_index].display_name);
 
     for (int i = 1; i < (int) item_count; i++) {
@@ -292,9 +294,11 @@ void handle_list_nav_page_up(void) {
 
     if (config.visual.page_skip) {
         const int jump = steps_to_next_lead(-1);
-        if (jump > 0) handle_list_nav_prev_with_dir(jump, nav_dir_up);
 
-        return;
+        if (jump > 0) {
+            handle_list_nav_prev_with_dir(jump, nav_dir_up);
+            return;
+        }
     }
 
     int steps;
@@ -319,9 +323,11 @@ void handle_list_nav_page_down(void) {
 
     if (config.visual.page_skip) {
         const int jump = steps_to_next_lead(+1);
-        if (jump > 0) handle_list_nav_next_with_dir(jump, nav_dir_down);
 
-        return;
+        if (jump > 0) {
+            handle_list_nav_next_with_dir(jump, nav_dir_down);
+            return;
+        }
     }
 
     int steps;

@@ -303,6 +303,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "visual", "highcontrast", CFG_OFF(visual.high_contrast), 0, {.i = 0}},
     {CONF_CONFIG_PATH "visual", "boldfocus", CFG_OFF(visual.bold_focus), 0, {.i = 0}},
     {CONF_CONFIG_PATH "visual", "pageskip", CFG_OFF(visual.page_skip), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "groupcontent", CFG_OFF(visual.group_content), 0, {.i = 0}},
     {CONF_CONFIG_PATH "visual", "contentcollect", CFG_OFF(visual.content_collect), 0, {.i = 0}},
     {CONF_CONFIG_PATH "visual", "contenthistory", CFG_OFF(visual.content_history), 0, {.i = 0}},
     {CONF_CONFIG_PATH "visual", "mixedcontent", CFG_OFF(visual.mixed_content), 0, {.i = 0}},

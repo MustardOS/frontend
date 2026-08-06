@@ -2773,6 +2773,13 @@ struct mux_lang {
             char page[MAX_BUFFER_SIZE];
             char letter[MAX_BUFFER_SIZE];
         } skip;
+        char groupcontent[MAX_BUFFER_SIZE];
+        struct {
+            char single[MAX_BUFFER_SIZE];
+            char two[MAX_BUFFER_SIZE];
+            char three[MAX_BUFFER_SIZE];
+            char four[MAX_BUFFER_SIZE];
+        } group;
         struct {
             char disabled[MAX_BUFFER_SIZE];
             char continuous[MAX_BUFFER_SIZE];
@@ -2872,6 +2879,7 @@ struct mux_lang {
             char video_preview[MAX_BUFFER_SIZE];
             char content_width[MAX_BUFFER_SIZE];
             char page_skip[MAX_BUFFER_SIZE];
+            char group_content[MAX_BUFFER_SIZE];
             char launchsplash[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];
             char box_art_hide[MAX_BUFFER_SIZE];

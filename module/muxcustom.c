@@ -551,6 +551,11 @@ static void init_navigation_group(void) {
 
     char *page_skip_options[] = {lang.muxvisual.skip.page, lang.muxvisual.skip.letter};
 
+    char *group_content_options[] = {
+        lang.generic.disabled, lang.muxvisual.group.single, lang.muxvisual.group.two, lang.muxvisual.group.three,
+        lang.muxvisual.group.four
+    };
+
     char *shake_direction[] = {
         lang.generic.up, lang.generic.down, lang.generic.left, lang.generic.right, lang.generic.all
     };
@@ -656,6 +661,7 @@ static void init_navigation_group(void) {
         -1, visual, display_empty_folder, lang.muxvisual.displayemptyfolder, "folderempty", hidden_visible, 2
     );
     INIT_OPTION_ITEM(-1, visual, hidden, lang.muxvisual.hidden, "hidden", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, group_content, lang.muxvisual.groupcontent, "groupcontent", group_content_options, 5);
     INIT_OPTION_ITEM(-1, custom, sort, lang.muxvisual.sort, "sort", NULL, 0);
     INIT_OPTION_ITEM(-1, visual, content_collect, lang.muxvisual.contentcollect, "collection", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, content_history, lang.muxvisual.contenthistory, "history", toggle_icon_visible, 3);
@@ -1085,6 +1091,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, box_art_align, "visual/boxartalign", INT, 1);
     CHECK_AND_SAVE_STD(visual, content_width, "visual/contentwidth", INT, 0);
     CHECK_AND_SAVE_STD(visual, page_skip, "visual/pageskip", INT, 0);
+    CHECK_AND_SAVE_STD(visual, group_content, "visual/groupcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
 
@@ -1291,6 +1298,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // menu_counter_file
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // display_empty_folder
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // hidden
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // group_content
     {"sort", NULL, &kiosk_pass, menu_sort, NULL},
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_collect
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_history
