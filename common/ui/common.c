@@ -341,6 +341,7 @@ void apply_gradient_to_ui_screen(
     lv_obj_set_size(canvas, device->mux.width, device->mux.height);
     lv_obj_align(canvas, LV_ALIGN_CENTER, 0, 0); // Center on the screen
     lv_obj_clear_flag(canvas, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_opa(canvas, theme->system.background_alpha, MU_OBJ_MAIN_DEFAULT);
 
     if (needs_regen) {
         // Define gradient colors
@@ -594,8 +595,7 @@ void init_ui_common_screen(
     lv_obj_set_style_border_width(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_all(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->system.background), MU_OBJ_MAIN_DEFAULT);
-    /* Background is rendered by SDL compositor; keep LVGL screen transparent */
-    lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_screen, (theme->system.background_gradient_direction == 0) ? theme->system.background_alpha : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_width(ui_screen, device->mux.width);
     lv_obj_set_height(ui_screen, device->mux.height);
@@ -1929,8 +1929,6 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
                     video_wallpaper_play(mp4_path);
                     lv_img_set_src(ui_img_wall, &ui_img_blank);
                     lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-                    lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-                    set_gradient_visible(0);
                     video_played = 1;
                 }
             }

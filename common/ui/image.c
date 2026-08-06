@@ -247,8 +247,6 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_img_
                 video_wallpaper_play(mp4_path);
                 lv_img_set_src(ui_img_wall, &ui_img_blank);
                 lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-                lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-                set_gradient_visible(0);
             } else {
                 if (video_wallpaper_active()) {
                     video_wallpaper_stop();
