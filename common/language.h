@@ -55,6 +55,7 @@ struct mux_lang {
         char content[MAX_BUFFER_SIZE];
         char details[MAX_BUFFER_SIZE];
         char directory[MAX_BUFFER_SIZE];
+        char duration[MAX_BUFFER_SIZE];
         char disabled[MAX_BUFFER_SIZE];
         char download[MAX_BUFFER_SIZE];
         char edit[MAX_BUFFER_SIZE];
@@ -71,8 +72,10 @@ struct mux_lang {
         char included[MAX_BUFFER_SIZE];
         char info[MAX_BUFFER_SIZE];
         char information[MAX_BUFFER_SIZE];
+        char launch_count[MAX_BUFFER_SIZE];
         char location[MAX_BUFFER_SIZE];
         char location_gone[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char tag_sort[MAX_BUFFER_SIZE];
         char search[MAX_BUFFER_SIZE];
         char top_level[MAX_BUFFER_SIZE];
@@ -202,8 +205,6 @@ struct mux_lang {
         char none[MAX_BUFFER_SIZE];
         char none_hint[MAX_BUFFER_SIZE];
         char info[MAX_BUFFER_SIZE];
-        char launch[MAX_BUFFER_SIZE];
-        char time[MAX_BUFFER_SIZE];
         char html[MAX_BUFFER_SIZE];
         char unique[MAX_BUFFER_SIZE];
         char export_success[MAX_BUFFER_SIZE];
@@ -221,7 +222,6 @@ struct mux_lang {
             char last[MAX_BUFFER_SIZE];
         } detail;
         struct {
-            char nav[MAX_BUFFER_SIZE];
             char top_time[MAX_BUFFER_SIZE];
             char top_launch[MAX_BUFFER_SIZE];
             char core[MAX_BUFFER_SIZE];
