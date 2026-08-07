@@ -251,12 +251,12 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (more_active(&more_menu)) {
-        play_sound(snd_back);
-        more_close(&more_menu);
+        more_cancel(&more_menu);
         return;
     }
 
     if (remove_mode) {
+        dialogue_mark_cancelled(&remove_dlg);
         hide_remove_dialog();
         return;
     }

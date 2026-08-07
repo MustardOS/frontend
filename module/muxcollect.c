@@ -795,12 +795,13 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (actions_mode) {
-        play_sound(snd_back);
+        dialogue_mark_cancelled(&actions_dlg);
         hide_actions_dialog();
         return;
     }
 
     if (remove_mode) {
+        dialogue_mark_cancelled(&remove_dlg);
         hide_remove_dialog();
         return;
     }

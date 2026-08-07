@@ -318,6 +318,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

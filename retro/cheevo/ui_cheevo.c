@@ -393,7 +393,6 @@ static int login_child_tick(void) {
         const mux_confirm_opt option = (mux_confirm_opt) clear_dialogue.selected;
         dialogue_dismiss(&clear_confirm_active, &clear_dialogue);
         if (option == mux_confirm_yep) {
-            play_sound(snd_confirm);
             cheevo_logout();
             login_submitted = 0;
             explicit_bzero(login_password, sizeof(login_password));

@@ -319,7 +319,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (assign_dialogue_active) {
-        play_sound(snd_back);
+        dialogue_mark_cancelled(&assign_dlg);
         dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
         return;
     }

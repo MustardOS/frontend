@@ -87,7 +87,6 @@ static void handle_a(void) {
 
         order_save(order_dir, opt == scope_directory);
 
-        play_sound(snd_confirm);
         toast_message(lang.generic.saving, tst_wait_f);
 
         leave_module();
@@ -130,7 +129,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (scope_mode) {
-        play_sound(snd_back);
+        dialogue_mark_cancelled(&scope_dlg);
         hide_scope_dialog();
         return;
     }

@@ -235,6 +235,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (confirm_mode) {
+        dialogue_mark_cancelled(&confirm_dlg);
         hide_confirm_dialog();
         return;
     }

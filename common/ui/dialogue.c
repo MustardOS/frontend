@@ -191,6 +191,14 @@ void dialogue_init(
 
     dlg->safe_default = 0;
     dlg->claimed = 0;
+
+    dlg->cancel_index = -1;
+    if (option_count > 0 && options[option_count - 1]) {
+        const char *last = options[option_count - 1];
+
+        if (strcmp(last, lang.generic.cancel) == 0 || strcmp(last, lang.generic.no) == 0)
+            dlg->cancel_index = option_count - 1;
+    }
 }
 
 void dialogue_init_unsaved(
@@ -210,6 +218,7 @@ void dialogue_init_confirm(
 
     dlg->safe_default = mux_confirm_nah;
     dlg->selected = mux_confirm_nah;
+    dlg->cancel_index = mux_confirm_nah;
 }
 
 void dialogue_init_assign_scope(
@@ -242,6 +251,8 @@ void dialogue_init_assign_scope(
     n++;
 
     dialogue_init(dlg, t, parent, title, lang.generic.assign_desc, opts, n, nav_a, nav_b);
+
+    dlg->cancel_index = n - 1;
 }
 
 void dialogue_init_warn(
@@ -250,6 +261,8 @@ void dialogue_init_warn(
 ) {
     const char *opts[] = {lang.generic.understand, lang.generic.cancel};
     dialogue_init(dlg, t, parent, lang.generic.warning, description, opts, 2, nav_a, nav_b);
+
+    dlg->cancel_index = 1;
 }
 
 void dialogue_init_remove(
@@ -261,6 +274,7 @@ void dialogue_init_remove(
 
     dlg->safe_default = mux_remove_nah;
     dlg->selected = mux_remove_nah;
+    dlg->cancel_index = mux_remove_nah;
 }
 
 void dialogue_init_message(
@@ -499,6 +513,9 @@ void dialogue_init_accept(
 }
 
 void dialogue_show(mux_dialogue *dlg) {
+    dlg->cancelled = 0;
+    dlg->silent = 0;
+
     if (!dlg->claimed) {
         modal_claim(MODAL_MASK_DIALOGUE);
         dlg->claimed = 1;
@@ -637,6 +654,9 @@ void dialogue_hide_chained(mux_dialogue *dlg) {
 }
 
 void dialogue_hide(mux_dialogue *dlg) {
+    const int backed_out = dlg->cancelled || (dlg->cancel_index >= 0 && dlg->selected == dlg->cancel_index);
+    if (!dlg->silent) play_sound(backed_out ? snd_back : snd_confirm);
+
     if (dlg->claimed) {
         modal_release();
         dlg->claimed = 0;
@@ -695,6 +715,7 @@ void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t) {
 void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t) {
     *active = 1;
     dlg->selected = dlg->safe_default;
+    dlg->cancelled = 0;
     dialogue_show(dlg);
     dialogue_refresh(dlg, t);
 }
@@ -702,6 +723,19 @@ void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t) {
 void dialogue_dismiss(int *active, mux_dialogue *dlg) {
     *active = 0;
     dialogue_hide(dlg);
+}
+
+void dialogue_cancel(int *active, mux_dialogue *dlg) {
+    dialogue_mark_cancelled(dlg);
+    dialogue_dismiss(active, dlg);
+}
+
+void dialogue_mark_cancelled(mux_dialogue *dlg) {
+    if (dlg) dlg->cancelled = 1;
+}
+
+void dialogue_mark_silent(mux_dialogue *dlg) {
+    if (dlg) dlg->silent = 1;
 }
 
 void dialogue_handle_dpad(mux_dialogue *dlg, struct theme_config *t, const int direction, const int should_fire) {

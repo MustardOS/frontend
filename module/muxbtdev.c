@@ -245,6 +245,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (forget_mode) {
+        dialogue_mark_cancelled(&forget_dlg);
         hide_forget_dialog();
         return;
     }

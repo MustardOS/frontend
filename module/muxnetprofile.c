@@ -1138,16 +1138,16 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (forget_dlg_active) {
+        dialogue_mark_cancelled(&forget_dlg);
         dialogue_dismiss(&forget_dlg_active, &forget_dlg);
 
-        play_sound(snd_back);
         return;
     }
 
     if (save_dlg_active) {
+        dialogue_mark_cancelled(&save_dlg);
         dialogue_dismiss(&save_dlg_active, &save_dlg);
 
-        play_sound(snd_back);
         return;
     }
 

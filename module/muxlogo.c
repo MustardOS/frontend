@@ -249,7 +249,6 @@ static void handle_a(void) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         hide_remove_dialog();
 
-        play_sound(opt == mux_remove_nah ? snd_back : snd_confirm);
 
         if (opt == mux_remove_skip) skip_confirm = 1;
         if (opt != mux_remove_nah) remove_logo();
@@ -261,7 +260,6 @@ static void handle_a(void) {
         const int confirmed = reset_dlg.selected == 0;
         hide_reset_dialog();
 
-        play_sound(confirmed ? snd_confirm : snd_back);
         if (confirmed) reset_logo();
 
         return;
@@ -271,7 +269,6 @@ static void handle_a(void) {
         const int chosen = fit_dlg.selected >= 0 && fit_dlg.selected < (int) A_SIZE(fit_modes) ? fit_dlg.selected : 0;
         hide_fit_dialog();
 
-        play_sound(snd_confirm);
         apply_logo(fit_modes[chosen]);
 
         return;
@@ -376,22 +373,22 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (remove_mode) {
+        dialogue_mark_cancelled(&remove_dlg);
         hide_remove_dialog();
-        play_sound(snd_back);
 
         return;
     }
 
     if (reset_mode) {
+        dialogue_mark_cancelled(&reset_dlg);
         hide_reset_dialog();
-        play_sound(snd_back);
 
         return;
     }
 
     if (fit_mode) {
+        dialogue_mark_cancelled(&fit_dlg);
         hide_fit_dialog();
-        play_sound(snd_back);
 
         return;
     }

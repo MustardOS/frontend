@@ -625,6 +625,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (warn_mode) {
+        dialogue_mark_cancelled(&warn_dlg);
         hide_warn_dialog();
         return;
     }

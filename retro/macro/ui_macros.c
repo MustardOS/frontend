@@ -883,7 +883,6 @@ void macros_menu_tick(void) {
 
                 if (macro_count > 0) focus_row(next_focus < macro_count ? next_focus : macro_count - 1);
             } else {
-                play_sound(snd_back);
             }
         } else if (edge & BIT(5)) {
             dialogue_dismiss(&delete_confirm_active, &delete_dlg);
@@ -905,7 +904,6 @@ void macros_menu_tick(void) {
 
             if (opt == mux_unsaved_save) {
                 macros_save(editing_position);
-                play_sound(snd_confirm);
                 close_editor();
             } else if (opt == mux_unsaved_discard) {
                 macro_list[editing_position] = editor_snapshot;
@@ -931,10 +929,8 @@ void macros_menu_tick(void) {
             dialogue_dismiss(&edit_bind_active, &edit_bind_dlg);
 
             if (opt == edit_bind_edit) {
-                play_sound(snd_confirm);
                 open_editor(current_item_index);
             } else if (opt == edit_bind_bind) {
-                play_sound(snd_confirm);
                 begin_capture(capture_purpose_assign);
             }
         } else if (edge & BIT(5)) {

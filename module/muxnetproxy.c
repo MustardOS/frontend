@@ -264,7 +264,6 @@ static void handle_a(void) {
         reboot_dlg_active = 0;
         msgbox_active = 0;
         dialogue_hide(&reboot_dlg);
-        play_sound(snd_confirm);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_proxy");
         mux_input_stop();
         return;
@@ -293,8 +292,8 @@ static void handle_b(void) {
     if (reboot_dlg_active) return;
 
     if (save_dlg_active) {
+        dialogue_mark_cancelled(&save_dlg);
         dialogue_dismiss(&save_dlg_active, &save_dlg);
-        play_sound(snd_back);
         return;
     }
 

@@ -485,7 +485,6 @@ static void handle_a(void) {
         wr_dlg_active = 0;
         msgbox_active = 0;
         dialogue_hide(&wr_dlg);
-        play_sound(snd_confirm);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
         mux_input_stop();
         return;
@@ -516,6 +515,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

@@ -757,6 +757,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (remove_mode) {
+        dialogue_mark_cancelled(&remove_dlg);
         hide_remove_dialog();
         return;
     }

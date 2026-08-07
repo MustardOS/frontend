@@ -368,7 +368,6 @@ static void handle_a(void) {
 
         if (opt == mux_unsaved_save) save_tweak_options();
 
-        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         list_frame_remember_section();
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
 
@@ -390,6 +389,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

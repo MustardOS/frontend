@@ -504,10 +504,7 @@ static void handle_a(void) {
 
         if (opt == mux_confirm_yep) {
             reset_all_zones();
-            play_sound(snd_confirm);
             toast_message(lang.muxrgb.reset_done, tst_wait_m);
-        } else {
-            play_sound(snd_back);
         }
 
         return;
@@ -529,8 +526,8 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (reset_dlg_active) {
+        dialogue_mark_cancelled(&reset_dlg);
         dialogue_dismiss(&reset_dlg_active, &reset_dlg);
-        play_sound(snd_back);
         return;
     }
 

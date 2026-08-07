@@ -590,7 +590,6 @@ void gamestate_menu_tick(void) {
             const mux_confirm_opt opt = (mux_confirm_opt) load_dlg.selected;
             dialogue_dismiss(&load_confirm_active, &load_dlg);
             if (opt == mux_confirm_yep) {
-                play_sound(snd_confirm);
                 pending_action = pending_load;
                 pending_index = current_item_index;
             }
@@ -607,7 +606,6 @@ void gamestate_menu_tick(void) {
             const mux_confirm_opt opt = (mux_confirm_opt) delete_dlg.selected;
             dialogue_dismiss(&delete_confirm_active, &delete_dlg);
             if (opt == mux_confirm_yep) {
-                play_sound(snd_confirm);
                 pending_action = pending_delete;
                 pending_index = current_item_index;
             }
@@ -624,7 +622,6 @@ void gamestate_menu_tick(void) {
             const mux_confirm_opt opt = (mux_confirm_opt) mismatch_dlg.selected;
             dialogue_dismiss(&mismatch_confirm_active, &mismatch_dlg);
             if (opt == mux_confirm_yep) {
-                play_sound(snd_confirm);
                 pending_action = pending_load;
                 pending_index = current_item_index;
             }
@@ -704,7 +701,6 @@ void gamestate_notice_tick(void) {
     notice_prev_mask = mask;
 
     if (edge & (BIT(4) | BIT(5))) {
-        play_sound(snd_confirm);
         dialogue_dismiss(&notice_active, &notice_dlg);
         pause_menu_sync_input_mask();
     }

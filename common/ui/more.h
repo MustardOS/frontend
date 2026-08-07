@@ -11,6 +11,9 @@ typedef enum {
     more_random,
     more_top_level,
     more_collect,
+    more_overview,
+    more_launch_count,
+    more_duration,
     more_remove,
     more_help,
     more_count
@@ -37,6 +40,10 @@ void more_open(mux_more *m, struct theme_config *t, lv_obj_t *parent, const more
 int more_active(const mux_more *m);
 
 void more_close(mux_more *m);
+
+void more_destroy(mux_more *m);
+
+void more_cancel(mux_more *m);
 
 more_id more_current(const mux_more *m);
 

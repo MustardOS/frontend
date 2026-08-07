@@ -320,7 +320,6 @@ void options_menu_tick(void) {
         } else if (edge & BIT(4)) {
             const save_opt_t opt = (save_opt_t) save_dlg.selected;
             dialogue_dismiss(&save_dialogue_active, &save_dlg);
-            play_sound(snd_confirm);
 
             switch (opt) {
                 case save_opt_content:

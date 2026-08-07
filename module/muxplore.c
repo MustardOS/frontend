@@ -1334,7 +1334,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (actions_mode) {
-        play_sound(snd_back);
+        dialogue_mark_cancelled(&actions_dlg);
         hide_actions_dialog();
         return;
     }

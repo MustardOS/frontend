@@ -299,7 +299,6 @@ static void handle_a(void) {
 
         if (opt == mux_unsaved_save) save_rgbzone_options(tst_wait_f);
 
-        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, current_zone_udata);
         load_mux("rgb");
 
@@ -316,6 +315,7 @@ static void handle_b(void) {
     if (block_input || hold_call) return;
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

@@ -298,8 +298,6 @@ static void handle_a(void) {
 
         if (opt == mux_unsaved_save) save_access_options();
 
-        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
-
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "access");
         if (config.boot.factory_reset) load_mux("installer");
 
@@ -311,6 +309,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

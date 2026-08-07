@@ -99,6 +99,7 @@ void task_prompt_hide(void) {
     if (!active) return;
 
     active = 0;
+    dialogue_mark_silent(&dlg);
     dialogue_hide(&dlg);
 }
 

@@ -307,7 +307,6 @@ void submenu_tick(submenu *m) {
         } else if (edge & BIT(4)) {
             const int opt = m->save_dlg.selected;
             dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
-            play_sound(snd_confirm);
 
             if (opt == 4) {
                 session_settings_discard_to(&m->entry_snapshot);
@@ -338,7 +337,6 @@ void submenu_tick(submenu *m) {
         } else if (edge & BIT(4)) {
             const int opt = m->save_all_dlg.selected;
             dialogue_dismiss(&m->save_all_dialogue_active, &m->save_all_dlg);
-            play_sound(snd_confirm);
 
             session_settings_apply_save_choice(opt);
             submenu_stack_resync();

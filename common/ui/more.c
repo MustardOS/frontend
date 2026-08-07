@@ -21,6 +21,12 @@ static const char *more_label(const more_id id) {
             return lang.generic.top_level;
         case more_collect:
             return lang.generic.collect;
+        case more_overview:
+            return lang.generic.overview;
+        case more_launch_count:
+            return lang.generic.launch_count;
+        case more_duration:
+            return lang.generic.duration;
         case more_remove:
             return lang.generic.remove;
         case more_help:
@@ -107,11 +113,38 @@ int more_active(const mux_more *m) {
     return m && m->active;
 }
 
+void more_cancel(mux_more *m) {
+    if (!m || !m->active) return;
+
+    dialogue_mark_cancelled(&m->dlg);
+    more_close(m);
+}
+
 void more_close(mux_more *m) {
     if (!m || !m->active) return;
 
     m->active = 0;
     dialogue_hide(&m->dlg);
+}
+
+void more_destroy(mux_more *m) {
+    if (!m) return;
+
+    more_close(m);
+
+    mux_dialogue *dlg = &m->dlg;
+
+    if (dlg->dim && lv_obj_is_valid(dlg->dim)) lv_obj_del(dlg->dim);
+    if (dlg->panel && lv_obj_is_valid(dlg->panel)) lv_obj_del(dlg->panel);
+
+    dlg->dim = NULL;
+    dlg->panel = NULL;
+    dlg->title_label = NULL;
+    dlg->description_label = NULL;
+    dlg->option_count = 0;
+
+    for (int i = 0; i < MUX_DIALOGUE_MAX_OPTIONS; i++)
+        dlg->options[i] = NULL;
 }
 
 more_id more_current(const mux_more *m) {

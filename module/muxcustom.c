@@ -1496,12 +1496,13 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (msg_mode) {
-        play_sound(snd_back);
+        dialogue_mark_cancelled(&msg_dlg);
         hide_message_dialog();
         return;
     }
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

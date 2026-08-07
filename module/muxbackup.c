@@ -214,8 +214,8 @@ static void finish_task(void) {
 static void handle_b(void) {
 
     if (bulk_mode) {
+        dialogue_mark_cancelled(&bulk_dlg);
         hide_bulk_dialog();
-        play_sound(snd_back);
 
         return;
     }
@@ -253,7 +253,6 @@ static void handle_a(void) {
         const int confirmed = bulk_dlg.selected == 0;
         hide_bulk_dialog();
 
-        play_sound(confirmed ? snd_confirm : snd_back);
         if (confirmed) start_backup(ui_lbl_start_backup);
 
         return;

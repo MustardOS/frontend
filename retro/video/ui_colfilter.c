@@ -130,7 +130,6 @@ void colfilter_menu_tick(void) {
         } else if (edge & BIT(4)) {
             const int opt = save_dlg.selected;
             dialogue_dismiss(&save_dialogue_active, &save_dlg);
-            play_sound(snd_confirm);
 
             if (opt != 3) session_settings_apply_save_choice(opt);
             submenu_stack_resync();

@@ -340,7 +340,7 @@ static void handle_b(void) {
     }
 
     if (msg_mode) {
-        play_sound(snd_back);
+        dialogue_mark_cancelled(&msg_dlg);
         hide_message_dialog();
         return;
     }

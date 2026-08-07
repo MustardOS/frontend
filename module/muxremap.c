@@ -663,6 +663,7 @@ static void handle_b(void) {
     }
 
     if (save_mode) {
+        dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
     }

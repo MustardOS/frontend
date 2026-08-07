@@ -241,6 +241,7 @@ static void close_cancel_ask(void) {
     if (!cancel_asking) return;
 
     cancel_asking = 0;
+    dialogue_mark_silent(&cancel_dlg);
     dialogue_hide(&cancel_dlg);
 }
 
