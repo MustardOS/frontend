@@ -51,6 +51,8 @@ void osk_hide(lv_obj_t *panel);
 
 void osk_refresh_labels(void);
 
+void osk_screen_reset(void);
+
 void process_key_event(const struct input_event *ev, lv_obj_t *entry);
 
 char get_shifted_char(uint16_t key);

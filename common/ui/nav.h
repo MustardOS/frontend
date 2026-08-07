@@ -95,6 +95,8 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count_static, int *nav_m
 
 void nav_suppress_next_shake(void);
 
+void nav_screen_reset(void);
+
 void nav_unsuppress_shake(void);
 
 void nav_set_last_dir(enum nav_direction dir);

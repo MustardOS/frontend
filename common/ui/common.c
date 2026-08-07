@@ -4,6 +4,11 @@
 #include "common.h"
 #include "notify.h"
 #include "empty_state.h"
+#include "list_frame.h"
+#include "modal.h"
+#include "osk.h"
+#include "task_progress.h"
+#include "task_prompt.h"
 #include "nav.h"
 #include "grid.h"
 #include "glyph.h"
@@ -393,6 +398,22 @@ void ui_common_get_gradient_buffer(void **buf, int *w, int *h) {
     *h = lv_obj_get_height(canvas);
 }
 
+// Every module runs in the same process, so anything holding on to a
+// screen object has to let go of it before that screen is thrown away!
+void ui_screen_teardown(void) {
+    notify_screen_reset();
+    empty_state_reset();
+    task_progress_reset();
+    task_prompt_reset();
+    list_frame_reset();
+    nav_screen_reset();
+    osk_screen_reset();
+    modal_reset();
+
+    canvas = NULL;
+    ui_black = NULL;
+}
+
 void fade_reset(void) {
     fade_in_done = 0;
     if (ui_black && !lv_obj_is_valid(ui_black)) ui_black = NULL;
@@ -595,7 +616,10 @@ void init_ui_common_screen(
     lv_obj_set_style_border_width(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_all(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->system.background), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_screen, (theme->system.background_gradient_direction == 0) ? theme->system.background_alpha : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(
+        ui_screen, (theme->system.background_gradient_direction == 0) ? theme->system.background_alpha : LV_OPA_TRANSP,
+        MU_OBJ_MAIN_DEFAULT
+    );
 
     lv_obj_set_width(ui_screen, device->mux.width);
     lv_obj_set_height(ui_screen, device->mux.height);

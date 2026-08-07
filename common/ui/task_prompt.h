@@ -15,6 +15,8 @@ int task_prompt_show(const task_event *prompt);
 
 void task_prompt_hide(void);
 
+void task_prompt_reset(void);
+
 int task_prompt_handle_a(void);
 
 int task_prompt_handle_b(void);

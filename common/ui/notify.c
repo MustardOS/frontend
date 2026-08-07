@@ -31,8 +31,28 @@ typedef struct {
 static notify_slot stack[NOTIFY_STACK_MAX];
 static int stack_ready = 0;
 
+static int slot_usable(const int i) {
+    return stack[i].panel && lv_obj_is_valid(stack[i].panel) && stack[i].label && lv_obj_is_valid(stack[i].label);
+}
+
+void notify_screen_reset(void) {
+    stack_ready = 0;
+
+    for (int i = 0; i < NOTIFY_STACK_MAX; i++) {
+        stack[i].panel = NULL;
+        stack[i].label = NULL;
+        stack[i].active = 0;
+        stack[i].until = 0;
+        stack[i].text[0] = '\0';
+    }
+}
+
 static void stack_build(void) {
-    if (stack_ready) return;
+    if (stack_ready && slot_usable(0)) return;
+
+    notify_screen_reset();
+
+    if (!ui_pnl_message || !lv_obj_is_valid(ui_pnl_message)) return;
 
     stack[0].panel = ui_pnl_message;
     stack[0].label = ui_lbl_message;
@@ -48,7 +68,7 @@ static void stack_layout(void) {
     lv_coord_t offset = 0;
 
     for (int i = 0; i < NOTIFY_STACK_MAX; i++) {
-        if (!stack[i].active) continue;
+        if (!stack[i].active || !slot_usable(i)) continue;
 
         lv_obj_update_layout(stack[i].panel);
         lv_obj_set_y(stack[i].panel, base - offset);
@@ -63,7 +83,7 @@ static void slot_clear(const int i) {
     stack[i].text[0] = '\0';
     stack[i].until = 0;
 
-    if (stack[i].panel) lv_obj_set_style_opa(stack[i].panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    if (slot_usable(i)) lv_obj_set_style_opa(stack[i].panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 }
 
 static const uint32_t hold_choices[] = {tst_wait_s, tst_wait_m, tst_wait_l, 4000};
@@ -101,6 +121,7 @@ static void present(const notify_entry *entry) {
     }
 
     stack_build();
+    if (!stack_ready) return;
 
     if (stack[NOTIFY_STACK_MAX - 1].active) slot_clear(NOTIFY_STACK_MAX - 1);
 
@@ -109,7 +130,7 @@ static void present(const notify_entry *entry) {
         stack[i].until = stack[i - 1].until;
         snprintf(stack[i].text, sizeof(stack[i].text), "%s", stack[i - 1].text);
 
-        if (!stack[i].active) continue;
+        if (!stack[i].active || !slot_usable(i)) continue;
 
         lv_label_set_text(stack[i].label, stack[i].text);
         lv_label_set_recolor(stack[i].label, 1);
@@ -224,20 +245,22 @@ static void drain_drop_file(void) {
 void notify_tick(void) {
     drain_drop_file();
 
-    if (!stack_ready) return;
+    if (stack_ready && !slot_usable(0)) notify_screen_reset();
 
-    const uint32_t now = lv_tick_get();
-    int expired = 0;
+    if (stack_ready) {
+        const uint32_t now = lv_tick_get();
+        int expired = 0;
 
-    for (int i = 0; i < NOTIFY_STACK_MAX; i++) {
-        if (!stack[i].active || !stack[i].until) continue;
-        if ((int32_t) (now - stack[i].until) < 0) continue;
+        for (int i = 0; i < NOTIFY_STACK_MAX; i++) {
+            if (!stack[i].active || !stack[i].until) continue;
+            if ((int32_t) (now - stack[i].until) < 0) continue;
 
-        slot_clear(i);
-        expired = 1;
+            slot_clear(i);
+            expired = 1;
+        }
+
+        if (expired) stack_layout();
     }
-
-    if (expired) stack_layout();
 
     if (queue_count == 0 || stack[0].active) return;
 

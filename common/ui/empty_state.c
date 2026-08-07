@@ -12,6 +12,17 @@ static lv_obj_t *action_row = NULL;
 static lv_obj_t *action_glyph = NULL;
 static lv_obj_t *action_label = NULL;
 
+void empty_state_reset(void) {
+    panel = NULL;
+
+    lbl_headline = NULL;
+    lbl_guidance = NULL;
+
+    action_row = NULL;
+    action_glyph = NULL;
+    action_label = NULL;
+}
+
 static int usable(void) {
     if (panel && lv_obj_is_valid(panel)) return 1;
     if (!ui_screen || !lv_obj_is_valid(ui_screen)) return 0;

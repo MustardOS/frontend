@@ -34,6 +34,8 @@ void ui_common_get_gradient_buffer(void **buf, int *w, int *h);
 
 void fade_reset(void);
 
+void ui_screen_teardown(void);
+
 void fade_in_screen(void);
 
 void fade_in_instant(void);

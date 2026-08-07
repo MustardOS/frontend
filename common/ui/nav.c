@@ -955,6 +955,19 @@ static void raise_row_draw_cb(lv_event_t *e) {
 static lv_obj_t *hoist_panel = NULL;
 static uint32_t hoist_index = 0;
 
+void nav_screen_reset(void) {
+    raise_row = NULL;
+    hoist_panel = NULL;
+    hoist_index = 0;
+
+    shake_prev_focused = NULL;
+    shake_prev_exec_cb = NULL;
+    shake_suppress = 0;
+
+    row_dim_active = 0;
+    row_dim_index = -1;
+}
+
 static void shake_cleanup_cb(lv_anim_t *a) {
     lv_obj_t *obj = a->var;
     if (!obj || !lv_obj_is_valid(obj)) return;

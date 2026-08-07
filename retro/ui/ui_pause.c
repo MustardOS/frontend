@@ -718,7 +718,10 @@ void pause_menu_init(void) {
 }
 
 void pause_menu_shutdown(void) {
+    ui_screen_teardown();
+
     if (ui_screen_container) lv_obj_del(ui_screen_container);
+    ui_screen_container = NULL;
 }
 
 int pause_menu_is_active(void) {

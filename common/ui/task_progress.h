@@ -14,6 +14,8 @@ int task_progress_active(void);
 
 void task_progress_tick(void);
 
+void task_progress_reset(void);
+
 int task_progress_handle_a(void);
 
 int task_progress_handle_b(void);

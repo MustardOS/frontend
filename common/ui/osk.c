@@ -502,6 +502,18 @@ void process_key_event(const struct input_event *ev, lv_obj_t *entry) {
     }
 }
 
+void osk_screen_reset(void) {
+    key_entry = NULL;
+    num_entry = NULL;
+    hex_entry = NULL;
+
+    nav_hint_container = NULL;
+    nav_hint_a = (osk_nav_hint_t) {NULL, NULL, NULL};
+    nav_hint_b = (osk_nav_hint_t) {NULL, NULL, NULL};
+    nav_hint_x = (osk_nav_hint_t) {NULL, NULL, NULL};
+    nav_hint_y = (osk_nav_hint_t) {NULL, NULL, NULL};
+}
+
 void init_osk(
     lv_obj_t *ui_pnl_entry, lv_obj_t *ui_txt_entry, const int include_numpad, const int is_password,
     const uint16_t max_len

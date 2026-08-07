@@ -89,6 +89,7 @@ static void cleanup_screen(void) {
     if (!ui_screen_container) return;
 
     timer_suspend_all();
+    ui_screen_teardown();
 
     lv_disp_load_scr(ui_screen_temp);
 

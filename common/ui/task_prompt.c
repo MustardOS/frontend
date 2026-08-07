@@ -25,6 +25,17 @@ void task_prompt_init(struct theme_config *t, lv_obj_t *parent) {
     memset(&dlg, 0, sizeof(dlg));
 }
 
+void task_prompt_reset(void) {
+    theme_ref = NULL;
+    parent_ref = NULL;
+
+    active = 0;
+    option_count = 0;
+    prompt_id[0] = '\0';
+
+    memset(&dlg, 0, sizeof(dlg));
+}
+
 int task_prompt_active(void) {
     return active;
 }

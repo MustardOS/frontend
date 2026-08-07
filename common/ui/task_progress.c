@@ -244,8 +244,28 @@ static void close_cancel_ask(void) {
     dialogue_hide(&cancel_dlg);
 }
 
+void task_progress_reset(void) {
+    theme_ref = NULL;
+
+    dim = NULL;
+    panel = NULL;
+    lbl_title = NULL;
+    lbl_status = NULL;
+    lbl_detail = NULL;
+    bar = NULL;
+    lbl_elapsed = NULL;
+    nav_glyph = NULL;
+    nav_label = NULL;
+
+    active = 0;
+    cancel_asking = 0;
+    offered = nav_offers_none;
+
+    memset(&cancel_dlg, 0, sizeof(cancel_dlg));
+}
+
 void task_progress_tick(void) {
-    if (!active || !panel) return;
+    if (!active || !panel || !lv_obj_is_valid(panel)) return;
 
     task_exec_poll();
 

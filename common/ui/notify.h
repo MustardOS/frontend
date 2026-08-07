@@ -19,4 +19,6 @@ void notify_tick(void);
 
 void notify_reset(void);
 
+void notify_screen_reset(void);
+
 uint32_t notify_hold_ms(void);
