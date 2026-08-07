@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
@@ -30,6 +31,48 @@ static void warn_if_truncated(const char *dropped_key) {
     if (!dropped_key) return;
 
     LOG_WARN(mux_module, "core options truncated at %d entries - '%s' onwards were dropped", OPTIONS_MAX, dropped_key);
+}
+
+// A core is free to offer as many values as it likes, and some offer well over
+// a hundred (Like FBNEO), so the list is sized to whatever it actually declares
+static char (*alloc_values(const int count)) [OPTIONS_VALUE_LEN] {
+    if (count <= 0) return NULL;
+
+    return calloc((size_t) count, sizeof(char[OPTIONS_VALUE_LEN]));
+}
+
+static void store_values(
+    struct core_option_entry *e, const struct retro_core_option_value *values, const char *default_value
+) {
+    e->values = NULL;
+    e->value_count = 0;
+    e->current_index = 0;
+
+    int total = 0;
+    for (int v = 0; values[v].value; v++)
+        total++;
+
+    e->values = alloc_values(total);
+    if (!e->values) {
+        if (total > 0) LOG_ERROR(mux_module, "no memory for the %d values of core option '%s'", total, e->key);
+        return;
+    }
+
+    for (int v = 0; v < total; v++)
+        snprintf(e->values[v], OPTIONS_VALUE_LEN, "%s", values[v].value);
+
+    e->value_count = total;
+
+    if (!default_value) return;
+
+    for (int v = 0; v < total; v++) {
+        if (strcmp(e->values[v], default_value) != 0) continue;
+
+        e->current_index = v;
+        return;
+    }
+
+    LOG_WARN(mux_module, "core option '%s' default '%s' is not in its own value list", e->key, default_value);
 }
 
 static void open_overrides(void) {
@@ -71,6 +114,9 @@ static void apply_override(struct core_option_entry *e) {
 }
 
 void options_reset(void) {
+    for (int i = 0; i < options_count; i++)
+        free(options_list[i].values);
+
     options_count = 0;
     memset(options_list, 0, sizeof(options_list));
     options_category_count = 0;
@@ -87,20 +133,7 @@ void options_store_v1(const struct retro_core_option_definition *defs) {
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
         snprintf(e->label, sizeof(e->label), "%s", defs[i].desc ? defs[i].desc : defs[i].key);
 
-        e->value_count = 0;
-        int default_index = 0;
-
-        for (int v = 0; defs[i].values[v].value && e->value_count < OPTIONS_MAX_VALUES; v++) {
-            snprintf(e->values[e->value_count], sizeof(e->values[e->value_count]), "%s", defs[i].values[v].value);
-
-            if (defs[i].default_value && strcmp(defs[i].values[v].value, defs[i].default_value) == 0) {
-                default_index = e->value_count;
-            }
-
-            e->value_count++;
-        }
-
-        e->current_index = default_index;
+        store_values(e, defs[i].values, defs[i].default_value);
         apply_override(e);
         options_count++;
     }
@@ -152,20 +185,7 @@ void options_store_v2(const struct retro_core_options_v2 *opts) {
                                 : defs[i].desc;
         snprintf(e->label, sizeof(e->label), "%s", label ? label : defs[i].key);
 
-        e->value_count = 0;
-        int default_index = 0;
-
-        for (int v = 0; defs[i].values[v].value && e->value_count < OPTIONS_MAX_VALUES; v++) {
-            snprintf(e->values[e->value_count], sizeof(e->values[e->value_count]), "%s", defs[i].values[v].value);
-
-            if (defs[i].default_value && strcmp(defs[i].values[v].value, defs[i].default_value) == 0) {
-                default_index = e->value_count;
-            }
-
-            e->value_count++;
-        }
-
-        e->current_index = default_index;
+        store_values(e, defs[i].values, defs[i].default_value);
         apply_override(e);
         options_count++;
     }
@@ -193,15 +213,25 @@ void options_store_legacy(const struct retro_variable *vars) {
             snprintf(e->label, sizeof(e->label), "%s", vars[i].key);
         }
 
+        e->values = NULL;
         e->value_count = 0;
-        const char *cursor = desc_sep ? desc_sep + 1 : vars[i].value;
-        while (*cursor == ' ')
-            cursor++;
+        e->current_index = 0;
 
-        while (*cursor && e->value_count < OPTIONS_MAX_VALUES) {
+        const char *start = desc_sep ? desc_sep + 1 : vars[i].value;
+        while (*start == ' ')
+            start++;
+
+        int total = *start ? 1 : 0;
+        for (const char *scan = start; *scan; scan++)
+            if (*scan == '|') total++;
+
+        e->values = alloc_values(total);
+
+        const char *cursor = start;
+        while (e->values && *cursor && e->value_count < total) {
             const char *sep = strchr(cursor, '|');
             size_t len = sep ? (size_t) (sep - cursor) : strlen(cursor);
-            if (len >= sizeof(e->values[0])) len = sizeof(e->values[0]) - 1;
+            if (len >= OPTIONS_VALUE_LEN) len = OPTIONS_VALUE_LEN - 1;
 
             memcpy(e->values[e->value_count], cursor, len);
             e->values[e->value_count][len] = '\0';
@@ -210,8 +240,6 @@ void options_store_legacy(const struct retro_variable *vars) {
             if (!sep) break;
             cursor = sep + 1;
         }
-
-        e->current_index = 0;
         apply_override(e);
         options_count++;
     }
@@ -296,8 +324,22 @@ void options_init_paths(const char *core_path_arg, const char *content_path) {
     create_directories(directory_ini_path, 1);
 }
 
+void options_log_resolved(void) {
+    LOG_INFO(mux_module, "core options resolved: %d entries", options_count);
+
+    for (int i = 0; i < options_count; i++) {
+        const struct core_option_entry *e = &options_list[i];
+
+        LOG_INFO(
+            mux_module, "  %s = %s (%d of %d)", e->key, e->value_count ? e->values[e->current_index] : "?",
+            e->current_index + 1, e->value_count
+        );
+    }
+}
+
 void options_capture_baseline(void) {
     snapshot_baseline();
+    options_log_resolved();
 }
 
 int options_is_dirty(void) {

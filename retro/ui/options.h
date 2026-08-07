@@ -4,14 +4,14 @@
 #include "../core/libretro.h"
 
 #define OPTIONS_MAX            256
-#define OPTIONS_MAX_VALUES     32
+#define OPTIONS_VALUE_LEN      64
 #define OPTIONS_MAX_CATEGORIES 32
 
 struct core_option_entry {
     char key[64];
     char label[128];
     char category_key[64];
-    char values[OPTIONS_MAX_VALUES][64];
+    char (*values)[OPTIONS_VALUE_LEN];
     int value_count;
     int current_index;
 };
@@ -28,6 +28,8 @@ extern int options_category_count;
 extern bool options_dirty;
 
 void options_reset(void);
+
+void options_log_resolved(void);
 
 void options_store_v1(const struct retro_core_option_definition *defs);
 
