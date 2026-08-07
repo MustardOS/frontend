@@ -177,7 +177,6 @@ static void handle_a(void) {
         }
 
         LOG_INFO(mux_module, "Shader Assignment Triggered (method %d)", method);
-        play_sound(snd_confirm);
 
         const char *selected = get_selected_shader();
         create_shader_assignment(selected, rom_name, (enum gen_type) method);

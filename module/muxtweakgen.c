@@ -551,8 +551,6 @@ static void handle_warn_mode(void) {
         snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_danger");
         increment_counter_file(c_path);
 
-        play_sound(snd_confirm);
-
         load_mux("danger");
         mux_input_stop();
     } else if (strcmp(target, "tweakadv") == 0) {
@@ -564,7 +562,6 @@ static void handle_warn_mode(void) {
             snprintf(pending_submenu, sizeof(pending_submenu), "%s", "tweakadv");
             show_save_dialog();
         } else {
-            play_sound(snd_confirm);
             save_tweak_options();
 
             load_mux("tweakadv");
@@ -582,10 +579,8 @@ static void handle_save_mode(void) {
     if (opt == mux_unsaved_save) save_tweak_options();
 
     if (submenu[0]) {
-        play_sound(snd_confirm);
         load_mux(submenu);
     } else {
-        play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
     }
 

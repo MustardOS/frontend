@@ -186,7 +186,6 @@ static void handle_a(void) {
         }
 
         LOG_INFO(mux_module, "Colour Filter Assignment Triggered (method %d)", method);
-        play_sound(snd_confirm);
 
         const char *selected = get_selected_filter();
         create_filter_assignment(selected, rom_name, (enum gen_type) method);

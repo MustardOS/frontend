@@ -121,7 +121,6 @@ static void handle_a(void) {
         }
 
         LOG_INFO(mux_module, "Governor Assignment Triggered (method %d)", method);
-        play_sound(snd_confirm);
 
         char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
         create_gov_assignment(selected, is_app ? "mux_option" : rom_name, (enum gen_type) method);

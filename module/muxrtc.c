@@ -419,7 +419,6 @@ static void handle_a(void) {
             }
             save_and_exit(lang.generic.saving);
         } else {
-            play_sound(snd_back);
             if (config.boot.factory_reset) {
                 write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
             } else {

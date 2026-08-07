@@ -637,6 +637,9 @@ skip_panel_anim:;
 }
 
 void dialogue_hide_chained(mux_dialogue *dlg) {
+    const int backed_out = dlg->cancelled || (dlg->cancel_index >= 0 && dlg->selected == dlg->cancel_index);
+    if (!dlg->silent) play_sound(backed_out ? snd_back : snd_confirm);
+
     if (dlg->claimed) {
         modal_release();
         dlg->claimed = 0;

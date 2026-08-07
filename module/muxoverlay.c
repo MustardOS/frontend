@@ -206,7 +206,6 @@ static void handle_a(void) {
         }
 
         LOG_INFO(mux_module, "Overlay Options Assignment Triggered (method %d)", method);
-        play_sound(snd_confirm);
 
         save_tweak_options((enum gen_type) method);
 

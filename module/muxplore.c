@@ -1294,6 +1294,8 @@ static void handle_a(void) {
 
     if (actions_mode) {
         const more_id opt = more_selected(&actions_dlg);
+        if (opt == more_help || opt == more_information) dialogue_mark_silent(&actions_dlg);
+
         hide_actions_dialog();
 
         if (opt == more_help) {
@@ -1439,7 +1441,6 @@ static void handle_y(void) {
 }
 
 static void go_top_level(void) {
-    play_sound(snd_confirm);
 
     char root_dir[PATH_MAX];
     union_get_roms_root(root_dir, sizeof(root_dir));
@@ -1455,7 +1456,6 @@ static void show_search(void) {
         return;
     }
 
-    play_sound(snd_confirm);
 
     if (ui_count_static > 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
@@ -1512,7 +1512,6 @@ static void hide_actions_dialog(void) {
 }
 
 static void show_sort_order(void) {
-    play_sound(snd_confirm);
 
     write_text_to_file(ORDER_DIR_FROM, "w", CHAR, sys_dir);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);

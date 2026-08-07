@@ -275,7 +275,6 @@ static void handle_a(void) {
 
         if (opt == mux_confirm_yep && !save_proxy_options()) return;
 
-        play_sound(snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_proxy");
         mux_input_stop();
         return;

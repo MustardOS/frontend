@@ -201,6 +201,8 @@ static void status_change(const char *method) {
 static void handle_a(void) {
     if (forget_mode) {
         const mux_confirm_opt opt = (mux_confirm_opt) forget_dlg.selected;
+        if (opt == mux_confirm_yep) dialogue_mark_silent(&forget_dlg);
+
         hide_forget_dialog();
         if (opt == mux_confirm_yep) do_forget();
         return;

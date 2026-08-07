@@ -205,6 +205,8 @@ static void handle_a(void) {
 
     if (more_active(&more_menu)) {
         const more_id opt = more_current(&more_menu);
+        if (opt == more_remove) dialogue_mark_silent(&more_menu.dlg);
+
         more_close(&more_menu);
 
         if (opt == more_remove) {

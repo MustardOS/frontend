@@ -77,7 +77,6 @@ static void handle_a(void) {
         }
 
         LOG_INFO(mux_module, "RetroArch Config Assignment Triggered (method %d)", method);
-        play_sound(snd_confirm);
 
         const char *selected = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         create_rac_assignment(selected, is_app ? "mux_option" : rom_name, (enum gen_type) method);

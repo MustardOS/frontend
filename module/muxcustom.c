@@ -1398,8 +1398,6 @@ static void handle_a(void) {
                 return;
             }
 
-            play_sound(snd_confirm);
-
             toast_message(lang.generic.loading, tst_wait_f);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, pending_pdi);
 

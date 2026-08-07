@@ -1103,7 +1103,6 @@ static void handle_a(void) {
         if (opt == mux_confirm_yep) {
             do_forget_profile();
 
-            play_sound(snd_confirm);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_profile");
 
             mux_input_stop();
@@ -1121,7 +1120,6 @@ static void handle_a(void) {
             save_profile_ini();
         }
 
-        play_sound(snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_profile");
 
         mux_input_stop();

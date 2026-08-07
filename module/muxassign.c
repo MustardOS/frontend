@@ -347,7 +347,6 @@ static void handle_b(void) {
 
 static void handle_core_assignment(const char *log_msg, const int assignment_mode) {
     LOG_INFO(mux_module, "%s", log_msg);
-    play_sound(snd_confirm);
 
     char *item_data = lv_obj_get_user_data(lv_group_get_focused(ui_group));
     char *selected_item = str_tolower(item_data);
@@ -432,6 +431,8 @@ static void handle_core_assignment(const char *log_msg, const int assignment_mod
 static void handle_a(void) {
     if (assign_dialogue_active) {
         const int method = assign_dlg.option_data[assign_dlg.selected];
+        if (method < 0) dialogue_mark_silent(&assign_dlg);
+
         dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
 
         if (method < 0) {

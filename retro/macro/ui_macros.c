@@ -430,7 +430,6 @@ static void add_pause_step(void) {
 
     const int new_pos = macros_add_step(editing_position, &new_step);
     if (new_pos >= 0) {
-        play_sound(snd_confirm);
         rebuild_editor_rows();
         apply_editor_nav();
         focus_row(new_pos);
@@ -877,12 +876,10 @@ void macros_menu_tick(void) {
                 macros_delete(current_item_index);
                 session_settings_clear_macro_references(macro_index);
 
-                play_sound(snd_confirm);
                 rebuild_list();
                 apply_list_nav();
 
                 if (macro_count > 0) focus_row(next_focus < macro_count ? next_focus : macro_count - 1);
-            } else {
             }
         } else if (edge & BIT(5)) {
             dialogue_dismiss(&delete_confirm_active, &delete_dlg);
@@ -907,7 +904,6 @@ void macros_menu_tick(void) {
                 close_editor();
             } else if (opt == mux_unsaved_discard) {
                 macro_list[editing_position] = editor_snapshot;
-                play_sound(snd_back);
                 close_editor();
             }
         } else if (edge & BIT(5)) {

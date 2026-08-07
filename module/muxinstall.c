@@ -133,10 +133,11 @@ static void hide_confirm(void) {
 static void handle_a(void) {
     if (confirm_mode) {
         const int yes = confirm_dlg && confirm_dlg->selected == 0;
+        if (yes) dialogue_mark_silent(confirm_dlg);
+
         hide_confirm();
 
         if (!yes) {
-            play_sound(snd_back);
             return;
         }
 

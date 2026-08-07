@@ -737,6 +737,7 @@ static void handle_random_select(void);
 static void handle_a(void) {
     if (actions_mode) {
         const more_id opt = more_selected(&actions_dlg);
+        if (opt == more_help || opt == more_information) dialogue_mark_silent(&actions_dlg);
 
         const int chains = opt == more_remove && !is_ksk(kiosk.collect.remove)
                            && !(config.settings.advanced.trust_remove || skip_confirm);
@@ -867,7 +868,6 @@ static void start_remove(void) {
         return;
     }
 
-    play_sound(snd_confirm);
     show_remove_dialog();
 }
 
@@ -880,7 +880,6 @@ static void show_information(void) {
 }
 
 static void show_tag_sort(void) {
-    play_sound(snd_confirm);
 
     write_text_to_file(TAG_SORT_FROM, "w", CHAR, "collection");
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, 0);
@@ -908,7 +907,6 @@ static void show_location(void) {
     char *last_slash = strrchr(base_dir, '/');
     if (last_slash) *last_slash = '\0';
 
-    play_sound(snd_confirm);
 
     write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
     write_text_to_file(MUOS_HST_LOAD, "w", CHAR, get_last_dir(resolved));
