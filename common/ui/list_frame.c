@@ -90,8 +90,6 @@ static void build_bar(lv_obj_t *parent) {
 
     apply_theme_list_panel(bar);
 
-    lv_obj_set_width(bar, lv_pct(100));
-    lv_obj_set_height(bar, theme_ref->mux.item.panel);
     lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
 
     lv_obj_set_flex_flow(bar, LV_FLEX_FLOW_ROW);
