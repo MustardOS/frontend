@@ -22,7 +22,7 @@ static int cat_dir_cache_n;
 static char cat_theme_path_snapshot[MAX_BUFFER_SIZE];
 
 static int cat_file_cmp(const void *a, const void *b) {
-    return strcmp(*(const char **) a, *(const char **) b);
+    return strcasecmp(*(const char **) a, *(const char **) b);
 }
 
 static void cat_dir_free_all(void) {
