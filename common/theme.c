@@ -1356,6 +1356,9 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         theme->list_default.radius = max_radius;
     }
 
+    if (theme->list_default.background_gradient < 0 || theme->list_default.background_gradient > LV_GRAD_DIR_HOR) theme->list_default.background_gradient = 0;
+    if (theme->list_focus.background_gradient < 0 || theme->list_focus.background_gradient > LV_GRAD_DIR_HOR) theme->list_focus.background_gradient = 0;
+
     apply_accessibility(theme);
 }
 
@@ -1781,7 +1784,7 @@ void init_panel_style(const struct theme_config *theme) {
 
     lv_style_set_bg_grad_color(&style_list_panel_default, lv_color_hex(theme->list_default.background_gradient));
     lv_style_set_bg_grad_dir(
-        &style_list_panel_default, theme->list_default.gradient_direction == 1 ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR
+        &style_list_panel_default, theme->list_default.gradient_direction
     );
     lv_style_set_bg_grad_stop(&style_list_panel_default, theme->list_default.gradient_stop);
 
@@ -1806,7 +1809,7 @@ void init_panel_style(const struct theme_config *theme) {
 
     lv_style_set_bg_grad_color(&style_list_panel_focused, lv_color_hex(theme->list_focus.background_gradient));
     lv_style_set_bg_grad_dir(
-        &style_list_panel_focused, theme->list_focus.gradient_direction == 1 ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR
+        &style_list_panel_focused, theme->list_focus.gradient_direction
     );
     lv_style_set_bg_grad_stop(&style_list_panel_focused, theme->list_focus.gradient_stop);
 }
