@@ -424,23 +424,10 @@ static void init_navigation_group(void) {
     if (sysinfo_cache.totalswap == 0) HIDE_VALUE_ITEM(sysinfo, swap);
 }
 
-static int warn_mode = 0;
 static mux_dialogue warn_dlg;
 
-static void show_warn_dialog(void) {
-    warn_mode = 1;
-    warn_dlg.selected = 1;
-    dialogue_show(&warn_dlg);
-    dialogue_refresh(&warn_dlg, &theme);
-}
-
-static void hide_warn_dialog(void) {
-    warn_mode = 0;
-    dialogue_hide(&warn_dlg);
-}
-
 static void handle_dpad_up(void) {
-    if (warn_mode) {
+    if (dialogue_active(&warn_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&warn_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -452,7 +439,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (warn_mode) {
+    if (dialogue_active(&warn_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&warn_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -464,7 +451,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (warn_mode) {
+    if (dialogue_active(&warn_dlg)) {
         dialogue_handle_dpad_hold(&warn_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -473,7 +460,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (warn_mode) {
+    if (dialogue_active(&warn_dlg)) {
         dialogue_handle_dpad_hold(&warn_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -482,9 +469,9 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_a(void) {
-    if (warn_mode) {
+    if (dialogue_active(&warn_dlg)) {
         const int idx = warn_dlg.selected;
-        hide_warn_dialog();
+        dialogue_dismiss(&warn_dlg);
         if (idx == 0) {
             char cpath[MAX_BUFFER_SIZE];
             snprintf(cpath, sizeof(cpath), "%scount/warn_device", CONF_CONFIG_PATH);
@@ -624,9 +611,9 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (warn_mode) {
+    if (dialogue_active(&warn_dlg)) {
         dialogue_mark_cancelled(&warn_dlg);
-        hide_warn_dialog();
+        dialogue_dismiss(&warn_dlg);
         return;
     }
 
@@ -642,16 +629,16 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || warn_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&warn_dlg)) return;
 
     play_sound(snd_info_open);
     show_help();
 }
 
 static void launch_device(void) {
-    if (msgbox_active || hold_call || warn_mode) return;
+    if (msgbox_active || hold_call || dialogue_active(&warn_dlg)) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lbl_device_sysinfo) show_warn_dialog();
+    if (lv_group_get_focused(ui_group) == ui_lbl_device_sysinfo) dialogue_open(&warn_dlg, &theme);
 }
 
 static void init_elements(void) {

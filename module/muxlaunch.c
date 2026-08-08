@@ -2,32 +2,23 @@
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxlaunch.h"
 
-static int confirm_mode = 0;
 static mux_dialogue confirm_dlg;
 
-static int tour_mode = 0;
 static mux_dialogue tour_dlg;
 static int pending_power_action = 0;
 
 static void show_confirm_dialog(const char *title) {
-    confirm_mode = 1;
-    confirm_dlg.selected = mux_confirm_nah;
     lv_label_set_text(confirm_dlg.title_label, title);
-    dialogue_show(&confirm_dlg);
-    dialogue_refresh(&confirm_dlg, &theme);
-}
-
-static void hide_confirm_dialog(void) {
-    dialogue_dismiss(&confirm_mode, &confirm_dlg);
+    dialogue_open(&confirm_dlg, &theme);
 }
 
 static void show_tour_offer(void) {
-    tour_mode = 1;
-    dialogue_open(&tour_mode, &tour_dlg, &theme);
+    tour_dlg.active = 1;
+    dialogue_open(&tour_dlg, &theme);
 }
 
 static void answer_tour_offer(const int accepted) {
-    dialogue_dismiss(&tour_mode, &tour_dlg);
+    dialogue_dismiss(&tour_dlg);
 
     if (accepted) {
         orientation_accept();
@@ -136,7 +127,7 @@ static void list_nav_next(const int steps) {
 }
 
 static void handle_a(void) {
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         play_sound(snd_confirm);
         answer_tour_offer(tour_dlg.selected == mux_confirm_yep);
         return;
@@ -144,9 +135,9 @@ static void handle_a(void) {
 
     if (msgbox_active || hold_call) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) confirm_dlg.selected;
-        hide_confirm_dialog();
+        dialogue_dismiss(&confirm_dlg);
 
         if (opt == mux_confirm_yep) {
             if (pending_power_action == 1) {
@@ -231,12 +222,12 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (tour_mode) return;
+    if (dialogue_active(&tour_dlg)) return;
     if (hold_call) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_mark_cancelled(&confirm_dlg);
-        hide_confirm_dialog();
+        dialogue_dismiss(&confirm_dlg);
         return;
     }
 
@@ -249,13 +240,13 @@ static void handle_b(void) {
 }
 
 static void handle_x_press(void) {
-    if (tour_mode) return;
+    if (dialogue_active(&tour_dlg)) return;
 
     orientation_handle_skip();
 }
 
 static void handle_x(void) {
-    if (tour_mode) return;
+    if (dialogue_active(&tour_dlg)) return;
 
     if (orientation_handle_skip()) return;
 
@@ -270,21 +261,21 @@ static void handle_x(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || hold_call || confirm_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || hold_call || dialogue_active(&confirm_dlg)) return;
 
     play_sound(snd_info_open);
     show_help();
 }
 
 static void handle_up(void) {
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         dialogue_handle_dpad(&tour_dlg, &theme, -1, !swap_axis);
         return;
     }
 
     if (msgbox_active) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_handle_dpad(&confirm_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -308,14 +299,14 @@ static void handle_up(void) {
 }
 
 static void handle_down(void) {
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         dialogue_handle_dpad(&tour_dlg, &theme, +1, !swap_axis);
         return;
     }
 
     if (msgbox_active) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_handle_dpad(&confirm_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -339,12 +330,12 @@ static void handle_down(void) {
 }
 
 static void handle_up_hold(void) { // prev
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         dialogue_handle_dpad_hold(&tour_dlg, &theme, -1, !swap_axis);
         return;
     }
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_handle_dpad_hold(&confirm_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -364,12 +355,12 @@ static void handle_up_hold(void) { // prev
 }
 
 static void handle_down_hold(void) { // next
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         dialogue_handle_dpad_hold(&tour_dlg, &theme, +1, !swap_axis);
         return;
     }
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_handle_dpad_hold(&confirm_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -390,14 +381,14 @@ static void handle_down_hold(void) { // next
 }
 
 static void handle_left(void) {
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         dialogue_handle_dpad(&tour_dlg, &theme, -1, swap_axis);
         return;
     }
 
     if (msgbox_active) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_handle_dpad(&confirm_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -434,14 +425,14 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
-    if (tour_mode) {
+    if (dialogue_active(&tour_dlg)) {
         dialogue_handle_dpad(&tour_dlg, &theme, +1, swap_axis);
         return;
     }
 
     if (msgbox_active) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(&confirm_dlg)) {
         dialogue_handle_dpad(&confirm_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -476,13 +467,13 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (tour_mode || msgbox_active || confirm_mode) return;
+    if (dialogue_active(&tour_dlg) || msgbox_active || dialogue_active(&confirm_dlg)) return;
 
     if (grid_row_hold_left_ok()) handle_left();
 }
 
 static void handle_right_hold(void) {
-    if (tour_mode || msgbox_active || confirm_mode) return;
+    if (dialogue_active(&tour_dlg) || msgbox_active || dialogue_active(&confirm_dlg)) return;
 
     if (grid_row_hold_right_ok()) handle_right();
 }

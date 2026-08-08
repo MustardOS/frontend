@@ -286,6 +286,10 @@ int list_frame_restore(void) {
     return steps;
 }
 
+int list_frame_current(void) {
+    return list_frame_active() ? current : -1;
+}
+
 int list_frame_current_row(void) {
     if (!list_frame_active() || current_item_index <= 0) return -1;
 
@@ -298,6 +302,16 @@ int list_frame_current_row(void) {
     }
 
     return -1;
+}
+
+int list_frame_go(const int index) {
+    if (!list_frame_active() || index < 0 || index >= frame_count) return 0;
+    if (index == current || !frame_has_rows(index)) return 0;
+
+    current = index;
+    list_frame_apply();
+
+    return 1;
 }
 
 int list_frame_move(const int direction) {

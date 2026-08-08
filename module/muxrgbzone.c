@@ -245,15 +245,10 @@ static void init_navigation_group(void) {
     gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 2, 0, 1);
 }
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
 
-static void hide_save_dialog(void) {
-    dialogue_dismiss(&save_mode, &save_dlg);
-}
-
 static void handle_option_prev(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -264,7 +259,7 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -275,7 +270,7 @@ static void handle_option_next(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -284,7 +279,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -293,9 +288,9 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_a(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_unsaved_save) save_rgbzone_options(tst_wait_f);
 
@@ -314,9 +309,9 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (block_input || hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -325,7 +320,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_rgbzone_modified())) return;
+    if (dialogue_guard_unsaved(&save_dlg, &theme, any_rgbzone_modified())) return;
 
     play_sound(snd_back);
     if (any_rgbzone_modified()) save_rgbzone_options(tst_wait_f);
@@ -337,14 +332,14 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (msgbox_active || save_mode || block_input || hold_call) return;
+    if (msgbox_active || dialogue_active(&save_dlg) || block_input || hold_call) return;
 
     save_rgbzone_options(tst_wait_m);
     init_dropdown_settings();
 }
 
 static void handle_y(void) {
-    if (msgbox_active || save_mode || block_input || hold_call) return;
+    if (msgbox_active || dialogue_active(&save_dlg) || block_input || hold_call) return;
 
     lv_dropdown_set_selected(ui_dro_colour_rgbzone, 0);
     save_rgbzone_options(tst_wait_m);

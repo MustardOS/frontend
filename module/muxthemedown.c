@@ -25,17 +25,6 @@ static int theme_extract_error = 0;
 static char theme_extract_zip_done[PATH_MAX];
 
 static mux_dialogue msg_dlg;
-static int msg_mode = 0;
-
-static void show_message_dialog(void) {
-    msg_mode = 1;
-    dialogue_show(&msg_dlg);
-}
-
-static void hide_message_dialog(void) {
-    msg_mode = 0;
-    dialogue_hide(&msg_dlg);
-}
 
 static void show_help(void) {
     char text_path[MAX_BUFFER_SIZE];
@@ -309,7 +298,7 @@ static void handle_a(void) {
         return;
     }
 
-    if (msg_mode || download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
+    if (dialogue_active(&msg_dlg) || download_in_progress || msgbox_active || !ui_count_static || hold_call) return;
 
     play_sound(snd_confirm);
 
@@ -339,9 +328,9 @@ static void handle_b(void) {
         return;
     }
 
-    if (msg_mode) {
+    if (dialogue_active(&msg_dlg)) {
         dialogue_mark_cancelled(&msg_dlg);
-        hide_message_dialog();
+        dialogue_dismiss(&msg_dlg);
         return;
     }
 
@@ -448,7 +437,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 
         if (theme_extract_error) {
             theme_extract_error = 0;
-            show_message_dialog();
+            dialogue_open(&msg_dlg, &theme);
         } else {
             refresh_current_list_item();
             nav_moved = 1;

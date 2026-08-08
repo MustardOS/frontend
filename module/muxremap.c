@@ -80,7 +80,6 @@ static int pending_layout = -1;
 
 static int entry_layout = 0;
 
-static int save_mode = 0;
 static int mapping_modified = 0;
 static mux_dialogue save_dlg;
 
@@ -419,22 +418,13 @@ static void cycle_to_next_device(void) {
     play_sound(snd_navigate);
 }
 
-static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
-}
-
 static void close_remap_module(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "inputremap");
     mux_input_stop();
 }
 
 static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
+    dialogue_dismiss(&save_dlg);
     check_focus();
 }
 
@@ -489,7 +479,7 @@ static void raw_event_capture(const SDL_Event *ev) {
         return;
     }
 
-    if (!capture_active || capture_target < 0 || save_mode) return;
+    if (!capture_active || capture_target < 0 || dialogue_active(&save_dlg)) return;
 
     char phys_str[32] = "";
 
@@ -545,7 +535,7 @@ static void cycle_layout(void) {
     if (mapping_modified) {
         pending_layout = new_layout;
         play_sound(snd_info_open);
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -603,7 +593,7 @@ static int do_save(void) {
 static void handle_a(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
         hide_save_dialog();
 
@@ -662,7 +652,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
         hide_save_dialog();
         return;
@@ -671,7 +661,7 @@ static void handle_b(void) {
     if (mapping_modified) {
         pending_layout = -1;
         play_sound(snd_info_open);
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -682,7 +672,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (hold_call || capture_active || save_mode) return;
+    if (hold_call || capture_active || dialogue_active(&save_dlg)) return;
 
     const int slot = focused_slot();
     if (slot < 0 || slot >= REMAP_SLOT_COUNT) return;
@@ -697,7 +687,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (hold_call || capture_active || save_mode) return;
+    if (hold_call || capture_active || dialogue_active(&save_dlg)) return;
 
     play_sound(snd_info_close);
 
@@ -709,7 +699,7 @@ static void handle_y(void) {
 }
 
 static void handle_dpad_left(void) {
-    if (capture_active || save_mode) return;
+    if (capture_active || dialogue_active(&save_dlg)) return;
     const int slot = focused_slot();
 
     if (slot == REMAP_DEVICE_ITEM && has_device_item) {
@@ -720,7 +710,7 @@ static void handle_dpad_left(void) {
 }
 
 static void handle_dpad_right(void) {
-    if (capture_active || save_mode) return;
+    if (capture_active || dialogue_active(&save_dlg)) return;
     const int slot = focused_slot();
 
     if (slot == REMAP_DEVICE_ITEM && has_device_item) {
@@ -733,7 +723,7 @@ static void handle_dpad_right(void) {
 static void handle_dpad_up(void) {
     if (capture_active) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_navigate(&save_dlg, &theme, -1);
         play_sound(snd_navigate);
         return;
@@ -746,7 +736,7 @@ static void handle_dpad_up(void) {
 static void handle_dpad_down(void) {
     if (capture_active) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_navigate(&save_dlg, &theme, +1);
         play_sound(snd_navigate);
         return;
@@ -757,7 +747,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -767,7 +757,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -777,14 +767,14 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_page_up(void) {
-    if (capture_active || save_mode) return;
+    if (capture_active || dialogue_active(&save_dlg)) return;
 
     handle_list_nav_page_up();
     check_focus();
 }
 
 static void handle_page_down(void) {
-    if (capture_active || save_mode) return;
+    if (capture_active || dialogue_active(&save_dlg)) return;
 
     handle_list_nav_page_down();
     check_focus();
@@ -912,7 +902,6 @@ int muxremap_main(void) {
     entry_layout = remap_layout;
     pending_layout = -1;
     mapping_modified = 0;
-    save_mode = 0;
     capture_active = 0;
     capture_target = -1;
     capture_pending_clear = 0;

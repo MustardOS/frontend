@@ -196,8 +196,10 @@ void dialogue_init(
     if (option_count > 0 && options[option_count - 1]) {
         const char *last = options[option_count - 1];
 
-        if (strcmp(last, lang.generic.cancel) == 0 || strcmp(last, lang.generic.no) == 0)
+        if (strcmp(last, lang.generic.cancel) == 0 || strcmp(last, lang.generic.no) == 0) {
             dlg->cancel_index = option_count - 1;
+            dlg->safe_default = option_count - 1;
+        }
     }
 }
 
@@ -263,6 +265,7 @@ void dialogue_init_warn(
     dialogue_init(dlg, t, parent, lang.generic.warning, description, opts, 2, nav_a, nav_b);
 
     dlg->cancel_index = 1;
+    dlg->safe_default = 1;
 }
 
 void dialogue_init_remove(
@@ -277,11 +280,46 @@ void dialogue_init_remove(
     dlg->cancel_index = mux_remove_nah;
 }
 
+void dialogue_init_choice(
+    mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, const char *description,
+    const char **options, const int option_count, const char *nav_a, const char *nav_b
+) {
+    dialogue_init(dlg, t, parent, title, description, options, option_count, nav_a, nav_b);
+
+    if (dlg->option_count <= 0) return;
+
+    dlg->option_row = lv_obj_create(dlg->panel);
+    lv_obj_remove_style_all(dlg->option_row);
+    lv_obj_set_width(dlg->option_row, LV_PCT(100));
+    lv_obj_set_height(dlg->option_row, LV_SIZE_CONTENT);
+    lv_obj_clear_flag(dlg->option_row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_flex_flow(dlg->option_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(dlg->option_row, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_move_to_index(dlg->option_row, (int32_t) lv_obj_get_index(dlg->options[0]));
+
+    for (int i = 0; i < dlg->option_count; i++) {
+        lv_obj_set_parent(dlg->options[i], dlg->option_row);
+        lv_obj_set_width(dlg->options[i], LV_SIZE_CONTENT);
+        lv_obj_set_style_pad_hor(dlg->options[i], 12, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_flex_grow(dlg->options[i], 1);
+    }
+}
+
+void dialogue_set_description(mux_dialogue *dlg, const char *text) {
+    if (!dlg || !dlg->description_label || !lv_obj_is_valid(dlg->description_label)) return;
+
+    lv_label_set_text(dlg->description_label, text);
+    lv_obj_update_layout(dlg->panel);
+
+    lv_obj_set_y(dlg->panel, (LV_VER_RES - lv_obj_get_height(dlg->panel)) / 2);
+}
+
 void dialogue_init_message(
     mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, const char *description,
     const char *message, const char *nav_b
 ) {
     dlg->option_count = 0;
+    dlg->cancel_index = -1;
     dlg->selected = 0;
     dlg->theme = t;
 
@@ -414,6 +452,7 @@ void dialogue_init_accept(
     const char *nav_a
 ) {
     dlg->option_count = 0;
+    dlg->cancel_index = -1;
     dlg->selected = 0;
     dlg->theme = t;
 
@@ -510,6 +549,13 @@ void dialogue_init_accept(
     lv_obj_t *label_a = create_footer_text(footer_row, t, t->nav.a.text, t->nav.a.text_alpha, 0);
     lv_label_set_text(label_a, nav_a);
     (void) glyph_a;
+}
+
+static void dialogue_play_dismiss(const mux_dialogue *dlg) {
+    if (dlg->silent) return;
+
+    const int backed_out = dlg->cancelled || (dlg->cancel_index >= 0 && dlg->selected == dlg->cancel_index);
+    play_sound(backed_out ? snd_back : snd_confirm);
 }
 
 void dialogue_show(mux_dialogue *dlg) {
@@ -637,8 +683,7 @@ skip_panel_anim:;
 }
 
 void dialogue_hide_chained(mux_dialogue *dlg) {
-    const int backed_out = dlg->cancelled || (dlg->cancel_index >= 0 && dlg->selected == dlg->cancel_index);
-    if (!dlg->silent) play_sound(backed_out ? snd_back : snd_confirm);
+    dialogue_play_dismiss(dlg);
 
     if (dlg->claimed) {
         modal_release();
@@ -657,8 +702,7 @@ void dialogue_hide_chained(mux_dialogue *dlg) {
 }
 
 void dialogue_hide(mux_dialogue *dlg) {
-    const int backed_out = dlg->cancelled || (dlg->cancel_index >= 0 && dlg->selected == dlg->cancel_index);
-    if (!dlg->silent) play_sound(backed_out ? snd_back : snd_confirm);
+    dialogue_play_dismiss(dlg);
 
     if (dlg->claimed) {
         modal_release();
@@ -715,22 +759,29 @@ void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t) {
     }
 }
 
-void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t) {
-    *active = 1;
-    dlg->selected = dlg->safe_default;
-    dlg->cancelled = 0;
+int dialogue_active(const mux_dialogue *dlg) {
+    return dlg && dlg->active;
+}
+
+void dialogue_open_at(mux_dialogue *dlg, struct theme_config *t, const int selected) {
+    dlg->active = 1;
+    dlg->selected = selected;
     dialogue_show(dlg);
     dialogue_refresh(dlg, t);
 }
 
-void dialogue_dismiss(int *active, mux_dialogue *dlg) {
-    *active = 0;
+void dialogue_open(mux_dialogue *dlg, struct theme_config *t) {
+    dialogue_open_at(dlg, t, dlg->safe_default);
+}
+
+void dialogue_dismiss(mux_dialogue *dlg) {
+    dlg->active = 0;
     dialogue_hide(dlg);
 }
 
-void dialogue_cancel(int *active, mux_dialogue *dlg) {
+void dialogue_cancel(mux_dialogue *dlg) {
     dialogue_mark_cancelled(dlg);
-    dialogue_dismiss(active, dlg);
+    dialogue_dismiss(dlg);
 }
 
 void dialogue_mark_cancelled(mux_dialogue *dlg) {
@@ -757,9 +808,9 @@ void dialogue_handle_dpad_hold(mux_dialogue *dlg, struct theme_config *t, const 
     if (dlg->selected != before) play_sound(snd_navigate);
 }
 
-int dialogue_guard_unsaved(int *active, mux_dialogue *dlg, struct theme_config *t, const int is_modified) {
+int dialogue_guard_unsaved(mux_dialogue *dlg, struct theme_config *t, const int is_modified) {
     if (config.settings.advanced.trust_modify || !is_modified) return 0;
 
-    dialogue_open(active, dlg, t);
+    dialogue_open(dlg, t);
     return 1;
 }

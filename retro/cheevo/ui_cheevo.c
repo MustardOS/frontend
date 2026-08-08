@@ -47,7 +47,6 @@ static entry_state entry_mode;
 static char login_username[128];
 static char login_password[128];
 static int login_submitted;
-static int clear_confirm_active;
 static mux_dialogue clear_dialogue;
 static uint64_t clear_previous_mask;
 static uint64_t entry_previous_mask;
@@ -366,7 +365,7 @@ static int login_is_action(const int index) {
 
 static void login_clear_open(void) {
     clear_previous_mask = entry_nav_mask();
-    dialogue_open(&clear_confirm_active, &clear_dialogue, &theme);
+    dialogue_open(&clear_dialogue, &theme);
 }
 
 static const char *login_extra_label(const int index) {
@@ -380,7 +379,7 @@ static void login_extra_action(const int index) {
 }
 
 static int login_child_tick(void) {
-    if (!clear_confirm_active) return 0;
+    if (!dialogue_active(&clear_dialogue)) return 0;
 
     const uint64_t mask = entry_nav_mask();
     const uint64_t edge = mask & ~clear_previous_mask;
@@ -391,7 +390,7 @@ static int login_child_tick(void) {
         dialogue_handle_dpad(&clear_dialogue, &theme, (edge & BIT(1)) ? 1 : -1, 1);
     } else if (edge & BIT(4)) {
         const mux_confirm_opt option = (mux_confirm_opt) clear_dialogue.selected;
-        dialogue_dismiss(&clear_confirm_active, &clear_dialogue);
+        dialogue_dismiss(&clear_dialogue);
         if (option == mux_confirm_yep) {
             cheevo_logout();
             login_submitted = 0;
@@ -401,7 +400,8 @@ static int login_child_tick(void) {
             pause_menu_show_toast_timed(lang.muxretro.cheevo.account_reset, tst_wait_s);
         }
     } else if (edge & BIT(5)) {
-        dialogue_dismiss(&clear_confirm_active, &clear_dialogue);
+        dialogue_mark_cancelled(&clear_dialogue);
+        dialogue_dismiss(&clear_dialogue);
         pause_menu_sync_input_mask();
     }
     return 1;

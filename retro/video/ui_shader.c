@@ -17,7 +17,6 @@ static int entry_value = 0;
 static nav_repeat_t rpt_up = {0};
 static nav_repeat_t rpt_down = {0};
 
-static int save_dialogue_active = 0;
 static mux_dialogue save_dlg;
 
 static uint64_t current_nav_mask(void) {
@@ -124,19 +123,20 @@ void shader_menu_tick(void) {
 
     if (nav_input_halted()) return;
 
-    if (save_dialogue_active) {
+    if (dialogue_active(&save_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&save_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const int opt = save_dlg.selected;
-            dialogue_dismiss(&save_dialogue_active, &save_dlg);
+            dialogue_dismiss(&save_dlg);
 
             if (opt != 3) session_settings_apply_save_choice(opt);
             submenu_stack_resync();
 
             close_screen();
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&save_dialogue_active, &save_dlg);
+            dialogue_mark_cancelled(&save_dlg);
+            dialogue_dismiss(&save_dlg);
         }
         return;
     }
@@ -164,7 +164,7 @@ void shader_menu_tick(void) {
         session_settings_set_colour_shader(current_item_index);
 
         if (session_settings_is_dirty()) {
-            dialogue_open(&save_dialogue_active, &save_dlg, &theme);
+            dialogue_open(&save_dlg, &theme);
         } else {
             close_screen();
         }

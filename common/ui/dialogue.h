@@ -10,6 +10,7 @@ typedef struct {
     lv_obj_t *panel;
     lv_obj_t *title_label;
     lv_obj_t *description_label;
+    lv_obj_t *option_row;
     lv_obj_t *options[MUX_DIALOGUE_MAX_OPTIONS];
     int option_count;
     int selected;
@@ -21,6 +22,7 @@ typedef struct {
     int cancelled;
     int silent;
     int cancel_index;
+    int active;
 } mux_dialogue;
 
 typedef enum { mux_unsaved_save = 0, mux_unsaved_discard, mux_unsaved_nope } mux_unsaved_opt;
@@ -54,6 +56,13 @@ void dialogue_init_remove(
     const char *nav_b
 );
 
+void dialogue_init_choice(
+    mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, const char *description,
+    const char **options, int option_count, const char *nav_a, const char *nav_b
+);
+
+void dialogue_set_description(mux_dialogue *dlg, const char *text);
+
 void dialogue_init_message(
     mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const char *title, const char *description,
     const char *message, const char *nav_b
@@ -79,11 +88,15 @@ void dialogue_navigate(mux_dialogue *dlg, struct theme_config *t, int delta);
 
 void dialogue_refresh(const mux_dialogue *dlg, const struct theme_config *t);
 
-void dialogue_open(int *active, mux_dialogue *dlg, struct theme_config *t);
+void dialogue_open(mux_dialogue *dlg, struct theme_config *t);
 
-void dialogue_dismiss(int *active, mux_dialogue *dlg);
+void dialogue_open_at(mux_dialogue *dlg, struct theme_config *t, int selected);
 
-void dialogue_cancel(int *active, mux_dialogue *dlg);
+int dialogue_active(const mux_dialogue *dlg);
+
+void dialogue_dismiss(mux_dialogue *dlg);
+
+void dialogue_cancel(mux_dialogue *dlg);
 
 void dialogue_mark_cancelled(mux_dialogue *dlg);
 
@@ -93,4 +106,4 @@ void dialogue_handle_dpad(mux_dialogue *dlg, struct theme_config *t, int directi
 
 void dialogue_handle_dpad_hold(mux_dialogue *dlg, struct theme_config *t, int direction, int should_fire);
 
-int dialogue_guard_unsaved(int *active, mux_dialogue *dlg, struct theme_config *t, int is_modified);
+int dialogue_guard_unsaved(mux_dialogue *dlg, struct theme_config *t, int is_modified);

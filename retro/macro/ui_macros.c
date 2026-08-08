@@ -26,18 +26,14 @@ static nav_repeat_t rpt_osk_left = {0};
 static nav_repeat_t rpt_osk_right = {0};
 static nav_repeat_t rpt_backspace = {0};
 
-static int delete_confirm_active = 0;
 static mux_dialogue delete_dlg;
 
-static int unsaved_confirm_active = 0;
 static mux_dialogue unsaved_dlg;
 
-static int edit_bind_active = 0;
 static mux_dialogue edit_bind_dlg;
 static const char *edit_bind_options[2];
 enum { edit_bind_edit = 0, edit_bind_bind };
 
-static int add_step_active = 0;
 static mux_dialogue add_step_dlg;
 static const char *add_step_options[2];
 enum { add_step_button = 0, add_step_pause };
@@ -810,7 +806,7 @@ void macros_menu_open(const int port) {
     edit_active = 0;
     field_edit_active = 0;
     field_edit_step = -1;
-    add_step_active = 0;
+    add_step_dlg.active = 0;
     capture_state = capture_none;
     capture_purpose = capture_purpose_none;
     chord_mask = 0;
@@ -858,7 +854,7 @@ void macros_menu_tick(void) {
         return;
     }
 
-    if (delete_confirm_active) {
+    if (dialogue_active(&delete_dlg)) {
         const uint64_t mask = current_nav_mask();
         const uint64_t edge = mask & ~prev_nav_mask;
         prev_nav_mask = mask;
@@ -867,7 +863,7 @@ void macros_menu_tick(void) {
             dialogue_handle_dpad(&delete_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const mux_confirm_opt opt = (mux_confirm_opt) delete_dlg.selected;
-            dialogue_dismiss(&delete_confirm_active, &delete_dlg);
+            dialogue_dismiss(&delete_dlg);
 
             if (opt == mux_confirm_yep && current_item_index >= 0 && current_item_index < macro_count) {
                 const int macro_index = macro_list[current_item_index].index;
@@ -882,13 +878,14 @@ void macros_menu_tick(void) {
                 if (macro_count > 0) focus_row(next_focus < macro_count ? next_focus : macro_count - 1);
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&delete_confirm_active, &delete_dlg);
+            dialogue_mark_cancelled(&delete_dlg);
+            dialogue_dismiss(&delete_dlg);
         }
 
         return;
     }
 
-    if (unsaved_confirm_active) {
+    if (dialogue_active(&unsaved_dlg)) {
         const uint64_t mask = current_nav_mask();
         const uint64_t edge = mask & ~prev_nav_mask;
         prev_nav_mask = mask;
@@ -897,7 +894,7 @@ void macros_menu_tick(void) {
             dialogue_handle_dpad(&unsaved_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const mux_unsaved_opt opt = (mux_unsaved_opt) unsaved_dlg.selected;
-            dialogue_dismiss(&unsaved_confirm_active, &unsaved_dlg);
+            dialogue_dismiss(&unsaved_dlg);
 
             if (opt == mux_unsaved_save) {
                 macros_save(editing_position);
@@ -907,13 +904,14 @@ void macros_menu_tick(void) {
                 close_editor();
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&unsaved_confirm_active, &unsaved_dlg);
+            dialogue_mark_cancelled(&unsaved_dlg);
+            dialogue_dismiss(&unsaved_dlg);
         }
 
         return;
     }
 
-    if (edit_bind_active) {
+    if (dialogue_active(&edit_bind_dlg)) {
         const uint64_t mask = current_nav_mask();
         const uint64_t edge = mask & ~prev_nav_mask;
         prev_nav_mask = mask;
@@ -922,7 +920,7 @@ void macros_menu_tick(void) {
             dialogue_handle_dpad(&edit_bind_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const int opt = edit_bind_dlg.selected;
-            dialogue_dismiss(&edit_bind_active, &edit_bind_dlg);
+            dialogue_dismiss(&edit_bind_dlg);
 
             if (opt == edit_bind_edit) {
                 open_editor(current_item_index);
@@ -930,13 +928,14 @@ void macros_menu_tick(void) {
                 begin_capture(capture_purpose_assign);
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&edit_bind_active, &edit_bind_dlg);
+            dialogue_mark_cancelled(&edit_bind_dlg);
+            dialogue_dismiss(&edit_bind_dlg);
         }
 
         return;
     }
 
-    if (add_step_active) {
+    if (dialogue_active(&add_step_dlg)) {
         const uint64_t mask = current_nav_mask();
         const uint64_t edge = mask & ~prev_nav_mask;
         prev_nav_mask = mask;
@@ -945,7 +944,7 @@ void macros_menu_tick(void) {
             dialogue_handle_dpad(&add_step_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const int opt = add_step_dlg.selected;
-            dialogue_dismiss(&add_step_active, &add_step_dlg);
+            dialogue_dismiss(&add_step_dlg);
 
             if (opt == add_step_button) {
                 begin_capture(capture_purpose_add_step);
@@ -953,7 +952,8 @@ void macros_menu_tick(void) {
                 add_pause_step();
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&add_step_active, &add_step_dlg);
+            dialogue_mark_cancelled(&add_step_dlg);
+            dialogue_dismiss(&add_step_dlg);
         }
 
         return;
@@ -1044,13 +1044,13 @@ void macros_menu_tick(void) {
             }
         } else if (macro_count > 0) {
             play_sound(snd_confirm);
-            dialogue_open(&delete_confirm_active, &delete_dlg, &theme);
+            dialogue_open(&delete_dlg, &theme);
         }
     } else if (edge & BIT(7)) {
         if (edit_active) {
             if (macro_list[editing_position].step_count < MACRO_STEP_MAX) {
                 play_sound(snd_confirm);
-                dialogue_open(&add_step_active, &add_step_dlg, &theme);
+                dialogue_open(&add_step_dlg, &theme);
             }
         } else if (macro_count < MACRO_MAX) {
             start_new_macro();
@@ -1074,14 +1074,14 @@ void macros_menu_tick(void) {
                 begin_capture(capture_purpose_assign);
             } else {
                 play_sound(snd_confirm);
-                dialogue_open(&edit_bind_active, &edit_bind_dlg, &theme);
+                dialogue_open(&edit_bind_dlg, &theme);
             }
         }
     } else if (edge & BIT(5)) {
         if (edit_active) {
             if (editor_is_modified()) {
                 play_sound(snd_confirm);
-                dialogue_open(&unsaved_confirm_active, &unsaved_dlg, &theme);
+                dialogue_open(&unsaved_dlg, &theme);
             } else {
                 play_sound(snd_back);
                 close_editor();

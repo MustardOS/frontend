@@ -9,7 +9,6 @@ static int is_dir = 0;
 static int is_app = 0;
 
 static mux_dialogue assign_dlg;
-static int assign_dialogue_active = 0;
 
 static void show_help(void) {
     show_info_box(lang.muxraopt.title, lang.muxraopt.help, 0);
@@ -67,9 +66,9 @@ static void close_screen(void) {
 }
 
 static void handle_a(void) {
-    if (assign_dialogue_active) {
+    if (dialogue_active(&assign_dlg)) {
         const int method = assign_dlg.option_data[assign_dlg.selected];
-        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+        dialogue_dismiss(&assign_dlg);
 
         if (method < 0) {
             close_screen();
@@ -90,7 +89,7 @@ static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
-    dialogue_open(&assign_dialogue_active, &assign_dlg, &theme);
+    dialogue_open(&assign_dlg, &theme);
 }
 
 static void handle_x(void) {
@@ -100,9 +99,8 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (assign_dialogue_active) {
-        dialogue_mark_cancelled(&assign_dlg);
-        dialogue_dismiss(&assign_dialogue_active, &assign_dlg);
+    if (dialogue_active(&assign_dlg)) {
+        dialogue_cancel(&assign_dlg);
         return;
     }
 
@@ -116,7 +114,7 @@ static void handle_b(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (assign_dialogue_active) {
+    if (dialogue_active(&assign_dlg)) {
         dialogue_handle_dpad(&assign_dlg, &theme, -1, 1);
         return;
     }
@@ -125,7 +123,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (assign_dialogue_active) {
+    if (dialogue_active(&assign_dlg)) {
         dialogue_handle_dpad(&assign_dlg, &theme, +1, 1);
         return;
     }
@@ -134,7 +132,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (assign_dialogue_active) {
+    if (dialogue_active(&assign_dlg)) {
         dialogue_handle_dpad_hold(&assign_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -143,7 +141,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (assign_dialogue_active) {
+    if (dialogue_active(&assign_dlg)) {
         dialogue_handle_dpad_hold(&assign_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -152,19 +150,20 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_page_up(void) {
-    if (assign_dialogue_active) return;
+    if (dialogue_active(&assign_dlg)) return;
 
     handle_list_nav_page_up();
 }
 
 static void handle_page_down(void) {
-    if (assign_dialogue_active) return;
+    if (dialogue_active(&assign_dlg)) return;
 
     handle_list_nav_page_down();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || assign_dialogue_active) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&assign_dlg))
+        return;
 
     play_sound(snd_info_open);
     show_help();

@@ -1774,7 +1774,6 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_more more_menu;
 
@@ -1785,18 +1784,6 @@ static mux_dialogue remove_dlg;
 static void handle_b(void);
 static void show_overview(void);
 static void set_display_mode(int mode);
-
-static void show_remove_dialog(void) {
-    remove_mode = 1;
-    remove_dlg.selected = mux_remove_nah;
-    dialogue_show(&remove_dlg);
-    dialogue_refresh(&remove_dlg, &theme);
-}
-
-static void hide_remove_dialog(void) {
-    remove_mode = 0;
-    dialogue_hide(&remove_dlg);
-}
 
 static void do_remove(void) {
     if (!activity_items || overview_item_index < 0 || (size_t) overview_item_index >= activity_count) return;
@@ -1824,11 +1811,13 @@ static void hide_nav(void) {
     lv_obj_add_flag(ui_lbl_counter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+}
 
+static void show_nav_x(const char *label) {
     lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
 
-    lv_label_set_text(ui_lbl_nav_x, lang.generic.remove);
+    lv_label_set_text(ui_lbl_nav_x, label);
 }
 
 static void show_nav(void) {
@@ -1843,10 +1832,7 @@ static void show_nav(void) {
 
 static void handle_a(void) {
     if (more_active(&more_menu)) {
-        const more_id opt = more_current(&more_menu);
-        if (opt == more_remove) dialogue_mark_silent(&more_menu.dlg);
-
-        more_destroy(&more_menu);
+        const more_id opt = more_take(&more_menu, 0);
 
         if (opt == more_remove) {
             start_remove();
@@ -1863,9 +1849,9 @@ static void handle_a(void) {
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         if (opt == mux_remove_yep) {
             do_remove();
         } else if (opt == mux_remove_skip) {
@@ -1880,6 +1866,7 @@ static void handle_a(void) {
     play_sound(snd_confirm);
     video_preview_cancel();
     hide_nav();
+    show_nav_x(lang.generic.remove);
 
     overview_item_index = current_item_index;
 
@@ -1896,9 +1883,9 @@ static void handle_b(void) {
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_mark_cancelled(&remove_dlg);
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         return;
     }
 
@@ -1956,7 +1943,8 @@ static void handle_b(void) {
 }
 
 static int remove_allowed(void) {
-    return in_detail_view && !remove_mode && overview_item_index >= 0 && (size_t) overview_item_index < activity_count;
+    return in_detail_view && !dialogue_active(&remove_dlg) && overview_item_index >= 0
+           && (size_t) overview_item_index < activity_count;
 }
 
 static void start_remove(void) {
@@ -1966,7 +1954,7 @@ static void start_remove(void) {
     }
 
     play_sound(snd_confirm);
-    show_remove_dialog();
+    dialogue_open(&remove_dlg, &theme);
 }
 
 static void show_overview(void) {
@@ -1974,10 +1962,7 @@ static void show_overview(void) {
 
     video_preview_cancel();
     hide_nav();
-
-    lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_label_set_text(ui_lbl_nav_x, lang.muxactivity.html);
+    show_nav_x(lang.muxactivity.html);
 
     overview_item_index = current_item_index;
 
@@ -2017,7 +2002,7 @@ static void handle_x(void) {
 static void handle_dpad_up(void) {
     if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -2031,7 +2016,7 @@ static void handle_dpad_up(void) {
 static void handle_dpad_down(void) {
     if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -2045,7 +2030,7 @@ static void handle_dpad_down(void) {
 static void handle_dpad_up_hold(void) {
     if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -2056,7 +2041,7 @@ static void handle_dpad_up_hold(void) {
 static void handle_dpad_down_hold(void) {
     if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -2066,7 +2051,7 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
-    if (remove_mode || more_active(&more_menu)) return;
+    if (dialogue_active(&remove_dlg) || more_active(&more_menu)) return;
 
     const int in_list = !in_detail_view && !in_global_view;
 

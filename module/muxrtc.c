@@ -29,12 +29,7 @@ static rtc_state_t rtc_original;
 
 static const char *notation[NOTATION_COUNT];
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
-
-static void hide_save_dialog(void) {
-    dialogue_dismiss(&save_mode, &save_dlg);
-}
 
 static int any_rtc_modified(void) {
     return rtc.year != rtc_original.year || rtc.month != rtc_original.month || rtc.day != rtc_original.day
@@ -407,25 +402,22 @@ static void handle_keyboard_ok_press(void) {
 }
 
 static void handle_a(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
+
+        if (config.boot.factory_reset) {
+            write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
+        } else {
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
+        }
 
         if (opt == mux_unsaved_save) {
-            if (config.boot.factory_reset) {
-                write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
-            } else {
-                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
-            }
             save_and_exit(lang.generic.saving);
         } else {
-            if (config.boot.factory_reset) {
-                write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
-            } else {
-                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
-            }
             mux_input_stop();
         }
+
         return;
     }
 
@@ -468,9 +460,9 @@ static void handle_b(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -479,7 +471,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_rtc_modified())) return;
+    if (dialogue_guard_unsaved(&save_dlg, &theme, any_rtc_modified())) return;
 
     play_sound(snd_back);
 
@@ -495,7 +487,7 @@ static void handle_left(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -509,7 +501,7 @@ static void handle_right(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -523,7 +515,7 @@ static void handle_dpad_up(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -537,7 +529,7 @@ static void handle_dpad_down(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -551,7 +543,7 @@ static void handle_dpad_up_hold(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -565,7 +557,7 @@ static void handle_dpad_down_hold(void) {
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -618,7 +610,9 @@ static void handle_start(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode || key_show) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)
+        || key_show)
+        return;
 
     play_sound(snd_info_open);
     show_help();

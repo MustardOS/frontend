@@ -407,27 +407,18 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static int remove_mode = 0;
 static int remove_pending = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
 
-static int actions_mode = 0;
 static int tag_filtered = 0;
 static char active_tag[MAX_BUFFER_SIZE];
-static mux_dialogue actions_dlg;
+static mux_more more_menu;
 
 static void start_remove(void);
 static void show_information(void);
 static void show_location(void);
 static void show_tag_sort(void);
-
-static void show_remove_dialog(void) {
-    remove_mode = 1;
-    remove_dlg.selected = mux_remove_nah;
-    dialogue_show(&remove_dlg);
-    dialogue_refresh(&remove_dlg, &theme);
-}
 
 static void show_module_help(void) {
     play_sound(snd_info_open);
@@ -451,25 +442,9 @@ static void show_actions_dialog(void) {
 
     entries[count++] = (more_entry) {more_help, 1};
 
-    more_init(&actions_dlg, &theme, ui_screen, entries, count);
+    more_open(&more_menu, &theme, ui_screen, entries, count);
 
-    actions_mode = 1;
-
-    const int quick_remove = config.settings.advanced.trust_remove || skip_confirm;
-    actions_dlg.selected = quick_remove ? actions_dlg.option_count - 1 : 0;
-
-    dialogue_show(&actions_dlg);
-    dialogue_refresh(&actions_dlg, &theme);
-}
-
-static void hide_actions_dialog(void) {
-    actions_mode = 0;
-    dialogue_hide(&actions_dlg);
-}
-
-static void hide_remove_dialog(void) {
-    remove_mode = 0;
-    dialogue_hide(&remove_dlg);
+    if (config.settings.advanced.trust_remove || skip_confirm) more_focus_last(&more_menu);
 }
 
 static void do_remove(void) {
@@ -735,19 +710,12 @@ load_end:
 static void handle_random_select(void);
 
 static void handle_a(void) {
-    if (actions_mode) {
-        const more_id opt = more_selected(&actions_dlg);
-        if (opt == more_help || opt == more_information) dialogue_mark_silent(&actions_dlg);
-
+    if (more_active(&more_menu)) {
+        const more_id opt = more_peek(&more_menu);
         const int chains = opt == more_remove && !is_ksk(kiosk.collect.remove)
                            && !(config.settings.advanced.trust_remove || skip_confirm);
 
-        if (chains) {
-            dialogue_hide_chained(&actions_dlg);
-            actions_mode = 0;
-        } else {
-            hide_actions_dialog();
-        }
+        more_take(&more_menu, chains);
 
         if (opt == more_help) {
             show_module_help();
@@ -765,9 +733,9 @@ static void handle_a(void) {
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         if (opt == mux_remove_yep) {
             do_remove();
         } else if (opt == mux_remove_skip) {
@@ -795,15 +763,14 @@ static void handle_b(void) {
 
     if (hold_call) return;
 
-    if (actions_mode) {
-        dialogue_mark_cancelled(&actions_dlg);
-        hide_actions_dialog();
+    if (more_active(&more_menu)) {
+        more_cancel(&more_menu);
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_mark_cancelled(&remove_dlg);
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         return;
     }
 
@@ -868,7 +835,8 @@ static void start_remove(void) {
         return;
     }
 
-    show_remove_dialog();
+    play_sound(snd_confirm);
+    dialogue_open(&remove_dlg, &theme);
 }
 
 static void show_information(void) {
@@ -880,7 +848,6 @@ static void show_information(void) {
 }
 
 static void show_tag_sort(void) {
-
     write_text_to_file(TAG_SORT_FROM, "w", CHAR, "collection");
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, 0);
 
@@ -907,7 +874,6 @@ static void show_location(void) {
     char *last_slash = strrchr(base_dir, '/');
     if (last_slash) *last_slash = '\0';
 
-
     write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
     write_text_to_file(MUOS_HST_LOAD, "w", CHAR, get_last_dir(resolved));
 
@@ -923,8 +889,8 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || !ui_count_static || add_mode || actions_mode || remove_mode || hold_call
-        || video_preview_active())
+    if (msgbox_active || !ui_count_static || add_mode || more_active(&more_menu) || dialogue_active(&remove_dlg)
+        || hold_call || video_preview_active())
         return;
 
     // A collection folder has no content behind it to carry any of the options stuff
@@ -977,7 +943,7 @@ static void handle_y(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || hold_call || video_preview_active()) return;
-    if (key_show || add_mode || actions_mode || remove_mode) return;
+    if (key_show || add_mode || more_active(&more_menu) || dialogue_active(&remove_dlg)) return;
 
     if (!ui_count_static && !tag_filtered) return;
 
@@ -1006,15 +972,15 @@ static void handle_up(void) {
         return;
     }
 
-    if (actions_mode) {
+    if (more_active(&more_menu)) {
         if (!swap_axis) {
-            dialogue_navigate(&actions_dlg, &theme, -1);
+            more_dpad(&more_menu, &theme, -1, 1);
             play_sound(snd_navigate);
         }
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -1031,12 +997,12 @@ static void handle_up_hold(void) {
         return;
     }
 
-    if (actions_mode) {
-        dialogue_handle_dpad_hold(&actions_dlg, &theme, -1, !swap_axis);
+    if (more_active(&more_menu)) {
+        more_dpad_hold(&more_menu, &theme, -1, !swap_axis);
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -1050,15 +1016,15 @@ static void handle_down(void) {
         return;
     }
 
-    if (actions_mode) {
+    if (more_active(&more_menu)) {
         if (!swap_axis) {
-            dialogue_navigate(&actions_dlg, &theme, +1);
+            more_dpad(&more_menu, &theme, +1, 1);
             play_sound(snd_navigate);
         }
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -1075,12 +1041,12 @@ static void handle_down_hold(void) {
         return;
     }
 
-    if (actions_mode) {
-        dialogue_handle_dpad_hold(&actions_dlg, &theme, +1, !swap_axis);
+    if (more_active(&more_menu)) {
+        more_dpad_hold(&more_menu, &theme, +1, !swap_axis);
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -1094,15 +1060,15 @@ static void handle_left(void) {
         return;
     }
 
-    if (actions_mode) {
+    if (more_active(&more_menu)) {
         if (swap_axis) {
-            dialogue_navigate(&actions_dlg, &theme, -1);
+            more_dpad(&more_menu, &theme, -1, 1);
             play_sound(snd_navigate);
         }
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -1119,15 +1085,15 @@ static void handle_right(void) {
         return;
     }
 
-    if (actions_mode) {
+    if (more_active(&more_menu)) {
         if (swap_axis) {
-            dialogue_navigate(&actions_dlg, &theme, +1);
+            more_dpad(&more_menu, &theme, +1, 1);
             play_sound(snd_navigate);
         }
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -1144,12 +1110,12 @@ static void handle_left_hold(void) {
         return;
     }
 
-    if (actions_mode) {
-        dialogue_handle_dpad_hold(&actions_dlg, &theme, -1, swap_axis);
+    if (more_active(&more_menu)) {
+        more_dpad_hold(&more_menu, &theme, -1, swap_axis);
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -1163,12 +1129,12 @@ static void handle_right_hold(void) {
         return;
     }
 
-    if (actions_mode) {
-        dialogue_handle_dpad_hold(&actions_dlg, &theme, +1, swap_axis);
+    if (more_active(&more_menu)) {
+        more_dpad_hold(&more_menu, &theme, +1, swap_axis);
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, swap_axis);
         return;
     }

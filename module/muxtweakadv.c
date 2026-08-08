@@ -3,20 +3,7 @@
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxtweakadv.h"
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
-
-static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
-}
-
-static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
-}
 
 #define TWEAKADV(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(TWEAKADV_ELEMENTS) };
@@ -298,7 +285,7 @@ static void init_navigation_group(void) {
 }
 
 static void handle_frame_prev(void) {
-    if (msgbox_active || save_mode) return;
+    if (msgbox_active || dialogue_active(&save_dlg)) return;
 
     if (list_frame_move(-1)) {
         play_sound(snd_option);
@@ -307,7 +294,7 @@ static void handle_frame_prev(void) {
 }
 
 static void handle_frame_next(void) {
-    if (msgbox_active || save_mode) return;
+    if (msgbox_active || dialogue_active(&save_dlg)) return;
 
     if (list_frame_move(+1)) {
         play_sound(snd_option);
@@ -317,7 +304,7 @@ static void handle_frame_next(void) {
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -339,7 +326,7 @@ static void handle_option_prev(void) {
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -362,9 +349,9 @@ static void handle_option_next(void) {
 static void handle_a(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_unsaved_save) save_tweak_options();
 
@@ -388,9 +375,9 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -400,7 +387,7 @@ static void handle_b(void) {
     }
 
     if (!config.settings.advanced.trust_modify && any_tweakadv_modified()) {
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -413,7 +400,7 @@ static void handle_b(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -425,7 +412,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -437,7 +424,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)) return;
 
     play_sound(snd_info_open);
     show_help();

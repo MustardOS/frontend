@@ -10,21 +10,10 @@ static char order_dir[MAX_BUFFER_SIZE];
 
 typedef enum { scope_directory = 0, scope_global, scope_count } scope_opt;
 
-static int scope_mode = 0;
 static mux_dialogue scope_dlg;
 
 static void show_scope_dialog(void) {
-    scope_mode = 1;
-
-    scope_dlg.selected = order_scope_directory ? scope_directory : scope_global;
-
-    dialogue_show(&scope_dlg);
-    dialogue_refresh(&scope_dlg, &theme);
-}
-
-static void hide_scope_dialog(void) {
-    scope_mode = 0;
-    dialogue_hide(&scope_dlg);
+    dialogue_open_at(&scope_dlg, &theme, order_scope_directory ? scope_directory : scope_global);
 }
 
 static void refresh_rows(void) {
@@ -81,9 +70,9 @@ static void leave_module(void) {
 }
 
 static void handle_a(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         const scope_opt opt = (scope_opt) scope_dlg.selected;
-        hide_scope_dialog();
+        dialogue_dismiss(&scope_dlg);
 
         order_save(order_dir, opt == scope_directory);
 
@@ -103,7 +92,7 @@ static void handle_a(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || scope_mode) return;
+    if (msgbox_active || dialogue_active(&scope_dlg)) return;
 
     order_reset_defaults();
 
@@ -128,9 +117,9 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_mark_cancelled(&scope_dlg);
-        hide_scope_dialog();
+        dialogue_dismiss(&scope_dlg);
         return;
     }
 
@@ -144,7 +133,7 @@ static void handle_b(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_handle_dpad(&scope_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -155,7 +144,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_handle_dpad(&scope_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -166,7 +155,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_handle_dpad_hold(&scope_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -177,7 +166,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_handle_dpad_hold(&scope_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -188,7 +177,7 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_dpad_left(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_handle_dpad(&scope_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -199,7 +188,7 @@ static void handle_dpad_left(void) {
 }
 
 static void handle_dpad_right(void) {
-    if (scope_mode) {
+    if (dialogue_active(&scope_dlg)) {
         dialogue_handle_dpad(&scope_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -210,19 +199,19 @@ static void handle_dpad_right(void) {
 }
 
 static void handle_page_up(void) {
-    if (scope_mode || msgbox_active) return;
+    if (dialogue_active(&scope_dlg) || msgbox_active) return;
 
     handle_list_nav_page_up();
 }
 
 static void handle_page_down(void) {
-    if (scope_mode || msgbox_active) return;
+    if (dialogue_active(&scope_dlg) || msgbox_active) return;
 
     handle_list_nav_page_down();
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || hold_call || scope_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || hold_call || dialogue_active(&scope_dlg)) return;
 
     play_sound(snd_info_open);
     show_info_box(lang.muxorder.title, lang.muxorder.help, 0);
@@ -245,8 +234,6 @@ static void init_elements(void) {
 }
 
 int muxorder_main(void) {
-    scope_mode = 0;
-
     init_module(__func__);
     init_theme(1, 0);
 

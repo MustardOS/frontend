@@ -387,10 +387,9 @@ static void init_navigation_group(void) {
 }
 
 static mux_dialogue reset_dlg;
-static int reset_dlg_active = 0;
 
 static void handle_dpad_up(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad(&reset_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -400,7 +399,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad(&reset_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -410,7 +409,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad_hold(&reset_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -420,7 +419,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad_hold(&reset_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -430,14 +429,14 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_page_up(void) {
-    if (reset_dlg_active) return;
+    if (dialogue_active(&reset_dlg)) return;
 
     handle_list_nav_page_up();
     check_focus();
 }
 
 static void handle_page_down(void) {
-    if (reset_dlg_active) return;
+    if (dialogue_active(&reset_dlg)) return;
 
     handle_list_nav_page_down();
     check_focus();
@@ -472,7 +471,7 @@ static void apply_option_change(void) {
 }
 
 static void handle_option_prev(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad(&reset_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -485,7 +484,7 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad(&reset_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -498,9 +497,9 @@ static void handle_option_next(void) {
 }
 
 static void handle_a(void) {
-    if (reset_dlg_active) {
+    if (dialogue_active(&reset_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) reset_dlg.selected;
-        dialogue_dismiss(&reset_dlg_active, &reset_dlg);
+        dialogue_dismiss(&reset_dlg);
 
         if (opt == mux_confirm_yep) {
             reset_all_zones();
@@ -525,9 +524,8 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (reset_dlg_active) {
-        dialogue_mark_cancelled(&reset_dlg);
-        dialogue_dismiss(&reset_dlg_active, &reset_dlg);
+    if (dialogue_active(&reset_dlg)) {
+        dialogue_cancel(&reset_dlg);
         return;
     }
 
@@ -547,17 +545,18 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (current_mode != RGB_MODE_STATIC || reset_dlg_active || msgbox_active || block_input || hold_call) return;
+    if (current_mode != RGB_MODE_STATIC || dialogue_active(&reset_dlg) || msgbox_active || block_input || hold_call)
+        return;
 
     play_sound(snd_info_open);
-    dialogue_open(&reset_dlg_active, &reset_dlg, &theme);
+    dialogue_open(&reset_dlg, &theme);
 }
 
 static int y_hold_fired = 0;
 
 static void handle_y_hold(void) {
     if (current_mode != RGB_MODE_STATIC) return;
-    if (y_hold_fired || reset_dlg_active || msgbox_active || block_input || hold_call) return;
+    if (y_hold_fired || dialogue_active(&reset_dlg) || msgbox_active || block_input || hold_call) return;
 
     y_hold_fired = 1;
     randomise_all_zones();
@@ -570,7 +569,8 @@ static void handle_y_release(void) {
 }
 
 static void handle_help(void) {
-    if (reset_dlg_active || msgbox_active || progress_onscreen != -1 || !ui_count_static || block_input || hold_call)
+    if (dialogue_active(&reset_dlg) || msgbox_active || progress_onscreen != -1 || !ui_count_static || block_input
+        || hold_call)
         return;
 
     play_sound(snd_info_open);

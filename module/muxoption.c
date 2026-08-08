@@ -529,20 +529,7 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static int remove_mode = 0;
 static mux_dialogue remove_dlg;
-
-static void show_remove_dialog(void) {
-    remove_mode = 1;
-    remove_dlg.selected = mux_confirm_nah;
-    dialogue_show(&remove_dlg);
-    dialogue_refresh(&remove_dlg, &theme);
-}
-
-static void hide_remove_dialog(void) {
-    remove_mode = 0;
-    dialogue_hide(&remove_dlg);
-}
 
 static void do_remove(void) {
     play_sound(snd_muos);
@@ -619,7 +606,7 @@ static char *change_config_opt(const int steps) {
 }
 
 static void handle_option_prev(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -637,7 +624,7 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -655,7 +642,7 @@ static void handle_option_next(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -667,7 +654,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -679,7 +666,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -688,7 +675,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -697,9 +684,9 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_a(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) remove_dlg.selected;
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         if (opt == mux_confirm_yep) do_remove();
         return;
     }
@@ -756,9 +743,9 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_mark_cancelled(&remove_dlg);
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         return;
     }
 
@@ -802,7 +789,7 @@ static void handle_x(void) {
     if (current_view != view_options) return;
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused != ui_lbl_rem_config_option || remove_mode) return;
+    if (e_focused != ui_lbl_rem_config_option || dialogue_active(&remove_dlg)) return;
 
     if (config.settings.advanced.trust_remove) {
         do_remove();
@@ -810,7 +797,7 @@ static void handle_x(void) {
     }
 
     play_sound(snd_confirm);
-    show_remove_dialog();
+    dialogue_open(&remove_dlg, &theme);
 }
 
 static void handle_y(void) {

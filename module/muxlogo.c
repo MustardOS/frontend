@@ -8,43 +8,14 @@
 
 static int task_pending = 0;
 
-static int fit_mode = 0;
 static mux_dialogue fit_dlg;
 
 static const char *fit_modes[] = {"fullscreen", "stretch", "crop", "original"};
 
-static void show_fit_dialog(void) {
-    fit_mode = 1;
-    fit_dlg.selected = 0;
-
-    dialogue_show(&fit_dlg);
-    dialogue_refresh(&fit_dlg, &theme);
-}
-
-static void hide_fit_dialog(void) {
-    fit_mode = 0;
-    dialogue_hide(&fit_dlg);
-}
-
-static int reset_mode = 0;
 static mux_dialogue reset_dlg;
 
-static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
-
-static void show_remove_dialog(void) {
-    remove_mode = 1;
-    remove_dlg.selected = mux_remove_nah;
-
-    dialogue_show(&remove_dlg);
-    dialogue_refresh(&remove_dlg, &theme);
-}
-
-static void hide_remove_dialog(void) {
-    remove_mode = 0;
-    dialogue_hide(&remove_dlg);
-}
 
 static void remove_logo(void) {
     if (!ui_count_static) return;
@@ -65,19 +36,6 @@ static void remove_logo(void) {
 
     load_mux("logo");
     mux_input_stop();
-}
-
-static void show_reset_dialog(void) {
-    reset_mode = 1;
-    reset_dlg.selected = 1;
-
-    dialogue_show(&reset_dlg);
-    dialogue_refresh(&reset_dlg, &theme);
-}
-
-static void hide_reset_dialog(void) {
-    reset_mode = 0;
-    dialogue_hide(&reset_dlg);
 }
 
 static void run_logo_task(const char **argv, const int argc, const char *title) {
@@ -245,10 +203,9 @@ static void handle_a(void) {
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
-        hide_remove_dialog();
-
+        dialogue_dismiss(&remove_dlg);
 
         if (opt == mux_remove_skip) skip_confirm = 1;
         if (opt != mux_remove_nah) remove_logo();
@@ -256,18 +213,18 @@ static void handle_a(void) {
         return;
     }
 
-    if (reset_mode) {
+    if (dialogue_active(&reset_dlg)) {
         const int confirmed = reset_dlg.selected == 0;
-        hide_reset_dialog();
+        dialogue_dismiss(&reset_dlg);
 
         if (confirmed) reset_logo();
 
         return;
     }
 
-    if (fit_mode) {
+    if (dialogue_active(&fit_dlg)) {
         const int chosen = fit_dlg.selected >= 0 && fit_dlg.selected < (int) A_SIZE(fit_modes) ? fit_dlg.selected : 0;
-        hide_fit_dialog();
+        dialogue_dismiss(&fit_dlg);
 
         apply_logo(fit_modes[chosen]);
 
@@ -277,21 +234,21 @@ static void handle_a(void) {
     if (msgbox_active || !ui_count_static || hold_call) return;
 
     play_sound(snd_confirm);
-    show_fit_dialog();
+    dialogue_open(&fit_dlg, &theme);
 }
 
 static void handle_dpad_up(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad(&remove_dlg, &theme, -1, 1);
         return;
     }
 
-    if (reset_mode) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad(&reset_dlg, &theme, -1, 1);
         return;
     }
 
-    if (fit_mode) {
+    if (dialogue_active(&fit_dlg)) {
         dialogue_handle_dpad(&fit_dlg, &theme, -1, 1);
         return;
     }
@@ -300,17 +257,17 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad(&remove_dlg, &theme, +1, 1);
         return;
     }
 
-    if (reset_mode) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad(&reset_dlg, &theme, +1, 1);
         return;
     }
 
-    if (fit_mode) {
+    if (dialogue_active(&fit_dlg)) {
         dialogue_handle_dpad(&fit_dlg, &theme, +1, 1);
         return;
     }
@@ -319,17 +276,17 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, 1);
         return;
     }
 
-    if (reset_mode) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad_hold(&reset_dlg, &theme, -1, 1);
         return;
     }
 
-    if (fit_mode) {
+    if (dialogue_active(&fit_dlg)) {
         dialogue_handle_dpad_hold(&fit_dlg, &theme, -1, 1);
         return;
     }
@@ -338,17 +295,17 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, 1);
         return;
     }
 
-    if (reset_mode) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_handle_dpad_hold(&reset_dlg, &theme, +1, 1);
         return;
     }
 
-    if (fit_mode) {
+    if (dialogue_active(&fit_dlg)) {
         dialogue_handle_dpad_hold(&fit_dlg, &theme, +1, 1);
         return;
     }
@@ -372,23 +329,23 @@ static void handle_b(void) {
     if (task_progress_handle_b()) return;
     if (hold_call) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_mark_cancelled(&remove_dlg);
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
 
         return;
     }
 
-    if (reset_mode) {
+    if (dialogue_active(&reset_dlg)) {
         dialogue_mark_cancelled(&reset_dlg);
-        hide_reset_dialog();
+        dialogue_dismiss(&reset_dlg);
 
         return;
     }
 
-    if (fit_mode) {
+    if (dialogue_active(&fit_dlg)) {
         dialogue_mark_cancelled(&fit_dlg);
-        hide_fit_dialog();
+        dialogue_dismiss(&fit_dlg);
 
         return;
     }
@@ -406,7 +363,9 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (fit_mode || reset_mode || remove_mode || msgbox_active || task_progress_active() || hold_call) return;
+    if (dialogue_active(&fit_dlg) || dialogue_active(&reset_dlg) || dialogue_active(&remove_dlg) || msgbox_active
+        || task_progress_active() || hold_call)
+        return;
     if (!ui_count_static) return;
 
     play_sound(snd_confirm);
@@ -416,14 +375,16 @@ static void handle_x(void) {
         return;
     }
 
-    show_remove_dialog();
+    dialogue_open(&remove_dlg, &theme);
 }
 
 static void handle_y(void) {
-    if (fit_mode || reset_mode || remove_mode || msgbox_active || task_progress_active() || hold_call) return;
+    if (dialogue_active(&fit_dlg) || dialogue_active(&reset_dlg) || dialogue_active(&remove_dlg) || msgbox_active
+        || task_progress_active() || hold_call)
+        return;
 
     play_sound(snd_confirm);
-    show_reset_dialog();
+    dialogue_open(&reset_dlg, &theme);
 }
 
 static void handle_help(void) {

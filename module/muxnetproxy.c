@@ -10,10 +10,8 @@ static int fields_modified = 0;
 static int test_running = 0;
 
 static mux_dialogue save_dlg;
-static int save_dlg_active = 0;
 
 static mux_dialogue reboot_dlg;
-static int reboot_dlg_active = 0;
 
 static const char *proxy_schemes[] = {"http://", "https://", "socks5://"};
 
@@ -129,8 +127,7 @@ static int save_proxy_options(void) {
         dialogue_init_accept(
             &reboot_dlg, &theme, ui_screen, lang.muxnetproxy.saved, lang.muxnetproxy.reboot, lang.generic.confirm
         );
-        dialogue_show(&reboot_dlg);
-        reboot_dlg_active = 1;
+        dialogue_open(&reboot_dlg, &theme);
         msgbox_active = 1;
         return 0;
     }
@@ -250,7 +247,7 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     if (fields_modified) {
         play_sound(snd_confirm);
-        dialogue_open(&save_dlg_active, &save_dlg, &theme);
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -260,18 +257,16 @@ static void handle_back(void) {
 }
 
 static void handle_a(void) {
-    if (reboot_dlg_active) {
-        reboot_dlg_active = 0;
-        msgbox_active = 0;
-        dialogue_hide(&reboot_dlg);
+    if (dialogue_active(&reboot_dlg)) {
+        dialogue_dismiss(&reboot_dlg);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_proxy");
         mux_input_stop();
         return;
     }
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
-        dialogue_dismiss(&save_dlg_active, &save_dlg);
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_confirm_yep && !save_proxy_options()) return;
 
@@ -288,11 +283,10 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (reboot_dlg_active) return;
+    if (dialogue_active(&reboot_dlg)) return;
 
-    if (save_dlg_active) {
-        dialogue_mark_cancelled(&save_dlg);
-        dialogue_dismiss(&save_dlg_active, &save_dlg);
+    if (dialogue_active(&save_dlg)) {
+        dialogue_cancel(&save_dlg);
         return;
     }
 
@@ -310,24 +304,24 @@ static void handle_b(void) {
 }
 
 static void handle_b_hold(void) {
-    if (save_dlg_active || reboot_dlg_active) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg)) return;
     if (key_show) key_backspace(ui_txt_entry_proxy);
 }
 
 static void handle_select(void) {
-    if (save_dlg_active || reboot_dlg_active || msgbox_active || hold_call) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg) || msgbox_active || hold_call) return;
     if (key_show) key_clear(ui_txt_entry_proxy);
 }
 
 static void handle_start(void) {
-    if (save_dlg_active || reboot_dlg_active || msgbox_active || hold_call) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg) || msgbox_active || hold_call) return;
     if (key_show) handle_keyboard_ok_press();
 }
 
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (save_dlg_active || reboot_dlg_active || msgbox_active || hold_call) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg) || msgbox_active || hold_call) return;
 
     if (key_show) {
         close_osk(
@@ -338,7 +332,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (save_dlg_active || msgbox_active || hold_call) return;
+    if (dialogue_active(&save_dlg) || msgbox_active || hold_call) return;
 
     if (key_show == 1) {
         key_space(ui_txt_entry_proxy);
@@ -346,9 +340,9 @@ static void handle_y(void) {
 }
 
 static void handle_up(void) {
-    if (reboot_dlg_active) return;
+    if (dialogue_active(&reboot_dlg)) return;
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -357,14 +351,14 @@ static void handle_up(void) {
 }
 
 static void handle_up_hold(void) {
-    if (save_dlg_active || reboot_dlg_active) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg)) return;
     key_show ? key_up() : handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
-    if (reboot_dlg_active) return;
+    if (dialogue_active(&reboot_dlg)) return;
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -373,14 +367,14 @@ static void handle_down(void) {
 }
 
 static void handle_down_hold(void) {
-    if (save_dlg_active || reboot_dlg_active) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg)) return;
     key_show ? key_down() : handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
-    if (reboot_dlg_active) return;
+    if (dialogue_active(&reboot_dlg)) return;
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -401,9 +395,9 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
-    if (reboot_dlg_active) return;
+    if (dialogue_active(&reboot_dlg)) return;
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -424,7 +418,7 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (save_dlg_active || reboot_dlg_active) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg)) return;
 
     if (!key_show) {
         const struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
@@ -442,7 +436,7 @@ static void handle_left_hold(void) {
 }
 
 static void handle_right_hold(void) {
-    if (save_dlg_active || reboot_dlg_active) return;
+    if (dialogue_active(&save_dlg) || dialogue_active(&reboot_dlg)) return;
 
     if (!key_show) {
         const struct _lv_obj_t *focused = lv_group_get_focused(ui_group);
@@ -478,7 +472,8 @@ static void handle_r1(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call || save_dlg_active)
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || key_show || hold_call
+        || dialogue_active(&save_dlg))
         return;
 
     play_sound(snd_info_open);
@@ -569,8 +564,7 @@ static void on_key_event(const struct input_event ev) {
 int muxnetproxy_main(void) {
     fields_modified = 0;
     test_running = 0;
-    save_dlg_active = 0;
-    reboot_dlg_active = 0;
+    save_dlg.active = 0;
 
     remove(PROXY_TEST_RESULT);
 

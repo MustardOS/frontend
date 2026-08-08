@@ -24,28 +24,21 @@ typedef struct {
     int enabled;
 } more_entry;
 
-void more_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const more_entry *entries, int count);
-
-more_id more_selected(const mux_dialogue *dlg);
-
-int more_is_enabled(const mux_dialogue *dlg, int index);
-
 typedef struct {
     mux_dialogue dlg;
-    int active;
 } mux_more;
 
 void more_open(mux_more *m, struct theme_config *t, lv_obj_t *parent, const more_entry *entries, int count);
 
+void more_focus_last(mux_more *m);
+
 int more_active(const mux_more *m);
 
-void more_close(mux_more *m);
+more_id more_peek(const mux_more *m);
 
-void more_destroy(mux_more *m);
+more_id more_take(mux_more *m, int chains);
 
 void more_cancel(mux_more *m);
-
-more_id more_current(const mux_more *m);
 
 int more_dpad(mux_more *m, struct theme_config *t, int direction, int should_fire);
 

@@ -42,10 +42,8 @@ static int viewing_existing_profile = 0;
 static int viewing_active_profile = 0;
 
 static mux_dialogue save_dlg;
-static int save_dlg_active = 0;
 
 static mux_dialogue forget_dlg;
-static int forget_dlg_active = 0;
 
 static void reset_connect_state(void) {
     connecting_phase = 0;
@@ -912,7 +910,7 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     if (fields_modified && !network_saved) {
         play_sound(snd_confirm);
-        dialogue_open(&save_dlg_active, &save_dlg, &theme);
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -1096,9 +1094,9 @@ static void save_profile_ini(void) {
 }
 
 static void handle_a(void) {
-    if (forget_dlg_active) {
+    if (dialogue_active(&forget_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) forget_dlg.selected;
-        dialogue_dismiss(&forget_dlg_active, &forget_dlg);
+        dialogue_dismiss(&forget_dlg);
 
         if (opt == mux_confirm_yep) {
             do_forget_profile();
@@ -1111,9 +1109,9 @@ static void handle_a(void) {
         return;
     }
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
-        dialogue_dismiss(&save_dlg_active, &save_dlg);
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_confirm_yep) {
             if (viewing_active_profile) save_network_config();
@@ -1135,16 +1133,14 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (forget_dlg_active) {
-        dialogue_mark_cancelled(&forget_dlg);
-        dialogue_dismiss(&forget_dlg_active, &forget_dlg);
+    if (dialogue_active(&forget_dlg)) {
+        dialogue_cancel(&forget_dlg);
 
         return;
     }
 
-    if (save_dlg_active) {
-        dialogue_mark_cancelled(&save_dlg);
-        dialogue_dismiss(&save_dlg_active, &save_dlg);
+    if (dialogue_active(&save_dlg)) {
+        dialogue_cancel(&save_dlg);
 
         return;
     }
@@ -1163,19 +1159,21 @@ static void handle_b(void) {
 }
 
 static void handle_b_hold(void) {
-    if (forget_dlg_active || save_dlg_active) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg)) return;
 
     if (key_show) key_backspace(ui_txt_entry_network);
 }
 
 static void handle_select(void) {
-    if (forget_dlg_active || save_dlg_active || msgbox_active || hold_call || ui_network_locked) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg) || msgbox_active || hold_call || ui_network_locked)
+        return;
 
     if (key_show) key_clear(ui_txt_entry_network);
 }
 
 static void handle_start(void) {
-    if (forget_dlg_active || save_dlg_active || msgbox_active || hold_call || ui_network_locked) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg) || msgbox_active || hold_call || ui_network_locked)
+        return;
 
     if (key_show) handle_keyboard_ok_press();
 }
@@ -1183,7 +1181,7 @@ static void handle_start(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (forget_dlg_active || msgbox_active || hold_call || ui_network_locked) return;
+    if (dialogue_active(&forget_dlg) || msgbox_active || hold_call || ui_network_locked) return;
 
     if (key_show) {
         close_osk(
@@ -1213,7 +1211,7 @@ static void handle_y(void) {
     }
 
     play_sound(snd_info_open);
-    dialogue_open(&forget_dlg_active, &forget_dlg, &theme);
+    dialogue_open(&forget_dlg, &theme);
 }
 
 static void handle_help(void) {
@@ -1225,12 +1223,12 @@ static void handle_help(void) {
 }
 
 static void handle_up(void) {
-    if (forget_dlg_active) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_handle_dpad(&forget_dlg, &theme, -1, !swap_axis);
         return;
     }
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -1239,18 +1237,18 @@ static void handle_up(void) {
 }
 
 static void handle_up_hold(void) {
-    if (forget_dlg_active || save_dlg_active) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg)) return;
 
     key_show ? key_up() : handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
-    if (forget_dlg_active) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_handle_dpad(&forget_dlg, &theme, +1, !swap_axis);
         return;
     }
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -1259,18 +1257,18 @@ static void handle_down(void) {
 }
 
 static void handle_down_hold(void) {
-    if (forget_dlg_active || save_dlg_active) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg)) return;
 
     key_show ? key_down() : handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
-    if (forget_dlg_active) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_handle_dpad(&forget_dlg, &theme, -1, swap_axis);
         return;
     }
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -1290,12 +1288,12 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
-    if (forget_dlg_active) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_handle_dpad(&forget_dlg, &theme, +1, swap_axis);
         return;
     }
 
-    if (save_dlg_active) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -1315,7 +1313,7 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (forget_dlg_active || save_dlg_active || ui_network_locked) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg) || ui_network_locked) return;
 
     if (!key_show && lv_group_get_focused(ui_group) == ui_lbl_priority_network) {
         handle_priority_change(-1);
@@ -1326,7 +1324,7 @@ static void handle_left_hold(void) {
 }
 
 static void handle_right_hold(void) {
-    if (forget_dlg_active || save_dlg_active || ui_network_locked) return;
+    if (dialogue_active(&forget_dlg) || dialogue_active(&save_dlg) || ui_network_locked) return;
 
     if (!key_show && lv_group_get_focused(ui_group) == ui_lbl_priority_network) {
         handle_priority_change(+1);
@@ -1436,8 +1434,8 @@ static void on_key_event(const struct input_event ev) {
 int muxnetprofile_main(void) {
     fields_modified = 0;
     network_saved = 0;
-    save_dlg_active = 0;
-    forget_dlg_active = 0;
+    save_dlg.active = 0;
+    forget_dlg.active = 0;
     reset_connect_state();
     ui_network_locked = 0;
     viewing_active_profile = 0;

@@ -15,7 +15,6 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
 
 static const int text_size_values[] = {0, 18, 22, 26};
@@ -95,19 +94,6 @@ static const char *motion_keys[] = {"visual/elementtransition", "visual/selectio
 static const char *text_keys[] = {
     "settings/font/list_size", "settings/font/header_size", "settings/font/footer_size", "settings/font/panel_size"
 };
-
-static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
-}
-
-static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
-}
 
 static int any_access_modified(void) {
 #define ACCESS(NAME, UDATA)                                                                                            \
@@ -252,7 +238,7 @@ static void init_navigation_group(void) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -267,7 +253,7 @@ static void handle_option_prev(void) {
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -277,6 +263,50 @@ static void handle_option_next(void) {
     }
 
     move_option(lv_group_get_focused(ui_group_value), +1);
+}
+
+static void handle_dpad_up(void) {
+    if (dialogue_active(&save_dlg)) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
+
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (dialogue_active(&save_dlg)) {
+        if (!swap_axis) {
+            dialogue_navigate(&save_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
+
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (dialogue_active(&save_dlg)) {
+        dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (dialogue_active(&save_dlg)) {
+        dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
+    handle_list_nav_down_hold();
 }
 
 static void leave_module(void) {
@@ -292,9 +322,9 @@ static void leave_module(void) {
 static void handle_a(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_unsaved_save) save_access_options();
 
@@ -308,9 +338,9 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -320,7 +350,7 @@ static void handle_b(void) {
     }
 
     if (!config.settings.advanced.trust_modify && any_access_modified()) {
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -390,8 +420,8 @@ int muxaccess_main(void) {
                 [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
             },
@@ -400,8 +430,8 @@ int muxaccess_main(void) {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
             [mux_input_dpad_left] = handle_option_prev,
             [mux_input_dpad_right] = handle_option_next,
             [mux_input_l1] = handle_list_nav_page_up,

@@ -107,20 +107,7 @@ static void check_focus(void) {
     }
 }
 
-static int forget_mode = 0;
 static mux_dialogue forget_dlg;
-
-static void show_forget_dialog(void) {
-    forget_mode = 1;
-    forget_dlg.selected = mux_confirm_nah;
-    dialogue_show(&forget_dlg);
-    dialogue_refresh(&forget_dlg, &theme);
-}
-
-static void hide_forget_dialog(void) {
-    forget_mode = 0;
-    dialogue_hide(&forget_dlg);
-}
 
 static void do_forget(void) {
     if (!*selected_mac) return;
@@ -199,11 +186,11 @@ static void status_change(const char *method) {
 }
 
 static void handle_a(void) {
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) forget_dlg.selected;
         if (opt == mux_confirm_yep) dialogue_mark_silent(&forget_dlg);
 
-        hide_forget_dialog();
+        dialogue_dismiss(&forget_dlg);
         if (opt == mux_confirm_yep) do_forget();
         return;
     }
@@ -246,9 +233,9 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_mark_cancelled(&forget_dlg);
-        hide_forget_dialog();
+        dialogue_dismiss(&forget_dlg);
         return;
     }
 
@@ -291,7 +278,7 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || current_item_index != BTDEV_FRGT_IDX || forget_mode) return;
+    if (msgbox_active || current_item_index != BTDEV_FRGT_IDX || dialogue_active(&forget_dlg)) return;
 
     if (config.settings.advanced.trust_remove) {
         do_forget();
@@ -299,7 +286,7 @@ static void handle_x(void) {
     }
 
     play_sound(snd_confirm);
-    show_forget_dialog();
+    dialogue_open(&forget_dlg, &theme);
 }
 
 static void handle_y(void) {
@@ -312,7 +299,7 @@ static void handle_up(void) {
         return;
     }
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -329,7 +316,7 @@ static void handle_up_hold(void) {
         return;
     }
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_handle_dpad_hold(&forget_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -343,7 +330,7 @@ static void handle_down(void) {
         return;
     }
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -360,7 +347,7 @@ static void handle_down_hold(void) {
         return;
     }
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         dialogue_handle_dpad_hold(&forget_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -374,7 +361,7 @@ static void handle_left(void) {
         return;
     }
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -391,7 +378,7 @@ static void handle_right(void) {
         return;
     }
 
-    if (forget_mode) {
+    if (dialogue_active(&forget_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&forget_dlg, &theme, +1);
             play_sound(snd_navigate);

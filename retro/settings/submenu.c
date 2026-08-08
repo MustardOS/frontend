@@ -218,8 +218,8 @@ void submenu_init(submenu *m, const submenu_def *def) {
 
     m->def = def;
     m->active = 0;
-    m->save_dialogue_active = 0;
-    m->save_all_dialogue_active = 0;
+    m->save_dlg.active = 0;
+    m->save_all_dlg.active = 0;
     m->nav_row_class = -1;
     m->nav_action_label = NULL;
     m->nav_extra_label = NULL;
@@ -271,7 +271,7 @@ int submenu_is_active(const submenu *m) {
 }
 
 static int coarse_step_tick(submenu *m, const uint64_t edge, const uint64_t mask) {
-    if (m->save_dialogue_active || m->save_all_dialogue_active) return 0;
+    if (dialogue_active(&m->save_dlg) || dialogue_active(&m->save_all_dlg)) return 0;
 
     const int step = m->def->row_coarse_step ? m->def->row_coarse_step(current_item_index) : 0;
     if (step <= 0 || !row_can_cycle(m, current_item_index)) return 0;
@@ -301,12 +301,12 @@ void submenu_tick(submenu *m) {
     if (coarse_step_tick(m, edge, mask)) return;
     if (nav_input_halted()) return;
 
-    if (m->save_dialogue_active) {
+    if (dialogue_active(&m->save_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&m->save_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const int opt = m->save_dlg.selected;
-            dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
+            dialogue_dismiss(&m->save_dlg);
 
             if (opt == 4) {
                 session_settings_discard_to(&m->entry_snapshot);
@@ -326,22 +326,24 @@ void submenu_tick(submenu *m) {
             }
         } else if (edge & BIT(5)) {
             m->pending_action_row = -1;
-            dialogue_dismiss(&m->save_dialogue_active, &m->save_dlg);
+            dialogue_mark_cancelled(&m->save_dlg);
+            dialogue_dismiss(&m->save_dlg);
         }
         return;
     }
 
-    if (m->save_all_dialogue_active) {
+    if (dialogue_active(&m->save_all_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&m->save_all_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const int opt = m->save_all_dlg.selected;
-            dialogue_dismiss(&m->save_all_dialogue_active, &m->save_all_dlg);
+            dialogue_dismiss(&m->save_all_dlg);
 
             session_settings_apply_save_choice(opt);
             submenu_stack_resync();
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&m->save_all_dialogue_active, &m->save_all_dlg);
+            dialogue_mark_cancelled(&m->save_all_dlg);
+            dialogue_dismiss(&m->save_all_dlg);
         }
         return;
     }
@@ -378,12 +380,12 @@ void submenu_tick(submenu *m) {
     } else if (edge & BIT(4)) {
         if (m->def->row_is_save && m->def->row_is_save(current_item_index)) {
             play_sound(snd_confirm);
-            dialogue_open(&m->save_all_dialogue_active, &m->save_all_dlg, &theme);
+            dialogue_open(&m->save_all_dlg, &theme);
         } else if (row_is_action(m, current_item_index) && m->def->action) {
             if (m->def->child_tick && memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {
                 play_sound(snd_confirm);
                 m->pending_action_row = current_item_index;
-                dialogue_open(&m->save_dialogue_active, &m->save_dlg, &theme);
+                dialogue_open(&m->save_dlg, &theme);
             } else {
                 play_sound(snd_confirm);
                 m->def->action(current_item_index);
@@ -397,7 +399,7 @@ void submenu_tick(submenu *m) {
     } else if (edge & BIT(5)) {
         if (memcmp(&session_settings, &m->entry_snapshot, sizeof(session_settings)) != 0) {
             play_sound(snd_confirm);
-            dialogue_open(&m->save_dialogue_active, &m->save_dlg, &theme);
+            dialogue_open(&m->save_dlg, &theme);
         } else {
             play_sound(snd_back);
             close_menu(m);

@@ -94,7 +94,6 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static int confirm_mode = 0;
 static mux_dialogue confirm_shutdown_dlg;
 static mux_dialogue confirm_install_dlg;
 static mux_dialogue *confirm_dlg = NULL;
@@ -115,31 +114,23 @@ static void show_confirm(const char *mux_name, mux_dialogue *dlg) {
     snprintf(confirm_target, sizeof(confirm_target), "%s", mux_name);
 
     confirm_dlg = dlg;
-    confirm_mode = 1;
 
-    confirm_dlg->selected = 1;
-
-    dialogue_show(confirm_dlg);
-    dialogue_refresh(confirm_dlg, &theme);
+    dialogue_open(confirm_dlg, &theme);
 }
 
 static void hide_confirm(void) {
-    confirm_mode = 0;
-
-    if (confirm_dlg) dialogue_hide(confirm_dlg);
+    if (confirm_dlg) dialogue_dismiss(confirm_dlg);
     confirm_dlg = NULL;
 }
 
 static void handle_a(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         const int yes = confirm_dlg && confirm_dlg->selected == 0;
         if (yes) dialogue_mark_silent(confirm_dlg);
 
         hide_confirm();
 
-        if (!yes) {
-            return;
-        }
+        if (!yes) return;
 
         run_action(confirm_target);
 
@@ -183,7 +174,7 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         dialogue_mark_cancelled(confirm_dlg);
         hide_confirm();
 
@@ -203,7 +194,7 @@ static void handle_help(void) {
 }
 
 static void handle_up(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, -1, 1);
         return;
     }
@@ -225,7 +216,7 @@ static void handle_up(void) {
 }
 
 static void handle_down(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, +1, 1);
         return;
     }
@@ -273,7 +264,7 @@ static void handle_down_hold(void) { // next
 }
 
 static void handle_left(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, -1, 1);
         return;
     }
@@ -290,7 +281,7 @@ static void handle_left(void) {
 }
 
 static void handle_right(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         if (confirm_dlg) dialogue_handle_dpad(confirm_dlg, &theme, +1, 1);
         return;
     }
@@ -307,7 +298,7 @@ static void handle_right(void) {
 }
 
 static void handle_left_hold(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         if (confirm_dlg) dialogue_handle_dpad_hold(confirm_dlg, &theme, -1, 1);
         return;
     }
@@ -318,7 +309,7 @@ static void handle_left_hold(void) {
 }
 
 static void handle_right_hold(void) {
-    if (confirm_mode) {
+    if (dialogue_active(confirm_dlg)) {
         if (confirm_dlg) dialogue_handle_dpad_hold(confirm_dlg, &theme, +1, 1);
         return;
     }

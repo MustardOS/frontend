@@ -10,25 +10,12 @@ enum { ui_count_dynamic = E_SIZE(DISTEMP_ELEMENTS) };
 DISTEMP_ELEMENTS
 #undef DISTEMP
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
 
 static lv_obj_t *ui_objects[ui_count_dynamic];
 static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
-
-static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
-}
-
-static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
-}
 
 static int any_distemp_modified(void) {
 #define DISTEMP(NAME, UDATA)                                                                                           \
@@ -202,7 +189,7 @@ static void refresh_x_nav(void) {
 }
 
 static void handle_option_prev(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -217,7 +204,7 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -232,21 +219,21 @@ static void handle_option_next(void) {
 }
 
 static void handle_option_prev_multi(void) {
-    if (save_mode || msgbox_active || block_input) return;
+    if (dialogue_active(&save_dlg) || msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), -25);
     if (current_item_index == 0) refresh_navigation();
 }
 
 static void handle_option_next_multi(void) {
-    if (save_mode || msgbox_active || block_input) return;
+    if (dialogue_active(&save_dlg) || msgbox_active || block_input) return;
 
     move_option(lv_group_get_focused(ui_group_value), +25);
     if (current_item_index == 0) refresh_navigation();
 }
 
 static void handle_dpad_up(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -259,7 +246,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -272,7 +259,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -281,7 +268,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -290,9 +277,9 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_a(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_unsaved_save) {
             if (!schedule_times_valid()) {
@@ -317,9 +304,9 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -329,7 +316,7 @@ static void handle_b(void) {
     }
 
     if (!config.settings.advanced.trust_modify && any_distemp_modified()) {
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -347,7 +334,7 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -356,7 +343,7 @@ static void handle_help(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (save_mode || msgbox_active || hold_call) return;
+    if (dialogue_active(&save_dlg) || msgbox_active || hold_call) return;
     if (!is_temp_row()) return;
 
     const int temp = (int) lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) - 255;

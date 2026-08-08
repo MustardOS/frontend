@@ -36,24 +36,27 @@ static const char *more_label(const more_id id) {
     }
 }
 
-void more_init(
-    mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const more_entry *entries, const int count
-) {
+static void more_drop_dialogue(mux_dialogue *dlg) {
+    if (!dlg->panel) return;
+
+    if (dlg->dim && lv_obj_is_valid(dlg->dim)) lv_obj_del(dlg->dim);
+    if (lv_obj_is_valid(dlg->panel)) lv_obj_del(dlg->panel);
+
+    dlg->dim = NULL;
+    dlg->panel = NULL;
+    dlg->title_label = NULL;
+    dlg->description_label = NULL;
+    dlg->option_count = 0;
+
+    for (int i = 0; i < MUX_DIALOGUE_MAX_OPTIONS; i++)
+        dlg->options[i] = NULL;
+}
+
+static void
+more_init(mux_dialogue *dlg, struct theme_config *t, lv_obj_t *parent, const more_entry *entries, const int count) {
     if (!dlg || !entries) return;
 
-    if (dlg->panel) {
-        if (dlg->dim && lv_obj_is_valid(dlg->dim)) lv_obj_del(dlg->dim);
-        if (lv_obj_is_valid(dlg->panel)) lv_obj_del(dlg->panel);
-
-        dlg->dim = NULL;
-        dlg->panel = NULL;
-        dlg->title_label = NULL;
-        dlg->description_label = NULL;
-        dlg->option_count = 0;
-
-        for (int i = 0; i < MUX_DIALOGUE_MAX_OPTIONS; i++)
-            dlg->options[i] = NULL;
-    }
+    more_drop_dialogue(dlg);
 
     const char *labels[MUX_DIALOGUE_MAX_OPTIONS];
     int packed[MUX_DIALOGUE_MAX_OPTIONS];
@@ -84,14 +87,14 @@ void more_init(
     }
 }
 
-more_id more_selected(const mux_dialogue *dlg) {
+static more_id more_selected(const mux_dialogue *dlg) {
     if (!dlg || dlg->option_count <= 0) return more_count;
     if (dlg->selected < 0 || dlg->selected >= dlg->option_count) return more_count;
 
     return (more_id) (dlg->option_data[dlg->selected] % more_count);
 }
 
-int more_is_enabled(const mux_dialogue *dlg, const int index) {
+static int more_is_enabled(const mux_dialogue *dlg, const int index) {
     if (!dlg || index < 0 || index >= dlg->option_count) return 0;
     return dlg->option_data[index] < more_count;
 }
@@ -102,7 +105,7 @@ void more_open(mux_more *m, struct theme_config *t, lv_obj_t *parent, const more
     more_init(&m->dlg, t, parent, entries, count);
     if (m->dlg.option_count <= 0) return;
 
-    m->active = 1;
+    m->dlg.active = 1;
     m->dlg.selected = 0;
 
     dialogue_show(&m->dlg);
@@ -110,45 +113,55 @@ void more_open(mux_more *m, struct theme_config *t, lv_obj_t *parent, const more
 }
 
 int more_active(const mux_more *m) {
-    return m && m->active;
+    return m && dialogue_active(&m->dlg);
+}
+
+void more_focus_last(mux_more *m) {
+    if (m && m->dlg.option_count > 0) m->dlg.selected = m->dlg.option_count - 1;
+}
+
+static int more_action_speaks(const more_id id) {
+    switch (id) {
+        case more_information:
+        case more_remove:
+        case more_help:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+more_id more_peek(const mux_more *m) {
+    return more_active(m) ? more_selected(&m->dlg) : more_count;
+}
+
+more_id more_take(mux_more *m, const int chains) {
+    if (!more_active(m)) return more_count;
+
+    const more_id opt = more_selected(&m->dlg);
+    if (more_action_speaks(opt)) dialogue_mark_silent(&m->dlg);
+
+    m->dlg.active = 0;
+
+    if (chains) {
+        dialogue_hide_chained(&m->dlg);
+        return opt;
+    }
+
+    dialogue_hide(&m->dlg);
+    more_drop_dialogue(&m->dlg);
+
+    return opt;
 }
 
 void more_cancel(mux_more *m) {
-    if (!m || !m->active) return;
+    if (!more_active(m)) return;
 
     dialogue_mark_cancelled(&m->dlg);
-    more_close(m);
-}
+    m->dlg.active = 0;
 
-void more_close(mux_more *m) {
-    if (!m || !m->active) return;
-
-    m->active = 0;
     dialogue_hide(&m->dlg);
-}
-
-void more_destroy(mux_more *m) {
-    if (!m) return;
-
-    more_close(m);
-
-    mux_dialogue *dlg = &m->dlg;
-
-    if (dlg->dim && lv_obj_is_valid(dlg->dim)) lv_obj_del(dlg->dim);
-    if (dlg->panel && lv_obj_is_valid(dlg->panel)) lv_obj_del(dlg->panel);
-
-    dlg->dim = NULL;
-    dlg->panel = NULL;
-    dlg->title_label = NULL;
-    dlg->description_label = NULL;
-    dlg->option_count = 0;
-
-    for (int i = 0; i < MUX_DIALOGUE_MAX_OPTIONS; i++)
-        dlg->options[i] = NULL;
-}
-
-more_id more_current(const mux_more *m) {
-    return m ? more_selected(&m->dlg) : more_count;
+    more_drop_dialogue(&m->dlg);
 }
 
 int more_dpad(mux_more *m, struct theme_config *t, const int direction, const int should_fire) {

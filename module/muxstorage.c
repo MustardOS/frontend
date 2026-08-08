@@ -63,7 +63,7 @@ static void update_storage_info(void) {
         }
     }
 
-    lv_label_set_text(ui_lbl_nav_x, on_sd2 ? lang.generic.sync : lang.generic.migrate);
+    lv_label_set_text(ui_lbl_nav_a, on_sd2 ? lang.generic.sync : lang.generic.migrate);
 }
 
 static void init_navigation_group(void) {
@@ -185,10 +185,10 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, "", 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, "", 0},
                                   {NULL, NULL, 0}});
 
 #define STORAGE(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_storage, UDATA);
@@ -207,9 +207,9 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 
         const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group_value);
         if (strcasecmp(lv_label_get_text(e_focused), "SD2") == 0) {
-            lv_label_set_text(ui_lbl_nav_x, lang.generic.sync);
+            lv_label_set_text(ui_lbl_nav_a, lang.generic.sync);
         } else {
-            lv_label_set_text(ui_lbl_nav_x, lang.generic.migrate);
+            lv_label_set_text(ui_lbl_nav_a, lang.generic.migrate);
         }
 
         lv_obj_invalidate(ui_pnl_content);

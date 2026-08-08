@@ -26,16 +26,12 @@ static nav_repeat_t rpt_osk_right = {0};
 
 static nav_repeat_t rpt_backspace = {0};
 
-static int load_confirm_active = 0;
 static mux_dialogue load_dlg;
 
-static int delete_confirm_active = 0;
 static mux_dialogue delete_dlg;
 
-static int mismatch_confirm_active = 0;
 static mux_dialogue mismatch_dlg;
 
-static int notice_active = 0;
 static mux_dialogue notice_dlg;
 static uint64_t notice_prev_mask = 0;
 
@@ -583,50 +579,53 @@ void gamestate_menu_tick(void) {
         return;
     }
 
-    if (load_confirm_active) {
+    if (dialogue_active(&load_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&load_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const mux_confirm_opt opt = (mux_confirm_opt) load_dlg.selected;
-            dialogue_dismiss(&load_confirm_active, &load_dlg);
+            dialogue_dismiss(&load_dlg);
             if (opt == mux_confirm_yep) {
                 pending_action = pending_load;
                 pending_index = current_item_index;
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&load_confirm_active, &load_dlg);
+            dialogue_mark_cancelled(&load_dlg);
+            dialogue_dismiss(&load_dlg);
         }
         return;
     }
 
-    if (delete_confirm_active) {
+    if (dialogue_active(&delete_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&delete_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const mux_confirm_opt opt = (mux_confirm_opt) delete_dlg.selected;
-            dialogue_dismiss(&delete_confirm_active, &delete_dlg);
+            dialogue_dismiss(&delete_dlg);
             if (opt == mux_confirm_yep) {
                 pending_action = pending_delete;
                 pending_index = current_item_index;
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&delete_confirm_active, &delete_dlg);
+            dialogue_mark_cancelled(&delete_dlg);
+            dialogue_dismiss(&delete_dlg);
         }
         return;
     }
 
-    if (mismatch_confirm_active) {
+    if (dialogue_active(&mismatch_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
             dialogue_handle_dpad(&mismatch_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
         } else if (edge & BIT(4)) {
             const mux_confirm_opt opt = (mux_confirm_opt) mismatch_dlg.selected;
-            dialogue_dismiss(&mismatch_confirm_active, &mismatch_dlg);
+            dialogue_dismiss(&mismatch_dlg);
             if (opt == mux_confirm_yep) {
                 pending_action = pending_load;
                 pending_index = current_item_index;
             }
         } else if (edge & BIT(5)) {
-            dialogue_dismiss(&mismatch_confirm_active, &mismatch_dlg);
+            dialogue_mark_cancelled(&mismatch_dlg);
+            dialogue_dismiss(&mismatch_dlg);
         }
         return;
     }
@@ -665,7 +664,7 @@ void gamestate_menu_tick(void) {
             pause_menu_show_toast(lang.muxretro.gamestate.timeline_protected);
         } else if (has_any_state()) {
             play_sound(snd_confirm);
-            dialogue_open(&delete_confirm_active, &delete_dlg, &theme);
+            dialogue_open(&delete_dlg, &theme);
         }
     } else if (edge & BIT(7)) {
         if (gamestate_slot_count < GAMESTATE_MAX_SLOTS) start_new_save();
@@ -678,9 +677,9 @@ void gamestate_menu_tick(void) {
 
             const struct gamestate_slot *sel = state_at_row(current_item_index);
             if (sel && !gamestate_metadata_matches(sel)) {
-                dialogue_open(&mismatch_confirm_active, &mismatch_dlg, &theme);
+                dialogue_open(&mismatch_dlg, &theme);
             } else {
-                dialogue_open(&load_confirm_active, &load_dlg, &theme);
+                dialogue_open(&load_dlg, &theme);
             }
         }
     }
@@ -688,11 +687,11 @@ void gamestate_menu_tick(void) {
 
 void gamestate_notice_open(void) {
     notice_prev_mask = current_nav_mask();
-    dialogue_open(&notice_active, &notice_dlg, &theme);
+    dialogue_open(&notice_dlg, &theme);
 }
 
 int gamestate_notice_is_active(void) {
-    return notice_active;
+    return dialogue_active(&notice_dlg);
 }
 
 void gamestate_notice_tick(void) {
@@ -701,7 +700,7 @@ void gamestate_notice_tick(void) {
     notice_prev_mask = mask;
 
     if (edge & (BIT(4) | BIT(5))) {
-        dialogue_dismiss(&notice_active, &notice_dlg);
+        dialogue_dismiss(&notice_dlg);
         pause_menu_sync_input_mask();
     }
 }

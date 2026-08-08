@@ -37,9 +37,7 @@ typedef struct {
     int nav_row_class;
     const char *nav_action_label;
     const char *nav_extra_label;
-    int save_dialogue_active;
     mux_dialogue save_dlg;
-    int save_all_dialogue_active;
     mux_dialogue save_all_dlg;
     struct session_settings_t entry_snapshot;
     int pending_action_row;

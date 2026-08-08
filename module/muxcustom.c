@@ -3,38 +3,14 @@
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxcustom.h"
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
 
-static int msg_mode = 0;
 static mux_dialogue msg_dlg;
-
-static void show_message_dialog(void) {
-    msg_mode = 1;
-    dialogue_show(&msg_dlg);
-}
-
-static void hide_message_dialog(void) {
-    msg_mode = 0;
-    dialogue_hide(&msg_dlg);
-}
 
 static int pending_submenu = 0;
 static char pending_pdi[64];
 static char pending_pik[MAX_BUFFER_SIZE];
 static char pending_mux_load[32];
-
-static void show_save_dialog(void) {
-    save_mode = 1;
-    save_dlg.selected = 0;
-    dialogue_show(&save_dlg);
-    dialogue_refresh(&save_dlg, &theme);
-}
-
-static void hide_save_dialog(void) {
-    save_mode = 0;
-    dialogue_hide(&save_dlg);
-}
 
 #define CUSTOM(NAME, UDATA) 1,
 #define VISUAL(NAME, UDATA) 1,
@@ -860,7 +836,7 @@ static void list_nav_next(const int steps) {
 }
 
 static void handle_frame_prev(void) {
-    if (msgbox_active || save_mode) return;
+    if (msgbox_active || dialogue_active(&save_dlg)) return;
 
     if (list_frame_move(-1)) {
         play_sound(snd_option);
@@ -870,7 +846,7 @@ static void handle_frame_prev(void) {
 }
 
 static void handle_frame_next(void) {
-    if (msgbox_active || save_mode) return;
+    if (msgbox_active || dialogue_active(&save_dlg)) return;
 
     if (list_frame_move(+1)) {
         play_sound(snd_option);
@@ -881,7 +857,7 @@ static void handle_frame_next(void) {
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -918,7 +894,7 @@ static void handle_option_prev(void) {
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -1362,7 +1338,7 @@ static void navigate_to_submenu(const menu_entry *entry, const char *target_mux)
 
         snprintf(pending_mux_load, sizeof(pending_mux_load), "%s", target_mux);
         pending_submenu = 1;
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
 
         return;
     }
@@ -1382,11 +1358,11 @@ static void navigate_to_submenu(const menu_entry *entry, const char *target_mux)
 }
 
 static void handle_a(void) {
-    if (msg_mode || msgbox_active || hold_call) return;
+    if (dialogue_active(&msg_dlg) || msgbox_active || hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
 
         if (pending_submenu) {
             pending_submenu = 0;
@@ -1394,7 +1370,7 @@ static void handle_a(void) {
             if (opt != mux_unsaved_save) revert_font_settings();
 
             if (opt == mux_unsaved_save && save_custom_options() < 0) {
-                show_message_dialog();
+                dialogue_open(&msg_dlg, &theme);
                 return;
             }
 
@@ -1412,7 +1388,7 @@ static void handle_a(void) {
         if (opt != mux_unsaved_save) revert_font_settings();
 
         if (opt == mux_unsaved_save && save_custom_options() < 0) {
-            show_message_dialog();
+            dialogue_open(&msg_dlg, &theme);
             return;
         }
 
@@ -1464,7 +1440,7 @@ static void handle_a(void) {
             if (strcasecmp(theme_alt, theme_alt_original) == 0) break;
 
             if (save_custom_options() < 0) {
-                show_message_dialog();
+                dialogue_open(&msg_dlg, &theme);
                 break;
             }
 
@@ -1493,15 +1469,15 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (msg_mode) {
+    if (dialogue_active(&msg_dlg)) {
         dialogue_mark_cancelled(&msg_dlg);
-        hide_message_dialog();
+        dialogue_dismiss(&msg_dlg);
         return;
     }
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -1511,7 +1487,7 @@ static void handle_b(void) {
     }
 
     if (!config.settings.advanced.trust_modify && any_custom_modified()) {
-        show_save_dialog();
+        dialogue_open(&save_dlg, &theme);
         return;
     }
 
@@ -1521,7 +1497,7 @@ static void handle_b(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
 
     if (save_custom_options() < 0) {
-        show_message_dialog();
+        dialogue_open(&msg_dlg, &theme);
         return;
     }
 
@@ -1529,7 +1505,7 @@ static void handle_b(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -1541,7 +1517,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -1553,7 +1529,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -1562,7 +1538,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -1571,7 +1547,7 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)) return;
 
     play_sound(snd_info_open);
     show_help();

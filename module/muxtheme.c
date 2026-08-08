@@ -9,25 +9,12 @@ static int preview_display_time = 0;
 static int preview_index = -1;
 static int no_theme_archives = 0;
 
-static int remove_mode = 0;
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
 static mux_more more_menu;
 
 static int remove_allowed(void);
 static void start_remove(void);
-
-static void show_remove_dialog(void) {
-    remove_mode = 1;
-    remove_dlg.selected = mux_remove_nah;
-    dialogue_show(&remove_dlg);
-    dialogue_refresh(&remove_dlg, &theme);
-}
-
-static void hide_remove_dialog(void) {
-    remove_mode = 0;
-    dialogue_hide(&remove_dlg);
-}
 
 #define TEMP_VERSION "version.txt"
 #define TEMP_CREDITS "credits.txt"
@@ -220,7 +207,7 @@ static void do_remove(void) {
 static void handle_dpad_up(void) {
     if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
             play_sound(snd_navigate);
@@ -233,7 +220,7 @@ static void handle_dpad_up(void) {
 static void handle_dpad_down(void) {
     if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
             play_sound(snd_navigate);
@@ -247,7 +234,7 @@ static void handle_dpad_down(void) {
 static void handle_dpad_up_hold(void) {
     if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -258,7 +245,7 @@ static void handle_dpad_up_hold(void) {
 static void handle_dpad_down_hold(void) {
     if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -270,10 +257,7 @@ static void handle_a(void) {
     if (msgbox_active || !ui_count_static || hold_call) return;
 
     if (more_active(&more_menu)) {
-        const more_id opt = more_current(&more_menu);
-        if (opt == more_remove) dialogue_mark_silent(&more_menu.dlg);
-
-        more_close(&more_menu);
+        const more_id opt = more_take(&more_menu, 0);
 
         if (opt == more_remove) {
             start_remove();
@@ -284,9 +268,9 @@ static void handle_a(void) {
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         if (opt == mux_remove_yep) {
             do_remove();
         } else if (opt == mux_remove_skip) {
@@ -368,13 +352,13 @@ static void start_remove(void) {
     }
 
     play_sound(snd_confirm);
-    show_remove_dialog();
+    dialogue_open(&remove_dlg, &theme);
 }
 
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (msgbox_active || remove_mode || more_active(&more_menu) || !remove_allowed()) return;
+    if (msgbox_active || dialogue_active(&remove_dlg) || more_active(&more_menu) || !remove_allowed()) return;
 
     start_remove();
 }
@@ -387,9 +371,9 @@ static void handle_b(void) {
         return;
     }
 
-    if (remove_mode) {
+    if (dialogue_active(&remove_dlg)) {
         dialogue_mark_cancelled(&remove_dlg);
-        hide_remove_dialog();
+        dialogue_dismiss(&remove_dlg);
         return;
     }
 
@@ -422,7 +406,7 @@ static void handle_b(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
-    if (remove_mode || more_active(&more_menu)) return;
+    if (dialogue_active(&remove_dlg) || more_active(&more_menu)) return;
 
     more_entry entries[2];
     int count = 0;

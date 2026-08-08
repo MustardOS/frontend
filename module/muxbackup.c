@@ -136,21 +136,7 @@ static int everything_included(void) {
     return 1;
 }
 
-static int bulk_mode = 0;
 static mux_dialogue bulk_dlg;
-
-static void show_bulk_dialog(void) {
-    bulk_mode = 1;
-    bulk_dlg.selected = 1;
-
-    dialogue_show(&bulk_dlg);
-    dialogue_refresh(&bulk_dlg, &theme);
-}
-
-static void hide_bulk_dialog(void) {
-    bulk_mode = 0;
-    dialogue_hide(&bulk_dlg);
-}
 
 static void start_backup(lv_obj_t *e_focused);
 
@@ -213,9 +199,9 @@ static void finish_task(void) {
 
 static void handle_b(void) {
 
-    if (bulk_mode) {
+    if (dialogue_active(&bulk_dlg)) {
         dialogue_mark_cancelled(&bulk_dlg);
-        hide_bulk_dialog();
+        dialogue_dismiss(&bulk_dlg);
 
         return;
     }
@@ -241,6 +227,50 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void handle_dpad_up(void) {
+    if (dialogue_active(&bulk_dlg)) {
+        if (!swap_axis) {
+            dialogue_navigate(&bulk_dlg, &theme, -1);
+            play_sound(snd_navigate);
+        }
+
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (dialogue_active(&bulk_dlg)) {
+        if (!swap_axis) {
+            dialogue_navigate(&bulk_dlg, &theme, +1);
+            play_sound(snd_navigate);
+        }
+
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (dialogue_active(&bulk_dlg)) {
+        dialogue_handle_dpad_hold(&bulk_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (dialogue_active(&bulk_dlg)) {
+        dialogue_handle_dpad_hold(&bulk_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_a(void) {
     if (task_progress_handle_a()) {
         if (task_pending && !task_progress_active()) finish_task();
@@ -249,9 +279,9 @@ static void handle_a(void) {
 
     if (msgbox_active || hold_call) return;
 
-    if (bulk_mode) {
+    if (dialogue_active(&bulk_dlg)) {
         const int confirmed = bulk_dlg.selected == 0;
-        hide_bulk_dialog();
+        dialogue_dismiss(&bulk_dlg);
 
         if (confirmed) start_backup(ui_lbl_start_backup);
 
@@ -267,7 +297,7 @@ static void handle_a(void) {
     // Everything at once can be quite huge, which is worth saying before it starts!
     if (e_focused == ui_lbl_start_backup && everything_included()) {
         play_sound(snd_confirm);
-        show_bulk_dialog();
+        dialogue_open(&bulk_dlg, &theme);
 
         return;
     }
@@ -442,8 +472,8 @@ int muxbackup_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_frame_prev,
                 [mux_input_r1] = handle_frame_next,
             },
@@ -454,8 +484,8 @@ int muxbackup_main(void) {
         .hold_handler = {
             [mux_input_dpad_left] = handle_option_prev,
             [mux_input_dpad_right] = handle_option_next,
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
             [mux_input_l1] = handle_frame_prev,
             [mux_input_r1] = handle_frame_next,
         }

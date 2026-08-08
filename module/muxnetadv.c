@@ -10,12 +10,7 @@ enum { ui_count_dynamic = E_SIZE(NETADV_ELEMENTS) };
 NETADV_ELEMENTS
 #undef NETADV
 
-static int save_mode = 0;
 static mux_dialogue save_dlg;
-
-static void hide_save_dialog(void) {
-    dialogue_dismiss(&save_mode, &save_dlg);
-}
 
 static int any_netadv_modified(void) {
 #define NETADV(NAME, UDATA)                                                                                            \
@@ -97,7 +92,7 @@ static void init_navigation_group(void) {
 }
 
 static void handle_option_prev(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
         return;
     }
@@ -108,7 +103,7 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
         return;
     }
@@ -119,9 +114,9 @@ static void handle_option_next(void) {
 }
 
 static void handle_a(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
 
         if (opt == mux_unsaved_save) save_netadv_options();
 
@@ -143,9 +138,9 @@ static void handle_x(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
-        hide_save_dialog();
+        dialogue_dismiss(&save_dlg);
         return;
     }
 
@@ -154,7 +149,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (dialogue_guard_unsaved(&save_mode, &save_dlg, &theme, any_netadv_modified())) return;
+    if (dialogue_guard_unsaved(&save_dlg, &theme, any_netadv_modified())) return;
 
     play_sound(snd_back);
     save_netadv_options();
@@ -165,7 +160,7 @@ static void handle_b(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -174,7 +169,7 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -183,7 +178,7 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
         return;
     }
@@ -192,7 +187,7 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (save_mode) {
+    if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
         return;
     }
@@ -201,7 +196,7 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || save_mode) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)) return;
 
     play_sound(snd_info_open);
     show_help();
