@@ -15,8 +15,21 @@
 SPACE_ELEMENTS
 #undef SPACE
 
+#define SPACE_ROW(NAME, GLYPH, KEY)                                                                                    \
+    lv_obj_t *ui_pnl_##NAME##_space;                                                                                   \
+    lv_obj_t *ui_lbl_##NAME##_space;                                                                                   \
+    lv_obj_t *ui_ico_##NAME##_space;                                                                                   \
+    lv_obj_t *ui_val_##NAME##_space;
+
+SPACE_ROW_ELEMENTS
+#undef SPACE_ROW
+
 void init_muxspace(lv_obj_t *ui_pnl_content) {
 #define SPACE(NAME, UDATA) CREATE_BAR_ITEM(space, NAME);
     SPACE_ELEMENTS
 #undef SPACE
+
+#define SPACE_ROW(NAME, GLYPH, KEY) CREATE_VALUE_ITEM(space, NAME);
+    SPACE_ROW_ELEMENTS
+#undef SPACE_ROW
 }

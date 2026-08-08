@@ -1,10 +1,18 @@
 #include "muxshare.h"
 #include "../common/ui/orientation.h"
+#include "../common/ui/list_frame.h"
+#include "../common/task_exec.h"
+#include "../common/ui/task_progress.h"
 #include "ui/ui_muxspace.h"
 
-#define SPACE(NAME, UDATA) 1,
-enum { ui_count_dynamic = E_SIZE(SPACE_ELEMENTS) };
+#define SPACE(NAME, UDATA)          1,
+#define SPACE_ROW(NAME, GLYPH, KEY) 1,
+enum { ui_count_dynamic = E_SIZE(SPACE_ELEMENTS) + E_SIZE(SPACE_ROW_ELEMENTS) };
+#undef SPACE_ROW
 #undef SPACE
+
+#define SPACE_INFO_ROWS  9
+#define SPACE_FIRST_INFO 4
 
 #define SPACE_BAR_WARN 70
 #define SPACE_BAR_FULL 90
@@ -13,28 +21,7 @@ enum { ui_count_dynamic = E_SIZE(SPACE_ELEMENTS) };
 #define SPACE_COLOR_WARN 0xE0A020
 #define SPACE_COLOR_FULL 0xEE3F3F
 
-#define SPACE_BAR_BASE_PX     24
-#define SPACE_BAR_EXPANDED_PX 14
-#define SPACE_DETAIL_ROWS     5
-
-static int show_details = 0;
-
-typedef struct {
-    lv_obj_t *value_panel;
-    lv_obj_t *bar_panel;
-    lv_obj_t *value;
-    lv_obj_t *bar;
-    lv_obj_t *title;
-    const char *partition;
-    int show_msd;
-} mount;
-
-typedef struct {
-    lv_obj_t *container;
-    lv_obj_t *row[SPACE_DETAIL_ROWS];
-    lv_obj_t *label[SPACE_DETAIL_ROWS];
-    lv_obj_t *value[SPACE_DETAIL_ROWS];
-} detail_ui;
+#define SPACE_BAR_BASE_PX 24
 
 typedef struct {
     int has_verdict;
@@ -44,10 +31,34 @@ typedef struct {
     char date[16];
 } msd_info;
 
-static detail_ui details_ui[4];
+static int storage_present[4];
+static int storage_attached[4];
+
+static int focused_storage(void);
 
 static void show_help(void) {
-    show_info_box(lang.muxspace.title, lang.muxspace.help, 0);
+    const int index = focused_storage();
+    if (index >= 0 && storage_attached[index] && !storage_present[index]) {
+        show_info_box(lang.muxspace.unreadable, lang.muxspace.unreadable_hint, 0);
+        return;
+    }
+
+    if (list_frame_focused()) {
+        list_frame_help();
+        return;
+    }
+
+    const struct help_msg help_messages[] = {
+        {"primary", lang.muxspace.help.primary},   {"secondary", lang.muxspace.help.secondary},
+        {"external", lang.muxspace.help.external}, {"system", lang.muxspace.help.system},
+        {"total", lang.muxspace.help.total},       {"used", lang.muxspace.help.used},
+        {"free", lang.muxspace.help.free},         {"filesystem", lang.muxspace.help.filesystem},
+        {"node", lang.muxspace.help.node},         {"maker", lang.muxspace.help.maker},
+        {"model", lang.muxspace.help.model},       {"made", lang.muxspace.help.made},
+        {"quality", lang.muxspace.help.quality},
+    };
+
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, NULL);
 }
 
 static void init_space_bars(void) {
@@ -173,6 +184,95 @@ static int read_msd_info(const char *dev_path, msd_info *out) {
     return out->has_verdict;
 }
 
+static int read_sysfs_text(const char *path, char *out, const size_t out_len) {
+    out[0] = '\0';
+
+    FILE *fp = fopen(path, "r");
+    if (!fp) return 0;
+
+    if (!fgets(out, (int) out_len, fp)) {
+        fclose(fp);
+        return 0;
+    }
+
+    fclose(fp);
+
+    size_t n = strlen(out);
+    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r' || out[n - 1] == ' ')) {
+        out[--n] = '\0';
+    }
+
+    return out[0] != '\0';
+}
+
+static int find_usb_node(const char *start, char *out, const size_t out_len) {
+    char path[PATH_MAX];
+    if (!realpath(start, path)) return 0;
+
+    for (int depth = 0; depth < 8; depth++) {
+        char probe[PATH_MAX];
+        snprintf(probe, sizeof(probe), "%s/idVendor", path);
+
+        if (access(probe, R_OK) == 0) {
+            snprintf(out, out_len, "%s", path);
+            return 1;
+        }
+
+        char *slash = strrchr(path, '/');
+        if (!slash || slash == path) break;
+
+        *slash = '\0';
+    }
+
+    return 0;
+}
+
+static int read_usb_info(const char *dev_path, msd_info *out) {
+    if (!*dev_path) return 0;
+
+    const char *base = strrchr(dev_path, '/');
+    base = base ? base + 1 : dev_path;
+
+    if (strncmp(base, "sd", 2) != 0) return 0;
+
+    memset(out, 0, sizeof(*out));
+
+    char block[32];
+    snprintf(block, sizeof(block), "%s", base);
+
+    for (char *c = block; *c; c++) {
+        if (*c >= '0' && *c <= '9') {
+            *c = '\0';
+            break;
+        }
+    }
+
+    char device_dir[PATH_MAX];
+    snprintf(device_dir, sizeof(device_dir), "/sys/block/%s/device", block);
+
+    char path[PATH_MAX];
+
+    snprintf(path, sizeof(path), "%s/vendor", device_dir);
+    read_sysfs_text(path, out->manufacturer, sizeof(out->manufacturer));
+
+    snprintf(path, sizeof(path), "%s/model", device_dir);
+    read_sysfs_text(path, out->model, sizeof(out->model));
+
+    char usb_node[PATH_MAX];
+    if (find_usb_node(device_dir, usb_node, sizeof(usb_node))) {
+        char text[64];
+
+        snprintf(path, sizeof(path), "%s/manufacturer", usb_node);
+        if (read_sysfs_text(path, text, sizeof(text)))
+            snprintf(out->manufacturer, sizeof(out->manufacturer), "%s", text);
+
+        snprintf(path, sizeof(path), "%s/product", usb_node);
+        if (read_sysfs_text(path, text, sizeof(text))) snprintf(out->model, sizeof(out->model), "%s", text);
+    }
+
+    return out->manufacturer[0] || out->model[0];
+}
+
 static const char *verdict_tag(const char *verdict) {
     if (!verdict || !*verdict) return NULL;
 
@@ -186,166 +286,200 @@ static const char *verdict_tag(const char *verdict) {
     return NULL;
 }
 
-static void build_detail_ui(detail_ui *du, const lv_obj_t *bar_panel) {
-    if (du->container) return;
+typedef struct {
+    lv_obj_t *value_panel;
+    lv_obj_t *bar_panel;
+    lv_obj_t *value;
+    lv_obj_t *bar;
+    lv_obj_t *title;
+    const char *partition;
+    const char *node;
+    const char *prepare_name;
+    int show_msd;
+    lv_obj_t *row_value[SPACE_INFO_ROWS];
+} storage_entry;
 
-    lv_obj_t *parent = lv_obj_get_parent(bar_panel);
-    if (!parent) return;
+static storage_entry *storage_table(void) {
+    static storage_entry table[4];
 
-    du->container = lv_obj_create(parent);
-    lv_obj_remove_style_all(du->container);
-    lv_obj_set_width(du->container, LV_PCT(100));
-    lv_obj_set_height(du->container, LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(du->container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(du->container, 2, LV_PART_MAIN);
-    lv_obj_set_style_pad_top(du->container, 4, LV_PART_MAIN);
-    lv_obj_set_style_pad_left(du->container, 16, LV_PART_MAIN);
-    lv_obj_set_style_pad_right(du->container, 16, LV_PART_MAIN);
-    lv_obj_set_style_pad_bottom(du->container, 4, LV_PART_MAIN);
-    lv_obj_add_flag(du->container, LV_OBJ_FLAG_HIDDEN);
+    table[0] = (storage_entry) {ui_pnl_primary_space,
+                                ui_pnl_primary_bar_space,
+                                ui_val_primary_space,
+                                ui_bar_primary_space,
+                                ui_lbl_primary_space,
+                                device.storage.rom.mount,
+                                device.storage.rom.device,
+                                NULL,
+                                1,
+                                {ui_val_primary_total_space, ui_val_primary_used_space, ui_val_primary_free_space,
+                                 ui_val_primary_fs_space, ui_val_primary_node_space, ui_val_primary_maker_space,
+                                 ui_val_primary_model_space, ui_val_primary_made_space, ui_val_primary_quality_space}};
 
-    const uint32_t bar_idx = lv_obj_get_index(bar_panel);
-    lv_obj_move_to_index(du->container, (int16_t) bar_idx + 1);
+    table[1] =
+        (storage_entry) {ui_pnl_secondary_space,
+                         ui_pnl_secondary_bar_space,
+                         ui_val_secondary_space,
+                         ui_bar_secondary_space,
+                         ui_lbl_secondary_space,
+                         device.storage.sdcard.mount,
+                         device.storage.sdcard.device,
+                         "sdcard",
+                         1,
+                         {ui_val_secondary_total_space, ui_val_secondary_used_space, ui_val_secondary_free_space,
+                          ui_val_secondary_fs_space, ui_val_secondary_node_space, ui_val_secondary_maker_space,
+                          ui_val_secondary_model_space, ui_val_secondary_made_space, ui_val_secondary_quality_space}};
 
-    for (int i = 0; i < SPACE_DETAIL_ROWS; i++) {
-        du->row[i] = lv_obj_create(du->container);
-        lv_obj_remove_style_all(du->row[i]);
-        lv_obj_set_width(du->row[i], LV_PCT(100));
-        lv_obj_set_height(du->row[i], LV_SIZE_CONTENT);
-        lv_obj_set_flex_flow(du->row[i], LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(du->row[i], LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    table[2] =
+        (storage_entry) {ui_pnl_external_space,
+                         ui_pnl_external_bar_space,
+                         ui_val_external_space,
+                         ui_bar_external_space,
+                         ui_lbl_external_space,
+                         device.storage.usb.mount,
+                         device.storage.usb.device,
+                         "usb",
+                         1,
+                         {ui_val_external_total_space, ui_val_external_used_space, ui_val_external_free_space,
+                          ui_val_external_fs_space, ui_val_external_node_space, ui_val_external_maker_space,
+                          ui_val_external_model_space, ui_val_external_made_space, ui_val_external_quality_space}};
 
-        du->label[i] = lv_label_create(du->row[i]);
-        du->value[i] = lv_label_create(du->row[i]);
+    table[3] = (storage_entry) {ui_pnl_system_space,
+                                ui_pnl_system_bar_space,
+                                ui_val_system_space,
+                                ui_bar_system_space,
+                                ui_lbl_system_space,
+                                device.storage.root.mount,
+                                device.storage.root.device,
+                                NULL,
+                                0,
+                                {ui_val_system_total_space, ui_val_system_used_space, ui_val_system_free_space,
+                                 ui_val_system_fs_space, ui_val_system_node_space, ui_val_system_maker_space,
+                                 ui_val_system_model_space, ui_val_system_made_space, ui_val_system_quality_space}};
 
-        lv_obj_add_flag(du->row[i], LV_OBJ_FLAG_HIDDEN);
-    }
+    return table;
 }
 
-static void apply_detail_style(const detail_ui *du) {
-    if (!du->container) return;
+static int frame_of_storage[4];
+static int storage_of_frame[5];
 
-    for (int i = 0; i < SPACE_DETAIL_ROWS; i++) {
-        if (!du->label[i] || !du->value[i]) continue;
-        lv_obj_set_style_text_color(du->label[i], lv_color_hex(theme.list_default.text), LV_PART_MAIN);
-        lv_obj_set_style_text_opa(du->label[i], theme.list_default.text_alpha, LV_PART_MAIN);
-        lv_obj_set_style_text_color(du->value[i], lv_color_hex(theme.list_default.text), LV_PART_MAIN);
-        lv_obj_set_style_text_opa(du->value[i], theme.list_default.text_alpha, LV_PART_MAIN);
-    }
+static int node_exists(const char *node) {
+    if (!node || !*node) return 0;
+
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "/dev/%s", node);
+
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISBLK(st.st_mode);
 }
 
-static void set_detail_row(const detail_ui *du, const int idx, const char *label, const char *value) {
-    if (!du->row[idx]) return;
+static void set_row_value(lv_obj_t *value, const char *text) {
+    if (!value) return;
 
-    if (!value || !*value) {
-        lv_obj_add_flag(du->row[idx], LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
-
-    lv_label_set_text(du->label[idx], label);
-    lv_label_set_text(du->value[idx], value);
-    lv_obj_clear_flag(du->row[idx], LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text(value, text && *text ? text : lang.generic.unknown);
 }
 
-static void hide_detail_rows(const detail_ui *du) {
-    if (!du->container) return;
+static void update_storage_details(
+    const storage_entry *entry, const int index, const double total_space, const double free_space,
+    const double used_space
+) {
+    char text[64];
 
-    for (int i = 0; i < SPACE_DETAIL_ROWS; i++) {
-        if (du->row[i]) lv_obj_add_flag(du->row[i], LV_OBJ_FLAG_HIDDEN);
-    }
+    snprintf(text, sizeof(text), "%.2f GB", total_space);
+    set_row_value(entry->row_value[0], text);
 
-    lv_obj_add_flag(du->container, LV_OBJ_FLAG_HIDDEN);
+    snprintf(text, sizeof(text), "%.2f GB", used_space);
+    set_row_value(entry->row_value[1], text);
+
+    snprintf(text, sizeof(text), "%.2f GB", free_space);
+    set_row_value(entry->row_value[2], text);
+
+    char dev_src[128], fs_type[32];
+    resolve_mount(entry->partition, dev_src, fs_type);
+
+    set_row_value(entry->row_value[3], fs_type);
+    set_row_value(entry->row_value[4], dev_src);
+
+    msd_info msd = {0};
+    if (entry->show_msd && !read_msd_info(dev_src, &msd)) read_usb_info(dev_src, &msd);
+
+    set_row_value(entry->row_value[5], msd.manufacturer);
+    set_row_value(entry->row_value[6], msd.model);
+    set_row_value(entry->row_value[7], msd.date);
+    set_row_value(entry->row_value[8], msd.has_verdict ? verdict_tag(msd.verdict) : NULL);
+
+    LV_UNUSED(index);
 }
 
-static void update_storage_info() {
-    const mount storage_info[] = {
-        {ui_pnl_primary_space, ui_pnl_primary_bar_space, ui_val_primary_space, ui_bar_primary_space,
-         ui_lbl_primary_space, device.storage.rom.mount, 1},
+static void update_storage_unreadable(const storage_entry *entry) {
+    set_row_value(entry->row_value[0], NULL);
+    set_row_value(entry->row_value[1], NULL);
+    set_row_value(entry->row_value[2], NULL);
+    set_row_value(entry->row_value[3], lang.muxspace.unreadable);
 
-        {ui_pnl_secondary_space, ui_pnl_secondary_bar_space, ui_val_secondary_space, ui_bar_secondary_space,
-         ui_lbl_secondary_space, device.storage.sdcard.mount, 1},
+    char node[MAX_BUFFER_SIZE];
+    snprintf(node, sizeof(node), "/dev/%s", entry->node ? entry->node : "");
+    set_row_value(entry->row_value[4], node);
 
-        {ui_pnl_external_space, ui_pnl_external_bar_space, ui_val_external_space, ui_bar_external_space,
-         ui_lbl_external_space, device.storage.usb.mount, 0},
+    msd_info msd = {0};
+    if (entry->show_msd && !read_msd_info(node, &msd)) read_usb_info(node, &msd);
 
-        {ui_pnl_system_space, ui_pnl_system_bar_space, ui_val_system_space, ui_bar_system_space, ui_lbl_system_space,
-         device.storage.root.mount, 0},
-    };
+    set_row_value(entry->row_value[5], msd.manufacturer);
+    set_row_value(entry->row_value[6], msd.model);
+    set_row_value(entry->row_value[7], msd.date);
+    set_row_value(entry->row_value[8], msd.has_verdict ? verdict_tag(msd.verdict) : NULL);
+}
 
-    int selected = -1;
-    for (size_t i = 0; i < A_SIZE(storage_info); i++) {
-        if (lv_obj_has_state(storage_info[i].title, LV_STATE_FOCUSED)) {
-            selected = (int) i;
-            break;
-        }
-    }
+static void update_storage_info(void) {
+    const storage_entry *storage_info = storage_table();
 
-    for (size_t i = 0; i < A_SIZE(storage_info); i++) {
+    for (size_t i = 0; i < 4; i++) {
         double total_space, free_space, used_space;
         get_storage_info(storage_info[i].partition, &total_space, &free_space, &used_space);
 
-        build_detail_ui(&details_ui[i], storage_info[i].bar_panel);
-        apply_detail_style(&details_ui[i]);
+        storage_present[i] = total_space > 0;
+        storage_attached[i] = storage_present[i] || node_exists(storage_info[i].node);
 
-        const int show_for_this = show_details && (int) i == selected;
+        if (!storage_attached[i]) continue;
 
-        if (total_space > 0) {
-            lv_obj_clear_flag(storage_info[i].value_panel, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(storage_info[i].bar_panel, LV_OBJ_FLAG_HIDDEN);
+        if (!storage_present[i]) {
+            lv_label_set_text(storage_info[i].value, lang.muxspace.unreadable);
+            update_storage_unreadable(&storage_info[i]);
 
-            int percentage = (int) (used_space / total_space * 100.0 + 0.5);
-
-            if (percentage < 0) percentage = 0;
-            if (percentage > 100) percentage = 100;
-
-            lv_bar_set_value(storage_info[i].bar, percentage, LV_ANIM_ON);
-
-            char space_info[48];
-            snprintf(space_info, sizeof(space_info), "%.2f GB / %.2f GB (%d%%)", used_space, total_space, percentage);
-            lv_label_set_text(storage_info[i].value, space_info);
-
-            if (show_for_this) {
-                char dev_src[128], fs_type[32];
-                msd_info msd = {0};
-
-                resolve_mount(storage_info[i].partition, dev_src, fs_type);
-                if (storage_info[i].show_msd) read_msd_info(dev_src, &msd);
-
-                set_detail_row(&details_ui[i], 0, lang.muxspace.detail.filesystem, fs_type);
-                set_detail_row(&details_ui[i], 1, lang.muxspace.detail.manufacturer, msd.manufacturer);
-                set_detail_row(&details_ui[i], 2, lang.muxspace.detail.model, msd.model);
-                set_detail_row(&details_ui[i], 3, lang.muxspace.detail.date, msd.date);
-                set_detail_row(
-                    &details_ui[i], 4, lang.muxspace.detail.quality_check,
-                    msd.has_verdict ? verdict_tag(msd.verdict) : NULL
-                );
-
-                lv_obj_clear_flag(details_ui[i].container, LV_OBJ_FLAG_HIDDEN);
-            } else {
-                hide_detail_rows(&details_ui[i]);
-            }
-
-            const lv_coord_t target_h = show_for_this ? SPACE_BAR_EXPANDED_PX : SPACE_BAR_BASE_PX;
-
-            if (lv_obj_get_height(storage_info[i].bar_panel) != target_h) {
-                lv_obj_set_height(storage_info[i].bar_panel, target_h);
-            }
-
-            uint32_t bar_color;
-            if (percentage >= SPACE_BAR_FULL) {
-                bar_color = SPACE_COLOR_FULL;
-            } else if (percentage >= SPACE_BAR_WARN) {
-                bar_color = SPACE_COLOR_WARN;
-            } else {
-                bar_color = SPACE_COLOR_OK;
-            }
-            lv_obj_set_style_bg_color(storage_info[i].bar, lv_color_hex(bar_color), MU_OBJ_INDI_DEFAULT);
+            lv_obj_set_height(storage_info[i].bar_panel, SPACE_BAR_BASE_PX);
+            lv_bar_set_value(storage_info[i].bar, 100, LV_ANIM_OFF);
+            lv_obj_set_style_bg_color(storage_info[i].bar, lv_color_hex(SPACE_COLOR_FULL), MU_OBJ_INDI_DEFAULT);
             lv_obj_set_style_bg_opa(storage_info[i].bar, 255, MU_OBJ_INDI_DEFAULT);
-        } else {
-            lv_obj_add_flag(storage_info[i].value_panel, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(storage_info[i].bar_panel, LV_OBJ_FLAG_HIDDEN);
-            hide_detail_rows(&details_ui[i]);
+
+            continue;
         }
+
+        int percentage = (int) (used_space / total_space * 100.0 + 0.5);
+
+        if (percentage < 0) percentage = 0;
+        if (percentage > 100) percentage = 100;
+
+        lv_bar_set_value(storage_info[i].bar, percentage, LV_ANIM_ON);
+
+        char space_info[48];
+        snprintf(space_info, sizeof(space_info), "%.2f GB / %.2f GB (%d%%)", used_space, total_space, percentage);
+        lv_label_set_text(storage_info[i].value, space_info);
+
+        if (lv_obj_get_height(storage_info[i].bar_panel) != SPACE_BAR_BASE_PX) {
+            lv_obj_set_height(storage_info[i].bar_panel, SPACE_BAR_BASE_PX);
+        }
+
+        uint32_t bar_color;
+        if (percentage >= SPACE_BAR_FULL) {
+            bar_color = SPACE_COLOR_FULL;
+        } else if (percentage >= SPACE_BAR_WARN) {
+            bar_color = SPACE_COLOR_WARN;
+        } else {
+            bar_color = SPACE_COLOR_OK;
+        }
+        lv_obj_set_style_bg_color(storage_info[i].bar, lv_color_hex(bar_color), MU_OBJ_INDI_DEFAULT);
+        lv_obj_set_style_bg_opa(storage_info[i].bar, 255, MU_OBJ_INDI_DEFAULT);
+
+        update_storage_details(&storage_info[i], (int) i, total_space, free_space, used_space);
     }
 }
 
@@ -354,24 +488,106 @@ static void update_storage_info_cb(const lv_timer_t *timer) {
     update_storage_info();
 }
 
+static void ui_refresh_task(lv_timer_t *timer) {
+    task_progress_tick();
+    ui_gen_refresh_task(timer);
+}
+
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_value[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_VALUE_ITEM(-1, space, primary, lang.muxspace.primary, "primary", "");
-    INIT_VALUE_ITEM(-1, space, secondary, lang.muxspace.secondary, "secondary", "");
-    INIT_VALUE_ITEM(-1, space, external, lang.muxspace.external, "external", "");
-    INIT_VALUE_ITEM(-1, space, system, lang.muxspace.system, "system", "");
+    INIT_VALUE_ITEM(-1, space, primary, lang.muxspace.primary, "primary", lang.muxspace.checking);
+    INIT_VALUE_ITEM(-1, space, secondary, lang.muxspace.secondary, "secondary", lang.muxspace.checking);
+    INIT_VALUE_ITEM(-1, space, external, lang.muxspace.external, "external", lang.muxspace.checking);
+    INIT_VALUE_ITEM(-1, space, system, lang.muxspace.system, "system", lang.muxspace.checking);
 
-    reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
+#define SPACE_INFO_ITEMS(NAME)                                                                                         \
+    INIT_VALUE_ITEM(-1, space, NAME##_total, lang.muxspace.detail.total, "capacity", lang.muxspace.checking);          \
+    INIT_VALUE_ITEM(-1, space, NAME##_used, lang.muxspace.detail.used, "capacity", lang.muxspace.checking);            \
+    INIT_VALUE_ITEM(-1, space, NAME##_free, lang.muxspace.detail.free, "capacity", lang.muxspace.checking);            \
+    INIT_VALUE_ITEM(-1, space, NAME##_fs, lang.muxspace.detail.filesystem, "filesystem", lang.muxspace.checking);      \
+    INIT_VALUE_ITEM(-1, space, NAME##_node, lang.muxspace.detail.device, "device", lang.muxspace.checking);            \
+    INIT_VALUE_ITEM(                                                                                                   \
+        -1, space, NAME##_maker, lang.muxspace.detail.manufacturer, "manufacturer", lang.muxspace.checking             \
+    );                                                                                                                 \
+    INIT_VALUE_ITEM(-1, space, NAME##_model, lang.muxspace.detail.model, "model", lang.muxspace.checking);             \
+    INIT_VALUE_ITEM(-1, space, NAME##_made, lang.muxspace.detail.date, "date", lang.muxspace.checking);                \
+    INIT_VALUE_ITEM(-1, space, NAME##_quality, lang.muxspace.detail.quality_check, "quality", lang.muxspace.checking)
+
+#define SPACE(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_space, UDATA);
+    SPACE_ELEMENTS
+#undef SPACE
+
+#define SPACE_ROW(NAME, GLYPH, KEY) lv_obj_set_user_data(ui_lbl_##NAME##_space, KEY);
+    SPACE_ROW_ELEMENTS
+#undef SPACE_ROW
+
+    SPACE_INFO_ITEMS(primary);
+    SPACE_INFO_ITEMS(secondary);
+    SPACE_INFO_ITEMS(external);
+    SPACE_INFO_ITEMS(system);
+#undef SPACE_INFO_ITEMS
+
+    for (int i = 0; i < 4; i++) {
+        if (storage_attached[i]) continue;
+
+        lv_obj_add_flag(ui_objects_panel[i], LV_OBJ_FLAG_HIDDEN);
+
+        for (int r = 0; r < SPACE_INFO_ROWS; r++)
+            lv_obj_add_flag(ui_objects_panel[SPACE_FIRST_INFO + i * SPACE_INFO_ROWS + r], LV_OBJ_FLAG_HIDDEN);
+    }
+
+    const char *section_name[] = {
+        lang.muxspace.primary, lang.muxspace.secondary, lang.muxspace.external, lang.muxspace.system
+    };
+
+    list_frame frames[5];
+    int frame_count = 0;
+
+    frames[frame_count] = (list_frame) {lang.muxspace.section.all, 0, SPACE_FIRST_INFO};
+    storage_of_frame[frame_count] = -1;
+    frame_count++;
+
+    for (int i = 0; i < 4; i++) {
+        frame_of_storage[i] = -1;
+        if (!storage_attached[i]) continue;
+
+        frames[frame_count] = (list_frame) {section_name[i], SPACE_FIRST_INFO + i * SPACE_INFO_ROWS, SPACE_INFO_ROWS};
+
+        frame_of_storage[i] = frame_count;
+        storage_of_frame[frame_count] = i;
+        frame_count++;
+    }
+
+    list_frame_init(
+        &theme, ui_pnl_content, frames, frame_count, ui_objects_panel, ui_objects, ui_objects_glyph, ui_objects_value,
+        ui_count_dynamic
+    );
+
+    list_frame_apply();
+}
+
+static void apply_bar_visibility(void) {
+    const storage_entry *storage_info = storage_table();
+    const int on_all = list_frame_current() == 0;
+
+    for (int i = 0; i < 4; i++) {
+        if (on_all && storage_attached[i]) {
+            lv_obj_clear_flag(storage_info[i].bar_panel, MU_OBJ_FLAG_HIDE_FLOAT);
+
+            const int32_t row = (int32_t) lv_obj_get_index(storage_info[i].value_panel);
+            lv_obj_move_to_index(storage_info[i].bar_panel, row + 1);
+        } else {
+            lv_obj_add_flag(storage_info[i].bar_panel, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
+    }
 }
 
 static void list_nav_move(const int steps, const int direction) {
     gen_step_movement(steps, direction, 0, 0, 1);
-    if (show_details) update_storage_info();
 }
 
 static void list_nav_prev(const int steps) {
@@ -382,11 +598,449 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_x(void) {
-    orientation_handle_skip();
+static void section_changed(void) {
+    apply_bar_visibility();
+    update_storage_info();
+
+    nav_moved = 1;
+}
+
+static int focused_storage(void) {
+    const int frame = list_frame_current();
+    if (frame < 1 || frame >= (int) A_SIZE(storage_of_frame)) return -1;
+
+    return storage_of_frame[frame];
+}
+
+static const char *prepare_target(void) {
+    const int index = focused_storage();
+    if (index < 0 || !storage_attached[index]) return NULL;
+
+    return storage_table()[index].prepare_name;
+}
+
+static const char *prepare_label(void) {
+    switch (focused_storage()) {
+        case 1:
+            return lang.muxspace.secondary;
+        case 2:
+            return lang.muxspace.external;
+        default:
+            return "";
+    }
+}
+
+static mux_dialogue format_dlg;
+static mux_dialogue warn_dlg;
+static mux_dialogue final_dlg;
+static mux_dialogue commit_dlg;
+
+static int task_pending = 0;
+static const char *chosen_fs = NULL;
+
+typedef enum { fs_vfat = 0, fs_exfat, fs_ext4, fs_count } fs_opt;
+
+static const char *fs_name[fs_count] = {"vfat", "exfat", "ext4"};
+
+static int fs_offer[fs_count];
+static int fs_offered = 0;
+
+static int mkfs_exists(const char *type) {
+    if (strncmp(type, "ext", 3) == 0 && access(OPT_PATH "bin/mke2fs", X_OK) == 0) return 1;
+
+    static const char *dirs[] = {"/sbin/", "/usr/sbin/", "/bin/", "/usr/bin/"};
+
+    for (size_t i = 0; i < A_SIZE(dirs); i++) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), "%smkfs.%s", dirs[i], type);
+
+        if (access(path, X_OK) == 0) return 1;
+    }
+
+    return 0;
+}
+
+#define MATH_CHOICES 6
+
+static mux_dialogue math_dlg;
+static char math_labels[MATH_CHOICES][16];
+static int math_answer = 0;
+static int math_invert = 0;
+
+static void run_prepare_task(void) {
+    const char *target = prepare_target();
+    if (!target || !chosen_fs) return;
+
+    const char *argv[] = {OPT_PATH "script/system/prepare.sh", target, chosen_fs, NULL};
+
+    const task_exec_spec spec = {
+        .argv = argv,
+        .argc = 3,
+        .mode = task_mode_progress,
+        .can_cancel = 0,
+        .turbo = 1,
+        .title = lang.muxspace.prepare.task,
+    };
+
+    if (task_exec_start(&spec) == 0) {
+        task_pending = 1;
+        task_progress_show();
+    }
+}
+
+static void ask_prepare_warning(void) {
+    char message[MAX_BUFFER_SIZE];
+    snprintf(message, sizeof(message), lang.muxspace.prepare.warning, prepare_label());
+
+    dialogue_init_confirm(
+        &warn_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, lang.generic.yes, lang.generic.no,
+        lang.generic.select, lang.generic.cancel
+    );
+
+    dialogue_open(&warn_dlg, &theme);
+}
+
+static void ask_prepare_final(void) {
+    char message[MAX_BUFFER_SIZE];
+    snprintf(message, sizeof(message), lang.muxspace.prepare.final, prepare_label());
+
+    dialogue_init_confirm(
+        &final_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, lang.generic.yes, lang.generic.no,
+        lang.generic.select, lang.generic.cancel
+    );
+
+    dialogue_open(&final_dlg, &theme);
+}
+
+static int math_holds(const int *taken, const int count, const int value) {
+    for (int i = 0; i < count; i++)
+        if (taken[i] == value) return 1;
+
+    return 0;
+}
+
+static void ask_prepare_math(void) {
+    static int seeded = 0;
+    if (!seeded) {
+        srandom((unsigned) time(NULL));
+        seeded = 1;
+    }
+
+    const int a = 2 + (int) (random() % 11);
+    const int b = 2 + (int) (random() % 11);
+    const int c = 2 + (int) (random() % 9);
+    const int m = 2 + (int) (random() % 4);
+
+    const int hi = a > b ? a : b;
+    const int lo = a > b ? b : a;
+
+    char question[64];
+    int result;
+
+    switch (random() % 5) {
+        case 0:
+            result = (a + b) * m - c;
+            snprintf(question, sizeof(question), "(%d + %d) x %d - %d = ?", a, b, m, c);
+            break;
+        case 1:
+            result = (hi - lo) * m + c;
+            snprintf(question, sizeof(question), "(%d - %d) x %d + %d = ?", hi, lo, m, c);
+            break;
+        case 2:
+            result = a * m - (b + c);
+            snprintf(question, sizeof(question), "%d x %d - (%d + %d) = ?", a, m, b, c);
+            break;
+        case 3:
+            result = (a + b) * (m - 1) - lo;
+            snprintf(question, sizeof(question), "(%d + %d) x %d - %d = ?", a, b, m - 1, lo);
+            break;
+        default:
+            result = a + b * m - c;
+            snprintf(question, sizeof(question), "%d + %d x %d - %d = ?", a, b, m, c);
+            break;
+    }
+
+    int values[MATH_CHOICES];
+    int taken[MATH_CHOICES] = {result};
+    int count = 1;
+
+    math_answer = (int) (random() % MATH_CHOICES);
+    values[math_answer] = result;
+
+    for (int i = 0; i < MATH_CHOICES; i++) {
+        if (i == math_answer) continue;
+
+        int guess;
+        do {
+            const int drift = 1 + (int) (random() % 12);
+            guess = random() % 2 ? result + drift : result - drift;
+        } while (math_holds(taken, count, guess));
+
+        taken[count++] = guess;
+        values[i] = guess;
+    }
+
+    const char *labels[MATH_CHOICES];
+    for (int i = 0; i < MATH_CHOICES; i++) {
+        snprintf(math_labels[i], sizeof(math_labels[i]), "%d", values[i]);
+        labels[i] = math_labels[i];
+    }
+
+    math_invert = random() % 20 == 0;
+
+    char message[MAX_BUFFER_SIZE];
+    snprintf(
+        message, sizeof(message),
+        math_invert ? lang.muxspace.prepare.challenge_invert : lang.muxspace.prepare.challenge, question
+    );
+
+    dialogue_init(
+        &math_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, labels, MATH_CHOICES, lang.generic.select,
+        lang.generic.cancel
+    );
+
+    dialogue_open(&math_dlg, &theme);
+}
+
+static void format_message(char *out, const size_t len, const int selected) {
+    const char *about[fs_count] = {
+        lang.muxspace.prepare.about_vfat, lang.muxspace.prepare.about_exfat, lang.muxspace.prepare.about_ext4
+    };
+
+    const int slot = selected >= 0 && selected < fs_offered ? selected : 0;
+
+    snprintf(out, len, "%s\n\n%s", lang.muxspace.prepare.choose, about[fs_offer[slot]]);
+}
+
+static void format_describe(void) {
+    char message[MAX_BUFFER_SIZE];
+    format_message(message, sizeof(message), format_dlg.selected);
+
+    dialogue_set_description(&format_dlg, message);
+}
+
+static void ask_prepare_commit(void) {
+    char message[MAX_BUFFER_SIZE];
+    snprintf(message, sizeof(message), lang.muxspace.prepare.commit, prepare_label(), chosen_fs ? chosen_fs : "");
+
+    dialogue_init_confirm(
+        &commit_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, lang.generic.yes, lang.generic.no,
+        lang.generic.select, lang.generic.cancel
+    );
+
+    dialogue_open(&commit_dlg, &theme);
+}
+
+static void ask_prepare_format(void) {
+    const char *name[fs_count] = {lang.muxspace.prepare.vfat, lang.muxspace.prepare.exfat, lang.muxspace.prepare.ext4};
+
+    const char *labels[fs_count];
+    fs_offered = 0;
+
+    for (int i = 0; i < fs_count; i++) {
+        if (!mkfs_exists(fs_name[i])) continue;
+
+        fs_offer[fs_offered] = i;
+        labels[fs_offered] = name[i];
+        fs_offered++;
+    }
+
+    if (fs_offered == 0) {
+        play_sound(snd_error);
+        toast_message(lang.muxspace.prepare.no_tooling, tst_wait_m);
+
+        return;
+    }
+
+    char message[MAX_BUFFER_SIZE];
+    format_message(message, sizeof(message), 0);
+
+    dialogue_init_choice(
+        &format_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, labels, fs_offered, lang.generic.select,
+        lang.generic.cancel
+    );
+
+    dialogue_open(&format_dlg, &theme);
+}
+
+static void nav_refresh(void);
+static void format_describe(void);
+
+static mux_dialogue *active_dialogue(void) {
+    if (dialogue_active(&math_dlg)) return &math_dlg;
+    if (dialogue_active(&format_dlg)) return &format_dlg;
+    if (dialogue_active(&warn_dlg)) return &warn_dlg;
+    if (dialogue_active(&final_dlg)) return &final_dlg;
+    if (dialogue_active(&commit_dlg)) return &commit_dlg;
+
+    return NULL;
+}
+
+static int dialogue_step(const int direction) {
+    mux_dialogue *dlg = active_dialogue();
+    if (!dlg) return 0;
+
+    dialogue_handle_dpad(dlg, &theme, direction, 1);
+    if (dlg == &format_dlg) format_describe();
+
+    return 1;
+}
+
+static void handle_dpad_up(void) {
+    if (task_progress_handle_dpad(-1)) return;
+    if (dialogue_step(-1)) return;
+
+    handle_list_nav_up();
+}
+
+static void handle_dpad_down(void) {
+    if (task_progress_handle_dpad(+1)) return;
+    if (dialogue_step(+1)) return;
+
+    handle_list_nav_down();
+}
+
+static void handle_dpad_up_hold(void) {
+    if (task_progress_handle_dpad_hold(-1)) return;
+    if (dialogue_step(-1)) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (task_progress_handle_dpad_hold(+1)) return;
+    if (dialogue_step(+1)) return;
+
+    handle_list_nav_down_hold();
+}
+
+static void finish_prepare(void) {
+    task_pending = 0;
+    task_exec_acknowledge();
+
+    chosen_fs = NULL;
+
+    update_storage_info();
+    apply_bar_visibility();
+
+    nav_moved = 1;
+}
+
+static void handle_a(void) {
+    if (task_progress_handle_a()) {
+        if (task_pending && !task_progress_active()) finish_prepare();
+        return;
+    }
+
+    if (dialogue_active(&math_dlg)) {
+        const int picked_answer = math_dlg.selected == math_answer;
+        const int correct = math_invert ? !picked_answer : picked_answer;
+
+        dialogue_mark_silent(&math_dlg);
+        dialogue_dismiss(&math_dlg);
+
+        if (!correct) {
+            play_sound(snd_error);
+            toast_message(lang.muxspace.prepare.wrong, tst_wait_m);
+
+            return;
+        }
+
+        play_sound(snd_muos);
+        ask_prepare_format();
+
+        return;
+    }
+
+    if (dialogue_active(&format_dlg)) {
+        const int slot = format_dlg.selected;
+        dialogue_dismiss(&format_dlg);
+
+        if (slot < 0 || slot >= fs_offered) {
+            chosen_fs = NULL;
+            return;
+        }
+
+        chosen_fs = fs_name[fs_offer[slot]];
+
+        ask_prepare_warning();
+        return;
+    }
+
+    if (dialogue_active(&warn_dlg)) {
+        const mux_confirm_opt opt = (mux_confirm_opt) warn_dlg.selected;
+        dialogue_dismiss(&warn_dlg);
+
+        if (opt == mux_confirm_yep) ask_prepare_final();
+        return;
+    }
+
+    if (dialogue_active(&final_dlg)) {
+        const mux_confirm_opt opt = (mux_confirm_opt) final_dlg.selected;
+        dialogue_dismiss(&final_dlg);
+
+        if (opt == mux_confirm_yep) ask_prepare_commit();
+        return;
+    }
+
+    if (dialogue_active(&commit_dlg)) {
+        const mux_confirm_opt opt = (mux_confirm_opt) commit_dlg.selected;
+        dialogue_dismiss(&commit_dlg);
+
+        if (opt == mux_confirm_yep) run_prepare_task();
+        return;
+    }
+
+    if (msgbox_active || progress_onscreen != -1 || hold_call) return;
+
+    if (list_frame_focused()) {
+        play_sound(snd_info_open);
+        list_frame_help();
+
+        return;
+    }
+
+    if (list_frame_current() != 0) return;
+
+    const int row = list_frame_current_row();
+    if (row < 0 || row >= SPACE_FIRST_INFO) return;
+
+    const int frame = frame_of_storage[row];
+    if (frame < 0 || !list_frame_go(frame)) return;
+
+    play_sound(snd_confirm);
+    section_changed();
+    nav_refresh();
 }
 
 static void handle_b(void) {
+    if (task_progress_handle_b()) return;
+
+    if (dialogue_active(&math_dlg)) {
+        dialogue_cancel(&math_dlg);
+        return;
+    }
+
+    if (dialogue_active(&format_dlg)) {
+        dialogue_cancel(&format_dlg);
+        return;
+    }
+
+    if (dialogue_active(&warn_dlg)) {
+        dialogue_cancel(&warn_dlg);
+        return;
+    }
+
+    if (dialogue_active(&final_dlg)) {
+        dialogue_cancel(&final_dlg);
+        return;
+    }
+
+    if (dialogue_active(&commit_dlg)) {
+        dialogue_cancel(&commit_dlg);
+        return;
+    }
+
     if (hold_call) return;
 
     if (msgbox_active) {
@@ -400,28 +1054,74 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_a(void) {
-    if (msgbox_active || progress_onscreen != -1 || hold_call) return;
+static void handle_x(void) {
+    if (orientation_handle_skip()) return;
 
-    show_details = !show_details;
-    play_sound(show_details ? snd_confirm : snd_back);
-    update_storage_info();
+    if (msgbox_active || progress_onscreen != -1 || hold_call) return;
+    if (task_progress_active() || active_dialogue()) return;
+    if (!prepare_target()) return;
+
+    play_sound(snd_confirm);
+    ask_prepare_math();
 }
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (task_progress_active()) return;
 
     play_sound(snd_info_open);
     show_help();
+}
+
+static void nav_refresh(void) {
+    if (list_frame_current() == 0) {
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (prepare_target()) {
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static void handle_section_prev(void) {
+    if (task_progress_active()) return;
+    if (dialogue_step(-1)) return;
+
+    if (list_frame_move(-1)) {
+        play_sound(snd_navigate);
+        section_changed();
+        nav_refresh();
+    }
+}
+
+static void handle_section_next(void) {
+    if (task_progress_active()) return;
+    if (dialogue_step(+1)) return;
+
+    if (list_frame_move(+1)) {
+        play_sound(snd_navigate);
+        section_changed();
+        nav_refresh();
+    }
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                  {ui_lbl_nav_a, lang.generic.details, 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.muxspace.prepare.nav, 0},
                                   {NULL, NULL, 0}});
 
     overlay_display();
@@ -430,9 +1130,6 @@ static void init_elements(void) {
 int muxspace_main(void) {
     init_module(__func__);
     init_theme(1, 0);
-
-    show_details = 0;
-    memset(details_ui, 0, sizeof(details_ui));
 
     init_ui_common_screen(&theme, &device, &lang, lang.muxspace.title);
 
@@ -446,11 +1143,16 @@ int muxspace_main(void) {
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
     init_fonts();
-    init_navigation_group();
 
     update_storage_info();
+    init_navigation_group();
+    update_storage_info();
 
-    init_timer(ui_gen_refresh_task, update_storage_info_cb);
+    apply_bar_visibility();
+    nav_refresh();
+
+    task_progress_init(&theme, ui_screen);
+    init_timer(ui_refresh_task, update_storage_info_cb);
     list_nav_next(0);
 
     mux_input_options input_opts = {
@@ -460,20 +1162,22 @@ int muxspace_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_dpad_up] = handle_dpad_up,
+                [mux_input_dpad_down] = handle_dpad_down,
+                [mux_input_dpad_left] = handle_section_prev,
+                [mux_input_dpad_right] = handle_section_next,
+                [mux_input_l1] = handle_section_prev,
+                [mux_input_r1] = handle_section_next,
             },
         .release_handler =
             {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_l1] = handle_section_prev,
+            [mux_input_r1] = handle_section_next,
         }
     };
 

@@ -2321,18 +2321,62 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char help[MAX_BUFFER_SIZE];
         char primary[MAX_BUFFER_SIZE];
         char secondary[MAX_BUFFER_SIZE];
         char external[MAX_BUFFER_SIZE];
         char system[MAX_BUFFER_SIZE];
+        char checking[MAX_BUFFER_SIZE];
+        char unreadable[MAX_BUFFER_SIZE];
+        char unreadable_hint[MAX_BUFFER_SIZE];
         struct {
+            char module[MAX_BUFFER_SIZE];
+            char primary[MAX_BUFFER_SIZE];
+            char secondary[MAX_BUFFER_SIZE];
+            char external[MAX_BUFFER_SIZE];
+            char system[MAX_BUFFER_SIZE];
+            char total[MAX_BUFFER_SIZE];
+            char used[MAX_BUFFER_SIZE];
+            char free[MAX_BUFFER_SIZE];
+            char filesystem[MAX_BUFFER_SIZE];
+            char node[MAX_BUFFER_SIZE];
+            char maker[MAX_BUFFER_SIZE];
+            char model[MAX_BUFFER_SIZE];
+            char made[MAX_BUFFER_SIZE];
+            char quality[MAX_BUFFER_SIZE];
+        } help;
+        struct {
+            char all[MAX_BUFFER_SIZE];
+        } section;
+        struct {
+            char total[MAX_BUFFER_SIZE];
+            char used[MAX_BUFFER_SIZE];
+            char free[MAX_BUFFER_SIZE];
+            char device[MAX_BUFFER_SIZE];
             char filesystem[MAX_BUFFER_SIZE];
             char quality_check[MAX_BUFFER_SIZE];
             char manufacturer[MAX_BUFFER_SIZE];
             char model[MAX_BUFFER_SIZE];
             char date[MAX_BUFFER_SIZE];
         } detail;
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char nav[MAX_BUFFER_SIZE];
+            char task[MAX_BUFFER_SIZE];
+            char challenge[MAX_BUFFER_SIZE];
+            char challenge_invert[MAX_BUFFER_SIZE];
+            char wrong[MAX_BUFFER_SIZE];
+            char no_tooling[MAX_BUFFER_SIZE];
+            char choose[MAX_BUFFER_SIZE];
+            char exfat[MAX_BUFFER_SIZE];
+            char vfat[MAX_BUFFER_SIZE];
+            char ext4[MAX_BUFFER_SIZE];
+            char about_exfat[MAX_BUFFER_SIZE];
+            char about_vfat[MAX_BUFFER_SIZE];
+            char about_ext4[MAX_BUFFER_SIZE];
+            char warning[MAX_BUFFER_SIZE];
+            char final[MAX_BUFFER_SIZE];
+            char commit[MAX_BUFFER_SIZE];
+        } prepare;
         struct {
             char genuine[MAX_BUFFER_SIZE];
             char likely_genuine[MAX_BUFFER_SIZE];

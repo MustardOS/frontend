@@ -452,6 +452,23 @@
     SPACE(external, "external")                                                                                        \
     SPACE(system, "system")
 
+#define SPACE_INFO(NAME)                                                                                               \
+    SPACE_ROW(NAME##_total, "capacity", "total")                                                                       \
+    SPACE_ROW(NAME##_used, "capacity", "used")                                                                         \
+    SPACE_ROW(NAME##_free, "capacity", "free")                                                                         \
+    SPACE_ROW(NAME##_fs, "filesystem", "filesystem")                                                                   \
+    SPACE_ROW(NAME##_node, "device", "node")                                                                           \
+    SPACE_ROW(NAME##_maker, "manufacturer", "maker")                                                                   \
+    SPACE_ROW(NAME##_model, "model", "model")                                                                          \
+    SPACE_ROW(NAME##_made, "date", "made")                                                                             \
+    SPACE_ROW(NAME##_quality, "quality", "quality")
+
+#define SPACE_ROW_ELEMENTS                                                                                             \
+    SPACE_INFO(primary)                                                                                                \
+    SPACE_INFO(secondary)                                                                                              \
+    SPACE_INFO(external)                                                                                               \
+    SPACE_INFO(system)
+
 #define STORAGE_ELEMENTS                                                                                               \
     STORAGE(apps, "apps")                                                                                              \
     STORAGE(bios, "bios")                                                                                              \
