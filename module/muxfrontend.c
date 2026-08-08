@@ -507,7 +507,7 @@ static void module_danger(void) {
 }
 
 static void module_device(void) {
-    exec_mux("sysinfo", "muxdevice", muxdevice_main);
+    exec_mux("detail", "muxdevice", muxdevice_main);
 }
 
 static void module_rtc(void) {
@@ -615,9 +615,7 @@ static const module_entry modules[] = {
     {"themedwn", "picker", "muxthemedown", muxthemedown_main, NULL},
     {"themefilter", "themedwn", "muxthemefilter", muxthemefilter_main, NULL},
     {"tester", "info", "muxtester", muxtester_main, NULL},
-    {"sysinfo", "info", "muxsysinfo", muxsysinfo_main, NULL},
-    {"batinfo", "info", "muxbatinfo", muxbatinfo_main, NULL},
-    {"netinfo", "info", "muxnetinfo", muxnetinfo_main, NULL},
+    {"detail", "info", "muxdetail", muxdetail_main, NULL},
     {"chrony", "info", "muxchrony", muxchrony_main, NULL},
     {"text", "info", "muxtext", muxtext_main, NULL},
 

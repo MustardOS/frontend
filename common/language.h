@@ -56,6 +56,10 @@ struct mux_lang {
         char details[MAX_BUFFER_SIZE];
         char directory[MAX_BUFFER_SIZE];
         char duration[MAX_BUFFER_SIZE];
+        char primary[MAX_BUFFER_SIZE];
+        char secondary[MAX_BUFFER_SIZE];
+        char purge[MAX_BUFFER_SIZE];
+        char sync_purge[MAX_BUFFER_SIZE];
         char disabled[MAX_BUFFER_SIZE];
         char download[MAX_BUFFER_SIZE];
         char edit[MAX_BUFFER_SIZE];
@@ -378,31 +382,6 @@ struct mux_lang {
             char start[MAX_BUFFER_SIZE];
         } help;
     } muxbackup;
-
-    struct {
-        char title[MAX_BUFFER_SIZE];
-        char overview[MAX_BUFFER_SIZE];
-        char capacity[MAX_BUFFER_SIZE];
-        char voltage[MAX_BUFFER_SIZE];
-        char status[MAX_BUFFER_SIZE];
-        char health[MAX_BUFFER_SIZE];
-        char design_cap[MAX_BUFFER_SIZE];
-        char last_charged[MAX_BUFFER_SIZE];
-        char time_on_battery[MAX_BUFFER_SIZE];
-        char battery_used[MAX_BUFFER_SIZE];
-        char charger[MAX_BUFFER_SIZE];
-        struct {
-            char capacity[MAX_BUFFER_SIZE];
-            char voltage[MAX_BUFFER_SIZE];
-            char status[MAX_BUFFER_SIZE];
-            char health[MAX_BUFFER_SIZE];
-            char design_cap[MAX_BUFFER_SIZE];
-            char last_charged[MAX_BUFFER_SIZE];
-            char time_on_battery[MAX_BUFFER_SIZE];
-            char battery_used[MAX_BUFFER_SIZE];
-            char charger[MAX_BUFFER_SIZE];
-        } help;
-    } muxbatinfo;
 
     struct {
         char boot[MAX_BUFFER_SIZE];
@@ -915,6 +894,114 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
+        char serial[MAX_BUFFER_SIZE];
+        char display[MAX_BUFFER_SIZE];
+        char tasks[MAX_BUFFER_SIZE];
+        char cores[MAX_BUFFER_SIZE];
+        char speed_range[MAX_BUFFER_SIZE];
+        char day[MAX_BUFFER_SIZE];
+        char hour[MAX_BUFFER_SIZE];
+        char minute[MAX_BUFFER_SIZE];
+        char warn[MAX_BUFFER_SIZE];
+        char memory_drop[MAX_BUFFER_SIZE];
+        char edit_blocked[MAX_BUFFER_SIZE];
+        char save_host[MAX_BUFFER_SIZE];
+        char report_ok[MAX_BUFFER_SIZE];
+        char report_fail[MAX_BUFFER_SIZE];
+        struct {
+            char system[MAX_BUFFER_SIZE];
+            char runtime[MAX_BUFFER_SIZE];
+            char processor[MAX_BUFFER_SIZE];
+            char battery[MAX_BUFFER_SIZE];
+            char power[MAX_BUFFER_SIZE];
+            char network[MAX_BUFFER_SIZE];
+            char traffic[MAX_BUFFER_SIZE];
+        } section;
+        struct {
+            char version[MAX_BUFFER_SIZE];
+            char build[MAX_BUFFER_SIZE];
+            char device[MAX_BUFFER_SIZE];
+            char serial[MAX_BUFFER_SIZE];
+            char kernel[MAX_BUFFER_SIZE];
+            char arch[MAX_BUFFER_SIZE];
+            char display[MAX_BUFFER_SIZE];
+            char uptime[MAX_BUFFER_SIZE];
+            char boot_time[MAX_BUFFER_SIZE];
+            char load_avg[MAX_BUFFER_SIZE];
+            char tasks[MAX_BUFFER_SIZE];
+            char memory[MAX_BUFFER_SIZE];
+            char swap[MAX_BUFFER_SIZE];
+            char temp[MAX_BUFFER_SIZE];
+            char cpu[MAX_BUFFER_SIZE];
+            char cores[MAX_BUFFER_SIZE];
+            char speed[MAX_BUFFER_SIZE];
+            char speed_range[MAX_BUFFER_SIZE];
+            char governor[MAX_BUFFER_SIZE];
+            char capacity[MAX_BUFFER_SIZE];
+            char voltage[MAX_BUFFER_SIZE];
+            char status[MAX_BUFFER_SIZE];
+            char health[MAX_BUFFER_SIZE];
+            char design_cap[MAX_BUFFER_SIZE];
+            char charger[MAX_BUFFER_SIZE];
+            char last_charged[MAX_BUFFER_SIZE];
+            char time_on_battery[MAX_BUFFER_SIZE];
+            char battery_used[MAX_BUFFER_SIZE];
+            char hostname[MAX_BUFFER_SIZE];
+            char mac[MAX_BUFFER_SIZE];
+            char ip[MAX_BUFFER_SIZE];
+            char ssid[MAX_BUFFER_SIZE];
+            char gateway[MAX_BUFFER_SIZE];
+            char dns[MAX_BUFFER_SIZE];
+            char signal[MAX_BUFFER_SIZE];
+            char channel[MAX_BUFFER_SIZE];
+            char ac_traffic[MAX_BUFFER_SIZE];
+            char tp_traffic[MAX_BUFFER_SIZE];
+        } label;
+        struct {
+            char version[MAX_BUFFER_SIZE];
+            char build[MAX_BUFFER_SIZE];
+            char device[MAX_BUFFER_SIZE];
+            char serial[MAX_BUFFER_SIZE];
+            char kernel[MAX_BUFFER_SIZE];
+            char arch[MAX_BUFFER_SIZE];
+            char display[MAX_BUFFER_SIZE];
+            char uptime[MAX_BUFFER_SIZE];
+            char boot_time[MAX_BUFFER_SIZE];
+            char load_avg[MAX_BUFFER_SIZE];
+            char tasks[MAX_BUFFER_SIZE];
+            char memory[MAX_BUFFER_SIZE];
+            char swap[MAX_BUFFER_SIZE];
+            char temp[MAX_BUFFER_SIZE];
+            char cpu[MAX_BUFFER_SIZE];
+            char cores[MAX_BUFFER_SIZE];
+            char speed[MAX_BUFFER_SIZE];
+            char speed_range[MAX_BUFFER_SIZE];
+            char governor[MAX_BUFFER_SIZE];
+            char capacity[MAX_BUFFER_SIZE];
+            char voltage[MAX_BUFFER_SIZE];
+            char status[MAX_BUFFER_SIZE];
+            char health[MAX_BUFFER_SIZE];
+            char design_cap[MAX_BUFFER_SIZE];
+            char charger[MAX_BUFFER_SIZE];
+            char last_charged[MAX_BUFFER_SIZE];
+            char time_on_battery[MAX_BUFFER_SIZE];
+            char battery_used[MAX_BUFFER_SIZE];
+            char hostname[MAX_BUFFER_SIZE];
+            char mac[MAX_BUFFER_SIZE];
+            char ip[MAX_BUFFER_SIZE];
+            char ssid[MAX_BUFFER_SIZE];
+            char gateway[MAX_BUFFER_SIZE];
+            char dns[MAX_BUFFER_SIZE];
+            char signal[MAX_BUFFER_SIZE];
+            char channel[MAX_BUFFER_SIZE];
+            char ac_traffic[MAX_BUFFER_SIZE];
+            char tp_traffic[MAX_BUFFER_SIZE];
+        } help;
+    } muxdetail;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char hasbluetooth[MAX_BUFFER_SIZE];
         char hasrgb[MAX_BUFFER_SIZE];
         char hasdebugfs[MAX_BUFFER_SIZE];
@@ -994,26 +1081,25 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         char news[MAX_BUFFER_SIZE];
-        char sysinfo[MAX_BUFFER_SIZE];
-        char batinfo[MAX_BUFFER_SIZE];
-        char netinfo[MAX_BUFFER_SIZE];
+        char detail[MAX_BUFFER_SIZE];
         char activity[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
         char space[MAX_BUFFER_SIZE];
         char tester[MAX_BUFFER_SIZE];
         char chrony[MAX_BUFFER_SIZE];
         char credit[MAX_BUFFER_SIZE];
+        char reload[MAX_BUFFER_SIZE];
+        char reload_run[MAX_BUFFER_SIZE];
         struct {
             char news[MAX_BUFFER_SIZE];
-            char sys_info[MAX_BUFFER_SIZE];
-            char bat_info[MAX_BUFFER_SIZE];
-            char net_info[MAX_BUFFER_SIZE];
+            char detail[MAX_BUFFER_SIZE];
             char activity[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
             char space[MAX_BUFFER_SIZE];
             char tester[MAX_BUFFER_SIZE];
             char chrony[MAX_BUFFER_SIZE];
             char credit[MAX_BUFFER_SIZE];
+            char reload[MAX_BUFFER_SIZE];
         } help;
     } muxinfo;
 
@@ -1254,45 +1340,6 @@ struct mux_lang {
             char mod_retry[MAX_BUFFER_SIZE];
         } help;
     } muxnetadv;
-
-    struct {
-        char title[MAX_BUFFER_SIZE];
-        char overview[MAX_BUFFER_SIZE];
-        char hostname[MAX_BUFFER_SIZE];
-        char mac[MAX_BUFFER_SIZE];
-        char ip[MAX_BUFFER_SIZE];
-        char ssid[MAX_BUFFER_SIZE];
-        char gateway[MAX_BUFFER_SIZE];
-        char dns[MAX_BUFFER_SIZE];
-        char signal[MAX_BUFFER_SIZE];
-        char channel[MAX_BUFFER_SIZE];
-        char actraffic[MAX_BUFFER_SIZE];
-        char tptraffic[MAX_BUFFER_SIZE];
-        struct {
-            char hostname[MAX_BUFFER_SIZE];
-            char mac[MAX_BUFFER_SIZE];
-            char ip[MAX_BUFFER_SIZE];
-            char ssid[MAX_BUFFER_SIZE];
-            char gateway[MAX_BUFFER_SIZE];
-            char dns[MAX_BUFFER_SIZE];
-            char signal[MAX_BUFFER_SIZE];
-            char channel[MAX_BUFFER_SIZE];
-            char ac_traffic[MAX_BUFFER_SIZE];
-            char tp_traffic[MAX_BUFFER_SIZE];
-        } help;
-        struct {
-            char edit[MAX_BUFFER_SIZE];
-            char change[MAX_BUFFER_SIZE];
-        } error;
-        struct {
-            char host[MAX_BUFFER_SIZE];
-            char mac[MAX_BUFFER_SIZE];
-        } save;
-        struct {
-            char success[MAX_BUFFER_SIZE];
-            char fail[MAX_BUFFER_SIZE];
-        } report;
-    } muxnetinfo;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -2405,6 +2452,9 @@ struct mux_lang {
         char syncthing[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
         char track[MAX_BUFFER_SIZE];
+        char migrate_all[MAX_BUFFER_SIZE];
+        char sync_all[MAX_BUFFER_SIZE];
+        char purge_all[MAX_BUFFER_SIZE];
         struct {
             char apps[MAX_BUFFER_SIZE];
             char bios[MAX_BUFFER_SIZE];
@@ -2421,56 +2471,26 @@ struct mux_lang {
             char syncthing[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
             char track[MAX_BUFFER_SIZE];
+            char migrate_all[MAX_BUFFER_SIZE];
+            char sync_all[MAX_BUFFER_SIZE];
+            char purge_all[MAX_BUFFER_SIZE];
         } help;
+        struct {
+            char migrate[MAX_BUFFER_SIZE];
+            char sync[MAX_BUFFER_SIZE];
+            char purge[MAX_BUFFER_SIZE];
+            char migrate_all[MAX_BUFFER_SIZE];
+            char sync_all[MAX_BUFFER_SIZE];
+            char purge_all[MAX_BUFFER_SIZE];
+        } confirm;
+        struct {
+            char content[MAX_BUFFER_SIZE];
+            char system[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
+            char action[MAX_BUFFER_SIZE];
+        } section;
+        char nothing[MAX_BUFFER_SIZE];
     } muxstorage;
-
-    struct {
-        char title[MAX_BUFFER_SIZE];
-        char overview[MAX_BUFFER_SIZE];
-        char day[MAX_BUFFER_SIZE];
-        char hour[MAX_BUFFER_SIZE];
-        char minute[MAX_BUFFER_SIZE];
-        char version[MAX_BUFFER_SIZE];
-        char build[MAX_BUFFER_SIZE];
-        char device[MAX_BUFFER_SIZE];
-        char kernel[MAX_BUFFER_SIZE];
-        char arch[MAX_BUFFER_SIZE];
-        char uptime[MAX_BUFFER_SIZE];
-        char boot_time[MAX_BUFFER_SIZE];
-        char load_avg[MAX_BUFFER_SIZE];
-        struct {
-            char info[MAX_BUFFER_SIZE];
-            char drop[MAX_BUFFER_SIZE];
-        } memory;
-        char swap[MAX_BUFFER_SIZE];
-        char temp[MAX_BUFFER_SIZE];
-        char reload[MAX_BUFFER_SIZE];
-        char reload_run[MAX_BUFFER_SIZE];
-        struct {
-            char info[MAX_BUFFER_SIZE];
-            char speed[MAX_BUFFER_SIZE];
-            char governor[MAX_BUFFER_SIZE];
-        } cpu;
-        char warn[MAX_BUFFER_SIZE];
-        struct {
-            char version[MAX_BUFFER_SIZE];
-            char build[MAX_BUFFER_SIZE];
-            char device[MAX_BUFFER_SIZE];
-            char kernel[MAX_BUFFER_SIZE];
-            char arch[MAX_BUFFER_SIZE];
-            char uptime[MAX_BUFFER_SIZE];
-            char boot_time[MAX_BUFFER_SIZE];
-            char load_avg[MAX_BUFFER_SIZE];
-            char memory[MAX_BUFFER_SIZE];
-            char swap[MAX_BUFFER_SIZE];
-            char temp[MAX_BUFFER_SIZE];
-            char service[MAX_BUFFER_SIZE];
-            char reload[MAX_BUFFER_SIZE];
-            char cpu[MAX_BUFFER_SIZE];
-            char speed[MAX_BUFFER_SIZE];
-            char governor[MAX_BUFFER_SIZE];
-        } help;
-    } muxsysinfo;
 
     struct {
         char help[MAX_BUFFER_SIZE];

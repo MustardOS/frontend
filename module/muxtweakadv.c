@@ -278,10 +278,12 @@ static void init_navigation_group(void) {
     };
 
     list_frame_init(
-        &theme, ui_pnl_content, frames, (int) A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
+        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
         ui_objects_value, ui_count_dynamic
     );
     list_frame_apply();
+
+    gen_step_movement(list_frame_restore(), +1, 2, 0, 1);
 }
 
 static void handle_frame_prev(void) {
@@ -470,7 +472,6 @@ int muxtweakadv_main(void) {
         lang.generic.select, lang.generic.cancel
     );
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(list_frame_restore(), +1, 2, 0, 1);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,

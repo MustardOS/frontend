@@ -35,8 +35,13 @@ static void init_dropdown_settings(void) {
 #undef BACKUP
 }
 
+static int is_toggle_option(const lv_obj_t *option) {
+    return option != ui_dro_target_backup && option != ui_dro_merge_backup && option != ui_dro_start_backup;
+}
+
 static void set_all_options(const int value) {
-#define BACKUP(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_backup, value);
+#define BACKUP(NAME, UDATA)                                                                                            \
+    if (is_toggle_option(ui_dro_##NAME##_backup)) lv_dropdown_set_selected(ui_dro_##NAME##_backup, value);
     BACKUP_ELEMENTS
 #undef BACKUP
 }
@@ -67,6 +72,11 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
+#define BACKUP_ACTION_SECTION 3
+
+static const char *target_token[3];
+static int target_count = 0;
+
 static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, collection, lang.muxbackup.collection, "collection", excluded_included, 2);
@@ -94,14 +104,19 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);
 
     lv_dropdown_clear_options(ui_dro_target_backup);
-    lv_dropdown_add_option(ui_dro_target_backup, "SD1", LV_DROPDOWN_POS_LAST);
+    target_count = 0;
+
+    lv_dropdown_add_option(ui_dro_target_backup, lang.generic.primary, LV_DROPDOWN_POS_LAST);
+    target_token[target_count++] = "SD1";
 
     if (is_partition_mounted(device.storage.sdcard.mount)) {
-        lv_dropdown_add_option(ui_dro_target_backup, "SD2", LV_DROPDOWN_POS_LAST);
+        lv_dropdown_add_option(ui_dro_target_backup, lang.generic.secondary, LV_DROPDOWN_POS_LAST);
+        target_token[target_count++] = "SD2";
     }
 
     if (is_partition_mounted(device.storage.usb.mount)) {
         lv_dropdown_add_option(ui_dro_target_backup, "USB", LV_DROPDOWN_POS_LAST);
+        target_token[target_count++] = "USB";
     }
 
     reset_ui_groups();
@@ -118,13 +133,15 @@ static void init_navigation_group(void) {
     );
     list_frame_apply();
 
-    int dbi_index = 0;
+    int dbi_index = -1;
     if (file_exist(MUOS_DBI_LOAD)) {
         dbi_index = read_line_int_from(MUOS_DBI_LOAD, 1);
         remove(MUOS_DBI_LOAD);
     }
 
-    if (ui_count_static > 0 && dbi_index >= 0 && dbi_index < ui_count_static && current_item_index < ui_count_static) {
+    if (dbi_index < 0) {
+        gen_step_movement(list_frame_restore(), +1, 0, 0, 1);
+    } else if (ui_count_static > 0 && dbi_index < ui_count_static && current_item_index < ui_count_static) {
         gen_step_movement(dbi_index, 1, 0, 0, 1);
     }
 }
@@ -310,8 +327,8 @@ static void start_backup(lv_obj_t *e_focused) {
 
     save_backup_options();
 
-    char target_value[MAX_BUFFER_SIZE];
-    lv_dropdown_get_selected_str(ui_dro_target_backup, target_value, sizeof(target_value));
+    const uint16_t target_index = lv_dropdown_get_selected(ui_dro_target_backup);
+    const char *target_value = target_index < target_count ? target_token[target_index] : "SD1";
 
     char datetime[64];
     snprintf(datetime, sizeof(datetime), "%s", get_datetime());
@@ -374,8 +391,9 @@ static void start_backup(lv_obj_t *e_focused) {
 
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
-
     if (msgbox_active || hold_call) return;
+
+    if (list_frame_current() == BACKUP_ACTION_SECTION) return;
 
     play_sound(snd_confirm);
 
@@ -414,6 +432,36 @@ static void init_elements(void) {
     overlay_display();
 }
 
+static void nav_refresh(void) {
+    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+
+    if (list_frame_focused() || e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup) {
+        lv_obj_add_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_clear_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    if (list_frame_current() == BACKUP_ACTION_SECTION) {
+        lv_obj_add_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_clear_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    if (e_focused == ui_lbl_start_backup) {
+        lv_obj_add_flag(ui_lbl_nav_lr, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_clear_flag(ui_lbl_nav_lr, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    footer_nav_check_scroll();
+}
+
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     task_progress_tick();
 
@@ -421,16 +469,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();
 
-        const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-
-        if (list_frame_focused() || e_focused == ui_lbl_merge_backup || e_focused == ui_lbl_target_backup) {
-            lv_obj_add_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_clear_flag(ui_lbl_nav_a, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_lbl_nav_a_glyph, LV_OBJ_FLAG_HIDDEN);
-        }
-        footer_nav_check_scroll();
+        nav_refresh();
 
         lv_obj_invalidate(ui_pnl_content);
         nav_moved = 0;
@@ -461,6 +500,8 @@ int muxbackup_main(void) {
     );
 
     task_progress_init(&theme, ui_screen);
+    nav_refresh();
+
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

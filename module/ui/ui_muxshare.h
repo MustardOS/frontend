@@ -90,6 +90,67 @@
     BACKUP(merge, "merge")                                                                                             \
     BACKUP(start, "start")
 
+#define DETAIL_SYSTEM_ELEMENTS                                                                                         \
+    DETAIL(version, "version")                                                                                         \
+    DETAIL(build, "build")                                                                                             \
+    DETAIL(device, "device")                                                                                           \
+    DETAIL(serial, "serial")                                                                                           \
+    DETAIL(kernel, "kernel")                                                                                           \
+    DETAIL(arch, "arch")                                                                                               \
+    DETAIL(display, "display")
+
+#define DETAIL_RUNTIME_ELEMENTS                                                                                        \
+    DETAIL(uptime, "uptime")                                                                                           \
+    DETAIL(boot_time, "boottime")                                                                                      \
+    DETAIL(load_avg, "loadavg")                                                                                        \
+    DETAIL(tasks, "tasks")                                                                                             \
+    DETAIL(memory, "memory")                                                                                           \
+    DETAIL(swap, "swap")                                                                                               \
+    DETAIL(temp, "temp")
+
+#define DETAIL_PROCESSOR_ELEMENTS                                                                                      \
+    DETAIL(cpu, "cpu")                                                                                                 \
+    DETAIL(cores, "cores")                                                                                             \
+    DETAIL(speed, "speed")                                                                                             \
+    DETAIL(speed_range, "speedrange")                                                                                  \
+    DETAIL(governor, "governor")
+
+#define DETAIL_BATTERY_ELEMENTS                                                                                        \
+    DETAIL(capacity, "capacity")                                                                                       \
+    DETAIL(voltage, "voltage")                                                                                         \
+    DETAIL(status, "status")                                                                                           \
+    DETAIL(health, "health")                                                                                           \
+    DETAIL(design_cap, "designcap")                                                                                    \
+    DETAIL(charger, "charger")
+
+#define DETAIL_POWER_ELEMENTS                                                                                          \
+    DETAIL(last_charged, "lastcharged")                                                                                \
+    DETAIL(time_on_battery, "timeonbattery")                                                                           \
+    DETAIL(battery_used, "batteryused")
+
+#define DETAIL_NETWORK_ELEMENTS                                                                                        \
+    DETAIL(hostname, "hostname")                                                                                       \
+    DETAIL(mac, "mac")                                                                                                 \
+    DETAIL(ip, "ip")                                                                                                   \
+    DETAIL(ssid, "ssid")                                                                                               \
+    DETAIL(gateway, "gateway")                                                                                         \
+    DETAIL(dns, "dns")                                                                                                 \
+    DETAIL(signal, "signal")
+
+#define DETAIL_TRAFFIC_ELEMENTS                                                                                        \
+    DETAIL(channel, "channel")                                                                                         \
+    DETAIL(ac_traffic, "actraffic")                                                                                    \
+    DETAIL(tp_traffic, "tptraffic")
+
+#define DETAIL_ELEMENTS                                                                                                \
+    DETAIL_SYSTEM_ELEMENTS                                                                                             \
+    DETAIL_RUNTIME_ELEMENTS                                                                                            \
+    DETAIL_PROCESSOR_ELEMENTS                                                                                          \
+    DETAIL_BATTERY_ELEMENTS                                                                                            \
+    DETAIL_POWER_ELEMENTS                                                                                              \
+    DETAIL_NETWORK_ELEMENTS                                                                                            \
+    DETAIL_TRAFFIC_ELEMENTS
+
 #define BATINFO_ELEMENTS                                                                                               \
     BATINFO(capacity, "capacity")                                                                                      \
     BATINFO(voltage, "voltage")                                                                                        \
@@ -247,11 +308,10 @@
     INFO(screenshot, "screenshot")                                                                                     \
     INFO(space, "space")                                                                                               \
     INFO(tester, "tester")                                                                                             \
-    INFO(sys_info, "sysinfo")                                                                                          \
-    INFO(bat_info, "batinfo")                                                                                          \
-    INFO(net_info, "netinfo")                                                                                          \
+    INFO(detail, "detail")                                                                                             \
     INFO(chrony, "chrony")                                                                                             \
-    INFO(credit, "credit")
+    INFO(credit, "credit")                                                                                             \
+    INFO(reload, "reload")
 
 #define INSTALL_ELEMENTS                                                                                               \
     INSTALL(rtc, "clock")                                                                                              \
@@ -469,22 +529,37 @@
     SPACE_INFO(external)                                                                                               \
     SPACE_INFO(system)
 
-#define STORAGE_ELEMENTS                                                                                               \
-    STORAGE(apps, "apps")                                                                                              \
-    STORAGE(bios, "bios")                                                                                              \
+#define STORAGE_CONTENT_ELEMENTS                                                                                       \
     STORAGE(catalogue, "catalogue")                                                                                    \
     STORAGE(collection, "collection")                                                                                  \
     STORAGE(history, "history")                                                                                        \
-    STORAGE(init, "init")                                                                                              \
-    STORAGE(music, "music")                                                                                            \
     STORAGE(name, "name")                                                                                              \
-    STORAGE(network, "network")                                                                                        \
-    STORAGE(package, "package")                                                                                        \
     STORAGE(save, "save")                                                                                              \
     STORAGE(screenshot, "screenshot")                                                                                  \
-    STORAGE(syncthing, "syncthing")                                                                                    \
-    STORAGE(theme, "theme")                                                                                            \
     STORAGE(track, "track")
+
+#define STORAGE_SYSTEM_ELEMENTS                                                                                        \
+    STORAGE(bios, "bios")                                                                                              \
+    STORAGE(init, "init")                                                                                              \
+    STORAGE(network, "network")                                                                                        \
+    STORAGE(syncthing, "syncthing")
+
+#define STORAGE_CUSTOM_ELEMENTS                                                                                        \
+    STORAGE(apps, "apps")                                                                                              \
+    STORAGE(music, "music")                                                                                            \
+    STORAGE(package, "package")                                                                                        \
+    STORAGE(theme, "theme")
+
+#define STORAGE_BULK_ELEMENTS                                                                                          \
+    STORAGE(migrate_all, "migrate_all")                                                                                \
+    STORAGE(sync_all, "sync_all")                                                                                      \
+    STORAGE(purge_all, "purge_all")
+
+#define STORAGE_ELEMENTS                                                                                               \
+    STORAGE_CONTENT_ELEMENTS                                                                                           \
+    STORAGE_SYSTEM_ELEMENTS                                                                                            \
+    STORAGE_CUSTOM_ELEMENTS                                                                                            \
+    STORAGE_BULK_ELEMENTS
 
 #define SYSINFO_ELEMENTS                                                                                               \
     SYSINFO(version, "version")                                                                                        \

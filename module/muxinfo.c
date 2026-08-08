@@ -34,19 +34,15 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, screenshot, lang.muxinfo.screenshot, "screenshot", 0);
     INIT_STATIC_ITEM(-1, info, space, lang.muxinfo.space, "space", 0);
     INIT_STATIC_ITEM(-1, info, tester, lang.muxinfo.tester, "tester", 0);
-    INIT_STATIC_ITEM(-1, info, sys_info, lang.muxinfo.sysinfo, "sysinfo", 0);
-    INIT_STATIC_ITEM(-1, info, bat_info, lang.muxinfo.batinfo, "batinfo", 0);
-    INIT_STATIC_ITEM(-1, info, net_info, lang.muxinfo.netinfo, "netinfo", 0);
+    INIT_STATIC_ITEM(-1, info, detail, lang.muxinfo.detail, "detail", 0);
     INIT_STATIC_ITEM(-1, info, chrony, lang.muxinfo.chrony, "chrony", 0);
     INIT_STATIC_ITEM(-1, info, credit, lang.muxinfo.credit, "credit", 0);
+    INIT_STATIC_ITEM(-1, info, reload, lang.muxinfo.reload, "reload", 0);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
 
-    if (!visible_network_opt()) {
-        HIDE_STATIC_ITEM(info, news);
-        HIDE_STATIC_ITEM(info, net_info);
-    }
+    if (!visible_network_opt()) HIDE_STATIC_ITEM(info, news);
 
     // Hide until further notice or future development
     HIDE_STATIC_ITEM(info, chrony);
@@ -61,6 +57,7 @@ static void handle_a(void) {
         menu_general = 0,
         menu_news,
         menu_credits,
+        menu_reload,
     } menu_action;
 
     typedef int (*visible_fn)(void);
@@ -77,11 +74,10 @@ static void handle_a(void) {
         {"screenshot", menu_general, NULL},
         {"space", menu_general, NULL},
         {"tester", menu_general, NULL},
-        {"sysinfo", menu_general, NULL},
-        {"batinfo", menu_general, NULL},
-        {"netinfo", menu_general, visible_network_opt},
+        {"detail", menu_general, NULL},
         {"chrony", menu_general, visible_chrony_opt},
         {"credits", menu_credits, NULL},
+        {"reload", menu_reload, NULL},
     };
 
     SELECT_VISIBLE_ENTRY(entries, entry);
@@ -103,6 +99,19 @@ static void handle_a(void) {
                 play_sound(snd_error);
                 toast_message(lang.generic.need_connect, tst_wait_m);
             }
+            break;
+        case menu_reload:
+            toast_message(lang.muxinfo.reload_run, tst_wait_f);
+
+            refresh_config = 1;
+            refresh_device = 1;
+            refresh_kiosk = 1;
+            refresh_resolution = 1;
+
+            if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
+            load_mux("launcher");
+
+            mux_input_stop();
             break;
         case menu_credits:
             play_sound(snd_confirm);

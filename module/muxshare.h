@@ -252,8 +252,6 @@ void muxassign_main(int auto_assign, const char *name, const char *dir, const ch
 
 int muxbackup_main();
 
-int muxbatinfo_main();
-
 int muxbtall_main();
 
 int muxbtcon_main();
@@ -276,6 +274,8 @@ int muxcustom_main();
 
 int muxdanger_main();
 
+int muxdetail_main();
+
 int muxdevice_main();
 
 int muxdistemp_main();
@@ -297,11 +297,10 @@ int muxkiosk_main();
 int muxlanguage_main();
 
 int muxlaunch_main();
+
 int muxlogo_main();
 
 int muxnetadv_main();
-
-int muxnetinfo_main();
 
 int muxnetprofile_main();
 
@@ -354,8 +353,6 @@ int muxspace_main();
 int muxsplash_main(char *splash_image, int apply_recolour);
 
 int muxstorage_main();
-
-int muxsysinfo_main();
 
 int muxtext_main();
 

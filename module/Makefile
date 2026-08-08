@@ -8,14 +8,14 @@ CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS) \
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
           -L../bin/lib -lui -lmuxcom -lplutosvg
 
-MODULES = muxactivity muxapp muxappcon muxaccess muxarchive muxassign muxbackup muxbatinfo muxbtall \
+MODULES = muxactivity muxapp muxappcon muxaccess muxdetail muxarchive muxassign muxbackup muxbtall \
           muxbtcon muxbtdev muxchrony muxcolfilter muxcollect muxconfig muxconnect \
           muxcontrol muxcustom muxdanger muxdevice muxdistemp muxdownload \
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk \
-          muxlanguage muxlaunch muxlogo muxnetadv muxnetinfo muxnetprofile muxnetproxy muxnetscan \
+          muxlanguage muxlaunch muxlogo muxnetadv muxnetprofile muxnetproxy muxnetscan \
           muxnetwork muxnews muxoption muxorder muxoverlay muxpass muxpasscfg muxpicker muxplore \
           muxpower muxraopt muxrgb muxrgbzone muxrtc muxsearch muxshader muxshot muxsort \
-          muxspace muxsplash muxstorage muxsysinfo muxtag muxtask muxtheme \
+          muxspace muxsplash muxstorage muxtag muxtask muxtheme \
           muxthemedown muxthemefilter muxtester muxtext muxtimezone \
           muxtweakadv muxtweakgen muxwebserv muxshare muxremap
 

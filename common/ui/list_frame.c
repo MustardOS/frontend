@@ -92,21 +92,27 @@ static void build_bar(lv_obj_t *parent) {
 
     lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
 
-    lv_obj_set_flex_flow(bar, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(bar, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
     bar_glyph = build_arrow(bar, "left");
-
     bar_label = lv_label_create(bar);
 
-    apply_theme_option_item_label(theme_ref, bar_label, "", 0);
+    apply_theme_list_item(theme_ref, bar_label, "");
 
-    lv_obj_set_flex_grow(bar_label, 1);
+    const lv_coord_t inset = theme_ref->list_default.glyph_padding_left + theme_ref->mux.item.height;
+
+    lv_obj_set_width(bar_label, lv_pct(100));
+    lv_obj_set_align(bar_label, LV_ALIGN_CENTER);
+    lv_obj_set_style_pad_left(bar_label, inset, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(bar_label, inset, MU_OBJ_MAIN_DEFAULT);
     lv_label_set_long_mode(bar_label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(bar_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
     lv_label_set_text(bar_label, "");
 
     bar_glyph_right = build_arrow(bar, "right");
+
+    lv_obj_set_style_x(
+        bar_glyph_right, theme_ref->misc.content.width / 2 - theme_ref->list_default.glyph_padding_left,
+        MU_OBJ_MAIN_DEFAULT
+    );
 
     lv_obj_add_event_cb(bar_glyph, bar_focus_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(bar_glyph, bar_focus_cb, LV_EVENT_DEFOCUSED, NULL);
