@@ -108,11 +108,8 @@ static void build_bar(lv_obj_t *parent) {
     lv_label_set_text(bar_label, "");
 
     bar_glyph_right = build_arrow(bar, "right");
-
-    lv_obj_set_style_x(
-        bar_glyph_right, theme_ref->misc.content.width / 2 - theme_ref->list_default.glyph_padding_left,
-        MU_OBJ_MAIN_DEFAULT
-    );
+    lv_obj_set_style_align(bar_glyph_right, LV_ALIGN_RIGHT_MID, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_x(bar_glyph_right, -theme_ref->list_default.glyph_padding_left, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_add_event_cb(bar_glyph, bar_focus_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(bar_glyph, bar_focus_cb, LV_EVENT_DEFOCUSED, NULL);

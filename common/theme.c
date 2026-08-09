@@ -364,7 +364,8 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->list_default.text = 0xFFFFFF;
     theme->list_default.text_alpha = 255;
     theme->list_default.background_gradient = theme->system.background;
-    theme->list_default.glyph_padding_left = 19;
+    theme->list_default.glyph_padding_left = 5;
+    theme->list_default.glyph_padding_right = 6;
     theme->list_default.glyph_alpha = 255;
     theme->list_default.glyph_recolour = 0xFFFFFF;
     theme->list_default.glyph_recolour_alpha = 0;
@@ -831,6 +832,7 @@ static const theme_field theme_fields[] = {
     {"list", "LIST_DEFAULT_TEXT", THEME_OFF(list_default.text), theme_hex},
     {"list", "LIST_DEFAULT_TEXT_ALPHA", THEME_OFF(list_default.text_alpha), theme_int},
     {"list", "LIST_DEFAULT_GLYPH_PAD_LEFT", THEME_OFF(list_default.glyph_padding_left), theme_int},
+    {"list", "LIST_DEFAULT_GLYPH_PAD_RIGHT", THEME_OFF(list_default.glyph_padding_right), theme_int},
     {"list", "LIST_DEFAULT_GLYPH_ALPHA", THEME_OFF(list_default.glyph_alpha), theme_int},
     {"list", "LIST_DEFAULT_GLYPH_RECOLOUR", THEME_OFF(list_default.glyph_recolour), theme_hex},
     {"list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", THEME_OFF(list_default.glyph_recolour_alpha), theme_int},
@@ -1341,16 +1343,15 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     if (eff_glyph_size == -2) eff_glyph_size = theme->glyph.list;
 
     const int16_t glyph_hidden = !config->visual.list_glyph || (theme->list_default.glyph_alpha == 0 && theme->list_focus.glyph_alpha == 0);
-    if (!glyph_hidden && eff_glyph_size == 0 && theme->mux.item.height > 0) {
-        const int16_t auto_size = (int16_t) (theme->mux.item.height * 3 / 4);
-        const int16_t half_auto = (int16_t) (auto_size / 2);
-        const int16_t needed = (int16_t) (auto_size + 6);
-
-        if (needed > theme->font.list_pad_left) theme->font.list_pad_left = needed;
-        int16_t glyph_center = (int16_t) (theme->font.list_pad_left / 2);
-
-        if (glyph_center < half_auto) glyph_center = half_auto;
-        theme->list_default.glyph_padding_left = (int16_t) (glyph_center + 4);
+    if (glyph_hidden) {
+        theme->font.list_pad_left = theme->list_default.glyph_padding_left;
+    } else {
+        if (eff_glyph_size == 0 && theme->mux.item.height > 0) {
+            const int16_t auto_size = (int16_t) (theme->mux.item.height * 3 / 4);
+            theme->font.list_pad_left = theme->list_default.glyph_padding_left + auto_size + theme->list_default.glyph_padding_right;
+        } else if (eff_glyph_size > 0){
+            theme->font.list_pad_left = theme->list_default.glyph_padding_left + eff_glyph_size + theme->list_default.glyph_padding_right;            
+        }
     }
 
     const int16_t max_radius = theme->mux.item.height / 2;
@@ -1434,11 +1435,6 @@ void apply_size_to_content(
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lbl_item, 0, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_width(ui_lbl_item, item_width);
-
-        lv_obj_set_x(
-            ui_lbl_item_glyph,
-            c_theme->list_default.glyph_padding_left - item_width / 2 - c_theme->list_default.border_width
-        );
     }
 }
 
@@ -1822,8 +1818,6 @@ void init_item_animation(void) {
 }
 
 void init_item_style(struct theme_config *theme) {
-    if (!config.visual.list_glyph) theme->font.list_pad_left = 6;
-
     lv_style_init(&style_list_item_default);
     lv_style_init(&style_list_item_focused);
 
@@ -1844,8 +1838,8 @@ void init_glyph_style(const struct theme_config *theme) {
     lv_style_init(&style_list_glyph_default);
     lv_style_init(&style_list_glyph_focused);
 
-    lv_style_set_x(&style_list_glyph_default, theme->list_default.glyph_padding_left - theme->misc.content.width / 2);
-    lv_style_set_align(&style_list_glyph_default, LV_ALIGN_CENTER);
+    lv_style_set_x(&style_list_glyph_default, theme->list_default.glyph_padding_left);
+    lv_style_set_align(&style_list_glyph_default, LV_ALIGN_LEFT_MID);
 
     lv_style_set_img_opa(&style_list_glyph_default, theme->list_default.glyph_alpha);
     lv_style_set_img_recolor(&style_list_glyph_default, lv_color_hex(theme->list_default.glyph_recolour));

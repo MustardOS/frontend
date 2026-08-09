@@ -204,6 +204,7 @@ struct theme_config {
         uint32_t text;
         int16_t text_alpha;
         int16_t glyph_padding_left;
+        int16_t glyph_padding_right;
         int16_t glyph_alpha;
         uint32_t glyph_recolour;
         int16_t glyph_recolour_alpha;
