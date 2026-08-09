@@ -600,11 +600,7 @@ static const char *get_ip_address(void) {
     if (!is_network_connected()) return lang.generic.not_connected;
 
     static char ip[64];
-    const char *const argv[] = {"ip", "addr", "show", device.network.interface, NULL};
-    if (!command_prefixed_value(argv, "inet ", ip, sizeof(ip))) return lang.generic.unknown;
-
-    char *prefix_end = strchr(ip, '/');
-    if (prefix_end) *prefix_end = '\0';
+    if (!get_network_ipv4_address(ip, sizeof(ip))) return lang.generic.unknown;
 
     return ip;
 }
@@ -824,6 +820,11 @@ static const char *get_tp_traffic(void) {
 
 static const char *get_serial(void) {
     static char buffer[UI_BUFFER];
+    static int initialised = 0;
+
+    if (initialised) return buffer[0] ? buffer : lang.generic.unknown;
+    initialised = 1;
+
     const char *const argv[] = {OPT_PATH "script/system/serial.sh", NULL};
     char *serial = get_execute_result_argv(argv, 0);
     if (!serial) return lang.generic.unknown;

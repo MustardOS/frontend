@@ -1,3 +1,6 @@
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +22,38 @@ int is_network_connected(void) {
     }
 
     return 0;
+}
+
+int get_network_ipv4_address(char *output, const size_t output_size) {
+    if (!output || output_size == 0 || !device.network.interface[0]) return 0;
+
+    output[0] = '\0';
+
+    struct ifaddrs *interfaces = NULL;
+    if (getifaddrs(&interfaces) == 0) {
+        for (const struct ifaddrs *entry = interfaces; entry; entry = entry->ifa_next) {
+            if (!entry->ifa_addr || entry->ifa_addr->sa_family != AF_INET) continue;
+            if (strcmp(entry->ifa_name, device.network.interface) != 0) continue;
+
+            const struct sockaddr_in *address = (const struct sockaddr_in *) entry->ifa_addr;
+            if (address->sin_addr.s_addr == htonl(INADDR_ANY)) continue;
+
+            if (inet_ntop(AF_INET, &address->sin_addr, output, output_size)) break;
+        }
+
+        freeifaddrs(interfaces);
+        if (output[0]) return 1;
+    }
+
+    char *saved = read_line_char_from(CONF_CONFIG_PATH "network/address", 1);
+    if (!saved) return 0;
+
+    struct in_addr address;
+    const int valid = inet_pton(AF_INET, saved, &address) == 1 && address.s_addr != htonl(INADDR_ANY) &&
+                      str_copy_checked(output, output_size, saved);
+    free(saved);
+
+    return valid;
 }
 
 int is_bluetooth_connected(void) {

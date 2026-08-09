@@ -1,8 +1,11 @@
 #pragma once
 
+#include <stddef.h>
 #include "init.h"
 
 int is_network_connected(void);
+
+int get_network_ipv4_address(char *output, size_t output_size);
 
 int is_bluetooth_connected(void);
 

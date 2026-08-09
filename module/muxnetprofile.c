@@ -116,57 +116,8 @@ static int profile_is_active(void) {
     return active_match;
 }
 
-static int is_safe_iface(const char *iface) {
-    if (!*iface) return 0;
-
-    const size_t len = strlen(iface);
-    if (len >= 16) return 0;
-
-    for (const char *p = iface; *p; p++) {
-        if (!isalnum((unsigned char) *p) && *p != '_' && *p != '-' && *p != '.' && *p != ':') {
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
 static int read_ip(char *buf) {
-    FILE *f = fopen(address_file, "r");
-
-    if (f) {
-        const int ok = fgets(buf, IP_OCTET, f) != NULL;
-        fclose(f);
-        if (ok) {
-            char *p = buf;
-            while (*p && *p != '\n' && *p != '\r')
-                p++;
-            *p = '\0';
-            if (*buf && strcasecmp(buf, "0.0.0.0") != 0) return 1;
-        }
-    }
-
-    if (!is_safe_iface(device.network.interface)) return 0;
-
-    const char *const argv[] = {"ip", "addr", "show", device.network.interface, NULL};
-    char *output = get_execute_result_argv(argv, -1);
-    if (!output) return 0;
-
-    buf[0] = '\0';
-    char *save = NULL;
-    for (char *line = strtok_r(output, "\r\n", &save); line; line = strtok_r(NULL, "\r\n", &save)) {
-        while (*line && isspace((unsigned char) *line))
-            line++;
-        if (strncmp(line, "inet ", 5) != 0) continue;
-        line += 5;
-        char *end = strpbrk(line, "/ \t");
-        if (end) *end = '\0';
-        snprintf(buf, IP_OCTET, "%s", line);
-        break;
-    }
-    free(output);
-
-    return *buf != '\0';
+    return get_network_ipv4_address(buf, IP_OCTET);
 }
 
 static int live_network_connected(void) {
