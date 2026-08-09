@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "contract.h"
 
 #ifndef TEST_IMAGE
 #define TEST_IMAGE 1
@@ -73,15 +72,15 @@
 
 #define LOCAL_TIME "/etc/localtime"
 
-#define OPT_PATH MUOS_OPT_PATH
-#define RUN_PATH MUOS_RUN_PATH
+#define OPT_PATH "/opt/muos/"
+#define RUN_PATH "/run/muos/"
 
 #define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
 #define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"
 
-#define IDLE_STATE   MUOS_IDLE_STATE
-#define NOTIFY_DROP  MUOS_NOTIFY_DROP
-#define WAKE_CPU_GOV MUOS_WAKE_CPU_GOV
+#define IDLE_STATE   RUN_PATH "idle_state"
+#define NOTIFY_DROP  RUN_PATH "notify"
+#define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
 
 #define RGBLED_BIN OPT_PATH "frontend/murgb"
 #define DEV_SCRIPT OPT_PATH "script/device/"
@@ -95,7 +94,7 @@
 #define MAIN_ROM_DIR "ROMS"
 
 #define CHIME_DONE "/tmp/chime_done"
-#define SAFE_QUIT  MUOS_SAFE_QUIT
+#define SAFE_QUIT  RUN_PATH "safe_quit"
 
 #define EXPLORE_DIR  "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
@@ -182,40 +181,40 @@
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 
-#define MUOS_ACT_LOAD MUOS_ACTION_FILE
+#define MUOS_ACT_LOAD RUN_PATH "action"
 #define MUOS_OPT_FROM "/tmp/opt_fm" // Content Options Module Return
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_AIX_LOAD "/tmp/aix_go" // Core/System Assignment Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
-#define MUOS_APP_LOAD MUOS_APPLICATION_FILE
+#define MUOS_APP_LOAD RUN_PATH "application"
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_ASS_SYSP "/tmp/ass_sp" // Core/System Assignment Force System Picker
 #define MUOS_BTI_LOAD "/tmp/bti_go" // Bluetooth Paired Last Index
 #define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 #define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
-#define MUOS_CON_LOAD MUOS_CONTROLLER_FILE
+#define MUOS_CON_LOAD RUN_PATH "controller"
 #define MUOS_CRS_LOAD "/tmp/crs_go" // Crash Module Information
 #define MUOS_PWR_LOSS "/tmp/pwr_no" // Unexpected Power Loss Alert
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_SFI_LOAD "/tmp/sfi_" // Section Frame Last Index, one per module
-#define MUOS_FLT_LOAD MUOS_FILTER_FILE
-#define MUOS_GOV_LOAD MUOS_GOVERNOR_FILE
+#define MUOS_FLT_LOAD RUN_PATH "filter"
+#define MUOS_GOV_LOAD RUN_PATH "governor"
 #define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
-#define MUOS_OVO_LOAD MUOS_OVERLAY_OPTIONS_FILE
+#define MUOS_OVO_LOAD RUN_PATH "overlay_options"
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
 #define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index
-#define MUOS_RAC_LOAD MUOS_RETROARCH_FILE
+#define MUOS_RAC_LOAD RUN_PATH "retroarch"
 #define MUOS_RES_LOAD "/tmp/res_go" // Full Path of ROM Content Search
-#define MUOS_ROM_LOAD MUOS_CONTENT_FILE
-#define MUOS_SAA_LOAD MUOS_AUTO_CORE_FILE
-#define MUOS_SAG_LOAD MUOS_AUTO_GOVERNOR_FILE
-#define MUOS_SAR_LOAD MUOS_AUTO_RETROARCH_FILE
+#define MUOS_ROM_LOAD RUN_PATH "content"
+#define MUOS_SAA_LOAD RUN_PATH "auto_core"
+#define MUOS_SAG_LOAD RUN_PATH "auto_governor"
+#define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
 #define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
-#define MUOS_SHD_LOAD MUOS_SHADER_FILE
+#define MUOS_SHD_LOAD RUN_PATH "shader"
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 

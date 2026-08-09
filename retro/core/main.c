@@ -290,7 +290,7 @@ int main(const int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
     if (argc == 2 && strcmp(argv[1], "--version") == 0) {
-        printf("muxretro interface %s\n", MUOS_MUXRETRO_CLI_VERSION);
+        printf("muxretro interface 1\n");
         return EXIT_SUCCESS;
     }
     startup_options startup;

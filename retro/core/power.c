@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../common/contract.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../netplay/netplay.h"
@@ -15,15 +14,16 @@
 #include "power_protocol.h"
 
 static int power_save_prepared = 0;
+static const char power_save_ready_path[] = "/run/muos/muxretro_save_ready";
 
 void power_session_init(void) {
     if (power_protocol_init() != 0) LOG_WARN(mux_module, "Could not initialise power lifecycle signals");
-    unlink(MUOS_PICKLES_SAVE_READY);
+    unlink(power_save_ready_path);
 }
 
 static void acknowledge_power_save(void) {
     const int descriptor =
-        open(MUOS_PICKLES_SAVE_READY, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+        open(power_save_ready_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
     if (descriptor < 0) {
         LOG_WARN(mux_module, "Could not acknowledge power save: %s", strerror(errno));
         return;
@@ -72,7 +72,7 @@ int power_session_poll(void) {
     if (events.wake) {
         LOG_INFO(mux_module, "Received resume signal (SIGUSR2)");
         power_save_prepared = 0;
-        unlink(MUOS_PICKLES_SAVE_READY);
+        unlink(power_save_ready_path);
 
         if (pause_menu_is_active()) pause_menu_toggle();
     }

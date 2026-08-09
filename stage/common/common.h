@@ -13,9 +13,7 @@
 #define INDICATOR_STEPS   10
 #define INDICATOR_SHOW_MS 1024
 
-#include "../../common/contract.h"
-
-#define OVERLAY_LOADER MUOS_OVERLAY_FILE
+#define OVERLAY_LOADER "/run/muos/overlay"
 #define OVERLAY_RUNNER "/run/muos/overlay."
 
 #define INTERNAL_SHARE   "/opt/muos/share" // Do NOT put a trailing slash here!
