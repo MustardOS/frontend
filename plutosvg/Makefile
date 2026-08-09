@@ -25,7 +25,7 @@ all: $(LIB_DIR)/$(LIB_FILE)
 $(LIB_DIR)/$(LIB_FILE): $(ALL_OBJS)
 	@printf "Linking objects into %s\n" "$@"
 	@mkdir -p $(LIB_DIR)
-	@$(CC) $(ALL_OBJS) $(SHARED_PIC) -lm -o $@
+	@$(CC) $(ALL_OBJS) $(SHARED_PIC) $(CLOSED_LIB_LDFLAGS) -lm -o $@
 	@find ${shell pwd} -name "*.o" -exec rm -f {} +
 
 %.o: %.c

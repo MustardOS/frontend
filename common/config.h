@@ -329,6 +329,7 @@ struct mux_config {
         int16_t video_wallpaper;
         int16_t background_scale;
         int16_t launchsplash;
+        int16_t pickles_startup_messages;
         int16_t blackfade;
         int16_t notify_time;
         int16_t reduce_motion;
@@ -359,6 +360,13 @@ struct mux_config {
         int16_t ttyd;
         int16_t syncthing;
         int16_t tailscaled;
+        char sshd_port[MAX_BUFFER_SIZE];
+        char sftpgo_port[MAX_BUFFER_SIZE];
+        char sftpgo_sftp_port[MAX_BUFFER_SIZE];
+        char ttyd_port[MAX_BUFFER_SIZE];
+        char ttyd_user[MAX_BUFFER_SIZE];
+        char ttyd_pass[MAX_BUFFER_SIZE];
+        char syncthing_port[MAX_BUFFER_SIZE];
     } web;
 
     struct {

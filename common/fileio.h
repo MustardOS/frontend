@@ -16,7 +16,7 @@ int file_exist(const char *filename);
 
 int dir_exist(const char *dirname);
 
-char *get_execute_result(const char *command, int line);
+char *get_execute_result_argv(const char *const argv[], int line);
 
 char *read_all_char_from(const char *filename);
 

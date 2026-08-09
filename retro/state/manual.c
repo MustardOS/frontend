@@ -7,6 +7,7 @@
 #include "../../common/fileio.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
+#include "../../common/options.h"
 #include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../core/paths.h"
@@ -31,7 +32,10 @@ void manual_init(const char *core_path_arg, const char *content_path) {
 
     char *program_no_ext = strip_ext(content_label);
     char program[MAX_BUFFER_SIZE];
-    snprintf(program, sizeof(program), "%s", program_no_ext ? program_no_ext : content_label);
+    if (!str_copy_checked(program, sizeof(program), program_no_ext ? program_no_ext : content_label)) {
+        free(program_no_ext);
+        return;
+    }
     free(program_no_ext);
 
     if (catalogue_name[0]
@@ -41,17 +45,23 @@ void manual_init(const char *core_path_arg, const char *content_path) {
     }
 
     char save_prefix[MAX_BUFFER_SIZE];
-    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+    if (!core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix))) return;
 
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), content_base)) return;
     char *dot = strrchr(content_stem, '.');
     if (dot) *dot = '\0';
 
-    snprintf(position_path, sizeof(position_path), "%s/%s/%s.pos", RETRO_MAN_PATH, save_prefix, content_stem);
+    char position_directory[PATH_MAX];
+    const char *parts[] = {RETRO_MAN_PATH, save_prefix};
+    if (!path_join_checked(position_directory, sizeof(position_directory), parts, A_SIZE(parts))
+        || !str_format_checked(position_path, sizeof(position_path), "%s/%s.pos", position_directory, content_stem)) {
+        position_path[0] = '\0';
+        LOG_ERROR(mux_module, "Manual position path is too long");
+    }
 }
 
 int manual_is_available(void) {

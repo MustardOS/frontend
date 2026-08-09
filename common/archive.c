@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -7,20 +8,35 @@
 #include "fileio.h"
 #include "util.h"
 #include "ui/nav.h"
+#define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
 #include "miniz/miniz.h"
 #include "log.h"
 #include "language.h"
 
-static void (*extraction_finish_cb)(char *result) = NULL;
+#define MAX_ARCHIVE_ENTRIES     16384U
+#define MAX_ARCHIVE_ENTRY_BYTES (512ULL * 1024ULL * 1024ULL)
+#define MAX_ARCHIVE_TOTAL_BYTES (2ULL * 1024ULL * 1024ULL * 1024ULL)
+#define MAX_ARCHIVE_RATIO       1000ULL
 
-static void (*extraction_finish_pending_cb)(char *result) = NULL;
+typedef enum { extraction_idle, extraction_running, extraction_completed } extraction_state;
 
-static volatile int extraction_finish_result = INT_MIN;
-static char *extraction_pending_filename = NULL;
+typedef struct {
+    pthread_mutex_t mutex;
+    extraction_state state;
+    int result;
+    char *filename;
+    void (*callback)(char *result);
+} extraction_control;
+
+static extraction_control extraction = {
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+    .state = extraction_idle,
+};
 
 typedef struct {
     char *filename;
     char *output_path;
+    void (*callback)(char *result);
 } extraction_args_t;
 
 static void *extraction_thread(void *arg) {
@@ -28,11 +44,12 @@ static void *extraction_thread(void *arg) {
 
     const int rc = extract_zip_to_dir(args->filename, args->output_path);
 
-    extraction_finish_pending_cb = extraction_finish_cb;
-    extraction_finish_cb = NULL;
-    extraction_pending_filename = args->filename;
-    args->filename = NULL;
-    extraction_finish_result = rc;
+    pthread_mutex_lock(&extraction.mutex);
+    extraction.result = rc;
+    extraction.filename = args->filename;
+    extraction.callback = args->callback;
+    extraction.state = extraction_completed;
+    pthread_mutex_unlock(&extraction.mutex);
 
     free(args->output_path);
     free(args);
@@ -40,16 +57,20 @@ static void *extraction_thread(void *arg) {
 }
 
 void extraction_poll(void) {
-    if (extraction_finish_result == INT_MIN) return;
+    pthread_mutex_lock(&extraction.mutex);
+    if (extraction.state != extraction_completed) {
+        pthread_mutex_unlock(&extraction.mutex);
+        return;
+    }
 
-    const int result = extraction_finish_result;
-    extraction_finish_result = INT_MIN;
-
-    void (*cb)(char *) = extraction_finish_pending_cb;
-    extraction_finish_pending_cb = NULL;
-
-    char *filename = extraction_pending_filename;
-    extraction_pending_filename = NULL;
+    const int result = extraction.result;
+    void (*cb)(char *) = extraction.callback;
+    char *filename = extraction.filename;
+    extraction.result = MUX_EXTRACT_ERR;
+    extraction.callback = NULL;
+    extraction.filename = NULL;
+    extraction.state = extraction_idle;
+    pthread_mutex_unlock(&extraction.mutex);
 
     hide_progress_bar();
 
@@ -60,18 +81,63 @@ void extraction_poll(void) {
     free(filename);
 }
 
-void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result)) {
-    extraction_finish_cb = callback;
+int extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result)) {
+    if (!filename || !*filename || !output || !*output) return -1;
+
+    pthread_mutex_lock(&extraction.mutex);
+    if (extraction.state != extraction_idle) {
+        pthread_mutex_unlock(&extraction.mutex);
+        return -1;
+    }
+
+    extraction_args_t *args = calloc(1, sizeof(*args));
+    if (!args) {
+        pthread_mutex_unlock(&extraction.mutex);
+        return -1;
+    }
+
+    args->filename = strdup(filename);
+    args->output_path = strdup(output);
+    args->callback = callback;
+    if (!args->filename || !args->output_path) {
+        free(args->filename);
+        free(args->output_path);
+        free(args);
+        pthread_mutex_unlock(&extraction.mutex);
+        return -1;
+    }
+
+    extraction.state = extraction_running;
+
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, extraction_thread, args) != 0) {
+        extraction.state = extraction_idle;
+        free(args->filename);
+        free(args->output_path);
+        free(args);
+        pthread_mutex_unlock(&extraction.mutex);
+        return -1;
+    }
+
+    pthread_detach(thread);
+    pthread_mutex_unlock(&extraction.mutex);
     show_progress_bar(lang.generic.extracting_archive);
+    return 0;
+}
 
-    extraction_args_t *args = mux_malloc(sizeof(*args));
+static int archive_path_is_safe(const char *name) {
+    if (!name || !*name || name[0] == '/') return 0;
 
-    args->filename = mux_strdup(filename);
-    args->output_path = mux_strdup(output);
+    const char *component = name;
+    while (*component) {
+        const char *slash = strchr(component, '/');
+        const size_t length = slash ? (size_t) (slash - component) : strlen(component);
+        if (length == 2 && component[0] == '.' && component[1] == '.') return 0;
+        if (!slash) break;
+        component = slash + 1;
+    }
 
-    pthread_t tid;
-    pthread_create(&tid, NULL, extraction_thread, args);
-    pthread_detach(tid);
+    return 1;
 }
 
 int extract_zip_to_dir(const char *filename, const char *output) {
@@ -93,7 +159,14 @@ int extract_zip_to_dir(const char *filename, const char *output) {
     }
     size_t resolved_len = strlen(resolved_output);
 
-    mz_uint zip_file_count = mz_zip_reader_get_num_files(&zip);
+    const mz_uint zip_file_count = mz_zip_reader_get_num_files(&zip);
+    if (zip_file_count > MAX_ARCHIVE_ENTRIES) {
+        LOG_ERROR(mux_module, "Blocked ZIP with too many entries: %u", zip_file_count);
+        mz_zip_reader_end(&zip);
+        return MUX_EXTRACT_BLOCKED;
+    }
+
+    uint64_t total_uncompressed = 0;
 
     for (mz_uint i = 0; i < zip_file_count; i++) {
         mz_zip_archive_file_stat file_stat;
@@ -101,14 +174,28 @@ int extract_zip_to_dir(const char *filename, const char *output) {
 
         const char *entry_name = file_stat.m_filename;
 
-        if (entry_name[0] == '/' || strstr(entry_name, "..")) {
+        if (!archive_path_is_safe(entry_name)) {
             LOG_ERROR(mux_module, "Blocked unsafe path in ZIP: '%s'", entry_name);
             mz_zip_reader_end(&zip);
             return MUX_EXTRACT_BLOCKED;
         }
 
+        if (file_stat.m_uncomp_size > MAX_ARCHIVE_ENTRY_BYTES
+            || total_uncompressed > MAX_ARCHIVE_TOTAL_BYTES - file_stat.m_uncomp_size
+            || (file_stat.m_comp_size > 0 && file_stat.m_uncomp_size / file_stat.m_comp_size > MAX_ARCHIVE_RATIO)) {
+            LOG_ERROR(mux_module, "Blocked oversized ZIP entry: '%s'", entry_name);
+            mz_zip_reader_end(&zip);
+            return MUX_EXTRACT_BLOCKED;
+        }
+        total_uncompressed += file_stat.m_uncomp_size;
+
         char dest_file[PATH_MAX];
-        snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, entry_name);
+        const int path_length = snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, entry_name);
+        if (path_length < 0 || (size_t) path_length >= sizeof(dest_file)) {
+            LOG_ERROR(mux_module, "Blocked overlong ZIP path: '%s'", entry_name);
+            mz_zip_reader_end(&zip);
+            return MUX_EXTRACT_BLOCKED;
+        }
 
         if (strncmp(dest_file, resolved_output, resolved_len) != 0
             || (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
@@ -122,9 +209,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             continue;
         }
 
-        if (file_exist(dest_file)) {
-            remove(dest_file);
-        }
+        create_directories(dest_file, 1);
 
         if (!mz_zip_reader_extract_to_file(&zip, file_stat.m_file_index, dest_file, 0)) {
             LOG_ERROR(mux_module, "File '%s' could not be extracted", dest_file);
@@ -132,7 +217,7 @@ int extract_zip_to_dir(const char *filename, const char *output) {
             return MUX_EXTRACT_ERR;
         }
 
-        progress_bar_value = (int) ((i + 1) * 100 / zip_file_count);
+        progress_bar_value = zip_file_count ? (int) ((i + 1) * 100 / zip_file_count) : 100;
     }
 
     mz_zip_reader_end(&zip);

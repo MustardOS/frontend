@@ -30,6 +30,12 @@ int display_ui_is_hidden(void);
 
 int display_video_fast_path_allowed(void);
 
+int display_video_needs_logical_target(void);
+
+void display_map_logical_rect(const SDL_Rect *logical, SDL_Rect *physical);
+
+void display_render_logical_texture(SDL_Renderer *renderer, SDL_Texture *texture);
+
 void display_set_composite_suppressed(int suppressed);
 
 int display_capture_clean_frame(const char *path);

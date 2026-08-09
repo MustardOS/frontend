@@ -144,7 +144,7 @@ int state_saves_warmup_frames(void);
 
 int state_save(const char *path);
 
-int state_load(const char *path);
+int state_load(const char *path, int show_message);
 
 void pause_menu_init(void);
 
@@ -184,7 +184,7 @@ void pause_menu_focus_cheevo_item(void);
 
 void pause_menu_set_fps_visible(int visible);
 
-void pause_menu_playtime_tick(void);
+void pause_menu_service_tick(uint32_t now);
 
 void pause_menu_playtime_reset(void);
 
@@ -198,9 +198,7 @@ void pause_menu_show_toast_timed(const char *msg, uint32_t duration_ms);
 
 void pause_menu_show_glyph_toast_timed(const char *msg, const char *glyph, uint32_t duration_ms);
 
-void pause_menu_toast_tick(void);
 
-void pause_menu_header_fade_tick(void);
 
 void pause_menu_update_header(void);
 

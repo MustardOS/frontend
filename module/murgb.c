@@ -12,6 +12,8 @@
 #include "../common/config.h"
 #include "../common/fileio.h"
 #include "../common/rgb.h"
+#include "../common/rgb_args.h"
+#include "../common/strutil.h"
 #include "../common/theme.h"
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
@@ -24,13 +26,6 @@
 #define SER_BRI 60
 #define MCU_BRI 255
 #define JOY_BRI 100
-
-typedef enum { be_auto, be_sysfs, be_serial, be_joypad } backend_t;
-
-typedef struct {
-    int dur_all, dur_l, dur_r, dur_m, dur_f1, dur_f2;
-    int cyc_all, cyc_l, cyc_r, cyc_m, cyc_f1, cyc_f2;
-} flags_t;
 
 static void die(const char *fmt, ...) {
     va_list ap;
@@ -479,20 +474,24 @@ static int get_theme_rgb_path(char *rgb_path) {
     const char *base = get_theme_base();
 
     char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof active_path, "%s/active.txt", base);
+    const char *active_parts[] = {base, "active.txt"};
+    if (!path_join_checked(active_path, sizeof(active_path), active_parts, 2)) return 0;
 
     if (file_exist(active_path)) {
         char *line = read_line_char_from(active_path, 1);
         char alt[MAX_BUFFER_SIZE];
-        snprintf(alt, sizeof alt, "%s", line ? line : "");
+        const int copied = str_copy_checked(alt, sizeof(alt), line ? line : "");
         free(line);
+        if (!copied) return 0;
         trim_trailing_cr(alt);
 
-        snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/alternate/rgb/%s/", base, alt);
+        const char *alternate_parts[] = {base, "alternate", "rgb", alt};
+        if (!path_join_checked(rgb_path, MAX_BUFFER_SIZE, alternate_parts, 4)) return 0;
         return dir_exists(rgb_path);
     }
 
-    snprintf(rgb_path, MAX_BUFFER_SIZE, "%s/rgb/", base);
+    const char *default_parts[] = {base, "rgb"};
+    if (!path_join_checked(rgb_path, MAX_BUFFER_SIZE, default_parts, 2)) return 0;
     return dir_exists(rgb_path);
 }
 
@@ -564,12 +563,13 @@ static void load_theme_rgb_state(rgb_restore_state_t *st) {
 
     if (get_theme_rgb_path(rgb_path)) {
         char path[MAX_BUFFER_SIZE];
+        const char *left_parts[] = {rgb_path, "colour_l"};
+        const char *right_parts[] = {rgb_path, "colour_r"};
 
-        snprintf(path, sizeof path, "%scolour_l", rgb_path);
-        read_rgb_colour_from_file(path, &col_l, &rgb_colours[0]);
+        if (path_join_checked(path, sizeof(path), left_parts, 2))
+            read_rgb_colour_from_file(path, &col_l, &rgb_colours[0]);
 
-        snprintf(path, sizeof path, "%scolour_r", rgb_path);
-        read_rgb_colour_from_file(path, &col_r, &col_l);
+        if (path_join_checked(path, sizeof(path), right_parts, 2)) read_rgb_colour_from_file(path, &col_r, &col_l);
     }
 
     const int bright_theme = read_config_int("settings/rgb/bright_theme", 255);
@@ -972,95 +972,26 @@ static void usage(void) {
     );
 }
 
-static backend_t parse_backend(const char *s) {
-    if (!s) die("Error: -b requires a value");
-
-    if (!strcasecmp(s, "auto")) return be_auto;
-    if (!strcasecmp(s, "sysfs")) return be_sysfs;
-    if (!strcasecmp(s, "serial")) return be_serial;
-    if (!strcasecmp(s, "joypad")) return be_joypad;
-
-    die("Invalid backend: %s", s);
-    return be_auto;
-}
-
 int main(const int argc, char **argv) {
+    murgb_args args;
+    if (murgb_args_parse(argc, argv, &args) != 0) {
+        if (args.invalid_argument) fprintf(stderr, "Invalid argument: %s\n", args.invalid_argument);
+        usage();
+        return 1;
+    }
+    if (args.command == rgb_command_help) {
+        usage();
+        return 0;
+    }
+
     load_config(&config);
-
-    if (argc >= 2 && (strcmp(argv[1], "off") == 0 || strcmp(argv[1], "restore") == 0)) {
-        if (argc != 2) {
-            fprintf(stderr, "Error: '%s' takes no other arguments\n", argv[1]);
-            return 1;
-        }
-        if (strcmp(argv[1], "off") == 0) {
-            dispatch_off();
-            return 0;
-        }
-        return dispatch_restore();
+    if (args.command == rgb_command_off) {
+        dispatch_off();
+        return 0;
     }
+    if (args.command == rgb_command_restore) return dispatch_restore();
 
-    flags_t fl;
-    fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
-    fl.cyc_all = fl.cyc_l = fl.cyc_r = fl.cyc_m = fl.cyc_f1 = fl.cyc_f2 = INT32_MIN;
+    const backend_t use = detect_backend(args.backend);
 
-    backend_t be = be_auto;
-    int i = 1;
-
-    while (i < argc) {
-        const char *a = argv[i];
-        if (a[0] != '-' || a[1] == '\0') break;
-        if (strcmp(a, "--") == 0) {
-            i++;
-            break;
-        }
-        if (strcmp(a, "-h") == 0 || strcmp(a, "--help") == 0) {
-            usage();
-            return 0;
-        }
-        if (strcmp(a, "-b") == 0) {
-            if (i + 1 >= argc) die("Error: -b requires a value");
-            be = parse_backend(argv[i + 1]);
-            i += 2;
-            continue;
-        }
-
-#define OPT_INT(flag, slot)                                                                                            \
-    if (strcmp(a, flag) == 0) {                                                                                        \
-        if (i + 1 >= argc) die("Error: %s requires a value", flag);                                                    \
-        (slot) = parse_int(argv[i + 1], flag);                                                                         \
-        i += 2;                                                                                                        \
-        continue;                                                                                                      \
-    }
-        OPT_INT("--dur", fl.dur_all)
-        OPT_INT("--dur-l", fl.dur_l)
-        OPT_INT("--dur-r", fl.dur_r)
-        OPT_INT("--dur-m", fl.dur_m)
-        OPT_INT("--dur-f1", fl.dur_f1)
-        OPT_INT("--dur-f2", fl.dur_f2)
-        OPT_INT("--cycles", fl.cyc_all)
-        OPT_INT("--cycles-l", fl.cyc_l)
-        OPT_INT("--cycles-r", fl.cyc_r)
-        OPT_INT("--cycles-m", fl.cyc_m)
-        OPT_INT("--cycles-f1", fl.cyc_f1)
-        OPT_INT("--cycles-f2", fl.cyc_f2)
-#undef OPT_INT
-
-        fprintf(stderr, "Unknown option: %s\n", a);
-        usage();
-        return 1;
-    }
-
-    if (argc - i < 2) {
-        usage();
-        return 1;
-    }
-
-    const int mode = parse_int(argv[i], "mode");
-    const int brightness = parse_int(argv[i + 1], "brightness");
-    const int rest_argc = argc - i - 2;
-    char **rest_argv = argv + i + 2;
-
-    const backend_t use = detect_backend(be);
-
-    return dispatch_wire_command(use, mode, brightness, rest_argc, rest_argv, &fl);
+    return dispatch_wire_command(use, args.mode, args.brightness, args.value_count, args.values, &args.flags);
 }

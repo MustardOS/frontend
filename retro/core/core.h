@@ -50,11 +50,11 @@ extern int core_restart_requested;
 
 int core_open(const char *corefile);
 
-void core_get_name(const char *core_path, char *out, size_t out_size);
+int core_get_name(const char *core_path, char *out, size_t out_size);
 
-void core_content_rel_dir(const char *content_path, char *out, size_t out_size);
+int core_content_rel_dir(const char *content_path, char *out, size_t out_size);
 
-void core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, size_t out_size);
+int core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, size_t out_size);
 
 int core_load_content(const char *content_path);
 

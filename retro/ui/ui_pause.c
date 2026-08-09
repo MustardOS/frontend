@@ -289,7 +289,7 @@ void pause_menu_playtime_reset(void) {
     LOG_WARN(mux_module, "playtime: MUX_RETRO_PLAYTIME_OFFSET is set, starting the counter at %ld seconds", seconds);
 }
 
-void pause_menu_playtime_tick(void) {
+static void pause_menu_playtime_tick(void) {
     if (!ui_lbl_playtime) return;
 
     lv_obj_t *panel = lv_obj_get_parent(ui_lbl_playtime);
@@ -418,9 +418,9 @@ void pause_menu_show_toast(const char *msg) {
     pause_menu_show_toast_timed(msg, TOAST_DURATION_MS);
 }
 
-void pause_menu_toast_tick(void) {
+static void pause_menu_toast_tick(const uint32_t now) {
     if (!toast_active) return;
-    if (SDL_GetTicks() < toast_expire_tick) return;
+    if (!SDL_TICKS_PASSED(now, toast_expire_tick)) return;
 
     lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
     lv_obj_invalidate(ui_screen);
@@ -486,10 +486,10 @@ static void apply_gameplay_header_overlay(void) {
     lv_obj_set_style_opa(ui_pnl_header, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 }
 
-void pause_menu_header_fade_tick(void) {
+static void pause_menu_header_fade_tick(const uint32_t now) {
     if (!header_fading) return;
 
-    const uint32_t elapsed = SDL_GetTicks() - header_fade_start_tick;
+    const uint32_t elapsed = now - header_fade_start_tick;
     if (elapsed >= HEADER_FADE_MS) {
         lv_obj_set_style_opa(ui_pnl_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
         header_fading = 0;
@@ -497,6 +497,25 @@ void pause_menu_header_fade_tick(void) {
     }
 
     lv_obj_set_style_opa(ui_pnl_header, (lv_opa_t) (255 * elapsed / HEADER_FADE_MS), MU_OBJ_MAIN_DEFAULT);
+}
+
+void pause_menu_service_tick(const uint32_t now) {
+    static uint32_t playtime_deadline;
+    static uint32_t header_deadline;
+    static int previous_active = -1;
+
+    pause_menu_toast_tick(now);
+
+    if (active != previous_active || SDL_TICKS_PASSED(now, playtime_deadline)) {
+        pause_menu_playtime_tick();
+        playtime_deadline = now + 250;
+        previous_active = active;
+    }
+
+    if (header_fading && SDL_TICKS_PASSED(now, header_deadline)) {
+        pause_menu_header_fade_tick(now);
+        header_deadline = now + 16;
+    }
 }
 
 static void restore_header_chrome(void) {
@@ -943,6 +962,7 @@ int pause_menu_tick(void) {
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
             if (!netplay_is_active() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
+            fade_out_screen_forced();
             return 1;
         }
     }

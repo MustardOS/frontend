@@ -1,6 +1,5 @@
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +16,7 @@
 #include "../../common/inotify.h"
 #include "../../common/language.h"
 #include "../../common/log.h"
+#include "../../common/strutil.h"
 #include "../../common/ui/common.h"
 #include "../../common/ui/nav.h"
 #include "../ui/cheats.h"
@@ -34,18 +34,20 @@
 #include "core.h"
 #include "governor_boost.h"
 #include "runahead.h"
+#include "startup.h"
 #include "../video/hw_render.h"
 #include "../video/image_writer.h"
 #include "../video/overlay_bridge.h"
 #include "paths.h"
 #include "perf.h"
+#include "power.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../state/sram.h"
 
 #define RESUME_COOLDOWN_MS 1500
 #define AUDIO_MAX_CATCHUP  3
-#define POWER_SAVE_READY   RUN_PATH "muxretro_save_ready"
+#define UI_TASK_INTERVAL_MS 16
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -54,10 +56,6 @@ static unsigned last_seen_changes = 0;
 static char state_dir[MAX_BUFFER_SIZE];
 static char macro_dir[MAX_BUFFER_SIZE];
 
-static volatile sig_atomic_t pending_sleep_signal = 0;
-static volatile sig_atomic_t pending_wake_signal = 0;
-static volatile sig_atomic_t pending_exit_signal = 0;
-static int power_save_prepared = 0;
 static double target_fps = 60.0;
 
 static double startup_elapsed_ms(const uint64_t start) {
@@ -75,102 +73,6 @@ void core_set_target_fps(const double new_fps) {
 
 double core_get_target_fps(void) {
     return target_fps;
-}
-
-static void handle_sleep_signal(const int sig) {
-    (void) sig;
-    pending_sleep_signal = 1;
-}
-
-static void handle_wake_signal(const int sig) {
-    (void) sig;
-    pending_wake_signal = 1;
-}
-
-static void handle_exit_signal(const int sig) {
-    pending_exit_signal = sig;
-}
-
-static void install_suspend_signal_handlers(void) {
-    struct sigaction sa = {0};
-    sa.sa_flags = SA_RESTART;
-
-    sa.sa_handler = handle_sleep_signal;
-    sigaction(SIGUSR1, &sa, NULL);
-
-    sa.sa_handler = handle_wake_signal;
-    sigaction(SIGUSR2, &sa, NULL);
-
-    sa.sa_handler = handle_exit_signal;
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGINT, &sa, NULL);
-
-    unlink(POWER_SAVE_READY);
-}
-
-static void acknowledge_power_save(void) {
-    const int fd = open(POWER_SAVE_READY, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
-    if (fd < 0) {
-        LOG_WARN(mux_module, "Could not acknowledge power save: %s", strerror(errno));
-        return;
-    }
-
-    char value[32];
-    const int length = snprintf(value, sizeof(value), "%ld\n", (long) getpid());
-    if (length <= 0 || write(fd, value, (size_t) length) != length)
-        LOG_WARN(mux_module, "Could not complete power-save acknowledgement");
-    close(fd);
-}
-
-static void prepare_power_save(const char *reason) {
-    LOG_INFO(mux_module, "Preparing content for %s", reason);
-
-    if (netplay_is_active()) netplay_disconnect();
-
-    int state_saved = 1;
-    if (state_saves_supported()) {
-        gamestate_capture_pending(1);
-        if (gamestate_autosave_save() == 0)
-            LOG_SUCCESS(mux_module, "Auto save completed before %s", reason);
-        else {
-            LOG_WARN(mux_module, "Auto save could not be completed before %s", reason);
-            state_saved = 0;
-        }
-    }
-
-    sram_bridge_save();
-    sram_bridge_flush();
-    power_save_prepared = state_saved;
-}
-
-static int handle_pending_suspend_signals(void) {
-    if (pending_sleep_signal) {
-        pending_sleep_signal = 0;
-
-        prepare_power_save("suspend");
-        if (!pause_menu_is_active()) pause_menu_toggle();
-        image_writer_flush();
-        acknowledge_power_save();
-    }
-
-    if (pending_wake_signal) {
-        pending_wake_signal = 0;
-        LOG_INFO(mux_module, "Received resume signal (SIGUSR2)");
-        power_save_prepared = 0;
-        unlink(POWER_SAVE_READY);
-
-        if (pause_menu_is_active()) pause_menu_toggle();
-    }
-
-    if (pending_exit_signal) {
-        const int signal_number = pending_exit_signal;
-        pending_exit_signal = 0;
-        LOG_INFO(mux_module, "Received exit signal %d", signal_number);
-        if (!power_save_prepared) prepare_power_save("shutdown");
-        return 1;
-    }
-
-    return 0;
 }
 
 static void precache_content(const char *content_path) {
@@ -198,36 +100,40 @@ static int hard_sync_enabled(void) {
     return session_settings.gpu_hard_sync;
 }
 
-static void build_state_dir(const char *core_path_arg, const char *content_path) {
+static int build_state_dir(const char *core_path_arg, const char *content_path) {
     const char *base = strrchr(content_path, '/');
     base = base ? base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), base)) return 0;
     char *dot = strrchr(content_stem, '.');
     if (dot) *dot = '\0';
 
     char save_prefix[MAX_BUFFER_SIZE];
-    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+    if (!core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix))) return 0;
 
-    snprintf(state_dir, sizeof(state_dir), "%s/%s/%s", RETRO_STA_PATH, save_prefix, content_stem);
+    const char *parts[] = {RETRO_STA_PATH, save_prefix, content_stem};
+    if (!path_join_checked(state_dir, sizeof(state_dir), parts, A_SIZE(parts))) return 0;
     create_directories(state_dir, 0);
+    return 1;
 }
 
-static void build_macro_dir(const char *core_path_arg, const char *content_path) {
+static int build_macro_dir(const char *core_path_arg, const char *content_path) {
     const char *base = strrchr(content_path, '/');
     base = base ? base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), base)) return 0;
     char *dot = strrchr(content_stem, '.');
     if (dot) *dot = '\0';
 
     char save_prefix[MAX_BUFFER_SIZE];
-    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+    if (!core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix))) return 0;
 
-    snprintf(macro_dir, sizeof(macro_dir), "%s/%s/%s", RETRO_MAC_PATH, save_prefix, content_stem);
+    const char *parts[] = {RETRO_MAC_PATH, save_prefix, content_stem};
+    if (!path_join_checked(macro_dir, sizeof(macro_dir), parts, A_SIZE(parts))) return 0;
     create_directories(macro_dir, 0);
+    return 1;
 }
 
 static void idle_poll(void) {
@@ -370,59 +276,41 @@ void core_prime_audio(void) {
     video_bridge_set_frame_skip(0);
 }
 
+static int abort_startup(const int core_opened) {
+    governor_boost_end();
+    if (core_opened) core_unload();
+    mux_input_close();
+    sdl_cleanup();
+    return EXIT_FAILURE;
+}
+
 int main(const int argc, char *argv[]) {
-    if (argc < 3) {
-        fprintf(
-            stderr, "Usage: %s <core.so> <content> [--fresh] [--netplay-host[=port]] [--netplay-join=address[:port]]\n",
-            argv[0]
-        );
+    if (argc == 2 && strcmp(argv[1], "--help") == 0) {
+        startup_options_print_usage(stdout, argv[0]);
+        return EXIT_SUCCESS;
+    }
+    if (argc == 2 && strcmp(argv[1], "--version") == 0) {
+        printf("muxretro interface %s\n", MUOS_MUXRETRO_CLI_VERSION);
+        return EXIT_SUCCESS;
+    }
+    startup_options startup;
+    if (!startup_options_parse(argc, argv, &startup)) {
+        if (startup.unknown_option) fprintf(stderr, "Unknown option: %s\n", startup.unknown_option);
+        startup_options_print_usage(stderr, argv[0]);
         return EXIT_FAILURE;
     }
 
-    const char *core_path_arg = argv[1];
-    const char *content_path = argv[2];
-
-    int start_fresh = 0;
-    int start_restarting = 0;
-    int start_netplay_host = 0;
-    int start_netplay_invalid = 0;
-    char start_netplay_address[256] = "";
-    uint16_t start_netplay_port = NETPLAY_DEFAULT_PORT;
-    for (int i = 3; i < argc; i++) {
-        if (strcmp(argv[i], "--fresh") == 0) start_fresh = 1;
-        if (strcmp(argv[i], "--restart") == 0) {
-            start_fresh = 1;
-            start_restarting = 1;
-        }
-        if (strcmp(argv[i], "--netplay-host") == 0) start_netplay_host = 1;
-        if (strncmp(argv[i], "--netplay-host=", 15) == 0) {
-            start_netplay_host = 1;
-            char *end = NULL;
-            const unsigned long port = strtoul(argv[i] + 15, &end, 10);
-            if (end && !*end && port > 0 && port <= UINT16_MAX)
-                start_netplay_port = (uint16_t) port;
-            else
-                start_netplay_invalid = 1;
-        }
-        if (strncmp(argv[i], "--netplay-join=", 15) == 0) {
-            if (netplay_parse_address(
-                    argv[i] + 15, start_netplay_address, sizeof(start_netplay_address), &start_netplay_port
-                )
-                != 0) {
-                start_netplay_address[0] = '\0';
-                start_netplay_invalid = 1;
-            }
-        }
-    }
-
-    const char *startup_message = start_restarting ? lang.muxretro.content_restarting : lang.muxretro.content_loading;
+    const char *core_path_arg = startup.core_path;
+    const char *content_path = startup.content_path;
+    const char *startup_message = startup.restarting ? lang.muxretro.content_restarting : lang.muxretro.content_loading;
     const uint64_t startup_start = SDL_GetPerformanceCounter();
     uint64_t startup_stage = startup_start;
 
-    install_suspend_signal_handlers();
+    power_session_init();
 
     load_device(&device);
     load_config(&config);
+    const int show_startup_messages = config.visual.pickles_startup_messages;
 
     init_module("muxretro");
     LOG_DEBUG(mux_module, "init_module done");
@@ -441,14 +329,11 @@ int main(const int argc, char *argv[]) {
     options_init_paths(core_path_arg, content_path);
 
     governor_boost_begin("content startup");
-    loading_message_show(startup_message);
+    if (show_startup_messages) loading_message_show(startup_message);
 
     if (core_open(core_path_arg) != 0) {
         LOG_ERROR(mux_module, "Failed to open core: %s", core_path_arg);
-        governor_boost_end();
-        mux_input_close();
-        sdl_cleanup();
-        return EXIT_FAILURE;
+        return abort_startup(0);
     }
     LOG_DEBUG(mux_module, "core_open done");
     startup_log_stage("frontend and core initialisation", &startup_stage);
@@ -458,24 +343,26 @@ int main(const int argc, char *argv[]) {
     perf_init();
     session_settings_init(core_path_arg, content_path);
 
-    build_state_dir(core_path_arg, content_path);
-    gamestate_init(state_dir);
+    if (!build_state_dir(core_path_arg, content_path)) {
+        LOG_ERROR(mux_module, "Save-state path is too long");
+        return abort_startup(1);
+    }
+    if (!gamestate_init(state_dir)) {
+        LOG_ERROR(mux_module, "Save-state path exceeds the supported length");
+        return abort_startup(1);
+    }
 
     char resume_path[512] = "";
     int load_blocked = 0;
-    int has_resume = !start_fresh && state_saves_supported()
+    int has_resume = !startup.fresh && state_saves_supported()
                      && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
-    loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
+    if (show_startup_messages) loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
 
     precache_content(content_path);
 
     if (core_load_content(content_path) != 0) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
-        governor_boost_end();
-        core_unload();
-        mux_input_close();
-        sdl_cleanup();
-        return EXIT_FAILURE;
+        return abort_startup(1);
     }
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
@@ -489,7 +376,10 @@ int main(const int argc, char *argv[]) {
     manual_init(core_path_arg, content_path);
     overlay_bridge_init(core_path_arg, content_path);
 
-    build_macro_dir(core_path_arg, content_path);
+    if (!build_macro_dir(core_path_arg, content_path)) {
+        LOG_ERROR(mux_module, "Macro path is too long");
+        return abort_startup(1);
+    }
     macros_init(macro_dir);
 
     content_hash_request(content_path, core_resolved_content_path);
@@ -524,7 +414,7 @@ int main(const int argc, char *argv[]) {
 
     int cheevo_connecting_background = 0;
     if (cheevo_is_starting()) {
-        loading_message_show(lang.muxretro.cheevo.connecting);
+        if (show_startup_messages) loading_message_show(lang.muxretro.cheevo.connecting);
         const uint32_t cheevo_deadline = SDL_GetTicks() + 1200;
         while (cheevo_is_starting() && !SDL_TICKS_PASSED(SDL_GetTicks(), cheevo_deadline)) {
             cheevo_tick();
@@ -536,7 +426,7 @@ int main(const int argc, char *argv[]) {
             cheevo_connecting_background = 1;
             LOG_INFO(mux_module, "RetroAchievements connection is continuing in the background");
         }
-        loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
+        if (show_startup_messages) loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
     }
 
     overlay_bridge_apply();
@@ -548,11 +438,11 @@ int main(const int argc, char *argv[]) {
 
     resume_path[0] = '\0';
     load_blocked = 0;
-    has_resume = !start_fresh && state_saves_supported()
+    has_resume = !startup.fresh && state_saves_supported()
                  && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
 
     if (has_resume) {
-        loading_message_show(lang.muxretro.content_resuming);
+        if (show_startup_messages) loading_message_show(lang.muxretro.content_resuming);
         const int warmup_frames = state_saves_warmup_frames();
         video_bridge_set_frame_skip(1);
         audio_bridge_set_muted(1);
@@ -575,7 +465,7 @@ int main(const int argc, char *argv[]) {
 
         startup_log_stage("save-state warm-up", &startup_stage);
 
-        if (state_load(resume_path) == 0) {
+        if (state_load(resume_path, show_startup_messages) == 0) {
             LOG_INFO(mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", warmup_frames);
         }
         startup_log_stage("save-state restore", &startup_stage);
@@ -588,17 +478,17 @@ int main(const int argc, char *argv[]) {
     pause_menu_init();
     loading_message_hide();
 
-    if (cheevo_connecting_background)
+    if (show_startup_messages && cheevo_connecting_background)
         pause_menu_show_toast_timed(lang.muxretro.cheevo.connecting_background, tst_wait_s);
 
     if (device.board.has_network) {
-        if (start_netplay_invalid) {
+        if (startup.netplay_invalid) {
             pause_menu_show_toast(lang.muxretro.netplay.startup_invalid);
-        } else if (start_netplay_host) {
-            if (netplay_host(start_netplay_port) != 0)
+        } else if (startup.netplay_host) {
+            if (netplay_host(startup.netplay_port) != 0)
                 pause_menu_show_toast(lang.muxretro.netplay.hosting_start_failed);
-        } else if (start_netplay_address[0]) {
-            if (netplay_join(start_netplay_address, start_netplay_port) != 0)
+        } else if (startup.netplay_address[0]) {
+            if (netplay_join(startup.netplay_address, startup.netplay_port) != 0)
                 pause_menu_show_toast(lang.muxretro.netplay.startup_join_failed);
         }
     }
@@ -622,7 +512,7 @@ int main(const int argc, char *argv[]) {
     }
 
     const cheevo_status startup_cheevo_status = cheevo_get_status();
-    if (!cheevo_connecting_background
+    if (show_startup_messages && !cheevo_connecting_background
         && (startup_cheevo_status == cheevo_status_active_softcore
             || startup_cheevo_status == cheevo_status_active_hardcore)) {
         cheevo_info startup_cheevo_info;
@@ -646,16 +536,22 @@ int main(const int argc, char *argv[]) {
     uint32_t status_deadline = SDL_GetTicks() + TIMER_STATUS;
 
     uint32_t timeline_deadline = 0;
+    uint32_t ui_task_deadline = 0;
     int timeline_armed_ms = 0;
 
     while (!quit) {
         int core_ran = 0;
 
         const uint32_t loop_now = SDL_GetTicks();
+        const uint64_t services_start = perf_begin();
 
         mux_input_poll();
+        const uint64_t cheevo_tick_start = perf_begin();
         cheevo_tick();
+        perf_end(perf_stage_cheevo_tick, cheevo_tick_start);
+        const uint64_t netplay_tick_start = perf_begin();
         netplay_tick();
+        perf_end(perf_stage_netplay_tick, netplay_tick_start);
         const int netplay_active = netplay_is_active();
         if (netplay_active != netplay_governor_active) {
             if (netplay_active)
@@ -665,7 +561,11 @@ int main(const int argc, char *argv[]) {
             netplay_governor_active = netplay_active;
         }
         idle_poll();
-        if (handle_pending_suspend_signals()) {
+        perf_end(perf_stage_services, services_start);
+
+        const uint64_t maintenance_start = perf_begin();
+        if (power_session_poll()) {
+            perf_end(perf_stage_maintenance, maintenance_start);
             quit = 1;
             continue;
         }
@@ -705,12 +605,15 @@ int main(const int argc, char *argv[]) {
         }
 
         if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported()
-            && !netplay_is_active() && !cheevo_restricted() && loop_now >= timeline_deadline) {
+            && !netplay_active
+            && !cheevo_restricted() && loop_now >= timeline_deadline) {
             gamestate_timeline_save();
             timeline_deadline = loop_now + (uint32_t) timeline_ms;
         }
+        perf_end(perf_stage_maintenance, maintenance_start);
 
         int run_gameplay = 0;
+        uint64_t control_start = perf_begin();
         if (paused) {
             if (!netplay_is_playing()) cheevo_idle();
             const int peek = pause_menu_peek_allowed() && mux_input_pressed(mux_input_menu);
@@ -722,13 +625,15 @@ int main(const int argc, char *argv[]) {
 
             if (!peek) {
                 if (pause_menu_tick()) quit = 1;
-                lv_obj_invalidate(ui_screen);
             }
 
             if (!quit && netplay_is_playing() && !network_menu_paused)
                 run_gameplay = 1;
-            else
+            else {
+                perf_end(perf_stage_control, control_start);
+                control_start = 0;
                 SDL_Delay(10);
+            }
         } else if (peeking) {
             peeking = 0;
             display_set_ui_hidden(0);
@@ -739,29 +644,37 @@ int main(const int argc, char *argv[]) {
             pause_menu_toggle();
             manual_menu_open();
         } else if (hotkeys_is_quit_requested()) {
+            fade_out_screen_forced();
             quit = 1;
         } else if (netplay_blocks_core()) {
+            perf_end(perf_stage_control, control_start);
+            control_start = 0;
             SDL_Delay(5);
         } else if (network_menu_paused) {
+            perf_end(perf_stage_control, control_start);
+            control_start = 0;
             SDL_Delay(10);
         } else if (hotkeys_is_content_paused()) {
+            perf_end(perf_stage_control, control_start);
+            control_start = 0;
             SDL_Delay(10);
         } else {
             run_gameplay = 1;
         }
+        perf_end(perf_stage_control, control_start);
 
         if (run_gameplay) {
             audio_bridge_apply_pending_min_latency();
             environment_apply_pending_av_info();
 
-            const int ff_active = !netplay_is_active() && hotkeys_is_fast_forward_active();
-            const int slowmo_active = !netplay_is_active() && hotkeys_is_slow_motion_active();
+            const int ff_active = !netplay_active && hotkeys_is_fast_forward_active();
+            const int slowmo_active = !netplay_active && hotkeys_is_slow_motion_active();
 
             unsigned frames = 1;
             if (ff_active) {
                 const unsigned ff_batch = (unsigned) session_settings_ff_speed_value(session_settings.ff_speed);
                 frames = ff_batch > 0 ? ff_batch : 1;
-            } else if (!netplay_is_active() && session_settings.fps_limit != fps_limit_50 && !slowmo_active
+            } else if (!netplay_active && session_settings.fps_limit != fps_limit_50 && !slowmo_active
                        && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
 
@@ -817,9 +730,8 @@ int main(const int argc, char *argv[]) {
             }
         }
 
-        pause_menu_toast_tick();
-        pause_menu_playtime_tick();
-        pause_menu_header_fade_tick();
+        const uint64_t ui_tick_start = perf_begin();
+        pause_menu_service_tick(loop_now);
 
         const int paused_now = pause_menu_is_active();
         const int ui_visible = paused_now || netplay_wait_visible;
@@ -830,20 +742,27 @@ int main(const int argc, char *argv[]) {
             const int hud_active = pause_menu_gameplay_hud_active();
             display_set_ui_hidden(!hud_active);
         }
+        perf_end(perf_stage_ui_logic, ui_tick_start);
 
         const uint64_t video_start = core_ran ? perf_begin() : 0;
         video_bridge_flush_frame();
         perf_end(perf_stage_video, video_start);
-        if (ui_visible) lv_task_handler();
+        if (ui_visible && SDL_TICKS_PASSED(loop_now, ui_task_deadline)) {
+            const uint64_t ui_task_start = perf_begin();
+            lv_task_handler();
+            perf_end(perf_stage_ui_task, ui_task_start);
+            ui_task_deadline = loop_now + UI_TASK_INTERVAL_MS;
+        } else if (!ui_visible) {
+            ui_task_deadline = loop_now;
+        }
 
         const uint64_t present_start = core_ran ? perf_begin() : 0;
         if (display_ui_is_hidden()) {
             display_composite_frame();
         } else {
             const uint64_t present_before_refresh = display_present_serial();
-            if (ui_visible) lv_obj_invalidate(ui_screen);
             lv_refr_now(NULL);
-            if (display_present_serial() == present_before_refresh) display_composite_frame();
+            if (core_ran && display_present_serial() == present_before_refresh) display_composite_frame();
         }
         perf_end(perf_stage_present, present_start);
         if (core_ran) perf_note_present();
@@ -880,9 +799,6 @@ int main(const int argc, char *argv[]) {
     sdl_cleanup();
 
     if (core_restart_requested) {
-        // Force a (re)start of pickles with '--fresh'.
-        // A restart must NEVER auto load anything otherwise it just reloads the exact frame we quit on
-        // and it'll essentially undo the reset and cause all sorts of funky stuff to happen...
         char *restart_argv[] = {argv[0], core_file_path, core_content_path, "--fresh", "--restart", NULL};
         execvp(restart_argv[0], restart_argv);
         LOG_ERROR(mux_module, "Failed to re-exec for restart (%s), exiting instead", strerror(errno));

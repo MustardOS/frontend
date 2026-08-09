@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <limits.h>
 
 const char *get_random_hex(void);
 
@@ -20,29 +20,8 @@ int get_index_on_delete(int current_index, int post_delete_count);
 
 int16_t validate_int16(int value, const char *field);
 
-static void *mux_malloc(const size_t n) {
-    void *p = malloc(n);
-    if (!p && n) {
-        fprintf(stderr, "OOM (%zu bytes)\n", n);
-        abort();
-    }
-    return p;
-}
+void *mux_malloc(size_t size);
 
-static char *mux_strdup(const char *s) {
-    char *p = strdup(s);
-    if (!p) {
-        fprintf(stderr, "OOM\n");
-        abort();
-    }
-    return p;
-}
+char *mux_strdup(const char *text);
 
-static int safe_atoi(const char *s, const int fallback) {
-    if (!s || !*s) return fallback;
-    char *end;
-    errno = 0;
-    const long v = strtol(s, &end, 10);
-    if (errno || end == s || *end != '\0' || v < INT_MIN || v > INT_MAX) return fallback;
-    return (int) v;
-}
+int safe_atoi(const char *text, int fallback);

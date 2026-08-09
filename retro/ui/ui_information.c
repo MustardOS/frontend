@@ -75,11 +75,13 @@ static void focus_item(const int index) {
 
     lv_obj_t *label = lv_obj_get_child(panel, 0);
     lv_obj_t *glyph = lv_obj_get_child(panel, 1);
+    lv_obj_t *value = lv_obj_get_child(panel, 2);
 
     nav_suppress_next_shake();
 
     if (label) lv_group_focus_obj(label);
     if (glyph) lv_group_focus_obj(glyph);
+    if (value) lv_group_focus_obj(value);
     lv_group_focus_obj(panel);
 
     update_scroll_position(

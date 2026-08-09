@@ -9,6 +9,8 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../../common/miniz/miniz.h"
+#include "../../common/options.h"
+#include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../core/paths.h"
 #include "patch.h"
@@ -726,14 +728,14 @@ void patch_manual_init(const char *core_path_arg, const char *content_path) {
             if (!ext || !patch_ext_is_valid(ext)) continue;
 
             char name_no_ext[PATCH_NAME_MAX];
-            snprintf(name_no_ext, sizeof(name_no_ext), "%s", ent->d_name);
+            if (!str_copy_checked(name_no_ext, sizeof(name_no_ext), ent->d_name)) continue;
             char *nd = strrchr(name_no_ext, '.');
             if (nd) *nd = '\0';
 
             if (patch_name_is_auto(name_no_ext, stem_base)) continue;
 
             struct patch_manual_entry *entry = &patch_manual_list[patch_manual_count];
-            snprintf(entry->filename, sizeof(entry->filename), "%s", ent->d_name);
+            if (!str_copy_checked(entry->filename, sizeof(entry->filename), ent->d_name)) continue;
             entry->enabled = 1;
             patch_manual_count++;
         }
@@ -743,12 +745,19 @@ void patch_manual_init(const char *core_path_arg, const char *content_path) {
     qsort(patch_manual_list, (size_t) patch_manual_count, sizeof(struct patch_manual_entry), patch_manual_cmp);
 
     char content_stem[PATH_MAX];
-    snprintf(content_stem, sizeof(content_stem), "%s", stem_base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), stem_base)) return;
 
     char save_prefix[PATH_MAX];
-    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+    if (!core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix))) return;
 
-    snprintf(patch_ini_path, sizeof(patch_ini_path), "%s/%s/%s.ini", RETRO_PTC_PATH, save_prefix, content_stem);
+    char patch_directory[PATH_MAX];
+    const char *parts[] = {RETRO_PTC_PATH, save_prefix};
+    if (!path_join_checked(patch_directory, sizeof(patch_directory), parts, A_SIZE(parts))
+        || !str_format_checked(patch_ini_path, sizeof(patch_ini_path), "%s/%s.ini", patch_directory, content_stem)) {
+        LOG_ERROR(mux_module, "Patch settings path is too long");
+        patch_ini_path[0] = '\0';
+        return;
+    }
 
     mini_t *ini = mini_try_load(patch_ini_path);
     if (ini) {

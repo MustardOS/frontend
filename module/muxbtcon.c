@@ -4,6 +4,7 @@
 static void cancel_scan(void);
 
 static time_t scan_start = 0;
+static lv_timer_t *scan_poll_timer = NULL;
 
 static void show_help(void) {
     show_info_box(lang.muxbtcon.title, lang.muxbtcon.help, 0);
@@ -88,6 +89,7 @@ static void bt_scan_poll_task(lv_timer_t *timer) {
     if (!file_ready && elapsed < scan_timeout + 10) return;
 
     lv_timer_del(timer);
+    scan_poll_timer = NULL;
     hide_progress_bar();
     refresh_scan_list();
 }
@@ -102,6 +104,11 @@ static void create_bt_scan_items(void) {
 }
 
 static void cancel_scan(void) {
+    if (scan_poll_timer) {
+        lv_timer_del(scan_poll_timer);
+        scan_poll_timer = NULL;
+    }
+
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "stop", NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 
@@ -234,6 +241,7 @@ int muxbtcon_main(void) {
     init_elements();
 
     init_timer(ui_gen_refresh_task, NULL);
+    scan_poll_timer = lv_timer_create(bt_scan_poll_task, 300, NULL);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,

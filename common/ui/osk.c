@@ -684,9 +684,16 @@ void close_osk(lv_obj_t *osk, lv_group_t *ui, lv_obj_t *entry, lv_obj_t *panel) 
     osk_hide(panel);
 }
 
+static lv_obj_t *active_osk(void) {
+    if (key_show == 2 && num_entry && lv_obj_is_valid(num_entry)) return num_entry;
+    if (key_show == 3 && hex_entry && lv_obj_is_valid(hex_entry)) return hex_entry;
+    return key_entry;
+}
+
 void osk_show(lv_obj_t *panel) {
     if (!panel || !lv_obj_is_valid(panel)) return;
 
+    reset_osk(active_osk());
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_move_foreground(panel);
 }
@@ -695,12 +702,6 @@ void osk_hide(lv_obj_t *panel) {
     if (!panel || !lv_obj_is_valid(panel)) return;
 
     lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
-}
-
-static lv_obj_t *active_osk(void) {
-    if (key_show == 2 && num_entry && lv_obj_is_valid(num_entry)) return num_entry;
-    if (key_show == 3 && hex_entry && lv_obj_is_valid(hex_entry)) return hex_entry;
-    return key_entry;
 }
 
 static int is_action_row(const osk_layout_t *l, const uint16_t row) {

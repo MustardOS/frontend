@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "config.h"
+#include "config_value.h"
 #include "device.h"
 #include "options.h"
 
@@ -16,25 +17,30 @@ void load_device(struct mux_device *device) {
 
 #define DEV_INT(field, name)                                                                                           \
     do {                                                                                                               \
-        (field) = (int16_t) cfg_dir_int(&d, (name), 0);                                                                \
+        (field) = config_i16_value(cfg_dir_get(&d, (name)), 0, 0, 0, 0);                                               \
+    } while (0)
+
+#define DEV_INT_RANGE(field, name, fallback, minimum, maximum)                                                         \
+    do {                                                                                                               \
+        (field) = config_i16_value(cfg_dir_get(&d, (name)), (fallback), 1, (minimum), (maximum));                      \
     } while (0)
 
 #define DEV_FLO(field, name, fallback)                                                                                 \
     do {                                                                                                               \
-        (field) = (float) cfg_dir_flo(&d, (name), (fallback));                                                         \
+        (field) = (float) config_float_value(cfg_dir_get(&d, (name)), (fallback), 1, 0.01, 64.0);                      \
     } while (0)
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "board");
     DEV_STR(device->board.name, "name");
-    DEV_INT(device->board.has_network, "network");
-    DEV_INT(device->board.has_bluetooth, "bluetooth");
-    DEV_INT(device->board.has_portmaster, "portmaster");
-    DEV_INT(device->board.has_lid, "lid");
-    DEV_INT(device->board.has_hdmi, "hdmi");
-    DEV_INT(device->board.has_event, "event");
-    DEV_INT(device->board.has_debugfs, "debugfs");
-    DEV_INT(device->board.has_stick, "stick");
-    DEV_INT(device->board.has_touch, "touch");
+    DEV_INT_RANGE(device->board.has_network, "network", 0, 0, 1);
+    DEV_INT_RANGE(device->board.has_bluetooth, "bluetooth", 0, 0, 1);
+    DEV_INT_RANGE(device->board.has_portmaster, "portmaster", 0, 0, 1);
+    DEV_INT_RANGE(device->board.has_lid, "lid", 0, 0, 1);
+    DEV_INT_RANGE(device->board.has_hdmi, "hdmi", 0, 0, 1);
+    DEV_INT_RANGE(device->board.has_event, "event", 0, 0, 32);
+    DEV_INT_RANGE(device->board.has_debugfs, "debugfs", 0, 0, 1);
+    DEV_INT_RANGE(device->board.has_stick, "stick", 0, 0, 4);
+    DEV_INT_RANGE(device->board.has_touch, "touch", 0, 0, 1);
     DEV_STR(device->board.sdl_map, "sdl_map");
     DEV_STR(device->board.joy_hall, "hall");
     DEV_STR(device->board.led, "led");
@@ -43,21 +49,21 @@ void load_device(struct mux_device *device) {
     DEV_STR(device->board.rumble, "rumble");
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "led");
-    DEV_INT(device->board.has_rgb, "rgb");
+    DEV_INT_RANGE(device->board.has_rgb, "rgb", 0, 0, 1);
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "audio");
-    DEV_INT(device->audio.min, "min");
-    DEV_INT(device->audio.max, "max");
+    DEV_INT_RANGE(device->audio.min, "min", 0, 0, 100);
+    DEV_INT_RANGE(device->audio.max, "max", 100, 0, 100);
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "mux");
-    DEV_INT(device->mux.width, "width");
-    DEV_INT(device->mux.height, "height");
-    DEV_INT(device->mux.buffer, "buffer");
+    DEV_INT_RANGE(device->mux.width, "width", 0, 1, 16384);
+    DEV_INT_RANGE(device->mux.height, "height", 0, 1, 16384);
+    DEV_INT_RANGE(device->mux.buffer, "buffer", 0, 0, 16384);
 
 #define DEV_MNT(field, subdir)                                                                                         \
     do {                                                                                                               \
         cfg_dir_scan(&d, CONF_DEVICE_PATH "storage/" subdir);                                                          \
-        DEV_INT(device->storage.field.partition, "num");                                                               \
+        DEV_INT_RANGE(device->storage.field.partition, "num", 0, 0, 127);                                              \
         DEV_STR(device->storage.field.device, "dev");                                                                  \
         DEV_STR(device->storage.field.separator, "sep");                                                               \
         DEV_STR(device->storage.field.mount, "mount");                                                                 \
@@ -87,15 +93,15 @@ void load_device(struct mux_device *device) {
     DEV_STR(device->network.state, "state");
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "screen");
-    DEV_INT(device->screen.bright, "bright");
-    DEV_INT(device->screen.wait, "wait");
+    DEV_INT_RANGE(device->screen.bright, "bright", 0, 1, INT16_MAX);
+    DEV_INT_RANGE(device->screen.wait, "wait", 0, 0, INT16_MAX);
     DEV_STR(device->screen.device, "device");
     DEV_STR(device->screen.hdmi, "hdmi");
-    DEV_INT(device->screen.width, "width");
-    DEV_INT(device->screen.height, "height");
+    DEV_INT_RANGE(device->screen.width, "width", 0, 1, 16384);
+    DEV_INT_RANGE(device->screen.height, "height", 0, 1, 16384);
 
-    DEV_INT(device->screen.rotate, "rotate");
-    device->screen.rotate = (int16_t) cfg_dir_int(&d, "s_rotate", device->screen.rotate);
+    DEV_INT_RANGE(device->screen.rotate, "rotate", 0, 0, 359);
+    device->screen.rotate = config_i16_value(cfg_dir_get(&d, "s_rotate"), device->screen.rotate, 1, 0, 359);
 
     DEV_INT(device->screen.rotate_pivot_x, "rotate_pivot_x");
     DEV_INT(device->screen.rotate_pivot_y, "rotate_pivot_y");
@@ -103,22 +109,22 @@ void load_device(struct mux_device *device) {
     DEV_INT(device->screen.render_offset_y, "render_offset_y");
 
     DEV_FLO(device->screen.zoom, "zoom", 1.0);
-    device->screen.zoom = (float) cfg_dir_flo(&d, "s_zoom", device->screen.zoom);
+    device->screen.zoom = (float) config_float_value(cfg_dir_get(&d, "s_zoom"), device->screen.zoom, 1, 0.01, 64.0);
 
     device->screen.zoom_width = device->screen.zoom;
     device->screen.zoom_height = device->screen.zoom;
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "screen/internal");
-    DEV_INT(device->screen.internal.width, "width");
-    DEV_INT(device->screen.internal.height, "height");
+    DEV_INT_RANGE(device->screen.internal.width, "width", 0, 0, 16384);
+    DEV_INT_RANGE(device->screen.internal.height, "height", 0, 0, 16384);
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "screen/external");
-    DEV_INT(device->screen.external.width, "width");
-    DEV_INT(device->screen.external.height, "height");
+    DEV_INT_RANGE(device->screen.external.width, "width", 0, 0, 16384);
+    DEV_INT_RANGE(device->screen.external.height, "height", 0, 0, 16384);
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "sdl");
-    DEV_INT(device->sdl.scaler, "scaler");
-    DEV_INT(device->sdl.rotate, "rotate");
+    DEV_INT_RANGE(device->sdl.scaler, "scaler", 0, 0, 1);
+    DEV_INT_RANGE(device->sdl.rotate, "rotate", 0, 0, 3);
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "colour");
     DEV_INT(device->colour.red, "red");
@@ -140,6 +146,7 @@ void load_device(struct mux_device *device) {
 
 #undef DEV_STR
 #undef DEV_INT
+#undef DEV_INT_RANGE
 #undef DEV_FLO
 
     if (!device->mux.width) device->mux.width = 640;

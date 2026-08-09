@@ -129,8 +129,6 @@ static void update_language_data(void) {
         language_data_local_path, sizeof(language_data_local_path), "%s/%s/" LANG_ARCHIVE, device.storage.rom.mount,
         MUOS_ARCH_PATH
     );
-    if (file_exist(language_data_local_path)) remove(language_data_local_path);
-
     set_download_callbacks(refresh_language_data_finished);
     initiate_download(config.extra.language.data, language_data_local_path, 1, lang.muxlanguage.downloading);
 }

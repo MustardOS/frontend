@@ -10,6 +10,6 @@ int overlay_bridge_active(void);
 
 void overlay_bridge_set_suppressed(int suppressed);
 
-void overlay_bridge_render(SDL_Renderer *renderer, int canvas_w, int canvas_h);
+void overlay_bridge_render(SDL_Renderer *renderer, int canvas_w, int canvas_h, int physical_output);
 
 void overlay_bridge_shutdown(void);

@@ -118,8 +118,7 @@ open_filename(struct archive *a, int mbs_fn, const void *filename)
 			    (const char *)filename);
 		else
 			archive_set_error(a, ARCHIVE_ERRNO_MISC,
-			    "Can't convert '%S' to MBS",
-			    (const wchar_t *)filename);
+			    "Can't convert '%ls' to MBS", (const wchar_t *)filename);
 		return (ARCHIVE_FAILED);
 	}
 	mine->fd = -1;
@@ -170,8 +169,8 @@ file_open(struct archive *a, void *client_data)
 		else {
 			archive_mstring_get_wcs(a, &mine->filename, &wcs);
 			archive_set_error(a, errno,
-			    "Can't convert '%S' to MBS", wcs);
-		}
+			    "Can't convert '%ls' to MBS", wcs);
+                }
 		return (ARCHIVE_FATAL);
 	}
 	mine->fd = open(mbs, flags, 0666);
@@ -181,16 +180,16 @@ file_open(struct archive *a, void *client_data)
 		if (mbs != NULL)
 			archive_set_error(a, errno, "Failed to open '%s'", mbs);
 		else
-			archive_set_error(a, errno, "Failed to open '%S'", wcs);
-		return (ARCHIVE_FATAL);
+			archive_set_error(a, errno, "Failed to open '%ls'", wcs);
+                return (ARCHIVE_FATAL);
 	}
 
 	if (fstat(mine->fd, &st) != 0) {
 		if (mbs != NULL)
 			archive_set_error(a, errno, "Couldn't stat '%s'", mbs);
 		else
-			archive_set_error(a, errno, "Couldn't stat '%S'", wcs);
-		return (ARCHIVE_FATAL);
+			archive_set_error(a, errno, "Couldn't stat '%ls'", wcs);
+                return (ARCHIVE_FATAL);
 	}
 
 	/*

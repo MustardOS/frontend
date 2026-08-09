@@ -552,27 +552,6 @@ static void cache_controller_axis(const SDL_GameControllerAxis axis, const int16
     }
 }
 
-static int raw_axis_to_controller_axis(const uint8_t axis, SDL_GameControllerAxis *out_axis) {
-    switch (axis) {
-        case 0:
-            *out_axis = SDL_CONTROLLER_AXIS_LEFTX;
-            return 1;
-        case 1:
-            *out_axis = SDL_CONTROLLER_AXIS_LEFTY;
-            return 1;
-        case 2:
-            *out_axis = SDL_CONTROLLER_AXIS_RIGHTX;
-            return 1;
-        case 3:
-            *out_axis = SDL_CONTROLLER_AXIS_RIGHTY;
-            return 1;
-        default:
-            break;
-    }
-
-    return 0;
-}
-
 static axis_map_entry raw_joystick_axis_map(const uint8_t axis) {
     axis_map_entry m = {
         .neg = mux_input_count,

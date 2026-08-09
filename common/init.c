@@ -55,7 +55,6 @@ int config_auth = 0;
 int idle_state_exists = 0;
 int notify_drop_exists = 0;
 unsigned notify_drop_changes = 0;
-int safe_quit_exists = 0;
 int hdmi_refresh_exists = 0;
 int blank_exists = 0;
 unsigned idle_state_changes = 0;
@@ -86,7 +85,6 @@ void inotify_init(void) {
 
     inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, &idle_state_changes);
     inotify_track(ino_proc, "/run/muos", "notify", &notify_drop_exists, &notify_drop_changes);
-    inotify_track(ino_proc, "/run/muos", "safe_quit", &safe_quit_exists, 0);
     inotify_track(ino_proc, "/run/muos", "hdmi_refresh", &hdmi_refresh_exists, 0);
     inotify_track(ino_proc, "/run/muos", "blank", &blank_exists, 0);
 
@@ -295,32 +293,28 @@ void init_input(mux_input_options *opts, const int def_combo) {
 
         for (size_t i = 0; i < sizeof(bright_mods) / sizeof(bright_mods[0]); i++) {
             append_combo(
-                opts, (mux_input_combo
-                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
-                        .press_handler = ui_common_handle_bright_up,
-                        .hold_handler = ui_common_handle_bright_up}
+                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
+                                         .press_handler = ui_common_handle_bright_up,
+                                         .hold_handler = ui_common_handle_bright_up}
             );
 
             append_combo(
-                opts, (mux_input_combo
-                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
-                        .press_handler = ui_common_handle_bright_down,
-                        .hold_handler = ui_common_handle_bright_down}
+                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
+                                         .press_handler = ui_common_handle_bright_down,
+                                         .hold_handler = ui_common_handle_bright_down}
             );
         }
 
         append_combo(
-            opts, (mux_input_combo
-                  ){.type_mask = BIT(mux_input_vol_up),
-                    .press_handler = ui_common_handle_volume_up,
-                    .hold_handler = ui_common_handle_volume_up}
+            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_up),
+                                     .press_handler = ui_common_handle_volume_up,
+                                     .hold_handler = ui_common_handle_volume_up}
         );
 
         append_combo(
-            opts, (mux_input_combo
-                  ){.type_mask = BIT(mux_input_vol_down),
-                    .press_handler = ui_common_handle_volume_down,
-                    .hold_handler = ui_common_handle_volume_down}
+            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_down),
+                                     .press_handler = ui_common_handle_volume_down,
+                                     .hold_handler = ui_common_handle_volume_down}
         );
     }
 

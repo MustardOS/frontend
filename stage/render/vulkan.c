@@ -13,6 +13,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <vulkan/vulkan.h>
+#include "../../common/function_pointer.h"
 #include "../../common/log.h"
 #include "../../common/inotify.h"
 #include "../common/common.h"
@@ -27,7 +28,6 @@
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
-#include "../overlay/notif.h"
 #include "../hook.h"
 
 #define V_MAX_DEVICES     4
@@ -169,7 +169,7 @@ static pthread_once_t vk_dl_once = PTHREAD_ONCE_INIT;
 
 #define V_LOAD(name)                                                                                                   \
     do {                                                                                                               \
-        vk_dl.name = (PFN_vk##name) dlsym(vk_dl.handle, "vk" #name);                                                   \
+        MUOS_FUNCTION_ASSIGN(vk_dl.name, dlsym(vk_dl.handle, "vk" #name));                                             \
         if (!vk_dl.name) {                                                                                             \
             LOG_INFO("stage", "[vk] missing proc: vk" #name);                                                          \
             return;                                                                                                    \
@@ -329,20 +329,6 @@ static const uint32_t spv_fs_overlay[] = {
 };
 static const size_t spv_fs_overlay_size = sizeof(spv_fs_overlay);
 
-static const uint32_t spv_fs_solid[] = {
-    0x07230203u, 0x00010000u, 0x00000000u, 0x0000000Cu, 0x00000000u, 0x00020011u, 0x00000001u, 0x0003000Eu, 0x00000000u,
-    0x00000001u, 0x0007000Fu, 0x00000004u, 0x00000003u, 0x6E69616Du, 0x00000000u, 0x00000009u, 0x00000007u, 0x00030010u,
-    0x00000003u, 0x00000007u, 0x00040005u, 0x00000003u, 0x6E69616Du, 0x00000000u, 0x00040005u, 0x00000007u, 0x6F635F76u,
-    0x0000006Cu, 0x00040005u, 0x00000009u, 0x6F635F6Fu, 0x0000006Cu, 0x00040047u, 0x00000007u, 0x0000001Eu, 0x00000001u,
-    0x00040047u, 0x00000009u, 0x0000001Eu, 0x00000000u, 0x00020013u, 0x00000001u, 0x00030021u, 0x00000002u, 0x00000001u,
-    0x00030016u, 0x00000004u, 0x00000020u, 0x00040017u, 0x00000005u, 0x00000004u, 0x00000004u, 0x00040020u, 0x00000006u,
-    0x00000001u, 0x00000005u, 0x00040020u, 0x00000008u, 0x00000003u, 0x00000005u, 0x0004003Bu, 0x00000006u, 0x00000007u,
-    0x00000001u, 0x0004003Bu, 0x00000008u, 0x00000009u, 0x00000003u, 0x00050036u, 0x00000001u, 0x00000003u, 0x00000000u,
-    0x00000002u, 0x000200F8u, 0x0000000Au, 0x0004003Du, 0x00000005u, 0x0000000Bu, 0x00000007u, 0x0003003Eu, 0x00000009u,
-    0x0000000Bu, 0x000100FDu, 0x00010038u
-};
-static const size_t spv_fs_solid_size = sizeof(spv_fs_solid);
-
 static const uint32_t spv_fs_content[] = {
     0x07230203u, 0x00010000u, 0x00000000u, 0x000000CAu, 0x00000000u, 0x00020011u, 0x00000001u, 0x0006000Bu, 0x00000001u,
     0x4C534C47u, 0x6474732Eu, 0x3035342Eu, 0x00000000u, 0x0003000Eu, 0x00000000u, 0x00000001u, 0x0007000Fu, 0x00000004u,
@@ -481,7 +467,6 @@ enum {
     V_LAYER_BATTERY,
     V_LAYER_BRIGHT,
     V_LAYER_VOLUME,
-    V_LAYER_NOTIF,
 };
 
 static inline uint64_t v_tex_key(uint16_t layer, uint64_t payload) {
@@ -519,7 +504,6 @@ typedef struct {
 
     VkShaderModule vs_quad;
     VkShaderModule fs_overlay;
-    VkShaderModule fs_solid;
     VkShaderModule fs_content;
     VkShaderModule fs_smooth;
 
@@ -543,7 +527,6 @@ typedef struct {
     struct {
         VkFormat format;
         VkPipeline pipe_overlay;
-        VkPipeline pipe_solid;
         VkPipeline pipe_content;
         VkPipeline pipe_user_shader;
     } pipe_present[V_MAX_SWAPCHAINS];
@@ -1085,22 +1068,6 @@ static v_tex_t *v_tex_get_or_upload_png(v_device_t *dev, uint64_t key, const cha
     return out;
 }
 
-static v_tex_t *v_tex_get_or_upload_surface(v_device_t *dev, uint64_t key, SDL_Surface *surf) {
-    if (!surf) return NULL;
-    SDL_Surface *rgba = surf;
-    if (surf->format->format != SDL_PIXELFORMAT_RGBA32) {
-        rgba = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA32, 0);
-        if (!rgba) return NULL;
-    }
-    SDL_LockSurface(rgba);
-    v_tex_t *out = v_tex_get_or_upload_rgba_pitched(
-        dev, key, (const uint8_t *) rgba->pixels, (uint32_t) rgba->w, (uint32_t) rgba->h, rgba->pitch
-    );
-    SDL_UnlockSurface(rgba);
-    if (rgba != surf) SDL_FreeSurface(rgba);
-    return out;
-}
-
 static void v_tex_evict(v_device_t *dev, uint64_t key) __attribute__((unused));
 
 static void v_tex_evict(v_device_t *dev, uint64_t key) {
@@ -1354,7 +1321,6 @@ static VkPipeline v_get_present_pipeline_overlay(v_device_t *dev, VkFormat fmt) 
     VkPipeline pipe = v_make_pipeline(dev, dev->fs_overlay, dev->layout_overlay, rp, 1);
     dev->pipe_present[dev->pipe_present_count].format = fmt;
     dev->pipe_present[dev->pipe_present_count].pipe_overlay = pipe;
-    dev->pipe_present[dev->pipe_present_count].pipe_solid = VK_NULL_HANDLE;
     dev->pipe_present[dev->pipe_present_count].pipe_content = VK_NULL_HANDLE;
     dev->pipe_present[dev->pipe_present_count].pipe_user_shader = VK_NULL_HANDLE;
     dev->pipe_present_count++;
@@ -1416,37 +1382,6 @@ static VkPipeline v_get_present_pipeline_user(v_device_t *dev, VkFormat fmt) {
 
             VkPipeline pipe = v_make_pipeline(dev, dev->fs_user_module, dev->layout_user, rp, 0);
             dev->pipe_present[i].pipe_user_shader = pipe;
-            return pipe;
-        }
-    }
-
-    return VK_NULL_HANDLE;
-}
-
-static VkPipeline v_get_present_pipeline_solid(v_device_t *dev, VkFormat fmt) {
-    if (dev->fs_solid == VK_NULL_HANDLE) return VK_NULL_HANDLE;
-
-    for (int i = 0; i < dev->pipe_present_count; i++) {
-        if (dev->pipe_present[i].format == fmt) {
-            if (dev->pipe_present[i].pipe_solid != VK_NULL_HANDLE) return dev->pipe_present[i].pipe_solid;
-
-            VkRenderPass rp = v_get_present_renderpass(dev, fmt);
-            if (rp == VK_NULL_HANDLE) return VK_NULL_HANDLE;
-
-            VkPipeline pipe = v_make_pipeline(dev, dev->fs_solid, dev->layout_overlay, rp, 1);
-            dev->pipe_present[i].pipe_solid = pipe;
-            return pipe;
-        }
-    }
-
-    (void) v_get_present_pipeline_overlay(dev, fmt);
-    for (int i = 0; i < dev->pipe_present_count; i++) {
-        if (dev->pipe_present[i].format == fmt) {
-            VkRenderPass rp = v_get_present_renderpass(dev, fmt);
-            if (rp == VK_NULL_HANDLE) return VK_NULL_HANDLE;
-
-            VkPipeline pipe = v_make_pipeline(dev, dev->fs_solid, dev->layout_overlay, rp, 1);
-            dev->pipe_present[i].pipe_solid = pipe;
             return pipe;
         }
     }
@@ -1577,7 +1512,6 @@ static void v_device_destroy(v_device_t *dev) {
     for (int i = 0; i < dev->pipe_present_count; i++) {
         if (dev->pipe_present[i].pipe_overlay)
             vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_overlay, NULL);
-        if (dev->pipe_present[i].pipe_solid) vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_solid, NULL);
         if (dev->pipe_present[i].pipe_content)
             vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_content, NULL);
         if (dev->pipe_present[i].pipe_user_shader)
@@ -1595,7 +1529,6 @@ static void v_device_destroy(v_device_t *dev) {
 
     if (dev->vs_quad) vk_dl.DestroyShaderModule(dev->device, dev->vs_quad, NULL);
     if (dev->fs_overlay) vk_dl.DestroyShaderModule(dev->device, dev->fs_overlay, NULL);
-    if (dev->fs_solid) vk_dl.DestroyShaderModule(dev->device, dev->fs_solid, NULL);
     if (dev->fs_content) vk_dl.DestroyShaderModule(dev->device, dev->fs_content, NULL);
     if (dev->fs_smooth) vk_dl.DestroyShaderModule(dev->device, dev->fs_smooth, NULL);
 
@@ -1685,7 +1618,6 @@ static int v_device_init(v_device_t *dev) {
 
     dev->vs_quad = v_make_shader(dev, spv_vs_quad, spv_vs_quad_size);
     dev->fs_overlay = v_make_shader(dev, spv_fs_overlay, spv_fs_overlay_size);
-    dev->fs_solid = v_make_shader(dev, spv_fs_solid, spv_fs_solid_size);
     dev->fs_content = v_make_shader(dev, spv_fs_content, spv_fs_content_size);
     dev->fs_smooth = v_make_shader(dev, spv_fs_smooth, spv_fs_smooth_size);
 
@@ -2189,32 +2121,6 @@ static int v_ensure_indicator_sprite(
     return *out != NULL;
 }
 
-static int v_ensure_notif_texture(
-    v_device_t *dev, int fb_w, int fb_h, v_tex_t **out_tex, int *out_w, int *out_h, int *out_bx, int *out_by
-) {
-    *out_tex = NULL;
-    *out_w = *out_h = 0;
-    *out_bx = *out_by = 0;
-    if (!notif_is_visible()) return 0;
-
-    if (!gl_notif_prepare(fb_w, fb_h)) return 0;
-
-    const uint64_t key = v_tex_key(V_LAYER_NOTIF, 0);
-    v_tex_t *t = v_tex_find(dev, key);
-    if (!t) {
-        const uint8_t transparent[4] = {0, 0, 0, 0};
-        t = v_tex_get_or_upload_rgba(dev, key, transparent, 1, 1);
-        if (!t) return 0;
-    }
-
-    *out_tex = t;
-    *out_w = (int) t->width;
-    *out_h = (int) t->height;
-    *out_bx = 0;
-    *out_by = 0;
-    return 1;
-}
-
 static inline void v_set_uv(float uv[4][2], int rot) {
     const float base[4][2] = {
         {0.0f, 0.0f},
@@ -2285,7 +2191,7 @@ static inline int
 v_write_quad(v_image_state_t *st, float x0, float y0, float x1, float y1, int rot, VkDeviceSize *out_offset) {
     float uv[4][2];
     v_set_uv(uv, rot);
-    return v_write_quad_uv(st, x0, y0, x1, y1, uv, out_offset);
+    return v_write_quad_uv(st, x0, y0, x1, y1, (const float (*)[2]) uv, out_offset);
 }
 
 static inline void v_push_colour(VkCommandBuffer cb, VkPipelineLayout layout, float r, float g, float b, float a) {
@@ -2312,17 +2218,6 @@ static inline void v_draw_sprite(
 
     vk_dl.CmdBindDescriptorSets(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &desc, 0, NULL);
     v_push_colour(st->cmdbuf, layout, 1.0f, 1.0f, 1.0f, alpha);
-    v_bind_quad_and_draw(st, offset);
-}
-
-static inline void v_draw_solid_rect(
-    v_image_state_t *st, VkPipelineLayout layout, float x0, float y0, float x1, float y1, float r, float g, float b,
-    float a
-) {
-    VkDeviceSize offset = 0;
-    if (!v_write_quad(st, x0, y0, x1, y1, rotate_0, &offset)) return;
-
-    v_push_colour(st->cmdbuf, layout, r, g, b, a);
     v_bind_quad_and_draw(st, offset);
 }
 
@@ -2691,31 +2586,6 @@ static int v_record_cmdbuf(
         v_draw_sprite(st, dev->layout_overlay, tex_volume->desc, x0, y0, x1, y1, rot, batch.volume_alpha);
     }
 
-    if (notif_is_visible()) {
-        v_tex_t *ntex = NULL;
-        int nw = 0, nh = 0, bx = 0, by = 0;
-        if (v_ensure_notif_texture(dev, fb_w, fb_h, &ntex, &nw, &nh, &bx, &by) && ntex) {
-            if (gl_notif_needs_dim()) {
-                VkPipeline dim_pipe = v_get_present_pipeline_solid(dev, sc->format);
-                if (dim_pipe != VK_NULL_HANDLE) {
-                    vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, dim_pipe);
-                    v_draw_solid_rect(
-                        st, dev->layout_overlay, -1.0f, -1.0f, 1.0f, 1.0f, notif_cfg.dim_colour.r / 255.0f,
-                        notif_cfg.dim_colour.g / 255.0f, notif_cfg.dim_colour.b / 255.0f, notif_cfg.dim_alpha / 255.0f
-                    );
-                    vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_overlay_present);
-                }
-            }
-
-            x0 = (float) bx / (float) fb_w * 2.0f - 1.0f;
-            x1 = (float) (bx + nw) / (float) fb_w * 2.0f - 1.0f;
-            y0 = 1.0f - (float) by / (float) fb_h * 2.0f;
-            y1 = 1.0f - (float) (by + nh) / (float) fb_h * 2.0f;
-
-            v_draw_sprite(st, dev->layout_overlay, ntex->desc, x0, y0, x1, y1, rotate_0, 1.0f);
-        }
-    }
-
     v_flush_quad_buffer(dev, st);
     vk_dl.CmdEndRenderPass(st->cmdbuf);
 
@@ -2860,7 +2730,6 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR *info) {
     battery_overlay_update();
     bright_overlay_update();
     volume_overlay_update();
-    notif_update();
 
     v_device_t *dev = NULL;
     pthread_mutex_lock(&v_devices_lock);

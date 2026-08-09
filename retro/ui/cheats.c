@@ -5,6 +5,8 @@
 #include "../../common/ini.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
+#include "../../common/options.h"
+#include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../core/paths.h"
 #include "cheats.h"
@@ -114,7 +116,11 @@ static int cheat_code_exists(const char *code) {
 
 static int load_ra_cht(const char *save_prefix, const char *content_stem) {
     char cht_path[MAX_BUFFER_SIZE];
-    snprintf(cht_path, sizeof(cht_path), "%s/%s/%s.cht", RETRO_CHT_PATH, save_prefix, content_stem);
+    char directory[MAX_BUFFER_SIZE];
+    const char *parts[] = {RETRO_CHT_PATH, save_prefix};
+    if (!path_join_checked(directory, sizeof(directory), parts, A_SIZE(parts))
+        || !str_format_checked(cht_path, sizeof(cht_path), "%s/%s.cht", directory, content_stem))
+        return 0;
 
     FILE *f = fopen(cht_path, "r");
     if (!f) return 0;
@@ -125,6 +131,7 @@ static int load_ra_cht(const char *save_prefix, const char *content_stem) {
     static int cht_have[CHEAT_MAX] = {0};
 
     memset(cht_enable, 0, sizeof(cht_enable));
+    memset(cht_have, 0, sizeof(cht_have));
     for (int i = 0; i < CHEAT_MAX; i++) {
         cht_desc[i][0] = '\0';
         cht_code[i][0] = '\0';
@@ -149,10 +156,9 @@ static int load_ra_cht(const char *save_prefix, const char *content_stem) {
         if (index < 0 || index >= CHEAT_MAX) continue;
 
         if (strcmp(field, "desc") == 0) {
-            snprintf(cht_desc[index], sizeof(cht_desc[index]), "%s", value);
+            str_copy_checked(cht_desc[index], sizeof(cht_desc[index]), value);
         } else if (strcmp(field, "code") == 0) {
-            snprintf(cht_code[index], sizeof(cht_code[index]), "%s", value);
-            cht_have[index] = 1;
+            cht_have[index] = str_copy_checked(cht_code[index], sizeof(cht_code[index]), value);
         } else if (strcmp(field, "enable") == 0) {
             cht_enable[index] = strcasecmp(value, "true") == 0 || strcmp(value, "1") == 0;
         }
@@ -168,8 +174,9 @@ static int load_ra_cht(const char *save_prefix, const char *content_stem) {
         if (cheats_count >= CHEAT_MAX || cheat_code_exists(cht_code[i])) continue;
 
         struct cheat_entry *entry = &cheats_list[cheats_count];
-        snprintf(entry->desc, sizeof(entry->desc), "%s", cht_desc[i][0] ? cht_desc[i] : cht_code[i]);
-        snprintf(entry->code, sizeof(entry->code), "%s", cht_code[i]);
+        if (!str_copy_checked(entry->desc, sizeof(entry->desc), cht_desc[i][0] ? cht_desc[i] : cht_code[i])
+            || !str_copy_checked(entry->code, sizeof(entry->code), cht_code[i]))
+            continue;
         entry->enabled = cht_enable[i];
 
         cheats_count++;
@@ -187,14 +194,20 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
     content_base = content_base ? content_base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), content_base)) return;
     char *dot = strrchr(content_stem, '.');
     if (dot) *dot = '\0';
 
     char save_prefix[MAX_BUFFER_SIZE];
-    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+    if (!core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix))) return;
 
-    snprintf(cheats_path, sizeof(cheats_path), "%s/%s/%s.ini", RETRO_CHT_PATH, save_prefix, content_stem);
+    char directory[MAX_BUFFER_SIZE];
+    const char *parts[] = {RETRO_CHT_PATH, save_prefix};
+    if (!path_join_checked(directory, sizeof(directory), parts, A_SIZE(parts))
+        || !str_format_checked(cheats_path, sizeof(cheats_path), "%s/%s.ini", directory, content_stem)) {
+        LOG_ERROR(mux_module, "Cheat path is too long");
+        return;
+    }
 
     mini_t *ini = mini_try_load(cheats_path);
     if (ini) {
@@ -207,8 +220,9 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
             if (index < 0) continue;
 
             struct cheat_entry *entry = &cheats_list[cheats_count];
-            snprintf(entry->desc, sizeof(entry->desc), "%s", get_ini_string(ini, group->id, "desc", ""));
-            snprintf(entry->code, sizeof(entry->code), "%s", get_ini_string(ini, group->id, "code", ""));
+            if (!str_copy_checked(entry->desc, sizeof(entry->desc), get_ini_string(ini, group->id, "desc", ""))
+                || !str_copy_checked(entry->code, sizeof(entry->code), get_ini_string(ini, group->id, "code", "")))
+                continue;
             entry->enabled = managed ? (int) mini_get_bool(ini, group->id, "enabled", 0) : 0;
 
             cheats_count++;
@@ -221,8 +235,9 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
 
     if (converted > 0 && write_cheats()) {
         char cht_path[MAX_BUFFER_SIZE];
-        snprintf(cht_path, sizeof(cht_path), "%s/%s/%s.cht", RETRO_CHT_PATH, save_prefix, content_stem);
-        if (remove(cht_path) == 0) LOG_INFO(mux_module, "Converted and removed '%s'", cht_path);
+        if (str_format_checked(cht_path, sizeof(cht_path), "%s/%s.cht", directory, content_stem)
+            && remove(cht_path) == 0)
+            LOG_INFO(mux_module, "Converted and removed '%s'", cht_path);
     }
 
     if (cheats_count == 0) return;

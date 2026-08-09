@@ -7,6 +7,8 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../../common/miniz/miniz.h"
+#include "../../common/options.h"
+#include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../core/paths.h"
 #include "../settings/settings.h"
@@ -39,7 +41,7 @@ static int write_in_flight = 0;
 
 static int atomic_write_file(const char *path, const void *data, const size_t size) {
     char tmp_path[MAX_BUFFER_SIZE];
-    snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", path);
+    if (!str_format_checked(tmp_path, sizeof(tmp_path), "%s.tmp", path)) return -1;
 
     FILE *f = fopen(tmp_path, "wb");
     if (!f) {
@@ -66,7 +68,7 @@ static int atomic_write_file(const char *path, const void *data, const size_t si
     }
 
     char dir_path[MAX_BUFFER_SIZE];
-    snprintf(dir_path, sizeof(dir_path), "%s", path);
+    if (!str_copy_checked(dir_path, sizeof(dir_path), path)) return -1;
     char *slash = strrchr(dir_path, '/');
     if (slash) *slash = '\0';
 
@@ -79,8 +81,8 @@ static int atomic_write_file(const char *path, const void *data, const size_t si
     return 0;
 }
 
-static void sum_path_for(const char *path, char *out, const size_t out_size) {
-    snprintf(out, out_size, "%s.sum", path);
+static int sum_path_for(const char *path, char *out, const size_t out_size) {
+    return str_format_checked(out, out_size, "%s.sum", path);
 }
 
 static uint32_t compute_crc(const void *data, const size_t size) {
@@ -91,7 +93,7 @@ static uint32_t compute_crc(const void *data, const size_t size) {
 // contents are still what was written rather than dealing with corrupted data.
 static void write_checksum(const char *path, const void *data, const size_t size) {
     char sum_path[MAX_BUFFER_SIZE];
-    sum_path_for(path, sum_path, sizeof(sum_path));
+    if (!sum_path_for(path, sum_path, sizeof(sum_path))) return;
 
     char sum_text[16];
     const int len = snprintf(sum_text, sizeof(sum_text), "%08X", compute_crc(data, size));
@@ -105,7 +107,7 @@ static void write_checksum(const char *path, const void *data, const size_t size
 // as invalid and we don't want that headache...
 static int checksum_matches(const char *path, const void *data, const size_t size) {
     char sum_path[MAX_BUFFER_SIZE];
-    sum_path_for(path, sum_path, sizeof(sum_path));
+    if (!sum_path_for(path, sum_path, sizeof(sum_path))) return 0;
 
     FILE *f = fopen(sum_path, "r");
     if (!f) return 1;
@@ -149,8 +151,9 @@ static void rotate_sram_backups(const char *path) {
 
     char oldest[MAX_BUFFER_SIZE];
     char oldest_sum[MAX_BUFFER_SIZE];
-    snprintf(oldest, sizeof(oldest), "%s.bk%d", path, SRAM_BACKUP_MAX - 1);
-    snprintf(oldest_sum, sizeof(oldest_sum), "%s.bk%d.sum", path, SRAM_BACKUP_MAX - 1);
+    if (!str_format_checked(oldest, sizeof(oldest), "%s.bk%d", path, SRAM_BACKUP_MAX - 1)
+        || !str_format_checked(oldest_sum, sizeof(oldest_sum), "%s.bk%d.sum", path, SRAM_BACKUP_MAX - 1))
+        return;
     remove(oldest);
     remove(oldest_sum);
 
@@ -159,10 +162,11 @@ static void rotate_sram_backups(const char *path) {
         char to[MAX_BUFFER_SIZE];
         char from_sum[MAX_BUFFER_SIZE];
         char to_sum[MAX_BUFFER_SIZE];
-        snprintf(from, sizeof(from), "%s.bk%d", path, i);
-        snprintf(to, sizeof(to), "%s.bk%d", path, i + 1);
-        snprintf(from_sum, sizeof(from_sum), "%s.bk%d.sum", path, i);
-        snprintf(to_sum, sizeof(to_sum), "%s.bk%d.sum", path, i + 1);
+        if (!str_format_checked(from, sizeof(from), "%s.bk%d", path, i)
+            || !str_format_checked(to, sizeof(to), "%s.bk%d", path, i + 1)
+            || !str_format_checked(from_sum, sizeof(from_sum), "%s.bk%d.sum", path, i)
+            || !str_format_checked(to_sum, sizeof(to_sum), "%s.bk%d.sum", path, i + 1))
+            return;
         rename(from, to);
         rename(from_sum, to_sum);
     }
@@ -170,9 +174,10 @@ static void rotate_sram_backups(const char *path) {
     char bk0[MAX_BUFFER_SIZE];
     char bk0_sum[MAX_BUFFER_SIZE];
     char path_sum[MAX_BUFFER_SIZE];
-    snprintf(bk0, sizeof(bk0), "%s.bk0", path);
-    snprintf(bk0_sum, sizeof(bk0_sum), "%s.bk0.sum", path);
-    sum_path_for(path, path_sum, sizeof(path_sum));
+    if (!str_format_checked(bk0, sizeof(bk0), "%s.bk0", path)
+        || !str_format_checked(bk0_sum, sizeof(bk0_sum), "%s.bk0.sum", path)
+        || !sum_path_for(path, path_sum, sizeof(path_sum)))
+        return;
     rename(path, bk0);
     rename(path_sum, bk0_sum);
 }
@@ -199,7 +204,7 @@ static void *sram_worker_main(void *arg) {
         if (worker_buf) {
             memcpy(worker_buf, job_buf, job_size);
             write_size = job_size;
-            snprintf(path, sizeof(path), "%s", job_path);
+            if (!str_copy_checked(path, sizeof(path), job_path)) write_size = 0;
         }
 
         job_pending = 0;
@@ -235,14 +240,27 @@ void sram_bridge_init(const char *core_path_arg, const char *content_path) {
     content_base = content_base ? content_base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), content_base)) {
+        LOG_ERROR(mux_module, "SRAM content name is too long");
+        return;
+    }
     char *dot = strrchr(content_stem, '.');
     if (dot) *dot = '\0';
 
     char save_prefix[MAX_BUFFER_SIZE];
-    core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix));
+    if (!core_content_save_prefix(core_path_arg, content_path, save_prefix, sizeof(save_prefix))) {
+        LOG_ERROR(mux_module, "SRAM save prefix is too long");
+        return;
+    }
 
-    snprintf(sram_path, sizeof(sram_path), "%s/%s/%s.srm", RETRO_SRM_PATH, save_prefix, content_stem);
+    char sram_directory[MAX_BUFFER_SIZE];
+    const char *parts[] = {RETRO_SRM_PATH, save_prefix};
+    if (!path_join_checked(sram_directory, sizeof(sram_directory), parts, A_SIZE(parts))
+        || !str_format_checked(sram_path, sizeof(sram_path), "%s/%s.srm", sram_directory, content_stem)) {
+        LOG_ERROR(mux_module, "SRAM path is too long");
+        sram_path[0] = '\0';
+        return;
+    }
     create_directories(sram_path, 1);
 
     int have_valid = 0;
@@ -268,7 +286,7 @@ void sram_bridge_init(const char *core_path_arg, const char *content_path) {
         if (!have_valid) {
             for (int i = 0; i < SRAM_BACKUP_MAX; i++) {
                 char backup_path[MAX_BUFFER_SIZE];
-                snprintf(backup_path, sizeof(backup_path), "%s.bk%d", sram_path, i);
+                if (!str_format_checked(backup_path, sizeof(backup_path), "%s.bk%d", sram_path, i)) continue;
                 if (!file_exist(backup_path)) continue;
 
                 size_t candidate_size = 0;
@@ -331,7 +349,11 @@ void sram_bridge_save(void) {
     if (job_buf) {
         memcpy(job_buf, data, size);
         job_size = size;
-        snprintf(job_path, sizeof(job_path), "%s", sram_path);
+        if (!str_copy_checked(job_path, sizeof(job_path), sram_path)) {
+            pthread_mutex_unlock(&sram_mutex);
+            LOG_ERROR(mux_module, "SRAM writer path is too long");
+            return;
+        }
         job_pending = 1;
         pthread_cond_signal(&sram_cond);
     } else {

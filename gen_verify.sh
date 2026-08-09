@@ -1,12 +1,14 @@
 #!/bin/sh
 
-INTERNAL_BASE="${1:?usage: $0 <internal repo>}"
+set -eu
+
+INTERNAL_BASE="${1:?usage: $0 <internal script directory> [output file]}"
 
 TARGET_BASE="/opt/muos/script"
-OUT="./common/verify.h"
+OUT="${2:-./common/verify.h}"
 
 INTERNAL_BASE=${INTERNAL_BASE%/}
-DIRS="device init mount mux package system var web"
+DIRS="archive control device init launch mount mux package system var web"
 
 command -v xxhsum >/dev/null 2>&1 || {
 	echo "xxhsum not found"
@@ -31,7 +33,9 @@ command -v xxhsum >/dev/null 2>&1 || {
 	done |
 		LC_ALL=C sort |
 		while IFS= read -r FILE; do
-			HASH=$(xxhsum "$FILE" | awk '{print $1}')
+			HASH_LINE=$(xxhsum <"$FILE")
+			HASH=${HASH_LINE%% *}
+			[ -n "$HASH" ] || exit 1
 			TARGET_PATH=$(printf '%s\n' "$FILE" | sed "s|^$INTERNAL_BASE|$TARGET_BASE|")
 			printf "    { \"%s\", \"%s\" },\n" "$TARGET_PATH" "$HASH"
 		done

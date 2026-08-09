@@ -26,7 +26,7 @@ extern int gamestate_quicksave_exists;
 extern struct gamestate_slot gamestate_timeline[GAMESTATE_TIMELINE_DEPTH];
 extern int gamestate_timeline_exists[GAMESTATE_TIMELINE_DEPTH];
 
-void gamestate_init(const char *state_dir);
+int gamestate_init(const char *state_dir);
 
 void gamestate_capture_pending(int restore_visibility);
 

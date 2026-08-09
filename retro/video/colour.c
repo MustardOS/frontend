@@ -7,6 +7,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
+#include "gl_dispatch.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
 
@@ -114,96 +115,7 @@ static SDL_Texture *work_tex = NULL;
 static int work_w = 0;
 static int work_h = 0;
 
-static GLuint(GL_APIENTRY *p_glCreateShader)(GLenum type) = NULL;
-static void(GL_APIENTRY *p_glShaderSource)(
-    GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length
-) = NULL;
-static void(GL_APIENTRY *p_glCompileShader)(GLuint shader) = NULL;
-static void(GL_APIENTRY *p_glGetShaderiv)(GLuint shader, GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glGetShaderInfoLog)(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog) = NULL;
-static void(GL_APIENTRY *p_glDeleteShader)(GLuint shader) = NULL;
-static GLuint(GL_APIENTRY *p_glCreateProgram)(void) = NULL;
-static void(GL_APIENTRY *p_glAttachShader)(GLuint program, GLuint shader) = NULL;
-static void(GL_APIENTRY *p_glLinkProgram)(GLuint program) = NULL;
-static void(GL_APIENTRY *p_glDeleteProgram)(GLuint program) = NULL;
-static void(GL_APIENTRY *p_glGetProgramiv)(GLuint program, GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glGetProgramInfoLog)(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog) =
-    NULL;
-static GLint(GL_APIENTRY *p_glGetAttribLocation)(GLuint program, const GLchar *name) = NULL;
-static GLint(GL_APIENTRY *p_glGetUniformLocation)(GLuint program, const GLchar *name) = NULL;
-static void(GL_APIENTRY *p_glUseProgram)(GLuint program) = NULL;
-static void(GL_APIENTRY *p_glVertexAttribPointer)(
-    GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer
-) = NULL;
-static void(GL_APIENTRY *p_glEnableVertexAttribArray)(GLuint index) = NULL;
-static void(GL_APIENTRY *p_glDisableVertexAttribArray)(GLuint index) = NULL;
-static void(GL_APIENTRY *p_glUniform1i)(GLint location, GLint v0) = NULL;
-static void(GL_APIENTRY *p_glUniform1f)(GLint location, GLfloat v0) = NULL;
-static void(GL_APIENTRY *p_glUniform2f)(GLint location, GLfloat v0, GLfloat v1) = NULL;
-static void(GL_APIENTRY *p_glUniformMatrix3fv)(
-    GLint location, GLsizei count, GLboolean transpose, const GLfloat *value
-) = NULL;
-static void(GL_APIENTRY *p_glDrawArrays)(GLenum mode, GLint first, GLsizei count) = NULL;
-static void(GL_APIENTRY *p_glBindBuffer)(GLenum target, GLuint buffer) = NULL;
-static void(GL_APIENTRY *p_glActiveTexture)(GLenum texture) = NULL;
-static void(GL_APIENTRY *p_glBindAttribLocation)(GLuint program, GLuint index, const GLchar *name) = NULL;
-static void(GL_APIENTRY *p_glGetIntegerv)(GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glEnable)(GLenum cap) = NULL;
-static void(GL_APIENTRY *p_glDisable)(GLenum cap) = NULL;
-static GLboolean(GL_APIENTRY *p_glIsEnabled)(GLenum cap) = NULL;
-static void(GL_APIENTRY *p_glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) = NULL;
-
-static int gl_funcs_ready = 0;
-
-static int load_gl_functions(void) {
-    if (gl_funcs_ready) return 1;
-
-#define LOAD_GL(name)                                                                                                  \
-    do {                                                                                                               \
-        p_##name = (void *) SDL_GL_GetProcAddress(#name);                                                              \
-        if (!p_##name) {                                                                                               \
-            LOG_ERROR(mux_module, "Colour: failed to resolve GL function %s", #name);                                  \
-            return 0;                                                                                                  \
-        }                                                                                                              \
-    } while (0)
-
-    LOAD_GL(glCreateShader);
-    LOAD_GL(glShaderSource);
-    LOAD_GL(glCompileShader);
-    LOAD_GL(glGetShaderiv);
-    LOAD_GL(glGetShaderInfoLog);
-    LOAD_GL(glDeleteShader);
-    LOAD_GL(glCreateProgram);
-    LOAD_GL(glAttachShader);
-    LOAD_GL(glLinkProgram);
-    LOAD_GL(glDeleteProgram);
-    LOAD_GL(glGetProgramiv);
-    LOAD_GL(glGetProgramInfoLog);
-    LOAD_GL(glGetAttribLocation);
-    LOAD_GL(glGetUniformLocation);
-    LOAD_GL(glUseProgram);
-    LOAD_GL(glVertexAttribPointer);
-    LOAD_GL(glEnableVertexAttribArray);
-    LOAD_GL(glDisableVertexAttribArray);
-    LOAD_GL(glUniform1i);
-    LOAD_GL(glUniform1f);
-    LOAD_GL(glUniform2f);
-    LOAD_GL(glUniformMatrix3fv);
-    LOAD_GL(glDrawArrays);
-    LOAD_GL(glBindBuffer);
-    LOAD_GL(glActiveTexture);
-    LOAD_GL(glBindAttribLocation);
-    LOAD_GL(glGetIntegerv);
-    LOAD_GL(glEnable);
-    LOAD_GL(glDisable);
-    LOAD_GL(glIsEnabled);
-    LOAD_GL(glViewport);
-
-#undef LOAD_GL
-
-    gl_funcs_ready = 1;
-    return 1;
-}
+static const gl_dispatch_t *gl;
 
 static int name_cmp(const void *a, const void *b) {
     return strcmp(a, b);
@@ -468,17 +380,17 @@ int colour_pass_needed(void) {
 }
 
 static GLuint compile_shader(const GLenum type, const char *src) {
-    const GLuint shader = p_glCreateShader(type);
-    p_glShaderSource(shader, 1, &src, NULL);
-    p_glCompileShader(shader);
+    const GLuint shader = gl->CreateShader(type);
+    gl->ShaderSource(shader, 1, &src, NULL);
+    gl->CompileShader(shader);
 
     GLint ok = 0;
-    p_glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
+    gl->GetShaderiv(shader, GL_COMPILE_STATUS, &ok);
     if (!ok) {
         char log[512];
-        p_glGetShaderInfoLog(shader, sizeof(log), NULL, log);
+        gl->GetShaderInfoLog(shader, sizeof(log), NULL, log);
         LOG_ERROR(mux_module, "Colour: shader compile failed: %s", log);
-        p_glDeleteShader(shader);
+        gl->DeleteShader(shader);
         return 0;
     }
 
@@ -489,51 +401,52 @@ static void ensure_program(void) {
     if (prog_attempted) return;
     prog_attempted = 1;
 
-    if (!load_gl_functions()) return;
+    gl = gl_dispatch_acquire("Colour", gl_dispatch_colour);
+    if (!gl) return;
 
     const GLuint vs = compile_shader(GL_VERTEX_SHADER, vs_src);
     const GLuint fs = vs ? compile_shader(GL_FRAGMENT_SHADER, fs_src) : 0;
 
     if (!vs || !fs) {
-        if (vs) p_glDeleteShader(vs);
-        if (fs) p_glDeleteShader(fs);
+        if (vs) gl->DeleteShader(vs);
+        if (fs) gl->DeleteShader(fs);
         return;
     }
 
-    prog = p_glCreateProgram();
-    p_glAttachShader(prog, vs);
-    p_glAttachShader(prog, fs);
+    prog = gl->CreateProgram();
+    gl->AttachShader(prog, vs);
+    gl->AttachShader(prog, fs);
 
-    p_glBindAttribLocation(prog, 3, "a_pos");
-    p_glBindAttribLocation(prog, 4, "a_uv");
+    gl->BindAttribLocation(prog, 3, "a_pos");
+    gl->BindAttribLocation(prog, 4, "a_uv");
 
-    p_glLinkProgram(prog);
+    gl->LinkProgram(prog);
 
-    p_glDeleteShader(vs);
-    p_glDeleteShader(fs);
+    gl->DeleteShader(vs);
+    gl->DeleteShader(fs);
 
     GLint ok = 0;
-    p_glGetProgramiv(prog, GL_LINK_STATUS, &ok);
+    gl->GetProgramiv(prog, GL_LINK_STATUS, &ok);
     if (!ok) {
         char log[512];
-        p_glGetProgramInfoLog(prog, sizeof(log), NULL, log);
+        gl->GetProgramInfoLog(prog, sizeof(log), NULL, log);
         LOG_ERROR(mux_module, "Colour: program link failed: %s", log);
-        p_glDeleteProgram(prog);
+        gl->DeleteProgram(prog);
         prog = 0;
         return;
     }
 
-    a_pos = p_glGetAttribLocation(prog, "a_pos");
-    a_uv = p_glGetAttribLocation(prog, "a_uv");
-    u_tex = p_glGetUniformLocation(prog, "u_tex");
-    u_brightness = p_glGetUniformLocation(prog, "u_brightness");
-    u_contrast = p_glGetUniformLocation(prog, "u_contrast");
-    u_saturation = p_glGetUniformLocation(prog, "u_saturation");
-    u_cos_h = p_glGetUniformLocation(prog, "u_cosH");
-    u_sin_h = p_glGetUniformLocation(prog, "u_sinH");
-    u_gamma = p_glGetUniformLocation(prog, "u_gamma");
-    u_filter = p_glGetUniformLocation(prog, "u_filter");
-    u_filter_enabled = p_glGetUniformLocation(prog, "u_filter_enabled");
+    a_pos = gl->GetAttribLocation(prog, "a_pos");
+    a_uv = gl->GetAttribLocation(prog, "a_uv");
+    u_tex = gl->GetUniformLocation(prog, "u_tex");
+    u_brightness = gl->GetUniformLocation(prog, "u_brightness");
+    u_contrast = gl->GetUniformLocation(prog, "u_contrast");
+    u_saturation = gl->GetUniformLocation(prog, "u_saturation");
+    u_cos_h = gl->GetUniformLocation(prog, "u_cosH");
+    u_sin_h = gl->GetUniformLocation(prog, "u_sinH");
+    u_gamma = gl->GetUniformLocation(prog, "u_gamma");
+    u_filter = gl->GetUniformLocation(prog, "u_filter");
+    u_filter_enabled = gl->GetUniformLocation(prog, "u_filter_enabled");
 
     prog_ready = 1;
     LOG_INFO(mux_module, "Colour: shader program ready");
@@ -575,7 +488,7 @@ static void ensure_shader_program(void) {
     shader_loaded_index = index;
 
     if (shader_prog) {
-        p_glDeleteProgram(shader_prog);
+        gl->DeleteProgram(shader_prog);
         shader_prog = 0;
     }
     sh_a_pos = sh_a_uv = -1;
@@ -603,41 +516,41 @@ static void ensure_shader_program(void) {
     free(full_src);
 
     if (!vs || !fs) {
-        if (vs) p_glDeleteShader(vs);
-        if (fs) p_glDeleteShader(fs);
+        if (vs) gl->DeleteShader(vs);
+        if (fs) gl->DeleteShader(fs);
         return;
     }
 
-    shader_prog = p_glCreateProgram();
-    p_glAttachShader(shader_prog, vs);
-    p_glAttachShader(shader_prog, fs);
+    shader_prog = gl->CreateProgram();
+    gl->AttachShader(shader_prog, vs);
+    gl->AttachShader(shader_prog, fs);
 
-    p_glBindAttribLocation(shader_prog, 3, "a_pos");
-    p_glBindAttribLocation(shader_prog, 4, "a_uv");
+    gl->BindAttribLocation(shader_prog, 3, "a_pos");
+    gl->BindAttribLocation(shader_prog, 4, "a_uv");
 
-    p_glLinkProgram(shader_prog);
+    gl->LinkProgram(shader_prog);
 
-    p_glDeleteShader(vs);
-    p_glDeleteShader(fs);
+    gl->DeleteShader(vs);
+    gl->DeleteShader(fs);
 
     GLint ok = 0;
-    p_glGetProgramiv(shader_prog, GL_LINK_STATUS, &ok);
+    gl->GetProgramiv(shader_prog, GL_LINK_STATUS, &ok);
     if (!ok) {
         char log[512];
-        p_glGetProgramInfoLog(shader_prog, sizeof(log), NULL, log);
+        gl->GetProgramInfoLog(shader_prog, sizeof(log), NULL, log);
         LOG_ERROR(mux_module, "Colour: user shader link failed: %s", log);
-        p_glDeleteProgram(shader_prog);
+        gl->DeleteProgram(shader_prog);
         shader_prog = 0;
         return;
     }
 
-    sh_a_pos = p_glGetAttribLocation(shader_prog, "a_pos");
-    sh_a_uv = p_glGetAttribLocation(shader_prog, "a_uv");
-    sh_u_tex = p_glGetUniformLocation(shader_prog, "u_tex");
-    sh_u_resolution = p_glGetUniformLocation(shader_prog, "u_resolution");
-    sh_u_native_resolution = p_glGetUniformLocation(shader_prog, "u_native_resolution");
-    sh_u_time = p_glGetUniformLocation(shader_prog, "u_time");
-    sh_u_frame = p_glGetUniformLocation(shader_prog, "u_frame");
+    sh_a_pos = gl->GetAttribLocation(shader_prog, "a_pos");
+    sh_a_uv = gl->GetAttribLocation(shader_prog, "a_uv");
+    sh_u_tex = gl->GetUniformLocation(shader_prog, "u_tex");
+    sh_u_resolution = gl->GetUniformLocation(shader_prog, "u_resolution");
+    sh_u_native_resolution = gl->GetUniformLocation(shader_prog, "u_native_resolution");
+    sh_u_time = gl->GetUniformLocation(shader_prog, "u_time");
+    sh_u_frame = gl->GetUniformLocation(shader_prog, "u_frame");
 
     LOG_INFO(mux_module, "Colour: user shader ready: %s", shader_names[index]);
 }
@@ -672,26 +585,26 @@ static void set_colour_uniforms(void) {
     const float gamma = (float) session_settings.colour_gamma / 100.0f;
     const colour_filter_matrix_t *filter = current_filter();
 
-    if (u_tex >= 0) p_glUniform1i(u_tex, 0);
-    if (u_brightness >= 0) p_glUniform1f(u_brightness, brightness);
-    if (u_contrast >= 0) p_glUniform1f(u_contrast, contrast);
-    if (u_saturation >= 0) p_glUniform1f(u_saturation, saturation);
-    if (u_cos_h >= 0) p_glUniform1f(u_cos_h, cosf(hue_rad));
-    if (u_sin_h >= 0) p_glUniform1f(u_sin_h, sinf(hue_rad));
-    if (u_gamma >= 0) p_glUniform1f(u_gamma, gamma);
-    if (u_filter_enabled >= 0) p_glUniform1i(u_filter_enabled, filter->enabled);
-    if (u_filter >= 0) p_glUniformMatrix3fv(u_filter, 1, GL_FALSE, filter->matrix);
+    if (u_tex >= 0) gl->Uniform1i(u_tex, 0);
+    if (u_brightness >= 0) gl->Uniform1f(u_brightness, brightness);
+    if (u_contrast >= 0) gl->Uniform1f(u_contrast, contrast);
+    if (u_saturation >= 0) gl->Uniform1f(u_saturation, saturation);
+    if (u_cos_h >= 0) gl->Uniform1f(u_cos_h, cosf(hue_rad));
+    if (u_sin_h >= 0) gl->Uniform1f(u_sin_h, sinf(hue_rad));
+    if (u_gamma >= 0) gl->Uniform1f(u_gamma, gamma);
+    if (u_filter_enabled >= 0) gl->Uniform1i(u_filter_enabled, filter->enabled);
+    if (u_filter >= 0) gl->UniformMatrix3fv(u_filter, 1, GL_FALSE, filter->matrix);
 }
 
 static void set_shader_uniforms(const int res_w, const int res_h) {
     int native_w = 0, native_h = 0;
     video_bridge_get_frame_size(&native_w, &native_h);
 
-    if (sh_u_tex >= 0) p_glUniform1i(sh_u_tex, 0);
-    if (sh_u_resolution >= 0) p_glUniform2f(sh_u_resolution, (float) res_w, (float) res_h);
-    if (sh_u_native_resolution >= 0) p_glUniform2f(sh_u_native_resolution, (float) native_w, (float) native_h);
-    if (sh_u_time >= 0) p_glUniform1f(sh_u_time, (float) shader_frame_count);
-    if (sh_u_frame >= 0) p_glUniform1i(sh_u_frame, shader_frame_count);
+    if (sh_u_tex >= 0) gl->Uniform1i(sh_u_tex, 0);
+    if (sh_u_resolution >= 0) gl->Uniform2f(sh_u_resolution, (float) res_w, (float) res_h);
+    if (sh_u_native_resolution >= 0) gl->Uniform2f(sh_u_native_resolution, (float) native_w, (float) native_h);
+    if (sh_u_time >= 0) gl->Uniform1f(sh_u_time, (float) shader_frame_count);
+    if (sh_u_frame >= 0) gl->Uniform1i(sh_u_frame, shader_frame_count);
 }
 
 static int draw_gl_pass(
@@ -700,7 +613,7 @@ static int draw_gl_pass(
 ) {
     float texw = 1.0f, texh = 1.0f;
     if (SDL_GL_BindTexture(src, &texw, &texh) != 0) return 0;
-    p_glActiveTexture(GL_TEXTURE0);
+    gl->ActiveTexture(GL_TEXTURE0);
 
     const GLfloat v_at_top = flip_v ? texh : 0.0f;
     const GLfloat v_at_bottom = flip_v ? 0.0f : texh;
@@ -712,12 +625,12 @@ static int draw_gl_pass(
         r, b, texw, v_at_bottom, // bottom right
     };
 
-    p_glViewport(0, 0, vp_w, vp_h);
+    gl->Viewport(0, 0, vp_w, vp_h);
 
     const GLint pass_a_pos = user_prog ? sh_a_pos : a_pos;
     const GLint pass_a_uv = user_prog ? sh_a_uv : a_uv;
 
-    p_glUseProgram(user_prog ? shader_prog : prog);
+    gl->UseProgram(user_prog ? shader_prog : prog);
 
     if (user_prog) {
         set_shader_uniforms(res_w, res_h);
@@ -725,21 +638,21 @@ static int draw_gl_pass(
         set_colour_uniforms();
     }
 
-    p_glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer(GL_ARRAY_BUFFER, 0);
 
     if (pass_a_pos >= 0) {
-        p_glVertexAttribPointer(pass_a_pos, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts);
-        p_glEnableVertexAttribArray(pass_a_pos);
+        gl->VertexAttribPointer(pass_a_pos, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts);
+        gl->EnableVertexAttribArray(pass_a_pos);
     }
     if (pass_a_uv >= 0) {
-        p_glVertexAttribPointer(pass_a_uv, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts + 2);
-        p_glEnableVertexAttribArray(pass_a_uv);
+        gl->VertexAttribPointer(pass_a_uv, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts + 2);
+        gl->EnableVertexAttribArray(pass_a_uv);
     }
 
-    p_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    gl->DrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    if (pass_a_pos >= 0) p_glDisableVertexAttribArray(pass_a_pos);
-    if (pass_a_uv >= 0) p_glDisableVertexAttribArray(pass_a_uv);
+    if (pass_a_pos >= 0) gl->DisableVertexAttribArray(pass_a_pos);
+    if (pass_a_uv >= 0) gl->DisableVertexAttribArray(pass_a_uv);
 
     SDL_GL_UnbindTexture(src);
     return 1;
@@ -804,16 +717,16 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
                                  : 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
 
     GLint prev_program = 0;
-    p_glGetIntegerv(GL_CURRENT_PROGRAM, &prev_program);
+    gl->GetIntegerv(GL_CURRENT_PROGRAM, &prev_program);
 
     GLint prev_viewport[4] = {0};
-    p_glGetIntegerv(GL_VIEWPORT, prev_viewport);
+    gl->GetIntegerv(GL_VIEWPORT, prev_viewport);
 
-    const GLboolean prev_blend_enabled = p_glIsEnabled(GL_BLEND);
-    const GLboolean prev_scissor_enabled = p_glIsEnabled(GL_SCISSOR_TEST);
+    const GLboolean prev_blend_enabled = gl->IsEnabled(GL_BLEND);
+    const GLboolean prev_scissor_enabled = gl->IsEnabled(GL_SCISSOR_TEST);
 
-    p_glDisable(GL_BLEND);
-    p_glDisable(GL_SCISSOR_TEST);
+    gl->Disable(GL_BLEND);
+    gl->Disable(GL_SCISSOR_TEST);
 
     int drew = 0;
 
@@ -834,10 +747,10 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
 
     if (!drew) drew = draw_gl_pass(gl_src, 0, ndc_left, ndc_right, ndc_top, ndc_bottom, 0, out_w, out_h, 0, 0);
 
-    p_glUseProgram((GLuint) prev_program);
-    p_glViewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);
-    if (prev_blend_enabled) p_glEnable(GL_BLEND);
-    if (prev_scissor_enabled) p_glEnable(GL_SCISSOR_TEST);
+    gl->UseProgram((GLuint) prev_program);
+    gl->Viewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);
+    if (prev_blend_enabled) gl->Enable(GL_BLEND);
+    if (prev_scissor_enabled) gl->Enable(GL_SCISSOR_TEST);
 
     if (!drew) SDL_RenderCopy(renderer, tex, NULL, dest_rect);
 }

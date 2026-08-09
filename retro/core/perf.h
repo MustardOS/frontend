@@ -20,8 +20,39 @@ enum perf_stage {
     perf_stage_cheevo_callback,
     perf_stage_screenshot,
     perf_stage_state_save,
+    perf_stage_services,
+    perf_stage_cheevo_tick,
+    perf_stage_netplay_tick,
+    perf_stage_maintenance,
+    perf_stage_control,
+    perf_stage_ui_logic,
+    perf_stage_ui_task,
     perf_stage_count
 };
+
+typedef struct {
+    unsigned tx_queue;
+    unsigned rx_queue;
+    unsigned input_age_frames;
+    unsigned state_jobs;
+    unsigned digest_jobs;
+    unsigned ping_ms;
+    unsigned jitter_ms;
+    unsigned resynchronisations;
+    unsigned queue_overflows;
+} perf_netplay_snapshot;
+
+typedef struct {
+    unsigned request_queue;
+    unsigned completion_queue;
+    unsigned preview_queue;
+    unsigned oldest_job_ms;
+    unsigned cache_hits;
+    unsigned cache_misses;
+    unsigned cache_fallbacks;
+    unsigned queue_rejections;
+    unsigned preview_drops;
+} perf_cheevo_snapshot;
 
 void perf_init(void);
 
@@ -50,6 +81,10 @@ void perf_note_poll(void);
 void perf_note_batch(unsigned frames);
 
 void perf_note_present(void);
+
+void perf_note_netplay(const perf_netplay_snapshot *snapshot);
+
+void perf_note_cheevo(const perf_cheevo_snapshot *snapshot);
 
 unsigned perf_missed_refreshes(void);
 

@@ -88,14 +88,16 @@ int overlay_bridge_active(void) {
     return !overlay_suppressed && current_overlay_tex != NULL;
 }
 
-void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int canvas_h) {
+void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int canvas_h, const int physical_output) {
     if (overlay_suppressed || !current_overlay_tex) return;
 
-    const SDL_Rect dst = {
+    const SDL_Rect logical_dst = {
         (canvas_w - current_overlay_w) / 2, (canvas_h - current_overlay_h) / 2, current_overlay_w, current_overlay_h
     };
+    SDL_Rect output_dst = logical_dst;
+    if (physical_output) display_map_logical_rect(&logical_dst, &output_dst);
 
-    SDL_RenderCopy(renderer, current_overlay_tex, NULL, &dst);
+    SDL_RenderCopy(renderer, current_overlay_tex, NULL, &output_dst);
 }
 
 void overlay_bridge_shutdown(void) {

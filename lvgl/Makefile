@@ -1,7 +1,7 @@
 include ../common.mk
 
 CFLAGS = $(BASE_CFLAGS)
-LDFLAGS = $(COMMON_LIBS) $(SHARED_PIC)
+LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC)
 
 BUILD_DIR      = ./build
 BUILD_OBJ_DIR  = $(BUILD_DIR)/obj

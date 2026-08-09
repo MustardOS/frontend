@@ -17,7 +17,6 @@
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
-#include "../overlay/notif.h"
 #include "../hook.h"
 
 #define RENDER_PATHS 8
@@ -78,8 +77,6 @@ static GLuint overlay_fbo = 0;
 static int overlay_tex_w = 0;
 static int overlay_tex_h = 0;
 static int overlay_valid = 0;
-
-static GLuint dim_tex = 0;
 
 typedef struct {
     int fb_w;
@@ -928,13 +925,6 @@ static void on_context_changed(void) {
     destroy_base_gles();
     destroy_overlay();
 
-    if (dim_tex) {
-        glDeleteTextures(1, &dim_tex);
-        dim_tex = 0;
-    }
-
-    gl_notif_free();
-
     max_vertex_attribs = 0;
     base_nop_last = -1;
     vtx_base_valid = 0;
@@ -1612,34 +1602,6 @@ static void update_geometry_caches(void) {
     UPDATE_GEOM_CACHE(volume, scale);
 }
 
-static void ensure_dim_tex(void) {
-    static SDL_Color last_colour = {0, 0, 0, 0};
-
-    const SDL_Color *c = &notif_cfg.dim_colour;
-    const Uint8 pixel[4] = {c->r, c->g, c->b, 255};
-
-    if (!dim_tex) {
-        glGenTextures(1, &dim_tex);
-        glBindTexture(GL_TEXTURE_2D, dim_tex);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-        last_colour = *c;
-        return;
-    }
-
-    if (c->r == last_colour.r && c->g == last_colour.g && c->b == last_colour.b) return;
-
-    glBindTexture(GL_TEXTURE_2D, dim_tex);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-
-    last_colour = *c;
-}
-
 static inline int stage_has_work(int base_disabled, int rot) {
     if (render_path == RENDER_PATH_UNKNOWN) return 1;
     if (!overlay_valid) return 1;
@@ -1647,7 +1609,6 @@ static inline int stage_has_work(int base_disabled, int rot) {
     if (battery_last_step >= 0 && battery_last_step < INDICATOR_STEPS && battery_gles_tex[battery_last_step]) return 1;
     if (bright_is_visible()) return 1;
     if (volume_is_visible()) return 1;
-    if (notif_is_visible()) return 1;
     if (content_pass_needed(rot)) return 1;
     if (shader_get()) return 1;
     return 0;
@@ -1771,9 +1732,8 @@ static void stage_draw(int fb_w, int fb_h) {
     }
 
     const int draw_overlay = overlay_valid && overlay_tex;
-    const int draw_notif = notif_is_visible() && gl_notif_prepare(fb_w, fb_h);
 
-    if (draw_overlay || draw_notif) {
+    if (draw_overlay) {
         glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
         glViewport(0, 0, fb_w, fb_h);
         glDisable(GL_SCISSOR_TEST);
@@ -1781,16 +1741,7 @@ static void stage_draw(int fb_w, int fb_h) {
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        if (draw_overlay) draw_quad_overlay(overlay_tex, fullscreen_vtx, 1.0f);
-
-        if (draw_notif) {
-            if (gl_notif_needs_dim()) {
-                ensure_dim_tex();
-                if (dim_tex) draw_quad_overlay(dim_tex, fullscreen_vtx, (float) notif_cfg.dim_alpha / 255.0f);
-            }
-
-            draw_quad_overlay(gl_notif_get_tex(), gl_notif_get_vtx(), 1.0f);
-        }
+        draw_quad_overlay(overlay_tex, fullscreen_vtx, 1.0f);
     }
 
     restore_gles_state(&st);
@@ -1814,7 +1765,6 @@ void SDL_GL_SwapWindow(SDL_Window *window) {
     battery_overlay_update();
     bright_overlay_update();
     volume_overlay_update();
-    notif_update();
 
     shader_reload();
 

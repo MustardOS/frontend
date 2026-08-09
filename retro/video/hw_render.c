@@ -4,10 +4,12 @@
 #include <string.h>
 #include <GLES2/gl2.h>
 #include "../../common/display.h"
+#include "../../common/function_pointer.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
 #include "filters/filters.h"
+#include "gl_dispatch.h"
 #include "hw_render.h"
 #include "overlay_bridge.h"
 #include "../core/governor_boost.h"
@@ -65,170 +67,8 @@ static const char *fs_src = "precision mediump float;"
                             "    gl_FragColor = u_swap != 0 ? vec4(t.b, t.g, t.r, 1.0) : vec4(t.rgb, 1.0);"
                             "}";
 
-static GLuint(GL_APIENTRY *p_glCreateShader)(GLenum type) = NULL;
-static void(GL_APIENTRY *p_glShaderSource)(
-    GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length
-) = NULL;
-static void(GL_APIENTRY *p_glCompileShader)(GLuint shader) = NULL;
-static void(GL_APIENTRY *p_glGetShaderiv)(GLuint shader, GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glGetShaderInfoLog)(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog) = NULL;
-static void(GL_APIENTRY *p_glDeleteShader)(GLuint shader) = NULL;
-static GLuint(GL_APIENTRY *p_glCreateProgram)(void) = NULL;
-static void(GL_APIENTRY *p_glAttachShader)(GLuint program, GLuint shader) = NULL;
-static void(GL_APIENTRY *p_glLinkProgram)(GLuint program) = NULL;
-static void(GL_APIENTRY *p_glDeleteProgram)(GLuint program) = NULL;
-static void(GL_APIENTRY *p_glGetProgramiv)(GLuint program, GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glGetProgramInfoLog)(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog) =
-    NULL;
-static GLint(GL_APIENTRY *p_glGetAttribLocation)(GLuint program, const GLchar *name) = NULL;
-static GLint(GL_APIENTRY *p_glGetUniformLocation)(GLuint program, const GLchar *name) = NULL;
-static void(GL_APIENTRY *p_glUseProgram)(GLuint program) = NULL;
-static void(GL_APIENTRY *p_glVertexAttribPointer)(
-    GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer
-) = NULL;
-static void(GL_APIENTRY *p_glEnableVertexAttribArray)(GLuint index) = NULL;
-static void(GL_APIENTRY *p_glDisableVertexAttribArray)(GLuint index) = NULL;
-static void(GL_APIENTRY *p_glUniform1i)(GLint location, GLint v0) = NULL;
-static void(GL_APIENTRY *p_glDrawArrays)(GLenum mode, GLint first, GLsizei count) = NULL;
-static void(GL_APIENTRY *p_glBindBuffer)(GLenum target, GLuint buffer) = NULL;
-static void(GL_APIENTRY *p_glActiveTexture)(GLenum texture) = NULL;
-static void(GL_APIENTRY *p_glEnable)(GLenum cap) = NULL;
-static void(GL_APIENTRY *p_glDisable)(GLenum cap) = NULL;
-static void(GL_APIENTRY *p_glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) = NULL;
-static void(GL_APIENTRY *p_glClearColor)(GLfloat r, GLfloat g, GLfloat b, GLfloat a) = NULL;
-static void(GL_APIENTRY *p_glClear)(GLbitfield mask) = NULL;
-static void(GL_APIENTRY *p_glColorMask)(GLboolean r, GLboolean g, GLboolean b, GLboolean a) = NULL;
-static void(GL_APIENTRY *p_glDepthMask)(GLboolean flag) = NULL;
-static void(GL_APIENTRY *p_glGetIntegerv)(GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glGetBooleanv)(GLenum pname, GLboolean *params) = NULL;
-static void(GL_APIENTRY *p_glGetFloatv)(GLenum pname, GLfloat *params) = NULL;
-static GLboolean(GL_APIENTRY *p_glIsEnabled)(GLenum cap) = NULL;
-static void(GL_APIENTRY *p_glGetVertexAttribiv)(GLuint index, GLenum pname, GLint *params) = NULL;
-static void(GL_APIENTRY *p_glBlendFuncSeparate)(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha) = NULL;
-static void(GL_APIENTRY *p_glBlendEquationSeparate)(GLenum modeRGB, GLenum modeAlpha) = NULL;
-static void(GL_APIENTRY *p_glFrontFace)(GLenum mode) = NULL;
-static void(GL_APIENTRY *p_glCullFace)(GLenum mode) = NULL;
-static void(GL_APIENTRY *p_glPixelStorei)(GLenum pname, GLint param) = NULL;
-static void(GL_APIENTRY *p_glScissor)(GLint x, GLint y, GLsizei width, GLsizei height) = NULL;
-
-static void(GL_APIENTRY *p_glGenFramebuffers)(GLsizei n, GLuint *framebuffers) = NULL;
-static void(GL_APIENTRY *p_glDeleteFramebuffers)(GLsizei n, const GLuint *framebuffers) = NULL;
-static void(GL_APIENTRY *p_glBindFramebuffer)(GLenum target, GLuint framebuffer) = NULL;
-static void(GL_APIENTRY *p_glFramebufferTexture2D)(
-    GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level
-) = NULL;
-static void(GL_APIENTRY *p_glFramebufferRenderbuffer)(
-    GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer
-) = NULL;
-static GLenum(GL_APIENTRY *p_glCheckFramebufferStatus)(GLenum target) = NULL;
-
-static void(GL_APIENTRY *p_glGenRenderbuffers)(GLsizei n, GLuint *renderbuffers) = NULL;
-static void(GL_APIENTRY *p_glDeleteRenderbuffers)(GLsizei n, const GLuint *renderbuffers) = NULL;
-static void(GL_APIENTRY *p_glBindRenderbuffer)(GLenum target, GLuint renderbuffer) = NULL;
-static void(GL_APIENTRY *p_glRenderbufferStorage)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) =
-    NULL;
-
-static void(GL_APIENTRY *p_glGenTextures)(GLsizei n, GLuint *textures) = NULL;
-static void(GL_APIENTRY *p_glDeleteTextures)(GLsizei n, const GLuint *textures) = NULL;
-static void(GL_APIENTRY *p_glBindTexture)(GLenum target, GLuint texture) = NULL;
-static void(GL_APIENTRY *p_glTexImage2D)(
-    GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format,
-    GLenum type, const void *pixels
-) = NULL;
-static void(GL_APIENTRY *p_glTexParameteri)(GLenum target, GLenum pname, GLint param) = NULL;
-static GLboolean(GL_APIENTRY *p_glIsTexture)(GLuint texture) = NULL;
-static const GLubyte *(GL_APIENTRY *p_glGetString)(GLenum name) = NULL;
-
-static void(GL_APIENTRY *p_glFlush)(void) = NULL;
-
-// ES3 only, so these are loaded best effort and stay NULL on an ES2 driver
-static int es3_available = 0;
-static void(GL_APIENTRY *p_glBindVertexArray)(GLuint array) = NULL;
-static void(GL_APIENTRY *p_glBindSampler)(GLuint unit, GLuint sampler) = NULL;
-static void(GL_APIENTRY *p_glBindTransformFeedback)(GLenum target, GLuint id) = NULL;
-
-static int gl_funcs_ready = 0;
-
-static int load_gl_functions(void) {
-    if (gl_funcs_ready) return 1;
-
-#define LOAD_GL(name)                                                                                                  \
-    do {                                                                                                               \
-        p_##name = (void *) SDL_GL_GetProcAddress(#name);                                                              \
-        if (!p_##name) {                                                                                               \
-            LOG_ERROR(mux_module, "hw_render: failed to resolve GL function %s", #name);                               \
-            return 0;                                                                                                  \
-        }                                                                                                              \
-    } while (0)
-
-    LOAD_GL(glCreateShader);
-    LOAD_GL(glShaderSource);
-    LOAD_GL(glCompileShader);
-    LOAD_GL(glGetShaderiv);
-    LOAD_GL(glGetShaderInfoLog);
-    LOAD_GL(glDeleteShader);
-    LOAD_GL(glCreateProgram);
-    LOAD_GL(glAttachShader);
-    LOAD_GL(glLinkProgram);
-    LOAD_GL(glDeleteProgram);
-    LOAD_GL(glGetProgramiv);
-    LOAD_GL(glGetProgramInfoLog);
-    LOAD_GL(glGetAttribLocation);
-    LOAD_GL(glGetUniformLocation);
-    LOAD_GL(glUseProgram);
-    LOAD_GL(glVertexAttribPointer);
-    LOAD_GL(glEnableVertexAttribArray);
-    LOAD_GL(glDisableVertexAttribArray);
-    LOAD_GL(glUniform1i);
-    LOAD_GL(glDrawArrays);
-    LOAD_GL(glBindBuffer);
-    LOAD_GL(glActiveTexture);
-    LOAD_GL(glEnable);
-    LOAD_GL(glDisable);
-    LOAD_GL(glViewport);
-    LOAD_GL(glClearColor);
-    LOAD_GL(glClear);
-    LOAD_GL(glColorMask);
-    LOAD_GL(glDepthMask);
-    LOAD_GL(glGetIntegerv);
-    LOAD_GL(glGetBooleanv);
-    LOAD_GL(glGetFloatv);
-    LOAD_GL(glIsEnabled);
-    LOAD_GL(glGetVertexAttribiv);
-    LOAD_GL(glBlendFuncSeparate);
-    LOAD_GL(glBlendEquationSeparate);
-    LOAD_GL(glFrontFace);
-    LOAD_GL(glCullFace);
-    LOAD_GL(glPixelStorei);
-    LOAD_GL(glScissor);
-    LOAD_GL(glGenFramebuffers);
-    LOAD_GL(glDeleteFramebuffers);
-    LOAD_GL(glBindFramebuffer);
-    LOAD_GL(glFramebufferTexture2D);
-    LOAD_GL(glFramebufferRenderbuffer);
-    LOAD_GL(glCheckFramebufferStatus);
-    LOAD_GL(glGenRenderbuffers);
-    LOAD_GL(glDeleteRenderbuffers);
-    LOAD_GL(glBindRenderbuffer);
-    LOAD_GL(glRenderbufferStorage);
-    LOAD_GL(glGenTextures);
-    LOAD_GL(glDeleteTextures);
-    LOAD_GL(glBindTexture);
-    LOAD_GL(glTexImage2D);
-    LOAD_GL(glTexParameteri);
-    LOAD_GL(glIsTexture);
-    LOAD_GL(glGetString);
-    LOAD_GL(glFlush);
-
-#undef LOAD_GL
-
-    p_glBindVertexArray = SDL_GL_GetProcAddress("glBindVertexArray");
-    p_glBindSampler = SDL_GL_GetProcAddress("glBindSampler");
-    p_glBindTransformFeedback = SDL_GL_GetProcAddress("glBindTransformFeedback");
-
-    gl_funcs_ready = 1;
-    return 1;
-}
+static const gl_dispatch_t *gl;
+static int es3_available;
 
 static retro_hw_context_reset_t core_context_reset = NULL;
 static retro_hw_context_reset_t core_context_destroy = NULL;
@@ -305,7 +145,7 @@ static const char *profile_name(const int profile) {
 #endif
 
 static int current_context_is(const int profile, const int major, const int minor) {
-    const char *version = (const char *) p_glGetString(GL_VERSION);
+    const char *version = (const char *) gl->GetString(GL_VERSION);
     if (!version) return 0;
 
     const int is_es = strncmp(version, "OpenGL ES", 9) == 0;
@@ -328,7 +168,7 @@ static int current_context_is(const int profile, const int major, const int mino
         if (have_major < 3 || (have_major == 3 && have_minor < 2)) return 0;
 
         GLint mask = 0;
-        p_glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
+        gl->GetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
 
         return (mask & GL_CONTEXT_CORE_PROFILE_BIT) != 0;
     }
@@ -393,7 +233,7 @@ static int shared_context_usable(const int profile, const int major, const int m
     SDL_GL_MakeCurrent(gl_window, core_ctx);
 
     if (!current_context_is(profile, major, minor)) {
-        const char *got = (const char *) p_glGetString(GL_VERSION);
+        const char *got = (const char *) gl->GetString(GL_VERSION);
         LOG_WARN(
             mux_module, "hw_render: asked for %s %d.%d, driver gave '%s'", profile_name(profile), major, minor,
             got ? got : "unknown"
@@ -403,18 +243,18 @@ static int shared_context_usable(const int profile, const int major, const int m
     }
 
     GLuint probe = 0;
-    p_glGenTextures(1, &probe);
+    gl->GenTextures(1, &probe);
     if (probe) {
-        p_glBindTexture(GL_TEXTURE_2D, probe);
-        p_glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        p_glBindTexture(GL_TEXTURE_2D, 0);
+        gl->BindTexture(GL_TEXTURE_2D, probe);
+        gl->TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        gl->BindTexture(GL_TEXTURE_2D, 0);
     }
 
     SDL_GL_MakeCurrent(gl_window, sdl_ctx);
-    const int visible = probe != 0 && p_glIsTexture(probe);
+    const int visible = probe != 0 && gl->IsTexture(probe);
 
     SDL_GL_MakeCurrent(gl_window, core_ctx);
-    if (probe) p_glDeleteTextures(1, &probe);
+    if (probe) gl->DeleteTextures(1, &probe);
     SDL_GL_MakeCurrent(gl_window, sdl_ctx);
 
     if (!visible) LOG_WARN(mux_module, "hw_render: %s context is not sharing objects", profile_name(profile));
@@ -425,7 +265,7 @@ static int shared_context_usable(const int profile, const int major, const int m
 static char backend_desc[64] = "";
 
 int hw_render_bridge_owns_context(void) {
-    return active && gl_funcs_ready && owns_context();
+    return active && gl && owns_context();
 }
 
 int hw_render_bridge_active(void) {
@@ -488,7 +328,8 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
         return 0;
     }
 
-    if (!load_gl_functions()) return 0;
+    gl = gl_dispatch_acquire("hw_render", gl_dispatch_hardware);
+    if (!gl) return 0;
 
     const int ui_context_compatible = current_context_is(profile, major, minor);
     const int forced_shared = force_shared_context();
@@ -542,17 +383,17 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
 }
 
 static int compile_shader(const GLenum type, const char *src, GLuint *out) {
-    const GLuint shader = p_glCreateShader(type);
-    p_glShaderSource(shader, 1, &src, NULL);
-    p_glCompileShader(shader);
+    const GLuint shader = gl->CreateShader(type);
+    gl->ShaderSource(shader, 1, &src, NULL);
+    gl->CompileShader(shader);
 
     GLint ok = 0;
-    p_glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
+    gl->GetShaderiv(shader, GL_COMPILE_STATUS, &ok);
     if (!ok) {
         char log[512];
-        p_glGetShaderInfoLog(shader, sizeof(log), NULL, log);
+        gl->GetShaderInfoLog(shader, sizeof(log), NULL, log);
         LOG_ERROR(mux_module, "hw_render: shader compile failed: %s", log);
-        p_glDeleteShader(shader);
+        gl->DeleteShader(shader);
         return 0;
     }
 
@@ -567,49 +408,49 @@ static void ensure_program(void) {
     GLuint vs = 0, fs = 0;
     if (!compile_shader(GL_VERTEX_SHADER, vs_src, &vs)) return;
     if (!compile_shader(GL_FRAGMENT_SHADER, fs_src, &fs)) {
-        p_glDeleteShader(vs);
+        gl->DeleteShader(vs);
         return;
     }
 
-    prog = p_glCreateProgram();
-    p_glAttachShader(prog, vs);
-    p_glAttachShader(prog, fs);
-    p_glLinkProgram(prog);
+    prog = gl->CreateProgram();
+    gl->AttachShader(prog, vs);
+    gl->AttachShader(prog, fs);
+    gl->LinkProgram(prog);
 
     GLint linked = 0;
-    p_glGetProgramiv(prog, GL_LINK_STATUS, &linked);
-    p_glDeleteShader(vs);
-    p_glDeleteShader(fs);
+    gl->GetProgramiv(prog, GL_LINK_STATUS, &linked);
+    gl->DeleteShader(vs);
+    gl->DeleteShader(fs);
 
     if (!linked) {
         char log[512];
-        p_glGetProgramInfoLog(prog, sizeof(log), NULL, log);
+        gl->GetProgramInfoLog(prog, sizeof(log), NULL, log);
         LOG_ERROR(mux_module, "hw_render: program link failed: %s", log);
-        p_glDeleteProgram(prog);
+        gl->DeleteProgram(prog);
         prog = 0;
         return;
     }
 
-    a_pos = p_glGetAttribLocation(prog, "a_pos");
-    a_uv = p_glGetAttribLocation(prog, "a_uv");
-    u_tex = p_glGetUniformLocation(prog, "u_tex");
-    u_swap = p_glGetUniformLocation(prog, "u_swap");
+    a_pos = gl->GetAttribLocation(prog, "a_pos");
+    a_uv = gl->GetAttribLocation(prog, "a_uv");
+    u_tex = gl->GetUniformLocation(prog, "u_tex");
+    u_swap = gl->GetUniformLocation(prog, "u_swap");
 }
 
 static void destroy_target(void) {
     for (int i = 0; i < HW_TARGET_COUNT_MAX; i++) {
         if (fbo[i]) {
-            p_glDeleteFramebuffers(1, &fbo[i]);
+            gl->DeleteFramebuffers(1, &fbo[i]);
             fbo[i] = 0;
         }
         if (colour_tex[i]) {
-            p_glDeleteTextures(1, &colour_tex[i]);
+            gl->DeleteTextures(1, &colour_tex[i]);
             colour_tex[i] = 0;
         }
     }
 
     if (depth_stencil_rb) {
-        p_glDeleteRenderbuffers(1, &depth_stencil_rb);
+        gl->DeleteRenderbuffers(1, &depth_stencil_rb);
         depth_stencil_rb = 0;
     }
 
@@ -637,9 +478,9 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
     target_count = colour_target_bytes <= HW_DOUBLE_BUFFER_MAX_EXTRA_BYTES ? 2 : 1;
 
     if (want_depth) {
-        p_glGenRenderbuffers(1, &depth_stencil_rb);
-        p_glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_rb);
-        p_glRenderbufferStorage(
+        gl->GenRenderbuffers(1, &depth_stencil_rb);
+        gl->BindRenderbuffer(GL_RENDERBUFFER, depth_stencil_rb);
+        gl->RenderbufferStorage(
             GL_RENDERBUFFER, want_stencil ? GL_DEPTH24_STENCIL8_OES : GL_DEPTH_COMPONENT16, (GLsizei) max_width,
             (GLsizei) max_height
         );
@@ -648,38 +489,38 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
     GLint sample_buffers = 0;
     GLint samples = 0;
     for (int i = 0; i < target_count; i++) {
-        p_glGenTextures(1, &colour_tex[i]);
-        p_glBindTexture(GL_TEXTURE_2D, colour_tex[i]);
-        p_glTexImage2D(
+        gl->GenTextures(1, &colour_tex[i]);
+        gl->BindTexture(GL_TEXTURE_2D, colour_tex[i]);
+        gl->TexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei) max_width, (GLsizei) max_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL
         );
         const GLint filter = target_filter_param();
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        p_glBindTexture(GL_TEXTURE_2D, 0);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        gl->BindTexture(GL_TEXTURE_2D, 0);
 
-        p_glGenFramebuffers(1, &fbo[i]);
-        p_glBindFramebuffer(GL_FRAMEBUFFER, fbo[i]);
-        p_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[i], 0);
+        gl->GenFramebuffers(1, &fbo[i]);
+        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[i]);
+        gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[i], 0);
 
         if (want_depth) {
-            p_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
             if (want_stencil)
-                p_glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+                gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
         }
 
-        const GLenum status = p_glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        const GLenum status = gl->CheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             if (i > 0) {
                 LOG_WARN(
                     mux_module, "hw_render: secondary framebuffer incomplete (status 0x%x) - using a single target",
                     status
                 );
-                p_glDeleteFramebuffers(1, &fbo[i]);
+                gl->DeleteFramebuffers(1, &fbo[i]);
                 fbo[i] = 0;
-                p_glDeleteTextures(1, &colour_tex[i]);
+                gl->DeleteTextures(1, &colour_tex[i]);
                 colour_tex[i] = 0;
                 target_count = 1;
                 break;
@@ -688,7 +529,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
             LOG_ERROR(
                 mux_module, "hw_render: framebuffer incomplete (status 0x%x) - disabling hardware render", status
             );
-            p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            gl->BindFramebuffer(GL_FRAMEBUFFER, 0);
             destroy_target();
             hw_render_bridge_context_restore();
             active = 0;
@@ -696,17 +537,17 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         }
 
         if (i == 0) {
-            p_glGetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers);
-            p_glGetIntegerv(GL_SAMPLES, &samples);
+            gl->GetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers);
+            gl->GetIntegerv(GL_SAMPLES, &samples);
         }
 
-        p_glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        p_glClear(
+        gl->ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        gl->Clear(
             GL_COLOR_BUFFER_BIT | (want_depth ? GL_DEPTH_BUFFER_BIT : 0) | (want_stencil ? GL_STENCIL_BUFFER_BIT : 0)
         );
     }
 
-    p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl->BindFramebuffer(GL_FRAMEBUFFER, 0);
 
     target_w = (int) max_width;
     target_h = (int) max_height;
@@ -743,20 +584,20 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 }
 
 void hw_render_bridge_apply_filter(void) {
-    if (!active || !gl_funcs_ready || !colour_tex[0]) return;
+    if (!active || !gl || !colour_tex[0]) return;
 
     hw_render_bridge_enter_core_call();
 
     GLint previous = 0;
-    p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous);
+    gl->GetIntegerv(GL_TEXTURE_BINDING_2D, &previous);
     const GLint filter = target_filter_param();
     for (int i = 0; i < target_count; i++) {
         if (!colour_tex[i]) continue;
-        p_glBindTexture(GL_TEXTURE_2D, colour_tex[i]);
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-        p_glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+        gl->BindTexture(GL_TEXTURE_2D, colour_tex[i]);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
     }
-    p_glBindTexture(GL_TEXTURE_2D, (GLuint) previous);
+    gl->BindTexture(GL_TEXTURE_2D, (GLuint) previous);
 
     hw_render_bridge_exit_core_call();
     LOG_INFO(mux_module, "hw_render: sampling changed to %s", filter == GL_LINEAR ? "linear" : "nearest");
@@ -769,7 +610,9 @@ uintptr_t hw_render_bridge_get_current_framebuffer(void) {
 }
 
 retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
-    return SDL_GL_GetProcAddress(sym);
+    retro_proc_address_t address = NULL;
+    MUOS_FUNCTION_ASSIGN(address, SDL_GL_GetProcAddress(sym));
+    return address;
 }
 
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
@@ -827,58 +670,58 @@ static gl_host_state_t core_state;
 
 static void set_cap(const GLenum cap, const GLboolean enabled) {
     if (enabled) {
-        p_glEnable(cap);
+        gl->Enable(cap);
     } else {
-        p_glDisable(cap);
+        gl->Disable(cap);
     }
 }
 
 static void gl_state_capture(gl_host_state_t *s) {
-    p_glGetIntegerv(GL_CURRENT_PROGRAM, &s->program);
-    p_glGetIntegerv(GL_VIEWPORT, s->viewport);
-    p_glGetIntegerv(GL_SCISSOR_BOX, s->scissor_box);
+    gl->GetIntegerv(GL_CURRENT_PROGRAM, &s->program);
+    gl->GetIntegerv(GL_VIEWPORT, s->viewport);
+    gl->GetIntegerv(GL_SCISSOR_BOX, s->scissor_box);
 
-    s->scissor_en = p_glIsEnabled(GL_SCISSOR_TEST);
-    s->blend_en = p_glIsEnabled(GL_BLEND);
-    s->depth_test_en = p_glIsEnabled(GL_DEPTH_TEST);
-    s->stencil_test_en = p_glIsEnabled(GL_STENCIL_TEST);
-    s->cull_face_en = p_glIsEnabled(GL_CULL_FACE);
-    s->dither_en = p_glIsEnabled(GL_DITHER);
+    s->scissor_en = gl->IsEnabled(GL_SCISSOR_TEST);
+    s->blend_en = gl->IsEnabled(GL_BLEND);
+    s->depth_test_en = gl->IsEnabled(GL_DEPTH_TEST);
+    s->stencil_test_en = gl->IsEnabled(GL_STENCIL_TEST);
+    s->cull_face_en = gl->IsEnabled(GL_CULL_FACE);
+    s->dither_en = gl->IsEnabled(GL_DITHER);
 
-    p_glGetIntegerv(GL_BLEND_SRC_RGB, &s->blend_src_rgb);
-    p_glGetIntegerv(GL_BLEND_DST_RGB, &s->blend_dst_rgb);
-    p_glGetIntegerv(GL_BLEND_SRC_ALPHA, &s->blend_src_alpha);
-    p_glGetIntegerv(GL_BLEND_DST_ALPHA, &s->blend_dst_alpha);
-    p_glGetIntegerv(GL_BLEND_EQUATION_RGB, &s->blend_eq_rgb);
-    p_glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &s->blend_eq_alpha);
+    gl->GetIntegerv(GL_BLEND_SRC_RGB, &s->blend_src_rgb);
+    gl->GetIntegerv(GL_BLEND_DST_RGB, &s->blend_dst_rgb);
+    gl->GetIntegerv(GL_BLEND_SRC_ALPHA, &s->blend_src_alpha);
+    gl->GetIntegerv(GL_BLEND_DST_ALPHA, &s->blend_dst_alpha);
+    gl->GetIntegerv(GL_BLEND_EQUATION_RGB, &s->blend_eq_rgb);
+    gl->GetIntegerv(GL_BLEND_EQUATION_ALPHA, &s->blend_eq_alpha);
 
-    p_glGetBooleanv(GL_COLOR_WRITEMASK, s->colour_mask);
-    p_glGetBooleanv(GL_DEPTH_WRITEMASK, &s->depth_mask);
-    p_glGetFloatv(GL_COLOR_CLEAR_VALUE, s->clear_colour);
+    gl->GetBooleanv(GL_COLOR_WRITEMASK, s->colour_mask);
+    gl->GetBooleanv(GL_DEPTH_WRITEMASK, &s->depth_mask);
+    gl->GetFloatv(GL_COLOR_CLEAR_VALUE, s->clear_colour);
 
-    p_glGetIntegerv(GL_FRONT_FACE, &s->front_face);
-    p_glGetIntegerv(GL_CULL_FACE_MODE, &s->cull_face_mode);
-    p_glGetIntegerv(GL_UNPACK_ALIGNMENT, &s->unpack_alignment);
+    gl->GetIntegerv(GL_FRONT_FACE, &s->front_face);
+    gl->GetIntegerv(GL_CULL_FACE_MODE, &s->cull_face_mode);
+    gl->GetIntegerv(GL_UNPACK_ALIGNMENT, &s->unpack_alignment);
 
-    p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &s->array_buffer);
-    p_glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &s->element_array_buffer);
+    gl->GetIntegerv(GL_ARRAY_BUFFER_BINDING, &s->array_buffer);
+    gl->GetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &s->element_array_buffer);
 
-    p_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &s->framebuffer);
+    gl->GetIntegerv(GL_FRAMEBUFFER_BINDING, &s->framebuffer);
     s->read_framebuffer = s->framebuffer;
-    if (es3_available) p_glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &s->read_framebuffer);
+    if (es3_available) gl->GetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &s->read_framebuffer);
 
-    p_glGetIntegerv(GL_ACTIVE_TEXTURE, &s->active_texture);
+    gl->GetIntegerv(GL_ACTIVE_TEXTURE, &s->active_texture);
     for (int i = 0; i < HW_TEX_UNITS; i++) {
-        p_glActiveTexture(GL_TEXTURE0 + (GLenum) i);
-        p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &s->tex_binding[i]);
+        gl->ActiveTexture(GL_TEXTURE0 + (GLenum) i);
+        gl->GetIntegerv(GL_TEXTURE_BINDING_2D, &s->tex_binding[i]);
     }
-    p_glActiveTexture((GLenum) s->active_texture);
+    gl->ActiveTexture((GLenum) s->active_texture);
 
     GLint max_attribs = 0;
-    p_glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_attribs);
+    gl->GetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_attribs);
     s->attrib_count = max_attribs < HW_ATTRIB_MAX ? max_attribs : HW_ATTRIB_MAX;
     for (GLint i = 0; i < s->attrib_count; i++)
-        p_glGetVertexAttribiv((GLuint) i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &s->attrib_enabled[i]);
+        gl->GetVertexAttribiv((GLuint) i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &s->attrib_enabled[i]);
 
     s->valid = 1;
 }
@@ -886,9 +729,9 @@ static void gl_state_capture(gl_host_state_t *s) {
 static void gl_state_apply(const gl_host_state_t *s) {
     if (!s->valid) return;
 
-    p_glUseProgram((GLuint) s->program);
-    p_glViewport(s->viewport[0], s->viewport[1], s->viewport[2], s->viewport[3]);
-    p_glScissor(s->scissor_box[0], s->scissor_box[1], s->scissor_box[2], s->scissor_box[3]);
+    gl->UseProgram((GLuint) s->program);
+    gl->Viewport(s->viewport[0], s->viewport[1], s->viewport[2], s->viewport[3]);
+    gl->Scissor(s->scissor_box[0], s->scissor_box[1], s->scissor_box[2], s->scissor_box[3]);
 
     set_cap(GL_SCISSOR_TEST, s->scissor_en);
     set_cap(GL_BLEND, s->blend_en);
@@ -897,40 +740,40 @@ static void gl_state_apply(const gl_host_state_t *s) {
     set_cap(GL_CULL_FACE, s->cull_face_en);
     set_cap(GL_DITHER, s->dither_en);
 
-    p_glBlendFuncSeparate(
+    gl->BlendFuncSeparate(
         (GLenum) s->blend_src_rgb, (GLenum) s->blend_dst_rgb, (GLenum) s->blend_src_alpha, (GLenum) s->blend_dst_alpha
     );
-    p_glBlendEquationSeparate((GLenum) s->blend_eq_rgb, (GLenum) s->blend_eq_alpha);
+    gl->BlendEquationSeparate((GLenum) s->blend_eq_rgb, (GLenum) s->blend_eq_alpha);
 
-    p_glColorMask(s->colour_mask[0], s->colour_mask[1], s->colour_mask[2], s->colour_mask[3]);
-    p_glDepthMask(s->depth_mask);
-    p_glClearColor(s->clear_colour[0], s->clear_colour[1], s->clear_colour[2], s->clear_colour[3]);
+    gl->ColorMask(s->colour_mask[0], s->colour_mask[1], s->colour_mask[2], s->colour_mask[3]);
+    gl->DepthMask(s->depth_mask);
+    gl->ClearColor(s->clear_colour[0], s->clear_colour[1], s->clear_colour[2], s->clear_colour[3]);
 
-    p_glFrontFace((GLenum) s->front_face);
-    p_glCullFace((GLenum) s->cull_face_mode);
-    p_glPixelStorei(GL_UNPACK_ALIGNMENT, s->unpack_alignment);
+    gl->FrontFace((GLenum) s->front_face);
+    gl->CullFace((GLenum) s->cull_face_mode);
+    gl->PixelStorei(GL_UNPACK_ALIGNMENT, s->unpack_alignment);
 
-    p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint) s->array_buffer);
-    p_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint) s->element_array_buffer);
+    gl->BindBuffer(GL_ARRAY_BUFFER, (GLuint) s->array_buffer);
+    gl->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint) s->element_array_buffer);
 
     if (es3_available && s->read_framebuffer != s->framebuffer) {
-        p_glBindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint) s->framebuffer);
-        p_glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) s->read_framebuffer);
+        gl->BindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint) s->framebuffer);
+        gl->BindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) s->read_framebuffer);
     } else {
-        p_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) s->framebuffer);
+        gl->BindFramebuffer(GL_FRAMEBUFFER, (GLuint) s->framebuffer);
     }
 
     for (int i = 0; i < HW_TEX_UNITS; i++) {
-        p_glActiveTexture(GL_TEXTURE0 + (GLenum) i);
-        p_glBindTexture(GL_TEXTURE_2D, (GLuint) s->tex_binding[i]);
+        gl->ActiveTexture(GL_TEXTURE0 + (GLenum) i);
+        gl->BindTexture(GL_TEXTURE_2D, (GLuint) s->tex_binding[i]);
     }
-    p_glActiveTexture((GLenum) s->active_texture);
+    gl->ActiveTexture((GLenum) s->active_texture);
 
     for (GLint i = 0; i < s->attrib_count; i++) {
         if (s->attrib_enabled[i]) {
-            p_glEnableVertexAttribArray((GLuint) i);
+            gl->EnableVertexAttribArray((GLuint) i);
         } else {
-            p_glDisableVertexAttribArray((GLuint) i);
+            gl->DisableVertexAttribArray((GLuint) i);
         }
     }
 }
@@ -949,18 +792,18 @@ static void enter_core_gl(void) {
 }
 
 static void gl_reset_es3_state(void) {
-    if (p_glBindVertexArray) p_glBindVertexArray(0);
+    if (gl->BindVertexArray) gl->BindVertexArray(0);
 
-    if (p_glBindSampler) {
+    if (gl->BindSampler) {
         for (int i = 0; i < HW_TEX_UNITS; i++)
-            p_glBindSampler((GLuint) i, 0);
+            gl->BindSampler((GLuint) i, 0);
     }
 
-    if (p_glBindTransformFeedback) p_glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+    if (gl->BindTransformFeedback) gl->BindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 
-    p_glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-    p_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    p_glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    gl->BindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    gl->BindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    gl->BindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 static void leave_core_gl(void) {
@@ -978,12 +821,12 @@ static void leave_core_gl(void) {
 }
 
 void hw_render_bridge_flush_core_commands(void) {
-    if (!active || !gl_funcs_ready) return;
-    p_glFlush();
+    if (!active || !gl) return;
+    gl->Flush();
 }
 
 void hw_render_bridge_context_save(void) {
-    if (!active || !gl_funcs_ready) return;
+    if (!active || !gl) return;
 
     const uint64_t start = perf_begin();
 
@@ -997,52 +840,52 @@ void hw_render_bridge_context_save(void) {
 }
 
 void hw_render_bridge_context_restore(void) {
-    if (!active || !gl_funcs_ready) return;
+    if (!active || !gl) return;
     if (!owns_context() && !sdl_state.valid) return;
 
     leave_core_gl();
 }
 
 void hw_render_bridge_enter_core_call(void) {
-    if (!active || !gl_funcs_ready) return;
+    if (!active || !gl) return;
     enter_core_gl();
 }
 
 void hw_render_bridge_exit_core_call(void) {
-    if (!active || !gl_funcs_ready) return;
+    if (!active || !gl) return;
     if (!owns_context() && !sdl_state.valid) return;
 
     leave_core_gl();
 }
 
 static void capture_quad_restore_state(quad_restore_state_t *state) {
-    p_glGetIntegerv(GL_CURRENT_PROGRAM, &state->program);
-    p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &state->array_buffer);
-    p_glGetIntegerv(GL_ACTIVE_TEXTURE, &state->active_texture);
+    gl->GetIntegerv(GL_CURRENT_PROGRAM, &state->program);
+    gl->GetIntegerv(GL_ARRAY_BUFFER_BINDING, &state->array_buffer);
+    gl->GetIntegerv(GL_ACTIVE_TEXTURE, &state->active_texture);
 
-    p_glActiveTexture(GL_TEXTURE0);
-    p_glGetIntegerv(GL_TEXTURE_BINDING_2D, &state->texture0);
+    gl->ActiveTexture(GL_TEXTURE0);
+    gl->GetIntegerv(GL_TEXTURE_BINDING_2D, &state->texture0);
 
-    state->blend_enabled = p_glIsEnabled(GL_BLEND);
-    state->scissor_enabled = p_glIsEnabled(GL_SCISSOR_TEST);
+    state->blend_enabled = gl->IsEnabled(GL_BLEND);
+    state->scissor_enabled = gl->IsEnabled(GL_SCISSOR_TEST);
     state->attrib_pos_enabled = 0;
     state->attrib_uv_enabled = 0;
-    if (a_pos >= 0) p_glGetVertexAttribiv((GLuint) a_pos, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &state->attrib_pos_enabled);
-    if (a_uv >= 0) p_glGetVertexAttribiv((GLuint) a_uv, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &state->attrib_uv_enabled);
+    if (a_pos >= 0) gl->GetVertexAttribiv((GLuint) a_pos, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &state->attrib_pos_enabled);
+    if (a_uv >= 0) gl->GetVertexAttribiv((GLuint) a_uv, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &state->attrib_uv_enabled);
 
     state->valid = 1;
 }
 
 static void restore_quad_state(const quad_restore_state_t *state) {
-    if (a_pos >= 0 && !state->attrib_pos_enabled) p_glDisableVertexAttribArray((GLuint) a_pos);
-    if (a_uv >= 0 && !state->attrib_uv_enabled) p_glDisableVertexAttribArray((GLuint) a_uv);
+    if (a_pos >= 0 && !state->attrib_pos_enabled) gl->DisableVertexAttribArray((GLuint) a_pos);
+    if (a_uv >= 0 && !state->attrib_uv_enabled) gl->DisableVertexAttribArray((GLuint) a_uv);
 
-    p_glBindTexture(GL_TEXTURE_2D, (GLuint) state->texture0);
-    p_glActiveTexture((GLenum) state->active_texture);
-    p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint) state->array_buffer);
-    p_glUseProgram((GLuint) state->program);
-    if (state->blend_enabled) p_glEnable(GL_BLEND);
-    if (state->scissor_enabled) p_glEnable(GL_SCISSOR_TEST);
+    gl->BindTexture(GL_TEXTURE_2D, (GLuint) state->texture0);
+    gl->ActiveTexture((GLenum) state->active_texture);
+    gl->BindBuffer(GL_ARRAY_BUFFER, (GLuint) state->array_buffer);
+    gl->UseProgram((GLuint) state->program);
+    if (state->blend_enabled) gl->Enable(GL_BLEND);
+    if (state->scissor_enabled) gl->Enable(GL_SCISSOR_TEST);
 }
 
 static void draw_hw_quad(
@@ -1062,7 +905,7 @@ static void draw_hw_quad(
 
     if (cache_restore_state && cached_quad_restore.valid) {
         restore = &cached_quad_restore;
-        p_glActiveTexture(GL_TEXTURE0);
+        gl->ActiveTexture(GL_TEXTURE0);
     } else {
         capture_quad_restore_state(&frame_restore);
         if (cache_restore_state) {
@@ -1073,25 +916,25 @@ static void draw_hw_quad(
         }
     }
 
-    p_glDisable(GL_SCISSOR_TEST);
-    p_glDisable(GL_BLEND);
-    p_glViewport(0, 0, vp_w, vp_h);
-    p_glUseProgram(prog);
-    p_glBindTexture(GL_TEXTURE_2D, colour_tex[display_index]);
-    if (u_tex >= 0) p_glUniform1i(u_tex, 0);
-    if (u_swap >= 0) p_glUniform1i(u_swap, swap_channels);
+    gl->Disable(GL_SCISSOR_TEST);
+    gl->Disable(GL_BLEND);
+    gl->Viewport(0, 0, vp_w, vp_h);
+    gl->UseProgram(prog);
+    gl->BindTexture(GL_TEXTURE_2D, colour_tex[display_index]);
+    if (u_tex >= 0) gl->Uniform1i(u_tex, 0);
+    if (u_swap >= 0) gl->Uniform1i(u_swap, swap_channels);
 
-    p_glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->BindBuffer(GL_ARRAY_BUFFER, 0);
     if (a_pos >= 0) {
-        p_glVertexAttribPointer(a_pos, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts);
-        p_glEnableVertexAttribArray(a_pos);
+        gl->VertexAttribPointer(a_pos, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts);
+        gl->EnableVertexAttribArray(a_pos);
     }
     if (a_uv >= 0) {
-        p_glVertexAttribPointer(a_uv, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts + 2);
-        p_glEnableVertexAttribArray(a_uv);
+        gl->VertexAttribPointer(a_uv, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), verts + 2);
+        gl->EnableVertexAttribArray(a_uv);
     }
 
-    p_glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    gl->DrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     restore_quad_state(restore);
 }
@@ -1204,7 +1047,7 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
 }
 
 void hw_render_bridge_shutdown(void) {
-    if (!gl_funcs_ready) {
+    if (!gl) {
         destroy_shared_context();
         active = 0;
         context_ready = 0;
@@ -1222,7 +1065,7 @@ void hw_render_bridge_shutdown(void) {
     destroy_target();
 
     if (prog) {
-        p_glDeleteProgram(prog);
+        gl->DeleteProgram(prog);
         prog = 0;
     }
     prog_ready = 0;

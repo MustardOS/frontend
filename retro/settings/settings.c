@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <string.h>
 #include "../../common/device.h"
 #include "../../common/fileio.h"
@@ -7,6 +8,7 @@
 #include "../../common/mini/mini.h"
 #include "../../common/options.h"
 #include "../../common/overlay.h"
+#include "../../common/strutil.h"
 #include "../video/colour.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
@@ -215,6 +217,108 @@ static const int sram_flush_choices[] = {15, 30, 60, 90, 120, 240, 300};
 
 static const int frame_delay_choices[] = {FRAME_DELAY_OFF, FRAME_DELAY_AUTO, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16};
 #define FRAME_DELAY_CHOICE_COUNT ((int) (sizeof(frame_delay_choices) / sizeof(frame_delay_choices[0])))
+
+enum setting_validation {
+    setting_range,
+    setting_choices,
+    setting_colour_filter,
+    setting_colour_shader,
+    setting_overlay_pattern,
+    setting_viewport_x,
+    setting_viewport_y
+};
+
+struct setting_descriptor {
+    const char *key;
+    size_t offset;
+    enum setting_validation validation;
+    int minimum;
+    int maximum;
+    const int *choices;
+    size_t choice_count;
+};
+
+#define SETTING_RANGE(FIELD, MINIMUM, MAXIMUM)                                                                         \
+    {#FIELD, offsetof(struct session_settings_t, FIELD), setting_range, MINIMUM, MAXIMUM, NULL, 0}
+#define SETTING_CHOICES(FIELD, CHOICES)                                                                                \
+    {#FIELD,  offsetof(struct session_settings_t, FIELD), setting_choices, 0, 0,                                       \
+     CHOICES, sizeof(CHOICES) / sizeof((CHOICES)[0])}
+#define SETTING_SPECIAL(FIELD, VALIDATION)                                                                             \
+    {#FIELD, offsetof(struct session_settings_t, FIELD), VALIDATION, 0, 0, NULL, 0}
+
+static const struct setting_descriptor setting_descriptors[] = {
+    SETTING_RANGE(scaling_mode, 0, video_scale_count - 1),
+    SETTING_RANGE(rotate, 0, video_rotate_count - 1),
+    SETTING_RANGE(mirrored, 0, 1),
+    SETTING_RANGE(aspect_ratio, 0, aspect_ratio_count - 1),
+    SETTING_RANGE(integer_scale, 0, integer_scale_count - 1),
+    SETTING_RANGE(texture_filter, 0, texture_filter_count - 1),
+    SETTING_RANGE(rumble_enabled, 0, 1),
+    SETTING_RANGE(volume, 0, 100),
+    SETTING_RANGE(show_fps, 0, show_fps_count - 1),
+    SETTING_RANGE(show_playtime, 0, 1),
+    SETTING_RANGE(content_precache, 0, content_precache_count - 1),
+    SETTING_RANGE(border_colour, 0, border_colour_count - 1),
+    SETTING_CHOICES(sample_rate, sample_rate_choices),
+    SETTING_RANGE(fps_limit, 0, fps_limit_count - 1),
+    SETTING_RANGE(header_visibility, 0, header_visibility_count - 1),
+    SETTING_RANGE(ff_speed, 0, ff_speed_count - 1),
+    SETTING_RANGE(slowmo_speed, 0, slowmo_speed_count - 1),
+    SETTING_RANGE(hotkey_ff_enabled, 0, 1),
+    SETTING_RANGE(hotkey_ff_glyph_enabled, 0, 1),
+    SETTING_RANGE(hotkey_slowmo_enabled, 0, 1),
+    SETTING_RANGE(hotkey_slowmo_glyph_enabled, 0, 1),
+    SETTING_RANGE(hotkey_pause_enabled, 0, 1),
+    SETTING_RANGE(hotkey_pause_glyph_enabled, 0, 1),
+    SETTING_RANGE(hotkey_quicksave_enabled, 0, 1),
+    SETTING_RANGE(hotkey_quickload_enabled, 0, 1),
+    SETTING_RANGE(hotkey_toggle_fps_enabled, 0, 1),
+    SETTING_RANGE(hotkey_header_toggle_enabled, 0, 1),
+    SETTING_RANGE(hotkey_quit_enabled, 0, 1),
+    SETTING_RANGE(hotkey_manual_enabled, 0, 1),
+    SETTING_RANGE(auto_save, 0, auto_save_count - 1),
+    SETTING_CHOICES(sram_flush_seconds, sram_flush_choices),
+    SETTING_RANGE(sram_backup_enabled, 0, 1),
+    SETTING_RANGE(timeline_interval, 0, 6),
+    SETTING_RANGE(timeline_count, 2, 10),
+    SETTING_RANGE(colour_brightness, COLOUR_BRIGHTNESS_MIN, COLOUR_BRIGHTNESS_MAX),
+    SETTING_RANGE(colour_contrast, COLOUR_CONTRAST_MIN, COLOUR_CONTRAST_MAX),
+    SETTING_RANGE(colour_saturation, COLOUR_SATURATION_MIN, COLOUR_SATURATION_MAX),
+    SETTING_RANGE(colour_hueshift, COLOUR_HUESHIFT_MIN, COLOUR_HUESHIFT_MAX),
+    SETTING_RANGE(colour_gamma, COLOUR_GAMMA_MIN, COLOUR_GAMMA_MAX),
+    SETTING_SPECIAL(colour_filter, setting_colour_filter),
+    SETTING_SPECIAL(colour_shader, setting_colour_shader),
+    SETTING_RANGE(overlay_source, 0, overlay_source_count - 1),
+    SETTING_SPECIAL(overlay_pattern, setting_overlay_pattern),
+    SETTING_RANGE(overlay_opacity, 0, 100),
+    SETTING_SPECIAL(viewport_offset_x, setting_viewport_x),
+    SETTING_SPECIAL(viewport_offset_y, setting_viewport_y),
+    SETTING_SPECIAL(viewport_stretch_x, setting_viewport_x),
+    SETTING_SPECIAL(viewport_stretch_y, setting_viewport_y),
+    SETTING_RANGE(viewport_zoom, VIEWPORT_ZOOM_MIN, VIEWPORT_ZOOM_MAX),
+    SETTING_RANGE(viewport_crop_top, 0, VIEWPORT_CROP_MAX),
+    SETTING_RANGE(viewport_crop_bottom, 0, VIEWPORT_CROP_MAX),
+    SETTING_RANGE(viewport_crop_left, 0, VIEWPORT_CROP_MAX),
+    SETTING_RANGE(viewport_crop_right, 0, VIEWPORT_CROP_MAX),
+    SETTING_RANGE(viewport_centre_crop, 0, 1),
+    SETTING_CHOICES(frame_delay_ms, frame_delay_choices),
+    SETTING_RANGE(stick_deadzone, STICK_DEADZONE_MIN, STICK_DEADZONE_MAX),
+    SETTING_RANGE(stick_anti_deadzone, STICK_ANTI_DEADZONE_MIN, STICK_ANTI_DEADZONE_MAX),
+    SETTING_RANGE(stick_sensitivity, STICK_SENSITIVITY_MIN, STICK_SENSITIVITY_MAX),
+    SETTING_RANGE(stick_invert_y, 0, 1),
+    SETTING_RANGE(audio_latency_profile, 0, audio_latency_count - 1),
+    SETTING_CHOICES(audio_period_frames, audio_period_choices),
+    SETTING_RANGE(audio_filter, 0, audio_filter_count - 1),
+    SETTING_CHOICES(audio_rate_control, audio_rate_control_choices),
+    SETTING_RANGE(game_renderer, 0, game_renderer_count - 1),
+    SETTING_RANGE(shimmer_fix, 0, 1),
+    SETTING_RANGE(run_ahead, 0, 1),
+    SETTING_RANGE(gpu_hard_sync, 0, 1),
+};
+
+#undef SETTING_SPECIAL
+#undef SETTING_CHOICES
+#undef SETTING_RANGE
 
 static const char *fps_limit_names[fps_limit_count] = {
     lang.muxretro.settings_screen.fps_60, lang.muxretro.settings_screen.fps_50, lang.muxretro.settings_screen.fps_none
@@ -559,237 +663,53 @@ const char *session_settings_audio_rate_control_name(const int hundredths) {
     return buf;
 }
 
+static int setting_value_valid(const struct setting_descriptor *descriptor, const long long value) {
+    switch (descriptor->validation) {
+        case setting_range:
+            return value >= descriptor->minimum && value <= descriptor->maximum;
+        case setting_choices:
+            for (size_t i = 0; i < descriptor->choice_count; i++) {
+                if (value == descriptor->choices[i]) return 1;
+            }
+            return 0;
+        case setting_colour_filter:
+            return value >= 0 && value < colour_filter_preset_count();
+        case setting_colour_shader:
+            return value >= 0 && value < colour_shader_count();
+        case setting_overlay_pattern:
+            return value >= 0 && value < overlay_pattern_count();
+        case setting_viewport_x:
+            return value >= -(device.mux.width / 2) && value <= device.mux.width / 2;
+        case setting_viewport_y:
+            return value >= -(device.mux.height / 2) && value <= device.mux.height / 2;
+    }
+
+    return 0;
+}
+
+static int *setting_field(struct session_settings_t *settings, const struct setting_descriptor *descriptor) {
+    return (int *) ((unsigned char *) settings + descriptor->offset);
+}
+
+static const int *
+setting_field_const(const struct session_settings_t *settings, const struct setting_descriptor *descriptor) {
+    return (const int *) ((const unsigned char *) settings + descriptor->offset);
+}
+
+static void apply_scalar_settings(mini_t *ini) {
+    for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        const long long value = mini_get_int(ini, "settings", descriptor->key, INT_MIN);
+        if (setting_value_valid(descriptor, value)) *setting_field(&session_settings, descriptor) = (int) value;
+    }
+}
+
 static void apply_ini(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) return;
 
-    long long v = mini_get_int(ini, "settings", "scaling_mode", -1);
-    if (v >= 0 && v < video_scale_count) session_settings.scaling_mode = (int) v;
-
-    v = mini_get_int(ini, "settings", "rotate", -1);
-    if (v >= 0 && v < video_rotate_count) session_settings.rotate = (int) v;
-
-    v = mini_get_int(ini, "settings", "mirrored", -1);
-    if (v == 0 || v == 1) session_settings.mirrored = (int) v;
-
-    v = mini_get_int(ini, "settings", "aspect_ratio", -1);
-    if (v >= 0 && v < aspect_ratio_count) session_settings.aspect_ratio = (int) v;
-
-    v = mini_get_int(ini, "settings", "integer_scale", -1);
-    if (v >= 0 && v < integer_scale_count) session_settings.integer_scale = (int) v;
-
-    v = mini_get_int(ini, "settings", "texture_filter", -1);
-    if (v >= 0 && v < texture_filter_count) session_settings.texture_filter = (int) v;
-
-    v = mini_get_int(ini, "settings", "rumble_enabled", -1);
-    if (v == 0 || v == 1) session_settings.rumble_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "volume", -1);
-    if (v >= 0 && v <= 100) session_settings.volume = (int) v;
-
-    v = mini_get_int(ini, "settings", "show_fps", -1);
-    if (v >= 0 && v < show_fps_count) session_settings.show_fps = (int) v;
-
-    v = mini_get_int(ini, "settings", "show_playtime", -1);
-    if (v >= 0) session_settings.show_playtime = v != 0;
-
-    v = mini_get_int(ini, "settings", "content_precache", -1);
-    if (v >= 0 && v < content_precache_count) session_settings.content_precache = (int) v;
-
-    v = mini_get_int(ini, "settings", "border_colour", -1);
-    if (v >= 0 && v < border_colour_count) session_settings.border_colour = (int) v;
-
-    v = mini_get_int(ini, "settings", "sample_rate", -1);
-    for (int i = 0; v >= 0 && i < SAMPLE_RATE_CHOICE_COUNT; i++) {
-        if (sample_rate_choices[i] == (int) v) {
-            session_settings.sample_rate = (int) v;
-            break;
-        }
-    }
-
-    v = mini_get_int(ini, "settings", "fps_limit", -1);
-    if (v >= 0 && v < fps_limit_count) session_settings.fps_limit = (int) v;
-
-    v = mini_get_int(ini, "settings", "header_visibility", -1);
-    if (v >= 0 && v < header_visibility_count) session_settings.header_visibility = (int) v;
-
-    v = mini_get_int(ini, "settings", "ff_speed", -1);
-    if (v >= 0 && v < ff_speed_count) session_settings.ff_speed = (int) v;
-
-    v = mini_get_int(ini, "settings", "slowmo_speed", -1);
-    if (v >= 0 && v < slowmo_speed_count) session_settings.slowmo_speed = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_ff_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_ff_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_ff_glyph_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_ff_glyph_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_slowmo_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_slowmo_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_slowmo_glyph_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_slowmo_glyph_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_pause_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_pause_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_pause_glyph_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_pause_glyph_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_quicksave_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_quicksave_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_quickload_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_quickload_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_toggle_fps_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_toggle_fps_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_header_toggle_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_header_toggle_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_quit_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_quit_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "hotkey_manual_enabled", -1);
-    if (v == 0 || v == 1) session_settings.hotkey_manual_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "auto_save", -1);
-    if (v >= 0 && v < auto_save_count) session_settings.auto_save = (int) v;
-
-    v = mini_get_int(ini, "settings", "sram_flush_seconds", -1);
-    for (int i = 0; v >= 0 && i < SRAM_FLUSH_CHOICE_COUNT; i++) {
-        if (sram_flush_choices[i] == (int) v) {
-            session_settings.sram_flush_seconds = (int) v;
-            break;
-        }
-    }
-
-    v = mini_get_int(ini, "settings", "sram_backup_enabled", -1);
-    if (v == 0 || v == 1) session_settings.sram_backup_enabled = (int) v;
-
-    v = mini_get_int(ini, "settings", "timeline_interval", -1);
-    if (v >= 0 && v <= 6) session_settings.timeline_interval = (int) v;
-
-    v = mini_get_int(ini, "settings", "timeline_count", -1);
-    if (v >= 2 && v <= 10) session_settings.timeline_count = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_brightness", COLOUR_BRIGHTNESS_MIN - 1);
-    if (v >= COLOUR_BRIGHTNESS_MIN && v <= COLOUR_BRIGHTNESS_MAX) session_settings.colour_brightness = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_contrast", COLOUR_CONTRAST_MIN - 1);
-    if (v >= COLOUR_CONTRAST_MIN && v <= COLOUR_CONTRAST_MAX) session_settings.colour_contrast = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_saturation", COLOUR_SATURATION_MIN - 1);
-    if (v >= COLOUR_SATURATION_MIN && v <= COLOUR_SATURATION_MAX) session_settings.colour_saturation = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_hueshift", COLOUR_HUESHIFT_MIN - 1);
-    if (v >= COLOUR_HUESHIFT_MIN && v <= COLOUR_HUESHIFT_MAX) session_settings.colour_hueshift = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_gamma", COLOUR_GAMMA_MIN - 1);
-    if (v >= COLOUR_GAMMA_MIN && v <= COLOUR_GAMMA_MAX) session_settings.colour_gamma = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_filter", -1);
-    if (v >= 0 && v < colour_filter_preset_count()) session_settings.colour_filter = (int) v;
-
-    v = mini_get_int(ini, "settings", "colour_shader", -1);
-    if (v >= 0 && v < colour_shader_count()) session_settings.colour_shader = (int) v;
-
-    v = mini_get_int(ini, "settings", "overlay_source", -1);
-    if (v >= 0 && v < overlay_source_count) session_settings.overlay_source = (int) v;
-
-    v = mini_get_int(ini, "settings", "overlay_pattern", -1);
-    if (v >= 0 && v < overlay_pattern_count()) session_settings.overlay_pattern = (int) v;
-
-    v = mini_get_int(ini, "settings", "overlay_opacity", -1);
-    if (v >= 0 && v <= 100) session_settings.overlay_opacity = (int) v;
-
-    const int offset_x_max = device.mux.width / 2;
-    v = mini_get_int(ini, "settings", "viewport_offset_x", offset_x_max + 1);
-    if (v >= -offset_x_max && v <= offset_x_max) session_settings.viewport_offset_x = (int) v;
-
-    const int offset_y_max = device.mux.height / 2;
-    v = mini_get_int(ini, "settings", "viewport_offset_y", offset_y_max + 1);
-    if (v >= -offset_y_max && v <= offset_y_max) session_settings.viewport_offset_y = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_stretch_x", offset_x_max + 1);
-    if (v >= -offset_x_max && v <= offset_x_max) session_settings.viewport_stretch_x = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_stretch_y", offset_y_max + 1);
-    if (v >= -offset_y_max && v <= offset_y_max) session_settings.viewport_stretch_y = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_zoom", VIEWPORT_ZOOM_MIN - 1);
-    if (v >= VIEWPORT_ZOOM_MIN && v <= VIEWPORT_ZOOM_MAX) session_settings.viewport_zoom = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_crop_top", -1);
-    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_top = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_crop_bottom", -1);
-    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_bottom = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_crop_left", -1);
-    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_left = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_crop_right", -1);
-    if (v >= 0 && v <= VIEWPORT_CROP_MAX) session_settings.viewport_crop_right = (int) v;
-
-    v = mini_get_int(ini, "settings", "viewport_centre_crop", -1);
-    if (v == 0 || v == 1) session_settings.viewport_centre_crop = (int) v;
-
-    v = mini_get_int(ini, "settings", "frame_delay_ms", FRAME_DELAY_OFF - 1);
-    for (int i = 0; i < FRAME_DELAY_CHOICE_COUNT; i++) {
-        if (frame_delay_choices[i] == (int) v) {
-            session_settings.frame_delay_ms = (int) v;
-            break;
-        }
-    }
-
-    v = mini_get_int(ini, "settings", "stick_deadzone", STICK_DEADZONE_MIN - 1);
-    if (v >= STICK_DEADZONE_MIN && v <= STICK_DEADZONE_MAX) session_settings.stick_deadzone = (int) v;
-
-    v = mini_get_int(ini, "settings", "stick_anti_deadzone", STICK_ANTI_DEADZONE_MIN - 1);
-    if (v >= STICK_ANTI_DEADZONE_MIN && v <= STICK_ANTI_DEADZONE_MAX) session_settings.stick_anti_deadzone = (int) v;
-
-    v = mini_get_int(ini, "settings", "stick_sensitivity", STICK_SENSITIVITY_MIN - 1);
-    if (v >= STICK_SENSITIVITY_MIN && v <= STICK_SENSITIVITY_MAX) session_settings.stick_sensitivity = (int) v;
-
-    v = mini_get_int(ini, "settings", "stick_invert_y", -1);
-    if (v == 0 || v == 1) session_settings.stick_invert_y = (int) v;
-
-    v = mini_get_int(ini, "settings", "audio_latency_profile", -1);
-    if (v >= 0 && v < audio_latency_count) session_settings.audio_latency_profile = (int) v;
-
-    v = mini_get_int(ini, "settings", "audio_filter", -1);
-    if (v >= 0 && v < audio_filter_count) session_settings.audio_filter = (int) v;
-
-    v = mini_get_int(ini, "settings", "audio_period_frames", -1);
-    for (int i = 0; v > 0 && i < AUDIO_PERIOD_CHOICE_COUNT; i++) {
-        if (audio_period_choices[i] == (int) v) {
-            session_settings.audio_period_frames = (int) v;
-            break;
-        }
-    }
-
-    v = mini_get_int(ini, "settings", "audio_rate_control", -1);
-    for (int i = 0; v >= 0 && i < AUDIO_RATE_CONTROL_CHOICE_COUNT; i++) {
-        if (audio_rate_control_choices[i] == (int) v) {
-            session_settings.audio_rate_control = (int) v;
-            break;
-        }
-    }
-
-    v = mini_get_int(ini, "settings", "game_renderer", -1);
-    if (v >= 0 && v < game_renderer_count) session_settings.game_renderer = (int) v;
-
-    v = mini_get_int(ini, "settings", "shimmer_fix", -1);
-    if (v == 0 || v == 1) session_settings.shimmer_fix = (int) v;
-
-    v = mini_get_int(ini, "settings", "run_ahead", -1);
-    if (v == 0 || v == 1) session_settings.run_ahead = (int) v;
-
-    v = mini_get_int(ini, "settings", "gpu_hard_sync", -1);
-    if (v == 0 || v == 1) session_settings.gpu_hard_sync = (int) v;
+    apply_scalar_settings(ini);
+    long long v;
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
@@ -848,80 +768,11 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
     mini_t *ini = mini_create(path);
     if (!ini) return;
 
-#define DELTA(FIELD)                                                                                                   \
-    do {                                                                                                               \
-        if (session_settings.FIELD != base->FIELD) mini_set_int(ini, "settings", #FIELD, session_settings.FIELD);      \
-    } while (0)
-
-    DELTA(scaling_mode);
-    DELTA(rotate);
-    DELTA(mirrored);
-    DELTA(aspect_ratio);
-    DELTA(integer_scale);
-    DELTA(texture_filter);
-    DELTA(rumble_enabled);
-    DELTA(volume);
-    DELTA(show_fps);
-    DELTA(show_playtime);
-    DELTA(content_precache);
-    DELTA(border_colour);
-    DELTA(sample_rate);
-    DELTA(fps_limit);
-    DELTA(header_visibility);
-    DELTA(ff_speed);
-    DELTA(slowmo_speed);
-    DELTA(hotkey_ff_enabled);
-    DELTA(hotkey_ff_glyph_enabled);
-    DELTA(hotkey_slowmo_enabled);
-    DELTA(hotkey_slowmo_glyph_enabled);
-    DELTA(hotkey_pause_enabled);
-    DELTA(hotkey_pause_glyph_enabled);
-    DELTA(hotkey_quicksave_enabled);
-    DELTA(hotkey_quickload_enabled);
-    DELTA(hotkey_toggle_fps_enabled);
-    DELTA(hotkey_header_toggle_enabled);
-    DELTA(hotkey_quit_enabled);
-    DELTA(hotkey_manual_enabled);
-    DELTA(auto_save);
-    DELTA(sram_flush_seconds);
-    DELTA(sram_backup_enabled);
-    DELTA(timeline_interval);
-    DELTA(timeline_count);
-    DELTA(colour_brightness);
-    DELTA(colour_contrast);
-    DELTA(colour_saturation);
-    DELTA(colour_hueshift);
-    DELTA(colour_gamma);
-    DELTA(colour_filter);
-    DELTA(colour_shader);
-    DELTA(overlay_source);
-    DELTA(overlay_pattern);
-    DELTA(overlay_opacity);
-    DELTA(viewport_offset_x);
-    DELTA(viewport_offset_y);
-    DELTA(viewport_stretch_x);
-    DELTA(viewport_stretch_y);
-    DELTA(viewport_zoom);
-    DELTA(viewport_crop_top);
-    DELTA(viewport_crop_bottom);
-    DELTA(viewport_crop_left);
-    DELTA(viewport_crop_right);
-    DELTA(viewport_centre_crop);
-    DELTA(frame_delay_ms);
-    DELTA(stick_deadzone);
-    DELTA(stick_anti_deadzone);
-    DELTA(stick_sensitivity);
-    DELTA(stick_invert_y);
-    DELTA(audio_latency_profile);
-    DELTA(audio_period_frames);
-    DELTA(audio_filter);
-    DELTA(audio_rate_control);
-    DELTA(game_renderer);
-    DELTA(shimmer_fix);
-    DELTA(run_ahead);
-    DELTA(gpu_hard_sync);
-
-#undef DELTA
+    for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        const int value = *setting_field_const(&session_settings, descriptor);
+        if (value != *setting_field_const(base, descriptor)) mini_set_int(ini, "settings", descriptor->key, value);
+    }
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
@@ -969,31 +820,56 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     session_settings = default_settings();
 
     char core_name[MAX_BUFFER_SIZE];
-    core_get_name(core_path_arg, core_name, sizeof(core_name));
-    snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_SET_PATH, core_name);
+    if (!core_get_name(core_path_arg, core_name, sizeof(core_name))
+        || !str_format_checked(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_SET_PATH, core_name)) {
+        LOG_ERROR(mux_module, "Settings core path is too long");
+        baseline_settings = session_settings;
+        return;
+    }
     create_directories(core_ini_path, 1);
 
     char rel_dir[MAX_BUFFER_SIZE];
-    core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir));
+    if (!core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir))) {
+        LOG_ERROR(mux_module, "Settings directory path is too long");
+        baseline_settings = session_settings;
+        return;
+    }
 
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), content_base)) {
+        LOG_ERROR(mux_module, "Settings content name is too long");
+        baseline_settings = session_settings;
+        return;
+    }
     char *content_dot = strrchr(content_stem, '.');
     if (content_dot) *content_dot = '\0';
 
     if (*rel_dir) {
-        snprintf(
-            content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_SET_PATH, rel_dir, content_stem
-        );
-        snprintf(
-            directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_SET_PATH, rel_dir
-        );
+        if (!str_format_checked(
+                content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_SET_PATH, rel_dir,
+                content_stem
+            )
+            || !str_format_checked(
+                directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_SET_PATH, rel_dir
+            )) {
+            LOG_ERROR(mux_module, "Settings hierarchy path is too long");
+            baseline_settings = session_settings;
+            return;
+        }
     } else {
-        snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_SET_PATH, content_stem);
-        snprintf(directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_SET_PATH);
+        if (!str_format_checked(
+                content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_SET_PATH, content_stem
+            )
+            || !str_format_checked(
+                directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_SET_PATH
+            )) {
+            LOG_ERROR(mux_module, "Settings hierarchy path is too long");
+            baseline_settings = session_settings;
+            return;
+        }
     }
     create_directories(content_ini_path, 1);
     create_directories(directory_ini_path, 1);

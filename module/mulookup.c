@@ -10,6 +10,7 @@
 #include "../common/sysinfo.h"
 #include "../common/util.h"
 #include "../common/lookup.h"
+#include "../common/lookup_args.h"
 #include "../common/json/json.h"
 
 #define LOOKUP_DIR_PATH OPT_SHARE_PATH "lookup/"
@@ -26,12 +27,6 @@ static struct json json_cache_root;
 static char term_lower[MAX_BUFFER_SIZE];
 static char *term = NULL;
 static char *folder = NULL;
-
-static int gen_mode = 0;
-static int gen_internal = 0;
-static int gen_global = 0;
-static int gen_folder = 0;
-static int gen_all = 0;
 
 typedef struct {
     char *name;
@@ -287,7 +282,9 @@ static void generate_all(void) {
 }
 
 int main(const int argc, char **argv) {
-    if (argc < 2) {
+    mulookup_args args;
+    if (mulookup_args_parse(argc, argv, &args) != 0) {
+        if (args.invalid_argument) fprintf(stderr, "Invalid argument: %s\n", args.invalid_argument);
         fprintf(
             stderr,
             "Usage: %s [--gen-all] [--gen-internal] [--gen-global]\n"
@@ -297,68 +294,26 @@ int main(const int argc, char **argv) {
         return 1;
     }
 
-    for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "--gen-all")) {
-            gen_all = 1;
-            gen_mode = 1;
-            continue;
-        }
-        if (!strcmp(argv[i], "--gen-internal")) {
-            gen_internal = 1;
-            gen_mode = 1;
-            continue;
-        }
-        if (!strcmp(argv[i], "--gen-global")) {
-            gen_global = 1;
-            gen_mode = 1;
-            continue;
-        }
-        if (!strcmp(argv[i], "--gen-folder")) {
-            if (i + 1 < argc) {
-                folder = argv[++i];
-                gen_folder = 1;
-                gen_mode = 1;
-            } else {
-                fprintf(stderr, "Error: missing folder name for --gen-folder\n");
-                return 1;
-            }
-            continue;
-        }
-        if (!strcmp(argv[i], "--folder") || !strcmp(argv[i], "-f")) {
-            if (i + 1 < argc)
-                folder = argv[++i];
-            else {
-                fprintf(stderr, "Error: missing argument for --folder\n");
-                return 1;
-            }
-            continue;
-        }
-        term = argv[i];
-    }
+    folder = args.folder;
+    term = args.term;
 
-    if (gen_mode) {
-        if (gen_all) {
+    if (args.generate != lookup_generate_none) {
+        if (args.generate == lookup_generate_all) {
             generate_all();
             return 0;
         }
-        if (gen_internal) {
+        if (args.generate == lookup_generate_internal) {
             generate_internal();
             return 0;
         }
-        if (gen_global) {
+        if (args.generate == lookup_generate_global) {
             generate_global();
             return 0;
         }
-        if (gen_folder && folder) {
+        if (args.generate == lookup_generate_folder) {
             generate_folder(folder);
             return 0;
         }
-        return 0;
-    }
-
-    if (!term) {
-        fprintf(stderr, "Error: missing search term\n");
-        return 1;
     }
 
     size_t i = 0;

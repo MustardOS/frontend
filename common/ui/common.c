@@ -510,8 +510,8 @@ void fade_in_instant(void) {
     display_set_fade_alpha(0);
 }
 
-void fade_out_screen(void) {
-    if (!config.visual.blackfade) {
+static void fade_out_screen_internal(const int forced) {
+    if (!forced && !config.visual.blackfade) {
         unload_image_animation();
         return;
     }
@@ -550,6 +550,14 @@ void fade_out_screen(void) {
 
         fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
     }
+}
+
+void fade_out_screen(void) {
+    fade_out_screen_internal(0);
+}
+
+void fade_out_screen_forced(void) {
+    fade_out_screen_internal(1);
 }
 
 lv_obj_t *build_message_panel(const struct theme_config *theme, const struct mux_device *device, lv_obj_t **label_out) {

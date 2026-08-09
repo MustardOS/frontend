@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../common/fileio.h"
+#include "../../common/function_pointer.h"
 #include "../../common/init.h"
 #include "../../common/language.h"
 #include "../../common/libarchive/archive.h"
@@ -48,31 +49,32 @@ static int open_core(const char *corefile) {
         return -1;
     }
 
-    // TODO: What else is missing from this list?
-    current_core.retro_init = dlsym(current_core.handle, "retro_init");
-    current_core.retro_deinit = dlsym(current_core.handle, "retro_deinit");
-    current_core.retro_api_version = dlsym(current_core.handle, "retro_api_version");
-    current_core.retro_get_system_info = dlsym(current_core.handle, "retro_get_system_info");
-    current_core.retro_get_system_av_info = dlsym(current_core.handle, "retro_get_system_av_info");
-    current_core.retro_set_controller_port_device = dlsym(current_core.handle, "retro_set_controller_port_device");
-    current_core.retro_reset = dlsym(current_core.handle, "retro_reset");
-    current_core.retro_run = dlsym(current_core.handle, "retro_run");
-    current_core.retro_serialize_size = dlsym(current_core.handle, "retro_serialize_size");
-    current_core.retro_serialize = dlsym(current_core.handle, "retro_serialize");
-    current_core.retro_unserialize = dlsym(current_core.handle, "retro_unserialize");
-    current_core.retro_load_game = dlsym(current_core.handle, "retro_load_game");
-    current_core.retro_unload_game = dlsym(current_core.handle, "retro_unload_game");
-    current_core.retro_get_memory_data = dlsym(current_core.handle, "retro_get_memory_data");
-    current_core.retro_get_memory_size = dlsym(current_core.handle, "retro_get_memory_size");
-    current_core.retro_cheat_reset = dlsym(current_core.handle, "retro_cheat_reset");
-    current_core.retro_cheat_set = dlsym(current_core.handle, "retro_cheat_set");
+    MUOS_FUNCTION_ASSIGN(current_core.retro_init, dlsym(current_core.handle, "retro_init"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_deinit, dlsym(current_core.handle, "retro_deinit"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_api_version, dlsym(current_core.handle, "retro_api_version"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_get_system_info, dlsym(current_core.handle, "retro_get_system_info"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_get_system_av_info, dlsym(current_core.handle, "retro_get_system_av_info"));
+    MUOS_FUNCTION_ASSIGN(
+        current_core.retro_set_controller_port_device, dlsym(current_core.handle, "retro_set_controller_port_device")
+    );
+    MUOS_FUNCTION_ASSIGN(current_core.retro_reset, dlsym(current_core.handle, "retro_reset"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_run, dlsym(current_core.handle, "retro_run"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_serialize_size, dlsym(current_core.handle, "retro_serialize_size"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_serialize, dlsym(current_core.handle, "retro_serialize"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_unserialize, dlsym(current_core.handle, "retro_unserialize"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_load_game, dlsym(current_core.handle, "retro_load_game"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_unload_game, dlsym(current_core.handle, "retro_unload_game"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_get_memory_data, dlsym(current_core.handle, "retro_get_memory_data"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_get_memory_size, dlsym(current_core.handle, "retro_get_memory_size"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_cheat_reset, dlsym(current_core.handle, "retro_cheat_reset"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_cheat_set, dlsym(current_core.handle, "retro_cheat_set"));
 
-    set_environment = dlsym(current_core.handle, "retro_set_environment");
-    set_video_refresh = dlsym(current_core.handle, "retro_set_video_refresh");
-    set_audio_sample = dlsym(current_core.handle, "retro_set_audio_sample");
-    set_audio_sample_batch = dlsym(current_core.handle, "retro_set_audio_sample_batch");
-    set_input_poll = dlsym(current_core.handle, "retro_set_input_poll");
-    set_input_state = dlsym(current_core.handle, "retro_set_input_state");
+    MUOS_FUNCTION_ASSIGN(set_environment, dlsym(current_core.handle, "retro_set_environment"));
+    MUOS_FUNCTION_ASSIGN(set_video_refresh, dlsym(current_core.handle, "retro_set_video_refresh"));
+    MUOS_FUNCTION_ASSIGN(set_audio_sample, dlsym(current_core.handle, "retro_set_audio_sample"));
+    MUOS_FUNCTION_ASSIGN(set_audio_sample_batch, dlsym(current_core.handle, "retro_set_audio_sample_batch"));
+    MUOS_FUNCTION_ASSIGN(set_input_poll, dlsym(current_core.handle, "retro_set_input_poll"));
+    MUOS_FUNCTION_ASSIGN(set_input_state, dlsym(current_core.handle, "retro_set_input_state"));
 
     if (!current_core.retro_init || !current_core.retro_run || !current_core.retro_load_game
         || !current_core.retro_get_system_av_info || !set_environment || !set_video_refresh || !set_audio_sample_batch
@@ -107,21 +109,25 @@ static int open_core(const char *corefile) {
 }
 
 int core_open(const char *corefile) {
-    snprintf(core_file_path, sizeof(core_file_path), "%s", corefile);
+    if (!str_copy_checked(core_file_path, sizeof(core_file_path), corefile)) {
+        LOG_ERROR(mux_module, "Core path is too long");
+        return -1;
+    }
     return open_core(corefile);
 }
 
-void core_get_name(const char *core_path, char *out, const size_t out_size) {
+int core_get_name(const char *core_path, char *out, const size_t out_size) {
     const char *base = strrchr(core_path, '/');
     base = base ? base + 1 : core_path;
 
-    snprintf(out, out_size, "%s", base);
+    if (!str_copy_checked(out, out_size, base)) return 0;
 
     char *ext = strstr(out, "_libretro.so");
     if (ext) *ext = '\0';
+    return 1;
 }
 
-void core_content_rel_dir(const char *content_path, char *out, const size_t out_size) {
+int core_content_rel_dir(const char *content_path, char *out, const size_t out_size) {
     char *content_dir = get_content_path((char *) content_path);
     char rel_path[PATH_MAX];
     union_get_relative_path(content_dir, rel_path, sizeof(rel_path));
@@ -134,21 +140,21 @@ void core_content_rel_dir(const char *content_path, char *out, const size_t out_
             sub++;
     }
 
-    snprintf(out, out_size, "%s", sub);
+    return str_copy_checked(out, out_size, sub);
 }
 
-void core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, const size_t out_size) {
+int core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, const size_t out_size) {
     char core_name[MAX_BUFFER_SIZE];
-    core_get_name(core_path_arg, core_name, sizeof(core_name));
+    if (!core_get_name(core_path_arg, core_name, sizeof(core_name))) return 0;
 
     char rel_dir[PATH_MAX];
-    core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir));
+    if (!core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir))) return 0;
 
     if (*rel_dir) {
-        snprintf(out, out_size, "%s/%s", core_name, rel_dir);
-    } else {
-        snprintf(out, out_size, "%s", core_name);
+        const char *parts[] = {core_name, rel_dir};
+        return path_join_checked(out, out_size, parts, A_SIZE(parts));
     }
+    return str_copy_checked(out, out_size, core_name);
 }
 
 static int reopen_core(void) {
@@ -163,7 +169,8 @@ static int find_first_file(const char *dir, char *out_path) {
     struct dirent *ent;
     while ((ent = readdir(d))) {
         if (ent->d_type != DT_REG) continue;
-        snprintf(out_path, PATH_MAX, "%s/%s", dir, ent->d_name);
+        const char *parts[] = {dir, ent->d_name};
+        if (!path_join_checked(out_path, PATH_MAX, parts, A_SIZE(parts))) break;
         found = 0;
         break;
     }
@@ -200,14 +207,28 @@ static int extract_archive_to_dir(const char *archive_path, const char *output_d
         const char *name = archive_entry_pathname(entry);
         if (!name) continue;
 
-        if (name[0] == '/' || strstr(name, "..")) {
+        int unsafe = name[0] == '/';
+        for (const char *component = name; !unsafe && *component;) {
+            while (*component == '/')
+                component++;
+            const char *end = strchr(component, '/');
+            const size_t length = end ? (size_t) (end - component) : strlen(component);
+            if (length == 2 && component[0] == '.' && component[1] == '.') unsafe = 1;
+            component = end ? end + 1 : component + length;
+        }
+        if (unsafe) {
             LOG_ERROR(mux_module, "Blocked unsafe path in archive: '%s'", name);
             rc = -1;
             break;
         }
 
         char dest_file[PATH_MAX];
-        snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, name);
+        const char *parts[] = {resolved_output, name};
+        if (!path_join_checked(dest_file, sizeof(dest_file), parts, A_SIZE(parts))) {
+            LOG_ERROR(mux_module, "Archive output path is too long: '%s'", name);
+            rc = -1;
+            break;
+        }
 
         if (strncmp(dest_file, resolved_output, resolved_len) != 0
             || (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
@@ -415,14 +436,18 @@ static int write_patched_content(const void *data, const size_t size, const char
 
     const char *name = strrchr(orig_path, '/');
     name = name ? name + 1 : orig_path;
-    snprintf(out_path, PATH_MAX, "%s/%s", RETRO_PAT_PATH, name);
+    const char *parts[] = {RETRO_PAT_PATH, name};
+    if (!path_join_checked(out_path, PATH_MAX, parts, A_SIZE(parts))) return -1;
 
     return write_whole_file(out_path, data, size);
 }
 
 int core_load_content(const char *content_path) {
-    snprintf(core_content_path, sizeof(core_content_path), "%s", content_path);
-    snprintf(core_resolved_content_path, sizeof(core_resolved_content_path), "%s", content_path);
+    if (!str_copy_checked(core_content_path, sizeof(core_content_path), content_path)
+        || !str_copy_checked(core_resolved_content_path, sizeof(core_resolved_content_path), content_path)) {
+        LOG_ERROR(mux_module, "Content path is too long");
+        return -1;
+    }
     core_active_patches[0] = '\0';
     core_active_patch_count = 0;
     if (dir_exist(RETRO_EXT_PATH)) remove_directory_recursive(RETRO_EXT_PATH);
@@ -513,7 +538,10 @@ int core_load_content(const char *content_path) {
     if (!has_patch && current_core.need_fullpath && vfs_bridge_is_active()) {
         char entry_name[PATH_MAX];
         if (find_entry_in_archive(content_path, entry_name) == 0) {
-            snprintf(resolved_path, sizeof(resolved_path), "%s#%s", content_path, entry_name);
+            if (!str_format_checked(resolved_path, sizeof(resolved_path), "%s#%s", content_path, entry_name)) {
+                LOG_ERROR(mux_module, "Archive entry path is too long");
+                return -1;
+            }
 
             const struct retro_game_info game_info = {.path = resolved_path};
             if (current_core.retro_load_game(&game_info)) {
@@ -522,7 +550,8 @@ int core_load_content(const char *content_path) {
                                          : lang.muxretro.information_screen.extracted;
 
                 snprintf(core_content_load_method, sizeof(core_content_load_method), "%s", method);
-                snprintf(core_resolved_content_path, sizeof(core_resolved_content_path), "%s", resolved_path);
+                if (!str_copy_checked(core_resolved_content_path, sizeof(core_resolved_content_path), resolved_path))
+                    return -1;
                 LOG_SUCCESS(mux_module, "Content loaded: %s", content_path);
                 return 0;
             }
@@ -575,7 +604,7 @@ int core_load_content(const char *content_path) {
     snprintf(
         core_content_load_method, sizeof(core_content_load_method), "%s", lang.muxretro.information_screen.extracted
     );
-    snprintf(core_resolved_content_path, sizeof(core_resolved_content_path), "%s", resolved_path);
+    if (!str_copy_checked(core_resolved_content_path, sizeof(core_resolved_content_path), resolved_path)) return -1;
     LOG_SUCCESS(mux_module, "Content loaded: %s", content_path);
     return 0;
 }

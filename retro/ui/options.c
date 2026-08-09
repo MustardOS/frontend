@@ -5,6 +5,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../../common/options.h"
+#include "../../common/strutil.h"
 #include "../core/core.h"
 #include "../coredef/coredef.h"
 #include "options.h"
@@ -293,32 +294,52 @@ static void snapshot_baseline(void) {
 
 void options_init_paths(const char *core_path_arg, const char *content_path) {
     char core_name[MAX_BUFFER_SIZE];
-    core_get_name(core_path_arg, core_name, sizeof(core_name));
-    snprintf(active_core_name, sizeof(active_core_name), "%s", core_name);
-    snprintf(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_OPT_PATH, core_name);
+    if (!core_get_name(core_path_arg, core_name, sizeof(core_name))
+        || !str_copy_checked(active_core_name, sizeof(active_core_name), core_name)
+        || !str_format_checked(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_OPT_PATH, core_name)) {
+        LOG_ERROR(mux_module, "Core options path is too long");
+        return;
+    }
     create_directories(core_ini_path, 1);
 
     char rel_dir[MAX_BUFFER_SIZE];
-    core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir));
+    if (!core_content_rel_dir(content_path, rel_dir, sizeof(rel_dir))) {
+        LOG_ERROR(mux_module, "Core options directory path is too long");
+        return;
+    }
 
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
 
     char content_stem[MAX_BUFFER_SIZE];
-    snprintf(content_stem, sizeof(content_stem), "%s", content_base);
+    if (!str_copy_checked(content_stem, sizeof(content_stem), content_base)) {
+        LOG_ERROR(mux_module, "Core options content name is too long");
+        return;
+    }
     char *content_dot = strrchr(content_stem, '.');
     if (content_dot) *content_dot = '\0';
 
     if (*rel_dir) {
-        snprintf(
-            content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_OPT_PATH, rel_dir, content_stem
-        );
-        snprintf(
-            directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_OPT_PATH, rel_dir
-        );
+        if (!str_format_checked(
+                content_ini_path, sizeof(content_ini_path), "%s/content/%s/%s.ini", RETRO_OPT_PATH, rel_dir,
+                content_stem
+            )
+            || !str_format_checked(
+                directory_ini_path, sizeof(directory_ini_path), "%s/directory/%s/directory.ini", RETRO_OPT_PATH, rel_dir
+            )) {
+            LOG_ERROR(mux_module, "Core options hierarchy path is too long");
+            return;
+        }
     } else {
-        snprintf(content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_OPT_PATH, content_stem);
-        snprintf(directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_OPT_PATH);
+        if (!str_format_checked(
+                content_ini_path, sizeof(content_ini_path), "%s/content/%s.ini", RETRO_OPT_PATH, content_stem
+            )
+            || !str_format_checked(
+                directory_ini_path, sizeof(directory_ini_path), "%s/directory/directory.ini", RETRO_OPT_PATH
+            )) {
+            LOG_ERROR(mux_module, "Core options hierarchy path is too long");
+            return;
+        }
     }
     create_directories(content_ini_path, 1);
     create_directories(directory_ini_path, 1);

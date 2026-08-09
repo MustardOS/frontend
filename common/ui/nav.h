@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdatomic.h>
 #include "../options.h"
 #include "../init.h"
 
@@ -7,7 +8,7 @@
 
 extern char progress_bar_message[MAX_BUFFER_SIZE];
 
-extern volatile int progress_bar_value;
+extern _Atomic int progress_bar_value;
 extern lv_timer_t *timer_update_progress;
 
 enum visual_type { vis_clock, vis_bluetooth, vis_network, vis_battery, vis_headertitle };

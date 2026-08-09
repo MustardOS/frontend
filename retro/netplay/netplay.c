@@ -28,6 +28,7 @@
 #include "../../common/log.h"
 #include "../../common/options.h"
 #include "../../common/randname.h"
+#include "../../common/strutil.h"
 #include "../cheevo/cheevo.h"
 #include "../core/core.h"
 #include "../core/perf.h"
@@ -40,9 +41,10 @@
 #include "../ui/options.h"
 #include "../video/hw_render.h"
 #include "netplay.h"
+#include "wire.h"
 
-#define NETPLAY_PROTOCOL               4U
-#define NETPLAY_HEADER_SIZE            32U
+#define NETPLAY_PROTOCOL               NETPLAY_WIRE_PROTOCOL
+#define NETPLAY_HEADER_SIZE            NETPLAY_WIRE_HEADER_SIZE
 #define NETPLAY_CONTROL_CAP            4096U
 #define NETPLAY_STATE_CAP              (128U * 1024U * 1024U)
 #define NETPLAY_IO_TIMEOUT_MS          30000U
@@ -226,6 +228,7 @@ typedef struct {
     uint8_t *digest_hash_state;
     size_t digest_hash_size;
     size_t digest_hash_capacity;
+    unsigned packet_queue_overflows;
     int failure_announced;
 } netplay_context;
 
@@ -234,35 +237,6 @@ static int netplay_initialised;
 static atomic_int netplay_fast_status = ATOMIC_VAR_INIT(netplay_status_idle);
 static struct retro_netpacket_callback pending_netpacket;
 static int pending_netpacket_available;
-
-static uint16_t read_u16(const uint8_t *data) {
-    return (uint16_t) data[0] << 8 | data[1];
-}
-
-static uint32_t read_u32(const uint8_t *data) {
-    return (uint32_t) data[0] << 24 | (uint32_t) data[1] << 16 | (uint32_t) data[2] << 8 | data[3];
-}
-
-static uint64_t read_u64(const uint8_t *data) {
-    return (uint64_t) read_u32(data) << 32 | read_u32(data + 4);
-}
-
-static void write_u16(uint8_t *data, const uint16_t value) {
-    data[0] = (uint8_t) (value >> 8);
-    data[1] = (uint8_t) value;
-}
-
-static void write_u32(uint8_t *data, const uint32_t value) {
-    data[0] = (uint8_t) (value >> 24);
-    data[1] = (uint8_t) (value >> 16);
-    data[2] = (uint8_t) (value >> 8);
-    data[3] = (uint8_t) value;
-}
-
-static void write_u64(uint8_t *data, const uint64_t value) {
-    write_u32(data, (uint32_t) (value >> 32));
-    write_u32(data + 4, (uint32_t) value);
-}
 
 static void set_status(const netplay_status status) {
     pthread_mutex_lock(&netplay.mutex);
@@ -418,7 +392,7 @@ static int hash_content(const char *path, uint8_t digest[SHA256_DIGEST_LENGTH]) 
     char name[SHA256_DIGEST_LENGTH * 2 + 1];
     digest_hex(path_digest, name);
     char cache_path[PATH_MAX];
-    snprintf(cache_path, sizeof(cache_path), "%s/%s.bin", NETPLAY_HASH_CACHE, name);
+    if (!str_format_checked(cache_path, sizeof(cache_path), "%s/%s.bin", NETPLAY_HASH_CACHE, name)) return -1;
 
     uint8_t record[56];
     const int cache = open(cache_path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
@@ -428,8 +402,8 @@ static int hash_content(const char *path, uint8_t digest[SHA256_DIGEST_LENGTH]) 
         const int valid = fstat(cache, &cache_stat) == 0 && S_ISREG(cache_stat.st_mode)
                           && cache_stat.st_size == (off_t) sizeof(record) && count == (ssize_t) sizeof(record)
                           && memcmp(record, "PKNH", 4) == 0 && record[4] == 1
-                          && read_u64(record + 8) == (uint64_t) before.st_size
-                          && read_u64(record + 16) == (uint64_t) before.st_mtime;
+                          && netplay_wire_read_u64(record + 8) == (uint64_t) before.st_size
+                          && netplay_wire_read_u64(record + 16) == (uint64_t) before.st_mtime;
         close(cache);
         if (valid) {
             memcpy(digest, record + 24, SHA256_DIGEST_LENGTH);
@@ -444,13 +418,13 @@ static int hash_content(const char *path, uint8_t digest[SHA256_DIGEST_LENGTH]) 
     memset(record, 0, sizeof(record));
     memcpy(record, "PKNH", 4);
     record[4] = 1;
-    write_u64(record + 8, (uint64_t) after.st_size);
-    write_u64(record + 16, (uint64_t) after.st_mtime);
+    netplay_wire_write_u64(record + 8, (uint64_t) after.st_size);
+    netplay_wire_write_u64(record + 16, (uint64_t) after.st_mtime);
     memcpy(record + 24, digest, SHA256_DIGEST_LENGTH);
     create_directories(NETPLAY_HASH_CACHE, 0);
 
     char temporary[PATH_MAX];
-    snprintf(temporary, sizeof(temporary), "%s.tmp", cache_path);
+    if (!str_format_checked(temporary, sizeof(temporary), "%s.tmp", cache_path)) return -1;
     const int output = open(temporary, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
     if (output >= 0) {
         const int written = write(output, record, sizeof(record)) == (ssize_t) sizeof(record) && fsync(output) == 0;
@@ -483,7 +457,7 @@ static void hash_options(uint8_t digest[SHA256_DIGEST_LENGTH]) {
 
     for (unsigned port = 0; port < NETPLAY_PORT_COUNT; port++) {
         uint8_t device[4];
-        write_u32(device, (uint32_t) session_settings.port_device_id[port]);
+        netplay_wire_write_u32(device, (uint32_t) session_settings.port_device_id[port]);
         EVP_DigestUpdate(context, device, sizeof(device));
     }
     EVP_DigestUpdate(context, core_active_patches, strlen(core_active_patches) + 1);
@@ -547,7 +521,7 @@ static int tls_create(void) {
         EVP_PKEY_free(key);
         return -1;
     }
-    ASN1_INTEGER_set(X509_get_serialNumber(certificate), (long) (read_u64(serial_bytes) & 0x7fffffff));
+    ASN1_INTEGER_set(X509_get_serialNumber(certificate), (long) (netplay_wire_read_u64(serial_bytes) & 0x7fffffff));
     X509_set_version(certificate, 2);
     X509_gmtime_adj(X509_get_notBefore(certificate), -60);
     X509_gmtime_adj(X509_get_notAfter(certificate), 24 * 60 * 60);
@@ -679,14 +653,15 @@ static int ssl_transfer(SSL *ssl, const int fd, uint8_t *data, const size_t size
 
 static int
 send_message(netplay_peer *peer, const uint8_t type, const uint64_t frame, const void *payload, const uint32_t size) {
-    uint8_t header[NETPLAY_HEADER_SIZE] = {0};
-    memcpy(header, "PKNP", 4);
-    header[4] = NETPLAY_PROTOCOL;
-    header[5] = type;
-    write_u32(header + 8, size);
-    write_u32(header + 12, ++peer->tx_sequence);
-    write_u64(header + 16, frame);
-    write_u64(header + 24, netplay.session_id);
+    uint8_t header[NETPLAY_HEADER_SIZE];
+    const netplay_wire_header message = {
+        .type = type,
+        .payload_size = size,
+        .sequence = ++peer->tx_sequence,
+        .frame = frame,
+        .session = netplay.session_id,
+    };
+    if (netplay_wire_header_encode(header, sizeof(header), &message) != 0) return -1;
 
     if (size <= NETPLAY_CONTROL_CAP) {
         uint8_t packet[NETPLAY_HEADER_SIZE + NETPLAY_CONTROL_CAP];
@@ -702,7 +677,7 @@ send_message(netplay_peer *peer, const uint8_t type, const uint64_t frame, const
 static int build_hello(const netplay_peer *peer, uint8_t *payload, const size_t size) {
     if (size < 166) return -1;
     memset(payload, 0, size);
-    write_u16(payload, NETPLAY_PROTOCOL);
+    netplay_wire_write_u16(payload, NETPLAY_PROTOCOL);
     payload[2] = (uint8_t) netplay.role;
     payload[3] = (uint8_t) (netplay.netpacket_available != 0);
     if (netplay.role == netplay_role_host) {
@@ -719,7 +694,7 @@ static int build_hello(const netplay_peer *peer, uint8_t *payload, const size_t 
 }
 
 static int check_hello(netplay_peer *peer, const uint8_t *payload, const size_t size) {
-    if (size != 196 || read_u16(payload) != NETPLAY_PROTOCOL) return -1;
+    if (size != 196 || netplay_wire_read_u16(payload) != NETPLAY_PROTOCOL) return -1;
     if (payload[2] != (netplay.role == netplay_role_host ? netplay_role_client : netplay_role_host)
         || (payload[3] & 1U) != (uint8_t) (netplay.netpacket_available != 0))
         return -1;
@@ -769,7 +744,7 @@ static int derive_pairing_code(netplay_peer *peer) {
 
     uint8_t digest[SHA256_DIGEST_LENGTH];
     SHA256(combined, sizeof(combined), digest);
-    const unsigned code = read_u32(digest) % 1000000U;
+    const unsigned code = netplay_wire_read_u32(digest) % 1000000U;
 
     pthread_mutex_lock(&netplay.mutex);
     snprintf(peer->pairing_code, sizeof(peer->pairing_code), "%06u", code);
@@ -788,14 +763,6 @@ static int derive_pairing_code(netplay_peer *peer) {
     pthread_mutex_unlock(&netplay.mutex);
     atomic_store(&netplay_fast_status, netplay_status_pairing);
     return 0;
-}
-
-static void encode_input(uint8_t payload[12], const netplay_pad_state *input, const uint8_t owner) {
-    payload[0] = owner;
-    payload[1] = input->connected;
-    write_u16(payload + 2, input->buttons);
-    for (unsigned index = 0; index < 4; index++)
-        write_u16(payload + 4 + index * 2, (uint16_t) input->axes[index]);
 }
 
 static unsigned peer_count_with(const int field) {
@@ -838,13 +805,14 @@ static void update_host_menu_pause_locked(void) {
 static int receive_message(netplay_peer *peer) {
     uint8_t header[NETPLAY_HEADER_SIZE];
     if (ssl_transfer(peer->ssl, peer->socket_fd, header, sizeof(header), 0) != 0) return -1;
-    if (memcmp(header, "PKNP", 4) != 0 || header[4] != NETPLAY_PROTOCOL) return -1;
+    netplay_wire_header message;
+    if (netplay_wire_header_decode(header, sizeof(header), &message) != 0) return -1;
 
-    const uint8_t type = header[5];
-    const uint32_t size = read_u32(header + 8);
-    const uint32_t sequence = read_u32(header + 12);
-    const uint64_t frame = read_u64(header + 16);
-    const uint64_t session = read_u64(header + 24);
+    const uint8_t type = message.type;
+    const uint32_t size = message.payload_size;
+    const uint32_t sequence = message.sequence;
+    const uint64_t frame = message.frame;
+    const uint64_t session = message.session;
     const uint32_t cap = type == netplay_message_state       ? NETPLAY_STATE_CAP
                          : type == netplay_message_netpacket ? NETPLAY_PACKET_CAP
                                                              : NETPLAY_CONTROL_CAP;
@@ -925,10 +893,13 @@ static int receive_message(netplay_peer *peer) {
             result = -1;
         } else {
             netplay_pad_state input = {0};
-            input.connected = payload[1] != 0;
-            input.buttons = read_u16(payload + 2);
-            for (unsigned index = 0; index < 4; index++)
-                input.axes[index] = (int16_t) read_u16(payload + 4 + index * 2);
+            uint8_t decoded_owner = 0;
+            if (netplay_wire_input_decode(payload, size, &input, &decoded_owner) != 0 || decoded_owner != owner) {
+                result = -1;
+                errno = EPROTO;
+                free(owned);
+                return result;
+            }
             pthread_mutex_lock(&netplay.mutex);
             const int accepts_input = netplay.status == netplay_status_playing
                                       || (netplay.role == netplay_role_host
@@ -950,7 +921,7 @@ static int receive_message(netplay_peer *peer) {
         }
     } else if (type == netplay_message_ping && size == 4) {
         result = send_message(peer, netplay_message_pong, frame, payload, size);
-    } else if (type == netplay_message_pong && size == 4 && read_u32(payload) == peer->ping_nonce) {
+    } else if (type == netplay_message_pong && size == 4 && netplay_wire_read_u32(payload) == peer->ping_nonce) {
         const unsigned elapsed = SDL_GetTicks() - peer->ping_sent_at;
         pthread_mutex_lock(&netplay.mutex);
         const unsigned previous = netplay.public_info.ping_ms;
@@ -1001,6 +972,7 @@ static int receive_message(netplay_peer *peer) {
     } else if (type == netplay_message_netpacket && netplay.netpacket_available && size > 0) {
         pthread_mutex_lock(&netplay.mutex);
         if (netplay.incoming_count >= NETPLAY_PACKET_QUEUE_CAP) {
+            netplay.packet_queue_overflows++;
             result = -1;
         } else {
             const unsigned tail = (netplay.incoming_head + netplay.incoming_count) % NETPLAY_PACKET_QUEUE_CAP;
@@ -1204,7 +1176,7 @@ static int peer_send_pending(netplay_peer *peer) {
 
     for (unsigned index = 0; index < pending_input_count; index++) {
         uint8_t payload[12];
-        encode_input(payload, &pending_input[index].input, (uint8_t) pending_input[index].port);
+        netplay_wire_input_encode(payload, &pending_input[index].input, (uint8_t) pending_input[index].port);
         if (send_message(peer, netplay_message_input, pending_input[index].frame, payload, sizeof(payload)) != 0)
             return -1;
         pthread_mutex_lock(&netplay.mutex);
@@ -1246,7 +1218,7 @@ static int peer_send_pending(netplay_peer *peer) {
         peer->ping_sent_at = now;
         peer->next_ping_at = now + 1000;
         uint8_t payload[4];
-        write_u32(payload, peer->ping_nonce);
+        netplay_wire_write_u32(payload, peer->ping_nonce);
         if (send_message(peer, netplay_message_ping, current_frame, payload, sizeof(payload)) != 0) return -1;
     }
 
@@ -1356,7 +1328,7 @@ static void send_discovery(const int socket_fd) {
     uint8_t message[64] = {0};
     memcpy(message, "PKND", 4);
     message[4] = NETPLAY_PROTOCOL;
-    write_u16(message + 6, netplay.port);
+    netplay_wire_write_u16(message + 6, netplay.port);
     pthread_mutex_lock(&netplay.mutex);
     snprintf((char *) message + 8, sizeof(message) - 8, "%s", netplay.host_name);
     pthread_mutex_unlock(&netplay.mutex);
@@ -1395,7 +1367,7 @@ static void *discovery_thread(void *unused) {
 
         char source_address[INET_ADDRSTRLEN];
         if (!inet_ntop(AF_INET, &source.sin_addr, source_address, sizeof(source_address))) continue;
-        const uint16_t port = read_u16(message + 6);
+        const uint16_t port = netplay_wire_read_u16(message + 6);
         if (!port) continue;
 
         pthread_mutex_lock(&netplay.mutex);
@@ -1772,6 +1744,7 @@ netpacket_send(const int flags, const void *data, const size_t size, const uint1
 
     pthread_mutex_lock(&netplay.mutex);
     if (netplay.outgoing_count >= NETPLAY_PACKET_QUEUE_CAP) {
+        netplay.packet_queue_overflows++;
         pthread_mutex_unlock(&netplay.mutex);
         free(copy);
         set_failure(lang.muxretro.netplay.packet_queue_failed);
@@ -1874,39 +1847,6 @@ int netplay_init(const char *core_path, const char *content_path) {
     netplay.netpacket = pending_netpacket;
     netplay.netpacket_available = pending_netpacket_available;
     return 0;
-}
-
-int netplay_parse_address(const char *specification, char *address, const size_t address_size, uint16_t *port) {
-    if (!specification || !specification[0] || !address || address_size < 2 || !port) return -1;
-    *port = NETPLAY_DEFAULT_PORT;
-
-    if (specification[0] == '[') {
-        const char *closing = strchr(specification, ']');
-        if (!closing || closing == specification + 1 || (closing[1] && closing[1] != ':')) return -1;
-        if ((size_t) (closing - specification) > address_size) return -1;
-        snprintf(address, address_size, "%.*s", (int) (closing - specification - 1), specification + 1);
-        if (closing[1] == ':') {
-            char *end = NULL;
-            const unsigned long parsed = strtoul(closing + 2, &end, 10);
-            if (!end || *end || !parsed || parsed > UINT16_MAX) return -1;
-            *port = (uint16_t) parsed;
-        }
-    } else {
-        const char *first = strchr(specification, ':');
-        const char *last = strrchr(specification, ':');
-        if (first && first == last) {
-            if (first == specification || (size_t) (first - specification) >= address_size) return -1;
-            snprintf(address, address_size, "%.*s", (int) (first - specification), specification);
-            char *end = NULL;
-            const unsigned long parsed = strtoul(first + 1, &end, 10);
-            if (!end || *end || !parsed || parsed > UINT16_MAX) return -1;
-            *port = (uint16_t) parsed;
-        } else {
-            if (strlen(specification) >= address_size) return -1;
-            snprintf(address, address_size, "%s", specification);
-        }
-    }
-    return address[0] ? 0 : -1;
 }
 
 void netplay_shutdown(void) {
@@ -2132,6 +2072,7 @@ void netplay_disconnect(void) {
     netplay.digest_ready = 0;
     netplay.digest_ready_frame = 0;
     netplay.digest_job_frame = 0;
+    netplay.packet_queue_overflows = 0;
     input_bridge_set_netplay_state(0, 0);
     cheevo_set_netplay_active(0);
     cheats_set_suppressed(cheevo_restricted());
@@ -2265,6 +2206,45 @@ unsigned netplay_get_host_slot_limit(void) {
     return netplay_initialised && !netplay.netpacket_available ? NETPLAY_CLIENT_CAPACITY : 1U;
 }
 
+static void record_perf_snapshot(void) {
+    if (!perf_is_enabled()) return;
+    perf_netplay_snapshot snapshot = {0};
+
+    pthread_mutex_lock(&netplay.mutex);
+    snapshot.tx_queue = netplay.outgoing_count;
+    snapshot.rx_queue = netplay.incoming_count;
+    snapshot.state_jobs = netplay.sync_state != NULL;
+    for (unsigned index = 0; index < netplay.peer_count; index++) {
+        snapshot.state_jobs += netplay.peers[index].tx_state_pending != 0;
+        snapshot.state_jobs += netplay.peers[index].rx_state_pending != 0;
+    }
+    if (!netplay.netpacket_available && netplay.status == netplay_status_playing) {
+        const unsigned local_port = netplay.public_info.local_port;
+        const unsigned player_count = netplay.public_info.player_count;
+        for (unsigned port = 0; port < player_count && port < NETPLAY_PORT_COUNT; port++) {
+            if (port == local_port || !netplay.remote_input_generation[port]) continue;
+            const uint64_t age =
+                netplay.frame > netplay.remote_input_frame[port] ? netplay.frame - netplay.remote_input_frame[port] : 0;
+            const unsigned bounded_age = age > UINT_MAX ? UINT_MAX : (unsigned) age;
+            if (bounded_age > snapshot.input_age_frames) snapshot.input_age_frames = bounded_age;
+        }
+    }
+    snapshot.ping_ms = netplay.public_info.ping_ms;
+    snapshot.jitter_ms = netplay.public_info.jitter_ms;
+    snapshot.resynchronisations = netplay.resynchronisations;
+    snapshot.queue_overflows = netplay.packet_queue_overflows;
+    pthread_mutex_unlock(&netplay.mutex);
+
+    if (netplay.digest_thread_running) {
+        pthread_mutex_lock(&netplay.digest_mutex);
+        snapshot.digest_jobs = (unsigned) (netplay.digest_job_pending != 0) + (unsigned) (netplay.digest_job_busy != 0)
+                               + (unsigned) (netplay.digest_ready != 0);
+        pthread_mutex_unlock(&netplay.digest_mutex);
+    }
+
+    perf_note_netplay(&snapshot);
+}
+
 void netplay_tick(void) {
     if (!netplay_initialised || atomic_load(&netplay_fast_status) == netplay_status_idle) return;
     const int local_menu_open = pause_menu_is_active();
@@ -2293,6 +2273,7 @@ void netplay_tick(void) {
         snprintf(failure, sizeof(failure), "%s", netplay.public_info.failure);
     }
     pthread_mutex_unlock(&netplay.mutex);
+    record_perf_snapshot();
 
     input_bridge_set_netplay_state(
         routes_input && mode == netplay_mode_play_together ? 1U : player_count, routes_input

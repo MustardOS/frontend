@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/wait.h>
 #include "init.h"
 #include "fileio.h"
 #include "util.h"
@@ -25,53 +26,97 @@ int dir_exist(const char *dirname) {
     return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
 }
 
-// Just so nobody is confused in the future...
-// line < 0  returns entire output
-// line == 0 returns first line
-// line == 1 returns second line
-char *get_execute_result(const char *command, const int line) {
-    FILE *fp = popen(command, "r");
-    if (!fp) {
-        LOG_ERROR(mux_module, "Failed to run: %s", command);
+char *get_execute_result_argv(const char *const argv[], const int line) {
+    if (!argv || !argv[0] || !argv[0][0]) return NULL;
+
+    int output_pipe[2];
+    if (pipe(output_pipe) != 0) return NULL;
+
+    const pid_t pid = fork();
+    if (pid < 0) {
+        close(output_pipe[0]);
+        close(output_pipe[1]);
         return NULL;
     }
 
-    char buffer[MAX_BUFFER_SIZE];
-    size_t total = 0;
-    char *result = NULL;
+    if (pid == 0) {
+        close(output_pipe[0]);
+        if (dup2(output_pipe[1], STDOUT_FILENO) < 0) _exit(127);
+        if (output_pipe[1] != STDOUT_FILENO) close(output_pipe[1]);
 
-    int current_line = 0;
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        if (line >= 0) {
-            if (current_line == line) {
-                char *nl = strchr(buffer, '\n');
-                if (nl) *nl = '\0';
-                pclose(fp);
-                return strdup(buffer);
-            }
-            current_line++;
-            continue;
+        const int the_void = open("/dev/null", O_WRONLY | O_CLOEXEC);
+        if (the_void >= 0) {
+            dup2(the_void, STDERR_FILENO);
+            if (the_void != STDERR_FILENO) close(the_void);
         }
 
-        const size_t len = strlen(buffer);
-        char *tmp = realloc(result, total + len + 1);
-        if (!tmp) {
-            free(result);
-            pclose(fp);
-            return NULL;
-        }
-
-        result = tmp;
-        memcpy(result + total, buffer, len);
-
-        total += len;
-        result[total] = '\0';
+        execvp(argv[0], (char *const *) argv);
+        _exit(127);
     }
 
-    pclose(fp);
+    close(output_pipe[1]);
 
-    if (line >= 0) return NULL;
-    return result;
+    enum { EXECUTE_OUTPUT_MAX = 1024 * 1024 };
+    char *result = malloc(1);
+    size_t used = 0;
+    int failed = result == NULL;
+    if (result) result[0] = '\0';
+
+    char buffer[4096];
+    while (!failed) {
+        const ssize_t count = read(output_pipe[0], buffer, sizeof(buffer));
+        if (count == 0) break;
+        if (count < 0) {
+            if (errno == EINTR) continue;
+            failed = 1;
+            break;
+        }
+        if ((size_t) count > EXECUTE_OUTPUT_MAX - used) {
+            failed = 1;
+            break;
+        }
+
+        char *expanded = realloc(result, used + (size_t) count + 1);
+        if (!expanded) {
+            failed = 1;
+            break;
+        }
+        result = expanded;
+        memcpy(result + used, buffer, (size_t) count);
+        used += (size_t) count;
+        result[used] = '\0';
+    }
+
+    close(output_pipe[0]);
+
+    int status = 0;
+    pid_t waited;
+    do {
+        waited = waitpid(pid, &status, 0);
+    } while (waited < 0 && errno == EINTR);
+
+    if (failed || waited != pid || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        free(result);
+        return NULL;
+    }
+
+    if (line < 0) return result;
+
+    char *start = result;
+    for (int current = 0; current < line; current++) {
+        start = strchr(start, '\n');
+        if (!start) {
+            free(result);
+            return NULL;
+        }
+        start++;
+    }
+
+    char *end = strchr(start, '\n');
+    if (end) *end = '\0';
+    char *selected = strdup(start);
+    free(result);
+    return selected;
 }
 
 char *read_all_char_from(const char *filename) {

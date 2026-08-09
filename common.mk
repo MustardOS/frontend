@@ -60,22 +60,30 @@ ifeq ($(DEVICE), NATIVE)
     FFMPEG_CFLAGS := $(shell pkg-config --cflags libavformat libavcodec libavutil libavdevice libswscale libswresample 2>/dev/null)
 endif
 
-BASE_CFLAGS = $(ARCH) -O$(OPT_LEVEL) -pipe -flto=auto \
+BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto \
               -ffunction-sections -fdata-sections \
-              -Wall -Wno-format-zero-length \
+              -Wall -Wpedantic -Wno-format-zero-length \
               -Wno-unused-function -fno-plt \
               -fstack-protector-strong -fstack-clash-protection \
               -D_FORTIFY_SOURCE=3 -D_GNU_SOURCE -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
               $(BUILD_FLAGS) $(FFMPEG_CFLAGS)
 
-STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int
+STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
+                -Werror=incompatible-pointer-types -Werror=return-type \
+                -Wformat-truncation=2 -Werror=format-truncation \
+                -Werror=unused-function
 
 COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm \
               -lavformat -lavcodec -lavutil -lavdevice -lswscale -lswresample
 
 BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
+               -Wl,--enable-new-dtags,-rpath,'$$ORIGIN/lib' \
                $(if $(filter 1,$(DEBUGSYM)),,-s)
-LIB_LDFLAGS  = -Wl,-rpath,'./lib' -Wl,-z,relro,-z,now
+LIB_LDFLAGS  = -Wl,-z,relro,-z,now \
+               -Wl,--enable-new-dtags,-rpath,'$$ORIGIN'
+CLOSED_LIB_LDFLAGS = $(LIB_LDFLAGS) -Wl,-z,defs
+STAGE_LDFLAGS = -Wl,-z,relro,-z,now \
+                -Wl,--enable-new-dtags,-rpath,'$$ORIGIN'
 
 SHARED_PIC = -shared -fPIC

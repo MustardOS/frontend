@@ -6,6 +6,7 @@
 #include "../../common/init.h"
 #include "../../common/language.h"
 #include "../../common/log.h"
+#include "../../common/strutil.h"
 #include "../video/image_writer.h"
 #include "gamestate.h"
 #include "content_hash.h"
@@ -36,13 +37,13 @@ static char quicksave_state_path[MAX_STATE_SIZE] = "";
 static char quicksave_thumb_path[MAX_STATE_SIZE] = "";
 
 static void slot_paths(const int index, char *state_path, char *thumb_path) {
-    snprintf(state_path, MAX_STATE_SIZE, "%s/slot_%d.state", base_dir, index);
-    snprintf(thumb_path, MAX_STATE_SIZE, "%s/slot_%d.png", base_dir, index);
+    str_format_checked(state_path, MAX_STATE_SIZE, "%s/slot_%d.state", base_dir, index);
+    str_format_checked(thumb_path, MAX_STATE_SIZE, "%s/slot_%d.png", base_dir, index);
 }
 
 static void timeline_paths(const int slot, char *state_path, char *thumb_path) {
-    snprintf(state_path, MAX_STATE_SIZE, "%s/timeline_%d.state", base_dir, slot);
-    snprintf(thumb_path, MAX_STATE_SIZE, "%s/timeline_%d.png", base_dir, slot);
+    str_format_checked(state_path, MAX_STATE_SIZE, "%s/timeline_%d.state", base_dir, slot);
+    str_format_checked(thumb_path, MAX_STATE_SIZE, "%s/timeline_%d.png", base_dir, slot);
 }
 
 static void current_metadata(
@@ -130,14 +131,17 @@ static void read_manifest_meta(mini_t *ini, const char *group_id, struct gamesta
     snprintf(slot->core_version, sizeof(slot->core_version), "%s", get_ini_string(ini, group_id, "core_version", ""));
 }
 
-void gamestate_init(const char *state_dir) {
-    snprintf(base_dir, sizeof(base_dir), "%s", state_dir);
-    snprintf(manifest_path, sizeof(manifest_path), "%s/states.ini", base_dir);
-    snprintf(pending_path, sizeof(pending_path), "%s/.pending.png", base_dir);
-    snprintf(autosave_state_path, sizeof(autosave_state_path), "%s/autosave.state", base_dir);
-    snprintf(autosave_thumb_path, sizeof(autosave_thumb_path), "%s/autosave.png", base_dir);
-    snprintf(quicksave_state_path, sizeof(quicksave_state_path), "%s/quicksave.state", base_dir);
-    snprintf(quicksave_thumb_path, sizeof(quicksave_thumb_path), "%s/quicksave.png", base_dir);
+int gamestate_init(const char *state_dir) {
+    if (!str_copy_checked(base_dir, sizeof(base_dir), state_dir)
+        || !str_format_checked(manifest_path, sizeof(manifest_path), "%s/states.ini", base_dir)
+        || !str_format_checked(pending_path, sizeof(pending_path), "%s/.pending.png", base_dir)
+        || !str_format_checked(autosave_state_path, sizeof(autosave_state_path), "%s/autosave.state", base_dir)
+        || !str_format_checked(autosave_thumb_path, sizeof(autosave_thumb_path), "%s/autosave.png", base_dir)
+        || !str_format_checked(quicksave_state_path, sizeof(quicksave_state_path), "%s/quicksave.state", base_dir)
+        || !str_format_checked(quicksave_thumb_path, sizeof(quicksave_thumb_path), "%s/quicksave.png", base_dir)) {
+        base_dir[0] = '\0';
+        return 0;
+    }
 
     create_directories(manifest_path, 1);
 
@@ -149,7 +153,7 @@ void gamestate_init(const char *state_dir) {
         gamestate_timeline_exists[i] = 0;
 
     mini_t *ini = mini_try_load(manifest_path);
-    if (!ini) return;
+    if (!ini) return 1;
 
     for (const mini_group_t *group = ini->head; group && gamestate_slot_count < GAMESTATE_MAX_SLOTS;
          group = group->next) {
@@ -219,6 +223,7 @@ void gamestate_init(const char *state_dir) {
     }
 
     mini_free(ini);
+    return 1;
 }
 
 void gamestate_capture_pending(const int restore_visibility) {
@@ -304,7 +309,7 @@ int gamestate_delete(const int index) {
 
 int gamestate_load(const int index) {
     if (index < 0 || index >= gamestate_slot_count) return -1;
-    return state_load(gamestate_slots[index].state_path);
+    return state_load(gamestate_slots[index].state_path, 1);
 }
 
 int gamestate_autosave_save(void) {
@@ -339,7 +344,7 @@ int gamestate_autosave_save(void) {
 
 int gamestate_autosave_load(void) {
     if (!gamestate_autosave_exists) return -1;
-    return state_load(gamestate_autosave.state_path);
+    return state_load(gamestate_autosave.state_path, 1);
 }
 
 int gamestate_autosave_delete(void) {
@@ -390,7 +395,7 @@ int gamestate_quicksave_save(void) {
 
 int gamestate_quicksave_load(void) {
     if (!gamestate_quicksave_exists) return -1;
-    return state_load(gamestate_quicksave.state_path);
+    return state_load(gamestate_quicksave.state_path, 1);
 }
 
 int gamestate_quicksave_delete(void) {
@@ -464,7 +469,7 @@ int gamestate_timeline_save(void) {
 
 int gamestate_timeline_load(const int slot) {
     if (slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot]) return -1;
-    return state_load(gamestate_timeline[slot].state_path);
+    return state_load(gamestate_timeline[slot].state_path, 1);
 }
 
 int gamestate_timeline_delete(const int slot) {
@@ -573,5 +578,5 @@ int gamestate_find_most_recent(char *path, const size_t path_len, int *mismatch_
 int gamestate_load_most_recent(int *mismatch_blocked) {
     char path[MAX_STATE_SIZE];
     if (gamestate_find_most_recent(path, sizeof(path), mismatch_blocked) != 0) return -1;
-    return state_load(path);
+    return state_load(path, 1);
 }

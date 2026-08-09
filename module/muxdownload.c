@@ -156,8 +156,6 @@ static void refresh_extra_data_finished(const int result) {
 }
 
 static void update_extra_data(void) {
-    if (file_exist(data_local_path)) remove(data_local_path);
-
     set_download_callbacks(refresh_extra_data_finished);
     initiate_download(config.extra.download.data, data_local_path, 1, lang.muxdownload.down.data);
 }

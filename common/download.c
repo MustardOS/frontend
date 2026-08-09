@@ -1,5 +1,14 @@
 #include <curl/curl.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
+#include <stdatomic.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/random.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include "init.h"
 #include "fileio.h"
@@ -9,110 +18,249 @@
 #include "log.h"
 
 #define MAX_DOWNLOAD_BYTES ((curl_off_t) (512L * 1024L * 1024L))
-#define TEMP_DL_DIR        "/opt/muos/temp_dl"
+#define TEMP_NAME_ATTEMPTS 64
 
-int cancel_download = 0;
-int download_in_progress = 0;
+_Atomic int cancel_download = 0;
+_Atomic int download_in_progress = 0;
 
-volatile int download_finish_result = INT_MIN;
+typedef enum { download_idle, download_running, download_completed } download_state;
+
+typedef struct {
+    pthread_mutex_t mutex;
+    download_state state;
+    int result;
+    void (*configured_cb)(int);
+    void (*completion_cb)(int);
+} download_control;
 
 typedef struct {
     char *url;
     char *save_path;
 } download_args_t;
 
+typedef struct {
+    int directory_fd;
+    int file_fd;
+    FILE *stream;
+    char *directory;
+    char *basename;
+    char temporary_name[64];
+} download_target;
+
+static download_control control = {
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+    .state = download_idle,
+};
+
 static size_t write_data(const void *ptr, const size_t size, const size_t nmemb, FILE *stream) {
     return fwrite(ptr, size, nmemb, stream) * size;
 }
 
-static void (*download_finish_cb)(int) = NULL;
+static int fill_random(void *buffer, const size_t size) {
+    unsigned char *out = buffer;
+    size_t offset = 0;
 
-void (*download_finish_pending_cb)(int) = NULL;
-
-void set_download_callbacks(void (*callback)(int)) {
-    download_finish_cb = callback;
-}
-
-void download_poll(void) {
-    if (download_finish_result == INT_MIN) return;
-
-    const int result = download_finish_result;
-    download_finish_result = INT_MIN;
-
-    void (*cb)(int) = download_finish_pending_cb;
-    download_finish_pending_cb = NULL;
-
-    if (result == 0) progress_bar_value = 100;
-    hide_progress_bar();
-
-    download_in_progress = 0;
-    cancel_download = 0;
-
-    if (cb) cb(result);
-}
-
-static int
-progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
-    if (cancel_download) {
-        LOG_INFO(mux_module, "Cancelling download");
-        return 1;
-    }
-
-    if (dltotal > 0) {
-        int percent = (int) ((dlnow * 100) / dltotal);
-        if (progress_bar_value != percent) progress_bar_value = percent;
-    } else if (dlnow > 0) {
-        progress_bar_value = PROGRESS_INDETERMINATE;
+    while (offset < size) {
+        const ssize_t got = getrandom(out + offset, size - offset, 0);
+        if (got > 0) {
+            offset += (size_t) got;
+            continue;
+        }
+        if (got < 0 && errno == EINTR) continue;
+        return -1;
     }
 
     return 0;
 }
 
-static void download_finished(int result) {
-    LOG_INFO(mux_module, "Download finished with result: %d", result);
+static void close_target(download_target *target, const int remove_temporary) {
+    if (!target) return;
 
-    download_finish_pending_cb = download_finish_cb;
-    download_finish_cb = NULL;
-    download_finish_result = result;
+    if (target->stream) {
+        fclose(target->stream);
+        target->stream = NULL;
+        target->file_fd = -1;
+    } else if (target->file_fd >= 0) {
+        close(target->file_fd);
+        target->file_fd = -1;
+    }
+
+    if (remove_temporary && target->directory_fd >= 0 && target->temporary_name[0])
+        unlinkat(target->directory_fd, target->temporary_name, 0);
+
+    if (target->directory_fd >= 0) close(target->directory_fd);
+    free(target->directory);
+    free(target->basename);
+
+    target->directory_fd = -1;
+    target->temporary_name[0] = '\0';
 }
 
-int download_file(const char *url, const char *output_path) {
-    progress_bar_value = 0;
-    cancel_download = 0;
-    download_in_progress = 1;
-    download_finish_result = INT_MIN;
+static int split_output_path(const char *path, char **directory, char **basename) {
+    if (!path || !*path) return -1;
 
-    CURL *curl;
-    FILE *fp;
-    CURLcode res;
+    const char *slash = strrchr(path, '/');
+    if (!slash) {
+        *directory = mux_strdup(".");
+        *basename = mux_strdup(path);
+    } else {
+        const size_t directory_len = slash == path ? 1 : (size_t) (slash - path);
+        *directory = mux_malloc(directory_len + 1);
+        memcpy(*directory, path, directory_len);
+        (*directory)[directory_len] = '\0';
+        *basename = mux_strdup(slash + 1);
+    }
 
-    curl = curl_easy_init();
-    if (!curl) {
-        download_finished(-1);
+    if (!**basename || strcmp(*basename, ".") == 0 || strcmp(*basename, "..") == 0 || strchr(*basename, '/')) {
+        free(*directory);
+        free(*basename);
+        *directory = NULL;
+        *basename = NULL;
         return -1;
     }
 
-    create_directories(TEMP_DL_DIR, 0);
+    return 0;
+}
 
-    const char *base = strrchr(output_path, '/');
-    base = base ? base + 1 : output_path;
-    size_t tmp_path_size = sizeof(TEMP_DL_DIR) + strlen(base) + 6;
-    char *tmp_path = mux_malloc(tmp_path_size);
-    snprintf(tmp_path, tmp_path_size, "%s/%s.part", TEMP_DL_DIR, base);
+static int open_download_target(const char *output_path, download_target *target) {
+    memset(target, 0, sizeof(*target));
+    target->directory_fd = -1;
+    target->file_fd = -1;
 
-    fp = fopen(tmp_path, "wb");
-    if (!fp) {
+    create_directories(output_path, 1);
+    if (split_output_path(output_path, &target->directory, &target->basename) != 0) return -1;
+
+    target->directory_fd = open(target->directory, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (target->directory_fd < 0) {
+        close_target(target, 0);
+        return -1;
+    }
+
+    for (int attempt = 0; attempt < TEMP_NAME_ATTEMPTS; attempt++) {
+        uint64_t random_value[2];
+        if (fill_random(random_value, sizeof(random_value)) != 0) {
+            close_target(target, 0);
+            return -1;
+        }
+
+        snprintf(
+            target->temporary_name, sizeof(target->temporary_name), ".muos-download-%016llx%016llx.part",
+            (unsigned long long) random_value[0], (unsigned long long) random_value[1]
+        );
+
+        target->file_fd = openat(
+            target->directory_fd, target->temporary_name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600
+        );
+        if (target->file_fd >= 0) break;
+        if (errno != EEXIST) {
+            close_target(target, 0);
+            return -1;
+        }
+    }
+
+    if (target->file_fd < 0) {
+        close_target(target, 0);
+        return -1;
+    }
+
+    target->stream = fdopen(target->file_fd, "wb");
+    if (!target->stream) {
+        close_target(target, 1);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int publish_download(download_target *target) {
+    if (fflush(target->stream) != 0 || fsync(target->file_fd) != 0) return -1;
+    if (fclose(target->stream) != 0) {
+        target->stream = NULL;
+        target->file_fd = -1;
+        return -1;
+    }
+
+    target->stream = NULL;
+    target->file_fd = -1;
+
+    if (renameat(target->directory_fd, target->temporary_name, target->directory_fd, target->basename) != 0) return -1;
+
+    target->temporary_name[0] = '\0';
+    if (fsync(target->directory_fd) == 0) return 0;
+
+    if (errno == EINVAL || errno == EROFS || errno == EOPNOTSUPP) {
+        LOG_WARN(mux_module, "Directory durability is not supported for downloaded file: %s", target->directory);
+        return 0;
+    }
+
+    return -1;
+}
+
+void set_download_callbacks(void (*callback)(int)) {
+    pthread_mutex_lock(&control.mutex);
+    if (control.state == download_idle) control.configured_cb = callback;
+    pthread_mutex_unlock(&control.mutex);
+}
+
+void download_poll(void) {
+    pthread_mutex_lock(&control.mutex);
+    if (control.state != download_completed) {
+        pthread_mutex_unlock(&control.mutex);
+        return;
+    }
+
+    const int result = control.result;
+    void (*cb)(int) = control.completion_cb;
+    control.result = 0;
+    control.completion_cb = NULL;
+    control.state = download_idle;
+    atomic_store_explicit(&download_in_progress, 0, memory_order_release);
+    atomic_store_explicit(&cancel_download, 0, memory_order_release);
+    pthread_mutex_unlock(&control.mutex);
+
+    if (result == 0) atomic_store_explicit(&progress_bar_value, 100, memory_order_relaxed);
+    hide_progress_bar();
+    if (cb) cb(result);
+}
+
+static int progress_callback(
+    void *clientp, const curl_off_t dltotal, const curl_off_t dlnow, const curl_off_t ultotal, const curl_off_t ulnow
+) {
+    (void) clientp;
+    (void) ultotal;
+    (void) ulnow;
+
+    if (atomic_load_explicit(&cancel_download, memory_order_acquire)) {
+        LOG_INFO(mux_module, "Cancelling download");
+        return 1;
+    }
+
+    if (dlnow > MAX_DOWNLOAD_BYTES || dltotal > MAX_DOWNLOAD_BYTES) return 1;
+
+    if (dltotal > 0) {
+        const int percent = (int) ((dlnow * 100) / dltotal);
+        atomic_store_explicit(&progress_bar_value, percent, memory_order_relaxed);
+    } else if (dlnow > 0) {
+        atomic_store_explicit(&progress_bar_value, PROGRESS_INDETERMINATE, memory_order_relaxed);
+    }
+
+    return 0;
+}
+
+static int perform_download(const char *url, const char *output_path) {
+    CURL *curl = curl_easy_init();
+    if (!curl) return -1;
+
+    download_target target;
+    if (open_download_target(output_path, &target) != 0) {
         curl_easy_cleanup(curl);
-        free(tmp_path);
-        download_finished(-2);
         return -2;
     }
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, target.stream);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
     curl_easy_setopt(curl, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
@@ -129,99 +277,128 @@ int download_file(const char *url, const char *output_path) {
     curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 300000L);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 100L);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 15L);
-
-    // Optional: follow redirects
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
-
     curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, MAX_DOWNLOAD_BYTES);
-
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
 
-    res = curl_easy_perform(curl);
-
-    // Flush and close file before checking
-    fflush(fp);
-    fclose(fp);
-
+    const CURLcode result = curl_easy_perform(curl);
     long response_code = 0;
+    curl_off_t downloaded = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-
-    curl_off_t cl = 0;
-    int cl_response = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &cl);
-
+    const CURLcode size_result = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &downloaded);
     curl_easy_cleanup(curl);
 
-    if (res != CURLE_OK) {
-        LOG_ERROR(mux_module, "cURL Failure: %s", curl_easy_strerror(res));
-        remove(tmp_path);
-        free(tmp_path);
-        download_finished(-3);
+    if (result != CURLE_OK) {
+        LOG_ERROR(mux_module, "cURL failure: %s", curl_easy_strerror(result));
+        close_target(&target, 1);
         return -3;
     }
-
-    // Verify HTTP status
     if (response_code < 200 || response_code >= 300) {
-        LOG_ERROR(mux_module, "Unexpected HTTP Status: %ld", response_code);
-        remove(tmp_path);
-        free(tmp_path);
-        download_finished(-4);
+        LOG_ERROR(mux_module, "Unexpected HTTP status: %ld", response_code);
+        close_target(&target, 1);
         return -4;
     }
-
-    // Verify file is not empty
-    if (cl_response != CURLE_OK || cl <= 0) {
-        LOG_ERROR(mux_module, "No data downloaded...");
-        remove(tmp_path);
-        free(tmp_path);
-        download_finished(-5);
+    if (size_result != CURLE_OK || downloaded <= 0 || downloaded > MAX_DOWNLOAD_BYTES) {
+        LOG_ERROR(mux_module, "Downloaded file has an invalid size");
+        close_target(&target, 1);
         return -5;
     }
-
-    remove(output_path);
-    int copy_ok = (copy_file(tmp_path, output_path) == 0);
-    remove(tmp_path);
-
-    if (!copy_ok) {
-        LOG_ERROR(mux_module, "Failed to finalise download");
-        remove(output_path);
-        free(tmp_path);
-        download_finished(-6);
+    if (publish_download(&target) != 0) {
+        LOG_ERROR(mux_module, "Failed to publish completed download: %s", strerror(errno));
+        close_target(&target, 1);
         return -6;
     }
 
-    free(tmp_path);
-
-    LOG_SUCCESS(mux_module, "Download finished (%.0ld bytes)", cl);
-    download_finished(0);
-
+    close_target(&target, 0);
+    LOG_SUCCESS(mux_module, "Download finished (%lld bytes)", (long long) downloaded);
     return 0;
 }
 
-static void *download_thread(void *arg) {
-    download_args_t *args = (download_args_t *) arg;
+static void complete_download(const int result) {
+    pthread_mutex_lock(&control.mutex);
+    control.result = result;
+    control.state = download_completed;
+    pthread_mutex_unlock(&control.mutex);
+}
 
-    download_file(args->url, args->save_path);
+static void *download_thread(void *arg) {
+    download_args_t *args = arg;
+    const int result = perform_download(args->url, args->save_path);
 
     free(args->url);
     free(args->save_path);
     free(args);
 
+    complete_download(result);
     return NULL;
 }
 
-void initiate_download(const char *url, const char *output_path, int show_progress, char *message) {
-    download_finish_result = INT_MIN;
+static int schedule_start_failure_locked(const int result) {
+    if (control.state == download_idle) {
+        control.completion_cb = control.configured_cb;
+        control.configured_cb = NULL;
+    }
+    control.result = result;
+    control.state = download_completed;
+    atomic_store_explicit(&download_in_progress, 0, memory_order_release);
+    return 0;
+}
+
+int initiate_download(const char *url, const char *output_path, const int show_progress, char *message) {
+    pthread_mutex_lock(&control.mutex);
+    if (control.state != download_idle) {
+        pthread_mutex_unlock(&control.mutex);
+        return -1;
+    }
+
+    if (!url || !*url || !output_path || !*output_path) {
+        const int result = schedule_start_failure_locked(-1);
+        pthread_mutex_unlock(&control.mutex);
+        return result;
+    }
+
+    download_args_t *args = calloc(1, sizeof(*args));
+    if (!args) {
+        const int result = schedule_start_failure_locked(-2);
+        pthread_mutex_unlock(&control.mutex);
+        return result;
+    }
+
+    args->url = strdup(url);
+    args->save_path = strdup(output_path);
+    if (!args->url || !args->save_path) {
+        free(args->url);
+        free(args->save_path);
+        free(args);
+        const int result = schedule_start_failure_locked(-2);
+        pthread_mutex_unlock(&control.mutex);
+        return result;
+    }
+
+    control.completion_cb = control.configured_cb;
+    control.configured_cb = NULL;
+    control.result = 0;
+    control.state = download_running;
+    atomic_store_explicit(&cancel_download, 0, memory_order_release);
+    atomic_store_explicit(&download_in_progress, 1, memory_order_release);
+    atomic_store_explicit(&progress_bar_value, 0, memory_order_relaxed);
+
+    pthread_t thread;
+    const int thread_result = pthread_create(&thread, NULL, download_thread, args);
+    if (thread_result != 0) {
+        free(args->url);
+        free(args->save_path);
+        free(args);
+        schedule_start_failure_locked(-7);
+        pthread_mutex_unlock(&control.mutex);
+        return 0;
+    }
+
+    pthread_detach(thread);
+    pthread_mutex_unlock(&control.mutex);
 
     if (show_progress) show_progress_bar(message);
-
-    download_args_t *args = mux_malloc(sizeof(*args));
-
-    args->url = mux_strdup(url);
-    args->save_path = mux_strdup(output_path);
-
-    pthread_t tid;
-    pthread_create(&tid, NULL, download_thread, args);
-    pthread_detach(tid);
+    return 0;
 }

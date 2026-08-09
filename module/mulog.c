@@ -33,6 +33,8 @@
 #define FLUSH_MS       256
 #define IDLE_EXIT_MS   4096
 #define DAEMON_WAIT_MS 256
+#define LOG_FILE_MAX   (8 * 1024 * 1024)
+#define LOG_RATE_MAX   512
 
 typedef enum { lvl_info = 0, lvl_warn, lvl_error, lvl_success, lvl_debug } log_level_t;
 
@@ -49,6 +51,7 @@ typedef struct {
     int fd;
     int dirty;
     uint64_t last_used_ms;
+    off_t size;
     char path[PATH_MAX];
 } log_cache_t;
 
@@ -231,7 +234,7 @@ static void detect_module(char *module) {
 
     const char *env = getenv("MUOS_MODULE");
     if (env && *env) {
-        snprintf(module, MODULE_SIZE, "%s", env);
+        snprintf(module, MODULE_SIZE, "%.*s", MODULE_SIZE - 1, env);
         sanitise_module_name(module);
         return;
     }
@@ -246,7 +249,7 @@ static void detect_module(char *module) {
         if (n > 0) {
             buf[n] = '\0';
 
-            snprintf(module, MODULE_SIZE, "%s", buf);
+            snprintf(module, MODULE_SIZE, "%.*s", MODULE_SIZE - 1, buf);
             sanitise_module_name(module);
 
             return;
@@ -316,21 +319,51 @@ static int write_all(const int fd, const char *buf, size_t len) {
     return 0;
 }
 
+static int open_log_file(const char *path, off_t *size) {
+    struct stat st;
+    int fd = open(path, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC | O_NOFOLLOW, 0644);
+    if (fd < 0) return -1;
+
+    if (fstat(fd, &st) != 0 || !S_ISREG(st.st_mode)) {
+        close(fd);
+        return -1;
+    }
+
+    if (st.st_size >= LOG_FILE_MAX) {
+        close(fd);
+
+        char previous[PATH_MAX];
+        const int written = snprintf(previous, sizeof(previous), "%s.1", path);
+        if (written < 0 || (size_t) written >= sizeof(previous)) return -1;
+
+        unlink(previous);
+        if (rename(path, previous) != 0 && errno != ENOENT) return -1;
+
+        fd = open(path, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC | O_NOFOLLOW, 0644);
+        if (fd < 0) return -1;
+        st.st_size = 0;
+    }
+
+    if (size) *size = st.st_size;
+    return fd;
+}
+
 static void make_date_time(char *date_buf, const size_t date_sz, char *time_buf, const size_t time_sz) {
     struct tm tm_now;
     const time_t now = time(NULL);
 
-    localtime_r(&now, &tm_now);
+    if (!localtime_r(&now, &tm_now)) {
+        if (date_buf && date_sz > 0) date_buf[0] = '\0';
+        if (time_buf && time_sz > 0) time_buf[0] = '\0';
+        return;
+    }
 
     if (date_buf) {
-        snprintf(date_buf, date_sz, "%04d_%02d_%02d", tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday);
+        if (strftime(date_buf, date_sz, "%Y_%m_%d", &tm_now) == 0 && date_sz > 0) date_buf[0] = '\0';
     }
 
     if (time_buf) {
-        snprintf(
-            time_buf, time_sz, "%04d-%02d-%02d %02d:%02d:%02d", tm_now.tm_year + 1900, tm_now.tm_mon + 1,
-            tm_now.tm_mday, tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec
-        );
+        if (strftime(time_buf, time_sz, "%Y-%m-%d %H:%M:%S", &tm_now) == 0 && time_sz > 0) time_buf[0] = '\0';
     }
 }
 
@@ -426,7 +459,7 @@ static int direct_write_packet(const log_packet_t *pkt) {
     if (line_len < 0) return -1;
     if ((size_t) line_len >= sizeof(line)) line_len = (int) sizeof(line) - 1;
 
-    const int fd = open(logfile, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+    const int fd = open_log_file(logfile, NULL);
     if (fd < 0) return -1;
 
     if (write_all(fd, line, (size_t) line_len) < 0) {
@@ -459,6 +492,7 @@ static void close_cache_entry(log_cache_t *entry) {
     entry->fd = -1;
     entry->dirty = 0;
     entry->last_used_ms = 0;
+    entry->size = 0;
     entry->path[0] = '\0';
 }
 
@@ -505,7 +539,7 @@ static int daemon_write_packet(log_cache_t cache[], const log_packet_t *pkt) {
         idx = cache_alloc(cache);
         if (idx < 0) return -1;
 
-        cache[idx].fd = open(logfile, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+        cache[idx].fd = open_log_file(logfile, &cache[idx].size);
         if (cache[idx].fd < 0) {
             cache[idx].used = 0;
             return -1;
@@ -525,9 +559,12 @@ static int daemon_write_packet(log_cache_t cache[], const log_packet_t *pkt) {
 
     cache[idx].dirty = 1;
     cache[idx].last_used_ms = now_ms();
+    cache[idx].size += line_len;
 
     emit_stderr((log_level_t) pkt->level, pkt->module, pkt->message);
     show_message(pkt->progress, pkt->title, pkt->message);
+
+    if (cache[idx].size >= LOG_FILE_MAX) close_cache_entry(&cache[idx]);
 
     return 0;
 }
@@ -612,6 +649,9 @@ static int run_daemon(void) {
     pfd.fd = sock;
     pfd.events = POLLIN;
     uint64_t last_rx_ms = now_ms();
+    uint64_t rate_window_ms = last_rx_ms;
+    unsigned rate_count = 0;
+    unsigned rate_dropped = 0;
 
     while (!daemon_stop) {
         const int pr = poll(&pfd, 1, FLUSH_MS);
@@ -634,8 +674,26 @@ static int run_daemon(void) {
                 pkt.message[MAX_BUFFER_SIZE - 1] = '\0';
 
                 sanitise_module_name(pkt.module);
+
+                const uint64_t packet_now = now_ms();
+                if (packet_now - rate_window_ms >= 1000) {
+                    if (rate_dropped > 0) {
+                        char warning[128];
+                        snprintf(warning, sizeof(warning), "Dropped %u excess log messages", rate_dropped);
+                        emit_stderr(lvl_warn, "arborist", warning);
+                    }
+                    rate_window_ms = packet_now;
+                    rate_count = 0;
+                    rate_dropped = 0;
+                }
+                if (rate_count >= LOG_RATE_MAX) {
+                    rate_dropped++;
+                    continue;
+                }
+                rate_count++;
+
                 daemon_write_packet(cache, &pkt);
-                last_rx_ms = now_ms();
+                last_rx_ms = packet_now;
             }
         }
 

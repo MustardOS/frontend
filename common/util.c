@@ -1,6 +1,9 @@
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 #include "util.h"
 #include "exec.h"
@@ -8,6 +11,34 @@
 #include "language.h"
 #include "options.h"
 #include "../module/muxshare.h"
+
+void *mux_malloc(const size_t size) {
+    void *memory = malloc(size);
+    if (!memory && size) {
+        fprintf(stderr, "Out of memory (%zu bytes)\n", size);
+        abort();
+    }
+    return memory;
+}
+
+char *mux_strdup(const char *text) {
+    char *copy = strdup(text);
+    if (!copy) {
+        fprintf(stderr, "Out of memory\n");
+        abort();
+    }
+    return copy;
+}
+
+int safe_atoi(const char *text, const int fallback) {
+    if (!text || !*text) return fallback;
+
+    char *end = NULL;
+    errno = 0;
+    const long value = strtol(text, &end, 10);
+    if (errno || end == text || *end != '\0' || value < INT_MIN || value > INT_MAX) return fallback;
+    return (int) value;
+}
 
 const char *get_random_hex(void) {
     static int seeded = 0;

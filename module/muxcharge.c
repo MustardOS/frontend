@@ -118,8 +118,8 @@ static void battery_task_charge(lv_timer_t *timer __attribute__((unused))) {
     LOG_INFO(mux_module, "Capacity: %d%%", bat_cap);
     LOG_INFO(mux_module, "Voltage: %s", bat_vol);
 
-    snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.muxcharge.capacity, bat_cap);
-    snprintf(voltage_info, sizeof(voltage_info), "%s: %s", lang.muxcharge.voltage, bat_vol);
+    str_format_checked(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.muxcharge.capacity, bat_cap);
+    str_format_checked(voltage_info, sizeof(voltage_info), "%s: %s", lang.muxcharge.voltage, bat_vol);
 
     lv_label_set_text(ui_lbl_capacity_charge, capacity_info);
     lv_label_set_text(ui_lbl_voltage_charge, voltage_info);

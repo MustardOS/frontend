@@ -239,6 +239,11 @@ static void do_remove(void) {
 }
 
 static void handle_dpad_up(void) {
+    if (task_progress_active()) {
+        (void) task_progress_handle_dpad(-1);
+        return;
+    }
+
     if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
 
     if (dialogue_active(&remove_dlg)) {
@@ -253,6 +258,11 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
+    if (task_progress_active()) {
+        (void) task_progress_handle_dpad(+1);
+        return;
+    }
+
     if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
 
     if (dialogue_active(&remove_dlg)) {
@@ -267,6 +277,11 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
+    if (task_progress_active()) {
+        (void) task_progress_handle_dpad_hold(-1);
+        return;
+    }
+
     if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
 
     if (dialogue_active(&remove_dlg)) {
@@ -278,6 +293,11 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
+    if (task_progress_active()) {
+        (void) task_progress_handle_dpad_hold(+1);
+        return;
+    }
+
     if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
 
     if (dialogue_active(&remove_dlg)) {
@@ -353,7 +373,9 @@ static void start_remove(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (msgbox_active || dialogue_active(&remove_dlg) || more_active(&more_menu) || !remove_allowed()) return;
+    if (task_progress_active() || msgbox_active || dialogue_active(&remove_dlg) || more_active(&more_menu)
+        || !remove_allowed())
+        return;
 
     start_remove();
 }
@@ -389,7 +411,7 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (task_progress_active() || msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
     if (dialogue_active(&remove_dlg) || more_active(&more_menu)) return;
 
     more_entry entries[2];
@@ -400,6 +422,14 @@ static void handle_help(void) {
 
     play_sound(snd_info_open);
     more_open(&more_menu, &theme, ui_screen, entries, count);
+}
+
+static void handle_page_up(void) {
+    if (!task_progress_active()) handle_list_nav_page_up();
+}
+
+static void handle_page_down(void) {
+    if (!task_progress_active()) handle_list_nav_page_down();
 }
 
 static void init_elements(void) {
@@ -488,8 +518,8 @@ int muxarchive_main(void) {
                 [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
         .release_handler =
             {
@@ -498,8 +528,8 @@ int muxarchive_main(void) {
         .hold_handler = {
             [mux_input_dpad_up] = handle_dpad_up_hold,
             [mux_input_dpad_down] = handle_dpad_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_l1] = handle_page_up,
+            [mux_input_r1] = handle_page_down,
         }
     };
 

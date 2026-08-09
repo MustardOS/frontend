@@ -694,8 +694,9 @@
     VISUAL(grid_mode_content, "gridmodecontent")                                                                       \
     VISUAL(box_art_hide, "boxarthide")                                                                                 \
     VISUAL(launch_swap, "launch_swap")                                                                                 \
-    VISUAL(shuffle, "shuffle")                                                                                         \
-    VISUAL(launchsplash, "splash")
+    VISUAL(launchsplash, "splash")                                                                                     \
+    VISUAL(pickles_startup_messages, "picklesstartupmessages")                                                         \
+    VISUAL(shuffle, "shuffle")
 
 #define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS
 

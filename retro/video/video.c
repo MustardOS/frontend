@@ -42,6 +42,10 @@ static SDL_Texture *rotate_canvas_tex = NULL;
 static int rotate_canvas_w = 0;
 static int rotate_canvas_h = 0;
 
+static SDL_Texture *output_canvas_tex = NULL;
+static int output_canvas_w = 0;
+static int output_canvas_h = 0;
+
 static int frame_dirty = 0;
 static int frame_skip = 0;
 
@@ -164,7 +168,7 @@ static double compute_src_aspect(void) {
     }
 }
 
-static void draw_sharp_bilinear(SDL_Renderer *renderer) {
+static void draw_sharp_bilinear(SDL_Renderer *renderer, const SDL_Rect *output_rect) {
     const int vis_w = crop_active ? crop_src_rect.w : frame_w;
     const int vis_h = crop_active ? crop_src_rect.h : frame_h;
 
@@ -198,7 +202,7 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
     SDL_Rect crop_src;
 
     if (!sharp_bilinear_tex) {
-        colour_render_pass(renderer, frame_tex, crop_tex_rect(&crop_src, 1), &dest_rect);
+        colour_render_pass(renderer, frame_tex, crop_tex_rect(&crop_src, 1), output_rect);
         return;
     }
 
@@ -207,10 +211,13 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer) {
     SDL_RenderCopy(renderer, frame_tex, NULL, NULL);
     SDL_SetRenderTarget(renderer, prev_target);
 
-    colour_render_pass(renderer, sharp_bilinear_tex, crop_tex_rect(&crop_src, int_scale), &dest_rect);
+    colour_render_pass(renderer, sharp_bilinear_tex, crop_tex_rect(&crop_src, int_scale), output_rect);
 }
 
-static void draw_video_content(SDL_Renderer *renderer) {
+static void draw_video_content(SDL_Renderer *renderer, const int physical_output) {
+    SDL_Rect output_rect = dest_rect;
+    if (physical_output) display_map_logical_rect(&dest_rect, &output_rect);
+
     if (session_settings.border_colour != border_colour_theme) {
         const SDL_Color *c = &border_colours[session_settings.border_colour];
         SDL_SetRenderDrawColor(renderer, c->r, c->g, c->b, c->a);
@@ -218,28 +225,28 @@ static void draw_video_content(SDL_Renderer *renderer) {
     }
 
     if (hw_render_bridge_active()) {
-        hw_render_bridge_draw(renderer, &dest_rect, crop_active ? &crop_src_rect : NULL);
+        hw_render_bridge_draw(renderer, &output_rect, crop_active ? &crop_src_rect : NULL);
     } else if (session_settings.texture_filter == texture_filter_sharp_bilinear) {
-        draw_sharp_bilinear(renderer);
+        draw_sharp_bilinear(renderer, &output_rect);
     } else {
         SDL_Rect crop_src;
         colour_render_pass(
-            renderer, frame_tex, crop_tex_rect(&crop_src, frame_w > 0 ? tex_w / frame_w : 1), &dest_rect
+            renderer, frame_tex, crop_tex_rect(&crop_src, frame_w > 0 ? tex_w / frame_w : 1), &output_rect
         );
     }
 
     int canvas_w, canvas_h;
     get_canvas_size(&canvas_w, &canvas_h);
-    overlay_bridge_render(renderer, canvas_w, canvas_h);
+    overlay_bridge_render(renderer, canvas_w, canvas_h, physical_output);
 }
 
-static void draw_video_background(SDL_Renderer *renderer) {
+static void draw_video_background_logical(SDL_Renderer *renderer, const int physical_output) {
     if (!frame_tex && !hw_render_bridge_active()) return;
 
     const int rot = effective_rotation();
 
     if (rot == video_rotate_0 && !session_settings.mirrored) {
-        draw_video_content(renderer);
+        draw_video_content(renderer, physical_output);
         return;
     }
 
@@ -264,7 +271,7 @@ static void draw_video_background(SDL_Renderer *renderer) {
     }
 
     if (!rotate_canvas_tex) {
-        draw_video_content(renderer);
+        draw_video_content(renderer, physical_output);
         return;
     }
 
@@ -272,16 +279,59 @@ static void draw_video_background(SDL_Renderer *renderer) {
     SDL_SetRenderTarget(renderer, rotate_canvas_tex);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    draw_video_content(renderer);
+    draw_video_content(renderer, 0);
     SDL_SetRenderTarget(renderer, prev_target);
 
-    const SDL_Rect final_dst = {
+    const SDL_Rect logical_dst = {
         (device.mux.width - canvas_w) / 2, (device.mux.height - canvas_h) / 2, canvas_w, canvas_h
     };
+    SDL_Rect final_dst = logical_dst;
+    if (physical_output) display_map_logical_rect(&logical_dst, &final_dst);
 
     const SDL_RendererFlip flip = session_settings.mirrored ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
     SDL_RenderCopyEx(renderer, rotate_canvas_tex, NULL, &final_dst, (double) rot * 90.0, NULL, flip);
+}
+
+static int ensure_output_canvas(SDL_Renderer *renderer) {
+    if (output_canvas_tex && output_canvas_w == device.mux.width && output_canvas_h == device.mux.height) return 1;
+
+    if (output_canvas_tex) SDL_DestroyTexture(output_canvas_tex);
+
+    output_canvas_tex = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
+    );
+    if (!output_canvas_tex) {
+        output_canvas_w = 0;
+        output_canvas_h = 0;
+        LOG_ERROR(mux_module, "Failed to create logical video output texture: %s", SDL_GetError());
+        return 0;
+    }
+
+    SDL_SetTextureBlendMode(output_canvas_tex, SDL_BLENDMODE_BLEND);
+    output_canvas_w = device.mux.width;
+    output_canvas_h = device.mux.height;
+    return 1;
+}
+
+static void draw_video_background(SDL_Renderer *renderer) {
+    if (!display_video_needs_logical_target() || !ensure_output_canvas(renderer)) {
+        draw_video_background_logical(renderer, 1);
+        return;
+    }
+
+    SDL_Texture *previous_target = SDL_GetRenderTarget(renderer);
+    if (SDL_SetRenderTarget(renderer, output_canvas_tex) != 0) {
+        draw_video_background_logical(renderer, 1);
+        return;
+    }
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    draw_video_background_logical(renderer, 0);
+    SDL_SetRenderTarget(renderer, previous_target);
+    display_render_logical_texture(renderer, output_canvas_tex);
 }
 
 static void recompute_dest_rect(void) {
@@ -532,6 +582,14 @@ void video_bridge_shutdown(void) {
 
     rotate_canvas_w = 0;
     rotate_canvas_h = 0;
+
+    if (output_canvas_tex) {
+        SDL_DestroyTexture(output_canvas_tex);
+        output_canvas_tex = NULL;
+    }
+
+    output_canvas_w = 0;
+    output_canvas_h = 0;
 
     free(raw_frame_buf);
     raw_frame_buf = NULL;

@@ -1,6 +1,7 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include "hook.h"
+#include "../common/function_pointer.h"
 #include "../common/log.h"
 
 #define RENDER_SDL "SDL_RenderPresent"
@@ -36,9 +37,9 @@ PFN_vkCreateSwapchainKHR real_vk_create_swapchain_khr = NULL;
 PFN_vkDestroySwapchainKHR real_vk_destroy_swapchain_khr = NULL;
 
 __attribute__((constructor)) static void resolve_symbols(void) {
-    real_sdl_render_present = dlsym(RTLD_NEXT, RENDER_SDL);
-    real_egl_swap_buffers = dlsym(RTLD_NEXT, RENDER_EGL);
-    real_sdl_gl_swap_window = dlsym(RTLD_NEXT, RENDER_GL);
+    MUOS_FUNCTION_ASSIGN(real_sdl_render_present, dlsym(RTLD_NEXT, RENDER_SDL));
+    MUOS_FUNCTION_ASSIGN(real_egl_swap_buffers, dlsym(RTLD_NEXT, RENDER_EGL));
+    MUOS_FUNCTION_ASSIGN(real_sdl_gl_swap_window, dlsym(RTLD_NEXT, RENDER_GL));
 
     if (!real_sdl_render_present) LOG_ERROR("stage", "Failed to hook to renderer: " RENDER_SDL);
     if (!real_egl_swap_buffers) LOG_WARN("stage", "Failed to hook to renderer: " RENDER_EGL);
@@ -63,11 +64,26 @@ vkCreateSwapchainKHR(VkDevice, const VkSwapchainCreateInfoKHR *, const VkAllocat
 
 extern void vkDestroySwapchainKHR(VkDevice, VkSwapchainKHR, const VkAllocationCallbacks *);
 
+#define RETURN_IF_SELF(type, name)                                                                                     \
+    do {                                                                                                               \
+        type self_function = name;                                                                                     \
+        void *self_symbol = NULL;                                                                                      \
+        MUOS_FUNCTION_EXPORT(self_symbol, self_function);                                                              \
+        if (p == self_symbol) return 1;                                                                                \
+    } while (0)
+
 static int is_self_pointer(void *p) {
-    return p == (void *) vkGetInstanceProcAddr || p == (void *) vkGetDeviceProcAddr || p == (void *) vkQueuePresentKHR
-           || p == (void *) vkCreateDevice || p == (void *) vkDestroyDevice || p == (void *) vkCreateSwapchainKHR
-           || p == (void *) vkDestroySwapchainKHR;
+    RETURN_IF_SELF(PFN_vkGetInstanceProcAddr, vkGetInstanceProcAddr);
+    RETURN_IF_SELF(PFN_vkGetDeviceProcAddr, vkGetDeviceProcAddr);
+    RETURN_IF_SELF(PFN_vkQueuePresentKHR, vkQueuePresentKHR);
+    RETURN_IF_SELF(PFN_vkCreateDevice, vkCreateDevice);
+    RETURN_IF_SELF(PFN_vkDestroyDevice, vkDestroyDevice);
+    RETURN_IF_SELF(PFN_vkCreateSwapchainKHR, vkCreateSwapchainKHR);
+    RETURN_IF_SELF(PFN_vkDestroySwapchainKHR, vkDestroySwapchainKHR);
+    return 0;
 }
+
+#undef RETURN_IF_SELF
 
 static int try_resolve_via(void *handle, const char *tag) {
     void *p_gipa = dlsym(handle, RENDER_VK_GIPA);
@@ -93,13 +109,13 @@ static int try_resolve_via(void *handle, const char *tag) {
 
     if (!p_present) return n;
 
-    real_vk_get_instance_proc_addr = (PFN_vkGetInstanceProcAddr) p_gipa;
-    real_vk_get_device_proc_addr = (PFN_vkGetDeviceProcAddr) p_gdpa;
-    real_vk_queue_present_khr = (PFN_vkQueuePresentKHR) p_present;
-    real_vk_create_device = (PFN_vkCreateDevice) p_create_dev;
-    real_vk_destroy_device = (PFN_vkDestroyDevice) p_destroy_dev;
-    real_vk_create_swapchain_khr = (PFN_vkCreateSwapchainKHR) p_create_sc;
-    real_vk_destroy_swapchain_khr = (PFN_vkDestroySwapchainKHR) p_destroy_sc;
+    MUOS_FUNCTION_ASSIGN(real_vk_get_instance_proc_addr, p_gipa);
+    MUOS_FUNCTION_ASSIGN(real_vk_get_device_proc_addr, p_gdpa);
+    MUOS_FUNCTION_ASSIGN(real_vk_queue_present_khr, p_present);
+    MUOS_FUNCTION_ASSIGN(real_vk_create_device, p_create_dev);
+    MUOS_FUNCTION_ASSIGN(real_vk_destroy_device, p_destroy_dev);
+    MUOS_FUNCTION_ASSIGN(real_vk_create_swapchain_khr, p_create_sc);
+    MUOS_FUNCTION_ASSIGN(real_vk_destroy_swapchain_khr, p_destroy_sc);
     return n;
 }
 

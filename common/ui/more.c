@@ -94,11 +94,6 @@ static more_id more_selected(const mux_dialogue *dlg) {
     return (more_id) (dlg->option_data[dlg->selected] % more_count);
 }
 
-static int more_is_enabled(const mux_dialogue *dlg, const int index) {
-    if (!dlg || index < 0 || index >= dlg->option_count) return 0;
-    return dlg->option_data[index] < more_count;
-}
-
 void more_open(mux_more *m, struct theme_config *t, lv_obj_t *parent, const more_entry *entries, const int count) {
     if (!m) return;
 

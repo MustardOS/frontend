@@ -300,6 +300,9 @@ struct mux_lang {
 
     struct {
         char help[MAX_BUFFER_SIZE];
+        char install_anyway[MAX_BUFFER_SIZE];
+        char invalid_manifest[MAX_BUFFER_SIZE];
+        char invalid_manifest_title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         char installed[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
@@ -732,6 +735,7 @@ struct mux_lang {
         char backgroundscale[MAX_BUFFER_SIZE];
         char blackfade[MAX_BUFFER_SIZE];
         char launchsplash[MAX_BUFFER_SIZE];
+        char pickles_startup_messages[MAX_BUFFER_SIZE];
         char shuffle[MAX_BUFFER_SIZE];
         char chime[MAX_BUFFER_SIZE];
         char contentwidth[MAX_BUFFER_SIZE];
@@ -2951,6 +2955,7 @@ struct mux_lang {
             char page_skip[MAX_BUFFER_SIZE];
             char group_content[MAX_BUFFER_SIZE];
             char launchsplash[MAX_BUFFER_SIZE];
+            char pickles_startup_messages[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];
             char box_art_hide[MAX_BUFFER_SIZE];
             char font[MAX_BUFFER_SIZE];
@@ -2965,12 +2970,28 @@ struct mux_lang {
         char sshd[MAX_BUFFER_SIZE];
         char sftpgo[MAX_BUFFER_SIZE];
         char tailscaled[MAX_BUFFER_SIZE];
+        char service[MAX_BUFFER_SIZE];
+        char port[MAX_BUFFER_SIZE];
+        char web_port[MAX_BUFFER_SIZE];
+        char sftp_port[MAX_BUFFER_SIZE];
+        char username[MAX_BUFFER_SIZE];
+        char password[MAX_BUFFER_SIZE];
+        char not_set[MAX_BUFFER_SIZE];
+        char invalid_port[MAX_BUFFER_SIZE];
+        char incomplete_login[MAX_BUFFER_SIZE];
+        char invalid_login[MAX_BUFFER_SIZE];
         struct {
             char ttyd[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char sshd[MAX_BUFFER_SIZE];
             char sftp_go[MAX_BUFFER_SIZE];
             char tailscaled[MAX_BUFFER_SIZE];
+            char service[MAX_BUFFER_SIZE];
+            char port[MAX_BUFFER_SIZE];
+            char web_port[MAX_BUFFER_SIZE];
+            char sftp_port[MAX_BUFFER_SIZE];
+            char username[MAX_BUFFER_SIZE];
+            char password[MAX_BUFFER_SIZE];
         } help;
     } muxwebserv;
 };

@@ -54,6 +54,7 @@ static nav_repeat_t entry_up, entry_down, entry_left, entry_right, entry_backspa
 
 #define DETAIL_CAP 192
 #define RANKING_CAP 10
+#define DETAIL_PREVIEW_DELAY_MS 80
 
 static cheevo_game_entry detail_entries[DETAIL_CAP];
 static const char *detail_labels[DETAIL_CAP];
@@ -73,6 +74,9 @@ static nav_repeat_t detail_up, detail_down;
 static lv_obj_t *detail_preview_panel;
 static lv_obj_t *detail_preview_label;
 static lv_obj_t *detail_preview_glyph;
+static uint32_t detail_preview_due;
+static int detail_preview_pending;
+static char detail_loaded_preview[MAX_BUFFER_SIZE];
 static cheevo_leaderboard_rank ranking_entries[RANKING_CAP];
 static char ranking_label_text[RANKING_CAP][160];
 static const char *ranking_labels[RANKING_CAP];
@@ -739,6 +743,32 @@ static void detail_refresh_preview(void) {
         lv_img_set_src(detail_preview_glyph, NULL);
 
     if (!entry->preview_path[0] || !file_exist(entry->preview_path)) {
+        detail_preview_pending = 0;
+        detail_loaded_preview[0] = '\0';
+        clear_image(ui_img_box);
+        return;
+    }
+
+    if (strcmp(detail_loaded_preview, entry->preview_path) == 0) {
+        detail_preview_pending = 0;
+        return;
+    }
+
+    if (detail_loaded_preview[0]) {
+        detail_loaded_preview[0] = '\0';
+        clear_image(ui_img_box);
+    }
+    detail_preview_due = SDL_GetTicks() + DETAIL_PREVIEW_DELAY_MS;
+    detail_preview_pending = 1;
+}
+
+static void detail_preview_tick(void) {
+    if (!detail_preview_pending || !detail_preview_mode || (int32_t) (SDL_GetTicks() - detail_preview_due) < 0) return;
+    detail_preview_pending = 0;
+    if (current_item_index < 0 || current_item_index >= detail_definition.row_count) return;
+    const cheevo_game_entry *entry = &detail_entries[current_item_index];
+    if (!entry->preview_path[0] || !file_exist(entry->preview_path)) {
+        detail_loaded_preview[0] = '\0';
         clear_image(ui_img_box);
         return;
     }
@@ -751,11 +781,13 @@ static void detail_refresh_preview(void) {
             (int16_t) (device.mux.height - theme.header.height - theme.footer.height - 4 - theme.mux.item.height - 12),
     };
     update_image(ui_img_box, settings);
+    snprintf(detail_loaded_preview, sizeof(detail_loaded_preview), "%s", entry->preview_path);
 }
 
 static void detail_set_preview(const int enabled) {
     detail_preview_mode = enabled;
     if (enabled) {
+        detail_loaded_preview[0] = '\0';
         detail_nav_show_x(0, NULL);
         detail_nav_show_y(0, NULL);
         lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
@@ -771,6 +803,8 @@ static void detail_set_preview(const int enabled) {
                                       {NULL, NULL, 0}});
         detail_refresh_preview();
     } else {
+        detail_preview_pending = 0;
+        detail_loaded_preview[0] = '\0';
         lv_obj_clear_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
         submenu_focus_at(&details, current_item_index);
         lv_obj_add_flag(detail_preview_panel, LV_OBJ_FLAG_HIDDEN);
@@ -799,6 +833,7 @@ static void detail_set_preview(const int enabled) {
 }
 
 static int detail_child_tick(void) {
+    detail_preview_tick();
     const uint64_t mask = entry_nav_mask();
     const uint64_t edge = mask & ~detail_previous_mask;
     const uint64_t vertical = mask & (BIT(0) | BIT(1));
@@ -865,6 +900,8 @@ static int detail_child_tick(void) {
 
 static void detail_closed(void) {
     detail_preview_mode = 0;
+    detail_preview_pending = 0;
+    detail_loaded_preview[0] = '\0';
     leaderboard_waiting = 0;
     cheevo_set_achievement_preferences(current_detail_sort, current_detail_mode);
     clear_image(ui_img_box);

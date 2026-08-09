@@ -663,6 +663,10 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, box_art_hide, lang.muxcontent.grid_mode_art, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, launch_swap, lang.muxcontent.launch_swap.title, "launch_swap", launch_swap_options, 4);
     INIT_OPTION_ITEM(-1, visual, launchsplash, lang.muxcontent.launch_splash, "splash", disabled_enabled, 2);
+    INIT_OPTION_ITEM(
+        -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
+        disabled_enabled, 2
+    );
     INIT_OPTION_ITEM(-1, visual, shuffle, lang.muxcontent.shuffle, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, catalogue, lang.muxcustom.catalogue, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, config, lang.muxcustom.config, "config", NULL, 0);
@@ -785,10 +789,10 @@ static void init_navigation_group(void) {
         {lang.muxvisual.section.header_bar, 0, 7},  {lang.muxvisual.section.appearance, 7, 8},
         {lang.muxvisual.section.labels, 15, 7},     {lang.muxvisual.section.font, 22, 6},
         {lang.muxvisual.section.folders, 28, 6},    {lang.muxvisual.section.content, 34, 8},
-        {lang.muxvisual.section.box_art, 42, 8},    {lang.muxvisual.section.launching, 50, 3},
-        {lang.muxcustom.section.packages, 53, 3},   {lang.muxcustom.section.theme, 56, 4},
-        {lang.muxcustom.section.layout, 60, 4},     {lang.muxcustom.section.glyphs, 64, 4},
-        {lang.muxcustom.section.background, 68, 3}, {lang.muxcustom.section.audio, 71, 5},
+        {lang.muxvisual.section.box_art, 42, 8},    {lang.muxvisual.section.launching, 50, 4},
+        {lang.muxcustom.section.packages, 54, 3},   {lang.muxcustom.section.theme, 57, 4},
+        {lang.muxcustom.section.layout, 61, 4},     {lang.muxcustom.section.glyphs, 65, 4},
+        {lang.muxcustom.section.background, 69, 3}, {lang.muxcustom.section.audio, 72, 5},
     };
 
     list_frame_init(
@@ -1069,6 +1073,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, page_skip, "visual/pageskip", INT, 0);
     CHECK_AND_SAVE_STD(visual, group_content, "visual/groupcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
+    CHECK_AND_SAVE_STD(visual, pickles_startup_messages, "visual/pickles_startup_messages", INT, 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
 
     // Stored the other way round to how it reads on screen
@@ -1293,6 +1298,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_hide
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launch_swap
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launchsplash
+    {NULL, NULL, &kiosk_pass, menu_option, NULL},
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // shuffle
     {"catalogue", "package/catalogue", &kiosk.custom.catalogue, menu_catalogue, NULL},
     {"config", "package/config", &kiosk.custom.raconfig, menu_config, NULL},

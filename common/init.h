@@ -23,7 +23,6 @@ extern int is_blank;
 extern int config_auth;
 extern int idle_state_exists;
 extern int notify_drop_exists;
-extern int safe_quit_exists;
 extern int hdmi_refresh_exists;
 extern int blank_exists;
 extern unsigned idle_state_changes;
@@ -59,6 +58,7 @@ void timer_resume_all(void);
 void timer_destroy_all(void);
 
 void init_fonts(void);
+
 void init_fonts_preview(void);
 
 void init_theme(int panel_init, int long_mode);

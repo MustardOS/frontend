@@ -15,6 +15,7 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include "../../common/function_pointer.h"
 #include "../../common/log.h"
 #include "../../common/inotify.h"
 #include "../common/common.h"
@@ -30,7 +31,6 @@
 #include "../overlay/battery.h"
 #include "../overlay/bright.h"
 #include "../overlay/volume.h"
-#include "../overlay/notif.h"
 
 #define RENDER_PATHS 8
 
@@ -138,9 +138,9 @@ static int (*real_drmModePageFlip)(int, uint32_t, uint32_t, uint32_t, void *) = 
 static pthread_once_t hook_once = PTHREAD_ONCE_INIT;
 
 static void resolve_hooks_once(void) {
-    real_egl_swap_buffers = dlsym(RTLD_NEXT, "eglSwapBuffers");
-    real_drmModeAtomicCommit = dlsym(RTLD_NEXT, "drmModeAtomicCommit");
-    real_drmModePageFlip = dlsym(RTLD_NEXT, "drmModePageFlip");
+    MUOS_FUNCTION_ASSIGN(real_egl_swap_buffers, dlsym(RTLD_NEXT, "eglSwapBuffers"));
+    MUOS_FUNCTION_ASSIGN(real_drmModeAtomicCommit, dlsym(RTLD_NEXT, "drmModeAtomicCommit"));
+    MUOS_FUNCTION_ASSIGN(real_drmModePageFlip, dlsym(RTLD_NEXT, "drmModePageFlip"));
 
     if (!real_egl_swap_buffers) LOG_ERROR("stage", "Failed to hook eglSwapBuffers");
     if (!real_drmModeAtomicCommit) LOG_WARN("stage", "drmModeAtomicCommit not found");
@@ -219,7 +219,7 @@ static int dl_init_result = 0;
 
 #define LOAD(handle, sym, name)                                                                                        \
     do {                                                                                                               \
-        *(void **) &dl.sym = dlsym(dl.handle, name);                                                                   \
+        MUOS_FUNCTION_ASSIGN(dl.sym, dlsym(dl.handle, name));                                                          \
         if (!dl.sym) {                                                                                                 \
             LOG_INFO("stage", "%s missing symbol: %s", #handle, name);                                                 \
             return 0;                                                                                                  \
@@ -1808,37 +1808,6 @@ static void k_rebuild_overlay_batch(const k_overlay_state_t *st) {
     k_overlay_valid = 1;
 }
 
-static GLuint k_dim_tex = 0;
-
-static void k_ensure_dim_tex(void) {
-    static SDL_Color last_colour = {0, 0, 0, 0};
-
-    const SDL_Color *c = &notif_cfg.dim_colour;
-    const Uint8 pixel[4] = {c->r, c->g, c->b, 255};
-
-    if (!k_dim_tex) {
-        glGenTextures(1, &k_dim_tex);
-        glBindTexture(GL_TEXTURE_2D, k_dim_tex);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-        last_colour = *c;
-
-        return;
-    }
-
-    if (c->r == last_colour.r && c->g == last_colour.g && c->b == last_colour.b) return;
-
-    glBindTexture(GL_TEXTURE_2D, k_dim_tex);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-
-    last_colour = *c;
-}
-
 typedef EGLImageKHR (*PFN_eglCreateImageKHR_)(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint *);
 
 typedef EGLBoolean (*PFN_eglDestroyImageKHR_)(EGLDisplay, EGLImageKHR);
@@ -2003,10 +1972,13 @@ static int pl_find_overlay_plane(int fd, uint32_t crtc_id, int crtc_idx) {
 }
 
 static int pl_resolve_egl_ext(void) {
-    pl.eglCreateImageKHR_p = (PFN_eglCreateImageKHR_) eglGetProcAddress("eglCreateImageKHR");
-    pl.eglDestroyImageKHR_p = (PFN_eglDestroyImageKHR_) eglGetProcAddress("eglDestroyImageKHR");
-    pl.glEGLImageTargetTexture2DOES_p =
-        (PFN_glEGLImageTargetTexture2DOES_) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+    void (*create_image)(void) = eglGetProcAddress("eglCreateImageKHR");
+    void (*destroy_image)(void) = eglGetProcAddress("eglDestroyImageKHR");
+    void (*image_target_texture)(void) = eglGetProcAddress("glEGLImageTargetTexture2DOES");
+
+    MUOS_FUNCTION_EXPORT(pl.eglCreateImageKHR_p, create_image);
+    MUOS_FUNCTION_EXPORT(pl.eglDestroyImageKHR_p, destroy_image);
+    MUOS_FUNCTION_EXPORT(pl.glEGLImageTargetTexture2DOES_p, image_target_texture);
 
     return pl.eglCreateImageKHR_p && pl.eglDestroyImageKHR_p && pl.glEGLImageTargetTexture2DOES_p;
 }
@@ -2819,7 +2791,6 @@ static int k_stage_has_work(int base_disabled, int rot) {
         return 1;
     if (bright_is_visible()) return 1;
     if (volume_is_visible()) return 1;
-    if (notif_is_visible()) return 1;
     if (k_content_pass_needed(rot)) return 1;
     if (shader_get()) return 1;
 
@@ -2928,9 +2899,8 @@ static void k_stage_draw(int fb_w, int fb_h, GLint dst_fbo) {
     }
 
     const int draw_overlay = k_overlay_valid && k_overlay_tex;
-    const int draw_notif = notif_is_visible() && gl_notif_prepare(fb_w, fb_h);
 
-    if (draw_overlay || draw_notif) {
+    if (draw_overlay) {
         glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) dst_fbo);
         glViewport(0, 0, fb_w, fb_h);
         glDisable(GL_SCISSOR_TEST);
@@ -2938,16 +2908,7 @@ static void k_stage_draw(int fb_w, int fb_h, GLint dst_fbo) {
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        if (draw_overlay) k_draw_quad_overlay(k_overlay_tex, k_fullscreen_vtx, 1.0f);
-
-        if (draw_notif) {
-            if (gl_notif_needs_dim()) {
-                k_ensure_dim_tex();
-                if (k_dim_tex) k_draw_quad_overlay(k_dim_tex, k_fullscreen_vtx, (float) notif_cfg.dim_alpha / 255.0f);
-            }
-
-            k_draw_quad_overlay(gl_notif_get_tex(), (const k_vtx_t *) gl_notif_get_vtx(), 1.0f);
-        }
+        k_draw_quad_overlay(k_overlay_tex, k_fullscreen_vtx, 1.0f);
     }
 
     k_restore_state(&st);
@@ -2971,11 +2932,6 @@ static void k_on_context_changed(void) {
     k_destroy_target(&k_output_tex, &k_output_fbo, &k_output_w, &k_output_h);
     k_destroy_target(&k_overlay_tex, &k_overlay_fbo, &k_overlay_w, &k_overlay_h);
     k_destroy_target(&k_shader_work_tex, &k_shader_work_fbo, &k_shader_work_w, &k_shader_work_h);
-
-    if (k_dim_tex) {
-        glDeleteTextures(1, &k_dim_tex);
-        k_dim_tex = 0;
-    }
 
     k_destroy_layer(&k_layer_base);
     for (int i = 0; i < INDICATOR_STEPS; i++) {
@@ -3145,7 +3101,6 @@ EGLBoolean eglSwapBuffers(EGLDisplay dpy, EGLSurface surface) {
     battery_overlay_update();
     bright_overlay_update();
     volume_overlay_update();
-    notif_update();
     shader_reload();
 
     if (k_render_path == RENDER_PATH_UNKNOWN) {

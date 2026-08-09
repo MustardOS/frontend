@@ -249,10 +249,14 @@ static void theme_download_finished(const int result) {
     char output_path[MAX_BUFFER_SIZE];
     snprintf(output_path, sizeof(output_path), RUN_STORAGE_PATH "theme/%s", theme_items[current_item_index].name);
 
+    if (extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished) != 0) {
+        play_sound(snd_error);
+        toast_message(lang.muxthemedown.error_get_data, tst_wait_s);
+        return;
+    }
+
     theme_extracting = 1;
     block_input = 1;
-
-    extract_zip_to_dir_with_progress(theme_path, output_path, theme_extraction_finished);
 }
 
 static void finish_extract(void) {
@@ -277,7 +281,6 @@ static void refresh_theme_previews_finished(const int result) {
 
 static void refresh_theme_data_finished(const int result) {
     if (result == 0) {
-        if (file_exist(preview_zip_path)) remove(preview_zip_path);
         set_download_callbacks(refresh_theme_previews_finished);
         initiate_download(config.theme.download.preview, preview_zip_path, 1, lang.muxthemedown.down.preview);
     } else {
@@ -287,7 +290,6 @@ static void refresh_theme_data_finished(const int result) {
 }
 
 static void update_theme_data(void) {
-    if (file_exist(theme_data_local_path)) remove(theme_data_local_path);
     set_download_callbacks(refresh_theme_data_finished);
     initiate_download(config.theme.download.data, theme_data_local_path, 1, lang.muxthemedown.down.data);
 }

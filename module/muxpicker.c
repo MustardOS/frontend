@@ -323,7 +323,7 @@ static void handle_y(void) {
 
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(
-        picker_script, sizeof(picker_script), OPT_PATH "/script/package/%s.sh", get_last_subdir(picker_type, '/', 1)
+        picker_script, sizeof(picker_script), OPT_PATH "script/package/%s.sh", get_last_subdir(picker_type, '/', 1)
     );
 
     const char *argv[] = {picker_script, "save", "-", NULL};

@@ -969,7 +969,7 @@ static void build_reel(void) {
 
     char ctitle[128];
     char ver[64] = "MustardOS";
-    snprintf(ver, sizeof(ver), "%s", config.system.version);
+    snprintf(ver, sizeof(ver), "%.63s", config.system.version);
 
     for (char *p = ver; *p; ++p)
         if (*p == '_') *p = ' ';

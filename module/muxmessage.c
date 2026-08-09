@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxmessage.h"
+#include "../common/message_args.h"
 #include "../common/inotify.h"
 
 #define FINISH_FILE   "/tmp/msg_finish"
@@ -86,32 +87,19 @@ static void load_messages(const char *filename) {
 }
 
 int main(const int argc, char *argv[]) {
-    char *default_message = NULL;
-    char *live_file = NULL;
-
-    int progress = -1;
+    muxmessage_args args;
     int is_message_file = 0;
-    int delay = 0;
 
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-d") == 0 && i + 1 < argc) {
-            delay = safe_atoi(argv[++i], 0);
-        } else if (strcmp(argv[i], "-l") == 0 && i + 1 < argc) {
-            live_file = argv[++i];
-        } else if (progress == -1) {
-            progress = safe_atoi(argv[i], 0);
-        } else if (!default_message) {
-            default_message = argv[i];
-        } else {
-            fprintf(stderr, "Unknown argument: %s\n", argv[i]);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    if (progress == -1 || (!default_message && !live_file)) {
+    if (muxmessage_args_parse(argc, argv, &args) != 0) {
+        if (args.unknown_option) fprintf(stderr, "Unknown argument: %s\n", args.unknown_option);
         fprintf(stderr, "Usage: %s <progress> <message or message file> [-d <delay>] [-l <live file>]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    char *default_message = args.message;
+    char *live_file = args.live_file;
+    const int progress = args.progress;
+    const int delay = args.delay;
 
     load_device(&device);
     load_config(&config);
@@ -128,15 +116,17 @@ int main(const int argc, char *argv[]) {
 
     if (config.boot.factory_reset) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dim, mux_module);
+        int wall_ready = str_format_checked(
+            init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dim, mux_module
+        );
 
-        if (!file_exist(init_wall))
-            snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
+        if (!wall_ready || !file_exist(init_wall))
+            wall_ready =
+                str_format_checked(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
 
         char lv_wall[MAX_BUFFER_SIZE];
-        snprintf(lv_wall, sizeof(lv_wall), "M:%s", init_wall);
-
-        lv_img_set_src(ui_img_wall, lv_wall);
+        if (wall_ready && str_format_checked(lv_wall, sizeof(lv_wall), "M:%s", init_wall))
+            lv_img_set_src(ui_img_wall, lv_wall);
     } else {
         load_wallpaper(ui_scr_message, NULL, ui_img_wall, wall_general);
     }

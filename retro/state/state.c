@@ -223,7 +223,7 @@ int state_save(const char *path) {
     return 0;
 }
 
-int state_load(const char *path) {
+int state_load(const char *path, const int show_message) {
     if (!saves_supported) return -1;
     if (!current_core.retro_unserialize) return -1;
     if (cheevo_hardcore_active()) {
@@ -231,7 +231,7 @@ int state_load(const char *path) {
         return -1;
     }
 
-    loading_message_show(lang.muxretro.content_resuming);
+    if (show_message) loading_message_show(lang.muxretro.content_resuming);
     governor_boost_begin("state load");
 
     const uint64_t load_start = SDL_GetPerformanceCounter();
@@ -254,7 +254,7 @@ int state_load(const char *path) {
         return -1;
     }
 
-    void *buf = malloc((size_t) size);
+    uint8_t *buf = malloc((size_t) size);
     if (!buf) {
         fclose(f);
         governor_boost_end();

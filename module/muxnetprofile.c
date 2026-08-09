@@ -148,23 +148,23 @@ static int read_ip(char *buf) {
 
     if (!is_safe_iface(device.network.interface)) return 0;
 
-    char cmd[MAX_BUFFER_SIZE];
-    snprintf(
-        cmd, sizeof(cmd), "ip addr show %s 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1",
-        device.network.interface
-    );
-    FILE *pipe = popen(cmd, "r");
+    const char *const argv[] = {"ip", "addr", "show", device.network.interface, NULL};
+    char *output = get_execute_result_argv(argv, -1);
+    if (!output) return 0;
 
-    if (!pipe) return 0;
-
-    const int ok = fgets(buf, IP_OCTET, pipe) != NULL;
-    pclose(pipe);
-    if (!ok) return 0;
-
-    char *p = buf;
-    while (*p && *p != '\n' && *p != '\r')
-        p++;
-    *p = '\0';
+    buf[0] = '\0';
+    char *save = NULL;
+    for (char *line = strtok_r(output, "\r\n", &save); line; line = strtok_r(NULL, "\r\n", &save)) {
+        while (*line && isspace((unsigned char) *line))
+            line++;
+        if (strncmp(line, "inet ", 5) != 0) continue;
+        line += 5;
+        char *end = strpbrk(line, "/ \t");
+        if (end) *end = '\0';
+        snprintf(buf, IP_OCTET, "%s", line);
+        break;
+    }
+    free(output);
 
     return *buf != '\0';
 }

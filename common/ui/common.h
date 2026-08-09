@@ -42,6 +42,8 @@ void fade_in_instant(void);
 
 void fade_out_screen(void);
 
+void fade_out_screen_forced(void);
+
 void init_ui_common_screen(
     const struct theme_config *theme, const struct mux_device *device, const struct mux_lang *lang, const char *title
 );

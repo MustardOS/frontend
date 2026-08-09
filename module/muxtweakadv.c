@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/contract.h"
 #include "../common/ui/list_frame.h"
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxtweakadv.h"
@@ -88,7 +89,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, retro_wait, "settings/advanced/retrowait", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, retro_free, "settings/advanced/retrofree", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, retro_cache, "settings/advanced/retrocache", INT, 0);
-    CHECK_AND_SAVE_STD(tweakadv, activity, "settings/advanced/activity", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, activity, MUOS_SETTING_ACTIVITY, INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, verbose, "settings/advanced/verbose", INT, 0);
 
     do {

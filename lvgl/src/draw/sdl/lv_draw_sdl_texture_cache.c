@@ -130,13 +130,13 @@ lv_draw_sdl_cache_key_head_img_t *lv_draw_sdl_texture_img_key_create(const void 
         key = SDL_malloc(key_size);
         SDL_memcpy(key, &header, sizeof(header));
         /*Copy string content as key value*/
-        SDL_memcpy(key + sizeof(header), src, srclen);
+        SDL_memcpy((uint8_t *) key + sizeof(header), src, srclen);
     } else {
         key_size = sizeof(header) + sizeof(void *);
         key = SDL_malloc(key_size);
         SDL_memcpy(key, &header, sizeof(header));
         /*Copy address number as key value*/
-        SDL_memcpy(key + sizeof(header), &src, sizeof(void *));
+        SDL_memcpy((uint8_t *) key + sizeof(header), &src, sizeof(void *));
     }
     *size = key_size;
     return (lv_draw_sdl_cache_key_head_img_t *) key;

@@ -52,13 +52,21 @@ static int safe_default(const char *fallback) {
 int task_prompt_show(const task_event *prompt) {
     if (!prompt || !theme_ref || !parent_ref) return -1;
 
-    if (strcasecmp(prompt->prompt_type, "confirm") != 0 && strcasecmp(prompt->prompt_type, "choice") != 0) {
+    const int update_manifest = strcasecmp(prompt->prompt_type, "update_manifest") == 0;
+
+    if (!update_manifest && strcasecmp(prompt->prompt_type, "confirm") != 0
+        && strcasecmp(prompt->prompt_type, "choice") != 0) {
         LOG_WARN("task", "unsupported prompt type '%s'", prompt->prompt_type);
         return -1;
     }
 
     if (prompt->option_count <= 0) {
         LOG_WARN("task", "prompt '%s' arrived without any options", prompt->id);
+        return -1;
+    }
+
+    if (update_manifest && prompt->option_count != 2) {
+        LOG_WARN("task", "update manifest prompt '%s' requires two options", prompt->id);
         return -1;
     }
 
@@ -79,9 +87,18 @@ int task_prompt_show(const task_event *prompt) {
     for (int i = 0; i < option_count; i++)
         labels[i] = options[i];
 
+    const char *title = prompt->title[0] ? prompt->title : lang.generic.confirm;
+    const char *message = prompt->message;
+
+    if (update_manifest && option_count == 2) {
+        labels[0] = lang.muxarchive.install_anyway;
+        labels[1] = lang.generic.cancel;
+        title = lang.muxarchive.invalid_manifest_title;
+        message = lang.muxarchive.invalid_manifest;
+    }
+
     dialogue_init(
-        &dlg, theme_ref, parent_ref, prompt->title[0] ? prompt->title : lang.generic.confirm, prompt->message, labels,
-        option_count, lang.generic.select, lang.generic.cancel
+        &dlg, theme_ref, parent_ref, title, message, labels, option_count, lang.generic.select, lang.generic.cancel
     );
 
     dialogue_show(&dlg);

@@ -6,7 +6,7 @@
 
 void extraction_poll(void);
 
-void extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result));
+int extract_zip_to_dir_with_progress(const char *filename, const char *output, void (*callback)(char *result));
 
 int extract_zip_to_dir(const char *filename, const char *output);
 

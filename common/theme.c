@@ -13,6 +13,7 @@
 #include "fileio.h"
 #include "strutil.h"
 #include "ini.h"
+#include "ui/common.h"
 #include "ui/glyph.h"
 
 const char *theme_base;
@@ -1356,8 +1357,10 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         theme->list_default.radius = max_radius;
     }
 
-    if (theme->list_default.background_gradient < 0 || theme->list_default.background_gradient > LV_GRAD_DIR_HOR) theme->list_default.background_gradient = 0;
-    if (theme->list_focus.background_gradient < 0 || theme->list_focus.background_gradient > LV_GRAD_DIR_HOR) theme->list_focus.background_gradient = 0;
+    if (theme->list_default.background_gradient < 0 || theme->list_default.background_gradient > LV_GRAD_DIR_HOR)
+        theme->list_default.background_gradient = 0;
+    if (theme->list_focus.background_gradient < 0 || theme->list_focus.background_gradient > LV_GRAD_DIR_HOR)
+        theme->list_focus.background_gradient = 0;
 
     apply_accessibility(theme);
 }
@@ -1610,7 +1613,7 @@ void apply_theme_list_glyph(
     if (get_glyph_path(screen_name, item_glyph, glyph_image_embed, MAX_BUFFER_SIZE)) {
         set_list_glyph_image(ui_lbl_item_glyph, glyph_image_embed);
     } else {
-        lv_img_set_src(ui_lbl_item_glyph, NULL);
+        lv_img_set_src(ui_lbl_item_glyph, &ui_img_blank);
     }
 
     lv_obj_remove_style(ui_lbl_item_glyph, &style_list_glyph_default, MU_OBJ_MAIN_DEFAULT);
@@ -1783,9 +1786,7 @@ void init_panel_style(const struct theme_config *theme) {
     lv_style_set_bg_opa(&style_list_panel_default, theme->list_default.background_alpha);
 
     lv_style_set_bg_grad_color(&style_list_panel_default, lv_color_hex(theme->list_default.background_gradient));
-    lv_style_set_bg_grad_dir(
-        &style_list_panel_default, theme->list_default.gradient_direction
-    );
+    lv_style_set_bg_grad_dir(&style_list_panel_default, theme->list_default.gradient_direction);
     lv_style_set_bg_grad_stop(&style_list_panel_default, theme->list_default.gradient_stop);
 
     lv_style_set_pad_left(&style_list_panel_default, 0);
@@ -1808,9 +1809,7 @@ void init_panel_style(const struct theme_config *theme) {
     lv_style_set_bg_opa(&style_list_panel_focused, theme->list_focus.background_alpha);
 
     lv_style_set_bg_grad_color(&style_list_panel_focused, lv_color_hex(theme->list_focus.background_gradient));
-    lv_style_set_bg_grad_dir(
-        &style_list_panel_focused, theme->list_focus.gradient_direction
-    );
+    lv_style_set_bg_grad_dir(&style_list_panel_focused, theme->list_focus.gradient_direction);
     lv_style_set_bg_grad_stop(&style_list_panel_focused, theme->list_focus.gradient_stop);
 }
 

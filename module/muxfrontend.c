@@ -125,10 +125,9 @@ static void quit_watchdog(lv_timer_t *timer __attribute__((unused))) {
     if (shutting_down) return;
     inotify_check(ino_proc);
 
-    if (safe_quit_exists || quit_signal) {
+    if (quit_signal) {
         LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal);
         shutting_down = 1;
-        safe_quit_exists = 0;
 
         cleanup_all();
         exit(0);

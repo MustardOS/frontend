@@ -51,7 +51,8 @@ static void chrony_refresh(void) {
     const time_t now = time(NULL);
     if (now == chrony_last) return;
 
-    char *out = get_execute_result("/opt/muos/bin/chronyc tracking", -1);
+    const char *const argv[] = {"/opt/muos/bin/chronyc", "tracking", NULL};
+    char *out = get_execute_result_argv(argv, -1);
     if (!out) {
         chrony_raw[0] = '\0';
     } else {

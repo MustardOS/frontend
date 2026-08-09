@@ -1,13 +1,11 @@
 #include <fcntl.h>
-#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <linux/fb.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include "../common/screenshot.h"
-#include "../common/util.h"
+#include "../common/fbset_args.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/log.h"
@@ -183,125 +181,62 @@ void print_help(const char *prog) {
 }
 
 int main(int argc, char *argv[]) {
-    int opt;
-    int width = 0, height = 0, depth = 0;
-    int hsync_len = 0, vsync_len = 0, ignore_dh = 2;
-    int show_modes = 0, clear_screen = 0;
-    int rotation = -1, show_info = 0;
-
-    const char *grab_path = NULL;
-    screenshot_mode grab_mode = screenshot_auto;
-
-    static struct option long_options[] = {{"width", required_argument, 0, 'w'},
-                                           {"height", required_argument, 0, 'h'},
-                                           {"depth", required_argument, 0, 'd'},
-                                           {"hsync", required_argument, 0, 'x'},
-                                           {"vsync", required_argument, 0, 'y'},
-                                           {"rotate", required_argument, 0, 'r'},
-                                           {"ignore", no_argument, 0, 'i'},
-                                           {"modes", no_argument, 0, 'm'},
-                                           {"show", no_argument, 0, 's'},
-                                           {"clear", no_argument, 0, 'c'},
-                                           {"grab", required_argument, 0, 'g'},
-                                           {"method", required_argument, 0, 'M'},
-                                           {"verbose", no_argument, 0, 'v'},
-                                           {"help", no_argument, 0, 'H'},
-                                           {0, 0, 0, 0}};
-
-    while ((opt = getopt_long(argc, argv, "w:h:d:x:y:r:imscg:M:vH", long_options, NULL)) != -1) {
-        switch (opt) {
-            case 'w':
-                width = safe_atoi(optarg, 0);
-                break;
-            case 'h':
-                height = safe_atoi(optarg, 0);
-                break;
-            case 'd':
-                depth = safe_atoi(optarg, 0);
-                break;
-            case 'x':
-                hsync_len = safe_atoi(optarg, 0);
-                break;
-            case 'y':
-                vsync_len = safe_atoi(optarg, 0);
-                break;
-            case 'r':
-                rotation = safe_atoi(optarg, 0);
-                break;
-            case 'i':
-                ignore_dh = 1;
-                break;
-            case 'm':
-                show_modes = 1;
-                break;
-            case 's':
-                show_info = 1;
-                break;
-            case 'c':
-                clear_screen = 1;
-                break;
-            case 'g':
-                grab_path = optarg;
-                break;
-            case 'M':
-                if (!strcmp(optarg, "fbdev"))
-                    grab_mode = screenshot_fbdev;
-                else if (!strcmp(optarg, "drm"))
-                    grab_mode = screenshot_drm;
-                else
-                    grab_mode = screenshot_auto;
-                break;
-            case 'v':
-                verbose = 1;
-                break;
-            case 'H':
-                print_help(argv[0]);
-                return 0;
-            default:
-                print_help(argv[0]);
-                return 1;
-        }
+    mufbset_args args;
+    if (mufbset_args_parse(argc, argv, &args) != 0) {
+        if (args.invalid_argument) fprintf(stderr, "Invalid argument: %s\n", args.invalid_argument);
+        print_help(argv[0]);
+        return 1;
     }
+    if (args.help) {
+        print_help(argv[0]);
+        return 0;
+    }
+    verbose = args.verbose;
 
     load_device(&device);
     load_config(&config);
 
-    if (grab_path) {
+    if (args.grab_path) {
         screenshot_hue hue = {
             .red = device.colour.red,
             .green = device.colour.green,
             .blue = device.colour.blue,
         };
 
-        if (screenshot_save(grab_path, grab_mode, hue) < 0) {
+        if (screenshot_save(args.grab_path, args.grab_mode, hue) < 0) {
             LOG_ERROR(module, "Failed to capture screenshot");
             return 1;
         }
 
-        if (verbose) LOG_SUCCESS(module, "Screenshot saved to %s", grab_path);
+        if (verbose) LOG_SUCCESS(module, "Screenshot saved to %s", args.grab_path);
 
         return 0;
     }
 
-    if (show_modes) {
+    if (args.show_modes) {
         print_available_modes();
         return 0;
     }
 
-    if (show_info) {
+    if (args.show_info) {
         show_current_mode();
         return 0;
     }
 
-    if (clear_screen) {
+    if (args.clear_screen) {
         if (clear_framebuffer() < 0) {
             LOG_ERROR(module, "Failed to clear the framebuffer");
             return 1;
         }
     }
 
-    if (width > 0 || height > 0 || depth > 0 || hsync_len > 0 || vsync_len > 0 || rotation >= 0) {
-        if (set_framebuffer(width, height, depth, hsync_len, vsync_len, ignore_dh, rotation) == 0) {
+    if (args.width > 0 || args.height > 0 || args.depth > 0 || args.hsync_len > 0 || args.vsync_len > 0
+        || args.rotation >= 0) {
+        if (set_framebuffer(
+                args.width, args.height, args.depth, args.hsync_len, args.vsync_len, args.ignore_double_height,
+                args.rotation
+            )
+            == 0) {
             if (verbose) LOG_SUCCESS(module, "Framebuffer updated successfully");
         } else {
             LOG_ERROR(module, "Failed to update framebuffer configuration");

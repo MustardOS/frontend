@@ -1,22 +1,30 @@
 #include <dirent.h>
+#include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include "config.h"
+#include "config_value.h"
 #include "options.h"
 
 typedef struct {
     const char *dir;
     const char *key;
     size_t offset;
-    int is_str; // 0 = int16_t, 1 = char
+    int kind;
     union {
         int16_t i;
         const char *s;
     } fallback;
+    int has_range;
+    int16_t minimum;
+    int16_t maximum;
 } cfg_field;
+
+enum { cfg_i16 = 0, cfg_text, cfg_port };
 
 #define CFG_OFF(member) offsetof(struct mux_config, member)
 
@@ -168,19 +176,19 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/hdmi", "scan", CFG_OFF(settings.hdmi.scan), 0, {.i = 0}},
 
     // settings/network/
-    {CONF_CONFIG_PATH "settings/network", "monitor", CFG_OFF(settings.network.monitor), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "settings/network", "boot", CFG_OFF(settings.network.boot), 0, {.i = 1}},
-    {CONF_CONFIG_PATH "settings/network", "wake", CFG_OFF(settings.network.wake), 0, {.i = 1}},
-    {CONF_CONFIG_PATH "settings/network", "compat", CFG_OFF(settings.network.compat), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "settings/network", "async_load", CFG_OFF(settings.network.async_load), 0, {.i = 1}},
-    {CONF_CONFIG_PATH "settings/network", "con_retry", CFG_OFF(settings.network.con_retry), 0, {.i = 1}},
-    {CONF_CONFIG_PATH "settings/network", "wait_timer", CFG_OFF(settings.network.wait), 0, {.i = 5}},
-    {CONF_CONFIG_PATH "settings/network", "mod_retry", CFG_OFF(settings.network.mod_retry), 0, {.i = 1}},
-    {CONF_CONFIG_PATH "settings/network", "proxy_enabled", CFG_OFF(settings.network.proxy_enabled), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "settings/network", "proxy_type", CFG_OFF(settings.network.proxy_type), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/network", "monitor", CFG_OFF(settings.network.monitor), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "boot", CFG_OFF(settings.network.boot), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "wake", CFG_OFF(settings.network.wake), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "compat", CFG_OFF(settings.network.compat), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "async_load", CFG_OFF(settings.network.async_load), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "con_retry", CFG_OFF(settings.network.con_retry), 0, {.i = 1}, 1, 1, 30},
+    {CONF_CONFIG_PATH "settings/network", "wait_timer", CFG_OFF(settings.network.wait), 0, {.i = 5}, 1, 1, 30},
+    {CONF_CONFIG_PATH "settings/network", "mod_retry", CFG_OFF(settings.network.mod_retry), 0, {.i = 1}, 1, 1, 30},
+    {CONF_CONFIG_PATH "settings/network", "proxy_enabled", CFG_OFF(settings.network.proxy_enabled), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "proxy_type", CFG_OFF(settings.network.proxy_type), 0, {.i = 0}, 1, 0, 2},
     {CONF_CONFIG_PATH "settings/network", "proxy_server", CFG_OFF(settings.network.proxy_server), 1, {.s = ""}},
     {CONF_CONFIG_PATH "settings/network", "proxy_noproxy", CFG_OFF(settings.network.proxy_noproxy), 1, {.s = "localhost,127.0.0.1,::1"}},
-    {CONF_CONFIG_PATH "settings/network", "system_dns", CFG_OFF(settings.network.system_dns), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/network", "system_dns", CFG_OFF(settings.network.system_dns), 0, {.i = 0}, 1, 0, 3},
 
     // settings/overlay/
     {CONF_CONFIG_PATH "settings/overlay", "gen_alpha", CFG_OFF(settings.overlay.gen_alpha), 0, {.i = 255}},
@@ -297,6 +305,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "visual", "video_wallpaper", CFG_OFF(visual.video_wallpaper), 0, {.i = 1}},
     {CONF_CONFIG_PATH "visual", "background_scale", CFG_OFF(visual.background_scale), 0, {.i = 2}},
     {CONF_CONFIG_PATH "visual", "launchsplash", CFG_OFF(visual.launchsplash), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "visual", "pickles_startup_messages", CFG_OFF(visual.pickles_startup_messages), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "blackfade", CFG_OFF(visual.blackfade), 0, {.i = 1}},
     {CONF_CONFIG_PATH "visual", "notifytime", CFG_OFF(visual.notify_time), 0, {.i = 1}},
     {CONF_CONFIG_PATH "visual", "reducemotion", CFG_OFF(visual.reduce_motion), 0, {.i = 0}},
@@ -319,11 +328,18 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "bluetooth", "autoconnect", CFG_OFF(bluetooth.auto_connect), 0, {.i = 0}},
 
     // web/
-    {CONF_CONFIG_PATH "web", "sshd", CFG_OFF(web.sshd), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "web", "sftpgo", CFG_OFF(web.sftp_go), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "web", "ttyd", CFG_OFF(web.ttyd), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "web", "syncthing", CFG_OFF(web.syncthing), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "web", "tailscaled", CFG_OFF(web.tailscaled), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "web", "sshd", CFG_OFF(web.sshd), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "sftpgo", CFG_OFF(web.sftp_go), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "ttyd", CFG_OFF(web.ttyd), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "syncthing", CFG_OFF(web.syncthing), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "tailscaled", CFG_OFF(web.tailscaled), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "sshd_port", CFG_OFF(web.sshd_port), 2, {.s = "22"}},
+    {CONF_CONFIG_PATH "web", "sftpgo_port", CFG_OFF(web.sftpgo_port), 2, {.s = "9090"}},
+    {CONF_CONFIG_PATH "web", "sftpgo_sftp_port", CFG_OFF(web.sftpgo_sftp_port), 2, {.s = "2022"}},
+    {CONF_CONFIG_PATH "web", "ttyd_port", CFG_OFF(web.ttyd_port), 2, {.s = "8080"}},
+    {CONF_CONFIG_PATH "web", "ttyd_user", CFG_OFF(web.ttyd_user), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "web", "ttyd_pass", CFG_OFF(web.ttyd_pass), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "web", "syncthing_port", CFG_OFF(web.syncthing_port), 2, {.s = "7070"}},
 
     // danger/
     {CONF_CONFIG_PATH "danger", "vmswap", CFG_OFF(danger.vm_swap), 0, {.i = 8}},
@@ -346,6 +362,14 @@ static const cfg_field cfg_fields[] = {
 
 #undef CFG_OFF
 
+static int16_t cfg_dir_i16(
+    const cfg_dir_t *d, const char *name, const int16_t fallback, const int has_range, const int16_t minimum,
+    const int16_t maximum
+) {
+    const char *value = cfg_dir_get(d, name);
+    return config_i16_value(value, fallback, has_range, minimum, maximum);
+}
+
 void load_config(struct mux_config *config) {
     cfg_dir_t d;
     const char *cur_dir = NULL;
@@ -359,11 +383,12 @@ void load_config(struct mux_config *config) {
         }
 
         void *field_ptr = (char *) config + f->offset;
-        if (f->is_str) {
+        if (f->kind != cfg_i16) {
             const char *v = cfg_dir_get(&d, f->key);
+            if (f->kind == cfg_port && !config_port_valid(v)) v = NULL;
             snprintf((char *) field_ptr, MAX_BUFFER_SIZE, "%s", v && *v ? v : f->fallback.s);
         } else {
-            *(int16_t *) field_ptr = (int16_t) cfg_dir_int(&d, f->key, f->fallback.i);
+            *(int16_t *) field_ptr = cfg_dir_i16(&d, f->key, f->fallback.i, f->has_range, f->minimum, f->maximum);
         }
     }
 
@@ -490,18 +515,14 @@ int cfg_dir_int(const cfg_dir_t *d, const char *name, const int fallback) {
     const char *v = cfg_dir_get(d, name);
     if (!v || !*v) return fallback;
 
-    char *end;
+    errno = 0;
+    char *end = NULL;
     const long val = strtol(v, &end, 10);
 
-    return end != v && *end == '\0' ? (int) val : fallback;
+    return errno != ERANGE && end != v && *end == '\0' && val >= INT_MIN && val <= INT_MAX ? (int) val : fallback;
 }
 
 double cfg_dir_flo(const cfg_dir_t *d, const char *name, const double fallback) {
     const char *v = cfg_dir_get(d, name);
-    if (!v || !*v) return fallback;
-
-    char *end;
-    const double val = strtod(v, &end);
-
-    return end != v && *end == '\0' ? val : fallback;
+    return config_float_value(v, fallback, 0, 0.0, 0.0);
 }

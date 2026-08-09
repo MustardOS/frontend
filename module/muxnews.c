@@ -357,7 +357,6 @@ static void refresh_index(void) {
     create_directories(NEWS_CACHE_DIR, 0);
 
     snprintf(cache_path, sizeof(cache_path), "%s", NEWS_INDEX_PATH);
-    if (file_exist(cache_path)) remove(cache_path);
 
     set_download_callbacks(load_index_finished);
     initiate_download(NEWS_INDEX_URL, cache_path, 1, lang.muxnews.download);
@@ -367,7 +366,6 @@ static void refresh_topic(const int topic_id) {
     create_directories(NEWS_CACHE_DIR, 0);
 
     snprintf(cache_path, sizeof(cache_path), NEWS_TOPIC_PATH_FMT, topic_id);
-    if (file_exist(cache_path)) remove(cache_path);
 
     char url[MAX_BUFFER_SIZE];
     snprintf(url, sizeof(url), NEWS_TOPIC_URL_FMT, topic_id);

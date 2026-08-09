@@ -19,6 +19,12 @@ int str_compare(const void *a, const void *b);
 
 int str_startswith(const char *a, const char *b);
 
+int str_copy_checked(char *destination, size_t capacity, const char *source);
+
+int str_format_checked(char *destination, size_t capacity, const char *format, ...);
+
+int path_join_checked(char *destination, size_t capacity, const char *const *parts, size_t count);
+
 char *str_nonew(char *text);
 
 char *str_tolower(const char *text);

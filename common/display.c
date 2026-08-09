@@ -12,6 +12,7 @@
 #include "config.h"
 #include "theme.h"
 #include "display.h"
+#include "function_pointer.h"
 #include "ui/common.h"
 #include "inotify.h"
 #include "fileio.h"
@@ -928,6 +929,37 @@ int display_video_fast_path_allowed(void) {
     return ui_layer_hidden && !video_overlay_fn_ptr && display_fade_alpha == 0 && !anim_is_active();
 }
 
+int display_video_needs_logical_target(void) {
+    return monitor.angle != 0.0;
+}
+
+void display_map_logical_rect(const SDL_Rect *logical, SDL_Rect *physical) {
+    if (!logical || !physical || device.mux.width <= 0 || device.mux.height <= 0) return;
+
+    const int64_t left = (int64_t) logical->x * monitor.dest_rect.w;
+    const int64_t top = (int64_t) logical->y * monitor.dest_rect.h;
+    const int64_t right = (int64_t) (logical->x + logical->w) * monitor.dest_rect.w;
+    const int64_t bottom = (int64_t) (logical->y + logical->h) * monitor.dest_rect.h;
+
+    physical->x = monitor.dest_rect.x + (int) (left / device.mux.width);
+    physical->y = monitor.dest_rect.y + (int) (top / device.mux.height);
+    physical->w = (int) (right / device.mux.width) - (int) (left / device.mux.width);
+    physical->h = (int) (bottom / device.mux.height) - (int) (top / device.mux.height);
+
+    if (logical->w > 0 && physical->w < 1) physical->w = 1;
+    if (logical->h > 0 && physical->h < 1) physical->h = 1;
+}
+
+void display_render_logical_texture(SDL_Renderer *renderer, SDL_Texture *texture) {
+    if (!renderer || !texture) return;
+
+    if (monitor.angle == 0.0) {
+        SDL_RenderCopy(renderer, texture, NULL, &monitor.dest_rect);
+    } else {
+        SDL_RenderCopyEx(renderer, texture, NULL, &monitor.dest_rect, monitor.angle, monitor.pivot_ptr, SDL_FLIP_NONE);
+    }
+}
+
 static void composite_to(SDL_Texture *target, const int present) {
     if (!monitor.renderer || !monitor.texture) return;
 
@@ -1029,7 +1061,7 @@ static void composite_to(SDL_Texture *target, const int present) {
 
     if (hard_sync_query_fn && hard_sync_query_fn()) {
         static void (*p_gl_finish)(void) = NULL;
-        if (!p_gl_finish) p_gl_finish = (void (*)(void)) SDL_GL_GetProcAddress("glFinish");
+        if (!p_gl_finish) MUOS_FUNCTION_ASSIGN(p_gl_finish, SDL_GL_GetProcAddress("glFinish"));
         if (p_gl_finish) p_gl_finish();
     }
 

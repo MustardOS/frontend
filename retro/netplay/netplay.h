@@ -3,9 +3,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "../core/libretro.h"
+#include "address.h"
 
 #define NETPLAY_PORT_COUNT     4
-#define NETPLAY_DEFAULT_PORT   55435
 #define NETPLAY_DISCOVERY_PORT 55436
 #define NETPLAY_HOST_NAME_MAX  48
 #define NETPLAY_HOST_NAME_SIZE (NETPLAY_HOST_NAME_MAX + 1)
@@ -67,8 +67,6 @@ void netplay_shutdown(void);
 int netplay_host(uint16_t port);
 
 int netplay_join(const char *address, uint16_t port);
-
-int netplay_parse_address(const char *specification, char *address, size_t address_size, uint16_t *port);
 
 int netplay_discover(void);
 

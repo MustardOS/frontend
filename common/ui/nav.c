@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdatomic.h>
 #include "../init.h"
 #include <limits.h>
 #include "common.h"
@@ -16,7 +17,7 @@
 #include "../../module/muxshare.h"
 
 char progress_bar_message[MAX_BUFFER_SIZE];
-volatile int progress_bar_value = 0;
+_Atomic int progress_bar_value = 0;
 lv_timer_t *timer_update_progress;
 
 static int progress_bar_last_value = -1;

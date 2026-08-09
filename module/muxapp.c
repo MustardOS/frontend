@@ -139,6 +139,14 @@ static int append_mux_app(char ***arr, size_t *count, size_t *cap, const char *n
     return 0;
 }
 
+static void apply_muxapp_glyph(const size_t index, lv_obj_t *glyph) {
+    apply_theme_list_glyph(&theme, glyph, mux_module, items[index].glyph_icon);
+
+    const void *source = lv_img_get_src(glyph);
+    if (config.visual.list_glyph && (!source || source == &ui_img_blank))
+        apply_app_glyph(items[index].extra_data, items[index].glyph_icon, glyph);
+}
+
 static void gen_app_label(const size_t index) {
     lv_obj_t *ui_pnl_app = lv_obj_create(ui_pnl_content);
     if (!ui_pnl_app) return;
@@ -154,9 +162,7 @@ static void gen_app_label(const size_t index) {
 
     lv_obj_t *ui_lbl_app_item_glyph = lv_img_create(ui_pnl_app);
     if (ui_lbl_app_item_glyph) {
-        apply_theme_list_glyph(&theme, ui_lbl_app_item_glyph, mux_module, items[index].glyph_icon);
-        if (config.visual.list_glyph && lv_img_get_src(ui_lbl_app_item_glyph) == NULL)
-            apply_app_glyph(items[index].extra_data, items[index].glyph_icon, ui_lbl_app_item_glyph);
+        apply_muxapp_glyph(index, ui_lbl_app_item_glyph);
         lv_group_add_obj(ui_group_glyph, ui_lbl_app_item_glyph);
     }
 
@@ -352,9 +358,7 @@ static void check_focus(void) {
 static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
     lv_label_set_text(ui_lbl_item, items[index].display_name);
 
-    apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, items[index].glyph_icon);
-    if (config.visual.list_glyph && lv_img_get_src(ui_lbl_item_glyph) == NULL)
-        apply_app_glyph(items[index].extra_data, items[index].glyph_icon, ui_lbl_item_glyph);
+    apply_muxapp_glyph((size_t) index, ui_lbl_item_glyph);
 
     apply_size_to_content(&theme, ui_pnl_content, ui_lbl_item, ui_lbl_item_glyph, items[index].display_name);
     apply_text_long_dot(&theme, ui_lbl_item);

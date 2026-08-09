@@ -102,10 +102,11 @@ static const char *get_cpu_model(void) {
     }
 
     if (!model[0]) {
-        FILE *lscpu = popen("lscpu", "r");
+        const char *const argv[] = {"lscpu", NULL};
+        char *lscpu = get_execute_result_argv(argv, -1);
         if (lscpu) {
-            char line[256];
-            while (fgets(line, sizeof(line), lscpu)) {
+            char *save = NULL;
+            for (char *line = strtok_r(lscpu, "\r\n", &save); line; line = strtok_r(NULL, "\r\n", &save)) {
                 char *trimmed = line;
                 while (*trimmed && isspace((unsigned char) *trimmed))
                     trimmed++;
@@ -121,7 +122,7 @@ static const char *get_cpu_model(void) {
                     break;
                 }
             }
-            pclose(lscpu);
+            free(lscpu);
         }
     }
 
@@ -564,22 +565,46 @@ static const char *get_mac_address(void) {
     return mac;
 }
 
+static int
+command_prefixed_value(const char *const argv[], const char *prefix, char *output, const size_t output_size) {
+    char *result = get_execute_result_argv(argv, -1);
+    if (!result) return 0;
+
+    int found = 0;
+    char *save = NULL;
+    for (char *line = strtok_r(result, "\r\n", &save); line; line = strtok_r(NULL, "\r\n", &save)) {
+        while (*line && isspace((unsigned char) *line))
+            line++;
+        const size_t prefix_length = strlen(prefix);
+        if (strncmp(line, prefix, prefix_length) != 0) continue;
+
+        line += prefix_length;
+        while (*line && isspace((unsigned char) *line))
+            line++;
+
+        char *end = line + strlen(line);
+        while (end > line && isspace((unsigned char) end[-1]))
+            end--;
+        *end = '\0';
+
+        found = str_copy_checked(output, output_size, line);
+        break;
+    }
+
+    free(result);
+    return found;
+}
+
 static const char *get_ip_address(void) {
     if (!interface_valid) return lang.generic.unknown;
     if (!is_network_connected()) return lang.generic.not_connected;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "ip addr show %s | awk '/inet / {print $2}' | cut -d/ -f1", device.network.interface);
-
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-        return lang.generic.unknown;
-    }
-
     static char ip[64];
-    snprintf(ip, sizeof(ip), "%s", result);
-    free(result);
+    const char *const argv[] = {"ip", "addr", "show", device.network.interface, NULL};
+    if (!command_prefixed_value(argv, "inet ", ip, sizeof(ip))) return lang.generic.unknown;
+
+    char *prefix_end = strchr(ip, '/');
+    if (prefix_end) *prefix_end = '\0';
 
     return ip;
 }
@@ -588,18 +613,9 @@ static const char *get_ssid(void) {
     if (!interface_valid) return lang.generic.unknown;
     if (!is_network_connected()) return lang.generic.not_connected;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "iw dev %s link | awk -F': ' '/SSID/ {print $2}'", device.network.interface);
-
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-        return lang.generic.unknown;
-    }
-
     static char ssid[64];
-    snprintf(ssid, sizeof(ssid), "%s", result);
-    free(result);
+    const char *const argv[] = {"iw", "dev", device.network.interface, "link", NULL};
+    if (!command_prefixed_value(argv, "SSID:", ssid, sizeof(ssid))) return lang.generic.unknown;
 
     return ssid;
 }
@@ -607,56 +623,58 @@ static const char *get_ssid(void) {
 static const char *get_gateway(void) {
     if (!is_network_connected()) return lang.generic.not_connected;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "ip route | awk '/default/ {print $3}'");
+    static char gw[64];
+    const char *const argv[] = {"ip", "route", NULL};
+    char route[256];
+    if (!command_prefixed_value(argv, "default ", route, sizeof(route))) return lang.generic.unknown;
 
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-        return lang.generic.unknown;
+    char *save = NULL;
+    char *token = strtok_r(route, " \t", &save);
+    while (token) {
+        if (strcmp(token, "via") == 0) {
+            token = strtok_r(NULL, " \t", &save);
+            if (token && str_copy_checked(gw, sizeof(gw), token)) return gw;
+            break;
+        }
+        token = strtok_r(NULL, " \t", &save);
     }
 
-    static char gw[64];
-    snprintf(gw, sizeof(gw), "%s", result);
-    free(result);
-
-    return gw;
+    return lang.generic.unknown;
 }
 
 static const char *get_dns_servers(void) {
     if (!is_network_connected()) return lang.generic.not_connected;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "awk '/nameserver/ {print $2}' /etc/resolv.conf | xargs");
-
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-        return lang.generic.unknown;
-    }
-
     static char dns[128];
-    snprintf(dns, sizeof(dns), "%s", result);
-    free(result);
+    dns[0] = '\0';
+    FILE *fp = fopen("/etc/resolv.conf", "r");
+    if (!fp) return lang.generic.unknown;
 
-    return dns;
+    char line[256];
+    size_t used = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        char server[64];
+        if (sscanf(line, " nameserver %63s", server) != 1) continue;
+        const int written = snprintf(dns + used, sizeof(dns) - used, "%s%s", used ? " " : "", server);
+        if (written < 0 || (size_t) written >= sizeof(dns) - used) break;
+        used += (size_t) written;
+    }
+    fclose(fp);
+
+    return dns[0] ? dns : lang.generic.unknown;
 }
 
 static const char *get_signal_strength(void) {
     if (!interface_valid) return lang.generic.unknown;
     if (!is_network_connected()) return lang.generic.not_connected;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/signal/ {print $2}'", device.network.interface);
+    char result[64];
+    const char *const argv[] = {"iw", "dev", device.network.interface, "link", NULL};
+    if (!command_prefixed_value(argv, "signal:", result, sizeof(result))) return lang.generic.unknown;
 
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-        return lang.generic.unknown;
-    }
-
+    char *space = strchr(result, ' ');
+    if (space) *space = '\0';
     const int dbm = safe_atoi(result, -100);
-    free(result);
 
     int percent;
     if (dbm <= -100) {
@@ -677,17 +695,13 @@ static const char *get_channel_info(void) {
     if (!interface_valid) return lang.generic.unknown;
     if (!is_network_connected()) return lang.generic.not_connected;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/freq:/ {print $2}'", device.network.interface);
+    char result[64];
+    const char *const argv[] = {"iw", "dev", device.network.interface, "link", NULL};
+    if (!command_prefixed_value(argv, "freq:", result, sizeof(result))) return lang.generic.unknown;
 
-    char *result = get_execute_result(cmd, 0);
-    if (!result || !*result) {
-        free(result);
-        return lang.generic.unknown;
-    }
-
+    char *space = strchr(result, ' ');
+    if (space) *space = '\0';
     const int freq = safe_atoi(result, 0);
-    free(result);
 
     static const struct {
         int freq;
@@ -810,18 +824,12 @@ static const char *get_tp_traffic(void) {
 
 static const char *get_serial(void) {
     static char buffer[UI_BUFFER];
-
-    FILE *fp = popen(OPT_PATH "script/system/serial.sh", "r");
-    if (!fp) return lang.generic.unknown;
-
-    if (!fgets(buffer, sizeof(buffer), fp)) {
-        pclose(fp);
-        return lang.generic.unknown;
-    }
-
-    pclose(fp);
-
-    buffer[strcspn(buffer, "\r\n")] = '\0';
+    const char *const argv[] = {OPT_PATH "script/system/serial.sh", NULL};
+    char *serial = get_execute_result_argv(argv, 0);
+    if (!serial) return lang.generic.unknown;
+    const int copied = str_copy_checked(buffer, sizeof(buffer), serial);
+    free(serial);
+    if (!copied) return lang.generic.unknown;
     return buffer[0] ? buffer : lang.generic.unknown;
 }
 

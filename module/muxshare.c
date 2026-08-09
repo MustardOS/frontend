@@ -1327,14 +1327,14 @@ int read_wpa_status_value(const char *key, char *value) {
 
     value[0] = '\0';
 
-    FILE *fp = popen("wpa_cli status 2>/dev/null", "r");
-    if (!fp) return 0;
+    const char *const argv[] = {"wpa_cli", "status", NULL};
+    char *status = get_execute_result_argv(argv, -1);
+    if (!status) return 0;
 
-    char line[MAX_BUFFER_SIZE];
     const size_t key_len = strlen(key);
     int found = 0;
-
-    while (fgets(line, sizeof(line), fp)) {
+    char *save = NULL;
+    for (char *line = strtok_r(status, "\r\n", &save); line; line = strtok_r(NULL, "\r\n", &save)) {
         net_trim(line);
 
         if (strncmp(line, key, key_len) == 0 && line[key_len] == '=') {
@@ -1345,7 +1345,7 @@ int read_wpa_status_value(const char *key, char *value) {
         }
     }
 
-    pclose(fp);
+    free(status);
     return found;
 }
 
