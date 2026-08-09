@@ -1340,7 +1340,8 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     int16_t eff_glyph_size = config->settings.themeopt.glyph_size_list;
     if (eff_glyph_size == -2) eff_glyph_size = theme->glyph.list;
 
-    if (eff_glyph_size == 0 && theme->mux.item.height > 0) {
+    const int16_t glyph_hidden = !config->visual.list_glyph || (theme->list_default.glyph_alpha == 0 && theme->list_focus.glyph_alpha == 0);
+    if (!glyph_hidden && eff_glyph_size == 0 && theme->mux.item.height > 0) {
         const int16_t auto_size = (int16_t) (theme->mux.item.height * 3 / 4);
         const int16_t half_auto = (int16_t) (auto_size / 2);
         const int16_t needed = (int16_t) (auto_size + 6);
