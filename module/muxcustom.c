@@ -1163,6 +1163,7 @@ static int save_custom_options(void) {
         lv_dropdown_get_selected_str(ui_dro_theme_alternate_custom, theme_alt, sizeof(theme_alt));
 
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
+            is_modified++;
             char theme_active_txt_path[MAX_BUFFER_SIZE];
             snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
             write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
@@ -1214,6 +1215,10 @@ static int save_custom_options(void) {
 
     if (is_modified > 0) {
         refresh_config = 1;
+        refresh_device = 1;
+        refresh_kiosk = 1;
+        refresh_resolution = 1;
+        if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
         run_tweak_script(lang.generic.saving);
     }
 
