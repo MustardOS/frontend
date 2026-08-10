@@ -84,7 +84,7 @@ int in_skiplist(const skip_list *sl, const char *name) {
     return 0;
 }
 
-int ends_with(char *str, const char *suffix) {
+int ends_with(const char *str, const char *suffix) {
     if (!str || !suffix) return 0;
 
     const size_t len_str = strlen(str);

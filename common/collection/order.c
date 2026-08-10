@@ -230,6 +230,7 @@ static unsigned int session_seed(void) {
 
 static void title_curiosities(order_key *key, const char *title) {
     int in_word = 0;
+    const size_t title_len = strlen(title);
 
     for (const char *c = title; *c; c++) {
         const unsigned char ch = (unsigned char) *c;
@@ -249,7 +250,6 @@ static void title_curiosities(order_key *key, const char *title) {
     static const char *numerals[] = {" II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};
     for (size_t i = 0; i < A_SIZE(numerals); i++) {
         const size_t len = strlen(numerals[i]);
-        const size_t title_len = strlen(title);
 
         if (title_len >= len && strncasecmp(title + title_len - len, numerals[i], len) == 0) key->sequel = 1;
     }
@@ -258,11 +258,17 @@ static void title_curiosities(order_key *key, const char *title) {
 void order_prepare(content_item *content_items, const size_t count, const char *base_dir) {
     if (!content_items || count == 0) return;
 
-    const unsigned int seed = session_seed();
     const int wants_file_meta = order_active == order_recently_added || order_active == order_file_size;
-
     const int wants_playtime =
         order_active == order_play_time || order_active == order_times_played || order_active == order_last_played;
+    const int wants_title_length = order_active == order_title_length;
+    const int lucky_variant = order_active == order_feeling_lucky ? order_variants[order_feeling_lucky] : -1;
+    const int wants_shuffle = lucky_variant == 0;
+    const int wants_curiosities = lucky_variant >= 2;
+
+    if (!wants_file_meta && !wants_playtime && !wants_title_length && !wants_shuffle && !wants_curiosities) return;
+
+    const unsigned int seed = wants_shuffle ? session_seed() : 0;
 
     char playtime_path[MAX_BUFFER_SIZE];
     snprintf(playtime_path, sizeof(playtime_path), INFO_ACT_PATH "/" PLAYTIME_DATA);
@@ -285,10 +291,10 @@ void order_prepare(content_item *content_items, const size_t count, const char *
 
         *key = (order_key) {0};
 
-        key->title_length = it->display_name ? strlen(it->display_name) : 0;
-        key->shuffle = fnv_hash_str(it->name ? it->name : "") ^ seed;
+        if (wants_title_length) key->title_length = it->display_name ? strlen(it->display_name) : 0;
+        if (wants_shuffle) key->shuffle = fnv_hash_str(it->name ? it->name : "") ^ seed;
 
-        if (it->display_name) title_curiosities(key, it->display_name);
+        if (wants_curiosities && it->display_name) title_curiosities(key, it->display_name);
 
         if (!wants_file_meta && !playtime_valid) continue;
 

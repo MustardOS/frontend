@@ -17,7 +17,7 @@ void add_to_skiplist(skip_list *sl, const char *dir, const char *name);
 
 int in_skiplist(const skip_list *sl, const char *name);
 
-int ends_with(char *str, const char *suffix);
+int ends_with(const char *str, const char *suffix);
 
 void process_gdi_file(char *dir, const char *filename, skip_list *sl);
 

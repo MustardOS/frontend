@@ -908,8 +908,41 @@ void resolve_friendly_name(const char *file_path, char *out) {
     }
 }
 
+static int read_content_entry(const char *path, char **content_path, char **content_dir) {
+    *content_path = NULL;
+    *content_dir = NULL;
+
+    FILE *fp = fopen(path, "r");
+    if (!fp) return 0;
+
+    char path_line[MAX_BUFFER_SIZE];
+    char dir_line[MAX_BUFFER_SIZE];
+
+    const int valid = fgets(path_line, sizeof(path_line), fp) && fgets(dir_line, sizeof(dir_line), fp);
+    fclose(fp);
+
+    if (!valid) return 0;
+
+    path_line[strcspn(path_line, "\r\n")] = '\0';
+    dir_line[strcspn(dir_line, "\r\n")] = '\0';
+    if (!path_line[0] || !dir_line[0]) return 0;
+
+    *content_path = strdup(path_line);
+    *content_dir = strdup(dir_line);
+
+    if (!*content_path || !*content_dir) {
+        free(*content_path);
+        free(*content_dir);
+        *content_path = NULL;
+        *content_dir = NULL;
+        return 0;
+    }
+
+    return 1;
+}
+
 void gen_item_from_files(const char *base_path, const int file_count, char **file_names) {
-    char *created_dirs[file_count];
+    char **created_dirs = calloc((size_t) file_count, sizeof(char *));
     int created_count = 0;
 
     char tag_filter[MAX_BUFFER_SIZE];
@@ -921,20 +954,28 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
         char item_file[MAX_BUFFER_SIZE];
         snprintf(item_file, sizeof(item_file), "%s/%s", base_path, file_names[i]);
 
-        union_rewrite_file_paths(item_file);
-        char *file_path_raw = read_line_char_from(item_file, cache_core_path);
+        char *file_path_raw = NULL;
+        char *sub_path = NULL;
+        if (!read_content_entry(item_file, &file_path_raw, &sub_path)) {
+            free(file_names[i]);
+            continue;
+        }
+
+        if (strncmp(file_path_raw, "/mnt/union", 10) == 0) union_rewrite_file_paths(item_file);
 
         char resolved_path[PATH_MAX];
         if (union_resolve_to_real(file_path_raw, resolved_path, sizeof(resolved_path))) {
-            free(file_path_raw);
-            file_path_raw = strdup(resolved_path);
+            char *resolved = strdup(resolved_path);
+            if (resolved) {
+                free(file_path_raw);
+                file_path_raw = resolved;
+            }
         }
 
         const char *file_path = file_path_raw;
-        char *sub_path = read_line_char_from(item_file, cache_core_dir);
 
         int already_created = 0;
-        for (int c = 0; c < created_count; c++) {
+        for (int c = 0; created_dirs && c < created_count; c++) {
             if (strcasecmp(created_dirs[c], sub_path) == 0) {
                 already_created = 1;
                 break;
@@ -946,7 +987,7 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
             snprintf(init_meta_dir, sizeof(init_meta_dir), INFO_CON_PATH "/%s/", sub_path);
             create_directories(init_meta_dir, 0);
 
-            created_dirs[created_count++] = strdup(sub_path);
+            if (created_dirs) created_dirs[created_count++] = sub_path;
         }
 
         if (filtered) {
@@ -956,7 +997,7 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
 
             if (!keep) {
                 free(file_path_raw);
-                free(sub_path);
+                if (already_created || !created_dirs) free(sub_path);
                 free(file_names[i]);
                 continue;
             }
@@ -966,12 +1007,15 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
         add_item(&items, &item_count, file_names[i], fn_name, file_path, content_type_item);
 
         ui_count_static++;
+        free(file_path_raw);
+        if (already_created || !created_dirs) free(sub_path);
         free(file_names[i]);
     }
 
     for (int c = 0; c < created_count; c++) {
         free(created_dirs[c]);
     }
+    free(created_dirs);
 }
 
 void adjust_label_value_width(const lv_obj_t *panel, const lv_obj_t *label, lv_obj_t *value) {

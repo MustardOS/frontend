@@ -132,21 +132,19 @@ static void apply_content_grouping(void) {
 }
 
 static void assign_item_buckets(void) {
-    char path[PATH_MAX];
-
     for (size_t i = 0; i < item_count; i++) {
         content_item *it = &items[i];
         it->sort_bucket = config.sort.dflt;
         it->group_tag[0] = '\0';
 
         int sort_special = -1;
-        snprintf(path, sizeof(path), "%s/%s", sys_dir, it->name);
+        const char *path = it->extra_data;
 
-        if (config.sort.collection != config.sort.dflt && collection_set_contains(path)) {
+        if (path && config.sort.collection != config.sort.dflt && collection_set_contains(path)) {
             sort_special = config.sort.collection;
         }
 
-        if (config.sort.history != config.sort.dflt && history_set_contains(path)) {
+        if (path && config.sort.history != config.sort.dflt && history_set_contains(path)) {
             if (config.sort.history > sort_special) sort_special = config.sort.history;
         }
 
@@ -384,11 +382,9 @@ static int filter_path_search(const void *key, const void *elem) {
 }
 
 static void remove_match_items(
-    const char *filter_name, const int mode, char ***filter_list, const int *filter_count, void (*pop_func)(void),
-    content_item **items, size_t *item_count, const char *sys_dir
+    const char *filter_name, const int mode, char ***filter_list, const int *filter_count, content_item **items,
+    size_t *item_count
 ) {
-    pop_func();
-
     if (mode != 2 || !*filter_list || *filter_count == 0) return;
 
     char **sorted = malloc((size_t) *filter_count * sizeof(char *));
@@ -397,17 +393,18 @@ static void remove_match_items(
     memcpy(sorted, *filter_list, (size_t) *filter_count * sizeof(char *));
     qsort(sorted, (size_t) *filter_count, sizeof(char *), filter_path_sort);
 
-    for (size_t i = 0; i < *item_count; i++) {
-        char item_path[PATH_MAX];
-        if (build_safe_path(item_path, sizeof(item_path), sys_dir, (*items)[i].name) != 0) continue;
+    size_t removed = 0;
+    for (size_t i = *item_count; i-- > 0;) {
+        const char *item_path = (*items)[i].extra_data;
+        if (!item_path || !*item_path) continue;
 
         if (bsearch(item_path, sorted, (size_t) *filter_count, sizeof(char *), filter_path_search)) {
-            LOG_DEBUG(mux_module, "Skipping %s Item: %s", filter_name, item_path);
             remove_item(items, item_count, i);
-            i--;
+            removed++;
         }
     }
 
+    LOG_DEBUG(mux_module, "Skipped %zu %s item(s)", removed, filter_name);
     free(sorted);
 }
 
@@ -524,8 +521,6 @@ static void build_items_from_temp(temp_item *tmp, const int tmp_count) {
     }
 
     free(tmp);
-
-    sort_items(items, item_count);
 }
 
 static void restore_explorer_index(void) {
@@ -544,14 +539,15 @@ static void restore_explorer_index(void) {
 }
 
 static void merge_history_and_collection(void) {
+    if (config.visual.content_history != 1 || config.sort.history != config.sort.dflt) populate_history_items();
+    if (config.visual.content_collect != 1 || config.sort.collection != config.sort.dflt) populate_collection_items();
+
     remove_match_items(
-        "History", config.visual.content_history, &history_items, &history_item_count, populate_history_items, &items,
-        &item_count, sys_dir
+        "History", config.visual.content_history, &history_items, &history_item_count, &items, &item_count
     );
 
     remove_match_items(
-        "Collected", config.visual.content_collect, &collection_items, &collection_item_count,
-        populate_collection_items, &items, &item_count, sys_dir
+        "Collected", config.visual.content_collect, &collection_items, &collection_item_count, &items, &item_count
     );
 }
 
@@ -765,7 +761,6 @@ static void create_content_items(void) {
         if (new_item) {
             new_item->glyph_icon = strdup("folder");
             new_item->folder_item_count = cnt;
-            adjust_visual_label(new_item->display_name, config.visual.name, config.visual.dash);
 
             if (config.visual.folder_item_count) {
                 char display_name[MAX_BUFFER_SIZE];

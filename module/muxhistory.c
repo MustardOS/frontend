@@ -135,6 +135,7 @@ static void add_file_names(const char *base_dir, char ***file_names) {
 
         if (type != DT_REG) continue;
         if (strcmp(name, ".nogrid") == 0) continue;
+        if (!ends_with(name, ".cfg")) continue;
 
         if (file_count >= file_cap) {
             const int new_cap = file_cap ? file_cap * 2 : 16;

@@ -76,6 +76,21 @@ static int path_set_contains(const path_set_t *s, const char *path) {
     return 0;
 }
 
+static char *read_first_line_at(const int dir_fd, const char *name) {
+    const int fd = openat(dir_fd, name, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) return NULL;
+
+    char line[MAX_BUFFER_SIZE];
+    const ssize_t count = read(fd, line, sizeof(line) - 1);
+    close(fd);
+
+    if (count <= 0) return NULL;
+
+    line[count] = '\0';
+    line[strcspn(line, "\r\n")] = '\0';
+    return line[0] ? strdup(line) : NULL;
+}
+
 static void populate_items(const char *base_path, char ***items, int *item_count, int *cap) {
     struct dirent *entry;
     char full_path[PATH_MAX];
@@ -90,32 +105,36 @@ static void populate_items(const char *base_path, char ***items, int *item_count
 
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-        snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
 
-        struct stat st;
-        if (fstatat(dfd, entry->d_name, &st, AT_SYMLINK_NOFOLLOW) == -1) {
-            LOG_ERROR(mux_module, "%s", lang.system.fail_stat);
-            continue;
+        int type = entry->d_type;
+        if (type == DT_UNKNOWN) {
+            struct stat st;
+            if (fstatat(dfd, entry->d_name, &st, AT_SYMLINK_NOFOLLOW) == -1) continue;
+            type = S_ISREG(st.st_mode) ? DT_REG : S_ISDIR(st.st_mode) ? DT_DIR : DT_UNKNOWN;
         }
 
-        if (S_ISREG(st.st_mode)) {
-            if (strstr(entry->d_name, ".cfg")) {
-                if (*item_count >= *cap) {
-                    const int new_cap = *cap ? *cap * 2 : 16;
-                    char **tmp = realloc(*items, (size_t) new_cap * sizeof(char *));
+        if (type == DT_REG) {
+            if (!ends_with(entry->d_name, ".cfg")) continue;
 
-                    if (!tmp) continue;
+            char *raw = read_first_line_at(dfd, entry->d_name);
+            if (!raw) continue;
 
-                    *items = tmp;
-                    *cap = new_cap;
+            if (*item_count >= *cap) {
+                const int new_cap = *cap ? *cap * 2 : 16;
+                char **tmp = realloc(*items, (size_t) new_cap * sizeof(char *));
+
+                if (!tmp) {
+                    free(raw);
+                    continue;
                 }
 
-                char *raw = read_line_char_from(full_path, 1);
-                (*items)[*item_count] = strdup(raw);
-                free(raw);
-                (*item_count)++;
+                *items = tmp;
+                *cap = new_cap;
             }
-        } else if (S_ISDIR(st.st_mode)) {
+
+            (*items)[(*item_count)++] = raw;
+        } else if (type == DT_DIR) {
+            snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
             populate_items(full_path, items, item_count, cap);
         }
     }

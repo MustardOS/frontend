@@ -216,23 +216,25 @@ static void create_collection_items(void) {
                 content_item *new_item = add_item(
                     &items, &item_count, dir_names[i], friendly_folder_name, collection_dir, content_type_folder
                 );
-                adjust_visual_label(new_item->display_name, config.visual.name, config.visual.dash);
 
-                if (config.visual.folder_item_count) {
+                if (new_item && config.visual.folder_item_count) {
                     char display_name[MAX_BUFFER_SIZE];
                     snprintf(
                         display_name, sizeof(display_name), "%s (%d)", new_item->display_name,
                         get_directory_item_count(sys_dir, new_item->name, 0)
                     );
-                    new_item->display_name = strdup(display_name);
+
+                    char *new_display = strdup(display_name);
+                    if (new_display) {
+                        free(new_item->display_name);
+                        new_item->display_name = new_display;
+                    }
                 }
 
                 free(dir_names[i]);
                 free(friendly_folder_name);
             }
         }
-
-        sort_items(items, item_count);
 
         grid_mode_enabled =
             !disable_grid_file_exists(sys_dir) && theme.grid.enabled

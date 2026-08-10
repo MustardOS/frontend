@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <limits.h>
 #include "common.h"
 #include "../config.h"
@@ -121,40 +120,15 @@ int content_item_compare(const void *a, const void *b) {
     return str_compare(&item_a->sort_name, &item_b->sort_name);
 }
 
-int time_compare_for_history(const void *a, const void *b) {
-    const content_item *item_a = (content_item *) a;
-    const content_item *item_b = (content_item *) b;
+static int history_time_compare(const void *a, const void *b) {
+    const content_item *item_a = a;
+    const content_item *item_b = b;
 
-    char mod_file_a[MAX_BUFFER_SIZE];
-    char mod_file_b[MAX_BUFFER_SIZE];
+    if (item_a->order.added != item_b->order.added) return item_a->order.added > item_b->order.added ? -1 : 1;
+    if (item_a->order.file_size != item_b->order.file_size)
+        return item_a->order.file_size > item_b->order.file_size ? -1 : 1;
 
-    snprintf(mod_file_a, sizeof(mod_file_a), "%s/%s.cfg", INFO_HIS_PATH, strip_ext(item_a->name));
-    snprintf(mod_file_b, sizeof(mod_file_b), "%s/%s.cfg", INFO_HIS_PATH, strip_ext(item_b->name));
-
-    if (access(mod_file_a, F_OK) != 0) return 0;
-    if (access(mod_file_b, F_OK) != 0) return 0;
-
-    struct stat stat_a, stat_b;
-
-    if (stat(mod_file_a, &stat_a) != 0) return 0;
-    if (stat(mod_file_b, &stat_b) != 0) return 0;
-
-    const struct timespec time_a = stat_a.st_mtim;
-    const struct timespec time_b = stat_b.st_mtim;
-
-    if (time_a.tv_sec > time_b.tv_sec) {
-        return -1;
-    }
-    if (time_a.tv_sec < time_b.tv_sec) {
-        return 1;
-    }
-    if (time_a.tv_nsec > time_b.tv_nsec) {
-        return -1;
-    }
-    if (time_a.tv_nsec < time_b.tv_nsec) {
-        return 1;
-    }
-    return 0;
+    return str_compare(&item_a->sort_name, &item_b->sort_name);
 }
 
 int item_exists(const content_item *content_items, const size_t count, const char *name) {
@@ -171,7 +145,25 @@ void sort_items(content_item *content_items, const size_t count) {
 
 void sort_items_time(content_item *content_items, const size_t count) {
     if (!content_items || count < 2U) return;
-    qsort(content_items, count, sizeof(content_item), time_compare_for_history);
+
+    for (size_t i = 0; i < count; i++) {
+        content_item *item = &content_items[i];
+        char history_file[PATH_MAX];
+        struct stat st;
+
+        item->order.added = 0;
+        item->order.file_size = 0;
+
+        const int written = snprintf(history_file, sizeof(history_file), "%s/%s", INFO_HIS_PATH, item->name);
+        if (written < 0 || (size_t) written >= sizeof(history_file)) continue;
+
+        if (stat(history_file, &st) == 0) {
+            item->order.added = st.st_mtim.tv_sec;
+            item->order.file_size = st.st_mtim.tv_nsec;
+        }
+    }
+
+    qsort(content_items, count, sizeof(content_item), history_time_compare);
 }
 
 content_item get_item_by_index(const content_item *items, const size_t index) {
