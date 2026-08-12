@@ -8,8 +8,8 @@
 #include "fileio.h"
 #include "util.h"
 
-struct json translation_generic;
-struct json translation_specific;
+static struct json translation_generic;
+static struct json translation_specific;
 static char *language_json = NULL;
 
 char *disabled_enabled[2];
@@ -320,7 +320,7 @@ static const lang_field lang_fields[] = {
     {"generic", LANG_OFF(generic.power_loss_message), lang_generic, "An unexpected power loss was detected during the previous session. Please ensure your device is fully charged before use and do not use the reset button!"},
 
     // muxactivity
-    {"muxactivity", LANG_OFF(muxactivity.title), lang_specific, "ACTIVITY TRACKER"},
+    {"muxactivity", LANG_OFF(muxactivity.title), lang_specific, "Activity Tracker"},
     {"muxactivity", LANG_OFF(muxactivity.help), lang_specific, "Tracks what you play, how often and for how long. View detailed stats per game, overall play habits, and export your activity data to a HTML file"},
     {"muxactivity", LANG_OFF(muxactivity.none), lang_specific, "Nothing Played Yet..."},
     {"muxactivity", LANG_OFF(muxactivity.none_hint), lang_specific, "Activity is recorded as you play, so launch something to start building a history."},
@@ -383,7 +383,7 @@ static const lang_field lang_fields[] = {
     {"muxactivity", LANG_OFF(muxactivity.style.global.window), lang_specific, "Window Shopper"},
 
     // muxapp
-    {"muxapp", LANG_OFF(muxapp.title), lang_specific, "APPLICATIONS"},
+    {"muxapp", LANG_OFF(muxapp.title), lang_specific, "Applications"},
     {"muxapp", LANG_OFF(muxapp.load_app), lang_specific, "Loading Application"},
     {"muxapp", LANG_OFF(muxapp.no_app), lang_specific, "No Applications Found"},
     {"muxapp", LANG_OFF(muxapp.none_hint), lang_specific, "Applications install from archives through the Archive Manager."},
@@ -396,7 +396,7 @@ static const lang_field lang_fields[] = {
     {"muxapp", LANG_OFF(muxapp.overview), lang_specific, "Everything on your device that is not typically a game. Tools, utilities, ports and the odd bit of fun.\n\nPress A to launch one. Press Y to read what an application does, and MENU as many times as you like to read this message."},
 
     // muxappcon
-    {"muxappcon", LANG_OFF(muxappcon.title), lang_specific, "APPLICATION OPTION"},
+    {"muxappcon", LANG_OFF(muxappcon.title), lang_specific, "Application Option"},
     {"muxappcon", LANG_OFF(muxappcon.overview), lang_specific, "Sets how one application behaves, covering the core it runs on, its governor and its control scheme. Changes here apply only to the application you opened this from."},
     {"muxappcon", LANG_OFF(muxappcon.name), lang_specific, "Name"},
     {"muxappcon", LANG_OFF(muxappcon.governor), lang_specific, "Governor"},
@@ -405,7 +405,7 @@ static const lang_field lang_fields[] = {
     {"muxappcon", LANG_OFF(muxappcon.help.control), lang_specific, "Set the control scheme for the selected application"},
 
     // muxarchive
-    {"muxarchive", LANG_OFF(muxarchive.title), lang_specific, "ARCHIVE MANAGER"},
+    {"muxarchive", LANG_OFF(muxarchive.title), lang_specific, "Archive Manager"},
     {"muxarchive", LANG_OFF(muxarchive.overview), lang_specific, "Installs archives placed on your storage, covering system updates, applications, themes, save data and configuration packages.\n\nSelect an archive to install it. The device works through it and reports what changed once it has finished."},
     {"muxarchive", LANG_OFF(muxarchive.installed), lang_specific, "INSTALLED"},
     {"muxarchive", LANG_OFF(muxarchive.install_anyway), lang_specific, "Install Anyway"},
@@ -416,7 +416,7 @@ static const lang_field lang_fields[] = {
     {"muxarchive", LANG_OFF(muxarchive.help), lang_specific, "Archive items can be found and installed here - Save games and states, updates, themes etc"},
 
     // muxassign
-    {"muxassign", LANG_OFF(muxassign.title), lang_specific, "ASSIGN"},
+    {"muxassign", LANG_OFF(muxassign.title), lang_specific, "Assign"},
     {"muxassign", LANG_OFF(muxassign.overview), lang_specific, "Chooses which core or emulator runs the content you selected. An assignment can apply to that one item, its folder or every item of the same system."},
     {"muxassign", LANG_OFF(muxassign.dir), lang_specific, "Assigned to Directory"},
     {"muxassign", LANG_OFF(muxassign.file), lang_specific, "Assigned to Content"},
@@ -426,7 +426,7 @@ static const lang_field lang_fields[] = {
     {"muxassign", LANG_OFF(muxassign.misconfigured), lang_specific, "Core Incorrectly Configured"},
 
     // muxbackup
-    {"muxbackup", LANG_OFF(muxbackup.title), lang_specific, "BACKUP"},
+    {"muxbackup", LANG_OFF(muxbackup.title), lang_specific, "Backup"},
     {"muxbackup", LANG_OFF(muxbackup.bulk.title), lang_specific, "Back Up Everything"},
     {"muxbackup", LANG_OFF(muxbackup.bulk.message), lang_specific, "Every category is included, so this backup could be very large and take a long while to finish. Continue?"},
     {"muxbackup", LANG_OFF(muxbackup.section.content), lang_specific, "Content"},
@@ -491,7 +491,7 @@ static const lang_field lang_fields[] = {
     {"muxcharge", LANG_OFF(muxcharge.voltage), lang_specific, "Voltage"},
 
     // muxchrony
-    {"muxchrony", LANG_OFF(muxchrony.title), lang_specific, "TIME SYNC DETAILS"},
+    {"muxchrony", LANG_OFF(muxchrony.title), lang_specific, "Time Sync Details"},
     {"muxchrony", LANG_OFF(muxchrony.overview), lang_specific, "Reports how the device is keeping its clock in step with a time server, including the reference in use and how far the clock has drifted. This screen is read only."},
     {"muxchrony", LANG_OFF(muxchrony.reference), lang_specific, "Reference"},
     {"muxchrony", LANG_OFF(muxchrony.stratum), lang_specific, "Stratum"},
@@ -517,7 +517,7 @@ static const lang_field lang_fields[] = {
     {"muxchrony", LANG_OFF(muxchrony.help.leap), lang_specific, "Whether the clock is currently in step, and whether a leap second is expected."},
 
     // muxdistemp
-    {"muxdistemp", LANG_OFF(muxdistemp.title), lang_specific, "COLOUR TEMPERATURE"},
+    {"muxdistemp", LANG_OFF(muxdistemp.title), lang_specific, "Colour Temperature"},
     {"muxdistemp", LANG_OFF(muxdistemp.overview), lang_specific, "Warms or cools the display colour on a schedule, so the screen can ease off blue light at night. Set the temperatures and the times they take effect."},
     {"muxdistemp", LANG_OFF(muxdistemp.schedule), lang_specific, "Schedule"},
     {"muxdistemp", LANG_OFF(muxdistemp.sunrise_temp), lang_specific, "Sunrise Temperature"},
@@ -534,13 +534,13 @@ static const lang_field lang_fields[] = {
     {"muxdistemp", LANG_OFF(muxdistemp.help.temperature), lang_specific, "The colour temperature applied to the screen.\n\nLower is warmer and yellower, higher is cooler and bluer."},
 
     // muxcolfilter
-    {"muxcolfilter", LANG_OFF(muxcolfilter.title), lang_specific, "COLOUR FILTER"},
+    {"muxcolfilter", LANG_OFF(muxcolfilter.title), lang_specific, "Colour Filter"},
     {"muxcolfilter", LANG_OFF(muxcolfilter.overview), lang_specific, "Applies a colour filter to the content you selected, which shifts how colours are drawn on screen. Useful for matching the look of the original display."},
     {"muxcolfilter", LANG_OFF(muxcolfilter.help), lang_specific, "Change the colour filter of your current selected content"},
     {"muxcolfilter", LANG_OFF(muxcolfilter.none), lang_specific, "No Colour Filters Found..."},
 
     // muxcollect
-    {"muxcollect", LANG_OFF(muxcollect.title), lang_specific, "COLLECTION"},
+    {"muxcollect", LANG_OFF(muxcollect.title), lang_specific, "Collection"},
     {"muxcollect", LANG_OFF(muxcollect.none), lang_specific, "Nothing Saved Yet..."},
     {"muxcollect", LANG_OFF(muxcollect.none_hint), lang_specific, "Highlight anything in Explore Content or History and choose Collect to start building a collection."},
     {"muxcollect", LANG_OFF(muxcollect.error.remove_file), lang_specific, "Error removing from Collections"},
@@ -549,7 +549,7 @@ static const lang_field lang_fields[] = {
     {"muxcollect", LANG_OFF(muxcollect.help), lang_specific, "Your own area for the things you come back to. Group them however you like, by theme, by system, or by nothing in particular.\n\nAnything can go in a collection without moving from where it lives.\n\nL1 and R1 jump a page at a time, and R2 picks something at random. Fun!"},
 
     // muxconfig
-    {"muxconfig", LANG_OFF(muxconfig.title), lang_specific, "CONFIGURATION"},
+    {"muxconfig", LANG_OFF(muxconfig.title), lang_specific, "Configuration"},
     {"muxconfig", LANG_OFF(muxconfig.connect), lang_specific, "Connectivity"},
     {"muxconfig", LANG_OFF(muxconfig.custom), lang_specific, "Customisation"},
     {"muxconfig", LANG_OFF(muxconfig.general), lang_specific, "General"},
@@ -569,7 +569,7 @@ static const lang_field lang_fields[] = {
     {"muxconfig", LANG_OFF(muxconfig.help.power), lang_specific, "Sleep and dim timers, what the power button does, the low battery light, and the screensaver."},
     {"muxconfig", LANG_OFF(muxconfig.help.interface), lang_specific, "How the frontend looks, what appears in the header and footer, and the way lists behave as you move through them."},
     {"muxconfig", LANG_OFF(muxconfig.overview), lang_specific, "Configuration gathers everything that changes how your device looks and behaves. Here you can adjust the interface, manage storage and networks, configure power and language, and back up your data.\n\nEach entry opens its own screen, and pressing MENU anywhere will show help for what you are looking at."},
-    {"muxaccess", LANG_OFF(muxaccess.title), lang_specific, "ACCESSIBILITY"},
+    {"muxaccess", LANG_OFF(muxaccess.title), lang_specific, "Accessibility"},
     {"muxaccess", LANG_OFF(muxaccess.overview), lang_specific, "Adjusts how the interface presents itself for easier reading and calmer movement. These choices set the matching options elsewhere for you."},
     {"muxaccess", LANG_OFF(muxaccess.reducemotion), lang_specific, "Reduce Motion"},
     {"muxaccess", LANG_OFF(muxaccess.highcontrast), lang_specific, "High Contrast"},
@@ -587,7 +587,7 @@ static const lang_field lang_fields[] = {
     {"muxaccess", LANG_OFF(muxaccess.help.legible_font), lang_specific, "Use Atkinson Hyperlegible, a typeface drawn to be easier to read with low vision"},
 
     // muxconnect
-    {"muxconnect", LANG_OFF(muxconnect.title), lang_specific, "CONNECTIVITY"},
+    {"muxconnect", LANG_OFF(muxconnect.title), lang_specific, "Connectivity"},
     {"muxconnect", LANG_OFF(muxconnect.overview), lang_specific, "Gathers everything to do with getting your device online or paired with other hardware, covering networks, Bluetooth, proxies and the services that run over them."},
     {"muxconnect", LANG_OFF(muxconnect.bluetooth), lang_specific, "Bluetooth"},
     {"muxconnect", LANG_OFF(muxconnect.services), lang_specific, "Web Services"},
@@ -601,7 +601,7 @@ static const lang_field lang_fields[] = {
     {"muxconnect", LANG_OFF(muxconnect.help.bluetooth), lang_specific, "Pair, connect and manage Bluetooth devices such as controllers and headphones."},
 
     // muxbtall
-    {"muxbtall", LANG_OFF(muxbtall.title), lang_specific, "BLUETOOTH"},
+    {"muxbtall", LANG_OFF(muxbtall.title), lang_specific, "Bluetooth"},
     {"muxbtall", LANG_OFF(muxbtall.overview), lang_specific, "Lists the Bluetooth devices your device has paired with and whether each is connected. Scan to find new devices or select a paired one to manage it."},
     {"muxbtall", LANG_OFF(muxbtall.auto_connect), lang_specific, "Auto Connect"},
     {"muxbtall", LANG_OFF(muxbtall.none), lang_specific, "No Paired Devices Found"},
@@ -616,7 +616,7 @@ static const lang_field lang_fields[] = {
     {"muxbtall", LANG_OFF(muxbtall.help.auto_connect), lang_specific, "Automatically reconnect to paired devices on startup"},
 
     // muxbtcon
-    {"muxbtcon", LANG_OFF(muxbtcon.title), lang_specific, "BLUETOOTH SCAN"},
+    {"muxbtcon", LANG_OFF(muxbtcon.title), lang_specific, "Bluetooth Scan"},
     {"muxbtcon", LANG_OFF(muxbtcon.overview), lang_specific, "Finds Bluetooth devices in range so they can be paired. Put the device into pairing mode first, then scan and select it once it appears."},
     {"muxbtcon", LANG_OFF(muxbtcon.scan), lang_specific, "Scanning for Bluetooth Devices"},
     {"muxbtcon", LANG_OFF(muxbtcon.none), lang_specific, "No Bluetooth Devices Found"},
@@ -626,7 +626,7 @@ static const lang_field lang_fields[] = {
     {"muxbtcon", LANG_OFF(muxbtcon.disconnect), lang_specific, "Disconnecting device..."},
 
     // muxbtdev
-    {"muxbtdev", LANG_OFF(muxbtdev.title), lang_specific, "BLUETOOTH DEVICE"},
+    {"muxbtdev", LANG_OFF(muxbtdev.title), lang_specific, "Bluetooth Device"},
     {"muxbtdev", LANG_OFF(muxbtdev.overview), lang_specific, "Shows the details of one paired Bluetooth device and what you can do with it, including connecting, disconnecting and forgetting it entirely."},
     {"muxbtdev", LANG_OFF(muxbtdev.friendly_name), lang_specific, "Friendly Name"},
     {"muxbtdev", LANG_OFF(muxbtdev.type), lang_specific, "Device Type"},
@@ -665,7 +665,7 @@ static const lang_field lang_fields[] = {
     {"muxbtdev", LANG_OFF(muxbtdev.help.forget), lang_specific, "Removes this device entirely.\n\nYou will have to pair it from scratch to use it again."},
 
     // muxcontent
-    {"muxcontent", LANG_OFF(muxcontent.title), lang_specific, "CONTENT OPTIONS"},
+    {"muxcontent", LANG_OFF(muxcontent.title), lang_specific, "Content Options"},
     {"muxcontent", LANG_OFF(muxcontent.overview), lang_specific, "Sets how content behaves, covering the core it launches with, its control scheme and any overrides applied to it.\n\nMost changes apply to the item you opened this from, though a few ask whether you would rather they applied to the whole folder or every folder below it."},
     {"muxcontent", LANG_OFF(muxcontent.shuffle), lang_specific, "Shuffle Function"},
     {"muxcontent", LANG_OFF(muxcontent.full_width), lang_specific, "Full Width Selection"},
@@ -737,13 +737,13 @@ static const lang_field lang_fields[] = {
     {"muxcontent", LANG_OFF(muxcontent.help.video_preview), lang_specific, "Plays a short video for an item once you have stayed on it for a moment.\n\nOnly items with a video in the catalogue have anything to show."},
 
     // muxcontrol
-    {"muxcontrol", LANG_OFF(muxcontrol.title), lang_specific, "CONTROL"},
+    {"muxcontrol", LANG_OFF(muxcontrol.title), lang_specific, "Control"},
     {"muxcontrol", LANG_OFF(muxcontrol.overview), lang_specific, "Chooses the control scheme for the content you selected, which decides how the physical buttons map to that system's controller."},
     {"muxcontrol", LANG_OFF(muxcontrol.help), lang_specific, "Change the control scheme of your current selected content"},
     {"muxcontrol", LANG_OFF(muxcontrol.none), lang_specific, "No Control Schemes Found..."},
 
     // muxcustom
-    {"muxcustom", LANG_OFF(muxcustom.title), lang_specific, "CUSTOMISATION"},
+    {"muxcustom", LANG_OFF(muxcustom.title), lang_specific, "Customisation"},
     {"muxcustom", LANG_OFF(muxcustom.section.content), lang_specific, "Content"},
     {"muxcustom", LANG_OFF(muxcustom.section.theme), lang_specific, "Theme"},
     {"muxcustom", LANG_OFF(muxcustom.section.packages), lang_specific, "Packages"},
@@ -843,7 +843,7 @@ static const lang_field lang_fields[] = {
     {"muxcustom", LANG_OFF(muxcustom.help.launchswap), lang_specific, "Whether pressing A picks up from your last save state, or whether holding A is what does that.\n\nSet it to whichever you find yourself doing more often."},
 
     // muxfont
-    {"muxfont", LANG_OFF(muxfont.title), lang_specific, "FONT PICKER"},
+    {"muxfont", LANG_OFF(muxfont.title), lang_specific, "Font Picker"},
     {"muxfont", LANG_OFF(muxfont.overview), lang_specific, "Chooses the typeface used throughout the interface and how large it appears in each part of the screen, covering lists, headers and footers separately. A custom font file can be supplied if the built-in ones do not suit."},
     {"muxfont", LANG_OFF(muxfont.type), lang_specific, "Font Type"},
     {"muxfont", LANG_OFF(muxfont.font_name), lang_specific, "Font Name"},
@@ -865,7 +865,7 @@ static const lang_field lang_fields[] = {
     {"muxfont", LANG_OFF(muxfont.help.panel_size), lang_specific, "Set the font size for grid panel labels (0 uses the device default, only applies in grid mode)"},
 
     // muxdanger
-    {"muxdanger", LANG_OFF(muxdanger.title), lang_specific, "DANGER SETTINGS"},
+    {"muxdanger", LANG_OFF(muxdanger.title), lang_specific, "Danger Settings"},
     {"muxdanger", LANG_OFF(muxdanger.overview), lang_specific, "Low level tuning that can affect stability. These options are for people who already know what they change, and the defaults are safe for everyone else."},
     {"muxdanger", LANG_OFF(muxdanger.vmswap), lang_specific, "Swap Tendency"},
     {"muxdanger", LANG_OFF(muxdanger.dirtyratio), lang_specific, "Write Back Threshold"},
@@ -900,7 +900,7 @@ static const lang_field lang_fields[] = {
     {"muxdanger", LANG_OFF(muxdanger.warn), lang_specific, "These are low level kernel parameters.\n\nIncorrect values can cause system instability or data loss!"},
 
     // muxdetail
-    {"muxdetail", LANG_OFF(muxdetail.title), lang_specific, "DETAILS"},
+    {"muxdetail", LANG_OFF(muxdetail.title), lang_specific, "Details"},
     {"muxdetail", LANG_OFF(muxdetail.overview), lang_specific, "Everything muOS knows about this device, grouped into sections. Left and Right move between them."},
     {"muxdetail", LANG_OFF(muxdetail.day), lang_specific, "Day"},
     {"muxdetail", LANG_OFF(muxdetail.hour), lang_specific, "Hour"},
@@ -1002,7 +1002,7 @@ static const lang_field lang_fields[] = {
     {"muxdetail", LANG_OFF(muxdetail.help.tp_traffic), lang_specific, "How much has been sent and received in total."},
 
     // muxdevice
-    {"muxdevice", LANG_OFF(muxdevice.title), lang_specific, "DEVICE SETTINGS"},
+    {"muxdevice", LANG_OFF(muxdevice.title), lang_specific, "Device Settings"},
     {"muxdevice", LANG_OFF(muxdevice.overview), lang_specific, "Reports what your particular device supports, such as Bluetooth, networking, HDMI and a lid switch. This screen is read only."},
     {"muxdevice", LANG_OFF(muxdevice.hasbluetooth), lang_specific, "Bluetooth Integration"},
     {"muxdevice", LANG_OFF(muxdevice.hasrgb), lang_specific, "RGB LED Integration"},
@@ -1029,12 +1029,12 @@ static const lang_field lang_fields[] = {
     {"muxdownload", LANG_OFF(muxdownload.error_get_data), lang_specific, "Error Retrieving Data"},
 
     // muxgov
-    {"muxgov", LANG_OFF(muxgov.title), lang_specific, "GOVERNOR"},
+    {"muxgov", LANG_OFF(muxgov.title), lang_specific, "Governor"},
     {"muxgov", LANG_OFF(muxgov.help), lang_specific, "Configure CPU governors to dynamically adjust the CPU frequency and help balance power consumption and performance"},
     {"muxgov", LANG_OFF(muxgov.none), lang_specific, "No Governors Found..."},
 
     // muxhdmi
-    {"muxhdmi", LANG_OFF(muxhdmi.title), lang_specific, "HDMI SETTINGS"},
+    {"muxhdmi", LANG_OFF(muxhdmi.title), lang_specific, "HDMI Settings"},
     {"muxhdmi", LANG_OFF(muxhdmi.overview), lang_specific, "Controls what the device sends over HDMI, covering resolution, colour depth and range. Options here apply once a display is connected."},
     {"muxhdmi", LANG_OFF(muxhdmi.resolution), lang_specific, "Resolution"},
     {"muxhdmi", LANG_OFF(muxhdmi.colour.depth), lang_specific, "Colour Depth"},
@@ -1052,14 +1052,14 @@ static const lang_field lang_fields[] = {
     {"muxhdmi", LANG_OFF(muxhdmi.help.space), lang_specific, "How colour is encoded on the way out.\n\nRGB suits most TVs. Try the others only if the colours look plainly wrong."},
 
     // muxhistory
-    {"muxhistory", LANG_OFF(muxhistory.title), lang_specific, "HISTORY"},
+    {"muxhistory", LANG_OFF(muxhistory.title), lang_specific, "History"},
     {"muxhistory", LANG_OFF(muxhistory.none), lang_specific, "Nothing Played Yet..."},
     {"muxhistory", LANG_OFF(muxhistory.none_hint), lang_specific, "Anything you launch is listed here automatically, so start something from Explore Content."},
     {"muxhistory", LANG_OFF(muxhistory.error.no_core), lang_specific, "Content is not associated with system or core"},
     {"muxhistory", LANG_OFF(muxhistory.help), lang_specific, "Whatever you have played recently, newest first, so you can pick straight back up without hunting for it.\n\nL1 and R1 jump a page at a time, and R2 picks something at random."},
 
     // muxinfo
-    {"muxinfo", LANG_OFF(muxinfo.title), lang_specific, "INFORMATION"},
+    {"muxinfo", LANG_OFF(muxinfo.title), lang_specific, "Information"},
     {"muxinfo", LANG_OFF(muxinfo.overview), lang_specific, "Reports what your device is doing, covering system and battery details, network status, storage use, play activity and the community news feed."},
     {"muxinfo", LANG_OFF(muxinfo.news), lang_specific, "Community News"},
     {"muxinfo", LANG_OFF(muxinfo.detail), lang_specific, "Device Details"},
@@ -1082,7 +1082,7 @@ static const lang_field lang_fields[] = {
     {"muxinfo", LANG_OFF(muxinfo.help.credit), lang_specific, "The people who support MustardOS and everyone who has helped along the way."},
 
     // muxinstall
-    {"muxinstall", LANG_OFF(muxinstall.title), lang_specific, "INSTALLER"},
+    {"muxinstall", LANG_OFF(muxinstall.title), lang_specific, "Installer"},
     {"muxinstall", LANG_OFF(muxinstall.rtc), lang_specific, "Date and Time"},
     {"muxinstall", LANG_OFF(muxinstall.language), lang_specific, "Language"},
     {"muxinstall", LANG_OFF(muxinstall.access), lang_specific, "Accessibility"},
@@ -1105,7 +1105,7 @@ static const lang_field lang_fields[] = {
     {"muxinstall", LANG_OFF(muxinstall.help.shutdown), lang_specific, "Shuts the device down properly, so nothing is left half written to your card."},
 
     // muxkiosk
-    {"muxkiosk", LANG_OFF(muxkiosk.title), lang_specific, "KIOSK SETTINGS"},
+    {"muxkiosk", LANG_OFF(muxkiosk.title), lang_specific, "Kiosk Settings"},
     {"muxkiosk", LANG_OFF(muxkiosk.overview), lang_specific, "Restricts what can be changed or launched, so the device can be handed to someone else safely. Locked entries stay visible but refuse to open."},
     {"muxkiosk", LANG_OFF(muxkiosk.enable), lang_specific, "Kiosk Mode"},
     {"muxkiosk", LANG_OFF(muxkiosk.message), lang_specific, "Restricted Messages"},
@@ -1199,7 +1199,7 @@ static const lang_field lang_fields[] = {
     {"muxkiosk", LANG_OFF(muxkiosk.help.history_rem), lang_specific, "Whether items can be cleared from the history."},
 
     // muxlanguage
-    {"muxlanguage", LANG_OFF(muxlanguage.title), lang_specific, "LANGUAGE"},
+    {"muxlanguage", LANG_OFF(muxlanguage.title), lang_specific, "Language"},
     {"muxlanguage", LANG_OFF(muxlanguage.overview), lang_specific, "Chooses the language used throughout the interface. Additional languages can be downloaded, and the change applies as soon as it is selected."},
     {"muxlanguage", LANG_OFF(muxlanguage.none), lang_specific, "No Languages Found..."},
     {"muxlanguage", LANG_OFF(muxlanguage.save), lang_specific, "Saving Language"},
@@ -1208,7 +1208,7 @@ static const lang_field lang_fields[] = {
     {"muxlanguage", LANG_OFF(muxlanguage.error_get_data), lang_specific, "Error Retrieving Language Data"},
 
     // muxlaunch
-    {"muxlaunch", LANG_OFF(muxlaunch.title), lang_specific, "MAIN MENU"},
+    {"muxlaunch", LANG_OFF(muxlaunch.title), lang_specific, "Main Menu"},
     {"muxlaunch", LANG_OFF(muxlaunch.apps), lang_specific, "Applications"},
     {"muxlaunch", LANG_OFF(muxlaunch.config), lang_specific, "Configuration"},
     {"muxlaunch", LANG_OFF(muxlaunch.info), lang_specific, "Information"},
@@ -1240,7 +1240,7 @@ static const lang_field lang_fields[] = {
     {"muxlaunch", LANG_OFF(muxlaunch.overview), lang_specific, "The Main Menu is the starting point for everything on your device. From here you can browse your content, revisit what you have recently played, open your collections, launch applications and reach every system setting.\n\nMove with the D-pad and confirm with A. B takes you back from anywhere, and MENU opens additional actions wherever they are available."},
 
     // muxlogo
-    {"muxlogo", LANG_OFF(muxlogo.title), lang_specific, "BOOT LOGO"},
+    {"muxlogo", LANG_OFF(muxlogo.title), lang_specific, "Boot Logo"},
     {"muxlogo", LANG_OFF(muxlogo.overview), lang_specific, "Choose the image shown while the device starts up. Installing a theme will replace it."},
     {"muxlogo", LANG_OFF(muxlogo.help), lang_specific, "Set this image as the boot logo, converted to suit this device"},
     {"muxlogo", LANG_OFF(muxlogo.none), lang_specific, "No Boot Logos Found"},
@@ -1258,7 +1258,7 @@ static const lang_field lang_fields[] = {
     {"muxlogo", LANG_OFF(muxlogo.task.reset), lang_specific, "Resetting Boot Logo"},
 
     // muxnetadv
-    {"muxnetadv", LANG_OFF(muxnetadv.title), lang_specific, "NETWORK SETTINGS"},
+    {"muxnetadv", LANG_OFF(muxnetadv.title), lang_specific, "Network Settings"},
     {"muxnetadv", LANG_OFF(muxnetadv.overview), lang_specific, "Fine tunes how networking behaves, covering when it connects, how long it waits and how many times it retries before giving up."},
     {"muxnetadv", LANG_OFF(muxnetadv.system_dns), lang_specific, "System DNS"},
     {"muxnetadv", LANG_OFF(muxnetadv.monitor), lang_specific, "Connection Monitor"},
@@ -1284,7 +1284,7 @@ static const lang_field lang_fields[] = {
     {"muxnetadv", LANG_OFF(muxnetadv.help.mod_retry), lang_specific, "Adjusts the maximum amount of attempts at loading the network module with Module Compatibility enabled. Increase this setting if you are still unable to connect to wifi.\n\nIncreasing this setting may increase boot times importantly."},
 
     // muxnetproxy
-    {"muxnetproxy", LANG_OFF(muxnetproxy.title), lang_specific, "PROXY SETTINGS"},
+    {"muxnetproxy", LANG_OFF(muxnetproxy.title), lang_specific, "Proxy Settings"},
     {"muxnetproxy", LANG_OFF(muxnetproxy.overview), lang_specific, "Routes network traffic through a proxy server. Enter the server details, then test the connection before saving."},
     {"muxnetproxy", LANG_OFF(muxnetproxy.enabled), lang_specific, "Proxy Enabled"},
     {"muxnetproxy", LANG_OFF(muxnetproxy.type), lang_specific, "Proxy Type"},
@@ -1307,7 +1307,7 @@ static const lang_field lang_fields[] = {
     {"muxnetproxy", LANG_OFF(muxnetproxy.help.test), lang_specific, "Test connectivity through the configured proxy server using a live HTTP request"},
 
     // muxnetprofile
-    {"muxnetprofile", LANG_OFF(muxnetprofile.title), lang_specific, "WI-FI PROFILE"},
+    {"muxnetprofile", LANG_OFF(muxnetprofile.title), lang_specific, "Wi-Fi Profile"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.overview), lang_specific, "Edits one saved Wi-Fi profile, covering its password, whether it takes a fixed address and the priority it has against other saved networks."},
     {"muxnetprofile", LANG_OFF(muxnetprofile.connect), lang_specific, "Connect"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.disconnect), lang_specific, "Disconnect"},
@@ -1358,14 +1358,14 @@ static const lang_field lang_fields[] = {
     {"muxnetprofile", LANG_OFF(muxnetprofile.help.connect), lang_specific, "Joins the network using everything entered above."},
 
     // muxnetscan
-    {"muxnetscan", LANG_OFF(muxnetscan.title), lang_specific, "NETWORK SCAN"},
+    {"muxnetscan", LANG_OFF(muxnetscan.title), lang_specific, "Network Scan"},
     {"muxnetscan", LANG_OFF(muxnetscan.overview), lang_specific, "Finds the Wi-Fi networks in range. Select one and enter its password, and it is saved as a profile you can connect to again later."},
     {"muxnetscan", LANG_OFF(muxnetscan.scan), lang_specific, "Scanning for Wi-Fi Networks"},
     {"muxnetscan", LANG_OFF(muxnetscan.none), lang_specific, "No Wi-Fi Networks Found"},
     {"muxnetscan", LANG_OFF(muxnetscan.help), lang_specific, "Detect, display and connect to available Wi-Fi networks"},
 
     // muxnetwork
-    {"muxnetwork", LANG_OFF(muxnetwork.title), lang_specific, "WI-FI NETWORK"},
+    {"muxnetwork", LANG_OFF(muxnetwork.title), lang_specific, "Wi-Fi Network"},
     {"muxnetwork", LANG_OFF(muxnetwork.overview), lang_specific, "Lists the Wi-Fi networks you have saved. Connect or disconnect from here, choose which one connects automatically and forget any you no longer need."},
     {"muxnetwork", LANG_OFF(muxnetwork.none), lang_specific, "No Saved Networks Found"},
     {"muxnetwork", LANG_OFF(muxnetwork.none_hint), lang_specific, "Scan for a nearby network and enter its password to save a profile."},
@@ -1375,7 +1375,7 @@ static const lang_field lang_fields[] = {
     {"muxnetwork", LANG_OFF(muxnetwork.help), lang_specific, "Manage saved Wi-Fi networks and auto-connect preferences"},
 
     // muxnews
-    {"muxnews", LANG_OFF(muxnews.title), lang_specific, "COMMUNITY NEWS"},
+    {"muxnews", LANG_OFF(muxnews.title), lang_specific, "Community News"},
     {"muxnews", LANG_OFF(muxnews.overview), lang_specific, "Shows announcements from the MustardOS crew, covering releases, changes and anything worth knowing about your device. Select an entry to read it in full and scroll with the D-pad."},
     {"muxnews", LANG_OFF(muxnews.none), lang_specific, "No News Found..."},
     {"muxnews", LANG_OFF(muxnews.download), lang_specific, "Downloading Community News..."},
@@ -1427,7 +1427,7 @@ static const lang_field lang_fields[] = {
     {"muxoption", LANG_OFF(muxoption.help.launch), lang_specific, "How many times you have opened this."},
 
     // muxorder
-    {"muxorder", LANG_OFF(muxorder.title), lang_specific, "SORT ORDER"},
+    {"muxorder", LANG_OFF(muxorder.title), lang_specific, "Sort Order"},
     {"muxorder", LANG_OFF(muxorder.overview), lang_specific, "Chooses how this list is arranged, from alphabetical through to how recently or how often something was played. The order can apply just to this folder or to every folder at once."},
     {"muxorder", LANG_OFF(muxorder.help), lang_specific, "Pick how this list is arranged. Left and Right flip each method around, such as A to Z or Z to A.\n\nA folder can keep an order of its own, or set it globally everywhere that's up to you."},
     {"muxorder", LANG_OFF(muxorder.active), lang_specific, "Active"},
@@ -1460,7 +1460,7 @@ static const lang_field lang_fields[] = {
     {"muxorder", LANG_OFF(muxorder.direction.smallest), lang_specific, "Smallest First"},
 
     // muxoverlay
-    {"muxoverlay", LANG_OFF(muxoverlay.title), lang_specific, "OVERLAY OPTIONS"},
+    {"muxoverlay", LANG_OFF(muxoverlay.title), lang_specific, "Overlay Options"},
     {"muxoverlay", LANG_OFF(muxoverlay.overview), lang_specific, "Places an image over the screen while content runs, which suits handheld shaders and bezels. Choose the overlay and how strongly it shows."},
     {"muxoverlay", LANG_OFF(muxoverlay.anchor.top.left), lang_specific, "Top Left"},
     {"muxoverlay", LANG_OFF(muxoverlay.anchor.top.middle), lang_specific, "Top Middle"},
@@ -1500,12 +1500,12 @@ static const lang_field lang_fields[] = {
     {"muxoverlay", LANG_OFF(muxoverlay.help.bri_scale), lang_specific, "How large the brightness indicator is drawn."},
 
     // muxpass
-    {"muxpass", LANG_OFF(muxpass.title), lang_specific, "PASSCODE"},
+    {"muxpass", LANG_OFF(muxpass.title), lang_specific, "Passcode"},
     {"muxpass", LANG_OFF(muxpass.overview), lang_specific, "Asks for the passcode before letting a protected action continue. Enter the code using the D-pad, in the direction order it was set. Anything protected stays visible but refuses to open until the code is accepted."},
     {"muxpass", LANG_OFF(muxpass.shutdown), lang_specific, "Shutdown"},
 
     // muxpasscfg
-    {"muxpasscfg", LANG_OFF(muxpasscfg.title), lang_specific, "PASSCODE SETTINGS"},
+    {"muxpasscfg", LANG_OFF(muxpasscfg.title), lang_specific, "Passcode Settings"},
     {"muxpasscfg", LANG_OFF(muxpasscfg.overview), lang_specific, "Sets the passcode and chooses which actions ask for it, covering start-up, launching content and changing settings. The code is a sequence of D-pad directions rather than numbers."},
     {"muxpasscfg", LANG_OFF(muxpasscfg.bootcode), lang_specific, "Boot Code"},
     {"muxpasscfg", LANG_OFF(muxpasscfg.bootmsg), lang_specific, "Boot Message"},
@@ -1544,7 +1544,7 @@ static const lang_field lang_fields[] = {
     {"muxpicker", LANG_OFF(muxpicker.none.theme), lang_specific, "No Theme Packages Found"},
 
     // muxplore
-    {"muxplore", LANG_OFF(muxplore.title), lang_specific, "EXPLORE"},
+    {"muxplore", LANG_OFF(muxplore.title), lang_specific, "Explore"},
     {"muxplore", LANG_OFF(muxplore.help), lang_specific, "Everything you can play or view, gathered into one place. Content folders from every card and drive are brought together, so you do not have to look through each one separately.\n\nSmall markers beside each item tell you whether you have played it before, whether it belongs to a collection and whether it is ready to launch.\n\nL1 and R1 jump a page at a time, and R2 picks something at random."},
     {"muxplore", LANG_OFF(muxplore.none), lang_specific, "No Content Found..."},
     {"muxplore", LANG_OFF(muxplore.none_hint), lang_specific, "Content goes in the ROMS directory on your current storage. Folders inside it can be named whatever you like, there are no fixed names to follow."},
@@ -1553,7 +1553,7 @@ static const lang_field lang_fields[] = {
     {"muxplore", LANG_OFF(muxplore.error.general), lang_specific, "Could not load content"},
 
     // muxpower
-    {"muxpower", LANG_OFF(muxpower.title), lang_specific, "POWER"},
+    {"muxpower", LANG_OFF(muxpower.title), lang_specific, "Power"},
     {"muxpower", LANG_OFF(muxpower.overview), lang_specific, "Controls what happens when the device idles or the lid closes, covering sleep, display timeout and shutdown behaviour."},
     {"muxpower", LANG_OFF(muxpower.low_battery), lang_specific, "Low Battery Indicator"},
     {"muxpower", LANG_OFF(muxpower.saver.type.title), lang_specific, "Screensaver Type"},
@@ -1614,11 +1614,11 @@ static const lang_field lang_fields[] = {
     {"muxpower", LANG_OFF(muxpower.help.saver_speed), lang_specific, "How quickly the screensaver moves about.\n\nEntirely a matter of taste.\n\nHow ludicrous!"},
 
     // muxraopt
-    {"muxraopt", LANG_OFF(muxraopt.title), lang_specific, "THREADED VIDEO"},
+    {"muxraopt", LANG_OFF(muxraopt.title), lang_specific, "Threaded Video"},
     {"muxraopt", LANG_OFF(muxraopt.help), lang_specific, "Until RetroArch sorts their issue out with the threaded video option, you can toggle it here instead\n\nThis also may turn into a larger set of options in the future!"},
 
     // muxremap
-    {"muxremap", LANG_OFF(muxremap.title), lang_specific, "INPUT REMAP"},
+    {"muxremap", LANG_OFF(muxremap.title), lang_specific, "Input Remap"},
     {"muxremap", LANG_OFF(muxremap.overview), lang_specific, "Reassigns the physical buttons to different actions. Choose a button, then the action it should perform and save when you are done. Useful if a button has worn out or you prefer a different arrangement."},
     {"muxremap", LANG_OFF(muxremap.none), lang_specific, "No Controller Detected"},
     {"muxremap", LANG_OFF(muxremap.waiting), lang_specific, "Press Any Input..."},
@@ -2149,7 +2149,7 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.information_screen.bios_required), lang_specific, "Required"},
 
     // muxrgb
-    {"muxrgb", LANG_OFF(muxrgb.title), lang_specific, "RGB LIGHTS"},
+    {"muxrgb", LANG_OFF(muxrgb.title), lang_specific, "RGB Lights"},
     {"muxrgb", LANG_OFF(muxrgb.overview), lang_specific, "Controls the lighting on devices that have it, covering the mode it uses, the colours it shows and how bright it runs. Individual zones can be set separately where the hardware supports it."},
     {"muxrgb", LANG_OFF(muxrgb.mode), lang_specific, "Mode"},
     {"muxrgb", LANG_OFF(muxrgb.colour), lang_specific, "Colour"},
@@ -2182,7 +2182,7 @@ static const lang_field lang_fields[] = {
     {"muxrgb", LANG_OFF(muxrgb.help.bright), lang_specific, "This zone's brightness"},
 
     // muxrtc
-    {"muxrtc", LANG_OFF(muxrtc.title), lang_specific, "DATE AND TIME"},
+    {"muxrtc", LANG_OFF(muxrtc.title), lang_specific, "Date and Time"},
     {"muxrtc", LANG_OFF(muxrtc.overview), lang_specific, "Sets the date, time and timezone your device keeps. The notation setting chooses how the clock reads, covering twelve or twenty-four hour and the order of day and month.\n\nChoosing Custom lets you write the layout yourself using a strftime format string, so %H:%M gives 14:30 and %a %d %b gives Tue 05 Aug. Anything strftime accepts will work, and an invalid string simply leaves the clock blank."},
     {"muxrtc", LANG_OFF(muxrtc.day), lang_specific, "Day"},
     {"muxrtc", LANG_OFF(muxrtc.month), lang_specific, "Month"},
@@ -2210,7 +2210,7 @@ static const lang_field lang_fields[] = {
     {"muxrtc", LANG_OFF(muxrtc.help_item.custom), lang_specific, "Your own clock layout, used when Time Notation is set to Custom.\n\n%H hour (24), %I hour (12), %M minute, %p AM or PM, %d day, %m month, %Y year, %a short day name, %b short month name.\n\nFor example, %a %d %b  %I:%M %p gives Mon 04 Aug  09:18 PM."},
 
     // muxsearch
-    {"muxsearch", LANG_OFF(muxsearch.title), lang_specific, "SEARCH CONTENT"},
+    {"muxsearch", LANG_OFF(muxsearch.title), lang_specific, "Search Content"},
     {"muxsearch", LANG_OFF(muxsearch.overview), lang_specific, "Finds content by name across your storage. Enter a term, then choose whether to search the current folder or everywhere."},
     {"muxsearch", LANG_OFF(muxsearch.global), lang_specific, "Search Global"},
     {"muxsearch", LANG_OFF(muxsearch.local), lang_specific, "Search Local"},
@@ -2222,20 +2222,20 @@ static const lang_field lang_fields[] = {
     {"muxsearch", LANG_OFF(muxsearch.help.lookup), lang_specific, "What to search for.\n\nPart of a name is enough, so there is no need to type the whole thing."},
 
     // muxshader
-    {"muxshader", LANG_OFF(muxshader.title), lang_specific, "SHADERS"},
+    {"muxshader", LANG_OFF(muxshader.title), lang_specific, "Shaders"},
     {"muxshader", LANG_OFF(muxshader.overview), lang_specific, "Applies a shader to the content you selected, which changes how it is drawn without altering the content itself. Shaders suit recreating the look of the original hardware."},
     {"muxshader", LANG_OFF(muxshader.help), lang_specific, "Change the shader of your current selected content"},
     {"muxshader", LANG_OFF(muxshader.none), lang_specific, "No Shaders Found..."},
 
     // muxshot
-    {"muxshot", LANG_OFF(muxshot.title), lang_specific, "SCREENSHOTS"},
+    {"muxshot", LANG_OFF(muxshot.title), lang_specific, "Screenshots"},
     {"muxshot", LANG_OFF(muxshot.overview), lang_specific, "Lists the screenshots taken on this device, newest first. Select one to view it full size, or remove any you no longer want. New screenshots appear here whenever you use the screenshot hotkey while content is running."},
     {"muxshot", LANG_OFF(muxshot.help), lang_specific, "View your current screenshots"},
     {"muxshot", LANG_OFF(muxshot.none), lang_specific, "No Screenshots Found"},
     {"muxshot", LANG_OFF(muxshot.none_hint), lang_specific, "Screenshots are saved here when you use the screenshot hotkey while content is running."},
 
     // muxsort
-    {"muxsort", LANG_OFF(muxsort.title), lang_specific, "TAG SORT PRIORITY"},
+    {"muxsort", LANG_OFF(muxsort.title), lang_specific, "Tag Sort Priority"},
     {"muxsort", LANG_OFF(muxsort.overview), lang_specific, "Chooses how this list is arranged, from alphabetical through to how recently or how often something was played. The order can apply just to this folder or to every folder at once."},
     {"muxsort", LANG_OFF(muxsort.dflt), lang_specific, "Default"},
     {"muxsort", LANG_OFF(muxsort.collection), lang_specific, "Collection"},
@@ -2259,7 +2259,7 @@ static const lang_field lang_fields[] = {
     {"muxsort", LANG_OFF(muxsort.help.tag), lang_specific, "Set Content Explorer sorting level for items tagged as %s (100 top of list 1 bottom of list)"},
 
     // muxspace
-    {"muxspace", LANG_OFF(muxspace.title), lang_specific, "STORAGE SPACE"},
+    {"muxspace", LANG_OFF(muxspace.title), lang_specific, "Storage Space"},
     {"muxspace", LANG_OFF(muxspace.overview), lang_specific, "Reports how much room is used and free on each storage device attached to your system, so you can see at a glance where content is going."},
     {"muxspace", LANG_OFF(muxspace.help.module), lang_specific, "View the current used space of the mounted storage devices"},
     {"muxspace", LANG_OFF(muxspace.help.primary), lang_specific, "The card muOS starts from. It holds the MUOS directory along with your content, saves and configuration."},
@@ -2320,7 +2320,7 @@ static const lang_field lang_fields[] = {
     {"muxstorage", LANG_OFF(muxstorage.confirm.migrate), lang_specific, "Copy %s to secondary storage and start using it from there?\nThe copy on primary storage is left alone until you purge it."},
     {"muxstorage", LANG_OFF(muxstorage.confirm.sync), lang_specific, "Copy %s back to primary storage?\nIt carries on being used from secondary storage afterwards."},
     {"muxstorage", LANG_OFF(muxstorage.confirm.purge), lang_specific, "%s will be wiped from secondary storage and used from primary storage again.\nSync it first if you have not already."},
-    {"muxstorage", LANG_OFF(muxstorage.title), lang_specific, "STORAGE"},
+    {"muxstorage", LANG_OFF(muxstorage.title), lang_specific, "Storage"},
     {"muxstorage", LANG_OFF(muxstorage.overview), lang_specific, "Chooses which card your saves, artwork, themes and other personal data are kept on, so they survive the first card being reflashed.\n\nCopying to the second card leaves the original in place until it has finished, and syncing copies it back to the first card while still using it from the second."},
     {"muxstorage", LANG_OFF(muxstorage.apps), lang_specific, "Applications"},
     {"muxstorage", LANG_OFF(muxstorage.bios), lang_specific, "System BIOS"},
@@ -2368,7 +2368,7 @@ static const lang_field lang_fields[] = {
     {"muxstorage", LANG_OFF(muxstorage.nothing), lang_specific, "There is nothing to do"},
 
     // muxtag
-    {"muxtag", LANG_OFF(muxtag.title), lang_specific, "TAG"},
+    {"muxtag", LANG_OFF(muxtag.title), lang_specific, "Tag"},
     {"muxtag", LANG_OFF(muxtag.overview), lang_specific, "Marks the content you selected with a tag, such as completed or in progress, so it stands out in lists and can be filtered on later."},
     {"muxtag", LANG_OFF(muxtag.help), lang_specific, "Change the tag of your current selected content to make it stand out"},
     {"muxtag", LANG_OFF(muxtag.none), lang_specific, "No Tags Found..."},
@@ -2377,18 +2377,18 @@ static const lang_field lang_fields[] = {
     {"muxtag", LANG_OFF(muxtag.sort_help), lang_specific, "Show only the content carrying the tag you pick, or choose None to show everything again"},
 
     // muxtask
-    {"muxtask", LANG_OFF(muxtask.title), lang_specific, "TASK TOOLKIT"},
+    {"muxtask", LANG_OFF(muxtask.title), lang_specific, "Task Toolkit"},
     {"muxtask", LANG_OFF(muxtask.overview), lang_specific, "Runs the maintenance scripts kept on your device, covering clean-up, restoring defaults and toggling services on and off. Scripts report their progress as they run and say what changed once finished."},
     {"muxtask", LANG_OFF(muxtask.none), lang_specific, "No Tasks Found"},
     {"muxtask", LANG_OFF(muxtask.none_hint), lang_specific, "Task scripts placed on your current storage will appear here."},
 
     // muxtester
-    {"muxtester", LANG_OFF(muxtester.title), lang_specific, "INPUT TESTER"},
+    {"muxtester", LANG_OFF(muxtester.title), lang_specific, "Input Tester"},
     {"muxtester", LANG_OFF(muxtester.quit), lang_specific, "Press DOWN + B to finish testing"},
     {"muxtester", LANG_OFF(muxtester.quit_alt), lang_specific, "Press DOWN + A to finish testing"},
 
     // muxtheme
-    {"muxtheme", LANG_OFF(muxtheme.title), lang_specific, "THEME PICKER"},
+    {"muxtheme", LANG_OFF(muxtheme.title), lang_specific, "Theme Picker"},
     {"muxtheme", LANG_OFF(muxtheme.overview), lang_specific, "Lists the themes installed on your device. Select one to apply it and the interface changes immediately, covering colours, fonts, glyphs and wallpapers. Themes are installed from archives through the Archive Manager."},
     {"muxtheme", LANG_OFF(muxtheme.none), lang_specific, "No Themes Installed..."},
     {"muxtheme", LANG_OFF(muxtheme.none_hint), lang_specific, "Themes install from archives through the Archive Manager."},
@@ -2399,7 +2399,7 @@ static const lang_field lang_fields[] = {
     {"muxtheme", LANG_OFF(muxtheme.no_credit), lang_specific, "There are no attributed credits!"},
 
     // muxthemedown
-    {"muxthemedown", LANG_OFF(muxthemedown.title), lang_specific, "THEME DOWNLOAD"},
+    {"muxthemedown", LANG_OFF(muxthemedown.title), lang_specific, "Theme Download"},
     {"muxthemedown", LANG_OFF(muxthemedown.overview), lang_specific, "Lists themes available to download from the community. Select one to fetch and install it, then apply it from the theme list. A preview is shown for each so you can see how it looks before committing to it."},
     {"muxthemedown", LANG_OFF(muxthemedown.theme_removed), lang_specific, "Theme Removed"},
     {"muxthemedown", LANG_OFF(muxthemedown.theme_extracting), lang_specific, "Theme Extraction In Process"},
@@ -2413,7 +2413,7 @@ static const lang_field lang_fields[] = {
     {"muxthemedown", LANG_OFF(muxthemedown.error_get_data), lang_specific, "Error Retrieving Theme Data"},
 
     // muxthemefilter
-    {"muxthemefilter", LANG_OFF(muxthemefilter.title), lang_specific, "THEME FILTER"},
+    {"muxthemefilter", LANG_OFF(muxthemefilter.title), lang_specific, "Theme Filter"},
     {"muxthemefilter", LANG_OFF(muxthemefilter.overview), lang_specific, "Narrows the theme list to those that suit your device, filtering by screen size and other properties so you only see themes that will fit."},
     {"muxthemefilter", LANG_OFF(muxthemefilter.all_themes), lang_specific, "Theme Compatibility"},
     {"muxthemefilter", LANG_OFF(muxthemefilter.compat.device), lang_specific, "Device"},
@@ -2429,7 +2429,7 @@ static const lang_field lang_fields[] = {
     {"muxthemefilter", LANG_OFF(muxthemefilter.help.lookup), lang_specific, "Filter to theme with a name containing lookup text."},
 
     // muxthemeopt
-    {"muxthemeopt", LANG_OFF(muxthemeopt.title), lang_specific, "THEME OPTIONS"},
+    {"muxthemeopt", LANG_OFF(muxthemeopt.title), lang_specific, "Theme Options"},
     {"muxthemeopt", LANG_OFF(muxthemeopt.overview), lang_specific, "Adjusts how the active theme is presented, covering scaling, resolution and which alternate colour scheme it uses."},
     {"muxthemeopt", LANG_OFF(muxthemeopt.header_height), lang_specific, "Header Height"},
     {"muxthemeopt", LANG_OFF(muxthemeopt.footer_height), lang_specific, "Footer Height"},
@@ -2452,14 +2452,14 @@ static const lang_field lang_fields[] = {
     {"muxthemeopt", LANG_OFF(muxthemeopt.help.label_width), lang_specific, "Override the maximum width of the left side option label as a percentage of content width (Default uses the theme value)"},
 
     // muxtimezone
-    {"muxtimezone", LANG_OFF(muxtimezone.title), lang_specific, "TIMEZONE"},
+    {"muxtimezone", LANG_OFF(muxtimezone.title), lang_specific, "Timezone"},
     {"muxtimezone", LANG_OFF(muxtimezone.overview), lang_specific, "Chooses the timezone your clock follows, listed by region and city. Pick your region first, then the closest city to you."},
     {"muxtimezone", LANG_OFF(muxtimezone.none), lang_specific, "No Timezones Found..."},
     {"muxtimezone", LANG_OFF(muxtimezone.save), lang_specific, "Saving Timezone"},
     {"muxtimezone", LANG_OFF(muxtimezone.help), lang_specific, "Select your preferred timezone"},
 
     // muxtweakadv
-    {"muxtweakadv", LANG_OFF(muxtweakadv.title), lang_specific, "ADVANCED"},
+    {"muxtweakadv", LANG_OFF(muxtweakadv.title), lang_specific, "Advanced"},
     {"muxtweakadv", LANG_OFF(muxtweakadv.section.input), lang_specific, "Input"},
     {"muxtweakadv", LANG_OFF(muxtweakadv.section.display), lang_specific, "Display"},
     {"muxtweakadv", LANG_OFF(muxtweakadv.section.audio), lang_specific, "Audio"},
@@ -2571,7 +2571,7 @@ static const lang_field lang_fields[] = {
     {"muxtweakadv", LANG_OFF(muxtweakadv.help.box_art_pad_div), lang_specific, "Box Art Padding in Customisation is a percentage, and this decides how much actual space each percent is worth.\n\nA smaller number here makes every percent count for more, so the same padding setting pushes the artwork further from the edge. A larger number makes each percent count for less, so the padding becomes finer to adjust.\n\nLeave it alone unless the padding steps feel too coarse or too gentle."},
 
     // muxtweakgen
-    {"muxtweakgen", LANG_OFF(muxtweakgen.title), lang_specific, "GENERAL"},
+    {"muxtweakgen", LANG_OFF(muxtweakgen.title), lang_specific, "General"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.section.options), lang_specific, "Options"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.section.submenu), lang_specific, "Additionals"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.overview), lang_specific, "Covers the everyday settings, including sound, brightness, startup behaviour, language and the colours of the interface."},
@@ -2616,7 +2616,7 @@ static const lang_field lang_fields[] = {
     // muxvisual
     {"muxvisual", LANG_OFF(muxvisual.sort), lang_specific, "Tag Sort Priority"},
     {"muxvisual", LANG_OFF(muxvisual.overview), lang_specific, "Chooses what appears on screen, from the clock and battery through to folder counts, scrolling labels and which hints are shown."},
-    {"muxvisual", LANG_OFF(muxvisual.title), lang_specific, "INTERFACE OPTIONS"},
+    {"muxvisual", LANG_OFF(muxvisual.title), lang_specific, "Interface Options"},
     {"muxvisual", LANG_OFF(muxvisual.section.header_bar), lang_specific, "Header"},
     {"muxvisual", LANG_OFF(muxvisual.section.appearance), lang_specific, "Appearance"},
     {"muxvisual", LANG_OFF(muxvisual.section.labels), lang_specific, "Names and Labels"},
@@ -2742,7 +2742,7 @@ static const lang_field lang_fields[] = {
     {"muxvisual", LANG_OFF(muxvisual.help.font), lang_specific, "The typeface used across the whole interface."},
 
     // muxwebserv
-    {"muxwebserv", LANG_OFF(muxwebserv.title), lang_specific, "WEB SERVICES"},
+    {"muxwebserv", LANG_OFF(muxwebserv.title), lang_specific, "Web Services"},
     {"muxwebserv", LANG_OFF(muxwebserv.overview), lang_specific, "Manage each network service and its connection settings. Each service runs only while enabled."},
     {"muxwebserv", LANG_OFF(muxwebserv.ttyd), lang_specific, "Virtual Terminal"},
     {"muxwebserv", LANG_OFF(muxwebserv.syncthing), lang_specific, "Syncthing"},
