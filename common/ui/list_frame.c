@@ -245,6 +245,7 @@ void list_frame_set_inert(const int row, const int value) {
 
 void list_frame_remember(const lv_obj_t *label) {
     if (!list_frame_active() || !label || !row_labels) return;
+    if (!config.settings.advanced.remember_section) return;
 
     for (int i = 0; i < row_total; i++) {
         if (row_labels[i] != label) continue;
@@ -257,6 +258,7 @@ void list_frame_remember(const lv_obj_t *label) {
 
 void list_frame_remember_section(void) {
     if (!list_frame_active()) return;
+    if (!config.settings.advanced.remember_section) return;
 
     marker_write(-1);
 }
@@ -268,6 +270,11 @@ int list_frame_restore(void) {
     marker_path(path, sizeof(path));
 
     if (!file_exist(path)) return 0;
+
+    if (!config.settings.advanced.remember_section) {
+        remove(path);
+        return 0;
+    }
 
     const int frame = read_line_int_from(path, 1);
     const int row = read_line_int_from(path, 2);

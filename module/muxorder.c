@@ -41,7 +41,7 @@ static void add_order_item(const int index) {
     lv_obj_t *ui_lbl_item_value = lv_label_create(ui_pnl_item);
 
     apply_theme_list_panel(ui_pnl_item);
-    apply_theme_list_item(&theme, ui_lbl_item, order_method_name(method));
+    apply_theme_option_item_label(&theme, ui_lbl_item, order_method_name(method), 1);
     apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, order_method_glyph(method));
     apply_theme_list_value(&theme, ui_lbl_item_value, "");
 
@@ -255,7 +255,7 @@ int muxorder_main(void) {
     init_navigation_group();
 
     lv_obj_update_layout(ui_pnl_content);
-    gen_step_movement(0, +1, 1, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
 
     const char *scope_options[scope_count] = {lang.generic.scope_directory, lang.muxorder.scope_global};
     dialogue_init(

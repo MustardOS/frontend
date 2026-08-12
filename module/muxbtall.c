@@ -89,7 +89,7 @@ static void populate_paired_device_list(void) {
         apply_theme_list_panel(ui_pnl_device);
 
         lv_obj_t *ui_lbl_device = lv_label_create(ui_pnl_device);
-        apply_theme_list_item(&theme, ui_lbl_device, name);
+        apply_theme_option_item_label(&theme, ui_lbl_device, name, 1);
 
         lv_obj_t *ui_lbl_device_status = lv_label_create(ui_pnl_device);
         apply_theme_list_value(
@@ -105,12 +105,6 @@ static void populate_paired_device_list(void) {
         lv_group_add_obj(ui_group_panel, ui_pnl_device);
 
         set_owned_user_data(ui_pnl_device, strdup(mac));
-
-        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_device, ui_ico_device, name);
-        apply_text_long_dot(&theme, ui_lbl_device);
-
-        const lv_coord_t name_max_w = theme.misc.content.width * OPTION_COLUMN_PCT / 100;
-        if (lv_obj_get_width(ui_lbl_device) > name_max_w) lv_obj_set_width(ui_lbl_device, name_max_w);
     }
     fclose(file);
 
@@ -141,7 +135,7 @@ static void bt_poll_task(lv_timer_t *t) {
     populate_paired_device_list();
 
     if (bti_index > -1 && bti_index < ui_count_static) {
-        gen_step_movement(bti_index, +1, 1, 0, 1);
+        gen_step_movement(bti_index, +1, 2, 0, 1);
         bti_index = -1;
     }
 
@@ -208,7 +202,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 1, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 

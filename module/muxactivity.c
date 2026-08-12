@@ -1192,7 +1192,7 @@ static void show_detail_view(const activity_item_t *it) {
         apply_theme_list_panel(ui_pnl_act);
 
         lv_obj_t *ui_lbl_act_item = lv_label_create(ui_pnl_act);
-        apply_theme_list_item(&theme, ui_lbl_act_item, detail_label);
+        apply_theme_option_item_label(&theme, ui_lbl_act_item, detail_label, 1);
 
         lv_obj_t *ui_lbl_act_item_value = lv_label_create(ui_pnl_act);
         apply_theme_list_value(&theme, ui_lbl_act_item_value, detail_value);
@@ -1207,8 +1207,6 @@ static void show_detail_view(const activity_item_t *it) {
 
         adjust_label_value_width(ui_pnl_act, ui_lbl_act_item, ui_lbl_act_item_value);
         apply_text_long_dot(&theme, ui_lbl_act_item_value);
-
-        apply_text_long_dot(&theme, ui_lbl_act_item);
     }
 
     lv_obj_update_layout(ui_pnl_content);
@@ -1354,7 +1352,7 @@ static void show_global_view(void) {
         apply_theme_list_panel(ui_pnl_act);
 
         lv_obj_t *ui_lbl_act_item = lv_label_create(ui_pnl_act);
-        apply_theme_list_item(&theme, ui_lbl_act_item, global_label);
+        apply_theme_option_item_label(&theme, ui_lbl_act_item, global_label, 1);
 
         lv_obj_t *ui_lbl_act_item_value = lv_label_create(ui_pnl_act);
         apply_theme_list_value(&theme, ui_lbl_act_item_value, global_value);
@@ -1369,8 +1367,6 @@ static void show_global_view(void) {
 
         adjust_label_value_width(ui_pnl_act, ui_lbl_act_item, ui_lbl_act_item_value);
         apply_text_long_dot(&theme, ui_lbl_act_item_value);
-
-        apply_text_long_dot(&theme, ui_lbl_act_item);
     }
 
     lv_obj_update_layout(ui_pnl_content);
@@ -1398,6 +1394,8 @@ static void html_escape(FILE *f, const char *s) {
         }
     }
 }
+
+static mux_dialogue export_dlg;
 
 static void export_activity_html(void) {
     char html_export[MAX_BUFFER_SIZE];
@@ -1632,7 +1630,12 @@ static void export_activity_html(void) {
 
     fclose(f);
 
-    toast_message(lang.muxactivity.export_success, tst_wait_m);
+    char saved[MAX_BUFFER_SIZE];
+    snprintf(saved, sizeof(saved), lang.muxactivity.export_saved, html_export);
+
+    dialogue_set_description(&export_dlg, saved);
+    dialogue_open(&export_dlg, &theme);
+
     refresh_screen(ui_screen, 1);
 }
 
@@ -1849,6 +1852,11 @@ static void handle_a(void) {
         return;
     }
 
+    if (dialogue_active(&export_dlg)) {
+        dialogue_dismiss(&export_dlg);
+        return;
+    }
+
     if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         dialogue_dismiss(&remove_dlg);
@@ -1880,6 +1888,12 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (more_active(&more_menu)) {
         more_cancel(&more_menu);
+        return;
+    }
+
+    if (dialogue_active(&export_dlg)) {
+        dialogue_mark_cancelled(&export_dlg);
+        dialogue_dismiss(&export_dlg);
         return;
     }
 
@@ -2058,17 +2072,21 @@ static void handle_help(void) {
     more_entry entries[5];
     int count = 0;
 
-    if (remove_allowed()) entries[count++] = (more_entry) {more_remove, 1};
-
     if (in_list) {
         entries[count++] = (more_entry) {more_overview, 1};
         entries[count++] = (more_entry) {more_launch_count, activity_display_mode != 1};
         entries[count++] = (more_entry) {more_duration, activity_display_mode != 0};
     }
 
+    play_sound(snd_info_open);
+
+    if (count == 0) {
+        show_help();
+        return;
+    }
+
     entries[count++] = (more_entry) {more_help, 1};
 
-    play_sound(snd_info_open);
     more_open(&more_menu, &theme, ui_screen, entries, count);
 }
 
@@ -2156,6 +2174,8 @@ int muxactivity_main() {
     }
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
+    dialogue_init_message(&export_dlg, &theme, ui_screen, lang.muxactivity.title, NULL, "", lang.generic.close);
+
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

@@ -136,6 +136,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/advanced", "bt_scan_timeout", CFG_OFF(settings.advanced.bt_scan_timeout), 0, {.i = 20}},
     {CONF_CONFIG_PATH "settings/advanced", "part_external", CFG_OFF(settings.advanced.usb_part), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "part_secondary", CFG_OFF(settings.advanced.second_part), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/advanced", "remember_section", CFG_OFF(settings.advanced.remember_section), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/advanced", "trust_modify", CFG_OFF(settings.advanced.trust_modify), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "trust_power", CFG_OFF(settings.advanced.trust_power), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/advanced", "trust_remove", CFG_OFF(settings.advanced.trust_remove), 0, {.i = 0}},

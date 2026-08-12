@@ -1,4 +1,6 @@
 #include "muxshare.h"
+
+#define THIRD_PARTY_DIR CONF_CONFIG_PATH "third_party"
 #include "../common/ui/empty_state.h"
 #include "../common/ui/orientation.h"
 
@@ -20,8 +22,8 @@ static int16_t *flag_task(void) {
 }
 
 static mux_apps app[] = {
-    {.name = "Archive Manager", .icon = "archive", .grid = "Archive", .help = "", .kiosk_flag = flag_archive},
-    {.name = "Task Toolkit", .icon = "task", .grid = "Toolkit", .help = "", .kiosk_flag = flag_task},
+    {.name = "Archive Manager", .icon = "archive", .grid = "Archive", .help = NULL, .kiosk_flag = flag_archive},
+    {.name = "Task Toolkit", .icon = "task", .grid = "Toolkit", .help = NULL, .kiosk_flag = flag_task},
 };
 
 static const char *app_paths[3];
@@ -84,15 +86,47 @@ static int get_app_base(char *out_base, const char *app_name) {
     return -1;
 }
 
-static void show_help(void) {
+static const char *builtin_help_text(const char *name) {
+    if (!name) return NULL;
+
+    if (strcasecmp(name, "Archive Manager") == 0) return lang.muxapp.help.archive;
+    if (strcasecmp(name, "Task Toolkit") == 0) return lang.muxapp.help.task;
+
+    return NULL;
+}
+
+static int app_is_bundled(const char *app_name) {
+    if (get_mux_app(app_name)) return 1;
+
+    char base[MAX_BUFFER_SIZE];
+    if (get_app_base(base, app_name) != 0) return 1;
+
+    return strcmp(base, OPT_SHARE_PATH "application") == 0;
+}
+
+static int third_party_notice_needed(const char *app_name) {
+    if (!app_name || !app_name[0] || app_is_bundled(app_name)) return 0;
+
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/%08X", THIRD_PARTY_DIR, fnv_hash_str(app_name));
+
+    if (file_exist(path)) return 0;
+
+    create_directories(THIRD_PARTY_DIR "/", 0);
+    write_text_to_file(path, "w", INT, 1);
+
+    return 1;
+}
+
+static void show_app_info(void) {
     char *extra_data_dup = strdup(items[current_item_index].extra_data);
     const mux_apps *mux_app = get_mux_app(get_last_dir(extra_data_dup));
     free(extra_data_dup);
 
-    if (mux_app && mux_app->help) {
-        char message[MAX_BUFFER_SIZE];
-        snprintf(message, sizeof(message), "%s", mux_app->help);
-        show_info_box(TRS(items[current_item_index].name), TRS(message), 0);
+    const char *builtin_help = mux_app ? builtin_help_text(mux_app->name) : NULL;
+
+    if (builtin_help && builtin_help[0]) {
+        show_info_box(TRS(items[current_item_index].name), builtin_help, 0);
     } else {
         char app_lang_file[FILENAME_MAX];
         snprintf(app_lang_file, sizeof(app_lang_file), "%s/" APP_LANGUAGE, items[current_item_index].extra_data);
@@ -456,6 +490,14 @@ static void handle_a(void) {
             }
         }
 
+        if (third_party_notice_needed(item_name)) {
+            play_sound(snd_info_open);
+            show_info_box(lang.muxapp.third_party.title, lang.muxapp.third_party.message, 0);
+
+            free(extra_data_dup);
+            return;
+        }
+
         play_sound(snd_confirm);
 
         if (!skip_toast) {
@@ -502,6 +544,17 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
+static void show_help(void) {
+    show_info_box(lang.muxapp.title, lang.muxapp.overview, 0);
+}
+
+static void handle_info(void) {
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+
+    play_sound(snd_info_open);
+    show_app_info();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
@@ -544,6 +597,8 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
                                   {ui_lbl_nav_x, lang.generic.option, 0},
+                                  {ui_lbl_nav_y_glyph, "", 1},
+                                  {ui_lbl_nav_y, lang.generic.info, 1},
                                   {NULL, NULL, 0}});
 
     check_focus();
@@ -610,6 +665,7 @@ int muxapp_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
+                [mux_input_y] = handle_info,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_dpad_left] = handle_list_nav_left,

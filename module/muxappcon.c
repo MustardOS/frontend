@@ -35,7 +35,7 @@ static void add_static_item(
     apply_theme_list_panel(ui_pnl_info_item);
 
     lv_obj_t *ui_lbl_info_item = lv_label_create(ui_pnl_info_item);
-    apply_theme_list_item(&theme, ui_lbl_info_item, item_label);
+    apply_theme_option_item_label(&theme, ui_lbl_info_item, item_label, 1);
 
     lv_obj_t *ui_ico_info_item = lv_img_create(ui_pnl_info_item);
     apply_theme_list_glyph(&theme, ui_ico_info_item, mux_module, glyph_name);
@@ -100,7 +100,7 @@ static void init_navigation_group(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 0, -1, 1);
+    gen_step_movement(steps, direction, 2, -1, 1);
 }
 
 static void list_nav_prev(const int steps) {

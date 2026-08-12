@@ -9,9 +9,8 @@ enum { ui_count_dynamic = E_SIZE(NETWORK_ELEMENTS) };
 
 #define NET_SCRIPT "script/init/async/S02network.sh"
 
-const char *pass_args[] = {OPT_PATH "script/web/password.sh", NULL};
-const char *net_c_args[] = {OPT_PATH NET_SCRIPT, "connect", NULL};
-const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
+static const char *pass_args[] = {OPT_PATH "script/web/password.sh", NULL};
+static const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
 
 #define PASS_ENCODE "********"
 
@@ -30,8 +29,6 @@ static char address_file[MAX_BUFFER_SIZE];
 static char current_profile[MAX_BUFFER_SIZE] = "";
 static char pending_password[MAX_BUFFER_SIZE] = "";
 
-static unsigned connect_grace_ticks = 0;
-
 static int connect_process_done = 1;
 static int connect_exit_code = 0;
 static unsigned connect_settle_ticks = 0;
@@ -47,7 +44,6 @@ static mux_dialogue forget_dlg;
 
 static void reset_connect_state(void) {
     connecting_phase = 0;
-    connect_grace_ticks = 0;
     connect_settle_ticks = 0;
 }
 
@@ -418,7 +414,6 @@ static void net_connect_check(const int exit_code) {
 
     ui_network_locked = 1;
     connecting_phase = 1;
-    connect_grace_ticks = 0;
     last_status[0] = '\0';
 
     if (!get_current_ip()) set_connect_value(lang.muxnetprofile.connect_try);
@@ -550,7 +545,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    gen_step_movement(0, +1, 1, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
     nav_moved = 1;
 
     check_focus();
@@ -571,7 +566,7 @@ static void check_focus() {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 0, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 
@@ -785,7 +780,6 @@ static void handle_profile_save(void) {
     connect_process_done = 0;
     connect_exit_code = 0;
     connecting_phase = 1;
-    connect_grace_ticks = 0;
     connect_settle_ticks = 0;
 
     clear_profile_status_file();

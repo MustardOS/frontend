@@ -939,6 +939,12 @@ static mux_input_type remap_stick_to_dpad(const mux_nav_type nav, const mux_inpu
     return mux_type;
 }
 
+static void (*msgbox_dismiss_cb)(void) = NULL;
+
+void mux_input_set_msgbox_dismiss(void (*cb)(void)) {
+    msgbox_dismiss_cb = cb;
+}
+
 // Invokes the relevant handler(s) for a particular input mux_type and action.
 // The alt ("hold") modifier input for this screen, or mux_input_cOUNT when disabled.
 static mux_input_type hold_modifier(const mux_input_options *opts) {
@@ -1011,6 +1017,12 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
         case mux_input_release:
             handler = release[mux_type];
             break;
+    }
+
+    // Whatever MENU opened, MENU closes again!
+    if (mux_type == mux_input_menu && action == mux_input_release && msgbox_active && msgbox_dismiss_cb) {
+        msgbox_dismiss_cb();
+        return;
     }
 
     // First invoke specific handler (if one was registered for this input mux_type and action).

@@ -133,7 +133,7 @@ static void rebuild_groups(const int count, const int target_index) {
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
-    gen_step_movement(target_index >= 0 && target_index < count ? target_index : 0, +1, 1, 0, 0);
+    gen_step_movement(target_index >= 0 && target_index < count ? target_index : 0, +1, 2, 0, 0);
     nav_moved = 1;
 }
 
@@ -178,8 +178,8 @@ static void show_main_view(void) {
 }
 
 static void load_service_values(void) {
-    int16_t *enabled = service_enabled(selected_service);
-    char *port = service_port(selected_service);
+    const int16_t *enabled = service_enabled(selected_service);
+    const char *port = service_port(selected_service);
 
     editing_enabled = enabled ? *enabled : 0;
     snprintf(editing_port, sizeof(editing_port), "%s", port && *port ? port : service_default_port(selected_service));
@@ -247,7 +247,8 @@ static void show_detail_view(const enum web_service service) {
 }
 
 static int valid_port(const char *port) {
-    if (!port || !*port) return 0;
+    if (!*port) return 0;
+
     for (const unsigned char *p = (const unsigned char *) port; *p; p++) {
         if (!isdigit(*p)) return 0;
     }

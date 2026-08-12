@@ -26,7 +26,6 @@ static char current_content_label[MAX_BUFFER_SIZE];
 static int *union_dir_item_count = NULL;
 static int union_dir_item_count_len = 0;
 
-
 static mux_more more_menu;
 
 static void navigate_to_dir(const char *new_dir, int restore_index);
@@ -441,7 +440,7 @@ static void ensure_content_meta_dir(const char *sub_path) {
     create_directories(init_meta_dir, 0);
 }
 
-static void strip_pico8_extension(char *file_path, const char *display) {
+static void strip_pico8_extension(const char *file_path, const char *display) {
     if (!ends_with(file_path, ".p8.png") && !ends_with(file_path, ".png.p8")) return;
 
     char *dot = strrchr(display, '.');
@@ -1377,6 +1376,11 @@ static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
     if (msgbox_active || !ui_count_static || hold_call || video_preview_active()) return;
+
+    if (items[current_item_index].content_type == content_type_menu) {
+        play_sound(snd_error);
+        return;
+    }
 
     play_sound(snd_confirm);
 

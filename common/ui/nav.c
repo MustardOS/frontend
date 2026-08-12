@@ -38,10 +38,27 @@ static int bounce_last_remaining = -1;
 #define BOUNCE_SEGMENT_WIDTH 15
 #define BOUNCE_STEP          2
 
+static lv_coord_t footer_last_content_w = -1;
+static lv_coord_t footer_last_inner_w = -1;
+static const lv_obj_t *footer_last_panel = NULL;
+
 static void footer_scroll_anim_cb(void *obj, const int32_t x) {
     lv_obj_t *panel = obj;
     const lv_coord_t delta = lv_obj_get_scroll_x(panel) - (lv_coord_t) x;
     if (delta != 0) lv_obj_scroll_by(panel, delta, 0, LV_ANIM_OFF);
+}
+
+void footer_nav_reset_scroll(void) {
+    if (ui_pnl_footer && lv_obj_is_valid(ui_pnl_footer)) {
+        lv_anim_del(ui_pnl_footer, footer_scroll_anim_cb);
+
+        const lv_coord_t cur = lv_obj_get_scroll_x(ui_pnl_footer);
+        if (cur != 0) lv_obj_scroll_by(ui_pnl_footer, cur, 0, LV_ANIM_OFF);
+    }
+
+    footer_last_content_w = -1;
+    footer_last_inner_w = -1;
+    footer_last_panel = NULL;
 }
 
 static void help_panel_y_cb(void *obj, const int32_t y) {
@@ -73,14 +90,10 @@ static void help_hide_ready_cb(lv_anim_t *a) {
 void footer_nav_check_scroll(void) {
     if (!ui_pnl_footer) return;
 
-    static lv_coord_t last_content_w = -1;
-    static lv_coord_t last_inner_w = -1;
-    static const lv_obj_t *last_footer = NULL;
-
-    if (ui_pnl_footer != last_footer) {
-        last_footer = ui_pnl_footer;
-        last_content_w = -1;
-        last_inner_w = -1;
+    if (ui_pnl_footer != footer_last_panel) {
+        footer_last_panel = ui_pnl_footer;
+        footer_last_content_w = -1;
+        footer_last_inner_w = -1;
     }
 
     lv_obj_update_layout(ui_pnl_footer);
@@ -95,10 +108,10 @@ void footer_nav_check_scroll(void) {
     }
 
     const lv_coord_t measured_inner = lv_obj_get_width(ui_pnl_footer);
-    if (measured_w == last_content_w && measured_inner == last_inner_w) return;
+    if (measured_w == footer_last_content_w && measured_inner == footer_last_inner_w) return;
 
-    last_content_w = measured_w;
-    last_inner_w = measured_inner;
+    footer_last_content_w = measured_w;
+    footer_last_inner_w = measured_inner;
 
     lv_anim_del(ui_pnl_footer, footer_scroll_anim_cb);
 
@@ -957,6 +970,8 @@ static lv_obj_t *hoist_panel = NULL;
 static uint32_t hoist_index = 0;
 
 void nav_screen_reset(void) {
+    footer_nav_reset_scroll();
+
     raise_row = NULL;
     hoist_panel = NULL;
     hoist_index = 0;

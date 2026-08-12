@@ -251,7 +251,7 @@ static void populate_profile_list(void) {
         set_owned_user_data(ui_pnl_profile, strdup(profile_store));
 
         lv_obj_t *ui_lbl_profile = lv_label_create(ui_pnl_profile);
-        apply_theme_list_item(&theme, ui_lbl_profile, profile_store);
+        apply_theme_option_item_label(&theme, ui_lbl_profile, profile_store, 1);
 
         lv_obj_t *ui_lbl_profile_status = lv_label_create(ui_pnl_profile);
         apply_theme_list_value(&theme, ui_lbl_profile_status, status);
@@ -263,9 +263,6 @@ static void populate_profile_list(void) {
         lv_group_add_obj(ui_group_value, ui_lbl_profile_status);
         lv_group_add_obj(ui_group_glyph, ui_ico_profile);
         lv_group_add_obj(ui_group_panel, ui_pnl_profile);
-
-        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_profile, ui_ico_profile, profile_store);
-        apply_text_long_dot(&theme, ui_lbl_profile);
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
@@ -417,7 +414,7 @@ static void init_navigation_group(void) {
         }
         free(saved_name);
 
-        gen_step_movement(target, +1, 1, 0, 1);
+        gen_step_movement(target, +1, 2, 0, 1);
     }
 }
 

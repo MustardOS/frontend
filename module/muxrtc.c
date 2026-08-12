@@ -42,7 +42,13 @@ static void list_nav_move(int steps, int direction);
 static void handle_keyboard_ok_press(void);
 
 static void show_help(void) {
-    show_info_box(lang.muxrtc.title, lang.muxrtc.help, 0);
+    const struct help_msg help_messages[] = {
+#define RTC(NAME, UDATA) {UDATA, lang.muxrtc.help_item.NAME},
+        RTC_ELEMENTS
+#undef RTC
+    };
+
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
 static void toggle_custom_format(const int show) {
@@ -83,6 +89,23 @@ static int days_in_month(const int year, const int month) {
             break;
     }
     return max_days;
+}
+
+static const char *current_timezone(void) {
+    static char zone[MAX_BUFFER_SIZE];
+
+    char target[MAX_BUFFER_SIZE];
+    const ssize_t len = readlink(LOCAL_TIME, target, sizeof(target) - 1);
+
+    if (len <= 0) return lang.generic.unknown;
+    target[len] = '\0';
+
+    const char *prefix = "/usr/share/zoneinfo/";
+    const char *name = strstr(target, prefix);
+
+    snprintf(zone, sizeof(zone), "%s", name ? name + strlen(prefix) : target);
+
+    return zone[0] ? zone : lang.generic.unknown;
 }
 
 static void restore_clock_settings(void) {
@@ -134,6 +157,7 @@ static void restore_clock_settings(void) {
 
     lv_label_set_text(ui_val_notation_rtc, notation[rtc.notation]);
     lv_label_set_text(ui_val_custom_rtc, rtc.custom_fmt);
+    lv_label_set_text(ui_val_timezone_rtc, current_timezone());
 
     toggle_custom_format(rtc.notation == NOTATION_CUSTOM);
 }
@@ -227,7 +251,7 @@ static void check_focus(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 0, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 

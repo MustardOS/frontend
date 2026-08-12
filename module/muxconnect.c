@@ -60,7 +60,7 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(connect, bluetooth);
     }
 
-    gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 1, 0, 1);
+    gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 2, 0, 1);
 }
 
 static void handle_option_prev(void) {

@@ -595,6 +595,8 @@ static void handle_a(void) {
 
     if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+
+        dialogue_mark_silent(&save_dlg);
         hide_save_dialog();
 
         if (opt == mux_unsaved_save) {
@@ -791,7 +793,7 @@ static void init_navigation_group(void) {
         apply_theme_list_panel(device_panel);
 
         device_label = lv_label_create(device_panel);
-        apply_theme_list_item(&theme, device_label, lang.muxremap.input_label);
+        apply_theme_option_item_label(&theme, device_label, lang.muxremap.input_label, 1);
 
         device_value = lv_label_create(device_panel);
         apply_theme_list_value(&theme, device_value, ctrl_name[0] ? ctrl_name : lang.generic.unknown);
@@ -801,8 +803,6 @@ static void init_navigation_group(void) {
 
         lv_obj_set_user_data(device_panel, (void *) (intptr_t) REMAP_DEVICE_ITEM);
 
-        apply_size_to_content(&theme, ui_pnl_content, device_label, device_glyph, lang.muxremap.input_label);
-        apply_text_long_dot(&theme, device_label);
 
         lv_group_add_obj(ui_group, device_label);
         lv_group_add_obj(ui_group_value, device_value);
@@ -815,7 +815,7 @@ static void init_navigation_group(void) {
         apply_theme_list_panel(layout_panel);
 
         layout_label = lv_label_create(layout_panel);
-        apply_theme_list_item(&theme, layout_label, lang.muxremap.layout_label);
+        apply_theme_option_item_label(&theme, layout_label, lang.muxremap.layout_label, 1);
 
         layout_value = lv_label_create(layout_panel);
         apply_theme_list_value(
@@ -832,8 +832,6 @@ static void init_navigation_group(void) {
 
         lv_obj_set_user_data(layout_panel, (void *) (intptr_t) REMAP_LAYOUT_ITEM);
 
-        apply_size_to_content(&theme, ui_pnl_content, layout_label, layout_glyph, lang.muxremap.layout_label);
-        apply_text_long_dot(&theme, layout_label);
     }
 
     for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
@@ -841,7 +839,7 @@ static void init_navigation_group(void) {
         apply_theme_list_panel(panel);
 
         lv_obj_t *label = lv_label_create(panel);
-        apply_theme_list_item(&theme, label, slot_defs[i].label);
+        apply_theme_option_item_label(&theme, label, slot_defs[i].label, 1);
 
         char val_label[PHYS_LABEL_SIZE];
         phys_to_label(phys[i], val_label);
@@ -858,8 +856,6 @@ static void init_navigation_group(void) {
 
         lv_obj_set_user_data(panel, (void *) (intptr_t) i);
 
-        apply_size_to_content(&theme, ui_pnl_content, label, glyph, slot_defs[i].label);
-        apply_text_long_dot(&theme, label);
 
         item_panels[i] = panel;
         item_labels[i] = label;

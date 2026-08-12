@@ -500,7 +500,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    gen_step_movement(0, +1, 1, 0, 1);
+    gen_step_movement(0, +1, 2, 0, 1);
     nav_moved = 1;
 }
 

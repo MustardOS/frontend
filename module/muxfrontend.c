@@ -498,11 +498,11 @@ static void module_config(void) {
 }
 
 static void module_tweakadv(void) {
-    exec_mux("tweakgen", "muxtweakadv", muxtweakadv_main);
+    exec_mux("config", "muxtweakadv", muxtweakadv_main);
 }
 
 static void module_danger(void) {
-    exec_mux("tweakgen", "muxdanger", muxdanger_main);
+    exec_mux("config", "muxdanger", muxdanger_main);
 }
 
 static void module_device(void) {

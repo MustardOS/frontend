@@ -19,3 +19,7 @@ int orientation_showing(void);
 void orientation_dismiss(void);
 
 void orientation_clear_showing(void);
+
+void orientation_tick(void);
+
+void orientation_reset_pending(void);

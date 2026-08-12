@@ -555,7 +555,7 @@ static void dialogue_play_dismiss(const mux_dialogue *dlg) {
     if (dlg->silent) return;
 
     const int backed_out = dlg->cancelled || (dlg->cancel_index >= 0 && dlg->selected == dlg->cancel_index);
-    play_sound(backed_out ? snd_back : snd_confirm);
+    play_sound(backed_out ? snd_info_close : snd_confirm);
 }
 
 void dialogue_show(mux_dialogue *dlg) {

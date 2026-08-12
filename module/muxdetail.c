@@ -1,6 +1,5 @@
 #include "muxshare.h"
 #include "../common/ui/orientation.h"
-#include "../common/ui/notify.h"
 #include "../common/ui/list_frame.h"
 #include "../common/battery.h"
 #include "ui/ui_muxdetail.h"
@@ -19,6 +18,7 @@ static int tap_count = 0;
 static int starter_image = 0;
 
 static mux_dialogue warn_dlg;
+static mux_dialogue export_dlg;
 
 static int read_file_trim(const char *path, char *out) {
     if (!out) return -1;
@@ -625,7 +625,7 @@ static const char *get_gateway(void) {
     if (!command_prefixed_value(argv, "default ", route, sizeof(route))) return lang.generic.unknown;
 
     char *save = NULL;
-    char *token = strtok_r(route, " \t", &save);
+    const char *token = strtok_r(route, " \t", &save);
     while (token) {
         if (strcmp(token, "via") == 0) {
             token = strtok_r(NULL, " \t", &save);
@@ -998,7 +998,12 @@ static void export_diagnostics(void) {
     fprintf(f, "%s: %s\n", lang.muxdetail.label.tp_traffic, get_tp_traffic());
 
     fclose(f);
-    toast_message(lang.muxdetail.report_ok, tst_wait_m);
+
+    char saved[MAX_BUFFER_SIZE];
+    snprintf(saved, sizeof(saved), lang.muxdetail.report_saved, path);
+
+    dialogue_set_description(&export_dlg, saved);
+    dialogue_open(&export_dlg, &theme);
 }
 
 static void show_help(void) {
@@ -1064,7 +1069,7 @@ static void init_navigation_group(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 0, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     nav_refresh();
 }
 
@@ -1183,6 +1188,11 @@ static void handle_keyboard_press(void) {
 }
 
 static void handle_a(void) {
+    if (dialogue_active(&export_dlg)) {
+        dialogue_dismiss(&export_dlg);
+        return;
+    }
+
     if (dialogue_active(&warn_dlg)) {
         const int idx = warn_dlg.selected;
         dialogue_dismiss(&warn_dlg);
@@ -1336,6 +1346,11 @@ static void handle_b(void) {
 
     if (key_show) {
         close_osk(key_entry, ui_group, ui_txt_entry_detail, ui_pnl_entry_detail);
+        return;
+    }
+
+    if (dialogue_active(&export_dlg)) {
+        dialogue_cancel(&export_dlg);
         return;
     }
 
@@ -1521,8 +1536,6 @@ static void init_elements(void) {
 }
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
-    notify_tick();
-
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, wall_general);
         adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_pnl_help, ui_pnl_progress_brightness,
@@ -1562,6 +1575,8 @@ int muxdetail_main(void) {
         &warn_dlg, &theme, ui_screen, lang.generic.warning, lang.muxdetail.warn, lang.generic.understand,
         lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
+
+    dialogue_init_message(&export_dlg, &theme, ui_screen, lang.muxdetail.title, NULL, "", lang.generic.close);
 
     init_timer(ui_refresh_task, update_detail_info_cb);
 

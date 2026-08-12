@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/list_frame.h"
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxtweakgen.h"
 
@@ -8,25 +9,6 @@ static char pending_submenu[64] = "";
 static void hide_save_dialog(void) {
     dialogue_dismiss(&save_dlg);
     pending_submenu[0] = '\0';
-}
-
-static mux_dialogue warn_dlg;
-static char warn_pending[64] = "";
-
-static void show_warn_dialog(const char *target) {
-    snprintf(warn_pending, sizeof(warn_pending), "%s", target);
-
-    if (warn_dlg.description_label) {
-        const char *desc = strcmp(target, "danger") == 0 ? lang.muxtweakgen.warn_danger : lang.muxtweakgen.warn;
-        lv_label_set_text(warn_dlg.description_label, desc);
-    }
-
-    dialogue_open(&warn_dlg, &theme);
-}
-
-static void hide_warn_dialog(void) {
-    dialogue_dismiss(&warn_dlg);
-    warn_pending[0] = '\0';
 }
 
 #define TWEAKGEN(NAME, UDATA) 1,
@@ -52,6 +34,8 @@ static char **audio_sinks = NULL;
 static int audio_sink_count = 0;
 static int audio_sink_refresh_ticks = 0;
 static long audio_sink_stamp = 0;
+static char audio_sink_name_last[MAX_BUFFER_SIZE] = {0};
+static char audio_sink_name_seen[MAX_BUFFER_SIZE] = {0};
 
 static void list_nav_move(int steps, int direction);
 
@@ -73,6 +57,38 @@ static int visible_hdmi(void) {
     return !lv_obj_has_flag(ui_pnl_hdmi_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
+static void restore_sink_volume(const int sink_index, const int save_outgoing) {
+    if (save_outgoing && audio_sink_name_last[0]) {
+        char *target = audio_sink_name(sink_index);
+
+        if (!target || strcmp(target, audio_sink_name_last) != 0) {
+            audio_sink_volume_store_name(audio_sink_name_last, current_volume);
+        }
+
+        free(target);
+    }
+
+    const int level = audio_sink_volume_load(sink_index, config.settings.general.volume);
+
+    current_volume = level;
+    config.settings.general.volume = (int16_t) level;
+
+    lv_dropdown_set_selected(
+        ui_dro_volume_tweakgen, clamp_range(level, 0, lv_dropdown_get_option_cnt(ui_dro_volume_tweakgen) - 1)
+    );
+
+    volume_original = lv_dropdown_get_selected(ui_dro_volume_tweakgen);
+
+    char *landed = audio_sink_name(sink_index);
+    snprintf(audio_sink_name_last, sizeof(audio_sink_name_last), "%s", landed ? landed : "");
+    free(landed);
+
+    LOG_INFO(
+        mux_module, "Sink %d '%s' level %d applied, row now shows %d", sink_index, audio_sink_name_last, level,
+        lv_dropdown_get_selected(ui_dro_volume_tweakgen)
+    );
+}
+
 static int visible_audiosink(void) {
     return !lv_obj_has_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
@@ -91,25 +107,31 @@ static void reload_audio_sinks(void) {
     if (audio_sink_count <= 0) return;
 
     add_drop_down_options(ui_dro_audio_sink_tweakgen, audio_sinks, audio_sink_count);
+
+    const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", 0);
+    lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamp_range(live_sink, 0, audio_sink_count - 1));
+
     lv_obj_clear_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void tweakgen_refresh_task(lv_timer_t *timer) {
     ui_gen_refresh_task(timer);
 
-    if (dialogue_active(&save_dlg) || dialogue_active(&warn_dlg)) return;
+    if (dialogue_active(&save_dlg)) return;
     if (++audio_sink_refresh_ticks < 30) return;
     audio_sink_refresh_ticks = 0;
 
-    if (lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen) != audio_sink_original) return;
-
     struct stat st;
     const long stamp = stat(AUDIO_SINK_LIST, &st) == 0 ? st.st_mtime : 0;
+    int rebuilt = 0;
 
     if (stamp != audio_sink_stamp) {
         audio_sink_stamp = stamp;
         reload_audio_sinks();
+        rebuilt = 1;
     }
+
+    if (!rebuilt && lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen) != audio_sink_original) return;
 
     const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
     if (live_sink < 0 || audio_sink_count <= 0) return;
@@ -120,15 +142,43 @@ static void tweakgen_refresh_task(lv_timer_t *timer) {
 
         audio_sink_stamp = stat(AUDIO_SINK_LIST, &st) == 0 ? st.st_mtime : 0;
         reload_audio_sinks();
+        rebuilt = 1;
 
-        if (live_sink >= audio_sink_count) return;
+        if (live_sink >= audio_sink_count) {
+            audio_sink_original = lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen);
+            return;
+        }
     }
 
-    if (live_sink == lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen)) return;
+    char *live_name = audio_sink_name(live_sink);
+    const int settled = live_name && strcmp(live_name, audio_sink_name_seen) == 0;
+    const int sink_changed = settled && strcmp(live_name, audio_sink_name_last) != 0;
+
+    snprintf(audio_sink_name_seen, sizeof(audio_sink_name_seen), "%s", live_name ? live_name : "");
+
+    if (rebuilt || sink_changed || live_sink != audio_sink_original) {
+        LOG_INFO(
+            mux_module, "Sink list %s, live %d '%s', last known '%s', settled %d, %d listed",
+            rebuilt ? "rebuilt" : "steady", live_sink, live_name ? live_name : "", audio_sink_name_last, settled,
+            audio_sink_count
+        );
+    }
+
+    if (!rebuilt && !sink_changed && live_sink == audio_sink_original) {
+        free(live_name);
+        return;
+    }
 
     lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, live_sink);
     apply_option_value_long_dot(ui_dro_audio_sink_tweakgen);
-    set_option_value_scroll_mode(ui_dro_audio_sink_tweakgen);
+
+    if (lv_group_get_focused(ui_group) == ui_lbl_audio_sink_tweakgen) {
+        set_option_value_scroll_mode(ui_dro_audio_sink_tweakgen);
+    }
+
+    if (sink_changed) restore_sink_volume(live_sink, 0);
+
+    free(live_name);
 
     audio_sink_original = live_sink;
 }
@@ -167,9 +217,16 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_dro_hk_shot_tweakgen, config.settings.general.hkshot);
 
     if (audio_sink_count > 0) {
+        audio_sink_volume_seed(audio_sink_active_index(), current_volume);
+
         const int active_sink =
             cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
         lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamp_range(active_sink, 0, audio_sink_count - 1));
+
+        char *active_name = audio_sink_name(active_sink);
+        snprintf(audio_sink_name_last, sizeof(audio_sink_name_last), "%s", active_name ? active_name : "");
+        snprintf(audio_sink_name_seen, sizeof(audio_sink_name_seen), "%s", audio_sink_name_last);
+        free(active_name);
     }
 
     lv_dropdown_set_selected(
@@ -200,6 +257,8 @@ static void save_tweak_options(void) {
 
             char idx_str[8];
             snprintf(idx_str, sizeof(idx_str), "%d", sink_mod);
+
+            restore_sink_volume(sink_mod, 1);
 
             const char *sink_args[] = {OPT_PATH "script/mux/audio_sink.sh", "set", idx_str, NULL};
             run_exec(sink_args, A_SIZE(sink_args), 1, 0, NULL, NULL);
@@ -309,19 +368,19 @@ static void init_navigation_group(void) {
     run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
     audio_sinks = str_parse_file("/run/muos/audio_sinks", &audio_sink_count, parse_lines);
 
-    INIT_OPTION_ITEM(-1, tweakgen, rtc, lang.muxtweakgen.rtc, "clock", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, hdmi, lang.muxtweakgen.hdmi, "hdmi", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, rgb, lang.muxtweakgen.rgb, "rgb", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, input_remap, lang.muxtweakgen.inputremap, "inputremap", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, advanced, lang.muxtweakgen.advanced, "advanced", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, pass_code, lang.muxtweakgen.passcode, "lock", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, display_temp, lang.muxtweakgen.displaytemp, "displaytemp", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, brightness, lang.muxtweakgen.brightness, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, volume, lang.muxtweakgen.volume, "volume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, audio_sink, lang.muxtweakgen.audiosink, "audiosink", audio_sinks, audio_sink_count);
     INIT_OPTION_ITEM(-1, tweakgen, hk_dpad, lang.muxtweakgen.hkdpad, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, hk_shot, lang.muxtweakgen.hkshot, "hkshot", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, startup, lang.muxtweakgen.startup.title, "startup", startup_options, 6);
+    INIT_OPTION_ITEM(-1, tweakgen, rtc, lang.muxtweakgen.rtc, "clock", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, language, lang.muxtweakgen.language, "language", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, hdmi, lang.muxtweakgen.hdmi, "hdmi", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, rgb, lang.muxtweakgen.rgb, "rgb", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, input_remap, lang.muxtweakgen.inputremap, "inputremap", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, pass_code, lang.muxtweakgen.passcode, "lock", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, display_temp, lang.muxtweakgen.displaytemp, "displaytemp", NULL, 0);
 
     char *bright_pct_values = generate_number_string(0, 100, 1, NULL, "%", NULL, 1);
     apply_theme_list_drop_down(&theme, ui_lbl_brightness_tweakgen, ui_dro_brightness_tweakgen, bright_pct_values);
@@ -350,14 +409,25 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(tweakgen, volume);
     }
 
-    list_nav_move(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1);
+    static const list_frame frames[] = {
+        {lang.muxtweakgen.section.options, 0, 6},
+        {lang.muxtweakgen.section.submenu, 6, 7},
+    };
+
+    list_frame_init(
+        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
+        ui_objects_value, ui_count_dynamic
+    );
+    list_frame_apply();
+
+    list_nav_move(list_frame_restore(), +1);
 }
 
 static void check_focus(void) {
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
     const int is_module = e_focused == ui_lbl_hdmi_tweakgen || e_focused == ui_lbl_rtc_tweakgen
-                          || e_focused == ui_lbl_advanced_tweakgen || e_focused == ui_lbl_rgb_tweakgen
+                          || e_focused == ui_lbl_language_tweakgen || e_focused == ui_lbl_rgb_tweakgen
                           || e_focused == ui_lbl_pass_code_tweakgen || e_focused == ui_lbl_input_remap_tweakgen
                           || e_focused == ui_lbl_display_temp_tweakgen;
     const int is_set_opt = e_focused == ui_lbl_brightness_tweakgen || e_focused == ui_lbl_volume_tweakgen;
@@ -387,19 +457,6 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-#define HANDLE_TWEAK_OPT(TYPE, TOAST, VALUE, SCRIPT, OFFSET)                                                           \
-    do {                                                                                                               \
-        if (e_focused == ui_lbl_##TYPE##_tweakgen) {                                                                   \
-            int v = (VALUE);                                                                                           \
-            if (v != TYPE##_original) {                                                                                \
-                toast_message(TOAST, tst_wait_s);                                                                      \
-                set_setting_value(SCRIPT, v, (OFFSET));                                                                \
-                TYPE##_original = (v - OFFSET);                                                                        \
-            }                                                                                                          \
-            return;                                                                                                    \
-        }                                                                                                              \
-    } while (0)
-
 static void update_option_values(void) {
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
 
@@ -413,19 +470,41 @@ static void update_option_values(void) {
         return;
     }
 
-    HANDLE_TWEAK_OPT(volume, lang.muxtweakgen.volume_set, lv_dropdown_get_selected(ui_dro_volume_tweakgen), "audio", 0);
+    if (e_focused == ui_lbl_volume_tweakgen) {
+        const int v = lv_dropdown_get_selected(ui_dro_volume_tweakgen);
+
+        if (v != volume_original) {
+            toast_message(lang.muxtweakgen.volume_set, tst_wait_s);
+            set_setting_value("audio", v, 0);
+            volume_original = v;
+            current_volume = v;
+            audio_sink_volume_store(audio_sink_active_index(), v);
+        }
+    }
+}
+
+static void handle_frame_prev(void) {
+    if (msgbox_active || dialogue_active(&save_dlg)) return;
+
+    if (list_frame_move(-1)) {
+        play_sound(snd_option);
+        gen_step_movement(0, +1, 2, 0, 0);
+        check_focus();
+    }
+}
+
+static void handle_frame_next(void) {
+    if (msgbox_active || dialogue_active(&save_dlg)) return;
+
+    if (list_frame_move(+1)) {
+        play_sound(snd_option);
+        gen_step_movement(0, +1, 2, 0, 0);
+        check_focus();
+    }
 }
 
 static void handle_option_prev(void) {
     if (msgbox_active || block_input) return;
-
-    if (dialogue_active(&warn_dlg)) {
-        if (swap_axis) {
-            dialogue_navigate(&warn_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
-        return;
-    }
 
     if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
@@ -435,25 +514,37 @@ static void handle_option_prev(void) {
         return;
     }
 
+    if (list_frame_focused()) {
+        if (list_frame_move(-1)) {
+            play_sound(snd_option);
+            gen_step_movement(0, +1, 2, 0, 0);
+            check_focus();
+        }
+
+        return;
+    }
+
     move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
     if (msgbox_active || block_input) return;
 
-    if (dialogue_active(&warn_dlg)) {
-        if (swap_axis) {
-            dialogue_navigate(&warn_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
-        return;
-    }
-
     if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
             play_sound(snd_navigate);
         }
+        return;
+    }
+
+    if (list_frame_focused()) {
+        if (list_frame_move(+1)) {
+            play_sound(snd_option);
+            gen_step_movement(0, +1, 2, 0, 0);
+            check_focus();
+        }
+
         return;
     }
 
@@ -474,13 +565,13 @@ static int get_multi_count(void) {
 }
 
 static void handle_option_prev_multi(void) {
-    if (msgbox_active || block_input || dialogue_active(&save_dlg) || dialogue_active(&warn_dlg)) return;
+    if (msgbox_active || block_input || dialogue_active(&save_dlg)) return;
 
     move_option(lv_group_get_focused(ui_group_value), -get_multi_count());
 }
 
 static void handle_option_next_multi(void) {
-    if (msgbox_active || block_input || dialogue_active(&save_dlg) || dialogue_active(&warn_dlg)) return;
+    if (msgbox_active || block_input || dialogue_active(&save_dlg)) return;
 
     move_option(lv_group_get_focused(ui_group_value), +get_multi_count());
 }
@@ -492,7 +583,6 @@ typedef enum {
     menu_hdmi,
     menu_rgb,
     menu_remap,
-    menu_advanced,
     menu_passcode,
     menu_display,
 } menu_action;
@@ -509,52 +599,20 @@ typedef struct {
 static int16_t kiosk_pass = 0;
 
 static const menu_entry tweakgen_menu_entries[ui_count_dynamic] = {
-    {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
-    {"hdmi", &kiosk.setting.hdmi, menu_hdmi, visible_hdmi},
-    {"rgb", &kiosk.setting.rgb, menu_rgb, visible_rgb},
-    {"remap", &kiosk_pass, menu_remap, NULL},
-    {"tweakadv", &kiosk.setting.advanced, menu_advanced, NULL},
-    {"passcfg", &kiosk_pass, menu_passcode, NULL},
-    {"distemp", &kiosk_pass, menu_display, visible_distemp}, // Display Temperature
-    {NULL, &kiosk_pass, menu_option, visible_brightness},    // Brightness
-    {NULL, &kiosk_pass, menu_option, visible_volume},        // Volume
+    {NULL, &kiosk_pass, menu_option, visible_brightness}, // Brightness
+    {NULL, &kiosk_pass, menu_option, visible_volume},     // Volume
     {NULL, &kiosk_pass, menu_toggle, visible_audiosink},
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey DPAD
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey Screenshot
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Startup Mode
+    {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
+    {"language", &kiosk.config.language, menu_clock, NULL},
+    {"hdmi", &kiosk.setting.hdmi, menu_hdmi, visible_hdmi},
+    {"rgb", &kiosk.setting.rgb, menu_rgb, visible_rgb},
+    {"remap", &kiosk_pass, menu_remap, NULL},
+    {"passcfg", &kiosk_pass, menu_passcode, NULL},
+    {"distemp", &kiosk_pass, menu_display, visible_distemp}, // Colour Temperature
 };
-
-static void handle_warn_mode(void) {
-    const int idx = warn_dlg.selected;
-    char target[64];
-    snprintf(target, sizeof(target), "%s", warn_pending);
-    hide_warn_dialog();
-
-    if (idx != 0) return;
-
-    if (strcmp(target, "danger") == 0) {
-        char c_path[MAX_BUFFER_SIZE];
-        snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_danger");
-        increment_counter_file(c_path);
-
-        load_mux("danger");
-        mux_input_stop();
-    } else if (strcmp(target, "tweakadv") == 0) {
-        char c_path[MAX_BUFFER_SIZE];
-        snprintf(c_path, sizeof(c_path), CONF_CONFIG_PATH "count/warn_tweakadv");
-        increment_counter_file(c_path);
-
-        if (!config.settings.advanced.trust_modify && any_tweakgen_modified()) {
-            snprintf(pending_submenu, sizeof(pending_submenu), "%s", "tweakadv");
-            dialogue_open(&save_dlg, &theme);
-        } else {
-            save_tweak_options();
-
-            load_mux("tweakadv");
-            mux_input_stop();
-        }
-    }
-}
 
 static void handle_save_mode(void) {
     const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
@@ -565,8 +623,10 @@ static void handle_save_mode(void) {
     if (opt == mux_unsaved_save) save_tweak_options();
 
     if (submenu[0]) {
+        list_frame_remember(lv_group_get_focused(ui_group));
         load_mux(submenu);
     } else {
+        list_frame_remember_section();
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
     }
 
@@ -574,7 +634,11 @@ static void handle_save_mode(void) {
 }
 
 static void handle_menu_dispatch(void) {
-    SELECT_VISIBLE_ENTRY(tweakgen_menu_entries, entry);
+    const int row = list_frame_current_row();
+    if (row < 0 || row >= (int) A_SIZE(tweakgen_menu_entries)) return;
+
+    const menu_entry *entry = &tweakgen_menu_entries[row];
+    if (entry->visible && !entry->visible()) return;
 
     switch (entry->action) {
         case menu_clock:
@@ -596,16 +660,11 @@ static void handle_menu_dispatch(void) {
 
             play_sound(snd_confirm);
             save_tweak_options();
+
+            list_frame_remember(lv_group_get_focused(ui_group));
             load_mux(entry->mux_name);
 
             mux_input_stop();
-            break;
-        case menu_advanced:
-            if (is_ksk(*entry->kiosk_flag)) {
-                kiosk_denied();
-                return;
-            }
-            show_warn_dialog("tweakadv");
             break;
         case menu_option:
             update_option_values();
@@ -621,11 +680,6 @@ static void handle_menu_dispatch(void) {
 static void handle_a(void) {
     if (msgbox_active || block_input || hold_call) return;
 
-    if (dialogue_active(&warn_dlg)) {
-        handle_warn_mode();
-        return;
-    }
-
     if (dialogue_active(&save_dlg)) {
         handle_save_mode();
         return;
@@ -640,12 +694,6 @@ static void handle_x(void) {
 
 static void handle_b(void) {
     if (block_input || hold_call) return;
-
-    if (dialogue_active(&warn_dlg)) {
-        dialogue_mark_cancelled(&warn_dlg);
-        hide_warn_dialog();
-        return;
-    }
 
     if (dialogue_active(&save_dlg)) {
         dialogue_mark_cancelled(&save_dlg);
@@ -666,20 +714,13 @@ static void handle_b(void) {
     play_sound(snd_back);
     save_tweak_options();
 
+    list_frame_remember_section();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
 
     mux_input_stop();
 }
 
 static void handle_dpad_up(void) {
-    if (dialogue_active(&warn_dlg)) {
-        if (!swap_axis) {
-            dialogue_navigate(&warn_dlg, &theme, -1);
-            play_sound(snd_navigate);
-        }
-        return;
-    }
-
     if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
@@ -692,14 +733,6 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (dialogue_active(&warn_dlg)) {
-        if (!swap_axis) {
-            dialogue_navigate(&warn_dlg, &theme, +1);
-            play_sound(snd_navigate);
-        }
-        return;
-    }
-
     if (dialogue_active(&save_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);
@@ -712,11 +745,6 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (dialogue_active(&warn_dlg)) {
-        dialogue_handle_dpad_hold(&warn_dlg, &theme, -1, !swap_axis);
-        return;
-    }
-
     if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, -1, !swap_axis);
         return;
@@ -726,11 +754,6 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (dialogue_active(&warn_dlg)) {
-        dialogue_handle_dpad_hold(&warn_dlg, &theme, +1, !swap_axis);
-        return;
-    }
-
     if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad_hold(&save_dlg, &theme, +1, !swap_axis);
         return;
@@ -741,17 +764,11 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || block_input || hold_call
-        || dialogue_active(&save_dlg) || dialogue_active(&warn_dlg))
+        || dialogue_active(&save_dlg))
         return;
 
     play_sound(snd_info_open);
     show_help();
-}
-
-static void launch_danger(void) {
-    if (msgbox_active || hold_call || dialogue_active(&save_dlg) || dialogue_active(&warn_dlg)) return;
-
-    if (lv_group_get_focused(ui_group) == ui_lbl_advanced_tweakgen) show_warn_dialog("danger");
 }
 
 static void init_elements(void) {
@@ -799,8 +816,6 @@ int muxtweakgen_main(void) {
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
         lang.generic.select, lang.generic.cancel
     );
-    dialogue_init_warn(&warn_dlg, &theme, ui_screen, lang.muxtweakgen.warn, lang.generic.select, lang.generic.cancel);
-
     init_timer(tweakgen_refresh_task, NULL);
 
     mux_input_options input_opts = {
@@ -814,9 +829,9 @@ int muxtweakgen_main(void) {
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
-                [mux_input_l1] = handle_list_nav_page_up,
+                [mux_input_l1] = handle_frame_prev,
                 [mux_input_l2] = handle_option_prev_multi,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_r1] = handle_frame_next,
                 [mux_input_r2] = handle_option_next_multi,
             },
         .release_handler =
@@ -825,14 +840,13 @@ int muxtweakgen_main(void) {
                 [mux_input_menu] = handle_help,
             },
         .hold_handler = {
-            [mux_input_x] = launch_danger,
             [mux_input_dpad_left] = handle_option_prev,
             [mux_input_dpad_right] = handle_option_next,
             [mux_input_dpad_up] = handle_dpad_up_hold,
             [mux_input_dpad_down] = handle_dpad_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
+            [mux_input_l1] = handle_frame_prev,
             [mux_input_l2] = hold_call_set,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_r1] = handle_frame_next,
         }
     };
 

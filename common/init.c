@@ -16,6 +16,8 @@
 #include "log.h"
 #include "ui/common.h"
 #include "ui/nav.h"
+#include "ui/notify.h"
+#include "ui/orientation.h"
 #include "language.h"
 #include "options.h"
 #include "config.h"
@@ -371,6 +373,15 @@ void timer_action(const int action) {
     }
 }
 
+static void (*ui_refresh_cb)(lv_timer_t *) = NULL;
+
+static void ui_refresh_tick(lv_timer_t *timer) {
+    notify_tick();
+    orientation_tick();
+
+    if (ui_refresh_cb) ui_refresh_cb(timer);
+}
+
 static void status_tick(lv_timer_t *timer) {
     static unsigned ticks = 0;
     ticks++;
@@ -388,8 +399,9 @@ static void status_tick(lv_timer_t *timer) {
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(const lv_timer_t *)) {
     status_sysinfo_cb = update_system_info;
+    ui_refresh_cb = ui_refresh_task;
 
-    timer_ensure(&timer_ui_refresh, ui_refresh_task, TIMER_REFRESH);
+    timer_ensure(&timer_ui_refresh, ui_refresh_tick, TIMER_REFRESH);
     timer_ensure(&timer_status, status_tick, TIMER_STATUS);
     timer_ensure(&timer_idle, mux_idle_poll, TIMER_IDLE);
 

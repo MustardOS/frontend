@@ -157,7 +157,7 @@ static void handle_b(void) {
 
     save_danger_options();
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
 
     mux_input_stop();
 }

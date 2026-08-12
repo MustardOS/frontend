@@ -53,6 +53,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_dro_inc_bright_tweakadv, config.settings.advanced.inc_bright - 1);
     lv_dropdown_set_selected(ui_dro_inc_volume_tweakadv, config.settings.advanced.inc_volume - 1);
     lv_dropdown_set_selected(ui_dro_bt_scan_timeout_tweakadv, config.settings.advanced.bt_scan_timeout / 5 - 1);
+    lv_dropdown_set_selected(ui_dro_remember_section_tweakadv, config.settings.advanced.remember_section);
     lv_dropdown_set_selected(ui_dro_usb_function_tweakadv, config.settings.advanced.usb_function);
 
     map_drop_down_to_index(ui_dro_accelerate_tweakadv, config.settings.advanced.accelerate, accelerate_values, 17, 6);
@@ -122,6 +123,7 @@ static void save_tweak_options(void) {
         }
     } while (0);
 
+    CHECK_AND_SAVE_STD(tweakadv, remember_section, "settings/advanced/remember_section", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_modify, "settings/advanced/trust_modify", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_power, "settings/advanced/trust_power", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_remove, "settings/advanced/trust_remove", INT, 0);
@@ -182,7 +184,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, repeat_delay, lang.muxtweakadv.repeatdelay, "repeat", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, stick_nav, lang.muxtweakadv.sticknav.title, "sticknav", sticknav_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, dpad_swap, lang.muxtweakadv.dpadswap, "dpadswap", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, rumble, lang.muxtweakadv.rumble.title, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, brightness, lang.muxtweakadv.brightness.title, "brightness", brightness_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, inc_bright, lang.muxtweakadv.incbright, "incbright", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, disp_suspend, lang.muxtweakadv.dispsuspend, "dispsuspend", disabled_enabled, 2);
@@ -194,8 +195,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, audio_ready, lang.muxtweakadv.audioready, "audioready", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, audio_swap, lang.muxtweakadv.audioswap, "audioswap", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, audio_suspend, lang.muxtweakadv.audiosuspend, "audiosuspend", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, thermal, lang.muxtweakadv.thermal, "thermal", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, overdrive, lang.muxtweakadv.overdrive, "overdrive", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, thermal, lang.muxtweakadv.thermal, "thermal", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, max_gpu, lang.muxtweakadv.maxgpu, "maxgpu", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, double_buffer, lang.muxtweakadv.doublebuffer, "doublebuffer", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, swapfile, lang.muxtweakadv.swapfile, "swapfile", NULL, 0);
@@ -207,12 +208,16 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, retro_free, lang.muxtweakadv.retrofree, "retrofree", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, retro_cache, lang.muxtweakadv.retrocache, "retrocache", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, led, lang.muxtweakadv.led, "led", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, rumble, lang.muxtweakadv.rumble.title, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, random_theme, lang.muxtweakadv.randomtheme, "randomtheme", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, activity, lang.muxtweakadv.activity, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, verbose, lang.muxtweakadv.verbose, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, debug_log, lang.muxtweakadv.debuglog, "debuglog", debug_log_mode, 3);
     INIT_OPTION_ITEM(-1, tweakadv, user_init, lang.muxtweakadv.userinit, "userinit", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, bt_scan_timeout, lang.muxtweakadv.btscantimeout, "btscan", NULL, 0);
+    INIT_OPTION_ITEM(
+        -1, tweakadv, remember_section, lang.muxtweakadv.remembersection, "remembersection", disabled_enabled, 2
+    );
     INIT_OPTION_ITEM(-1, tweakadv, trust_modify, lang.muxtweakadv.trustmodify, "trustmodify", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_power, lang.muxtweakadv.trustpower, "trustpower", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_remove, lang.muxtweakadv.trustremove, "trustremove", disabled_enabled, 2);
@@ -271,10 +276,10 @@ static void init_navigation_group(void) {
     }
 
     static const list_frame frames[] = {
-        {lang.muxtweakadv.section.input, 0, 5},    {lang.muxtweakadv.section.display, 5, 6},
-        {lang.muxtweakadv.section.audio, 11, 5},   {lang.muxtweakadv.section.performance, 16, 6},
-        {lang.muxtweakadv.section.storage, 22, 3}, {lang.muxtweakadv.section.retroarch, 25, 3},
-        {lang.muxtweakadv.section.system, 28, 7},  {lang.muxtweakadv.section.confirmations, 35, 3},
+        {lang.muxtweakadv.section.input, 0, 4},    {lang.muxtweakadv.section.display, 4, 6},
+        {lang.muxtweakadv.section.audio, 10, 6},   {lang.muxtweakadv.section.performance, 16, 5},
+        {lang.muxtweakadv.section.storage, 21, 3}, {lang.muxtweakadv.section.retroarch, 24, 3},
+        {lang.muxtweakadv.section.system, 27, 9},  {lang.muxtweakadv.section.confirmations, 36, 3},
     };
 
     list_frame_init(
@@ -358,7 +363,7 @@ static void handle_a(void) {
         if (opt == mux_unsaved_save) save_tweak_options();
 
         list_frame_remember_section();
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
 
         mux_input_stop();
 
@@ -396,7 +401,7 @@ static void handle_b(void) {
     play_sound(snd_back);
     save_tweak_options();
     list_frame_remember_section();
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
 
     mux_input_stop();
 }

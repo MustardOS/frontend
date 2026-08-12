@@ -227,10 +227,10 @@ static void update_nav_hint(void) {
 
     const int swap = config.settings.remap.layout;
 
-    set_osk_nav_hint_item(&nav_hint_a, swap ? "B" : "A", theme.nav.a, lang.generic.type);
-    set_osk_nav_hint_item(&nav_hint_b, swap ? "A" : "B", theme.nav.b, lang.generic.backspace);
-    set_osk_nav_hint_item(&nav_hint_x, swap ? "Y" : "X", theme.nav.x, lang.generic.cancel);
-    set_osk_nav_hint_item(&nav_hint_y, swap ? "X" : "Y", theme.nav.y, lang.generic.space);
+    set_osk_nav_hint_item(&nav_hint_a, swap ? "b" : "a", theme.nav.a, lang.generic.type);
+    set_osk_nav_hint_item(&nav_hint_b, swap ? "a" : "b", theme.nav.b, lang.generic.backspace);
+    set_osk_nav_hint_item(&nav_hint_x, swap ? "y" : "x", theme.nav.x, lang.generic.cancel);
+    set_osk_nav_hint_item(&nav_hint_y, swap ? "x" : "y", theme.nav.y, lang.generic.space);
 
     if (nav_hint_y.box && lv_obj_is_valid(nav_hint_y.box)) {
         if (key_show == 2 || key_show == 3) {

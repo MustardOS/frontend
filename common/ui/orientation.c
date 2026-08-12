@@ -3,6 +3,8 @@
 #include "orientation.h"
 #include "../../module/muxshare.h"
 #include "nav.h"
+#include "modal.h"
+#include "task_progress.h"
 #include "../audio.h"
 #include "../config.h"
 #include "../fileio.h"
@@ -79,15 +81,52 @@ void orientation_dismiss(void) {
     store(ORIENTATION_OFF);
 }
 
-int orientation_introduce(const char *module, const char *title, const char *text) {
-    if (!orientation_should_show(module) || !text || !text[0]) return 0;
+static char pending_module[MAX_BUFFER_SIZE];
+static char pending_title[MAX_BUFFER_SIZE];
+static char pending_text[MAX_BUFFER_SIZE];
+static int pending = 0;
 
+static int intro_blocked(void) {
+    return msgbox_active || modal_active() || task_progress_active() || progress_onscreen != -1;
+}
+
+static void intro_present(const char *module, const char *title, const char *text) {
     orientation_mark_shown(module);
 
     play_sound(snd_info_open);
     show_info_box(title, text, 0);
+}
+
+int orientation_introduce(const char *module, const char *title, const char *text) {
+    if (!orientation_should_show(module) || !text || !text[0]) return 0;
+
+    if (intro_blocked()) {
+        snprintf(pending_module, sizeof(pending_module), "%s", module);
+        snprintf(pending_title, sizeof(pending_title), "%s", title);
+        snprintf(pending_text, sizeof(pending_text), "%s", text);
+
+        pending = 1;
+
+        return 0;
+    }
+
+    intro_present(module, title, text);
 
     return 1;
+}
+
+void orientation_tick(void) {
+    if (!pending || intro_blocked()) return;
+
+    pending = 0;
+
+    if (!orientation_should_show(pending_module)) return;
+
+    intro_present(pending_module, pending_title, pending_text);
+}
+
+void orientation_reset_pending(void) {
+    pending = 0;
 }
 
 int orientation_handle_skip(void) {

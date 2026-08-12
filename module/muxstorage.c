@@ -139,7 +139,7 @@ static void init_navigation_group(void) {
 
     update_storage_info();
 
-    gen_step_movement(list_frame_restore(), +1, 0, 0, 1);
+    gen_step_movement(list_frame_restore(), +1, 2, 0, 1);
     nav_refresh();
 }
 
@@ -234,7 +234,7 @@ static void handle_section_step(const int direction) {
 
     if (list_frame_move(direction)) {
         play_sound(snd_navigate);
-        gen_step_movement(0, +1, 0, 0, 0);
+        gen_step_movement(0, +1, 2, 0, 0);
 
         nav_refresh();
         nav_moved = 1;
@@ -547,8 +547,6 @@ static void nav_refresh(void) {
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     task_progress_tick();
-    notify_tick();
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();

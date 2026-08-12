@@ -18,6 +18,8 @@
 #include "../input/list_nav.h"
 #include "../strutil.h"
 #include "../fileio.h"
+#include "../audio.h"
+#include "orientation.h"
 #include "../inotify.h"
 #include "../language.h"
 #include "../config.h"
@@ -407,6 +409,7 @@ void ui_screen_teardown(void) {
     task_prompt_reset();
     list_frame_reset();
     nav_screen_reset();
+    orientation_reset_pending();
     osk_screen_reset();
     modal_reset();
 
@@ -625,7 +628,7 @@ void init_ui_common_screen(
     lv_obj_set_style_pad_all(ui_screen, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->system.background), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(
-        ui_screen, (theme->system.background_gradient_direction == 0) ? theme->system.background_alpha : LV_OPA_TRANSP,
+        ui_screen, theme->system.background_gradient_direction == 0 ? theme->system.background_alpha : LV_OPA_TRANSP,
         MU_OBJ_MAIN_DEFAULT
     );
 
@@ -1287,9 +1290,11 @@ void init_ui_common_screen(
     lv_obj_set_style_img_recolor_opa(ui_ico_progress_volume, theme->bar.icon_alpha, MU_OBJ_MAIN_DEFAULT);
     update_glyph(ui_ico_progress_volume, "bar", "volume_0");
 
-    current_volume = config.settings.general.volume;
+    current_volume = audio_sink_volume_load(audio_sink_active_index(), config.settings.general.volume);
+    audio_sink_volume_seed(audio_sink_active_index(), current_volume);
+
     ui_bar_progress_volume = lv_bar_create(ui_pnl_progress_volume);
-    lv_bar_set_value(ui_bar_progress_volume, volume_to_percent(config.settings.general.volume), LV_ANIM_OFF);
+    lv_bar_set_value(ui_bar_progress_volume, volume_to_percent(current_volume), LV_ANIM_OFF);
     lv_bar_set_start_value(ui_bar_progress_volume, 0, LV_ANIM_OFF);
     lv_bar_set_range(ui_bar_progress_volume, 0, 100);
     lv_obj_set_width(ui_bar_progress_volume, theme->bar.progress_width);
@@ -1548,6 +1553,7 @@ int ui_common_progress_tick(void) {
 
         char buffer[MAX_BUFFER_SIZE];
         CFG_INT_FIELD(config.settings.general.volume, CONF_CONFIG_PATH "settings/general/volume", 75);
+        audio_sink_volume_store(audio_sink_active_index(), current_volume);
 
         need_update = 1;
     }

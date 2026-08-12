@@ -1,5 +1,4 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
 #include "../common/ui/orientation.h"
 
 size_t item_count = 0;
@@ -183,6 +182,8 @@ void nav_show_a(const int show, const char *text) {
         lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+
+    footer_nav_check_scroll();
 }
 
 void nav_show_lr(const int show) {
@@ -193,6 +194,8 @@ void nav_show_lr(const int show) {
         lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+
+    footer_nav_check_scroll();
 }
 
 static int preview_hint_visible = 0;
@@ -215,6 +218,8 @@ int preview_hint_active(void) {
 void header_and_footer_setup(void) {
     hold_call_release();
     adjust_gen_panel();
+
+    mux_input_set_msgbox_dismiss(handle_msgbox_dismiss);
 
     lv_obj_set_style_bg_opa(ui_pnl_header, theme.header.background_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnl_footer, theme.footer.background_alpha, MU_OBJ_MAIN_DEFAULT);
@@ -636,8 +641,6 @@ void adjust_gen_panel(void) {
 }
 
 void ui_gen_refresh_task(lv_timer_t *timer __attribute__((unused))) {
-    notify_tick();
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();

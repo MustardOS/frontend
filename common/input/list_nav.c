@@ -7,6 +7,7 @@
 #include "../ui/grid.h"
 #include "../ui/nav.h"
 #include "../theme.h"
+#include "../collection/order.h"
 #include "../../module/muxshare.h"
 
 static void (*list_nav_prev_cb)(int) = NULL;
@@ -254,6 +255,10 @@ static char lead_key(const char *name) {
     return isalpha(c) ? (char) toupper(c) : '#';
 }
 
+static int letter_skip_usable(void) {
+    return config.visual.page_skip && order_active == order_natural;
+}
+
 static int steps_to_next_lead(const int direction) {
     if (!items || item_count == 0) return 0;
     if (current_item_index < 0 || current_item_index >= (int) item_count) return 0;
@@ -292,7 +297,7 @@ void handle_list_nav_page_up(void) {
 
     if (ui_count_static < 2 || block_input || page_nav_blocked) return;
 
-    if (config.visual.page_skip) {
+    if (letter_skip_usable()) {
         const int jump = steps_to_next_lead(-1);
 
         if (jump > 0) {
@@ -321,7 +326,7 @@ void handle_list_nav_page_down(void) {
 
     if (ui_count_static < 2 || block_input || page_nav_blocked) return;
 
-    if (config.visual.page_skip) {
+    if (letter_skip_usable()) {
         const int jump = steps_to_next_lead(+1);
 
         if (jump > 0) {

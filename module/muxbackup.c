@@ -100,7 +100,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, cheats, lang.muxbackup.cheats, "cheats", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);
-    INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", no_yes, 2);
     INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);
 
     lv_dropdown_clear_options(ui_dro_target_backup);
@@ -140,9 +140,9 @@ static void init_navigation_group(void) {
     }
 
     if (dbi_index < 0) {
-        gen_step_movement(list_frame_restore(), +1, 0, 0, 1);
+        gen_step_movement(list_frame_restore(), +1, 2, 0, 1);
     } else if (ui_count_static > 0 && dbi_index < ui_count_static && current_item_index < ui_count_static) {
-        gen_step_movement(dbi_index, 1, 0, 0, 1);
+        gen_step_movement(dbi_index, 1, 2, 0, 1);
     }
 }
 
@@ -162,7 +162,7 @@ static void handle_frame_prev(void) {
 
     if (list_frame_move(-1)) {
         play_sound(snd_option);
-        gen_step_movement(0, +1, 0, 0, 0);
+        gen_step_movement(0, +1, 2, 0, 0);
     }
 }
 
@@ -171,7 +171,7 @@ static void handle_frame_next(void) {
 
     if (list_frame_move(+1)) {
         play_sound(snd_option);
-        gen_step_movement(0, +1, 0, 0, 0);
+        gen_step_movement(0, +1, 2, 0, 0);
     }
 }
 

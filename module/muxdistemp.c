@@ -140,7 +140,7 @@ static void refresh_navigation(void) {
     }
 
     current_item_index = 0;
-    gen_step_movement(0, +1, 0, 0, 0);
+    gen_step_movement(0, +1, 2, 0, 0);
 }
 
 static void init_navigation_group(void) {
@@ -279,6 +279,8 @@ static void handle_dpad_down_hold(void) {
 static void handle_a(void) {
     if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+
+        dialogue_mark_silent(&save_dlg);
         dialogue_dismiss(&save_dlg);
 
         if (opt == mux_unsaved_save) {
@@ -398,7 +400,7 @@ int muxdistemp_main(void) {
     );
 
     init_timer(ui_gen_refresh_task, NULL);
-    gen_step_movement(0, +1, 0, 0, 0);
+    gen_step_movement(0, +1, 2, 0, 0);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,

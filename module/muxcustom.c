@@ -612,10 +612,10 @@ static void init_navigation_group(void) {
     );
     INIT_OPTION_ITEM(-1, visual, name, lang.muxvisual.name.title, "name", visual_names, 4);
     INIT_OPTION_ITEM(-1, visual, dash, lang.muxvisual.dash, "dash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, friendly_folder, lang.muxvisual.friendlyfolder, "friendlyfolder", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, visual, the_title_format, lang.muxvisual.thetitleformat, "thetitleformat", disabled_enabled, 2
     );
+    INIT_OPTION_ITEM(-1, visual, friendly_folder, lang.muxvisual.friendlyfolder, "friendlyfolder", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, visual, title_include_root_drive, lang.muxvisual.titleincluderootdrive, "titleincluderootdrive",
         disabled_enabled, 2
@@ -824,10 +824,12 @@ static void check_focus(void) {
         lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+
+    footer_nav_check_scroll();
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 1, 0, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 
@@ -844,7 +846,7 @@ static void handle_frame_prev(void) {
 
     if (list_frame_move(-1)) {
         play_sound(snd_option);
-        gen_step_movement(0, +1, 1, 0, 0);
+        gen_step_movement(0, +1, 2, 0, 0);
         check_focus();
     }
 }
@@ -854,7 +856,7 @@ static void handle_frame_next(void) {
 
     if (list_frame_move(+1)) {
         play_sound(snd_option);
-        gen_step_movement(0, +1, 1, 0, 0);
+        gen_step_movement(0, +1, 2, 0, 0);
         check_focus();
     }
 }
@@ -872,7 +874,7 @@ static void handle_option_prev(void) {
     if (list_frame_focused()) {
         if (list_frame_move(-1)) {
             play_sound(snd_option);
-            gen_step_movement(0, +1, 1, 0, 0);
+            gen_step_movement(0, +1, 2, 0, 0);
             check_focus();
         }
 
@@ -888,7 +890,7 @@ static void handle_option_prev(void) {
         populate_font_names();
         font_apply_lock();
         list_frame_apply();
-        gen_step_movement(1, +1, 1, 0, 0);
+        gen_step_movement(1, +1, 2, 0, 0);
     }
 
     if (font_row_focused()) apply_current_font_settings();
@@ -909,7 +911,7 @@ static void handle_option_next(void) {
     if (list_frame_focused()) {
         if (list_frame_move(+1)) {
             play_sound(snd_option);
-            gen_step_movement(0, +1, 1, 0, 0);
+            gen_step_movement(0, +1, 2, 0, 0);
             check_focus();
         }
 
@@ -925,7 +927,7 @@ static void handle_option_next(void) {
         populate_font_names();
         font_apply_lock();
         list_frame_apply();
-        gen_step_movement(1, +1, 1, 0, 0);
+        gen_step_movement(1, +1, 2, 0, 0);
     }
 
     if (font_row_focused()) apply_current_font_settings();
@@ -1091,6 +1093,8 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, box_art_placeholder, "visual/boxartplaceholder", INT, 0);
     CHECK_AND_SAVE_STD(visual, video_preview, "visual/videopreview", INT, 0);
 
+    const int modified_before_font = is_modified;
+
     if ((int) config.settings.advanced.font != type_to_canonical((uint32_t) type_original)) {
         is_modified++;
         write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, config.settings.advanced.font);
@@ -1108,6 +1112,8 @@ static int save_custom_options(void) {
             write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, name_current);
         }
     }
+
+    if (is_modified != modified_before_font) refresh_resolution = 1;
 
     CHECK_AND_SAVE_STD(custom, video_wallpaper, "visual/video_wallpaper", INT, 0);
     CHECK_AND_SAVE_STD(custom, background_scale, "visual/background_scale", INT, 0);
@@ -1164,6 +1170,8 @@ static int save_custom_options(void) {
 
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
             is_modified++;
+            refresh_resolution = 1;
+
             char theme_active_txt_path[MAX_BUFFER_SIZE];
             snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
             write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
@@ -1217,8 +1225,9 @@ static int save_custom_options(void) {
         refresh_config = 1;
         refresh_device = 1;
         refresh_kiosk = 1;
-        refresh_resolution = 1;
-        if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
+
+        if (refresh_resolution && file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
+
         run_tweak_script(lang.generic.saving);
     }
 
@@ -1330,8 +1339,6 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // chime
 };
 
-// Shared shape for every "navigate to a submenu" menu action: kiosk check, then either defer via the
-// pending-save dialog (if options are unsaved) or save immediately and load the target submenu.
 static void navigate_to_submenu(const menu_entry *entry, const char *target_mux) {
     if (is_ksk(*entry->kiosk_flag)) {
         kiosk_denied();
@@ -1373,6 +1380,8 @@ static void handle_a(void) {
 
     if (dialogue_active(&save_dlg)) {
         const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
+
+        dialogue_mark_silent(&save_dlg);
         dialogue_dismiss(&save_dlg);
 
         if (pending_submenu) {
@@ -1385,6 +1394,7 @@ static void handle_a(void) {
                 return;
             }
 
+            play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
             toast_message(lang.generic.loading, tst_wait_f);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, pending_pdi);
 

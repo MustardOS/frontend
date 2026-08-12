@@ -10,6 +10,9 @@
 #include "log.h"
 #include "language.h"
 #include "fileio.h"
+#include "strutil.h"
+#include "content.h"
+#include "options.h"
 
 int fe_snd;
 int fe_bgm;
@@ -274,4 +277,96 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         is_silence_playing = 0;
         LOG_INFO("audio", "No OGG music files found");
     }
+}
+
+// This is the German coast guard... what are you sinking about?
+#define AUDIO_SINK_LIST RUN_PATH "audio_sinks"
+
+char *audio_sink_name(const int sink_index) {
+    if (sink_index < 0) return NULL;
+
+    char *name = read_line_char_from(AUDIO_SINK_LIST, (size_t) sink_index + 1);
+    if (!name) return NULL;
+
+    str_trim(name);
+
+    if (!name[0]) {
+        free(name);
+        return NULL;
+    }
+
+    return name;
+}
+
+static int audio_sink_volume_path_name(char *out, const char *name) {
+    if (!name || !name[0]) return 0;
+
+    snprintf(out, MAX_BUFFER_SIZE, STORAGE_VOLUME "/%08x", fnv_hash_str(name));
+
+    return 1;
+}
+
+static int audio_sink_volume_path(char *out, const int sink_index) {
+    char *name = audio_sink_name(sink_index);
+    if (!name) return 0;
+
+    const int resolved = audio_sink_volume_path_name(out, name);
+    free(name);
+
+    return resolved;
+}
+
+int audio_sink_volume_load(const int sink_index, const int fallback) {
+    char path[MAX_BUFFER_SIZE];
+
+    if (!audio_sink_volume_path(path, sink_index)) {
+        LOG_WARN("audio", "No sink name for index %d, falling back to %d", sink_index, fallback);
+        return fallback;
+    }
+
+    const int level = cfg_read_int(path, fallback);
+    LOG_DEBUG("audio", "Loaded volume %d for sink %d from %s", level, sink_index, path);
+
+    return level;
+}
+
+int audio_sink_active_index(void) {
+    return cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
+}
+
+void audio_sink_volume_seed(const int sink_index, const int value) {
+    char path[MAX_BUFFER_SIZE];
+
+    if (!audio_sink_volume_path(path, sink_index)) return;
+    if (file_exist(path)) return;
+
+    audio_sink_volume_store(sink_index, value);
+}
+
+void audio_sink_volume_store(const int sink_index, const int value) {
+    char path[MAX_BUFFER_SIZE];
+
+    if (!audio_sink_volume_path(path, sink_index)) {
+        LOG_WARN("audio", "No sink name for index %d, volume %d not stored", sink_index, value);
+        return;
+    }
+
+    create_directories(STORAGE_VOLUME "/", 0);
+    write_text_to_file_atomic(path, INT, value);
+
+    LOG_DEBUG("audio", "Stored volume %d for sink %d at %s", value, sink_index, path);
+}
+
+void audio_sink_volume_store_name(const char *name, const int value) {
+    char path[MAX_BUFFER_SIZE];
+
+    if (!audio_sink_volume_path_name(path, name)) {
+        LOG_WARN("audio", "No sink name given, volume %d not stored", value);
+        return;
+    }
+
+    create_directories(STORAGE_VOLUME "/", 0);
+    write_text_to_file_atomic(path, INT, value);
+
+    LOG_INFO("audio", "Stored volume %d for '%s' at %s", value, name, path);
 }

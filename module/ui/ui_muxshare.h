@@ -197,10 +197,9 @@
 
 #define CONFIG_ELEMENTS                                                                                                \
     CONFIG(general, "general")                                                                                         \
-    CONFIG(access, "access")                                                                                           \
-    CONFIG(connect, "connect")                                                                                         \
     CONFIG(custom, "custom")                                                                                           \
-    CONFIG(language, "language")                                                                                       \
+    CONFIG(connect, "connect")                                                                                         \
+    CONFIG(access, "access")                                                                                           \
     CONFIG(power, "power")                                                                                             \
     CONFIG(storage, "storage")                                                                                         \
     CONFIG(backup, "backup")
@@ -630,16 +629,17 @@
     TWEAKADV(debug_log, "debuglog")                                                                                    \
     TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
+    TWEAKADV(remember_section, "remembersection")                                                                      \
     TWEAKADV(trust_modify, "trustmodify")                                                                              \
     TWEAKADV(trust_power, "trustpower")                                                                                \
     TWEAKADV(trust_remove, "trustremove")
 
 #define TWEAKGEN_ELEMENTS                                                                                              \
     TWEAKGEN(rtc, "clock")                                                                                             \
+    TWEAKGEN(language, "language")                                                                                     \
     TWEAKGEN(hdmi, "hdmi")                                                                                             \
     TWEAKGEN(rgb, "rgb")                                                                                               \
     TWEAKGEN(input_remap, "inputremap")                                                                                \
-    TWEAKGEN(advanced, "advanced")                                                                                     \
     TWEAKGEN(pass_code, "lock")                                                                                        \
     TWEAKGEN(display_temp, "displaytemp")                                                                              \
     TWEAKGEN(brightness, "brightness")                                                                                 \

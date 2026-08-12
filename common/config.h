@@ -154,6 +154,7 @@ struct mux_config {
             int16_t bt_scan_timeout;
             int16_t second_part;
             int16_t usb_part;
+            int16_t remember_section;
             int16_t trust_modify;
             int16_t trust_power;
             int16_t trust_remove;

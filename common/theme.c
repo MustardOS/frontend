@@ -1342,15 +1342,18 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     int16_t eff_glyph_size = config->settings.themeopt.glyph_size_list;
     if (eff_glyph_size == -2) eff_glyph_size = theme->glyph.list;
 
-    const int16_t glyph_hidden = !config->visual.list_glyph || (theme->list_default.glyph_alpha == 0 && theme->list_focus.glyph_alpha == 0);
+    const int16_t glyph_hidden =
+        !config->visual.list_glyph || (theme->list_default.glyph_alpha == 0 && theme->list_focus.glyph_alpha == 0);
     if (glyph_hidden) {
         theme->font.list_pad_left = theme->list_default.glyph_padding_left;
     } else {
         if (eff_glyph_size == 0 && theme->mux.item.height > 0) {
             const int16_t auto_size = (int16_t) (theme->mux.item.height * 3 / 4);
-            theme->font.list_pad_left = theme->list_default.glyph_padding_left + auto_size + theme->list_default.glyph_padding_right;
-        } else if (eff_glyph_size > 0){
-            theme->font.list_pad_left = theme->list_default.glyph_padding_left + eff_glyph_size + theme->list_default.glyph_padding_right;            
+            theme->font.list_pad_left =
+                theme->list_default.glyph_padding_left + auto_size + theme->list_default.glyph_padding_right;
+        } else if (eff_glyph_size > 0) {
+            theme->font.list_pad_left =
+                theme->list_default.glyph_padding_left + eff_glyph_size + theme->list_default.glyph_padding_right;
         }
     }
 
@@ -1478,21 +1481,28 @@ void apply_theme_option_item_label(
 }
 
 void apply_option_label_long_dot(lv_obj_t *ui_lbl_item) {
+    if (!ui_lbl_item) return;
+
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);
 }
 
 void set_option_label_scroll_mode(lv_obj_t *ui_lbl_item) {
+    if (!ui_lbl_item) return;
+
     const int scroll_mode = config.visual.name_scroll;
     if (scroll_mode == 0 || config.visual.label_scroll_speed == 0) return;
 
     const int is_bounce = scroll_mode == 2;
+    const lv_label_long_mode_t wanted = is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR;
+
+    if (lv_label_get_long_mode(ui_lbl_item) == wanted) return;
     apply_label_scroll_speed(ui_lbl_item, is_bounce);
 
     lv_obj_update_layout(ui_lbl_item);
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);
     if (!lv_label_is_text_dotted(ui_lbl_item)) return;
 
-    lv_label_set_long_mode(ui_lbl_item, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(ui_lbl_item, wanted);
 }
 
 void apply_option_value_long_dot(lv_obj_t *ui_value_item) {
@@ -1519,13 +1529,16 @@ void set_option_value_scroll_mode(lv_obj_t *ui_value_item) {
         return;
     }
 
+    const lv_label_long_mode_t wanted = is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR;
+    if (lv_label_get_long_mode(ui_value_item) == wanted) return;
+
     apply_label_scroll_speed(ui_value_item, is_bounce);
 
     lv_obj_update_layout(ui_value_item);
     lv_label_set_long_mode(ui_value_item, LV_LABEL_LONG_DOT);
     if (!lv_label_is_text_dotted(ui_value_item)) return;
 
-    lv_label_set_long_mode(ui_value_item, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_label_set_long_mode(ui_value_item, wanted);
 }
 
 void apply_theme_list_value(const struct theme_config *lv_theme, lv_obj_t *ui_lbl_item_value, const char *item_text) {

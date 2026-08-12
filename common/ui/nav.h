@@ -90,6 +90,8 @@ void nav_set_row_dim(const lv_obj_t *panel, int active, int index);
 
 void footer_nav_check_scroll(void);
 
+void footer_nav_reset_scroll(void);
+
 void hide_info_box(void);
 
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count_static, int *nav_moved);

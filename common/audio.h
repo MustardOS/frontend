@@ -58,3 +58,15 @@ int init_audio_backend(void);
 void init_fe_snd(int *fe_snd, int snd_type, int re_init);
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init);
+
+int audio_sink_active_index(void);
+
+char *audio_sink_name(int sink_index);
+
+int audio_sink_volume_load(int sink_index, int fallback);
+
+void audio_sink_volume_store(int sink_index, int value);
+
+void audio_sink_volume_store_name(const char *name, int value);
+
+void audio_sink_volume_seed(int sink_index, int value);
