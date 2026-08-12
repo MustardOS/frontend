@@ -6,6 +6,7 @@
 extern struct mux_lang lang;
 
 extern char *disabled_enabled[];
+extern char *no_yes[];
 extern char *excluded_included[];
 extern char *allowed_restricted[];
 extern char *hidden_visible[];
@@ -212,6 +213,7 @@ struct mux_lang {
         char html[MAX_BUFFER_SIZE];
         char unique[MAX_BUFFER_SIZE];
         char export_success[MAX_BUFFER_SIZE];
+        char export_saved[MAX_BUFFER_SIZE];
         char export_error[MAX_BUFFER_SIZE];
         char removed[MAX_BUFFER_SIZE];
         struct {
@@ -284,6 +286,14 @@ struct mux_lang {
         char archive[MAX_BUFFER_SIZE];
         char task[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
+        struct {
+            char archive[MAX_BUFFER_SIZE];
+            char task[MAX_BUFFER_SIZE];
+        } help;
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char message[MAX_BUFFER_SIZE];
+        } third_party;
     } muxapp;
 
     struct {
@@ -911,6 +921,7 @@ struct mux_lang {
         char edit_blocked[MAX_BUFFER_SIZE];
         char save_host[MAX_BUFFER_SIZE];
         char report_ok[MAX_BUFFER_SIZE];
+        char report_saved[MAX_BUFFER_SIZE];
         char report_fail[MAX_BUFFER_SIZE];
         struct {
             char system[MAX_BUFFER_SIZE];
@@ -2337,6 +2348,16 @@ struct mux_lang {
         char f_custom[MAX_BUFFER_SIZE];
         char custom[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
+        struct {
+            char timezone[MAX_BUFFER_SIZE];
+            char year[MAX_BUFFER_SIZE];
+            char month[MAX_BUFFER_SIZE];
+            char day[MAX_BUFFER_SIZE];
+            char hour[MAX_BUFFER_SIZE];
+            char minute[MAX_BUFFER_SIZE];
+            char notation[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
+        } help_item;
     } muxrtc;
 
     struct {
@@ -2645,6 +2666,7 @@ struct mux_lang {
         char audioswap[MAX_BUFFER_SIZE];
         char audiosuspend[MAX_BUFFER_SIZE];
         char btscantimeout[MAX_BUFFER_SIZE];
+        char remembersection[MAX_BUFFER_SIZE];
         char seconds[MAX_BUFFER_SIZE];
         char trustmodify[MAX_BUFFER_SIZE];
         char trustpower[MAX_BUFFER_SIZE];
@@ -2718,6 +2740,7 @@ struct mux_lang {
             char audio_swap[MAX_BUFFER_SIZE];
             char audio_suspend[MAX_BUFFER_SIZE];
             char bt_scan_timeout[MAX_BUFFER_SIZE];
+            char remember_section[MAX_BUFFER_SIZE];
             char trust_modify[MAX_BUFFER_SIZE];
             char trust_power[MAX_BUFFER_SIZE];
             char trust_remove[MAX_BUFFER_SIZE];
@@ -2730,6 +2753,7 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         char rtc[MAX_BUFFER_SIZE];
+        char language[MAX_BUFFER_SIZE];
         char brightness[MAX_BUFFER_SIZE];
         char brightness_set[MAX_BUFFER_SIZE];
         char volume[MAX_BUFFER_SIZE];
@@ -2755,13 +2779,17 @@ struct mux_lang {
         char warn[MAX_BUFFER_SIZE];
         char warn_danger[MAX_BUFFER_SIZE];
         struct {
+            char options[MAX_BUFFER_SIZE];
+            char submenu[MAX_BUFFER_SIZE];
+        } section;
+        struct {
             char title[MAX_BUFFER_SIZE];
             char rtc[MAX_BUFFER_SIZE];
+            char language[MAX_BUFFER_SIZE];
             char startup[MAX_BUFFER_SIZE];
             char brightness[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char hdmi[MAX_BUFFER_SIZE];
-            char advanced[MAX_BUFFER_SIZE];
             char rgb[MAX_BUFFER_SIZE];
             char hk_dpad[MAX_BUFFER_SIZE];
             char hk_shot[MAX_BUFFER_SIZE];

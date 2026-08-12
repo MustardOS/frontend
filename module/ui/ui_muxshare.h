@@ -341,6 +341,7 @@
     KIOSK(tag, "tag")                                                                                                  \
     KIOSK(col_filter, "colfilter")                                                                                     \
     KIOSK(shader, "shader")                                                                                            \
+    KIOSK(overlay, "overlay")                                                                                          \
     KIOSK(rem_config, "remconfig")                                                                                     \
     KIOSK(catalogue, "catalogue")                                                                                      \
     KIOSK(ra_config, "raconfig")                                                                                       \
@@ -364,8 +365,7 @@
     KIOSK(general, "general")                                                                                          \
     KIOSK(hdmi, "hdmi")                                                                                                \
     KIOSK(power, "power")                                                                                              \
-    KIOSK(visual, "visual")                                                                                            \
-    KIOSK(overlay, "overlay")
+    KIOSK(visual, "visual")
 
 #define LAUNCH_ELEMENTS                                                                                                \
     LAUNCH(explore, "explore")                                                                                         \
@@ -598,7 +598,6 @@
     TWEAKADV(repeat_delay, "repeat")                                                                                   \
     TWEAKADV(stick_nav, "sticknav")                                                                                    \
     TWEAKADV(dpad_swap, "dpadswap")                                                                                    \
-    TWEAKADV(rumble, "rumble")                                                                                         \
     TWEAKADV(brightness, "brightness")                                                                                 \
     TWEAKADV(inc_bright, "incbright")                                                                                  \
     TWEAKADV(disp_suspend, "dispsuspend")                                                                              \
@@ -610,8 +609,8 @@
     TWEAKADV(audio_ready, "audioready")                                                                                \
     TWEAKADV(audio_swap, "audioswap")                                                                                  \
     TWEAKADV(audio_suspend, "audiosuspend")                                                                            \
-    TWEAKADV(thermal, "thermal")                                                                                       \
     TWEAKADV(overdrive, "overdrive")                                                                                   \
+    TWEAKADV(thermal, "thermal")                                                                                       \
     TWEAKADV(max_gpu, "maxgpu")                                                                                        \
     TWEAKADV(double_buffer, "doublebuffer")                                                                            \
     TWEAKADV(swapfile, "swapfile")                                                                                     \
@@ -623,6 +622,7 @@
     TWEAKADV(retro_free, "retrofree")                                                                                  \
     TWEAKADV(retro_cache, "retrocache")                                                                                \
     TWEAKADV(led, "led")                                                                                               \
+    TWEAKADV(rumble, "rumble")                                                                                         \
     TWEAKADV(random_theme, "randomtheme")                                                                              \
     TWEAKADV(activity, "activity")                                                                                     \
     TWEAKADV(verbose, "verbose")                                                                                       \
@@ -635,19 +635,19 @@
     TWEAKADV(trust_remove, "trustremove")
 
 #define TWEAKGEN_ELEMENTS                                                                                              \
+    TWEAKGEN(brightness, "brightness")                                                                                 \
+    TWEAKGEN(volume, "volume")                                                                                         \
+    TWEAKGEN(audio_sink, "audiosink")                                                                                  \
+    TWEAKGEN(hk_dpad, "hkdpad")                                                                                        \
+    TWEAKGEN(hk_shot, "hkshot")                                                                                        \
+    TWEAKGEN(startup, "startup")                                                                                       \
     TWEAKGEN(rtc, "clock")                                                                                             \
     TWEAKGEN(language, "language")                                                                                     \
     TWEAKGEN(hdmi, "hdmi")                                                                                             \
     TWEAKGEN(rgb, "rgb")                                                                                               \
     TWEAKGEN(input_remap, "inputremap")                                                                                \
     TWEAKGEN(pass_code, "lock")                                                                                        \
-    TWEAKGEN(display_temp, "displaytemp")                                                                              \
-    TWEAKGEN(brightness, "brightness")                                                                                 \
-    TWEAKGEN(volume, "volume")                                                                                         \
-    TWEAKGEN(audio_sink, "audiosink")                                                                                  \
-    TWEAKGEN(hk_dpad, "hkdpad")                                                                                        \
-    TWEAKGEN(hk_shot, "hkshot")                                                                                        \
-    TWEAKGEN(startup, "startup")
+    TWEAKGEN(display_temp, "displaytemp")
 
 #define VISUAL_CONFIG_ELEMENTS                                                                                         \
     VISUAL(battery, "battery")                                                                                         \

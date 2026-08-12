@@ -353,7 +353,7 @@ order_index_build(order_index *index, const content_item *content_items, const s
 
         size_t slot = hash & index->mask;
         while (index->slots[slot].item != ORDER_INDEX_EMPTY)
-            slot = slot + 1 & index->mask;
+            slot = (slot + 1) & index->mask;
 
         index->slots[slot].hash = hash;
         index->slots[slot].item = i;
@@ -371,12 +371,12 @@ static int order_index_find(const order_index *index, const char *key, size_t *f
 
         if (index->slots[slot].hash == hash && strcmp(order_index_path(index, candidate), key) == 0) {
             *item = candidate;
-            *from = slot + 1 & index->mask;
+            *from = (slot + 1) & index->mask;
 
             return 1;
         }
 
-        slot = slot + 1 & index->mask;
+        slot = (slot + 1) & index->mask;
     }
 
     return 0;

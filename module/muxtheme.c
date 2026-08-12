@@ -412,9 +412,15 @@ static void handle_help(void) {
     int count = 0;
 
     if (remove_allowed()) entries[count++] = (more_entry) {more_remove, 1};
-    entries[count++] = (more_entry) {more_help, 1};
 
     play_sound(snd_info_open);
+
+    if (count == 0) {
+        show_help();
+        return;
+    }
+
+    entries[count++] = (more_entry) {more_help, 1};
     more_open(&more_menu, &theme, ui_screen, entries, count);
 }
 
