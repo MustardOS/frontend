@@ -306,9 +306,14 @@ void dialogue_init_choice(
 }
 
 void dialogue_set_description(mux_dialogue *dlg, const char *text) {
-    if (!dlg || !dlg->description_label || !lv_obj_is_valid(dlg->description_label)) return;
+    if (!dlg) return;
 
-    lv_label_set_text(dlg->description_label, text);
+    lv_obj_t *target = dlg->description_label;
+    if (!target && dlg->option_count == 0) target = dlg->options[0];
+
+    if (!target || !lv_obj_is_valid(target)) return;
+
+    lv_label_set_text(target, text);
     lv_obj_update_layout(dlg->panel);
 
     lv_obj_set_y(dlg->panel, (LV_VER_RES - lv_obj_get_height(dlg->panel)) / 2);
@@ -455,6 +460,7 @@ void dialogue_init_accept(
     dlg->cancel_index = -1;
     dlg->selected = 0;
     dlg->theme = t;
+    dlg->options[0] = NULL;
 
     dlg->dim = lv_obj_create(parent);
     lv_obj_set_size(dlg->dim, LV_HOR_RES, LV_VER_RES);
