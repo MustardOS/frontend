@@ -151,8 +151,8 @@ static const char *contributors[] = {
 #define SONG_TITLE   "Supporter Music"
 #define SONG_TRACK   "Andromeda"
 #define SONG_ARTIST  "Selfmademusic"
-#define SONG_REBOOT  "Please wait while we reboot…"
-#define SONG_BLESSED "Have a blessed day…"
+#define SONG_REBOOT  "Please wait while we reboot..."
+#define SONG_BLESSED "Have a blessed day..."
 
 typedef enum {
     blk_title_big,

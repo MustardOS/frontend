@@ -102,8 +102,8 @@ void adjust_box_art(void) {
     const int content_h = device.mux.height - theme.header.height - theme.footer.height - 4;
 
     switch (config.visual.box_art) {
-        case 0: // Behind — within content area, behind content; header/footer clip
-        case 1: // Front — within content area, in front of content; header/footer always on top
+        case 0: // Behind -- within content area, behind content; header/footer clip
+        case 1: // Front -- within content area, in front of content; header/footer always on top
             lv_obj_set_x(ui_pnl_box, 0);
             lv_obj_set_y(ui_pnl_box, content_y);
             lv_obj_set_width(ui_pnl_box, device.mux.width);
@@ -116,8 +116,8 @@ void adjust_box_art(void) {
                 lv_obj_move_foreground(ui_pnl_box);
             }
             break;
-        case 2: // Fullscreen + Behind — full screen, behind content; header/footer render on top but do not clip
-        case 3: // Fullscreen + Front — full screen, in front of everything including header/footer
+        case 2: // Fullscreen + Behind -- full screen, behind content; header/footer render on top but do not clip
+        case 3: // Fullscreen + Front -- full screen, in front of everything including header/footer
             lv_obj_set_x(ui_pnl_box, 0);
             lv_obj_set_y(ui_pnl_box, 0);
             lv_obj_set_width(ui_pnl_box, device.mux.width);

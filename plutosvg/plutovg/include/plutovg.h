@@ -915,14 +915,14 @@ PLUTOVG_API float plutovg_font_face_text_extents(plutovg_font_face_t* face, floa
 typedef struct plutovg_font_face_cache plutovg_font_face_cache_t;
 
 /**
- * @brief Create a new, empty font‐face cache.
+ * @brief Create a new, empty font-face cache.
  *
  * @return Pointer to a newly allocated `plutovg_font_face_cache_t` object.
  */
 PLUTOVG_API plutovg_font_face_cache_t* plutovg_font_face_cache_create(void);
 
 /**
- * @brief Increments the reference count of a font‐face cache.
+ * @brief Increments the reference count of a font-face cache.
  *
  * @param cache A pointer to a `plutovg_font_face_cache_t` object.
  * @return A pointer to the same `plutovg_font_face_cache_t` object with an incremented reference count.
@@ -930,14 +930,14 @@ PLUTOVG_API plutovg_font_face_cache_t* plutovg_font_face_cache_create(void);
 PLUTOVG_API plutovg_font_face_cache_t* plutovg_font_face_cache_reference(plutovg_font_face_cache_t* cache);
 
 /**
- * @brief Decrement the reference count of a font‐face cache and destroy it when it reaches zero.
+ * @brief Decrement the reference count of a font-face cache and destroy it when it reaches zero.
  *
  * @param cache A pointer to a `plutovg_font_face_cache_t` object to release.
  */
 PLUTOVG_API void plutovg_font_face_cache_destroy(plutovg_font_face_cache_t* cache);
 
 /**
- * @brief Retrieve the current reference count of a font‐face cache.
+ * @brief Retrieve the current reference count of a font-face cache.
  *
  * @param cache A pointer to a `plutovg_font_face_cache_t` object.
  * @return The current reference count, or 0 if cache is NULL.
@@ -945,7 +945,7 @@ PLUTOVG_API void plutovg_font_face_cache_destroy(plutovg_font_face_cache_t* cach
 PLUTOVG_API int plutovg_font_face_cache_reference_count(const plutovg_font_face_cache_t* cache);
 
 /**
- * @brief Remove all entries from a font‐face cache.
+ * @brief Remove all entries from a font-face cache.
  *
  * @param cache A pointer to a `plutovg_font_face_cache_t` object to reset.
  */

@@ -38439,8 +38439,8 @@ static inline mjb_decode_result MJB_USED mjb_next_codepoint(const char *buffer, 
 
 /**
  * Return the number of encoded bytes a codepoint occupies in the given encoding.
- * UTF-8:  1–4 bytes depending on codepoint value (ASCII shares the UTF-8 decode path).
- * UTF-16: 2 bytes for BMP (U+0000–U+FFFF), 4 bytes for supplementary planes.
+ * UTF-8:  1-4 bytes depending on codepoint value (ASCII shares the UTF-8 decode path).
+ * UTF-16: 2 bytes for BMP (U+0000-U+FFFF), 4 bytes for supplementary planes.
  * UTF-32: always 4 bytes.
  */
 static inline size_t MJB_USED mjb_codepoint_encoded_bytes(mjb_codepoint cp, mjb_encoding encoding) {
@@ -40512,7 +40512,7 @@ MJB_EXPORT mjb_break_type mjb_next_line_break(const char *buffer, size_t byte_le
             // will be the base class, not ZWJ; the flag restores LB8a's ability to fire.
             if(lbp == MJB_LBP_ZWJ) {
                 // The LineBreakTest.txt v17 tests that cover 200D × (LB8a) are all at the start of
-                // the string (lines 18795–18890+). ZWJ is the first codepoint, so previous is
+                // the string (lines 18795-18890+). ZWJ is the first codepoint, so previous is
                 // literally ZWJ when the next character is processed - LB8a fires correctly.
                 state->zwj_absorbed = true;
             }
@@ -41937,9 +41937,9 @@ static bool mjb_maybe_has_special_casing(mjb_codepoint codepoint) {
             return true;
     }
 
-    return (codepoint >= 7830 && codepoint <= 7834) || // U+1E96–U+1E9A
-        (codepoint >= 8016 && codepoint <= 8188) ||    // U+1F50–U+1FFC
-        (codepoint >= 64256 && codepoint <= 64279);    // U+FB00–U+FB17
+    return (codepoint >= 7830 && codepoint <= 7834) || // U+1E96-U+1E9A
+        (codepoint >= 8016 && codepoint <= 8188) ||    // U+1F50-U+1FFC
+        (codepoint >= 64256 && codepoint <= 64279);    // U+FB00-U+FB17
 }
 
 static mjb_status mjb_map_case_output_codepoint(mjb_codepoint codepoint, mjb_output *output,
@@ -42961,9 +42961,9 @@ MJB_EXPORT bool mjb_codepoint_is_combining(mjb_codepoint codepoint) {
 
 // Collation element
 typedef struct {
-    uint16_t primary;    // 0x0000–0xFFFF; 0 = ignorable at L1
-    uint16_t secondary;  // 0x0000–0x0127; 0 = ignorable at L2
-    uint16_t tertiary;   // 0x0000–0x001F; 0 = ignorable at L3
+    uint16_t primary;    // 0x0000-0xFFFF; 0 = ignorable at L1
+    uint16_t secondary;  // 0x0000-0x0127; 0 = ignorable at L2
+    uint16_t tertiary;   // 0x0000-0x001F; 0 = ignorable at L3
     uint16_t quaternary; // Filled only in SHIFTED mode
     bool variable;       // Originally marked * in DUCET
 } mjb_ce;
@@ -43272,7 +43272,7 @@ static bool cea_lookup_or_implicit(mjb_cea *cea, mjb_codepoint cp) {
 }
 
 /**
- * UTS#10 S2.1 – find the longest CONSECUTIVE contraction starting at cps[pos].
+ * UTS#10 S2.1 - find the longest CONSECUTIVE contraction starting at cps[pos].
  * Only examines positions pos, pos+1, pos+2, ... (no skip).
  * Returns true and fills out_* if a multi-cp match is found (seq_len >= 2).
  */
@@ -43326,7 +43326,7 @@ static bool consecutive_contraction(const mjb_codepoint *cps, size_t pos, size_t
 }
 
 /**
- * UTS#10 S2.1.1-S2.1.3 – check if the exact sequence `seq[0..seq_len-1]`
+ * UTS#10 S2.1.1-S2.1.3 - check if the exact sequence `seq[0..seq_len-1]`
  * has an entry in the DB.  seq_len >= 2 (caller guarantees).
  */
 static bool lookup_sequence(const mjb_codepoint *seq, int seq_len, uint8_t *out_weights,
@@ -43450,7 +43450,7 @@ static bool build_cea(const mjb_codepoint *cps, size_t len, mjb_cea *cea) {
             }
         }
 
-        // S2.1.1 – S2.1.3: extend S via unblocked non-starters
+        // S2.1.1 - S2.1.3: extend S via unblocked non-starters
         bool keep_extending = true;
 
         while(keep_extending) {

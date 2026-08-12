@@ -47,9 +47,9 @@ Hardcore cannot be enabled during Network Play or while gameplay patches are act
 
 Use left or right on **Notifications** to choose:
 
-- **Disabled** — no normal achievement notifications;
-- **Basic** — shows an achievement only when it is awarded; or
-- **Detailed** — also shows measured progress, active challenges and leaderboard activity.
+- **Disabled** -- no normal achievement notifications;
+- **Basic** -- shows an achievement only when it is awarded; or
+- **Detailed** -- also shows measured progress, active challenges and leaderboard activity.
 
 An awarded achievement uses a short trophy notification containing its name and point value. Pickles also captures a
 clean gameplay screenshot for that achievement when possible.

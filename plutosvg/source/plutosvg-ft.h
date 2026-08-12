@@ -23,7 +23,7 @@
 /**
  * @brief FreeType hooks for rendering SVG glyphs with PlutoSVG.
  *
- * This file implements the integration layer between FreeType’s SVG module (typically
+ * This file implements the integration layer between FreeType's SVG module (typically
  * named "ot-svg") and PlutoSVG. It defines the necessary functions to initialize and
  * free the SVG rendering state, render an SVG glyph into a glyph slot, load (and cache)
  * SVG documents, and pre-configure glyph slots with appropriate metrics and transforms.

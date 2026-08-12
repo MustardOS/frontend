@@ -100,8 +100,8 @@ typedef struct {
     char longest_session[256];
     size_t longest_session_duration;
 
-    int active_hour;   // 0–23, -1 if unknown
-    int favourite_day; // 0–6 (Sun–Sat), -1 if unknown
+    int active_hour;   // 0-23, -1 if unknown
+    int favourite_day; // 0-6 (Sun-Sat), -1 if unknown
 
     global_playstyle_t global_playstyle;
 } global_stats_t;

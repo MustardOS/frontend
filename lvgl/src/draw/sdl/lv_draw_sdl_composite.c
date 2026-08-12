@@ -160,7 +160,7 @@ void lv_draw_sdl_composite_end(lv_draw_sdl_ctx_t *ctx, const lv_area_t *apply_ar
             case LV_BLEND_MODE_NORMAL:
 #if LV_GPU_SDL_CUSTOM_BLEND_MODE
                 /* composition texture holds pixels in premultiplied form (drawn via BLEND over (0,0,0,0)).
-                 * SDL_BLENDMODE_BLEND would apply srcA a second time — use premultiplied blend instead. */
+                 * SDL_BLENDMODE_BLEND would apply srcA a second time -- use premultiplied blend instead. */
                 SDL_SetTextureBlendMode(
                     internals->composition,
                     SDL_ComposeCustomBlendMode(
