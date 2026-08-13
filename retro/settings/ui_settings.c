@@ -143,6 +143,7 @@ static submenu_def def = {
     .closed = closed,
     .save_title = lang.muxretro.save.settings_title,
     .save_desc = lang.muxretro.save.settings_desc,
+    .skip_value_object_creation = 1,
 };
 
 static void build_rows(void) {

@@ -59,25 +59,28 @@ static void row_value(const submenu *m, const int index, char *buf, const size_t
 }
 
 static void build_row(const submenu *m, const int index) {
+    int create_value_label = !m->def->skip_value_object_creation;
     lv_obj_t *panel = lv_obj_create(ui_pnl_content);
     lv_obj_t *label = lv_label_create(panel);
     lv_obj_t *icon = lv_img_create(panel);
-    lv_obj_t *value = lv_label_create(panel);
-
-    char value_text[SUBMENU_VALUE_MAX];
-    row_value(m, index, value_text, sizeof(value_text));
+    lv_obj_t *value = (create_value_label) ? lv_label_create(panel) : NULL;
 
     apply_theme_list_panel(panel);
     apply_theme_option_item_label(&theme, label, m->def->labels[index], 1);
     apply_theme_list_glyph(&theme, icon, "muxretro", m->def->glyphs[index]);
-    apply_theme_list_value(&theme, value, value_text);
+    if (value) {
+        char value_text[SUBMENU_VALUE_MAX];
+        row_value(m, index, value_text, sizeof(value_text));
+        apply_theme_list_value(&theme, value, value_text);
+    }
+
     apply_size_to_content(&theme, ui_pnl_content, label, icon, m->def->labels[index]);
     apply_text_long_dot(&theme, label);
 
     lv_group_add_obj(ui_group, label);
     lv_group_add_obj(ui_group_glyph, icon);
     lv_group_add_obj(ui_group_panel, panel);
-    lv_group_add_obj(ui_group_value, value);
+    if (value) lv_group_add_obj(ui_group_value, value);
 }
 
 static void rebuild_rows(const submenu *m) {
