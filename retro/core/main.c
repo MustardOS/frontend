@@ -45,8 +45,8 @@
 #include "../settings/settings.h"
 #include "../state/sram.h"
 
-#define RESUME_COOLDOWN_MS 1500
-#define AUDIO_MAX_CATCHUP  3
+#define RESUME_COOLDOWN_MS  1500
+#define AUDIO_MAX_CATCHUP   3
 #define UI_TASK_INTERVAL_MS 16
 
 static inotify_status *idle_ino = NULL;
@@ -604,8 +604,7 @@ int main(const int argc, char *argv[]) {
             timeline_deadline = timeline_ms > 0 ? loop_now + (uint32_t) timeline_ms : 0;
         }
 
-        if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported()
-            && !netplay_active
+        if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported() && !netplay_active
             && !cheevo_restricted() && loop_now >= timeline_deadline) {
             gamestate_timeline_save();
             timeline_deadline = loop_now + (uint32_t) timeline_ms;
@@ -620,7 +619,11 @@ int main(const int argc, char *argv[]) {
             if (peek != peeking) {
                 peeking = peek;
                 display_set_ui_hidden(peek);
-                if (!peek) pause_menu_sync_input_mask();
+
+                if (!peek) {
+                    pause_menu_sync_input_mask();
+                    lv_obj_invalidate(ui_screen);
+                }
             }
 
             if (!peek) {
@@ -637,6 +640,7 @@ int main(const int argc, char *argv[]) {
         } else if (peeking) {
             peeking = 0;
             display_set_ui_hidden(0);
+            lv_obj_invalidate(ui_screen);
         } else if (hotkeys_task()) {
             LOG_DEBUG(mux_module, "main: menu released without a hotkey combo, toggling pause");
             pause_menu_toggle();
