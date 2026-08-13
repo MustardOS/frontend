@@ -513,46 +513,62 @@ void fade_in_instant(void) {
     display_set_fade_alpha(0);
 }
 
+static void fade_out_compositor(void) {
+    for (int i = 0; i <= FADE_STEP; i++) {
+        display_set_fade_alpha((uint8_t) (255 * i / FADE_STEP));
+        display_composite_frame();
+        usleep(FADE_TIME * 1000 / FADE_STEP);
+    }
+}
+
 static void fade_out_screen_internal(const int forced) {
     if (!forced && !config.visual.blackfade) {
         unload_image_animation();
         return;
     }
 
-    if (!ui_screen_container || !lv_obj_is_valid(ui_screen_container)) {
+    const int no_objects =
+        (forced && display_ui_is_hidden()) || !ui_screen_container || !lv_obj_is_valid(ui_screen_container);
+
+    if (no_objects) {
         unload_image_animation();
-        return;
-    }
-
-    if (ui_black && lv_obj_is_valid(ui_black)) {
-        lv_obj_del(ui_black);
-        ui_black = NULL;
-    }
-
-    if (anim_is_active()) {
-        for (int i = 0; i <= FADE_STEP; i++) {
-            const uint8_t alpha = (uint8_t) (255 * i / FADE_STEP);
-            display_set_fade_alpha(alpha);
-            lv_obj_invalidate(ui_screen);
-            lv_refr_now(NULL);
-            usleep(FADE_TIME * 1000 / FADE_STEP);
+        if (forced) fade_out_compositor();
+    } else {
+        if (ui_black && lv_obj_is_valid(ui_black)) {
+            lv_obj_del(ui_black);
+            ui_black = NULL;
         }
 
-        unload_image_animation();
-        gen_black(LV_OPA_COVER);
+        if (anim_is_active()) {
+            for (int i = 0; i <= FADE_STEP; i++) {
+                display_set_fade_alpha((uint8_t) (255 * i / FADE_STEP));
+                lv_obj_invalidate(ui_screen);
+                lv_refr_now(NULL);
+                usleep(FADE_TIME * 1000 / FADE_STEP);
+            }
 
-        if (ui_black && lv_obj_is_valid(ui_black)) lv_obj_move_foreground(ui_black);
-    } else {
-        unload_image_animation();
-        gen_black(LV_OPA_TRANSP);
+            unload_image_animation();
+            gen_black(LV_OPA_COVER);
 
-        if (!ui_black || !lv_obj_is_valid(ui_black)) return;
+            if (ui_black && lv_obj_is_valid(ui_black)) lv_obj_move_foreground(ui_black);
+        } else {
+            unload_image_animation();
+            gen_black(LV_OPA_TRANSP);
 
-        lv_obj_move_foreground(ui_black);
-        lv_refr_now(NULL);
+            if (ui_black && lv_obj_is_valid(ui_black)) {
+                lv_obj_move_foreground(ui_black);
+                lv_refr_now(NULL);
 
-        fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
+                fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
+            }
+        }
     }
+
+    if (!forced) return;
+    display_set_fade_alpha(255);
+
+    for (int i = 0; i < 3; i++)
+        display_composite_frame();
 }
 
 void fade_out_screen(void) {
