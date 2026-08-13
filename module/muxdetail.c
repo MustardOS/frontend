@@ -763,27 +763,14 @@ static const char *get_channel_info(void) {
     return unknown;
 }
 
-static const char *get_ac_traffic(void) {
-    if (!interface_valid) return lang.generic.unknown;
-    if (!is_network_connected()) return lang.generic.not_connected;
+static unsigned long long read_iface_bytes(const char *direction) {
+    char path[128];
+    snprintf(path, sizeof(path), "/sys/class/net/%s/statistics/%s_bytes", device.network.interface, direction);
 
-    char rx_path[128], tx_path[128];
-    snprintf(rx_path, sizeof(rx_path), "/sys/class/net/%s/statistics/rx_bytes", device.network.interface);
-    snprintf(tx_path, sizeof(tx_path), "/sys/class/net/%s/statistics/tx_bytes", device.network.interface);
-
-    const unsigned long long rx = read_all_long_from(rx_path);
-    const unsigned long long tx = read_all_long_from(tx_path);
-
-    static char ac_traffic[64];
-    snprintf(
-        ac_traffic, sizeof(ac_traffic), "RX: %.1f MB TX: %.1f MB", (double) rx / 1024.0 / 1024.0,
-        (double) tx / 1024.0 / 1024.0
-    );
-
-    return ac_traffic;
+    return read_all_long_from(path);
 }
 
-static const char *get_tp_traffic(void) {
+static const char *get_ac_traffic(void) {
     if (!interface_valid) return lang.generic.unknown;
     if (!is_network_connected()) return lang.generic.not_connected;
 
@@ -791,12 +778,8 @@ static const char *get_tp_traffic(void) {
     static time_t last_time = 0;
     double rx_rate = 0, tx_rate = 0;
 
-    char rx_path[128], tx_path[128];
-    snprintf(rx_path, sizeof(rx_path), "/sys/class/net/%s/statistics/rx_bytes", device.network.interface);
-    snprintf(tx_path, sizeof(tx_path), "/sys/class/net/%s/statistics/tx_bytes", device.network.interface);
-
-    const unsigned long long rx = read_all_long_from(rx_path);
-    const unsigned long long tx = read_all_long_from(tx_path);
+    const unsigned long long rx = read_iface_bytes("rx");
+    const unsigned long long tx = read_iface_bytes("tx");
 
     const time_t now = time(NULL);
     if (last_time > 0) {
@@ -812,8 +795,24 @@ static const char *get_tp_traffic(void) {
 
     last_time = now;
 
+    static char ac_traffic[64];
+    snprintf(ac_traffic, sizeof(ac_traffic), "RX: %.1f KB/s TX: %.1f KB/s", rx_rate / 1024.0, tx_rate / 1024.0);
+
+    return ac_traffic;
+}
+
+static const char *get_tp_traffic(void) {
+    if (!interface_valid) return lang.generic.unknown;
+    if (!is_network_connected()) return lang.generic.not_connected;
+
+    const unsigned long long rx = read_iface_bytes("rx");
+    const unsigned long long tx = read_iface_bytes("tx");
+
     static char tp_traffic[64];
-    snprintf(tp_traffic, sizeof(tp_traffic), "RX: %.1f KB/s TX: %.1f KB/s", rx_rate / 1024.0, tx_rate / 1024.0);
+    snprintf(
+        tp_traffic, sizeof(tp_traffic), "RX: %.1f MB TX: %.1f MB", (double) rx / 1024.0 / 1024.0,
+        (double) tx / 1024.0 / 1024.0
+    );
 
     return tp_traffic;
 }

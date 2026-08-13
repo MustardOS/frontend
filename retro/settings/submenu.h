@@ -13,7 +13,7 @@ typedef struct {
     int row_count;
 
     void (*value_text)(int index, char *buf, size_t len);
-    int (*skip_value_object_creation)(int index);
+    int skip_value_object_creation;
     void (*cycle)(int index, int direction);
     int (*row_can_cycle)(int index);
     int (*row_is_action)(int index);

@@ -461,7 +461,7 @@ static const lang_field lang_fields[] = {
     {"muxbackup", LANG_OFF(muxbackup.start), lang_specific, "Start Backup"},
     {"muxbackup", LANG_OFF(muxbackup.help.apps), lang_specific, "Applications you have installed, such as PortMaster and its ports.\n\nThese can be installed again later, so include them only if you would rather not set them up from scratch."},
     {"muxbackup", LANG_OFF(muxbackup.help.bios), lang_specific, "The BIOS files certain systems need before their content will run.\n\nWorth including, as tracking them down a second time can be quite tedious!"},
-    {"muxbackup", LANG_OFF(muxbackup.help.catalogue), lang_specific, "Box art, previewimages descriptions, video previews, manuals etc. for your content.\n\nThis can be rebuilt from a catalogue download, so leave it out if you want a smaller archive."},
+    {"muxbackup", LANG_OFF(muxbackup.help.catalogue), lang_specific, "Box art, preview images, descriptions, video previews, manuals etc. for your content.\n\nThis can be rebuilt from a catalogue download, so leave it out if you want a smaller archive."},
     {"muxbackup", LANG_OFF(muxbackup.help.cheats), lang_specific, "The cheat files RetroArch specifically uses, this is not cheats for Pickles."},
     {"muxbackup", LANG_OFF(muxbackup.help.collection), lang_specific, "The collections you have put together yourself.\n\nSmall, and a nuisance to rebuild by hand, so worth bringing along."},
     {"muxbackup", LANG_OFF(muxbackup.help.config), lang_specific, "Your RetroArch configuration, including anything you have changed for particular systems."},
@@ -998,8 +998,8 @@ static const lang_field lang_fields[] = {
     {"muxdetail", LANG_OFF(muxdetail.help.dns), lang_specific, "The servers used to look up names on the network."},
     {"muxdetail", LANG_OFF(muxdetail.help.signal), lang_specific, "How strong the wireless signal is."},
     {"muxdetail", LANG_OFF(muxdetail.help.channel), lang_specific, "The wireless channel and band in use."},
-    {"muxdetail", LANG_OFF(muxdetail.help.ac_traffic), lang_specific, "How much has been sent and received since the connection came up."},
-    {"muxdetail", LANG_OFF(muxdetail.help.tp_traffic), lang_specific, "How much has been sent and received in total."},
+    {"muxdetail", LANG_OFF(muxdetail.help.ac_traffic), lang_specific, "How much is being sent and received right now."},
+    {"muxdetail", LANG_OFF(muxdetail.help.tp_traffic), lang_specific, "How much has been sent and received since the connection came up."},
 
     // muxdevice
     {"muxdevice", LANG_OFF(muxdevice.title), lang_specific, "Device Settings"},
@@ -2321,7 +2321,7 @@ static const lang_field lang_fields[] = {
     {"muxstorage", LANG_OFF(muxstorage.confirm.sync), lang_specific, "Copy %s back to primary storage?\nIt carries on being used from secondary storage afterwards."},
     {"muxstorage", LANG_OFF(muxstorage.confirm.purge), lang_specific, "%s will be wiped from secondary storage and used from primary storage again.\nSync it first if you have not already."},
     {"muxstorage", LANG_OFF(muxstorage.title), lang_specific, "Storage"},
-    {"muxstorage", LANG_OFF(muxstorage.overview), lang_specific, "Chooses which card your saves, artwork, themes and other personal data are kept on, so they survive the first card being reflashed.\n\nCopying to the second card leaves the original in place until it has finished, and syncing copies it back to the first card while still using it from the second."},
+    {"muxstorage", LANG_OFF(muxstorage.overview), lang_specific, "Chooses which card your saves, artwork, themes and other personal data are kept on, so they survive the first card being reflashed.\n\nCopying to the second card leaves the original in place, and syncing copies it back to the first card while still using it from the second."},
     {"muxstorage", LANG_OFF(muxstorage.apps), lang_specific, "Applications"},
     {"muxstorage", LANG_OFF(muxstorage.bios), lang_specific, "System BIOS"},
     {"muxstorage", LANG_OFF(muxstorage.catalogue), lang_specific, "Metadata Catalogue"},
