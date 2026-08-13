@@ -618,6 +618,13 @@ void reset_ui_groups(void) {
     nav_suppress_next_shake();
 }
 
+static void ensure_group_focus(lv_group_t *group) {
+    if (!group || lv_group_get_obj_count(group) == 0) return;
+    if (lv_group_get_focused(group)) return;
+
+    lv_group_focus_next(group);
+}
+
 void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_obj_t **panels, const int long_dot) {
     for (unsigned int i = 0; i < ui_count_static; i++) {
         lv_obj_t *opt = options ? options[i] : NULL;
@@ -632,6 +639,11 @@ void add_ui_groups(lv_obj_t **options, lv_obj_t **values, lv_obj_t **glyphs, lv_
 
         if (long_dot && pnl && opt) apply_text_long_dot(&theme, opt);
     }
+
+    ensure_group_focus(ui_group);
+    ensure_group_focus(ui_group_value);
+    ensure_group_focus(ui_group_glyph);
+    ensure_group_focus(ui_group_panel);
 }
 
 void adjust_gen_panel(void) {
@@ -645,6 +657,7 @@ void ui_gen_refresh_task(lv_timer_t *timer __attribute__((unused))) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();
 
+        nav_refresh_list_overflow(ui_pnl_content);
         lv_obj_invalidate(ui_pnl_content);
 
         nav_moved = 0;

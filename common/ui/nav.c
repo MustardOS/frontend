@@ -535,6 +535,13 @@ void nav_watch_list_overflow(lv_obj_t *panel) {
     lv_obj_add_event_cb(panel, raise_row_draw_cb, LV_EVENT_DRAW_POST, NULL);
 }
 
+void nav_refresh_list_overflow(lv_obj_t *panel) {
+    if (!panel || !lv_obj_is_valid(panel)) return;
+
+    lv_obj_update_layout(panel);
+    blank_overflow_rows(panel);
+}
+
 void update_windowed_list(
     const lv_obj_t *ui_pnl_content, const int direction, const int current_item_index, const int total_count,
     const int visible_count, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index),

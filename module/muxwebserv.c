@@ -127,11 +127,11 @@ static void set_row_visible(const int index, const int visible) {
 static void rebuild_groups(const int count, const int target_index) {
     ui_count_static = (unsigned int) count;
     current_item_index = 0;
+    reset_ui_groups();
 
     for (int i = 0; i < ui_count_dynamic; i++)
         set_row_visible(i, i < count);
 
-    reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
     gen_step_movement(target_index >= 0 && target_index < count ? target_index : 0, +1, 2, 0, 0);
     nav_moved = 1;
@@ -329,7 +329,8 @@ static int save_service(void) {
         snprintf(config.web.ttyd_pass, sizeof(config.web.ttyd_pass), "%s", editing_password);
     }
 
-    toast_message(lang.generic.saving, tst_wait_f);
+    toast_message(lang.generic.saving, tst_wait_m);
+
     const char *args[] = {OPT_PATH "script/web/service.sh", "apply", key, NULL};
     run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
 

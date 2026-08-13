@@ -164,12 +164,12 @@ void list_frame_apply(void) {
 
     const list_frame *f = &frames[current];
 
+    reset_ui_groups();
+
     for (int i = 0; i < row_total; i++) {
         const int in_frame = i >= f->first && i < f->first + f->count;
         show_row(i, in_frame && !suppressed[i]);
     }
-
-    reset_ui_groups();
 
     ui_count_static = 0;
 
@@ -214,13 +214,13 @@ void list_frame_help(void) {
     show_info_box(frames[current].label ? frames[current].label : "", lang.generic.section_help, 0);
 }
 
-static void marker_path(char *out, const size_t len) {
-    snprintf(out, len, "%s%s", MUOS_SFI_LOAD, mux_module);
+static void marker_path(char *out) {
+    snprintf(out, MAX_BUFFER_SIZE, "%s%s", MUOS_SFI_LOAD, mux_module);
 }
 
 static void marker_write(const int row) {
     char path[MAX_BUFFER_SIZE];
-    marker_path(path, sizeof(path));
+    marker_path(path);
 
     char value[64];
     snprintf(value, sizeof(value), "%d\n%d", current, row);
@@ -267,7 +267,7 @@ int list_frame_restore(void) {
     if (!list_frame_active()) return 0;
 
     char path[MAX_BUFFER_SIZE];
-    marker_path(path, sizeof(path));
+    marker_path(path);
 
     if (!file_exist(path)) return 0;
 

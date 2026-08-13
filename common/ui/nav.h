@@ -109,3 +109,5 @@ void nav_focus_shake_cb(const lv_group_t *group);
 void nav_play_shake(lv_obj_t *obj, enum nav_direction hint);
 
 void nav_watch_list_overflow(lv_obj_t *panel);
+
+void nav_refresh_list_overflow(lv_obj_t *panel);
