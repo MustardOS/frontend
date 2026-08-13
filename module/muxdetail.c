@@ -895,51 +895,60 @@ static const char *get_task_count(void) {
     return buffer;
 }
 
+static void set_detail_value(lv_obj_t *label, const char *value) {
+    if (!label || !value) return;
+
+    const char *current = lv_label_get_text(label);
+    if (current && strcmp(current, value) == 0) return;
+
+    lv_label_set_text(label, value);
+}
+
 static void update_detail_info(void) {
-    lv_label_set_text(ui_val_version_detail, get_version(verify_check));
-    lv_label_set_text(ui_val_build_detail, get_build());
-    lv_label_set_text(ui_val_device_detail, get_device_info());
-    lv_label_set_text(ui_val_serial_detail, get_serial());
-    lv_label_set_text(ui_val_kernel_detail, get_kernel_version());
-    lv_label_set_text(ui_val_arch_detail, get_cpu_arch());
-    lv_label_set_text(ui_val_display_detail, get_display_mode());
+    set_detail_value(ui_val_version_detail, get_version(verify_check));
+    set_detail_value(ui_val_build_detail, get_build());
+    set_detail_value(ui_val_device_detail, get_device_info());
+    set_detail_value(ui_val_serial_detail, get_serial());
+    set_detail_value(ui_val_kernel_detail, get_kernel_version());
+    set_detail_value(ui_val_arch_detail, get_cpu_arch());
+    set_detail_value(ui_val_display_detail, get_display_mode());
 
-    lv_label_set_text(ui_val_uptime_detail, get_system_uptime());
-    lv_label_set_text(ui_val_boot_time_detail, get_boot_time());
-    lv_label_set_text(ui_val_load_avg_detail, get_load_average());
-    lv_label_set_text(ui_val_tasks_detail, get_task_count());
-    lv_label_set_text(ui_val_memory_detail, get_memory_usage());
-    lv_label_set_text(ui_val_swap_detail, get_swap_usage());
-    lv_label_set_text(ui_val_temp_detail, get_temperature());
+    set_detail_value(ui_val_uptime_detail, get_system_uptime());
+    set_detail_value(ui_val_boot_time_detail, get_boot_time());
+    set_detail_value(ui_val_load_avg_detail, get_load_average());
+    set_detail_value(ui_val_tasks_detail, get_task_count());
+    set_detail_value(ui_val_memory_detail, get_memory_usage());
+    set_detail_value(ui_val_swap_detail, get_swap_usage());
+    set_detail_value(ui_val_temp_detail, get_temperature());
 
-    lv_label_set_text(ui_val_cpu_detail, get_cpu_model());
-    lv_label_set_text(ui_val_cores_detail, get_core_count());
-    lv_label_set_text(ui_val_speed_detail, get_current_frequency());
-    lv_label_set_text(ui_val_speed_range_detail, get_speed_range());
-    lv_label_set_text(ui_val_governor_detail, get_scaling_governor());
+    set_detail_value(ui_val_cpu_detail, get_cpu_model());
+    set_detail_value(ui_val_cores_detail, get_core_count());
+    set_detail_value(ui_val_speed_detail, get_current_frequency());
+    set_detail_value(ui_val_speed_range_detail, get_speed_range());
+    set_detail_value(ui_val_governor_detail, get_scaling_governor());
 
-    lv_label_set_text(ui_val_capacity_detail, get_bat_capacity());
-    lv_label_set_text(ui_val_voltage_detail, get_bat_voltage());
-    lv_label_set_text(ui_val_status_detail, get_bat_status());
-    lv_label_set_text(ui_val_health_detail, get_bat_health());
-    lv_label_set_text(ui_val_design_cap_detail, get_bat_design_cap());
-    lv_label_set_text(ui_val_charger_detail, get_bat_charger());
-    lv_label_set_text(ui_val_last_charged_detail, get_last_charged());
+    set_detail_value(ui_val_capacity_detail, get_bat_capacity());
+    set_detail_value(ui_val_voltage_detail, get_bat_voltage());
+    set_detail_value(ui_val_status_detail, get_bat_status());
+    set_detail_value(ui_val_health_detail, get_bat_health());
+    set_detail_value(ui_val_design_cap_detail, get_bat_design_cap());
+    set_detail_value(ui_val_charger_detail, get_bat_charger());
+    set_detail_value(ui_val_last_charged_detail, get_last_charged());
 
-    lv_label_set_text(ui_val_time_on_battery_detail, get_time_on_battery());
-    lv_label_set_text(ui_val_battery_used_detail, get_battery_used());
+    set_detail_value(ui_val_time_on_battery_detail, get_time_on_battery());
+    set_detail_value(ui_val_battery_used_detail, get_battery_used());
 
-    lv_label_set_text(ui_val_hostname_detail, get_hostname());
-    lv_label_set_text(ui_val_mac_detail, get_mac_address());
-    lv_label_set_text(ui_val_ip_detail, get_ip_address());
-    lv_label_set_text(ui_val_ssid_detail, get_ssid());
-    lv_label_set_text(ui_val_gateway_detail, get_gateway());
-    lv_label_set_text(ui_val_dns_detail, get_dns_servers());
-    lv_label_set_text(ui_val_signal_detail, get_signal_strength());
+    set_detail_value(ui_val_hostname_detail, get_hostname());
+    set_detail_value(ui_val_mac_detail, get_mac_address());
+    set_detail_value(ui_val_ip_detail, get_ip_address());
+    set_detail_value(ui_val_ssid_detail, get_ssid());
+    set_detail_value(ui_val_gateway_detail, get_gateway());
+    set_detail_value(ui_val_dns_detail, get_dns_servers());
+    set_detail_value(ui_val_signal_detail, get_signal_strength());
 
-    lv_label_set_text(ui_val_channel_detail, get_channel_info());
-    lv_label_set_text(ui_val_ac_traffic_detail, get_ac_traffic());
-    lv_label_set_text(ui_val_tp_traffic_detail, get_tp_traffic());
+    set_detail_value(ui_val_channel_detail, get_channel_info());
+    set_detail_value(ui_val_ac_traffic_detail, get_ac_traffic());
+    set_detail_value(ui_val_tp_traffic_detail, get_tp_traffic());
 }
 
 static void update_detail_info_cb(const lv_timer_t *timer) {
