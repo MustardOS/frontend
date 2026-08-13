@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../common/ui/font.h"
 #include "../common/ui/orientation.h"
 #include "ui/ui_muxaccess.h"
 
@@ -17,7 +18,7 @@ static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
 static mux_dialogue save_dlg;
 
-static const int text_size_values[] = {0, 18, 22, 26};
+static const int text_size_scale[] = {0, 115, 130, 145};
 
 #define LEGIBLE_FONT_NAME "Atkinson Hyperlegible"
 #define DEFAULT_FONT_NAME "Noto Sans"
@@ -95,6 +96,32 @@ static const char *text_keys[] = {
     "settings/font/list_size", "settings/font/header_size", "settings/font/footer_size", "settings/font/panel_size"
 };
 
+static int text_key_theme_size(const size_t key) {
+    const int16_t sizes[] = {
+        theme.font.font_list_size, theme.font.font_header_size, theme.font.font_footer_size, theme.font.font_panel_size
+    };
+
+    return sizes[key] > 0 ? sizes[key] : get_font_size();
+}
+
+static int text_key_base(const size_t key) {
+    char kept[MAX_BUFFER_SIZE];
+    backup_path(text_keys[key], kept, sizeof(kept));
+
+    char live[MAX_BUFFER_SIZE];
+    snprintf(live, sizeof(live), CONF_CONFIG_PATH "%s", text_keys[key]);
+
+    const int stored = cfg_read_int(file_exist(kept) ? kept : live, 0);
+
+    return stored > 0 ? stored : text_key_theme_size(key);
+}
+
+static int text_size_for(const size_t key, const int index) {
+    if (index <= 0 || index >= (int) A_SIZE(text_size_scale)) return 0;
+
+    return text_key_base(key) * text_size_scale[index] / 100;
+}
+
 static int any_access_modified(void) {
 #define ACCESS(NAME, UDATA)                                                                                            \
     if ((int) lv_dropdown_get_selected(ui_dro_##NAME##_access) != NAME##_original) return 1;
@@ -120,8 +147,8 @@ static void init_dropdown_settings(void) {
 }
 
 static int text_size_index(void) {
-    for (int i = 1; i < (int) A_SIZE(text_size_values); i++)
-        if (config.settings.font.list_size == text_size_values[i]) return i;
+    for (int i = 1; i < (int) A_SIZE(text_size_scale); i++)
+        if (config.settings.font.list_size == text_size_for(0, i)) return i;
 
     return 0;
 }
@@ -183,10 +210,8 @@ static void preset_text_size(const int index) {
         return;
     }
 
-    const int size = index < (int) A_SIZE(text_size_values) ? text_size_values[index] : 0;
-
     for (size_t i = 0; i < A_SIZE(text_keys); i++)
-        preset_int(text_keys[i], size);
+        preset_int(text_keys[i], text_size_for(i, index));
 }
 
 static void save_access_options(void) {
