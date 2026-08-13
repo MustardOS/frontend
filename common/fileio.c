@@ -56,7 +56,7 @@ char *get_execute_result_argv(const char *const argv[], const int line) {
 
     close(output_pipe[1]);
 
-    enum { EXECUTE_OUTPUT_MAX = 1024 * 1024 };
+    enum { execute_output_max = 1024 * 1024 };
     char *result = malloc(1);
     size_t used = 0;
     int failed = result == NULL;
@@ -71,7 +71,7 @@ char *get_execute_result_argv(const char *const argv[], const int line) {
             failed = 1;
             break;
         }
-        if ((size_t) count > EXECUTE_OUTPUT_MAX - used) {
+        if ((size_t) count > execute_output_max - used) {
             failed = 1;
             break;
         }
@@ -308,7 +308,8 @@ void write_text_to_file_atomic(const char *filename, const int type, ...) {
     va_end(args);
 
     if (fflush(f) != 0) ok = 0;
-    if (fsync(fileno(f)) != 0) ok = 0;
+    if (ok && fsync(fileno(f)) != 0) LOG_WARN(mux_module, "%s: %s", lang.system.fail_file_write, filename);
+
     fclose(f);
 
     if (!ok || rename(tmp, filename) != 0) {

@@ -150,7 +150,7 @@ log_write_va(const int debug_mode, const log_level level, const char *module, co
     const size_t term_length = bounded_length(result);
     if (term_length > 0U) write_all(STDERR_FILENO, term_line, term_length);
 
-    if (debug_mode >= 2) write_log_file(formatted_date, formatted_time, elapsed, module_text, message);
+    write_log_file(formatted_date, formatted_time, elapsed, module_text, message);
 
     (void) pthread_mutex_unlock(&log_lock);
 }
