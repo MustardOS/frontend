@@ -1421,6 +1421,8 @@ void apply_size_to_content(
 ) {
     if (c_theme->misc.content.size_to_content) {
         lv_obj_t *ui_pnl_item = lv_obj_get_parent(ui_lbl_item);
+        uint32_t child_object_count = lv_obj_get_child_cnt(ui_pnl_item);
+        if (child_object_count > 2) return;
         lv_obj_set_width(ui_pnl_item, LV_SIZE_CONTENT);
         lv_obj_get_style_max_width(ui_pnl_item, c_theme->misc.content.width);
 
