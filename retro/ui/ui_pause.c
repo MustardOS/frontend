@@ -699,6 +699,8 @@ void pause_menu_show_nav_hints(void) {
 
 void pause_menu_init(void) {
     init_ui_common_screen(&theme, &device, &lang, lang.muxretro.title);
+    //Background transparency levels are handled by SDL so ui_screen must be set to transparent
+    lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     set_gradient_visible(0);
 
     ui_img_toast_glyph = lv_img_create(ui_pnl_message);
