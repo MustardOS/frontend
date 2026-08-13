@@ -244,6 +244,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_img_
             const int wall_is_mp4 = wall_len > 6 && strcasecmp(new_wall + wall_len - 4, ".mp4") == 0;
             if (wall_is_mp4) {
                 const char *mp4_path = new_wall + 2;
+                LOG_DEBUG(mux_module, "Wallpaper video chosen: %s", mp4_path);
                 video_wallpaper_play(mp4_path);
                 lv_img_set_src(ui_img_wall, &ui_img_blank);
                 lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);

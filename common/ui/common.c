@@ -1970,6 +1970,12 @@ void adjust_panel_priority(lv_obj_t *panels[]) {
 }
 
 int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, const int wall_type) {
+    LOG_DEBUG(
+        mux_module, "Wallpaper for '%s': factory_reset=%d video=%d base=%s dim=%s",
+        (const char *) lv_obj_get_user_data(ui_screen), config.boot.factory_reset, config.visual.video_wallpaper,
+        theme_base, mux_dim
+    );
+
     if (config.boot.factory_reset) {
         int video_played = 0;
         if (config.visual.video_wallpaper) {
@@ -1979,6 +1985,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
             for (size_t i = 0; i < 2 && !video_played; i++) {
                 const int w =
                     snprintf(mp4_path, sizeof(mp4_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[i], program);
+                LOG_DEBUG(mux_module, "Wallpaper video check: %s (%s)", mp4_path, file_exist(mp4_path) ? "yes" : "no");
                 if (w > 0 && (size_t) w < sizeof(mp4_path) && file_exist(mp4_path)) {
                     video_wallpaper_play(mp4_path);
                     lv_img_set_src(ui_img_wall, &ui_img_blank);

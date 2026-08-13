@@ -12,6 +12,7 @@
 #include <libavutil/channel_layout.h>
 #include <libavutil/version.h>
 #include "video.h"
+#include "log.h"
 #include "ui/modal.h"
 #include "display.h"
 #include "config.h"
@@ -937,14 +938,22 @@ static void preview_timer_cb(lv_timer_t *t __attribute__((unused))) {
 }
 
 static void wallpaper_open(void) {
+    const char *fail_reason = "unknown";
+
     is_wallpaper = 1;
 
-    if (avformat_open_input(&fmt_ctx, video_path, NULL, NULL) < 0) goto fail;
+    if (avformat_open_input(&fmt_ctx, video_path, NULL, NULL) < 0) {
+        fail_reason = "could not open the file";
+        goto fail;
+    }
 
     fmt_ctx->probesize = 32768;
     fmt_ctx->max_analyze_duration = 0;
 
-    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) goto fail;
+    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+        fail_reason = "no stream information";
+        goto fail;
+    }
 
     for (unsigned int i = 0; i < fmt_ctx->nb_streams; i++) {
         const AVCodecParameters *par = fmt_ctx->streams[i]->codecpar;
@@ -972,19 +981,31 @@ static void wallpaper_open(void) {
         }
     }
 
-    if (video_si < 0) goto fail;
+    if (video_si < 0) {
+        fail_reason = "no decodable video stream";
+        goto fail;
+    }
 
     sdl_ren = display_get_renderer();
-    if (!sdl_ren) goto fail;
+    if (!sdl_ren) {
+        fail_reason = "no renderer available";
+        goto fail;
+    }
 
     av_frame = av_frame_alloc();
     present_frame = av_frame_alloc();
     av_pkt = av_packet_alloc();
-    if (!av_frame || !present_frame || !av_pkt) goto fail;
+    if (!av_frame || !present_frame || !av_pkt) {
+        fail_reason = "frame allocation failed";
+        goto fail;
+    }
 
     for (int i = 0; i < VFRAME_Q; i++) {
         vq[i] = av_frame_alloc();
-        if (!vq[i]) goto fail;
+        if (!vq[i]) {
+            fail_reason = "queue allocation failed";
+            goto fail;
+        }
     }
 
     vq_head = vq_tail = vq_count = 0;
@@ -1009,13 +1030,19 @@ static void wallpaper_open(void) {
     reset_playback_timing(start_ticks);
     if (has_frame) wallpaper_next_ticks = start_ticks + wallpaper_frame_ms;
 
-    if (!start_decode_thread()) goto fail;
+    if (!start_decode_thread()) {
+        fail_reason = "decode thread would not start";
+        goto fail;
+    }
 
     display_set_video_background(wallpaper_cb);
     present_timer = lv_timer_create(present_cb, PRESENT_MS, NULL);
+
+    LOG_INFO("video", "Wallpaper playing: %s", video_path);
     return;
 
 fail:
+    LOG_ERROR("video", "Wallpaper failed, %s: %s", fail_reason, video_path);
     cleanup();
 }
 
