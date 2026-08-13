@@ -3,15 +3,16 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_controller = 0, row_core_device, row_button_mapping, row_macros, row_reset_port, row_count };
+enum { row_controller = 0, row_core_device, row_stick_dpad, row_button_mapping, row_macros, row_reset_port, row_count };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.controller,     lang.muxretro.settings_screen.core_device,
-    lang.muxretro.settings_screen.button_mapping, lang.muxretro.settings_screen.macros,
-    lang.muxretro.settings_screen.reset_port,
+    lang.muxretro.settings_screen.controller, lang.muxretro.settings_screen.core_device,
+    lang.muxretro.settings_screen.stick_dpad, lang.muxretro.settings_screen.button_mapping,
+    lang.muxretro.settings_screen.macros,     lang.muxretro.settings_screen.reset_port,
 };
 
-static const char *row_glyphs[row_count] = {"controller", "coredevice", "buttonmapping", "macro", "portreset"};
+static const char *row_glyphs[row_count] = {"controller", "coredevice",    "buttonmapping",
+                                            "macro",      "buttonmapping", "portreset"};
 
 static int active_port = 0;
 
@@ -22,6 +23,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_core_device:
             session_settings_port_device_summary(active_port, buf, buf_len);
+            break;
+        case row_stick_dpad:
+            session_settings_stick_dpad_summary(active_port, buf, buf_len);
             break;
         default:
             buf[0] = '\0';
@@ -36,6 +40,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_core_device:
             session_settings_cycle_port_device(active_port, direction);
+            break;
+        case row_stick_dpad:
+            session_settings_cycle_stick_dpad(active_port, direction);
             break;
         default:
             break;

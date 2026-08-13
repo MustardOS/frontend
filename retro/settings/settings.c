@@ -111,6 +111,7 @@ static struct session_settings_t default_settings(void) {
 
     for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++) {
         out.port_device_id[port] = (int) core_input_meta_preferred_device(port);
+        out.port_stick_forced[port] = 0;
 
         for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
             out.port_source_target[port][source] = default_source_target[source];
@@ -709,13 +710,12 @@ static void apply_ini(const char *path) {
     if (!ini) return;
 
     apply_scalar_settings(ini);
-    long long v;
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
 
         snprintf(key, sizeof(key), "port%d_assignment", i);
-        v = mini_get_int(ini, "settings", key, -1);
+        long long v = mini_get_int(ini, "settings", key, -1);
         if (v >= port_assignment_auto && v <= port_assignment_remembered) session_settings.port_assignment[i] = (int) v;
 
         snprintf(key, sizeof(key), "port%d_device_key", i);
@@ -728,6 +728,10 @@ static void apply_ini(const char *path) {
         snprintf(key, sizeof(key), "port%d_device_id", i);
         v = mini_get_int(ini, "settings", key, -1);
         if (v >= 0) session_settings.port_device_id[i] = (int) v;
+
+        snprintf(key, sizeof(key), "port%d_stick_forced", i);
+        v = mini_get_int(ini, "settings", key, -1);
+        if (v >= 0 && v <= 2) session_settings.port_stick_forced[i] = (int) v;
 
         for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
             snprintf(key, sizeof(key), "port%d_src_%d", i, s);
@@ -790,6 +794,11 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
         if (session_settings.port_device_id[i] != base->port_device_id[i]) {
             snprintf(key, sizeof(key), "port%d_device_id", i);
             mini_set_int(ini, "settings", key, session_settings.port_device_id[i]);
+        }
+
+        if (session_settings.port_stick_forced[i] != base->port_stick_forced[i]) {
+            snprintf(key, sizeof(key), "port%d_stick_forced", i);
+            mini_set_int(ini, "settings", key, session_settings.port_stick_forced[i]);
         }
 
         for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
@@ -1734,6 +1743,86 @@ int session_settings_set_source_target(const int port, const int source, const i
     session_settings.port_source_target[port][source] = target;
     session_settings.port_source_macro[port][source] = -1;
     return 1;
+}
+
+static const int stick_dpad_source[2][4] = {{16, 17, 18, 19}, {20, 21, 22, 23}};
+static const int stick_dpad_target[4] = {4, 5, 6, 7};
+
+enum { stick_dpad_off = 0, stick_dpad_left, stick_dpad_right, stick_dpad_left_forced, stick_dpad_right_forced };
+
+static int stick_dpad_bound(const int port, const int stick) {
+    for (int i = 0; i < 4; i++)
+        if (session_settings.port_source_target[port][stick_dpad_source[stick][i]] != stick_dpad_target[i]) return 0;
+
+    return 1;
+}
+
+static void stick_dpad_clear(const int port, const int stick) {
+    for (int i = 0; i < 4; i++)
+        if (session_settings.port_source_target[port][stick_dpad_source[stick][i]] == stick_dpad_target[i])
+            session_settings_unbind_source(port, stick_dpad_source[stick][i]);
+}
+
+static int stick_dpad_mode(const int port) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return stick_dpad_off;
+
+    for (int stick = 0; stick < 2; stick++) {
+        if (!stick_dpad_bound(port, stick)) continue;
+        return stick + 1 + (session_settings.port_stick_forced[port] == stick + 1 ? 2 : 0);
+    }
+
+    return stick_dpad_off;
+}
+
+void session_settings_cycle_stick_dpad(const int port, const int direction) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return;
+
+    int mode = stick_dpad_mode(port) + (direction > 0 ? 1 : -1);
+    if (mode < stick_dpad_off) mode = stick_dpad_right_forced;
+    if (mode > stick_dpad_right_forced) mode = stick_dpad_off;
+
+    stick_dpad_clear(port, 0);
+    stick_dpad_clear(port, 1);
+    session_settings.port_stick_forced[port] = 0;
+
+    if (mode == stick_dpad_off) return;
+
+    const int stick = (mode - 1) % 2;
+    for (int i = 0; i < 4; i++)
+        session_settings_set_source_target(port, stick_dpad_source[stick][i], stick_dpad_target[i]);
+
+    if (mode > stick_dpad_right) session_settings.port_stick_forced[port] = stick + 1;
+}
+
+void session_settings_stick_dpad_summary(const int port, char *buf, const size_t len) {
+    if (!buf || !len) return;
+
+    const char *name;
+    switch (stick_dpad_mode(port)) {
+        case stick_dpad_left:
+            name = lang.muxretro.settings_screen.stick_dpad_left;
+            break;
+        case stick_dpad_right:
+            name = lang.muxretro.settings_screen.stick_dpad_right;
+            break;
+        case stick_dpad_left_forced:
+            name = lang.muxretro.settings_screen.stick_dpad_left_forced;
+            break;
+        case stick_dpad_right_forced:
+            name = lang.muxretro.settings_screen.stick_dpad_right_forced;
+            break;
+        default:
+            name = lang.generic.disabled;
+            break;
+    }
+
+    snprintf(buf, len, "%s", name);
+}
+
+int session_settings_stick_forced(const int port, const int index) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || index < 0 || index > 1) return 0;
+
+    return session_settings.port_stick_forced[port] == index + 1;
 }
 
 int session_settings_set_source_by_button(const int port, const int source, const int pressed_type) {

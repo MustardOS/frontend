@@ -366,8 +366,11 @@ int16_t mux_retro_input_state_cb(const unsigned port, const unsigned device, con
 
     if (device == RETRO_DEVICE_ANALOG) {
         if (index != RETRO_DEVICE_INDEX_ANALOG_LEFT && index != RETRO_DEVICE_INDEX_ANALOG_RIGHT) return 0;
+        if (session_settings_stick_forced(port, index)) return 0;
+
         if (id == RETRO_DEVICE_ID_ANALOG_X) return port_stick_x[port][index];
         if (id == RETRO_DEVICE_ID_ANALOG_Y) return port_stick_y[port][index];
+
         return 0;
     }
 

@@ -2087,6 +2087,11 @@ struct mux_lang {
             char stick_anti_deadzone[MAX_BUFFER_SIZE];
             char stick_sensitivity[MAX_BUFFER_SIZE];
             char stick_invert_y[MAX_BUFFER_SIZE];
+            char stick_dpad[MAX_BUFFER_SIZE];
+            char stick_dpad_left[MAX_BUFFER_SIZE];
+            char stick_dpad_right[MAX_BUFFER_SIZE];
+            char stick_dpad_left_forced[MAX_BUFFER_SIZE];
+            char stick_dpad_right_forced[MAX_BUFFER_SIZE];
             char audio_latency[MAX_BUFFER_SIZE];
             char audio_latency_low[MAX_BUFFER_SIZE];
             char audio_latency_balanced[MAX_BUFFER_SIZE];

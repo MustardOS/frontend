@@ -178,6 +178,7 @@ struct session_settings_t {
     int port_assignment[MUX_INPUT_PORT_COUNT];
     char port_device_key[MUX_INPUT_PORT_COUNT][64];
     int port_device_id[MUX_INPUT_PORT_COUNT];
+    int port_stick_forced[MUX_INPUT_PORT_COUNT];
     int port_source_target[MUX_INPUT_PORT_COUNT][24];
     int port_source_turbo[MUX_INPUT_PORT_COUNT][24];
     int port_source_macro[MUX_INPUT_PORT_COUNT][24];
@@ -457,6 +458,12 @@ int session_settings_source_for_input(int pressed_type);
 int session_settings_set_source_by_button(int port, int source, int pressed_type);
 
 int session_settings_set_source_target(int port, int source, int target);
+
+void session_settings_cycle_stick_dpad(int port, int direction);
+
+void session_settings_stick_dpad_summary(int port, char *buf, size_t len);
+
+int session_settings_stick_forced(int port, int index);
 
 void session_settings_cycle_source_turbo(int port, int source, int direction);
 
