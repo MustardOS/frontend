@@ -90,7 +90,11 @@ void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const 
 }
 
 int glyph_explicit_px(const int16_t runtime_size, const int16_t section_size) {
-    const int size = runtime_size == -2 ? section_size : runtime_size;
+    int size = runtime_size == -2 ? section_size : runtime_size;
+
+    if (size == 0 && theme.mux.item.height > 0) {
+        size = (int16_t) (theme.mux.item.height * 3 / 4);
+    }
 
     return size > 0 ? size : 0;
 }
