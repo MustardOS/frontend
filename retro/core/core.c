@@ -523,6 +523,8 @@ int core_load_content(const char *content_path) {
 
         if (!ok) {
             LOG_ERROR(mux_module, "Core rejected content: %s", content_path);
+            if (environment_hw_render_refused())
+                LOG_ERROR(mux_module, "This core has no software renderer, set Game Renderer back to Hardware");
             return -1;
         }
         snprintf(
@@ -598,6 +600,8 @@ int core_load_content(const char *content_path) {
 
     if (!ok) {
         LOG_ERROR(mux_module, "Core rejected content: %s", content_path);
+        if (environment_hw_render_refused())
+            LOG_ERROR(mux_module, "This core has no software renderer, set Game Renderer back to Hardware");
         return -1;
     }
 

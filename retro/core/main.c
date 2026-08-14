@@ -48,6 +48,7 @@
 #define RESUME_COOLDOWN_MS  1500
 #define AUDIO_MAX_CATCHUP   3
 #define UI_TASK_INTERVAL_MS 16
+#define REFRESH_NOTICE_TLC  0.05
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -195,6 +196,7 @@ static unsigned run_core_batch(const unsigned frames) {
     for (unsigned i = 0; i < frames; i++) {
         const int is_last = i + 1 == frames || environment_av_info_pending();
 
+        video_bridge_set_frame_skip(!is_last);
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
 
@@ -224,7 +226,7 @@ static unsigned run_core_batch(const unsigned frames) {
     return ran;
 }
 
-static void pace_core_output(void) {
+static void pace_core_output(const uint64_t frame_start) {
     static double fps_limit_deadline = 0.0;
 
     if (hotkeys_is_fast_forward_active()) {
@@ -232,9 +234,15 @@ static void pace_core_output(void) {
         return;
     }
 
+    const double budget_ms = target_fps > 0.0 ? 1000.0 / target_fps : 1000.0 / 60.0;
+    const double spent_ms =
+        (double) (SDL_GetPerformanceCounter() - frame_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+    const double slack_ms = budget_ms - spent_ms;
+
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
-    audio_bridge_wait_for_headroom();
+    perf_record(perf_stage_audio_queue, (double) audio_bridge_queued_ms());
+    audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
     const int slowmo_active = hotkeys_is_slow_motion_active();
@@ -528,6 +536,7 @@ int main(const int argc, char *argv[]) {
     int prev_paused = 0;
     int netplay_wait_visible = 0;
     int netplay_governor_active = 0;
+    int refresh_notice_shown = 0;
 
     uint32_t fps_frame_count = 0;
     uint32_t fps_last_update = SDL_GetTicks();
@@ -542,6 +551,7 @@ int main(const int argc, char *argv[]) {
     while (!quit) {
         int core_ran = 0;
 
+        const uint64_t frame_start = SDL_GetPerformanceCounter();
         const uint32_t loop_now = SDL_GetTicks();
         const uint64_t services_start = perf_begin();
 
@@ -682,22 +692,41 @@ int main(const int argc, char *argv[]) {
                        && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
 
-                if (hw_render_bridge_active()) {
-                    extra = 0;
-                } else if (core_run_ema_ms > 0.0) {
+                if (core_run_ema_ms > 0.0) {
                     const double headroom = 1000.0 / target_fps / core_run_ema_ms - 1.0;
-                    if (headroom <= 0.0) {
-                        extra = 0;
-                    } else if (headroom < (double) AUDIO_MAX_CATCHUP) {
+
+                    if (headroom <= 0.0)
+                        extra = 1;
+                    else if (headroom < (double) AUDIO_MAX_CATCHUP)
                         extra = (unsigned) headroom;
-                    }
                 }
+
+                if (hw_render_bridge_active() && extra > 1) extra = 1;
 
                 frames = 1 + extra;
             }
 
             const unsigned ran_frames = run_core_batch(frames);
+            audio_bridge_note_core_frames(ran_frames);
             core_ran = ran_frames > 0;
+
+            if (!refresh_notice_shown) {
+                const double content_hz = audio_bridge_content_fps();
+                const int reported_hz = display_panel_refresh_hz();
+                const double panel_hz = reported_hz > 0 ? (double) reported_hz : (double) frame_pacer_get_refresh_hz();
+                const double delta = content_hz > panel_hz ? content_hz - panel_hz : panel_hz - content_hz;
+
+                if (content_hz > 0.0 && panel_hz > 0.0 && delta > panel_hz * REFRESH_NOTICE_TLC) {
+                    refresh_notice_shown = 1;
+
+                    char notice[MAX_BUFFER_SIZE];
+                    snprintf(
+                        notice, sizeof(notice), lang.muxretro.settings_screen.refresh_mismatch, (int) (content_hz + 0.5)
+                    );
+                    pause_menu_show_toast_timed(notice, tst_wait_s);
+                    LOG_INFO(mux_module, "Content runs at %.2f Hz on a %.2f Hz display", content_hz, panel_hz);
+                }
+            }
 
             if (core_ran) {
                 perf_note_batch(ran_frames);
@@ -774,12 +803,13 @@ int main(const int argc, char *argv[]) {
         frame_pacer_after_present();
         cheevo_present_tick();
 
-        if (core_ran) pace_core_output();
+        if (core_ran) pace_core_output(frame_start);
         perf_frame_complete(core_ran);
     }
 
     if (netplay_wait_visible) loading_message_hide();
     if (netplay_governor_active) governor_boost_end();
+
     pause_menu_shutdown();
     netplay_shutdown();
     cheevo_shutdown();

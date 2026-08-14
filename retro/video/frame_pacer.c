@@ -71,7 +71,7 @@ static void frame_pacer_reset_state(void) {
 }
 
 static int frame_pacer_timing_available(void) {
-    if (session_settings.fps_limit != fps_limit_60) return 0;
+    if (session_settings.fps_limit != fps_limit_auto) return 0;
     if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) return 0;
     if (audio_bridge_is_active() && audio_bridge_queued_ms() < FRAME_PACER_EMERGENCY_AUDIO_MS) return 0;
 

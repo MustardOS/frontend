@@ -84,6 +84,11 @@ static double last_flip_ms = 0.0;
 static int flip_pending = 0;
 static uint64_t present_serial = 0;
 static int monitor_blend_configured = 0;
+static int panel_refresh_hz = 0;
+
+int display_panel_refresh_hz(void) {
+    return panel_refresh_hz;
+}
 
 SDL_Renderer *display_get_renderer(void) {
     return monitor.renderer;
@@ -653,6 +658,7 @@ void sdl_init(void) {
 
     SDL_DisplayMode display_mode;
     if (SDL_GetWindowDisplayMode(monitor.window, &display_mode) == 0) {
+        panel_refresh_hz = display_mode.refresh_rate;
         LOG_INFO("video", "Display reports %dx%d @ %dHz", display_mode.w, display_mode.h, display_mode.refresh_rate);
     }
 

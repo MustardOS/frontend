@@ -448,7 +448,7 @@ void video_bridge_apply_fps_limit(void) {
     SDL_Renderer *renderer = display_get_renderer();
     if (!renderer) return;
 
-    const int want_vsync = session_settings.fps_limit == fps_limit_60;
+    const int want_vsync = session_settings.fps_limit == fps_limit_auto;
 
     if (SDL_RenderSetVSync(renderer, want_vsync) != 0) {
         LOG_ERROR(mux_module, "SDL_RenderSetVSync(%d) failed: %s", want_vsync, SDL_GetError());

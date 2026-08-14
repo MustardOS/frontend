@@ -2032,6 +2032,7 @@ struct mux_lang {
             char shimmer_fix[MAX_BUFFER_SIZE];
             char run_ahead[MAX_BUFFER_SIZE];
             char run_ahead_failed[MAX_BUFFER_SIZE];
+            char refresh_mismatch[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];
@@ -2063,7 +2064,7 @@ struct mux_lang {
             char sample_rate[MAX_BUFFER_SIZE];
             char auto_rate[MAX_BUFFER_SIZE];
             char fps_limit[MAX_BUFFER_SIZE];
-            char fps_60[MAX_BUFFER_SIZE];
+            char fps_auto[MAX_BUFFER_SIZE];
             char fps_50[MAX_BUFFER_SIZE];
             char fps_none[MAX_BUFFER_SIZE];
             char header_visibility[MAX_BUFFER_SIZE];

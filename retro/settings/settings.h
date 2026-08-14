@@ -65,7 +65,7 @@ enum border_colour_mode {
     border_colour_count
 };
 
-enum fps_limit_mode { fps_limit_60 = 0, fps_limit_50, fps_limit_none, fps_limit_count };
+enum fps_limit_mode { fps_limit_auto = 0, fps_limit_50, fps_limit_none, fps_limit_count };
 
 #define FRAME_DELAY_OFF  (-1)
 #define FRAME_DELAY_AUTO (-2)

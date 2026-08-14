@@ -11,8 +11,7 @@
 
 #define GOVERNOR_NAME_MAX 64
 
-#define GAMEPLAY_ENTER_RATIO   0.97
-#define GAMEPLAY_EXIT_RATIO    0.99
+#define GAMEPLAY_BOOST_RATIO   0.99
 #define GAMEPLAY_ENTER_WINDOWS 2
 #define GAMEPLAY_EXIT_WINDOWS  8
 
@@ -104,8 +103,8 @@ void governor_boost_end(void) {
 void governor_boost_gameplay_update(const double observed_fps, const double target_fps, const int force) {
     if (target_fps <= 0.0 || observed_fps < 0.0) return;
 
-    const int missed = observed_fps < target_fps * GAMEPLAY_ENTER_RATIO;
-    const int stable = observed_fps >= target_fps * GAMEPLAY_EXIT_RATIO;
+    const int missed = observed_fps < target_fps * GAMEPLAY_BOOST_RATIO;
+    const int stable = !missed;
 
     if (!gameplay_boost_active) {
         gameplay_stable_windows = 0;

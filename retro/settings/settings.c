@@ -34,7 +34,7 @@ static const struct session_settings_t defaults = {
     .content_precache = content_precache_off,
     .border_colour = border_colour_theme,
     .sample_rate = 0,
-    .fps_limit = fps_limit_60,
+    .fps_limit = fps_limit_auto,
     .header_visibility = header_visibility_none,
     .ff_speed = ff_speed_4_x,
     .slowmo_speed = slowmo_speed_1_2_x,
@@ -322,7 +322,7 @@ static const struct setting_descriptor setting_descriptors[] = {
 #undef SETTING_RANGE
 
 static const char *fps_limit_names[fps_limit_count] = {
-    lang.muxretro.settings_screen.fps_60, lang.muxretro.settings_screen.fps_50, lang.muxretro.settings_screen.fps_none
+    lang.muxretro.settings_screen.fps_auto, lang.muxretro.settings_screen.fps_50, lang.muxretro.settings_screen.fps_none
 };
 
 static const char *audio_latency_names[audio_latency_count] = {
@@ -432,7 +432,7 @@ const char *session_settings_sample_rate_name(const int rate) {
 }
 
 const char *session_settings_fps_limit_name(const int mode) {
-    if (mode < 0 || mode >= fps_limit_count) return fps_limit_names[fps_limit_60];
+    if (mode < 0 || mode >= fps_limit_count) return fps_limit_names[fps_limit_auto];
     return fps_limit_names[mode];
 }
 
