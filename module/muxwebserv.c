@@ -132,8 +132,14 @@ static void rebuild_groups(const int count, const int target_index) {
     for (int i = 0; i < ui_count_dynamic; i++)
         set_row_visible(i, i < count);
 
+    lv_obj_update_layout(ui_pnl_content);
+    lv_obj_set_scroll_snap_y(ui_pnl_content, LV_SCROLL_SNAP_START);
+    lv_obj_scroll_to_y(ui_pnl_content, 0, LV_ANIM_OFF);
+
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
     gen_step_movement(target_index >= 0 && target_index < count ? target_index : 0, +1, 2, 0, 0);
+    nav_refresh_list_overflow(ui_pnl_content);
+
     nav_moved = 1;
 }
 

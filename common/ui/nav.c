@@ -473,7 +473,9 @@ void update_scroll_position(
     const int content_panel_y = (int) round(scroll_multiplier * mux_item_panel);
 
     lv_obj_scroll_to_y(ui_pnl_content, content_panel_y, LV_ANIM_OFF);
-    lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
+
+    const lv_coord_t scroll_range = lv_obj_get_scroll_top(ui_pnl_content) + lv_obj_get_scroll_bottom(ui_pnl_content);
+    if (scroll_range > 0) lv_obj_update_snap(ui_pnl_content, LV_ANIM_OFF);
 }
 
 static int row_dim_active = 0;
