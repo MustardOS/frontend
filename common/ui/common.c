@@ -1642,7 +1642,7 @@ lv_obj_t *create_footer_glyph(
         const int footer_target = resolve_glyph_size(
             config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->mux.item.height * 3 / 4
         );
-        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme->glyph.footer);
+        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->footer.height);
         append_glyph_size_hint(footer_image_embed, sizeof(footer_image_embed), footer_target);
         set_list_glyph_image(ui_glyph, footer_image_embed);
         apply_glyph_scale(ui_glyph, footer_image_embed, footer_px, footer_px);
@@ -1765,7 +1765,7 @@ static void update_status_glyph(
         )) {
         int header_target =
             resolve_glyph_size(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
-        int header_px = glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header);
+        int header_px = glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
 
         if (header_target > 0) header_target = header_target * size_pct / 100;
         if (header_px > 0) header_px = header_px * size_pct / 100;

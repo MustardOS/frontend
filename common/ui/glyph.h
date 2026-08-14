@@ -12,7 +12,7 @@ void resolve_grid_glyph_hint(const struct theme_config *theme, int *hint_w, int 
 
 void build_embed_path(char *embed, size_t embed_size, const char *path, int hint_w, int hint_h);
 
-int glyph_explicit_px(int16_t runtime_size, int16_t section_size);
+int glyph_explicit_px(int16_t runtime_size, int16_t section_size, const int16_t parent_height);
 
 void apply_glyph_scale(lv_obj_t *img, const char *embed, int box_w, int box_h);
 
