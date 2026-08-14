@@ -497,12 +497,12 @@ static void process_sdl_button(const SDL_GameControllerButton btn, const int dow
     pressed = down ? pressed | BIT(t) : pressed & ~BIT(t);
 }
 
-static void process_sdl_joy_button(const uint8_t button, const int down) {
+static void process_sdl_joy_button(const SDL_JoystickID which, const uint8_t button, const int down) {
     if (button >= 32) return;
 
     const mux_input_type t = joy_button_map[button];
     if (t == mux_input_count) {
-        LOG_DEBUG("input", "Unmapped joystick button %d", button);
+        if (!is_tracked_as_controller(which)) LOG_DEBUG("input", "Unmapped joystick button %d", button);
         return;
     }
 
@@ -756,7 +756,7 @@ static void load_active_controller_mappings(void) {
     if (mappings < 0) {
         LOG_WARN("input", "Failed to load %s gamecontrollerdb from %s: %s", layout_name, info_map, SDL_GetError());
     } else {
-        LOG_INFO("input", "Loaded %d %s controller mappings from %s", mappings, layout_name, info_map);
+        LOG_INFO("input", "Loaded %d new %s controller mapping(s) from %s", mappings, layout_name, info_map);
     }
 }
 
@@ -1323,14 +1323,14 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
             break;
         case SDL_JOYBUTTONDOWN:
             if (ev->jbutton.which == primary_instance) {
-                process_sdl_joy_button(ev->jbutton.button, 1);
+                process_sdl_joy_button(ev->jbutton.which, ev->jbutton.button, 1);
                 if (ev->jbutton.button < 32)
                     update_primary_pressed(ev->jbutton.which, joy_button_map[ev->jbutton.button], 1);
             }
             break;
         case SDL_JOYBUTTONUP:
             if (ev->jbutton.which == primary_instance) {
-                process_sdl_joy_button(ev->jbutton.button, 0);
+                process_sdl_joy_button(ev->jbutton.which, ev->jbutton.button, 0);
                 if (ev->jbutton.button < 32)
                     update_primary_pressed(ev->jbutton.which, joy_button_map[ev->jbutton.button], 0);
             }
