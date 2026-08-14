@@ -1301,23 +1301,47 @@ static void wake_peers(void) {
     }
 }
 
+static void peer_release(netplay_peer *peer) {
+    if (peer->ssl) SSL_free(peer->ssl);
+    if (peer->wake_fd >= 0) close(peer->wake_fd);
+    free(peer->rx_state);
+    memset(peer, 0, sizeof(*peer));
+    peer->socket_fd = -1;
+    peer->wake_fd = -1;
+}
+
 static int peer_start(const int socket_fd, const int server, const unsigned index) {
     if (index >= NETPLAY_CLIENT_CAPACITY) return -1;
     netplay_peer *peer = &netplay.peers[index];
+
     pthread_mutex_lock(&netplay.mutex);
-    memset(peer, 0, sizeof(*peer));
+    if (peer->running) {
+        pthread_mutex_unlock(&netplay.mutex);
+        LOG_WARN(mux_module, "netplay: peer slot %u is still busy, refusing to start another", index);
+        return -1;
+    }
+
+    peer_release(peer);
     peer->socket_fd = socket_fd;
     peer->wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     peer->owner_port = server ? index + 1U : 1U;
     if (netplay.peer_count <= index) netplay.peer_count = index + 1U;
     pthread_mutex_unlock(&netplay.mutex);
+
     peer->ssl = SSL_new(netplay.tls);
-    if (!peer->ssl) return -1;
-    SSL_set_fd(peer->ssl, socket_fd);
-    if (!server) SSL_set_tlsext_host_name(peer->ssl, "Pickles Network Play");
-    if (tls_handshake(peer->ssl, socket_fd, server) != 0) return -1;
-    peer->running = pthread_create(&peer->thread, NULL, peer_thread, peer) == 0;
-    return peer->running ? 0 : -1;
+    if (peer->ssl) {
+        SSL_set_fd(peer->ssl, socket_fd);
+        if (!server) SSL_set_tlsext_host_name(peer->ssl, "Pickles Network Play");
+        if (tls_handshake(peer->ssl, socket_fd, server) == 0) {
+            peer->running = pthread_create(&peer->thread, NULL, peer_thread, peer) == 0;
+            if (peer->running) return 0;
+        }
+    }
+
+    pthread_mutex_lock(&netplay.mutex);
+    peer_release(peer);
+    pthread_mutex_unlock(&netplay.mutex);
+    return -1;
 }
 
 static void send_discovery(const int socket_fd) {
