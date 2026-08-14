@@ -77,7 +77,16 @@ void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const 
     if (zoom < 1) zoom = 1;
     if (zoom > 0xFFFF) zoom = 0xFFFF;
 
-    lv_img_set_zoom(img, (uint16_t) zoom);
+    // Calculate the scaled image width.
+    const int scaled_w = ((int)header.w * zoom) / LV_IMG_ZOOM_NONE;
+
+    // LVGL zooms around the center, so compensate for the increase/decrease in width.
+    const int offset_x = (scaled_w - (int)header.w) / 2;
+
+    lv_img_set_zoom(img, (uint16_t)zoom);
+
+    // Keep the visible left edge at the configured X.
+    lv_obj_set_x(img, theme.list_default.glyph_padding_left + offset_x);
 }
 
 int glyph_explicit_px(const int16_t runtime_size, const int16_t section_size) {
