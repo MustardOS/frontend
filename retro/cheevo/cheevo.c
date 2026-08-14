@@ -45,10 +45,11 @@
 #define CHEEVO_PROGRESS_CAP             (16U * 1024U * 1024U)
 #define CHEEVO_UNKNOWN_EMULATOR_WARNING "Warning: Unknown Emulator"
 #define CHEEVO_LEADERBOARD_CAP          10
-#define CHEEVO_MEMORY_WAIT_FRAMES  120
-#define CHEEVO_UNLOCK_TOAST_MS     3192
-#define CHEEVO_FRAME_COMPLETIONS   1
-#define CHEEVO_STARTUP_COMPLETIONS 4
+#define CHEEVO_MEMORY_DESCRIPTOR_CAP    256
+#define CHEEVO_MEMORY_WAIT_FRAMES       120
+#define CHEEVO_UNLOCK_TOAST_MS          3192
+#define CHEEVO_FRAME_COMPLETIONS        1
+#define CHEEVO_STARTUP_COMPLETIONS      4
 
 typedef struct {
     char *url;
@@ -1107,12 +1108,24 @@ void cheevo_set_memory_map(const struct retro_memory_map *map) {
     rc_libretro_memory_destroy(&memory_regions);
     memory_available = 0;
     memory_initialisation_deferred = 0;
-    if (!map || !map->descriptors || !map->num_descriptors || map->num_descriptors > 256) {
+    if (map && map->descriptors && map->num_descriptors > CHEEVO_MEMORY_DESCRIPTOR_CAP)
+        LOG_WARN(
+            mux_module, "cheevo: ignoring a %u entry memory map, achievements will read the core memory blocks instead",
+            map->num_descriptors
+        );
+
+    if (!map || !map->descriptors || !map->num_descriptors || map->num_descriptors > CHEEVO_MEMORY_DESCRIPTOR_CAP) {
         cheevo_refresh_memory();
         return;
     }
+
     memory_descriptors = malloc(sizeof(*memory_descriptors) * map->num_descriptors);
-    if (!memory_descriptors) return;
+    if (!memory_descriptors) {
+        LOG_WARN(mux_module, "cheevo: could not copy the core memory map, reading the core memory blocks instead");
+        cheevo_refresh_memory();
+        return;
+    }
+
     memcpy(memory_descriptors, map->descriptors, sizeof(*memory_descriptors) * map->num_descriptors);
     memory_descriptor_count = map->num_descriptors;
     cheevo_refresh_memory();
