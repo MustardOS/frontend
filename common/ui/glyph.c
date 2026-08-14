@@ -77,24 +77,37 @@ void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const 
     if (zoom < 1) zoom = 1;
     if (zoom > 0xFFFF) zoom = 0xFFFF;
 
-    lv_img_set_zoom(img, (uint16_t) zoom);
+    // Calculate the scaled image width.
+    const int scaled_w = ((int)header.w * zoom) / LV_IMG_ZOOM_NONE;
+
+    // LVGL zooms around the center, so compensate for the increase/decrease in width.
+    const int offset_x = (scaled_w - (int)header.w) / 2;
+
+    lv_img_set_zoom(img, (uint16_t)zoom);
+
+    // Keep the visible left edge at the configured X.
+    lv_obj_set_x(img, theme.list_default.glyph_padding_left + offset_x);
 }
 
-int glyph_explicit_px(const int16_t runtime_size, const int16_t section_size) {
-    const int size = runtime_size == -2 ? section_size : runtime_size;
+int glyph_explicit_px(const int16_t runtime_size, const int16_t section_size, const int16_t parent_height) {
+    int size = runtime_size == -2 ? section_size : runtime_size;
+
+    if (size == 0 && parent_height > 0) {
+        size = (int16_t) (parent_height * 3 / 4);
+    }
 
     return size > 0 ? size : 0;
 }
 
 void set_list_glyph_image(lv_obj_t *img, const char *embed) {
     lv_img_set_src(img, embed);
-    const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_list, theme.glyph.list);
+    const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height);
     apply_glyph_scale(img, embed, px, px);
 }
 
 void set_footer_glyph_image(lv_obj_t *img, const char *embed) {
     lv_img_set_src(img, embed);
-    const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer);
+    const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
     apply_glyph_scale(img, embed, px, px);
 }
 

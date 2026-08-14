@@ -364,7 +364,7 @@ static void update_footer_glyph(lv_obj_t *glyph, const char *name) {
             config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.mux.item.height * 3 / 4
         );
 
-        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer);
+        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
 
         append_glyph_size_hint(image_embed, sizeof(image_embed), footer_target);
         lv_img_set_src(glyph, image_embed);
