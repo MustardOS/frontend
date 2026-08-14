@@ -851,7 +851,7 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
     playtime_json_root = (struct json) {0};
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
-    is_dir = dir_exist(rom_dir);
+    is_dir = dir_exist(rom_dir) && !folder_is_content(dir, name);
 
     if (!is_dir) snprintf(rom_dir, sizeof(rom_dir), "%s", dir);
 
