@@ -72,7 +72,11 @@ uint32_t audio_bridge_low_water_ms(void);
 
 uint32_t audio_bridge_high_water_ms(void);
 
-void audio_bridge_wait_for_headroom(void);
+void audio_bridge_wait_for_headroom(uint32_t budget_ms);
+
+void audio_bridge_note_core_frames(unsigned frames);
+
+double audio_bridge_content_fps(void);
 
 void audio_bridge_drc_tick(void);
 
@@ -113,6 +117,8 @@ void input_bridge_apply_controller_ports(void);
 void input_bridge_set_netplay_state(unsigned player_count, int routes_input);
 
 int environment_core_wants_hw_render(void);
+
+int environment_hw_render_refused(void);
 
 int environment_av_info_pending(void);
 
@@ -197,8 +203,6 @@ void pause_menu_show_toast(const char *msg);
 void pause_menu_show_toast_timed(const char *msg, uint32_t duration_ms);
 
 void pause_menu_show_glyph_toast_timed(const char *msg, const char *glyph, uint32_t duration_ms);
-
-
 
 void pause_menu_update_header(void);
 

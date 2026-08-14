@@ -330,7 +330,7 @@ int perf_export_trace(const char *path) {
         "present_flip", "audio_wait", "input_present",  "present_to_poll", "frame_delay",
         "gl_enter",     "gl_leave",   "netplay_digest", "cheevo_callback", "screenshot",
         "state_save",   "services",   "cheevo_tick",    "netplay_tick",    "maintenance",
-        "control",      "ui_logic",   "ui_task"
+        "control",      "ui_logic",   "ui_task",        "audio_queue"
     };
 
     FILE *f = fopen(path, "w");
@@ -390,6 +390,9 @@ int perf_export_trace(const char *path) {
         f, "missed_refresh_percent,%.2f\n",
         frames_observed ? 100.0 * (double) missed_refreshes / (double) frames_observed : 0.0
     );
+    fprintf(f, "content_hz,%.4f\n", audio_bridge_content_fps());
+    fprintf(f, "panel_hz,%d\n", display_panel_refresh_hz());
+
     const char *gl_context = "none";
     if (hw_render_bridge_active()) gl_context = hw_render_bridge_owns_context() ? "dedicated" : "shared";
     fprintf(f, "gl_context,%s\n", gl_context);

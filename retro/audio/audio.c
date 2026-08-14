@@ -32,6 +32,13 @@
 #define HEADROOM_MAX_WAIT_MS 4
 #define HEADROOM_SMOOTHING   0.25
 
+#define AUDIO_LATENCY_CEILING_RATIO 2
+
+#define CONTENT_FPS_SMOOTHING     0.02
+#define CONTENT_FPS_MIN           20.0
+#define CONTENT_FPS_MAX           130.0
+#define CONTENT_FPS_SETTLE_FRAMES 180
+
 static SDL_AudioDeviceID audio_dev = 0;
 
 static int opened_freq = 0;
@@ -45,6 +52,10 @@ static int audio_muted = 0;
 
 static double core_native_rate = 48000.0;
 static SDL_AudioStream *resampler = NULL;
+
+static uint64_t submitted_frames = 0;
+static double content_fps_ema = 0.0;
+static unsigned content_fps_samples = 0;
 
 static int16_t scratch_buf[AUDIO_SCRATCH_FRAMES * 2];
 static uint8_t resample_buf[AUDIO_SCRATCH_FRAMES * 2 * sizeof(int16_t)];
@@ -60,6 +71,7 @@ static int16_t audio_ring[AUDIO_RING_FRAMES * 2];
 static _Atomic uint32_t ring_write_index = 0;
 static _Atomic uint32_t ring_read_index = 0;
 static _Atomic uint32_t underrun_count = 0;
+static uint64_t dropped_frames = 0;
 
 static _Atomic uint32_t fade_in_remaining = 0;
 static _Atomic uint32_t fade_in_total = 0;
@@ -183,6 +195,7 @@ static size_t ring_write_frames(const int16_t *src, const size_t frames) {
 
     memcpy(audio_ring + (size_t) start * 2, src, first * 2 * sizeof(int16_t));
     if (second > 0) memcpy(audio_ring, src + first * 2, second * 2 * sizeof(int16_t));
+    if (to_write < frames) dropped_frames += frames - to_write;
 
     ring_write_index = write_idx + (uint32_t) to_write;
     return to_write;
@@ -317,6 +330,8 @@ static void queue_samples(const int16_t *data, const size_t frames) {
 }
 
 static void submit_audio_frames(const int16_t *data, const size_t frames) {
+    submitted_frames += frames;
+
     const int need_volume = session_settings.volume < 100;
     const int need_filter = session_settings.audio_filter != audio_filter_none;
 
@@ -433,6 +448,10 @@ int audio_bridge_open(const double core_sample_rate) {
     drc_ratio = 1.0;
     drc_reset_stream();
 
+    submitted_frames = 0;
+    content_fps_ema = 0.0;
+    content_fps_samples = 0;
+
     free_resampler();
     if ((int) core_sample_rate != have.freq) {
         resampler = SDL_NewAudioStream(AUDIO_S16SYS, 2, (int) core_sample_rate, AUDIO_S16SYS, 2, have.freq);
@@ -502,12 +521,41 @@ void audio_bridge_close(void) {
     const uint32_t underruns = underrun_count;
     if (underruns > 0) LOG_DEBUG(mux_module, "Audio ring underran %u time(s) this session", underruns);
 
+    if (dropped_frames > 0)
+        LOG_WARN(
+            mux_module, "Audio ring overran and discarded %llu frame(s) this session (%.2f seconds of sound)",
+            (unsigned long long) dropped_frames, opened_freq > 0 ? (double) dropped_frames / (double) opened_freq : 0.0
+        );
+
     LOG_DEBUG(mux_module, "Audio rate control settled at %+.3f%% correction", (1.0 - drc_ratio) * 100.0);
 
     audio_bridge_discard_sample_fifo();
     close_device();
 
     if (SDL_WasInit(SDL_INIT_AUDIO)) SDL_QuitSubSystem(SDL_INIT_AUDIO);
+}
+
+void audio_bridge_note_core_frames(const unsigned frames) {
+    const uint64_t produced = submitted_frames;
+    submitted_frames = 0;
+
+    if (!frames || !produced || audio_muted || core_native_rate <= 0.0) return;
+
+    const double per_frame = (double) produced / (double) frames;
+    if (per_frame < 1.0) return;
+
+    const double implied = core_native_rate / per_frame;
+    if (implied < CONTENT_FPS_MIN || implied > CONTENT_FPS_MAX) return;
+
+    content_fps_ema = content_fps_ema <= 0.0
+                          ? implied
+                          : content_fps_ema * (1.0 - CONTENT_FPS_SMOOTHING) + implied * CONTENT_FPS_SMOOTHING;
+
+    if (content_fps_samples < CONTENT_FPS_SETTLE_FRAMES) content_fps_samples++;
+}
+
+double audio_bridge_content_fps(void) {
+    return content_fps_samples >= CONTENT_FPS_SETTLE_FRAMES ? content_fps_ema : 0.0;
 }
 
 void audio_bridge_get_info(int *freq, int *channels) {
@@ -675,6 +723,26 @@ void audio_bridge_reset_period_floor(void) {
     period_floor_frames = 0;
 }
 
+static void enforce_latency_ceiling(const uint32_t high_ms) {
+    if (high_ms == 0) return;
+
+    const uint32_t ceiling_ms = high_ms * AUDIO_LATENCY_CEILING_RATIO;
+    if (audio_bridge_queued_ms() <= ceiling_ms) return;
+
+    const uint32_t keep = (uint32_t) ((uint64_t) high_ms * (uint64_t) opened_freq / 1000ULL);
+
+    SDL_LockAudioDevice(audio_dev);
+    const uint32_t write_idx = ring_write_index;
+    const uint32_t occupied = write_idx - ring_read_index;
+    if (occupied > keep) {
+        ring_read_index = write_idx - keep;
+        dropped_frames += occupied - keep;
+    }
+    SDL_UnlockAudioDevice(audio_dev);
+
+    LOG_DEBUG(mux_module, "Audio queue reached %ums, skipped ahead to %ums", ceiling_ms, high_ms);
+}
+
 void audio_bridge_drc_tick(void) {
     period_stability_check();
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
@@ -688,6 +756,7 @@ void audio_bridge_drc_tick(void) {
 
     uint32_t low, high;
     compute_latency_targets(active_min_latency_ms, &low, &high);
+    enforce_latency_ceiling(high);
 
     const uint64_t target_frames = (uint64_t) (low + high) / 2ULL * (uint64_t) opened_freq / 1000ULL;
     if (target_frames == 0) return;
@@ -713,9 +782,10 @@ void audio_bridge_drc_tick(void) {
     drc_ratio = 1.0 - correction;
 }
 
-void audio_bridge_wait_for_headroom(void) {
+void audio_bridge_wait_for_headroom(const uint32_t budget_ms) {
     audio_bridge_maybe_finish_resume();
     if (device_paused) return;
+    if (budget_ms == 0) return;
 
     const uint32_t queued = audio_bridge_queued_ms();
 
@@ -730,6 +800,7 @@ void audio_bridge_wait_for_headroom(void) {
 
     uint32_t wait_ms = (uint32_t) (depth - (double) high);
     if (wait_ms > HEADROOM_MAX_WAIT_MS) wait_ms = HEADROOM_MAX_WAIT_MS;
+    if (wait_ms > budget_ms) wait_ms = budget_ms;
     if (wait_ms == 0) return;
 
     SDL_Delay(wait_ms);

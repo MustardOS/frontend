@@ -27,6 +27,7 @@ enum perf_stage {
     perf_stage_control,
     perf_stage_ui_logic,
     perf_stage_ui_task,
+    perf_stage_audio_queue,
     perf_stage_count
 };
 
