@@ -163,7 +163,9 @@ int state_save(const char *path) {
 
     static size_t alloc_high_water = 0;
     size_t alloc = core_size + core_size / 4 + (1 << 20);
-    if (alloc < alloc_high_water) alloc = alloc_high_water;
+
+    const size_t alloc_ceiling = alloc * 2;
+    if (alloc < alloc_high_water) alloc = alloc_high_water < alloc_ceiling ? alloc_high_water : alloc_ceiling;
     alloc_high_water = alloc;
 
     size_t cheevo_size = cheevo_progress_size();
@@ -308,7 +310,19 @@ int state_load(const char *path, const int show_message) {
     }
 
     hw_render_bridge_enter_core_call();
-    if (current_core.retro_serialize_size) current_core.retro_serialize_size();
+
+    const size_t expected = current_core.retro_serialize_size ? current_core.retro_serialize_size() : core_size;
+    if (expected && expected != core_size) {
+        hw_render_bridge_exit_core_call();
+        LOG_ERROR(
+            mux_module, "Save state is %zu bytes but this core wants %zu, refusing to load '%s'", core_size, expected,
+            path
+        );
+        free(buf);
+        governor_boost_end();
+        loading_message_hide();
+        return -1;
+    }
 
     const int ok = current_core.retro_unserialize(core_data, core_size);
     hw_render_bridge_exit_core_call();
