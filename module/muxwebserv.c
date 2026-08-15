@@ -573,6 +573,18 @@ static void handle_down(void) {
     key_show ? key_down() : handle_list_nav_down();
 }
 
+static void handle_up_hold(void) {
+    if (dialogue_active(&save_dlg)) return;
+
+    key_show ? key_up() : handle_list_nav_up_hold();
+}
+
+static void handle_down_hold(void) {
+    if (dialogue_active(&save_dlg)) return;
+
+    key_show ? key_down() : handle_list_nav_down_hold();
+}
+
 static void handle_left(void) {
     if (dialogue_active(&save_dlg)) {
         dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
@@ -699,8 +711,8 @@ int muxwebserv_main(void) {
             },
         .hold_handler = {
             [mux_input_b] = handle_b_hold,
-            [mux_input_dpad_up] = handle_up,
-            [mux_input_dpad_down] = handle_down,
+            [mux_input_dpad_up] = handle_up_hold,
+            [mux_input_dpad_down] = handle_down_hold,
             [mux_input_dpad_left] = handle_left,
             [mux_input_dpad_right] = handle_right,
             [mux_input_l1] = handle_l1,
