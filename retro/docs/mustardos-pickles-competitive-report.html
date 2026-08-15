@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A discussion report on how MustardOS and Pickles can offer a simpler, safer and more complete handheld experience than a general-purpose emulation frontend.">
+    <title>MustardOS and Pickles Competitive Experience Report</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --background: #10141b;
+            --surface: #181f2a;
+            --raised: #222c3a;
+            --raised-2: #2a3545;
+            --border: #374458;
+            --text: #f0f3f8;
+            --muted: #abb6c7;
+            --mustard: #d4b600;
+            --mustard-light: #f2d73d;
+            --mustard-soft: #4d4311;
+            --green: #64d698;
+            --green-soft: #173d2b;
+            --blue: #67c3ff;
+            --blue-soft: #17394f;
+            --orange: #ffb35d;
+            --orange-soft: #4b341b;
+            --red: #ff7474;
+            --red-soft: #4b2529;
+            --purple: #c69cff;
+            --purple-soft: #362651;
+            --shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(212, 182, 0, 0.13), transparent 30rem),
+                radial-gradient(circle at 88% 18%, rgba(103, 195, 255, 0.07), transparent 34rem),
+                var(--background);
+            color: var(--text);
+            font: 16px/1.62 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        a { color: var(--mustard-light); }
+        a:hover { color: #fff3a0; }
+
+        code {
+            padding: 0.08rem 0.32rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.3rem;
+            background: rgba(0, 0, 0, 0.24);
+            color: #fff1a6;
+            font-size: 0.92em;
+        }
+
+        .page {
+            width: min(1220px, calc(100% - 2rem));
+            margin: 0 auto;
+            padding: 3rem 0 5rem;
+        }
+
+        header {
+            padding: clamp(1.5rem, 5vw, 3rem);
+            border: 1px solid var(--border);
+            border-radius: 1.35rem;
+            background: linear-gradient(135deg, rgba(212, 182, 0, 0.20), rgba(24, 31, 42, 0.96) 48%);
+            box-shadow: var(--shadow);
+        }
+
+        h1, h2, h3, h4 { line-height: 1.2; }
+        h1 { max-width: 930px; margin: 0.35rem 0 1rem; font-size: clamp(2.2rem, 5vw, 4rem); }
+        h2 { margin: 0 0 1rem; font-size: clamp(1.55rem, 3vw, 2.25rem); }
+        h3 { margin: 0 0 0.65rem; font-size: 1.15rem; }
+        h4 { margin: 0 0 0.45rem; color: var(--mustard-light); }
+        p { margin: 0.7rem 0; }
+        ul, ol { padding-left: 1.3rem; }
+        li + li { margin-top: 0.34rem; }
+
+        .eyebrow {
+            color: var(--mustard-light);
+            font-size: 0.78rem;
+            font-weight: 850;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .lead { max-width: 910px; color: #dce2ec; font-size: 1.13rem; }
+        .muted { color: var(--muted); }
+
+        .meta, .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem 1.15rem;
+            margin-top: 1.35rem;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0 2rem;
+            padding: 0.75rem;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 0.85rem;
+            background: rgba(16, 20, 27, 0.94);
+            backdrop-filter: blur(14px);
+        }
+
+        nav a {
+            flex: 0 0 auto;
+            padding: 0.45rem 0.72rem;
+            border-radius: 0.5rem;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        nav a:hover { background: var(--raised); color: var(--text); }
+
+        section {
+            margin-top: 2rem;
+            padding: clamp(1.2rem, 3vw, 1.8rem);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--surface);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.17);
+        }
+
+        .callout {
+            margin-top: 1rem;
+            padding: 1rem 1.15rem;
+            border-left: 4px solid var(--mustard);
+            border-radius: 0.55rem;
+            background: var(--mustard-soft);
+        }
+
+        .callout.good { border-color: var(--green); background: var(--green-soft); }
+        .callout.warning { border-color: var(--orange); background: var(--orange-soft); }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .card, .opportunity, .roadmap-item {
+            padding: 1.1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.78rem;
+            background: var(--raised);
+        }
+
+        .card p:last-child, .opportunity p:last-child { margin-bottom: 0; }
+
+        .number {
+            display: block;
+            margin-bottom: 0.1rem;
+            color: var(--mustard-light);
+            font-size: 2rem;
+            font-weight: 850;
+        }
+
+        .badge {
+            display: inline-block;
+            margin-right: 0.35rem;
+            padding: 0.18rem 0.52rem;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 850;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .existing { background: var(--green-soft); color: #9ee9bd; }
+        .next { background: var(--mustard-soft); color: #f5df5b; }
+        .later { background: var(--blue-soft); color: #a9ddff; }
+        .research { background: var(--purple-soft); color: #dfc8ff; }
+        .high { background: var(--red-soft); color: #ffa0a0; }
+        .medium { background: var(--orange-soft); color: #ffd08f; }
+        .low { background: var(--green-soft); color: #9ee9bd; }
+
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            margin-top: 1rem;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        th, td {
+            padding: 0.78rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--mustard-light);
+            font-size: 0.76rem;
+            letter-spacing: 0.045em;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td { border-bottom: 0; }
+
+        .pillars {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .pillar {
+            min-height: 14rem;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--mustard);
+            border-radius: 0.8rem;
+            background: var(--raised);
+        }
+
+        .pillar:nth-child(2) { border-top-color: var(--blue); }
+        .pillar:nth-child(3) { border-top-color: var(--green); }
+
+        .opportunities {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .opportunity { border-left: 4px solid var(--blue); }
+        .opportunity.priority { border-left-color: var(--mustard); }
+
+        .opportunity-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .opportunity-head h3 { margin-top: 0.1rem; }
+
+        .why {
+            margin-top: 0.8rem;
+            padding-top: 0.7rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.91rem;
+        }
+
+        .mock-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .mock-wrap {
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            background: #0d1118;
+        }
+
+        .mock-label {
+            margin: 0 0 0.6rem 0.2rem;
+            color: var(--muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .screen {
+            position: relative;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            border: 1px solid #485369;
+            border-radius: 0.55rem;
+            background:
+                linear-gradient(rgba(8, 13, 20, 0.62), rgba(8, 13, 20, 0.72)),
+                radial-gradient(circle at 65% 34%, #48678a 0 5%, transparent 6%),
+                linear-gradient(160deg, #18325b 0 42%, #2b6b51 43% 58%, #183047 59%);
+            color: white;
+            box-shadow: inset 0 0 45px rgba(0, 0, 0, 0.25);
+        }
+
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.55rem 0.75rem;
+            background: rgba(7, 10, 15, 0.76);
+            font-size: clamp(0.62rem, 1.4vw, 0.88rem);
+        }
+
+        .screen-title {
+            padding: 0.5rem 0.8rem;
+            background: var(--mustard);
+            color: #111;
+            font-size: clamp(0.68rem, 1.7vw, 1.05rem);
+            font-weight: 800;
+        }
+
+        .screen-body {
+            padding: clamp(0.55rem, 2vw, 1rem);
+            font-size: clamp(0.58rem, 1.4vw, 0.88rem);
+        }
+
+        .screen-card {
+            margin-bottom: 0.5rem;
+            padding: 0.58rem 0.7rem;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 0.42rem;
+            background: rgba(12, 19, 30, 0.88);
+        }
+
+        .screen-card.selected { background: var(--mustard); color: #111; }
+        .screen-card strong { display: block; }
+        .screen-card small { opacity: 0.82; }
+
+        .screen-footer {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            padding: 0.48rem 0.7rem;
+            background: rgba(7, 10, 15, 0.88);
+            font-size: clamp(0.52rem, 1.25vw, 0.78rem);
+        }
+
+        .status-line {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .status-dot {
+            width: 0.66rem;
+            height: 0.66rem;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 3px rgba(100, 214, 152, 0.16);
+        }
+
+        .status-dot.warn { background: var(--orange); box-shadow: 0 0 0 3px rgba(255, 179, 93, 0.16); }
+
+        .roadmap { display: grid; gap: 0.85rem; margin-top: 1rem; }
+        .roadmap-item { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; }
+        .roadmap-item h3 { color: var(--mustard-light); }
+
+        .score {
+            display: inline-block;
+            min-width: 2.5rem;
+            padding: 0.12rem 0.38rem;
+            border-radius: 0.3rem;
+            background: var(--raised-2);
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .principles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .principle {
+            padding: 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 0.7rem;
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .principle strong { display: block; margin-bottom: 0.25rem; color: var(--mustard-light); }
+
+        footer {
+            margin-top: 2rem;
+            padding: 1.25rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 850px) {
+            .pillars, .opportunities, .mock-grid { grid-template-columns: 1fr; }
+            .roadmap-item { grid-template-columns: 1fr; gap: 0.2rem; }
+        }
+
+        @media print {
+            :root { color-scheme: light; }
+            body { background: #fff; color: #111; }
+            .page { width: 100%; padding: 0; }
+            header, section, .card, .opportunity, .roadmap-item, .pillar {
+                background: #fff;
+                color: #111;
+                box-shadow: none;
+            }
+            nav { display: none; }
+            a { color: #665700; }
+            .muted, .why { color: #444; }
+            .screen { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <header>
+        <div class="eyebrow">MustardOS product strategy · Discussion report</div>
+        <h1>Make retro gaming feel like a console, not an emulator settings exercise</h1>
+        <p class="lead">
+            Pickles should not try to out-RetroArch RetroArch. Its competitive edge is that MustardOS owns the complete
+            handheld experience: the device, launcher, content library, emulator host, save lifecycle, power behaviour,
+            network discovery and support path. That control can turn advanced emulation into a calm, understandable and
+            dependable experience for a first-time user while retaining meaningful depth for enthusiasts.
+        </p>
+        <div class="meta">
+            <span>Prepared: 16 August 2026</span>
+            <span>Language: Australian English</span>
+            <span>Status: proposals for discussion, not implementation commitments</span>
+            <span>Scope: MustardOS frontend and Pickles</span>
+        </div>
+    </header>
+
+    <nav aria-label="Report sections">
+        <a href="#recommendation">Recommendation</a>
+        <a href="#position">Position</a>
+        <a href="#foundations">Foundations</a>
+        <a href="#pillars">Pillars</a>
+        <a href="#opportunities">Opportunities</a>
+        <a href="#mock-ups">Mock-ups</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#measures">Measures</a>
+        <a href="#boundaries">Boundaries</a>
+        <a href="#sources">Sources</a>
+    </nav>
+
+    <section id="recommendation">
+        <div class="eyebrow">Executive recommendation</div>
+        <h2>Compete on decisions removed, problems prevented and moments recovered</h2>
+        <p>
+            RetroArch is a capable, mature and unusually broad general-purpose frontend. It already provides netplay,
+            achievements, playlists, thumbnails, configuration overrides, run-ahead, frame delay, accessibility features,
+            shaders, remapping and many more facilities. Recreating its entire option surface would consume years while
+            making MustardOS harder for new users.
+        </p>
+        <p>
+            The stronger direction is an <strong>opinionated handheld appliance</strong>. Advanced controls remain available,
+            but MustardOS normally makes the safe choice, explains what happened in plain language and offers one action to
+            recover. A user should be able to insert content, press A and trust the result.
+        </p>
+        <div class="cards">
+            <div class="card">
+                <span class="number">1</span>
+                <h3>Game Ready</h3>
+                <p>Check content, firmware, controls, storage and known core limitations before a broken launch.</p>
+            </div>
+            <div class="card">
+                <span class="number">2</span>
+                <h3>Compatibility Director</h3>
+                <p>Choose tested defaults and preserve a last-known-good configuration for every device and core.</p>
+            </div>
+            <div class="card">
+                <span class="number">3</span>
+                <h3>Resume Journey</h3>
+                <p>Make saves, achievements, manuals, recent activity and recovery part of one coherent game journey.</p>
+            </div>
+            <div class="card">
+                <span class="number">4</span>
+                <h3>Play Together</h3>
+                <p>Make nearby multiplayer and family assistance discoverable without network terminology.</p>
+            </div>
+        </div>
+        <div class="callout good">
+            <strong>Proposed product promise:</strong> “Choose a game. MustardOS handles the rest—and tells you clearly when
+            it cannot.”
+        </div>
+    </section>
+
+    <section id="position">
+        <div class="eyebrow">Competitive position</div>
+        <h2>Respect RetroArch’s strengths, then compete somewhere different</h2>
+        <p>
+            This comparison is deliberately fair. The RetroArch column describes current documented capabilities rather
+            than assumptions about what it lacks. The opportunity column describes how MustardOS can package comparable
+            building blocks into a more coherent handheld experience.
+        </p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Area</th>
+                    <th>RetroArch strength</th>
+                    <th>MustardOS opportunity</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Platform breadth</td>
+                    <td>A general-purpose frontend with many menu, platform, core and driver combinations. <a href="https://docs.libretro.com/guides/navigating/">Official interface guide</a></td>
+                    <td>Support a curated hardware matrix deeply and make each supported device feel intentional.</td>
+                </tr>
+                <tr>
+                    <td>Configuration</td>
+                    <td>Comprehensive core, directory and game overrides with extensive settings and remaps. <a href="https://docs.libretro.com/guides/overrides/">Official overrides guide</a></td>
+                    <td>Offer three understandable profiles, apply verified exceptions automatically and expose the reason.</td>
+                </tr>
+                <tr>
+                    <td>Latency and pacing</td>
+                    <td>Run-ahead, pre-emptive frames, frame delay and several synchronisation controls. <a href="https://docs.libretro.com/guides/optimal-vsync/">Official VSync guide</a></td>
+                    <td>Measure the actual device and game, diagnose hitching, then recommend or apply a safe correction.</td>
+                </tr>
+                <tr>
+                    <td>Network play</td>
+                    <td>Internet/LAN hosting, lobby and relay support, multiple players and spectators. <a href="https://docs.libretro.com/guides/netplay-faq/">Official netplay FAQ</a></td>
+                    <td>Lead with nearby device discovery, pairing codes, controller roles and family-friendly Play Together.</td>
+                </tr>
+                <tr>
+                    <td>Achievements</td>
+                    <td>RetroAchievements login, achievement lists and Hardcore restrictions. <a href="https://docs.libretro.com/guides/retroachievements/">Official achievement guide</a></td>
+                    <td>Blend unlock previews, cached browsing, session recaps and next-goal guidance into the library.</td>
+                </tr>
+                <tr>
+                    <td>Library</td>
+                    <td>Database scans, playlists, Explore metadata and downloadable thumbnails. <a href="https://docs.libretro.com/guides/roms-playlists-thumbnails/">Official playlist guide</a></td>
+                    <td>Make the library useful before a perfect database match and organise around play intent, not files.</td>
+                </tr>
+                <tr>
+                    <td>Recovery</td>
+                    <td>Save/load slots and undo save/load operations are available in the Quick Menu. <a href="https://docs.libretro.com/guides/quick-menu/">Official Quick Menu guide</a></td>
+                    <td>Provide visual timelines, protected checkpoints, crash recovery and last-known-good settings as one system.</td>
+                </tr>
+                <tr>
+                    <td>Accessibility</td>
+                    <td>Desktop narrator support and a configurable AI service for OCR, translation and speech. <a href="https://docs.libretro.com/guides/retroarch-accessibility-guide/">Official accessibility guide</a></td>
+                    <td>Build device-native profiles for readable UI, one-handed input, colour vision and reduced-complexity play.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="callout warning">
+            <strong>Important:</strong> “Easier than RetroArch” is not a durable advantage by itself. The defensible advantage
+            is an evidence-driven policy layer that knows the hardware, observes the session, chooses safe behaviour and can
+            reverse a bad decision.
+        </div>
+    </section>
+
+    <section id="foundations">
+        <div class="eyebrow">What already exists</div>
+        <h2>Pickles has the pieces of a differentiated product</h2>
+        <p>
+            Several proposed experiences do not require a new emulator architecture. They can be assembled from systems
+            already present in the repository, then made consistent at the product layer.
+        </p>
+        <div class="cards">
+            <article class="card">
+                <span class="badge existing">Existing foundation</span>
+                <h3>Safe game lifecycle</h3>
+                <p>Atomic SRAM persistence, bounded save-state writing, suspend/quit saves, state previews and per-core safety policy.</p>
+            </article>
+            <article class="card">
+                <span class="badge existing">Existing foundation</span>
+                <h3>Device-aware performance</h3>
+                <p>Frame pacing, audio headroom, run-ahead, frame delay, hardware rendering and controlled governor ownership.</p>
+            </article>
+            <article class="card">
+                <span class="badge existing">Existing foundation</span>
+                <h3>Purpose-built Network Play</h3>
+                <p>LAN discovery, pairing confirmation, up to three clients, separate-player roles and Play Together.</p>
+            </article>
+            <article class="card">
+                <span class="badge existing">Existing foundation</span>
+                <h3>Integrated achievements</h3>
+                <p>Official rcheevos support, cached data, sorting, leaderboards, notifications and captured unlock previews.</p>
+            </article>
+            <article class="card">
+                <span class="badge existing">Existing foundation</span>
+                <h3>Layered settings</h3>
+                <p>Core, directory and content deltas with baseline-aware save prompts rather than uncontrolled global changes.</p>
+            </article>
+            <article class="card">
+                <span class="badge existing">Existing foundation</span>
+                <h3>RELISH automation</h3>
+                <p>A bounded, deterministic macro language that supports useful accessibility and playful user recipes.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="pillars">
+        <div class="eyebrow">Product pillars</div>
+        <h2>Three ideas should organise the whole experience</h2>
+        <div class="pillars">
+            <article class="pillar">
+                <h3>1. Just Play</h3>
+                <p>MustardOS makes the normal path obvious, validates it and automatically selects a tested configuration.</p>
+                <ul>
+                    <li>One primary action per screen.</li>
+                    <li>No emulator terminology until it is useful.</li>
+                    <li>Safe, Balanced and Quality intent profiles.</li>
+                    <li>Automatic rollback after a failed launch.</li>
+                </ul>
+            </article>
+            <article class="pillar">
+                <h3>2. Your Game Journey</h3>
+                <p>The system remembers why the game matters, not merely its path, core and last-played timestamp.</p>
+                <ul>
+                    <li>Resume cards and visual save history.</li>
+                    <li>Manual, goals and achievement context.</li>
+                    <li>Protected milestones and session recap.</li>
+                    <li>Offline-first personal progress.</li>
+                </ul>
+            </article>
+            <article class="pillar">
+                <h3>3. Play Together</h3>
+                <p>Nearby play should feel like pairing controllers, even when several MustardOS devices are involved.</p>
+                <ul>
+                    <li>Friendly host names and visual pairing.</li>
+                    <li>Automatic player assignment.</li>
+                    <li>Co-pilot assistance for families.</li>
+                    <li>Clear connection health and recovery.</li>
+                </ul>
+            </article>
+        </div>
+    </section>
+
+    <section id="opportunities">
+        <div class="eyebrow">Differentiated opportunities</div>
+        <h2>Features that become more valuable because MustardOS owns the device</h2>
+        <p>
+            Each proposal includes the user-facing outcome and the reason it is a meaningful point of difference. “Next”
+            items offer the strongest combination of impact, feasibility and reuse of current Pickles systems.
+        </p>
+        <div class="opportunities">
+            <article class="opportunity priority">
+                <div class="opportunity-head">
+                    <h3>Game Ready preflight</h3>
+                    <span class="badge next">Next</span>
+                </div>
+                <p>Before first launch, validate content access, BIOS requirements, free save space, selected controller type,
+                    known state limitations and network dependencies. Fix safe issues automatically; explain the rest in one screen.</p>
+                <p class="why"><strong>Edge:</strong> replaces late, technical failures with an early answer: Ready, Needs Attention or Limited.</p>
+            </article>
+
+            <article class="opportunity priority">
+                <div class="opportunity-head">
+                    <h3>Pickles Compatibility Director</h3>
+                    <span class="badge next">Next</span>
+                </div>
+                <p>Combine compiled core policy, device capabilities and measured session results. Select safe render, state,
+                    run-ahead, audio and controller defaults, while preserving a last-known-good profile and user overrides.</p>
+                <p class="why"><strong>Edge:</strong> makes expertise cumulative. A solved device/core problem stays solved for every new user.</p>
+            </article>
+
+            <article class="opportunity priority">
+                <div class="opportunity-head">
+                    <h3>Smoothness Advisor</h3>
+                    <span class="badge next">Next</span>
+                </div>
+                <p>Detect frame-time variance, repeated frames, audio underruns, expensive presentation paths and thermal or
+                    governor changes. Explain that “60 FPS” can still hitch, then offer a reversible recommended adjustment.</p>
+                <p class="why"><strong>Edge:</strong> turns a difficult performance diagnosis into “We found irregular frame delivery. Apply Smooth mode?”</p>
+            </article>
+
+            <article class="opportunity priority">
+                <div class="opportunity-head">
+                    <h3>Visual recovery timeline</h3>
+                    <span class="badge next">Next</span>
+                </div>
+                <p>Unify autosaves, quick saves, manual saves, suspend saves and crash recovery in a chronological strip. Allow
+                    important moments to be protected, named and restored without understanding state slots.</p>
+                <p class="why"><strong>Edge:</strong> the user chooses a moment, not a file operation. Current previews and state metadata provide a strong base.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Universal resume shelf</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>Show the most recent safe resume point for several games on the MustardOS home screen, with age, device,
+                    play time and a clean screenshot. Enforce storage budgets and clearly mark cores that cannot resume safely.</p>
+                <p class="why"><strong>Edge:</strong> makes switching retro games feel like a modern handheld while respecting core-specific state safety.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>One-button Fix This Game</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>Collect a privacy-conscious local diagnosis, compare it with packaged compatibility rules and propose a tested
+                    profile. Always preview changes, retain user settings and provide Undo.</p>
+                <p class="why"><strong>Edge:</strong> support knowledge becomes a product feature instead of a forum search.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Nearby Play cards</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>Advertise compatible sessions in the library and pause menu using cover art, host name, player slots and a
+                    short pairing code. Hide ports and addresses unless manual connection is required.</p>
+                <p class="why"><strong>Edge:</strong> reframes netplay as “Daniel is playing Mario Kart—Join” rather than network configuration.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Family co-pilot profiles</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>Build on Play Together with Helper, Take Turns and Shared Chaos modes. Add optional turn reminders, temporary
+                    assistance and a visible indicator of who currently has control.</p>
+                <p class="why"><strong>Edge:</strong> creates a distinctive social use case that matches handhelds and is easy to demonstrate.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Session recap</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>After quitting, show play time, achievements earned, protected saves, screenshots and the next likely goal.
+                    Keep it short, optional and fully useful offline.</p>
+                <p class="why"><strong>Edge:</strong> makes classic games feel alive without altering them or requiring a social account.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Intent-based library</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>Add dynamic shelves such as Continue Playing, Five-Minute Games, Local Multiplayer, Almost Complete, Works
+                    Offline and Recently Fixed. Derive them from local metadata and activity.</p>
+                <p class="why"><strong>Edge:</strong> answers “what should I play?” rather than presenting another filesystem hierarchy.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Accessibility play profiles</h3>
+                    <span class="badge later">Then</span>
+                </div>
+                <p>Provide one-handed remaps, hold-versus-toggle assistance, enlarged interface text, colour-vision filters,
+                    reduced flashing overlays and spoken menu prompts where hardware permits. RELISH can power bounded assists.</p>
+                <p class="why"><strong>Edge:</strong> accessibility becomes a named, portable profile instead of many scattered options.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Device-to-device handoff</h3>
+                    <span class="badge research">Research</span>
+                </div>
+                <p>Send a compatible save, SRAM and session manifest to another nearby MustardOS device. Validate core, content
+                    hash and state format before offering Resume Here. Fall back to SRAM when state portability is unsafe.</p>
+                <p class="why"><strong>Edge:</strong> makes a household of MustardOS devices behave as one gaming system; state compatibility risk needs careful design.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Battery and thermal concierge</h3>
+                    <span class="badge research">Research</span>
+                </div>
+                <p>Estimate remaining play time for the active core, identify unusually expensive options and offer Battery,
+                    Balanced or Performance intent without exposing governor terminology.</p>
+                <p class="why"><strong>Edge:</strong> joins emulator configuration to the physical device outcome users actually care about.</p>
+            </article>
+
+            <article class="opportunity">
+                <div class="opportunity-head">
+                    <h3>Curated community recipes</h3>
+                    <span class="badge research">Research</span>
+                </div>
+                <p>Share small declarative compatibility, control and RELISH recipes with explicit capability limits, previews,
+                    versioning and one-action removal. Never permit arbitrary executables or silent system-wide changes.</p>
+                <p class="why"><strong>Edge:</strong> gives enthusiasts room to contribute without turning the handheld into an unbounded plugin platform.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="mock-ups">
+        <div class="eyebrow">Discussion mock-ups</div>
+        <h2>What “advanced underneath, simple on screen” could look like</h2>
+        <p class="muted">These are layout concepts made in HTML/CSS, not final artwork or fixed navigation designs.</p>
+        <div class="mock-grid">
+            <figure class="mock-wrap">
+                <figcaption class="mock-label">First launch · Game Ready</figcaption>
+                <div class="screen">
+                    <div class="screen-header"><span>10:11 PM</span><span>82% ▰</span></div>
+                    <div class="screen-title">Super Example World</div>
+                    <div class="screen-body">
+                        <div class="screen-card">
+                            <div class="status-line"><span class="status-dot"></span><strong>Ready to play</strong></div>
+                            <small>Controls, firmware and save storage are ready.</small>
+                        </div>
+                        <div class="screen-card selected"><strong>Start Game</strong><small>Balanced profile · Recommended</small></div>
+                        <div class="screen-card"><strong>Choose Profile</strong><small>Battery · Balanced · Quality</small></div>
+                    </div>
+                    <div class="screen-footer">A Start&nbsp;&nbsp;&nbsp; X Details&nbsp;&nbsp;&nbsp; B Back</div>
+                </div>
+            </figure>
+
+            <figure class="mock-wrap">
+                <figcaption class="mock-label">Game needs attention</figcaption>
+                <div class="screen">
+                    <div class="screen-header"><span>Game Ready</span><span>1 item</span></div>
+                    <div class="screen-title">One thing needs attention</div>
+                    <div class="screen-body">
+                        <div class="screen-card">
+                            <div class="status-line"><span class="status-dot warn"></span><strong>Required firmware is missing</strong></div>
+                            <small>This game may show a black screen without it.</small>
+                        </div>
+                        <div class="screen-card selected"><strong>Show What I Need</strong><small>File name and safe destination</small></div>
+                        <div class="screen-card"><strong>Try Anyway</strong><small>Nothing will be changed</small></div>
+                    </div>
+                    <div class="screen-footer">A Continue&nbsp;&nbsp;&nbsp; B Back</div>
+                </div>
+            </figure>
+
+            <figure class="mock-wrap">
+                <figcaption class="mock-label">Smoothness Advisor</figcaption>
+                <div class="screen">
+                    <div class="screen-header"><span>Performance Check</span><span>60.0 FPS</span></div>
+                    <div class="screen-title">We found occasional hitching</div>
+                    <div class="screen-body">
+                        <div class="screen-card">
+                            <strong>Frames arrive unevenly</strong>
+                            <small>Speed is correct, but some frames are held too long.</small>
+                        </div>
+                        <div class="screen-card selected"><strong>Apply Smooth Mode</strong><small>Reversible · affects this core only</small></div>
+                        <div class="screen-card"><strong>Keep Current Settings</strong></div>
+                    </div>
+                    <div class="screen-footer">A Apply&nbsp;&nbsp;&nbsp; X Why?&nbsp;&nbsp;&nbsp; B Cancel</div>
+                </div>
+            </figure>
+
+            <figure class="mock-wrap">
+                <figcaption class="mock-label">Nearby Play</figcaption>
+                <div class="screen">
+                    <div class="screen-header"><span>Nearby Play</span><span>Strong connection</span></div>
+                    <div class="screen-title">Bouncy Kookaburra is hosting</div>
+                    <div class="screen-body">
+                        <div class="screen-card">
+                            <strong>Super Example Kart</strong>
+                            <small>Same game and core · 2 of 4 players</small>
+                        </div>
+                        <div class="screen-card selected"><strong>Join as Player 3</strong><small>Pairing code 482 193</small></div>
+                        <div class="screen-card"><strong>Join as Helper</strong><small>Share Player 1 controls</small></div>
+                    </div>
+                    <div class="screen-footer">A Join&nbsp;&nbsp;&nbsp; X Details&nbsp;&nbsp;&nbsp; B Back</div>
+                </div>
+            </figure>
+        </div>
+    </section>
+
+    <section id="design">
+        <div class="eyebrow">Experience rules</div>
+        <h2>Make first-time simplicity compatible with enthusiast depth</h2>
+        <div class="principles">
+            <div class="principle">
+                <strong>Lead with intent</strong>
+                Say “Smoother motion” or “Longer battery”, not “audio skew tolerance” or “performance governor”.
+            </div>
+            <div class="principle">
+                <strong>One recommended choice</strong>
+                Alternatives can exist, but every decision screen should clearly identify the safe default.
+            </div>
+            <div class="principle">
+                <strong>Progressive disclosure</strong>
+                Normal, More Options and Technical Details are separate layers—not one enormous list.
+            </div>
+            <div class="principle">
+                <strong>Explain scope before saving</strong>
+                Show whether a change affects this game, this folder, this core or the whole device.
+            </div>
+            <div class="principle">
+                <strong>Every automatic action is reversible</strong>
+                Preserve the last-known-good profile and provide an obvious Undo where practical.
+            </div>
+            <div class="principle">
+                <strong>Offline is normal</strong>
+                Core play, saves, manuals, library data and previously fetched achievement information remain useful offline.
+            </div>
+            <div class="principle">
+                <strong>Never pretend success</strong>
+                Distinguish Ready, Limited, Offline and Failed. Do not hide a problem behind a generic toast.
+            </div>
+            <div class="principle">
+                <strong>Keep the frame loop sacred</strong>
+                Diagnostics, downloads, image work and persistence must remain bounded and away from time-critical emulation.
+            </div>
+        </div>
+    </section>
+
+    <section id="roadmap">
+        <div class="eyebrow">Suggested delivery order</div>
+        <h2>Build the policy and recovery layer before adding spectacle</h2>
+        <div class="roadmap">
+            <article class="roadmap-item">
+                <div>
+                    <span class="badge next">Phase 1</span>
+                    <h3>Trust</h3>
+                    <p class="muted">0–3 months</p>
+                </div>
+                <div>
+                    <ul>
+                        <li>Define Game Ready status and preflight checks.</li>
+                        <li>Create the Compatibility Director data model and last-known-good rollback.</li>
+                        <li>Add lightweight frame-time, audio and presentation diagnostics.</li>
+                        <li>Unify state types into a user-facing recovery timeline.</li>
+                        <li>Introduce Safe, Balanced and Quality intent profiles with clear scope.</li>
+                    </ul>
+                    <p><strong>Exit condition:</strong> a first-time user can launch, diagnose and recover a typical game without core terminology.</p>
+                </div>
+            </article>
+            <article class="roadmap-item">
+                <div>
+                    <span class="badge later">Phase 2</span>
+                    <h3>Delight</h3>
+                    <p class="muted">3–6 months</p>
+                </div>
+                <div>
+                    <ul>
+                        <li>Add the home-screen resume shelf and protected milestones.</li>
+                        <li>Present Nearby Play as library and pause-menu cards.</li>
+                        <li>Polish Helper and Take Turns modes on top of Play Together.</li>
+                        <li>Add session recap and intent-based dynamic shelves.</li>
+                        <li>Deliver the first portable accessibility profiles.</li>
+                    </ul>
+                    <p><strong>Exit condition:</strong> MustardOS has several experiences that are immediately visible in a short product demonstration.</p>
+                </div>
+            </article>
+            <article class="roadmap-item">
+                <div>
+                    <span class="badge research">Phase 3</span>
+                    <h3>Moat</h3>
+                    <p class="muted">6–12 months</p>
+                </div>
+                <div>
+                    <ul>
+                        <li>Expand packaged compatibility knowledge across the supported device matrix.</li>
+                        <li>Prototype safe nearby handoff with SRAM fallback.</li>
+                        <li>Evaluate battery estimates and adaptive profiles using real device measurements.</li>
+                        <li>Design bounded, declarative community recipes.</li>
+                        <li>Build privacy-conscious support bundles and profile feedback.</li>
+                    </ul>
+                    <p><strong>Exit condition:</strong> each release makes the system measurably more capable of selecting and repairing its own configuration.</p>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section id="priorities">
+        <div class="eyebrow">Decision matrix</div>
+        <h2>Recommended priorities for discussion</h2>
+        <p class="muted">Scores are relative discussion aids: 5 is highest. Effort and risk score 5 when they are hardest.</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Proposal</th>
+                    <th>User impact</th>
+                    <th>Differentiation</th>
+                    <th>Reuse of current work</th>
+                    <th>Effort</th>
+                    <th>Risk</th>
+                    <th>Recommendation</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>Game Ready preflight</td><td><span class="score">5</span></td><td><span class="score">4</span></td><td><span class="score">5</span></td><td><span class="score">3</span></td><td><span class="score">2</span></td><td><span class="badge next">Start</span></td></tr>
+                <tr><td>Compatibility Director</td><td><span class="score">5</span></td><td><span class="score">5</span></td><td><span class="score">4</span></td><td><span class="score">4</span></td><td><span class="score">3</span></td><td><span class="badge next">Start</span></td></tr>
+                <tr><td>Smoothness Advisor</td><td><span class="score">5</span></td><td><span class="score">5</span></td><td><span class="score">4</span></td><td><span class="score">4</span></td><td><span class="score">3</span></td><td><span class="badge next">Start</span></td></tr>
+                <tr><td>Visual recovery timeline</td><td><span class="score">5</span></td><td><span class="score">4</span></td><td><span class="score">5</span></td><td><span class="score">3</span></td><td><span class="score">2</span></td><td><span class="badge next">Start</span></td></tr>
+                <tr><td>Nearby Play cards</td><td><span class="score">4</span></td><td><span class="score">5</span></td><td><span class="score">4</span></td><td><span class="score">3</span></td><td><span class="score">3</span></td><td><span class="badge later">Follow</span></td></tr>
+                <tr><td>Resume shelf</td><td><span class="score">5</span></td><td><span class="score">4</span></td><td><span class="score">4</span></td><td><span class="score">3</span></td><td><span class="score">3</span></td><td><span class="badge later">Follow</span></td></tr>
+                <tr><td>Accessibility profiles</td><td><span class="score">4</span></td><td><span class="score">4</span></td><td><span class="score">3</span></td><td><span class="score">4</span></td><td><span class="score">3</span></td><td><span class="badge later">Follow</span></td></tr>
+                <tr><td>Device handoff</td><td><span class="score">4</span></td><td><span class="score">5</span></td><td><span class="score">3</span></td><td><span class="score">5</span></td><td><span class="score">5</span></td><td><span class="badge research">Prototype</span></td></tr>
+                <tr><td>Community recipes</td><td><span class="score">3</span></td><td><span class="score">4</span></td><td><span class="score">4</span></td><td><span class="score">5</span></td><td><span class="score">5</span></td><td><span class="badge research">Design first</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="architecture">
+        <div class="eyebrow">Enabling architecture</div>
+        <h2>Keep intelligence declarative, bounded and reversible</h2>
+        <p>The competitive layer should be a small set of shared services rather than feature-specific exceptions spread across UI modules.</p>
+        <div class="cards">
+            <article class="card">
+                <h3>Capability registry</h3>
+                <p>One typed answer for what the board, core, content and active mode can safely do. Existing core information overrides are the starting point.</p>
+            </article>
+            <article class="card">
+                <h3>Session health recorder</h3>
+                <p>Bounded counters and rolling percentiles for frame delivery, audio, temperature, network health and save outcomes—never an unbounded log in the frame loop.</p>
+            </article>
+            <article class="card">
+                <h3>Recommendation engine</h3>
+                <p>Deterministic packaged rules with a reason, scope, confidence and reversible action. No opaque online model is needed for the primary path.</p>
+            </article>
+            <article class="card">
+                <h3>Activity and recovery model</h3>
+                <p>A shared index for resume points, achievements, screenshots, manuals and session summaries, updated atomically away from emulation.</p>
+            </article>
+        </div>
+        <div class="callout">
+            <strong>Production rule:</strong> an advisory system may recommend a change, but it must not continuously retune a
+            running core. Apply changes at safe boundaries, keep the previous configuration and record why the change occurred.
+        </div>
+    </section>
+
+    <section id="measures">
+        <div class="eyebrow">Measures of success</div>
+        <h2>Measure user outcomes, not the number of options</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr><th>Outcome</th><th>Suggested measure</th><th>Why it matters</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Fast first success</td><td>Median time from selecting new content to controllable play</td><td>Captures setup friction and slow failure paths.</td></tr>
+                <tr><td>Zero-configuration play</td><td>Percentage of launches that need no settings change</td><td>Direct measure of the Compatibility Director.</td></tr>
+                <tr><td>Smooth delivery</td><td>99th-percentile frame time and repeated-frame count by device/core</td><td>Finds hitching that an average FPS counter conceals.</td></tr>
+                <tr><td>Dependable progress</td><td>Successful SRAM/state writes, restores and crash recoveries</td><td>Trust is more important than feature count.</td></tr>
+                <tr><td>Understandable recovery</td><td>Percentage of Game Ready issues resolved without technical details</td><td>Tests whether explanations and actions work for new users.</td></tr>
+                <tr><td>Nearby play success</td><td>Pairing completion rate and median time to first shared input</td><td>Measures the experience rather than raw connectivity.</td></tr>
+                <tr><td>Battery honesty</td><td>Estimated versus actual session duration per profile</td><td>Prevents misleading power promises.</td></tr>
+                <tr><td>Low support burden</td><td>Issues resolved by packaged fixes or a useful support bundle</td><td>Shows whether product knowledge is compounding.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="muted">Any optional aggregate reporting should be explicit, minimal and disabled without affecting local diagnosis.</p>
+    </section>
+
+    <section id="boundaries">
+        <div class="eyebrow">What not to chase</div>
+        <h2>Restraint is part of the competitive strategy</h2>
+        <div class="cards">
+            <article class="card">
+                <span class="badge high">Avoid</span>
+                <h3>Every RetroArch setting</h3>
+                <p>Expose settings that produce a useful outcome on supported devices. An exhaustive surface makes testing and explanation unbounded.</p>
+            </article>
+            <article class="card">
+                <span class="badge high">Avoid</span>
+                <h3>Uncontrolled automatic tuning</h3>
+                <p>Constant live adjustment can create instability, netplay divergence and irreproducible bugs. Recommend, apply at safe boundaries and allow Undo.</p>
+            </article>
+            <article class="card">
+                <span class="badge high">Avoid</span>
+                <h3>Online-only identity</h3>
+                <p>A user should not need an account to build a library, resume a game, read a manual or understand performance.</p>
+            </article>
+            <article class="card">
+                <span class="badge high">Avoid</span>
+                <h3>Arbitrary community code</h3>
+                <p>Recipes should remain declarative and capability-limited. The system is single-user root, making boundaries more—not less—important.</p>
+            </article>
+            <article class="card">
+                <span class="badge medium">Defer</span>
+                <h3>Internet-scale social platform</h3>
+                <p>Nearby household play offers a clearer advantage and lower operational burden than profiles, feeds, messaging and moderation.</p>
+            </article>
+            <article class="card">
+                <span class="badge medium">Defer</span>
+                <h3>Desktop-style media breadth</h3>
+                <p>Streaming, recording and general media features should not delay excellent handheld launch, play, save and recovery behaviour.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="questions">
+        <div class="eyebrow">Questions for product discussion</div>
+        <h2>Decisions to make before implementation</h2>
+        <ol>
+            <li>Is the primary audience a first-time retro player, an experienced handheld owner, or a household containing both?</li>
+            <li>Should Game Ready block only certain failure, or also strongly warn about likely failure?</li>
+            <li>Which settings are safe for automatic correction, and which must always require confirmation?</li>
+            <li>Should the visual recovery timeline replace state slots in the normal UI or sit above them?</li>
+            <li>Which four device/core combinations should seed Compatibility Director measurements?</li>
+            <li>Does Nearby Play remain LAN-first, or is a later relay service strategically important?</li>
+            <li>Which accessibility profile would provide the greatest immediate value on current controls and displays?</li>
+            <li>What local data retention limits are appropriate for screenshots, health history and resume points?</li>
+        </ol>
+    </section>
+
+    <section id="sources">
+        <div class="eyebrow">Current comparison sources</div>
+        <h2>Official RetroArch and Libretro documentation consulted</h2>
+        <p>
+            These sources establish the comparison baseline. They show that RetroArch already has deep capabilities; the
+            recommendations above focus on orchestration, presentation and device integration rather than claiming absent features.
+        </p>
+        <ul>
+            <li><a href="https://docs.libretro.com/guides/navigating/">RetroArch user interface</a> — menu structure, content import and built-in netplay lobby.</li>
+            <li><a href="https://docs.libretro.com/guides/quick-menu/">RetroArch Quick Menu</a> — runtime controls, states, remapping, core options, shaders and screenshots.</li>
+            <li><a href="https://docs.libretro.com/guides/overrides/">Content, folder and core overrides</a> — layered configuration and remap behaviour.</li>
+            <li><a href="https://docs.libretro.com/guides/runahead/">Run Ahead</a> and <a href="https://docs.libretro.com/guides/optimal-vsync/">Optimal VSync Performance</a> — latency and frame-pacing controls and trade-offs.</li>
+            <li><a href="https://docs.libretro.com/guides/netplay-faq/">Netplay FAQ</a>, <a href="https://docs.libretro.com/guides/netplay-getting-started/">Getting Started</a> and <a href="https://docs.libretro.com/development/retroarch/netplay/">netplay implementation notes</a> — synchronisation, hosting, lobby and participant support.</li>
+            <li><a href="https://docs.libretro.com/guides/retroachievements/">RetroAchievements in RetroArch</a> — account setup, achievement browsing, Hardcore and offline-session behaviour.</li>
+            <li><a href="https://docs.libretro.com/guides/roms-playlists-thumbnails/">ROMs, playlists and thumbnails</a> — scanning, Explore metadata, custom playlists and artwork.</li>
+            <li><a href="https://docs.libretro.com/guides/retroarch-accessibility-guide/">RetroArch accessibility guide</a> and <a href="https://docs.libretro.com/guides/ai-service/">AI Service</a> — narrator, OCR, translation and speech capabilities.</li>
+        </ul>
+    </section>
+
+    <section id="conclusion">
+        <div class="eyebrow">Conclusion</div>
+        <h2>The competitive edge is confidence</h2>
+        <p>
+            MustardOS will stand apart when users trust it to choose well, preserve their progress, explain limitations and
+            help them recover. Pickles already contains many of the difficult low-level pieces. The next step is to organise
+            those pieces into a product language centred on Ready, Resume, Fix and Play Together.
+        </p>
+        <p>
+            The most valuable first implementation is therefore not another isolated emulator feature. It is the shared
+            <strong>Game Ready and Compatibility Director</strong> foundation, followed by a <strong>Smoothness Advisor</strong>
+            and <strong>visual recovery timeline</strong>. Together, they establish an advantage that becomes stronger with
+            every device, core and problem MustardOS learns how to handle.
+        </p>
+    </section>
+
+    <footer>
+        <p><strong>Suggested frontend commit message</strong></p>
+        <p>Added a product strategy report for making Pickles simpler, safer, and more distinctive for MustardOS users</p>
+    </footer>
+</main>
+</body>
+</html>

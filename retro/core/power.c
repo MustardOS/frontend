@@ -44,7 +44,7 @@ static void prepare_power_save(const char *reason) {
     int state_saved = 1;
     if (state_saves_supported()) {
         gamestate_capture_pending(1);
-        if (gamestate_autosave_save() == 0)
+        if (gamestate_autosave_save() == 0 && state_flush() == 0)
             LOG_SUCCESS(mux_module, "Auto save completed before %s", reason);
         else {
             LOG_WARN(mux_module, "Auto save could not be completed before %s", reason);

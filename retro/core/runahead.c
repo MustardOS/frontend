@@ -6,15 +6,14 @@
 #include "../input/rumble.h"
 #include "../coreinfo/coreinfo.h"
 #include "../settings/settings.h"
+#include "../state/core_state.h"
 #include "../video/hw_render.h"
 #include "core.h"
 #include "muxretro.h"
 #include "runahead.h"
 
-static void *anchor_buf = NULL;
-static size_t anchor_cap = 0;
+static struct core_state_buffer anchor;
 static size_t anchor_size = 0;
-static size_t anchor_written_size = 0;
 static int anchor_valid = 0;
 static uint64_t anchor_sig = 0;
 
@@ -42,18 +41,18 @@ static int ensure_anchor_buf(void) {
         return 1;
     }
 
-    const size_t size = current_core.retro_serialize_size();
+    const size_t size = core_state_reported_size(0, "run-ahead size");
     if (size == 0) return 0;
 
     anchor_size = size;
     size_refresh_countdown = SERIALIZE_SIZE_REFRESH_FRAMES;
 
-    if (size + size / 8 > anchor_cap) {
+    if (size + size / 8 > anchor.capacity) {
         const size_t want = size + size / 8 + (64 << 10);
-        void *grown = realloc(anchor_buf, want);
+        uint8_t *grown = realloc(anchor.data, want);
         if (!grown) return 0;
-        anchor_buf = grown;
-        anchor_cap = want;
+        anchor.data = grown;
+        anchor.capacity = want;
     }
 
     return 1;
@@ -80,7 +79,7 @@ void runahead_before_frame(const int allow_replay) {
     const uint64_t sig = input_bridge_snapshot_signature();
 
     if (allow_replay && anchor_valid && sig != anchor_sig) {
-        if (current_core.retro_unserialize(anchor_buf, anchor_written_size)) {
+        if (core_state_restore(anchor.data, anchor.size, 0, "run-ahead restore") == 0) {
             rumble_bridge_set_suppressed(1);
             audio_bridge_set_muted(1);
             video_bridge_set_frame_skip(1);
@@ -97,15 +96,13 @@ void runahead_before_frame(const int allow_replay) {
         }
     }
 
-    if (!current_core.retro_serialize(anchor_buf, anchor_size)) {
+    if (core_state_capture(&anchor, anchor_size, 0, 0, "run-ahead capture") != 0) {
         size_refresh_countdown = 0;
-        if (!ensure_anchor_buf() || !current_core.retro_serialize(anchor_buf, anchor_size)) {
-            runahead_fail("retro_serialize failed");
-            return;
-        }
+        runahead_fail("retro_serialize failed");
+        return;
     }
 
-    anchor_written_size = anchor_size;
+    anchor_size = anchor.size;
     anchor_valid = 1;
     anchor_sig = sig;
 }
@@ -116,11 +113,8 @@ void runahead_invalidate(void) {
 }
 
 void runahead_shutdown(void) {
-    free(anchor_buf);
-    anchor_buf = NULL;
-    anchor_cap = 0;
+    core_state_buffer_release(&anchor);
     anchor_size = 0;
-    anchor_written_size = 0;
     anchor_valid = 0;
     failed = 0;
     failure_announced = 0;

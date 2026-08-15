@@ -28,6 +28,7 @@ static char active_name[128];
 static int features[coreinfo_feature_count];
 static size_t state_max_bytes;
 static int state_warmup_frames;
+static enum coreinfo_state_load_policy state_load_policy;
 
 static int parse_switch(const char *value, int *result) {
     if (!value || !result) return 0;
@@ -109,6 +110,7 @@ static void apply_override(void) {
         if (override->state_max_bytes) state_max_bytes = override->state_max_bytes;
         if (override->state_warmup_frames != COREINFO_INHERIT)
             state_warmup_frames = override->state_warmup_frames;
+        state_load_policy = override->state_load_policy;
         LOG_INFO(mux_module, "Applied Pickles core information override for '%s'", active_name);
         return;
     }
@@ -120,6 +122,7 @@ void coreinfo_init(const char *core_path) {
         features[feature] = 1;
     state_max_bytes = STATE_MAX_DEFAULT;
     state_warmup_frames = 0;
+    state_load_policy = coreinfo_state_load_exact;
 
     if (!core_get_name(core_path, active_name, sizeof(active_name))) {
         LOG_WARN(mux_module, "Could not resolve core information name");
@@ -151,6 +154,10 @@ size_t coreinfo_state_max_bytes(void) {
 
 int coreinfo_state_warmup_frames(void) {
     return state_warmup_frames;
+}
+
+enum coreinfo_state_load_policy coreinfo_state_load_policy(void) {
+    return state_load_policy;
 }
 
 const char *coreinfo_name(void) {

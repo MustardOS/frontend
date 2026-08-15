@@ -38,6 +38,7 @@
 #include "../coreinfo/coreinfo.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
+#include "../state/core_state.h"
 #include "../ui/cheats.h"
 #include "../ui/options.h"
 #include "../video/hw_render.h"
@@ -1531,21 +1532,10 @@ static void *connect_thread(void *unused) {
 }
 
 static int queue_host_state(void) {
-    if (!current_core.retro_serialize_size || !current_core.retro_serialize) return -1;
-
-    hw_render_bridge_enter_core_call();
-    const size_t size = current_core.retro_serialize_size();
-    if (!size || size > NETPLAY_STATE_CAP) {
-        hw_render_bridge_exit_core_call();
-        return -1;
-    }
-    uint8_t *state = malloc(size);
-    const int okay = state && current_core.retro_serialize(state, size);
-    hw_render_bridge_exit_core_call();
-    if (!okay) {
-        free(state);
-        return -1;
-    }
+    struct core_state_buffer capture = {0};
+    if (core_state_capture(&capture, 0, NETPLAY_STATE_CAP, 1, "Network Play host sync") != 0) return -1;
+    uint8_t *state = capture.data;
+    const size_t size = capture.size;
 
     pthread_mutex_lock(&netplay.mutex);
     if (netplay.sync_state) {
@@ -1643,7 +1633,6 @@ static void digest_worker_stop(void) {
 }
 
 static int queue_state_digest(const uint64_t frame) {
-    if (!current_core.retro_serialize_size || !current_core.retro_serialize) return -1;
     if (digest_worker_start() != 0) return -1;
 
     pthread_mutex_lock(&netplay.digest_mutex);
@@ -1653,27 +1642,20 @@ static int queue_state_digest(const uint64_t frame) {
 
     const uint64_t digest_start = perf_begin();
 
-    hw_render_bridge_enter_core_call();
-    const size_t size = current_core.retro_serialize_size();
-    if (!size || size > NETPLAY_STATE_CAP) {
-        hw_render_bridge_exit_core_call();
-        return -1;
-    }
-    if (size > netplay.digest_state_capacity) {
-        uint8_t *grown = realloc(netplay.digest_state, size);
-        if (!grown) {
-            hw_render_bridge_exit_core_call();
-            return -1;
-        }
-        netplay.digest_state = grown;
-        netplay.digest_state_capacity = size;
-    }
+    struct core_state_buffer capture = {
+        .data = netplay.digest_state,
+        .capacity = netplay.digest_state_capacity,
+        .size = 0
+    };
     const uint64_t serialise_start = SDL_GetPerformanceCounter();
-    const int okay = current_core.retro_serialize(netplay.digest_state, size);
+    const int capture_result =
+        core_state_capture(&capture, 0, NETPLAY_STATE_CAP, 1, "Network Play digest capture");
     const double serialise_ms =
         (double) (SDL_GetPerformanceCounter() - serialise_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
-    hw_render_bridge_exit_core_call();
-    if (!okay) return -1;
+    netplay.digest_state = capture.data;
+    netplay.digest_state_capacity = capture.capacity;
+    if (capture_result != 0) return -1;
+    const size_t size = capture.size;
 
     pthread_mutex_lock(&netplay.mutex);
     netplay.digest_serialise_ms =
@@ -1725,10 +1707,7 @@ static int apply_client_state(void) {
     pthread_mutex_unlock(&netplay.mutex);
     if (!state) return -1;
 
-    hw_render_bridge_enter_core_call();
-    if (current_core.retro_serialize_size) current_core.retro_serialize_size();
-    const int okay = current_core.retro_unserialize && current_core.retro_unserialize(state, size);
-    hw_render_bridge_exit_core_call();
+    const int okay = core_state_restore(state, size, NETPLAY_STATE_CAP, "Network Play peer sync") == 0;
     free(state);
     if (!okay) return -1;
 

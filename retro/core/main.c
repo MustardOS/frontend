@@ -885,6 +885,7 @@ int main(const int argc, char *argv[]) {
 
     pause_menu_shutdown();
     netplay_shutdown();
+    state_shutdown();
     cheevo_shutdown();
     image_writer_shutdown();
     governor_boost_shutdown();

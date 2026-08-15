@@ -32,7 +32,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        input/ui_buttonmapping.c input/nav_repeat.c input/core_input_meta.c \
        macro/macro.c macro/relish.c macro/runtime.c macro/ui_macros.c \
        core/subsystem.c \
-       state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
+       state/core_state.c state/state_writer.c state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
        state/content_hash.c state/bios_check.c state/sram.c \
        state/patch.c state/ui_storagesettings.c state/manual.c \
        cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/cheevo.c cheevo/ui_cheevo.c \

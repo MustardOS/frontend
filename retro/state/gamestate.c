@@ -284,6 +284,7 @@ int gamestate_rename(const int index, const char *new_name) {
 
 int gamestate_delete(const int index) {
     if (index < 0 || index >= gamestate_slot_count) return -1;
+    if (state_flush() != 0) return -1;
 
     const struct gamestate_slot *slot = &gamestate_slots[index];
 
@@ -349,6 +350,7 @@ int gamestate_autosave_load(void) {
 
 int gamestate_autosave_delete(void) {
     if (!gamestate_autosave_exists) return -1;
+    if (state_flush() != 0) return -1;
 
     remove(gamestate_autosave.state_path);
     remove(gamestate_autosave.thumb_path);
@@ -400,6 +402,7 @@ int gamestate_quicksave_load(void) {
 
 int gamestate_quicksave_delete(void) {
     if (!gamestate_quicksave_exists) return -1;
+    if (state_flush() != 0) return -1;
 
     remove(gamestate_quicksave.state_path);
     remove(gamestate_quicksave.thumb_path);
@@ -474,6 +477,7 @@ int gamestate_timeline_load(const int slot) {
 
 int gamestate_timeline_delete(const int slot) {
     if (slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot]) return -1;
+    if (state_flush() != 0) return -1;
 
     remove(gamestate_timeline[slot].state_path);
     remove(gamestate_timeline[slot].thumb_path);
@@ -496,6 +500,7 @@ int gamestate_protect_mismatched_autosave(void) {
     if (!base_dir[0] || !gamestate_autosave_exists) return 0;
     if (gamestate_metadata_matches(&gamestate_autosave)) return 0;
     if (gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return 0;
+    if (state_flush() != 0) return 0;
 
     const int position = gamestate_slot_count;
     const int index = next_free_index();

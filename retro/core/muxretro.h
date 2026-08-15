@@ -162,6 +162,10 @@ int state_save(const char *path);
 
 int state_load(const char *path, int show_message);
 
+int state_flush(void);
+
+void state_shutdown(void);
+
 void pause_menu_init(void);
 
 void pause_menu_shutdown(void);
