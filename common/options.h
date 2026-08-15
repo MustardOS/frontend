@@ -152,6 +152,7 @@
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
 
 #define MUOS_ARCH_PATH "ARCHIVE"
+#define MUOS_BACKUP_PATH "BACKUP"
 #define MUOS_BASE_PATH "MUOS"
 
 #define MUOS_APPS_PATH MUOS_BASE_PATH "/application"

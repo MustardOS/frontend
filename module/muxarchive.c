@@ -9,7 +9,7 @@ static int mount_points_init = 0;
 static int extract_pending = 0;
 static const char *mount_points[4];
 
-static const char *subdirs[] = {"/backup", "/archive"};
+static const char *subdirs[] = {MUOS_BACKUP_PATH, MUOS_ARCH_PATH};
 
 static const char *mount_labels[] = {"SD1", "SD2", "USB", "THM"};
 
@@ -73,10 +73,11 @@ static void create_archive_items(void) {
 
     for (size_t i = 0, k = 0; i < A_SIZE(mount_points); ++i) {
         for (size_t j = 0; j < A_SIZE(subdirs); ++j, ++k) {
-            const int len =
-                snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
+            const int len = snprintf(
+                archive_directories[k], sizeof(archive_directories[k]), "%s/%s", mount_points[i], subdirs[j]
+            );
             if (len < 0 || (size_t) len >= sizeof(archive_directories[k])) {
-                LOG_WARN(mux_module, "Archive path truncated: %s%s", mount_points[i], subdirs[j]);
+                LOG_WARN(mux_module, "Archive path truncated: %s/%s", mount_points[i], subdirs[j]);
                 archive_directories[k][0] = '\0';
             }
         }
