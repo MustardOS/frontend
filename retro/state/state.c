@@ -162,7 +162,7 @@ int state_save(const char *path) {
     LOG_DEBUG(mux_module, "state_save: serialise_size=%zu", core_size);
 
     static size_t alloc_high_water = 0;
-    size_t alloc = core_size + core_size / 4 + (1 << 20);
+    size_t alloc = core_size * 2 + (1 << 20);
 
     const size_t alloc_ceiling = alloc * 2;
     if (alloc < alloc_high_water) alloc = alloc_high_water < alloc_ceiling ? alloc_high_water : alloc_ceiling;
@@ -178,13 +178,21 @@ int state_save(const char *path) {
         return -1;
     }
 
-    int ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, core_size);
+    int ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, alloc);
 
     if (!ok) {
         const size_t regrown = current_core.retro_serialize_size();
         if (regrown > 0 && regrown != core_size && regrown <= alloc) {
             core_size = regrown;
-            ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, core_size);
+            ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, alloc);
+        }
+    }
+
+    if (ok && current_core.retro_serialize_size) {
+        const size_t settled = current_core.retro_serialize_size();
+        if (settled > core_size && settled <= alloc) {
+            LOG_WARN(mux_module, "Core under-reported its state size, %zu became %zu", core_size, settled);
+            core_size = settled;
         }
     }
 
