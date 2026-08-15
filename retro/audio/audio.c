@@ -582,7 +582,8 @@ void audio_bridge_note_core_frames(const unsigned frames) {
     const uint64_t produced = submitted_frames;
     submitted_frames = 0;
 
-    if (produced && core_native_rate > 0.0) last_batch_ms = (double) produced / core_native_rate * 1000.0;
+    if (frames && produced && core_native_rate > 0.0)
+        last_batch_ms = (double) produced / (double) frames / core_native_rate * 1000.0;
     if (!frames || !produced || audio_muted || core_native_rate <= 0.0) return;
 
     const double per_frame = (double) produced / (double) frames;
@@ -672,6 +673,10 @@ void audio_bridge_get_info(int *freq, int *channels) {
 
 int audio_bridge_is_active(void) {
     return audio_dev != 0;
+}
+
+int audio_bridge_is_prefilling(void) {
+    return audio_dev != 0 && resume_pending;
 }
 
 static void audio_bridge_trigger_fade_in(void) {

@@ -746,7 +746,8 @@ int main(const int argc, char *argv[]) {
             if (ff_active) {
                 const unsigned ff_batch = (unsigned) session_settings_ff_speed_value(session_settings.ff_speed);
                 frames = ff_batch > 0 ? ff_batch : 1;
-            } else if (!netplay_active && session_settings.fps_limit != fps_limit_50 && !slowmo_active
+            } else if (!netplay_active && audio_bridge_is_prefilling()
+                       && session_settings.fps_limit != fps_limit_50 && !slowmo_active
                        && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
 

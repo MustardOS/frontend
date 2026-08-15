@@ -66,6 +66,8 @@ void audio_bridge_set_paused(int pause);
 
 int audio_bridge_is_active(void);
 
+int audio_bridge_is_prefilling(void);
+
 uint32_t audio_bridge_queued_ms(void);
 
 uint32_t audio_bridge_low_water_ms(void);
