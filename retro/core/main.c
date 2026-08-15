@@ -53,6 +53,7 @@
 #define SLOW_CORE_PACE_RATIO      0.98
 
 #define CONTENT_RATIO_INTEGER_TOLERANCE 0.02
+#define PACE_VSYNC_TOLERANCE            1.10
 #define REFRESH_NOTICE_TLC              0.05
 
 static inotify_status *idle_ino = NULL;
@@ -291,7 +292,14 @@ static void pace_core_output(const uint64_t frame_start) {
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
     const int slowmo_active = hotkeys_is_slow_motion_active();
-    const double audio_target_ms = session_settings.fps_limit == fps_limit_auto ? audio_bridge_pace_target_ms() : 0.0;
+    double audio_target_ms = session_settings.fps_limit == fps_limit_auto ? audio_bridge_pace_target_ms() : 0.0;
+
+    if (audio_target_ms > 0.0 && !slowmo_active) {
+        const int reported = display_panel_refresh_hz();
+        const double panel = reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
+        if (panel > 0.0 && audio_target_ms <= 1000.0 / panel * PACE_VSYNC_TOLERANCE) audio_target_ms = 0.0;
+    }
+
     if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_target_ms <= 0.0) {
         fps_limit_deadline = 0.0;
         return;
