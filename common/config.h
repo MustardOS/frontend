@@ -377,6 +377,7 @@ struct mux_config {
         int16_t cache;
         int16_t merge;
         int16_t requests;
+        int16_t kernel_log;
         int16_t io_stats;
         int16_t read_ahead;
         int16_t idle_flush;

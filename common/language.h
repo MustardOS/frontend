@@ -13,6 +13,7 @@ extern char *hidden_visible[];
 extern char *toggle_icon_visible[];
 extern char *battery_display[];
 extern char *debug_log_mode[];
+extern char *kernel_log_mode[];
 extern char *scroll_speed[];
 
 struct mux_lang {
@@ -879,6 +880,14 @@ struct mux_lang {
         char readahead[MAX_BUFFER_SIZE];
         char pagecluster[MAX_BUFFER_SIZE];
         char timeslice[MAX_BUFFER_SIZE];
+        char kernellog[MAX_BUFFER_SIZE];
+        struct {
+            char silent[MAX_BUFFER_SIZE];
+            char critical[MAX_BUFFER_SIZE];
+            char error[MAX_BUFFER_SIZE];
+            char warning[MAX_BUFFER_SIZE];
+            char everything[MAX_BUFFER_SIZE];
+        } kernellevel;
         char iostats[MAX_BUFFER_SIZE];
         char idleflush[MAX_BUFFER_SIZE];
         char childfirst[MAX_BUFFER_SIZE];
@@ -902,6 +911,7 @@ struct mux_lang {
             char tune_scale[MAX_BUFFER_SIZE];
             char card_mode[MAX_BUFFER_SIZE];
             char state[MAX_BUFFER_SIZE];
+            char kernel_log[MAX_BUFFER_SIZE];
         } help;
     } muxdanger;
 

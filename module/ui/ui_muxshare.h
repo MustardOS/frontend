@@ -253,6 +253,7 @@
     CUSTOM(chime, "chime")
 
 #define DANGER_ELEMENTS                                                                                                \
+    DANGER(kernel_log, "kernellog")                                                                                    \
     DANGER(vm_swap, "vmswap")                                                                                          \
     DANGER(dirty_ratio, "dirty-ratio")                                                                                 \
     DANGER(dirty_back, "dirty-back")                                                                                   \

@@ -20,6 +20,7 @@ char *hidden_visible[2];
 char *toggle_icon_visible[3];
 char *battery_display[3];
 char *debug_log_mode[3];
+char *kernel_log_mode[5];
 char *scroll_speed[4];
 
 void load_language_file(const char *module) {
@@ -113,6 +114,12 @@ void common_var_init(void) {
     debug_log_mode[0] = lang.generic.disabled;
     debug_log_mode[1] = lang.generic.standard;
     debug_log_mode[2] = lang.generic.verbose;
+
+    kernel_log_mode[0] = lang.muxdanger.kernellevel.silent;
+    kernel_log_mode[1] = lang.muxdanger.kernellevel.critical;
+    kernel_log_mode[2] = lang.muxdanger.kernellevel.error;
+    kernel_log_mode[3] = lang.muxdanger.kernellevel.warning;
+    kernel_log_mode[4] = lang.muxdanger.kernellevel.everything;
 
     scroll_speed[0] = lang.generic.disabled;
     scroll_speed[1] = lang.generic.slow;
@@ -882,6 +889,12 @@ static const lang_field lang_fields[] = {
     {"muxdanger", LANG_OFF(muxdanger.tunescale), lang_specific, "Scheduler Scaling"},
     {"muxdanger", LANG_OFF(muxdanger.cardmode), lang_specific, "Disk Tuning"},
     {"muxdanger", LANG_OFF(muxdanger.state), lang_specific, "Suspend Power State"},
+    {"muxdanger", LANG_OFF(muxdanger.kernellog), lang_specific, "Kernel Log Level"},
+    {"muxdanger", LANG_OFF(muxdanger.kernellevel.silent), lang_specific, "Silent"},
+    {"muxdanger", LANG_OFF(muxdanger.kernellevel.critical), lang_specific, "Critical"},
+    {"muxdanger", LANG_OFF(muxdanger.kernellevel.error), lang_specific, "Errors"},
+    {"muxdanger", LANG_OFF(muxdanger.kernellevel.warning), lang_specific, "Warnings"},
+    {"muxdanger", LANG_OFF(muxdanger.kernellevel.everything), lang_specific, "Everything"},
     {"muxdanger", LANG_OFF(muxdanger.help.vm_swap), lang_specific, "Controls how aggressively the system swaps memory to disk\n\nLower values keep processes in RAM longer"},
     {"muxdanger", LANG_OFF(muxdanger.help.dirty_ratio), lang_specific, "Percentage of RAM allowed to hold unwritten (dirty) data before forcing a write to disk"},
     {"muxdanger", LANG_OFF(muxdanger.help.dirty_back), lang_specific, "Background write back starts when dirty data exceeds this percentage of RAM\n\nLower values help reduce latency"},
@@ -898,6 +911,7 @@ static const lang_field lang_fields[] = {
     {"muxdanger", LANG_OFF(muxdanger.help.card_mode), lang_specific, "Switch between different storage tuning options\n\nMay improve performance on certain mSD cards"},
     {"muxdanger", LANG_OFF(muxdanger.help.state), lang_specific, "Switch between system sleep suspend states\n\nChanges how the device reacts to sleep mode and wake locks"},
     {"muxdanger", LANG_OFF(muxdanger.warn), lang_specific, "These are low level kernel parameters.\n\nIncorrect values can cause system instability or data loss!"},
+    {"muxdanger", LANG_OFF(muxdanger.help.kernel_log), lang_specific, "How much the system writes to its own internal log.\n\nThis is separate from the debug log and covers messages from the device itself rather than from MustardOS.\n\nLower settings keep it quiet and save a little work. Raise it only when you are chasing a problem, as a busy log costs time on every message."},
 
     // muxdetail
     {"muxdetail", LANG_OFF(muxdetail.title), lang_specific, "Details"},

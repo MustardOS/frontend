@@ -27,6 +27,7 @@ static void init_dropdown_settings(void) {
 }
 
 static void restore_danger_options(void) {
+    lv_dropdown_set_selected(ui_dro_kernel_log_danger, config.danger.kernel_log);
     lv_dropdown_set_selected(ui_dro_io_stats_danger, config.danger.io_stats);
     lv_dropdown_set_selected(ui_dro_idle_flush_danger, config.danger.idle_flush);
     lv_dropdown_set_selected(ui_dro_child_first_danger, config.danger.child_first);
@@ -49,6 +50,7 @@ static void restore_danger_options(void) {
 static void save_danger_options(void) {
     int is_modified = 0;
 
+    CHECK_AND_SAVE_STD(danger, kernel_log, "danger/kernellog", INT, 0);
     CHECK_AND_SAVE_STD(danger, io_stats, "danger/iostats", INT, 0);
     CHECK_AND_SAVE_STD(danger, idle_flush, "danger/idle_flush", INT, 0);
     CHECK_AND_SAVE_STD(danger, child_first, "danger/child_first", INT, 0);
@@ -85,6 +87,7 @@ static void init_navigation_group(void) {
     char *cardmode_options[] = {"deadline", "noop"};
     char *state_options[] = {"mem", "freeze"};
 
+    INIT_OPTION_ITEM(-1, danger, kernel_log, lang.muxdanger.kernellog, "kernellog", kernel_log_mode, 5);
     INIT_OPTION_ITEM(-1, danger, vm_swap, lang.muxdanger.vmswap, "vmswap", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, dirty_ratio, lang.muxdanger.dirtyratio, "dirty-ratio", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, dirty_back, lang.muxdanger.dirtyback, "dirty-back", NULL, 0);

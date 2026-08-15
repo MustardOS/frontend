@@ -352,6 +352,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "danger", "read_ahead", CFG_OFF(danger.read_ahead), 0, {.i = 4096}},
     {CONF_CONFIG_PATH "danger", "page_cluster", CFG_OFF(danger.page_cluster), 0, {.i = 3}},
     {CONF_CONFIG_PATH "danger", "time_slice", CFG_OFF(danger.time_slice), 0, {.i = 10}},
+    {CONF_CONFIG_PATH "danger", "kernellog", CFG_OFF(danger.kernel_log), 0, {.i = 0}, 1, 0, 4},
     {CONF_CONFIG_PATH "danger", "iostats", CFG_OFF(danger.io_stats), 0, {.i = 0}},
     {CONF_CONFIG_PATH "danger", "idle_flush", CFG_OFF(danger.idle_flush), 0, {.i = 0}},
     {CONF_CONFIG_PATH "danger", "child_first", CFG_OFF(danger.child_first), 0, {.i = 0}},
