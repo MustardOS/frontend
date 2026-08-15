@@ -146,6 +146,16 @@ static void resolve_current_zone(void) {
     current_zone_valid = 1;
 }
 
+static void show_help(void) {
+    const struct help_msg help_messages[] = {
+#define RGBZONE(NAME, UDATA) {UDATA, lang.muxrgb.help.NAME},
+        RGBZONE_ELEMENTS
+#undef RGBZONE
+    };
+
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
+}
+
 static void rgb_apply(void) {
     const char *argv[2];
     argv[0] = RGBLED_BIN;
@@ -349,6 +359,15 @@ static void handle_y(void) {
     init_dropdown_settings();
 }
 
+static void handle_help(void) {
+    if (msgbox_active || dialogue_active(&save_dlg) || progress_onscreen != -1 || !ui_count_static || block_input
+        || hold_call)
+        return;
+
+    play_sound(snd_info_open);
+    show_help();
+}
+
 static void init_elements(void) {
     header_and_footer_setup();
 
@@ -419,6 +438,10 @@ int muxrgbzone_main(void) {
                 [mux_input_dpad_down] = handle_dpad_down,
                 [mux_input_l1] = handle_list_nav_page_up,
                 [mux_input_r1] = handle_list_nav_page_down,
+            },
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
             },
         .hold_handler = {
             [mux_input_dpad_left] = handle_option_prev,

@@ -2477,6 +2477,9 @@ struct mux_lang {
             char joypad[MAX_BUFFER_SIZE];
         } backend_name;
         struct {
+            char mode[MAX_BUFFER_SIZE];
+            char zone[MAX_BUFFER_SIZE];
+            char bright_theme[MAX_BUFFER_SIZE];
             char colour[MAX_BUFFER_SIZE];
             char bright[MAX_BUFFER_SIZE];
         } help;

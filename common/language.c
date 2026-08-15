@@ -2299,8 +2299,11 @@ static const lang_field lang_fields[] = {
     {"muxrgb", LANG_OFF(muxrgb.backend_name.sysfs), lang_specific, "SysFS"},
     {"muxrgb", LANG_OFF(muxrgb.backend_name.serial), lang_specific, "Serial"},
     {"muxrgb", LANG_OFF(muxrgb.backend_name.joypad), lang_specific, "Joypad"},
-    {"muxrgb", LANG_OFF(muxrgb.help.colour), lang_specific, "This zone's colour"},
-    {"muxrgb", LANG_OFF(muxrgb.help.bright), lang_specific, "This zone's brightness"},
+    {"muxrgb", LANG_OFF(muxrgb.help.mode), lang_specific, "Chooses how the lights are controlled.\n\nOff turns every zone off and hides the rest of this screen. Zone lists each lighting zone your device has, letting you set its colour and brightness independently. Theme hides the zone list and instead colours every zone to match whichever palette your currently active theme is using, leaving you with just an overall brightness to set."},
+    {"muxrgb", LANG_OFF(muxrgb.help.zone), lang_specific, "One of the lighting zones your device has, such as the left stick, the middle strip or a shoulder button.\n\nSelect it to open its own colour and brightness screen."},
+    {"muxrgb", LANG_OFF(muxrgb.help.bright_theme), lang_specific, "The overall brightness of the theme supplied colours from 0% to 100%."},
+    {"muxrgb", LANG_OFF(muxrgb.help.colour), lang_specific, "The colour for this zone.\n\nChoose Off to turn just this zone off without affecting any others."},
+    {"muxrgb", LANG_OFF(muxrgb.help.bright), lang_specific, "This zone's own brightness from 0% to 100%. Independent of every other zone."},
 
     // muxrtc
     {"muxrtc", LANG_OFF(muxrtc.title), lang_specific, "Date and Time"},
