@@ -390,7 +390,7 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (task_progress_active() || msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
     if (dialogue_active(&remove_dlg) || more_active(&more_menu)) return;
 
     more_entry entries[2];

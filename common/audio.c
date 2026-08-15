@@ -183,8 +183,7 @@ void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
     if (snd_type == 2) snprintf(base_path, sizeof(base_path), "%s/sound", theme_base);
 
-    DIR *dir = opendir(base_path);
-    if (!dir) {
+    if (!dir_exist(base_path)) {
         LOG_INFO("audio", "Sound directory not found: %s", base_path);
         return;
     }

@@ -62,15 +62,28 @@ const char *get_theme_base(void) {
         if (!file_exist(theme_version_file)) continue;
 
         char *theme_version = read_line_char_from(theme_version_file, 1);
-        if (!theme_version || !*theme_version) continue;
+        if (!theme_version || !*theme_version) {
+            free(theme_version);
+            continue;
+        }
 
+        int compatible = 0;
         for (size_t i = 0; i < theme_compat; i++) {
             const char *compat = theme_back_compat[i];
             if (!compat) continue;
-            if (str_startswith(compat, theme_version)) return paths[p];
+            if (str_startswith(compat, theme_version)) {
+                compatible = 1;
+                break;
+            }
+        }
+
+        if (compatible) {
+            free(theme_version);
+            return paths[p];
         }
 
         LOG_WARN(mux_module, "Incompatible Theme Detected (%s): %s", paths[p], theme_version);
+        free(theme_version);
         break;
     }
 
@@ -1104,12 +1117,17 @@ int get_alt_scheme_path(char *alt_scheme_path, const size_t alt_scheme_path_size
     char active_path[MAX_BUFFER_SIZE];
     snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
     if (file_exist(active_path)) {
-        snprintf(
-            alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_base,
-            str_replace(read_line_char_from(active_path, 1), "\r", "")
-        );
+        char *active = read_line_char_from(active_path, 1);
+        char *cleaned = active ? str_replace(active, "\r", "") : NULL;
+
+        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_base, cleaned ? cleaned : "");
+
+        free(cleaned);
+        free(active);
+
         return file_exist(alt_scheme_path);
     }
+
     return 0;
 }
 
@@ -1421,7 +1439,7 @@ void apply_size_to_content(
 ) {
     if (c_theme->misc.content.size_to_content) {
         lv_obj_t *ui_pnl_item = lv_obj_get_parent(ui_lbl_item);
-        uint32_t child_object_count = lv_obj_get_child_cnt(ui_pnl_item);
+        const uint32_t child_object_count = lv_obj_get_child_cnt(ui_pnl_item);
         if (child_object_count > 2) return;
         lv_obj_set_width(ui_pnl_item, LV_SIZE_CONTENT);
         lv_obj_get_style_max_width(ui_pnl_item, c_theme->misc.content.width);

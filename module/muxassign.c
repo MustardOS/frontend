@@ -304,7 +304,9 @@ static void create_core_items(const char *target) {
 static void load_return_module() {
     if (file_exist(MUOS_ASS_FROM)) {
         remove(OPTION_SKIP);
-        load_mux(read_all_char_from(MUOS_ASS_FROM));
+        char *origin = read_all_char_from(MUOS_ASS_FROM);
+        load_mux(origin);
+        free(origin);
         remove(MUOS_ASS_FROM);
         remove(MUOS_SYS_LOAD);
     }
@@ -608,7 +610,9 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
         char force_sys_name[PATH_MAX] = "";
         const int force_sys_picker = file_exist(MUOS_ASS_SYSP);
         if (force_sys_picker) {
-            snprintf(force_sys_name, sizeof(force_sys_name), "%s", read_line_char_from(MUOS_ASS_SYSP, 1));
+            char *picked = read_line_char_from(MUOS_ASS_SYSP, 1);
+            snprintf(force_sys_name, sizeof(force_sys_name), "%s", picked ? picked : "");
+            free(picked);
             remove(MUOS_ASS_SYSP);
         }
 

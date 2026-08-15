@@ -478,7 +478,10 @@ int init_grid_static(const int count, char *item_labels[], char *item_grid_label
     init_grid_common(count);
 
     char prev_dir[MAX_BUFFER_SIZE];
-    snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
+    char *saved_dir = file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : NULL;
+
+    snprintf(prev_dir, sizeof(prev_dir), "%s", saved_dir ? saved_dir : "");
+    free(saved_dir);
 
     int steps = 0;
     for (int i = 0; i < count; i++) {

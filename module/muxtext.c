@@ -78,7 +78,10 @@ int muxtext_main(void) {
     init_module(__func__);
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, read_line_char_from(TEXT_FILE, 1));
+    char *title = read_line_char_from(TEXT_FILE, 1);
+    init_ui_common_screen(&theme, &device, &lang, title);
+    free(title);
+
     init_muxtext(ui_pnl_content, &theme);
     init_elements();
 

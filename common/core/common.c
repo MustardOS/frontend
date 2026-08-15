@@ -25,6 +25,8 @@ static int read_catalogue(const char *path, const int line, char *out, const siz
     if (!val) return 0;
 
     snprintf(out, out_size, "%s", val);
+    free(val);
+
     return 1;
 }
 
@@ -370,8 +372,6 @@ static int find_recursive_core_file(const char *start_path, char *recursive_core
         if (file_exist(recursive_core_file)) return 1;
         if (strcasecmp(root_core_file, recursive_core_file) == 0) return 0;
     }
-
-    return 0;
 }
 
 int automatic_assign_core(char *rom_dir) {
@@ -392,7 +392,7 @@ int automatic_assign_core(char *rom_dir) {
         snprintf(assign_check, sizeof(assign_check), "%s", str_tolower(get_last_dir(rom_dir)));
         str_remchars(assign_check, " -_+");
 
-        struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
+        const struct json auto_assign_config = json_object_get(json_parse(assign_content), assign_check);
 
         if (json_exists(auto_assign_config)) {
             char ass_config[MAX_BUFFER_SIZE];
@@ -479,7 +479,7 @@ int automatic_assign_core(char *rom_dir) {
                         LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
                     }
 
-                    int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
+                    const int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
                     if (use_local_lookup) {
                         core_lookup = use_local_lookup;
                         LOG_INFO(mux_module, "\t(LOCAL) Core Lookup: %d", core_lookup);
@@ -652,11 +652,11 @@ static const char *get_ra_config_dir(const char *core) {
 #define MURETRO_SET_PATH RUN_STORAGE_PATH "save/pickles/settings"
 #define MURETRO_OPT_PATH RUN_STORAGE_PATH "save/pickles/coreopt"
 
-static void muxretro_core_name(const char *core, char *out, const size_t out_size) {
+static void muxretro_core_name(const char *core, char *out) {
     const char *base = strrchr(core, '/');
     base = base ? base + 1 : core;
 
-    snprintf(out, out_size, "%s", base);
+    snprintf(out, MAX_BUFFER_SIZE, "%s", base);
 
     char *ext = strstr(out, "_libretro.so");
     if (ext) *ext = '\0';
@@ -674,7 +674,7 @@ static void remove_muxretro_ini_pair(const char *label, const char *rel) {
     if (file_exist(path)) remove(path);
 }
 
-static void muxretro_rel_dir(const char *dir, char *out, const size_t out_size) {
+static void muxretro_rel_dir(const char *dir, char *out) {
     char rel_path[MAX_BUFFER_SIZE];
     union_get_relative_path(dir, rel_path, sizeof(rel_path));
 
@@ -685,7 +685,7 @@ static void muxretro_rel_dir(const char *dir, char *out, const size_t out_size) 
             sub++;
     }
 
-    snprintf(out, out_size, "%s", sub);
+    snprintf(out, MAX_BUFFER_SIZE, "%s", sub);
 }
 
 int remove_muxretro_content_config(const char *content_path) {
@@ -693,7 +693,7 @@ int remove_muxretro_content_config(const char *content_path) {
 
     char *content_dir = get_content_path((char *) content_path);
     char rel_dir[MAX_BUFFER_SIZE];
-    muxretro_rel_dir(content_dir, rel_dir, sizeof(rel_dir));
+    muxretro_rel_dir(content_dir, rel_dir);
     free(content_dir);
 
     const char *content_base = strrchr(content_path, '/');
@@ -720,7 +720,7 @@ int remove_muxretro_dir_config(const char *dir) {
     toast_message(lang.muxoption.remdir, tst_wait_m);
 
     char rel_dir[MAX_BUFFER_SIZE];
-    muxretro_rel_dir(dir, rel_dir, sizeof(rel_dir));
+    muxretro_rel_dir(dir, rel_dir);
 
     char rel[MAX_BUFFER_SIZE];
     if (*rel_dir) {
@@ -738,7 +738,7 @@ int remove_muxretro_core_config(const char *core) {
     toast_message(lang.muxoption.remcore, tst_wait_m);
 
     char core_name[MAX_BUFFER_SIZE];
-    muxretro_core_name(core, core_name, sizeof(core_name));
+    muxretro_core_name(core, core_name);
 
     char rel[MAX_BUFFER_SIZE];
     snprintf(rel, sizeof(rel), "core/%s.ini", core_name);

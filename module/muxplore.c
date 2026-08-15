@@ -1846,7 +1846,9 @@ int muxplore_main(const int index, char *dir) {
 
     reset_ui_groups();
 
-    snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
+    char *saved_dir = file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : NULL;
+    snprintf(prev_dir, sizeof(prev_dir), "%s", saved_dir ? saved_dir : "");
+    free(saved_dir);
 
     load_skip_patterns();
     load_tag_items(&tag_items, &tag_item_count);

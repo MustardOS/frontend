@@ -531,13 +531,17 @@ static void handle_keyboard_press(void) {
 
 static void add_collection_item(void) {
     char *base_file_name = read_line_char_from(ADD_MODE_WORK, 1);
-    const char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
+    char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
     char *system_sub = read_line_char_from(ADD_MODE_WORK, 3);
+
+    char *mount = read_line_char_from(cache_file, content_mount);
+    char *content = read_line_char_from(cache_file, content_dir);
+
     char full_file_path[MAX_BUFFER_SIZE];
-    snprintf(
-        full_file_path, sizeof(full_file_path), "%s%s/%s", read_line_char_from(cache_file, content_mount),
-        read_line_char_from(cache_file, content_dir), base_file_name
-    );
+    snprintf(full_file_path, sizeof(full_file_path), "%s%s/%s", mount, content, base_file_name);
+
+    free(mount);
+    free(content);
 
     char collection_content[MAX_BUFFER_SIZE];
     snprintf(
@@ -561,6 +565,10 @@ static void add_collection_item(void) {
     write_text_to_file(ADD_MODE_DONE, "w", CHAR, done_content);
 
     if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
+
+    free(base_file_name);
+    free(cache_file);
+    free(system_sub);
 }
 
 static int load_add_mode_origin(void) {
@@ -1273,7 +1281,9 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
 
     reset_ui_groups();
 
-    snprintf(prev_dir, sizeof(prev_dir), "%s", file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : "");
+    char *saved_dir = file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : NULL;
+    snprintf(prev_dir, sizeof(prev_dir), "%s", saved_dir ? saved_dir : "");
+    free(saved_dir);
 
     tag_filter_apply();
 

@@ -50,7 +50,10 @@ static int version_check(void) {
     if (!file_exist(theme_version_file)) return 0;
 
     char *theme_version = read_line_char_from(theme_version_file, 1);
-    if (!theme_version || !*theme_version) return 0;
+    if (!theme_version || !*theme_version) {
+        free(theme_version);
+        return 0;
+    }
 
     free(theme_version_buf);
     theme_version_buf = theme_version;
