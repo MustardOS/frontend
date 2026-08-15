@@ -13,6 +13,10 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"fpscounter", "playtime", "header"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.hud.show_fps, lang.muxretro.help.hud.show_playtime, lang.muxretro.help.hud.header_visibility
+};
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_fps:
@@ -55,6 +59,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

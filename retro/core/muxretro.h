@@ -170,6 +170,10 @@ int pause_menu_is_active(void);
 
 int pause_menu_peek_allowed(void);
 
+int pause_menu_take_menu_tap(void);
+
+int pause_menu_help_input(int scroll_up, int scroll_down, int dismiss);
+
 void pause_menu_toggle(void);
 
 void pause_menu_rebuild(void);

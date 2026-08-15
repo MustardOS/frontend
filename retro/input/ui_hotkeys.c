@@ -43,6 +43,16 @@ static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",      "ffgl
                                             "slowmoglyph", "pause",        "pauseglyph", "quicksave",  "quickload",
                                             "togglefps",   "toggleheader", "quit",       "manual"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.hotkeys.fast_forward,  lang.muxretro.help.hotkeys.ff_speed,
+    lang.muxretro.help.hotkeys.ff_glyph,      lang.muxretro.help.hotkeys.slow_motion,
+    lang.muxretro.help.hotkeys.slowmo_speed,  lang.muxretro.help.hotkeys.slowmo_glyph,
+    lang.muxretro.help.hotkeys.pause_content, lang.muxretro.help.hotkeys.pause_glyph,
+    lang.muxretro.help.hotkeys.quick_save,    lang.muxretro.help.hotkeys.quick_load,
+    lang.muxretro.help.hotkeys.toggle_fps,    lang.muxretro.help.hotkeys.toggle_header,
+    lang.muxretro.help.hotkeys.quit,          lang.muxretro.help.hotkeys.manual
+};
+
 static void enabled_text(char *buf, const size_t buf_len, const int enabled, const char *combo) {
     if (enabled) {
         snprintf(buf, buf_len, "%s (%s)", lang.generic.enabled, combo);
@@ -168,6 +178,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

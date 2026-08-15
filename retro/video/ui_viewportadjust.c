@@ -13,6 +13,11 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"viewportx", "viewporty", "viewportx", "viewporty", "viewportzoom"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.viewport.offset_x, lang.muxretro.help.viewport.offset_y, lang.muxretro.help.viewport.stretch_x,
+    lang.muxretro.help.viewport.stretch_y, lang.muxretro.help.viewport.zoom
+};
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_offset_x:
@@ -71,6 +76,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

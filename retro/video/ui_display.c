@@ -15,6 +15,11 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"filter", "shader", "brightness", "contrast", "saturation", "hue", "gamma"};
 
+static const char *row_help[row_count] = {lang.muxretro.help.display.filter,     lang.muxretro.help.display.shader,
+                                          lang.muxretro.help.display.brightness, lang.muxretro.help.display.contrast,
+                                          lang.muxretro.help.display.saturation, lang.muxretro.help.display.hue_shift,
+                                          lang.muxretro.help.display.gamma};
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_filter:
@@ -101,6 +106,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

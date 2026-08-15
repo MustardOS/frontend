@@ -37,6 +37,8 @@
 
 #define TOAST_DURATION_MS 2048
 #define HEADER_FADE_MS    256
+#define MENU_TAP_MS       400
+#define PAUSE_ROW_MAX     16
 
 static uint32_t toast_expire_tick = 0;
 static int toast_active = 0;
@@ -99,6 +101,12 @@ static void compute_row_indices(void) {
 static nav_repeat_t rpt_up = {0};
 static nav_repeat_t rpt_down = {0};
 
+static uint32_t menu_press_tick = 0;
+static int menu_was_down = 0;
+static int menu_armed = 0;
+static int menu_tap_pending = 0;
+static int menu_prev_active = 0;
+
 static uint64_t current_nav_mask(void) {
     const int confirm = mux_input_pressed(mux_input_a);
     const int back = mux_input_pressed(mux_input_b);
@@ -110,8 +118,58 @@ void pause_menu_sync_input_mask(void) {
     prev_nav_mask = current_nav_mask();
 }
 
+static void pause_menu_menu_key_tick(const uint32_t now) {
+    menu_tap_pending = 0;
+
+    const int down = mux_input_pressed(mux_input_menu);
+
+    if (active != menu_prev_active) {
+        menu_prev_active = active;
+        menu_was_down = down;
+        menu_armed = 0;
+    }
+
+    if (!active) {
+        menu_was_down = down;
+        return;
+    }
+
+    if (down && !menu_was_down) {
+        menu_press_tick = now;
+        menu_armed = 1;
+    } else if (!down && menu_was_down) {
+        if (menu_armed && now - menu_press_tick < MENU_TAP_MS) menu_tap_pending = 1;
+        menu_armed = 0;
+    }
+
+    menu_was_down = down;
+}
+
+int pause_menu_take_menu_tap(void) {
+    const int tap = menu_tap_pending;
+    menu_tap_pending = 0;
+
+    return tap;
+}
+
+int pause_menu_help_input(const int scroll_up, const int scroll_down, const int dismiss) {
+    if (!msgbox_active) return 0;
+
+    if (scroll_up) {
+        scroll_help_content(1, 0);
+    } else if (scroll_down) {
+        scroll_help_content(-1, 0);
+    } else if (dismiss) {
+        handle_msgbox_dismiss();
+    }
+
+    return 1;
+}
+
 int pause_menu_peek_allowed(void) {
-    return active && (settings_menu_is_active() || manual_menu_is_active());
+    const int held = menu_armed && SDL_GetTicks() - menu_press_tick >= MENU_TAP_MS;
+
+    return active && held && (settings_menu_is_active() || manual_menu_is_active());
 }
 
 static void create_dim_overlay(void) {
@@ -546,6 +604,7 @@ void pause_menu_service_tick(const uint32_t now) {
     static int previous_active = -1;
 
     pause_menu_toast_tick(now);
+    pause_menu_menu_key_tick(now);
 
     if (active != previous_active || SDL_TICKS_PASSED(now, playtime_deadline)) {
         pause_menu_playtime_tick();
@@ -618,27 +677,53 @@ int pause_menu_gameplay_hud_active(void) {
     return 0;
 }
 
+static const char *row_help[PAUSE_ROW_MAX];
+static int row_help_count;
+
+static void add_label(const char *glyph, const char *text, const char *help) {
+    if (row_help_count >= PAUSE_ROW_MAX) return;
+
+    gen_label("muxretro", glyph, text);
+
+    const lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, row_help_count);
+    if (panel) lv_obj_set_user_data(lv_obj_get_child(panel, 0), (void *) help);
+
+    row_help[row_help_count++] = help;
+}
+
+static void pause_menu_show_help(void) {
+    struct help_msg help_messages[PAUSE_ROW_MAX];
+
+    for (int i = 0; i < row_help_count; i++) {
+        help_messages[i].key = (char *) row_help[i];
+        help_messages[i].message = (char *) row_help[i];
+    }
+
+    gen_help(current_item_index, help_messages, (size_t) row_help_count, ui_group, NULL);
+}
+
 void pause_menu_rebuild(void) {
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();
 
     ui_count_static = 0;
     current_item_index = 0;
+    row_help_count = 0;
 
     compute_row_indices();
 
-    gen_label("muxretro", "resume", lang.muxretro.resume);
-    if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
-    if (row_netplay >= 0) gen_label("muxretro", "network", lang.muxretro.network_play);
-    if (row_cheevo >= 0) gen_label("muxretro", "trophy", lang.muxretro.cheevo.achievements);
-    if (row_game_link >= 0) gen_label("muxretro", "network", lang.muxretro.link.game_link);
-    if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
-    if (row_cheats >= 0) gen_label("muxretro", "cheat", lang.muxretro.cheats);
-    if (row_patches >= 0) gen_label("muxretro", "patch", lang.muxretro.patches);
-    gen_label("muxretro", "settings", lang.muxretro.settings);
-    gen_label("muxretro", "info", lang.muxretro.information);
-    gen_label("muxretro", "restart", lang.muxretro.restart);
-    gen_label("muxretro", "exit", lang.muxretro.quit);
+    add_label("resume", lang.muxretro.resume, lang.muxretro.help.pause.resume);
+    if (row_game_state >= 0) add_label("state", lang.muxretro.game_state, lang.muxretro.help.pause.game_state);
+    if (row_netplay >= 0) add_label("network", lang.muxretro.network_play, lang.muxretro.help.pause.network_play);
+    if (row_cheevo >= 0) add_label("trophy", lang.muxretro.cheevo.achievements, lang.muxretro.help.pause.cheevo);
+    if (row_game_link >= 0) add_label("network", lang.muxretro.link.game_link, lang.muxretro.help.pause.game_link);
+    if (has_disc_control) add_label("disc", lang.muxretro.disc_control, lang.muxretro.help.pause.disc_control);
+    if (row_cheats >= 0) add_label("cheat", lang.muxretro.cheats, lang.muxretro.help.pause.cheats);
+    if (row_patches >= 0) add_label("patch", lang.muxretro.patches, lang.muxretro.help.pause.patches);
+    add_label("settings", lang.muxretro.settings, lang.muxretro.help.pause.settings);
+    add_label("info", lang.muxretro.information, lang.muxretro.help.pause.information);
+    add_label("restart", lang.muxretro.restart, lang.muxretro.help.pause.restart);
+    add_label("exit", lang.muxretro.quit, lang.muxretro.help.pause.quit);
 
     ui_count_static = row_count;
     first_open = 0;
@@ -961,6 +1046,14 @@ int pause_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
+
+    const int menu_tap = pause_menu_take_menu_tap();
+    if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(2) | BIT(3)))) return 0;
+
+    if (menu_tap) {
+        pause_menu_show_help();
+        return 0;
+    }
 
     if (nav_input_halted()) return 0;
 

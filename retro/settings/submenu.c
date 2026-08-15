@@ -10,6 +10,7 @@
 
 #define SUBMENU_VALUE_MAX 64
 #define SUBMENU_STACK_MAX 8
+#define SUBMENU_HELP_MAX  64
 
 static submenu *submenu_stack[SUBMENU_STACK_MAX];
 static int submenu_stack_depth = 0;
@@ -76,6 +77,8 @@ static void build_row(const submenu *m, const int index) {
 
     apply_size_to_content(&theme, ui_pnl_content, label, icon, m->def->labels[index]);
     apply_text_long_dot(&theme, label);
+
+    if (m->def->help) lv_obj_set_user_data(label, (void *) m->def->help[index]);
 
     lv_group_add_obj(ui_group, label);
     lv_group_add_obj(ui_group_glyph, icon);
@@ -145,6 +148,22 @@ void submenu_refresh_values(const submenu *m) {
         row_value(m, i, value_text, sizeof(value_text));
         if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
     }
+}
+
+static void submenu_show_help(const submenu *m) {
+    if (!m->def->help) return;
+
+    struct help_msg help_messages[SUBMENU_HELP_MAX];
+
+    int count = m->def->row_count;
+    if (count > SUBMENU_HELP_MAX) count = SUBMENU_HELP_MAX;
+
+    for (int i = 0; i < count; i++) {
+        help_messages[i].key = (char *) m->def->help[i];
+        help_messages[i].message = (char *) m->def->help[i];
+    }
+
+    gen_help(current_item_index, help_messages, (size_t) count, ui_group, NULL);
 }
 
 static void submenu_nav(submenu *m, const int force) {
@@ -300,6 +319,16 @@ void submenu_tick(submenu *m) {
     const uint64_t mask = submenu_nav_mask();
     const uint64_t edge = mask & ~m->prev_nav_mask;
     m->prev_nav_mask = mask;
+
+    if (!dialogue_active(&m->save_dlg) && !dialogue_active(&m->save_all_dlg)) {
+        const int menu_tap = pause_menu_take_menu_tap();
+        if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || (edge & (BIT(4) | BIT(5))))) return;
+
+        if (menu_tap) {
+            submenu_show_help(m);
+            return;
+        }
+    }
 
     if (coarse_step_tick(m, edge, mask)) return;
     if (nav_input_halted()) return;

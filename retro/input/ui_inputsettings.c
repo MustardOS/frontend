@@ -17,14 +17,28 @@ enum {
 
 static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys,
-    lang.muxretro.settings_screen.port_1,      lang.muxretro.settings_screen.port_2,
-    lang.muxretro.settings_screen.port_3,      lang.muxretro.settings_screen.port_4,
-    lang.muxretro.settings_screen.auto_assign, lang.muxretro.settings_screen.controller_options,
+    lang.muxretro.settings_screen.port_1,
+    lang.muxretro.settings_screen.port_2,
+    lang.muxretro.settings_screen.port_3,
+    lang.muxretro.settings_screen.port_4,
+    lang.muxretro.settings_screen.auto_assign,
+    lang.muxretro.settings_screen.controller_options,
     lang.muxretro.settings_screen.reset_input,
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys",    "port1",      "port2",             "port3", "port4",
-                                            "autoassign", "controlleroptions", "inputreset"};
+static const char *row_glyphs[row_count] = {"hotkeys",           "port1",     "port2", "port3", "port4", "autoassign",
+                                            "controlleroptions", "inputreset"};
+
+static const char *row_help[row_count] = {
+    lang.muxretro.help.input.hotkeys,
+    lang.muxretro.help.input.port_1,
+    lang.muxretro.help.input.port_2,
+    lang.muxretro.help.input.port_3,
+    lang.muxretro.help.input.port_4,
+    lang.muxretro.help.input.auto_assign,
+    lang.muxretro.help.input.controller_options,
+    lang.muxretro.help.input.reset_input
+};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     if (index >= row_port_1 && index <= row_port_4) {
@@ -95,6 +109,7 @@ static void closed(void) {
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .row_is_action = row_is_action,

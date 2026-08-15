@@ -12,6 +12,10 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"viewport", "centrecrop", "viewportreset"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.viewport.adjustment, lang.muxretro.help.viewport.cropping, lang.muxretro.help.viewport.reset
+};
+
 static int row_is_action(const int index) {
     (void) index;
     return 1;
@@ -56,6 +60,7 @@ static void closed(void) {
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .row_is_action = row_is_action,
     .action = row_action,

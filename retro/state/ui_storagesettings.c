@@ -14,6 +14,12 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"autosave", "timeline", "timeline", "sram", "sram", "content"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.storage.auto_save,      lang.muxretro.help.storage.timeline,
+    lang.muxretro.help.storage.timeline_count, lang.muxretro.help.storage.sram_flush,
+    lang.muxretro.help.storage.sram_backup,    lang.muxretro.help.storage.precache
+};
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_auto_save:
@@ -76,6 +82,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

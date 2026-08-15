@@ -11,8 +11,12 @@ static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.macros,     lang.muxretro.settings_screen.reset_port,
 };
 
-static const char *row_glyphs[row_count] = {"controller", "coredevice",    "buttonmapping",
-                                            "macro",      "buttonmapping", "portreset"};
+static const char *row_glyphs[row_count] = {"controller",    "coredevice", "sticksensitivity",
+                                            "buttonmapping", "macro",      "portreset"};
+
+static const char *row_help[row_count] = {lang.muxretro.help.port.controller, lang.muxretro.help.port.core_device,
+                                          lang.muxretro.help.port.stick_dpad, lang.muxretro.help.port.button_mapping,
+                                          lang.muxretro.help.port.macros,     lang.muxretro.help.port.reset_port};
 
 static int active_port = 0;
 
@@ -93,6 +97,7 @@ static void closed(void) {
 static const submenu_def port_def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

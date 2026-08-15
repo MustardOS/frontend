@@ -19,13 +19,15 @@ typedef enum {
 
 static const char *row_labels[settings_item_count];
 static const char *row_glyphs[settings_item_count];
+static const char *row_help[settings_item_count];
 static settings_item row_items[settings_item_count];
 static int row_count;
 
-static void add_row(const settings_item item, const char *label, const char *glyph) {
+static void add_row(const settings_item item, const char *label, const char *glyph, const char *help) {
     row_items[row_count] = item;
     row_labels[row_count] = label;
     row_glyphs[row_count] = glyph;
+    row_help[row_count] = help;
     row_count++;
 }
 
@@ -135,6 +137,7 @@ static submenu self;
 static submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = 0,
     .row_is_action = row_is_action,
     .row_is_save = row_is_save,
@@ -148,16 +151,36 @@ static submenu_def def = {
 
 static void build_rows(void) {
     row_count = 0;
-    if (!netplay_is_active()) add_row(settings_item_core_options, lang.muxretro.core_options, "core");
-    add_row(settings_item_video, lang.muxretro.settings_screen.category_video, "videosettings");
-    add_row(settings_item_sound, lang.muxretro.settings_screen.category_sound, "soundsettings");
-    add_row(settings_item_input, lang.muxretro.settings_screen.category_input, "inputsettings");
-    add_row(settings_item_performance, lang.muxretro.settings_screen.category_performance, "performance");
-    add_row(settings_item_hud, lang.muxretro.settings_screen.category_hud, "screeninfo");
-    add_row(settings_item_storage, lang.muxretro.settings_screen.category_storage, "storagesettings");
+    if (!netplay_is_active())
+        add_row(
+            settings_item_core_options, lang.muxretro.core_options, "core", lang.muxretro.help.settings.core_options
+        );
+    add_row(
+        settings_item_video, lang.muxretro.settings_screen.category_video, "videosettings",
+        lang.muxretro.help.settings.video
+    );
+    add_row(
+        settings_item_sound, lang.muxretro.settings_screen.category_sound, "soundsettings",
+        lang.muxretro.help.settings.sound
+    );
+    add_row(
+        settings_item_input, lang.muxretro.settings_screen.category_input, "inputsettings",
+        lang.muxretro.help.settings.input
+    );
+    add_row(
+        settings_item_performance, lang.muxretro.settings_screen.category_performance, "performance",
+        lang.muxretro.help.settings.performance
+    );
+    add_row(
+        settings_item_hud, lang.muxretro.settings_screen.category_hud, "screeninfo", lang.muxretro.help.settings.hud
+    );
+    add_row(
+        settings_item_storage, lang.muxretro.settings_screen.category_storage, "storagesettings",
+        lang.muxretro.help.settings.storage
+    );
     if (device.board.has_network)
-        add_row(settings_item_cheevo, lang.muxretro.retroachievements, "trophy");
-    add_row(settings_item_save, lang.muxretro.save_settings, "settings");
+        add_row(settings_item_cheevo, lang.muxretro.retroachievements, "trophy", lang.muxretro.help.settings.cheevo);
+    add_row(settings_item_save, lang.muxretro.save_settings, "settings", lang.muxretro.help.settings.save_all);
     def.row_count = row_count;
 }
 

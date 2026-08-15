@@ -41,9 +41,20 @@ static const char *all_glyphs[row_max] = {"viewport", "display",      "overlay",
                                           "mirrored", "aspectratio",  "integerscale", "texturefilter", "shimmerfix",
                                           "border",   "gamerenderer", "performance"};
 
+static const char *all_help[row_max] = {
+    lang.muxretro.help.video.viewport,         lang.muxretro.help.video.display,
+    lang.muxretro.help.video.overlay,          lang.muxretro.help.video.scaling,
+    lang.muxretro.help.video.rotate,           lang.muxretro.help.video.mirrored,
+    lang.muxretro.help.video.aspect_ratio,     lang.muxretro.help.video.integer_scale,
+    lang.muxretro.help.video.texture_filter,   lang.muxretro.help.video.shimmer_fix,
+    lang.muxretro.help.video.border,           lang.muxretro.help.video.game_renderer,
+    lang.muxretro.help.video.performance_first
+};
+
 // The renderer choice only means anything to a core that asked for hardware rendering!
 static const char *row_labels[row_max];
 static const char *row_glyphs[row_max];
+static const char *row_help[row_max];
 static int row_map[row_max];
 static int row_total;
 
@@ -55,6 +66,7 @@ static void build_rows(void) {
 
         row_labels[row_total] = all_labels[i];
         row_glyphs[row_total] = all_glyphs[i];
+        row_help[row_total] = all_help[i];
         row_map[row_total] = i;
         row_total++;
     }
@@ -188,6 +200,7 @@ static void closed(void) {
 static submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_max,
     .value_text = row_value_text,
     .cycle = cycle_row,

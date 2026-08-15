@@ -17,23 +17,11 @@
 #include "cheevo.h"
 #include "ui_cheevo.h"
 
-enum {
-    row_account = 0,
-    row_mode,
-    row_notifications,
-    row_refresh,
-    row_count
-};
+enum { row_account = 0, row_mode, row_notifications, row_refresh, row_count };
 
 typedef enum { entry_none = 0, entry_username, entry_password } entry_state;
 
-enum {
-    login_row_username = 0,
-    login_row_password,
-    login_row_submit,
-    login_row_sign_out,
-    login_row_count
-};
+enum { login_row_username = 0, login_row_password, login_row_submit, login_row_sign_out, login_row_count };
 
 static submenu self;
 static submenu details;
@@ -52,8 +40,8 @@ static uint64_t clear_previous_mask;
 static uint64_t entry_previous_mask;
 static nav_repeat_t entry_up, entry_down, entry_left, entry_right, entry_backspace;
 
-#define DETAIL_CAP 192
-#define RANKING_CAP 10
+#define DETAIL_CAP              192
+#define RANKING_CAP             10
 #define DETAIL_PREVIEW_DELAY_MS 80
 
 static cheevo_game_entry detail_entries[DETAIL_CAP];
@@ -92,6 +80,11 @@ static const char *login_glyphs[login_row_count] = {"user", "lock", "network", "
 static const char *row_labels[row_count];
 
 static const char *row_glyphs[row_count] = {"user", "performance", "message", "refresh"};
+
+static const char *row_help[row_count] = {
+    lang.muxretro.help.cheevo.account, lang.muxretro.help.cheevo.mode, lang.muxretro.help.cheevo.notifications,
+    lang.muxretro.help.cheevo.refresh
+};
 
 static void detail_nav_show_x(const int show, const char *text) {
     if (show) {
@@ -145,10 +138,9 @@ static void row_value_text(const int index, char *buffer, const size_t length) {
         case row_notifications:
             snprintf(
                 buffer, length, "%s",
-                info.notifications == cheevo_notifications_detailed
-                    ? lang.muxretro.cheevo.detailed
-                    : info.notifications == cheevo_notifications_basic ? lang.muxretro.cheevo.basic
-                                                                        : lang.generic.disabled
+                info.notifications == cheevo_notifications_detailed ? lang.muxretro.cheevo.detailed
+                : info.notifications == cheevo_notifications_basic  ? lang.muxretro.cheevo.basic
+                                                                    : lang.generic.disabled
             );
             break;
         default:
@@ -176,8 +168,7 @@ static void row_cycle(const int index, const int direction) {
 static uint64_t entry_nav_mask(void) {
     return nav_dir_bits() | (mux_input_pressed(mux_input_a) ? BIT(4) : 0)
            | (mux_input_pressed(mux_input_b) ? BIT(5) : 0) | (mux_input_pressed(mux_input_x) ? BIT(6) : 0)
-           | (mux_input_pressed(mux_input_y) ? BIT(7) : 0)
-           | (mux_input_pressed(mux_input_select) ? BIT(8) : 0)
+           | (mux_input_pressed(mux_input_y) ? BIT(7) : 0) | (mux_input_pressed(mux_input_select) ? BIT(8) : 0)
            | (mux_input_pressed(mux_input_start) ? BIT(9) : 0) | nav_mask_page();
 }
 
@@ -328,17 +319,17 @@ static void login_value_text(const int index, char *buffer, const size_t length)
         case login_row_username:
             snprintf(
                 buffer, length, "%s",
-                login_username[0]
-                    ? login_username
-                    : info.username[0] ? info.username : lang.muxretro.cheevo.not_entered
+                login_username[0]  ? login_username
+                : info.username[0] ? info.username
+                                   : lang.muxretro.cheevo.not_entered
             );
             break;
         case login_row_password:
             snprintf(
                 buffer, length, "%s",
-                login_password[0] || submission_active
-                    ? "********"
-                    : account_active ? lang.muxretro.cheevo.session_saved : lang.muxretro.cheevo.not_entered
+                login_password[0] || submission_active ? "********"
+                : account_active                       ? lang.muxretro.cheevo.session_saved
+                                                       : lang.muxretro.cheevo.not_entered
             );
             break;
         case login_row_submit:
@@ -391,7 +382,7 @@ static int login_child_tick(void) {
     if (nav_input_halted()) return 1;
 
     if (edge & (BIT(0) | BIT(1))) {
-        dialogue_handle_dpad(&clear_dialogue, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        dialogue_handle_dpad(&clear_dialogue, &theme, edge & BIT(1) ? 1 : -1, 1);
     } else if (edge & BIT(4)) {
         const mux_confirm_opt option = (mux_confirm_opt) clear_dialogue.selected;
         dialogue_dismiss(&clear_dialogue);
@@ -492,14 +483,13 @@ static int detail_compare(const void *left_value, const void *right_value) {
         if (current_detail_sort == cheevo_sort_percentage_common) return left->rarity < right->rarity ? 1 : -1;
         if (current_detail_sort == cheevo_sort_percentage_rarest) return left->rarity > right->rarity ? 1 : -1;
     }
-    if (current_detail_sort == cheevo_sort_alphanumeric_descending)
-        return strcasecmp(right->title, left->title);
+    if (current_detail_sort == cheevo_sort_alphanumeric_descending) return strcasecmp(right->title, left->title);
     return strcasecmp(left->title, right->title);
 }
 
 static int detail_load(const cheevo_achievement_view mode) {
-    const cheevo_game_entry_type type = mode == cheevo_view_achievements ? cheevo_game_entry_achievement
-                                                                         : cheevo_game_entry_leaderboard;
+    const cheevo_game_entry_type type =
+        mode == cheevo_view_achievements ? cheevo_game_entry_achievement : cheevo_game_entry_leaderboard;
     detail_definition.row_count = (int) cheevo_game_entries(type, detail_entries, DETAIL_CAP);
     if (mode == cheevo_view_achievements && detail_definition.row_count > 1)
         qsort(detail_entries, (size_t) detail_definition.row_count, sizeof(*detail_entries), detail_compare);
@@ -514,8 +504,8 @@ static void details_open(void) {
     current_detail_mode = cheevo_get_achievement_view();
     current_detail_sort = cheevo_get_achievement_sort();
     if (!detail_load(current_detail_mode)) {
-        current_detail_mode = current_detail_mode == cheevo_view_achievements ? cheevo_view_leaderboards
-                                                                              : cheevo_view_achievements;
+        current_detail_mode =
+            current_detail_mode == cheevo_view_achievements ? cheevo_view_leaderboards : cheevo_view_achievements;
         detail_load(current_detail_mode);
     }
     if (!detail_definition.row_count) {
@@ -612,9 +602,7 @@ static void ranking_closed(void) {
 }
 
 static void ranking_open(void) {
-    ranking_definition.row_count = (int) cheevo_leaderboard_ranks(
-        ranking_entries, RANKING_CAP, &ranking_total
-    );
+    ranking_definition.row_count = (int) cheevo_leaderboard_ranks(ranking_entries, RANKING_CAP, &ranking_total);
     if (!ranking_definition.row_count) {
         pause_menu_show_toast_timed(lang.muxretro.cheevo.leaderboard_empty, tst_wait_s);
         return;
@@ -638,14 +626,12 @@ static void ranking_open(void) {
     submenu_open(&rankings);
     nav_show_a(0, NULL);
     nav_show_lr(0);
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {NULL, NULL, 0}});
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
     char message[128];
     snprintf(
-        message, sizeof(message), lang.muxretro.cheevo.leaderboard_total,
-        (unsigned) ranking_definition.row_count, ranking_total
+        message, sizeof(message), lang.muxretro.cheevo.leaderboard_total, (unsigned) ranking_definition.row_count,
+        ranking_total
     );
     pause_menu_show_toast_timed(message, tst_wait_s);
 }
@@ -668,9 +654,7 @@ static void detail_action(const int index) {
         return;
     }
     pause_menu_show_toast_timed(
-        entry->description[0] ? entry->description
-                              : lang.muxretro.cheevo.achievement_default,
-        tst_wait_s
+        entry->description[0] ? entry->description : lang.muxretro.cheevo.achievement_default, tst_wait_s
     );
 }
 
@@ -698,12 +682,11 @@ static const char *detail_sort_name(void) {
 
 static void detail_switch_mode(void) {
     const cheevo_achievement_view previous_mode = current_detail_mode;
-    current_detail_mode = current_detail_mode == cheevo_view_achievements ? cheevo_view_leaderboards
-                                                                          : cheevo_view_achievements;
+    current_detail_mode =
+        current_detail_mode == cheevo_view_achievements ? cheevo_view_leaderboards : cheevo_view_achievements;
     if (!detail_load(current_detail_mode)) {
-        const char *message = current_detail_mode == cheevo_view_achievements
-                                  ? lang.muxretro.cheevo.no_achievements
-                                  : lang.muxretro.cheevo.no_leaderboards;
+        const char *message = current_detail_mode == cheevo_view_achievements ? lang.muxretro.cheevo.no_achievements
+                                                                              : lang.muxretro.cheevo.no_leaderboards;
         current_detail_mode = previous_mode;
         detail_load(current_detail_mode);
         pause_menu_show_toast_timed(message, tst_wait_s);
@@ -840,19 +823,19 @@ static int detail_child_tick(void) {
     detail_previous_mask = mask;
     if (nav_input_halted()) return detail_preview_mode;
 
-    if (!detail_preview_mode && (edge & BIT(6))) {
+    if (!detail_preview_mode && edge & BIT(6)) {
         play_sound(snd_option);
         detail_switch_mode();
         return 1;
     }
-    if (!detail_preview_mode && (edge & BIT(7)) && current_detail_mode == cheevo_view_achievements) {
+    if (!detail_preview_mode && edge & BIT(7) && current_detail_mode == cheevo_view_achievements) {
         play_sound(snd_option);
         detail_cycle_sort();
         return 1;
     }
 
     if (!detail_preview_mode) {
-        if (current_detail_mode == cheevo_view_achievements && !vertical && (edge & (BIT(2) | BIT(3)))) {
+        if (current_detail_mode == cheevo_view_achievements && !vertical && edge & (BIT(2) | BIT(3))) {
             play_sound(snd_option);
             details.prev_nav_mask = mask;
             detail_set_preview(1);
@@ -865,7 +848,7 @@ static int detail_child_tick(void) {
         detail_set_preview(0);
         return 0;
     }
-    if (!vertical && (edge & (BIT(2) | BIT(3)))) {
+    if (!vertical && edge & (BIT(2) | BIT(3))) {
         play_sound(snd_option);
         details.prev_nav_mask = mask;
         detail_set_preview(0);
@@ -923,6 +906,7 @@ static void settings_closed(void) {
 static submenu_def definition = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = row_cycle,
@@ -961,9 +945,7 @@ void cheevo_menu_init(void) {
     apply_theme_list_item(&theme, detail_preview_label, "");
     apply_theme_list_glyph(&theme, detail_preview_glyph, "muxretro", "trophy");
     apply_text_long_dot(&theme, detail_preview_label);
-    lv_obj_align(
-        detail_preview_panel, LV_ALIGN_TOP_MID, 0, theme.header.height + 2 + theme.misc.content.padding_top
-    );
+    lv_obj_align(detail_preview_panel, LV_ALIGN_TOP_MID, 0, theme.header.height + 2 + theme.misc.content.padding_top);
     lv_obj_move_foreground(detail_preview_panel);
     lv_obj_add_state(detail_preview_panel, LV_STATE_FOCUSED);
     lv_obj_add_state(detail_preview_label, LV_STATE_FOCUSED);

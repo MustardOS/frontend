@@ -23,6 +23,12 @@ static const char *row_glyphs[row_count] = {
     "rumble", "stickdeadzone", "stickantideadzone", "sticksensitivity", "stickinverty"
 };
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.controller.rumble, lang.muxretro.help.controller.stick_deadzone,
+    lang.muxretro.help.controller.stick_anti_deadzone, lang.muxretro.help.controller.stick_sensitivity,
+    lang.muxretro.help.controller.stick_invert_y
+};
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_rumble:
@@ -83,6 +89,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

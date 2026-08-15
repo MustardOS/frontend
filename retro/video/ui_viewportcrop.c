@@ -14,6 +14,12 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"croptop", "cropbottom", "cropleft", "cropright", "centrecrop"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.viewport.crop_top, lang.muxretro.help.viewport.crop_bottom,
+    lang.muxretro.help.viewport.crop_left, lang.muxretro.help.viewport.crop_right,
+    lang.muxretro.help.viewport.centre_crop
+};
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_crop_top:
@@ -74,6 +80,7 @@ static submenu self;
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,

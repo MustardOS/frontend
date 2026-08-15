@@ -9,6 +9,7 @@
 typedef struct {
     const char *const *labels;
     const char *const *glyphs;
+    const char *const *help;
 
     int row_count;
 

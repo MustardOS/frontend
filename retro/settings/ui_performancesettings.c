@@ -24,6 +24,12 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"performance", "fpslimit", "framedelay", "runahead", "hardsync", "info"};
 
+static const char *row_help[row_count] = {
+    lang.muxretro.help.performance.preset,        lang.muxretro.help.performance.fps_limit,
+    lang.muxretro.help.performance.frame_delay,   lang.muxretro.help.performance.run_ahead,
+    lang.muxretro.help.performance.gpu_hard_sync, lang.muxretro.help.performance.capture
+};
+
 enum { preset_recommended = 0, preset_low_latency, preset_stable, preset_count };
 
 static const struct {
@@ -140,6 +146,7 @@ static void closed(void) {
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help = row_help,
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,
