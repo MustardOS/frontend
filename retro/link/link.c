@@ -56,7 +56,8 @@ void link_set_focus(const int slot) {
     if (slot < 0 || slot > 1 || !link_local_active()) return;
 
     focus_slot = slot;
-    options_set("sameboy_audio_output", slot == 0 ? "Game Boy #1" : "Game Boy #2");
+    if (!options_set("sameboy_audio_output", slot == 0 ? "Game Boy #1" : "Game Boy #2"))
+        LOG_WARN(mux_module, "Core would not move its sound to Game Boy #%d", slot + 1);
     LOG_INFO(mux_module, "Game Link focus moved to Game Boy #%d", slot + 1);
 }
 
@@ -265,5 +266,6 @@ int link_align_port(void) {
 
 void link_reveal_settings(void) {
     const link_provider *p = active_provider();
-    if (p && p->reveal_key) options_set(p->reveal_key, "enabled");
+    if (p && p->reveal_key && !options_set(p->reveal_key, "enabled"))
+        LOG_WARN(mux_module, "Core would not reveal its link settings");
 }
