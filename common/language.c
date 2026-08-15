@@ -497,32 +497,6 @@ static const lang_field lang_fields[] = {
     {"muxcharge", LANG_OFF(muxcharge.start), lang_specific, "Press START button to continue booting..."},
     {"muxcharge", LANG_OFF(muxcharge.voltage), lang_specific, "Voltage"},
 
-    // muxchrony
-    {"muxchrony", LANG_OFF(muxchrony.title), lang_specific, "Time Sync Details"},
-    {"muxchrony", LANG_OFF(muxchrony.overview), lang_specific, "Reports how the device is keeping its clock in step with a time server, including the reference in use and how far the clock has drifted. This screen is read only."},
-    {"muxchrony", LANG_OFF(muxchrony.reference), lang_specific, "Reference"},
-    {"muxchrony", LANG_OFF(muxchrony.stratum), lang_specific, "Stratum"},
-    {"muxchrony", LANG_OFF(muxchrony.ref_time), lang_specific, "Reference Time"},
-    {"muxchrony", LANG_OFF(muxchrony.system_time), lang_specific, "System Offset"},
-    {"muxchrony", LANG_OFF(muxchrony.last_offset), lang_specific, "Last Offset"},
-    {"muxchrony", LANG_OFF(muxchrony.rms_offset), lang_specific, "RMS Offset"},
-    {"muxchrony", LANG_OFF(muxchrony.frequency), lang_specific, "Frequency"},
-    {"muxchrony", LANG_OFF(muxchrony.root_delay), lang_specific, "Root Delay"},
-    {"muxchrony", LANG_OFF(muxchrony.root_disp), lang_specific, "Root Dispersion"},
-    {"muxchrony", LANG_OFF(muxchrony.update_int), lang_specific, "Update Interval"},
-    {"muxchrony", LANG_OFF(muxchrony.leap), lang_specific, "Leap Status"},
-    {"muxchrony", LANG_OFF(muxchrony.help.reference), lang_specific, "The time server the device is currently taking its time from."},
-    {"muxchrony", LANG_OFF(muxchrony.help.stratum), lang_specific, "How many steps this device sits from a proper reference clock.\n\nLower is better, and one means it is talking straight to the source."},
-    {"muxchrony", LANG_OFF(muxchrony.help.ref_time), lang_specific, "When a good update was last received."},
-    {"muxchrony", LANG_OFF(muxchrony.help.system_time), lang_specific, "How far the device clock currently sits from network time."},
-    {"muxchrony", LANG_OFF(muxchrony.help.last_offset), lang_specific, "How far out the clock was found to be at the most recent check."},
-    {"muxchrony", LANG_OFF(muxchrony.help.rms_offset), lang_specific, "The average of how far out the clock has been over time.\n\nA small figure here means it is being held steady."},
-    {"muxchrony", LANG_OFF(muxchrony.help.frequency), lang_specific, "How fast or slow the clock would drift on its own, before any correction is applied."},
-    {"muxchrony", LANG_OFF(muxchrony.help.root_delay), lang_specific, "How long messages take to reach the reference clock and come back."},
-    {"muxchrony", LANG_OFF(muxchrony.help.root_disp), lang_specific, "The worst the error could be, allowing for everything between here and the reference clock."},
-    {"muxchrony", LANG_OFF(muxchrony.help.update_int), lang_specific, "How often the device checks the time."},
-    {"muxchrony", LANG_OFF(muxchrony.help.leap), lang_specific, "Whether the clock is currently in step, and whether a leap second is expected."},
-
     // muxdistemp
     {"muxdistemp", LANG_OFF(muxdistemp.title), lang_specific, "Colour Temperature"},
     {"muxdistemp", LANG_OFF(muxdistemp.overview), lang_specific, "Warms or cools the display colour on a schedule, so the screen can ease off blue light at night. Set the temperatures and the times they take effect."},
@@ -1083,7 +1057,6 @@ static const lang_field lang_fields[] = {
     {"muxinfo", LANG_OFF(muxinfo.screenshot), lang_specific, "Screenshots"},
     {"muxinfo", LANG_OFF(muxinfo.space), lang_specific, "Storage Space"},
     {"muxinfo", LANG_OFF(muxinfo.tester), lang_specific, "Input Tester"},
-    {"muxinfo", LANG_OFF(muxinfo.chrony), lang_specific, "Time Sync Details"},
     {"muxinfo", LANG_OFF(muxinfo.credit), lang_specific, "Supporters and Credits"},
     {"muxinfo", LANG_OFF(muxinfo.help.news), lang_specific, "Community news and announcements, fetched while you are online."},
     {"muxinfo", LANG_OFF(muxinfo.help.detail), lang_specific, "Everything about the device itself, its battery and its network connection, grouped into sections."},
@@ -1092,7 +1065,6 @@ static const lang_field lang_fields[] = {
     {"muxinfo", LANG_OFF(muxinfo.help.screenshot), lang_specific, "Every screenshot taken on this device, with the option to remove ones you no longer want."},
     {"muxinfo", LANG_OFF(muxinfo.help.space), lang_specific, "How much room is left on each mounted storage device."},
     {"muxinfo", LANG_OFF(muxinfo.help.tester), lang_specific, "Checks that every button and stick reports correctly.\n\nThe place to start if a control feels unresponsive."},
-    {"muxinfo", LANG_OFF(muxinfo.help.chrony), lang_specific, "How the device clock is being kept in step with network time."},
     {"muxinfo", LANG_OFF(muxinfo.help.credit), lang_specific, "The people who support MustardOS and everyone who has helped along the way."},
 
     // muxinstall

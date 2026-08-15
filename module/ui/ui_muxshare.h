@@ -309,7 +309,6 @@
     INFO(space, "space")                                                                                               \
     INFO(tester, "tester")                                                                                             \
     INFO(detail, "detail")                                                                                             \
-    INFO(chrony, "chrony")                                                                                             \
     INFO(credit, "credit")                                                                                             \
     INFO(reload, "reload")
 

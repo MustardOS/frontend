@@ -20,10 +20,6 @@ static int visible_network_opt(void) {
     return device.board.has_network;
 }
 
-static int visible_chrony_opt(void) {
-    return 0;
-}
-
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
@@ -35,7 +31,6 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, space, lang.muxinfo.space, "space", 0);
     INIT_STATIC_ITEM(-1, info, tester, lang.muxinfo.tester, "tester", 0);
     INIT_STATIC_ITEM(-1, info, detail, lang.muxinfo.detail, "detail", 0);
-    INIT_STATIC_ITEM(-1, info, chrony, lang.muxinfo.chrony, "chrony", 0);
     INIT_STATIC_ITEM(-1, info, credit, lang.muxinfo.credit, "credit", 0);
     INIT_STATIC_ITEM(-1, info, reload, lang.muxinfo.reload, "reload", 0);
 
@@ -43,9 +38,6 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
 
     if (!visible_network_opt()) HIDE_STATIC_ITEM(info, news);
-
-    // Hide until further notice or future development
-    HIDE_STATIC_ITEM(info, chrony);
 
     gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 1, 0, 1);
 }
@@ -75,7 +67,6 @@ static void handle_a(void) {
         {"space", menu_general, NULL},
         {"tester", menu_general, NULL},
         {"detail", menu_general, NULL},
-        {"chrony", menu_general, visible_chrony_opt},
         {"credits", menu_credits, NULL},
         {"reload", menu_reload, NULL},
     };

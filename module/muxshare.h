@@ -258,8 +258,6 @@ int muxbtcon_main();
 
 int muxbtdev_main();
 
-int muxchrony_main();
-
 void muxcolfilter_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxcollect_main(int add, const char *dir, int last_index);

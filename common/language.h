@@ -407,35 +407,6 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char reference[MAX_BUFFER_SIZE];
-        char stratum[MAX_BUFFER_SIZE];
-        char ref_time[MAX_BUFFER_SIZE];
-        char system_time[MAX_BUFFER_SIZE];
-        char last_offset[MAX_BUFFER_SIZE];
-        char rms_offset[MAX_BUFFER_SIZE];
-        char frequency[MAX_BUFFER_SIZE];
-        char root_delay[MAX_BUFFER_SIZE];
-        char root_disp[MAX_BUFFER_SIZE];
-        char update_int[MAX_BUFFER_SIZE];
-        char leap[MAX_BUFFER_SIZE];
-        struct {
-            char reference[MAX_BUFFER_SIZE];
-            char stratum[MAX_BUFFER_SIZE];
-            char ref_time[MAX_BUFFER_SIZE];
-            char system_time[MAX_BUFFER_SIZE];
-            char last_offset[MAX_BUFFER_SIZE];
-            char rms_offset[MAX_BUFFER_SIZE];
-            char frequency[MAX_BUFFER_SIZE];
-            char root_delay[MAX_BUFFER_SIZE];
-            char root_disp[MAX_BUFFER_SIZE];
-            char update_int[MAX_BUFFER_SIZE];
-            char leap[MAX_BUFFER_SIZE];
-        } help;
-    } muxchrony;
-
-    struct {
-        char title[MAX_BUFFER_SIZE];
-        char overview[MAX_BUFFER_SIZE];
         char schedule[MAX_BUFFER_SIZE];
         char sunrise_temp[MAX_BUFFER_SIZE];
         char sunset_temp[MAX_BUFFER_SIZE];
@@ -1111,7 +1082,6 @@ struct mux_lang {
         char screenshot[MAX_BUFFER_SIZE];
         char space[MAX_BUFFER_SIZE];
         char tester[MAX_BUFFER_SIZE];
-        char chrony[MAX_BUFFER_SIZE];
         char credit[MAX_BUFFER_SIZE];
         char reload[MAX_BUFFER_SIZE];
         char reload_run[MAX_BUFFER_SIZE];
@@ -1122,7 +1092,6 @@ struct mux_lang {
             char screenshot[MAX_BUFFER_SIZE];
             char space[MAX_BUFFER_SIZE];
             char tester[MAX_BUFFER_SIZE];
-            char chrony[MAX_BUFFER_SIZE];
             char credit[MAX_BUFFER_SIZE];
             char reload[MAX_BUFFER_SIZE];
         } help;

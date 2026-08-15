@@ -615,7 +615,6 @@ static const module_entry modules[] = {
     {"themefilter", "themedwn", "muxthemefilter", muxthemefilter_main, NULL},
     {"tester", "info", "muxtester", muxtester_main, NULL},
     {"detail", "info", "muxdetail", muxdetail_main, NULL},
-    {"chrony", "info", "muxchrony", muxchrony_main, NULL},
     {"text", "info", "muxtext", muxtext_main, NULL},
 
     // these are custom entries specifically for the first time installer
