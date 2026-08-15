@@ -13,6 +13,13 @@ static void hide_save_dialog(void) {
 
 #define TWEAKGEN(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(TWEAKGEN_ELEMENTS) };
+
+enum {
+    tweakgen_off_options = 0,
+    tweakgen_len_options = E_SIZE(TWEAKGEN_OPTIONS_ELEMENTS),
+    tweakgen_off_submenu = tweakgen_off_options + tweakgen_len_options,
+    tweakgen_len_submenu = E_SIZE(TWEAKGEN_SUBMENU_ELEMENTS),
+};
 #undef TWEAKGEN
 
 #define TWEAKGEN(NAME, UDATA) static int NAME##_original;
@@ -410,8 +417,8 @@ static void init_navigation_group(void) {
     }
 
     static const list_frame frames[] = {
-        {lang.muxtweakgen.section.options, 0, 6},
-        {lang.muxtweakgen.section.submenu, 6, 7},
+        {lang.muxtweakgen.section.options, tweakgen_off_options, tweakgen_len_options},
+        {lang.muxtweakgen.section.submenu, tweakgen_off_submenu, tweakgen_len_submenu},
     };
 
     list_frame_init(

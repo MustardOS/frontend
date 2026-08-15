@@ -6,6 +6,24 @@
 
 #define DETAIL(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(DETAIL_ELEMENTS) };
+
+// section offsets follow the element lists so the numbers cannot drift
+enum {
+    detail_off_system = 0,
+    detail_len_system = E_SIZE(DETAIL_SYSTEM_ELEMENTS),
+    detail_off_runtime = detail_off_system + detail_len_system,
+    detail_len_runtime = E_SIZE(DETAIL_RUNTIME_ELEMENTS),
+    detail_off_processor = detail_off_runtime + detail_len_runtime,
+    detail_len_processor = E_SIZE(DETAIL_PROCESSOR_ELEMENTS),
+    detail_off_battery = detail_off_processor + detail_len_processor,
+    detail_len_battery = E_SIZE(DETAIL_BATTERY_ELEMENTS),
+    detail_off_power = detail_off_battery + detail_len_battery,
+    detail_len_power = E_SIZE(DETAIL_POWER_ELEMENTS),
+    detail_off_network = detail_off_power + detail_len_power,
+    detail_len_network = E_SIZE(DETAIL_NETWORK_ELEMENTS),
+    detail_off_traffic = detail_off_network + detail_len_network,
+    detail_len_traffic = E_SIZE(DETAIL_TRAFFIC_ELEMENTS),
+};
 #undef DETAIL
 
 #define UI_BUFFER 128
@@ -1051,17 +1069,17 @@ static void init_navigation_group(void) {
     list_frame frames[7];
     int frame_count = 0;
 
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.system, 0, 7};
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.runtime, 7, 7};
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.processor, 14, 5};
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.battery, 19, 6};
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.power, 25, 3};
+    frames[frame_count++] = (list_frame) {lang.muxdetail.section.system, detail_off_system, detail_len_system};
+    frames[frame_count++] = (list_frame) {lang.muxdetail.section.runtime, detail_off_runtime, detail_len_runtime};
+    frames[frame_count++] = (list_frame) {lang.muxdetail.section.processor, detail_off_processor, detail_len_processor};
+    frames[frame_count++] = (list_frame) {lang.muxdetail.section.battery, detail_off_battery, detail_len_battery};
+    frames[frame_count++] = (list_frame) {lang.muxdetail.section.power, detail_off_power, detail_len_power};
 
     if (device.board.has_network) {
-        frames[frame_count++] = (list_frame) {lang.muxdetail.section.network, 28, 7};
-        frames[frame_count++] = (list_frame) {lang.muxdetail.section.traffic, 35, 3};
+        frames[frame_count++] = (list_frame) {lang.muxdetail.section.network, detail_off_network, detail_len_network};
+        frames[frame_count++] = (list_frame) {lang.muxdetail.section.traffic, detail_off_traffic, detail_len_traffic};
     } else {
-        for (int i = 28; i < ui_count_dynamic; i++)
+        for (int i = detail_off_network; i < ui_count_dynamic; i++)
             lv_obj_add_flag(ui_objects_panel[i], LV_OBJ_FLAG_HIDDEN);
     }
 

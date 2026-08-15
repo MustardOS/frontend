@@ -7,6 +7,25 @@ static mux_dialogue save_dlg;
 
 #define TWEAKADV(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(TWEAKADV_ELEMENTS) };
+
+enum {
+    tweakadv_off_input = 0,
+    tweakadv_len_input = E_SIZE(TWEAKADV_INPUT_ELEMENTS),
+    tweakadv_off_display = tweakadv_off_input + tweakadv_len_input,
+    tweakadv_len_display = E_SIZE(TWEAKADV_DISPLAY_ELEMENTS),
+    tweakadv_off_audio = tweakadv_off_display + tweakadv_len_display,
+    tweakadv_len_audio = E_SIZE(TWEAKADV_AUDIO_ELEMENTS),
+    tweakadv_off_performance = tweakadv_off_audio + tweakadv_len_audio,
+    tweakadv_len_performance = E_SIZE(TWEAKADV_PERFORMANCE_ELEMENTS),
+    tweakadv_off_storage = tweakadv_off_performance + tweakadv_len_performance,
+    tweakadv_len_storage = E_SIZE(TWEAKADV_STORAGE_ELEMENTS),
+    tweakadv_off_retroarch = tweakadv_off_storage + tweakadv_len_storage,
+    tweakadv_len_retroarch = E_SIZE(TWEAKADV_RETROARCH_ELEMENTS),
+    tweakadv_off_system = tweakadv_off_retroarch + tweakadv_len_retroarch,
+    tweakadv_len_system = E_SIZE(TWEAKADV_SYSTEM_ELEMENTS),
+    tweakadv_off_confirmations = tweakadv_off_system + tweakadv_len_system,
+    tweakadv_len_confirmations = E_SIZE(TWEAKADV_CONFIRMATIONS_ELEMENTS),
+};
 #undef TWEAKADV
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
@@ -79,6 +98,7 @@ static void normalise_overdrive(const int overdrive_old, const int overdrive_new
 
 static void save_tweak_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(tweakadv, stick_nav, "settings/advanced/sticknav", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, volume, "settings/advanced/volume", INT, 0);
@@ -96,7 +116,7 @@ static void save_tweak_options(void) {
         const int debuglog_current = lv_dropdown_get_selected(ui_dro_debug_log_tweakadv);
         if (debuglog_current != debug_log_original) {
             is_modified++;
-            write_text_to_file(DEBUG_FILE, "w", INT, debuglog_current);
+            if (!write_text_to_file(DEBUG_FILE, "w", INT, debuglog_current)) save_failed++;
             nop_debug_mode();
         }
     } while (0);
@@ -117,9 +137,10 @@ static void save_tweak_options(void) {
         const int bt_scan_current = lv_dropdown_get_selected(ui_dro_bt_scan_timeout_tweakadv);
         if (bt_scan_current != bt_scan_timeout_original) {
             is_modified++;
-            write_text_to_file(
-                CONF_CONFIG_PATH "settings/advanced/bt_scan_timeout", "w", INT, (bt_scan_current + 1) * 5
-            );
+            if (!write_text_to_file(
+                    CONF_CONFIG_PATH "settings/advanced/bt_scan_timeout", "w", INT, (bt_scan_current + 1) * 5
+                ))
+                save_failed++;
         }
     } while (0);
 
@@ -139,7 +160,8 @@ static void save_tweak_options(void) {
         const int overdrive_current = lv_dropdown_get_selected(ui_dro_overdrive_tweakadv);
         if (overdrive_current != overdrive_original) {
             is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/overdrive", "w", INT, overdrive_current);
+            if (!write_text_to_file(CONF_CONFIG_PATH "settings/advanced/overdrive", "w", INT, overdrive_current))
+                save_failed++;
             normalise_overdrive(overdrive_original, overdrive_current);
         }
     } while (0);
@@ -150,6 +172,8 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_MAP(tweakadv, zramfile, "settings/advanced/zramfile", swap_values, 11, 0);
 
     if (is_modified > 0) run_tweak_script(lang.generic.saving);
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {
@@ -276,10 +300,14 @@ static void init_navigation_group(void) {
     }
 
     static const list_frame frames[] = {
-        {lang.muxtweakadv.section.input, 0, 4},    {lang.muxtweakadv.section.display, 4, 6},
-        {lang.muxtweakadv.section.audio, 10, 6},   {lang.muxtweakadv.section.performance, 16, 5},
-        {lang.muxtweakadv.section.storage, 21, 3}, {lang.muxtweakadv.section.retroarch, 24, 3},
-        {lang.muxtweakadv.section.system, 27, 9},  {lang.muxtweakadv.section.confirmations, 36, 3},
+        {lang.muxtweakadv.section.input, tweakadv_off_input, tweakadv_len_input},
+        {lang.muxtweakadv.section.display, tweakadv_off_display, tweakadv_len_display},
+        {lang.muxtweakadv.section.audio, tweakadv_off_audio, tweakadv_len_audio},
+        {lang.muxtweakadv.section.performance, tweakadv_off_performance, tweakadv_len_performance},
+        {lang.muxtweakadv.section.storage, tweakadv_off_storage, tweakadv_len_storage},
+        {lang.muxtweakadv.section.retroarch, tweakadv_off_retroarch, tweakadv_len_retroarch},
+        {lang.muxtweakadv.section.system, tweakadv_off_system, tweakadv_len_system},
+        {lang.muxtweakadv.section.confirmations, tweakadv_off_confirmations, tweakadv_len_confirmations},
     };
 
     list_frame_init(
@@ -310,7 +338,8 @@ static void handle_frame_next(void) {
 }
 
 static void handle_option_prev(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || block_input) return;
+
     if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, -1);
@@ -332,7 +361,8 @@ static void handle_option_prev(void) {
 }
 
 static void handle_option_next(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || block_input) return;
+
     if (dialogue_active(&save_dlg)) {
         if (swap_axis) {
             dialogue_navigate(&save_dlg, &theme, +1);

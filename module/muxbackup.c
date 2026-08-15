@@ -6,7 +6,18 @@
 #include "../common/ui/task_progress.h"
 
 #define BACKUP(NAME, UDATA) 1,
-enum { ui_count_dynamic = E_SIZE(BACKUP_ELEMENTS), storage_count = ui_count_dynamic - 3 };
+enum { ui_count_dynamic = E_SIZE(BACKUP_ELEMENTS), storage_count = ui_count_dynamic - E_SIZE(BACKUP_ACTION_ELEMENTS) };
+
+enum {
+    backup_off_content = 0,
+    backup_len_content = E_SIZE(BACKUP_CONTENT_ELEMENTS),
+    backup_off_system = backup_off_content + backup_len_content,
+    backup_len_system = E_SIZE(BACKUP_SYSTEM_ELEMENTS),
+    backup_off_custom = backup_off_system + backup_len_system,
+    backup_len_custom = E_SIZE(BACKUP_CUSTOM_ELEMENTS),
+    backup_off_action = backup_off_custom + backup_len_custom,
+    backup_len_action = E_SIZE(BACKUP_ACTION_ELEMENTS),
+};
 #undef BACKUP
 
 #define BACKUP(NAME, UDATA) static int NAME##_original;
@@ -56,6 +67,7 @@ static void restore_backup_options(void) {
 
 static void save_backup_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
 #define BACKUP(NAME, UDATA) CHECK_AND_SAVE_STD(backup, NAME, "backup/" UDATA, INT, 0);
     BACKUP_ELEMENTS
@@ -65,6 +77,8 @@ static void save_backup_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static lv_obj_t *ui_objects[ui_count_dynamic];
@@ -121,10 +135,10 @@ static void init_navigation_group(void) {
 
     reset_ui_groups();
     static const list_frame frames[] = {
-        {lang.muxbackup.section.content, 0, 8},
-        {lang.muxbackup.section.system, 8, 7},
-        {lang.muxbackup.section.custom, 15, 6},
-        {lang.muxbackup.section.action, 21, 3},
+        {lang.muxbackup.section.content, backup_off_content, backup_len_content},
+        {lang.muxbackup.section.system, backup_off_system, backup_len_system},
+        {lang.muxbackup.section.custom, backup_off_custom, backup_len_custom},
+        {lang.muxbackup.section.action, backup_off_action, backup_len_action},
     };
 
     list_frame_init(

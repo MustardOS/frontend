@@ -64,7 +64,7 @@
     APPCON(governor, "governor")                                                                                       \
     APPCON(control, "control")
 
-#define BACKUP_ELEMENTS                                                                                                \
+#define BACKUP_CONTENT_ELEMENTS                                                                                        \
     BACKUP(content, "content")                                                                                         \
     BACKUP(collection, "collection")                                                                                   \
     BACKUP(history, "history")                                                                                         \
@@ -72,23 +72,35 @@
     BACKUP(name, "name")                                                                                               \
     BACKUP(save, "save")                                                                                               \
     BACKUP(screenshot, "screenshot")                                                                                   \
-    BACKUP(track, "track")                                                                                             \
+    BACKUP(track, "track")
+
+#define BACKUP_SYSTEM_ELEMENTS                                                                                         \
     BACKUP(apps, "application")                                                                                        \
     BACKUP(bios, "bios")                                                                                               \
     BACKUP(config, "config")                                                                                           \
     BACKUP(init, "init")                                                                                               \
     BACKUP(network, "network")                                                                                         \
     BACKUP(syncthing, "syncthing")                                                                                     \
-    BACKUP(package, "package")                                                                                         \
+    BACKUP(package, "package")
+
+#define BACKUP_CUSTOM_ELEMENTS                                                                                         \
     BACKUP(theme, "theme")                                                                                             \
     BACKUP(music, "music")                                                                                             \
     BACKUP(overlays, "overlays")                                                                                       \
     BACKUP(shaders, "shaders")                                                                                         \
     BACKUP(override, "override")                                                                                       \
-    BACKUP(cheats, "cheats")                                                                                           \
+    BACKUP(cheats, "cheats")
+
+#define BACKUP_ACTION_ELEMENTS                                                                                         \
     BACKUP(target, "target")                                                                                           \
     BACKUP(merge, "merge")                                                                                             \
     BACKUP(start, "start")
+
+#define BACKUP_ELEMENTS                                                                                                \
+    BACKUP_CONTENT_ELEMENTS                                                                                            \
+    BACKUP_SYSTEM_ELEMENTS                                                                                             \
+    BACKUP_CUSTOM_ELEMENTS                                                                                             \
+    BACKUP_ACTION_ELEMENTS
 
 #define DETAIL_SYSTEM_ELEMENTS                                                                                         \
     DETAIL(version, "version")                                                                                         \
@@ -515,34 +527,46 @@
     THEMEFILTER(hdmi, "hdmi")                                                                                          \
     THEMEFILTER(language, "language")
 
-#define TWEAKADV_ELEMENTS                                                                                              \
+#define TWEAKADV_INPUT_ELEMENTS                                                                                        \
     TWEAKADV(accelerate, "accelerate")                                                                                 \
     TWEAKADV(repeat_delay, "repeat")                                                                                   \
     TWEAKADV(stick_nav, "sticknav")                                                                                    \
-    TWEAKADV(dpad_swap, "dpadswap")                                                                                    \
+    TWEAKADV(dpad_swap, "dpadswap")
+
+#define TWEAKADV_DISPLAY_ELEMENTS                                                                                      \
     TWEAKADV(brightness, "brightness")                                                                                 \
     TWEAKADV(inc_bright, "incbright")                                                                                  \
     TWEAKADV(disp_suspend, "dispsuspend")                                                                              \
     TWEAKADV(lid_switch, "lidswitch")                                                                                  \
     TWEAKADV(stage_overlay, "stageoverlay")                                                                            \
-    TWEAKADV(box_art_pad_div, "boxartpaddiv")                                                                          \
+    TWEAKADV(box_art_pad_div, "boxartpaddiv")
+
+#define TWEAKADV_AUDIO_ELEMENTS                                                                                        \
     TWEAKADV(volume, "volume")                                                                                         \
     TWEAKADV(inc_volume, "incvolume")                                                                                  \
     TWEAKADV(audio_ready, "audioready")                                                                                \
     TWEAKADV(audio_swap, "audioswap")                                                                                  \
     TWEAKADV(audio_suspend, "audiosuspend")                                                                            \
-    TWEAKADV(overdrive, "overdrive")                                                                                   \
+    TWEAKADV(overdrive, "overdrive")
+
+#define TWEAKADV_PERFORMANCE_ELEMENTS                                                                                  \
     TWEAKADV(thermal, "thermal")                                                                                       \
     TWEAKADV(max_gpu, "maxgpu")                                                                                        \
     TWEAKADV(double_buffer, "doublebuffer")                                                                            \
     TWEAKADV(swapfile, "swapfile")                                                                                     \
-    TWEAKADV(zramfile, "zramfile")                                                                                     \
+    TWEAKADV(zramfile, "zramfile")
+
+#define TWEAKADV_STORAGE_ELEMENTS                                                                                      \
     TWEAKADV(second_part, "secondpart")                                                                                \
     TWEAKADV(usb_part, "usbpart")                                                                                      \
-    TWEAKADV(usb_function, "usbfunction")                                                                              \
+    TWEAKADV(usb_function, "usbfunction")
+
+#define TWEAKADV_RETROARCH_ELEMENTS                                                                                    \
     TWEAKADV(retro_wait, "retrowait")                                                                                  \
     TWEAKADV(retro_free, "retrofree")                                                                                  \
-    TWEAKADV(retro_cache, "retrocache")                                                                                \
+    TWEAKADV(retro_cache, "retrocache")
+
+#define TWEAKADV_SYSTEM_ELEMENTS                                                                                       \
     TWEAKADV(led, "led")                                                                                               \
     TWEAKADV(rumble, "rumble")                                                                                         \
     TWEAKADV(random_theme, "randomtheme")                                                                              \
@@ -551,18 +575,32 @@
     TWEAKADV(debug_log, "debuglog")                                                                                    \
     TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
-    TWEAKADV(remember_section, "remembersection")                                                                      \
+    TWEAKADV(remember_section, "remembersection")
+
+#define TWEAKADV_CONFIRMATIONS_ELEMENTS                                                                                \
     TWEAKADV(trust_modify, "trustmodify")                                                                              \
     TWEAKADV(trust_power, "trustpower")                                                                                \
     TWEAKADV(trust_remove, "trustremove")
 
-#define TWEAKGEN_ELEMENTS                                                                                              \
+#define TWEAKADV_ELEMENTS                                                                                              \
+    TWEAKADV_INPUT_ELEMENTS                                                                                            \
+    TWEAKADV_DISPLAY_ELEMENTS                                                                                          \
+    TWEAKADV_AUDIO_ELEMENTS                                                                                            \
+    TWEAKADV_PERFORMANCE_ELEMENTS                                                                                      \
+    TWEAKADV_STORAGE_ELEMENTS                                                                                          \
+    TWEAKADV_RETROARCH_ELEMENTS                                                                                        \
+    TWEAKADV_SYSTEM_ELEMENTS                                                                                           \
+    TWEAKADV_CONFIRMATIONS_ELEMENTS
+
+#define TWEAKGEN_OPTIONS_ELEMENTS                                                                                      \
     TWEAKGEN(brightness, "brightness")                                                                                 \
     TWEAKGEN(volume, "volume")                                                                                         \
     TWEAKGEN(audio_sink, "audiosink")                                                                                  \
     TWEAKGEN(hk_dpad, "hkdpad")                                                                                        \
     TWEAKGEN(hk_shot, "hkshot")                                                                                        \
-    TWEAKGEN(startup, "startup")                                                                                       \
+    TWEAKGEN(startup, "startup")
+
+#define TWEAKGEN_SUBMENU_ELEMENTS                                                                                      \
     TWEAKGEN(rtc, "clock")                                                                                             \
     TWEAKGEN(language, "language")                                                                                     \
     TWEAKGEN(hdmi, "hdmi")                                                                                             \
@@ -570,6 +608,10 @@
     TWEAKGEN(input_remap, "inputremap")                                                                                \
     TWEAKGEN(pass_code, "lock")                                                                                        \
     TWEAKGEN(display_temp, "displaytemp")
+
+#define TWEAKGEN_ELEMENTS                                                                                              \
+    TWEAKGEN_OPTIONS_ELEMENTS                                                                                          \
+    TWEAKGEN_SUBMENU_ELEMENTS
 
 #define VISUAL_CONFIG_ELEMENTS                                                                                         \
     VISUAL(battery, "battery")                                                                                         \

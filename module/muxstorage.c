@@ -11,6 +11,17 @@ enum {
     bulk_count = E_SIZE(STORAGE_BULK_ELEMENTS),
     storage_count = ui_count_dynamic - bulk_count
 };
+
+enum {
+    storage_off_content = 0,
+    storage_len_content = E_SIZE(STORAGE_CONTENT_ELEMENTS),
+    storage_off_system = storage_off_content + storage_len_content,
+    storage_len_system = E_SIZE(STORAGE_SYSTEM_ELEMENTS),
+    storage_off_custom = storage_off_system + storage_len_system,
+    storage_len_custom = E_SIZE(STORAGE_CUSTOM_ELEMENTS),
+    storage_off_bulk = storage_off_custom + storage_len_custom,
+    storage_len_bulk = E_SIZE(STORAGE_BULK_ELEMENTS),
+};
 #undef STORAGE
 
 typedef enum { bulk_migrate = 0, bulk_sync, bulk_purge } bulk_act;
@@ -125,10 +136,10 @@ static void init_navigation_group(void) {
     reset_ui_groups();
 
     static const list_frame frames[] = {
-        {lang.muxstorage.section.content, 0, 7},
-        {lang.muxstorage.section.system, 7, 4},
-        {lang.muxstorage.section.custom, 11, 4},
-        {lang.muxstorage.section.action, 15, 3},
+        {lang.muxstorage.section.content, storage_off_content, storage_len_content},
+        {lang.muxstorage.section.system, storage_off_system, storage_len_system},
+        {lang.muxstorage.section.custom, storage_off_custom, storage_len_custom},
+        {lang.muxstorage.section.action, storage_off_bulk, storage_len_bulk},
     };
 
     list_frame_init(
