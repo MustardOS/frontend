@@ -18,7 +18,8 @@ INCLUDES := -I../module -I../module/ui -I../common \
             -I../common/input -I../common/mini -Icore \
             -Icheevo/vendor/rcheevos/include -Icheevo/vendor/rcheevos/src/rcheevos
 
-SRC := $(wildcard coredef/*.c) core/main.c core/startup.c core/core.c core/environment.c core/runahead.c core/perf.c \
+SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
+       core/main.c core/startup.c core/core.c core/environment.c core/runahead.c core/perf.c \
        core/governor_boost.c core/power.c core/power_protocol.c \
        video/video.c video/gl_dispatch.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_viewport.c \

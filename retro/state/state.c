@@ -9,22 +9,20 @@
 #include "../../common/language.h"
 #include "../../common/log.h"
 #include "../../common/options.h"
-#include "../../common/strutil.h"
 #include "../../common/ui/nav.h"
 #include "../core/core.h"
 #include "../core/governor_boost.h"
 #include "../core/perf.h"
 #include "../core/muxretro.h"
 #include "../core/runahead.h"
+#include "../coreinfo/coreinfo.h"
 #include "../cheevo/cheevo.h"
 #include "../video/hw_render.h"
 #include "../ui/ui_loading.h"
 
-#define CORE_INFO_PATH     OPT_SHARE_PATH "emulator/retroarch/info/"
 #define STATE_HEADER_SIZE  32U
 #define STATE_VERSION      1U
 #define STATE_FLAG_CHEEVO  1U
-#define STATE_CORE_LIMIT   (512U * 1024U * 1024U)
 #define STATE_CHEEVO_LIMIT (16U * 1024U * 1024U)
 
 static void state_write_u16(uint8_t *data, const uint16_t value) {
@@ -91,48 +89,17 @@ static int atomic_write_state(const char *path, const void *data, const size_t s
 
 static int saves_supported = 1;
 static int saves_warmup_frames = 0;
+
+static void quarantine_saves(const char *reason) {
+    if (!saves_supported) return;
+    saves_supported = 0;
+    LOG_ERROR(mux_module, "Save states disabled for this session: %s", reason);
+}
+
 void state_saves_init(const char *core_file_path) {
-    saves_supported = 1;
-    saves_warmup_frames = 0;
-
-    const char *base = strrchr(core_file_path, '/');
-    base = base ? base + 1 : core_file_path;
-
-    char core_name[128];
-    snprintf(core_name, sizeof(core_name), "%s", base);
-    char *ext = strstr(core_name, ".so");
-    if (ext) *ext = '\0';
-
-    char info_path[MAX_BUFFER_SIZE];
-    snprintf(info_path, sizeof(info_path), "%s%s.info", CORE_INFO_PATH, core_name);
-
-    FILE *f = fopen(info_path, "r");
-    if (!f) return;
-
-    char line[256];
-    while (fgets(line, sizeof(line), f)) {
-        char *eq = strchr(line, '=');
-        if (!eq) continue;
-        *eq = '\0';
-
-        const char *key = str_trim(line);
-        char *val = str_trim(eq + 1);
-        const size_t vlen = strlen(val);
-        if (vlen >= 2 && val[0] == '"' && val[vlen - 1] == '"') {
-            val[vlen - 1] = '\0';
-            val++;
-        }
-
-        if (strcmp(key, "savestate_support") == 0 && strcmp(val, "disabled") == 0) {
-            saves_supported = 0;
-            LOG_INFO(mux_module, "Save states disabled for this core (savestate_support=disabled in %s)", info_path);
-        } else if (strcmp(key, "savestate_warmup_frames") == 0) {
-            char *end = NULL;
-            const long frames = strtol(val, &end, 10);
-            if (end != val && frames >= 0 && frames <= 600) saves_warmup_frames = (int) frames;
-        }
-    }
-    fclose(f);
+    coreinfo_init(core_file_path);
+    saves_supported = coreinfo_feature_enabled(coreinfo_feature_save_states);
+    saves_warmup_frames = coreinfo_state_warmup_frames();
 }
 
 int state_saves_supported(void) {
@@ -152,47 +119,64 @@ int state_save(const char *path) {
 
     hw_render_bridge_enter_core_call();
 
+    const size_t state_limit = coreinfo_state_max_bytes();
     size_t core_size = current_core.retro_serialize_size();
-    if (core_size == 0 || core_size > STATE_CORE_LIMIT) {
+    if (core_size == 0 || core_size > state_limit || core_size > UINT32_MAX) {
         hw_render_bridge_exit_core_call();
         governor_boost_end();
+        quarantine_saves(core_size == 0 ? "core reported an empty state" : "core state exceeds the safe limit");
         return -1;
     }
 
     LOG_DEBUG(mux_module, "state_save: serialise_size=%zu", core_size);
 
-    static size_t alloc_high_water = 0;
-    size_t alloc = core_size * 2 + (1 << 20);
-
-    const size_t alloc_ceiling = alloc * 2;
-    if (alloc < alloc_high_water) alloc = alloc_high_water < alloc_ceiling ? alloc_high_water : alloc_ceiling;
-    alloc_high_water = alloc;
-
     size_t cheevo_size = cheevo_progress_size();
     if (cheevo_size > STATE_CHEEVO_LIMIT) cheevo_size = 0;
 
-    uint8_t *buf = malloc(STATE_HEADER_SIZE + alloc + cheevo_size);
-    if (!buf) {
+    if (core_size > SIZE_MAX - STATE_HEADER_SIZE || cheevo_size > SIZE_MAX - STATE_HEADER_SIZE - core_size) {
         hw_render_bridge_exit_core_call();
         governor_boost_end();
+        LOG_ERROR(mux_module, "Save-state allocation size overflow");
         return -1;
     }
 
-    int ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, alloc);
+    size_t allocation_size = STATE_HEADER_SIZE + core_size + cheevo_size;
+    uint8_t *buf = malloc(allocation_size);
+    if (!buf) {
+        hw_render_bridge_exit_core_call();
+        governor_boost_end();
+        LOG_ERROR(mux_module, "Could not allocate %zu bytes for save state", allocation_size);
+        return -1;
+    }
+
+    int ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, core_size);
 
     if (!ok) {
         const size_t regrown = current_core.retro_serialize_size();
-        if (regrown > 0 && regrown != core_size && regrown <= alloc) {
+        if (regrown > 0 && regrown != core_size && regrown <= state_limit && regrown <= UINT32_MAX
+            && regrown <= SIZE_MAX - STATE_HEADER_SIZE
+            && cheevo_size <= SIZE_MAX - STATE_HEADER_SIZE - regrown) {
+            allocation_size = STATE_HEADER_SIZE + regrown + cheevo_size;
+            uint8_t *resized = realloc(buf, allocation_size);
+            if (!resized) {
+                hw_render_bridge_exit_core_call();
+                free(buf);
+                governor_boost_end();
+                LOG_ERROR(mux_module, "Could not resize save-state allocation to %zu bytes", allocation_size);
+                return -1;
+            }
+            buf = resized;
             core_size = regrown;
-            ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, alloc);
+            LOG_WARN(mux_module, "Core changed its state size before capture; retrying with %zu bytes", core_size);
+            ok = current_core.retro_serialize(buf + STATE_HEADER_SIZE, core_size);
         }
     }
 
-    if (ok && current_core.retro_serialize_size) {
+    if (ok) {
         const size_t settled = current_core.retro_serialize_size();
-        if (settled > core_size && settled <= alloc) {
-            LOG_WARN(mux_module, "Core under-reported its state size, %zu became %zu", core_size, settled);
-            core_size = settled;
+        if (settled != core_size) {
+            LOG_ERROR(mux_module, "Core state size changed during capture, %zu became %zu", core_size, settled);
+            ok = 0;
         }
     }
 
@@ -202,6 +186,7 @@ int state_save(const char *path) {
         LOG_ERROR(mux_module, "Core failed to serialise state");
         free(buf);
         governor_boost_end();
+        quarantine_saves("core serialisation was unstable");
         return -1;
     }
 
@@ -257,7 +242,8 @@ int state_load(const char *path, const int show_message) {
     const long size = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    if (size <= 0 || (uint64_t) size > STATE_HEADER_SIZE + STATE_CORE_LIMIT + STATE_CHEEVO_LIMIT) {
+    const size_t state_limit = coreinfo_state_max_bytes();
+    if (size <= 0 || (uint64_t) size > STATE_HEADER_SIZE + (uint64_t) state_limit + STATE_CHEEVO_LIMIT) {
         fclose(f);
         governor_boost_end();
         loading_message_hide();
@@ -298,7 +284,7 @@ int state_load(const char *path, const int show_message) {
         const uint64_t declared_total = STATE_HEADER_SIZE + (uint64_t) declared_core + declared_cheevo;
 
         if (version != STATE_VERSION || (flags & ~STATE_FLAG_CHEEVO) != 0 || declared_core == 0
-            || declared_core > STATE_CORE_LIMIT || declared_cheevo > STATE_CHEEVO_LIMIT
+            || declared_core > state_limit || declared_cheevo > STATE_CHEEVO_LIMIT
             || declared_total != (uint64_t) size || ((flags & STATE_FLAG_CHEEVO) == 0) != (declared_cheevo == 0)
             || state_read_u32(buf + 16) != crc32(0, buf + STATE_HEADER_SIZE, declared_core)
             || (declared_cheevo

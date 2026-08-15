@@ -26,6 +26,7 @@
 #include "../core/muxretro.h"
 #include "../core/core.h"
 #include "../core/perf.h"
+#include "../coreinfo/coreinfo.h"
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
@@ -85,7 +86,10 @@ static void compute_row_indices(void) {
     int i = 0;
     row_resume = i++;
     row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
-    row_netplay = device.board.has_network ? i++ : -1;
+    row_netplay = device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay)
+                          && state_saves_supported()
+                      ? i++
+                      : -1;
     row_cheevo = device.board.has_network && cheevo_is_configured() ? i++ : -1;
     row_game_link = link_is_supported() && !netplay_is_active() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;

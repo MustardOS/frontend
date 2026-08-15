@@ -4,6 +4,7 @@
 #include "../../common/log.h"
 #include "../input/hotkeys.h"
 #include "../input/rumble.h"
+#include "../coreinfo/coreinfo.h"
 #include "../settings/settings.h"
 #include "../video/hw_render.h"
 #include "core.h"
@@ -61,7 +62,9 @@ static int ensure_anchor_buf(void) {
 void runahead_before_frame(const int allow_replay) {
     if (!session_settings.run_ahead || failed) return;
 
-    if (!state_saves_supported() || hw_render_bridge_active()) return;
+    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead) || !state_saves_supported()
+        || hw_render_bridge_active())
+        return;
     if (!current_core.retro_serialize || !current_core.retro_unserialize || !current_core.retro_serialize_size) return;
 
     if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) {

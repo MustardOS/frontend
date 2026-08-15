@@ -21,6 +21,7 @@
 #include "../../common/ui/nav.h"
 #include "../ui/cheats.h"
 #include "../cheevo/cheevo.h"
+#include "../coreinfo/coreinfo.h"
 #include "../state/content_hash.h"
 #include "../state/gamestate.h"
 #include "../macro/macro.h"
@@ -318,6 +319,7 @@ void core_prime_audio(void) {
     hw_render_bridge_context_restore();
 
     video_bridge_set_frame_skip(0);
+    audio_bridge_note_core_frames(primed);
 }
 
 static int abort_startup(const int core_opened) {
@@ -386,6 +388,7 @@ int main(const int argc, char *argv[]) {
     patch_manual_init(core_path_arg, content_path);
     perf_init();
     session_settings_init(core_path_arg, content_path);
+    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) session_settings.run_ahead = 0;
 
     if (!build_state_dir(core_path_arg, content_path)) {
         LOG_ERROR(mux_module, "Save-state path is too long");
@@ -448,7 +451,8 @@ int main(const int argc, char *argv[]) {
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
 
-    if (device.board.has_network && netplay_init(core_path_arg, content_path) != 0)
+    if (device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay)
+        && netplay_init(core_path_arg, content_path) != 0)
         LOG_WARN(mux_module, "Network Play secure transport could not be initialised");
 
     video_bridge_apply_fps_limit();
@@ -542,7 +546,7 @@ int main(const int argc, char *argv[]) {
     if (show_startup_messages && cheevo_connecting_background)
         pause_menu_show_toast_timed(lang.muxretro.cheevo.connecting_background, tst_wait_s);
 
-    if (device.board.has_network) {
+    if (device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay)) {
         if (startup.netplay_invalid) {
             pause_menu_show_toast(lang.muxretro.netplay.startup_invalid);
         } else if (startup.netplay_host) {

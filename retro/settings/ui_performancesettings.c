@@ -3,6 +3,7 @@
 #include "../core/muxretro.h"
 #include "../core/paths.h"
 #include "../core/perf.h"
+#include "../coreinfo/coreinfo.h"
 #include "settings.h"
 #include "submenu.h"
 
@@ -55,7 +56,7 @@ static int current_preset(void) {
 
 static void apply_preset(const int preset) {
     session_settings.frame_delay_ms = presets[preset].frame_delay_ms;
-    session_settings.run_ahead = presets[preset].run_ahead;
+    session_settings.run_ahead = coreinfo_feature_enabled(coreinfo_feature_run_ahead) ? presets[preset].run_ahead : 0;
     session_settings.gpu_hard_sync = presets[preset].gpu_hard_sync;
 }
 
@@ -105,7 +106,7 @@ static void cycle_row(const int index, const int direction) {
             session_settings_cycle_frame_delay(direction);
             break;
         case row_run_ahead:
-            session_settings_cycle_run_ahead(direction);
+            if (coreinfo_feature_enabled(coreinfo_feature_run_ahead)) session_settings_cycle_run_ahead(direction);
             break;
         case row_gpu_hard_sync:
             session_settings_cycle_gpu_hard_sync(direction);

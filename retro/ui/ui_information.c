@@ -181,7 +181,8 @@ static void build_core_rows(void) {
         "content"
     );
 
-    const size_t state_size = current_core.retro_serialize_size ? current_core.retro_serialize_size() : 0;
+    const size_t state_size =
+        state_saves_supported() && current_core.retro_serialize_size ? current_core.retro_serialize_size() : 0;
     char state_text[32];
     if (state_size > 0) {
         format_bytes((long long) state_size, state_text, sizeof(state_text));

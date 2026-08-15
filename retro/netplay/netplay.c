@@ -35,6 +35,7 @@
 #include "../core/muxretro.h"
 #include "../core/paths.h"
 #include "../core/runahead.h"
+#include "../coreinfo/coreinfo.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../ui/cheats.h"
@@ -1837,6 +1838,7 @@ static void netpacket_stop(void) {
 }
 
 int netplay_init(const char *core_path, const char *content_path) {
+    if (!coreinfo_feature_enabled(coreinfo_feature_netplay) || !state_saves_supported()) return -1;
     memset(&netplay, 0, sizeof(netplay));
     pthread_mutex_init(&netplay.mutex, NULL);
     atomic_init(&netplay.stop, 0);
@@ -1887,7 +1889,7 @@ void netplay_shutdown(void) {
 }
 
 int netplay_host(const uint16_t requested_port) {
-    if (!netplay_initialised) return -1;
+    if (!netplay_initialised || !state_saves_supported()) return -1;
     if (atomic_load(&netplay_fast_status) == netplay_status_failed) netplay_disconnect();
     if (netplay_is_active()) return -1;
     if (!netplay.tls && tls_create() != 0) {
@@ -1951,7 +1953,7 @@ int netplay_host(const uint16_t requested_port) {
 }
 
 int netplay_join(const char *address, const uint16_t requested_port) {
-    if (!netplay_initialised || !address || !address[0]) return -1;
+    if (!netplay_initialised || !state_saves_supported() || !address || !address[0]) return -1;
     if (atomic_load(&netplay_fast_status) == netplay_status_failed) netplay_disconnect();
     if (netplay_is_active()) return -1;
     if (!netplay.tls && tls_create() != 0) {
