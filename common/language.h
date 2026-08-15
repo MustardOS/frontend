@@ -744,8 +744,6 @@ struct mux_lang {
         } box_art;
         struct {
             char title[MAX_BUFFER_SIZE];
-            char lang[MAX_BUFFER_SIZE];
-            char theme[MAX_BUFFER_SIZE];
         } font;
         struct {
             char title[MAX_BUFFER_SIZE];
@@ -2942,7 +2940,6 @@ struct mux_lang {
             char submenu[MAX_BUFFER_SIZE];
         } section;
         struct {
-            char title[MAX_BUFFER_SIZE];
             char rtc[MAX_BUFFER_SIZE];
             char language[MAX_BUFFER_SIZE];
             char startup[MAX_BUFFER_SIZE];
