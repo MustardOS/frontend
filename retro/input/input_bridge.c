@@ -5,6 +5,7 @@
 #include "../core/perf.h"
 #include "../macro/runtime.h"
 #include "../cheevo/cheevo.h"
+#include "../link/link.h"
 #include "../netplay/netplay.h"
 #include "../settings/settings.h"
 #include "../video/hw_render.h"
@@ -354,8 +355,14 @@ void input_bridge_suppress(const mux_input_type type) {
     suppress_until_released[type] = 1;
 }
 
-int16_t mux_retro_input_state_cb(const unsigned port, const unsigned device, const unsigned index, const unsigned id) {
+int16_t mux_retro_input_state_cb(unsigned port, const unsigned device, const unsigned index, const unsigned id) {
     if (port >= MUX_RETRO_PORT_COUNT) return 0;
+    if (pause_menu_is_active()) return 0;
+
+    if (link_local_active()) {
+        if (port != (unsigned) link_get_focus()) return 0;
+        port = 0;
+    }
 
     if (device == RETRO_DEVICE_JOYPAD) {
         if (id == RETRO_DEVICE_ID_JOYPAD_MASK) return (int16_t) port_retropad_mask[port];

@@ -1759,6 +1759,22 @@ struct mux_lang {
         char restart[MAX_BUFFER_SIZE];
         char quit[MAX_BUFFER_SIZE];
         struct {
+            char game_link[MAX_BUFFER_SIZE];
+            char menu_desc[MAX_BUFFER_SIZE];
+            char mode[MAX_BUFFER_SIZE];
+            char mode_host[MAX_BUFFER_SIZE];
+            char mode_join[MAX_BUFFER_SIZE];
+            char mode_local[MAX_BUFFER_SIZE];
+            char restart_needed[MAX_BUFFER_SIZE];
+            char focus_moved[MAX_BUFFER_SIZE];
+            char single_screen[MAX_BUFFER_SIZE];
+            char slot_label[MAX_BUFFER_SIZE];
+            char address[MAX_BUFFER_SIZE];
+            char address_saved[MAX_BUFFER_SIZE];
+            char invalid_address[MAX_BUFFER_SIZE];
+            char no_address[MAX_BUFFER_SIZE];
+        } link;
+        struct {
             char status[MAX_BUFFER_SIZE];
             char find_lan[MAX_BUFFER_SIZE];
             char join_found[MAX_BUFFER_SIZE];

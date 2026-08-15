@@ -14,6 +14,7 @@
 #include "../../common/union.h"
 #include "muxretro.h"
 #include "core.h"
+#include "subsystem.h"
 #include "paths.h"
 #include "../input/core_input_meta.h"
 #include "../state/patch.h"
@@ -63,6 +64,7 @@ static int open_core(const char *corefile) {
     MUOS_FUNCTION_ASSIGN(current_core.retro_serialize, dlsym(current_core.handle, "retro_serialize"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_unserialize, dlsym(current_core.handle, "retro_unserialize"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_load_game, dlsym(current_core.handle, "retro_load_game"));
+    MUOS_FUNCTION_ASSIGN(current_core.retro_load_game_special, dlsym(current_core.handle, "retro_load_game_special"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_unload_game, dlsym(current_core.handle, "retro_unload_game"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_get_memory_data, dlsym(current_core.handle, "retro_get_memory_data"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_get_memory_size, dlsym(current_core.handle, "retro_get_memory_size"));
@@ -133,7 +135,7 @@ int core_content_rel_dir(const char *content_path, char *out, const size_t out_s
     union_get_relative_path(content_dir, rel_path, sizeof(rel_path));
     free(content_dir);
 
-    char *sub = rel_path;
+    const char *sub = rel_path;
     if (strncasecmp(sub, MAIN_ROM_DIR, strlen(MAIN_ROM_DIR)) == 0) {
         sub += strlen(MAIN_ROM_DIR);
         while (*sub == '/')
@@ -508,6 +510,11 @@ int core_load_content(const char *content_path) {
             return 0;
         }
 
+        if (subsystem_pending_count() > 0) {
+            const int loaded = core_load_subsystem_content();
+            if (loaded <= 0) return loaded;
+        }
+
         struct retro_game_info game_info = {.path = content_path};
         void *direct_data = NULL;
         size_t direct_size = 0;
@@ -626,4 +633,50 @@ void core_unload(void) {
 
     memset(&current_core, 0, sizeof(current_core));
     core_input_meta_clear();
+}
+
+int core_load_subsystem_content(void) {
+    const int entry = subsystem_pending_entry();
+    const int count = subsystem_pending_count();
+
+    if (entry < 0 || count <= 0) return 0;
+    if (!current_core.retro_load_game_special) {
+        LOG_ERROR(mux_module, "Core has no subsystem support but a subsystem launch was requested");
+        return -1;
+    }
+
+    const struct subsystem_entry *chosen = &subsystem_list[entry];
+
+    struct retro_game_info info[SUBSYSTEM_ROM_MAX] = {0};
+    void *data[SUBSYSTEM_ROM_MAX] = {0};
+
+    for (int i = 0; i < count; i++) {
+        info[i].path = subsystem_pending_path(i);
+
+        if (current_core.need_fullpath) continue;
+
+        size_t size = 0;
+        if (read_whole_file(info[i].path, &data[i], &size) != 0) {
+            LOG_ERROR(mux_module, "Could not read subsystem file: %s", info[i].path);
+            for (int f = 0; f < i; f++)
+                free(data[f]);
+            return -1;
+        }
+
+        info[i].data = data[i];
+        info[i].size = size;
+    }
+
+    const int ok = current_core.retro_load_game_special(chosen->id, info, (size_t) count);
+
+    for (int i = 0; i < count; i++)
+        free(data[i]);
+
+    if (!ok) {
+        LOG_ERROR(mux_module, "Core rejected the '%s' subsystem content", chosen->ident);
+        return -1;
+    }
+
+    LOG_INFO(mux_module, "Loaded %d file(s) through the '%s' subsystem", count, chosen->ident);
+    return 1;
 }

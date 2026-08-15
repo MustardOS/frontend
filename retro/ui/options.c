@@ -251,6 +251,33 @@ void options_store_legacy(const struct retro_variable *vars) {
     options_dirty = true;
 }
 
+int options_find(const char *key) {
+    for (int i = 0; i < options_count; i++) {
+        if (strcmp(options_list[i].key, key) == 0) return i;
+    }
+
+    return -1;
+}
+
+int options_set(const char *key, const char *value) {
+    const int index = options_find(key);
+    if (index < 0) return 0;
+
+    struct core_option_entry *e = &options_list[index];
+    for (int i = 0; i < e->value_count; i++) {
+        if (strcmp(e->values[i], value) != 0) continue;
+
+        if (e->current_index != i) {
+            e->current_index = i;
+            options_dirty = true;
+        }
+
+        return 1;
+    }
+
+    return 0;
+}
+
 const char *options_get_value(const char *key) {
     for (int i = 0; i < options_count; i++) {
         if (strcmp(options_list[i].key, key) == 0) {

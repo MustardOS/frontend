@@ -12,6 +12,8 @@ typedef struct startup_options {
     int netplay_invalid;
     const char *unknown_option;
     char netplay_address[256];
+    char subsystem_ident[64];
+    int single_screen;
     uint16_t netplay_port;
 } startup_options;
 

@@ -30,11 +30,13 @@ SRC := $(wildcard coredef/*.c) core/main.c core/startup.c core/core.c core/envir
        input/ui_inputsettings.c input/ui_controlleroptions.c input/ui_inputport.c \
        input/ui_buttonmapping.c input/nav_repeat.c input/core_input_meta.c \
        macro/macro.c macro/relish.c macro/runtime.c macro/ui_macros.c \
+       core/subsystem.c \
        state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
        state/content_hash.c state/bios_check.c state/sram.c \
        state/patch.c state/ui_storagesettings.c state/manual.c \
        cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/cheevo.c cheevo/ui_cheevo.c \
        netplay/address.c netplay/wire.c netplay/netplay.c netplay/ui_netplay.c \
+       link/link.c link/ui_link.c \
        settings/settings.c settings/submenu.c settings/ui_settings.c \
        settings/ui_performancesettings.c settings/ui_hudsettings.c \
        ui/ui_pause.c ui/ui_loading.c ui/options.c ui/ui_options.c ui/ui_information.c \

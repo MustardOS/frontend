@@ -11,6 +11,7 @@
 #include "../cheevo/cheevo.h"
 #include "../netplay/netplay.h"
 #include "muxretro.h"
+#include "subsystem.h"
 #include "../ui/options.h"
 #include "paths.h"
 #include "../input/rumble.h"
@@ -168,6 +169,12 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             static struct retro_log_callback log_cb;
             log_cb.log = mux_retro_log_printf;
             *(struct retro_log_callback *) data = log_cb;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO: {
+            subsystem_store((const struct retro_subsystem_info *) data);
+            subsystem_log_resolved();
             return true;
         }
 

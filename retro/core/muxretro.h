@@ -196,9 +196,13 @@ void pause_menu_focus_information_item(void);
 
 void pause_menu_focus_netplay_item(void);
 
+void pause_menu_focus_game_link_item(void);
+
 void pause_menu_focus_cheevo_item(void);
 
 void pause_menu_set_fps_visible(int visible);
+
+void pause_menu_refresh_gb_slot(void);
 
 void pause_menu_service_tick(uint32_t now);
 

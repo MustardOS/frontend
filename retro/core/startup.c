@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +8,8 @@
 void startup_options_print_usage(FILE *stream, const char *program) {
     fprintf(
         stream,
-        "Usage: %s <core.so> <content> [--fresh] [--restart] [--netplay-host[=port]] "
+        "Usage: %s <core.so> <content> [--fresh] [--restart] [--subsystem=<ident>] [--single-screen] "
+        "[--netplay-host[=port]] "
         "[--netplay-join=address[:port]]\n",
         program
     );
@@ -37,6 +39,10 @@ int startup_options_parse(const int argc, char *argv[], startup_options *options
                 options->netplay_port = (uint16_t) port;
             else
                 options->netplay_invalid = 1;
+        } else if (strcmp(argv[i], "--single-screen") == 0) {
+            options->single_screen = 1;
+        } else if (strncmp(argv[i], "--subsystem=", 12) == 0) {
+            snprintf(options->subsystem_ident, sizeof(options->subsystem_ident), "%s", argv[i] + 12);
         } else if (strncmp(argv[i], "--netplay-join=", 15) == 0) {
             if (netplay_parse_address(
                     argv[i] + 15, options->netplay_address, sizeof(options->netplay_address), &options->netplay_port

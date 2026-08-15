@@ -20,6 +20,8 @@
 #include "../cheevo/ui_cheevo.h"
 #include "../netplay/netplay.h"
 #include "../netplay/ui_netplay.h"
+#include "../link/link.h"
+#include "../link/ui_link.h"
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
 #include "../core/core.h"
@@ -48,6 +50,8 @@ static int active = 0;
 static uint64_t prev_nav_mask = 0;
 static lv_obj_t *dim_overlay = NULL;
 static lv_obj_t *ui_lbl_fps = NULL;
+static lv_obj_t *ui_lbl_gb_slot = NULL;
+static lv_obj_t *ui_img_gb_slot_glyph = NULL;
 static lv_obj_t *ui_img_fps_glyph = NULL;
 static lv_obj_t *ui_lbl_speed_mode = NULL;
 static lv_obj_t *ui_lbl_playtime = NULL;
@@ -62,6 +66,7 @@ static int has_disc_control = 0;
 static int row_resume;
 static int row_game_state;
 static int row_netplay;
+static int row_game_link;
 static int row_cheevo;
 static int row_disc_control;
 static int row_cheats;
@@ -80,6 +85,7 @@ static void compute_row_indices(void) {
     row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
     row_netplay = device.board.has_network ? i++ : -1;
     row_cheevo = device.board.has_network && cheevo_is_configured() ? i++ : -1;
+    row_game_link = link_is_supported() && !netplay_is_active() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
     row_cheats = cheats_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
     row_patches = patch_manual_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
@@ -158,6 +164,40 @@ create_corner_indicator(const lv_align_t align, const lv_coord_t x_ofs, const lv
     return panel;
 }
 
+static void reflow_bottom_right(void);
+
+static void create_gb_slot_label(void) {
+    lv_obj_t *panel = create_corner_indicator(LV_ALIGN_BOTTOM_RIGHT, -4, -4, &ui_img_gb_slot_glyph);
+    set_corner_glyph(ui_img_gb_slot_glyph, "controller");
+    load_font_section(FONT_FOOTER_DIR, panel);
+
+    ui_lbl_gb_slot = lv_label_create(panel);
+    lv_obj_set_style_text_color(ui_lbl_gb_slot, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_gb_slot, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_label_set_text(ui_lbl_gb_slot, "");
+
+    lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void pause_menu_refresh_gb_slot(void) {
+    if (!ui_lbl_gb_slot) return;
+
+    lv_obj_t *panel = lv_obj_get_parent(ui_lbl_gb_slot);
+
+    if (!link_single_screen() || active) {
+        lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    char slot_text[16];
+    snprintf(slot_text, sizeof(slot_text), lang.muxretro.link.slot_label, link_get_focus() + 1);
+    lv_label_set_text(ui_lbl_gb_slot, slot_text);
+
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(panel);
+    reflow_bottom_right();
+}
+
 static void create_fps_label(void) {
     lv_obj_t *ui_pnl_fps = create_corner_indicator(LV_ALIGN_BOTTOM_LEFT, 4, -4, &ui_img_fps_glyph);
     set_corner_glyph(ui_img_fps_glyph, "fps");
@@ -201,6 +241,7 @@ static lv_coord_t stack_panel(lv_obj_t *label, const lv_coord_t offset) {
 static void reflow_bottom_right(void) {
     lv_coord_t offset = -4;
 
+    offset = stack_panel(ui_lbl_gb_slot, offset);
     offset = stack_panel(ui_lbl_playtime, offset);
     offset = stack_panel(ui_lbl_break, offset);
 
@@ -561,6 +602,8 @@ int pause_menu_gameplay_hud_active(void) {
 
     if (toast_active) return 1;
 
+    if (ui_lbl_gb_slot && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_gb_slot), LV_OBJ_FLAG_HIDDEN)) return 1;
+
     if (ui_lbl_speed_mode && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_speed_mode), LV_OBJ_FLAG_HIDDEN)) return 1;
 
     if (session_settings.show_playtime && ui_lbl_playtime
@@ -588,6 +631,7 @@ void pause_menu_rebuild(void) {
     if (row_game_state >= 0) gen_label("muxretro", "state", lang.muxretro.game_state);
     if (row_netplay >= 0) gen_label("muxretro", "network", lang.muxretro.network_play);
     if (row_cheevo >= 0) gen_label("muxretro", "trophy", lang.muxretro.cheevo.achievements);
+    if (row_game_link >= 0) gen_label("muxretro", "network", lang.muxretro.link.game_link);
     if (has_disc_control) gen_label("muxretro", "disc", lang.muxretro.disc_control);
     if (row_cheats >= 0) gen_label("muxretro", "cheat", lang.muxretro.cheats);
     if (row_patches >= 0) gen_label("muxretro", "patch", lang.muxretro.patches);
@@ -608,6 +652,7 @@ static void set_chrome_visible(const int visible) {
         lv_obj_clear_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
         if (ui_lbl_fps) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
+        if (ui_lbl_gb_slot) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_gb_slot), LV_OBJ_FLAG_HIDDEN);
         pause_menu_set_speed_indicator(NULL, NULL);
         restore_header_chrome();
     } else {
@@ -616,6 +661,7 @@ static void set_chrome_visible(const int visible) {
         lv_obj_add_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
         pause_menu_set_fps_visible(session_settings.show_fps);
+        pause_menu_refresh_gb_slot();
         apply_gameplay_header_overlay();
     }
 }
@@ -669,6 +715,10 @@ void pause_menu_focus_netplay_item(void) {
     focus_item(row_netplay);
 }
 
+void pause_menu_focus_game_link_item(void) {
+    focus_item(row_game_link);
+}
+
 void pause_menu_focus_cheevo_item(void) {
     focus_item(row_cheevo);
 }
@@ -699,7 +749,7 @@ void pause_menu_show_nav_hints(void) {
 
 void pause_menu_init(void) {
     init_ui_common_screen(&theme, &device, &lang, lang.muxretro.title);
-    //Background transparency levels are handled by SDL so ui_screen must be set to transparent
+    // Background transparency levels are handled by SDL so ui_screen must be set to transparent
     lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
     set_gradient_visible(0);
 
@@ -713,6 +763,7 @@ void pause_menu_init(void) {
 
     create_dim_overlay();
     create_fps_label();
+    create_gb_slot_label();
     create_break_label();
     create_playtime_label();
     create_speed_mode_label();
@@ -739,6 +790,9 @@ void pause_menu_init(void) {
 }
 
 void pause_menu_shutdown(void) {
+    ui_lbl_gb_slot = NULL;
+    ui_img_gb_slot_glyph = NULL;
+    link_menu_teardown();
     ui_screen_teardown();
 
     if (ui_screen_container) lv_obj_del(ui_screen_container);
@@ -869,6 +923,11 @@ int pause_menu_tick(void) {
         return 0;
     }
 
+    if (link_menu_is_active()) {
+        link_menu_tick();
+        return 0;
+    }
+
     if (diskcontrol_menu_is_active()) {
         diskcontrol_menu_tick();
         return 0;
@@ -941,6 +1000,9 @@ int pause_menu_tick(void) {
         } else if (row_cheevo >= 0 && current_item_index == row_cheevo) {
             play_sound(snd_confirm);
             cheevo_menu_open();
+        } else if (row_game_link >= 0 && current_item_index == row_game_link) {
+            play_sound(snd_confirm);
+            link_menu_open();
         } else if (has_disc_control && current_item_index == row_disc_control) {
             play_sound(snd_confirm);
             diskcontrol_menu_open();

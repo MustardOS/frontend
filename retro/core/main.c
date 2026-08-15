@@ -25,6 +25,8 @@
 #include "../state/gamestate.h"
 #include "../macro/macro.h"
 #include "../netplay/netplay.h"
+#include "../link/link.h"
+#include "subsystem.h"
 #include "../state/manual.h"
 #include "../state/patch.h"
 #include "../input/hotkeys.h"
@@ -288,11 +290,12 @@ static void pace_core_output(const uint64_t frame_start) {
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
     perf_record(perf_stage_audio_queue, audio_bridge_queued_ms());
-    audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
+    if (!link_is_engaged()) audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
     const int slowmo_active = hotkeys_is_slow_motion_active();
-    double audio_target_ms = session_settings.fps_limit == fps_limit_auto ? audio_bridge_pace_target_ms() : 0.0;
+    double audio_target_ms =
+        session_settings.fps_limit == fps_limit_auto && !link_is_engaged() ? audio_bridge_pace_target_ms() : 0.0;
 
     if (audio_target_ms > 0.0 && !slowmo_active) {
         const int reported = display_panel_refresh_hz();
@@ -423,6 +426,23 @@ int main(const int argc, char *argv[]) {
     if (show_startup_messages) loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
 
     precache_content(content_path);
+
+    if (startup.subsystem_ident[0]) {
+        const char *slots[SUBSYSTEM_ROM_MAX];
+        const int index = subsystem_find(startup.subsystem_ident);
+        const int wanted = index >= 0 ? subsystem_list[index].rom_count : 0;
+
+        for (int i = 0; i < wanted && i < SUBSYSTEM_ROM_MAX; i++)
+            slots[i] = content_path;
+
+        if (startup.single_screen) link_single_screen_set(1);
+        link_set_mode(link_mode_local);
+
+        if (wanted <= 0 || !subsystem_select(startup.subsystem_ident, slots, wanted))
+            LOG_ERROR(
+                mux_module, "Core has no '%s' subsystem, loading the single file instead", startup.subsystem_ident
+            );
+    }
 
     if (core_load_content(content_path) != 0) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
@@ -652,6 +672,7 @@ int main(const int argc, char *argv[]) {
         const int paused = pause_menu_is_active();
         const int network_menu_paused = netplay_menu_paused();
         const int show_netplay_wait = network_menu_paused && !paused;
+
         if (show_netplay_wait != netplay_wait_visible) {
             if (show_netplay_wait)
                 loading_message_show(lang.muxretro.netplay.pause_menu_open);
@@ -659,9 +680,12 @@ int main(const int argc, char *argv[]) {
                 loading_message_hide();
             netplay_wait_visible = show_netplay_wait;
         }
-        const int content_paused = (paused && !netplay_is_playing()) || network_menu_paused;
+
+        const int content_paused = (paused && !netplay_is_playing() && !link_is_engaged()) || network_menu_paused;
+
         if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
         if (prev_paused && !content_paused) core_prime_audio();
+
         prev_paused = content_paused;
         audio_bridge_set_paused(content_paused);
 
@@ -697,7 +721,7 @@ int main(const int argc, char *argv[]) {
                 if (pause_menu_tick()) quit = 1;
             }
 
-            if (!quit && netplay_is_playing() && !network_menu_paused)
+            if (!quit && (netplay_is_playing() || link_is_engaged()) && !network_menu_paused)
                 run_gameplay = 1;
             else {
                 perf_end(perf_stage_control, control_start);
@@ -900,7 +924,26 @@ int main(const int argc, char *argv[]) {
     sdl_cleanup();
 
     if (core_restart_requested) {
-        char *restart_argv[] = {argv[0], core_file_path, core_content_path, "--fresh", "--restart", NULL};
+        char subsystem_arg[80] = "";
+        if (link_local_pending()) snprintf(subsystem_arg, sizeof(subsystem_arg), "--subsystem=%s", link_local_ident());
+
+        char fresh_arg[] = "--fresh";
+        char restart_arg[] = "--restart";
+        char single_arg[] = "--single-screen";
+
+        char *restart_argv[8];
+        int arg_count = 0;
+
+        restart_argv[arg_count++] = argv[0];
+        restart_argv[arg_count++] = core_file_path;
+        restart_argv[arg_count++] = core_content_path;
+        restart_argv[arg_count++] = fresh_arg;
+        restart_argv[arg_count++] = restart_arg;
+
+        if (subsystem_arg[0]) restart_argv[arg_count++] = subsystem_arg;
+        if (link_single_screen_setting()) restart_argv[arg_count++] = single_arg;
+
+        restart_argv[arg_count] = NULL;
         execvp(restart_argv[0], restart_argv);
         LOG_ERROR(mux_module, "Failed to re-exec for restart (%s), exiting instead", strerror(errno));
     }

@@ -11,6 +11,7 @@
 #include "hw_render.h"
 #include "../core/muxretro.h"
 #include "overlay_bridge.h"
+#include "../link/link.h"
 #include "../settings/settings.h"
 
 static SDL_Texture *frame_tex = NULL;
@@ -74,6 +75,14 @@ static const SDL_Color border_colours[border_colour_count] = {
     {255, 255, 255, 255},
 };
 
+static int split_frame_w(void) {
+    return link_single_screen() && link_split_is_horizontal() ? frame_w / 2 : frame_w;
+}
+
+static int split_frame_h(void) {
+    return link_single_screen() && !link_split_is_horizontal() ? frame_h / 2 : frame_h;
+}
+
 static int clamp_crop(int value, const int max) {
     if (value < 0) value = 0;
     if (value > max) value = max;
@@ -87,6 +96,19 @@ static void apply_viewport_crop(const int canvas_w, const int canvas_h) {
     crop_src_rect.y = 0;
     crop_src_rect.w = frame_w;
     crop_src_rect.h = frame_h;
+
+    if (link_single_screen()) {
+        crop_active = 1;
+
+        crop_src_rect.w = split_frame_w();
+        crop_src_rect.h = split_frame_h();
+        crop_src_rect.x = link_split_is_horizontal() ? crop_src_rect.w * link_get_focus() : 0;
+        crop_src_rect.y = link_split_is_horizontal() ? 0 : crop_src_rect.h * link_get_focus();
+
+        dest_rect.x = (canvas_w - dest_rect.w) / 2;
+        dest_rect.y = (canvas_h - dest_rect.h) / 2;
+        return;
+    }
 
     const int crop_left = clamp_crop(session_settings.viewport_crop_left, frame_w - 1);
     const int crop_right = clamp_crop(session_settings.viewport_crop_right, frame_w - 1 - crop_left);
@@ -161,9 +183,10 @@ static double compute_src_aspect(void) {
         case aspect_ratio_16_10:
             return 16.0 / 10.0;
         case aspect_ratio_pixel_perfect:
-            return (double) frame_w / (double) frame_h;
+            return (double) split_frame_w() / (double) split_frame_h();
         case aspect_ratio_auto:
         default:
+            if (link_single_screen()) return (double) split_frame_w() / (double) split_frame_h();
             return core_aspect_ratio > 0.0 ? core_aspect_ratio : (double) frame_w / (double) frame_h;
     }
 }

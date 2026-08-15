@@ -7,12 +7,15 @@
 #include "../../common/ui/nav.h"
 #include "../state/gamestate.h"
 #include "../state/manual.h"
+#include "../link/link.h"
 #include "../netplay/netplay.h"
 #include "../cheevo/cheevo.h"
 #include "hotkeys.h"
 #include "../core/muxretro.h"
 #include "nav_repeat.h"
 #include "../settings/settings.h"
+
+#define TOAST_FOCUS_MS 1200
 
 static int menu_held = 0;
 static int menu_combo_consumed = 0;
@@ -26,6 +29,7 @@ static int prev_x = 0;
 static int prev_start = 0;
 static int prev_select = 0;
 static int prev_b = 0;
+static int prev_a = 0;
 
 static int fast_forward_active = 0;
 static int slow_motion_active = 0;
@@ -124,6 +128,7 @@ int hotkeys_task(void) {
     const int start_now = mux_input_pressed(mux_input_start);
     const int select_now = mux_input_pressed(mux_input_select);
     const int b_now = mux_input_pressed(mux_input_b);
+    const int a_now = mux_input_pressed(mux_input_a);
 
     int open_pause = 0;
 
@@ -140,6 +145,20 @@ int hotkeys_task(void) {
             toggle_fast_forward();
             input_bridge_suppress(mux_input_r1);
             menu_combo_consumed = 1;
+        }
+
+        if (a_now && !prev_a && link_local_active()) {
+            link_toggle_focus();
+            input_bridge_suppress(mux_input_a);
+            menu_combo_consumed = 1;
+
+            pause_menu_refresh_gb_slot();
+
+            if (!link_single_screen()) {
+                char focus_message[64];
+                snprintf(focus_message, sizeof(focus_message), lang.muxretro.link.focus_moved, link_get_focus() + 1);
+                pause_menu_show_glyph_toast_timed(focus_message, "controller", TOAST_FOCUS_MS);
+            }
         }
 
         if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled && !netplay_is_active()) {
@@ -237,6 +256,7 @@ int hotkeys_task(void) {
     prev_start = start_now;
     prev_select = select_now;
     prev_b = b_now;
+    prev_a = a_now;
 
     return open_pause;
 }

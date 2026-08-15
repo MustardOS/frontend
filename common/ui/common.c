@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include <unistd.h>
+#include "../exec.h"
 #include "common.h"
 #include "notify.h"
 #include "empty_state.h"
@@ -1258,6 +1259,18 @@ void init_ui_common_screen(
     update_glyph(ui_ico_progress_brightness, "bar", "bright_0");
 
     current_brightness = config.settings.general.brightness;
+
+    static int brightness_applied = 0;
+    if (!brightness_applied && strcmp(mux_module, "muxcharge") != 0) {
+        brightness_applied = 1;
+
+        char bright_value[8];
+        snprintf(bright_value, sizeof(bright_value), "%d", config.settings.general.brightness);
+
+        const char *bright_args[] = {DEV_SCRIPT "bright.sh", bright_value, NULL};
+        run_exec(bright_args, A_SIZE(bright_args), 0, 0, NULL, NULL);
+    }
+
     ui_bar_progress_brightness = lv_bar_create(ui_pnl_progress_brightness);
     lv_bar_set_value(
         ui_bar_progress_brightness, brightness_to_percent(config.settings.general.brightness), LV_ANIM_OFF
@@ -1642,7 +1655,8 @@ lv_obj_t *create_footer_glyph(
         const int footer_target = resolve_glyph_size(
             config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->mux.item.height * 3 / 4
         );
-        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->footer.height);
+        const int footer_px =
+            glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->footer.height);
         append_glyph_size_hint(footer_image_embed, sizeof(footer_image_embed), footer_target);
         set_list_glyph_image(ui_glyph, footer_image_embed);
         apply_glyph_scale(ui_glyph, footer_image_embed, footer_px, footer_px);
@@ -1765,7 +1779,8 @@ static void update_status_glyph(
         )) {
         int header_target =
             resolve_glyph_size(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
-        int header_px = glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
+        int header_px =
+            glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
 
         if (header_target > 0) header_target = header_target * size_pct / 100;
         if (header_px > 0) header_px = header_px * size_pct / 100;

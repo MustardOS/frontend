@@ -39,6 +39,10 @@ void options_store_legacy(const struct retro_variable *vars);
 
 const char *options_get_value(const char *key);
 
+int options_find(const char *key);
+
+int options_set(const char *key, const char *value);
+
 void options_cycle(int index, int direction);
 
 void options_init_paths(const char *core_path_arg, const char *content_path);
