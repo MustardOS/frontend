@@ -57,5 +57,3 @@ void task_parser_reset(task_parser *parser);
 void task_parser_feed(task_parser *parser, const char *data, size_t len, task_event_cb callback, void *user_data);
 
 int task_parse_line(const char *line, task_event *event);
-
-const char *task_event_name(task_event_type type);

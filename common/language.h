@@ -1939,11 +1939,6 @@ struct mux_lang {
             char request_memory_failed[MAX_BUFFER_SIZE];
             char request_queue_full[MAX_BUFFER_SIZE];
             char memory_unavailable[MAX_BUFFER_SIZE];
-            char status_disabled[MAX_BUFFER_SIZE];
-            char status_identifying[MAX_BUFFER_SIZE];
-            char status_offline[MAX_BUFFER_SIZE];
-            char status_unsupported[MAX_BUFFER_SIZE];
-            char status_unavailable[MAX_BUFFER_SIZE];
         } cheevo;
         struct {
             char none_found[MAX_BUFFER_SIZE];
@@ -3187,8 +3182,6 @@ void common_var_init(void);
 void load_language_file(const char *module);
 
 char *translate_generic(char *key);
-
-char *translate_help(char *key);
 
 char *translate_specific(char *key);
 

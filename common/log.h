@@ -29,8 +29,6 @@ typedef enum log_level {
 
 void log_write_enabled(int debug_mode, log_level level, const char *module, const char *format, ...);
 
-void log_write(log_level level, const char *module, const char *format, ...);
-
 #if defined(MUX_LOG_DISABLE)
 
 #define LOG_INFO(...)    ((void) 0)

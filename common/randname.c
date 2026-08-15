@@ -84,22 +84,3 @@ int randname_generate_with_separator(char *out, const size_t out_size, const cha
 
     return randname_format(out, out_size, adjective_index, noun_index, separator);
 }
-
-int randname_generate(char *out, const size_t out_size) {
-    return randname_generate_with_separator(out, out_size, RANDNAME_SEP);
-}
-
-int randname_from_id(char *out, const size_t out_size, const size_t id) {
-
-    if (id >= RANDNAME_COMBINATION_COUNT) {
-        if (out != NULL && out_size > 0U) {
-            out[0] = '\0';
-        }
-        return -1;
-    }
-
-    const size_t adjective_index = id / RANDNAME_NOUN_COUNT;
-    const size_t noun_index = id % RANDNAME_NOUN_COUNT;
-
-    return randname_format(out, out_size, adjective_index, noun_index, RANDNAME_SEP);
-}

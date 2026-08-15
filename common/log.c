@@ -123,8 +123,9 @@ write_log_file(const char *date, const char *time_text, const double elapsed, co
     if (length > 0U) write_all(log_file, line, length);
 }
 
-static void
-log_write_va(const int debug_mode, const log_level level, const char *module, const char *format, va_list arguments) {
+static void log_write_va(
+    const int debug_mode, const log_level level, const char *module, const char *format, const va_list arguments
+) {
     char module_text[LOG_MODULE_SIZE];
     char message[LOG_MESSAGE_SIZE];
     char term_line[LOG_LINE_SIZE];
@@ -157,18 +158,6 @@ log_write_va(const int debug_mode, const log_level level, const char *module, co
 
 void log_write_enabled(const int debug_mode, const log_level level, const char *module, const char *format, ...) {
     va_list arguments;
-
-    va_start(arguments, format);
-    log_write_va(debug_mode, level, module, format, arguments);
-    va_end(arguments);
-}
-
-void log_write(const log_level level, const char *module, const char *format, ...) {
-    const int debug_mode = is_debug_mode();
-    va_list arguments;
-
-    if (debug_mode < 1 || !format) return;
-    if (level == log_level_debug && debug_mode < 2) return;
 
     va_start(arguments, format);
     log_write_va(debug_mode, level, module, format, arguments);

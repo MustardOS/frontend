@@ -21,9 +21,7 @@ static mux_dialogue save_dlg;
 static const int text_size_scale[] = {0, 115, 130, 145};
 
 #define LEGIBLE_FONT_NAME "Atkinson Hyperlegible"
-#define DEFAULT_FONT_NAME "Noto Sans"
-
-#define ACCESS_BACKUP CONF_CONFIG_PATH "visual/accessbak/"
+#define ACCESS_BACKUP     CONF_CONFIG_PATH "visual/accessbak/"
 
 static void backup_path(const char *key, char *out, const size_t len) {
     const char *base = strrchr(key, '/');
@@ -216,6 +214,7 @@ static void preset_text_size(const int index) {
 
 static void save_access_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(access, reduce_motion, "visual/reducemotion", INT, 0);
     CHECK_AND_SAVE_STD(access, high_contrast, "visual/highcontrast", INT, 0);
@@ -243,6 +242,8 @@ static void save_access_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {
@@ -383,7 +384,7 @@ static void handle_b(void) {
 }
 
 static void handle_x(void) {
-    if (orientation_handle_skip()) return;
+    orientation_handle_skip();
 }
 
 static void handle_help(void) {

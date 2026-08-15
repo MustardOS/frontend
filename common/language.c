@@ -53,10 +53,6 @@ char *translate_generic(char *key) {
     return key;
 }
 
-char *translate_help(char *key) {
-    return translate_generic(key);
-}
-
 char *translate_specific(char *key) {
     const struct json translation_specific_json = json_object_get(translation_specific, key);
 
@@ -1832,11 +1828,6 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.cheevo.request_memory_failed), lang_specific, "Out of memory preparing RetroAchievements request"},
     {"muxretro", LANG_OFF(muxretro.cheevo.request_queue_full), lang_specific, "RetroAchievements request queue is full"},
     {"muxretro", LANG_OFF(muxretro.cheevo.memory_unavailable), lang_specific, "This core does not expose usable achievement memory"},
-    {"muxretro", LANG_OFF(muxretro.cheevo.status_disabled), lang_specific, "Disabled"},
-    {"muxretro", LANG_OFF(muxretro.cheevo.status_identifying), lang_specific, "Identifying Content"},
-    {"muxretro", LANG_OFF(muxretro.cheevo.status_offline), lang_specific, "Offline"},
-    {"muxretro", LANG_OFF(muxretro.cheevo.status_unsupported), lang_specific, "Unsupported"},
-    {"muxretro", LANG_OFF(muxretro.cheevo.status_unavailable), lang_specific, "Unavailable"},
     {"muxretro", LANG_OFF(muxretro.gamestate.none_found), lang_specific, "No Save States Found"},
     {"muxretro", LANG_OFF(muxretro.gamestate.delete), lang_specific, "Delete"},
     {"muxretro", LANG_OFF(muxretro.gamestate.load_title), lang_specific, "Load State"},

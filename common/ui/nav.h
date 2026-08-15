@@ -86,8 +86,6 @@ void hide_bounce_progress_bar(void);
 
 void set_nav_flags(const struct nav_flag *nav_flags, size_t count);
 
-void nav_set_row_dim(const lv_obj_t *panel, int active, int index);
-
 void footer_nav_check_scroll(void);
 
 void footer_nav_reset_scroll(void);

@@ -150,12 +150,3 @@ void tag_filter_apply(void) {
     free(tag);
     remove(TAG_SORT_PICK);
 }
-
-void print_tag_items(const tag_item *tag_items, const size_t count) {
-    for (size_t i = 0; i < count; i++) {
-        printf(
-            "Tag Name: %s  Tag Glyph: %s Tag Sort Bucket: %d\n", tag_items[i].name, tag_items[i].glyph,
-            tag_items[i].sort_bucket
-        );
-    }
-}

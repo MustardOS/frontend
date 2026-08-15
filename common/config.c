@@ -523,8 +523,3 @@ int cfg_dir_int(const cfg_dir_t *d, const char *name, const int fallback) {
 
     return errno != ERANGE && end != v && *end == '\0' && val >= INT_MIN && val <= INT_MAX ? (int) val : fallback;
 }
-
-double cfg_dir_flo(const cfg_dir_t *d, const char *name, const double fallback) {
-    const char *v = cfg_dir_get(d, name);
-    return config_float_value(v, fallback, 0, 0.0, 0.0);
-}

@@ -49,8 +49,6 @@ char *str_capital_all(char *text);
 
 char *str_rem_first_char(char *text, int count);
 
-char *str_rem_last_char(char *text, int count);
-
 char *get_last_subdir(char *text, char separator, int n);
 
 void remove_double_slashes(char *str);
@@ -59,7 +57,7 @@ char *get_last_dir(const char *text);
 
 char *get_file_name(const char *text);
 
-char *get_content_path(char *path);
+char *get_content_path(const char *path);
 
 char *strip_dir(const char *text);
 

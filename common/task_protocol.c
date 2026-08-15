@@ -12,13 +12,6 @@ static const struct {
     {.name = "COMPLETE", .type = task_event_complete}, {.name = "ERROR", .type = task_event_error},
 };
 
-const char *task_event_name(const task_event_type type) {
-    for (size_t i = 0; i < sizeof(event_names) / sizeof(event_names[0]); i++)
-        if (event_names[i].type == type) return event_names[i].name;
-
-    return "UNKNOWN";
-}
-
 void task_parser_reset(task_parser *parser) {
     if (!parser) return;
 

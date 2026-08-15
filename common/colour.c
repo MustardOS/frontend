@@ -119,12 +119,6 @@ const rgb_colour_t *rgb_colour_at(int idx) {
     return &rgb_colours[idx];
 }
 
-const rgb_colour_t *rgb_colour_or_fallback(const int idx, const rgb_colour_t *fallback) {
-    if (idx <= 0) return fallback ? fallback : &rgb_colours[0];
-
-    return rgb_colour_at(idx - 1);
-}
-
 int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb_colour_t *fallback) {
     if (!file_exist(filepath)) {
         *out = *fallback;
@@ -193,10 +187,4 @@ int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb
 
     free(line);
     return 1;
-}
-
-const rgb_colour_combo_t *rgb_colour_combo_at(int idx) {
-    if (idx < 0 || idx >= (int) rgb_colour_combo_count) idx = 0;
-
-    return &rgb_colour_combos[idx];
 }

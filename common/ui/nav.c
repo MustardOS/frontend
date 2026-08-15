@@ -520,13 +520,6 @@ static void blank_overflow_rows_cb(lv_event_t *e) {
     blank_overflow_rows(lv_event_get_target(e));
 }
 
-void nav_set_row_dim(const lv_obj_t *panel, const int active, const int index) {
-    row_dim_active = active;
-    row_dim_index = index;
-
-    if (panel) blank_overflow_rows(panel);
-}
-
 static lv_obj_t *raise_row = NULL;
 
 static void raise_row_draw_cb(lv_event_t *e);

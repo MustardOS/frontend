@@ -259,16 +259,6 @@ lookup_generic(const lookup_internal_name *table, const size_t count, lookup_sor
     return NULL;
 }
 
-static const char *r_lookup_generic(const lookup_internal_name *table, const size_t count, const char *value) {
-    for (size_t i = 0; i < count; i++) {
-        if (strstr(table[i].value, value)) {
-            return table[i].name;
-        }
-    }
-
-    return NULL;
-}
-
 static void lookup_generic_multi(
     const lookup_internal_name *table, const size_t count, const char *term,
     void (*emit)(const char *name, const char *value, void *udata), void *udata
@@ -314,25 +304,6 @@ const char *lookup(const char *name) {
     get_table((size_t) idx, &table, &count);
 
     return lookup_generic(table, count, &sort_cache[idx], name);
-}
-
-const char *r_lookup(const char *value) {
-    if (!value || !value[0]) {
-        return NULL;
-    }
-
-    for (size_t i = 0; i < LOOKUP_TABLE_COUNT; i++) {
-        const lookup_internal_name *table;
-        size_t count;
-        get_table(i, &table, &count);
-
-        const char *result = r_lookup_generic(table, count, value);
-        if (result) {
-            return result;
-        }
-    }
-
-    return NULL; // you get nothing, you lose, good day sir
 }
 
 void lookup_multi_at(

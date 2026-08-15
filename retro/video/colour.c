@@ -258,11 +258,6 @@ int colour_filter_preset_count(void) {
     return filter_count > 0 ? filter_count : 1;
 }
 
-const char *colour_filter_preset_name(const int index) {
-    if (index < 0 || index >= filter_count) return filter_names[0];
-    return filter_names[index];
-}
-
 const char *colour_filter_preset_label(const int index) {
     if (index < 0 || index >= filter_count) return filter_labels[0];
     return filter_labels[index];
@@ -270,11 +265,6 @@ const char *colour_filter_preset_label(const int index) {
 
 int colour_shader_count(void) {
     return shader_count > 0 ? shader_count : 1;
-}
-
-const char *colour_shader_name(const int index) {
-    if (index < 0 || index >= shader_count) return shader_names[0];
-    return shader_names[index];
 }
 
 const char *colour_shader_label(const int index) {
@@ -706,15 +696,15 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         return;
     }
 
-    const float ndc_left = ((float) dest_rect->x / (float) out_w) * 2.0f - 1.0f;
-    const float ndc_right = ((float) (dest_rect->x + dest_rect->w) / (float) out_w) * 2.0f - 1.0f;
+    const float ndc_left = (float) dest_rect->x / (float) out_w * 2.0f - 1.0f;
+    const float ndc_right = (float) (dest_rect->x + dest_rect->w) / (float) out_w * 2.0f - 1.0f;
 
     const int to_offscreen_target = prev_target != NULL;
-    const float ndc_top = to_offscreen_target ? ((float) dest_rect->y / (float) out_h) * 2.0f - 1.0f
-                                              : 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
+    const float ndc_top = to_offscreen_target ? (float) dest_rect->y / (float) out_h * 2.0f - 1.0f
+                                              : 1.0f - (float) dest_rect->y / (float) out_h * 2.0f;
     const float ndc_bottom = to_offscreen_target
-                                 ? ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f - 1.0f
-                                 : 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
+                                 ? (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f - 1.0f
+                                 : 1.0f - (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f;
 
     GLint prev_program = 0;
     gl->GetIntegerv(GL_CURRENT_PROGRAM, &prev_program);

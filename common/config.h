@@ -25,8 +25,6 @@ const char *cfg_dir_get(const cfg_dir_t *d, const char *name);
 
 int cfg_dir_int(const cfg_dir_t *d, const char *name, int fallback);
 
-double cfg_dir_flo(const cfg_dir_t *d, const char *name, double fallback);
-
 struct mux_config {
     struct {
         char build[MAX_BUFFER_SIZE];

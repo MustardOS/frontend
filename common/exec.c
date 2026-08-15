@@ -24,12 +24,12 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     for (const char **p = term_cmd; p && *p; p++)
         arg_count++;
 
-    size_t total_args = 16 + arg_count + 2;
+    const size_t total_args = 16 + arg_count + 2;
     const char **exec = malloc(sizeof(char *) * total_args);
     if (!exec) return NULL;
 
     size_t i = 0;
-    exec[i++] = (OPT_PATH "bin/muterm");
+    exec[i++] = OPT_PATH "bin/muterm";
     exec[i++] = "-ro";
     exec[i++] = "-s";
     exec[i++] = (char *) theme.terminal.font_size;
@@ -228,13 +228,6 @@ void turbo_time(const int toggle, const int show_done) {
 
 void set_process_name(const char *module) {
     prctl(PR_SET_NAME, module, 0, 0, 0);
-}
-
-const char *get_process_name(void) {
-    static char module[16]; // Apparently process names can only be 16 char?
-    prctl(PR_GET_NAME, module);
-    module[15] = '\0';
-    return module;
 }
 
 const char *module_from_func(const char *func) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct {
@@ -30,9 +31,5 @@ extern const rgb_colour_combo_t rgb_colour_combos[];
 extern const size_t rgb_colour_combo_count;
 
 const rgb_colour_t *rgb_colour_at(int idx);
-
-const rgb_colour_t *rgb_colour_or_fallback(int idx, const rgb_colour_t *fallback);
-
-const rgb_colour_combo_t *rgb_colour_combo_at(int idx);
 
 int read_rgb_colour_from_file(const char *filepath, rgb_colour_t *out, const rgb_colour_t *fallback);

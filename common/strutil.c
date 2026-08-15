@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mojibake/mojibake.h"
 #include "init.h"
 #include "strutil.h"
 #include "fileio.h"
@@ -12,7 +13,6 @@
 #include "util.h"
 #include "log.h"
 #include "language.h"
-#include "mojibake.h"
 #include "skip.h"
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
@@ -450,22 +450,6 @@ char *str_rem_first_char(char *text, const int count) {
     return buffer;
 }
 
-char *str_rem_last_char(char *text, int count) {
-    static char buffer[PATH_MAX];
-    size_t len = strlen(text);
-
-    if (count >= (int) len) return "";
-
-    snprintf(buffer, sizeof(buffer), "%s", text);
-
-    while (count-- > 0 && len > 0) {
-        len--;
-        buffer[len] = '\0';
-    }
-
-    return buffer;
-}
-
 char *get_last_subdir(char *text, const char separator, const int n) {
     char *ptr = text;
     int count = 0;
@@ -518,7 +502,7 @@ char *get_file_name(const char *text) {
     return (char *) text;
 }
 
-char *get_content_path(char *path) {
+char *get_content_path(const char *path) {
     char *directory_path = strip_dir(path);
     if (dir_exist(path)) return directory_path;
 

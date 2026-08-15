@@ -141,7 +141,7 @@ char *get_execute_result_argv(const char *const argv[], const int line) {
             selected = result;
             result = NULL;
         } else {
-            char *start = result;
+            const char *start = result;
 
             for (int current = 0; current < line && start; current++) {
                 start = strchr(start, '\n');
@@ -233,23 +233,6 @@ char *read_line_char_from(const char *filename, const size_t line_number) {
     return strdup("");
 }
 
-int read_all_int_from(const char *filename, size_t buffer) {
-    FILE *file = fopen(filename, "r");
-    if (!file) return 0;
-
-    char line[buffer];
-    size_t buf_size = sizeof(line);
-    if (buf_size > INT_MAX) buf_size = INT_MAX;
-
-    if (!fgets(line, (int) buf_size, file)) {
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-    return safe_atoi(line, 0);
-}
-
 int read_line_int_from(const char *filename, const size_t line_number) {
     char line[MAX_BUFFER_SIZE];
     FILE *file = fopen(filename, "r");
@@ -294,47 +277,45 @@ void cfg_write_def_int(const char *path, const int value) {
     write_text_to_file(path, "w", INT, value);
 }
 
-void cfg_write_def_char(const char *path, const char *value) {
-    if (file_exist(path)) return;
-
-    create_directories(path, 1);
-    write_text_to_file(path, "w", CHAR, value);
-}
-
-void write_text_to_file(const char *filename, const char *mode, const int type, ...) {
+int write_text_to_file(const char *filename, const char *mode, const int type, ...) {
     FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
-        return;
+        return 0;
     }
 
     va_list args;
     va_start(args, type);
 
+    int ok = 1;
     if (type == CHAR) { // type is general text!
-        fprintf(file, "%s", va_arg(args, const char *));
+        if (fprintf(file, "%s", va_arg(args, const char *)) < 0) ok = 0;
     } else if (type == INT) { // type is a number!
-        fprintf(file, "%d", va_arg(args, int));
+        if (fprintf(file, "%d", va_arg(args, int)) < 0) ok = 0;
     }
 
     va_end(args);
-    fclose(file);
+
+    if (fclose(file) != 0) ok = 0;
+    if (!ok) LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
+
+    return ok;
 }
 
-void write_text_to_file_atomic(const char *filename, const int type, ...) {
+int write_text_to_file_atomic(const char *filename, const int type, ...) {
     char tmp[PATH_MAX];
     const int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp", filename);
 
     if (tmp_len < 0 || (size_t) tmp_len >= sizeof(tmp)) {
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
-        return;
+        return 0;
     }
 
     FILE *f = fopen(tmp, "w");
     if (!f) {
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
-        return;
+        return 0;
     }
 
     va_list args;
@@ -352,12 +333,15 @@ void write_text_to_file_atomic(const char *filename, const int type, ...) {
     if (fflush(f) != 0) ok = 0;
     if (ok && fsync(fileno(f)) != 0) LOG_WARN(mux_module, "%s: %s", lang.system.fail_file_write, filename);
 
-    fclose(f);
+    if (fclose(f) != 0) ok = 0;
 
     if (!ok || rename(tmp, filename) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
+        return 0;
     }
+
+    return 1;
 }
 
 void create_directories(const char *path, const int parent_only) {

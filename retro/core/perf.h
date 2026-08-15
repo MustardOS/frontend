@@ -90,8 +90,6 @@ void perf_note_netplay(const perf_netplay_snapshot *snapshot);
 
 void perf_note_cheevo(const perf_cheevo_snapshot *snapshot);
 
-unsigned perf_missed_refreshes(void);
-
 void perf_format_hud(char *buf, size_t len, double fps);
 
 int perf_export_trace(const char *path);

@@ -37,7 +37,7 @@ theme_item *add_theme_item(
     return &(*theme_items)[*count - 1];
 }
 
-int theme_item_compare(const void *a, const void *b) {
+static int theme_item_compare(const void *a, const void *b) {
     const theme_item *item_a = (theme_item *) a;
     const theme_item *item_b = (theme_item *) b;
 
@@ -45,19 +45,8 @@ int theme_item_compare(const void *a, const void *b) {
     return str_compare(&item_a->name, &item_b->name);
 }
 
-int theme_item_exists(const theme_item *theme_items, const size_t count, const char *name) {
-    for (size_t i = 0; i < count; i++) {
-        if (strcasecmp(theme_items[i].name, name) == 0) return 1;
-    }
-    return 0;
-}
-
 void sort_theme_items(theme_item *theme_items, const size_t count) {
     qsort(theme_items, count, sizeof(theme_item), theme_item_compare);
-}
-
-theme_item get_theme_item_by_index(const theme_item *items, const size_t index) {
-    return items[index];
 }
 
 void free_theme_items(theme_item **theme_items, size_t *count) {

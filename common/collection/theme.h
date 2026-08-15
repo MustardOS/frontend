@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 typedef struct {
     char *name;
@@ -20,10 +21,6 @@ theme_item *add_theme_item(
     int resolution1024_x768, int resolution1280_x720, int resolution1920_x1080
 );
 
-int theme_item_exists(const theme_item *theme_items, size_t count, const char *name);
-
 void sort_theme_items(theme_item *theme_items, size_t count);
-
-theme_item get_theme_item_by_index(const theme_item *items, size_t index);
 
 void free_theme_items(theme_item **theme_items, size_t *count);

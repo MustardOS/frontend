@@ -247,10 +247,6 @@ void perf_frame_complete(const int record) {
     frame_start = now;
 }
 
-unsigned perf_missed_refreshes(void) {
-    return missed_refreshes;
-}
-
 void perf_note_input_change(void) {
     if (enabled && !input_change_start) input_change_start = SDL_GetPerformanceCounter();
 }

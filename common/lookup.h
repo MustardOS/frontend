@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 typedef struct {
     const char *name;
@@ -8,8 +9,6 @@ typedef struct {
 #define LOOKUP_TABLE_COUNT 36
 
 const char *lookup(const char *name);
-const char *r_lookup(const char *value);
-
 void lookup_multi_at(
     size_t index, const char *term, void (*emit)(const char *name, const char *value, void *udata), void *udata
 );

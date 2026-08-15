@@ -146,8 +146,6 @@ double core_get_target_fps(void);
 
 int core_content_needs_pacing(void);
 
-int core_content_pacing_keeps_vsync(void);
-
 void input_bridge_suppress_held(void);
 
 void input_bridge_suppress(mux_input_type type);

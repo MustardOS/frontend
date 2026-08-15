@@ -9,13 +9,9 @@ void colour_init(void);
 
 int colour_filter_preset_count(void);
 
-const char *colour_filter_preset_name(int index);
-
 const char *colour_filter_preset_label(int index);
 
 int colour_shader_count(void);
-
-const char *colour_shader_name(int index);
 
 const char *colour_shader_label(int index);
 

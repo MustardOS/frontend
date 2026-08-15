@@ -159,5 +159,3 @@ int cheevo_progress_save(void *data, size_t size);
 int cheevo_progress_load(const void *data, size_t size);
 
 void cheevo_progress_reset(void);
-
-const char *cheevo_status_name(cheevo_status status);

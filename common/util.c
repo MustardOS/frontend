@@ -40,24 +40,6 @@ int safe_atoi(const char *text, const int fallback) {
     return (int) value;
 }
 
-const char *get_random_hex(void) {
-    static int seeded = 0;
-    if (!seeded) {
-        srandom((unsigned) time(NULL) ^ (uintptr_t) &seeded);
-        seeded = 1;
-    }
-
-    const unsigned char r = random() % 256;
-    const unsigned char g = random() % 256;
-    const unsigned char b = random() % 256;
-
-    char *hex = malloc(8);
-    if (!hex) return NULL;
-    snprintf(hex, 8, "%02X%02X%02X", r, g, b);
-
-    return hex;
-}
-
 static void fix_range(int *min, int *max) {
     if (*min > *max) {
         const int tmp = *min;

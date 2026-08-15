@@ -41,19 +41,12 @@
 #define MU_OBJ_MAIN_FOCUS      (LV_PART_MAIN | LV_STATE_FOCUSED)
 #define MU_OBJ_MAIN_SCROLL     (LV_PART_MAIN | LV_STATE_SCROLLED)
 #define MU_OBJ_INDI_DEFAULT    (LV_PART_INDICATOR | LV_STATE_DEFAULT)
-#define MU_OBJ_INDI_FOCUS      (LV_PART_INDICATOR | LV_STATE_FOCUSED)
 #define MU_OBJ_SELECT_DEFAULT  (LV_PART_SELECTED | LV_STATE_DEFAULT)
-#define MU_OBJ_SELECT_FOCUS    (LV_PART_SELECTED | LV_STATE_FOCUSED)
 
-#define TIMER_DATETIME  8192
-#define TIMER_BLUETOOTH 4096
-#define TIMER_NETWORK   4096
-#define TIMER_BATTERY   4096
-#define TIMER_CAPACITY  8192
-#define TIMER_STATUS    1024
-#define TIMER_SYSINFO   2048
-#define TIMER_IDLE      512
-#define TIMER_REFRESH   IDLE_MS
+#define TIMER_BATTERY 4096
+#define TIMER_STATUS  1024
+#define TIMER_IDLE    512
+#define TIMER_REFRESH IDLE_MS
 
 #define FADE_TIME 256
 #define FADE_STEP 16
@@ -102,8 +95,10 @@
 #define OPTION_SKIP "/tmp/skip_opt"
 
 #define INTERNAL_FONTS OPT_PATH "share/font/internal"
-#define USER_FONTS "MUOS/font" // Fonts the user supplies on any storage
-#define USER_LOGOS "MUOS/logo" // Boot logos the user supplies on any storage
+
+#define USER_FONTS     "MUOS/font" // Fonts the user supplies on any storage
+#define USER_LOGOS     "MUOS/logo" // Boot logos the user supplies on any storage
+
 #define INTERNAL_LOGOS OPT_PATH "share/logo"
 #define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
 #define LAST_PLAY_FILE OPT_PATH "config/boot/last_play"
@@ -168,8 +163,6 @@
 #define STORE_LOC_SCRS MUOS_BASE_PATH "/screenshot"
 #define STORE_LOC_THEM MUOS_BASE_PATH "/theme"
 #define STORE_LOC_PACK MUOS_BASE_PATH "/package"
-#define STORE_LOC_PCAT STORE_LOC_PACK "/catalogue"
-#define STORE_LOC_PCON STORE_LOC_PACK "/config"
 #define STORE_LOC_NETW MUOS_BASE_PATH "/network"
 #define STORE_LOC_SYCT MUOS_BASE_PATH "/syncthing"
 #define STORE_LOC_INIT MUOS_BASE_PATH "/init"
@@ -198,7 +191,7 @@
 #define MUOS_CRS_LOAD "/tmp/crs_go" // Crash Module Information
 #define MUOS_PWR_LOSS "/tmp/pwr_no" // Unexpected Power Loss Alert
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
-#define MUOS_SFI_LOAD "/tmp/sfi_" // Section Frame Last Index, one per module
+#define MUOS_SFI_LOAD "/tmp/sfi_"   // Section Frame Last Index, one per module
 #define MUOS_FLT_LOAD RUN_PATH "filter"
 #define MUOS_GOV_LOAD RUN_PATH "governor"
 #define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index
@@ -214,7 +207,6 @@
 #define MUOS_SAA_LOAD RUN_PATH "auto_core"
 #define MUOS_SAG_LOAD RUN_PATH "auto_governor"
 #define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
-#define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
 #define MUOS_SHD_LOAD RUN_PATH "shader"
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
@@ -242,11 +234,4 @@
         snprintf(buffer, sizeof(buffer), "%s", PATH);                                                                  \
         cfg_write_def_int(buffer, DEFAULT);                                                                            \
         FIELD = cfg_read_int(buffer, DEFAULT);                                                                         \
-    } while (0)
-
-#define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                                                            \
-    do {                                                                                                               \
-        snprintf(buffer, sizeof(buffer), "%s", PATH);                                                                  \
-        cfg_write_def_char(buffer, DEFAULT);                                                                           \
-        snprintf(FIELD, MAX_BUFFER_SIZE, "%s", read_line_char_from(buffer, 1));                                        \
     } while (0)

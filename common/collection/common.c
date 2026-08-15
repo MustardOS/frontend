@@ -10,7 +10,7 @@
 #include "../fileio.h"
 #include "../init.h"
 
-void reformat_display_name(char *display_name) {
+static void reformat_display_name(char *display_name) {
     const char *suffix = ", The";
     const size_t suffix_len = strlen(suffix);
 
@@ -34,7 +34,7 @@ content_item *add_item(
         content_item *new_items = malloc(sizeof(content_item));
         if (!new_items) return NULL;
         *content_items = new_items;
-    } else if (*count > 0 && (*count & (*count - 1)) == 0) {
+    } else if (*count > 0 && (*count & *count - 1) == 0) {
         content_item *new_items = realloc(*content_items, *count * 2 * sizeof(content_item));
         if (!new_items) return NULL;
         *content_items = new_items;
@@ -95,19 +95,6 @@ void remove_item(content_item **content_items, size_t *count, const size_t index
     }
 }
 
-int bucket_item_compare(const void *a, const void *b) {
-    const content_item *item_a = (content_item *) a;
-    const content_item *item_b = (content_item *) b;
-
-    if (!config.visual.mixed_content && item_a->content_type != item_b->content_type)
-        return item_a->content_type == content_type_folder ? -1 : 1;
-
-    if (item_a->sort_bucket != item_b->sort_bucket) return item_b->sort_bucket - item_a->sort_bucket;
-
-    // Case-insensitive natural sort on sort_name, allocation-free
-    return str_compare(&item_a->sort_name, &item_b->sort_name);
-}
-
 int content_item_compare(const void *a, const void *b) {
     const content_item *item_a = (content_item *) a;
     const content_item *item_b = (content_item *) b;
@@ -166,10 +153,6 @@ void sort_items_time(content_item *content_items, const size_t count) {
     qsort(content_items, count, sizeof(content_item), history_time_compare);
 }
 
-content_item get_item_by_index(const content_item *items, const size_t index) {
-    return items[index];
-}
-
 int get_item_index_by_name(
     const content_item *content_items, const size_t count, const char *name, const content_type type
 ) {
@@ -209,20 +192,4 @@ void free_item_list(char ***list, int *count) {
 
     free(*list);
     *list = NULL;
-}
-
-void print_items(const content_item *content_items, const size_t count) {
-    for (size_t i = 0; i < count; i++) {
-        char message[MAX_BUFFER_SIZE];
-        snprintf(
-            message, sizeof(message),
-            "\nItem %zu\n\tfile_name=%s\n\tdisplay_name=%s\n\tsort_name=%s\n\tcontent_type=%d\n", i,
-            content_items[i].name, content_items[i].display_name, content_items[i].sort_name,
-            content_items[i].content_type
-        );
-
-        char log_location[PATH_MAX];
-        snprintf(log_location, sizeof(log_location), "%s/MUOS/log/collection.log", device.storage.rom.mount);
-        write_text_to_file(log_location, "a", CHAR, message);
-    }
 }

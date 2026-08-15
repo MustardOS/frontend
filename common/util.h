@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *get_random_hex(void);
-
 int clamp_range(int value, int min, int max);
 
 int pct_to_int(int pct, int min, int max);

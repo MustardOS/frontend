@@ -42,15 +42,11 @@ content_item *add_item(
 
 void remove_item(content_item **content_items, size_t *count, size_t index);
 
-int bucket_item_compare(const void *a, const void *b);
-
 int item_exists(const content_item *content_items, size_t count, const char *name);
 
 void sort_items(content_item *content_items, size_t count);
 
 void sort_items_time(content_item *content_items, size_t count);
-
-content_item get_item_by_index(const content_item *items, size_t index);
 
 int get_item_index_by_name(const content_item *content_items, size_t count, const char *name, content_type type);
 
@@ -59,5 +55,3 @@ int get_item_index_by_extra_data(const content_item *content_items, size_t count
 void free_items(content_item **content_items, size_t *count);
 
 void free_item_list(char ***list, int *count);
-
-void print_items(const content_item *content_items, size_t count);

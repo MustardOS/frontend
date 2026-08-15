@@ -54,9 +54,8 @@
 #define PERF_AUTODUMP_INTERVAL_MS 15000
 #define SLOW_CORE_PACE_RATIO      0.98
 
-#define CONTENT_RATIO_INTEGER_TOLERANCE 0.02
-#define PACE_VSYNC_TOLERANCE            1.10
-#define REFRESH_NOTICE_TLC              0.05
+#define PACE_VSYNC_TOLERANCE 1.10
+#define REFRESH_NOTICE_TLC   0.05
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -238,28 +237,6 @@ static unsigned run_core_batch(const unsigned frames) {
     hw_render_bridge_context_restore();
     video_bridge_set_frame_skip(0);
     return ran;
-}
-
-static double content_panel_ratio(void) {
-    const double locked = audio_bridge_locked_content_fps();
-    if (locked <= 0.0) return 0.0;
-
-    const int reported = display_panel_refresh_hz();
-    const double panel = reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
-    if (panel <= 0.0) return 0.0;
-
-    return panel / locked;
-}
-
-int core_content_pacing_keeps_vsync(void) {
-    const double ratio = content_panel_ratio();
-    if (ratio < 1.0) return 0;
-
-    const double nearest = (double) (long) (ratio + 0.5);
-    if (nearest < 1.0) return 0;
-
-    const double error = ratio > nearest ? ratio - nearest : nearest - ratio;
-    return error <= CONTENT_RATIO_INTEGER_TOLERANCE;
 }
 
 int core_content_needs_pacing(void) {

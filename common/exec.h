@@ -22,6 +22,4 @@ void turbo_time(int toggle, int show_done);
 
 void set_process_name(const char *module);
 
-const char *get_process_name(void);
-
 const char *module_from_func(const char *func);

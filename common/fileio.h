@@ -24,19 +24,15 @@ char *read_all_char_from(const char *filename);
 
 char *read_line_char_from(const char *filename, size_t line_number);
 
-int read_all_int_from(const char *filename, size_t buffer);
-
 int read_line_int_from(const char *filename, size_t line_number);
 
 unsigned long long read_all_long_from(const char *filename);
 
 void cfg_write_def_int(const char *path, int value);
 
-void cfg_write_def_char(const char *path, const char *value);
+int write_text_to_file(const char *filename, const char *mode, int type, ...);
 
-void write_text_to_file(const char *filename, const char *mode, int type, ...);
-
-void write_text_to_file_atomic(const char *filename, int type, ...);
+int write_text_to_file_atomic(const char *filename, int type, ...);
 
 void create_directories(const char *path, int parent_only);
 

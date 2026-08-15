@@ -37,6 +37,7 @@
 #include "vendor/rcheevos/include/rc_error.h"
 #include "vendor/rcheevos/include/rc_hash.h"
 #include "vendor/rcheevos/src/rc_libretro.h"
+
 #define CHEEVO_ACCOUNT_DIR              STORAGE_NETWORK "/cheevo"
 #define CHEEVO_PREVIEW_DIR              CHEEVO_ACCOUNT_DIR "/previews"
 #define CHEEVO_PREVIEW_CAP              16
@@ -1436,29 +1437,4 @@ void cheevo_progress_reset(void) {
     pending_progress = NULL;
     pending_progress_size = 0;
     if (client) rc_client_reset(client);
-}
-
-const char *cheevo_status_name(const cheevo_status value) {
-    switch (value) {
-        case cheevo_status_disabled:
-            return lang.muxretro.cheevo.status_disabled;
-        case cheevo_status_signed_out:
-            return lang.muxretro.cheevo.signed_out;
-        case cheevo_status_signing_in:
-            return lang.muxretro.cheevo.signing_in;
-        case cheevo_status_identifying:
-            return lang.muxretro.cheevo.status_identifying;
-        case cheevo_status_active_softcore:
-            return lang.muxretro.cheevo.softcore;
-        case cheevo_status_active_hardcore:
-            return lang.muxretro.cheevo.hardcore;
-        case cheevo_status_offline:
-            return lang.muxretro.cheevo.status_offline;
-        case cheevo_status_unsupported:
-            return lang.muxretro.cheevo.status_unsupported;
-        case cheevo_status_failed:
-            return lang.muxretro.cheevo.status_unavailable;
-        default:
-            return lang.generic.unknown;
-    }
 }
