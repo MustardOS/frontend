@@ -430,6 +430,18 @@ static void handle_dpad_down(void) {
     handle_list_nav_down();
 }
 
+static void handle_dpad_up_hold(void) {
+    if (dialogue_active(&save_dlg)) return;
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_dpad_down_hold(void) {
+    if (dialogue_active(&save_dlg)) return;
+
+    handle_list_nav_down_hold();
+}
+
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)) return;
 
@@ -499,8 +511,8 @@ int muxtweakadv_main(void) {
         .hold_handler = {
             [mux_input_dpad_left] = handle_option_prev,
             [mux_input_dpad_right] = handle_option_next,
-            [mux_input_dpad_up] = handle_dpad_up,
-            [mux_input_dpad_down] = handle_dpad_down,
+            [mux_input_dpad_up] = handle_dpad_up_hold,
+            [mux_input_dpad_down] = handle_dpad_down_hold,
             [mux_input_l1] = handle_frame_prev,
             [mux_input_r1] = handle_frame_next,
         }
