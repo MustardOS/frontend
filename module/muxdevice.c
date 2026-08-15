@@ -34,6 +34,7 @@ static void restore_device_options(void) {
 
 static void save_device_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_DEV(device, has_bluetooth, "board/bluetooth", INT, 0);
     CHECK_AND_SAVE_DEV(device, has_rgb, "led/rgb", INT, 0);
@@ -47,6 +48,8 @@ static void save_device_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_device = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {

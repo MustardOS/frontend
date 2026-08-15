@@ -632,15 +632,21 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(
         -1, visual, menu_counter_folder, lang.muxvisual.menucounterfolder, "menucounterfolder", hidden_visible, 2
     );
-    INIT_OPTION_ITEM(-1, visual, menu_counter_file, lang.muxvisual.menucounterfile, "menucounterfile", hidden_visible, 2);
+    INIT_OPTION_ITEM(
+        -1, visual, menu_counter_file, lang.muxvisual.menucounterfile, "menucounterfile", hidden_visible, 2
+    );
     INIT_OPTION_ITEM(
         -1, visual, display_empty_folder, lang.muxvisual.displayemptyfolder, "displayemptyfolder", hidden_visible, 2
     );
     INIT_OPTION_ITEM(-1, visual, hidden, lang.muxvisual.hidden, "hidden", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, group_content, lang.muxvisual.groupcontent, "groupcontent", group_content_options, 5);
     INIT_OPTION_ITEM(-1, custom, sort, lang.muxvisual.sort, "sort", NULL, 0);
-    INIT_OPTION_ITEM(-1, visual, content_collect, lang.muxvisual.contentcollect, "contentcollect", toggle_icon_visible, 3);
-    INIT_OPTION_ITEM(-1, visual, content_history, lang.muxvisual.contenthistory, "contenthistory", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(
+        -1, visual, content_collect, lang.muxvisual.contentcollect, "contentcollect", toggle_icon_visible, 3
+    );
+    INIT_OPTION_ITEM(
+        -1, visual, content_history, lang.muxvisual.contenthistory, "contenthistory", toggle_icon_visible, 3
+    );
     INIT_OPTION_ITEM(-1, visual, mixed_content, lang.muxvisual.mixedcontent, "mixedcontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, forward_history, lang.muxvisual.forwardhistory, "forwardhistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, content_width, lang.muxcontent.full_width, "width", disabled_enabled, 2);
@@ -1018,6 +1024,7 @@ static void restore_custom_options(void) {
 
 static int save_custom_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(visual, battery, "visual/battery", INT, 0);
     CHECK_AND_SAVE_STD(visual, clock, "visual/clock", INT, 0);
@@ -1053,9 +1060,10 @@ static int save_custom_options(void) {
         const int oi_current = lv_dropdown_get_selected(ui_dro_overlay_image_visual);
         if (oi_current != overlay_image_original) {
             is_modified++;
-            write_text_to_file(
-                CONF_CONFIG_PATH "visual/overlayimage", "w", INT, overlay_dropdown_to_config(oi_current)
-            );
+            if (!write_text_to_file(
+                    CONF_CONFIG_PATH "visual/overlayimage", "w", INT, overlay_dropdown_to_config(oi_current)
+                ))
+                save_failed++;
         }
     }
 
@@ -1063,7 +1071,10 @@ static int save_custom_options(void) {
         const int ot_current = lv_dropdown_get_selected(ui_dro_overlay_transparency_visual);
         if (ot_current != overlay_transparency_original) {
             is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "visual/overlaytransparency", "w", INT, pct_to_int(ot_current, 0, 255));
+            if (!write_text_to_file(
+                    CONF_CONFIG_PATH "visual/overlaytransparency", "w", INT, pct_to_int(ot_current, 0, 255)
+                ))
+                save_failed++;
         }
     }
 
@@ -1081,10 +1092,11 @@ static int save_custom_options(void) {
     // Stored the other way round to how it reads on screen
     if ((int) lv_dropdown_get_selected(ui_dro_box_art_hide_visual) != box_art_hide_original) {
         is_modified++;
-        write_text_to_file(
-            CONF_CONFIG_PATH "visual/boxarthide", "w", INT,
-            1 - (int) lv_dropdown_get_selected(ui_dro_box_art_hide_visual)
-        );
+        if (!write_text_to_file(
+                CONF_CONFIG_PATH "visual/boxarthide", "w", INT,
+                1 - (int) lv_dropdown_get_selected(ui_dro_box_art_hide_visual)
+            ))
+            save_failed++;
     }
 
     CHECK_AND_SAVE_STD(visual, box_art_transition, "visual/boxarttransition", INT, 0);
@@ -1097,7 +1109,8 @@ static int save_custom_options(void) {
 
     if ((int) config.settings.advanced.font != type_to_canonical((uint32_t) type_original)) {
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, config.settings.advanced.font);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, config.settings.advanced.font))
+            save_failed++;
     }
     CHECK_AND_SAVE_VAL(font, list_size, "settings/font/list_size", INT, font_size_values);
     CHECK_AND_SAVE_VAL(font, header_size, "settings/font/header_size", INT, font_size_values);
@@ -1109,7 +1122,7 @@ static int save_custom_options(void) {
         lv_dropdown_get_selected_str(ui_dro_font_name_font, name_current, sizeof(name_current));
         if (strcasecmp(name_current, font_name_saved) != 0) {
             is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, name_current);
+            if (!write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, name_current)) save_failed++;
         }
     }
 
@@ -1156,7 +1169,8 @@ static int save_custom_options(void) {
     if (lv_dropdown_get_selected(ui_dro_theme_resolution_custom) != theme_resolution_original) {
         is_modified++;
 
-        write_text_to_file(CONF_CONFIG_PATH "settings/general/theme_resolution", "w", INT, idx_theme_resolution);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/general/theme_resolution", "w", INT, idx_theme_resolution))
+            save_failed++;
         refresh_resolution = 1;
     }
 
@@ -1174,7 +1188,7 @@ static int save_custom_options(void) {
 
             char theme_active_txt_path[MAX_BUFFER_SIZE];
             snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
-            write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt);
+            if (!write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt)) save_failed++;
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
             snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", theme_base, theme_alt);
@@ -1230,6 +1244,8 @@ static int save_custom_options(void) {
 
         run_tweak_script(lang.generic.saving);
     }
+
+    REPORT_SAVE_FAILURE();
 
     if (file_exist(MUOS_PIK_LOAD)) remove(MUOS_PIK_LOAD);
     return 0;

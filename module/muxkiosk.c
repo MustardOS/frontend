@@ -76,6 +76,7 @@ static void restore_kiosk_options(void) {
 
 static void save_kiosk_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_KSK(kiosk, enable, "enable", INT);
     CHECK_AND_SAVE_KSK(kiosk, message, "message", INT);
@@ -131,6 +132,8 @@ static void save_kiosk_options(void) {
 
         refresh_kiosk = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {

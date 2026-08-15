@@ -287,31 +287,33 @@ static int save_power_options(void) {
     }
 
     int is_modified = 0;
+    int save_failed = 0;
 
     const int idx_shutdown =
         map_drop_down_to_value(lv_dropdown_get_selected(ui_dro_shutdown_power), shutdown_values, SHUTDOWN_COUNT, -2);
 
     if (lv_dropdown_get_selected(ui_dro_shutdown_power) != shutdown_original) {
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/shutdown", "w", INT, idx_shutdown);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/power/shutdown", "w", INT, idx_shutdown)) save_failed++;
     }
 
     const int idx_battery = pct_to_int(lv_dropdown_get_selected(ui_dro_battery_power), 0, 100);
     if (lv_dropdown_get_selected(ui_dro_battery_power) != battery_original) {
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/low_battery", "w", INT, idx_battery);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/power/low_battery", "w", INT, idx_battery)) save_failed++;
     }
 
     if (lv_dropdown_get_option_cnt(ui_dro_idle_display_power) > 1
         && lv_dropdown_get_selected(ui_dro_idle_display_power) != idle_display_original) {
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_display", "w", INT, idx_idle_display);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_display", "w", INT, idx_idle_display))
+            save_failed++;
     }
 
     if (lv_dropdown_get_option_cnt(ui_dro_idle_sleep_power) > 1
         && lv_dropdown_get_selected(ui_dro_idle_sleep_power) != idle_sleep_original) {
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_sleep", "w", INT, idx_idle_sleep);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/power/idle_sleep", "w", INT, idx_idle_sleep)) save_failed++;
     }
 
     if (lv_dropdown_get_option_cnt(ui_dro_idle_mute_power) > 1
@@ -345,7 +347,7 @@ static int save_power_options(void) {
         }
 
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_speed", "w", INT, ss_value);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_speed", "w", INT, ss_value)) save_failed++;
     }
 
     if (lv_dropdown_get_option_cnt(ui_dro_saver_type_power) > 1
@@ -354,10 +356,12 @@ static int save_power_options(void) {
             lv_dropdown_get_selected(ui_dro_saver_type_power), saver_type_values, SAVER_TYPE_COUNT, saver_type_dvd
         );
         is_modified++;
-        write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_type", "w", INT, idx_type);
+        if (!write_text_to_file(CONF_CONFIG_PATH "settings/power/saver_type", "w", INT, idx_type)) save_failed++;
     }
 
     if (is_modified > 0) run_tweak_script(lang.generic.saving);
+
+    REPORT_SAVE_FAILURE();
 
     if (get_selected_saver_type() == saver_type_disabled && idx_idle_display == 300 && idx_idle_sleep == 0
         && !file_exist(WR_PATH)) {

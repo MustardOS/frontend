@@ -38,6 +38,7 @@ static void restore_hdmi_options(void) {
 
 static void save_hdmi_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_MAP(hdmi, resolution, "settings/hdmi/resolution", hdmi_index, 11, 0);
     CHECK_AND_SAVE_STD(hdmi, space, "settings/hdmi/space", INT, 0);
@@ -49,6 +50,8 @@ static void save_hdmi_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {

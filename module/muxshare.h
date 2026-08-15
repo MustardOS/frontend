@@ -525,7 +525,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current);                                              \
+            if (!write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current)) save_failed++;                          \
         }                                                                                                              \
     } while (0)
 
@@ -534,7 +534,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, current + OFFSET);                                    \
+            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, current + OFFSET)) save_failed++;                \
         }                                                                                                              \
     } while (0)
 
@@ -543,7 +543,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, current + OFFSET);                                    \
+            if (!write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, current + OFFSET)) save_failed++;                \
         }                                                                                                              \
     } while (0)
 
@@ -552,7 +552,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, VALUES[current]);                                     \
+            if (!write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, VALUES[current])) save_failed++;                 \
         }                                                                                                              \
     } while (0)
 
@@ -561,7 +561,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, VALUES[current]);                                     \
+            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, VALUES[current])) save_failed++;                 \
         }                                                                                                              \
     } while (0)
 
@@ -571,7 +571,7 @@ void resolve_grid_item_images(
         if (current != NAME##_original) {                                                                              \
             int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT);                                      \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped);                                               \
+            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped)) save_failed++;                           \
         }                                                                                                              \
     } while (0)
 
@@ -581,7 +581,15 @@ void resolve_grid_item_images(
         int value = ((VAL_MIN) == (VAL_MAX)) ? (VAL_MIN) : pct_to_int(current, VAL_MIN, VAL_MAX);                      \
         if (value != NAME##_original) {                                                                                \
             is_modified++;                                                                                             \
-            write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, value);                                               \
+            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, value)) save_failed++;                           \
+        }                                                                                                              \
+    } while (0)
+
+#define REPORT_SAVE_FAILURE()                                                                                          \
+    do {                                                                                                               \
+        if (save_failed > 0) {                                                                                         \
+            LOG_ERROR(mux_module, "%s (%d)", lang.generic.save_fail, save_failed);                                     \
+            toast_message(lang.generic.save_fail, tst_wait_m);                                                         \
         }                                                                                                              \
     } while (0)
 
@@ -600,10 +608,6 @@ void resolve_grid_item_images(
 
 #define OPTION_APPLY_WIDTH(NAME)                                                                                       \
     adjust_label_value_width(ui_pnl_##NAME##_option, ui_val_##NAME##_option, ui_lbl_##NAME##_option)
-
-#define OPTION_SHOW(NAME) lv_obj_clear_flag(ui_pnl_##NAME##_option, LV_OBJ_FLAG_HIDDEN)
-
-#define OPTION_HIDE(NAME) lv_obj_add_flag(ui_pnl_##NAME##_option, LV_OBJ_FLAG_HIDDEN)
 
 #define OPTION_APPLY_LONG(NAME)                                                                                        \
     apply_text_long_dot(&theme, ui_lbl_##NAME##_option);                                                               \

@@ -49,6 +49,7 @@ static void restore_danger_options(void) {
 
 static void save_danger_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(danger, kernel_log, "danger/kernellog", INT, 0);
     CHECK_AND_SAVE_STD(danger, io_stats, "danger/iostats", INT, 0);
@@ -73,6 +74,8 @@ static void save_danger_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {

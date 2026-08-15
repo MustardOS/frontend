@@ -187,12 +187,13 @@ static void restore_rgbzone_options(void) {
 
 static void save_rgbzone_options(const int toast_vis) {
     int is_modified = 0;
+    int save_failed = 0;
 
     const int cur_colour = lv_dropdown_get_selected(ui_dro_colour_rgbzone);
     if (cur_colour != colour_original) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof path, "/opt/muos/config/%s", current_zone.colour_path);
-        write_text_to_file(path, "w", INT, cur_colour);
+        if (!write_text_to_file(path, "w", INT, cur_colour)) save_failed++;
         is_modified++;
     }
 
@@ -201,7 +202,7 @@ static void save_rgbzone_options(const int toast_vis) {
     if (cur_bright != bright_original) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof path, "/opt/muos/config/%s", current_zone.bright_path);
-        write_text_to_file(path, "w", INT, cur_bright);
+        if (!write_text_to_file(path, "w", INT, cur_bright)) save_failed++;
         is_modified++;
     }
 
@@ -209,6 +210,8 @@ static void save_rgbzone_options(const int toast_vis) {
         toast_message(lang.generic.saving, toast_vis);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 
     rgb_apply();
 }

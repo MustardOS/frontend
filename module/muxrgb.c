@@ -59,6 +59,18 @@ static const rgb_device_caps_t *rgb_caps_for(const char *code) {
 static const rgb_device_caps_t *rgb_caps = NULL;
 static int current_mode = RGB_MODE_OFF;
 
+static void show_help(void) {
+    const struct help_msg help_messages[] = {
+        {"mode", lang.muxrgb.help.mode},
+        {"bright", lang.muxrgb.help.bright_theme},
+#define RGB(NAME, UDATA) {UDATA, lang.muxrgb.help.zone},
+        RGB_ELEMENTS
+#undef RGB
+    };
+
+    gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
+}
+
 static int mode_raw_to_dropdown(const int raw) {
     switch (raw) {
         case RGB_MODE_STATIC:
@@ -574,6 +586,7 @@ static void handle_help(void) {
         return;
 
     play_sound(snd_info_open);
+    show_help();
 }
 
 static void init_elements(void) {

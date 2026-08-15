@@ -48,6 +48,7 @@ static void restore_netadv_options(void) {
 
 static void save_netadv_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(netadv, system_dns, "settings/network/system_dns", INT, 0);
     CHECK_AND_SAVE_STD(netadv, monitor, "settings/network/monitor", INT, 0);
@@ -64,6 +65,8 @@ static void save_netadv_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {

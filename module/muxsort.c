@@ -87,6 +87,7 @@ static int save_sort_option(const lv_obj_t *ui_dro_item, const int original_valu
 
 static void save_sort_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     is_modified += save_sort_option(ui_objects_value[0], default_original, "default");
     is_modified += save_sort_option(ui_objects_value[1], collection_original, "collection");
@@ -102,6 +103,8 @@ static void save_sort_options(void) {
         toast_message(lang.generic.saving, tst_wait_f);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void add_tag_item(const int index, const char *label, const char *glyph, const char *options) {

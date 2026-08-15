@@ -248,6 +248,7 @@ static void restore_tweak_options(void) {
 
 static void save_tweak_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     const char *startup_options[] = {"launcher", "explore", "collection", "history", "last", "resume"};
 
@@ -260,7 +261,7 @@ static void save_tweak_options(void) {
 
         if (sink_mod != audio_sink_original) {
             is_modified++;
-            write_text_to_file(CONF_CONFIG_PATH "settings/general/audiosink", "w", INT, sink_mod);
+            if (!write_text_to_file(CONF_CONFIG_PATH "settings/general/audiosink", "w", INT, sink_mod)) save_failed++;
 
             char idx_str[8];
             snprintf(idx_str, sizeof(idx_str), "%d", sink_mod);
@@ -282,6 +283,8 @@ static void save_tweak_options(void) {
     }
 
     if (is_modified > 0) run_tweak_script(lang.generic.saving);
+
+    REPORT_SAVE_FAILURE();
 }
 
 static char **load_combos(const char *filename, int *count) {

@@ -36,6 +36,7 @@ static void restore_theme_filter_options(void) {
 
 static void save_theme_filter_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(themefilter, all_themes, "theme/filter/allthemes", INT, 0);
     CHECK_AND_SAVE_STD(themefilter, grid, "theme/filter/grid", INT, 0);
@@ -44,9 +45,10 @@ static void save_theme_filter_options(void) {
 
     if (strcmp(lookup_original_value, lv_label_get_text(ui_val_lookup_themefilter)) != 0) {
         is_modified++;
-        write_text_to_file(
-            CONF_CONFIG_PATH "theme/filter/lookup", "w", CHAR, lv_label_get_text(ui_val_lookup_themefilter)
-        );
+        if (!write_text_to_file(
+                CONF_CONFIG_PATH "theme/filter/lookup", "w", CHAR, lv_label_get_text(ui_val_lookup_themefilter)
+            ))
+            save_failed++;
     }
 
     if (is_modified > 0) {
@@ -54,6 +56,8 @@ static void save_theme_filter_options(void) {
         refresh_config = 1;
         theme_down_index = 0;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void init_navigation_group(void) {

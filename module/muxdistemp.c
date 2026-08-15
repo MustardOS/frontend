@@ -87,6 +87,7 @@ static void restore_distemp_options(void) {
 
 static void save_distemp_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(distemp, schedule, "settings/colour/schedule_mode", INT, 0);
 
@@ -118,6 +119,8 @@ static void save_distemp_options(void) {
             apply_colour_temp((int) lv_dropdown_get_selected(ui_dro_temp_distemp) - 255);
         }
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void refresh_navigation(void) {

@@ -33,6 +33,7 @@ static void restore_btall_options(void) {
 
 static void save_btall_options(void) {
     int is_modified = 0;
+    int save_failed = 0;
 
     CHECK_AND_SAVE_STD(btall, auto_connect, "bluetooth/autoconnect", INT, 0);
 
@@ -41,6 +42,8 @@ static void save_btall_options(void) {
         run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
         refresh_config = 1;
     }
+
+    REPORT_SAVE_FAILURE();
 }
 
 static void check_focus(void);

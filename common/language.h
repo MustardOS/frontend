@@ -138,6 +138,7 @@ struct mux_lang {
         char restore[MAX_BUFFER_SIZE];
         char restricted[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
+        char save_fail[MAX_BUFFER_SIZE];
         char saving[MAX_BUFFER_SIZE];
         char scan[MAX_BUFFER_SIZE];
         char scroll[MAX_BUFFER_SIZE];

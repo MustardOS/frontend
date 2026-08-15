@@ -256,6 +256,7 @@ static const lang_field lang_fields[] = {
     {"generic", LANG_OFF(generic.restore), lang_generic, "Restore"},
     {"generic", LANG_OFF(generic.restricted), lang_generic, "Restricted"},
     {"generic", LANG_OFF(generic.save), lang_generic, "Save"},
+    {"generic", LANG_OFF(generic.save_fail), lang_generic, "Could not save! Storage may be full or read only!"},
     {"generic", LANG_OFF(generic.saving), lang_generic, "Saving..."},
     {"generic", LANG_OFF(generic.scan), lang_generic, "Scan"},
     {"generic", LANG_OFF(generic.scroll), lang_generic, "Scroll"},
