@@ -76,7 +76,13 @@ void audio_bridge_wait_for_headroom(uint32_t budget_ms);
 
 void audio_bridge_note_core_frames(unsigned frames);
 
+uint64_t audio_bridge_dropped_frames(void);
+
 double audio_bridge_content_fps(void);
+
+double audio_bridge_locked_content_fps(void);
+
+double audio_bridge_pace_target_ms(void);
 
 void audio_bridge_drc_tick(void);
 
@@ -137,6 +143,10 @@ float frame_pacer_get_delay_ms(void);
 void core_set_target_fps(double new_fps);
 
 double core_get_target_fps(void);
+
+int core_content_needs_pacing(void);
+
+int core_content_pacing_keeps_vsync(void);
 
 void input_bridge_suppress_held(void);
 

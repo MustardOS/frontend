@@ -48,7 +48,12 @@
 #define RESUME_COOLDOWN_MS  1500
 #define AUDIO_MAX_CATCHUP   3
 #define UI_TASK_INTERVAL_MS 16
-#define REFRESH_NOTICE_TLC  0.05
+
+#define PERF_AUTODUMP_INTERVAL_MS 15000
+#define SLOW_CORE_PACE_RATIO      0.98
+
+#define CONTENT_RATIO_INTEGER_TOLERANCE 0.02
+#define REFRESH_NOTICE_TLC              0.05
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -200,18 +205,24 @@ static unsigned run_core_batch(const unsigned frames) {
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
 
-        const uint64_t run_start = SDL_GetPerformanceCounter();
         const int network_active = netplay_is_active();
         const int network_frame = network_active && netplay_is_playing();
         if (network_frame && !netplay_before_frame()) break;
         environment_notify_frame_time();
         if (is_last && !network_active && !cheevo_restricted()) runahead_before_frame(frames == 1);
+
+        const uint64_t run_start = SDL_GetPerformanceCounter();
         current_core.retro_run();
-        ran++;
-        cheevo_do_frame();
-        if (network_frame) netplay_after_frame();
         const double run_ms =
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+        ran++;
+
+        const uint64_t cheevo_frame_start = perf_begin();
+        cheevo_do_frame();
+        perf_end(perf_stage_cheevo_frame, cheevo_frame_start);
+
+        if (network_frame) netplay_after_frame();
+
         core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
         perf_record(perf_stage_core, run_ms);
 
@@ -224,6 +235,40 @@ static unsigned run_core_batch(const unsigned frames) {
     hw_render_bridge_context_restore();
     video_bridge_set_frame_skip(0);
     return ran;
+}
+
+static double content_panel_ratio(void) {
+    const double locked = audio_bridge_locked_content_fps();
+    if (locked <= 0.0) return 0.0;
+
+    const int reported = display_panel_refresh_hz();
+    const double panel = reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
+    if (panel <= 0.0) return 0.0;
+
+    return panel / locked;
+}
+
+int core_content_pacing_keeps_vsync(void) {
+    const double ratio = content_panel_ratio();
+    if (ratio < 1.0) return 0;
+
+    const double nearest = (double) (long) (ratio + 0.5);
+    if (nearest < 1.0) return 0;
+
+    const double error = ratio > nearest ? ratio - nearest : nearest - ratio;
+    return error <= CONTENT_RATIO_INTEGER_TOLERANCE;
+}
+
+int core_content_needs_pacing(void) {
+    if (session_settings.fps_limit != fps_limit_auto) return 0;
+
+    const double locked = audio_bridge_locked_content_fps();
+    if (locked <= 0.0) return 0;
+
+    const int reported = display_panel_refresh_hz();
+    const double panel = reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
+
+    return locked < panel * SLOW_CORE_PACE_RATIO;
 }
 
 static void pace_core_output(const uint64_t frame_start) {
@@ -241,17 +286,20 @@ static void pace_core_output(const uint64_t frame_start) {
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
-    perf_record(perf_stage_audio_queue, (double) audio_bridge_queued_ms());
+    perf_record(perf_stage_audio_queue, audio_bridge_queued_ms());
     audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
     const int slowmo_active = hotkeys_is_slow_motion_active();
-    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active) {
+    const double audio_target_ms = session_settings.fps_limit == fps_limit_auto ? audio_bridge_pace_target_ms() : 0.0;
+    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_target_ms <= 0.0) {
         fps_limit_deadline = 0.0;
         return;
     }
 
-    double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0 : 1000.0 / target_fps;
+    double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0
+                       : audio_target_ms > 0.0                    ? audio_target_ms
+                                                                  : 1000.0 / target_fps;
     if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
 
     const double now = SDL_GetTicks();
@@ -546,6 +594,7 @@ int main(const int argc, char *argv[]) {
 
     uint32_t timeline_deadline = 0;
     uint32_t ui_task_deadline = 0;
+    uint32_t perf_autodump_deadline = SDL_GetTicks() + PERF_AUTODUMP_INTERVAL_MS;
     int timeline_armed_ms = 0;
 
     while (!quit) {
@@ -692,16 +741,16 @@ int main(const int argc, char *argv[]) {
                        && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
 
-                if (core_run_ema_ms > 0.0) {
+                if (hw_render_bridge_active()) {
+                    extra = 0;
+                } else if (core_run_ema_ms > 0.0) {
                     const double headroom = 1000.0 / target_fps / core_run_ema_ms - 1.0;
-
-                    if (headroom <= 0.0)
-                        extra = 1;
-                    else if (headroom < (double) AUDIO_MAX_CATCHUP)
+                    if (headroom <= 0.0) {
+                        extra = 0;
+                    } else if (headroom < (double) AUDIO_MAX_CATCHUP) {
                         extra = (unsigned) headroom;
+                    }
                 }
-
-                if (hw_render_bridge_active() && extra > 1) extra = 1;
 
                 frames = 1 + extra;
             }
@@ -803,8 +852,18 @@ int main(const int argc, char *argv[]) {
         frame_pacer_after_present();
         cheevo_present_tick();
 
+        if (perf_capture_is_automatic() && loop_now >= perf_autodump_deadline) {
+            perf_export_trace(RETRO_SHARE_PATH "performance.csv");
+            perf_autodump_deadline = loop_now + PERF_AUTODUMP_INTERVAL_MS;
+        }
+
         if (core_ran) pace_core_output(frame_start);
         perf_frame_complete(core_ran);
+    }
+
+    if (perf_is_capture_active()) {
+        if (perf_export_trace(RETRO_SHARE_PATH "performance.csv") == 0)
+            LOG_INFO(mux_module, "Performance capture written to " RETRO_SHARE_PATH "performance.csv");
     }
 
     if (netplay_wait_visible) loading_message_hide();

@@ -39,6 +39,14 @@
 #define CONTENT_FPS_MAX           130.0
 #define CONTENT_FPS_SETTLE_FRAMES 180
 
+#define CONTENT_FPS_SNAP_TOLERANCE 0.06
+#define CONTENT_FPS_LOCK_FRAMES    150
+#define CONTENT_FPS_WINDOW_FRAMES  60
+#define CONTENT_FPS_BREAK_RATIO    0.25
+
+#define PACE_QUEUE_GAIN       0.08
+#define PACE_CORRECTION_LIMIT 0.20
+
 static SDL_AudioDeviceID audio_dev = 0;
 
 static int opened_freq = 0;
@@ -56,6 +64,12 @@ static SDL_AudioStream *resampler = NULL;
 static uint64_t submitted_frames = 0;
 static double content_fps_ema = 0.0;
 static unsigned content_fps_samples = 0;
+static double content_fps_locked = 0.0;
+static double content_fps_candidate = 0.0;
+static unsigned content_fps_agree = 0;
+static double content_fps_window_sum = 0.0;
+static unsigned content_fps_window_count = 0;
+static double last_batch_ms = 0.0;
 
 static int16_t scratch_buf[AUDIO_SCRATCH_FRAMES * 2];
 static uint8_t resample_buf[AUDIO_SCRATCH_FRAMES * 2 * sizeof(int16_t)];
@@ -451,6 +465,12 @@ int audio_bridge_open(const double core_sample_rate) {
     submitted_frames = 0;
     content_fps_ema = 0.0;
     content_fps_samples = 0;
+    content_fps_locked = 0.0;
+    content_fps_candidate = 0.0;
+    content_fps_agree = 0;
+    content_fps_window_sum = 0.0;
+    content_fps_window_count = 0;
+    last_batch_ms = 0.0;
 
     free_resampler();
     if ((int) core_sample_rate != have.freq) {
@@ -535,10 +555,29 @@ void audio_bridge_close(void) {
     if (SDL_WasInit(SDL_INIT_AUDIO)) SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
+static double snap_content_fps(const double raw) {
+    static const double standard[] = {59.94, 50.0, 29.97, 25.0};
+
+    double best = 0.0;
+    double best_error = CONTENT_FPS_SNAP_TOLERANCE;
+
+    for (size_t i = 0; i < sizeof(standard) / sizeof(standard[0]); i++) {
+        const double diff = raw > standard[i] ? raw - standard[i] : standard[i] - raw;
+        const double error = diff / standard[i];
+        if (error < best_error) {
+            best_error = error;
+            best = standard[i];
+        }
+    }
+
+    return best;
+}
+
 void audio_bridge_note_core_frames(const unsigned frames) {
     const uint64_t produced = submitted_frames;
     submitted_frames = 0;
 
+    if (produced && core_native_rate > 0.0) last_batch_ms = (double) produced / core_native_rate * 1000.0;
     if (!frames || !produced || audio_muted || core_native_rate <= 0.0) return;
 
     const double per_frame = (double) produced / (double) frames;
@@ -551,7 +590,70 @@ void audio_bridge_note_core_frames(const unsigned frames) {
                           ? implied
                           : content_fps_ema * (1.0 - CONTENT_FPS_SMOOTHING) + implied * CONTENT_FPS_SMOOTHING;
 
-    if (content_fps_samples < CONTENT_FPS_SETTLE_FRAMES) content_fps_samples++;
+    content_fps_window_sum += implied;
+    if (++content_fps_window_count >= CONTENT_FPS_WINDOW_FRAMES) {
+        const double window = content_fps_window_sum / (double) content_fps_window_count;
+        content_fps_window_sum = 0.0;
+        content_fps_window_count = 0;
+
+        LOG_DEBUG(
+            mux_module, "Content rate window %.2f Hz, average %.2f Hz, locked %.2f Hz", window, content_fps_ema,
+            content_fps_locked
+        );
+
+        if (content_fps_locked > 0.0) {
+            const double drift =
+                window > content_fps_locked ? window - content_fps_locked : content_fps_locked - window;
+            if (drift / content_fps_locked > CONTENT_FPS_BREAK_RATIO) {
+                LOG_INFO(
+                    mux_module, "Content rate moved to %.2f Hz, releasing the %.2f Hz lock", window, content_fps_locked
+                );
+                content_fps_locked = 0.0;
+                content_fps_candidate = 0.0;
+                content_fps_agree = 0;
+                content_fps_ema = window;
+            }
+        }
+    }
+
+    if (content_fps_samples < CONTENT_FPS_SETTLE_FRAMES) {
+        content_fps_samples++;
+        return;
+    }
+
+    const double snapped = snap_content_fps(content_fps_ema);
+    if (snapped > 0.0 && snapped == content_fps_candidate) {
+        if (content_fps_agree < CONTENT_FPS_LOCK_FRAMES) content_fps_agree++;
+        if (content_fps_agree >= CONTENT_FPS_LOCK_FRAMES && content_fps_locked != snapped) {
+            content_fps_locked = snapped;
+            LOG_INFO(mux_module, "Content rate locked at %.2f Hz", snapped);
+        }
+        return;
+    }
+
+    content_fps_candidate = snapped;
+    content_fps_agree = 0;
+}
+
+double audio_bridge_locked_content_fps(void) {
+    return content_fps_locked;
+}
+
+double audio_bridge_pace_target_ms(void) {
+    if (last_batch_ms <= 0.0 || !audio_bridge_is_active() || audio_muted) return 0.0;
+
+    const double centre = ((double) audio_bridge_low_water_ms() + (double) audio_bridge_high_water_ms()) * 0.5;
+    const double queued = (double) audio_bridge_queued_ms();
+
+    double target = last_batch_ms + (queued - centre) * PACE_QUEUE_GAIN;
+
+    const double lowest = last_batch_ms * (1.0 - PACE_CORRECTION_LIMIT);
+    const double highest = last_batch_ms * (1.0 + PACE_CORRECTION_LIMIT);
+
+    if (target < lowest) target = lowest;
+    if (target > highest) target = highest;
+
+    return target;
 }
 
 double audio_bridge_content_fps(void) {
@@ -598,6 +700,10 @@ void audio_bridge_set_paused(const int pause) {
 void audio_bridge_set_muted(const int mute) {
     if (mute && !audio_muted) audio_bridge_discard_sample_fifo();
     audio_muted = mute;
+}
+
+uint64_t audio_bridge_dropped_frames(void) {
+    return dropped_frames;
 }
 
 int audio_bridge_is_muted(void) {
@@ -726,10 +832,13 @@ void audio_bridge_reset_period_floor(void) {
 static void enforce_latency_ceiling(const uint32_t high_ms) {
     if (high_ms == 0) return;
 
-    const uint32_t ceiling_ms = high_ms * AUDIO_LATENCY_CEILING_RATIO;
+    uint32_t keep_ms = high_ms;
+    if (keep_ms < AUDIO_RESUME_PREFILL_MIN_MS) keep_ms = AUDIO_RESUME_PREFILL_MIN_MS;
+
+    const uint32_t ceiling_ms = keep_ms * AUDIO_LATENCY_CEILING_RATIO;
     if (audio_bridge_queued_ms() <= ceiling_ms) return;
 
-    const uint32_t keep = (uint32_t) ((uint64_t) high_ms * (uint64_t) opened_freq / 1000ULL);
+    const uint32_t keep = (uint32_t) ((uint64_t) keep_ms * (uint64_t) opened_freq / 1000ULL);
 
     SDL_LockAudioDevice(audio_dev);
     const uint32_t write_idx = ring_write_index;
