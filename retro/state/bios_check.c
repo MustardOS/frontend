@@ -62,7 +62,7 @@ int bios_check_scan(const char *core_file_path) {
     for (int i = 0; i < entry_count; i++) {
         char bios_path[MAX_BUFFER_SIZE];
         snprintf(bios_path, sizeof(bios_path), "%s/%s", STORAGE_BIOS, entries[i].filename);
-        entries[i].present = file_exist(bios_path);
+        entries[i].present = file_exist_nocase(bios_path, NULL, 0);
     }
 
     return entry_count;

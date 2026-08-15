@@ -1103,6 +1103,15 @@ static const lang_field lang_fields[] = {
     {"muxinstall", LANG_OFF(muxinstall.help.language), lang_specific, "Select your preferred language\n\nTranslations supported by Weblate"},
     {"muxinstall", LANG_OFF(muxinstall.help.install), lang_specific, "Prepares the storage and installs MustardOS.\n\nThis is the point of no return, so be sure anything you want off the card is already off it."},
     {"muxinstall", LANG_OFF(muxinstall.help.shutdown), lang_specific, "Shuts the device down properly, so nothing is left half written to your card."},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.title), lang_specific, "Storage Format"},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.desc), lang_specific, "Choose how the primary storage should be prepared."},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.vfat), lang_specific, "FAT32"},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.exfat), lang_specific, "exFAT"},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.ext4), lang_specific, "EXT4"},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.about_vfat), lang_specific, "Works with most computers, but cannot hold a single file larger than 4GB."},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.about_exfat), lang_specific, "Recommended. Handles large files and reads on any computer without extra software."},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.about_ext4), lang_specific, "Copes better if the console is switched off suddenly, but some computers cannot read it without extra software."},
+    {"muxinstall", LANG_OFF(muxinstall.filesystem.no_tooling), lang_specific, "This device cannot format the primary storage"},
 
     // muxkiosk
     {"muxkiosk", LANG_OFF(muxkiosk.title), lang_specific, "Kiosk Settings"},

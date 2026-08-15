@@ -21,6 +21,45 @@ int file_exist(const char *filename) {
     return access(filename, F_OK) == 0;
 }
 
+int file_exist_nocase(const char *path, char *resolved, const size_t resolved_size) {
+    if (!path || !*path) return 0;
+
+    if (file_exist(path)) {
+        if (resolved && resolved_size) snprintf(resolved, resolved_size, "%s", path);
+        return 1;
+    }
+
+    const char *slash = strrchr(path, '/');
+    if (!slash || slash == path) return 0;
+
+    char folder[MAX_BUFFER_SIZE];
+    const size_t folder_len = (size_t) (slash - path);
+    if (folder_len >= sizeof(folder)) return 0;
+
+    memcpy(folder, path, folder_len);
+    folder[folder_len] = '\0';
+
+    const char *wanted = slash + 1;
+    if (!*wanted) return 0;
+
+    DIR *dir = opendir(folder);
+    if (!dir) return 0;
+
+    int found = 0;
+    const struct dirent *entry;
+
+    while ((entry = readdir(dir))) {
+        if (strcasecmp(entry->d_name, wanted) != 0) continue;
+
+        if (resolved && resolved_size) snprintf(resolved, resolved_size, "%s/%s", folder, entry->d_name);
+        found = 1;
+        break;
+    }
+
+    closedir(dir);
+    return found;
+}
+
 int dir_exist(const char *dirname) {
     struct stat stats;
     return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
@@ -95,26 +134,29 @@ char *get_execute_result_argv(const char *const argv[], const int line) {
         waited = waitpid(pid, &status, 0);
     } while (waited < 0 && errno == EINTR);
 
-    if (failed || waited != pid || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        free(result);
-        return NULL;
-    }
+    char *selected = NULL;
 
-    if (line < 0) return result;
+    if (!failed && waited == pid && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        if (line < 0) {
+            selected = result;
+            result = NULL;
+        } else {
+            char *start = result;
 
-    char *start = result;
-    for (int current = 0; current < line; current++) {
-        start = strchr(start, '\n');
-        if (!start) {
-            free(result);
-            return NULL;
+            for (int current = 0; current < line && start; current++) {
+                start = strchr(start, '\n');
+                if (start) start++;
+            }
+
+            if (start) {
+                char *end = strchr(start, '\n');
+                if (end) *end = '\0';
+
+                selected = strdup(start);
+            }
         }
-        start++;
     }
 
-    char *end = strchr(start, '\n');
-    if (end) *end = '\0';
-    char *selected = strdup(start);
     free(result);
     return selected;
 }
@@ -637,12 +679,11 @@ void get_storage_info(const char *partition, double *total, double *free, double
 
 int copy_file(const char *from, const char *to) {
     int fd_to = -1;
-    int fd_from = -1;
     int saved_errno = 0;
 
     struct stat st;
 
-    fd_from = open(from, O_RDONLY | O_CLOEXEC);
+    const int fd_from = open(from, O_RDONLY | O_CLOEXEC);
     if (fd_from < 0) return -1;
 
     if (fstat(fd_from, &st) < 0) goto out_error;

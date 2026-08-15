@@ -204,7 +204,7 @@ int load_image_catalogue(
             cat_dir_entry *e = cat_dir_lookup(dir);
             if (e) {
                 if (!cat_dir_has_file(e, filename)) continue;
-            } else if (!file_exist(full_path)) {
+            } else if (!file_exist_nocase(full_path, full_path, sizeof(full_path))) {
                 continue;
             }
 
@@ -242,7 +242,7 @@ int load_manual_catalogue(
         const int pw = snprintf(full_path, sizeof(full_path), "%s/%s", dir, filename);
         if (pw < 0 || (size_t) pw >= sizeof(full_path)) continue;
 
-        if (!file_exist(full_path)) continue;
+        if (!file_exist_nocase(full_path, full_path, sizeof(full_path))) continue;
 
         snprintf(manual_path, path_size, "%s", full_path);
         LOG_DEBUG(mux_module, "Catalogue manual found: %s", manual_path);
@@ -282,7 +282,7 @@ int load_video_catalogue(
             if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
 
             const int pw = snprintf(video_path, path_size, "%s/%s", dir, filename);
-            if (pw >= 0 && (size_t) pw < path_size && file_exist(video_path)) return 1;
+            if (pw >= 0 && (size_t) pw < path_size && file_exist_nocase(video_path, video_path, path_size)) return 1;
         }
     }
 

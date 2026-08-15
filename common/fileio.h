@@ -14,6 +14,8 @@ enum count_type { count_files, count_dirs, count_both };
 
 int file_exist(const char *filename);
 
+int file_exist_nocase(const char *path, char *resolved, size_t resolved_size);
+
 int dir_exist(const char *dirname);
 
 char *get_execute_result_argv(const char *const argv[], int line);

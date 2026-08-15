@@ -1146,6 +1146,17 @@ struct mux_lang {
             char install[MAX_BUFFER_SIZE];
             char shutdown[MAX_BUFFER_SIZE];
         } help;
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char desc[MAX_BUFFER_SIZE];
+            char vfat[MAX_BUFFER_SIZE];
+            char exfat[MAX_BUFFER_SIZE];
+            char ext4[MAX_BUFFER_SIZE];
+            char about_vfat[MAX_BUFFER_SIZE];
+            char about_exfat[MAX_BUFFER_SIZE];
+            char about_ext4[MAX_BUFFER_SIZE];
+            char no_tooling[MAX_BUFFER_SIZE];
+        } filesystem;
     } muxinstall;
 
     struct {

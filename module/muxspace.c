@@ -852,15 +852,23 @@ static void ask_prepare_format(void) {
         return;
     }
 
+    int start = 0;
+    for (int i = 0; i < fs_offered; i++) {
+        if (fs_offer[i] != fs_exfat) continue;
+
+        start = i;
+        break;
+    }
+
     char message[MAX_BUFFER_SIZE];
-    format_message(message, sizeof(message), 0);
+    format_message(message, sizeof(message), start);
 
     dialogue_init_choice(
         &format_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, labels, fs_offered, lang.generic.select,
         lang.generic.cancel
     );
 
-    dialogue_open(&format_dlg, &theme);
+    dialogue_open_at(&format_dlg, &theme, start);
 }
 
 static void nav_refresh(void);
