@@ -28,6 +28,7 @@ enum perf_stage {
     perf_stage_ui_logic,
     perf_stage_ui_task,
     perf_stage_audio_queue,
+    perf_stage_cheevo_frame,
     perf_stage_count
 };
 
@@ -62,6 +63,8 @@ void perf_set_hud_active(int active);
 void perf_set_capture_active(int active);
 
 int perf_is_capture_active(void);
+
+int perf_capture_is_automatic(void);
 
 int perf_is_enabled(void);
 

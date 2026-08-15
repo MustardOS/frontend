@@ -3,6 +3,8 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "../../common/display.h"
+#include "../../common/log.h"
+#include "../../common/init.h"
 #include "perf.h"
 #include "muxretro.h"
 #include "../video/hw_render.h"
@@ -58,8 +60,10 @@ static unsigned cheevo_cache_misses;
 static unsigned cheevo_cache_fallbacks;
 static unsigned cheevo_queue_rejections;
 static unsigned cheevo_preview_drops;
+static uint64_t audio_dropped_baseline;
 static int hud_active;
 static int capture_active;
+static int capture_automatic;
 static int enabled;
 
 static double elapsed_ms(const uint64_t start) {
@@ -135,6 +139,7 @@ static void reset(void) {
     cheevo_queue_rejections = 0;
     cheevo_preview_drops = 0;
     pending_present_timing = 0;
+    audio_dropped_baseline = audio_bridge_dropped_frames();
 }
 
 static void note_present_timing(const double draw_ms, const double flip_ms) {
@@ -150,6 +155,13 @@ void perf_init(void) {
     capture_active = 0;
     enabled = 0;
     reset();
+
+    const char *env = getenv("MUXRETRO_PERF_CAPTURE");
+    if (env && *env == '1') {
+        perf_set_capture_active(1);
+        capture_automatic = 1;
+        LOG_INFO(mux_module, "Performance capture armed by MUXRETRO_PERF_CAPTURE");
+    }
 }
 
 static void sync_enabled(void) {
@@ -174,6 +186,10 @@ void perf_set_capture_active(const int active) {
 
 int perf_is_capture_active(void) {
     return capture_active;
+}
+
+int perf_capture_is_automatic(void) {
+    return capture_automatic;
 }
 
 int perf_is_enabled(void) {
@@ -204,6 +220,18 @@ void perf_record(const enum perf_stage stage, const double ms) {
     push(&series[stage], ms);
 }
 
+static double perf_target_hz(void) {
+    if (core_content_needs_pacing()) {
+        const double locked = audio_bridge_locked_content_fps();
+        if (locked > 0.0) return locked;
+    }
+
+    const int panel = display_panel_refresh_hz();
+    if (panel > 0) return panel;
+
+    return frame_pacer_get_refresh_hz();
+}
+
 void perf_frame_complete(const int record) {
     if (!enabled) return;
 
@@ -213,8 +241,8 @@ void perf_frame_complete(const int record) {
         push(&series[perf_stage_frame], frame_ms);
         frames_observed++;
 
-        const double refresh_hz = frame_pacer_get_refresh_hz();
-        if (refresh_hz > 0.0 && frame_ms > 1000.0 / refresh_hz * 1.5) missed_refreshes++;
+        const double target_hz = perf_target_hz();
+        if (target_hz > 0.0 && frame_ms > 1000.0 / target_hz * 1.5) missed_refreshes++;
     }
     frame_start = now;
 }
@@ -330,7 +358,7 @@ int perf_export_trace(const char *path) {
         "present_flip", "audio_wait", "input_present",  "present_to_poll", "frame_delay",
         "gl_enter",     "gl_leave",   "netplay_digest", "cheevo_callback", "screenshot",
         "state_save",   "services",   "cheevo_tick",    "netplay_tick",    "maintenance",
-        "control",      "ui_logic",   "ui_task",        "audio_queue"
+        "control",      "ui_logic",   "ui_task",        "audio_queue",     "cheevo_frame"
     };
 
     FILE *f = fopen(path, "w");
@@ -390,7 +418,20 @@ int perf_export_trace(const char *path) {
         f, "missed_refresh_percent,%.2f\n",
         frames_observed ? 100.0 * (double) missed_refreshes / (double) frames_observed : 0.0
     );
+    int audio_freq = 0, audio_channels = 0;
+    audio_bridge_get_info(&audio_freq, &audio_channels);
+
+    const uint64_t total_dropped = audio_bridge_dropped_frames();
+    const uint64_t audio_dropped = total_dropped > audio_dropped_baseline ? total_dropped - audio_dropped_baseline : 0;
+
+    fprintf(f, "audio_low_water_ms,%u\n", audio_bridge_low_water_ms());
+    fprintf(f, "audio_high_water_ms,%u\n", audio_bridge_high_water_ms());
+    fprintf(f, "audio_dropped_frames,%llu\n", (unsigned long long) audio_dropped);
+    fprintf(f, "audio_dropped_seconds,%.3f\n", audio_freq > 0 ? (double) audio_dropped / (double) audio_freq : 0.0);
     fprintf(f, "content_hz,%.4f\n", audio_bridge_content_fps());
+    fprintf(f, "content_locked_hz,%.4f\n", audio_bridge_locked_content_fps());
+    fprintf(f, "content_paced,%d\n", core_content_needs_pacing());
+    fprintf(f, "paced_target_hz,%.4f\n", perf_target_hz());
     fprintf(f, "panel_hz,%d\n", display_panel_refresh_hz());
 
     const char *gl_context = "none";
