@@ -151,17 +151,6 @@
     DETAIL_NETWORK_ELEMENTS                                                                                            \
     DETAIL_TRAFFIC_ELEMENTS
 
-#define BATINFO_ELEMENTS                                                                                               \
-    BATINFO(capacity, "capacity")                                                                                      \
-    BATINFO(voltage, "voltage")                                                                                        \
-    BATINFO(status, "status")                                                                                          \
-    BATINFO(health, "health")                                                                                          \
-    BATINFO(design_cap, "designcap")                                                                                   \
-    BATINFO(last_charged, "lastcharged")                                                                               \
-    BATINFO(time_on_battery, "timeonbattery")                                                                          \
-    BATINFO(battery_used, "batteryused")                                                                               \
-    BATINFO(charger, "charger")
-
 #define BTALL_ELEMENTS BTALL(auto_connect, "autoconnect")
 
 #define BTDEV_INFO_ELEMENTS                                                                                            \
@@ -182,19 +171,6 @@
     BTDEV(status, "status")                                                                                            \
     BTDEV(forget, "forget")
 
-#define CHRONY_ELEMENTS                                                                                                \
-    CHRONY(reference, "reference")                                                                                     \
-    CHRONY(stratum, "stratum")                                                                                         \
-    CHRONY(ref_time, "reftime")                                                                                        \
-    CHRONY(system_time, "system")                                                                                      \
-    CHRONY(last_offset, "last")                                                                                        \
-    CHRONY(rms_offset, "rms")                                                                                          \
-    CHRONY(frequency, "freq")                                                                                          \
-    CHRONY(root_delay, "delay")                                                                                        \
-    CHRONY(root_disp, "disp")                                                                                          \
-    CHRONY(update_int, "update")                                                                                       \
-    CHRONY(leap, "leap")
-
 #define CONFIG_ELEMENTS                                                                                                \
     CONFIG(general, "general")                                                                                         \
     CONFIG(custom, "custom")                                                                                           \
@@ -210,21 +186,6 @@
     CONNECT(proxy, "net_proxy")                                                                                        \
     CONNECT(services, "service")                                                                                       \
     CONNECT(bluetooth, "bluetooth")
-
-#define CONTENT_ELEMENTS                                                                                               \
-    CONTENT(launch_swap, "launch_swap")                                                                                \
-    CONTENT(shuffle, "shuffle")                                                                                        \
-    CONTENT(box_art_image, "boxart")                                                                                   \
-    CONTENT(box_art_align, "align")                                                                                    \
-    CONTENT(box_art_transition, "boxarttransition")                                                                    \
-    CONTENT(box_art_scale, "boxartscale")                                                                              \
-    CONTENT(box_art_padding, "boxartpadding")                                                                          \
-    CONTENT(box_art_placeholder, "boxartplaceholder")                                                                  \
-    CONTENT(video_preview, "videopreview")                                                                             \
-    CONTENT(full_width, "width")                                                                                       \
-    CONTENT(launch_splash, "splash")                                                                                   \
-    CONTENT(grid_mode, "gridmodecontent")                                                                              \
-    CONTENT(grid_mode_art, "boxarthide")
 
 #define CUSTOM_ELEMENTS                                                                                                \
     CUSTOM(catalogue, "catalogue")                                                                                     \
@@ -388,18 +349,6 @@
     NETADV(wait, "wait")                                                                                               \
     NETADV(mod_retry, "modretry")
 
-#define NETINFO_ELEMENTS                                                                                               \
-    NETINFO(hostname, "hostname")                                                                                      \
-    NETINFO(mac, "mac")                                                                                                \
-    NETINFO(ip, "ip")                                                                                                  \
-    NETINFO(ssid, "ssid")                                                                                              \
-    NETINFO(gateway, "gateway")                                                                                        \
-    NETINFO(dns, "dns")                                                                                                \
-    NETINFO(signal, "signal")                                                                                          \
-    NETINFO(channel, "channel")                                                                                        \
-    NETINFO(ac_traffic, "actraffic")                                                                                   \
-    NETINFO(tp_traffic, "tptraffic")
-
 #define NETWORK_ELEMENTS                                                                                               \
     NETWORK(profile_name, "profile_name")                                                                              \
     NETWORK(identifier, "identifier")                                                                                  \
@@ -560,38 +509,11 @@
     STORAGE_CUSTOM_ELEMENTS                                                                                            \
     STORAGE_BULK_ELEMENTS
 
-#define SYSINFO_ELEMENTS                                                                                               \
-    SYSINFO(version, "version")                                                                                        \
-    SYSINFO(build, "build")                                                                                            \
-    SYSINFO(device, "device")                                                                                          \
-    SYSINFO(kernel, "kernel")                                                                                          \
-    SYSINFO(arch, "arch")                                                                                              \
-    SYSINFO(uptime, "uptime")                                                                                          \
-    SYSINFO(boot_time, "boottime")                                                                                     \
-    SYSINFO(load_avg, "loadavg")                                                                                       \
-    SYSINFO(cpu, "cpu")                                                                                                \
-    SYSINFO(speed, "speed")                                                                                            \
-    SYSINFO(governor, "governor")                                                                                      \
-    SYSINFO(memory, "memory")                                                                                          \
-    SYSINFO(swap, "swap")                                                                                              \
-    SYSINFO(temp, "temp")                                                                                              \
-    SYSINFO(reload, "reload")
-
 #define THEMEFILTER_ELEMENTS                                                                                           \
     THEMEFILTER(all_themes, "theme")                                                                                   \
     THEMEFILTER(grid, "grid")                                                                                          \
     THEMEFILTER(hdmi, "hdmi")                                                                                          \
     THEMEFILTER(language, "language")
-
-#define THEMEOPT_ELEMENTS                                                                                              \
-    THEMEOPT(header_height, "headerheight")                                                                            \
-    THEMEOPT(footer_height, "footerheight")                                                                            \
-    THEMEOPT(content_item_count, "count")                                                                              \
-    THEMEOPT(glyph_list, "glyphlist")                                                                                  \
-    THEMEOPT(glyph_footer, "glyphfooter")                                                                              \
-    THEMEOPT(glyph_header, "glyphheader")                                                                              \
-    THEMEOPT(glyph_grid, "glyphgrid")                                                                                  \
-    THEMEOPT(label_width, "labelwidth")
 
 #define TWEAKADV_ELEMENTS                                                                                              \
     TWEAKADV(accelerate, "accelerate")                                                                                 \

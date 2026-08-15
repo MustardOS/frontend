@@ -42,7 +42,7 @@ static void init_navigation_group(void) {
 
     INIT_OPTION_ITEM(-1, connect, network, lang.muxconnect.network, "network", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, net_adv, lang.muxconnect.net_adv, "netadv", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, proxy, lang.muxconnect.proxy, "proxy", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, proxy, lang.muxconnect.proxy, "net_proxy", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, services, lang.muxconnect.services, "service", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, bluetooth, lang.muxconnect.bluetooth, "bluetooth", NULL, 0);
 

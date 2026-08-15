@@ -600,7 +600,7 @@ static void init_navigation_group(void) {
     );
     INIT_OPTION_ITEM(-1, visual, selection_style, lang.muxvisual.selectionstyle, "selectionstyle", shake_direction, 5);
     INIT_OPTION_ITEM(-1, visual, list_glyph, lang.muxvisual.listglyph, "listglyph", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, visual, render_shadows, lang.muxvisual.rendershadows, "shadow", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, render_shadows, lang.muxvisual.rendershadows, "rendershadows", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, notify_time, lang.muxvisual.notifytime, "notifytime", notify_time_options, 4);
     INIT_OPTION_ITEM(-1, visual, overlay_image, lang.muxvisual.overlay.image, "overlayimage", NULL, 0);
     INIT_OPTION_ITEM(
@@ -621,7 +621,7 @@ static void init_navigation_group(void) {
         disabled_enabled, 2
     );
     INIT_OPTION_ITEM(-1, font, type, lang.muxfont.type, "type", type_options, num_type_options);
-    INIT_OPTION_ITEM(-1, font, font_name, lang.muxfont.font_name, "name", NULL, 0);
+    INIT_OPTION_ITEM(-1, font, font_name, lang.muxfont.font_name, "fontname", NULL, 0);
     INIT_OPTION_ITEM(-1, font, list_size, lang.muxfont.list_size, "listsize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, header_size, lang.muxfont.header_size, "headersize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, footer_size, lang.muxfont.footer_size, "footersize", NULL, 0);
@@ -630,17 +630,17 @@ static void init_navigation_group(void) {
         -1, visual, folder_item_count, lang.muxvisual.folderitemcount, "folderitemcount", disabled_enabled, 2
     );
     INIT_OPTION_ITEM(
-        -1, visual, menu_counter_folder, lang.muxvisual.menucounterfolder, "counterfolder", hidden_visible, 2
+        -1, visual, menu_counter_folder, lang.muxvisual.menucounterfolder, "menucounterfolder", hidden_visible, 2
     );
-    INIT_OPTION_ITEM(-1, visual, menu_counter_file, lang.muxvisual.menucounterfile, "counterfile", hidden_visible, 2);
+    INIT_OPTION_ITEM(-1, visual, menu_counter_file, lang.muxvisual.menucounterfile, "menucounterfile", hidden_visible, 2);
     INIT_OPTION_ITEM(
-        -1, visual, display_empty_folder, lang.muxvisual.displayemptyfolder, "folderempty", hidden_visible, 2
+        -1, visual, display_empty_folder, lang.muxvisual.displayemptyfolder, "displayemptyfolder", hidden_visible, 2
     );
     INIT_OPTION_ITEM(-1, visual, hidden, lang.muxvisual.hidden, "hidden", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, group_content, lang.muxvisual.groupcontent, "groupcontent", group_content_options, 5);
     INIT_OPTION_ITEM(-1, custom, sort, lang.muxvisual.sort, "sort", NULL, 0);
-    INIT_OPTION_ITEM(-1, visual, content_collect, lang.muxvisual.contentcollect, "collection", toggle_icon_visible, 3);
-    INIT_OPTION_ITEM(-1, visual, content_history, lang.muxvisual.contenthistory, "history", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(-1, visual, content_collect, lang.muxvisual.contentcollect, "contentcollect", toggle_icon_visible, 3);
+    INIT_OPTION_ITEM(-1, visual, content_history, lang.muxvisual.contenthistory, "contenthistory", toggle_icon_visible, 3);
     INIT_OPTION_ITEM(-1, visual, mixed_content, lang.muxvisual.mixedcontent, "mixedcontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, forward_history, lang.muxvisual.forwardhistory, "forwardhistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, content_width, lang.muxcontent.full_width, "width", disabled_enabled, 2);

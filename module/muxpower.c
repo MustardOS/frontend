@@ -417,7 +417,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, idle_display, lang.muxpower.idle.display, "idle_display", idle_timer, IDLE_COUNT);
     INIT_OPTION_ITEM(-1, power, idle_mute, lang.muxpower.idle.mute, "idle_mute", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, power, gov_idle, lang.muxpower.gov.idle, "gov_idle", gov_values_disp, (int) gov_count);
-    INIT_OPTION_ITEM(-1, power, gov_default, lang.muxpower.gov.dflt, "gov_fe", gov_values_disp, (int) gov_count);
+    INIT_OPTION_ITEM(-1, power, gov_default, lang.muxpower.gov.dflt, "gov_default", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(
         -1, power, saver_type, lang.muxpower.saver.type.title, "saver_type", (char **) saver_type, SAVER_TYPE_COUNT
     );
