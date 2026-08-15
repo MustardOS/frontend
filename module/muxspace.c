@@ -4,6 +4,7 @@
 #include "../common/task_exec.h"
 #include "../common/ui/task_progress.h"
 #include "ui/ui_muxspace.h"
+#include "../common/ui/fs_choice.h"
 
 #define SPACE(NAME, UDATA)          1,
 #define SPACE_ROW(NAME, GLYPH, KEY) 1,
@@ -638,28 +639,6 @@ static mux_dialogue commit_dlg;
 static int task_pending = 0;
 static const char *chosen_fs = NULL;
 
-typedef enum { fs_vfat = 0, fs_exfat, fs_ext4, fs_count } fs_opt;
-
-static const char *fs_name[fs_count] = {"vfat", "exfat", "ext4"};
-
-static int fs_offer[fs_count];
-static int fs_offered = 0;
-
-static int mkfs_exists(const char *type) {
-    if (strncmp(type, "ext", 3) == 0 && access(OPT_PATH "bin/mke2fs", X_OK) == 0) return 1;
-
-    static const char *dirs[] = {"/sbin/", "/usr/sbin/", "/bin/", "/usr/bin/"};
-
-    for (size_t i = 0; i < A_SIZE(dirs); i++) {
-        char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), "%smkfs.%s", dirs[i], type);
-
-        if (access(path, X_OK) == 0) return 1;
-    }
-
-    return 0;
-}
-
 #define MATH_CHOICES 6
 
 static mux_dialogue math_dlg;
@@ -802,21 +781,21 @@ static void ask_prepare_math(void) {
     dialogue_open(&math_dlg, &theme);
 }
 
-static void format_message(char *out, const size_t len, const int selected) {
-    const char *about[fs_count] = {
-        lang.muxspace.prepare.about_vfat, lang.muxspace.prepare.about_exfat, lang.muxspace.prepare.about_ext4
+static fs_choice_text format_text(void) {
+    return (fs_choice_text) {
+        .title = lang.muxspace.prepare.title,
+        .description = lang.muxspace.prepare.choose,
+        .no_tooling = lang.muxspace.prepare.no_tooling,
+        .name = {lang.muxspace.prepare.vfat, lang.muxspace.prepare.exfat, lang.muxspace.prepare.ext4},
+        .about = {
+            lang.muxspace.prepare.about_vfat, lang.muxspace.prepare.about_exfat, lang.muxspace.prepare.about_ext4
+        },
     };
-
-    const int slot = selected >= 0 && selected < fs_offered ? selected : 0;
-
-    snprintf(out, len, "%s\n\n%s", lang.muxspace.prepare.choose, about[fs_offer[slot]]);
 }
 
 static void format_describe(void) {
-    char message[MAX_BUFFER_SIZE];
-    format_message(message, sizeof(message), format_dlg.selected);
-
-    dialogue_set_description(&format_dlg, message);
+    const fs_choice_text text = format_text();
+    fs_choice_describe(&format_dlg, &text);
 }
 
 static void ask_prepare_commit(void) {
@@ -832,43 +811,8 @@ static void ask_prepare_commit(void) {
 }
 
 static void ask_prepare_format(void) {
-    const char *name[fs_count] = {lang.muxspace.prepare.vfat, lang.muxspace.prepare.exfat, lang.muxspace.prepare.ext4};
-
-    const char *labels[fs_count];
-    fs_offered = 0;
-
-    for (int i = 0; i < fs_count; i++) {
-        if (!mkfs_exists(fs_name[i])) continue;
-
-        fs_offer[fs_offered] = i;
-        labels[fs_offered] = name[i];
-        fs_offered++;
-    }
-
-    if (fs_offered == 0) {
-        play_sound(snd_error);
-        toast_message(lang.muxspace.prepare.no_tooling, tst_wait_m);
-
-        return;
-    }
-
-    int start = 0;
-    for (int i = 0; i < fs_offered; i++) {
-        if (fs_offer[i] != fs_exfat) continue;
-
-        start = i;
-        break;
-    }
-
-    char message[MAX_BUFFER_SIZE];
-    format_message(message, sizeof(message), start);
-
-    dialogue_init_choice(
-        &format_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, labels, fs_offered, lang.generic.select,
-        lang.generic.cancel
-    );
-
-    dialogue_open_at(&format_dlg, &theme, start);
+    const fs_choice_text text = format_text();
+    fs_choice_open(&format_dlg, &theme, ui_screen, &text);
 }
 
 static void nav_refresh(void);
@@ -964,12 +908,8 @@ static void handle_a(void) {
         const int slot = format_dlg.selected;
         dialogue_dismiss(&format_dlg);
 
-        if (slot < 0 || slot >= fs_offered) {
-            chosen_fs = NULL;
-            return;
-        }
-
-        chosen_fs = fs_name[fs_offer[slot]];
+        chosen_fs = fs_choice_name(slot);
+        if (!chosen_fs) return;
 
         ask_prepare_warning();
         return;

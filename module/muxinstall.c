@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxinstall.h"
+#include "../common/ui/fs_choice.h"
 
 #define INSTALL(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(INSTALL_ELEMENTS) };
@@ -123,86 +124,29 @@ static void hide_confirm(void) {
     confirm_dlg = NULL;
 }
 
-typedef enum { fs_vfat = 0, fs_exfat, fs_ext4, fs_count } fs_opt;
-
-static const char *fs_name[fs_count] = {"vfat", "exfat", "ext4"};
-static int fs_offer[fs_count];
-static int fs_offered = 0;
-
 static mux_dialogue format_dlg = {0};
 
-static int mkfs_exists(const char *type) {
-    if (strncmp(type, "ext", 3) == 0 && access(OPT_PATH "bin/mke2fs", X_OK) == 0) return 1;
-    static const char *dirs[] = {"/sbin/", "/usr/sbin/", "/bin/", "/usr/bin/"};
-
-    for (size_t i = 0; i < A_SIZE(dirs); i++) {
-        char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), "%smkfs.%s", dirs[i], type);
-
-        if (access(path, X_OK) == 0) return 1;
-    }
-
-    return 0;
-}
-
-static void format_message(char *out, const int selected) {
-    const char *about[fs_count] = {
-        lang.muxinstall.filesystem.about_vfat, lang.muxinstall.filesystem.about_exfat,
-        lang.muxinstall.filesystem.about_ext4
+static fs_choice_text format_text(void) {
+    return (fs_choice_text) {
+        .title = lang.muxinstall.filesystem.title,
+        .description = lang.muxinstall.filesystem.desc,
+        .no_tooling = lang.muxinstall.filesystem.no_tooling,
+        .name = {lang.muxinstall.filesystem.vfat, lang.muxinstall.filesystem.exfat, lang.muxinstall.filesystem.ext4},
+        .about = {
+            lang.muxinstall.filesystem.about_vfat, lang.muxinstall.filesystem.about_exfat,
+            lang.muxinstall.filesystem.about_ext4
+        },
     };
-
-    const int slot = selected >= 0 && selected < fs_offered ? selected : 0;
-
-    snprintf(out, MAX_BUFFER_SIZE, "%s\n\n%s", lang.muxinstall.filesystem.desc, about[fs_offer[slot]]);
 }
 
 static void format_describe(void) {
-    char message[MAX_BUFFER_SIZE];
-    format_message(message, format_dlg.selected);
-
-    dialogue_set_description(&format_dlg, message);
+    const fs_choice_text text = format_text();
+    fs_choice_describe(&format_dlg, &text);
 }
 
 static void ask_install_format(void) {
-    const char *name[fs_count] = {
-        lang.muxinstall.filesystem.vfat, lang.muxinstall.filesystem.exfat, lang.muxinstall.filesystem.ext4
-    };
-
-    const char *labels[fs_count];
-    fs_offered = 0;
-
-    for (int i = 0; i < fs_count; i++) {
-        if (!mkfs_exists(fs_name[i])) continue;
-
-        fs_offer[fs_offered] = i;
-        labels[fs_offered] = name[i];
-        fs_offered++;
-    }
-
-    if (fs_offered == 0) {
-        play_sound(snd_error);
-        toast_message(lang.muxinstall.filesystem.no_tooling, tst_wait_m);
-
-        return;
-    }
-
-    int start = 0;
-    for (int i = 0; i < fs_offered; i++) {
-        if (fs_offer[i] != fs_exfat) continue;
-
-        start = i;
-        break;
-    }
-
-    char message[MAX_BUFFER_SIZE];
-    format_message(message, start);
-
-    dialogue_init_choice(
-        &format_dlg, &theme, ui_screen, lang.muxinstall.filesystem.title, message, labels, fs_offered,
-        lang.generic.select, lang.generic.cancel
-    );
-
-    dialogue_open_at(&format_dlg, &theme, start);
+    const fs_choice_text text = format_text();
+    fs_choice_open(&format_dlg, &theme, ui_screen, &text);
 }
 
 static void handle_a(void) {
@@ -210,9 +154,9 @@ static void handle_a(void) {
         const int picked = format_dlg.selected;
         dialogue_dismiss(&format_dlg);
 
-        if (picked < 0 || picked >= fs_offered) return;
+        const char *chosen = fs_choice_name(picked);
+        if (!chosen) return;
 
-        const char *chosen = fs_name[fs_offer[picked]];
         write_text_to_file(CONF_DEVICE_PATH "storage/rom/type", "w", CHAR, chosen);
         LOG_INFO(mux_module, "Install will format the storage as %s", chosen);
 
