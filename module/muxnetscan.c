@@ -20,7 +20,11 @@ static void populate_network_items(void) {
     FILE *file = fopen(scan_file, "r");
     if (!file) return;
 
-    if (strcmp(read_line_char_from(scan_file, 1), "[!]") == 0) {
+    char *first = read_line_char_from(scan_file, 1);
+    const int no_networks = first && strcmp(first, "[!]") == 0;
+    free(first);
+
+    if (no_networks) {
         fclose(file);
         return;
     }
@@ -121,10 +125,6 @@ static void handle_a(void) {
     mux_input_stop();
 }
 
-static void handle_x(void) {
-    orientation_handle_skip();
-}
-
 static void handle_b(void) {
     if (hold_call) return;
 
@@ -139,7 +139,8 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_rescan(void) {
+static void handle_x(void) {
+    if (orientation_handle_skip()) return;
     if (msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
@@ -196,7 +197,6 @@ int muxnetscan_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
-                [mux_input_x] = handle_rescan,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_l1] = handle_list_nav_page_up,
