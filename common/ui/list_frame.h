@@ -11,7 +11,7 @@ typedef struct {
     int count;
 } list_frame;
 
-void list_frame_init(
+int list_frame_init(
     struct theme_config *t, lv_obj_t *parent, const list_frame *frames, int frame_count, lv_obj_t **panels,
     lv_obj_t **labels, lv_obj_t **glyphs, lv_obj_t **values, int total_rows
 );

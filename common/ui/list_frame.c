@@ -124,14 +124,26 @@ static void build_bar(lv_obj_t *parent) {
     lv_obj_move_to_index(bar, 0);
 }
 
-void list_frame_init(
+int list_frame_init(
     struct theme_config *t, lv_obj_t *parent, const list_frame *list, const int count, lv_obj_t **panels,
     lv_obj_t **labels, lv_obj_t **glyphs, lv_obj_t **values, const int total_rows
 ) {
     list_frame_reset();
 
-    if (!t || !parent || !list || count <= 0 || count > LIST_FRAME_MAX) return;
-    if (total_rows <= 0 || total_rows > LIST_FRAME_ROWS_MAX) return;
+    if (!t || !parent || !list) {
+        LOG_ERROR(mux_module, "list frame refused: missing theme, parent or section list");
+        return 0;
+    }
+
+    if (count <= 0 || count > LIST_FRAME_MAX) {
+        LOG_ERROR(mux_module, "list frame refused: %d sections, limit is %d", count, LIST_FRAME_MAX);
+        return 0;
+    }
+
+    if (total_rows <= 0 || total_rows > LIST_FRAME_ROWS_MAX) {
+        LOG_ERROR(mux_module, "list frame refused: %d rows, limit is %d", total_rows, LIST_FRAME_ROWS_MAX);
+        return 0;
+    }
 
     theme_ref = t;
 
@@ -157,6 +169,8 @@ void list_frame_init(
         if (panels && panels[i]) lv_obj_move_to_index(panels[i], i);
 
     build_bar(parent);
+
+    return 1;
 }
 
 void list_frame_apply(void) {
