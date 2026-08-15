@@ -603,7 +603,7 @@ static void add_spacer(const int px, const char *bg_key) {
     b->height = px;
 }
 
-static void add_kofi_qr() {
+static void add_kofi_qr(void) {
     char path[512];
     snprintf(path, sizeof(path), "%s/kofi_qr.png", MEDIA_DIR);
 
@@ -619,7 +619,7 @@ static void add_kofi_qr() {
     b->height = h;
 }
 
-static void add_logo() {
+static void add_logo(void) {
     char path[512];
     snprintf(path, sizeof(path), "%s/logo.png", MEDIA_DIR);
 

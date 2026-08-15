@@ -57,7 +57,7 @@ static int parse_enabled(const char *line, int *out) {
     if (end == ptr) return 0;
     if (errno == ERANGE) return 0;
 
-    *out = (v != 0);
+    *out = v != 0;
     return 1;
 }
 

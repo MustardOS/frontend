@@ -34,7 +34,7 @@ content_item *add_item(
         content_item *new_items = malloc(sizeof(content_item));
         if (!new_items) return NULL;
         *content_items = new_items;
-    } else if (*count > 0 && (*count & *count - 1) == 0) {
+    } else if (*count > 0 && (*count & (*count - 1)) == 0) {
         content_item *new_items = realloc(*content_items, *count * 2 * sizeof(content_item));
         if (!new_items) return NULL;
         *content_items = new_items;

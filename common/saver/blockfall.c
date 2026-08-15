@@ -314,7 +314,7 @@ void blockfall_render(SDL_Renderer *renderer) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     uint32_t now = SDL_GetTicks();
-    int flash_active = (now < mod.lock_flash_until);
+    int flash_active = now < mod.lock_flash_until;
     int flash_alpha_boost = 0;
 
     if (flash_active) {

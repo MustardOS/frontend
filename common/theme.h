@@ -562,7 +562,7 @@ void apply_pass_theme(
 
 void init_panel_style(const struct theme_config *theme);
 
-void init_item_animation();
+void init_item_animation(void);
 
 void init_item_style(struct theme_config *theme);
 

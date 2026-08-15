@@ -124,7 +124,7 @@ void run_tweak_script(const char *message);
 
 void shuffle_index(int current, int *dir, int *target);
 
-void adjust_box_art();
+void adjust_box_art(void);
 
 void set_nav_input_dir(enum nav_direction direction);
 
@@ -138,9 +138,9 @@ void set_preview_hint(int visible);
 
 int preview_hint_active(void);
 
-void header_and_footer_setup();
+void header_and_footer_setup(void);
 
-void overlay_display();
+void overlay_display(void);
 
 void viewport_refresh(
     lv_obj_t **ui_viewport_objects, const char *artwork_config, char *catalogue_folder, char *content_name
@@ -208,14 +208,14 @@ void gen_item_from_files(const char *base_path, int file_count, char **file_name
 
 void adjust_label_value_width(const lv_obj_t *panel, const lv_obj_t *label, lv_obj_t *value);
 
-void update_label_scroll();
+void update_label_scroll(void);
 
 void render_image_refresh(
     const char *image_type, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_img_splash,
     lv_obj_t *ui_viewport_objects[], int *starter_image, int *splash_valid
 );
 
-void clear_box_image();
+void clear_box_image(void);
 
 void render_video_refresh(const char *h_core_artwork, const char *h_file_name);
 
@@ -238,77 +238,77 @@ void resolve_content_artwork_names(char *h_core_artwork, size_t core_size, char 
 
 void refresh_theme_preview_image(char *base_path, char *name, int *preview_index);
 
-int muxaccess_main();
+int muxaccess_main(void);
 
-int muxactivity_main();
+int muxactivity_main(void);
 
-int muxapp_main();
+int muxapp_main(void);
 
 void muxappcon_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxarchive_main();
+int muxarchive_main(void);
 
 void muxassign_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxbackup_main();
+int muxbackup_main(void);
 
-int muxbtall_main();
+int muxbtall_main(void);
 
-int muxbtcon_main();
+int muxbtcon_main(void);
 
-int muxbtdev_main();
+int muxbtdev_main(void);
 
 void muxcolfilter_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxcollect_main(int add, const char *dir, int last_index);
 
-int muxconfig_main();
+int muxconfig_main(void);
 
-int muxconnect_main();
+int muxconnect_main(void);
 
 void muxcontrol_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxcustom_main();
+int muxcustom_main(void);
 
-int muxdanger_main();
+int muxdanger_main(void);
 
-int muxdetail_main();
+int muxdetail_main(void);
 
-int muxdevice_main();
+int muxdevice_main(void);
 
-int muxdistemp_main();
+int muxdistemp_main(void);
 
 int muxdownload_main(char *type);
 
 void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxhdmi_main();
+int muxhdmi_main(void);
 
 int muxhistory_main(int his_index);
 
-int muxinfo_main();
+int muxinfo_main(void);
 
-int muxinstall_main();
+int muxinstall_main(void);
 
-int muxkiosk_main();
+int muxkiosk_main(void);
 
-int muxlanguage_main();
+int muxlanguage_main(void);
 
-int muxlaunch_main();
+int muxlaunch_main(void);
 
-int muxlogo_main();
+int muxlogo_main(void);
 
-int muxnetadv_main();
+int muxnetadv_main(void);
 
-int muxnetprofile_main();
+int muxnetprofile_main(void);
 
-int muxnetproxy_main();
+int muxnetproxy_main(void);
 
-int muxnetscan_main();
+int muxnetscan_main(void);
 
-int muxnetwork_main();
+int muxnetwork_main(void);
 
-int muxnews_main();
+int muxnews_main(void);
 
 void muxoption_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
@@ -316,61 +316,61 @@ void muxoverlay_main(int auto_assign, const char *name, const char *dir, const c
 
 int muxpass_main(int auth_type);
 
-int muxpasscfg_main();
+int muxpasscfg_main(void);
 
 int muxpicker_main(char *type, char *ex_dir);
 
-int muxremap_main();
+int muxremap_main(void);
 
 int muxtheme_main(char *ex_dir);
 
 int muxplore_main(int index, char *dir);
 
-int muxpower_main();
+int muxpower_main(void);
 
 void muxraopt_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxrgb_main();
+int muxrgb_main(void);
 
-int muxrgbzone_main();
+int muxrgbzone_main(void);
 
-int muxrtc_main();
+int muxrtc_main(void);
 
 int muxsearch_main(char *dir);
 
 void muxshader_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
-int muxshot_main();
+int muxshot_main(void);
 
-int muxsort_main();
+int muxsort_main(void);
 
-int muxorder_main();
+int muxorder_main(void);
 
-int muxspace_main();
+int muxspace_main(void);
 
 int muxsplash_main(char *splash_image, int apply_recolour);
 
-int muxstorage_main();
+int muxstorage_main(void);
 
-int muxtext_main();
+int muxtext_main(void);
 
 void muxtag_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxtask_main(char *ex_dir);
 
-int muxthemedown_main();
+int muxthemedown_main(void);
 
-int muxthemefilter_main();
+int muxthemefilter_main(void);
 
-int muxtester_main();
+int muxtester_main(void);
 
-int muxtimezone_main();
+int muxtimezone_main(void);
 
-int muxtweakadv_main();
+int muxtweakadv_main(void);
 
-int muxtweakgen_main();
+int muxtweakgen_main(void);
 
-int muxwebserv_main();
+int muxwebserv_main(void);
 
 void resolve_grid_item_images(
     const char *mux_dim, const char *mux_module, const char *glyph_name, char *grid_img, size_t img_size,

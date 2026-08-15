@@ -156,7 +156,7 @@ static void show_help(void) {
     show_info_box(lang.muxactivity.title, lang.muxactivity.help, 0);
 }
 
-static void image_refresh() {
+static void image_refresh(void) {
     if (in_detail_view || in_global_view || config.visual.box_art == 8) return;
     if (!activity_items || current_item_index < 0 || (size_t) current_item_index >= activity_count) return;
 
@@ -2128,7 +2128,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     }
 }
 
-int muxactivity_main() {
+int muxactivity_main(void) {
     starter_image = 0;
 
     init_module(__func__);

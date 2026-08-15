@@ -148,7 +148,7 @@ show_dl_only:
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 }
 
-static void check_focus() {
+static void check_focus(void) {
     if (current_item_index) {
         lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);

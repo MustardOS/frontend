@@ -406,7 +406,7 @@ static void saver_stop(void) {
         bsod_stop();
 }
 
-static void reload_saver() {
+static void reload_saver(void) {
     if (active_saver == saver_type_video && video_saver_running) {
         video_wallpaper_stop();
         if (video_saver_prev_path[0]) {

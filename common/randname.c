@@ -34,7 +34,7 @@ const char *const randname_nouns[RANDNAME_NOUN_COUNT] = {
     "Mustard"
 };
 
-static size_t randname_random_index() {
+static size_t randname_random_index(void) {
     static int seeded;
     if (!seeded) {
         srand((unsigned) time(NULL) ^ (uintptr_t) &seeded);

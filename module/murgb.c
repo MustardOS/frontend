@@ -100,7 +100,7 @@ static int sysfs_write_int(const char *leaf, const int v) {
     return sysfs_write(leaf, buf);
 }
 
-static int joypad_writable() {
+static int joypad_writable(void) {
     char path[512];
     snprintf(path, sizeof path, "%s/%s", JOY_SYS, "led_set");
 

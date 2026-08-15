@@ -50,15 +50,15 @@ void init_ui_common_screen(
 
 void init_ui_item_counter(const struct theme_config *theme);
 
-void ui_common_handle_bright_up();
+void ui_common_handle_bright_up(void);
 
-void ui_common_handle_bright_down();
+void ui_common_handle_bright_down(void);
 
-void ui_common_handle_volume_up();
+void ui_common_handle_volume_up(void);
 
-void ui_common_handle_volume_down();
+void ui_common_handle_volume_down(void);
 
-void ui_common_handle_idle();
+void ui_common_handle_idle(void);
 
 int ui_common_progress_tick(void);
 

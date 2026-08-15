@@ -301,7 +301,7 @@ static void create_core_items(const char *target) {
     }
 }
 
-static void load_return_module() {
+static void load_return_module(void) {
     if (file_exist(MUOS_ASS_FROM)) {
         remove(OPTION_SKIP);
         char *origin = read_all_char_from(MUOS_ASS_FROM);

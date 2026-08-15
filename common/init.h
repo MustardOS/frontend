@@ -45,7 +45,7 @@ void safe_quit(int exit_status);
 
 void init_module(const char *module);
 
-void init_display();
+void init_display(void);
 
 void init_input(mux_input_options *opts, int def_combo);
 
@@ -71,4 +71,4 @@ void bluetooth_task(const lv_timer_t *timer);
 
 void network_task(const lv_timer_t *timer);
 
-void battery_task();
+void battery_task(void);

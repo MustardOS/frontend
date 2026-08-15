@@ -318,7 +318,7 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static void show_splash() {
+static void show_splash(void) {
     if (config.visual.launchsplash) {
         image_refresh("splash");
         if (splash_valid) {

@@ -1057,7 +1057,7 @@ void adjust_label_value_width(const lv_obj_t *panel, const lv_obj_t *label, lv_o
     lv_obj_set_width(value, available);
 }
 
-void update_label_scroll() {
+void update_label_scroll(void) {
     if (lv_group_get_focused(ui_group_value)) {
         set_label_long_mode(&theme, lv_group_get_focused(ui_group_value), config.visual.name_scroll);
     }
@@ -1252,7 +1252,7 @@ void render_image_refresh(
     }
 }
 
-void clear_box_image() {
+void clear_box_image(void) {
     lv_img_set_src(ui_img_box, &ui_img_blank);
     snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
 }

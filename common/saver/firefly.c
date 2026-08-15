@@ -178,18 +178,18 @@ static void integrate_fly(firefly_t *f, int32_t step_fp, uint32_t now) {
     int M = firefly_edge_margin;
 
     if (x < M) {
-        int s = (M - x);
+        int s = M - x;
         f->vx += (s * 4) / M;
     } else if (x > mod.base.screen_w - M) {
-        int s = (x - (mod.base.screen_w - M));
+        int s = x - (mod.base.screen_w - M);
         f->vx -= (s * 4) / M;
     }
 
     if (y < M) {
-        int s = (M - y);
+        int s = M - y;
         f->vy += (s * 4) / M;
     } else if (y > mod.base.screen_h - M) {
-        int s = (y - (mod.base.screen_h - M));
+        int s = y - (mod.base.screen_h - M);
         f->vy -= (s * 4) / M;
     }
 

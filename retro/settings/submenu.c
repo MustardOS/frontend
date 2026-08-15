@@ -64,7 +64,7 @@ static void build_row(const submenu *m, const int index) {
     lv_obj_t *panel = lv_obj_create(ui_pnl_content);
     lv_obj_t *label = lv_label_create(panel);
     lv_obj_t *icon = lv_img_create(panel);
-    lv_obj_t *value = (create_value_label) ? lv_label_create(panel) : NULL;
+    lv_obj_t *value = create_value_label ? lv_label_create(panel) : NULL;
 
     apply_theme_list_panel(panel);
     apply_theme_option_item_label(&theme, label, m->def->labels[index], 1);

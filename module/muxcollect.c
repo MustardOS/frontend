@@ -583,7 +583,7 @@ static int load_add_mode_origin(void) {
     return valid;
 }
 
-static void show_splash() {
+static void show_splash(void) {
     if (config.visual.launchsplash) {
         image_refresh("splash");
         if (splash_valid) {

@@ -254,7 +254,7 @@ void datetime_render(SDL_Renderer *renderer) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
 
-    int is_12h = (config.clock.notation == 0);
+    int is_12h = config.clock.notation == 0;
     int time_x = mod.pos_x + (mod.block_w - mod.time_w) / 2;
 
     if (is_12h) {

@@ -1072,7 +1072,7 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static void show_splash() {
+static void show_splash(void) {
     if (config.visual.launchsplash) {
         image_refresh("splash");
         if (splash_valid) {
@@ -1640,7 +1640,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-static void refresh_nav_items() {
+static void refresh_nav_items(void) {
     if (!ui_count_static) return;
 
     if (items[current_item_index].content_type != content_type_item) {

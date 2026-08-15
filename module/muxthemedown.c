@@ -48,7 +48,7 @@ static int is_downloaded(const int index) {
     return dir_exist(theme_path);
 }
 
-static void image_refresh() {
+static void image_refresh(void) {
     if (!theme_items || theme_item_count == 0 || current_item_index < 0) return;
 
     char base_image_path[MAX_BUFFER_SIZE];
@@ -209,7 +209,7 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
-static void refresh_current_list_item() {
+static void refresh_current_list_item(void) {
     update_list_item(lv_group_get_focused(ui_group), lv_group_get_focused(ui_group_glyph), current_item_index);
     lv_label_set_text(
         ui_lbl_nav_a, is_downloaded(current_item_index) ? lang.muxthemedown.remove : lang.muxthemedown.download

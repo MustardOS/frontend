@@ -18,9 +18,9 @@ void handle_list_nav_up_hold(void);
 
 void handle_list_nav_down_hold(void);
 
-void handle_list_nav_left();
+void handle_list_nav_left(void);
 
-void handle_list_nav_right();
+void handle_list_nav_right(void);
 
 void handle_list_nav_left_hold(void);
 

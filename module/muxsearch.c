@@ -57,7 +57,7 @@ static void init_navigation_group(void) {
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 }
 
-static void image_refresh() {
+static void image_refresh(void) {
     if (config.visual.box_art == 8) return;
 
     char *item_dir = get_content_path(all_items[current_item_index].extra_data);

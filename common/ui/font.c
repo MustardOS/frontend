@@ -111,10 +111,7 @@ static int theme_font_scan(const int ttf_only) {
         }
         free(entries);
 
-        if (found) {
-            return 1;
-            break;
-        }
+        if (found) return 1;
     }
 
     return 0;

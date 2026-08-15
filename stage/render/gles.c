@@ -625,8 +625,8 @@ static void build_quad_ndc(gl_vtx_t out[4], int tex_w, int tex_h, int fb_w, int 
     if (fb_w < 1) fb_w = 1;
     if (fb_h < 1) fb_h = 1;
 
-    const float w_ndc = (draw_w * (2.0f / (float) fb_w));
-    const float h_ndc = (draw_h * (2.0f / (float) fb_h));
+    const float w_ndc = draw_w * (2.0f / (float) fb_w);
+    const float h_ndc = draw_h * (2.0f / (float) fb_h);
 
     float x0, x1, y0, y1;
 
