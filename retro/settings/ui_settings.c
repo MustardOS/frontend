@@ -76,9 +76,11 @@ static void build_profile_rows(void) {
 
     profile_user_count = session_settings_refresh_user_profiles();
     for (int index = 0; index < profile_user_count; index++) {
+        const char *description = session_settings_user_profile_description(index);
         profile_labels[profile_row_count] = session_settings_user_profile_name(index);
         profile_glyphs[profile_row_count] = "settings";
-        profile_help[profile_row_count] = lang.muxretro.help.settings.profile_user;
+        profile_help[profile_row_count] =
+            description && *description ? description : lang.muxretro.help.settings.profile_user;
         profile_row_count++;
     }
 

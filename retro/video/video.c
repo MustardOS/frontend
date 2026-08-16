@@ -568,6 +568,11 @@ static void upload_frame(void) {
 
     if (!ensure_frame_tex(want_w, want_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format()))) return;
 
+    if (!texture_filter_is_cpu_scaled(session_settings.texture_filter)) {
+        SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
+        return;
+    }
+
     const size_t needed = (size_t) want_w * want_h * raw_frame_bpp;
     if (needed > scaled_buf_cap) {
         free(scaled_buf);
@@ -688,27 +693,13 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     if (!data || width == 0 || height == 0) return;
 
     raw_frame_bpp = bpp_for_pixel_format();
-    const int cpu_filter = texture_filter_is_cpu_scaled(session_settings.texture_filter);
-
-    if (cpu_filter) {
-        const size_t needed = pitch * height;
-        if (needed > raw_frame_buf_cap) {
-            void *grown = malloc(needed);
-            if (!grown) return;
-            free(raw_frame_buf);
-            raw_frame_buf = grown;
-            raw_frame_buf_cap = needed;
-        }
-
-        raw_frame_pitch = pitch;
-        const int size_changed = (int) width != frame_w || (int) height != frame_h;
-        frame_w = (int) width;
-        frame_h = (int) height;
-        if (size_changed) recompute_dest_rect();
-
-        memcpy(raw_frame_buf, data, needed);
-        frame_dirty = 1;
-        return;
+    const size_t raw_needed = pitch * height;
+    if (raw_needed > raw_frame_buf_cap) {
+        void *grown = malloc(raw_needed);
+        if (!grown) return;
+        free(raw_frame_buf);
+        raw_frame_buf = grown;
+        raw_frame_buf_cap = raw_needed;
     }
 
     raw_frame_pitch = pitch;
@@ -717,8 +708,15 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     frame_h = (int) height;
     if (size_changed) recompute_dest_rect();
 
+    memcpy(raw_frame_buf, data, raw_needed);
+
+    if (texture_filter_is_cpu_scaled(session_settings.texture_filter)) {
+        frame_dirty = 1;
+        return;
+    }
+
     if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format())))
-        SDL_UpdateTexture(frame_tex, NULL, data, (int) pitch);
+        SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
 }
 
 static int video_output_is_opaque(void) {

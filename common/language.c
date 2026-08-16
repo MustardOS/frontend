@@ -2202,7 +2202,7 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.help.settings.profile_safe), lang_specific, "Prioritises steady play and reliable sound. It removes optional timing pressure and uses a larger audio buffer."},
     {"muxretro", LANG_OFF(muxretro.help.settings.profile_balanced), lang_specific, "Uses the recommended picture, sound and response settings for most games."},
     {"muxretro", LANG_OFF(muxretro.help.settings.profile_quality), lang_specific, "Uses cleaner image scaling and shimmer reduction. Best for games and devices with performance to spare."},
-    {"muxretro", LANG_OFF(muxretro.help.settings.profile_user), lang_specific, "A user-made profile from the Pickles profile folder. It changes only the valid settings listed in its INI file; settings that are not listed stay as they are."},
+    {"muxretro", LANG_OFF(muxretro.help.settings.profile_user), lang_specific, "Peter picked a pickled profile politely. A user created profile from the Pickles profile folder. It restores all settings, controller mappings, and compatible core options.\n\nMissing or unsupported values use the currently saved settings."},
     {"muxretro", LANG_OFF(muxretro.help.settings.profile_save_current), lang_specific, "Save the settings currently in use as a named user profile. You can keep it with this content, this core or all content."},
     {"muxretro", LANG_OFF(muxretro.help.settings.video), lang_specific, "How the content fits the screen, including its size, shape, rotation, scaling and border."},
     {"muxretro", LANG_OFF(muxretro.help.settings.sound), lang_specific, "Volume and audio quality, plus the settings to reach for if the sound ever snaps, crackles, or pops."},

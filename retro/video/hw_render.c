@@ -13,6 +13,7 @@
 #include "hw_render.h"
 #include "overlay_bridge.h"
 #include "../core/governor_boost.h"
+#include "../core/muxretro.h"
 #include "../core/perf.h"
 #include "../settings/settings.h"
 
@@ -101,6 +102,10 @@ static int prog_ready = 0;
 static SDL_Texture *filter_src_tex = NULL;
 static int filter_src_w = 0;
 static int filter_src_h = 0;
+static SDL_Texture *paused_src_tex = NULL;
+static int paused_src_w = 0;
+static int paused_src_h = 0;
+static int paused_src_valid = 0;
 static SDL_Renderer *cached_output_renderer = NULL;
 static int cached_output_w = 0;
 static int cached_output_h = 0;
@@ -613,6 +618,7 @@ void hw_render_bridge_apply_filter(void) {
     gl->BindTexture(GL_TEXTURE_2D, (GLuint) previous);
 
     hw_render_bridge_exit_core_call();
+    cached_quad_restore.valid = 0;
     LOG_INFO(mux_module, "hw_render: sampling changed to %s", filter == GL_LINEAR ? "linear" : "nearest");
 }
 
@@ -988,6 +994,48 @@ static int ensure_filter_src(SDL_Renderer *renderer) {
     return 1;
 }
 
+static int ensure_paused_src(SDL_Renderer *renderer) {
+    const int width = (int) frame_valid_w;
+    const int height = (int) frame_valid_h;
+    if (width <= 0 || height <= 0) return 0;
+    if (paused_src_tex && width == paused_src_w && height == paused_src_h) return 1;
+
+    if (paused_src_tex) SDL_DestroyTexture(paused_src_tex);
+    paused_src_tex = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, width, height
+    );
+    if (!paused_src_tex) {
+        paused_src_w = 0;
+        paused_src_h = 0;
+        paused_src_valid = 0;
+        LOG_ERROR(mux_module, "hw_render: failed to create paused frame texture: %s", SDL_GetError());
+        return 0;
+    }
+
+    SDL_SetTextureBlendMode(paused_src_tex, SDL_BLENDMODE_NONE);
+    paused_src_w = width;
+    paused_src_h = height;
+    paused_src_valid = 0;
+    return 1;
+}
+
+static int capture_paused_src(SDL_Renderer *renderer, const float du, const float dv, const float u_max, const float v_max) {
+    if (!ensure_paused_src(renderer)) return 0;
+    if (paused_src_valid) return 1;
+
+    SDL_Texture *previous_target = SDL_GetRenderTarget(renderer);
+    if (SDL_SetRenderTarget(renderer, paused_src_tex) != 0) return 0;
+
+    const float v_at_top = flip_needed ? dv : v_max - dv;
+    const float v_at_bottom = flip_needed ? v_max - dv : dv;
+    draw_hw_quad(
+        -1.0f, 1.0f, -1.0f, 1.0f, du, u_max - du, v_at_top, v_at_bottom, paused_src_w, paused_src_h, 1, 0
+    );
+    SDL_SetRenderTarget(renderer, previous_target);
+    paused_src_valid = 1;
+    return 1;
+}
+
 void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, const SDL_Rect *src_rect) {
     if (!active || !context_ready || !colour_tex[display_index] || target_w == 0 || target_h == 0) return;
     if (!prog) return;
@@ -999,6 +1047,15 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
 
     const float du = target_w > 0 ? 0.5f / (float) target_w : 0.0f;
     const float dv = target_h > 0 ? 0.5f / (float) target_h : 0.0f;
+
+    if (!pause_menu_is_active()) {
+        paused_src_valid = 0;
+    } else if (capture_paused_src(renderer, du, dv, u_max, v_max)) {
+        const int linear = texture_filter_wants_linear_sample(session_settings.texture_filter);
+        SDL_SetTextureScaleMode(paused_src_tex, linear ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
+        colour_render_pass(renderer, paused_src_tex, src_rect, dest_rect);
+        return;
+    }
 
     if (colour_pass_needed() && ensure_filter_src(renderer)) {
         SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
@@ -1104,6 +1161,13 @@ void hw_render_bridge_shutdown(void) {
     }
     filter_src_w = 0;
     filter_src_h = 0;
+    if (paused_src_tex) {
+        SDL_DestroyTexture(paused_src_tex);
+        paused_src_tex = NULL;
+    }
+    paused_src_w = 0;
+    paused_src_h = 0;
+    paused_src_valid = 0;
     cached_output_renderer = NULL;
     cached_output_w = 0;
     cached_output_h = 0;

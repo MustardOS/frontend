@@ -49,6 +49,16 @@ void options_init_paths(const char *core_path_arg, const char *content_path);
 
 void options_capture_baseline(void);
 
+void options_profile_capture(int indices[OPTIONS_MAX]);
+
+int options_profile_matches(const int indices[OPTIONS_MAX]);
+
+int options_profile_baseline_matches(void);
+
+int options_profile_value_index(int option_index, const char *value);
+
+void options_profile_apply(const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]);
+
 int options_is_dirty(void);
 
 void options_discard(void);

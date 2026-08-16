@@ -23,6 +23,7 @@
 #include "../input/core_input_meta.h"
 #include "../input/rumble.h"
 #include "../macro/macro.h"
+#include "../ui/options.h"
 #include "../video/overlay_bridge.h"
 #include "../core/paths.h"
 #include "../core/perf.h"
@@ -180,8 +181,10 @@ static char settings_content_name[MAX_BUFFER_SIZE] = "";
 static char settings_content_stem[MAX_BUFFER_SIZE] = "";
 static char active_user_profile_path[MAX_BUFFER_SIZE] = "";
 static struct session_settings_t active_user_profile_settings;
+static int active_user_profile_options[OPTIONS_MAX];
 static enum play_profile active_play_profile = play_profile_unmatched;
 static struct session_settings_t active_play_profile_settings;
+static int active_play_profile_options[OPTIONS_MAX];
 
 static const char *scale_names[video_scale_count] = {
     lang.muxretro.settings_screen.aspect_ratio, lang.muxretro.settings_screen.integer_mode,
@@ -363,30 +366,43 @@ static const struct play_profile_settings play_profiles[play_profile_count] = {
     {texture_filter_sharp_bilinear, 1, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50}
 };
 
-static int play_profile_values_match(const struct play_profile_settings *profile) {
-    return session_settings.texture_filter == profile->texture_filter
-           && session_settings.shimmer_fix == profile->shimmer_fix
-           && session_settings.frame_delay_ms == profile->frame_delay_ms
-           && !session_settings.run_ahead == !profile->run_ahead
-           && !session_settings.gpu_hard_sync == !profile->gpu_hard_sync
-           && session_settings.audio_latency_profile == profile->audio_latency_profile
-           && session_settings.audio_period_frames == profile->audio_period_frames
-           && session_settings.audio_rate_control == profile->audio_rate_control;
+static struct session_settings_t play_profile_resolve(const enum play_profile profile) {
+    struct session_settings_t resolved = default_settings();
+    const struct play_profile_settings *values = &play_profiles[profile];
+
+    resolved.texture_filter = values->texture_filter;
+    resolved.shimmer_fix = values->shimmer_fix;
+    resolved.frame_delay_ms = values->frame_delay_ms;
+    resolved.run_ahead = values->run_ahead;
+    resolved.gpu_hard_sync = values->gpu_hard_sync;
+    resolved.audio_latency_profile = values->audio_latency_profile;
+    resolved.audio_period_frames = values->audio_period_frames;
+    resolved.audio_rate_control = values->audio_rate_control;
+    return resolved;
+}
+
+static int play_profile_values_match(const enum play_profile profile) {
+    const struct session_settings_t expected = play_profile_resolve(profile);
+    return memcmp(&session_settings, &expected, sizeof(session_settings)) == 0;
 }
 
 static void play_profile_track_current(void) {
     active_play_profile = play_profile_unmatched;
+    if (!options_profile_baseline_matches()) return;
+
     for (int profile = 0; profile < play_profile_count; profile++) {
-        if (!play_profile_values_match(&play_profiles[profile])) continue;
+        if (!play_profile_values_match((enum play_profile) profile)) continue;
         active_play_profile = (enum play_profile) profile;
         active_play_profile_settings = session_settings;
+        options_profile_capture(active_play_profile_options);
         break;
     }
 }
 
 enum play_profile session_settings_play_profile(void) {
     if (active_play_profile < 0 || active_play_profile >= play_profile_count
-        || memcmp(&session_settings, &active_play_profile_settings, sizeof(session_settings)) != 0)
+        || memcmp(&session_settings, &active_play_profile_settings, sizeof(session_settings)) != 0
+        || !options_profile_matches(active_play_profile_options))
         return play_profile_unmatched;
     return active_play_profile;
 }
@@ -394,20 +410,13 @@ enum play_profile session_settings_play_profile(void) {
 void session_settings_apply_play_profile(const enum play_profile profile) {
     if (profile < 0 || profile >= play_profile_count) return;
 
-    const struct play_profile_settings *values = &play_profiles[profile];
-    struct session_settings_t next = session_settings;
-    next.texture_filter = values->texture_filter;
-    next.shimmer_fix = values->shimmer_fix;
-    next.frame_delay_ms = values->frame_delay_ms;
-    next.run_ahead = values->run_ahead;
-    next.gpu_hard_sync = values->gpu_hard_sync;
-    next.audio_latency_profile = values->audio_latency_profile;
-    next.audio_period_frames = values->audio_period_frames;
-    next.audio_rate_control = values->audio_rate_control;
+    struct session_settings_t next = play_profile_resolve(profile);
     session_settings_discard_to(&next);
+    options_profile_apply(NULL, NULL);
     active_user_profile_path[0] = '\0';
     active_play_profile = profile;
     active_play_profile_settings = session_settings;
+    options_profile_capture(active_play_profile_options);
 }
 
 static const char *show_fps_names[show_fps_count] = {
@@ -786,13 +795,91 @@ enum {
 typedef struct {
     char path[MAX_BUFFER_SIZE];
     char name[MAX_BUFFER_SIZE];
+    char description[SESSION_USER_PROFILE_DESCRIPTION_MAX];
     struct session_settings_t values;
     unsigned char present[setting_descriptor_count];
+    int option_indices[OPTIONS_MAX];
+    unsigned char option_present[OPTIONS_MAX];
+    int input_present;
     int field_count;
 } user_profile;
 
 static user_profile user_profiles[SESSION_USER_PROFILE_LIMIT];
 static int user_profile_count;
+
+static int apply_input_settings_to(mini_t *ini, struct session_settings_t *settings) {
+    int applied = 0;
+
+    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
+        char key[32];
+        long long value;
+
+        snprintf(key, sizeof(key), "port%d_assignment", i);
+        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+            value = mini_get_int(ini, "settings", key, LLONG_MIN);
+            if (value >= port_assignment_auto && value <= port_assignment_remembered) {
+                settings->port_assignment[i] = (int) value;
+                applied++;
+            }
+        }
+
+        snprintf(key, sizeof(key), "port%d_device_key", i);
+        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+            const char *device_key = mini_get_string(ini, "settings", key, "");
+            snprintf(settings->port_device_key[i], sizeof(settings->port_device_key[i]), "%s", device_key);
+            applied++;
+        }
+
+        snprintf(key, sizeof(key), "port%d_device_id", i);
+        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+            value = mini_get_int(ini, "settings", key, LLONG_MIN);
+            if (value >= 0 && value <= INT_MAX) {
+                settings->port_device_id[i] = (int) value;
+                applied++;
+            }
+        }
+
+        snprintf(key, sizeof(key), "port%d_stick_forced", i);
+        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+            value = mini_get_int(ini, "settings", key, LLONG_MIN);
+            if (value >= 0 && value <= 2) {
+                settings->port_stick_forced[i] = (int) value;
+                applied++;
+            }
+        }
+
+        for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
+            snprintf(key, sizeof(key), "port%d_src_%d", i, source);
+            if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+                value = mini_get_int(ini, "settings", key, LLONG_MIN);
+                if (value >= -1 && value < PORT_TARGET_COUNT) {
+                    settings->port_source_target[i][source] = (int) value;
+                    applied++;
+                }
+            }
+
+            snprintf(key, sizeof(key), "port%d_srcms_%d", i, source);
+            if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+                value = mini_get_int(ini, "settings", key, LLONG_MIN);
+                if (value >= 0 && value <= 65535) {
+                    settings->port_source_turbo[i][source] = (int) value;
+                    applied++;
+                }
+            }
+
+            snprintf(key, sizeof(key), "port%d_macro_%d", i, source);
+            if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+                value = mini_get_int(ini, "settings", key, LLONG_MIN);
+                if (value >= -1 && value < MACRO_MAX) {
+                    settings->port_source_macro[i][source] = (int) value;
+                    applied++;
+                }
+            }
+        }
+    }
+
+    return applied;
+}
 
 static int user_profile_file_compare(const void *left, const void *right) {
     return strcasecmp(left, right);
@@ -810,6 +897,24 @@ static int user_profile_name_valid(const char *name) {
         if (*cursor < 0x20 || *cursor == 0x7f) return 0;
 
     return 1;
+}
+
+static void user_profile_description_decode(char *output, const size_t output_size, const char *input) {
+    if (!output || output_size == 0) return;
+
+    size_t written = 0;
+    while (input && *input && written + 1 < output_size) {
+        if (input[0] == '\\' && input[1] == 'n') {
+            output[written++] = '\n';
+            input += 2;
+        } else if (input[0] == '\\' && input[1] == '\\') {
+            output[written++] = '\\';
+            input += 2;
+        } else {
+            output[written++] = *input++;
+        }
+    }
+    output[written] = '\0';
 }
 
 static int user_profile_target_matches(const char *wanted, const char *first, const char *second) {
@@ -831,6 +936,7 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
     }
 
     memset(profile, 0, sizeof(*profile));
+    profile->values = baseline_settings;
     snprintf(profile->path, sizeof(profile->path), "%s", path);
 
     const char *display_name = mini_get_string(ini, "profile", "name", "");
@@ -841,6 +947,10 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
         char *extension = strrchr(profile->name, '.');
         if (extension) *extension = '\0';
     }
+
+    const char *description = mini_get_string(ini, "profile", "description", "");
+    if (description && *description)
+        user_profile_description_decode(profile->description, sizeof(profile->description), description);
 
     if (!user_profile_name_valid(profile->name)) {
         mini_free(ini);
@@ -859,6 +969,26 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
 
         *setting_field(&profile->values, descriptor) = (int) value;
         profile->present[i] = 1;
+        profile->field_count++;
+    }
+
+    const int input_fields = apply_input_settings_to(ini, &profile->values);
+    profile->input_present = input_fields > 0;
+    profile->field_count += input_fields;
+
+    for (int option = 0; option < options_count; option++) {
+        const struct core_option_entry *entry = &options_list[option];
+        if (mini_value_exists(ini, "options", entry->key) != MINI_OK) continue;
+
+        const char *value = mini_get_string(ini, "options", entry->key, "");
+        const int value_index = options_profile_value_index(option, value);
+        if (value_index < 0) {
+            LOG_WARN(mux_module, "Ignoring invalid core option '%s' in %s", entry->key, file_name);
+            continue;
+        }
+
+        profile->option_indices[option] = value_index;
+        profile->option_present[option] = 1;
         profile->field_count++;
     }
 
@@ -913,28 +1043,45 @@ const char *session_settings_user_profile_name(const int index) {
     return index >= 0 && index < user_profile_count ? user_profiles[index].name : "";
 }
 
+const char *session_settings_user_profile_description(const int index) {
+    return index >= 0 && index < user_profile_count ? user_profiles[index].description : "";
+}
+
 int session_settings_user_profile_apply(const int index) {
     if (index < 0 || index >= user_profile_count) return 0;
 
     const user_profile *profile = &user_profiles[index];
-    struct session_settings_t next = session_settings;
+    struct session_settings_t next = baseline_settings;
     for (int i = 0; i < setting_descriptor_count; i++) {
         if (!profile->present[i]) continue;
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
         *setting_field(&next, descriptor) = *setting_field_const(&profile->values, descriptor);
     }
 
+    if (profile->input_present) {
+        memcpy(next.port_assignment, profile->values.port_assignment, sizeof(next.port_assignment));
+        memcpy(next.port_device_key, profile->values.port_device_key, sizeof(next.port_device_key));
+        memcpy(next.port_device_id, profile->values.port_device_id, sizeof(next.port_device_id));
+        memcpy(next.port_stick_forced, profile->values.port_stick_forced, sizeof(next.port_stick_forced));
+        memcpy(next.port_source_target, profile->values.port_source_target, sizeof(next.port_source_target));
+        memcpy(next.port_source_turbo, profile->values.port_source_turbo, sizeof(next.port_source_turbo));
+        memcpy(next.port_source_macro, profile->values.port_source_macro, sizeof(next.port_source_macro));
+    }
+
     if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) next.run_ahead = 0;
     session_settings_discard_to(&next);
+    options_profile_apply(profile->option_indices, profile->option_present);
     snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", profile->path);
     active_user_profile_settings = session_settings;
+    options_profile_capture(active_user_profile_options);
     active_play_profile = play_profile_unmatched;
     return profile->field_count;
 }
 
 int session_settings_user_profile_current(void) {
     if (!active_user_profile_path[0]
-        || memcmp(&session_settings, &active_user_profile_settings, sizeof(session_settings)) != 0)
+        || memcmp(&session_settings, &active_user_profile_settings, sizeof(session_settings)) != 0
+        || !options_profile_matches(active_user_profile_options))
         return -1;
 
     for (int index = 0; index < user_profile_count; index++) {
@@ -988,6 +1135,37 @@ static int user_profile_write(FILE *file, const char *name, const enum user_prof
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
         if (fprintf(file, "%s=%d\n", descriptor->key, *setting_field_const(&session_settings, descriptor)) < 0)
             return 0;
+    }
+
+    for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++) {
+        if (fprintf(file, "port%d_assignment=%d\n", port, session_settings.port_assignment[port]) < 0
+            || fprintf(file, "port%d_device_key=%s\n", port, session_settings.port_device_key[port]) < 0
+            || fprintf(file, "port%d_device_id=%d\n", port, session_settings.port_device_id[port]) < 0
+            || fprintf(file, "port%d_stick_forced=%d\n", port, session_settings.port_stick_forced[port]) < 0)
+            return 0;
+
+        for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
+            if (fprintf(
+                    file, "port%d_src_%d=%d\n", port, source, session_settings.port_source_target[port][source]
+                ) < 0
+                || fprintf(
+                       file, "port%d_srcms_%d=%d\n", port, source,
+                       session_settings.port_source_turbo[port][source]
+                   ) < 0
+                || fprintf(
+                       file, "port%d_macro_%d=%d\n", port, source,
+                       session_settings.port_source_macro[port][source]
+                   ) < 0)
+                return 0;
+        }
+    }
+
+    if (options_count > 0 && fputs("\n[options]\n", file) < 0) return 0;
+    for (int option = 0; option < options_count; option++) {
+        const struct core_option_entry *entry = &options_list[option];
+        if (entry->value_count <= 0 || entry->current_index < 0 || entry->current_index >= entry->value_count)
+            continue;
+        if (fprintf(file, "%s=%s\n", entry->key, entry->values[entry->current_index]) < 0) return 0;
     }
 
     return 1;
@@ -1069,6 +1247,7 @@ int session_settings_user_profile_create(const char *name, const enum user_profi
     if (!str_format_checked(final_path, sizeof(final_path), "%s/%s", RETRO_PRO_PATH, final_name)) return -1;
     snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", final_path);
     active_user_profile_settings = session_settings;
+    options_profile_capture(active_user_profile_options);
 
     session_settings_refresh_user_profiles();
     for (int index = 0; index < user_profile_count; index++)
@@ -1115,43 +1294,7 @@ static void apply_ini(const char *path) {
     if (!ini) return;
 
     apply_scalar_settings_to(ini, &session_settings);
-
-    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
-        char key[32];
-
-        snprintf(key, sizeof(key), "port%d_assignment", i);
-        long long v = mini_get_int(ini, "settings", key, -1);
-        if (v >= port_assignment_auto && v <= port_assignment_remembered) session_settings.port_assignment[i] = (int) v;
-
-        snprintf(key, sizeof(key), "port%d_device_key", i);
-        const char *device_key = mini_get_string(ini, "settings", key, NULL);
-        if (device_key)
-            snprintf(
-                session_settings.port_device_key[i], sizeof(session_settings.port_device_key[i]), "%s", device_key
-            );
-
-        snprintf(key, sizeof(key), "port%d_device_id", i);
-        v = mini_get_int(ini, "settings", key, -1);
-        if (v >= 0) session_settings.port_device_id[i] = (int) v;
-
-        snprintf(key, sizeof(key), "port%d_stick_forced", i);
-        v = mini_get_int(ini, "settings", key, -1);
-        if (v >= 0 && v <= 2) session_settings.port_stick_forced[i] = (int) v;
-
-        for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-            snprintf(key, sizeof(key), "port%d_src_%d", i, s);
-            v = mini_get_int(ini, "settings", key, -99);
-            if (v >= -1 && v < PORT_TARGET_COUNT) session_settings.port_source_target[i][s] = (int) v;
-
-            snprintf(key, sizeof(key), "port%d_srcms_%d", i, s);
-            v = mini_get_int(ini, "settings", key, -1);
-            if (v >= 0 && v <= 65535) session_settings.port_source_turbo[i][s] = (int) v;
-
-            snprintf(key, sizeof(key), "port%d_macro_%d", i, s);
-            v = mini_get_int(ini, "settings", key, -99);
-            if (v >= -1 && v < MACRO_MAX) session_settings.port_source_macro[i][s] = (int) v;
-        }
-    }
+    apply_input_settings_to(ini, &session_settings);
 
     mini_free(ini);
 }
@@ -2470,10 +2613,14 @@ void session_settings_discard_to(const struct session_settings_t *snapshot) {
     video_bridge_apply_scaling();
     video_bridge_apply_filter();
     session_settings_apply_fps_mode();
+    audio_bridge_reset_period_floor();
     audio_bridge_apply_sample_rate();
+    audio_bridge_apply_filter();
     video_bridge_apply_fps_limit();
     colour_refresh();
     overlay_bridge_apply();
+    rumble_bridge_refresh();
+    input_bridge_apply_controller_ports();
 }
 
 void session_settings_discard(void) {

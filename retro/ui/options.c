@@ -390,6 +390,55 @@ void options_capture_baseline(void) {
     options_log_resolved();
 }
 
+void options_profile_capture(int indices[OPTIONS_MAX]) {
+    if (!indices) return;
+
+    for (int i = 0; i < OPTIONS_MAX; i++)
+        indices[i] = i < options_count ? options_list[i].current_index : -1;
+}
+
+int options_profile_matches(const int indices[OPTIONS_MAX]) {
+    if (!indices) return 0;
+
+    for (int i = 0; i < options_count; i++)
+        if (indices[i] != options_list[i].current_index) return 0;
+
+    return 1;
+}
+
+int options_profile_baseline_matches(void) {
+    for (int i = 0; i < options_count; i++)
+        if (baseline_indices[i] != options_list[i].current_index) return 0;
+
+    return 1;
+}
+
+int options_profile_value_index(const int option_index, const char *value) {
+    if (option_index < 0 || option_index >= options_count || !value) return -1;
+
+    const struct core_option_entry *entry = &options_list[option_index];
+    for (int value_index = 0; value_index < entry->value_count; value_index++)
+        if (strcmp(entry->values[value_index], value) == 0) return value_index;
+
+    return -1;
+}
+
+void options_profile_apply(const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]) {
+    int changed = 0;
+
+    for (int i = 0; i < options_count; i++) {
+        int next = baseline_indices[i];
+        if (indices && present && present[i] && indices[i] >= 0 && indices[i] < options_list[i].value_count)
+            next = indices[i];
+
+        if (options_list[i].current_index == next) continue;
+        options_list[i].current_index = next;
+        changed = 1;
+    }
+
+    if (changed) options_dirty = true;
+}
+
 int options_is_dirty(void) {
     for (int i = 0; i < options_count; i++) {
         if (options_list[i].current_index != baseline_indices[i]) return 1;

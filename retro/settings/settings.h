@@ -77,8 +77,9 @@ enum play_profile {
     play_profile_unmatched = -1
 };
 
-#define SESSION_USER_PROFILE_LIMIT    24
-#define SESSION_USER_PROFILE_NAME_MAX 64
+#define SESSION_USER_PROFILE_LIMIT           24
+#define SESSION_USER_PROFILE_NAME_MAX        64
+#define SESSION_USER_PROFILE_DESCRIPTION_MAX 1024
 
 enum user_profile_scope {
     user_profile_scope_content = 0,
@@ -317,6 +318,8 @@ int session_settings_refresh_user_profiles(void);
 int session_settings_user_profile_count(void);
 
 const char *session_settings_user_profile_name(int index);
+
+const char *session_settings_user_profile_description(int index);
 
 int session_settings_user_profile_apply(int index);
 
