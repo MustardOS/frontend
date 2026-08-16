@@ -293,7 +293,8 @@ static void build_hash_row(const enum content_hash_kind kind, const char *label,
     hash_row_shown_ready[kind] = content_hash_is_ready(kind);
     build_info_row(label, "", glyph, 1);
     hash_row_index[kind] = build_info_row(
-        hash_row_shown_ready[kind] ? content_hash_get(kind) : lang.muxretro.information_screen.calculating, "", "", 1
+        hash_row_shown_ready[kind] ? content_hash_get(kind) : lang.muxretro.information_screen.calculating, "", "hash",
+        1
     );
 }
 
