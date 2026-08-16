@@ -89,6 +89,7 @@ typedef struct {
     cheevo_http_completion completions[CHEEVO_QUEUE_CAP];
     unsigned completion_head;
     unsigned completion_count;
+    atomic_uint completion_pending;
     uint64_t active_queued_at;
     unsigned cache_hits;
     unsigned cache_misses;
@@ -443,6 +444,7 @@ static void *http_thread(void *userdata) {
             const unsigned tail = (worker->completion_head + worker->completion_count) % CHEEVO_QUEUE_CAP;
             worker->completions[tail] = completion;
             worker->completion_count++;
+            atomic_store(&worker->completion_pending, worker->completion_count);
             worker->cache_hits += completion.cache_hit;
             worker->cache_misses += completion.cache_miss;
             worker->cache_fallbacks += completion.cache_fallback;
@@ -460,6 +462,7 @@ static int http_start(void) {
     pthread_mutex_init(&http_worker.mutex, NULL);
     pthread_cond_init(&http_worker.wake, NULL);
     atomic_store(&http_worker.stop, 0);
+    atomic_store(&http_worker.completion_pending, 0);
     if (pthread_create(&http_worker.thread, NULL, http_thread, &http_worker) != 0) {
         pthread_mutex_destroy(&http_worker.mutex);
         pthread_cond_destroy(&http_worker.wake);
@@ -540,6 +543,7 @@ static int http_drain_limited(const unsigned budget) {
         memset(&http_worker.completions[http_worker.completion_head], 0, sizeof(completion));
         http_worker.completion_head = (http_worker.completion_head + 1) % CHEEVO_QUEUE_CAP;
         http_worker.completion_count--;
+        atomic_store(&http_worker.completion_pending, http_worker.completion_count);
         pthread_cond_signal(&http_worker.wake);
         pthread_mutex_unlock(&http_worker.mutex);
 
@@ -1053,6 +1057,15 @@ void cheevo_tick(void) {
     }
 }
 
+int cheevo_needs_tick(void) {
+    return client && (cheevo_is_starting() || reset_pending);
+}
+
+int cheevo_needs_present_tick(void) {
+    if (!client || cheevo_is_starting()) return 0;
+    return preview_achievement_count || (http_worker.running && atomic_load(&http_worker.completion_pending));
+}
+
 static void memory_wait_tick(void) {
     if (memory_wait_frames <= 0) return;
 
@@ -1076,6 +1089,12 @@ void cheevo_do_frame(void) {
     if (status == cheevo_status_active_softcore || status == cheevo_status_active_hardcore
         || status == cheevo_status_offline)
         rc_client_do_frame(client);
+}
+
+int cheevo_needs_frame(void) {
+    if (!client || netplay_active) return 0;
+    return memory_wait_frames > 0 || status == cheevo_status_active_softcore || status == cheevo_status_active_hardcore
+           || status == cheevo_status_offline;
 }
 
 void cheevo_idle(void) {

@@ -38,6 +38,8 @@ void video_bridge_apply_filter(void);
 
 void video_bridge_apply_fps_limit(void);
 
+int video_bridge_get_swap_interval(void);
+
 void video_bridge_flush_frame(void);
 
 void video_bridge_set_frame_skip(int skip);
@@ -76,15 +78,35 @@ uint32_t audio_bridge_high_water_ms(void);
 
 void audio_bridge_wait_for_headroom(uint32_t budget_ms);
 
+void audio_bridge_wait_for_cadence(void);
+
+void audio_bridge_recover_cadence(void);
+
 void audio_bridge_note_core_frames(unsigned frames);
 
 uint64_t audio_bridge_dropped_frames(void);
+
+uint64_t audio_bridge_latency_recovery_frames(void);
+
+uint64_t audio_bridge_latency_recovery_count(void);
+
+uint32_t audio_bridge_underrun_count(void);
+
+double audio_bridge_rate_correction_percent(void);
+
+double audio_bridge_rate_limit_percent(void);
+
+uint64_t audio_bridge_batch_calls(void);
+
+size_t audio_bridge_batch_peak_frames(void);
 
 double audio_bridge_content_fps(void);
 
 double audio_bridge_locked_content_fps(void);
 
-double audio_bridge_pace_target_ms(void);
+double audio_bridge_content_quantum_fps(void);
+
+double audio_bridge_core_pace_divisor(void);
 
 void audio_bridge_drc_tick(void);
 
@@ -110,6 +132,10 @@ int audio_bridge_is_muted(void);
 
 void audio_bridge_get_info(int *freq, int *channels);
 
+unsigned audio_bridge_target_sample_rate(void);
+
+void audio_bridge_reset_content_rate(void);
+
 void audio_bridge_apply_filter(void);
 
 void mux_retro_input_poll_cb(void);
@@ -134,6 +160,12 @@ void environment_apply_pending_av_info(void);
 
 void environment_notify_frame_time(void);
 
+int environment_frame_time_callback_active(void);
+
+uint32_t environment_frame_time_clamp_count(void);
+
+double environment_frame_time_clamp_peak_ms(void);
+
 void frame_pacer_maybe_wait(void);
 
 void frame_pacer_after_present(void);
@@ -146,7 +178,13 @@ void core_set_target_fps(double new_fps);
 
 double core_get_target_fps(void);
 
+double core_pace_divisor(void);
+
 int core_content_needs_pacing(void);
+
+double core_auto_pace_target_ms(void);
+
+int core_pacing_uses_audio_clock(void);
 
 void input_bridge_suppress_held(void);
 

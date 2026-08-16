@@ -10,6 +10,8 @@ int hw_render_bridge_active(void);
 
 int hw_render_bridge_owns_context(void);
 
+int hw_render_bridge_buffer_count(void);
+
 const char *hw_render_bridge_description(void);
 
 void hw_render_bridge_flush_core_commands(void);

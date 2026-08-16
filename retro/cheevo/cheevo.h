@@ -88,9 +88,15 @@ void cheevo_shutdown(void);
 
 void cheevo_tick(void);
 
+int cheevo_needs_tick(void);
+
 void cheevo_present_tick(void);
 
+int cheevo_needs_present_tick(void);
+
 void cheevo_do_frame(void);
+
+int cheevo_needs_frame(void);
 
 void cheevo_idle(void);
 

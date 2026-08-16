@@ -79,8 +79,8 @@ static int flip_needed = 1;
 static int active = 0;
 static int context_ready = 0;
 
-#define HW_TARGET_COUNT_MAX              2
-#define HW_DOUBLE_BUFFER_MAX_EXTRA_BYTES (16u * 1024u * 1024u)
+#define HW_TARGET_COUNT_MAX       3
+#define HW_BUFFER_MAX_EXTRA_BYTES (16u * 1024u * 1024u)
 
 static GLuint fbo[HW_TARGET_COUNT_MAX] = {0};
 static GLuint colour_tex[HW_TARGET_COUNT_MAX] = {0};
@@ -88,8 +88,6 @@ static GLuint depth_stencil_rb = 0;
 static int target_count = 1;
 static int render_index = 0;
 static int display_index = 0;
-static int target_queried = 0;
-static int handed_index = 0;
 static int target_w = 0;
 static int target_h = 0;
 
@@ -128,6 +126,7 @@ static GLint target_filter_param(void) {
 static SDL_Window *gl_window = NULL;
 static SDL_GLContext sdl_ctx = NULL;
 static SDL_GLContext core_ctx = NULL;
+static unsigned context_scope_depth = 0;
 
 static int owns_context(void) {
     return core_ctx != NULL;
@@ -270,6 +269,10 @@ int hw_render_bridge_owns_context(void) {
 
 int hw_render_bridge_active(void) {
     return active;
+}
+
+int hw_render_bridge_buffer_count(void) {
+    return active && fbo[0] ? target_count : 0;
 }
 
 const char *hw_render_bridge_description(void) {
@@ -456,8 +459,6 @@ static void destroy_target(void) {
 
     render_index = 0;
     display_index = 0;
-    target_queried = 0;
-    handed_index = 0;
     target_count = 1;
     target_w = 0;
     target_h = 0;
@@ -475,7 +476,17 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     const size_t pixels = (size_t) max_width * (size_t) max_height;
     const size_t colour_target_bytes = pixels * 4u;
-    target_count = colour_target_bytes <= HW_DOUBLE_BUFFER_MAX_EXTRA_BYTES ? 2 : 1;
+    target_count = 1;
+    if (colour_target_bytes > 0) {
+        const size_t affordable_extra = HW_BUFFER_MAX_EXTRA_BYTES / colour_target_bytes;
+        target_count += affordable_extra > HW_TARGET_COUNT_MAX - 1 ? HW_TARGET_COUNT_MAX - 1 : (int) affordable_extra;
+    }
+
+    const char *buffer_override = getenv("MUXRETRO_HW_BUFFERS");
+    if (buffer_override && *buffer_override) {
+        const int requested = atoi(buffer_override);
+        if (requested >= 1 && requested <= HW_TARGET_COUNT_MAX && requested < target_count) target_count = requested;
+    }
 
     if (want_depth) {
         gl->GenRenderbuffers(1, &depth_stencil_rb);
@@ -484,6 +495,14 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
             GL_RENDERBUFFER, want_stencil ? GL_DEPTH24_STENCIL8_OES : GL_DEPTH_COMPONENT16, (GLsizei) max_width,
             (GLsizei) max_height
         );
+    }
+
+    gl->GenFramebuffers(1, &fbo[0]);
+    gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+    if (want_depth) {
+        gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+        if (want_stencil)
+            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
     }
 
     GLint sample_buffers = 0;
@@ -501,28 +520,19 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         gl->BindTexture(GL_TEXTURE_2D, 0);
 
-        gl->GenFramebuffers(1, &fbo[i]);
-        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[i]);
+        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
         gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[i], 0);
-
-        if (want_depth) {
-            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
-            if (want_stencil)
-                gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
-        }
 
         const GLenum status = gl->CheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             if (i > 0) {
                 LOG_WARN(
-                    mux_module, "hw_render: secondary framebuffer incomplete (status 0x%x) - using a single target",
-                    status
+                    mux_module, "hw_render: colour buffer %d incomplete (status 0x%x) - using %d buffer(s)", i + 1,
+                    status, i
                 );
-                gl->DeleteFramebuffers(1, &fbo[i]);
-                fbo[i] = 0;
                 gl->DeleteTextures(1, &colour_tex[i]);
                 colour_tex[i] = 0;
-                target_count = 1;
+                target_count = i;
                 break;
             }
 
@@ -546,6 +556,9 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
             GL_COLOR_BUFFER_BIT | (want_depth ? GL_DEPTH_BUFFER_BIT : 0) | (want_stencil ? GL_STENCIL_BUFFER_BIT : 0)
         );
     }
+
+    gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+    gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[0], 0);
 
     gl->BindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -604,9 +617,7 @@ void hw_render_bridge_apply_filter(void) {
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
-    target_queried = 1;
-    handed_index = render_index;
-    return fbo[render_index];
+    return fbo[0];
 }
 
 retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
@@ -618,16 +629,26 @@ retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
     if (width == 0 || height == 0) return;
 
-    if (target_count > 1 && !target_queried) {
-        LOG_WARN(mux_module, "hw_render: core reuses a cached framebuffer; pinning to a single render target!");
-        target_count = 1;
-        render_index = handed_index;
-    }
-
     display_index = render_index;
-    if (target_count > 1) render_index = (render_index + 1) % target_count;
+    if (target_count > 1) {
+        const uint64_t rotate_start = perf_begin();
+        GLint previous_fbo = 0;
+        GLint previous_read_fbo = 0;
+        gl->GetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
+        if (es3_available) gl->GetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previous_read_fbo);
 
-    target_queried = 0;
+        render_index = (render_index + 1) % target_count;
+        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+        gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[render_index], 0);
+
+        if (es3_available && previous_read_fbo != previous_fbo) {
+            gl->BindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint) previous_fbo);
+            gl->BindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) previous_read_fbo);
+        } else {
+            gl->BindFramebuffer(GL_FRAMEBUFFER, (GLuint) previous_fbo);
+        }
+        perf_end(perf_stage_gl_rotate, rotate_start);
+    }
 
     frame_valid_w = width;
     frame_valid_h = height;
@@ -821,12 +842,15 @@ static void leave_core_gl(void) {
 }
 
 void hw_render_bridge_flush_core_commands(void) {
-    if (!active || !gl) return;
+    if (!active || !gl || !owns_context()) return;
+    const uint64_t start = perf_begin();
     gl->Flush();
+    perf_end(perf_stage_gl_submit, start);
 }
 
 void hw_render_bridge_context_save(void) {
     if (!active || !gl) return;
+    if (context_scope_depth++ > 0) return;
 
     const uint64_t start = perf_begin();
 
@@ -840,6 +864,7 @@ void hw_render_bridge_context_save(void) {
 }
 
 void hw_render_bridge_context_restore(void) {
+    if (context_scope_depth > 0 && --context_scope_depth > 0) return;
     if (!active || !gl) return;
     if (!owns_context() && !sdl_state.valid) return;
 
@@ -901,7 +926,7 @@ static void draw_hw_quad(
     };
 
     quad_restore_state_t frame_restore;
-    quad_restore_state_t *restore = &frame_restore;
+    const quad_restore_state_t *restore = &frame_restore;
 
     if (cache_restore_state && cached_quad_restore.valid) {
         restore = &cached_quad_restore;
@@ -1010,11 +1035,11 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
     }
     if (out_w <= 0 || out_h <= 0) return;
 
-    const float ndc_left = ((float) dest_rect->x / (float) out_w) * 2.0f - 1.0f;
-    const float ndc_right = ((float) (dest_rect->x + dest_rect->w) / (float) out_w) * 2.0f - 1.0f;
+    const float ndc_left = (float) dest_rect->x / (float) out_w * 2.0f - 1.0f;
+    const float ndc_right = (float) (dest_rect->x + dest_rect->w) / (float) out_w * 2.0f - 1.0f;
 
-    float ndc_top = 1.0f - ((float) dest_rect->y / (float) out_h) * 2.0f;
-    float ndc_bottom = 1.0f - ((float) (dest_rect->y + dest_rect->h) / (float) out_h) * 2.0f;
+    float ndc_top = 1.0f - (float) dest_rect->y / (float) out_h * 2.0f;
+    float ndc_bottom = 1.0f - (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f;
 
     if (cur_target) {
         ndc_top = -ndc_top;

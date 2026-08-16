@@ -10,7 +10,7 @@
 
 #define AUDIO_SCRATCH_FRAMES 4096
 #define SAMPLE_FIFO_FRAMES   256
-#define AUDIO_RING_FRAMES    32768
+#define AUDIO_RING_FRAMES    65536
 
 #define CORE_MIN_LATENCY_CEILING_MS 512
 
@@ -34,20 +34,28 @@
 #define HEADROOM_MAX_WAIT_MS 4
 #define HEADROOM_SMOOTHING   0.25
 
-#define AUDIO_LATENCY_CEILING_RATIO 2
+#define HEADROOM_BACKPRESSURE_RATIO 2
+#define HEADROOM_RECOVERY_QUEUE_MS  1000
+#define HEADROOM_FORCED_WAIT_MS     20
 
-#define CONTENT_FPS_SMOOTHING     0.02
-#define CONTENT_FPS_MIN           20.0
-#define CONTENT_FPS_MAX           130.0
-#define CONTENT_FPS_SETTLE_FRAMES 180
+#define CADENCE_RECOVERY_QUEUE_MS 250
+#define CADENCE_MAX_WAIT_MS       50
+#define CADENCE_WAIT_GAIN_NUM     2
+#define CADENCE_WAIT_GAIN_DEN     3
+
+#define AUDIO_WRITE_BACKPRESSURE_MAX_MS 100
+
+#define CONTENT_FPS_SMOOTHING 0.25
+#define CONTENT_FPS_MIN       20.0
+#define CONTENT_FPS_MAX       130.0
 
 #define CONTENT_FPS_SNAP_TOLERANCE 0.06
-#define CONTENT_FPS_LOCK_FRAMES    150
+#define CONTENT_FPS_LOCK_WINDOWS   2
 #define CONTENT_FPS_WINDOW_FRAMES  60
-#define CONTENT_FPS_BREAK_RATIO    0.25
 
-#define PACE_QUEUE_GAIN       0.08
-#define PACE_CORRECTION_LIMIT 0.20
+#define CONTENT_QUANTUM_SMOOTHING  0.25
+#define CONTENT_HALF_RATE_ENTER_HZ 42.0
+#define CONTENT_HALF_RATE_LEAVE_HZ 48.0
 
 static SDL_AudioDeviceID audio_dev = 0;
 
@@ -69,9 +77,11 @@ static unsigned content_fps_samples = 0;
 static double content_fps_locked = 0.0;
 static double content_fps_candidate = 0.0;
 static unsigned content_fps_agree = 0;
-static double content_fps_window_sum = 0.0;
-static unsigned content_fps_window_count = 0;
-static double last_batch_ms = 0.0;
+static uint64_t content_pending_core_frames = 0;
+static uint64_t content_window_core_frames = 0;
+static uint64_t content_window_audio_frames = 0;
+static double content_quantum_fps = 0.0;
+static int content_half_rate = 0;
 
 static int16_t scratch_buf[AUDIO_SCRATCH_FRAMES * 2];
 static uint8_t resample_buf[AUDIO_SCRATCH_FRAMES * 2 * sizeof(int16_t)];
@@ -88,6 +98,10 @@ static _Atomic uint32_t ring_write_index = 0;
 static _Atomic uint32_t ring_read_index = 0;
 static _Atomic uint32_t underrun_count = 0;
 static uint64_t dropped_frames = 0;
+static uint64_t latency_recovery_frames = 0;
+static uint64_t latency_recovery_count = 0;
+static uint64_t batch_calls = 0;
+static size_t batch_peak_frames = 0;
 
 static _Atomic uint32_t fade_in_remaining = 0;
 static _Atomic uint32_t fade_in_total = 0;
@@ -98,6 +112,7 @@ static double drc_bias = 0.0;
 static double drc_fill_avg = -1.0;
 static double headroom_queued_avg = -1.0;
 static double drc_ratio = 1.0;
+static double drc_limit = 0.0;
 static double drc_phase = 0.0;
 static int16_t drc_prev_l = 0;
 static int16_t drc_prev_r = 0;
@@ -119,6 +134,8 @@ static uint32_t last_queued_ms_sample = 0;
 static int last_queued_ms_valid = 0;
 
 static void audio_bridge_maybe_finish_resume(void);
+
+static void audio_bridge_wait_after_write(void);
 
 static int16_t scale_sample(const int16_t sample) {
     const int32_t scaled = (int32_t) sample * session_settings.volume / 100;
@@ -398,7 +415,7 @@ void audio_bridge_flush_sample_fifo(void) {
 
     if (audio_dev && !audio_muted) {
         submit_audio_frames(sample_fifo, sample_fifo_count);
-        audio_bridge_maybe_finish_resume();
+        audio_bridge_wait_after_write();
 
         single_sample_flushes++;
         if (sample_fifo_count > single_sample_max_batch) single_sample_max_batch = sample_fifo_count;
@@ -471,6 +488,7 @@ int audio_bridge_open(const double core_sample_rate) {
     drc_fill_avg = -1.0;
     headroom_queued_avg = -1.0;
     drc_ratio = 1.0;
+    drc_limit = 0.0;
     drc_reset_stream();
 
     submitted_frames = 0;
@@ -479,9 +497,11 @@ int audio_bridge_open(const double core_sample_rate) {
     content_fps_locked = 0.0;
     content_fps_candidate = 0.0;
     content_fps_agree = 0;
-    content_fps_window_sum = 0.0;
-    content_fps_window_count = 0;
-    last_batch_ms = 0.0;
+    content_pending_core_frames = 0;
+    content_window_core_frames = 0;
+    content_window_audio_frames = 0;
+    content_quantum_fps = 0.0;
+    content_half_rate = 0;
 
     free_resampler();
     if ((int) core_sample_rate != have.freq) {
@@ -588,93 +608,127 @@ void audio_bridge_note_core_frames(const unsigned frames) {
     const uint64_t produced = submitted_frames;
     submitted_frames = 0;
 
-    if (frames && produced && core_native_rate > 0.0)
-        last_batch_ms = (double) produced / (double) frames / core_native_rate * 1000.0;
-    if (!frames || !produced || audio_muted || core_native_rate <= 0.0) return;
+    if (!frames) return;
+    if (audio_muted || core_native_rate <= 0.0) {
+        content_pending_core_frames = 0;
+        return;
+    }
 
-    const double per_frame = (double) produced / (double) frames;
-    if (per_frame < 1.0) return;
+    content_pending_core_frames += frames;
+    if (!produced) return;
 
-    const double implied = core_native_rate / per_frame;
-    if (implied < CONTENT_FPS_MIN || implied > CONTENT_FPS_MAX) return;
+    const uint64_t observed_frames = content_pending_core_frames;
+    content_pending_core_frames = 0;
+
+    const double quantum = core_native_rate * (double) observed_frames / (double) produced;
+    if (quantum >= CONTENT_FPS_MIN && quantum <= CONTENT_FPS_MAX) {
+        content_quantum_fps = content_quantum_fps <= 0.0 ? quantum
+                                                         : content_quantum_fps * (1.0 - CONTENT_QUANTUM_SMOOTHING)
+                                                               + quantum * CONTENT_QUANTUM_SMOOTHING;
+
+        const int was_half_rate = content_half_rate;
+        if (!content_half_rate && content_quantum_fps < CONTENT_HALF_RATE_ENTER_HZ)
+            content_half_rate = 1;
+        else if (content_half_rate && content_quantum_fps > CONTENT_HALF_RATE_LEAVE_HZ)
+            content_half_rate = 0;
+
+        if (content_half_rate != was_half_rate) {
+            content_fps_ema = 0.0;
+            content_fps_samples = 0;
+            content_fps_locked = 0.0;
+            content_fps_candidate = 0.0;
+            content_fps_agree = 0;
+            content_window_core_frames = 0;
+            content_window_audio_frames = 0;
+            LOG_INFO(
+                mux_module, "Core audio quantum switched to %s-rate pacing (%.2f Hz)",
+                content_half_rate ? "half" : "full", content_quantum_fps
+            );
+            video_bridge_apply_fps_limit();
+        }
+    }
+
+    content_window_core_frames += observed_frames;
+    content_window_audio_frames += produced;
+    if (content_window_core_frames < CONTENT_FPS_WINDOW_FRAMES) return;
+
+    const double window = core_native_rate * (double) content_window_core_frames / (double) content_window_audio_frames;
+    content_window_core_frames = 0;
+    content_window_audio_frames = 0;
+    if (window < CONTENT_FPS_MIN || window > CONTENT_FPS_MAX) return;
 
     content_fps_ema = content_fps_ema <= 0.0
-                          ? implied
-                          : content_fps_ema * (1.0 - CONTENT_FPS_SMOOTHING) + implied * CONTENT_FPS_SMOOTHING;
+                          ? window
+                          : content_fps_ema * (1.0 - CONTENT_FPS_SMOOTHING) + window * CONTENT_FPS_SMOOTHING;
+    content_fps_samples++;
 
-    content_fps_window_sum += implied;
-    if (++content_fps_window_count >= CONTENT_FPS_WINDOW_FRAMES) {
-        const double window = content_fps_window_sum / (double) content_fps_window_count;
-        content_fps_window_sum = 0.0;
-        content_fps_window_count = 0;
+    LOG_DEBUG(
+        mux_module, "Content rate window %.2f Hz, average %.2f Hz, locked %.2f Hz", window, content_fps_ema,
+        content_fps_locked
+    );
 
-        LOG_DEBUG(
-            mux_module, "Content rate window %.2f Hz, average %.2f Hz, locked %.2f Hz", window, content_fps_ema,
-            content_fps_locked
-        );
+    if (content_fps_locked > 0.0) return;
 
-        if (content_fps_locked > 0.0) {
-            const double drift =
-                window > content_fps_locked ? window - content_fps_locked : content_fps_locked - window;
-            if (drift / content_fps_locked > CONTENT_FPS_BREAK_RATIO) {
-                LOG_INFO(
-                    mux_module, "Content rate moved to %.2f Hz, releasing the %.2f Hz lock", window, content_fps_locked
-                );
-                content_fps_locked = 0.0;
-                content_fps_candidate = 0.0;
-                content_fps_agree = 0;
-                content_fps_ema = window;
-            }
-        }
-    }
-
-    if (content_fps_samples < CONTENT_FPS_SETTLE_FRAMES) {
-        content_fps_samples++;
+    const double snapped = snap_content_fps(window);
+    if (snapped <= 0.0) {
+        content_fps_candidate = 0.0;
+        content_fps_agree = 0;
         return;
     }
 
-    const double snapped = snap_content_fps(content_fps_ema);
-    if (snapped > 0.0 && snapped == content_fps_candidate) {
-        if (content_fps_agree < CONTENT_FPS_LOCK_FRAMES) content_fps_agree++;
-        if (content_fps_agree >= CONTENT_FPS_LOCK_FRAMES && content_fps_locked != snapped) {
-            content_fps_locked = snapped;
-            LOG_INFO(mux_module, "Content rate locked at %.2f Hz", snapped);
-        }
+    if (snapped != content_fps_candidate) {
+        content_fps_candidate = snapped;
+        content_fps_agree = 1;
         return;
     }
 
-    content_fps_candidate = snapped;
-    content_fps_agree = 0;
+    if (content_fps_agree < CONTENT_FPS_LOCK_WINDOWS) content_fps_agree++;
+    if (content_fps_agree >= CONTENT_FPS_LOCK_WINDOWS && content_fps_locked != snapped) {
+        content_fps_locked = snapped;
+        LOG_INFO(mux_module, "Content rate locked at %.2f Hz", snapped);
+        video_bridge_apply_fps_limit();
+    }
 }
 
 double audio_bridge_locked_content_fps(void) {
     return content_fps_locked;
 }
 
-double audio_bridge_pace_target_ms(void) {
-    if (last_batch_ms <= 0.0 || !audio_bridge_is_active() || audio_muted) return 0.0;
-
-    const double centre = ((double) audio_bridge_low_water_ms() + (double) audio_bridge_high_water_ms()) * 0.5;
-    const double queued = audio_bridge_queued_ms();
-
-    double target = last_batch_ms + (queued - centre) * PACE_QUEUE_GAIN;
-
-    const double lowest = last_batch_ms * (1.0 - PACE_CORRECTION_LIMIT);
-    const double highest = last_batch_ms * (1.0 + PACE_CORRECTION_LIMIT);
-
-    if (target < lowest) target = lowest;
-    if (target > highest) target = highest;
-
-    return target;
+void audio_bridge_reset_content_rate(void) {
+    submitted_frames = 0;
+    content_fps_ema = 0.0;
+    content_fps_samples = 0;
+    content_fps_locked = 0.0;
+    content_fps_candidate = 0.0;
+    content_fps_agree = 0;
+    content_pending_core_frames = 0;
+    content_window_core_frames = 0;
+    content_window_audio_frames = 0;
+    content_quantum_fps = 0.0;
+    content_half_rate = 0;
 }
 
 double audio_bridge_content_fps(void) {
-    return content_fps_samples >= CONTENT_FPS_SETTLE_FRAMES ? content_fps_ema : 0.0;
+    return content_fps_samples ? content_fps_ema : 0.0;
+}
+
+double audio_bridge_content_quantum_fps(void) {
+    return content_quantum_fps;
+}
+
+double audio_bridge_core_pace_divisor(void) {
+    return content_half_rate ? 2.0 : 1.0;
 }
 
 void audio_bridge_get_info(int *freq, int *channels) {
     *freq = opened_freq;
     *channels = opened_channels;
+}
+
+unsigned audio_bridge_target_sample_rate(void) {
+    if (opened_freq > 0) return (unsigned) opened_freq;
+    if (session_settings.sample_rate > 0) return (unsigned) session_settings.sample_rate;
+    return AUDIO_AUTO_RATE_TO;
 }
 
 int audio_bridge_is_active(void) {
@@ -722,6 +776,26 @@ uint64_t audio_bridge_dropped_frames(void) {
     return dropped_frames;
 }
 
+uint64_t audio_bridge_latency_recovery_frames(void) {
+    return latency_recovery_frames;
+}
+
+uint64_t audio_bridge_latency_recovery_count(void) {
+    return latency_recovery_count;
+}
+
+uint32_t audio_bridge_underrun_count(void) {
+    return underrun_count;
+}
+
+double audio_bridge_rate_correction_percent(void) {
+    return (drc_ratio - 1.0) * 100.0;
+}
+
+double audio_bridge_rate_limit_percent(void) {
+    return drc_limit * 100.0;
+}
+
 int audio_bridge_is_muted(void) {
     return audio_muted;
 }
@@ -745,6 +819,7 @@ void audio_bridge_clear_queued(void) {
     drc_fill_avg = -1.0;
     headroom_queued_avg = -1.0;
     drc_ratio = 1.0;
+    drc_limit = 0.0;
     drc_reset_stream();
     audio_filter_reset();
 }
@@ -845,34 +920,12 @@ void audio_bridge_reset_period_floor(void) {
     period_floor_frames = 0;
 }
 
-static void enforce_latency_ceiling(const uint32_t high_ms) {
-    if (high_ms == 0) return;
-
-    uint32_t keep_ms = high_ms;
-    if (keep_ms < AUDIO_RESUME_PREFILL_MIN_MS) keep_ms = AUDIO_RESUME_PREFILL_MIN_MS;
-
-    const uint32_t ceiling_ms = keep_ms * AUDIO_LATENCY_CEILING_RATIO;
-    if (audio_bridge_queued_ms() <= ceiling_ms) return;
-
-    const uint32_t keep = (uint32_t) ((uint64_t) keep_ms * (uint64_t) opened_freq / 1000ULL);
-
-    SDL_LockAudioDevice(audio_dev);
-    const uint32_t write_idx = ring_write_index;
-    const uint32_t occupied = write_idx - ring_read_index;
-    if (occupied > keep) {
-        ring_read_index = write_idx - keep;
-        dropped_frames += occupied - keep;
-    }
-    SDL_UnlockAudioDevice(audio_dev);
-
-    LOG_DEBUG(mux_module, "Audio queue reached %ums, skipped ahead to %ums", ceiling_ms, high_ms);
-}
-
 void audio_bridge_drc_tick(void) {
     period_stability_check();
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
 
     const double max_deviation = (double) session_settings.audio_rate_control / 10000.0;
+    drc_limit = max_deviation;
     if (max_deviation <= 0.0) {
         drc_bias = 0.0;
         drc_ratio = 1.0;
@@ -881,7 +934,6 @@ void audio_bridge_drc_tick(void) {
 
     uint32_t low, high;
     compute_latency_targets(active_min_latency_ms, &low, &high);
-    enforce_latency_ceiling(high);
 
     const uint64_t target_frames = (uint64_t) (low + high) / 2ULL * (uint64_t) opened_freq / 1000ULL;
     if (target_frames == 0) return;
@@ -907,25 +959,99 @@ void audio_bridge_drc_tick(void) {
     drc_ratio = 1.0 - correction;
 }
 
+static uint32_t recover_stale_audio(uint32_t queued, const uint32_t ceiling_ms) {
+    const uint32_t high = audio_bridge_high_water_ms();
+    if (queued < ceiling_ms || high == 0) return queued;
+
+    const uint32_t keep_frames = (uint32_t) ((uint64_t) high * (uint64_t) opened_freq / 1000ULL);
+
+    SDL_LockAudioDevice(audio_dev);
+    const uint32_t write_idx = ring_write_index;
+    const uint32_t occupied = write_idx - ring_read_index;
+    if (occupied > keep_frames) {
+        const uint32_t discarded = occupied - keep_frames;
+        ring_read_index = write_idx - keep_frames;
+        dropped_frames += discarded;
+        latency_recovery_frames += discarded;
+        latency_recovery_count++;
+        audio_bridge_trigger_fade_in();
+    }
+    SDL_UnlockAudioDevice(audio_dev);
+
+    queued = audio_bridge_queued_ms();
+    headroom_queued_avg = (double) queued;
+    return queued;
+}
+
+void audio_bridge_wait_for_cadence(void) {
+    audio_bridge_maybe_finish_resume();
+    if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
+
+    uint32_t queued = audio_bridge_queued_ms();
+    queued = recover_stale_audio(queued, CADENCE_RECOVERY_QUEUE_MS);
+
+    const uint32_t low = audio_bridge_low_water_ms();
+    const uint32_t high = audio_bridge_high_water_ms();
+    const uint32_t target = (low + high) / 2;
+    if (queued <= target) return;
+
+    uint32_t wait_ms = (queued - target) * CADENCE_WAIT_GAIN_NUM / CADENCE_WAIT_GAIN_DEN;
+    if (wait_ms > CADENCE_MAX_WAIT_MS) wait_ms = CADENCE_MAX_WAIT_MS;
+    if (wait_ms == 0) return;
+
+    SDL_Delay(wait_ms);
+}
+
+void audio_bridge_recover_cadence(void) {
+    audio_bridge_maybe_finish_resume();
+    if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
+
+    recover_stale_audio(audio_bridge_queued_ms(), HEADROOM_RECOVERY_QUEUE_MS);
+}
+
+static void audio_bridge_wait_after_write(void) {
+    audio_bridge_maybe_finish_resume();
+    if (!audio_dev || audio_muted || device_paused || opened_freq == 0 || netplay_is_active()) return;
+
+    const uint32_t high = audio_bridge_high_water_ms();
+    if (high == 0) return;
+
+    const uint32_t started = SDL_GetTicks();
+    while (audio_bridge_queued_ms() > high) {
+        if (SDL_GetTicks() - started >= AUDIO_WRITE_BACKPRESSURE_MAX_MS) break;
+        SDL_Delay(1);
+    }
+}
+
 void audio_bridge_wait_for_headroom(const uint32_t budget_ms) {
     audio_bridge_maybe_finish_resume();
     if (device_paused) return;
-    if (budget_ms == 0) return;
 
-    const uint32_t queued = audio_bridge_queued_ms();
+    uint32_t queued = audio_bridge_queued_ms();
+    const uint32_t high = audio_bridge_high_water_ms();
+
+    queued = recover_stale_audio(queued, HEADROOM_RECOVERY_QUEUE_MS);
+
+    uint32_t backpressure_at = high * HEADROOM_BACKPRESSURE_RATIO;
+    if (backpressure_at < high) backpressure_at = high;
+
+    uint32_t wait_budget = budget_ms;
+    if (queued >= backpressure_at && wait_budget < HEADROOM_FORCED_WAIT_MS) wait_budget = HEADROOM_FORCED_WAIT_MS;
+    if (wait_budget == 0) return;
 
     headroom_queued_avg = headroom_queued_avg < 0.0
                               ? (double) queued
                               : headroom_queued_avg * (1.0 - HEADROOM_SMOOTHING) + (double) queued * HEADROOM_SMOOTHING;
 
-    const double depth = headroom_queued_avg < (double) queued ? headroom_queued_avg : (double) queued;
-
-    const uint32_t high = audio_bridge_high_water_ms();
+    const double depth = queued >= backpressure_at               ? (double) queued
+                         : headroom_queued_avg < (double) queued ? headroom_queued_avg
+                                                                 : (double) queued;
     if (depth <= (double) high) return;
 
     uint32_t wait_ms = (uint32_t) (depth - (double) high);
-    if (wait_ms > HEADROOM_MAX_WAIT_MS) wait_ms = HEADROOM_MAX_WAIT_MS;
-    if (wait_ms > budget_ms) wait_ms = budget_ms;
+    const uint32_t max_wait = queued >= backpressure_at ? HEADROOM_FORCED_WAIT_MS : HEADROOM_MAX_WAIT_MS;
+    if (wait_ms > max_wait) wait_ms = max_wait;
+    if (wait_ms > wait_budget) wait_ms = wait_budget;
     if (wait_ms == 0) return;
 
     SDL_Delay(wait_ms);
@@ -1011,7 +1137,18 @@ void mux_retro_audio_sample_cb(const int16_t left, const int16_t right) {
 size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames) {
     if (!audio_dev || !data || audio_muted) return frames;
 
+    batch_calls++;
+    if (frames > batch_peak_frames) batch_peak_frames = frames;
+
     submit_audio_frames(data, frames);
-    audio_bridge_maybe_finish_resume();
+    audio_bridge_wait_after_write();
     return frames;
+}
+
+uint64_t audio_bridge_batch_calls(void) {
+    return batch_calls;
+}
+
+size_t audio_bridge_batch_peak_frames(void) {
+    return batch_peak_frames;
 }

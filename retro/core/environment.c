@@ -3,6 +3,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "../../common/fileio.h"
+#include "../../common/display.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "core.h"
@@ -54,6 +55,10 @@ static retro_frame_time_callback_t frame_time_cb = NULL;
 static retro_usec_t frame_time_reference = 0;
 static uint64_t frame_time_last_counter = 0;
 static int frame_time_last_valid = 0;
+static uint32_t frame_time_clamp_count = 0;
+static retro_usec_t frame_time_clamp_peak = 0;
+
+#define FRAME_TIME_MAX_REFERENCE_MULTIPLIER 4
 
 enum retro_pixel_format mux_retro_get_pixel_format(void) {
     return pixel_format;
@@ -173,7 +178,7 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO: {
-            subsystem_store((const struct retro_subsystem_info *) data);
+            subsystem_store(data);
             subsystem_log_resolved();
             return true;
         }
@@ -185,8 +190,15 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_GET_VARIABLE: {
             struct retro_variable *v = data;
-            v->value = options_get_value(v->key);
-            return v->value != NULL;
+            if (v) v->value = v->key ? options_get_value(v->key) : NULL;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_VARIABLE: {
+            const struct retro_variable *v = data;
+            if (!v) return true;
+            if (!v->key || !*v->key || !v->value || !*v->value) return false;
+            return options_set(v->key, v->value);
         }
 
         case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: {
@@ -327,6 +339,7 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         case RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY: {
             const unsigned *ms = data;
             audio_bridge_request_min_latency(ms ? *ms : 0);
+            audio_bridge_apply_pending_min_latency();
             return true;
         }
 
@@ -349,6 +362,8 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             if (!info) return false;
             pending_av_info = *info;
             av_info_pending = 1;
+
+            environment_apply_pending_av_info();
             return true;
         }
 
@@ -366,7 +381,15 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE: {
-            if (data) *(float *) data = frame_pacer_get_refresh_hz();
+            if (data) {
+                const int panel_hz = display_panel_refresh_hz();
+                *(float *) data = panel_hz > 0 ? (float) panel_hz : frame_pacer_get_refresh_hz();
+            }
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_TARGET_SAMPLE_RATE: {
+            if (data) *(unsigned *) data = audio_bridge_target_sample_rate();
             return true;
         }
 
@@ -380,16 +403,23 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         case RETRO_ENVIRONMENT_GET_THROTTLE_STATE: {
             struct retro_throttle_state *throttle = data;
             if (throttle) {
+                double run_rate = core_get_target_fps();
+                const double pace_ms = core_auto_pace_target_ms();
+                if (pace_ms > 0.0) run_rate = 1000.0 / pace_ms;
+
                 if (hotkeys_is_fast_forward_active()) {
                     throttle->mode = RETRO_THROTTLE_FAST_FORWARD;
                     throttle->rate = 0.0f;
                 } else if (hotkeys_is_slow_motion_active()) {
                     throttle->mode = RETRO_THROTTLE_SLOW_MOTION;
-                    throttle->rate = (float) (core_get_target_fps()
-                                              * session_settings_slowmo_speed_value(session_settings.slowmo_speed));
+                    throttle->rate =
+                        (float) (run_rate * session_settings_slowmo_speed_value(session_settings.slowmo_speed));
                 } else if (session_settings.fps_limit == fps_limit_auto) {
-                    throttle->mode = RETRO_THROTTLE_VSYNC;
-                    throttle->rate = frame_pacer_get_refresh_hz();
+                    const int panel_hz = display_panel_refresh_hz();
+                    throttle->mode = core_content_needs_pacing() || (panel_hz > 0 && run_rate > (double) panel_hz)
+                                         ? RETRO_THROTTLE_VSYNC
+                                         : RETRO_THROTTLE_NONE;
+                    throttle->rate = (float) run_rate;
                 } else if (session_settings.fps_limit == fps_limit_none) {
                     throttle->mode = RETRO_THROTTLE_UNBLOCKED;
                     throttle->rate = 0.0f;
@@ -439,8 +469,15 @@ void environment_apply_pending_av_info(void) {
         pending_av_info.geometry.base_width, pending_av_info.geometry.base_height, pending_av_info.geometry.aspect_ratio
     );
 
+    audio_bridge_reset_content_rate();
     if (pending_av_info.timing.fps > 0.0) core_set_target_fps(pending_av_info.timing.fps);
     if (pending_av_info.timing.sample_rate > 0.0) audio_bridge_reconfigure_rate(pending_av_info.timing.sample_rate);
+
+    LOG_INFO(
+        mux_module, "Core AV info applied: %.4f Hz, %.0f Hz audio, %ux%u (max %ux%u)", pending_av_info.timing.fps,
+        pending_av_info.timing.sample_rate, pending_av_info.geometry.base_width, pending_av_info.geometry.base_height,
+        pending_av_info.geometry.max_width, pending_av_info.geometry.max_height
+    );
 }
 
 void environment_notify_frame_time(void) {
@@ -454,6 +491,12 @@ void environment_notify_frame_time(void) {
         if (frame_time_last_valid) {
             const double ns = (double) (now - frame_time_last_counter) * 1e9 / (double) SDL_GetPerformanceFrequency();
             usec = (retro_usec_t) (ns / 1000.0);
+
+            if (frame_time_reference > 0 && usec > frame_time_reference * FRAME_TIME_MAX_REFERENCE_MULTIPLIER) {
+                if (usec > frame_time_clamp_peak) frame_time_clamp_peak = usec;
+                frame_time_clamp_count++;
+                usec = frame_time_reference;
+            }
         }
         frame_time_last_counter = now;
         frame_time_last_valid = 1;
@@ -462,4 +505,16 @@ void environment_notify_frame_time(void) {
     }
 
     frame_time_cb(usec);
+}
+
+int environment_frame_time_callback_active(void) {
+    return frame_time_cb != NULL;
+}
+
+uint32_t environment_frame_time_clamp_count(void) {
+    return frame_time_clamp_count;
+}
+
+double environment_frame_time_clamp_peak_ms(void) {
+    return (double) frame_time_clamp_peak / 1000.0;
 }

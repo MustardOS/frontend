@@ -6,8 +6,11 @@
 #include "../../common/log.h"
 #include "../../common/init.h"
 #include "perf.h"
+#include "core.h"
 #include "muxretro.h"
 #include "../video/hw_render.h"
+#include "../settings/settings.h"
+#include "../ui/options.h"
 
 #define PERF_HISTORY 1024
 
@@ -55,6 +58,8 @@ static unsigned missed_refreshes;
 static unsigned frames_observed;
 static unsigned video_frames;
 static unsigned video_duplicate_frames;
+static double observed_core_run_hz;
+static double observed_emulation_fps;
 static unsigned netplay_resynchronisations;
 static unsigned netplay_queue_overflows;
 static unsigned cheevo_cache_hits;
@@ -63,6 +68,11 @@ static unsigned cheevo_cache_fallbacks;
 static unsigned cheevo_queue_rejections;
 static unsigned cheevo_preview_drops;
 static uint64_t audio_dropped_baseline;
+static uint64_t audio_recovery_frames_baseline;
+static uint64_t audio_recovery_count_baseline;
+static uint32_t audio_underrun_baseline;
+static uint32_t frame_time_clamp_baseline;
+static uint64_t audio_batch_call_baseline;
 static int hud_active;
 static int capture_active;
 static int capture_automatic;
@@ -137,6 +147,8 @@ static void reset(void) {
     frames_observed = 0;
     video_frames = 0;
     video_duplicate_frames = 0;
+    observed_core_run_hz = 0.0;
+    observed_emulation_fps = 0.0;
     netplay_resynchronisations = 0;
     netplay_queue_overflows = 0;
     cheevo_cache_hits = 0;
@@ -146,6 +158,11 @@ static void reset(void) {
     cheevo_preview_drops = 0;
     pending_present_timing = 0;
     audio_dropped_baseline = audio_bridge_dropped_frames();
+    audio_recovery_frames_baseline = audio_bridge_latency_recovery_frames();
+    audio_recovery_count_baseline = audio_bridge_latency_recovery_count();
+    audio_underrun_baseline = audio_bridge_underrun_count();
+    frame_time_clamp_baseline = environment_frame_time_clamp_count();
+    audio_batch_call_baseline = audio_bridge_batch_calls();
 }
 
 static void note_present_timing(const double draw_ms, const double flip_ms) {
@@ -228,8 +245,11 @@ void perf_record(const enum perf_stage stage, const double ms) {
 
 static double perf_target_hz(void) {
     if (core_content_needs_pacing()) {
+        const double pace_ms = core_auto_pace_target_ms();
+        if (pace_ms > 0.0) return 1000.0 / pace_ms;
         const double locked = audio_bridge_locked_content_fps();
         if (locked > 0.0) return locked;
+        return core_get_target_fps();
     }
 
     const int panel = display_panel_refresh_hz();
@@ -282,6 +302,12 @@ void perf_note_present(void) {
     }
 
     last_present = now;
+}
+
+void perf_note_rates(const double core_run_hz, const double emulation_fps) {
+    if (!enabled) return;
+    observed_core_run_hz = core_run_hz;
+    observed_emulation_fps = emulation_fps;
 }
 
 void perf_note_video_frame(const int duplicate) {
@@ -352,25 +378,26 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
         buf, len,
         "%.2f FPS\nFrame %.2f/%.2f/%.2f ms\nCore %.2f  Video %.2f ms\nDraw %.2f  Flip %.2f ms\nAudio %.2f ms  Lag "
         "%s\nIdle %.2f ms  Delay %.2f ms\nQueue %u ms  GL %.2f ms\nSvc %.2f  UI %.2f/%.2f ms\nMissed %u  "
-        "Dupes %u%s",
+        "Dupes %u\nSubmit %.2f  Rotate %.2f  Pace %.2f ms%s",
         fps, mean(&series[perf_stage_frame]), percentile95(&series[perf_stage_frame]),
         percentile99(&series[perf_stage_frame]), mean(&series[perf_stage_core]), mean(&series[perf_stage_video]),
         mean(&series[perf_stage_present_draw]), mean(&series[perf_stage_present_flip]),
         mean(&series[perf_stage_audio_wait]), lag_text, mean(&series[perf_stage_present_to_poll]),
         mean(&series[perf_stage_frame_delay]), audio_bridge_queued_ms(), gl_ms, mean(&series[perf_stage_services]),
         mean(&series[perf_stage_ui_logic]), mean(&series[perf_stage_ui_task]), missed_refreshes, video_duplicate_frames,
+        mean(&series[perf_stage_gl_submit]), mean(&series[perf_stage_gl_rotate]), mean(&series[perf_stage_pace_sleep]),
         netplay_text
     );
 }
 
 int perf_export_trace(const char *path) {
-    static const char *names[perf_stage_count] = {
-        "frame",        "core",       "video",          "present",         "present_draw",
-        "present_flip", "audio_wait", "input_present",  "present_to_poll", "frame_delay",
-        "gl_enter",     "gl_leave",   "netplay_digest", "cheevo_callback", "screenshot",
-        "state_save",   "services",   "cheevo_tick",    "netplay_tick",    "maintenance",
-        "control",      "ui_logic",   "ui_task",        "audio_queue",     "cheevo_frame"
-    };
+    static const char *names[perf_stage_count] = {"frame",           "core",         "video",       "present",
+                                                  "present_draw",    "present_flip", "audio_wait",  "input_present",
+                                                  "present_to_poll", "frame_delay",  "gl_enter",    "gl_leave",
+                                                  "gl_submit",       "gl_rotate",    "pace_sleep",  "netplay_digest",
+                                                  "cheevo_callback", "screenshot",   "state_save",  "services",
+                                                  "cheevo_tick",     "netplay_tick", "maintenance", "control",
+                                                  "ui_logic",        "ui_task",      "audio_queue", "cheevo_frame"};
 
     FILE *f = fopen(path, "w");
     if (!f) return -1;
@@ -411,6 +438,8 @@ int perf_export_trace(const char *path) {
     fprintf(f, "core_batch_catchup_percent,%.2f\n", batch_catchup_percent());
     fprintf(f, "refresh_hz,%.4f\n", (double) frame_pacer_get_refresh_hz());
     fprintf(f, "frames_observed,%u\n", frames_observed);
+    fprintf(f, "core_run_hz,%.4f\n", observed_core_run_hz);
+    fprintf(f, "emulation_fps,%.4f\n", observed_emulation_fps);
     fprintf(f, "missed_refreshes,%u\n", missed_refreshes);
     fprintf(f, "video_frames,%u\n", video_frames);
     fprintf(f, "video_duplicate_frames,%u\n", video_duplicate_frames);
@@ -440,20 +469,81 @@ int perf_export_trace(const char *path) {
 
     const uint64_t total_dropped = audio_bridge_dropped_frames();
     const uint64_t audio_dropped = total_dropped > audio_dropped_baseline ? total_dropped - audio_dropped_baseline : 0;
+    const uint64_t total_recovery_frames = audio_bridge_latency_recovery_frames();
+    const uint64_t recovery_frames = total_recovery_frames > audio_recovery_frames_baseline
+                                         ? total_recovery_frames - audio_recovery_frames_baseline
+                                         : 0;
+    const uint64_t total_recoveries = audio_bridge_latency_recovery_count();
+    const uint64_t recoveries =
+        total_recoveries > audio_recovery_count_baseline ? total_recoveries - audio_recovery_count_baseline : 0;
+    const uint32_t audio_underruns = audio_bridge_underrun_count() - audio_underrun_baseline;
 
     fprintf(f, "audio_low_water_ms,%u\n", audio_bridge_low_water_ms());
     fprintf(f, "audio_high_water_ms,%u\n", audio_bridge_high_water_ms());
     fprintf(f, "audio_dropped_frames,%llu\n", (unsigned long long) audio_dropped);
     fprintf(f, "audio_dropped_seconds,%.3f\n", audio_freq > 0 ? (double) audio_dropped / (double) audio_freq : 0.0);
+    fprintf(f, "audio_latency_recoveries,%llu\n", (unsigned long long) recoveries);
+    fprintf(f, "audio_recovery_dropped_frames,%llu\n", (unsigned long long) recovery_frames);
+    fprintf(
+        f, "audio_recovery_dropped_seconds,%.3f\n",
+        audio_freq > 0 ? (double) recovery_frames / (double) audio_freq : 0.0
+    );
+    fprintf(f, "audio_underruns,%u\n", audio_underruns);
+    fprintf(f, "audio_rate_correction_percent,%.4f\n", audio_bridge_rate_correction_percent());
+    fprintf(f, "audio_rate_limit_percent,%.4f\n", audio_bridge_rate_limit_percent());
+    fprintf(
+        f, "audio_batch_calls,%llu\n", (unsigned long long) (audio_bridge_batch_calls() - audio_batch_call_baseline)
+    );
+    fprintf(f, "audio_batch_peak_frames,%zu\n", audio_bridge_batch_peak_frames());
     fprintf(f, "content_hz,%.4f\n", audio_bridge_content_fps());
     fprintf(f, "content_locked_hz,%.4f\n", audio_bridge_locked_content_fps());
+    fprintf(f, "content_quantum_hz,%.4f\n", audio_bridge_content_quantum_fps());
     fprintf(f, "content_paced,%d\n", core_content_needs_pacing());
+    fprintf(f, "pacing_clock,%s\n", core_pacing_uses_audio_clock() ? "audio" : "deadline");
+    fprintf(f, "audio_pace_target_ms,%.4f\n", core_auto_pace_target_ms());
     fprintf(f, "paced_target_hz,%.4f\n", perf_target_hz());
+    fprintf(f, "core_target_hz,%.4f\n", core_get_target_fps());
+    fprintf(f, "core_pace_divisor,%.4f\n", core_pace_divisor());
     fprintf(f, "panel_hz,%d\n", display_panel_refresh_hz());
+    fprintf(f, "fps_limit_mode,%d\n", session_settings.fps_limit);
+    fprintf(f, "swap_interval,%d\n", video_bridge_get_swap_interval());
+    fprintf(f, "frame_time_callback,%d\n", environment_frame_time_callback_active());
+    fprintf(f, "frame_time_clamps,%u\n", environment_frame_time_clamp_count() - frame_time_clamp_baseline);
+    fprintf(f, "frame_time_clamp_peak_ms,%.4f\n", environment_frame_time_clamp_peak_ms());
 
     const char *gl_context = "none";
     if (hw_render_bridge_active()) gl_context = hw_render_bridge_owns_context() ? "dedicated" : "shared";
     fprintf(f, "gl_context,%s\n", gl_context);
+    fprintf(f, "gl_buffers,%d\n", hw_render_bridge_buffer_count());
+
+    char core_name[128] = "unknown";
+    core_get_name(core_file_path, core_name, sizeof(core_name));
+    fprintf(f, "core_name,%s\n", core_name);
+
+    const char *threaded_rendering = options_get_value("reicast_threaded_rendering");
+    const char *auto_skip_frame = options_get_value("reicast_auto_skip_frame");
+    const char *detect_vsync_swap_interval = options_get_value("reicast_detect_vsync_swap_interval");
+    const char *anisotropic_filtering = options_get_value("reicast_anisotropic_filtering");
+    const char *synchronous_rendering = options_get_value("reicast_synchronous_rendering");
+    const char *delay_frame_swapping = options_get_value("reicast_delay_frame_swapping");
+    const char *frame_skipping = options_get_value("reicast_frame_skipping");
+    const char *framerate = options_get_value("reicast_framerate");
+    const char *alpha_sorting = options_get_value("reicast_alpha_sorting");
+    const char *enable_dsp = options_get_value("reicast_enable_dsp");
+    const char *broadcast = options_get_value("reicast_broadcast");
+    const char *cable_type = options_get_value("reicast_cable_type");
+    if (threaded_rendering) fprintf(f, "flycast_threaded_rendering,%s\n", threaded_rendering);
+    if (auto_skip_frame) fprintf(f, "flycast_auto_skip_frame,%s\n", auto_skip_frame);
+    if (detect_vsync_swap_interval) fprintf(f, "flycast_detect_vsync_swap_interval,%s\n", detect_vsync_swap_interval);
+    if (anisotropic_filtering) fprintf(f, "flycast_anisotropic_filtering,%s\n", anisotropic_filtering);
+    if (synchronous_rendering) fprintf(f, "flycast_synchronous_rendering,%s\n", synchronous_rendering);
+    if (delay_frame_swapping) fprintf(f, "flycast_delay_frame_swapping,%s\n", delay_frame_swapping);
+    if (frame_skipping) fprintf(f, "flycast_frame_skipping,%s\n", frame_skipping);
+    if (framerate) fprintf(f, "flycast_framerate,%s\n", framerate);
+    if (alpha_sorting) fprintf(f, "flycast_alpha_sorting,%s\n", alpha_sorting);
+    if (enable_dsp) fprintf(f, "flycast_enable_dsp,%s\n", enable_dsp);
+    if (broadcast) fprintf(f, "flycast_broadcast,%s\n", broadcast);
+    if (cable_type) fprintf(f, "flycast_cable_type,%s\n", cable_type);
 
     fclose(f);
     return 0;

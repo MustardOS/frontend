@@ -16,6 +16,9 @@ enum perf_stage {
     perf_stage_frame_delay,
     perf_stage_gl_enter,
     perf_stage_gl_leave,
+    perf_stage_gl_submit,
+    perf_stage_gl_rotate,
+    perf_stage_pace_sleep,
     perf_stage_netplay_digest,
     perf_stage_cheevo_callback,
     perf_stage_screenshot,
@@ -85,6 +88,8 @@ void perf_note_poll(void);
 void perf_note_batch(unsigned frames);
 
 void perf_note_present(void);
+
+void perf_note_rates(double core_run_hz, double emulation_fps);
 
 void perf_note_video_frame(int duplicate);
 

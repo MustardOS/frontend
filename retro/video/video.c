@@ -50,6 +50,7 @@ static int output_canvas_h = 0;
 
 static int frame_dirty = 0;
 static int frame_skip = 0;
+static int applied_swap_interval = -2;
 
 static void upload_frame(void);
 
@@ -473,13 +474,39 @@ void video_bridge_apply_fps_limit(void) {
     SDL_Renderer *renderer = display_get_renderer();
     if (!renderer) return;
 
-    const int want_vsync = session_settings.fps_limit == fps_limit_auto;
+    const int software_paced = session_settings.fps_limit == fps_limit_50 || core_content_needs_pacing();
+    const int want_vsync = session_settings.fps_limit == fps_limit_auto && !software_paced;
 
     if (SDL_RenderSetVSync(renderer, want_vsync) != 0) {
         LOG_ERROR(mux_module, "SDL_RenderSetVSync(%d) failed: %s", want_vsync, SDL_GetError());
     } else {
         LOG_INFO(mux_module, "SDL_RenderSetVSync(%d) applied", want_vsync);
     }
+
+    applied_swap_interval = -2;
+    if (!SDL_GL_GetCurrentContext()) return;
+
+    int requested_interval = want_vsync ? 1 : 0;
+    if (want_vsync && hw_render_bridge_active()) requested_interval = -1;
+
+    if (SDL_GL_SetSwapInterval(requested_interval) != 0) {
+        if (requested_interval != -1 || SDL_GL_SetSwapInterval(1) != 0) {
+            LOG_WARN(mux_module, "Could not apply GL swap interval %d: %s", requested_interval, SDL_GetError());
+            return;
+        }
+        requested_interval = 1;
+        LOG_INFO(mux_module, "Adaptive GL swap interval unavailable; using interval 1");
+    }
+
+    applied_swap_interval = SDL_GL_GetSwapInterval();
+    LOG_INFO(
+        mux_module, "GL swap interval %d applied (requested %d, software paced=%d)", applied_swap_interval,
+        requested_interval, software_paced
+    );
+}
+
+int video_bridge_get_swap_interval(void) {
+    return applied_swap_interval;
 }
 
 static void apply_texture_filter(void) {

@@ -22,6 +22,8 @@ const char *coredef_lookup(const char *core_name, const char *key);
 
 // One entry per core file in this directory!
 #define COREDEF_LIST                                                                                                   \
+    COREDEF(flycast)                                                                                                   \
+    COREDEF(flycastvl)                                                                                                 \
     COREDEF(gambatte)                                                                                                  \
     COREDEF(mednafen_pce)                                                                                              \
     COREDEF(mednafen_pce_fast)                                                                                         \

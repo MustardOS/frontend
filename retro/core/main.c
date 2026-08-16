@@ -55,9 +55,6 @@
 #define PERF_AUTODUMP_INTERVAL_MS 15000
 #define SLOW_CORE_PACE_RATIO      0.98
 
-#define PACE_VSYNC_TOLERANCE 1.10
-#define REFRESH_NOTICE_TLC   0.05
-
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
 static unsigned mux_idle_state_changes = 0;
@@ -77,7 +74,9 @@ static void startup_log_stage(const char *stage, uint64_t *stage_start) {
 }
 
 void core_set_target_fps(const double new_fps) {
-    if (new_fps > 0.0) target_fps = new_fps;
+    if (new_fps <= 0.0) return;
+    target_fps = new_fps;
+    video_bridge_apply_fps_limit();
 }
 
 double core_get_target_fps(void) {
@@ -220,9 +219,11 @@ static unsigned run_core_batch(const unsigned frames) {
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
         ran++;
 
-        const uint64_t cheevo_frame_start = perf_begin();
-        cheevo_do_frame();
-        perf_end(perf_stage_cheevo_frame, cheevo_frame_start);
+        if (cheevo_needs_frame()) {
+            const uint64_t cheevo_frame_start = perf_begin();
+            cheevo_do_frame();
+            perf_end(perf_stage_cheevo_frame, cheevo_frame_start);
+        }
 
         if (network_frame) netplay_after_frame();
 
@@ -240,49 +241,129 @@ static unsigned run_core_batch(const unsigned frames) {
     return ran;
 }
 
+static double core_panel_rate(void) {
+    const int reported = display_panel_refresh_hz();
+    return reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
+}
+
+double core_pace_divisor(void) {
+    char core_name[64];
+    if (!core_get_name(core_file_path, core_name, sizeof(core_name))) return 1.0;
+
+    return strcmp(core_name, "flycast") == 0 || strcmp(core_name, "flycastvl") == 0 ? audio_bridge_core_pace_divisor()
+                                                                                    : 1.0;
+}
+
+static double core_declared_pace_rate(void) {
+    const double divisor = core_pace_divisor();
+    if (target_fps <= 0.0 || divisor <= 1.0) return target_fps;
+
+    return target_fps > 40.0 ? target_fps / divisor : target_fps;
+}
+
+static int core_declared_rate_needs_pacing(void) {
+    const double panel = core_panel_rate();
+    const double pace_rate = core_declared_pace_rate();
+    return pace_rate > 0.0 && panel > 0.0 && pace_rate < panel * SLOW_CORE_PACE_RATIO;
+}
+
 int core_content_needs_pacing(void) {
-    if (session_settings.fps_limit != fps_limit_auto) return 0;
+    if (session_settings.fps_limit != fps_limit_auto || link_is_engaged()) return 0;
+    if (core_declared_rate_needs_pacing()) return 1;
+    if (environment_frame_time_callback_active()) return 0;
 
     const double locked = audio_bridge_locked_content_fps();
-    if (locked <= 0.0) return 0;
+    const double panel = core_panel_rate();
+    return locked > 0.0 && locked < panel * SLOW_CORE_PACE_RATIO;
+}
 
-    const int reported = display_panel_refresh_hz();
-    const double panel = reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
+double core_auto_pace_target_ms(void) {
+    if (!core_content_needs_pacing()) return 0.0;
+    if (core_declared_rate_needs_pacing()) return 1000.0 / core_declared_pace_rate();
 
-    return locked < panel * SLOW_CORE_PACE_RATIO;
+    const double locked = audio_bridge_locked_content_fps();
+    const double pace_fps = locked > 0.0 ? locked : target_fps;
+    return pace_fps > 0.0 ? 1000.0 / pace_fps : 0.0;
+}
+
+int core_pacing_uses_audio_clock(void) {
+    return core_pace_divisor() == 1.0 && session_settings.fps_limit == fps_limit_auto && !link_is_engaged()
+           && audio_bridge_is_active() && !audio_bridge_is_muted() && audio_bridge_locked_content_fps() <= 0.0;
+}
+
+static double core_nominal_emulation_fps(void) {
+    if (core_declared_rate_needs_pacing()) {
+        const double divisor = core_pace_divisor();
+        const double pace_rate = core_declared_pace_rate();
+        return divisor > 1.0 ? pace_rate * divisor : target_fps;
+    }
+
+    const double locked = audio_bridge_locked_content_fps();
+    if (core_content_needs_pacing() && locked > 0.0) {
+        const double distance_25 = locked > 25.0 ? locked - 25.0 : 25.0 - locked;
+        const double distance_50 = locked > 50.0 ? locked - 50.0 : 50.0 - locked;
+        if (distance_25 < 1.0 || distance_50 < 1.0) return 50.0;
+    }
+
+    return target_fps > 0.0 ? target_fps : 60.0;
+}
+
+static double core_reported_emulation_fps(const double core_run_hz) {
+    const double divisor = core_pace_divisor();
+    if (divisor > 1.0) return core_run_hz * divisor;
+    if (core_declared_rate_needs_pacing()) return core_run_hz;
+    if (!core_content_needs_pacing()) return core_run_hz;
+
+    const double locked = audio_bridge_locked_content_fps();
+    if (locked <= 0.0) return core_run_hz;
+
+    return core_run_hz * core_nominal_emulation_fps() / locked;
 }
 
 static void pace_core_output(const uint64_t frame_start) {
     static double fps_limit_deadline = 0.0;
+    static double fps_limit_target_ms = 0.0;
 
     if (hotkeys_is_fast_forward_active()) {
         fps_limit_deadline = 0.0;
+        fps_limit_target_ms = 0.0;
         return;
     }
 
     const double budget_ms = target_fps > 0.0 ? 1000.0 / target_fps : 1000.0 / 60.0;
     const double spent_ms =
         (double) (SDL_GetPerformanceCounter() - frame_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+
     const double slack_ms = budget_ms - spent_ms;
+    const int slowmo_active = hotkeys_is_slow_motion_active();
+
+    const int audio_master_paced = !slowmo_active && core_pacing_uses_audio_clock();
+    const int deadline_content_paced = !audio_master_paced && core_content_needs_pacing();
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
     perf_record(perf_stage_audio_queue, audio_bridge_queued_ms());
-    if (!link_is_engaged()) audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
+    if (!link_is_engaged()) {
+        if (audio_master_paced)
+            audio_bridge_wait_for_cadence();
+        else if (deadline_content_paced)
+            audio_bridge_recover_cadence();
+        else
+            audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
+    }
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
-    const int slowmo_active = hotkeys_is_slow_motion_active();
-    double audio_target_ms =
-        session_settings.fps_limit == fps_limit_auto && !link_is_engaged() ? audio_bridge_pace_target_ms() : 0.0;
-
-    if (audio_target_ms > 0.0 && !slowmo_active) {
-        const int reported = display_panel_refresh_hz();
-        const double panel = reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
-        if (panel > 0.0 && audio_target_ms <= 1000.0 / panel * PACE_VSYNC_TOLERANCE) audio_target_ms = 0.0;
+    if (audio_master_paced) {
+        fps_limit_deadline = 0.0;
+        fps_limit_target_ms = 0.0;
+        return;
     }
+
+    const double audio_target_ms = !slowmo_active ? core_auto_pace_target_ms() : 0.0;
 
     if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_target_ms <= 0.0) {
         fps_limit_deadline = 0.0;
+        fps_limit_target_ms = 0.0;
         return;
     }
 
@@ -292,10 +373,26 @@ static void pace_core_output(const uint64_t frame_start) {
     if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
 
     const double now = SDL_GetTicks();
-    if (fps_limit_deadline < now - target_ms) fps_limit_deadline = now;
+    const double pacing_spent_ms =
+        (double) (SDL_GetPerformanceCounter() - frame_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+    if (pacing_spent_ms >= target_ms) {
+        fps_limit_deadline = now;
+        fps_limit_target_ms = target_ms;
+        return;
+    }
+
+    const double target_change =
+        target_ms > fps_limit_target_ms ? target_ms - fps_limit_target_ms : fps_limit_target_ms - target_ms;
+    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < now - target_ms || target_change > 0.01)
+        fps_limit_deadline = now - pacing_spent_ms;
+    fps_limit_target_ms = target_ms;
 
     fps_limit_deadline += target_ms;
-    if (fps_limit_deadline > now) SDL_Delay((uint32_t) (fps_limit_deadline - now));
+    if (fps_limit_deadline > now) {
+        const uint64_t sleep_start = perf_begin();
+        SDL_Delay((uint32_t) (fps_limit_deadline - now));
+        perf_end(perf_stage_pace_sleep, sleep_start);
+    }
 }
 
 void core_prime_audio(void) {
@@ -457,7 +554,6 @@ int main(const int argc, char *argv[]) {
         && netplay_init(core_path_arg, content_path) != 0)
         LOG_WARN(mux_module, "Network Play secure transport could not be initialised");
 
-    video_bridge_apply_fps_limit();
     display_set_hard_sync_query(hard_sync_enabled);
     display_set_idle_saver_suppressed_query(netplay_is_active);
 
@@ -470,7 +566,7 @@ int main(const int argc, char *argv[]) {
         LOG_DEBUG(mux_module, "hw_render_bridge_configure done");
     }
 
-    target_fps = av_info.timing.fps > 0 ? av_info.timing.fps : 60.0;
+    core_set_target_fps(av_info.timing.fps > 0 ? av_info.timing.fps : 60.0);
 
     audio_bridge_open(av_info.timing.sample_rate > 0 ? av_info.timing.sample_rate : 48000.0);
     LOG_DEBUG(mux_module, "audio_bridge_open done");
@@ -599,7 +695,6 @@ int main(const int argc, char *argv[]) {
     int prev_paused = 0;
     int netplay_wait_visible = 0;
     int netplay_governor_active = 0;
-    int refresh_notice_shown = 0;
 
     uint32_t fps_frame_count = 0;
     uint32_t fps_last_update = SDL_GetTicks();
@@ -620,13 +715,18 @@ int main(const int argc, char *argv[]) {
         const uint64_t services_start = perf_begin();
 
         mux_input_poll();
-        const uint64_t cheevo_tick_start = perf_begin();
-        cheevo_tick();
-        perf_end(perf_stage_cheevo_tick, cheevo_tick_start);
-        const uint64_t netplay_tick_start = perf_begin();
-        netplay_tick();
-        perf_end(perf_stage_netplay_tick, netplay_tick_start);
-        const int netplay_active = netplay_is_active();
+        if (cheevo_needs_tick()) {
+            const uint64_t cheevo_tick_start = perf_begin();
+            cheevo_tick();
+            perf_end(perf_stage_cheevo_tick, cheevo_tick_start);
+        }
+        int netplay_active = netplay_is_active();
+        if (netplay_active) {
+            const uint64_t netplay_tick_start = perf_begin();
+            netplay_tick();
+            perf_end(perf_stage_netplay_tick, netplay_tick_start);
+            netplay_active = netplay_is_active();
+        }
         if (netplay_active != netplay_governor_active) {
             if (netplay_active)
                 governor_boost_begin("Network Play session");
@@ -780,24 +880,6 @@ int main(const int argc, char *argv[]) {
             audio_bridge_note_core_frames(ran_frames);
             core_ran = ran_frames > 0;
 
-            if (!refresh_notice_shown) {
-                const double content_hz = audio_bridge_content_fps();
-                const int reported_hz = display_panel_refresh_hz();
-                const double panel_hz = reported_hz > 0 ? (double) reported_hz : (double) frame_pacer_get_refresh_hz();
-                const double delta = content_hz > panel_hz ? content_hz - panel_hz : panel_hz - content_hz;
-
-                if (content_hz > 0.0 && panel_hz > 0.0 && delta > panel_hz * REFRESH_NOTICE_TLC) {
-                    refresh_notice_shown = 1;
-
-                    char notice[MAX_BUFFER_SIZE];
-                    snprintf(
-                        notice, sizeof(notice), lang.muxretro.settings_screen.refresh_mismatch, (int) (content_hz + 0.5)
-                    );
-                    pause_menu_show_toast_timed(notice, tst_wait_s);
-                    LOG_INFO(mux_module, "Content runs at %.2f Hz on a %.2f Hz display", content_hz, panel_hz);
-                }
-            }
-
             if (core_ran) {
                 perf_note_batch(ran_frames);
                 perf_record(perf_stage_frame_delay, frame_pacer_get_delay_ms());
@@ -808,12 +890,15 @@ int main(const int argc, char *argv[]) {
             const uint32_t fps_elapsed = now_ticks - fps_last_update;
             if (fps_elapsed >= 1000) {
                 const double vfps = (double) fps_frame_count * 1000.0 / (double) fps_elapsed;
+                const double effective_fps = core_reported_emulation_fps(vfps);
+                perf_note_rates(vfps, effective_fps);
+
                 if (session_settings.show_fps) {
                     char fps_text[256];
                     if (session_settings.show_fps == show_fps_detailed) {
-                        perf_format_hud(fps_text, sizeof(fps_text), vfps);
+                        perf_format_hud(fps_text, sizeof(fps_text), effective_fps);
                     } else {
-                        snprintf(fps_text, sizeof(fps_text), "%.2f", vfps);
+                        snprintf(fps_text, sizeof(fps_text), "%.2f", effective_fps);
                     }
                     pause_menu_set_fps_text(fps_text);
                 }
@@ -822,8 +907,9 @@ int main(const int argc, char *argv[]) {
                     if (slowmo_active) {
                         governor_boost_gameplay_idle();
                     } else {
-                        const double governor_target = session_settings.fps_limit == fps_limit_50 ? 50.0 : target_fps;
-                        governor_boost_gameplay_update(vfps, governor_target, ff_active);
+                        const double governor_target =
+                            session_settings.fps_limit == fps_limit_50 ? 50.0 : core_nominal_emulation_fps();
+                        governor_boost_gameplay_update(effective_fps, governor_target, ff_active);
                     }
                 }
 
@@ -871,7 +957,7 @@ int main(const int argc, char *argv[]) {
         if (core_ran) perf_note_present();
 
         frame_pacer_after_present();
-        cheevo_present_tick();
+        if (cheevo_needs_present_tick()) cheevo_present_tick();
 
         if (perf_capture_is_automatic() && loop_now >= perf_autodump_deadline) {
             perf_export_trace(RETRO_SHARE_PATH "performance.csv");
