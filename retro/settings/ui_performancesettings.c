@@ -13,6 +13,7 @@ enum {
     row_frame_delay,
     row_run_ahead,
     row_gpu_hard_sync,
+    row_smoothness_check,
     row_performance_capture,
     row_count
 };
@@ -20,16 +21,23 @@ enum {
 static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.performance_preset, lang.muxretro.settings_screen.fps_limit,
     lang.muxretro.settings_screen.frame_delay,        lang.muxretro.settings_screen.run_ahead,
-    lang.muxretro.settings_screen.gpu_hard_sync,      lang.muxretro.settings_screen.performance_capture
+    lang.muxretro.settings_screen.gpu_hard_sync,      lang.muxretro.settings_screen.smoothness_check,
+    lang.muxretro.settings_screen.performance_capture
 };
 
-static const char *row_glyphs[row_count] = {"performance", "fpslimit", "framedelay", "runahead", "hardsync", "info"};
+static const char *row_glyphs[row_count] = {
+    "performance", "fpslimit", "framedelay", "runahead", "hardsync", "performance", "info"
+};
 
 static const char *row_help[row_count] = {
     lang.muxretro.help.performance.preset,        lang.muxretro.help.performance.fps_limit,
     lang.muxretro.help.performance.frame_delay,   lang.muxretro.help.performance.run_ahead,
-    lang.muxretro.help.performance.gpu_hard_sync, lang.muxretro.help.performance.capture
+    lang.muxretro.help.performance.gpu_hard_sync, lang.muxretro.help.performance.smoothness,
+    lang.muxretro.help.performance.capture
 };
+
+static int advisor_capture_owned;
+static int advisor_result_shown;
 
 enum { preset_recommended = 0, preset_low_latency, preset_stable, preset_count };
 
@@ -81,6 +89,23 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
         case row_gpu_hard_sync:
             snprintf(buf, buf_len, "%s", session_settings.gpu_hard_sync ? lang.generic.enabled : lang.generic.disabled);
             break;
+        case row_smoothness_check:
+            switch (perf_check_smoothness()) {
+                case perf_smoothness_collecting:
+                    snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.smoothness_collecting);
+                    break;
+                case perf_smoothness_smooth:
+                    snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.smoothness_smooth);
+                    break;
+                case perf_smoothness_uneven_frames:
+                case perf_smoothness_audio_pressure:
+                    snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.smoothness_review);
+                    break;
+                default:
+                    snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.smoothness_not_run);
+                    break;
+            }
+            break;
         case row_performance_capture:
             snprintf(buf, buf_len, "%s", perf_is_capture_active() ? lang.generic.enabled : lang.generic.disabled);
             break;
@@ -112,12 +137,69 @@ static void cycle_row(const int index, const int direction) {
             session_settings_cycle_gpu_hard_sync(direction);
             break;
         case row_performance_capture:
+            advisor_capture_owned = 0;
+            advisor_result_shown = 0;
             perf_set_capture_active(!perf_is_capture_active());
             break;
         default:
             break;
     }
 
+    submenu_refresh_values(&self);
+}
+
+static int row_is_action(const int index) {
+    return index == row_smoothness_check;
+}
+
+static int row_can_cycle(const int index) {
+    return index != row_smoothness_check;
+}
+
+static const char *action_label(const int index) {
+    return index == row_smoothness_check ? lang.generic.check : NULL;
+}
+
+static void row_action(const int index) {
+    if (index != row_smoothness_check) return;
+
+    if (advisor_result_shown) {
+        perf_set_capture_active(1);
+        advisor_capture_owned = 1;
+        advisor_result_shown = 0;
+        pause_menu_show_toast(lang.muxretro.settings_screen.smoothness_started);
+        submenu_refresh_values(&self);
+        return;
+    }
+
+    enum perf_smoothness_result result = perf_check_smoothness();
+    if (result == perf_smoothness_not_run || result == perf_smoothness_collecting) {
+        if (!perf_is_capture_active()) {
+            perf_set_capture_active(1);
+            advisor_capture_owned = 1;
+        }
+        pause_menu_show_toast(lang.muxretro.settings_screen.smoothness_started);
+        submenu_refresh_values(&self);
+        return;
+    }
+
+    if (advisor_capture_owned) {
+        perf_set_capture_active(0);
+        advisor_capture_owned = 0;
+        advisor_result_shown = 1;
+    }
+
+    switch (result) {
+        case perf_smoothness_audio_pressure:
+            pause_menu_show_toast(lang.muxretro.settings_screen.smoothness_audio);
+            break;
+        case perf_smoothness_uneven_frames:
+            pause_menu_show_toast(lang.muxretro.settings_screen.smoothness_frames);
+            break;
+        default:
+            pause_menu_show_toast(lang.muxretro.settings_screen.smoothness_good);
+            break;
+    }
     submenu_refresh_values(&self);
 }
 
@@ -151,6 +233,10 @@ static const submenu_def def = {
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,
+    .row_can_cycle = row_can_cycle,
+    .row_is_action = row_is_action,
+    .action_label = action_label,
+    .action = row_action,
     .extra_label = extra_label,
     .extra_action = extra_action,
     .closed = closed,

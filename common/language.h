@@ -2113,6 +2113,15 @@ struct mux_lang {
             char gpu_hard_sync[MAX_BUFFER_SIZE];
             char performance_preset[MAX_BUFFER_SIZE];
             char performance_capture[MAX_BUFFER_SIZE];
+            char smoothness_check[MAX_BUFFER_SIZE];
+            char smoothness_not_run[MAX_BUFFER_SIZE];
+            char smoothness_collecting[MAX_BUFFER_SIZE];
+            char smoothness_smooth[MAX_BUFFER_SIZE];
+            char smoothness_review[MAX_BUFFER_SIZE];
+            char smoothness_started[MAX_BUFFER_SIZE];
+            char smoothness_good[MAX_BUFFER_SIZE];
+            char smoothness_frames[MAX_BUFFER_SIZE];
+            char smoothness_audio[MAX_BUFFER_SIZE];
             char preset_recommended[MAX_BUFFER_SIZE];
             char preset_low_latency[MAX_BUFFER_SIZE];
             char preset_stable[MAX_BUFFER_SIZE];
@@ -2127,6 +2136,7 @@ struct mux_lang {
             char category_performance[MAX_BUFFER_SIZE];
             char category_hud[MAX_BUFFER_SIZE];
             char category_storage[MAX_BUFFER_SIZE];
+            char category_advanced[MAX_BUFFER_SIZE];
             char port_1[MAX_BUFFER_SIZE];
             char port_2[MAX_BUFFER_SIZE];
             char port_3[MAX_BUFFER_SIZE];
@@ -2292,6 +2302,18 @@ struct mux_lang {
             char bios_missing[MAX_BUFFER_SIZE];
             char bios_optional[MAX_BUFFER_SIZE];
             char bios_required[MAX_BUFFER_SIZE];
+            char game_check[MAX_BUFFER_SIZE];
+            char game_ready[MAX_BUFFER_SIZE];
+            char game_attention[MAX_BUFFER_SIZE];
+            char game_limited[MAX_BUFFER_SIZE];
+            char not_required[MAX_BUFFER_SIZE];
+            char available[MAX_BUFFER_SIZE];
+            char unavailable[MAX_BUFFER_SIZE];
+            char save_protection[MAX_BUFFER_SIZE];
+            char save_space[MAX_BUFFER_SIZE];
+            char network_play[MAX_BUFFER_SIZE];
+            char required_missing[MAX_BUFFER_SIZE];
+            char optional_missing[MAX_BUFFER_SIZE];
         } information_screen;
         struct {
             struct {
@@ -2318,6 +2340,7 @@ struct mux_lang {
                 char storage[MAX_BUFFER_SIZE];
                 char cheevo[MAX_BUFFER_SIZE];
                 char save_all[MAX_BUFFER_SIZE];
+                char advanced[MAX_BUFFER_SIZE];
             } settings;
             struct {
                 char volume[MAX_BUFFER_SIZE];
@@ -2347,6 +2370,7 @@ struct mux_lang {
                 char run_ahead[MAX_BUFFER_SIZE];
                 char gpu_hard_sync[MAX_BUFFER_SIZE];
                 char capture[MAX_BUFFER_SIZE];
+                char smoothness[MAX_BUFFER_SIZE];
             } performance;
             struct {
                 char viewport[MAX_BUFFER_SIZE];

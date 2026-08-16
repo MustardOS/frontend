@@ -1,5 +1,7 @@
+#include <limits.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include "../../common/audio.h"
 #include "../../common/device.h"
 #include "../../common/input.h"
@@ -9,6 +11,8 @@
 #include "../state/content_hash.h"
 #include "../core/muxretro.h"
 #include "../core/core.h"
+#include "../core/paths.h"
+#include "../coreinfo/coreinfo.h"
 #include "../input/nav_repeat.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
@@ -17,6 +21,10 @@
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
 static int bios_count = 0;
+static int required_bios_missing = 0;
+static int optional_bios_missing = 0;
+static long long save_space_bytes = -1;
+static int save_space_low = 0;
 static int bios_row_index = -1;
 static int rumble_row_index = -1;
 static int root_row_index = 0;
@@ -25,6 +33,7 @@ static int hash_row_shown_ready[content_hash_count];
 
 typedef enum {
     screen_root,
+    screen_check,
     screen_core,
     screen_content,
     screen_hash,
@@ -118,24 +127,62 @@ static void format_bytes(const long long bytes, char *out, const size_t out_size
     }
 }
 
+static void scan_game_check(void) {
+    bios_count = bios_check_scan(core_file_path);
+    required_bios_missing = 0;
+    optional_bios_missing = 0;
+
+    for (int i = 0; i < bios_count; i++) {
+        const bios_entry_t *entry = bios_check_get(i);
+        if (!entry || entry->present) continue;
+        if (entry->optional) {
+            optional_bios_missing++;
+        } else {
+            required_bios_missing++;
+        }
+    }
+
+    save_space_bytes = -1;
+    save_space_low = 0;
+    struct statvfs storage;
+    if (statvfs(RETRO_SHARE_PATH, &storage) == 0) {
+        const unsigned long long available =
+            (unsigned long long) storage.f_bavail * (unsigned long long) storage.f_frsize;
+        save_space_bytes = available > (unsigned long long) LLONG_MAX ? LLONG_MAX : (long long) available;
+
+        save_space_low = available < 32ULL * 1024ULL * 1024ULL;
+    }
+}
+
+static const char *game_check_value(void) {
+    if (required_bios_missing > 0) return lang.muxretro.information_screen.game_attention;
+    if (optional_bios_missing > 0 || !state_saves_supported() || save_space_low)
+        return lang.muxretro.information_screen.game_limited;
+    return lang.muxretro.information_screen.game_ready;
+}
+
+static const char *game_check_glyph(void) {
+    if (required_bios_missing > 0) return "missing";
+    if (optional_bios_missing > 0 || !state_saves_supported() || save_space_low) return "info";
+    return "valid";
+}
+
 static void build_root_rows(void) {
     begin_rows();
 
+    scan_game_check();
+
+    build_info_row(lang.muxretro.information_screen.game_check, game_check_value(), game_check_glyph());
     build_info_row(lang.muxretro.information_screen.section_core, "", "core");
     build_info_row(lang.muxretro.information_screen.section_content, "", "content");
     build_info_row(lang.muxretro.information_screen.section_hash, "", "hash");
     build_info_row(lang.muxretro.information_screen.section_video, "", "videosettings");
     build_info_row(lang.muxretro.information_screen.section_audio, "", "audio");
 
-    int rows = 5;
+    int rows = 6;
 
-    bios_count = bios_check_scan(core_file_path);
     if (bios_count > 0) {
-        int missing = 0;
-        for (int i = 0; i < bios_count; i++) {
-            const bios_entry_t *e = bios_check_get(i);
-            if (e && !e->present) missing++;
-        }
+        const int missing = required_bios_missing + optional_bios_missing;
 
         char bios_summary[32];
         if (missing > 0) {
@@ -152,6 +199,69 @@ static void build_root_rows(void) {
     }
 
     ui_count_static = rows;
+    first_open = 0;
+}
+
+static void build_game_check_rows(void) {
+    begin_rows();
+
+    char firmware[48];
+    const char *firmware_glyph = "valid";
+    if (bios_count == 0) {
+        snprintf(firmware, sizeof(firmware), "%s", lang.muxretro.information_screen.not_required);
+    } else if (required_bios_missing > 0) {
+        snprintf(
+            firmware, sizeof(firmware), "%d %s", required_bios_missing,
+            lang.muxretro.information_screen.required_missing
+        );
+        firmware_glyph = "missing";
+    } else if (optional_bios_missing > 0) {
+        snprintf(
+            firmware, sizeof(firmware), "%d %s", optional_bios_missing,
+            lang.muxretro.information_screen.optional_missing
+        );
+        firmware_glyph = "info";
+    } else {
+        snprintf(firmware, sizeof(firmware), "%s", lang.muxretro.information_screen.game_ready);
+    }
+    build_info_row(lang.muxretro.information_screen.system_bios, firmware, firmware_glyph);
+
+    const int states_available = state_saves_supported();
+    build_info_row(
+        lang.muxretro.information_screen.save_protection,
+        states_available ? lang.muxretro.information_screen.available : lang.muxretro.information_screen.unavailable,
+        states_available ? "valid" : "info"
+    );
+
+    char save_space[32];
+    if (save_space_bytes >= 0) {
+        format_bytes(save_space_bytes, save_space, sizeof(save_space));
+    } else {
+        snprintf(save_space, sizeof(save_space), "%s", lang.generic.unknown);
+    }
+    build_info_row(lang.muxretro.information_screen.save_space, save_space, save_space_low ? "info" : "valid");
+
+    int rows = 3;
+    if (device.board.has_network) {
+        const int netplay_available = states_available && coreinfo_feature_enabled(coreinfo_feature_netplay);
+        build_info_row(
+            lang.muxretro.information_screen.network_play,
+            netplay_available ? lang.muxretro.information_screen.available
+                              : lang.muxretro.information_screen.unavailable,
+            netplay_available ? "valid" : "info"
+        );
+        rows++;
+    }
+
+    char patches[16];
+    if (core_active_patch_count > 0) {
+        snprintf(patches, sizeof(patches), "%d", core_active_patch_count);
+    } else {
+        snprintf(patches, sizeof(patches), "%s", lang.muxretro.information_screen.patches_none);
+    }
+    build_info_row(lang.muxretro.information_screen.active_patches, patches, "patch");
+
+    ui_count_static = rows + 1;
     first_open = 0;
 }
 
@@ -424,6 +534,9 @@ static void build_bios_rows(void) {
 
 static void build_screen(void) {
     switch (screen_state) {
+        case screen_check:
+            build_game_check_rows();
+            break;
         case screen_core:
             build_core_rows();
             break;
@@ -507,15 +620,18 @@ static void enter_row(void) {
     } else {
         switch (current_item_index) {
             case 0:
-                screen_state = screen_core;
+                screen_state = screen_check;
                 break;
             case 1:
-                screen_state = screen_content;
+                screen_state = screen_core;
                 break;
             case 2:
-                screen_state = screen_hash;
+                screen_state = screen_content;
                 break;
             case 3:
+                screen_state = screen_hash;
+                break;
+            case 4:
                 screen_state = screen_video;
                 break;
             default:

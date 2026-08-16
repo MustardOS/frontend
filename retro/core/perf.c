@@ -66,6 +66,8 @@ static int capture_active;
 static int capture_automatic;
 static int enabled;
 
+static double perf_target_hz(void);
+
 static double elapsed_ms(const uint64_t start) {
     return (double) (SDL_GetPerformanceCounter() - start) * ticks_to_ms;
 }
@@ -198,6 +200,27 @@ int perf_is_enabled(void) {
 
 int perf_has_samples(void) {
     return series[perf_stage_frame].count != 0;
+}
+
+enum perf_smoothness_result perf_check_smoothness(void) {
+    const perf_series *frames = &series[perf_stage_frame];
+    if (!frames->count) return perf_smoothness_not_run;
+    if (frames->count < 120) return perf_smoothness_collecting;
+
+    const uint64_t total_dropped = audio_bridge_dropped_frames();
+    if (total_dropped > audio_dropped_baseline) return perf_smoothness_audio_pressure;
+
+    const double target_hz = perf_target_hz();
+    if (target_hz <= 0.0) return perf_smoothness_smooth;
+
+    const double target_ms = 1000.0 / target_hz;
+    const double missed_percent =
+        frames_observed ? 100.0 * (double) missed_refreshes / (double) frames_observed : 0.0;
+    if (missed_percent >= 1.0 || percentile95(frames) > target_ms * 1.15
+        || percentile99(frames) > target_ms * 1.35)
+        return perf_smoothness_uneven_frames;
+
+    return perf_smoothness_smooth;
 }
 
 uint64_t perf_begin(void) {
