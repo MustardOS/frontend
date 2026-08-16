@@ -22,8 +22,7 @@ void power_session_init(void) {
 }
 
 static void acknowledge_power_save(void) {
-    const int descriptor =
-        open(power_save_ready_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+    const int descriptor = open(power_save_ready_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
     if (descriptor < 0) {
         LOG_WARN(mux_module, "Could not acknowledge power save: %s", strerror(errno));
         return;
@@ -50,6 +49,7 @@ static void prepare_power_save(const char *reason) {
             LOG_WARN(mux_module, "Auto save could not be completed before %s", reason);
             state_saved = 0;
         }
+        gamestate_publish_flush();
     }
 
     sram_bridge_save();

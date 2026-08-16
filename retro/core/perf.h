@@ -56,14 +56,6 @@ typedef struct {
     unsigned preview_drops;
 } perf_cheevo_snapshot;
 
-enum perf_smoothness_result {
-    perf_smoothness_not_run = 0,
-    perf_smoothness_collecting,
-    perf_smoothness_smooth,
-    perf_smoothness_uneven_frames,
-    perf_smoothness_audio_pressure
-};
-
 void perf_init(void);
 
 void perf_set_hud_active(int active);
@@ -77,8 +69,6 @@ int perf_capture_is_automatic(void);
 int perf_is_enabled(void);
 
 int perf_has_samples(void);
-
-enum perf_smoothness_result perf_check_smoothness(void);
 
 uint64_t perf_begin(void);
 
@@ -95,6 +85,8 @@ void perf_note_poll(void);
 void perf_note_batch(unsigned frames);
 
 void perf_note_present(void);
+
+void perf_note_video_frame(int duplicate);
 
 void perf_note_netplay(const perf_netplay_snapshot *snapshot);
 

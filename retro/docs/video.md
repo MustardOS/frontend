@@ -25,7 +25,7 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
 ## Hardware Render
 
 Cores that require an OpenGL ES 2 context (`RETRO_ENVIRONMENT_SET_HW_RENDER` with `RETRO_HW_CONTEXT_OPENGLES2`, e.g.
-flycast) render into an FBO owned by muxretro, sharing SDL_Renderer's GLES2 context. Key invariants, all handled in
+flycast) render into an FBO owned by Pickles, sharing SDL_Renderer's GLES2 context. Key invariants, all handled in
 `video/hw_render.c`:
 
 - `SDL_RenderFlush()` before any raw-GL draw (render batching would otherwise reorder the queued clear over the frame).

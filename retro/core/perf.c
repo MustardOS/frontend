@@ -53,6 +53,8 @@ static int pending_present_timing;
 static double ticks_to_ms;
 static unsigned missed_refreshes;
 static unsigned frames_observed;
+static unsigned video_frames;
+static unsigned video_duplicate_frames;
 static unsigned netplay_resynchronisations;
 static unsigned netplay_queue_overflows;
 static unsigned cheevo_cache_hits;
@@ -133,6 +135,8 @@ static void reset(void) {
     batch_catchup = 0;
     missed_refreshes = 0;
     frames_observed = 0;
+    video_frames = 0;
+    video_duplicate_frames = 0;
     netplay_resynchronisations = 0;
     netplay_queue_overflows = 0;
     cheevo_cache_hits = 0;
@@ -200,27 +204,6 @@ int perf_is_enabled(void) {
 
 int perf_has_samples(void) {
     return series[perf_stage_frame].count != 0;
-}
-
-enum perf_smoothness_result perf_check_smoothness(void) {
-    const perf_series *frames = &series[perf_stage_frame];
-    if (!frames->count) return perf_smoothness_not_run;
-    if (frames->count < 120) return perf_smoothness_collecting;
-
-    const uint64_t total_dropped = audio_bridge_dropped_frames();
-    if (total_dropped > audio_dropped_baseline) return perf_smoothness_audio_pressure;
-
-    const double target_hz = perf_target_hz();
-    if (target_hz <= 0.0) return perf_smoothness_smooth;
-
-    const double target_ms = 1000.0 / target_hz;
-    const double missed_percent =
-        frames_observed ? 100.0 * (double) missed_refreshes / (double) frames_observed : 0.0;
-    if (missed_percent >= 1.0 || percentile95(frames) > target_ms * 1.15
-        || percentile99(frames) > target_ms * 1.35)
-        return perf_smoothness_uneven_frames;
-
-    return perf_smoothness_smooth;
 }
 
 uint64_t perf_begin(void) {
@@ -301,6 +284,13 @@ void perf_note_present(void) {
     last_present = now;
 }
 
+void perf_note_video_frame(const int duplicate) {
+    if (!enabled) return;
+
+    video_frames++;
+    if (duplicate) video_duplicate_frames++;
+}
+
 void perf_note_netplay(const perf_netplay_snapshot *snapshot) {
     if (!enabled || !snapshot) return;
 
@@ -361,13 +351,15 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
     snprintf(
         buf, len,
         "%.2f FPS\nFrame %.2f/%.2f/%.2f ms\nCore %.2f  Video %.2f ms\nDraw %.2f  Flip %.2f ms\nAudio %.2f ms  Lag "
-        "%s\nIdle %.2f ms  Delay %.2f ms\nQueue %u ms  GL %.2f ms\nSvc %.2f  UI %.2f/%.2f ms\nMissed %u%s",
+        "%s\nIdle %.2f ms  Delay %.2f ms\nQueue %u ms  GL %.2f ms\nSvc %.2f  UI %.2f/%.2f ms\nMissed %u  "
+        "Dupes %u%s",
         fps, mean(&series[perf_stage_frame]), percentile95(&series[perf_stage_frame]),
         percentile99(&series[perf_stage_frame]), mean(&series[perf_stage_core]), mean(&series[perf_stage_video]),
         mean(&series[perf_stage_present_draw]), mean(&series[perf_stage_present_flip]),
         mean(&series[perf_stage_audio_wait]), lag_text, mean(&series[perf_stage_present_to_poll]),
         mean(&series[perf_stage_frame_delay]), audio_bridge_queued_ms(), gl_ms, mean(&series[perf_stage_services]),
-        mean(&series[perf_stage_ui_logic]), mean(&series[perf_stage_ui_task]), missed_refreshes, netplay_text
+        mean(&series[perf_stage_ui_logic]), mean(&series[perf_stage_ui_task]), missed_refreshes, video_duplicate_frames,
+        netplay_text
     );
 }
 
@@ -420,6 +412,12 @@ int perf_export_trace(const char *path) {
     fprintf(f, "refresh_hz,%.4f\n", (double) frame_pacer_get_refresh_hz());
     fprintf(f, "frames_observed,%u\n", frames_observed);
     fprintf(f, "missed_refreshes,%u\n", missed_refreshes);
+    fprintf(f, "video_frames,%u\n", video_frames);
+    fprintf(f, "video_duplicate_frames,%u\n", video_duplicate_frames);
+    fprintf(
+        f, "video_duplicate_percent,%.2f\n",
+        video_frames ? 100.0 * (double) video_duplicate_frames / (double) video_frames : 0.0
+    );
     fprintf(f, "netplay_resynchronisations,%u\n", netplay_resynchronisations);
     fprintf(f, "netplay_queue_overflows,%u\n", netplay_queue_overflows);
     fprintf(f, "achievement_cache_hits,%u\n", cheevo_cache_hits);

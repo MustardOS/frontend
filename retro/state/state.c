@@ -6,7 +6,6 @@
 #include "../../common/init.h"
 #include "../../common/language.h"
 #include "../../common/log.h"
-#include "../../common/options.h"
 #include "../../common/ui/nav.h"
 #include "../core/governor_boost.h"
 #include "../core/perf.h"
@@ -20,6 +19,9 @@
 #include "state_writer.h"
 
 static int saves_warmup_frames = 0;
+
+static int write_pending = 0;
+static int write_result = 0;
 
 void state_saves_init(const char *core_file_path) {
     coreinfo_init(core_file_path);
@@ -38,8 +40,7 @@ int state_saves_warmup_frames(void) {
 int state_save(const char *path) {
     if (!core_state_available() || !path) return -1;
 
-    if (state_writer_wait() != 0)
-        LOG_WARN(mux_module, "The previous save-state write did not complete successfully");
+    if (state_flush() != 0) LOG_WARN(mux_module, "The previous save-state write did not complete successfully");
 
     const uint64_t save_start = perf_begin();
     governor_boost_begin("state save");
@@ -89,6 +90,9 @@ int state_save(const char *path) {
         return -1;
     }
 
+    write_pending = 1;
+    write_result = 0;
+
     LOG_DEBUG(mux_module, "Queued state persistence for '%s'", path);
     governor_boost_end();
     perf_end(perf_stage_state_save, save_start);
@@ -97,7 +101,7 @@ int state_save(const char *path) {
 
 int state_load(const char *path, const int show_message) {
     if (!core_state_available()) return -1;
-    if (state_writer_flush() != 0) {
+    if (state_flush() != 0) {
         LOG_ERROR(mux_module, "Cannot load '%s' because its pending state write failed", path);
         return -1;
     }
@@ -164,8 +168,8 @@ int state_load(const char *path, const int show_message) {
         const uint64_t declared_total = STATE_HEADER_SIZE + (uint64_t) declared_core + declared_cheevo;
 
         if (version != STATE_VERSION || (flags & ~STATE_FLAG_CHEEVO) != 0 || declared_core == 0
-            || declared_core > state_limit || declared_cheevo > STATE_CHEEVO_LIMIT
-            || declared_total != (uint64_t) size || ((flags & STATE_FLAG_CHEEVO) == 0) != (declared_cheevo == 0)
+            || declared_core > state_limit || declared_cheevo > STATE_CHEEVO_LIMIT || declared_total != (uint64_t) size
+            || ((flags & STATE_FLAG_CHEEVO) == 0) != (declared_cheevo == 0)
             || state_read_u32(buf + 16) != crc32(0, buf + STATE_HEADER_SIZE, declared_core)
             || (declared_cheevo
                 && state_read_u32(buf + 20) != crc32(0, buf + STATE_HEADER_SIZE + declared_core, declared_cheevo))) {
@@ -221,7 +225,24 @@ int state_load(const char *path, const int show_message) {
 }
 
 int state_flush(void) {
-    return state_writer_flush();
+    if (!write_pending) return 0;
+
+    write_pending = 0;
+    write_result = state_writer_flush();
+
+    return write_result;
+}
+
+int state_write_poll(int *result) {
+    if (write_pending) {
+        if (state_writer_busy()) return 0;
+
+        write_pending = 0;
+        write_result = state_writer_flush();
+    }
+
+    if (result) *result = write_result;
+    return 1;
 }
 
 void state_shutdown(void) {

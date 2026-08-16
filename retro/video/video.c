@@ -10,6 +10,7 @@
 #include "filters/filters.h"
 #include "hw_render.h"
 #include "../core/muxretro.h"
+#include "../core/perf.h"
 #include "overlay_bridge.h"
 #include "../link/link.h"
 #include "../settings/settings.h"
@@ -370,22 +371,23 @@ static void recompute_dest_rect(void) {
             break;
 
         case video_scale_integer: {
-            const double src_aspect = compute_src_aspect();
-            const double base_w = (double) frame_h * src_aspect;
+            const int base_w = split_frame_w();
+            const int base_h = split_frame_h();
 
             double scale;
             if (session_settings.integer_scale == integer_scale_auto) {
-                int auto_scale = canvas_h / frame_h;
+                const int auto_scale_w = canvas_w / base_w;
+                const int auto_scale_h = canvas_h / base_h;
+                int auto_scale = auto_scale_w < auto_scale_h ? auto_scale_w : auto_scale_h;
                 if (auto_scale < 1) auto_scale = 1;
-                while (auto_scale > 1 && base_w * auto_scale > (double) canvas_w)
-                    auto_scale--;
                 scale = (double) auto_scale;
             } else {
-                scale = session_settings_integer_scale_value(session_settings.integer_scale);
+                scale = (double) (int) session_settings_integer_scale_value(session_settings.integer_scale);
+                if (scale < 1.0) scale = 1.0;
             }
 
             dest_rect.w = (int) (base_w * scale);
-            dest_rect.h = (int) ((double) frame_h * scale);
+            dest_rect.h = (int) (base_h * scale);
             break;
         }
 
@@ -641,6 +643,8 @@ int video_bridge_get_frame_skip(void) {
 
 void mux_retro_video_refresh_cb(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
     if (frame_skip) return;
+
+    perf_note_video_frame(data == NULL);
 
     if (data == RETRO_HW_FRAME_BUFFER_VALID) {
         if (width == 0 || height == 0) return;

@@ -16,3 +16,4 @@
 #define RETRO_PTC_PATH RETRO_SHARE_PATH "patchopt"
 #define RETRO_MAN_PATH RETRO_SHARE_PATH "manual"
 #define RETRO_MAC_PATH RETRO_SHARE_PATH "macro"
+#define RETRO_PRO_PATH RETRO_SHARE_PATH "profile"

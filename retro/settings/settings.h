@@ -16,19 +16,14 @@ enum video_rotate_mode { video_rotate_0 = 0, video_rotate_90, video_rotate_180, 
 
 enum integer_scale_mode {
     integer_scale_auto = 0,
-    integer_scale_1_00,
-    integer_scale_1_25,
-    integer_scale_1_50,
-    integer_scale_1_75,
-    integer_scale_2_00,
-    integer_scale_2_25,
-    integer_scale_2_50,
-    integer_scale_2_75,
-    integer_scale_3_00,
-    integer_scale_3_25,
-    integer_scale_3_50,
-    integer_scale_3_75,
-    integer_scale_4_00,
+    integer_scale_1,
+    integer_scale_2,
+    integer_scale_3,
+    integer_scale_4,
+    integer_scale_5,
+    integer_scale_6,
+    integer_scale_7,
+    integer_scale_8,
     integer_scale_count
 };
 
@@ -71,6 +66,26 @@ enum fps_limit_mode { fps_limit_auto = 0, fps_limit_50, fps_limit_none, fps_limi
 #define FRAME_DELAY_AUTO (-2)
 
 enum audio_latency_mode { audio_latency_low = 0, audio_latency_balanced, audio_latency_compat, audio_latency_count };
+
+#define SESSION_VOLUME_MAX 200
+
+enum play_profile {
+    play_profile_safe = 0,
+    play_profile_balanced,
+    play_profile_quality,
+    play_profile_count,
+    play_profile_unmatched = -1
+};
+
+#define SESSION_USER_PROFILE_LIMIT    24
+#define SESSION_USER_PROFILE_NAME_MAX 64
+
+enum user_profile_scope {
+    user_profile_scope_content = 0,
+    user_profile_scope_core,
+    user_profile_scope_all,
+    user_profile_scope_count
+};
 
 enum content_precache_mode {
     content_precache_off = 0,
@@ -293,7 +308,31 @@ const char *session_settings_audio_rate_control_name(int hundredths);
 
 const char *session_settings_game_renderer_name(int mode);
 
+enum play_profile session_settings_play_profile(void);
+
+void session_settings_apply_play_profile(enum play_profile profile);
+
+int session_settings_refresh_user_profiles(void);
+
+int session_settings_user_profile_count(void);
+
+const char *session_settings_user_profile_name(int index);
+
+int session_settings_user_profile_apply(int index);
+
+int session_settings_user_profile_current(void);
+
+int session_settings_user_profile_create(const char *name, enum user_profile_scope scope);
+
+int session_settings_user_profile_delete(int index);
+
 void session_settings_init(const char *core_path_arg, const char *content_path);
+
+void session_settings_launch_begin(void);
+
+void session_settings_launch_ready(void);
+
+int session_settings_launch_recovered(void);
 
 void session_settings_cycle_scaling(int direction);
 
@@ -484,8 +523,6 @@ void session_settings_reset_input_port(int port);
 void session_settings_reset_input(void);
 
 void session_settings_auto_assign_controllers(void);
-
-void session_settings_apply_performance_first(void);
 
 void session_settings_reset_viewport(void);
 

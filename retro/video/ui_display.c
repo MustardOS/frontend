@@ -2,6 +2,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "../settings/pages.h"
 #include "../settings/submenu.h"
 
 enum { row_filter = 0, row_shader, row_brightness, row_contrast, row_saturation, row_hue_shift, row_gamma, row_count };
@@ -98,7 +99,7 @@ static int child_tick(void) {
 }
 
 static void closed(void) {
-    video_menu_reopen_display();
+    settings_menu_reopen_visuals();
 }
 
 static submenu self;
@@ -138,9 +139,13 @@ void display_menu_tick(void) {
 }
 
 void display_menu_reopen_filter(void) {
-    submenu_reopen_at(&self, row_filter);
+    settings_menu_reopen_visuals_at(row_filter);
 }
 
 void display_menu_reopen_shader(void) {
-    submenu_reopen_at(&self, row_shader);
+    settings_menu_reopen_visuals_at(row_shader);
+}
+
+const submenu_def *visuals_menu_definition(void) {
+    return &def;
 }

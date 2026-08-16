@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "../../common/init.h"
@@ -120,7 +121,12 @@ static int last_queued_ms_valid = 0;
 static void audio_bridge_maybe_finish_resume(void);
 
 static int16_t scale_sample(const int16_t sample) {
-    return (int16_t) ((int32_t) sample * session_settings.volume / 100);
+    const int32_t scaled = (int32_t) sample * session_settings.volume / 100;
+
+    if (scaled > INT16_MAX) return INT16_MAX;
+    if (scaled < INT16_MIN) return INT16_MIN;
+
+    return (int16_t) scaled;
 }
 
 typedef struct {
@@ -204,7 +210,7 @@ static size_t ring_write_frames(const int16_t *src, const size_t frames) {
     const uint32_t free_frames = AUDIO_RING_FRAMES - occupied;
 
     const size_t to_write = frames > free_frames ? free_frames : frames;
-    const uint32_t start = write_idx & (AUDIO_RING_FRAMES - 1);
+    const uint32_t start = write_idx & AUDIO_RING_FRAMES - 1;
     const size_t first = to_write < AUDIO_RING_FRAMES - start ? to_write : AUDIO_RING_FRAMES - start;
     const size_t second = to_write - first;
 
@@ -235,7 +241,7 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     uint32_t fade_remaining = fade_started;
 
     if (fade_remaining == 0 || fade_total == 0) {
-        const uint32_t start = read_idx & (AUDIO_RING_FRAMES - 1);
+        const uint32_t start = read_idx & AUDIO_RING_FRAMES - 1;
         const uint32_t first = to_read < AUDIO_RING_FRAMES - start ? to_read : AUDIO_RING_FRAMES - start;
         const uint32_t second = to_read - first;
 
@@ -243,7 +249,7 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
         if (second > 0) memcpy(out + (size_t) first * 2, audio_ring, (size_t) second * 2 * sizeof(int16_t));
     } else {
         for (uint32_t i = 0; i < to_read; i++) {
-            const uint32_t pos = (read_idx + i) & (AUDIO_RING_FRAMES - 1);
+            const uint32_t pos = read_idx + i & AUDIO_RING_FRAMES - 1;
             int16_t l = audio_ring[pos * 2 + 0];
             int16_t r = audio_ring[pos * 2 + 1];
 
@@ -347,7 +353,7 @@ static void queue_samples(const int16_t *data, const size_t frames) {
 static void submit_audio_frames(const int16_t *data, const size_t frames) {
     submitted_frames += frames;
 
-    const int need_volume = session_settings.volume < 100;
+    const int need_volume = session_settings.volume != 100;
     const int need_filter = session_settings.audio_filter != audio_filter_none;
 
     if (!need_volume && !need_filter) {
@@ -649,7 +655,7 @@ double audio_bridge_pace_target_ms(void) {
     if (last_batch_ms <= 0.0 || !audio_bridge_is_active() || audio_muted) return 0.0;
 
     const double centre = ((double) audio_bridge_low_water_ms() + (double) audio_bridge_high_water_ms()) * 0.5;
-    const double queued = (double) audio_bridge_queued_ms();
+    const double queued = audio_bridge_queued_ms();
 
     double target = last_batch_ms + (queued - centre) * PACE_QUEUE_GAIN;
 

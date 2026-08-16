@@ -5,6 +5,7 @@ Sources are organised by subsystem, with explicit relative-path includes through
 ```
 retro/
   core/      entry point, core hosting, environment callback, runahead
+  coreinfo/  Pickles-owned per-core feature and safety overrides
   video/     frame pipeline, hardware render, colour grading, video UI screens
   audio/     audio bridge and sound settings screen
   input/     input/rumble/hotkey bridges and their UI screens
@@ -19,29 +20,43 @@ retro/
 | File                        | Purpose                                                                                                                                                                                                                                           |
 |-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `main.c`                    | Entry point: startup sequence, main loop (frame batching, pacing, runahead hook), shutdown.                                                                                                                                                       |
-| `core.c` / `core.h`         | `dlopen`s the core `.so`, resolves every `retro_*` symbol into a global `current_core`, wires muxretro's own video/audio/input callbacks in via the core's `retro_set_*_cb` setters, loads content (archives, softpatches).                       |
+| `core.c` / `core.h`         | `dlopen`s the core `.so`, resolves every `retro_*` symbol into a global `current_core`, wires Pickles' own video/audio/input callbacks in via the core's `retro_set_*_cb` setters, loads content (archives, softpatches).                         |
 | `environment.c`             | Implements `mux_retro_environment_cb` - the big `RETRO_ENVIRONMENT_*` switch (pixel format, directories, log, core options v0/v1/v2 + intl, disk control, messages, VFS, rumble, hardware render, AV info, frame time, throttle state, shutdown). |
 | `runahead.c` / `runahead.h` | Preemptive-frames runahead (see [Run Ahead](video.md#runahead)).                                                                                                                                                                                  |
 | `muxretro.h`                | Shared declarations for every bridge and UI screen.                                                                                                                                                                                               |
 | `libretro.h`                | Vendored upstream libretro API header.                                                                                                                                                                                                            |
 | `paths.h`                   | Every `RETRO_*_PATH` macro used across the app.                                                                                                                                                                                                   |
 
+## coreinfo/
+
+| File            | Purpose                                                                                                                                                          |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `coreinfo.c`    | Resolves packaged core metadata, applies compiled Pickles policy last and exposes feature, state-limit, warm-up and load-compatibility policy.                   |
+| `<core-name>.c` | Contains the small typed override for an affected core, independently controlling save states, run-ahead, Network Play, limits and qualified load compatibility. |
+
+## compat/
+
+| File         | Purpose                                                                                                                       |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `director.c` | Converts bounded session findings into named, user-approved adjustments and restores only the fields changed by the last fix. |
+
 ## video/
 
-| File                                      | Purpose                                                                                                                                                                                                                 |
-|-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `video.c`                                 | SDL2 texture pipeline: raw frame upload/conversion, all scaling modes (including Fit Screen and the Shimmer Fix snap), rotation, mirroring. Dispatches CPU texture filters to `filters/` rather than implementing them. |
-| `filters/filters.c` / `filters.h`         | CPU texture filter dispatch layer - the only part of `filters/` video.c talks to (scale factor, CPU-scaled/linear-sample queries, apply).                                                                               |
-| `filters/scale2x.c` / `scale2x.h`         | Scale2x / Scale3x (EPX-style edge-detect upscalers).                                                                                                                                                                    |
-| `filters/super_eagle.c` / `super_eagle.h` | Super Eagle (2xSaI-family, sharper diagonals than 2xSaI).                                                                                                                                                               |
-| `hw_render.c` / `hw_render.h`             | `RETRO_ENVIRONMENT_SET_HW_RENDER` support for GLES2 cores (see [Hardware render](video.md#hardware-render)).                                                                                                            |
-| `colour.c` / `colour.h`                   | GLES2 colour grading (brightness/contrast/saturation/hue/gamma) plus filter/shader preset loading.                                                                                                                      |
-| `overlay_bridge.c` / `overlay_bridge.h`   | Predefined pattern overlays and per-game catalogue overlays, composited into the video content layer.                                                                                                                   |
-| `frame_pacer.c`                           | Frame Delay: adaptive pre-run wait (p95 of recent frame costs) so input is sampled as late as possible before each frame.                                                                                               |
-| `ui_display.c`                            | Display screen (filter/shader pickers, colour grading, overlay).                                                                                                                                                        |
-| `ui_videosettings.c`                      | Video screen (viewport entry, scaling, rotation, mirror, aspect, integer scale, texture filter, shimmer fix, border).                                                                                                   |
-| `ui_viewport.c`                           | Viewport Offsets screen (X/Y offset, zoom, edge cropping, centre crop, reset).                                                                                                                                          |
-| `ui_colfilter.c` / `ui_shader.c`          | Colour filter / shader picker screens.                                                                                                                                                                                  |
+| File                                        | Purpose                                                                                                                                                                                                                                                     |
+|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `video.c`                                   | SDL2 texture pipeline: raw frame upload/conversion, all scaling modes (including native whole-pixel Integer scaling, Fit Screen and the Shimmer Fix snap), rotation, mirroring. Dispatches CPU texture filters to `filters/` rather than implementing them. |
+| `filters/filters.c` / `filters.h`           | CPU texture filter dispatch layer - the only part of `filters/` video.c talks to (scale factor, CPU-scaled/linear-sample queries, apply).                                                                                                                   |
+| `filters/scale2x.c` / `scale2x.h`           | Scale2x / Scale3x (EPX-style edge-detect upscalers).                                                                                                                                                                                                        |
+| `filters/super_eagle.c` / `super_eagle.h`   | Super Eagle (2xSaI-family, sharper diagonals than 2xSaI).                                                                                                                                                                                                   |
+| `hw_render.c` / `hw_render.h`               | `RETRO_ENVIRONMENT_SET_HW_RENDER` support for GLES2 cores (see [Hardware render](video.md#hardware-render)).                                                                                                                                                |
+| `colour.c` / `colour.h`                     | GLES2 colour grading (brightness/contrast/saturation/hue/gamma) plus filter/shader preset loading.                                                                                                                                                          |
+| `overlay_bridge.c` / `overlay_bridge.h`     | Predefined pattern overlays and per-game catalogue overlays, composited into the video content layer.                                                                                                                                                       |
+| `frame_pacer.c`                             | Frame Delay: adaptive pre-run wait (p95 of recent frame costs) so input is sampled as late as possible before each frame.                                                                                                                                   |
+| `ui_display.c`                              | Display screen (filter/shader pickers, colour grading, overlay).                                                                                                                                                                                            |
+| `ui_videosettings.c`                        | Video settings rows (scaling, rotation, mirror, aspect, integer scale, texture filter, shimmer fix, border).                                                                                                                                                |
+| `ui_viewport.c`                             | Display-section rows for Adjustment, Cropping and Reset Viewport, plus dispatch to the two viewport submenus.                                                                                                                                               |
+| `ui_viewportadjust.c` / `ui_viewportcrop.c` | Viewport adjustment (offset, stretch and zoom) and per-edge cropping controls.                                                                                                                                                                              |
+| `ui_colfilter.c` / `ui_shader.c`            | Colour filter / shader picker screens.                                                                                                                                                                                                                      |
 
 ## audio/
 
@@ -77,28 +92,30 @@ retro/
 
 ## state/
 
-| File                                | Purpose                                                                                                                                                                                                                                        |
-|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `state.c`                           | `state_save`/`state_load` with hardware-render context bracketing, serialize buffer slack, per-core disablement.                                                                                                                               |
-| `gamestate.c` / `gamestate.h`       | Quicksave/autosave/numbered-slot savestate management, screenshot thumbnails, most-recent auto load on launch.                                                                                                                                 |
-| `sram.c` / `sram.h`                 | SRAM (battery save) bridge: dirty-aware, atomic (tmp+rename+fsync), written on a background worker thread.                                                                                                                                     |
-| `vfs.c` / `vfs.h`                   | libretro VFS incl. reading content directly out of an archive member, with a persistent size/mtime-keyed cache.                                                                                                                                |
-| `content_hash.c` / `content_hash.h` | Background-threaded CRC32 of the content file, cached by size+mtime.                                                                                                                                                                           |
-| `patch.c` / `patch.h`               | Softpatch engine - IPS, BPS, and UPS appliers, stacking numbered patches (`.ips`, `.1.ips`, ...).                                                                                                                                              |
-| `bios_check.c` / `bios_check.h`     | Reads the core's RetroArch-style `.info` file for `firmware*` entries and checks presence.                                                                                                                                                     |
-| `manual.c` / `manual.h`             | Locates a core/content's bundled manual and tracks read position, font size, and word-wrap preference.                                                                                                                                         |
-| `ui_gamestate.c`                    | Game State screen (slots, naming, preview mode).                                                                                                                                                                                               |
-| `ui_storagesettings.c`              | Storage screen (auto save, SRAM flush interval).                                                                                                                                                                                               |
+| File                                | Purpose                                                                                                                                                  |
+|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `core_state.c` / `core_state.h`     | Shared main-thread broker used by normal saves, run-ahead and Network Play for exact capture, restore, limits, rendering context and session quarantine. |
+| `state.c`                           | `state_save`/`state_load`, the Pickles state envelope, achievement progress append and validation.                                                       |
+| `state_writer.c` / `state_writer.h` | Single bounded worker for state CRC calculation and atomic persistence, with lifecycle flush and shutdown.                                               |
+| `gamestate.c` / `gamestate.h`       | Quicksave/autosave/numbered-slot savestate management, screenshot thumbnails, most-recent auto load and the bounded shared resume index.                 |
+| `sram.c` / `sram.h`                 | SRAM (battery save) bridge: dirty-aware, atomic (tmp+rename+fsync), written on a background worker thread.                                               |
+| `vfs.c` / `vfs.h`                   | libretro VFS incl. reading content directly out of an archive member, with a persistent size/mtime-keyed cache.                                          |
+| `content_hash.c` / `content_hash.h` | Background-threaded CRC32 of the content file, cached by size+mtime.                                                                                     |
+| `patch.c` / `patch.h`               | Softpatch engine - IPS, BPS, and UPS appliers, stacking numbered patches (`.ips`, `.1.ips`, ...).                                                        |
+| `bios_check.c` / `bios_check.h`     | Reads the core's RetroArch-style `.info` file for `firmware*` entries and checks presence.                                                               |
+| `manual.c` / `manual.h`             | Locates a core/content's bundled manual and tracks read position, font size, and word-wrap preference.                                                   |
+| `ui_gamestate.c`                    | Game State screen (slots, naming, preview mode).                                                                                                         |
+| `ui_storagesettings.c`              | Storage screen (auto save, SRAM flush interval).                                                                                                         |
 
 ## settings/
 
-| File                        | Purpose                                                                                                             |
-|-----------------------------|---------------------------------------------------------------------------------------------------------------------|
-| `settings.c` / `settings.h` | `session_settings_t` model, every enum, cycling functions, three-tier ini persistence, shared save-choice dispatch. |
-| `submenu.c` / `submenu.h`   | Table-driven engine behind every settings screen (see [Settings screens](settings.md#settings-screens)).            |
-| `ui_settings.c`             | Settings hub - the category list.                                                                                   |
-| `ui_performancesettings.c`  | Performance screen (FPS limit, frame delay, run ahead).                                                             |
-| `ui_hudsettings.c`          | Screen Info screen (FPS counter, header visibility).                                                                |
+| File                        | Purpose                                                                                                                                                                                                                                             |
+|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `settings.c` / `settings.h` | `session_settings_t` model, built-in play profiles, bounded user profile loading and atomic creation/deletion, per-content last-working launch recovery, every enum, cycling functions, three-tier ini persistence and shared save-choice dispatch. |
+| `submenu.c` / `submenu.h`   | Table-driven engine behind every settings screen (see [Settings screens](settings.md#settings-screens)).                                                                                                                                            |
+| `ui_settings.c`             | Section-based Settings hub, profile picker and save-state-style user profile management.                                                                                                                                                            |
+| `ui_performancesettings.c`  | Performance settings with manual timing controls and optional diagnostic capture and export.                                                                                                                                                        |
+| `ui_hudsettings.c`          | Screen Info screen (FPS counter, header visibility).                                                                                                                                                                                                |
 
 ## ui/
 

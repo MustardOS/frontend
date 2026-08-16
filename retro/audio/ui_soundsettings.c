@@ -2,6 +2,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "../settings/pages.h"
 #include "../settings/submenu.h"
 
 enum {
@@ -112,4 +113,8 @@ int sound_menu_is_active(void) {
 
 void sound_menu_tick(void) {
     submenu_tick(&self);
+}
+
+const submenu_def *sound_menu_definition(void) {
+    return &def;
 }

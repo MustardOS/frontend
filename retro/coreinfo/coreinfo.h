@@ -9,10 +9,14 @@ enum coreinfo_feature {
     coreinfo_feature_count
 };
 
-enum coreinfo_state_load_policy {
-    coreinfo_state_load_exact = 0,
-    coreinfo_state_load_core
+enum coreinfo_feature_reason {
+    coreinfo_reason_available = 0,
+    coreinfo_reason_core_metadata,
+    coreinfo_reason_packaged_rule,
+    coreinfo_reason_requires_save_states
 };
+
+enum coreinfo_state_load_policy { coreinfo_state_load_exact = 0, coreinfo_state_load_core };
 
 struct coreinfo_override {
     const char *name;
@@ -24,13 +28,13 @@ struct coreinfo_override {
 
 #define COREINFO_INHERIT (-1)
 
-#define COREINFO_CORE(IDENT, NAME, SAVE_STATES, RUN_AHEAD, NETPLAY, STATE_MAX_BYTES, WARMUP_FRAMES, LOAD_POLICY)     \
-    const struct coreinfo_override coreinfo_##IDENT = {                                                             \
-        .name = NAME,                                                                                                \
-        .features = {SAVE_STATES, RUN_AHEAD, NETPLAY},                                                              \
-        .state_max_bytes = STATE_MAX_BYTES,                                                                          \
-        .state_warmup_frames = WARMUP_FRAMES,                                                                        \
-        .state_load_policy = LOAD_POLICY                                                                              \
+#define COREINFO_CORE(IDENT, NAME, SAVE_STATES, RUN_AHEAD, NETPLAY, STATE_MAX_BYTES, WARMUP_FRAMES, LOAD_POLICY)       \
+    const struct coreinfo_override coreinfo_##IDENT = {                                                                \
+        .name = NAME,                                                                                                  \
+        .features = {SAVE_STATES, RUN_AHEAD, NETPLAY},                                                                 \
+        .state_max_bytes = STATE_MAX_BYTES,                                                                            \
+        .state_warmup_frames = WARMUP_FRAMES,                                                                          \
+        .state_load_policy = LOAD_POLICY                                                                               \
     }
 
 #define COREINFO_DECLARE(IDENT) extern const struct coreinfo_override coreinfo_##IDENT;
@@ -38,6 +42,8 @@ struct coreinfo_override {
 void coreinfo_init(const char *core_path);
 
 int coreinfo_feature_enabled(enum coreinfo_feature feature);
+
+enum coreinfo_feature_reason coreinfo_feature_reason_for(enum coreinfo_feature feature);
 
 size_t coreinfo_state_max_bytes(void);
 

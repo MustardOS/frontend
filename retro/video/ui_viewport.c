@@ -37,9 +37,7 @@ static void row_action(const int index) {
     }
 }
 
-static submenu self;
-
-static int child_tick(void) {
+int viewport_settings_child_tick(void) {
     if (viewport_adjust_menu_is_active()) {
         viewport_adjust_menu_tick();
         return 1;
@@ -53,10 +51,6 @@ static int child_tick(void) {
     return 0;
 }
 
-static void closed(void) {
-    video_menu_reopen_viewport();
-}
-
 static const submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
@@ -64,35 +58,15 @@ static const submenu_def def = {
     .row_count = row_count,
     .row_is_action = row_is_action,
     .action = row_action,
-    .child_tick = child_tick,
-    .closed = closed,
     .save_title = lang.muxretro.save.viewport_title,
     .save_desc = lang.muxretro.save.viewport_desc,
 };
 
 void viewport_menu_init(void) {
-    submenu_init(&self, &def);
-
     viewport_adjust_menu_init();
     viewport_crop_menu_init();
 }
 
-void viewport_menu_open(void) {
-    submenu_open(&self);
-}
-
-int viewport_menu_is_active(void) {
-    return submenu_is_active(&self);
-}
-
-void viewport_menu_tick(void) {
-    submenu_tick(&self);
-}
-
-void viewport_menu_reopen_adjustment(void) {
-    submenu_reopen_at(&self, row_adjustment);
-}
-
-void viewport_menu_reopen_cropping(void) {
-    submenu_reopen_at(&self, row_cropping);
+const submenu_def *viewport_menu_definition(void) {
+    return &def;
 }

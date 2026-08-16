@@ -86,11 +86,10 @@ static void compute_row_indices(void) {
     int i = 0;
     row_resume = i++;
     row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
-    row_netplay = device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay)
-                          && state_saves_supported()
-                      ? i++
-                      : -1;
-    row_cheevo = device.board.has_network && cheevo_is_configured() ? i++ : -1;
+    row_netplay =
+        device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay) && state_saves_supported() ? i++
+                                                                                                                  : -1;
+    row_cheevo = device.board.has_network && cheevo_is_configured() && cheevo_has_game_entries() ? i++ : -1;
     row_game_link = link_is_supported() && !netplay_is_active() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
     row_cheats = cheats_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
@@ -276,7 +275,7 @@ static void create_fps_label(void) {
 void pause_menu_set_fps_visible(const int visible) {
     if (!ui_lbl_fps) return;
     lv_obj_t *panel = lv_obj_get_parent(ui_lbl_fps);
-    if (visible) {
+    if (visible && !active) {
         lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
@@ -741,6 +740,8 @@ static void set_chrome_visible(const int visible) {
         lv_obj_clear_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
         if (ui_lbl_fps) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
+        if (ui_lbl_playtime) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_playtime), LV_OBJ_FLAG_HIDDEN);
+        if (ui_lbl_break) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_break), LV_OBJ_FLAG_HIDDEN);
         if (ui_lbl_gb_slot) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_gb_slot), LV_OBJ_FLAG_HIDDEN);
         pause_menu_set_speed_indicator(NULL, NULL);
         restore_header_chrome();
@@ -750,6 +751,7 @@ static void set_chrome_visible(const int visible) {
         lv_obj_add_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
 
         pause_menu_set_fps_visible(session_settings.show_fps);
+        pause_menu_playtime_tick();
         pause_menu_refresh_gb_slot();
         apply_gameplay_header_overlay();
     }
@@ -857,14 +859,14 @@ void pause_menu_init(void) {
     create_playtime_label();
     create_speed_mode_label();
     gamestate_menu_init();
-    settings_menu_init();
-    cheats_menu_init();
-    patch_menu_init();
-    manual_menu_init();
     if (device.board.has_network) {
         netplay_menu_init();
         cheevo_menu_init();
     }
+    settings_menu_init();
+    cheats_menu_init();
+    patch_menu_init();
+    manual_menu_init();
 
     pause_menu_rebuild();
 

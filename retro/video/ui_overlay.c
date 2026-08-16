@@ -2,6 +2,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "../settings/pages.h"
 #include "../settings/submenu.h"
 
 enum { row_overlay_source = 0, row_overlay_pattern, row_overlay_opacity, row_count };
@@ -51,7 +52,7 @@ static void cycle_row(const int index, const int direction) {
 }
 
 static void closed(void) {
-    video_menu_reopen_overlay();
+    settings_menu_reopen_overlay();
 }
 
 static submenu self;
@@ -82,4 +83,8 @@ int overlay_menu_is_active(void) {
 
 void overlay_menu_tick(void) {
     submenu_tick(&self);
+}
+
+const submenu_def *overlay_menu_definition(void) {
+    return &def;
 }

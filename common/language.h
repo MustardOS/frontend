@@ -1732,6 +1732,7 @@ struct mux_lang {
         char content_loading[MAX_BUFFER_SIZE];
         char content_resuming[MAX_BUFFER_SIZE];
         char content_restarting[MAX_BUFFER_SIZE];
+        char information_loading[MAX_BUFFER_SIZE];
         char resume[MAX_BUFFER_SIZE];
         char game_state[MAX_BUFFER_SIZE];
         char core_options[MAX_BUFFER_SIZE];
@@ -2104,33 +2105,40 @@ struct mux_lang {
             char audio_filter_high_pass[MAX_BUFFER_SIZE];
             char audio_rate_control[MAX_BUFFER_SIZE];
             char game_renderer[MAX_BUFFER_SIZE];
-            char performance_first[MAX_BUFFER_SIZE];
-            char performance_first_applied[MAX_BUFFER_SIZE];
             char game_renderer_hardware[MAX_BUFFER_SIZE];
             char game_renderer_software[MAX_BUFFER_SIZE];
             char game_renderer_restart[MAX_BUFFER_SIZE];
             char audio_rate_control_off[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
-            char performance_preset[MAX_BUFFER_SIZE];
+            char play_profile[MAX_BUFFER_SIZE];
+            char profile_safe[MAX_BUFFER_SIZE];
+            char profile_balanced[MAX_BUFFER_SIZE];
+            char profile_quality[MAX_BUFFER_SIZE];
+            char profile_current[MAX_BUFFER_SIZE];
+            char profile_apply[MAX_BUFFER_SIZE];
+            char profile_applied[MAX_BUFFER_SIZE];
+            char profile_failed[MAX_BUFFER_SIZE];
+            char profile_save_current[MAX_BUFFER_SIZE];
+            char profile_saved[MAX_BUFFER_SIZE];
+            char profile_save_failed[MAX_BUFFER_SIZE];
+            char profile_delete[MAX_BUFFER_SIZE];
+            char profile_delete_title[MAX_BUFFER_SIZE];
+            char profile_delete_desc[MAX_BUFFER_SIZE];
+            char profile_deleted[MAX_BUFFER_SIZE];
+            char profile_delete_failed[MAX_BUFFER_SIZE];
+            char profile_scope_title[MAX_BUFFER_SIZE];
+            char profile_scope_desc[MAX_BUFFER_SIZE];
+            char profile_scope_content[MAX_BUFFER_SIZE];
+            char profile_scope_core[MAX_BUFFER_SIZE];
+            char profile_scope_all[MAX_BUFFER_SIZE];
+            char launch_recovered[MAX_BUFFER_SIZE];
             char performance_capture[MAX_BUFFER_SIZE];
-            char smoothness_check[MAX_BUFFER_SIZE];
-            char smoothness_not_run[MAX_BUFFER_SIZE];
-            char smoothness_collecting[MAX_BUFFER_SIZE];
-            char smoothness_smooth[MAX_BUFFER_SIZE];
-            char smoothness_review[MAX_BUFFER_SIZE];
-            char smoothness_started[MAX_BUFFER_SIZE];
-            char smoothness_good[MAX_BUFFER_SIZE];
-            char smoothness_frames[MAX_BUFFER_SIZE];
-            char smoothness_audio[MAX_BUFFER_SIZE];
-            char preset_recommended[MAX_BUFFER_SIZE];
-            char preset_low_latency[MAX_BUFFER_SIZE];
-            char preset_stable[MAX_BUFFER_SIZE];
-            char preset_custom[MAX_BUFFER_SIZE];
             char export_diagnostics[MAX_BUFFER_SIZE];
             char export_diagnostics_done[MAX_BUFFER_SIZE];
             char export_diagnostics_failed[MAX_BUFFER_SIZE];
             char export_diagnostics_empty[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];
+            char category_display[MAX_BUFFER_SIZE];
             char category_sound[MAX_BUFFER_SIZE];
             char category_input[MAX_BUFFER_SIZE];
             char category_performance[MAX_BUFFER_SIZE];
@@ -2302,18 +2310,20 @@ struct mux_lang {
             char bios_missing[MAX_BUFFER_SIZE];
             char bios_optional[MAX_BUFFER_SIZE];
             char bios_required[MAX_BUFFER_SIZE];
-            char game_check[MAX_BUFFER_SIZE];
+            char checklist[MAX_BUFFER_SIZE];
             char game_ready[MAX_BUFFER_SIZE];
             char game_attention[MAX_BUFFER_SIZE];
             char game_limited[MAX_BUFFER_SIZE];
-            char not_required[MAX_BUFFER_SIZE];
             char available[MAX_BUFFER_SIZE];
-            char unavailable[MAX_BUFFER_SIZE];
             char save_protection[MAX_BUFFER_SIZE];
             char save_space[MAX_BUFFER_SIZE];
             char network_play[MAX_BUFFER_SIZE];
-            char required_missing[MAX_BUFFER_SIZE];
-            char optional_missing[MAX_BUFFER_SIZE];
+            char settings_recovery[MAX_BUFFER_SIZE];
+            char recovery_restored[MAX_BUFFER_SIZE];
+            char recovery_not_needed[MAX_BUFFER_SIZE];
+            char capability_packaged[MAX_BUFFER_SIZE];
+            char capability_core_unsupported[MAX_BUFFER_SIZE];
+            char capability_states_required[MAX_BUFFER_SIZE];
         } information_screen;
         struct {
             struct {
@@ -2332,6 +2342,12 @@ struct mux_lang {
             } pause;
             struct {
                 char core_options[MAX_BUFFER_SIZE];
+                char play_profile[MAX_BUFFER_SIZE];
+                char profile_safe[MAX_BUFFER_SIZE];
+                char profile_balanced[MAX_BUFFER_SIZE];
+                char profile_quality[MAX_BUFFER_SIZE];
+                char profile_user[MAX_BUFFER_SIZE];
+                char profile_save_current[MAX_BUFFER_SIZE];
                 char video[MAX_BUFFER_SIZE];
                 char sound[MAX_BUFFER_SIZE];
                 char input[MAX_BUFFER_SIZE];
@@ -2364,13 +2380,11 @@ struct mux_lang {
                 char precache[MAX_BUFFER_SIZE];
             } storage;
             struct {
-                char preset[MAX_BUFFER_SIZE];
                 char fps_limit[MAX_BUFFER_SIZE];
                 char frame_delay[MAX_BUFFER_SIZE];
                 char run_ahead[MAX_BUFFER_SIZE];
                 char gpu_hard_sync[MAX_BUFFER_SIZE];
                 char capture[MAX_BUFFER_SIZE];
-                char smoothness[MAX_BUFFER_SIZE];
             } performance;
             struct {
                 char viewport[MAX_BUFFER_SIZE];
@@ -2385,7 +2399,6 @@ struct mux_lang {
                 char shimmer_fix[MAX_BUFFER_SIZE];
                 char border[MAX_BUFFER_SIZE];
                 char game_renderer[MAX_BUFFER_SIZE];
-                char performance_first[MAX_BUFFER_SIZE];
             } video;
             struct {
                 char filter[MAX_BUFFER_SIZE];

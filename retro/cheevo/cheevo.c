@@ -1270,6 +1270,12 @@ unsigned cheevo_game_entries(const cheevo_game_entry_type type, cheevo_game_entr
     return count;
 }
 
+int cheevo_has_game_entries(void) {
+    cheevo_game_entry entry;
+    return cheevo_game_entries(cheevo_game_entry_achievement, &entry, 1) > 0
+           || cheevo_game_entries(cheevo_game_entry_leaderboard, &entry, 1) > 0;
+}
+
 int cheevo_leaderboard_fetch(const uint32_t requested_id) {
     if (!client || !requested_id || !rc_client_is_game_loaded(client)) return -1;
     if (leaderboard_state == cheevo_leaderboard_ready && leaderboard_id == requested_id) return 0;

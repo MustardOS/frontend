@@ -2,6 +2,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "settings.h"
+#include "pages.h"
 #include "submenu.h"
 
 enum { row_fps = 0, row_playtime, row_header_visibility, row_count };
@@ -82,4 +83,8 @@ int hud_menu_is_active(void) {
 
 void hud_menu_tick(void) {
     submenu_tick(&self);
+}
+
+const submenu_def *hud_menu_definition(void) {
+    return &def;
 }

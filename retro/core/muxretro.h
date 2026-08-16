@@ -164,6 +164,8 @@ int state_load(const char *path, int show_message);
 
 int state_flush(void);
 
+int state_write_poll(int *result);
+
 void state_shutdown(void);
 
 void pause_menu_init(void);
@@ -280,9 +282,19 @@ void input_menu_reopen_hotkeys(void);
 
 void settings_menu_reopen_video(void);
 
+void settings_menu_reopen_visuals(void);
+
+void settings_menu_reopen_visuals_at(int local_index);
+
+void settings_menu_reopen_overlay(void);
+
+void settings_menu_reopen_viewport_at(int local_index);
+
 void settings_menu_reopen_sound(void);
 
 void settings_menu_reopen_input(void);
+
+void settings_menu_reopen_input_at(int local_index);
 
 void settings_menu_reopen_performance(void);
 
@@ -292,6 +304,8 @@ void settings_menu_reopen_storage(void);
 
 void settings_menu_reopen_cheevo(void);
 
+void settings_menu_reopen_cheevo_at(int local_index);
+
 void video_menu_init(void);
 
 void video_menu_open(void);
@@ -299,12 +313,6 @@ void video_menu_open(void);
 int video_menu_is_active(void);
 
 void video_menu_tick(void);
-
-void video_menu_reopen_viewport(void);
-
-void video_menu_reopen_display(void);
-
-void video_menu_reopen_overlay(void);
 
 void sound_menu_init(void);
 
@@ -423,16 +431,6 @@ int shader_menu_is_active(void);
 void shader_menu_tick(void);
 
 void viewport_menu_init(void);
-
-void viewport_menu_open(void);
-
-int viewport_menu_is_active(void);
-
-void viewport_menu_tick(void);
-
-void viewport_menu_reopen_adjustment(void);
-
-void viewport_menu_reopen_cropping(void);
 
 void viewport_adjust_menu_init(void);
 

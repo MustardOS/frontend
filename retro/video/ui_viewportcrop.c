@@ -72,7 +72,7 @@ static int row_coarse_step(const int index) {
 }
 
 static void closed(void) {
-    viewport_menu_reopen_cropping();
+    settings_menu_reopen_viewport_at(1);
 }
 
 static submenu self;

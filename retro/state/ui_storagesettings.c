@@ -2,6 +2,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "../settings/pages.h"
 #include "../settings/submenu.h"
 
 enum { row_auto_save = 0, row_timeline, row_timeline_count, row_sram_flush, row_sram_backup, row_precache, row_count };
@@ -105,4 +106,8 @@ int storage_menu_is_active(void) {
 
 void storage_menu_tick(void) {
     submenu_tick(&self);
+}
+
+const submenu_def *storage_menu_definition(void) {
+    return &def;
 }

@@ -13,6 +13,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
+#include "../settings/pages.h"
 #include "../settings/submenu.h"
 #include "cheevo.h"
 #include "ui_cheevo.h"
@@ -453,7 +454,7 @@ static void login_action(const int index) {
 static void login_closed(void) {
     login_submitted = 0;
     explicit_bzero(login_password, sizeof(login_password));
-    submenu_reopen_at(&self, row_account);
+    settings_menu_reopen_cheevo_at(row_account);
 }
 
 static int detail_rarity_band(const float rarity) {
@@ -1035,15 +1036,24 @@ int cheevo_settings_menu_is_active(void) {
 }
 
 void cheevo_settings_menu_tick(void) {
-    if (entry_mode != entry_none) {
-        entry_tick();
-        return;
-    }
-    if (submenu_is_active(&login)) {
-        submenu_refresh_values(&login);
-        submenu_tick(&login);
-        return;
-    }
+    if (cheevo_settings_child_tick()) return;
     submenu_refresh_values(&self);
     submenu_tick(&self);
+}
+
+const submenu_def *cheevo_settings_definition(void) {
+    return &definition;
+}
+
+int cheevo_settings_child_tick(void) {
+    if (entry_mode != entry_none) {
+        entry_tick();
+        return 1;
+    }
+    if (login_initialised && submenu_is_active(&login)) {
+        submenu_refresh_values(&login);
+        submenu_tick(&login);
+        return 1;
+    }
+    return 0;
 }

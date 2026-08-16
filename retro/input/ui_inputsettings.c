@@ -1,6 +1,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
+#include "../settings/pages.h"
 #include "../settings/submenu.h"
 
 enum {
@@ -69,14 +70,12 @@ static void row_action(const int index) {
             break;
         case row_auto_assign:
             session_settings_auto_assign_controllers();
-            submenu_refresh_values(&self);
             break;
         case row_controller_options:
             controller_options_menu_open();
             break;
         case row_reset_input:
             session_settings_reset_input();
-            submenu_refresh_values(&self);
             break;
         default:
             break;
@@ -140,13 +139,17 @@ void input_menu_tick(void) {
 }
 
 void input_menu_reopen_port(const int port) {
-    submenu_reopen_at(&self, row_port_1 + port);
+    settings_menu_reopen_input_at(row_port_1 + port);
 }
 
 void input_menu_reopen_controller_options(void) {
-    submenu_reopen_at(&self, row_controller_options);
+    settings_menu_reopen_input_at(row_controller_options);
 }
 
 void input_menu_reopen_hotkeys(void) {
-    submenu_reopen_at(&self, row_hotkeys);
+    settings_menu_reopen_input_at(row_hotkeys);
+}
+
+const submenu_def *input_menu_definition(void) {
+    return &def;
 }

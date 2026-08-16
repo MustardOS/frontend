@@ -81,7 +81,8 @@ static void *writer_main(void *unused) {
     (void) unused;
     for (;;) {
         pthread_mutex_lock(&writer_mutex);
-        while (!writer_job.data && !writer_stop) pthread_cond_wait(&writer_wake, &writer_mutex);
+        while (!writer_job.data && !writer_stop)
+            pthread_cond_wait(&writer_wake, &writer_mutex);
         if (writer_stop && !writer_job.data) {
             pthread_mutex_unlock(&writer_mutex);
             break;
@@ -100,8 +101,8 @@ static void *writer_main(void *unused) {
         const int result = atomic_write(job.path, job.data, job.size);
         if (result == 0)
             LOG_SUCCESS(
-                mux_module, "Saved state to '%s' (%zu core bytes, %zu achievement bytes)", job.path,
-                job.core_size, job.cheevo_size
+                mux_module, "Saved state to '%s' (%zu core bytes, %zu achievement bytes)", job.path, job.core_size,
+                job.cheevo_size
             );
         free(job.data);
 
@@ -134,11 +135,19 @@ static int start_writer(void) {
 
 int state_writer_wait(void) {
     pthread_mutex_lock(&writer_mutex);
-    while (writer_job.data || writer_busy) pthread_cond_wait(&writer_idle, &writer_mutex);
+    while (writer_job.data || writer_busy)
+        pthread_cond_wait(&writer_idle, &writer_mutex);
     const int result = writer_result;
     writer_result = 0;
     pthread_mutex_unlock(&writer_mutex);
     return result;
+}
+
+int state_writer_busy(void) {
+    pthread_mutex_lock(&writer_mutex);
+    const int busy = writer_job.data != NULL || writer_busy;
+    pthread_mutex_unlock(&writer_mutex);
+    return busy;
 }
 
 int state_writer_submit(
@@ -149,7 +158,8 @@ int state_writer_submit(
     if (start_writer() != 0) return -1;
 
     pthread_mutex_lock(&writer_mutex);
-    while (writer_job.data || writer_busy) pthread_cond_wait(&writer_idle, &writer_mutex);
+    while (writer_job.data || writer_busy)
+        pthread_cond_wait(&writer_idle, &writer_mutex);
     snprintf(writer_job.path, sizeof(writer_job.path), "%s", path);
     writer_job.data = data;
     writer_job.size = size;
@@ -171,7 +181,8 @@ void state_writer_shutdown(void) {
         pthread_mutex_unlock(&writer_mutex);
         return;
     }
-    while (writer_job.data || writer_busy) pthread_cond_wait(&writer_idle, &writer_mutex);
+    while (writer_job.data || writer_busy)
+        pthread_cond_wait(&writer_idle, &writer_mutex);
     writer_stop = 1;
     pthread_cond_signal(&writer_wake);
     pthread_mutex_unlock(&writer_mutex);

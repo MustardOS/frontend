@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "../../common/ui/dialogue.h"
+#include "../../common/ui/list_frame.h"
 #include "../input/nav_repeat.h"
 #include "settings.h"
 
@@ -12,6 +13,8 @@ typedef struct {
     const char *const *help;
 
     int row_count;
+    const list_frame *frames;
+    int frame_count;
 
     void (*value_text)(int index, char *buf, size_t len);
     int skip_value_object_creation;
@@ -24,7 +27,10 @@ typedef struct {
     void (*action)(int index);
     const char *(*extra_label)(int index);
     void (*extra_action)(int index);
+    const char *(*y_label)(int index);
+    void (*y_action)(int index);
     int (*child_tick)(void);
+    int action_without_save_guard;
     void (*closed)(void);
 
     const char *save_title;
@@ -39,6 +45,7 @@ typedef struct {
     int nav_row_class;
     const char *nav_action_label;
     const char *nav_extra_label;
+    const char *nav_y_label;
     mux_dialogue save_dlg;
     mux_dialogue save_all_dlg;
     struct session_settings_t entry_snapshot;

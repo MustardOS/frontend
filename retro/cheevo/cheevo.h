@@ -120,6 +120,8 @@ void cheevo_get_info(cheevo_info *info);
 
 unsigned cheevo_game_entries(cheevo_game_entry_type type, cheevo_game_entry *entries, unsigned capacity);
 
+int cheevo_has_game_entries(void);
+
 int cheevo_leaderboard_fetch(uint32_t leaderboard_id);
 
 cheevo_leaderboard_state cheevo_leaderboard_get_state(void);

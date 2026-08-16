@@ -372,6 +372,7 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "board_init/mux_input_open done");
 
     create_directories(RETRO_SRM_PATH "/", 1);
+    create_directories(RETRO_PRO_PATH "/", 1);
     options_init_paths(core_path_arg, content_path);
 
     governor_boost_begin("content startup");
@@ -388,6 +389,7 @@ int main(const int argc, char *argv[]) {
     patch_manual_init(core_path_arg, content_path);
     perf_init();
     session_settings_init(core_path_arg, content_path);
+    session_settings_launch_begin();
     if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) session_settings.run_ahead = 0;
 
     if (!build_state_dir(core_path_arg, content_path)) {
@@ -585,6 +587,10 @@ int main(const int argc, char *argv[]) {
         if (startup_cheevo_info.notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.active, tst_wait_s);
     }
 
+    session_settings_launch_ready();
+    if (session_settings_launch_recovered())
+        pause_menu_show_toast_timed(lang.muxretro.settings_screen.launch_recovered, tst_wait_s);
+
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", target_fps, av_info.timing.sample_rate);
     LOG_INFO(mux_module, "Startup: ready in %.2f ms total", startup_elapsed_ms(startup_start));
 
@@ -639,6 +645,7 @@ int main(const int argc, char *argv[]) {
         }
         display_check_idle_saver();
         hotkeys_volume_bright_task();
+        gamestate_publish_task();
 
         if (loop_now >= status_deadline) {
             status_task(NULL);
@@ -750,9 +757,9 @@ int main(const int argc, char *argv[]) {
             if (ff_active) {
                 const unsigned ff_batch = (unsigned) session_settings_ff_speed_value(session_settings.ff_speed);
                 frames = ff_batch > 0 ? ff_batch : 1;
-            } else if (!netplay_active && audio_bridge_is_prefilling()
-                       && session_settings.fps_limit != fps_limit_50 && !slowmo_active
-                       && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
+            } else if (!netplay_active && audio_bridge_is_prefilling() && session_settings.fps_limit != fps_limit_50
+                       && !slowmo_active && audio_bridge_is_active()
+                       && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 unsigned extra = AUDIO_MAX_CATCHUP;
 
                 if (hw_render_bridge_active()) {
@@ -885,6 +892,7 @@ int main(const int argc, char *argv[]) {
 
     pause_menu_shutdown();
     netplay_shutdown();
+    gamestate_publish_flush();
     state_shutdown();
     cheevo_shutdown();
     image_writer_shutdown();

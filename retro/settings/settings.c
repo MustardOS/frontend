@@ -1,5 +1,12 @@
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "../../common/device.h"
 #include "../../common/fileio.h"
 #include "../../common/init.h"
@@ -12,6 +19,7 @@
 #include "../video/colour.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../coreinfo/coreinfo.h"
 #include "../input/core_input_meta.h"
 #include "../input/rumble.h"
 #include "../macro/macro.h"
@@ -164,6 +172,16 @@ static struct session_settings_t baseline_settings;
 static char core_ini_path[MAX_BUFFER_SIZE] = "";
 static char content_ini_path[MAX_BUFFER_SIZE] = "";
 static char directory_ini_path[MAX_BUFFER_SIZE] = "";
+static char launch_marker_path[MAX_BUFFER_SIZE] = "";
+static char last_good_path[MAX_BUFFER_SIZE] = "";
+static int launch_recovered;
+static char settings_core_name[MAX_BUFFER_SIZE] = "";
+static char settings_content_name[MAX_BUFFER_SIZE] = "";
+static char settings_content_stem[MAX_BUFFER_SIZE] = "";
+static char active_user_profile_path[MAX_BUFFER_SIZE] = "";
+static struct session_settings_t active_user_profile_settings;
+static enum play_profile active_play_profile = play_profile_unmatched;
+static struct session_settings_t active_play_profile_settings;
 
 static const char *scale_names[video_scale_count] = {
     lang.muxretro.settings_screen.aspect_ratio, lang.muxretro.settings_screen.integer_mode,
@@ -172,9 +190,6 @@ static const char *scale_names[video_scale_count] = {
 };
 
 static const int rotate_degrees[video_rotate_count] = {0, 90, 180, 270};
-
-static const double integer_scale_values[integer_scale_count] = {0.0,  1.00, 1.25, 1.50, 1.75, 2.00, 2.25,
-                                                                 2.50, 2.75, 3.00, 3.25, 3.50, 3.75, 4.00};
 
 static const char *aspect_ratio_names[aspect_ratio_count] = {
     lang.muxretro.settings_screen.auto_rate,   lang.muxretro.settings_screen.ratio_4_3,
@@ -252,10 +267,11 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(rotate, 0, video_rotate_count - 1),
     SETTING_RANGE(mirrored, 0, 1),
     SETTING_RANGE(aspect_ratio, 0, aspect_ratio_count - 1),
-    SETTING_RANGE(integer_scale, 0, integer_scale_count - 1),
+    {"scale_multiplier", offsetof(struct session_settings_t, integer_scale), setting_range, 0, integer_scale_count - 1,
+     NULL, 0},
     SETTING_RANGE(texture_filter, 0, texture_filter_count - 1),
     SETTING_RANGE(rumble_enabled, 0, 1),
-    SETTING_RANGE(volume, 0, 100),
+    SETTING_RANGE(volume, 0, SESSION_VOLUME_MAX),
     SETTING_RANGE(show_fps, 0, show_fps_count - 1),
     SETTING_RANGE(show_playtime, 0, 1),
     SETTING_RANGE(content_precache, 0, content_precache_count - 1),
@@ -330,6 +346,70 @@ static const char *audio_latency_names[audio_latency_count] = {
     lang.muxretro.settings_screen.audio_latency_compat
 };
 
+struct play_profile_settings {
+    int texture_filter;
+    int shimmer_fix;
+    int frame_delay_ms;
+    int run_ahead;
+    int gpu_hard_sync;
+    int audio_latency_profile;
+    int audio_period_frames;
+    int audio_rate_control;
+};
+
+static const struct play_profile_settings play_profiles[play_profile_count] = {
+    {texture_filter_nearest, 0, FRAME_DELAY_OFF, 0, 0, audio_latency_compat, 1024, 100},
+    {texture_filter_nearest, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50},
+    {texture_filter_sharp_bilinear, 1, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50}
+};
+
+static int play_profile_values_match(const struct play_profile_settings *profile) {
+    return session_settings.texture_filter == profile->texture_filter
+           && session_settings.shimmer_fix == profile->shimmer_fix
+           && session_settings.frame_delay_ms == profile->frame_delay_ms
+           && !session_settings.run_ahead == !profile->run_ahead
+           && !session_settings.gpu_hard_sync == !profile->gpu_hard_sync
+           && session_settings.audio_latency_profile == profile->audio_latency_profile
+           && session_settings.audio_period_frames == profile->audio_period_frames
+           && session_settings.audio_rate_control == profile->audio_rate_control;
+}
+
+static void play_profile_track_current(void) {
+    active_play_profile = play_profile_unmatched;
+    for (int profile = 0; profile < play_profile_count; profile++) {
+        if (!play_profile_values_match(&play_profiles[profile])) continue;
+        active_play_profile = (enum play_profile) profile;
+        active_play_profile_settings = session_settings;
+        break;
+    }
+}
+
+enum play_profile session_settings_play_profile(void) {
+    if (active_play_profile < 0 || active_play_profile >= play_profile_count
+        || memcmp(&session_settings, &active_play_profile_settings, sizeof(session_settings)) != 0)
+        return play_profile_unmatched;
+    return active_play_profile;
+}
+
+void session_settings_apply_play_profile(const enum play_profile profile) {
+    if (profile < 0 || profile >= play_profile_count) return;
+
+    const struct play_profile_settings *values = &play_profiles[profile];
+    struct session_settings_t next = session_settings;
+    next.texture_filter = values->texture_filter;
+    next.shimmer_fix = values->shimmer_fix;
+    next.frame_delay_ms = values->frame_delay_ms;
+    next.run_ahead = values->run_ahead;
+    next.gpu_hard_sync = values->gpu_hard_sync;
+    next.audio_latency_profile = values->audio_latency_profile;
+    next.audio_period_frames = values->audio_period_frames;
+    next.audio_rate_control = values->audio_rate_control;
+    session_settings_discard_to(&next);
+    active_user_profile_path[0] = '\0';
+    active_play_profile = profile;
+    active_play_profile_settings = session_settings;
+}
+
 static const char *show_fps_names[show_fps_count] = {
     lang.generic.disabled, lang.muxretro.settings_screen.show_fps_simple,
     lang.muxretro.settings_screen.show_fps_detailed
@@ -388,13 +468,13 @@ const char *session_settings_integer_scale_name(const int mode) {
     if (mode <= integer_scale_auto || mode >= integer_scale_count) return lang.muxretro.settings_screen.auto_rate;
 
     static char buf[16];
-    snprintf(buf, sizeof(buf), "%.2fx", integer_scale_values[mode]);
+    snprintf(buf, sizeof(buf), "%dx", mode);
     return buf;
 }
 
 double session_settings_integer_scale_value(const int mode) {
     if (mode <= integer_scale_auto || mode >= integer_scale_count) return 0.0;
-    return integer_scale_values[mode];
+    return mode;
 }
 
 const char *session_settings_filter_name(const int mode) {
@@ -697,11 +777,336 @@ setting_field_const(const struct session_settings_t *settings, const struct sett
     return (const int *) ((const unsigned char *) settings + descriptor->offset);
 }
 
-static void apply_scalar_settings(mini_t *ini) {
+enum {
+    setting_descriptor_count = sizeof(setting_descriptors) / sizeof(setting_descriptors[0]),
+    user_profile_scan_limit = 64,
+    user_profile_file_limit = 64 * 1024
+};
+
+typedef struct {
+    char path[MAX_BUFFER_SIZE];
+    char name[MAX_BUFFER_SIZE];
+    struct session_settings_t values;
+    unsigned char present[setting_descriptor_count];
+    int field_count;
+} user_profile;
+
+static user_profile user_profiles[SESSION_USER_PROFILE_LIMIT];
+static int user_profile_count;
+
+static int user_profile_file_compare(const void *left, const void *right) {
+    return strcasecmp(left, right);
+}
+
+static int user_profile_file_name(const char *name) {
+    const size_t length = strlen(name);
+    return length > 4 && strcasecmp(name + length - 4, ".ini") == 0;
+}
+
+static int user_profile_name_valid(const char *name) {
+    if (!name || !*name) return 0;
+
+    for (const unsigned char *cursor = (const unsigned char *) name; *cursor; cursor++)
+        if (*cursor < 0x20 || *cursor == 0x7f) return 0;
+
+    return 1;
+}
+
+static int user_profile_target_matches(const char *wanted, const char *first, const char *second) {
+    if (!wanted || !*wanted) return 1;
+    return (first && strcasecmp(wanted, first) == 0) || (second && strcasecmp(wanted, second) == 0);
+}
+
+static int user_profile_load(const char *path, const char *file_name, user_profile *profile) {
+    mini_t *ini = mini_load(path);
+    if (!ini) return 0;
+
+    const int version = (int) mini_get_int(ini, "profile", "version", 1);
+    const char *wanted_core = mini_get_string(ini, "profile", "core", "");
+    const char *wanted_content = mini_get_string(ini, "profile", "content", "");
+    if (version != 1 || !user_profile_target_matches(wanted_core, settings_core_name, NULL)
+        || !user_profile_target_matches(wanted_content, settings_content_name, settings_content_stem)) {
+        mini_free(ini);
+        return 0;
+    }
+
+    memset(profile, 0, sizeof(*profile));
+    snprintf(profile->path, sizeof(profile->path), "%s", path);
+
+    const char *display_name = mini_get_string(ini, "profile", "name", "");
+    if (display_name && *display_name) {
+        snprintf(profile->name, sizeof(profile->name), "%s", display_name);
+    } else {
+        snprintf(profile->name, sizeof(profile->name), "%s", file_name);
+        char *extension = strrchr(profile->name, '.');
+        if (extension) *extension = '\0';
+    }
+
+    if (!user_profile_name_valid(profile->name)) {
+        mini_free(ini);
+        return 0;
+    }
+
+    for (int i = 0; i < setting_descriptor_count; i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        if (mini_value_exists(ini, "settings", descriptor->key) != MINI_OK) continue;
+
+        const long long value = mini_get_int(ini, "settings", descriptor->key, LLONG_MIN);
+        if (!setting_value_valid(descriptor, value)) {
+            LOG_WARN(mux_module, "Ignoring invalid user profile value '%s' in %s", descriptor->key, file_name);
+            continue;
+        }
+
+        *setting_field(&profile->values, descriptor) = (int) value;
+        profile->present[i] = 1;
+        profile->field_count++;
+    }
+
+    mini_free(ini);
+    return profile->field_count > 0 && profile->name[0];
+}
+
+int session_settings_refresh_user_profiles(void) {
+    user_profile_count = 0;
+
+    struct stat directory_status;
+    if (lstat(RETRO_PRO_PATH, &directory_status) != 0 || !S_ISDIR(directory_status.st_mode)) return 0;
+
+    DIR *directory = opendir(RETRO_PRO_PATH);
+    if (!directory) return 0;
+
+    char file_names[user_profile_scan_limit][NAME_MAX + 1];
+    int file_count = 0;
+    struct dirent *entry;
+    while (file_count < user_profile_scan_limit && ((entry = readdir(directory)))) {
+        if (!user_profile_file_name(entry->d_name)) continue;
+
+        char path[MAX_BUFFER_SIZE];
+        if (!str_format_checked(path, sizeof(path), "%s/%s", RETRO_PRO_PATH, entry->d_name)) continue;
+
+        struct stat file_status;
+        if (lstat(path, &file_status) != 0 || !S_ISREG(file_status.st_mode) || file_status.st_size <= 0
+            || file_status.st_size > user_profile_file_limit)
+            continue;
+
+        snprintf(file_names[file_count], sizeof(file_names[file_count]), "%s", entry->d_name);
+        file_count++;
+    }
+    closedir(directory);
+
+    qsort(file_names, (size_t) file_count, sizeof(file_names[0]), user_profile_file_compare);
+
+    for (int i = 0; i < file_count && user_profile_count < SESSION_USER_PROFILE_LIMIT; i++) {
+        char path[MAX_BUFFER_SIZE];
+        if (!str_format_checked(path, sizeof(path), "%s/%s", RETRO_PRO_PATH, file_names[i])) continue;
+        if (user_profile_load(path, file_names[i], &user_profiles[user_profile_count])) user_profile_count++;
+    }
+
+    return user_profile_count;
+}
+
+int session_settings_user_profile_count(void) {
+    return user_profile_count;
+}
+
+const char *session_settings_user_profile_name(const int index) {
+    return index >= 0 && index < user_profile_count ? user_profiles[index].name : "";
+}
+
+int session_settings_user_profile_apply(const int index) {
+    if (index < 0 || index >= user_profile_count) return 0;
+
+    const user_profile *profile = &user_profiles[index];
+    struct session_settings_t next = session_settings;
+    for (int i = 0; i < setting_descriptor_count; i++) {
+        if (!profile->present[i]) continue;
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        *setting_field(&next, descriptor) = *setting_field_const(&profile->values, descriptor);
+    }
+
+    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) next.run_ahead = 0;
+    session_settings_discard_to(&next);
+    snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", profile->path);
+    active_user_profile_settings = session_settings;
+    active_play_profile = play_profile_unmatched;
+    return profile->field_count;
+}
+
+int session_settings_user_profile_current(void) {
+    if (!active_user_profile_path[0]
+        || memcmp(&session_settings, &active_user_profile_settings, sizeof(session_settings)) != 0)
+        return -1;
+
+    for (int index = 0; index < user_profile_count; index++) {
+        const user_profile *profile = &user_profiles[index];
+        if (strcmp(profile->path, active_user_profile_path) != 0) continue;
+
+        for (int i = 0; i < setting_descriptor_count; i++) {
+            if (!profile->present[i]) continue;
+            const struct setting_descriptor *descriptor = &setting_descriptors[i];
+            if (*setting_field_const(&session_settings, descriptor)
+                != *setting_field_const(&profile->values, descriptor))
+                return -1;
+        }
+        return index;
+    }
+
+    return -1;
+}
+
+static void user_profile_file_stem(const char *name, char *stem, const size_t length) {
+    size_t output = 0;
+    int separator = 0;
+
+    for (const unsigned char *cursor = (const unsigned char *) name; *cursor && output + 1 < length; cursor++) {
+        const unsigned char value = *cursor;
+        if ((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') || (value >= '0' && value <= '9')) {
+            if (separator && output > 0 && output + 1 < length) stem[output++] = '-';
+            stem[output++] = (char) value;
+            separator = 0;
+        } else if (value == ' ' || value == '-' || value == '_') {
+            separator = output > 0;
+        }
+    }
+
+    if (output == 0)
+        snprintf(stem, length, "%s", "profile");
+    else
+        stem[output] = '\0';
+}
+
+static int user_profile_write(FILE *file, const char *name, const enum user_profile_scope scope) {
+    if (fprintf(file, "[profile]\nversion=1\nname=%s\n", name) < 0) return 0;
+
+    if ((scope == user_profile_scope_content || scope == user_profile_scope_core)
+        && fprintf(file, "core=%s\n", settings_core_name) < 0)
+        return 0;
+    if (scope == user_profile_scope_content && fprintf(file, "content=%s\n", settings_content_name) < 0) return 0;
+    if (fputs("\n[settings]\n", file) < 0) return 0;
+
+    for (int i = 0; i < setting_descriptor_count; i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        if (fprintf(file, "%s=%d\n", descriptor->key, *setting_field_const(&session_settings, descriptor)) < 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+int session_settings_user_profile_create(const char *name, const enum user_profile_scope scope) {
+    if (!user_profile_name_valid(name) || strlen(name) >= SESSION_USER_PROFILE_NAME_MAX || scope < 0
+        || scope >= user_profile_scope_count || user_profile_count >= SESSION_USER_PROFILE_LIMIT)
+        return -1;
+    if ((scope == user_profile_scope_content && !user_profile_name_valid(settings_content_name))
+        || (scope != user_profile_scope_all && !user_profile_name_valid(settings_core_name)))
+        return -1;
+
+    create_directories(RETRO_PRO_PATH, 0);
+    const int directory = open(RETRO_PRO_PATH, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+    if (directory < 0) {
+        LOG_ERROR(mux_module, "Unable to open the user profile directory: %s", strerror(errno));
+        return -1;
+    }
+
+    char temporary[NAME_MAX + 1];
+    int descriptor = -1;
+    for (int attempt = 0; attempt < 16 && descriptor < 0; attempt++) {
+        if (snprintf(temporary, sizeof(temporary), ".profile-%ld-%d.tmp", (long) getpid(), attempt)
+            >= (int) sizeof(temporary))
+            break;
+        descriptor = openat(directory, temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0600);
+        if (descriptor < 0 && errno != EEXIST) break;
+    }
+
+    if (descriptor < 0) {
+        close(directory);
+        return -1;
+    }
+
+    FILE *file = fdopen(descriptor, "w");
+    int okay = file != NULL;
+    if (okay) okay = user_profile_write(file, name, scope) && fflush(file) == 0 && fsync(descriptor) == 0;
+    if (file) {
+        if (fclose(file) != 0) okay = 0;
+    } else {
+        close(descriptor);
+    }
+
+    char stem[49];
+    char final_name[NAME_MAX + 1];
+    user_profile_file_stem(name, stem, sizeof(stem));
+
+    int published = 0;
+    if (okay) {
+        for (int suffix = 0; suffix < 1000; suffix++) {
+            const int written = suffix == 0 ? snprintf(final_name, sizeof(final_name), "%s.ini", stem)
+                                            : snprintf(final_name, sizeof(final_name), "%s-%d.ini", stem, suffix + 1);
+            if (written < 0 || written >= (int) sizeof(final_name)) break;
+            struct stat existing;
+            if (fstatat(directory, final_name, &existing, AT_SYMLINK_NOFOLLOW) == 0) continue;
+            if (errno != ENOENT) break;
+
+            if (linkat(directory, temporary, directory, final_name, 0) == 0) {
+                published = 1;
+                break;
+            }
+            if (errno == EEXIST) continue;
+
+            if ((errno == EPERM || errno == ENOSYS || errno == EOPNOTSUPP || errno == EMLINK)
+                && renameat(directory, temporary, directory, final_name) == 0)
+                published = 1;
+
+            break;
+        }
+    }
+
+    unlinkat(directory, temporary, 0);
+    if (published) fsync(directory);
+    close(directory);
+    if (!published) return -1;
+
+    char final_path[MAX_BUFFER_SIZE];
+    if (!str_format_checked(final_path, sizeof(final_path), "%s/%s", RETRO_PRO_PATH, final_name)) return -1;
+    snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", final_path);
+    active_user_profile_settings = session_settings;
+
+    session_settings_refresh_user_profiles();
+    for (int index = 0; index < user_profile_count; index++)
+        if (strcmp(user_profiles[index].path, final_path) == 0) return index;
+
+    return -1;
+}
+
+int session_settings_user_profile_delete(const int index) {
+    if (index < 0 || index >= user_profile_count) return 0;
+
+    const char *separator = strrchr(user_profiles[index].path, '/');
+    if (!separator || !separator[1] || strchr(separator + 1, '/')) return 0;
+
+    const int directory = open(RETRO_PRO_PATH, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+    if (directory < 0) return 0;
+
+    struct stat status;
+    const int okay = fstatat(directory, separator + 1, &status, AT_SYMLINK_NOFOLLOW) == 0 && S_ISREG(status.st_mode)
+                     && unlinkat(directory, separator + 1, 0) == 0;
+    if (okay) fsync(directory);
+    close(directory);
+
+    if (!okay) return 0;
+    if (strcmp(active_user_profile_path, user_profiles[index].path) == 0) active_user_profile_path[0] = '\0';
+    session_settings_refresh_user_profiles();
+    return 1;
+}
+
+static void apply_scalar_settings_to(mini_t *ini, struct session_settings_t *settings) {
     for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
         const long long value = mini_get_int(ini, "settings", descriptor->key, INT_MIN);
-        if (setting_value_valid(descriptor, value)) *setting_field(&session_settings, descriptor) = (int) value;
+        if (setting_value_valid(descriptor, value)) {
+            *setting_field(settings, descriptor) = (int) value;
+        } else if (value != INT_MIN && descriptor->offset == offsetof(struct session_settings_t, integer_scale)) {
+            settings->integer_scale = integer_scale_auto;
+        }
     }
 }
 
@@ -709,7 +1114,7 @@ static void apply_ini(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) return;
 
-    apply_scalar_settings(ini);
+    apply_scalar_settings_to(ini, &session_settings);
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
@@ -827,6 +1232,11 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     colour_init();
 
     session_settings = default_settings();
+    active_user_profile_path[0] = '\0';
+    play_profile_track_current();
+    settings_core_name[0] = '\0';
+    settings_content_name[0] = '\0';
+    settings_content_stem[0] = '\0';
 
     char core_name[MAX_BUFFER_SIZE];
     if (!core_get_name(core_path_arg, core_name, sizeof(core_name))
@@ -835,6 +1245,7 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
         baseline_settings = session_settings;
         return;
     }
+    snprintf(settings_core_name, sizeof(settings_core_name), "%s", core_name);
     create_directories(core_ini_path, 1);
 
     char rel_dir[MAX_BUFFER_SIZE];
@@ -846,6 +1257,7 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
 
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;
+    snprintf(settings_content_name, sizeof(settings_content_name), "%s", content_base);
 
     char content_stem[MAX_BUFFER_SIZE];
     if (!str_copy_checked(content_stem, sizeof(content_stem), content_base)) {
@@ -855,6 +1267,7 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     }
     char *content_dot = strrchr(content_stem, '.');
     if (content_dot) *content_dot = '\0';
+    snprintf(settings_content_stem, sizeof(settings_content_stem), "%s", content_stem);
 
     if (*rel_dir) {
         if (!str_format_checked(
@@ -890,10 +1303,83 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     session_settings_apply_fps_mode();
 
     baseline_settings = session_settings;
+    play_profile_track_current();
+}
+
+static int write_settings_snapshot(const char *path, const struct session_settings_t *settings) {
+    mini_t *ini = mini_create(path);
+    if (!ini) return 0;
+
+    mini_set_int(ini, "snapshot", "version", 1);
+    for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        mini_set_int(ini, "settings", descriptor->key, *setting_field_const(settings, descriptor));
+    }
+
+    const int saved = mini_save(ini, 0) == MINI_OK;
+    mini_free(ini);
+    return saved;
+}
+
+static int read_settings_snapshot(const char *path, struct session_settings_t *settings) {
+    mini_t *ini = mini_try_load(path);
+    if (!ini) return 0;
+
+    const int valid = mini_get_int(ini, "snapshot", "version", 0) == 1;
+    if (valid) apply_scalar_settings_to(ini, settings);
+    mini_free(ini);
+    return valid;
+}
+
+static int write_launch_marker(void) {
+    mini_t *ini = mini_create(launch_marker_path);
+    if (!ini) return 0;
+    mini_set_int(ini, "launch", "version", 1);
+    const int saved = mini_save(ini, 0) == MINI_OK;
+    mini_free(ini);
+    return saved;
+}
+
+void session_settings_launch_begin(void) {
+    launch_recovered = 0;
+    launch_marker_path[0] = '\0';
+    last_good_path[0] = '\0';
+
+    if (!content_ini_path[0]
+        || !str_format_checked(launch_marker_path, sizeof(launch_marker_path), "%s.launching", content_ini_path)
+        || !str_format_checked(last_good_path, sizeof(last_good_path), "%s.known_good", content_ini_path))
+        return;
+
+    if (access(launch_marker_path, F_OK) == 0) {
+        struct session_settings_t recovered = session_settings;
+        if (read_settings_snapshot(last_good_path, &recovered)) {
+            session_settings = recovered;
+            session_settings_save_content();
+            launch_recovered = 1;
+            LOG_WARN(mux_module, "Recovered the last working settings after an incomplete launch");
+        }
+    }
+
+    if (!write_launch_marker()) LOG_WARN(mux_module, "Could not arm settings launch recovery");
+}
+
+void session_settings_launch_ready(void) {
+    if (!launch_marker_path[0] || !last_good_path[0]) return;
+
+    if (!write_settings_snapshot(last_good_path, &session_settings))
+        LOG_WARN(mux_module, "Could not update the last working settings");
+
+    if (unlink(launch_marker_path) != 0 && errno != ENOENT)
+        LOG_WARN(mux_module, "Could not clear settings launch recovery");
+}
+
+int session_settings_launch_recovered(void) {
+    return launch_recovered;
 }
 
 void session_settings_cycle_scaling(const int direction) {
     session_settings.scaling_mode = (session_settings.scaling_mode + direction + video_scale_count) % video_scale_count;
+
     video_bridge_apply_scaling();
 }
 
@@ -916,6 +1402,7 @@ void session_settings_cycle_aspect_ratio(const int direction) {
 void session_settings_cycle_integer_scale(const int direction) {
     session_settings.integer_scale =
         (session_settings.integer_scale + direction + integer_scale_count) % integer_scale_count;
+
     video_bridge_apply_scaling();
 }
 
@@ -943,7 +1430,7 @@ void session_settings_cycle_rumble(const int direction) {
 void session_settings_cycle_volume(const int direction) {
     session_settings.volume += direction * 10;
     if (session_settings.volume < 0) session_settings.volume = 0;
-    if (session_settings.volume > 100) session_settings.volume = 100;
+    if (session_settings.volume > SESSION_VOLUME_MAX) session_settings.volume = SESSION_VOLUME_MAX;
 }
 
 void session_settings_apply_fps_mode(void) {
@@ -1941,26 +2428,6 @@ void session_settings_reset_input(void) {
     input_bridge_apply_controller_ports();
 }
 
-void session_settings_apply_performance_first(void) {
-    session_settings.texture_filter = texture_filter_nearest;
-    session_settings.shimmer_fix = 0;
-
-    session_settings.colour_filter = 0;
-    session_settings.colour_shader = 0;
-    session_settings.colour_brightness = defaults.colour_brightness;
-    session_settings.colour_contrast = defaults.colour_contrast;
-    session_settings.colour_saturation = defaults.colour_saturation;
-    session_settings.colour_hueshift = defaults.colour_hueshift;
-    session_settings.colour_gamma = defaults.colour_gamma;
-
-    session_settings.overlay_source = overlay_source_off;
-
-    video_bridge_apply_filter();
-    video_bridge_apply_scaling();
-    colour_refresh();
-    overlay_bridge_apply();
-}
-
 void session_settings_reset_viewport(void) {
     session_settings.viewport_offset_x = 0;
     session_settings.viewport_offset_y = 0;
@@ -1998,6 +2465,8 @@ void session_settings_apply_save_choice(const int choice) {
 
 void session_settings_discard_to(const struct session_settings_t *snapshot) {
     session_settings = *snapshot;
+    active_user_profile_path[0] = '\0';
+    play_profile_track_current();
     video_bridge_apply_scaling();
     video_bridge_apply_filter();
     session_settings_apply_fps_mode();

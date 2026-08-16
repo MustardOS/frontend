@@ -30,6 +30,10 @@ int gamestate_init(const char *state_dir);
 
 void gamestate_capture_pending(int restore_visibility);
 
+void gamestate_publish_task(void);
+
+void gamestate_publish_flush(void);
+
 int gamestate_create(const char *name);
 
 int gamestate_rename(int index, const char *new_name);
