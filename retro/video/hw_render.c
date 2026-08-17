@@ -89,6 +89,8 @@ static GLuint depth_stencil_rb = 0;
 static int target_count = 1;
 static int render_index = 0;
 static int display_index = 0;
+static int target_queried = 0;
+static int handed_index = 0;
 static int target_w = 0;
 static int target_h = 0;
 
@@ -371,6 +373,7 @@ int hw_render_bridge_negotiate(struct retro_hw_render_callback *cb) {
     core_context_destroy = cb->context_destroy;
     want_depth = cb->depth;
     want_stencil = cb->stencil;
+    es3_available = major >= 3;
 
     flip_needed = cb->bottom_left_origin;
 
@@ -464,6 +467,8 @@ static void destroy_target(void) {
 
     render_index = 0;
     display_index = 0;
+    target_queried = 0;
+    handed_index = 0;
     target_count = 1;
     target_w = 0;
     target_h = 0;
@@ -502,13 +507,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         );
     }
 
-    gl->GenFramebuffers(1, &fbo[0]);
-    gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
-    if (want_depth) {
-        gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
-        if (want_stencil)
-            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
-    }
+    if (!es3_available) gl->GenFramebuffers(1, &fbo[0]);
 
     GLint sample_buffers = 0;
     GLint samples = 0;
@@ -525,8 +524,14 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         gl->BindTexture(GL_TEXTURE_2D, 0);
 
-        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+        if (es3_available) gl->GenFramebuffers(1, &fbo[i]);
+        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[es3_available ? i : 0]);
         gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[i], 0);
+        if (want_depth) {
+            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+            if (want_stencil)
+                gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+        }
 
         const GLenum status = gl->CheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -535,6 +540,10 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
                     mux_module, "hw_render: colour buffer %d incomplete (status 0x%x) - using %d buffer(s)", i + 1,
                     status, i
                 );
+                if (fbo[i]) {
+                    gl->DeleteFramebuffers(1, &fbo[i]);
+                    fbo[i] = 0;
+                }
                 gl->DeleteTextures(1, &colour_tex[i]);
                 colour_tex[i] = 0;
                 target_count = i;
@@ -562,8 +571,10 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         );
     }
 
-    gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
-    gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[0], 0);
+    if (!es3_available) {
+        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
+        gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[0], 0);
+    }
 
     gl->BindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -623,6 +634,12 @@ void hw_render_bridge_apply_filter(void) {
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
+    if (es3_available) {
+        target_queried = 1;
+        handed_index = render_index;
+        return fbo[render_index];
+    }
+
     return fbo[0];
 }
 
@@ -634,6 +651,21 @@ retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
 
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
     if (width == 0 || height == 0) return;
+
+    if (es3_available) {
+        if (target_count > 1 && !target_queried) {
+            LOG_WARN(mux_module, "hw_render: core cached its GLES3 framebuffer; pinning to one render target");
+            target_count = 1;
+            render_index = handed_index;
+        }
+
+        display_index = render_index;
+        if (target_count > 1) render_index = (render_index + 1) % target_count;
+        target_queried = 0;
+        frame_valid_w = width;
+        frame_valid_h = height;
+        return;
+    }
 
     display_index = render_index;
     if (target_count > 1) {
@@ -1001,9 +1033,7 @@ static int ensure_paused_src(SDL_Renderer *renderer) {
     if (paused_src_tex && width == paused_src_w && height == paused_src_h) return 1;
 
     if (paused_src_tex) SDL_DestroyTexture(paused_src_tex);
-    paused_src_tex = SDL_CreateTexture(
-        renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, width, height
-    );
+    paused_src_tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, width, height);
     if (!paused_src_tex) {
         paused_src_w = 0;
         paused_src_h = 0;
@@ -1019,18 +1049,17 @@ static int ensure_paused_src(SDL_Renderer *renderer) {
     return 1;
 }
 
-static int capture_paused_src(SDL_Renderer *renderer, const float du, const float dv, const float u_max, const float v_max) {
+static int
+capture_paused_src(SDL_Renderer *renderer, const float du, const float dv, const float u_max, const float v_max) {
     if (!ensure_paused_src(renderer)) return 0;
     if (paused_src_valid) return 1;
 
     SDL_Texture *previous_target = SDL_GetRenderTarget(renderer);
     if (SDL_SetRenderTarget(renderer, paused_src_tex) != 0) return 0;
 
-    const float v_at_top = flip_needed ? dv : v_max - dv;
-    const float v_at_bottom = flip_needed ? v_max - dv : dv;
-    draw_hw_quad(
-        -1.0f, 1.0f, -1.0f, 1.0f, du, u_max - du, v_at_top, v_at_bottom, paused_src_w, paused_src_h, 1, 0
-    );
+    const float v_at_top = flip_needed ? v_max - dv : dv;
+    const float v_at_bottom = flip_needed ? dv : v_max - dv;
+    draw_hw_quad(-1.0f, 1.0f, -1.0f, 1.0f, du, u_max - du, v_at_top, v_at_bottom, paused_src_w, paused_src_h, 1, 0);
     SDL_SetRenderTarget(renderer, previous_target);
     paused_src_valid = 1;
     return 1;
@@ -1179,6 +1208,7 @@ void hw_render_bridge_shutdown(void) {
     destroy_shared_context();
 
     backend_desc[0] = '\0';
+    es3_available = 0;
     active = 0;
     context_ready = 0;
 

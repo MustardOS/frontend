@@ -24,6 +24,11 @@ int file_exist(const char *filename) {
 int file_exist_nocase(const char *path, char *resolved, const size_t resolved_size) {
     if (!path || !*path) return 0;
 
+    char requested[MAX_BUFFER_SIZE];
+    const int requested_len = snprintf(requested, sizeof(requested), "%s", path);
+    if (requested_len < 0 || (size_t) requested_len >= sizeof(requested)) return 0;
+    path = requested;
+
     if (file_exist(path)) {
         if (resolved && resolved_size) snprintf(resolved, resolved_size, "%s", path);
         return 1;
