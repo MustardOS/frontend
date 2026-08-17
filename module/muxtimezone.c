@@ -15,6 +15,11 @@ typedef enum {
     alias_city,
 } alias_field_t;
 
+typedef struct {
+    const char *zone;
+    const char *label;
+} zone_item;
+
 static zone_view_t zone_view = view_region;
 static char zone_selected_region[ZONE_LABEL_MAX] = {0};
 static int zone_region_index = 0;
@@ -71,6 +76,35 @@ static void alias_lookup_both(const char *zone, const char **region_out, const c
 
     *region_out = NULL;
     *city_out = NULL;
+}
+
+static int alias_has_canonical_zone(const char *zone) {
+    const char *region = NULL;
+    const char *city = NULL;
+    alias_lookup_both(zone, &region, &city);
+    if (!region || !city) return 0;
+
+    char canonical[ZONE_LABEL_MAX * 2];
+    snprintf(canonical, sizeof(canonical), "%s/%s", region, city);
+
+    for (size_t i = 0; timezone_location[i] != NULL; i++)
+        if (strcmp(timezone_location[i], canonical) == 0) return 1;
+
+    return 0;
+}
+
+static int zone_item_compare(const void *a, const void *b) {
+    const zone_item *left = a;
+    const zone_item *right = b;
+
+    const char *left_label = left->label;
+    const char *right_label = right->label;
+    const int label_order = str_compare(&left_label, &right_label);
+    if (label_order) return label_order;
+
+    const char *left_zone = left->zone;
+    const char *right_zone = right->zone;
+    return str_compare(&left_zone, &right_zone);
 }
 
 static void create_list_item(const char *base_key, const char *label) {
@@ -135,6 +169,8 @@ static void create_region_items(void) {
     int seen_count = 0;
 
     for (size_t i = 0; timezone_location[i] != NULL; i++) {
+        if (alias_has_canonical_zone(timezone_location[i])) continue;
+
         char region[ZONE_LABEL_MAX];
         get_region(timezone_location[i], region);
 
@@ -172,11 +208,12 @@ static void create_timezone_items(void) {
     ui_count_static = 0;
     current_item_index = 0;
 
-    const char *sorted[ZONE_REGION_MAX * 16];
+    zone_item sorted[ZONE_REGION_MAX * 16];
     int sorted_count = 0;
 
     for (size_t i = 0; timezone_location[i] != NULL; i++) {
         const char *zone = timezone_location[i];
+        if (alias_has_canonical_zone(zone)) continue;
 
         const char *mapped_region = NULL;
         const char *mapped_city = NULL;
@@ -190,20 +227,18 @@ static void create_timezone_items(void) {
         }
 
         if (strcmp(region, zone_selected_region) != 0) continue;
-        sorted[sorted_count++] = zone;
+        if (sorted_count >= (int) A_SIZE(sorted)) break;
+
+        sorted[sorted_count++] = (zone_item) {
+            .zone = zone,
+            .label = mapped_city ? mapped_city : get_city_label(zone),
+        };
     }
 
-    qsort(sorted, sorted_count, sizeof(sorted[0]), str_compare);
+    qsort(sorted, sorted_count, sizeof(sorted[0]), zone_item_compare);
 
     for (int i = 0; i < sorted_count; i++) {
-        const char *base_key = sorted[i];
-
-        const char *mapped_region = NULL;
-        const char *mapped_city = NULL;
-        alias_lookup_both(base_key, &mapped_region, &mapped_city);
-
-        const char *city_label = mapped_city ? mapped_city : get_city_label(base_key);
-        create_list_item(base_key, city_label);
+        create_list_item(sorted[i].zone, sorted[i].label);
     }
 
     if (ui_count_static > 0) {
