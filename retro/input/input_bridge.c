@@ -236,6 +236,7 @@ static void resolve_port_assignments_cached(void) {
 static void input_bridge_build_snapshot(void) {
     const int track_latency = perf_is_enabled();
     const int restricted = cheevo_restricted();
+    const int frontend_modifier_held = mux_input_pressed(mux_input_menu);
     const uint64_t previous_signature = track_latency ? input_bridge_snapshot_signature() : 0;
 
     resolve_port_assignments_cached();
@@ -250,6 +251,21 @@ static void input_bridge_build_snapshot(void) {
         port_source_connected[port] = connected;
 
         if (!connected) {
+            port_retropad_mask[port] = 0;
+            port_stick_x[port][0] = port_stick_y[port][0] = 0;
+            port_stick_x[port][1] = port_stick_y[port][1] = 0;
+            macro_runtime_reset_port(port);
+            bound_stick_active[port][0] = 0;
+            bound_stick_active[port][1] = 0;
+
+            for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+                turbo_held_prev[port][s] = 0;
+                turbo_phase[port][s] = 0;
+            }
+            continue;
+        }
+
+        if (frontend_modifier_held) {
             port_retropad_mask[port] = 0;
             port_stick_x[port][0] = port_stick_y[port][0] = 0;
             port_stick_x[port][1] = port_stick_y[port][1] = 0;
