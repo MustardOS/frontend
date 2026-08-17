@@ -2849,6 +2849,7 @@ struct mux_lang {
         char lidswitch[MAX_BUFFER_SIZE];
         char dispsuspend[MAX_BUFFER_SIZE];
         char stageoverlay[MAX_BUFFER_SIZE];
+        char hwrendereffects[MAX_BUFFER_SIZE];
         char secondpart[MAX_BUFFER_SIZE];
         char usbpart[MAX_BUFFER_SIZE];
         char incbright[MAX_BUFFER_SIZE];
@@ -2923,6 +2924,7 @@ struct mux_lang {
             char stick_nav[MAX_BUFFER_SIZE];
             char disp_suspend[MAX_BUFFER_SIZE];
             char stage_overlay[MAX_BUFFER_SIZE];
+            char hw_render_effects[MAX_BUFFER_SIZE];
             char second_part[MAX_BUFFER_SIZE];
             char usb_part[MAX_BUFFER_SIZE];
             char inc_bright[MAX_BUFFER_SIZE];

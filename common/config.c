@@ -126,6 +126,8 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/advanced", "lidswitch", CFG_OFF(settings.advanced.lid_switch), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/advanced", "disp_suspend", CFG_OFF(settings.advanced.disp_suspend), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "stage_overlay", CFG_OFF(settings.advanced.stage_overlay), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "settings/advanced", "hw_render_effects", CFG_OFF(settings.advanced.hw_render_effects), 0,
+     {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "incbright", CFG_OFF(settings.advanced.inc_bright), 0, {.i = 16}},
     {CONF_CONFIG_PATH "settings/advanced", "incvolume", CFG_OFF(settings.advanced.inc_volume), 0, {.i = 8}},
     {CONF_CONFIG_PATH "settings/advanced", "maxgpu", CFG_OFF(settings.advanced.max_gpu), 0, {.i = 0}},

@@ -539,6 +539,7 @@
     TWEAKADV(disp_suspend, "dispsuspend")                                                                              \
     TWEAKADV(lid_switch, "lidswitch")                                                                                  \
     TWEAKADV(stage_overlay, "stageoverlay")                                                                            \
+    TWEAKADV(hw_render_effects, "shader")                                                                              \
     TWEAKADV(box_art_pad_div, "boxartpaddiv")
 
 #define TWEAKADV_AUDIO_ELEMENTS                                                                                        \

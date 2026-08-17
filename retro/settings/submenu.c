@@ -318,7 +318,10 @@ static void close_menu(submenu *m) {
     m->active = 0;
     nav_show_x(0, NULL);
     nav_show_y(0, NULL);
-    if (sectioned(m)) list_frame_reset();
+    if (sectioned(m)) {
+        if (m->def->remember_section_key) list_frame_remember_section_key(m->def->remember_section_key);
+        list_frame_reset();
+    }
     if (submenu_stack_depth > 0 && submenu_stack[submenu_stack_depth - 1] == m) submenu_stack_depth--;
     if (m->def->closed) m->def->closed();
 }
@@ -371,7 +374,8 @@ void submenu_open(submenu *m) {
 
     rebuild_rows(m);
     if (sectioned(m)) {
-        gen_step_movement(0, +1, 2, 0, 0);
+        const int steps = m->def->remember_section_key ? list_frame_restore_key(m->def->remember_section_key) : 0;
+        gen_step_movement(steps, +1, 2, 0, 0);
     } else {
         focus_row(m, current_item_index);
     }

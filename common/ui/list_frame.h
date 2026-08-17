@@ -26,6 +26,8 @@ void list_frame_remember(const lv_obj_t *label);
 
 void list_frame_remember_section(void);
 
+void list_frame_remember_section_key(const char *key);
+
 int list_frame_current_row(void);
 
 int list_frame_current(void);
@@ -35,6 +37,8 @@ void list_frame_set_inert(int row, int inert);
 int list_frame_row_of(const lv_obj_t *label);
 
 int list_frame_restore(void);
+
+int list_frame_restore_key(const char *key);
 
 void list_frame_apply(void);
 

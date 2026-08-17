@@ -101,6 +101,17 @@ and cycling the option says so rather than appearing to do nothing. Settings are
 the same reason - a core asks for its renderer while loading, so anything acted on during load has to be in place
 before it starts.
 
+## Hardware rendering effects
+
+Colour filters, user shaders and colour adjustments add another render pass around an already hardware-rendered frame.
+Pickles therefore hides and suppresses the entire effects section by default whenever
+`hw_render_bridge_active()` reports a hardware renderer. The underlying content, core and directory settings remain
+intact, and software-rendered cores retain the normal controls and behaviour.
+
+Advanced > Display > Pickles Hardware Effects exposes an experimental global override. Enabling it restores the colour
+filter, shader, brightness, contrast, saturation, hue and gamma rows and applies their saved selections to
+hardware-rendered content on the next launch.
+
 ## Known issue - hardware rendered PSX content
 
 SwanStation and DuckStation run some content near 40 FPS during gameplay while the same title's in game menus hold 60,

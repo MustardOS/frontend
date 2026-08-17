@@ -228,13 +228,13 @@ void list_frame_help(void) {
     show_info_box(frames[current].label ? frames[current].label : "", lang.generic.section_help, 0);
 }
 
-static void marker_path(char *out) {
-    snprintf(out, MAX_BUFFER_SIZE, "%s%s", MUOS_SFI_LOAD, mux_module);
+static void marker_path(char *out, const char *key) {
+    snprintf(out, MAX_BUFFER_SIZE, "%s%s", MUOS_SFI_LOAD, key && *key ? key : mux_module);
 }
 
-static void marker_write(const int row) {
+static void marker_write(const char *key, const int row) {
     char path[MAX_BUFFER_SIZE];
-    marker_path(path);
+    marker_path(path, key);
 
     char value[64];
     snprintf(value, sizeof(value), "%d\n%d", current, row);
@@ -264,24 +264,32 @@ void list_frame_remember(const lv_obj_t *label) {
     for (int i = 0; i < row_total; i++) {
         if (row_labels[i] != label) continue;
 
-        marker_write(i);
+        marker_write(NULL, i);
 
         return;
     }
 }
 
 void list_frame_remember_section(void) {
+    list_frame_remember_section_key(NULL);
+}
+
+void list_frame_remember_section_key(const char *key) {
     if (!list_frame_active()) return;
     if (!config.settings.advanced.remember_section) return;
 
-    marker_write(-1);
+    marker_write(key, -1);
 }
 
 int list_frame_restore(void) {
+    return list_frame_restore_key(NULL);
+}
+
+int list_frame_restore_key(const char *key) {
     if (!list_frame_active()) return 0;
 
     char path[MAX_BUFFER_SIZE];
-    marker_path(path);
+    marker_path(path, key);
 
     if (!file_exist(path)) return 0;
 

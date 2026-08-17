@@ -127,6 +127,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, lid_switch, "settings/advanced/lidswitch", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, disp_suspend, "settings/advanced/disp_suspend", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, stage_overlay, "settings/advanced/stage_overlay", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, hw_render_effects, "settings/advanced/hw_render_effects", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, max_gpu, "settings/advanced/maxgpu", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, double_buffer, "settings/advanced/double_buffer", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, audio_ready, "settings/advanced/audio_ready", INT, 0);
@@ -213,6 +214,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, disp_suspend, lang.muxtweakadv.dispsuspend, "dispsuspend", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, lid_switch, lang.muxtweakadv.lidswitch, "lidswitch", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, stage_overlay, lang.muxtweakadv.stageoverlay, "stageoverlay", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, hw_render_effects, lang.muxtweakadv.hwrendereffects, "shader", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, box_art_pad_div, lang.muxtweakadv.box_art_pad_div, "boxartpaddiv", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, volume, lang.muxtweakadv.volume.title, "volume", volume_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, inc_volume, lang.muxtweakadv.incvolume, "incvolume", NULL, 0);

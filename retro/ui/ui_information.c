@@ -467,8 +467,9 @@ static void build_information_sections(void) {
             information_glyphs, information_values, information_row_count
         )) {
         list_frame_apply();
+        const int steps = list_frame_restore_key("muxretro_information");
         screen_state = information_frame_screens[list_frame_current()];
-        gen_step_movement(0, +1, 2, 0, 0);
+        gen_step_movement(steps, +1, 2, 0, 0);
     }
 
     first_open = 0;
@@ -476,6 +477,7 @@ static void build_information_sections(void) {
 
 static void close_information(void) {
     rumble_bridge_test_cancel();
+    list_frame_remember_section_key("muxretro_information");
     list_frame_reset();
     active = 0;
 

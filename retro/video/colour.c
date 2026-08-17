@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <GLES2/gl2.h>
+#include "../../common/config.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
 #include "gl_dispatch.h"
+#include "hw_render.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
 
@@ -354,12 +356,17 @@ void colour_refresh(void) {
 
 static int pass_suppressed;
 
+static int preset_effects_enabled(void) {
+    return !hw_render_bridge_active() || config.settings.advanced.hw_render_effects;
+}
+
 void colour_set_suppressed(const int suppressed) {
     pass_suppressed = suppressed;
 }
 
 int colour_pass_needed(void) {
     if (pass_suppressed) return 0;
+    if (!preset_effects_enabled()) return 0;
     if (session_settings.colour_brightness != 0) return 1;
     if (session_settings.colour_contrast != 100) return 1;
     if (session_settings.colour_saturation != 100) return 1;
@@ -473,7 +480,7 @@ static char *read_shader_file(const char *path) {
 }
 
 static void ensure_shader_program(void) {
-    const int index = session_settings.colour_shader;
+    const int index = preset_effects_enabled() ? session_settings.colour_shader : 0;
     if (index == shader_loaded_index) return;
     shader_loaded_index = index;
 
@@ -573,7 +580,8 @@ static void set_colour_uniforms(void) {
     const float saturation = (float) session_settings.colour_saturation / 100.0f;
     const float hue_rad = (float) session_settings.colour_hueshift * (float) M_PI / 180.0f;
     const float gamma = (float) session_settings.colour_gamma / 100.0f;
-    const colour_filter_matrix_t *filter = current_filter();
+    static const colour_filter_matrix_t disabled_filter = {0};
+    const colour_filter_matrix_t *filter = preset_effects_enabled() ? current_filter() : &disabled_filter;
 
     if (u_tex >= 0) gl->Uniform1i(u_tex, 0);
     if (u_brightness >= 0) gl->Uniform1f(u_brightness, brightness);
@@ -702,9 +710,8 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     const int to_offscreen_target = prev_target != NULL;
     const float ndc_top = to_offscreen_target ? (float) dest_rect->y / (float) out_h * 2.0f - 1.0f
                                               : 1.0f - (float) dest_rect->y / (float) out_h * 2.0f;
-    const float ndc_bottom = to_offscreen_target
-                                 ? (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f - 1.0f
-                                 : 1.0f - (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f;
+    const float ndc_bottom = to_offscreen_target ? (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f - 1.0f
+                                                 : 1.0f - (float) (dest_rect->y + dest_rect->h) / (float) out_h * 2.0f;
 
     GLint prev_program = 0;
     gl->GetIntegerv(GL_CURRENT_PROGRAM, &prev_program);

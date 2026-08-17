@@ -4,6 +4,7 @@
 #include "../settings/settings.h"
 #include "../settings/pages.h"
 #include "../settings/submenu.h"
+#include "hw_render.h"
 
 enum { row_filter = 0, row_shader, row_brightness, row_contrast, row_saturation, row_hue_shift, row_gamma, row_count };
 
@@ -104,7 +105,7 @@ static void closed(void) {
 
 static submenu self;
 
-static const submenu_def def = {
+static submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
     .help = row_help,
@@ -119,7 +120,13 @@ static const submenu_def def = {
     .save_desc = lang.muxretro.save.display_desc,
 };
 
+static void configure_rows(void) {
+    const int effects_enabled = !hw_render_bridge_active() || config.settings.advanced.hw_render_effects;
+    def.row_count = effects_enabled ? row_count : 0;
+}
+
 void display_menu_init(void) {
+    configure_rows();
     submenu_init(&self, &def);
 
     colfilter_menu_init();
@@ -127,6 +134,7 @@ void display_menu_init(void) {
 }
 
 void display_menu_open(void) {
+    configure_rows();
     submenu_open(&self);
 }
 
@@ -147,5 +155,6 @@ void display_menu_reopen_shader(void) {
 }
 
 const submenu_def *visuals_menu_definition(void) {
+    configure_rows();
     return &def;
 }

@@ -561,6 +561,7 @@ static submenu_def def = {
     .child_tick = child_tick,
     .action_without_save_guard = 1,
     .closed = closed,
+    .remember_section_key = "muxretro_settings",
     .save_title = lang.muxretro.save.settings_title,
     .save_desc = lang.muxretro.save.settings_desc,
 };

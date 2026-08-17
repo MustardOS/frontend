@@ -33,6 +33,8 @@ typedef struct {
     int action_without_save_guard;
     void (*closed)(void);
 
+    const char *remember_section_key;
+
     const char *save_title;
     const char *save_desc;
 } submenu_def;

@@ -142,6 +142,7 @@ struct mux_config {
             int16_t lid_switch;
             int16_t disp_suspend;
             int16_t stage_overlay;
+            int16_t hw_render_effects;
             int16_t inc_bright;
             int16_t inc_volume;
             int16_t max_gpu;
