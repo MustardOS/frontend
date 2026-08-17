@@ -16,8 +16,10 @@ See [`architecture.md`](architecture.md#state) for the file-by-file breakdown of
   keeps safety policy inside Pickles even when packaged metadata is absent or out of date.
 - Save-state capture passes the exact size declared by the core. A changed size is retried once only after an explicit
   failure, and further state captures are disabled for the session if serialisation remains unstable.
-- Manual saves, run-ahead and Network Play use the same core-state broker. Loads require an exact current size unless
-  an audited compiled core definition explicitly permits that core to judge compatibility.
+- Manual saves, run-ahead and Network Play use the same core-state broker. Pickles validates the state envelope, bounds
+  and checksums, then passes the saved payload to the core's `retro_unserialize()` compatibility check. This supports
+  valid game-dependent or runtime-dependent serialisation sizes, matching Libretro frontend behaviour. An audited
+  compiled core definition can still require exact sizing where a specific core needs it.
 - After capture, one bounded worker calculates the envelope checksums and writes the state atomically. A second state
   cannot queue behind it; loads, deletion, suspend, shutdown and core unload wait for pending persistence to finish.
 - SRAM is dirty checked and written atomically (tmp + rename + fsync) on a background worker thread, flushed on a
@@ -27,6 +29,14 @@ See [`architecture.md`](architecture.md#state) for the file-by-file breakdown of
   compatible state and preview for up to 12 games, along with the content path, state type, core and timestamp. Pickles
   removes stale entries when their final state is deleted and writes the small index atomically after successful state
   persistence.
+- Launch resume considers quicksave, autosave, timeline and manual states together. Candidates are ordered by their
+  recorded creation time, with the state file's precise modification time resolving same-second saves. Missing and
+  empty files are ignored, and a rejected newest state falls back to the next compatible candidate. Core version
+  strings remain recorded for diagnostics and manual-load warnings, but are not treated as a compatibility contract;
+  the state broker's size checks and the core's own `retro_unserialize()` result decide whether a restore is accepted.
+- Automatic state writes are disarmed during content startup and resume. Pickles arms them only after the first genuine
+  post-resume gameplay frame, so an idle or power event queued during a slow core load cannot replace the previous
+  autosave with the core's freshly booted state.
 - A save appears in the on-screen list straight away, but nothing is recorded on disk until its write lands. The
   `states.ini` entry and the `resume.ini` index are both written from the completion path, so a save that never reaches
   storage leaves no entry behind. If the write fails, the listing rolls back to what it was before the save and any

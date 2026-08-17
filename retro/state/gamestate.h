@@ -44,6 +44,10 @@ int gamestate_load(int index);
 
 int gamestate_autosave_save(void);
 
+void gamestate_autosave_arm(void);
+
+int gamestate_autosave_is_armed(void);
+
 int gamestate_autosave_load(void);
 
 int gamestate_autosave_delete(void);
@@ -64,6 +68,6 @@ int gamestate_metadata_matches(const struct gamestate_slot *slot);
 
 int gamestate_protect_mismatched_autosave(void);
 
-int gamestate_load_most_recent(int *mismatch_blocked);
+int gamestate_load_most_recent(int *mismatch_blocked, int show_message);
 
 int gamestate_find_most_recent(char *path, size_t path_len, int *mismatch_blocked);

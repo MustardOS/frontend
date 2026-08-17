@@ -181,6 +181,12 @@ static void idle_poll(void) {
         );
     }
 
+    if (mux_idle_state_changes != last_seen_changes && !gamestate_autosave_is_armed()) {
+        LOG_DEBUG(mux_module, "idle_poll: discarded startup idle transition before gameplay began");
+        last_seen_changes = mux_idle_state_changes;
+        return;
+    }
+
     if (mux_idle_state_exists && mux_idle_state_changes != last_seen_changes && !is_paused
         && SDL_GetTicks() >= resume_cooldown_until) {
         LOG_DEBUG(mux_module, "idle_poll: triggering pause_menu_toggle + SRAM save");
@@ -628,7 +634,7 @@ int main(const int argc, char *argv[]) {
 
         startup_log_stage("save-state warm-up", &startup_stage);
 
-        if (state_load(resume_path, show_startup_messages) == 0) {
+        if (gamestate_load_most_recent(&load_blocked, show_startup_messages) == 0) {
             LOG_INFO(mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", warmup_frames);
         }
         startup_log_stage("save-state restore", &startup_stage);
@@ -881,6 +887,7 @@ int main(const int argc, char *argv[]) {
             core_ran = ran_frames > 0;
 
             if (core_ran) {
+                gamestate_autosave_arm();
                 perf_note_batch(ran_frames);
                 perf_record(perf_stage_frame_delay, frame_pacer_get_delay_ms());
             }

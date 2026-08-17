@@ -1,7 +1,9 @@
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
@@ -24,6 +26,7 @@ int gamestate_slot_count = 0;
 
 struct gamestate_slot gamestate_autosave;
 int gamestate_autosave_exists = 0;
+static int gamestate_autosave_armed = 0;
 
 struct gamestate_slot gamestate_quicksave;
 int gamestate_quicksave_exists = 0;
@@ -39,6 +42,14 @@ static char autosave_thumb_path[MAX_STATE_SIZE] = "";
 static char quicksave_state_path[MAX_STATE_SIZE] = "";
 static char quicksave_thumb_path[MAX_STATE_SIZE] = "";
 
+#define RESUME_CANDIDATE_LIMIT (GAMESTATE_MAX_SLOTS + GAMESTATE_TIMELINE_DEPTH + 2)
+
+struct resume_candidate {
+    const struct gamestate_slot *slot;
+    struct timespec modified;
+    int order;
+};
+
 #define RESUME_INDEX_LIMIT 12
 
 enum publish_kind { publish_none = 0, publish_slot, publish_autosave, publish_quicksave, publish_timeline };
@@ -50,6 +61,56 @@ static struct {
     int previous_exists;
 } pending_publish;
 
+static int state_file_timestamp(const char *path, struct timespec *modified) {
+    struct stat st;
+    if (!path || !*path || stat(path, &st) != 0 || !S_ISREG(st.st_mode) || st.st_size <= 0) return 0;
+
+    if (modified) *modified = st.st_mtim;
+    return 1;
+}
+
+static int resume_candidate_compare(const void *left_ptr, const void *right_ptr) {
+    const struct resume_candidate *left = left_ptr;
+    const struct resume_candidate *right = right_ptr;
+
+    if (left->slot->created != right->slot->created) return left->slot->created < right->slot->created ? 1 : -1;
+    if (left->modified.tv_sec != right->modified.tv_sec) return left->modified.tv_sec < right->modified.tv_sec ? 1 : -1;
+    if (left->modified.tv_nsec != right->modified.tv_nsec)
+        return left->modified.tv_nsec < right->modified.tv_nsec ? 1 : -1;
+    return right->order - left->order;
+}
+
+static void append_resume_candidate(
+    struct resume_candidate *candidates, int *count, const struct gamestate_slot *slot, const int exists
+) {
+    if (!exists || *count >= RESUME_CANDIDATE_LIMIT) return;
+
+    struct timespec modified;
+    if (!state_file_timestamp(slot->state_path, &modified)) return;
+
+    candidates[*count] = (struct resume_candidate) {
+        .slot = slot,
+        .modified = modified,
+        .order = *count,
+    };
+    (*count)++;
+}
+
+static int collect_resume_candidates(struct resume_candidate *candidates) {
+    int count = 0;
+    append_resume_candidate(candidates, &count, &gamestate_quicksave, gamestate_quicksave_exists);
+    append_resume_candidate(candidates, &count, &gamestate_autosave, gamestate_autosave_exists);
+    for (int i = 0; i < GAMESTATE_TIMELINE_DEPTH; i++)
+        append_resume_candidate(candidates, &count, &gamestate_timeline[i], gamestate_timeline_exists[i]);
+    for (int i = 0; i < gamestate_slot_count; i++)
+        append_resume_candidate(candidates, &count, &gamestate_slots[i], 1);
+
+    qsort(candidates, (size_t) count, sizeof(*candidates), resume_candidate_compare);
+    return count;
+}
+
+static int gamestate_resume_matches(const struct gamestate_slot *slot);
+
 static uint64_t resume_path_key(const char *path) {
     uint64_t hash = UINT64_C(1469598103934665603);
     for (const unsigned char *cursor = (const unsigned char *) path; *cursor; cursor++) {
@@ -59,27 +120,31 @@ static uint64_t resume_path_key(const char *path) {
     return hash;
 }
 
-static void consider_resume_slot(
-    const struct gamestate_slot *slot, const int exists, const char *type, const struct gamestate_slot **latest,
-    const char **latest_type
-) {
-    if (!exists || !gamestate_metadata_matches(slot) || (*latest && slot->created < (*latest)->created)) return;
-    *latest = slot;
-    *latest_type = type;
-}
-
 static const struct gamestate_slot *latest_resume_slot(const char **type) {
-    const struct gamestate_slot *latest = NULL;
+    struct resume_candidate candidates[RESUME_CANDIDATE_LIMIT];
+    const int count = collect_resume_candidates(candidates);
     *type = "";
 
-    consider_resume_slot(&gamestate_quicksave, gamestate_quicksave_exists, "quicksave", &latest, type);
-    consider_resume_slot(&gamestate_autosave, gamestate_autosave_exists, "autosave", &latest, type);
-    for (int i = 0; i < GAMESTATE_TIMELINE_DEPTH; i++)
-        consider_resume_slot(&gamestate_timeline[i], gamestate_timeline_exists[i], "timeline", &latest, type);
-    for (int i = 0; i < gamestate_slot_count; i++)
-        consider_resume_slot(&gamestate_slots[i], 1, "manual", &latest, type);
+    for (int i = 0; i < count; i++) {
+        const struct gamestate_slot *slot = candidates[i].slot;
+        if (!gamestate_resume_matches(slot)) continue;
 
-    return latest;
+        if (slot == &gamestate_quicksave)
+            *type = "quicksave";
+        else if (slot == &gamestate_autosave)
+            *type = "autosave";
+        else {
+            *type = "manual";
+            for (int timeline = 0; timeline < GAMESTATE_TIMELINE_DEPTH; timeline++) {
+                if (slot != &gamestate_timeline[timeline]) continue;
+                *type = "timeline";
+                break;
+            }
+        }
+        return slot;
+    }
+
+    return NULL;
 }
 
 static void prune_resume_index(mini_t *ini) {
@@ -181,6 +246,13 @@ int gamestate_metadata_matches(const struct gamestate_slot *slot) {
 
     return meta_component_matches(slot->crc, crc) && meta_component_matches(slot->core, core)
            && meta_component_matches(slot->core_version, version);
+}
+
+static int gamestate_resume_matches(const struct gamestate_slot *slot) {
+    char crc[16], core[64], version[64];
+    current_metadata(crc, sizeof(crc), core, sizeof(core), version, sizeof(version));
+
+    return meta_component_matches(slot->crc, crc) && meta_component_matches(slot->core, core);
 }
 
 static int slot_index_from_group_id(const char *group_id) {
@@ -342,6 +414,7 @@ int gamestate_init(const char *state_dir) {
 
     gamestate_slot_count = 0;
     gamestate_autosave_exists = 0;
+    gamestate_autosave_armed = 0;
     gamestate_quicksave_exists = 0;
     pending_publish.kind = publish_none;
 
@@ -365,7 +438,9 @@ int gamestate_init(const char *state_dir) {
             snprintf(gamestate_autosave.state_path, sizeof(gamestate_autosave.state_path), "%s", autosave_state_path);
             snprintf(gamestate_autosave.thumb_path, sizeof(gamestate_autosave.thumb_path), "%s", autosave_thumb_path);
             read_manifest_meta(ini, group->id, &gamestate_autosave);
-            gamestate_autosave_exists = 1;
+            gamestate_autosave_exists = state_file_timestamp(gamestate_autosave.state_path, NULL);
+            if (!gamestate_autosave_exists)
+                LOG_WARN(mux_module, "Ignoring stale autosave manifest entry '%s'", gamestate_autosave.state_path);
             continue;
         }
 
@@ -383,7 +458,9 @@ int gamestate_init(const char *state_dir) {
                 gamestate_quicksave.thumb_path, sizeof(gamestate_quicksave.thumb_path), "%s", quicksave_thumb_path
             );
             read_manifest_meta(ini, group->id, &gamestate_quicksave);
-            gamestate_quicksave_exists = 1;
+            gamestate_quicksave_exists = state_file_timestamp(gamestate_quicksave.state_path, NULL);
+            if (!gamestate_quicksave_exists)
+                LOG_WARN(mux_module, "Ignoring stale quicksave manifest entry '%s'", gamestate_quicksave.state_path);
             continue;
         }
 
@@ -399,7 +476,9 @@ int gamestate_init(const char *state_dir) {
             t->created = mini_get_int(ini, group->id, "created", 0);
             timeline_paths(timeline_slot, t->state_path, t->thumb_path);
             read_manifest_meta(ini, group->id, t);
-            gamestate_timeline_exists[timeline_slot] = 1;
+            gamestate_timeline_exists[timeline_slot] = state_file_timestamp(t->state_path, NULL);
+            if (!gamestate_timeline_exists[timeline_slot])
+                LOG_WARN(mux_module, "Ignoring stale timeline manifest entry '%s'", t->state_path);
             continue;
         }
 
@@ -414,6 +493,11 @@ int gamestate_init(const char *state_dir) {
         slot->created = mini_get_int(ini, group->id, "created", 0);
         slot_paths(index, slot->state_path, slot->thumb_path);
         read_manifest_meta(ini, group->id, slot);
+
+        if (!state_file_timestamp(slot->state_path, NULL)) {
+            LOG_WARN(mux_module, "Ignoring stale manual save manifest entry '%s'", slot->state_path);
+            continue;
+        }
 
         gamestate_slot_count++;
     }
@@ -516,7 +600,11 @@ int gamestate_load(const int index) {
 }
 
 int gamestate_autosave_save(void) {
-    if (!base_dir[0] || !state_saves_supported()) return -1;
+    if (!base_dir[0] || !state_saves_supported() || !gamestate_autosave_armed) {
+        if (!gamestate_autosave_armed)
+            LOG_INFO(mux_module, "Ignored automatic save before the first post-resume gameplay frame");
+        return -1;
+    }
     gamestate_publish_flush();
 
     const struct gamestate_slot previous = gamestate_autosave;
@@ -547,6 +635,16 @@ int gamestate_autosave_save(void) {
     gamestate_autosave_exists = 1;
     publish_arm(publish_autosave, 0, &previous, previous_exists);
     return 0;
+}
+
+void gamestate_autosave_arm(void) {
+    if (gamestate_autosave_armed) return;
+    gamestate_autosave_armed = 1;
+    LOG_DEBUG(mux_module, "Automatic state saves armed after gameplay began");
+}
+
+int gamestate_autosave_is_armed(void) {
+    return gamestate_autosave_armed;
 }
 
 int gamestate_autosave_load(void) {
@@ -716,7 +814,7 @@ int gamestate_timeline_delete(const int slot) {
 int gamestate_protect_mismatched_autosave(void) {
     gamestate_publish_flush();
     if (!base_dir[0] || !gamestate_autosave_exists) return 0;
-    if (gamestate_metadata_matches(&gamestate_autosave)) return 0;
+    if (gamestate_resume_matches(&gamestate_autosave)) return 0;
     if (gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return 0;
     if (state_flush() != 0) return 0;
 
@@ -750,56 +848,31 @@ int gamestate_protect_mismatched_autosave(void) {
 }
 
 int gamestate_find_most_recent(char *path, const size_t path_len, int *mismatch_blocked) {
-    long long best_created = -1;
-    long long best_match_created = -1;
-    const char *best_match_path = NULL;
-    int newest_is_mismatch = 0;
+    struct resume_candidate candidates[RESUME_CANDIDATE_LIMIT];
+    const int count = collect_resume_candidates(candidates);
 
-    if (gamestate_autosave_exists) {
-        const int matches = gamestate_metadata_matches(&gamestate_autosave);
-        best_created = gamestate_autosave.created;
-        newest_is_mismatch = !matches;
-        if (matches) {
-            best_match_created = gamestate_autosave.created;
-            best_match_path = gamestate_autosave.state_path;
-        }
+    if (mismatch_blocked) *mismatch_blocked = count > 0 && !gamestate_resume_matches(candidates[0].slot);
+
+    if (!path || path_len == 0) return -1;
+    for (int i = 0; i < count; i++) {
+        if (!gamestate_resume_matches(candidates[i].slot)) continue;
+        snprintf(path, path_len, "%s", candidates[i].slot->state_path);
+        return 0;
     }
-
-    for (int i = 0; i < GAMESTATE_TIMELINE_DEPTH; i++) {
-        if (!gamestate_timeline_exists[i]) continue;
-
-        const int matches = gamestate_metadata_matches(&gamestate_timeline[i]);
-        if (gamestate_timeline[i].created > best_created) {
-            best_created = gamestate_timeline[i].created;
-            newest_is_mismatch = !matches;
-        }
-        if (matches && gamestate_timeline[i].created > best_match_created) {
-            best_match_created = gamestate_timeline[i].created;
-            best_match_path = gamestate_timeline[i].state_path;
-        }
-    }
-
-    for (int i = 0; i < gamestate_slot_count; i++) {
-        const int matches = gamestate_metadata_matches(&gamestate_slots[i]);
-        if (gamestate_slots[i].created > best_created) {
-            best_created = gamestate_slots[i].created;
-            newest_is_mismatch = !matches;
-        }
-        if (matches && gamestate_slots[i].created > best_match_created) {
-            best_match_created = gamestate_slots[i].created;
-            best_match_path = gamestate_slots[i].state_path;
-        }
-    }
-
-    if (mismatch_blocked) *mismatch_blocked = newest_is_mismatch;
-
-    if (!best_match_path || !path || path_len == 0) return -1;
-    snprintf(path, path_len, "%s", best_match_path);
-    return 0;
+    return -1;
 }
 
-int gamestate_load_most_recent(int *mismatch_blocked) {
-    char path[MAX_STATE_SIZE];
-    if (gamestate_find_most_recent(path, sizeof(path), mismatch_blocked) != 0) return -1;
-    return state_load(path, 1);
+int gamestate_load_most_recent(int *mismatch_blocked, const int show_message) {
+    struct resume_candidate candidates[RESUME_CANDIDATE_LIMIT];
+    const int count = collect_resume_candidates(candidates);
+
+    if (mismatch_blocked) *mismatch_blocked = count > 0 && !gamestate_resume_matches(candidates[0].slot);
+
+    for (int i = 0; i < count; i++) {
+        const struct gamestate_slot *slot = candidates[i].slot;
+        if (!gamestate_resume_matches(slot)) continue;
+        if (state_load(slot->state_path, show_message) == 0) return 0;
+        LOG_WARN(mux_module, "Could not restore '%s'; trying the next most recent compatible state", slot->state_path);
+    }
+    return -1;
 }

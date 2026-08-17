@@ -135,7 +135,7 @@ void coreinfo_init(const char *core_path) {
     }
     state_max_bytes = STATE_MAX_DEFAULT;
     state_warmup_frames = 0;
-    state_load_policy = coreinfo_state_load_exact;
+    state_load_policy = coreinfo_state_load_core;
 
     if (!core_get_name(core_path, active_name, sizeof(active_name))) {
         LOG_WARN(mux_module, "Could not resolve core information name");
