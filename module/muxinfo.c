@@ -33,6 +33,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, info, detail, lang.muxinfo.detail, "detail", 0);
     INIT_STATIC_ITEM(-1, info, credit, lang.muxinfo.credit, "credit", 0);
     INIT_STATIC_ITEM(-1, info, reload, lang.muxinfo.reload, "reload", 0);
+    INIT_STATIC_ITEM(-1, info, third, lang.muxinfo.third, "third", 0);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
@@ -69,6 +70,7 @@ static void handle_a(void) {
         {"detail", menu_general, NULL},
         {"credits", menu_credits, NULL},
         {"reload", menu_reload, NULL},
+        {"third", menu_general, NULL},
     };
 
     SELECT_VISIBLE_ENTRY(entries, entry);

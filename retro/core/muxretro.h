@@ -76,6 +76,12 @@ uint32_t audio_bridge_low_water_ms(void);
 
 uint32_t audio_bridge_high_water_ms(void);
 
+uint32_t audio_bridge_prefill_target_ms(void);
+
+uint32_t audio_bridge_burst_reservoir_ms(void);
+
+uint32_t audio_bridge_backpressure_ceiling_ms(void);
+
 void audio_bridge_wait_for_headroom(uint32_t budget_ms);
 
 void audio_bridge_wait_for_cadence(void);
@@ -92,9 +98,19 @@ uint64_t audio_bridge_latency_recovery_count(void);
 
 uint32_t audio_bridge_underrun_count(void);
 
+uint32_t audio_bridge_underrun_event_count(void);
+
+uint64_t audio_bridge_underrun_missing_frames(void);
+
 double audio_bridge_rate_correction_percent(void);
 
 double audio_bridge_rate_limit_percent(void);
+
+int audio_bridge_pickles_burst_recovery_active(void);
+
+uint64_t audio_bridge_pickles_burst_recovery_count(void);
+
+double audio_bridge_pickles_burst_recovery_peak_percent(void);
 
 uint64_t audio_bridge_batch_calls(void);
 
@@ -111,6 +127,10 @@ double audio_bridge_core_pace_divisor(void);
 void audio_bridge_drc_tick(void);
 
 void audio_bridge_request_min_latency(unsigned ms);
+
+void audio_bridge_set_latency_floor(unsigned ms);
+
+uint32_t audio_bridge_latency_floor_ms(void);
 
 void audio_bridge_apply_pending_min_latency(void);
 
@@ -169,6 +189,8 @@ double environment_frame_time_clamp_peak_ms(void);
 void frame_pacer_maybe_wait(void);
 
 void frame_pacer_after_present(void);
+
+void frame_pacer_wait_until(uint64_t deadline_counter);
 
 float frame_pacer_get_refresh_hz(void);
 

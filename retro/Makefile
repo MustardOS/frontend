@@ -5,18 +5,12 @@ LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(BIN_DIR)/muxretro
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE
-LDFLAGS := $(COMMON_LIBS) $(BIN_LDFLAGS) -lssl -lcrypto -ldl
+LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl
 
-ifeq ($(DEVICE), NATIVE)
-LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg -lz -llzma -lbz2
-else
-LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg \
-           -Wl,-Bstatic -lz -llzma -Wl,-Bdynamic -lbz2
-endif
+LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
 INCLUDES := -I../module -I../module/ui -I../common \
-            -I../common/input -I../common/mini -Icore \
-            -Icheevo/vendor/rcheevos/include -Icheevo/vendor/rcheevos/src/rcheevos
+            -I../common/input -I../common/mini -Icore
 
 SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        core/main.c core/startup.c core/core.c core/environment.c core/runahead.c core/perf.c \
@@ -30,6 +24,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
        input/ui_inputsettings.c input/ui_controlleroptions.c input/ui_inputport.c \
        input/ui_buttonmapping.c input/nav_repeat.c input/core_input_meta.c \
+       input/deck.c \
        macro/macro.c macro/relish.c macro/runtime.c macro/ui_macros.c \
        core/subsystem.c \
        state/core_state.c state/state_writer.c state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
@@ -47,37 +42,23 @@ OBJ := $(SRC:.c=.o)
 
 state/content_hash.o state/patch.o state/sram.o state/vfs.o: CFLAGS += -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
 
-RC_DIR := cheevo/vendor/rcheevos
-RC_SRC := $(filter-out $(RC_DIR)/src/rc_client_external.c $(RC_DIR)/src/rc_client_raintegration.c, \
-          $(wildcard $(RC_DIR)/src/*.c)) \
-          $(wildcard $(RC_DIR)/src/rcheevos/*.c) \
-          $(wildcard $(RC_DIR)/src/rapi/*.c) \
-          $(wildcard $(RC_DIR)/src/rhash/*.c)
-RC_OBJ := $(RC_SRC:.c=.o)
-RC_CFLAGS := $(BASE_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -I$(RC_DIR)/include \
-             -I$(RC_DIR)/src/rcheevos -Icore
-
-LA_DIR     := ../common/libarchive
-LA_SRC     := $(wildcard $(LA_DIR)/*.c)
-LA_OBJ     := $(LA_SRC:.c=.o)
-LA_CFLAGS  := $(BASE_CFLAGS) -DHAVE_CONFIG_H -DLIBARCHIVE_STATIC -I$(LA_DIR)
-
 .PHONY: all clean
 
-all: $(TARGET) clean
+all: $(TARGET)
 
-$(TARGET): $(OBJ) $(RC_OBJ) $(LA_OBJ)
+$(TARGET): $(OBJ)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(OBJ) $(RC_OBJ) $(LA_OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
+
+DEPDIR := $(DEP_ROOT)/retro
+DEPS   := $(foreach O,$(OBJ),$(call DEP_NAME,retro,$(basename $(O))))
+$(shell mkdir -p $(DEPDIR))
+
+-include $(DEPS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -MF $(call DEP_NAME,retro,$*)
 
-$(LA_DIR)/%.o: $(LA_DIR)/%.c
-	$(CC) $(LA_CFLAGS) -c $< -o $@
-
-$(RC_DIR)/%.o: $(RC_DIR)/%.c
-	$(CC) $(RC_CFLAGS) -c $< -o $@
-
-clean: | $(TARGET)
-	rm -f $(OBJ) $(RC_OBJ) $(LA_OBJ)
+clean:
+	rm -f $(OBJ)
+	rm -rf $(DEPDIR)

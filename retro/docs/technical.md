@@ -26,10 +26,12 @@ context bracket, per-frame Frame Delay wait, late input poll, optional run-ahead
 video frame, refresh LVGL only when the HUD is dirty, composite and present > apply pacing sleeps for audio headroom, 50 Hz
 content and slow motion _after_ presentation.
 
-The gameplay-governor policy samples effective FPS once per second. Two consecutive windows below 97% of the core target
-temporarily select the performance governor; eight windows above 99% restore the governor observed at session start. Fast
-forward requests the boost directly, while pause and slow motion release it. Save, load and startup boosts use the same
-nested ownership so none of these paths can restore the governor out of order.
+The gameplay-governor policy monitors both core pressure and effective FPS. Four consecutive frames whose core-time EMA
+uses at least 75% of the frame budget select the performance governor immediately and keep it selected while that
+pressure continues. Otherwise, two consecutive one-second windows below 99% of the core target select it, and eight
+stable windows restore the governor observed at session start. Fast-forward requests the boost directly, while pause and
+slow motion release it. Save, load and startup boosts use the same nested ownership so none of these paths can restore
+the governor out of order.
 
 Hidden frames (fast-forward intermediate frames, audio catch-up and run-ahead replays) skip the video path entirely and
 report video disabled via `RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE`, so cooperating cores skip their own rendering too. When

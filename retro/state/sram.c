@@ -229,12 +229,14 @@ static void *sram_worker_main(void *arg) {
 
 void sram_bridge_init(const char *core_path_arg, const char *content_path) {
     sram_path[0] = '\0';
+    core_cache_save_memory_size(0);
 
     if (!current_core.retro_get_memory_data || !current_core.retro_get_memory_size) return;
 
     const size_t size = current_core.retro_get_memory_size(RETRO_MEMORY_SAVE_RAM);
     void *data = current_core.retro_get_memory_data(RETRO_MEMORY_SAVE_RAM);
     if (!data || size == 0) return;
+    core_cache_save_memory_size(size);
 
     const char *content_base = strrchr(content_path, '/');
     content_base = content_base ? content_base + 1 : content_path;

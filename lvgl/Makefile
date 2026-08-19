@@ -24,18 +24,23 @@ LIBRARY = $(BUILD_BIN_DIR)/libui.so
 
 all: $(LIBRARY)
 
+DEPDIR := $(DEP_ROOT)/lvgl
+DEPS   := $(foreach O,$(TARGET),$(call DEP_NAME,lvgl,$(basename $(patsubst $(BUILD_OBJ_DIR)/%,%,$(O)))))
+$(shell mkdir -p $(DEPDIR))
+
+-include $(DEPS)
+
 $(BUILD_OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,lvgl,$*)
 	@echo "CC $<"
 
 $(BUILD_OBJ_DIR)/%.o: %.S
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,lvgl,$*)
 	@echo "CC $<"
 
 $(LIBRARY): $(TARGET)
 	@mkdir -p $(dir $(LIBRARY))
 	$(CC) -o $@ $(TARGET) $(LDFLAGS)
 	@echo "Built shared library: $@"
-	@rm -rf $(BUILD_DIR)

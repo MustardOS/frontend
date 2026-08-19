@@ -1,8 +1,10 @@
 # Macros
 
 Per-port, per-content button macros, reached from the port's **Macros** row alongside **Button Mapping**
-(`input/ui_inputport.c`). Want loops, conditions, or forward jumps instead of a straight line list?
-That's [Relish](relish.md), the companion scripting language. This page just covers the on device editor.
+(`input/ui_inputport.c`). On a port set up as a [Ketchup Deck](ketchup-deck.md), the same screen edits that deck's
+layout instead, so everything below applies just as well to a helper controller. Want loops, conditions, or forward
+jumps instead of a straight line list? That's [Relish](relish.md), the companion scripting language. This page just
+covers the on device editor.
 
 ## Steps
 

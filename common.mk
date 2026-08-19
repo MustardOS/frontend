@@ -31,9 +31,24 @@ else ifeq ($(DEVICE), ARM32)
 else ifeq ($(DEVICE), ARM32_A9)
     ARCH = -mcpu=cortex-a9 -mthumb -mfpu=neon-vfpv3 -mfloat-abi=softfp
 
-# everything else, like maybe x86?
+# generic 64 bit x86, safe baseline rather than anything modern
+else ifeq ($(DEVICE), X86_64)
+    ARCH = -march=x86-64-v2 -mtune=generic
+
+# generic 64 bit risc-v with the usual double float abi
+else ifeq ($(DEVICE), RISCV64)
+    ARCH = -march=rv64gc -mabi=lp64d
+
+# whatever the build host happens to be
 else ifeq ($(DEVICE), NATIVE)
     ARCH = -march=native
+
+# escape hatch for an architecture we have not met, pass ARCH_FLAGS in yourself!
+else ifeq ($(DEVICE), GENERIC)
+    ifeq ($(strip $(ARCH_FLAGS)),)
+        $(error DEVICE=GENERIC needs ARCH_FLAGS, e.g. ARCH_FLAGS="-march=armv8.2-a")
+    endif
+    ARCH = $(ARCH_FLAGS)
 
 # unsupported or not specified
 else
@@ -56,26 +71,29 @@ OPT_LEVEL ?= 2
 
 DEBUGSYM ?= 0
 
-ifeq ($(DEVICE), NATIVE)
-    FFMPEG_CFLAGS := $(shell pkg-config --cflags libavformat libavcodec libavutil libavdevice libswscale libswresample 2>/dev/null)
-endif
+REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+DEP_ROOT  := $(REPO_ROOT)/.deps
 
-BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto \
+# Flattened so nothing escapes its own dep directory, ./ and ../ normalised first
+DEP_NAME = $(DEP_ROOT)/$(1)/$(subst /,_,$(subst ../,up_,$(patsubst ./%,%,$(2)))).d
+
+include $(dir $(lastword $(MAKEFILE_LIST)))external/external.mk
+
+BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto -MMD -MP \
               -ffunction-sections -fdata-sections \
               -Wall -Wpedantic -Wno-format-zero-length \
               -Wno-unused-function -fno-plt \
               -fstack-protector-strong -fstack-clash-protection \
               -D_FORTIFY_SOURCE=3 -D_GNU_SOURCE -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
-              $(BUILD_FLAGS) $(FFMPEG_CFLAGS)
+              $(BUILD_FLAGS) $(EXTERNAL_CFLAGS)
 
 STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Werror=incompatible-pointer-types -Werror=return-type \
                 -Wformat-truncation=2 -Werror=format-truncation \
                 -Werror=unused-function
 
-COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm \
-              -lavformat -lavcodec -lavutil -lavdevice -lswscale -lswresample
+COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm
 
 BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
                -Wl,--enable-new-dtags,-rpath,'$$ORIGIN/lib' \

@@ -3,7 +3,43 @@
 #include <limits.h> // IWYU pragma: keep
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "libretro.h"
+
+struct pickles_ppsspp_perf_stats {
+    uint32_t version;
+    uint32_t size;
+    uint64_t frame_wait_calls;
+    uint64_t frame_wait_polls;
+    uint64_t frame_wait_fallbacks;
+    uint64_t frame_wait_us;
+    uint64_t frame_wait_peak_us;
+    uint64_t poll_audio_drains;
+    uint64_t poll_audio_frames;
+    uint64_t frame_execute_us;
+    uint64_t frame_execute_peak_us;
+    uint64_t frame_idle_us;
+    uint64_t frame_idle_peak_us;
+    uint64_t render_service_calls;
+    uint64_t render_audio_drains;
+    uint64_t render_audio_frames;
+    uint64_t render_audio_deferred;
+    uint64_t gl_render_steps;
+    uint64_t gl_copy_steps;
+    uint64_t gl_blit_steps;
+    uint64_t gl_readback_steps;
+    uint64_t gl_readback_image_steps;
+    uint64_t gl_render_us;
+    uint64_t gl_copy_us;
+    uint64_t gl_blit_us;
+    uint64_t gl_readback_us;
+    uint64_t gl_readback_image_us;
+    uint64_t gl_render_commands;
+    uint64_t gl_draw_commands;
+    uint64_t gl_texture_upload_commands;
+    uint64_t gl_clear_commands;
+    uint64_t gl_bind_texture_commands;
+};
 
 struct core_cbs {
     bool initialised;
@@ -31,6 +67,10 @@ struct core_cbs {
     size_t (*retro_get_memory_size)(unsigned id);
     void (*retro_cheat_reset)(void);
     void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
+
+    // Optional Pickles extension exported only by the custom built PPSSPP core, hooray!
+    void (*pickles_ppsspp_perf_reset)(void);
+    bool (*pickles_ppsspp_perf_get)(struct pickles_ppsspp_perf_stats *stats, size_t size);
 };
 
 extern struct core_cbs current_core;
@@ -60,6 +100,24 @@ int core_content_rel_dir(const char *content_path, char *out, size_t out_size);
 int core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, size_t out_size);
 
 int core_load_content(const char *content_path);
+
+int core_cached_system_info(struct retro_system_info *info);
+
+int core_cached_system_av_info(struct retro_system_av_info *info);
+
+int core_cached_api_version(unsigned *version);
+
+void core_cache_system_av_info(const struct retro_system_av_info *info);
+
+void core_cache_save_memory_size(size_t size);
+
+size_t core_cached_save_memory_size(void);
+
+void core_cache_disc_count(int count);
+
+int core_cached_disc_count(void);
+
+void core_prepare_content_unload(void);
 
 void core_unload_content(void);
 

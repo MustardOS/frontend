@@ -1,8 +1,45 @@
+# Build output
 *.o
-.buildcount
-.clangd
-.idea/
+*.d
+.deps/
+*.a
+*.so
+*.so.*
+*.gch
+*.lo
+*.la
 bin/
+lvgl/build/
+.build-config
+.buildcount
+
+# External dependencies, fetched and built by external/build.sh
+external/dist/
+external/src/
+external/work/
+external/prefix/
+
+# Runtime state kept out of the repo
 interface/autosave/
 interface/backup/
 interface/cache/
+
+# Editors and tooling
+.clangd
+.cache/
+.idea/
+.vscode/
+compile_commands.json
+*.swp
+*~
+tags
+cscope.out
+perf.data
+perf.data.old
+core
+core.*
+vgcore.*
+
+# OS clutter
+.DS_Store
+Thumbs.db

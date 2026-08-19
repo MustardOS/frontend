@@ -119,7 +119,7 @@ typedef struct {
     mux_input_handler release_handler;
 } mux_input_combo;
 
-// Configuration for the muOS input subsystem.
+// Configuration for the MustardOS input subsystem.
 typedef struct {
     // File descriptors for the underlying evdev devices.
     int general_fd;

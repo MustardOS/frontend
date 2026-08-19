@@ -1,10 +1,10 @@
 include ../common.mk
 
-CFLAGS   = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Icollection -Imojibake -isystem miniz \
+CFLAGS   = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I. -Iinput -Ijson -Imini -Iminiz -Icore -Ixxhash -Icollection -isystem miniz \
            -I../plutosvg/source -I../plutosvg/plutovg/include
-LDFLAGS  = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) -L../bin/lib -lplutosvg
+LDFLAGS  = $(COMMON_LIBS) $(COMMON_EXTERNAL_LDFLAGS) $(LIB_LDFLAGS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
-SRC_DIRS = . saver input json mini miniz core xxhash ui collection mojibake
+SRC_DIRS = . saver input json mini miniz core xxhash ui collection
 
 ifeq ($(BUILD),release)
     SRCS = $(filter-out %crash_stub.c, $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c)))
@@ -24,8 +24,13 @@ $(LIB_DIR)/$(LIB_FILE): $(OBJS)
 	@printf "Linking objects into %s\n" "$@"
 	@mkdir -p $(LIB_DIR)
 	@$(CC) $(OBJS) $(LDFLAGS) -o $@
-	@find ${shell pwd} -name "*.o" -exec rm -f {} +
+
+DEPDIR := $(DEP_ROOT)/common
+DEPS   := $(foreach O,$(OBJS),$(call DEP_NAME,common,$(basename $(O))))
+$(shell mkdir -p $(DEPDIR))
+
+-include $(DEPS)
 
 %.o: %.c
 	@printf "Compiling %s into %s\n" "$<" "$@"
-	@$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS) -MF $(call DEP_NAME,common,$*)

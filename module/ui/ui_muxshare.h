@@ -283,7 +283,8 @@
     INFO(tester, "tester")                                                                                             \
     INFO(detail, "detail")                                                                                             \
     INFO(credit, "credit")                                                                                             \
-    INFO(reload, "reload")
+    INFO(reload, "reload")                                                                                             \
+    INFO(third, "third")
 
 #define INSTALL_ELEMENTS                                                                                               \
     INSTALL(rtc, "clock")                                                                                              \

@@ -26,8 +26,13 @@ $(LIB_DIR)/$(LIB_FILE): $(ALL_OBJS)
 	@printf "Linking objects into %s\n" "$@"
 	@mkdir -p $(LIB_DIR)
 	@$(CC) $(ALL_OBJS) $(SHARED_PIC) $(CLOSED_LIB_LDFLAGS) -lm -o $@
-	@find ${shell pwd} -name "*.o" -exec rm -f {} +
+
+DEPDIR := $(DEP_ROOT)/plutosvg
+DEPS   := $(foreach O,$(ALL_OBJS),$(call DEP_NAME,plutosvg,$(basename $(O))))
+$(shell mkdir -p $(DEPDIR))
+
+-include $(DEPS)
 
 %.o: %.c
 	@printf "Compiling %s into %s\n" "$<" "$@"
-	@$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS) -MF $(call DEP_NAME,plutosvg,$*)

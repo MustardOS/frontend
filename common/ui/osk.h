@@ -23,6 +23,8 @@ void init_osk(lv_obj_t *ui_pnl_entry, lv_obj_t *ui_txt_entry, int include_numpad
 
 void osk_handler(lv_event_t *e);
 
+void apply_osk_theme(lv_obj_t *osk);
+
 void reset_osk(lv_obj_t *osk);
 
 void close_osk(lv_obj_t *osk, lv_group_t *ui, lv_obj_t *entry, lv_obj_t *panel);

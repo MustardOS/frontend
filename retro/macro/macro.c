@@ -136,6 +136,16 @@ const char *macros_get_name_by_index(const int index) {
     return entry ? entry->name : lang.generic.unknown;
 }
 
+int macros_index_by_name(const char *name) {
+    if (!name || !*name) return -1;
+
+    for (int i = 0; i < macro_count; i++) {
+        if (strcasecmp(macro_list[i].name, name) == 0) return macro_list[i].index;
+    }
+
+    return -1;
+}
+
 static int macro_cmp(const void *a, const void *b) {
     return strcasecmp(((const struct macro_entry *) a)->name, ((const struct macro_entry *) b)->name);
 }

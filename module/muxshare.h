@@ -324,6 +324,8 @@ int muxremap_main(void);
 
 int muxtheme_main(char *ex_dir);
 
+int muxthird_main(void);
+
 int muxplore_main(int index, char *dir);
 
 int muxpower_main(void);

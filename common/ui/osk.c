@@ -241,7 +241,7 @@ static void update_nav_hint(void) {
     }
 }
 
-static void apply_osk_theme(lv_obj_t *osk) {
+void apply_osk_theme(lv_obj_t *osk) {
     lv_obj_set_style_border_width(osk, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
     lv_obj_set_style_border_width(osk, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(osk, 2, MU_OBJ_MAIN_DEFAULT);

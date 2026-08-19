@@ -123,6 +123,8 @@ enum auto_save_mode { auto_save_off = 0, auto_save_idle, auto_save_quit, auto_sa
 
 enum port_assignment_mode { port_assignment_auto = 0, port_assignment_none, port_assignment_remembered };
 
+enum port_role_mode { port_role_player = 0, port_role_ketchup };
+
 struct session_settings_t {
     int scaling_mode;
     int rotate;
@@ -194,6 +196,8 @@ struct session_settings_t {
     int port_assignment[MUX_INPUT_PORT_COUNT];
     char port_device_key[MUX_INPUT_PORT_COUNT][64];
     int port_device_id[MUX_INPUT_PORT_COUNT];
+    int port_role[MUX_INPUT_PORT_COUNT];
+    int port_deck[MUX_INPUT_PORT_COUNT];
     int port_stick_forced[MUX_INPUT_PORT_COUNT];
     int port_source_target[MUX_INPUT_PORT_COUNT][24];
     int port_source_turbo[MUX_INPUT_PORT_COUNT][24];
@@ -477,6 +481,40 @@ void session_settings_cycle_port_device(int port, int direction);
 
 void session_settings_port_device_summary(int port, char *buf, size_t len);
 
+void session_settings_set_port_role(int port, int role);
+
+int session_settings_port_is_deck(int port);
+
+void session_settings_set_port_deck(int port, int deck_index);
+
+void session_settings_cycle_port_deck(int port, int direction);
+
+void session_settings_port_deck_summary(int port, char *buf, size_t len);
+
+void session_settings_cycle_port_deck_route(int port, int direction);
+
+void session_settings_port_deck_route_summary(int port, char *buf, size_t len);
+
+void session_settings_cycle_port_deck_priority(int port, int direction);
+
+void session_settings_port_deck_priority_summary(int port, char *buf, size_t len);
+
+int session_settings_port_deck_priority(int port);
+
+int session_settings_port_deck_position(int port);
+
+void session_settings_clear_deck_references(int deck_index);
+
+int session_settings_port_ketchup_route(int port);
+
+int session_settings_default_source_target(int source);
+
+int *session_settings_source_target(int port);
+
+int *session_settings_source_turbo(int port);
+
+int *session_settings_source_macro(int port);
+
 void session_settings_resolve_port_sources(int *resolved);
 
 int session_settings_resolve_port_source(int port);
@@ -542,3 +580,5 @@ void session_settings_save_content(void);
 void session_settings_save_core(void);
 
 void session_settings_save_directory(void);
+
+int session_settings_delete_saved_overrides(void);

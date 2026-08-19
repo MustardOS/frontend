@@ -1,5 +1,7 @@
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
 #include "../../common/init.h"
@@ -464,4 +466,20 @@ void options_save_core(void) {
 void options_save_directory(void) {
     options_save(directory_ini_path);
     snapshot_baseline();
+}
+
+static int delete_saved_option_file(const char *path) {
+    if (!path || !*path) return 1;
+    if (unlink(path) == 0 || errno == ENOENT) return 1;
+
+    LOG_ERROR(mux_module, "Could not delete saved core options '%s': %s", path, strerror(errno));
+    return 0;
+}
+
+int options_delete_saved_overrides(void) {
+    int ok = 1;
+    if (!delete_saved_option_file(content_ini_path)) ok = 0;
+    if (!delete_saved_option_file(directory_ini_path)) ok = 0;
+    if (!delete_saved_option_file(core_ini_path)) ok = 0;
+    return ok;
 }

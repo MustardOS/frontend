@@ -8,6 +8,7 @@
 #include "../../module/muxshare.h"
 #include "macro.h"
 #include "../core/muxretro.h"
+#include "../input/deck.h"
 #include "../input/nav_repeat.h"
 #include "../settings/settings.h"
 
@@ -156,7 +157,7 @@ static void describe_assignment(const int position, char *buf) {
     const int macro_index = macro_list[position].index;
 
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-        if (session_settings.port_source_macro[active_port][s] == macro_index) {
+        if (session_settings_source_macro(active_port)[s] == macro_index) {
             snprintf(buf, ROW_VALUE_MAX, "%s", session_settings_button_type_label(session_settings_source_types[s]));
             return;
         }
@@ -577,6 +578,7 @@ static void finish_new_macro_confirm(void) {
         const char *name = lv_textarea_get_text(ui_txt_entry_macro);
         const int position = macros_create(name);
         if (position >= 0) {
+            decks_resolve_macros();
             rebuild_list();
             apply_list_nav();
             focus_row(position);

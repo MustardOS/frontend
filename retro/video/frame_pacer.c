@@ -213,6 +213,18 @@ void frame_pacer_after_present(void) {
         refresh_period_ns * (1.0 - FRAME_PACER_REFRESH_SMOOTHING) + interval_ns * FRAME_PACER_REFRESH_SMOOTHING;
 }
 
+void frame_pacer_wait_until(const uint64_t deadline_counter) {
+    uint64_t now = SDL_GetPerformanceCounter();
+    if (now >= deadline_counter) return;
+
+    uint64_t remaining_ns = (uint64_t) perf_ns(deadline_counter - now);
+    const uint64_t spin_ns = remaining_ns > FRAME_PACER_SPIN_NS ? FRAME_PACER_SPIN_NS : remaining_ns;
+    sleep_ns_coarse(remaining_ns - spin_ns);
+
+    while ((now = SDL_GetPerformanceCounter()) < deadline_counter) {
+    }
+}
+
 float frame_pacer_get_refresh_hz(void) {
     if (refresh_period_known && refresh_period_ns > 0.0) return (float) (1e9 / refresh_period_ns);
     return 60.0f;

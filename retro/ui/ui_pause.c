@@ -1041,7 +1041,7 @@ int pause_menu_tick(void) {
 
     if (settings_menu_is_active()) {
         settings_menu_tick();
-        return 0;
+        return core_restart_requested;
     }
 
     if (information_menu_is_active()) {

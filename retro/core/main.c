@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
@@ -30,6 +31,7 @@
 #include "subsystem.h"
 #include "../state/manual.h"
 #include "../state/patch.h"
+#include "../input/deck.h"
 #include "../input/hotkeys.h"
 #include "muxretro.h"
 #include "../ui/options.h"
@@ -52,6 +54,8 @@
 #define AUDIO_MAX_CATCHUP   3
 #define UI_TASK_INTERVAL_MS 16
 
+#define PPSSPP_AUDIO_LATENCY_FLOOR_MS 112
+
 #define PERF_AUTODUMP_INTERVAL_MS 15000
 #define SLOW_CORE_PACE_RATIO      0.98
 
@@ -61,8 +65,41 @@ static unsigned mux_idle_state_changes = 0;
 static unsigned last_seen_changes = 0;
 static char state_dir[MAX_BUFFER_SIZE];
 static char macro_dir[MAX_BUFFER_SIZE];
+static int instance_lock_fd = -1;
 
 static double target_fps = 60.0;
+
+static int instance_lock_acquire(void) {
+    const int fd = open(RETRO_INSTANCE_LOCK, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (fd < 0) {
+        fprintf(stderr, "Could not open Pickles instance lock: %s\n", strerror(errno));
+        return 0;
+    }
+
+    if (flock(fd, LOCK_EX | LOCK_NB) != 0) {
+        if (errno == EWOULDBLOCK || errno == EAGAIN)
+            fprintf(stderr, "Pickles is already running; refusing to start another muxretro instance\n");
+        else
+            fprintf(stderr, "Could not acquire Pickles instance lock: %s\n", strerror(errno));
+        close(fd);
+        return 0;
+    }
+
+    if (ftruncate(fd, 0) != 0) {
+        fprintf(stderr, "Could not update Pickles instance lock: %s\n", strerror(errno));
+    } else if (dprintf(fd, "%ld\n", (long) getpid()) < 0) {
+        fprintf(stderr, "Could not record the Pickles instance PID: %s\n", strerror(errno));
+    }
+
+    instance_lock_fd = fd;
+    return 1;
+}
+
+static void instance_lock_release(void) {
+    if (instance_lock_fd < 0) return;
+    close(instance_lock_fd);
+    instance_lock_fd = -1;
+}
 
 static double startup_elapsed_ms(const uint64_t start) {
     return (double) (SDL_GetPerformanceCounter() - start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
@@ -252,12 +289,33 @@ static double core_panel_rate(void) {
     return reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
 }
 
+static int ppsspp_adaptive_frameskip_active(void);
+
 double core_pace_divisor(void) {
     char core_name[64];
     if (!core_get_name(core_file_path, core_name, sizeof(core_name))) return 1.0;
 
-    return strcmp(core_name, "flycast") == 0 || strcmp(core_name, "flycastvl") == 0 ? audio_bridge_core_pace_divisor()
-                                                                                    : 1.0;
+    const int adaptive_half_rate =
+        strcmp(core_name, "flycast") == 0 || strcmp(core_name, "flycastvl") == 0 || ppsspp_adaptive_frameskip_active();
+    return adaptive_half_rate ? audio_bridge_core_pace_divisor() : 1.0;
+}
+
+static int ppsspp_adaptive_frameskip_active(void) {
+    char core_name[64];
+    if (!core_get_name(core_file_path, core_name, sizeof(core_name)) || strcmp(core_name, "ppsspp") != 0) return 0;
+
+    const char *auto_frameskip = options_get_value("ppsspp_auto_frameskip");
+    const char *frameskip = options_get_value("ppsspp_frameskip");
+    return auto_frameskip && strcmp(auto_frameskip, "enabled") == 0 && frameskip && strcmp(frameskip, "disabled") != 0
+           && strcmp(frameskip, "0") != 0;
+}
+
+static double core_detected_pace_rate(void) {
+    const double locked = audio_bridge_locked_content_fps();
+    if (!ppsspp_adaptive_frameskip_active() || target_fps <= 0.0) return locked;
+
+    const double recovery_floor = target_fps / 2.0;
+    return locked > 0.0 && locked < recovery_floor ? recovery_floor : locked;
 }
 
 static double core_declared_pace_rate(void) {
@@ -287,7 +345,7 @@ double core_auto_pace_target_ms(void) {
     if (!core_content_needs_pacing()) return 0.0;
     if (core_declared_rate_needs_pacing()) return 1000.0 / core_declared_pace_rate();
 
-    const double locked = audio_bridge_locked_content_fps();
+    const double locked = core_detected_pace_rate();
     const double pace_fps = locked > 0.0 ? locked : target_fps;
     return pace_fps > 0.0 ? 1000.0 / pace_fps : 0.0;
 }
@@ -304,7 +362,7 @@ static double core_nominal_emulation_fps(void) {
         return divisor > 1.0 ? pace_rate * divisor : target_fps;
     }
 
-    const double locked = audio_bridge_locked_content_fps();
+    const double locked = core_detected_pace_rate();
     if (core_content_needs_pacing() && locked > 0.0) {
         const double distance_25 = locked > 25.0 ? locked - 25.0 : 25.0 - locked;
         const double distance_50 = locked > 50.0 ? locked - 50.0 : 50.0 - locked;
@@ -320,7 +378,7 @@ static double core_reported_emulation_fps(const double core_run_hz) {
     if (core_declared_rate_needs_pacing()) return core_run_hz;
     if (!core_content_needs_pacing()) return core_run_hz;
 
-    const double locked = audio_bridge_locked_content_fps();
+    const double locked = core_detected_pace_rate();
     if (locked <= 0.0) return core_run_hz;
 
     return core_run_hz * core_nominal_emulation_fps() / locked;
@@ -378,25 +436,26 @@ static void pace_core_output(const uint64_t frame_start) {
                                                                   : 1000.0 / target_fps;
     if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
 
-    const double now = SDL_GetTicks();
-    const double pacing_spent_ms =
-        (double) (SDL_GetPerformanceCounter() - frame_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+    const uint64_t frequency = SDL_GetPerformanceFrequency();
+    const uint64_t now_counter = SDL_GetPerformanceCounter();
+    const double pacing_spent_ms = (double) (now_counter - frame_start) * 1000.0 / (double) frequency;
     if (pacing_spent_ms >= target_ms) {
-        fps_limit_deadline = now;
+        fps_limit_deadline = (double) now_counter;
         fps_limit_target_ms = target_ms;
         return;
     }
 
+    const double target_ticks = target_ms * (double) frequency / 1000.0;
     const double target_change =
         target_ms > fps_limit_target_ms ? target_ms - fps_limit_target_ms : fps_limit_target_ms - target_ms;
-    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < now - target_ms || target_change > 0.01)
-        fps_limit_deadline = now - pacing_spent_ms;
+    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < (double) now_counter - target_ticks || target_change > 0.01)
+        fps_limit_deadline = (double) frame_start;
     fps_limit_target_ms = target_ms;
 
-    fps_limit_deadline += target_ms;
-    if (fps_limit_deadline > now) {
+    fps_limit_deadline += target_ticks;
+    if (fps_limit_deadline > (double) now_counter) {
         const uint64_t sleep_start = perf_begin();
-        SDL_Delay((uint32_t) (fps_limit_deadline - now));
+        frame_pacer_wait_until((uint64_t) fps_limit_deadline);
         perf_end(perf_stage_pace_sleep, sleep_start);
     }
 }
@@ -405,14 +464,13 @@ void core_prime_audio(void) {
     if (!audio_bridge_is_active()) return;
     runahead_invalidate();
 
-    const uint32_t target = audio_bridge_low_water_ms();
     const unsigned max_frames = AUDIO_MAX_CATCHUP * 8;
 
     video_bridge_set_frame_skip(1);
 
     unsigned primed = 0;
     hw_render_bridge_context_save();
-    while (primed < max_frames && audio_bridge_queued_ms() < target) {
+    while (primed < max_frames && audio_bridge_queued_ms() < audio_bridge_prefill_target_ms()) {
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
         current_core.retro_run();
@@ -448,6 +506,8 @@ int main(const int argc, char *argv[]) {
         startup_options_print_usage(stderr, argv[0]);
         return EXIT_FAILURE;
     }
+
+    if (!instance_lock_acquire()) return EXIT_FAILURE;
 
     const char *core_path_arg = startup.core_path;
     const char *content_path = startup.content_path;
@@ -550,6 +610,7 @@ int main(const int argc, char *argv[]) {
         return abort_startup(1);
     }
     macros_init(macro_dir);
+    decks_init(RETRO_DEK_PATH);
 
     content_hash_request(content_path, core_resolved_content_path);
 
@@ -564,7 +625,11 @@ int main(const int argc, char *argv[]) {
     display_set_idle_saver_suppressed_query(netplay_is_active);
 
     struct retro_system_av_info av_info = {0};
+    hw_render_bridge_enter_core_call();
     current_core.retro_get_system_av_info(&av_info);
+    core_cache_disc_count(mux_retro_disk_get_num_images());
+    hw_render_bridge_exit_core_call();
+    core_cache_system_av_info(&av_info);
     video_bridge_set_core_aspect(av_info.geometry.aspect_ratio);
 
     if (hw_render_bridge_active()) {
@@ -574,6 +639,11 @@ int main(const int argc, char *argv[]) {
 
     core_set_target_fps(av_info.timing.fps > 0 ? av_info.timing.fps : 60.0);
 
+    char loaded_core_name[64];
+    const int ppsspp_core = core_get_name(core_path_arg, loaded_core_name, sizeof(loaded_core_name))
+                            && strcmp(loaded_core_name, "ppsspp") == 0;
+
+    audio_bridge_set_latency_floor(ppsspp_core ? PPSSPP_AUDIO_LATENCY_FLOOR_MS : 0);
     audio_bridge_open(av_info.timing.sample_rate > 0 ? av_info.timing.sample_rate : 48000.0);
     LOG_DEBUG(mux_module, "audio_bridge_open done");
 
@@ -890,6 +960,13 @@ int main(const int argc, char *argv[]) {
                 gamestate_autosave_arm();
                 perf_note_batch(ran_frames);
                 perf_record(perf_stage_frame_delay, frame_pacer_get_delay_ms());
+
+                if (!netplay_active && !slowmo_active) {
+                    const double frame_budget_ms = session_settings.fps_limit == fps_limit_50
+                                                       ? 20.0
+                                                       : 1000.0 / (target_fps > 0.0 ? target_fps : 60.0);
+                    governor_boost_gameplay_pressure(core_run_ema_ms, frame_budget_ms);
+                }
             }
 
             fps_frame_count += ran_frames;
@@ -991,7 +1068,6 @@ int main(const int argc, char *argv[]) {
     image_writer_shutdown();
     governor_boost_shutdown();
     runahead_shutdown();
-    video_bridge_shutdown();
     overlay_bridge_shutdown();
     audio_bridge_close();
     rumble_bridge_shutdown();
@@ -999,7 +1075,10 @@ int main(const int argc, char *argv[]) {
     sram_bridge_save();
     sram_bridge_shutdown();
 
+    core_prepare_content_unload();
+    hw_render_bridge_prepare_core_unload();
     core_unload_content();
+    video_bridge_shutdown();
     core_unload();
 
     if (dir_exist(RETRO_EXT_PATH)) remove_directory_recursive(RETRO_EXT_PATH);
@@ -1032,5 +1111,6 @@ int main(const int argc, char *argv[]) {
         LOG_ERROR(mux_module, "Failed to re-exec for restart (%s), exiting instead", strerror(errno));
     }
 
+    instance_lock_release();
     return EXIT_SUCCESS;
 }

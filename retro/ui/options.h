@@ -68,3 +68,5 @@ void options_save_content(void);
 void options_save_core(void);
 
 void options_save_directory(void);
+
+int options_delete_saved_overrides(void);

@@ -22,6 +22,8 @@ static int16_t port_stick_x[MUX_RETRO_PORT_COUNT][2];
 static int16_t port_stick_y[MUX_RETRO_PORT_COUNT][2];
 
 static int port_source_connected[MUX_RETRO_PORT_COUNT];
+static int port_is_deck[MUX_RETRO_PORT_COUNT];
+static int port_deck_route[MUX_RETRO_PORT_COUNT];
 static unsigned netplay_player_count;
 static int netplay_routes_input;
 static netplay_pad_state netplay_local_input;
@@ -37,6 +39,36 @@ static int16_t clamp_axis(const int value) {
     if (value > PORT_STICK_FULL) return PORT_STICK_FULL;
     if (value < -PORT_STICK_FULL) return -PORT_STICK_FULL;
     return (int16_t) value;
+}
+
+static int16_t merge_axis(const int16_t player, const int16_t deck, const int priority) {
+    if (priority && deck != 0) return deck;
+
+    const int player_magnitude = player < 0 ? -player : player;
+    const int deck_magnitude = deck < 0 ? -deck : deck;
+
+    return deck_magnitude > player_magnitude ? deck : player;
+}
+
+#define RETROPAD_UP    ((uint16_t) (1u << RETRO_DEVICE_ID_JOYPAD_UP))
+#define RETROPAD_DOWN  ((uint16_t) (1u << RETRO_DEVICE_ID_JOYPAD_DOWN))
+#define RETROPAD_LEFT  ((uint16_t) (1u << RETRO_DEVICE_ID_JOYPAD_LEFT))
+#define RETROPAD_RIGHT ((uint16_t) (1u << RETRO_DEVICE_ID_JOYPAD_RIGHT))
+
+static uint16_t drop_opposite(uint16_t player, const uint16_t deck, const uint16_t one, const uint16_t other) {
+    if (deck & one) player &= (uint16_t) ~other;
+    if (deck & other) player &= (uint16_t) ~one;
+
+    return player;
+}
+
+static uint16_t merge_buttons(uint16_t player, const uint16_t deck, const int priority) {
+    if (priority) {
+        player = drop_opposite(player, deck, RETROPAD_UP, RETROPAD_DOWN);
+        player = drop_opposite(player, deck, RETROPAD_LEFT, RETROPAD_RIGHT);
+    }
+
+    return (uint16_t) (player | deck);
 }
 
 static void push_bound_stick(const int port, const int target) {
@@ -74,6 +106,10 @@ build_retropad_mask(const int port, const uint64_t mask, const int apply_suppres
 
     macro_runtime_begin_port(port);
 
+    const int *source_target = session_settings_source_target(port);
+    const int *source_turbo = session_settings_source_turbo(port);
+    const int *source_macro = session_settings_source_macro(port);
+
     bound_stick_x[port][0] = bound_stick_y[port][0] = 0;
     bound_stick_x[port][1] = bound_stick_y[port][1] = 0;
     bound_stick_active[port][0] = 0;
@@ -82,20 +118,20 @@ build_retropad_mask(const int port, const uint64_t mask, const int apply_suppres
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
 
-        const int macro_index = session_settings.port_source_macro[port][s];
+        const int macro_index = source_macro[s];
         if (macro_index >= 0 && !restricted) {
             out |=
                 macro_runtime_drive(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress), mask, fps);
             continue;
         }
 
-        const int target = session_settings.port_source_target[port][s];
+        const int target = source_target[s];
         if (target < 0 || target >= PORT_TARGET_COUNT) continue;
 
         const int raw_held = resolve_raw_held(mux_type, mask, apply_suppress);
 
         int held = raw_held;
-        const int rate = restricted ? 0 : session_settings.port_source_turbo[port][s];
+        const int rate = restricted ? 0 : source_turbo[s];
 
         if (rate > 0) {
             if (raw_held) {
@@ -129,10 +165,11 @@ build_retropad_mask(const int port, const uint64_t mask, const int apply_suppres
 
 static int stick_has_bound_direction(const int port, const int stick) {
     const int first = PORT_DIGITAL_COUNT + stick * 4;
+    const int *source_target = session_settings_source_target(port);
+    const int *source_macro = session_settings_source_macro(port);
 
     for (int s = first; s < first + 4; s++) {
-        if (session_settings.port_source_target[port][s] >= 0 || session_settings.port_source_macro[port][s] >= 0)
-            return 1;
+        if (source_target[s] >= 0 || source_macro[s] >= 0) return 1;
     }
 
     return 0;
@@ -242,30 +279,23 @@ static void input_bridge_build_snapshot(void) {
     resolve_port_assignments_cached();
 
     int ports_changed = 0;
+    int fed_by_deck[MUX_RETRO_PORT_COUNT] = {0};
+
+    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
+        port_is_deck[port] = resolved_source[port] >= 0 && session_settings_port_is_deck(port);
+        port_deck_route[port] = port_is_deck[port] ? session_settings_port_ketchup_route(port) : -1;
+        if (port_deck_route[port] >= 0) fed_by_deck[port_deck_route[port]] = 1;
+    }
 
     for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
         const int source = resolved_source[port];
-        const int connected = source >= 0;
+        const int has_source = source >= 0;
+        const int connected = (has_source && !port_is_deck[port]) || fed_by_deck[port];
 
         if (connected != port_source_connected[port]) ports_changed = 1;
         port_source_connected[port] = connected;
 
-        if (!connected) {
-            port_retropad_mask[port] = 0;
-            port_stick_x[port][0] = port_stick_y[port][0] = 0;
-            port_stick_x[port][1] = port_stick_y[port][1] = 0;
-            macro_runtime_reset_port(port);
-            bound_stick_active[port][0] = 0;
-            bound_stick_active[port][1] = 0;
-
-            for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-                turbo_held_prev[port][s] = 0;
-                turbo_phase[port][s] = 0;
-            }
-            continue;
-        }
-
-        if (frontend_modifier_held) {
+        if (!has_source || frontend_modifier_held) {
             port_retropad_mask[port] = 0;
             port_stick_x[port][0] = port_stick_y[port][0] = 0;
             port_stick_x[port][1] = port_stick_y[port][1] = 0;
@@ -305,6 +335,29 @@ static void input_bridge_build_snapshot(void) {
             port_stick_x[port][s] = apply_stick_transform(x);
             port_stick_y[port][s] = invert_y_if_needed(apply_stick_transform(y));
         }
+    }
+
+    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
+        if (!port_is_deck[port]) continue;
+
+        const int route = port_deck_route[port];
+        if (route >= 0) {
+            const int priority = session_settings_port_deck_priority(port);
+
+            port_retropad_mask[route] = merge_buttons(port_retropad_mask[route], port_retropad_mask[port], priority);
+
+            for (int stick = 0; stick < 2; stick++) {
+                port_stick_x[route][stick] =
+                    merge_axis(port_stick_x[route][stick], port_stick_x[port][stick], priority);
+                port_stick_y[route][stick] =
+                    merge_axis(port_stick_y[route][stick], port_stick_y[port][stick], priority);
+            }
+        }
+
+        port_retropad_mask[port] = 0;
+
+        port_stick_x[port][0] = port_stick_y[port][0] = 0;
+        port_stick_x[port][1] = port_stick_y[port][1] = 0;
     }
 
     memset(&netplay_local_input, 0, sizeof(netplay_local_input));

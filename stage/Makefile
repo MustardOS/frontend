@@ -20,7 +20,7 @@ OBJ := $(SRC:.c=.o)
 
 .PHONY: all clean
 
-all: $(TARGET) clean
+all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	@echo "Building Stage Overlay: $@"
@@ -35,9 +35,16 @@ $(TARGET): $(OBJ)
 		exit 1; \
 	fi
 
+DEPDIR := $(DEP_ROOT)/stage
+DEPS   := $(foreach O,$(OBJ),$(call DEP_NAME,stage,$(basename $(O))))
+$(shell mkdir -p $(DEPDIR))
+
+-include $(DEPS)
+
 %.o: %.c
 	@echo "Compiling $<"
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -MF $(call DEP_NAME,stage,$*)
 
-clean: | $(TARGET)
+clean:
 	rm -f $(OBJ)
+	rm -rf $(DEPDIR)

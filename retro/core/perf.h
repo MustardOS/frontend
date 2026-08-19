@@ -11,6 +11,7 @@ enum perf_stage {
     perf_stage_present_draw,
     perf_stage_present_flip,
     perf_stage_audio_wait,
+    perf_stage_audio_backpressure,
     perf_stage_input_present,
     perf_stage_present_to_poll,
     perf_stage_frame_delay,

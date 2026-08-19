@@ -27,9 +27,9 @@ command -v xxhsum >/dev/null 2>&1 || {
 	echo
 	echo "static const struct int_script_hash int_scripts[] = {"
 
-	for d in $DIRS; do
-		[ -d "$INTERNAL_BASE/$d" ] || continue
-		find "$INTERNAL_BASE/$d" -type f
+	for DIR in $DIRS; do
+		[ -d "$INTERNAL_BASE/$DIR" ] || continue
+		find "$INTERNAL_BASE/$DIR" -type f
 	done |
 		LC_ALL=C sort |
 		while IFS= read -r FILE; do

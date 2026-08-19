@@ -185,7 +185,7 @@ static int text_run_compare(const char *a, const size_t a_len, const char *b, co
     int order = 0;
     if (mjb_collation_compare(
             folded_a, folded_a_size, MJB_ENC_UTF_8, folded_b, folded_b_size, MJB_ENC_UTF_8, MJB_COLLATION_SHIFTED,
-            &order
+            MJB_COLLATION_TERTIARY, &order
         )
         != MJB_STATUS_OK) {
         return ascii_run_compare(a, a_len, b, b_len);

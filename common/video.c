@@ -10,7 +10,6 @@
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
 #include <libavutil/channel_layout.h>
-#include <libavutil/version.h>
 #include "video.h"
 #include "log.h"
 #include "ui/modal.h"
@@ -462,20 +461,11 @@ static void decode_audio_pkt(const AVPacket *pkt) {
 
     while (avcodec_receive_frame(audio_dec, av_frame) >= 0) {
         if (!swr) {
-#if LIBAVUTIL_VERSION_MAJOR >= 58
             AVChannelLayout stereo_layout = AV_CHANNEL_LAYOUT_STEREO;
             swr_alloc_set_opts2(
                 &swr, &stereo_layout, AV_SAMPLE_FMT_FLT, mix_freq, &av_frame->ch_layout,
                 (enum AVSampleFormat) av_frame->format, av_frame->sample_rate, 0, NULL
             );
-#else
-            const int64_t in_layout = av_frame->channel_layout ? (int64_t) av_frame->channel_layout
-                                                               : av_get_default_channel_layout(av_frame->channels);
-            swr = swr_alloc_set_opts(
-                NULL, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_FLT, mix_freq, in_layout,
-                (enum AVSampleFormat) av_frame->format, av_frame->sample_rate, 0, NULL
-            );
-#endif
             if (swr) swr_init(swr);
         }
 

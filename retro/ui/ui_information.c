@@ -19,7 +19,6 @@
 #include "../state/bios_check.h"
 #include "../state/content_hash.h"
 #include "../video/hw_render.h"
-#include "ui_loading.h"
 
 #define INFORMATION_ROW_MAX   96
 #define INFORMATION_FRAME_MAX 7
@@ -196,7 +195,7 @@ static void build_checklist_rows(void) {
 
 static void build_core_rows(void) {
     struct retro_system_info info = {0};
-    if (current_core.retro_get_system_info) current_core.retro_get_system_info(&info);
+    core_cached_system_info(&info);
 
     build_info_row(
         lang.muxretro.information_screen.core_name, info.library_name ? info.library_name : lang.generic.unknown,
@@ -209,7 +208,8 @@ static void build_core_rows(void) {
 
     char api[16];
     snprintf(api, sizeof(api), "%s", lang.generic.unknown);
-    if (current_core.retro_api_version) snprintf(api, sizeof(api), "%u", current_core.retro_api_version());
+    unsigned api_version = 0;
+    if (core_cached_api_version(&api_version)) snprintf(api, sizeof(api), "%u", api_version);
     build_info_row(lang.muxretro.information_screen.core_api, api, "version", 0);
 
     build_info_row(
@@ -219,18 +219,15 @@ static void build_core_rows(void) {
         "content", 0
     );
 
-    const size_t state_size =
-        state_saves_supported() && current_core.retro_serialize_size ? current_core.retro_serialize_size() : 0;
     char state_text[32];
-    if (state_size > 0) {
-        format_bytes((long long) state_size, state_text, sizeof(state_text));
-    } else {
-        snprintf(state_text, sizeof(state_text), "%s", lang.muxretro.information_screen.not_supported);
-    }
+    snprintf(
+        state_text, sizeof(state_text), "%s",
+        state_saves_supported() ? lang.muxretro.information_screen.available
+                                : lang.muxretro.information_screen.not_supported
+    );
     build_info_row(lang.muxretro.information_screen.save_states, state_text, "state", 0);
 
-    const size_t sram_size =
-        current_core.retro_get_memory_size ? current_core.retro_get_memory_size(RETRO_MEMORY_SAVE_RAM) : 0;
+    const size_t sram_size = core_cached_save_memory_size();
     char sram_text[32];
     if (sram_size > 0) {
         format_bytes((long long) sram_size, sram_text, sizeof(sram_text));
@@ -281,7 +278,7 @@ static void build_content_rows(void) {
     }
     build_info_row(lang.muxretro.information_screen.active_patches, patches_text, "patch", 0);
 
-    const int disc_count = mux_retro_disk_get_num_images();
+    const int disc_count = core_cached_disc_count();
     if (disc_count > 1) {
         char discs[8];
         snprintf(discs, sizeof(discs), "%d", disc_count);
@@ -309,7 +306,7 @@ static void build_hash_rows(void) {
 
 static void build_video_rows(void) {
     struct retro_system_av_info av_info = {0};
-    if (current_core.retro_get_system_av_info) current_core.retro_get_system_av_info(&av_info);
+    core_cached_system_av_info(&av_info);
 
     int frame_w = 0;
     int frame_h = 0;
@@ -498,15 +495,10 @@ static void refresh_information_nav(void) {
 }
 
 void information_menu_open(void) {
-    const int show_loading = !checklist_scanned;
-
     active = 1;
     prev_nav_mask = current_nav_mask();
 
-    if (show_loading) loading_message_show(lang.muxretro.information_loading);
     build_information_sections();
-    if (show_loading) loading_message_hide();
-
     refresh_information_nav();
 }
 

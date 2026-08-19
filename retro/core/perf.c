@@ -71,8 +71,16 @@ static uint64_t audio_dropped_baseline;
 static uint64_t audio_recovery_frames_baseline;
 static uint64_t audio_recovery_count_baseline;
 static uint32_t audio_underrun_baseline;
+static uint32_t audio_underrun_event_baseline;
+static uint64_t audio_underrun_missing_frames_baseline;
+static uint64_t audio_burst_recovery_baseline;
 static uint32_t frame_time_clamp_baseline;
 static uint64_t audio_batch_call_baseline;
+static double observed_audio_rate_correction_percent;
+static double observed_audio_rate_limit_percent;
+static uint32_t audio_queue_min_ms;
+static unsigned audio_queue_below_low_samples;
+static unsigned audio_queue_empty_samples;
 static int hud_active;
 static int capture_active;
 static int capture_automatic;
@@ -161,8 +169,18 @@ static void reset(void) {
     audio_recovery_frames_baseline = audio_bridge_latency_recovery_frames();
     audio_recovery_count_baseline = audio_bridge_latency_recovery_count();
     audio_underrun_baseline = audio_bridge_underrun_count();
+    audio_underrun_event_baseline = audio_bridge_underrun_event_count();
+    audio_underrun_missing_frames_baseline = audio_bridge_underrun_missing_frames();
+    audio_burst_recovery_baseline = audio_bridge_pickles_burst_recovery_count();
     frame_time_clamp_baseline = environment_frame_time_clamp_count();
     audio_batch_call_baseline = audio_bridge_batch_calls();
+    observed_audio_rate_correction_percent = 0.0;
+    observed_audio_rate_limit_percent = 0.0;
+    audio_queue_min_ms = UINT32_MAX;
+    audio_queue_below_low_samples = 0;
+    audio_queue_empty_samples = 0;
+
+    if (current_core.pickles_ppsspp_perf_reset) current_core.pickles_ppsspp_perf_reset();
 }
 
 static void note_present_timing(const double draw_ms, const double flip_ms) {
@@ -266,6 +284,12 @@ void perf_frame_complete(const int record) {
         const double frame_ms = (double) (now - frame_start) * ticks_to_ms;
         push(&series[perf_stage_frame], frame_ms);
         frames_observed++;
+        observed_audio_rate_correction_percent = audio_bridge_rate_correction_percent();
+        observed_audio_rate_limit_percent = audio_bridge_rate_limit_percent();
+        const uint32_t audio_queue_ms = audio_bridge_queued_ms();
+        if (audio_queue_ms < audio_queue_min_ms) audio_queue_min_ms = audio_queue_ms;
+        if (audio_queue_ms < audio_bridge_low_water_ms()) audio_queue_below_low_samples++;
+        if (audio_queue_ms == 0) audio_queue_empty_samples++;
 
         const double target_hz = perf_target_hz();
         if (target_hz > 0.0 && frame_ms > 1000.0 / target_hz * 1.5) missed_refreshes++;
@@ -391,13 +415,23 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
 }
 
 int perf_export_trace(const char *path) {
-    static const char *names[perf_stage_count] = {"frame",           "core",         "video",       "present",
-                                                  "present_draw",    "present_flip", "audio_wait",  "input_present",
-                                                  "present_to_poll", "frame_delay",  "gl_enter",    "gl_leave",
-                                                  "gl_submit",       "gl_rotate",    "pace_sleep",  "netplay_digest",
-                                                  "cheevo_callback", "screenshot",   "state_save",  "services",
-                                                  "cheevo_tick",     "netplay_tick", "maintenance", "control",
-                                                  "ui_logic",        "ui_task",      "audio_queue", "cheevo_frame"};
+    static const char *names[perf_stage_count] = {
+        "frame",          "core",
+        "video",          "present",
+        "present_draw",   "present_flip",
+        "audio_wait",     "audio_backpressure",
+        "input_present",  "present_to_poll",
+        "frame_delay",    "gl_enter",
+        "gl_leave",       "gl_submit",
+        "gl_rotate",      "pace_sleep",
+        "netplay_digest", "cheevo_callback",
+        "screenshot",     "state_save",
+        "services",       "cheevo_tick",
+        "netplay_tick",   "maintenance",
+        "control",        "ui_logic",
+        "ui_task",        "audio_queue",
+        "cheevo_frame",
+    };
 
     FILE *f = fopen(path, "w");
     if (!f) return -1;
@@ -476,10 +510,28 @@ int perf_export_trace(const char *path) {
     const uint64_t total_recoveries = audio_bridge_latency_recovery_count();
     const uint64_t recoveries =
         total_recoveries > audio_recovery_count_baseline ? total_recoveries - audio_recovery_count_baseline : 0;
-    const uint32_t audio_underruns = audio_bridge_underrun_count() - audio_underrun_baseline;
+    const uint32_t total_underruns = audio_bridge_underrun_count();
+    const uint32_t audio_underruns =
+        total_underruns > audio_underrun_baseline ? total_underruns - audio_underrun_baseline : 0;
+    const uint32_t total_underrun_events = audio_bridge_underrun_event_count();
+    const uint32_t audio_underrun_events = total_underrun_events > audio_underrun_event_baseline
+                                               ? total_underrun_events - audio_underrun_event_baseline
+                                               : 0;
+    const uint64_t total_missing_frames = audio_bridge_underrun_missing_frames();
+    const uint64_t audio_underrun_missing_frames = total_missing_frames > audio_underrun_missing_frames_baseline
+                                                       ? total_missing_frames - audio_underrun_missing_frames_baseline
+                                                       : 0;
+    const uint64_t total_burst_recoveries = audio_bridge_pickles_burst_recovery_count();
+    const uint64_t audio_burst_recoveries = total_burst_recoveries > audio_burst_recovery_baseline
+                                                ? total_burst_recoveries - audio_burst_recovery_baseline
+                                                : 0;
 
     fprintf(f, "audio_low_water_ms,%u\n", audio_bridge_low_water_ms());
     fprintf(f, "audio_high_water_ms,%u\n", audio_bridge_high_water_ms());
+    fprintf(f, "audio_latency_floor_ms,%u\n", audio_bridge_latency_floor_ms());
+    fprintf(f, "audio_prefill_target_ms,%u\n", audio_bridge_prefill_target_ms());
+    fprintf(f, "audio_burst_reservoir_ms,%u\n", audio_bridge_burst_reservoir_ms());
+    fprintf(f, "audio_backpressure_ceiling_ms,%u\n", audio_bridge_backpressure_ceiling_ms());
     fprintf(f, "audio_dropped_frames,%llu\n", (unsigned long long) audio_dropped);
     fprintf(f, "audio_dropped_seconds,%.3f\n", audio_freq > 0 ? (double) audio_dropped / (double) audio_freq : 0.0);
     fprintf(f, "audio_latency_recoveries,%llu\n", (unsigned long long) recoveries);
@@ -489,8 +541,29 @@ int perf_export_trace(const char *path) {
         audio_freq > 0 ? (double) recovery_frames / (double) audio_freq : 0.0
     );
     fprintf(f, "audio_underruns,%u\n", audio_underruns);
-    fprintf(f, "audio_rate_correction_percent,%.4f\n", audio_bridge_rate_correction_percent());
-    fprintf(f, "audio_rate_limit_percent,%.4f\n", audio_bridge_rate_limit_percent());
+    fprintf(f, "audio_underrun_callbacks,%u\n", audio_underruns);
+    fprintf(f, "audio_underrun_events,%u\n", audio_underrun_events);
+    fprintf(f, "audio_underrun_missing_frames,%llu\n", (unsigned long long) audio_underrun_missing_frames);
+    fprintf(
+        f, "audio_underrun_missing_seconds,%.3f\n",
+        audio_freq > 0 ? (double) audio_underrun_missing_frames / (double) audio_freq : 0.0
+    );
+    fprintf(
+        f, "audio_underrun_callbacks_per_event,%.2f\n",
+        audio_underrun_events ? (double) audio_underruns / (double) audio_underrun_events : 0.0
+    );
+    fprintf(f, "audio_queue_min_ms,%u\n", audio_queue_min_ms == UINT32_MAX ? 0 : audio_queue_min_ms);
+    fprintf(f, "audio_queue_below_low_samples,%u\n", audio_queue_below_low_samples);
+    fprintf(
+        f, "audio_queue_below_low_percent,%.2f\n",
+        frames_observed ? 100.0 * (double) audio_queue_below_low_samples / (double) frames_observed : 0.0
+    );
+    fprintf(f, "audio_queue_empty_samples,%u\n", audio_queue_empty_samples);
+    fprintf(f, "audio_burst_recoveries,%llu\n", (unsigned long long) audio_burst_recoveries);
+    fprintf(f, "audio_burst_recovery_active,%d\n", audio_bridge_pickles_burst_recovery_active());
+    fprintf(f, "audio_burst_recovery_peak_percent,%.4f\n", audio_bridge_pickles_burst_recovery_peak_percent());
+    fprintf(f, "audio_rate_correction_percent,%.4f\n", observed_audio_rate_correction_percent);
+    fprintf(f, "audio_rate_limit_percent,%.4f\n", observed_audio_rate_limit_percent);
     fprintf(
         f, "audio_batch_calls,%llu\n", (unsigned long long) (audio_bridge_batch_calls() - audio_batch_call_baseline)
     );
@@ -514,11 +587,160 @@ int perf_export_trace(const char *path) {
     const char *gl_context = "none";
     if (hw_render_bridge_active()) gl_context = hw_render_bridge_owns_context() ? "dedicated" : "shared";
     fprintf(f, "gl_context,%s\n", gl_context);
+    const char *gl_backend = hw_render_bridge_description();
+    fprintf(f, "gl_backend,%s\n", gl_backend ? gl_backend : "none");
     fprintf(f, "gl_buffers,%d\n", hw_render_bridge_buffer_count());
 
     char core_name[128] = "unknown";
     core_get_name(core_file_path, core_name, sizeof(core_name));
     fprintf(f, "core_name,%s\n", core_name);
+    struct retro_system_info core_info = {0};
+    fprintf(
+        f, "core_version,%s\n",
+        core_cached_system_info(&core_info) && core_info.library_version ? core_info.library_version : "unknown"
+    );
+
+    struct pickles_ppsspp_perf_stats ppsspp_perf = {0};
+    if (current_core.pickles_ppsspp_perf_get && current_core.pickles_ppsspp_perf_get(&ppsspp_perf, sizeof(ppsspp_perf))
+        && ppsspp_perf.version >= 1) {
+        fprintf(f, "ppsspp_pickles_frame_wait_calls,%llu\n", (unsigned long long) ppsspp_perf.frame_wait_calls);
+        fprintf(f, "ppsspp_pickles_frame_wait_polls,%llu\n", (unsigned long long) ppsspp_perf.frame_wait_polls);
+        fprintf(
+            f, "ppsspp_pickles_frame_wait_polls_per_call,%.4f\n",
+            ppsspp_perf.frame_wait_calls ? (double) ppsspp_perf.frame_wait_polls / (double) ppsspp_perf.frame_wait_calls
+                                         : 0.0
+        );
+        fprintf(
+            f, "ppsspp_pickles_frame_wait_mean_ms,%.4f\n",
+            ppsspp_perf.frame_wait_calls
+                ? (double) ppsspp_perf.frame_wait_us / (double) ppsspp_perf.frame_wait_calls / 1000.0
+                : 0.0
+        );
+        fprintf(f, "ppsspp_pickles_frame_wait_peak_ms,%.4f\n", (double) ppsspp_perf.frame_wait_peak_us / 1000.0);
+        fprintf(f, "ppsspp_pickles_frame_wait_fallbacks,%llu\n", (unsigned long long) ppsspp_perf.frame_wait_fallbacks);
+        fprintf(f, "ppsspp_pickles_audio_poll_drains,%llu\n", (unsigned long long) ppsspp_perf.poll_audio_drains);
+        fprintf(f, "ppsspp_pickles_audio_poll_frames,%llu\n", (unsigned long long) ppsspp_perf.poll_audio_frames);
+        fprintf(f, "ppsspp_pickles_audio_poll_ms,%.3f\n", (double) ppsspp_perf.poll_audio_frames * 1000.0 / 44100.0);
+        if (ppsspp_perf.version >= 2) {
+            fprintf(
+                f, "ppsspp_pickles_frame_execute_mean_ms,%.4f\n",
+                ppsspp_perf.frame_wait_calls
+                    ? (double) ppsspp_perf.frame_execute_us / (double) ppsspp_perf.frame_wait_calls / 1000.0
+                    : 0.0
+            );
+            fprintf(
+                f, "ppsspp_pickles_frame_execute_peak_ms,%.4f\n", (double) ppsspp_perf.frame_execute_peak_us / 1000.0
+            );
+            fprintf(
+                f, "ppsspp_pickles_frame_idle_mean_ms,%.4f\n",
+                ppsspp_perf.frame_wait_calls
+                    ? (double) ppsspp_perf.frame_idle_us / (double) ppsspp_perf.frame_wait_calls / 1000.0
+                    : 0.0
+            );
+            fprintf(f, "ppsspp_pickles_frame_idle_peak_ms,%.4f\n", (double) ppsspp_perf.frame_idle_peak_us / 1000.0);
+            fprintf(
+                f, "ppsspp_pickles_render_service_calls,%llu\n", (unsigned long long) ppsspp_perf.render_service_calls
+            );
+            fprintf(
+                f, "ppsspp_pickles_render_audio_drains,%llu\n", (unsigned long long) ppsspp_perf.render_audio_drains
+            );
+            fprintf(
+                f, "ppsspp_pickles_render_audio_frames,%llu\n", (unsigned long long) ppsspp_perf.render_audio_frames
+            );
+            fprintf(
+                f, "ppsspp_pickles_render_audio_ms,%.3f\n", (double) ppsspp_perf.render_audio_frames * 1000.0 / 44100.0
+            );
+            fprintf(
+                f, "ppsspp_pickles_render_audio_hit_percent,%.2f\n",
+                ppsspp_perf.render_service_calls
+                    ? (double) ppsspp_perf.render_audio_drains * 100.0 / (double) ppsspp_perf.render_service_calls
+                    : 0.0
+            );
+            fprintf(
+                f, "ppsspp_pickles_render_audio_mean_frames,%.2f\n",
+                ppsspp_perf.render_audio_drains
+                    ? (double) ppsspp_perf.render_audio_frames / (double) ppsspp_perf.render_audio_drains
+                    : 0.0
+            );
+        }
+        if (ppsspp_perf.version >= 3) {
+            fprintf(
+                f, "ppsspp_pickles_render_audio_deferred,%llu\n", (unsigned long long) ppsspp_perf.render_audio_deferred
+            );
+            fprintf(f, "ppsspp_pickles_gl_render_steps,%llu\n", (unsigned long long) ppsspp_perf.gl_render_steps);
+            fprintf(f, "ppsspp_pickles_gl_render_ms,%.3f\n", (double) ppsspp_perf.gl_render_us / 1000.0);
+            fprintf(
+                f, "ppsspp_pickles_gl_render_mean_step_ms,%.4f\n",
+                ppsspp_perf.gl_render_steps
+                    ? (double) ppsspp_perf.gl_render_us / (double) ppsspp_perf.gl_render_steps / 1000.0
+                    : 0.0
+            );
+            fprintf(f, "ppsspp_pickles_gl_copy_steps,%llu\n", (unsigned long long) ppsspp_perf.gl_copy_steps);
+            fprintf(f, "ppsspp_pickles_gl_copy_ms,%.3f\n", (double) ppsspp_perf.gl_copy_us / 1000.0);
+            fprintf(f, "ppsspp_pickles_gl_blit_steps,%llu\n", (unsigned long long) ppsspp_perf.gl_blit_steps);
+            fprintf(f, "ppsspp_pickles_gl_blit_ms,%.3f\n", (double) ppsspp_perf.gl_blit_us / 1000.0);
+            fprintf(
+                f, "ppsspp_pickles_gl_readback_steps,%llu\n",
+                (unsigned long long) (ppsspp_perf.gl_readback_steps + ppsspp_perf.gl_readback_image_steps)
+            );
+            fprintf(
+                f, "ppsspp_pickles_gl_readback_ms,%.3f\n",
+                (double) (ppsspp_perf.gl_readback_us + ppsspp_perf.gl_readback_image_us) / 1000.0
+            );
+            fprintf(f, "ppsspp_pickles_gl_render_commands,%llu\n", (unsigned long long) ppsspp_perf.gl_render_commands);
+            fprintf(f, "ppsspp_pickles_gl_draws,%llu\n", (unsigned long long) ppsspp_perf.gl_draw_commands);
+            fprintf(
+                f, "ppsspp_pickles_gl_draws_per_frame,%.2f\n",
+                ppsspp_perf.frame_wait_calls
+                    ? (double) ppsspp_perf.gl_draw_commands / (double) ppsspp_perf.frame_wait_calls
+                    : 0.0
+            );
+            fprintf(
+                f, "ppsspp_pickles_gl_texture_uploads,%llu\n",
+                (unsigned long long) ppsspp_perf.gl_texture_upload_commands
+            );
+            fprintf(
+                f, "ppsspp_pickles_gl_texture_uploads_per_frame,%.2f\n",
+                ppsspp_perf.frame_wait_calls
+                    ? (double) ppsspp_perf.gl_texture_upload_commands / (double) ppsspp_perf.frame_wait_calls
+                    : 0.0
+            );
+            fprintf(f, "ppsspp_pickles_gl_clears,%llu\n", (unsigned long long) ppsspp_perf.gl_clear_commands);
+            fprintf(
+                f, "ppsspp_pickles_gl_texture_binds,%llu\n", (unsigned long long) ppsspp_perf.gl_bind_texture_commands
+            );
+        }
+    }
+
+    static const char *const ppsspp_options[] = {
+        "ppsspp_cpu_core",
+        "ppsspp_fast_memory",
+        "ppsspp_io_timing_method",
+        "ppsspp_internal_resolution",
+        "ppsspp_pickles_output_upscaler",
+        "ppsspp_frameskip",
+        "ppsspp_frameskiptype",
+        "ppsspp_auto_frameskip",
+        "ppsspp_frame_duplication",
+        "ppsspp_detect_vsync_swap_interval",
+        "ppsspp_inflight_frames",
+        "ppsspp_skip_buffer_effects",
+        "ppsspp_skip_gpu_readbacks",
+        "ppsspp_lazy_texture_caching",
+        "ppsspp_spline_quality",
+        "ppsspp_gpu_hardware_transform",
+        "ppsspp_software_skinning",
+        "ppsspp_lower_resolution_for_effects",
+        "ppsspp_texture_scaling_level",
+        "ppsspp_texture_anisotropic_filtering",
+    };
+    for (size_t i = 0; i < sizeof(ppsspp_options) / sizeof(ppsspp_options[0]); i++) {
+        const char *value = options_get_value(ppsspp_options[i]);
+        if (value) fprintf(f, "%s,%s\n", ppsspp_options[i], value);
+    }
+    const char *pickles_upscaler = options_get_value("ppsspp_pickles_output_upscaler");
+    if (pickles_upscaler && strcmp(pickles_upscaler, "Sharp Bilinear") == 0)
+        fprintf(f, "ppsspp_pickles_effective_scene_resolution,480x272\n");
 
     const char *threaded_rendering = options_get_value("reicast_threaded_rendering");
     const char *auto_skip_frame = options_get_value("reicast_auto_skip_frame");

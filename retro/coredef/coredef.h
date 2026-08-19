@@ -30,5 +30,6 @@ const char *coredef_lookup(const char *core_name, const char *key);
     COREDEF(mednafen_pce_fast)                                                                                         \
     COREDEF(mednafen_supergrafx)                                                                                       \
     COREDEF(mupen64plus_next)                                                                                          \
+    COREDEF(ppsspp)                                                                                                    \
     COREDEF(sameboy)                                                                                                   \
     COREDEF(swanstation)

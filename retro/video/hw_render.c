@@ -85,7 +85,8 @@ static int context_ready = 0;
 
 static GLuint fbo[HW_TARGET_COUNT_MAX] = {0};
 static GLuint colour_tex[HW_TARGET_COUNT_MAX] = {0};
-static GLuint depth_stencil_rb = 0;
+static GLuint depth_stencil_rb[HW_TARGET_COUNT_MAX] = {0};
+static int allocated_target_count = 1;
 static int target_count = 1;
 static int render_index = 0;
 static int display_index = 0;
@@ -216,7 +217,6 @@ static int create_shared_context(const int profile, const int major, const int m
         return 0;
     }
 
-    /* SDL_GL_CreateContext leaves the new context current - the UI needs its own back */
     SDL_GL_MakeCurrent(gl_window, sdl_ctx);
     return 1;
 }
@@ -460,15 +460,18 @@ static void destroy_target(void) {
         }
     }
 
-    if (depth_stencil_rb) {
-        gl->DeleteRenderbuffers(1, &depth_stencil_rb);
-        depth_stencil_rb = 0;
+    for (int i = 0; i < HW_TARGET_COUNT_MAX; i++) {
+        if (depth_stencil_rb[i]) {
+            gl->DeleteRenderbuffers(1, &depth_stencil_rb[i]);
+            depth_stencil_rb[i] = 0;
+        }
     }
 
     render_index = 0;
     display_index = 0;
     target_queried = 0;
     handed_index = 0;
+    allocated_target_count = 1;
     target_count = 1;
     target_w = 0;
     target_h = 0;
@@ -486,9 +489,11 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     const size_t pixels = (size_t) max_width * (size_t) max_height;
     const size_t colour_target_bytes = pixels * 4u;
+    const size_t depth_target_bytes = want_depth ? pixels * (want_stencil ? 4u : 2u) : 0u;
+    const size_t target_bytes = colour_target_bytes + depth_target_bytes;
     target_count = 1;
-    if (colour_target_bytes > 0) {
-        const size_t affordable_extra = HW_BUFFER_MAX_EXTRA_BYTES / colour_target_bytes;
+    if (target_bytes > 0) {
+        const size_t affordable_extra = HW_BUFFER_MAX_EXTRA_BYTES / target_bytes;
         target_count += affordable_extra > HW_TARGET_COUNT_MAX - 1 ? HW_TARGET_COUNT_MAX - 1 : (int) affordable_extra;
     }
 
@@ -497,17 +502,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         const int requested = atoi(buffer_override);
         if (requested >= 1 && requested <= HW_TARGET_COUNT_MAX && requested < target_count) target_count = requested;
     }
-
-    if (want_depth) {
-        gl->GenRenderbuffers(1, &depth_stencil_rb);
-        gl->BindRenderbuffer(GL_RENDERBUFFER, depth_stencil_rb);
-        gl->RenderbufferStorage(
-            GL_RENDERBUFFER, want_stencil ? GL_DEPTH24_STENCIL8_OES : GL_DEPTH_COMPONENT16, (GLsizei) max_width,
-            (GLsizei) max_height
-        );
-    }
-
-    if (!es3_available) gl->GenFramebuffers(1, &fbo[0]);
+    allocated_target_count = target_count;
 
     GLint sample_buffers = 0;
     GLint samples = 0;
@@ -524,13 +519,21 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         gl->BindTexture(GL_TEXTURE_2D, 0);
 
-        if (es3_available) gl->GenFramebuffers(1, &fbo[i]);
-        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[es3_available ? i : 0]);
+        gl->GenFramebuffers(1, &fbo[i]);
+        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[i]);
         gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[i], 0);
         if (want_depth) {
-            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+            gl->GenRenderbuffers(1, &depth_stencil_rb[i]);
+            gl->BindRenderbuffer(GL_RENDERBUFFER, depth_stencil_rb[i]);
+            gl->RenderbufferStorage(
+                GL_RENDERBUFFER, want_stencil ? GL_DEPTH24_STENCIL8_OES : GL_DEPTH_COMPONENT16, (GLsizei) max_width,
+                (GLsizei) max_height
+            );
+            gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb[i]);
             if (want_stencil)
-                gl->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb);
+                gl->FramebufferRenderbuffer(
+                    GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_rb[i]
+                );
         }
 
         const GLenum status = gl->CheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -546,7 +549,12 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
                 }
                 gl->DeleteTextures(1, &colour_tex[i]);
                 colour_tex[i] = 0;
+                if (depth_stencil_rb[i]) {
+                    gl->DeleteRenderbuffers(1, &depth_stencil_rb[i]);
+                    depth_stencil_rb[i] = 0;
+                }
                 target_count = i;
+                allocated_target_count = i;
                 break;
             }
 
@@ -571,11 +579,6 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
         );
     }
 
-    if (!es3_available) {
-        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
-        gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[0], 0);
-    }
-
     gl->BindFramebuffer(GL_FRAMEBUFFER, 0);
 
     target_w = (int) max_width;
@@ -585,14 +588,13 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     ensure_program();
 
-    const size_t depth_bytes = want_depth ? pixels * (want_stencil ? 4u : 2u) : 0u;
-    const size_t target_bytes = colour_target_bytes * (size_t) target_count + depth_bytes;
+    const size_t total_target_bytes = target_bytes * (size_t) target_count;
     LOG_INFO(
         mux_module,
         "hw_render: target %ux%u (buffers=%d depth=%d stencil=%d filter=%s sample_buffers=%d samples=%d, %.1f MiB)",
         max_width, max_height, target_count, want_depth, want_stencil,
         target_filter_param() == GL_LINEAR ? "linear" : "nearest", sample_buffers, samples,
-        (double) target_bytes / (1024.0 * 1024.0)
+        (double) total_target_bytes / (1024.0 * 1024.0)
     );
 
     // Tell the core to rebuild against the new framebuffer, not just the first time we make one!
@@ -620,7 +622,7 @@ void hw_render_bridge_apply_filter(void) {
     GLint previous = 0;
     gl->GetIntegerv(GL_TEXTURE_BINDING_2D, &previous);
     const GLint filter = target_filter_param();
-    for (int i = 0; i < target_count; i++) {
+    for (int i = 0; i < allocated_target_count; i++) {
         if (!colour_tex[i]) continue;
         gl->BindTexture(GL_TEXTURE_2D, colour_tex[i]);
         gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
@@ -634,13 +636,9 @@ void hw_render_bridge_apply_filter(void) {
 }
 
 uintptr_t hw_render_bridge_get_current_framebuffer(void) {
-    if (es3_available) {
-        target_queried = 1;
-        handed_index = render_index;
-        return fbo[render_index];
-    }
-
-    return fbo[0];
+    target_queried = 1;
+    handed_index = render_index;
+    return fbo[render_index];
 }
 
 retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
@@ -652,42 +650,15 @@ retro_proc_address_t hw_render_bridge_get_proc_address(const char *sym) {
 void hw_render_bridge_notify_frame(const unsigned width, const unsigned height) {
     if (width == 0 || height == 0) return;
 
-    if (es3_available) {
-        if (target_count > 1 && !target_queried) {
-            LOG_WARN(mux_module, "hw_render: core cached its GLES3 framebuffer; pinning to one render target");
-            target_count = 1;
-            render_index = handed_index;
-        }
-
-        display_index = render_index;
-        if (target_count > 1) render_index = (render_index + 1) % target_count;
-        target_queried = 0;
-        frame_valid_w = width;
-        frame_valid_h = height;
-        return;
+    if (target_count > 1 && !target_queried) {
+        LOG_WARN(mux_module, "hw_render: core cached its framebuffer; pinning to one render target");
+        target_count = 1;
+        render_index = handed_index;
     }
 
     display_index = render_index;
-    if (target_count > 1) {
-        const uint64_t rotate_start = perf_begin();
-        GLint previous_fbo = 0;
-        GLint previous_read_fbo = 0;
-        gl->GetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
-        if (es3_available) gl->GetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previous_read_fbo);
-
-        render_index = (render_index + 1) % target_count;
-        gl->BindFramebuffer(GL_FRAMEBUFFER, fbo[0]);
-        gl->FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colour_tex[render_index], 0);
-
-        if (es3_available && previous_read_fbo != previous_fbo) {
-            gl->BindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint) previous_fbo);
-            gl->BindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) previous_read_fbo);
-        } else {
-            gl->BindFramebuffer(GL_FRAMEBUFFER, (GLuint) previous_fbo);
-        }
-        perf_end(perf_stage_gl_rotate, rotate_start);
-    }
-
+    if (target_count > 1) render_index = (render_index + 1) % target_count;
+    target_queried = 0;
     frame_valid_w = width;
     frame_valid_h = height;
 }
@@ -1157,6 +1128,15 @@ void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, co
     );
 }
 
+void hw_render_bridge_prepare_core_unload(void) {
+    if (active && context_ready && core_context_destroy) {
+        hw_render_bridge_enter_core_call();
+        core_context_destroy();
+        hw_render_bridge_exit_core_call();
+        core_context_destroy = NULL;
+    }
+}
+
 void hw_render_bridge_shutdown(void) {
     if (!gl) {
         destroy_shared_context();
@@ -1165,11 +1145,7 @@ void hw_render_bridge_shutdown(void) {
         return;
     }
 
-    if (active && context_ready && core_context_destroy) {
-        hw_render_bridge_enter_core_call();
-        core_context_destroy();
-        hw_render_bridge_exit_core_call();
-    }
+    hw_render_bridge_prepare_core_unload();
 
     if (active) enter_core_gl();
 

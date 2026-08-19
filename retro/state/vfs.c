@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include "../../common/fileio.h"
 #include "../../common/init.h"
-#include "../../common/libarchive/archive.h"
-#include "../../common/libarchive/archive_entry.h"
+#include <libarchive/archive.h>
+#include <libarchive/archive_entry.h>
 #include "../../common/log.h"
 #include "../../common/miniz/miniz.h"
 #include "../core/paths.h"

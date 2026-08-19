@@ -95,7 +95,7 @@
 #endif
 
 #if USE_SDL || USE_SDL_GPU
-/* The following resolution defines are not required as muOS uses external
+/* The following resolution defines are not required as MustardOS uses external
  * device configurations to set the specific screen sizes for SDL2
 #  define SDL_HOR_RES     0
 #  define SDL_VER_RES     0

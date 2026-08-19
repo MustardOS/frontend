@@ -21,6 +21,7 @@
 #include "../core/muxretro.h"
 #include "../coreinfo/coreinfo.h"
 #include "../input/core_input_meta.h"
+#include "../input/deck.h"
 #include "../input/rumble.h"
 #include "../macro/macro.h"
 #include "../ui/options.h"
@@ -100,6 +101,8 @@ static const struct session_settings_t defaults = {
     .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
     .port_device_key = {"builtin", "", "", ""},
     .port_device_id = {0, 0, 0, 0},
+    .port_role = {port_role_player, port_role_player, port_role_player, port_role_player},
+    .port_deck = {-1, -1, -1, -1},
 };
 
 // Physical control per source index
@@ -839,6 +842,31 @@ static int apply_input_settings_to(mini_t *ini, struct session_settings_t *setti
             }
         }
 
+        int role_stated = 0;
+        snprintf(key, sizeof(key), "port%d_role", i);
+        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+            value = mini_get_int(ini, "settings", key, LLONG_MIN);
+            if (value >= port_role_player && value <= port_role_ketchup) {
+                settings->port_role[i] = (int) value;
+                role_stated = 1;
+                applied++;
+            }
+        }
+
+        snprintf(key, sizeof(key), "port%d_deck", i);
+        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
+            value = mini_get_int(ini, "settings", key, LLONG_MIN);
+            if (value >= -1 && value < DECK_MAX) {
+                settings->port_deck[i] = (int) value;
+                applied++;
+            }
+        }
+
+        if (!role_stated && settings->port_deck[i] >= 0) {
+            settings->port_role[i] = port_role_ketchup;
+            applied++;
+        }
+
         snprintf(key, sizeof(key), "port%d_stick_forced", i);
         if (mini_value_exists(ini, "settings", key) == MINI_OK) {
             value = mini_get_int(ini, "settings", key, LLONG_MIN);
@@ -1062,6 +1090,8 @@ int session_settings_user_profile_apply(const int index) {
         memcpy(next.port_assignment, profile->values.port_assignment, sizeof(next.port_assignment));
         memcpy(next.port_device_key, profile->values.port_device_key, sizeof(next.port_device_key));
         memcpy(next.port_device_id, profile->values.port_device_id, sizeof(next.port_device_id));
+        memcpy(next.port_role, profile->values.port_role, sizeof(next.port_role));
+        memcpy(next.port_deck, profile->values.port_deck, sizeof(next.port_deck));
         memcpy(next.port_stick_forced, profile->values.port_stick_forced, sizeof(next.port_stick_forced));
         memcpy(next.port_source_target, profile->values.port_source_target, sizeof(next.port_source_target));
         memcpy(next.port_source_turbo, profile->values.port_source_turbo, sizeof(next.port_source_turbo));
@@ -1141,21 +1171,17 @@ static int user_profile_write(FILE *file, const char *name, const enum user_prof
         if (fprintf(file, "port%d_assignment=%d\n", port, session_settings.port_assignment[port]) < 0
             || fprintf(file, "port%d_device_key=%s\n", port, session_settings.port_device_key[port]) < 0
             || fprintf(file, "port%d_device_id=%d\n", port, session_settings.port_device_id[port]) < 0
+            || fprintf(file, "port%d_role=%d\n", port, session_settings.port_role[port]) < 0
+            || fprintf(file, "port%d_deck=%d\n", port, session_settings.port_deck[port]) < 0
             || fprintf(file, "port%d_stick_forced=%d\n", port, session_settings.port_stick_forced[port]) < 0)
             return 0;
 
         for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
-            if (fprintf(
-                    file, "port%d_src_%d=%d\n", port, source, session_settings.port_source_target[port][source]
-                ) < 0
-                || fprintf(
-                       file, "port%d_srcms_%d=%d\n", port, source,
-                       session_settings.port_source_turbo[port][source]
-                   ) < 0
-                || fprintf(
-                       file, "port%d_macro_%d=%d\n", port, source,
-                       session_settings.port_source_macro[port][source]
-                   ) < 0)
+            if (fprintf(file, "port%d_src_%d=%d\n", port, source, session_settings.port_source_target[port][source]) < 0
+                || fprintf(file, "port%d_srcms_%d=%d\n", port, source, session_settings.port_source_turbo[port][source])
+                       < 0
+                || fprintf(file, "port%d_macro_%d=%d\n", port, source, session_settings.port_source_macro[port][source])
+                       < 0)
                 return 0;
         }
     }
@@ -1163,8 +1189,7 @@ static int user_profile_write(FILE *file, const char *name, const enum user_prof
     if (options_count > 0 && fputs("\n[options]\n", file) < 0) return 0;
     for (int option = 0; option < options_count; option++) {
         const struct core_option_entry *entry = &options_list[option];
-        if (entry->value_count <= 0 || entry->current_index < 0 || entry->current_index >= entry->value_count)
-            continue;
+        if (entry->value_count <= 0 || entry->current_index < 0 || entry->current_index >= entry->value_count) continue;
         if (fprintf(file, "%s=%s\n", entry->key, entry->values[entry->current_index]) < 0) return 0;
     }
 
@@ -1342,6 +1367,16 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
         if (session_settings.port_device_id[i] != base->port_device_id[i]) {
             snprintf(key, sizeof(key), "port%d_device_id", i);
             mini_set_int(ini, "settings", key, session_settings.port_device_id[i]);
+        }
+
+        if (session_settings.port_role[i] != base->port_role[i]) {
+            snprintf(key, sizeof(key), "port%d_role", i);
+            mini_set_int(ini, "settings", key, session_settings.port_role[i]);
+        }
+
+        if (session_settings.port_deck[i] != base->port_deck[i]) {
+            snprintf(key, sizeof(key), "port%d_deck", i);
+            mini_set_int(ini, "settings", key, session_settings.port_deck[i]);
         }
 
         if (session_settings.port_stick_forced[i] != base->port_stick_forced[i]) {
@@ -1995,6 +2030,8 @@ static int port_claimed_elsewhere(const char *stable_key, const int for_port) {
     return 0;
 }
 
+#define PORT_CHOICE_KETCHUP (-1)
+
 static int port_choice_count(int *modes, char keys[][64], const int max_choices, const int for_port) {
     int count = 0;
 
@@ -2002,13 +2039,20 @@ static int port_choice_count(int *modes, char keys[][64], const int max_choices,
     keys[count][0] = '\0';
     count++;
 
-    for (int s = 0; s < mux_input_source_count() && count < max_choices - 1; s++) {
+    for (int s = 0; s < mux_input_source_count() && count < max_choices - 2; s++) {
         mux_input_source_info info;
         if (!mux_input_source_get(s, &info) || !info.connected) continue;
         if (port_claimed_elsewhere(info.stable_key, for_port)) continue;
 
         modes[count] = port_assignment_remembered;
         snprintf(keys[count], 64, "%s", info.stable_key);
+        count++;
+    }
+
+    // Port one is the primary player and can never be handed over to another controller!
+    if (for_port > 0) {
+        modes[count] = PORT_CHOICE_KETCHUP;
+        keys[count][0] = '\0';
         count++;
     }
 
@@ -2022,12 +2066,22 @@ static int port_choice_count(int *modes, char keys[][64], const int max_choices,
 void session_settings_cycle_port_controller(const int port, const int direction) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT) return;
 
-    int modes[2 + MUX_INPUT_PORT_COUNT];
-    char keys[2 + MUX_INPUT_PORT_COUNT][64];
-    const int count = port_choice_count(modes, keys, 2 + MUX_INPUT_PORT_COUNT, port);
+    int modes[3 + MUX_INPUT_PORT_COUNT];
+    char keys[3 + MUX_INPUT_PORT_COUNT][64];
+    const int count = port_choice_count(modes, keys, 3 + MUX_INPUT_PORT_COUNT, port);
 
     int current = 0;
+    const int is_deck = session_settings_port_is_deck(port);
+
     for (int i = 0; i < count; i++) {
+        if (is_deck) {
+            if (modes[i] == PORT_CHOICE_KETCHUP) {
+                current = i;
+                break;
+            }
+            continue;
+        }
+
         if (modes[i] != session_settings.port_assignment[port]) continue;
         if (modes[i] != port_assignment_remembered || strcmp(keys[i], session_settings.port_device_key[port]) == 0) {
             current = i;
@@ -2039,6 +2093,13 @@ void session_settings_cycle_port_controller(const int port, const int direction)
     if (next < 0) next = count - 1;
     if (next >= count) next = 0;
 
+    // Becoming a deck keeps whichever controller the port had already been given
+    if (modes[next] == PORT_CHOICE_KETCHUP) {
+        session_settings_set_port_role(port, port_role_ketchup);
+        return;
+    }
+
+    session_settings_set_port_role(port, port_role_player);
     session_settings.port_assignment[port] = modes[next];
     snprintf(session_settings.port_device_key[port], sizeof(session_settings.port_device_key[port]), "%s", keys[next]);
 }
@@ -2046,6 +2107,18 @@ void session_settings_cycle_port_controller(const int port, const int direction)
 void session_settings_port_summary(const int port, char *buf, const size_t len) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT) {
         if (len) buf[0] = '\0';
+        return;
+    }
+
+    if (session_settings_port_is_deck(port)) {
+        const int source = session_settings_resolve_port_source(port);
+        const char *device = lang.generic.not_connected;
+        mux_input_source_info info;
+
+        if (source >= 0 && mux_input_source_get(source, &info))
+            device = info.is_builtin ? lang.muxretro.settings_screen.built_in_controls : info.name;
+
+        snprintf(buf, len, "%s (%s)", device, lang.muxretro.settings_screen.port_role_ketchup_short);
         return;
     }
 
@@ -2143,6 +2216,238 @@ void session_settings_port_device_summary(const int port, char *buf, const size_
     snprintf(buf, len, "#%d", id);
 }
 
+static const char *port_label(const int port) {
+    switch (port) {
+        case 0:
+            return lang.muxretro.settings_screen.port_1;
+        case 1:
+            return lang.muxretro.settings_screen.port_2;
+        case 2:
+            return lang.muxretro.settings_screen.port_3;
+        default:
+            return lang.muxretro.settings_screen.port_4;
+    }
+}
+
+int session_settings_default_source_target(const int source) {
+    if (source < 0 || source >= PORT_SOURCE_COUNT) return -1;
+    return default_source_target[source];
+}
+
+int session_settings_port_is_deck(const int port) {
+    if (port <= 0 || port >= MUX_INPUT_PORT_COUNT) return 0;
+    return session_settings.port_role[port] == port_role_ketchup;
+}
+
+int session_settings_port_deck_position(const int port) {
+    if (!session_settings_port_is_deck(port)) return -1;
+    if (session_settings.port_deck[port] < 0) return -1;
+
+    return decks_position_from_index(session_settings.port_deck[port]);
+}
+
+int session_settings_port_ketchup_route(const int port) {
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) return -1;
+
+    const int route = deck_list[position].route;
+    if (route < 0 || route >= MUX_INPUT_PORT_COUNT || route == port) return -1;
+    if (session_settings_port_is_deck(route)) return -1;
+
+    return route;
+}
+
+int session_settings_port_deck_priority(const int port) {
+    const int position = session_settings_port_deck_position(port);
+    return position < 0 ? 0 : deck_list[position].priority;
+}
+
+static int deck_worn_elsewhere(const int deck_index, const int for_port) {
+    for (int port = 1; port < MUX_INPUT_PORT_COUNT; port++) {
+        if (port == for_port) continue;
+        if (session_settings_port_deck_position(port) < 0) continue;
+        if (session_settings.port_deck[port] == deck_index) return 1;
+    }
+
+    return 0;
+}
+
+void session_settings_set_port_role(const int port, const int role) {
+    if (port <= 0 || port >= MUX_INPUT_PORT_COUNT) return;
+
+    if (role != port_role_ketchup) {
+        session_settings.port_role[port] = port_role_player;
+        session_settings.port_deck[port] = -1;
+        return;
+    }
+
+    session_settings.port_role[port] = port_role_ketchup;
+
+    if (session_settings.port_assignment[port] == port_assignment_none) {
+        session_settings.port_assignment[port] = port_assignment_auto;
+        session_settings.port_device_key[port][0] = '\0';
+    }
+
+    for (int other = 1; other < MUX_INPUT_PORT_COUNT; other++) {
+        if (other == port) continue;
+
+        const int other_position = session_settings_port_deck_position(other);
+        if (other_position >= 0 && deck_list[other_position].route == port)
+            session_settings_set_port_role(other, port_role_player);
+    }
+
+    if (session_settings_port_deck_position(port) >= 0) return;
+
+    for (int i = 0; i < deck_count; i++) {
+        if (deck_worn_elsewhere(deck_list[i].index, port)) continue;
+
+        session_settings.port_deck[port] = deck_list[i].index;
+        return;
+    }
+}
+
+static void deck_touched(const int port) {
+    decks_mark_dirty(session_settings_port_deck_position(port));
+}
+
+static void deck_sync_macro(const int port, const int source) {
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) return;
+
+    decks_set_macro_name(position, source, session_settings_source_macro(port)[source]);
+}
+
+int *session_settings_source_target(const int port) {
+    const int position = session_settings_port_deck_position(port);
+    return position < 0 ? session_settings.port_source_target[port] : deck_list[position].source_target;
+}
+
+int *session_settings_source_turbo(const int port) {
+    const int position = session_settings_port_deck_position(port);
+    return position < 0 ? session_settings.port_source_turbo[port] : deck_list[position].source_turbo;
+}
+
+int *session_settings_source_macro(const int port) {
+    const int position = session_settings_port_deck_position(port);
+    return position < 0 ? session_settings.port_source_macro[port] : deck_list[position].source_macro;
+}
+
+void session_settings_set_port_deck(const int port, const int deck_index) {
+    if (port <= 0 || port >= MUX_INPUT_PORT_COUNT) return;
+
+    session_settings.port_deck[port] = deck_index;
+    if (deck_index < 0) return;
+
+    for (int other = 1; other < MUX_INPUT_PORT_COUNT; other++) {
+        if (other == port) continue;
+
+        if (session_settings.port_deck[other] == deck_index) {
+            session_settings.port_deck[other] = -1;
+            continue;
+        }
+
+        const int other_position = session_settings_port_deck_position(other);
+        if (other_position >= 0 && deck_list[other_position].route == port) session_settings.port_deck[other] = -1;
+    }
+}
+
+void session_settings_cycle_port_deck(const int port, const int direction) {
+    if (!session_settings_port_is_deck(port) || deck_count <= 0) return;
+
+    const int current = session_settings_port_deck_position(port);
+    const int choice_count = deck_count + 1;
+
+    int choice = (current < 0 ? 0 : current + 1) + (direction > 0 ? 1 : -1);
+    if (choice < 0) choice = choice_count - 1;
+    if (choice >= choice_count) choice = 0;
+
+    session_settings_set_port_deck(port, choice == 0 ? -1 : deck_list[choice - 1].index);
+}
+
+void session_settings_clear_deck_references(const int deck_index) {
+    if (deck_index < 0) return;
+
+    for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++) {
+        if (session_settings.port_deck[port] == deck_index) session_settings.port_deck[port] = -1;
+    }
+}
+
+void session_settings_port_deck_summary(const int port, char *buf, const size_t len) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT) {
+        if (len) buf[0] = '\0';
+        return;
+    }
+
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) {
+        snprintf(buf, len, "%s", lang.muxretro.settings_screen.port_none);
+        return;
+    }
+
+    snprintf(buf, len, "%s", deck_list[position].name);
+}
+
+void session_settings_cycle_port_deck_route(const int port, const int direction) {
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) return;
+
+    int routes[MUX_INPUT_PORT_COUNT];
+    int count = 0;
+
+    for (int target = 0; target < MUX_INPUT_PORT_COUNT; target++) {
+        if (target == port) continue;
+        if (session_settings_port_is_deck(target)) continue;
+        routes[count++] = target;
+    }
+
+    if (count <= 0) return;
+
+    int current = 0;
+    for (int i = 0; i < count; i++) {
+        if (routes[i] == deck_list[position].route) {
+            current = i;
+            break;
+        }
+    }
+
+    int next = current + (direction > 0 ? 1 : -1);
+    if (next < 0) next = count - 1;
+    if (next >= count) next = 0;
+
+    deck_list[position].route = routes[next];
+    decks_mark_dirty(position);
+}
+
+void session_settings_port_deck_route_summary(const int port, char *buf, const size_t len) {
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) {
+        snprintf(buf, len, "%s", lang.muxretro.settings_screen.port_none);
+        return;
+    }
+
+    snprintf(buf, len, "%s", port_label(deck_list[position].route));
+}
+
+void session_settings_cycle_port_deck_priority(const int port, const int direction) {
+    (void) direction;
+
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) return;
+
+    deck_list[position].priority = !deck_list[position].priority;
+    decks_mark_dirty(position);
+}
+
+void session_settings_port_deck_priority_summary(const int port, char *buf, const size_t len) {
+    const int position = session_settings_port_deck_position(port);
+    if (position < 0) {
+        snprintf(buf, len, "%s", lang.muxretro.settings_screen.port_none);
+        return;
+    }
+
+    snprintf(buf, len, "%s", deck_list[position].priority ? lang.generic.enabled : lang.generic.disabled);
+}
+
 void session_settings_resolve_port_sources(int *resolved) {
     if (!resolved) return;
 
@@ -2164,8 +2469,7 @@ void session_settings_resolve_port_sources(int *resolved) {
         }
     }
 
-    // port one keeps the built-in controls unless another port was told to use them!
-    if (!claimed[0] && resolved[0] < 0) {
+    if (!claimed[0] && resolved[0] < 0 && session_settings.port_assignment[0] != port_assignment_none) {
         mux_input_source_info builtin;
         if (mux_input_source_get(0, &builtin) && builtin.connected) {
             resolved[0] = 0;
@@ -2318,14 +2622,14 @@ void session_settings_source_value(const int port, const int source, char *buf, 
         return;
     }
 
-    const int macro_index = session_settings.port_source_macro[port][source];
+    const int macro_index = session_settings_source_macro(port)[source];
     if (macro_index >= 0) {
         snprintf(buf, len, "%s: %s", lang.muxretro.settings_screen.macro_label, macros_get_name_by_index(macro_index));
         return;
     }
 
-    const int target = session_settings.port_source_target[port][source];
-    const int rate = session_settings.port_source_turbo[port][source];
+    const int target = session_settings_source_target(port)[source];
+    const int rate = session_settings_source_turbo(port)[source];
 
     if (target >= 0 && rate > 0) {
         snprintf(buf, len, "%s (%s)", session_settings_target_label(target), session_settings_turbo_rate_name(rate));
@@ -2356,9 +2660,11 @@ int session_settings_source_for_input(const int pressed_type) {
 
 void session_settings_unbind_source(const int port, const int source) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
-    session_settings.port_source_target[port][source] = -1;
-    session_settings.port_source_turbo[port][source] = 0;
-    session_settings.port_source_macro[port][source] = -1;
+    session_settings_source_target(port)[source] = -1;
+    session_settings_source_turbo(port)[source] = 0;
+    session_settings_source_macro(port)[source] = -1;
+    deck_sync_macro(port, source);
+    deck_touched(port);
 }
 
 int session_settings_set_source_target(const int port, const int source, const int target) {
@@ -2370,8 +2676,11 @@ int session_settings_set_source_target(const int port, const int source, const i
         return 1;
     }
 
-    session_settings.port_source_target[port][source] = target;
-    session_settings.port_source_macro[port][source] = -1;
+    session_settings_source_target(port)[source] = target;
+    session_settings_source_macro(port)[source] = -1;
+    deck_sync_macro(port, source);
+    deck_touched(port);
+
     return 1;
 }
 
@@ -2382,14 +2691,14 @@ enum { stick_dpad_off = 0, stick_dpad_left, stick_dpad_right, stick_dpad_left_fo
 
 static int stick_dpad_bound(const int port, const int stick) {
     for (int i = 0; i < 4; i++)
-        if (session_settings.port_source_target[port][stick_dpad_source[stick][i]] != stick_dpad_target[i]) return 0;
+        if (session_settings_source_target(port)[stick_dpad_source[stick][i]] != stick_dpad_target[i]) return 0;
 
     return 1;
 }
 
 static void stick_dpad_clear(const int port, const int stick) {
     for (int i = 0; i < 4; i++)
-        if (session_settings.port_source_target[port][stick_dpad_source[stick][i]] == stick_dpad_target[i])
+        if (session_settings_source_target(port)[stick_dpad_source[stick][i]] == stick_dpad_target[i])
             session_settings_unbind_source(port, stick_dpad_source[stick][i]);
 }
 
@@ -2468,7 +2777,7 @@ static const int turbo_ms_table[] = {48, 96, 192, 384, 768, 1536, 3072, 6144};
 void session_settings_cycle_source_turbo(const int port, const int source, const int direction) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
 
-    const int current = session_settings.port_source_turbo[port][source];
+    const int current = session_settings_source_turbo(port)[source];
 
     int idx = -1;
     for (int i = 0; i < TURBO_MS_TABLE_COUNT; i++) {
@@ -2482,14 +2791,17 @@ void session_settings_cycle_source_turbo(const int port, const int source, const
     if (idx < -1) idx = TURBO_MS_TABLE_COUNT - 1;
     if (idx >= TURBO_MS_TABLE_COUNT) idx = -1;
 
-    session_settings.port_source_turbo[port][source] = idx < 0 ? 0 : turbo_ms_table[idx];
+    session_settings_source_turbo(port)[source] = idx < 0 ? 0 : turbo_ms_table[idx];
+    deck_touched(port);
 }
 
 void session_settings_reset_source(const int port, const int source) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
-    session_settings.port_source_target[port][source] = default_source_target[source];
-    session_settings.port_source_turbo[port][source] = 0;
-    session_settings.port_source_macro[port][source] = -1;
+    session_settings_source_target(port)[source] = default_source_target[source];
+    session_settings_source_turbo(port)[source] = 0;
+    session_settings_source_macro(port)[source] = -1;
+    deck_sync_macro(port, source);
+    deck_touched(port);
 }
 
 void session_settings_assign_source_macro(const int port, const int source, const int macro_index) {
@@ -2497,14 +2809,16 @@ void session_settings_assign_source_macro(const int port, const int source, cons
 
     if (macro_index >= 0) {
         for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-            if (s != source && session_settings.port_source_macro[port][s] == macro_index)
+            if (s != source && session_settings_source_macro(port)[s] == macro_index)
                 session_settings_reset_source(port, s);
         }
     }
 
-    session_settings.port_source_macro[port][source] = macro_index;
-    session_settings.port_source_target[port][source] = -1;
-    session_settings.port_source_turbo[port][source] = 0;
+    session_settings_source_macro(port)[source] = macro_index;
+    session_settings_source_target(port)[source] = -1;
+    session_settings_source_turbo(port)[source] = 0;
+    deck_sync_macro(port, source);
+    deck_touched(port);
 }
 
 void session_settings_clear_macro_references(const int macro_index) {
@@ -2515,14 +2829,19 @@ void session_settings_clear_macro_references(const int macro_index) {
             if (session_settings.port_source_macro[i][s] == macro_index) session_settings.port_source_macro[i][s] = -1;
         }
     }
+
+    decks_clear_macro_references(macro_index);
 }
 
 static void reset_button_map(const int port) {
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-        session_settings.port_source_target[port][s] = default_source_target[s];
-        session_settings.port_source_turbo[port][s] = 0;
-        session_settings.port_source_macro[port][s] = -1;
+        session_settings_source_target(port)[s] = default_source_target[s];
+        session_settings_source_turbo(port)[s] = 0;
+        session_settings_source_macro(port)[s] = -1;
+        deck_sync_macro(port, s);
     }
+
+    deck_touched(port);
 }
 
 const char *session_settings_turbo_rate_name(const int rate) {
@@ -2551,6 +2870,8 @@ void session_settings_reset_input_port(const int port) {
     }
 
     session_settings.port_device_id[port] = (int) core_input_meta_preferred_device(port);
+    session_settings.port_role[port] = port_role_player;
+    session_settings.port_deck[port] = -1;
     reset_button_map(port);
 }
 
@@ -2637,6 +2958,42 @@ void session_settings_save_core(void) {
     const struct session_settings_t base = tier_base(0, 0);
     write_ini_delta(core_ini_path, &base);
     baseline_settings = session_settings;
+}
+
+static int delete_saved_settings_file(const char *path) {
+    if (!path || !*path) return 1;
+    if (unlink(path) == 0 || errno == ENOENT) return 1;
+
+    LOG_ERROR(mux_module, "Could not delete saved settings '%s': %s", path, strerror(errno));
+    return 0;
+}
+
+static int delete_settings_sidecar(const char *path, const char *suffix) {
+    if (!path || !*path || !suffix) return 1;
+
+    char sidecar[MAX_BUFFER_SIZE];
+    if (!str_format_checked(sidecar, sizeof(sidecar), "%s%s", path, suffix)) {
+        LOG_ERROR(mux_module, "Settings reset sidecar path is too long");
+        return 0;
+    }
+    return delete_saved_settings_file(sidecar);
+}
+
+int session_settings_delete_saved_overrides(void) {
+    int ok = 1;
+
+    if (!delete_saved_settings_file(content_ini_path)) ok = 0;
+    if (!delete_saved_settings_file(directory_ini_path)) ok = 0;
+    if (!delete_saved_settings_file(core_ini_path)) ok = 0;
+
+    // Prevent launch recovery from restoring the settings that were just reset...
+    if (!delete_settings_sidecar(content_ini_path, ".launching")) ok = 0;
+    if (!delete_settings_sidecar(content_ini_path, ".known_good")) ok = 0;
+
+    launch_marker_path[0] = '\0';
+    last_good_path[0] = '\0';
+
+    return ok;
 }
 
 void session_settings_save_directory(void) {

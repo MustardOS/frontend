@@ -5,6 +5,7 @@
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "../core/muxretro.h"
+#include "../core/perf.h"
 #include "../netplay/netplay.h"
 #include "../settings/settings.h"
 
@@ -25,11 +26,14 @@
 #define AUDIO_FADE_IN_MS            8
 #define AUDIO_UNDERRUN_RAMP_MS      1
 #define AUDIO_RESUME_PREFILL_MIN_MS 20
-#define AUDIO_RESUME_PREFILL_MAX_MS 64
+#define AUDIO_RESUME_PREFILL_MAX_MS 256
 
 #define DRC_INTEGRAL_DIVISOR 500.0
 #define DRC_FILL_SMOOTHING   0.05
 #define DRC_OUT_FRAMES       1024
+
+#define PICKLES_BURST_RECOVERY_MIN 0.015
+#define PICKLES_BURST_RECOVERY_MAX 0.020
 
 #define HEADROOM_MAX_WAIT_MS 4
 #define HEADROOM_SMOOTHING   0.25
@@ -97,6 +101,9 @@ static int16_t audio_ring[AUDIO_RING_FRAMES * 2];
 static _Atomic uint32_t ring_write_index = 0;
 static _Atomic uint32_t ring_read_index = 0;
 static _Atomic uint32_t underrun_count = 0;
+static _Atomic uint32_t underrun_event_count = 0;
+static _Atomic uint64_t underrun_missing_frames = 0;
+static _Atomic int underrun_active = 0;
 static uint64_t dropped_frames = 0;
 static uint64_t latency_recovery_frames = 0;
 static uint64_t latency_recovery_count = 0;
@@ -113,6 +120,9 @@ static double drc_fill_avg = -1.0;
 static double headroom_queued_avg = -1.0;
 static double drc_ratio = 1.0;
 static double drc_limit = 0.0;
+static int pickles_burst_recovery_active = 0;
+static uint64_t pickles_burst_recovery_count = 0;
+static double pickles_burst_recovery_peak = 0.0;
 static double drc_phase = 0.0;
 static int16_t drc_prev_l = 0;
 static int16_t drc_prev_r = 0;
@@ -128,6 +138,7 @@ static const double latency_profile_periods[audio_latency_count][2] = {
 static uint32_t pending_min_latency_ms = 0;
 static int min_latency_pending = 0;
 static uint32_t active_min_latency_ms = 0;
+static uint32_t frontend_latency_floor_ms = 0;
 
 static retro_audio_buffer_status_callback_t buffer_status_cb = NULL;
 static uint32_t last_queued_ms_sample = 0;
@@ -227,7 +238,7 @@ static size_t ring_write_frames(const int16_t *src, const size_t frames) {
     const uint32_t free_frames = AUDIO_RING_FRAMES - occupied;
 
     const size_t to_write = frames > free_frames ? free_frames : frames;
-    const uint32_t start = write_idx & AUDIO_RING_FRAMES - 1;
+    const uint32_t start = write_idx & (AUDIO_RING_FRAMES - 1);
     const size_t first = to_write < AUDIO_RING_FRAMES - start ? to_write : AUDIO_RING_FRAMES - start;
     const size_t second = to_write - first;
 
@@ -258,7 +269,7 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     uint32_t fade_remaining = fade_started;
 
     if (fade_remaining == 0 || fade_total == 0) {
-        const uint32_t start = read_idx & AUDIO_RING_FRAMES - 1;
+        const uint32_t start = read_idx & (AUDIO_RING_FRAMES - 1);
         const uint32_t first = to_read < AUDIO_RING_FRAMES - start ? to_read : AUDIO_RING_FRAMES - start;
         const uint32_t second = to_read - first;
 
@@ -266,7 +277,7 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
         if (second > 0) memcpy(out + (size_t) first * 2, audio_ring, (size_t) second * 2 * sizeof(int16_t));
     } else {
         for (uint32_t i = 0; i < to_read; i++) {
-            const uint32_t pos = read_idx + i & AUDIO_RING_FRAMES - 1;
+            const uint32_t pos = (read_idx + i) & (AUDIO_RING_FRAMES - 1);
             int16_t l = audio_ring[pos * 2 + 0];
             int16_t r = audio_ring[pos * 2 + 1];
 
@@ -306,7 +317,14 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
 
         fade_in_total = fade_in_frames;
         fade_in_remaining = fade_in_frames;
+        if (!underrun_active) {
+            underrun_active = 1;
+            underrun_event_count++;
+        }
+        underrun_missing_frames += missing;
         underrun_count++;
+    } else {
+        underrun_active = 0;
     }
 
     ring_read_index = read_idx + to_read;
@@ -415,7 +433,9 @@ void audio_bridge_flush_sample_fifo(void) {
 
     if (audio_dev && !audio_muted) {
         submit_audio_frames(sample_fifo, sample_fifo_count);
+        const uint64_t wait_start = perf_begin();
         audio_bridge_wait_after_write();
+        perf_end(perf_stage_audio_backpressure, wait_start);
 
         single_sample_flushes++;
         if (sample_fifo_count > single_sample_max_batch) single_sample_max_batch = sample_fifo_count;
@@ -480,6 +500,9 @@ int audio_bridge_open(const double core_sample_rate) {
     ring_write_index = 0;
     ring_read_index = 0;
     underrun_count = 0;
+    underrun_event_count = 0;
+    underrun_missing_frames = 0;
+    underrun_active = 0;
     opened_at_ms = SDL_GetTicks();
     fade_in_remaining = 0;
     fade_in_total = 0;
@@ -489,6 +512,9 @@ int audio_bridge_open(const double core_sample_rate) {
     headroom_queued_avg = -1.0;
     drc_ratio = 1.0;
     drc_limit = 0.0;
+    pickles_burst_recovery_active = 0;
+    pickles_burst_recovery_count = 0;
+    pickles_burst_recovery_peak = 0.0;
     drc_reset_stream();
 
     submitted_frames = 0;
@@ -788,12 +814,32 @@ uint32_t audio_bridge_underrun_count(void) {
     return underrun_count;
 }
 
+uint32_t audio_bridge_underrun_event_count(void) {
+    return underrun_event_count;
+}
+
+uint64_t audio_bridge_underrun_missing_frames(void) {
+    return underrun_missing_frames;
+}
+
 double audio_bridge_rate_correction_percent(void) {
     return (drc_ratio - 1.0) * 100.0;
 }
 
 double audio_bridge_rate_limit_percent(void) {
     return drc_limit * 100.0;
+}
+
+int audio_bridge_pickles_burst_recovery_active(void) {
+    return pickles_burst_recovery_active;
+}
+
+uint64_t audio_bridge_pickles_burst_recovery_count(void) {
+    return pickles_burst_recovery_count;
+}
+
+double audio_bridge_pickles_burst_recovery_peak_percent(void) {
+    return pickles_burst_recovery_peak * 100.0;
 }
 
 int audio_bridge_is_muted(void) {
@@ -813,6 +859,7 @@ void audio_bridge_clear_queued(void) {
     }
 
     if (resampler) SDL_AudioStreamClear(resampler);
+    underrun_active = 0;
     last_queued_ms_valid = 0;
 
     drc_bias = 0.0;
@@ -820,6 +867,7 @@ void audio_bridge_clear_queued(void) {
     headroom_queued_avg = -1.0;
     drc_ratio = 1.0;
     drc_limit = 0.0;
+    pickles_burst_recovery_active = 0;
     drc_reset_stream();
     audio_filter_reset();
 }
@@ -849,9 +897,10 @@ static void compute_latency_targets(const uint32_t floor_ms, uint32_t *low_ms, u
     uint32_t low = (uint32_t) (p_ms * low_periods);
     uint32_t high = (uint32_t) (p_ms * high_periods);
 
-    if (floor_ms > low) {
+    const uint32_t effective_floor = frontend_latency_floor_ms > floor_ms ? frontend_latency_floor_ms : floor_ms;
+    if (effective_floor > low) {
         const uint32_t spread = high - low;
-        low = floor_ms;
+        low = effective_floor;
         high = low + spread;
     }
 
@@ -871,11 +920,40 @@ uint32_t audio_bridge_high_water_ms(void) {
     return high;
 }
 
-static uint32_t audio_bridge_resume_target_ms(void) {
+uint32_t audio_bridge_burst_reservoir_ms(void) {
+    if (batch_peak_frames == 0 || core_native_rate <= 0.0) return 0;
+
+    return (uint32_t) ((double) batch_peak_frames * 1000.0 / core_native_rate + 0.999);
+}
+
+uint32_t audio_bridge_backpressure_ceiling_ms(void) {
+    const uint32_t high = audio_bridge_high_water_ms();
+    if (frontend_latency_floor_ms == 0) return high;
+
+    const uint32_t burst_ms = audio_bridge_burst_reservoir_ms();
+    const uint32_t period_reserve_ms = (uint32_t) (period_ms() + 0.999);
+    uint64_t ceiling = (uint64_t) high + burst_ms + period_reserve_ms;
+
+    if (ceiling > AUDIO_RESUME_PREFILL_MAX_MS) ceiling = AUDIO_RESUME_PREFILL_MAX_MS;
+    if (ceiling < high) ceiling = high;
+    return (uint32_t) ceiling;
+}
+
+uint32_t audio_bridge_prefill_target_ms(void) {
+    if (frontend_latency_floor_ms > 0) return audio_bridge_backpressure_ceiling_ms();
+
     uint32_t target = audio_bridge_low_water_ms();
+    const uint32_t burst_ms = audio_bridge_burst_reservoir_ms();
+    const uint32_t period_reserve_ms = (uint32_t) (period_ms() + 0.999);
+    const uint32_t burst_target = burst_ms + period_reserve_ms;
+
+    if (burst_target > target) target = burst_target;
 
     if (target < AUDIO_RESUME_PREFILL_MIN_MS) target = AUDIO_RESUME_PREFILL_MIN_MS;
     if (target > AUDIO_RESUME_PREFILL_MAX_MS) target = AUDIO_RESUME_PREFILL_MAX_MS;
+
+    const uint32_t high = audio_bridge_high_water_ms();
+    if (high > 0 && target > high) target = high;
 
     return target;
 }
@@ -883,7 +961,7 @@ static uint32_t audio_bridge_resume_target_ms(void) {
 static void audio_bridge_maybe_finish_resume(void) {
     if (!audio_dev || !resume_pending) return;
 
-    const uint32_t target_ms = audio_bridge_resume_target_ms();
+    const uint32_t target_ms = audio_bridge_prefill_target_ms();
     const uint32_t queued_ms = audio_bridge_queued_ms();
     if (queued_ms < target_ms) return;
 
@@ -924,11 +1002,12 @@ void audio_bridge_drc_tick(void) {
     period_stability_check();
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
 
-    const double max_deviation = (double) session_settings.audio_rate_control / 10000.0;
-    drc_limit = max_deviation;
-    if (max_deviation <= 0.0) {
+    const double configured_deviation = (double) session_settings.audio_rate_control / 10000.0;
+    drc_limit = configured_deviation;
+    if (configured_deviation <= 0.0) {
         drc_bias = 0.0;
         drc_ratio = 1.0;
+        pickles_burst_recovery_active = 0;
         return;
     }
 
@@ -940,7 +1019,20 @@ void audio_bridge_drc_tick(void) {
 
     const uint32_t write_idx = ring_write_index;
     const uint32_t read_idx = ring_read_index;
-    const double fill = (double) (write_idx - read_idx) / (double) target_frames;
+    const uint32_t queued_frames = write_idx - read_idx;
+    const uint32_t queued_ms = (uint32_t) ((uint64_t) queued_frames * 1000ULL / (uint64_t) opened_freq);
+    const double fill = (double) queued_frames / (double) target_frames;
+
+    if (frontend_latency_floor_ms > 0) {
+        if (pickles_burst_recovery_active) {
+            if (queued_ms >= high) pickles_burst_recovery_active = 0;
+        } else if (queued_ms <= low) {
+            pickles_burst_recovery_active = 1;
+            pickles_burst_recovery_count++;
+        }
+    } else {
+        pickles_burst_recovery_active = 0;
+    }
 
     drc_fill_avg = drc_fill_avg < 0.0 ? fill : drc_fill_avg * (1.0 - DRC_FILL_SMOOTHING) + fill * DRC_FILL_SMOOTHING;
 
@@ -948,13 +1040,25 @@ void audio_bridge_drc_tick(void) {
     if (error > 1.0) error = 1.0;
     if (error < -1.0) error = -1.0;
 
-    drc_bias += error * max_deviation / DRC_INTEGRAL_DIVISOR;
-    if (drc_bias > max_deviation) drc_bias = max_deviation;
-    if (drc_bias < -max_deviation) drc_bias = -max_deviation;
+    drc_bias += error * configured_deviation / DRC_INTEGRAL_DIVISOR;
+    if (drc_bias > configured_deviation) drc_bias = configured_deviation;
+    if (drc_bias < -configured_deviation) drc_bias = -configured_deviation;
 
-    double correction = max_deviation * error + drc_bias;
-    if (correction > max_deviation) correction = max_deviation;
-    if (correction < -max_deviation) correction = -max_deviation;
+    double correction = configured_deviation * error + drc_bias;
+    if (correction > configured_deviation) correction = configured_deviation;
+    if (correction < -configured_deviation) correction = -configured_deviation;
+
+    if (pickles_burst_recovery_active) {
+        double deficit = low > 0 && queued_ms < low ? (double) (low - queued_ms) / (double) low : 0.0;
+        if (deficit > 1.0) deficit = 1.0;
+
+        const double recovery =
+            PICKLES_BURST_RECOVERY_MIN + (PICKLES_BURST_RECOVERY_MAX - PICKLES_BURST_RECOVERY_MIN) * deficit;
+        if (correction < recovery) correction = recovery;
+        if (correction > PICKLES_BURST_RECOVERY_MAX) correction = PICKLES_BURST_RECOVERY_MAX;
+        if (correction > pickles_burst_recovery_peak) pickles_burst_recovery_peak = correction;
+        drc_limit = PICKLES_BURST_RECOVERY_MAX;
+    }
 
     drc_ratio = 1.0 - correction;
 }
@@ -1013,11 +1117,11 @@ static void audio_bridge_wait_after_write(void) {
     audio_bridge_maybe_finish_resume();
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0 || netplay_is_active()) return;
 
-    const uint32_t high = audio_bridge_high_water_ms();
-    if (high == 0) return;
+    const uint32_t ceiling = audio_bridge_backpressure_ceiling_ms();
+    if (ceiling == 0) return;
 
     const uint32_t started = SDL_GetTicks();
-    while (audio_bridge_queued_ms() > high) {
+    while (audio_bridge_queued_ms() > ceiling) {
         if (SDL_GetTicks() - started >= AUDIO_WRITE_BACKPRESSURE_MAX_MS) break;
         SDL_Delay(1);
     }
@@ -1060,6 +1164,14 @@ void audio_bridge_wait_for_headroom(const uint32_t budget_ms) {
 void audio_bridge_request_min_latency(const uint32_t ms) {
     pending_min_latency_ms = ms > CORE_MIN_LATENCY_CEILING_MS ? CORE_MIN_LATENCY_CEILING_MS : ms;
     min_latency_pending = 1;
+}
+
+void audio_bridge_set_latency_floor(const uint32_t ms) {
+    frontend_latency_floor_ms = ms > CORE_MIN_LATENCY_CEILING_MS ? CORE_MIN_LATENCY_CEILING_MS : ms;
+}
+
+uint32_t audio_bridge_latency_floor_ms(void) {
+    return frontend_latency_floor_ms;
 }
 
 void audio_bridge_apply_pending_min_latency(void) {
@@ -1141,7 +1253,9 @@ size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames)
     if (frames > batch_peak_frames) batch_peak_frames = frames;
 
     submit_audio_frames(data, frames);
+    const uint64_t wait_start = perf_begin();
     audio_bridge_wait_after_write();
+    perf_end(perf_stage_audio_backpressure, wait_start);
     return frames;
 }
 

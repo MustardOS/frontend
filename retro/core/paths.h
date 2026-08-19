@@ -2,7 +2,8 @@
 
 #include "../../common/options.h"
 
-#define RETRO_SHARE_PATH RUN_STORAGE_PATH "save/pickles/"
+#define RETRO_INSTANCE_LOCK RUN_PATH "muxretro.lock"
+#define RETRO_SHARE_PATH    RUN_STORAGE_PATH "save/pickles/"
 
 #define RETRO_STA_PATH RETRO_SHARE_PATH "state"
 #define RETRO_SRM_PATH RETRO_SHARE_PATH "sram"
@@ -17,3 +18,4 @@
 #define RETRO_MAN_PATH RETRO_SHARE_PATH "manual"
 #define RETRO_MAC_PATH RETRO_SHARE_PATH "macro"
 #define RETRO_PRO_PATH RETRO_SHARE_PATH "profile"
+#define RETRO_DEK_PATH RETRO_SHARE_PATH "deck"

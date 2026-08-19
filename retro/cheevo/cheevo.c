@@ -33,10 +33,10 @@
 #include "cache.h"
 #include "cheevo.h"
 #include "../state/vfs.h"
-#include "vendor/rcheevos/include/rc_client.h"
-#include "vendor/rcheevos/include/rc_error.h"
-#include "vendor/rcheevos/include/rc_hash.h"
-#include "vendor/rcheevos/src/rc_libretro.h"
+#include <rc_client.h>
+#include <rc_error.h>
+#include <rc_hash.h>
+#include <rc_libretro.h>
 
 #define CHEEVO_ACCOUNT_DIR              STORAGE_NETWORK "/cheevo"
 #define CHEEVO_PREVIEW_DIR              CHEEVO_ACCOUNT_DIR "/previews"

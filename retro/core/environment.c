@@ -65,9 +65,14 @@ enum retro_pixel_format mux_retro_get_pixel_format(void) {
 }
 
 int mux_retro_disk_get_num_images(void) {
-    if (disk_control_ext_cb && disk_control_ext_cb->get_num_images) return (int) disk_control_ext_cb->get_num_images();
-    if (disk_control_cb && disk_control_cb->get_num_images) return (int) disk_control_cb->get_num_images();
-    return 0;
+    int count = 0;
+    if (disk_control_ext_cb && disk_control_ext_cb->get_num_images)
+        count = (int) disk_control_ext_cb->get_num_images();
+    else if (disk_control_cb && disk_control_cb->get_num_images)
+        count = (int) disk_control_cb->get_num_images();
+
+    core_cache_disc_count(count);
+    return count;
 }
 
 unsigned mux_retro_disk_get_image_index(void) {
@@ -460,6 +465,7 @@ int environment_av_info_pending(void) {
 void environment_apply_pending_av_info(void) {
     if (!av_info_pending) return;
     av_info_pending = 0;
+    core_cache_system_av_info(&pending_av_info);
 
     if (hw_render_bridge_active()) {
         hw_render_bridge_configure(pending_av_info.geometry.max_width, pending_av_info.geometry.max_height);

@@ -1084,6 +1084,7 @@ struct mux_lang {
         char credit[MAX_BUFFER_SIZE];
         char reload[MAX_BUFFER_SIZE];
         char reload_run[MAX_BUFFER_SIZE];
+        char third[MAX_BUFFER_SIZE];
         struct {
             char news[MAX_BUFFER_SIZE];
             char detail[MAX_BUFFER_SIZE];
@@ -1093,8 +1094,14 @@ struct mux_lang {
             char tester[MAX_BUFFER_SIZE];
             char credit[MAX_BUFFER_SIZE];
             char reload[MAX_BUFFER_SIZE];
+            char third[MAX_BUFFER_SIZE];
         } help;
     } muxinfo;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+    } muxthird;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -1980,6 +1987,21 @@ struct mux_lang {
             char relish_broken[MAX_BUFFER_SIZE];
         } macros;
         struct {
+            char new[MAX_BUFFER_SIZE];
+            char manage[MAX_BUFFER_SIZE];
+            char rename[MAX_BUFFER_SIZE];
+            char delete[MAX_BUFFER_SIZE];
+            char manage_title[MAX_BUFFER_SIZE];
+            char manage_desc[MAX_BUFFER_SIZE];
+            char delete_title[MAX_BUFFER_SIZE];
+            char delete_desc[MAX_BUFFER_SIZE];
+            char limit_reached[MAX_BUFFER_SIZE];
+            char created[MAX_BUFFER_SIZE];
+            char renamed[MAX_BUFFER_SIZE];
+            char deleted[MAX_BUFFER_SIZE];
+            char name_needed[MAX_BUFFER_SIZE];
+        } deck;
+        struct {
             char options_title[MAX_BUFFER_SIZE];
             char options_desc[MAX_BUFFER_SIZE];
             char settings_title[MAX_BUFFER_SIZE];
@@ -2131,6 +2153,16 @@ struct mux_lang {
             char profile_scope_content[MAX_BUFFER_SIZE];
             char profile_scope_core[MAX_BUFFER_SIZE];
             char profile_scope_all[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
+            char reset_title[MAX_BUFFER_SIZE];
+            char reset_desc[MAX_BUFFER_SIZE];
+            char reset_core_options[MAX_BUFFER_SIZE];
+            char reset_settings[MAX_BUFFER_SIZE];
+            char reset_both[MAX_BUFFER_SIZE];
+            char reset_confirm_core_options[MAX_BUFFER_SIZE];
+            char reset_confirm_settings[MAX_BUFFER_SIZE];
+            char reset_confirm_both[MAX_BUFFER_SIZE];
+            char reset_failed[MAX_BUFFER_SIZE];
             char launch_recovered[MAX_BUFFER_SIZE];
             char performance_capture[MAX_BUFFER_SIZE];
             char export_diagnostics[MAX_BUFFER_SIZE];
@@ -2157,6 +2189,10 @@ struct mux_lang {
             char port_auto[MAX_BUFFER_SIZE];
             char port_none[MAX_BUFFER_SIZE];
             char built_in_controls[MAX_BUFFER_SIZE];
+            char port_deck[MAX_BUFFER_SIZE];
+            char port_deck_route[MAX_BUFFER_SIZE];
+            char port_deck_priority[MAX_BUFFER_SIZE];
+            char port_role_ketchup_short[MAX_BUFFER_SIZE];
             char core_device[MAX_BUFFER_SIZE];
             char core_device_default[MAX_BUFFER_SIZE];
             char button_mapping[MAX_BUFFER_SIZE];
@@ -2188,7 +2224,6 @@ struct mux_lang {
             char stick_rs_left[MAX_BUFFER_SIZE];
             char stick_rs_right[MAX_BUFFER_SIZE];
             char turbo_modes[MAX_BUFFER_SIZE];
-            char targets[MAX_BUFFER_SIZE];
             char assign_control[MAX_BUFFER_SIZE];
             char macro_label[MAX_BUFFER_SIZE];
             char macro_turbo_blocked[MAX_BUFFER_SIZE];
@@ -2356,6 +2391,7 @@ struct mux_lang {
                 char storage[MAX_BUFFER_SIZE];
                 char cheevo[MAX_BUFFER_SIZE];
                 char save_all[MAX_BUFFER_SIZE];
+                char reset[MAX_BUFFER_SIZE];
                 char advanced[MAX_BUFFER_SIZE];
             } settings;
             struct {
@@ -2457,6 +2493,9 @@ struct mux_lang {
             } hotkeys;
             struct {
                 char controller[MAX_BUFFER_SIZE];
+                char deck[MAX_BUFFER_SIZE];
+                char deck_route[MAX_BUFFER_SIZE];
+                char deck_priority[MAX_BUFFER_SIZE];
                 char core_device[MAX_BUFFER_SIZE];
                 char stick_dpad[MAX_BUFFER_SIZE];
                 char button_mapping[MAX_BUFFER_SIZE];

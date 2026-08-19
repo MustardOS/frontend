@@ -15,6 +15,9 @@
 #define GAMEPLAY_ENTER_WINDOWS 2
 #define GAMEPLAY_EXIT_WINDOWS  8
 
+#define GAMEPLAY_CORE_PRESSURE_RATIO  0.75
+#define GAMEPLAY_CORE_PRESSURE_FRAMES 4
+
 static unsigned boost_depth = 0;
 static int governor_changed = 0;
 static int cleanup_registered = 0;
@@ -22,6 +25,7 @@ static char saved_governor[GOVERNOR_NAME_MAX] = "";
 static int gameplay_boost_active = 0;
 static unsigned gameplay_miss_windows = 0;
 static unsigned gameplay_stable_windows = 0;
+static unsigned gameplay_pressure_frames = 0;
 
 static int read_governor(char out[GOVERNOR_NAME_MAX]) {
     out[0] = '\0';
@@ -133,9 +137,36 @@ void governor_boost_gameplay_update(const double observed_fps, const double targ
     governor_boost_end();
 }
 
+void governor_boost_gameplay_pressure(const double core_ms, const double frame_budget_ms) {
+    if (core_ms <= 0.0 || frame_budget_ms <= 0.0) {
+        gameplay_pressure_frames = 0;
+        return;
+    }
+
+    if (core_ms < frame_budget_ms * GAMEPLAY_CORE_PRESSURE_RATIO) {
+        gameplay_pressure_frames = 0;
+        return;
+    }
+
+    if (gameplay_boost_active) {
+        gameplay_pressure_frames = 0;
+        gameplay_stable_windows = 0;
+        return;
+    }
+
+    if (++gameplay_pressure_frames < GAMEPLAY_CORE_PRESSURE_FRAMES) return;
+
+    gameplay_pressure_frames = 0;
+    gameplay_miss_windows = 0;
+    gameplay_stable_windows = 0;
+    gameplay_boost_active = 1;
+    governor_boost_begin("sustained core pressure");
+}
+
 void governor_boost_gameplay_idle(void) {
     gameplay_miss_windows = 0;
     gameplay_stable_windows = 0;
+    gameplay_pressure_frames = 0;
 
     if (!gameplay_boost_active) return;
 

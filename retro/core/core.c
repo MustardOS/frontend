@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../../common/fileio.h"
 #include "../../common/function_pointer.h"
 #include "../../common/init.h"
 #include "../../common/language.h"
-#include "../../common/libarchive/archive.h"
-#include "../../common/libarchive/archive_entry.h"
+#include <libarchive/archive.h>
+#include <libarchive/archive_entry.h>
 #include "../../common/log.h"
 #include "../../common/strutil.h"
 #include "../../common/union.h"
@@ -19,6 +20,7 @@
 #include "../input/core_input_meta.h"
 #include "../state/patch.h"
 #include "../state/vfs.h"
+#include "../video/hw_render.h"
 
 struct core_cbs current_core = {0};
 char core_content_path[PATH_MAX] = "";
@@ -28,6 +30,45 @@ char core_active_patches[1024] = "";
 int core_active_patch_count = 0;
 char core_file_path[PATH_MAX] = "";
 int core_restart_requested = 0;
+
+struct core_information_cache {
+    struct retro_system_info system;
+    struct retro_system_av_info av;
+    char library_name[128];
+    char library_version[128];
+    char valid_extensions[1024];
+    unsigned api_version;
+    size_t save_memory_size;
+    int disc_count;
+    int system_valid;
+    int av_valid;
+    int api_valid;
+};
+
+static struct core_information_cache information_cache;
+
+static void cache_system_info(const struct retro_system_info *info) {
+    if (!info) return;
+
+    snprintf(
+        information_cache.library_name, sizeof(information_cache.library_name), "%s",
+        info->library_name ? info->library_name : ""
+    );
+    snprintf(
+        information_cache.library_version, sizeof(information_cache.library_version), "%s",
+        info->library_version ? info->library_version : ""
+    );
+    snprintf(
+        information_cache.valid_extensions, sizeof(information_cache.valid_extensions), "%s",
+        info->valid_extensions ? info->valid_extensions : ""
+    );
+
+    information_cache.system = *info;
+    information_cache.system.library_name = information_cache.library_name;
+    information_cache.system.library_version = information_cache.library_version;
+    information_cache.system.valid_extensions = information_cache.valid_extensions;
+    information_cache.system_valid = 1;
+}
 
 static int open_core(const char *corefile) {
     if (current_core.initialised) {
@@ -44,6 +85,7 @@ static int open_core(const char *corefile) {
     void (*set_input_state)(retro_input_state_t) = NULL;
 
     memset(&current_core, 0, sizeof(current_core));
+    memset(&information_cache, 0, sizeof(information_cache));
     current_core.handle = dlopen(corefile, RTLD_LAZY);
     if (!current_core.handle) {
         LOG_ERROR(mux_module, "Failed to load core '%s': %s", corefile, dlerror());
@@ -70,6 +112,10 @@ static int open_core(const char *corefile) {
     MUOS_FUNCTION_ASSIGN(current_core.retro_get_memory_size, dlsym(current_core.handle, "retro_get_memory_size"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_cheat_reset, dlsym(current_core.handle, "retro_cheat_reset"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_cheat_set, dlsym(current_core.handle, "retro_cheat_set"));
+    MUOS_FUNCTION_ASSIGN(
+        current_core.pickles_ppsspp_perf_reset, dlsym(current_core.handle, "pickles_ppsspp_perf_reset")
+    );
+    MUOS_FUNCTION_ASSIGN(current_core.pickles_ppsspp_perf_get, dlsym(current_core.handle, "pickles_ppsspp_perf_get"));
 
     MUOS_FUNCTION_ASSIGN(set_environment, dlsym(current_core.handle, "retro_set_environment"));
     MUOS_FUNCTION_ASSIGN(set_video_refresh, dlsym(current_core.handle, "retro_set_video_refresh"));
@@ -97,13 +143,19 @@ static int open_core(const char *corefile) {
     current_core.retro_init();
     current_core.initialised = true;
 
+    if (current_core.retro_api_version) {
+        information_cache.api_version = current_core.retro_api_version();
+        information_cache.api_valid = 1;
+    }
+
     current_core.need_fullpath = true;
     if (current_core.retro_get_system_info) {
         struct retro_system_info info = {0};
         current_core.retro_get_system_info(&info);
+        cache_system_info(&info);
         current_core.need_fullpath = info.need_fullpath;
         current_core.block_extract = info.block_extract;
-        current_core.valid_extensions = info.valid_extensions;
+        current_core.valid_extensions = information_cache.valid_extensions;
     }
 
     LOG_SUCCESS(mux_module, "Core loaded: %s", corefile);
@@ -620,8 +672,103 @@ int core_load_content(const char *content_path) {
     return 0;
 }
 
+int core_cached_system_info(struct retro_system_info *info) {
+    if (!info || !information_cache.system_valid) return 0;
+    *info = information_cache.system;
+    return 1;
+}
+
+int core_cached_system_av_info(struct retro_system_av_info *info) {
+    if (!info || !information_cache.av_valid) return 0;
+    *info = information_cache.av;
+    return 1;
+}
+
+int core_cached_api_version(unsigned *version) {
+    if (!version || !information_cache.api_valid) return 0;
+    *version = information_cache.api_version;
+    return 1;
+}
+
+void core_cache_system_av_info(const struct retro_system_av_info *info) {
+    if (!info) return;
+    information_cache.av = *info;
+    information_cache.av_valid = 1;
+}
+
+void core_cache_save_memory_size(const size_t size) {
+    information_cache.save_memory_size = size;
+}
+
+size_t core_cached_save_memory_size(void) {
+    return information_cache.save_memory_size;
+}
+
+void core_cache_disc_count(const int count) {
+    information_cache.disc_count = count > 0 ? count : 0;
+}
+
+int core_cached_disc_count(void) {
+    return information_cache.disc_count;
+}
+
+void core_prepare_content_unload(void) {
+    if (!current_core.handle || strcmp(information_cache.library_name, "PPSSPP") != 0) return;
+
+    const unsigned char *use_emu_thread = dlsym(current_core.handle, "_ZN8Libretro12useEmuThreadE");
+    const int *emu_thread_state = dlsym(current_core.handle, "_ZN8Libretro14emuThreadStateE");
+    void (*emu_thread_start)(void) = NULL;
+    void (*emu_thread_stop)(void) = NULL;
+    MUOS_FUNCTION_ASSIGN(emu_thread_start, dlsym(current_core.handle, "_ZN8Libretro14EmuThreadStartEv"));
+    MUOS_FUNCTION_ASSIGN(emu_thread_stop, dlsym(current_core.handle, "_ZN8Libretro13EmuThreadStopEv"));
+
+    if (!use_emu_thread || !*use_emu_thread || !emu_thread_state || !emu_thread_start || !emu_thread_stop) return;
+
+    enum {
+        ppsspp_thread_disabled,
+        ppsspp_thread_start_requested,
+        ppsspp_thread_running,
+        ppsspp_thread_pause_requested,
+        ppsspp_thread_paused,
+        ppsspp_thread_quit_requested,
+        ppsspp_thread_stopped,
+    };
+
+    int resumed = 0;
+    LOG_DEBUG(mux_module, "PPSSPP worker unload state=%d", __atomic_load_n(emu_thread_state, __ATOMIC_ACQUIRE));
+    for (int wait_ms = 0; wait_ms < 100; wait_ms++) {
+        const int state = __atomic_load_n(emu_thread_state, __ATOMIC_ACQUIRE);
+        if (state == ppsspp_thread_running) {
+            hw_render_bridge_enter_core_call();
+            emu_thread_stop();
+            hw_render_bridge_exit_core_call();
+            LOG_DEBUG(mux_module, "PPSSPP worker joined before content unload");
+            return;
+        }
+        if (state == ppsspp_thread_paused && !resumed) {
+            hw_render_bridge_enter_core_call();
+            emu_thread_start();
+            hw_render_bridge_exit_core_call();
+            resumed = 1;
+        } else if (state == ppsspp_thread_disabled || state == ppsspp_thread_stopped) {
+            return;
+        } else if (state != ppsspp_thread_start_requested && state != ppsspp_thread_pause_requested
+                   && state != ppsspp_thread_quit_requested) {
+            LOG_WARN(mux_module, "PPSSPP worker has unknown unload state %d", state);
+            return;
+        }
+        usleep(1000);
+    }
+
+    LOG_WARN(mux_module, "PPSSPP worker did not reach a stoppable state before unload");
+}
+
 void core_unload_content(void) {
-    if (current_core.retro_unload_game) current_core.retro_unload_game();
+    if (current_core.retro_unload_game) {
+        hw_render_bridge_enter_core_call();
+        current_core.retro_unload_game();
+        hw_render_bridge_exit_core_call();
+    }
     core_input_meta_clear();
 }
 

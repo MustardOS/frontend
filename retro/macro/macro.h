@@ -119,3 +119,5 @@ const char *macros_step_compact_label(const struct macro_step *step, char *buf, 
 const struct macro_entry *macros_get_by_index(int index);
 
 const char *macros_get_name_by_index(int index);
+
+int macros_index_by_name(const char *name);

@@ -6,14 +6,24 @@
 #include "../../common/randname.h"
 #include "../../common/ui/osk.h"
 #include "../../module/muxshare.h"
+#include "../core/core.h"
 #include "../netplay/netplay.h"
 #include "../core/muxretro.h"
+#include "../ui/ui_loading.h"
+#include "../ui/options.h"
 #include "pages.h"
 #include "submenu.h"
 
 enum { settings_row_limit = 96, settings_frame_limit = 12 };
 
-typedef enum { settings_special_none = 0, settings_special_core_options, settings_special_save } settings_special;
+typedef enum {
+    settings_special_none = 0,
+    settings_special_core_options,
+    settings_special_reset,
+    settings_special_save
+} settings_special;
+
+typedef enum { reset_core_options = 0, reset_settings, reset_both } reset_scope;
 
 static const char *row_labels[settings_row_limit];
 static const char *row_glyphs[settings_row_limit];
@@ -38,6 +48,10 @@ static int profile_user_count;
 static int profile_save_row = -1;
 static mux_dialogue profile_scope_dlg;
 static mux_dialogue profile_delete_dlg;
+static mux_dialogue reset_scope_dlg;
+static mux_dialogue reset_confirm_dlg;
+static reset_scope pending_reset_scope;
+static uint64_t reset_modal_prev_mask;
 static lv_obj_t *profile_entry_panel;
 static lv_obj_t *profile_entry_text;
 static int profile_saving;
@@ -366,6 +380,76 @@ static int profile_modal_tick(void) {
     return 1;
 }
 
+static const char *reset_confirmation_text(const reset_scope scope) {
+    switch (scope) {
+        case reset_core_options:
+            return lang.muxretro.settings_screen.reset_confirm_core_options;
+        case reset_settings:
+            return lang.muxretro.settings_screen.reset_confirm_settings;
+        default:
+            return lang.muxretro.settings_screen.reset_confirm_both;
+    }
+}
+
+static void start_reset(void) {
+    dialogue_open(&reset_scope_dlg, &theme);
+    reset_modal_prev_mask = profile_modal_nav_mask();
+}
+
+static void perform_reset(const reset_scope scope) {
+    int ok = 1;
+    if (scope == reset_core_options || scope == reset_both) {
+        if (!options_delete_saved_overrides()) ok = 0;
+    }
+    if (scope == reset_settings || scope == reset_both) {
+        if (!session_settings_delete_saved_overrides()) ok = 0;
+    }
+
+    if (!ok) {
+        pause_menu_show_toast(lang.muxretro.settings_screen.reset_failed);
+        self.prev_nav_mask = profile_modal_nav_mask();
+        return;
+    }
+
+    loading_message_show(lang.muxretro.content_restarting);
+    core_restart_requested = 1;
+}
+
+static int reset_modal_tick(void) {
+    mux_dialogue *active = dialogue_active(&reset_scope_dlg)   ? &reset_scope_dlg
+                           : dialogue_active(&reset_confirm_dlg) ? &reset_confirm_dlg
+                                                                 : NULL;
+    if (!active) return 0;
+
+    const uint64_t mask = profile_modal_nav_mask();
+    const uint64_t edge = mask & ~reset_modal_prev_mask;
+    reset_modal_prev_mask = mask;
+
+    if (edge & (BIT(0) | BIT(1))) {
+        dialogue_handle_dpad(active, &theme, edge & BIT(1) ? 1 : -1, 1);
+    } else if (edge & BIT(4)) {
+        if (active == &reset_scope_dlg) {
+            pending_reset_scope = (reset_scope) reset_scope_dlg.selected;
+            dialogue_dismiss(&reset_scope_dlg);
+            dialogue_set_description(&reset_confirm_dlg, reset_confirmation_text(pending_reset_scope));
+            dialogue_open(&reset_confirm_dlg, &theme);
+            reset_modal_prev_mask = mask;
+        } else {
+            const mux_confirm_opt option = (mux_confirm_opt) reset_confirm_dlg.selected;
+            dialogue_dismiss(&reset_confirm_dlg);
+            if (option == mux_confirm_yep)
+                perform_reset(pending_reset_scope);
+            else
+                self.prev_nav_mask = mask;
+        }
+    } else if (edge & BIT(5)) {
+        dialogue_mark_cancelled(active);
+        dialogue_dismiss(active);
+        self.prev_nav_mask = mask;
+    }
+    return 1;
+}
+
 static void add_definition_row(const submenu_def *definition, const int local_index) {
     if (!definition || local_index < 0 || local_index >= definition->row_count || row_count >= settings_row_limit)
         return;
@@ -461,6 +545,7 @@ static int row_coarse_step(const int index) {
 
 static const char *row_action_label(const int index) {
     const submenu_def *definition = row_definition(index);
+    if (row_special(index) == settings_special_reset) return lang.generic.reset;
     return definition && definition->action_label ? definition->action_label(row_local_index(index)) : NULL;
 }
 
@@ -491,6 +576,8 @@ static void row_action(const int index) {
 
     if (special == settings_special_core_options)
         options_menu_open();
+    else if (special == settings_special_reset)
+        start_reset();
     else if (definition && definition->action)
         definition->action(local_index);
 
@@ -502,6 +589,7 @@ static void row_action(const int index) {
 }
 
 static int child_tick(void) {
+    if (reset_modal_tick()) return 1;
     if (profile_modal_tick()) return 1;
     if (options_menu_is_active()) {
         options_menu_tick();
@@ -633,6 +721,9 @@ static void build_rows(void) {
         );
     add_definition(performance_menu_definition());
     add_special_row(
+        settings_special_reset, lang.muxretro.settings_screen.reset, "reset", lang.muxretro.help.settings.reset
+    );
+    add_special_row(
         settings_special_save, lang.muxretro.save_settings, "settings", lang.muxretro.help.settings.save_all
     );
     add_settings_frame(lang.muxretro.settings_screen.category_advanced, first);
@@ -656,6 +747,20 @@ void settings_menu_init(void) {
         lang.muxretro.settings_screen.profile_delete_desc, lang.muxretro.settings_screen.profile_delete,
         lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
+    static const char *reset_options[3];
+    reset_options[0] = lang.muxretro.settings_screen.reset_core_options;
+    reset_options[1] = lang.muxretro.settings_screen.reset_settings;
+    reset_options[2] = lang.muxretro.settings_screen.reset_both;
+    dialogue_init(
+        &reset_scope_dlg, &theme, ui_screen, lang.muxretro.settings_screen.reset_title,
+        lang.muxretro.settings_screen.reset_desc, reset_options, 3, lang.generic.select, lang.generic.cancel
+    );
+    dialogue_init_confirm(
+        &reset_confirm_dlg, &theme, ui_screen, lang.muxretro.settings_screen.reset_title,
+        lang.muxretro.settings_screen.reset_confirm_core_options, lang.generic.reset, lang.generic.cancel,
+        lang.generic.select, lang.generic.cancel
+    );
+    reset_confirm_dlg.safe_default = mux_confirm_nah;
     profile_save_osk_objects();
 
     options_menu_init();

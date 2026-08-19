@@ -66,10 +66,14 @@ good enough" cannot be inferred from what was requested when it was made.
 
 ## Targets
 
-One colour texture and framebuffer, which is what RetroArch settles on for hardware rendered cores as well. Rotating
-through several was measured and made no difference. The hazard that would justify it - the core drawing into the
-texture the UI is sampling from another context - only exists while the core has a context of its own, and it no
-longer does.
+The bridge rotates through as many as three immutable framebuffer targets. Each target owns its colour texture and, when
+requested by the core, its depth/stencil renderbuffer. GLES2 and GLES3 use the same arrangement: changing a shared
+framebuffer attachment at the frame boundary can otherwise make the driver wait for earlier rendering or UI sampling
+before the core can start its next frame.
+
+The core must call `get_current_framebuffer()` for each frame so it receives the next target. A core that caches the
+returned framebuffer is detected after its first submitted frame and pinned to that target for compatibility. Extra
+targets are limited by a 16 MiB memory budget and `MUXRETRO_HW_BUFFERS` may reduce their number for diagnosis.
 
 `hw_render_bridge_flush_core_commands()` submits the core's queued commands after the last frame of a batch while the
 core's context is still current. It does not wait for them, so the work is already in flight by the time state is put

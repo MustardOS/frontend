@@ -1,6 +1,6 @@
 # MustardOS Frontend
 
-This is where all the magic of the user interface of MustardOS (muOS) comes to life.
+This is where all the magic of the user interface of MustardOS comes to life.
 
 ---
 
@@ -8,7 +8,13 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 
 ### Prerequisites
 
-You will need `make`, `ccache`, and a C compiler. Everything else depends on which target you are building for.
+You will need `make`, `ccache`, and a C compiler.
+
+Some dependencies are fetched and built from source on first use (see [External
+Dependencies](#external-dependencies)), which additionally needs `curl` or `wget`, `perl`, and `tar`. Optionally,
+`dialog` or `whiptail` gives `build.sh` a guided setup, and `nasm` is needed for ffmpeg's x86 assembly on x86 hosts.
+
+Everything else depends on which target you are building for.
 
 **Cross-compiling for ARM devices (normal workflow)**
 
@@ -39,14 +45,24 @@ On Debian/Ubuntu:
 
 ### Cross-Compile Build (ARM Devices)
 
-All cross-compile builds go through `xtool.sh`, which sets up the toolchain environment and then calls `make`.
+All cross-compile builds go through `build.sh`, which sets up the toolchain environment and then calls `make`.
+
+Run it with no arguments for a guided setup that asks for the device, build type and toolchain, then starts the
+build. It uses `dialog` or `whiptail` when either is installed, and falls back to plain numbered prompts otherwise.
+
+```sh
+# Guided / Spoon Fed
+./build.sh
+```
+
+Passing arguments skips the questions entirely, so scripted builds are unaffected.
 
 ```sh
 # Standard release build (aarch64 Cortex-A53, the most common target)
-BUILD=release ./xtool.sh make -j$(nproc)
+BUILD=release ./build.sh make -j$(nproc)
 
 # Verbose build (shows each compiler command and all error output)
-DEBUG=1 BUILD=release ./xtool.sh make -j$(nproc)
+DEBUG=1 BUILD=release ./build.sh make -j$(nproc)
 ```
 
 **DEVICE targets**
@@ -58,10 +74,16 @@ DEBUG=1 BUILD=release ./xtool.sh make -j$(nproc)
 | `ARM64`            | Generic ARMv8-A                 |
 | `ARM32`            | Original 35x (ARMv7 hard-float) |
 | `ARM32_A9`         | Cortex-A9 with NEON             |
+| `X86_64`           | Generic 64-bit x86              |
+| `RISCV64`          | Generic 64-bit RISC-V           |
+| `GENERIC`          | Anything else, with `ARCH_FLAGS`|
+
+The toolchain is detected automatically from `$HOME/x-tools` (override with `XTOOL`), picking one whose architecture
+matches `DEVICE`. Set `XDIR` to a directory name under it to choose a specific toolchain.
 
 ```sh
 # Example: build for generic ARM64
-DEVICE=ARM64 BUILD=release ./xtool.sh make -j$(nproc)
+DEVICE=ARM64 BUILD=release ./build.sh make -j$(nproc)
 ```
 
 `BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if
@@ -75,19 +97,53 @@ Use `DEVICE=NATIVE` to build and run directly on the host machine. This is usefu
 without hardware.
 
 ```sh
-DEVICE=NATIVE BUILD=release ./xtool.sh make -j$(nproc)
+DEVICE=NATIVE BUILD=release ./build.sh make -j$(nproc)
 ```
 
 Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 
 ---
 
+### Incremental Builds
+
+Builds are incremental. Header dependencies are tracked with `-MMD -MP`, and the generated dependency files are kept
+under `.deps/`, one directory per component, so a rebuild only touches what actually changed.
+
+```sh
+# Full rebuild from nothing
+./build.sh make clean
+```
+
+Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with
+different flags cannot be reused. The current configuration is recorded in `.build-config`.
+
+---
+
+### External Dependencies
+
+Some third party libraries are not kept in this repository. They are fetched from upstream, checksum verified, built
+static and installed into `external/prefix/$DEVICE` by `external/build.sh`, which the build calls for you. Each library
+stamps what it built, so repeat runs cost nothing.
+
+```sh
+# Rebuild one of them after bumping its pinned version
+DEVICE=ARM64_A53 EXT_ARCH_FLAGS="-mcpu=cortex-a53" ./external/build.sh ffmpeg
+```
+
+Linking them statically means the version shipped in a device rootfs never matters, and their symbols are hidden with
+`--exclude-libs` so libretro cores keep their own copies.
+
+---
+
 ### Dependency
 
 * `common`: Common Libraries and Functions
+* `external`: Third party dependencies fetched and built from source
 * `lookup`: Friendly name lookup table mainly for arcade content
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `module`: Frontend menu system modules
+* `plutosvg`: Bundled SVG rendering library
+* `retro`: LibRetro core host
 * `stage`: Hardware overlay staging system
 
 ### Independent
@@ -181,9 +237,9 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 
 ## Third Party Libraries
 
-The following third party libraries are bundled in this repository.
+### Bundled In This Repository
 
-### [LVGL](https://github.com/lvgl/lvgl)
+#### [LVGL](https://github.com/lvgl/lvgl)
 
 Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for
 glyph rasterisation.
@@ -192,7 +248,7 @@ glyph rasterisation.
 - License: MIT
 - Location: `lvgl/`
 
-### [PlutoSVG](https://github.com/sammycage/plutosvg)
+#### [PlutoSVG](https://github.com/sammycage/plutosvg)
 
 Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with
 scaling driven by the LVGL custom image
@@ -205,7 +261,7 @@ it is built on.
 - License: MIT
 - Location: `plutosvg/`
 
-### [json.c](https://github.com/tidwall/json.c)
+#### [json.c](https://github.com/tidwall/json.c)
 
 Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration
 data, and API responses.
@@ -214,7 +270,7 @@ data, and API responses.
 - License: MIT
 - Location: `common/json/`
 
-### [minic](https://github.com/univrsal/minic)
+#### [minic](https://github.com/univrsal/minic)
 
 Minimal C INI file parser. Used for reading and writing `.ini` configuration files.
 
@@ -222,7 +278,7 @@ Minimal C INI file parser. Used for reading and writing `.ini` configuration fil
 - License: BSD 2-Clause
 - Location: `common/mini/`
 
-### [miniz](https://github.com/richgeldreich/miniz)
+#### [miniz](https://github.com/richgeldreich/miniz)
 
 Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP archive reading and writing. Used to
 extract downloaded ZIP archives.
@@ -231,7 +287,7 @@ extract downloaded ZIP archives.
 - License: MIT (portions also released as public domain / Unlicense)
 - Location: `common/miniz/`
 
-### [xxHash](https://github.com/Cyan4973/xxHash)
+#### [xxHash](https://github.com/Cyan4973/xxHash)
 
 Extremely fast non-cryptographic hash algorithm. Used to compute file checksums for content verification.
 
@@ -244,7 +300,7 @@ Extremely fast non-cryptographic hash algorithm. Used to compute file checksums 
 - License: BSD 2-Clause
 - Location: `common/xxhash/`
 
-### [stb_truetype](https://github.com/nothings/stb)
+#### [stb_truetype](https://github.com/nothings/stb)
 
 Single-header C library for TrueType font parsing and glyph rasterisation. Used by the LVGL TinyTTF renderer to load and
 render custom TTF fonts at runtime.
@@ -254,7 +310,7 @@ render custom TTF fonts at runtime.
 - License: Public domain
 - Location: `common/stb/stb_truetype.h`
 
-### [stb_rect_pack](https://github.com/nothings/stb)
+#### [stb_rect_pack](https://github.com/nothings/stb)
 
 Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer to pack glyph bitmaps into atlas
 textures.
@@ -264,7 +320,7 @@ textures.
 - License: Public domain
 - Location: `common/stb/stb_rect_pack.h`
 
-### [stb_image_write](https://github.com/nothings/stb)
+#### [stb_image_write](https://github.com/nothings/stb)
 
 Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from
 the framebuffer.
@@ -274,12 +330,56 @@ the framebuffer.
 - License: Public domain
 - Location: `common/stb/stb_image_write.h`
 
-### [Mojibake](https://github.com/zaerl/mojibake)
+---
+
+### Fetched At Build Time
+
+These are not kept in the repository. `external/build.sh` downloads a pinned release, verifies its SHA-256, and builds
+a trimmed static copy into `external/prefix/$DEVICE`. Versions and checksums are pinned at the top of each
+`external/<name>.sh`.
+
+#### [FFmpeg](https://ffmpeg.org)
+
+Audio and video decoding for theme wallpapers, the screensaver, the boot logo, and content video previews. Built with
+`--disable-everything` plus only the MP4 demuxer and the handful of decoders `common/video.c` uses.
+
+- Version: 9.0.1
+- License: LGPL 2.1 or later
+- Build: `external/ffmpeg.sh`
+
+#### [libarchive](https://libarchive.org)
+
+Multi-format archive reading. Used read-only by muxretro for content stored in archives. Compression codecs are
+detected per sysroot, since they are not present everywhere.
+
+- Version: 3.8.9
+- License: BSD 2-Clause
+- Build: `external/libarchive.sh`
+
+#### [OpenSSL](https://openssl.org)
+
+TLS, hashing and signature verification for Network Play and achievement accounts. Built statically so the 1.1 and 3.x
+split across device rootfs images stops mattering.
+
+- Version: 3.5.7 (LTS branch)
+- License: Apache 2.0
+- Build: `external/openssl.sh`
+
+#### [rcheevos](https://github.com/RetroAchievements/rcheevos)
+
+RetroAchievements client, hashing and libretro memory helper. Desktop integration and the RetroAchievements
+integration DLL sources are excluded.
+
+- Version: 12.4.0
+- License: MIT
+- Build: `external/rcheevos.sh`
+
+#### [Mojibake](https://github.com/zaerl/mojibake)
 
 Unicode text processing library covering normalisation, collation, and case mapping without external dependencies.
 Used for locale-aware, Unicode-correct natural sorting of content and file lists.
 
-- Version: 0.3.3
+- Version: 0.3.6
 - Author: Francesco Bigiarini
 - License: MIT
-- Location: `common/mojibake/`
+- Build: `external/mojibake.sh`

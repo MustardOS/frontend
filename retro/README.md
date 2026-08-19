@@ -28,9 +28,11 @@ rather than reading one bloody giant file:
 | [`docs/audio.md`](docs/audio.md)               | The audio pipeline, latency profiles, sample rate handling.                                                                         |
 | [`docs/macros.md`](docs/macros.md)             | The on device Macros editor - Button/Pause steps, timing, binding.                                                                  |
 | [`docs/relish.md`](docs/relish.md)             | Relish - `.rls` macros with maths, subroutines, conditions, examples and bounded playback.                                          |
+| [`docs/ketchup-deck.md`](docs/ketchup-deck.md) | Ketchup Deck - turning a spare controller into a macro board, turbo pad, co-pilot or accessibility helper.                          |
 | [`docs/save-states.md`](docs/save-states.md)   | Save states, SRAM, and disc swapping.                                                                                               |
 | [`docs/settings.md`](docs/settings.md)         | The settings-screen engine, core options, cheats, information screen, hotkeys.                                                      |
 | [`docs/technical.md`](docs/technical.md)       | Startup sequence, main loop, shutdown, settings persistence, content loading, build.                                                |
 
 New here and just want the short version? Start with [`docs/macros.md`](docs/macros.md) if you're after button macros,
-or [`docs/architecture.md`](docs/architecture.md) if you're trying to find where a particular piece of code lives.
+[`docs/ketchup-deck.md`](docs/ketchup-deck.md) if you want a second controller helping out, or
+[`docs/architecture.md`](docs/architecture.md) if you're trying to find where a particular piece of code lives.
