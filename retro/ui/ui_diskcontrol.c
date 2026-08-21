@@ -5,6 +5,7 @@
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
+#include "../state/history.h"
 
 #define DISKCONTROL_MAX_DISCS 32
 #define DISKCONTROL_LABEL_MAX 128
@@ -132,6 +133,8 @@ static void select_disc(const int index) {
 
     mux_retro_disk_set_image_index((unsigned) index);
     mux_retro_disk_set_eject_state(false);
+
+    history_clear();
 
     refresh_current_marker();
 }

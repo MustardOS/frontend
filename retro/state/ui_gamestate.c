@@ -1,16 +1,21 @@
+#include <time.h>
 #include "../../common/audio.h"
 #include "../../common/init.h"
 #include "../../common/input.h"
 #include "../../common/log.h"
 #include "../../common/ui/common.h"
 #include "../../common/ui/dialogue.h"
+#include "../../common/ui/glyph.h"
 #include "../../common/ui/image.h"
+#include "../../common/ui/list_frame.h"
 #include "../../common/ui/osk.h"
 #include "../../common/randname.h"
 #include "../../module/muxshare.h"
 #include "../video/image_writer.h"
 #include "gamestate.h"
+#include "history.h"
 #include "../core/muxretro.h"
+#include "../settings/settings.h"
 #include "../input/nav_repeat.h"
 
 static int active = 0;
@@ -32,10 +37,13 @@ static mux_dialogue delete_dlg;
 
 static mux_dialogue mismatch_dlg;
 
+static mux_dialogue purge_dlg;
+static mux_dialogue empty_dlg;
+
 static mux_dialogue notice_dlg;
 static uint64_t notice_prev_mask = 0;
 
-typedef enum { pending_none, pending_load, pending_delete } pending_action_t;
+typedef enum { pending_none, pending_load, pending_delete, pending_purge, pending_empty } pending_action_t;
 
 static pending_action_t pending_action = pending_none;
 static int pending_index = -1;
@@ -44,10 +52,39 @@ static lv_obj_t *ui_pnl_entry_gamestate = NULL;
 static lv_obj_t *ui_txt_entry_gamestate = NULL;
 static int creating_save = 0;
 
-static int preview_mode = 0;
-static lv_obj_t *ui_pnl_preview_name = NULL;
-static lv_obj_t *ui_lbl_preview_name = NULL;
-static lv_obj_t *ui_img_preview_glyph = NULL;
+enum { section_states = 0, section_history, section_trash, section_count };
+
+#define GAMESTATE_ROW_MAX (GAMESTATE_MAX_SLOTS + GAMESTATE_TIMELINE_DEPTH + 2 + HISTORY_DEPTH_MAX + GAMESTATE_TRASH_MAX)
+
+static lv_obj_t *row_panels[GAMESTATE_ROW_MAX];
+static lv_obj_t *row_labels[GAMESTATE_ROW_MAX];
+static lv_obj_t *row_glyphs[GAMESTATE_ROW_MAX];
+
+static int state_row_count = 0;
+static int frame_section[section_count];
+static int frame_total = 0;
+static int history_row_count = 0;
+static int trash_row_count = 0;
+static int sectioned = 0;
+
+static int focused_row(void) {
+    return sectioned ? list_frame_current_row() : -1;
+}
+
+static int current_section(void) {
+    if (!sectioned || frame_total <= 0) return -1;
+
+    const int frame = list_frame_current();
+    return frame >= 0 && frame < frame_total ? frame_section[frame] : -1;
+}
+
+static int in_history(void) {
+    return current_section() == section_history;
+}
+
+static int in_trash(void) {
+    return current_section() == section_trash;
+}
 
 static uint64_t current_nav_mask(void) {
     const int confirm = mux_input_pressed(mux_input_a);
@@ -81,6 +118,45 @@ static void nav_show_y(const int show, const char *text) {
         lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+}
+
+static const char *glyph_or_state(const char *name) {
+    char embed[MAX_BUFFER_SIZE];
+    return get_glyph_path("muxretro", name, embed, sizeof(embed)) ? name : "state";
+}
+
+static const char *history_source_label(const enum history_source source) {
+    switch (source) {
+        case history_source_quick:
+            return lang.muxretro.gamestate.source_quick;
+        case history_source_auto:
+            return lang.muxretro.gamestate.source_auto;
+        case history_source_timeline:
+            return lang.muxretro.gamestate.source_timeline;
+        default:
+            return lang.muxretro.gamestate.source_standard;
+    }
+}
+
+static void history_row_text(const int index, char *buf, const size_t size) {
+    enum history_source source = history_source_standard;
+    long long created = 0;
+
+    if (history_describe(index, &source, &created) != 0) {
+        buf[0] = '\0';
+        return;
+    }
+
+    const time_t moment = created;
+    const struct tm *parts = localtime(&moment);
+
+    char stamp[32];
+    if (parts)
+        strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M:%S", parts);
+    else
+        snprintf(stamp, sizeof(stamp), "%s", lang.generic.unknown);
+
+    snprintf(buf, size, "%s - %s", history_source_label(source), stamp);
 }
 
 static int quicksave_row_offset(void) {
@@ -147,26 +223,48 @@ static const struct gamestate_slot *state_at_row(const int row) {
     return NULL;
 }
 
-static void refresh_preview(void) {
-    const char *state_name = NULL;
+static void refresh_row_nav(void) {
+    const int on_row = focused_row() >= 0;
+
+    if (in_trash()) {
+        nav_show_a(on_row, lang.muxretro.gamestate.restore);
+        nav_show_x(on_row, lang.muxretro.gamestate.purge);
+        nav_show_y(gamestate_trash_count > 0, lang.muxretro.gamestate.empty);
+    } else {
+        nav_show_a(on_row, lang.generic.load);
+        nav_show_x(on_row && !in_history(), lang.muxretro.gamestate.delete);
+        nav_show_y(!in_history() && gamestate_slot_count < GAMESTATE_MAX_SLOTS, lang.generic.save);
+    }
+
+    const int on_bar = sectioned && frame_total > 1 && list_frame_focused();
+
+    nav_show_lr(on_bar);
+    if (on_bar) lv_label_set_text(ui_lbl_nav_lr, lang.generic.change);
+}
+
+static void refresh_thumbnail(void) {
     const char *thumb_path = NULL;
 
-    int is_live_row = 0;
+    int reused_path = 0;
 
-    const struct gamestate_slot *sel = state_at_row(current_item_index);
-    if (sel) {
-        thumb_path = sel->thumb_path;
-        state_name = sel->name;
+    const int row = focused_row();
 
-        is_live_row = current_item_index < pinned_row_offset();
+    if (row >= 0 && in_trash()) {
+        const int entry = row - state_row_count - history_row_count;
+        if (entry >= 0 && entry < gamestate_trash_count && gamestate_trash[entry].thumb_path[0])
+            thumb_path = gamestate_trash[entry].thumb_path;
+    } else if (row >= 0 && in_history()) {
+        thumb_path = history_thumbnail(row - state_row_count);
+        reused_path = 1;
+    } else if (row >= 0) {
+        const struct gamestate_slot *sel = state_at_row(row);
+        if (sel) {
+            thumb_path = sel->thumb_path;
+            reused_path = row < pinned_row_offset();
+        }
     }
 
-    if (ui_lbl_preview_name) lv_label_set_text(ui_lbl_preview_name, state_name ? state_name : "");
-
-    if (!preview_mode) {
-        lv_obj_add_flag(ui_img_box, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
+    refresh_row_nav();
 
     lv_obj_clear_flag(ui_img_box, LV_OBJ_FLAG_HIDDEN);
 
@@ -175,105 +273,174 @@ static void refresh_preview(void) {
         return;
     }
 
-    if (is_live_row) lv_img_cache_invalidate_src(NULL);
+    if (reused_path) lv_img_cache_invalidate_src(NULL);
+
+    const int16_t box = (int16_t) session_settings_state_thumbnail_width();
 
     const struct image_settings settings = {
         .image_path = (char *) thumb_path,
-        .align = LV_ALIGN_BOTTOM_MID,
-        .max_width = (int16_t) (device.mux.width - 16),
-        .max_height =
-            (int16_t) (device.mux.height - theme.header.height - theme.footer.height - 4 - theme.mux.item.height - 12),
+        .align = LV_ALIGN_BOTTOM_RIGHT,
+        .max_width = box,
+        .max_height = box,
     };
 
     update_image(ui_img_box, settings);
 }
 
-static void set_preview_mode(int enabled);
+static void refresh_empty_state(void) {
+    const char *empty = lang.muxretro.gamestate.none_found;
+    if (in_history()) empty = lang.muxretro.gamestate.history_none;
+    if (in_trash()) empty = lang.muxretro.gamestate.trash_none;
+    const int rows = sectioned ? ui_count_static - 1 : 0;
 
-static int has_any_state(void) {
-    return gamestate_quicksave_exists || gamestate_autosave_exists || timeline_row_count() > 0
-           || gamestate_slot_count > 0;
+    lv_label_set_text(ui_lbl_screen_message, rows > 0 ? "" : empty);
+
+    refresh_row_nav();
 }
 
-static void refresh_empty_state(void) {
-    const int has_anything = has_any_state();
+static void capture_row(const int row) {
+    if (row < 0 || row >= GAMESTATE_ROW_MAX) return;
 
-    if (!has_anything && preview_mode) set_preview_mode(0);
-    lv_label_set_text(ui_lbl_screen_message, has_anything ? "" : lang.muxretro.gamestate.none_found);
+    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, lv_obj_get_child_cnt(ui_pnl_content) - 1);
+    if (!panel) return;
 
-    nav_show_a(has_anything, lang.generic.load);
-    nav_show_x(has_anything, lang.muxretro.gamestate.delete);
-    nav_show_lr(has_anything);
+    row_panels[row] = panel;
+    row_labels[row] = lv_obj_get_child(panel, 0);
+    row_glyphs[row] = lv_obj_get_child(panel, 1);
 }
 
 static void rebuild_rows(void) {
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();
+    list_frame_reset();
+
+    memset(row_panels, 0, sizeof(row_panels));
+    memset(row_labels, 0, sizeof(row_labels));
+    memset(row_glyphs, 0, sizeof(row_glyphs));
 
     ui_count_static = 0;
     current_item_index = 0;
+    sectioned = 0;
+
+    int row = 0;
 
     if (gamestate_quicksave_exists) {
         gen_label("muxretro", "state", gamestate_quicksave.name);
+        capture_row(row++);
     }
 
     if (gamestate_autosave_exists) {
         gen_label("muxretro", "state", gamestate_autosave.name);
+        capture_row(row++);
     }
 
     int trows[GAMESTATE_TIMELINE_DEPTH];
     const int tcount = timeline_rows(trows);
     for (int i = 0; i < tcount; i++) {
         gen_label("muxretro", "state", gamestate_timeline[trows[i]].name);
+        capture_row(row++);
     }
 
     for (int i = 0; i < gamestate_slot_count; i++) {
         gen_label("muxretro", "state", gamestate_slots[i].name);
+        capture_row(row++);
     }
 
-    ui_count_static = pinned_row_offset() + gamestate_slot_count;
+    state_row_count = row;
+
+    history_row_count = history_count();
+    if (history_row_count > 0) {
+        const char *glyph = glyph_or_state("save_history");
+
+        for (int i = 0; i < history_row_count; i++) {
+            char label[128];
+            history_row_text(i, label, sizeof(label));
+            gen_label("muxretro", glyph, label);
+            capture_row(row++);
+        }
+    }
+
+    trash_row_count = gamestate_trash_count;
+    if (trash_row_count > 0) {
+        const char *glyph = glyph_or_state("save_trash");
+
+        for (int i = 0; i < trash_row_count; i++) {
+            gen_label("muxretro", glyph, gamestate_trash[i].name);
+            capture_row(row++);
+        }
+    }
+
+    static list_frame frames[section_count];
+    frame_total = 0;
+
+    if (state_row_count > 0) {
+        frame_section[frame_total] = section_states;
+        frames[frame_total++] = (list_frame){lang.muxretro.gamestate.section_states, 0, state_row_count};
+    }
+
+    if (history_row_count > 0) {
+        frame_section[frame_total] = section_history;
+        frames[frame_total++] = (list_frame){lang.muxretro.gamestate.history, state_row_count, history_row_count};
+    }
+
+    if (trash_row_count > 0) {
+        frame_section[frame_total] = section_trash;
+        frames[frame_total++] =
+            (list_frame){lang.muxretro.gamestate.trash, state_row_count + history_row_count, trash_row_count};
+    }
+
+    if (frame_total > 0
+        && list_frame_init(
+            &theme, ui_pnl_content, frames, frame_total, row_panels, row_labels, row_glyphs, NULL, row
+        )) {
+        sectioned = 1;
+        list_frame_apply();
+    } else {
+        ui_count_static = row;
+    }
+
     first_open = 0;
 
-    refresh_preview();
+    refresh_thumbnail();
     refresh_empty_state();
 }
 
-static void focus_row(const int index) {
-    if (index < 0 || index >= ui_count_static) return;
-    current_item_index = index;
+static void focus_row(const int row) {
+    if (!sectioned) return;
+    if (row < 0 || row >= state_row_count + history_row_count + trash_row_count) return;
 
-    lv_obj_t *panel = lv_obj_get_child(ui_pnl_content, index);
-    if (!panel) return;
+    int section = section_states;
+    int first = 0;
 
-    lv_obj_t *label = lv_obj_get_child(panel, 0);
-    lv_obj_t *glyph = lv_obj_get_child(panel, 1);
-
-    nav_suppress_next_shake();
-
-    if (label) lv_group_focus_obj(label);
-    if (glyph) lv_group_focus_obj(glyph);
-    lv_group_focus_obj(panel);
-
-    update_scroll_position(
-        theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
-    );
-}
-
-static void set_preview_mode(const int enabled) {
-    preview_mode = enabled;
-
-    if (enabled) {
-        lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnl_preview_name, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(ui_lbl_nav_lr, lang.muxretro.gamestate.list);
-    } else {
-        lv_obj_clear_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnl_preview_name, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(ui_lbl_nav_lr, lang.generic.preview);
-        focus_row(current_item_index);
+    if (row >= state_row_count + history_row_count) {
+        section = section_trash;
+        first = state_row_count + history_row_count;
+    } else if (row >= state_row_count) {
+        section = section_history;
+        first = state_row_count;
     }
 
-    refresh_preview();
+    int frame = -1;
+    for (int i = 0; i < frame_total; i++)
+        if (frame_section[i] == section) frame = i;
+
+    if (frame < 0) return;
+    if (list_frame_current() != frame && !list_frame_go(frame)) return;
+
+    current_item_index = 0;
+    gen_step_movement(row - first + 1, +1, 1, 0, 0);
+}
+
+static int move_section(const int direction) {
+    if (!sectioned || !list_frame_move(direction)) return 0;
+
+    play_sound(snd_option);
+    gen_step_movement(0, +1, 1, 0, 0);
+
+    refresh_thumbnail();
+    refresh_empty_state();
+
+    return 1;
 }
 
 static void create_osk_objects(void) {
@@ -321,31 +488,20 @@ void gamestate_menu_init(void) {
         &mismatch_dlg, &theme, ui_screen, lang.generic.warning, lang.muxretro.gamestate.mismatch_load,
         lang.generic.load, lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
+    dialogue_init_confirm(
+        &purge_dlg, &theme, ui_screen, lang.muxretro.gamestate.purge_title, lang.muxretro.gamestate.purge_desc,
+        lang.muxretro.gamestate.purge, lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
+    dialogue_init_confirm(
+        &empty_dlg, &theme, ui_screen, lang.muxretro.gamestate.empty_title, lang.muxretro.gamestate.empty_desc,
+        lang.muxretro.gamestate.empty, lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
     dialogue_init_accept(
         &notice_dlg, &theme, ui_screen, lang.generic.warning, lang.muxretro.gamestate.mismatch_notice,
         lang.generic.understand
     );
 
     create_osk_objects();
-
-    ui_pnl_preview_name = lv_obj_create(ui_screen);
-    ui_lbl_preview_name = lv_label_create(ui_pnl_preview_name);
-    ui_img_preview_glyph = lv_img_create(ui_pnl_preview_name);
-
-    apply_theme_list_panel(ui_pnl_preview_name);
-    apply_theme_list_item(&theme, ui_lbl_preview_name, "");
-    apply_theme_list_glyph(&theme, ui_img_preview_glyph, "muxretro", "state");
-    apply_text_long_dot(&theme, ui_lbl_preview_name);
-
-    lv_obj_align(ui_pnl_preview_name, LV_ALIGN_TOP_MID, 0, theme.header.height + 2 + theme.misc.content.padding_top);
-    lv_obj_move_foreground(ui_pnl_preview_name);
-
-    lv_obj_add_state(ui_pnl_preview_name, LV_STATE_FOCUSED);
-    lv_obj_add_state(ui_lbl_preview_name, LV_STATE_FOCUSED);
-    lv_obj_add_state(ui_img_preview_glyph, LV_STATE_FOCUSED);
-
-    lv_obj_clear_flag(ui_pnl_preview_name, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_flag(ui_pnl_preview_name, LV_OBJ_FLAG_HIDDEN);
 }
 
 void gamestate_menu_open(void) {
@@ -355,20 +511,22 @@ void gamestate_menu_open(void) {
     image_writer_flush();
 
     lv_obj_clear_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
-
-    preview_mode = 0;
-
     lv_obj_clear_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_pnl_preview_name, LV_OBJ_FLAG_HIDDEN);
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
-                                  {ui_lbl_nav_lr, lang.generic.preview, 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
     nav_show_y(1, lang.generic.save);
 
     rebuild_rows();
+
+    if (sectioned && ui_count_static > 1) {
+        gen_step_movement(1, +1, 1, 0, 0);
+        refresh_thumbnail();
+    }
+
     pause_menu_fix_nav_order();
 }
 
@@ -384,8 +542,10 @@ static void close_gamestate(void) {
     lv_label_set_text(ui_lbl_screen_message, "");
 
     lv_obj_clear_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_pnl_preview_name, LV_OBJ_FLAG_HIDDEN);
-    preview_mode = 0;
+
+    list_frame_reset();
+    sectioned = 0;
+    frame_total = 0;
 
     nav_show_a(0, NULL);
     nav_show_x(0, NULL);
@@ -419,8 +579,8 @@ static void finish_new_save_confirm(void) {
         const int position = gamestate_create(name);
         if (position >= 0) {
             rebuild_rows();
-            focus_row(position);
-            refresh_preview();
+            focus_row(pinned_row_offset() + position);
+            refresh_thumbnail();
         }
     }
 
@@ -503,8 +663,27 @@ void gamestate_menu_tick(void) {
     if (pending_action != pending_none) {
         const pending_action_t action = pending_action;
         const int index = pending_index;
+
         pending_action = pending_none;
         pending_index = -1;
+
+        if (action == pending_empty) {
+            gamestate_trash_empty();
+            rebuild_rows();
+            focus_row(0);
+            refresh_thumbnail();
+            return;
+        }
+
+        if (index < 0) return;
+
+        if (action == pending_purge) {
+            gamestate_trash_delete(index - state_row_count - history_row_count);
+            rebuild_rows();
+            focus_row(0);
+            refresh_thumbnail();
+            return;
+        }
 
         const int qs_offset = quicksave_row_offset();
         const int offset = pinned_row_offset();
@@ -529,25 +708,25 @@ void gamestate_menu_tick(void) {
                 gamestate_quicksave_delete();
                 rebuild_rows();
 
-                if (ui_count_static > 0) {
+                if (state_row_count > 0) {
                     focus_row(0);
-                    refresh_preview();
+                    refresh_thumbnail();
                 }
             } else if (gamestate_autosave_exists && index == qs_offset) {
                 gamestate_autosave_delete();
                 rebuild_rows();
 
-                if (ui_count_static > 0) {
+                if (state_row_count > 0) {
                     focus_row(0);
-                    refresh_preview();
+                    refresh_thumbnail();
                 }
             } else if (timeline_slot >= 0) {
                 gamestate_timeline_delete(timeline_slot);
                 rebuild_rows();
 
-                if (ui_count_static > 0) {
+                if (state_row_count > 0) {
                     focus_row(0);
-                    refresh_preview();
+                    refresh_thumbnail();
                 }
             } else {
                 const int slot_index = index - offset;
@@ -558,10 +737,10 @@ void gamestate_menu_tick(void) {
                     const int next_slot_index =
                         slot_index < gamestate_slot_count ? slot_index : gamestate_slot_count - 1;
                     focus_row(pinned_row_offset() + next_slot_index);
-                    refresh_preview();
-                } else if (ui_count_static > 0) {
+                    refresh_thumbnail();
+                } else if (state_row_count > 0) {
                     focus_row(0);
-                    refresh_preview();
+                    refresh_thumbnail();
                 }
             }
         }
@@ -587,7 +766,7 @@ void gamestate_menu_tick(void) {
             dialogue_dismiss(&load_dlg);
             if (opt == mux_confirm_yep) {
                 pending_action = pending_load;
-                pending_index = current_item_index;
+                pending_index = focused_row();
             }
         } else if (edge & BIT(5)) {
             dialogue_mark_cancelled(&load_dlg);
@@ -604,7 +783,7 @@ void gamestate_menu_tick(void) {
             dialogue_dismiss(&delete_dlg);
             if (opt == mux_confirm_yep) {
                 pending_action = pending_delete;
-                pending_index = current_item_index;
+                pending_index = focused_row();
             }
         } else if (edge & BIT(5)) {
             dialogue_mark_cancelled(&delete_dlg);
@@ -621,11 +800,45 @@ void gamestate_menu_tick(void) {
             dialogue_dismiss(&mismatch_dlg);
             if (opt == mux_confirm_yep) {
                 pending_action = pending_load;
-                pending_index = current_item_index;
+                pending_index = focused_row();
             }
         } else if (edge & BIT(5)) {
             dialogue_mark_cancelled(&mismatch_dlg);
             dialogue_dismiss(&mismatch_dlg);
+        }
+        return;
+    }
+
+    if (dialogue_active(&purge_dlg)) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&purge_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const mux_confirm_opt opt = (mux_confirm_opt) purge_dlg.selected;
+            dialogue_dismiss(&purge_dlg);
+            if (opt == mux_confirm_yep) {
+                pending_action = pending_purge;
+                pending_index = focused_row();
+            }
+        } else if (edge & BIT(5)) {
+            dialogue_mark_cancelled(&purge_dlg);
+            dialogue_dismiss(&purge_dlg);
+        }
+        return;
+    }
+
+    if (dialogue_active(&empty_dlg)) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&empty_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const mux_confirm_opt opt = (mux_confirm_opt) empty_dlg.selected;
+            dialogue_dismiss(&empty_dlg);
+            if (opt == mux_confirm_yep) {
+                pending_action = pending_empty;
+                pending_index = 0;
+            }
+        } else if (edge & BIT(5)) {
+            dialogue_mark_cancelled(&empty_dlg);
+            dialogue_dismiss(&empty_dlg);
         }
         return;
     }
@@ -645,37 +858,72 @@ void gamestate_menu_tick(void) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
         gen_step_movement(1, -1, 1, 0, 1);
-        refresh_preview();
+        refresh_thumbnail();
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 1, 0, 1);
-        refresh_preview();
-    } else if (nav_page_tick(edge, mask, 1)) {
-        refresh_preview();
+        refresh_thumbnail();
+    } else if (edge & (NAV_PAGE_UP_BIT | NAV_PAGE_DOWN_BIT)) {
+        move_section(edge & NAV_PAGE_UP_BIT ? -1 : +1);
     } else if (edge & (BIT(2) | BIT(3))) {
-        if (has_any_state()) {
-            play_sound(snd_option);
-            set_preview_mode(!preview_mode);
+        if (list_frame_focused()) move_section(edge & BIT(2) ? -1 : +1);
+    } else if (edge & BIT(6) && in_trash()) {
+        if (focused_row() >= 0) {
+            play_sound(snd_confirm);
+            dialogue_open(&purge_dlg, &theme);
         }
     } else if (edge & BIT(6)) {
-        if (timeline_slot_is_newest(timeline_at_row(current_item_index))) {
+        const int row = in_history() ? -1 : focused_row();
+
+        if (row >= 0 && timeline_slot_is_newest(timeline_at_row(row))) {
             play_sound(snd_error);
             pause_menu_show_toast(lang.muxretro.gamestate.timeline_protected);
-        } else if (has_any_state()) {
+        } else if (row >= 0) {
             play_sound(snd_confirm);
             dialogue_open(&delete_dlg, &theme);
         }
     } else if (edge & BIT(7)) {
-        if (gamestate_slot_count < GAMESTATE_MAX_SLOTS) start_new_save();
+        if (in_trash()) {
+            if (gamestate_trash_count > 0) {
+                play_sound(snd_confirm);
+                dialogue_open(&empty_dlg, &theme);
+            }
+        } else if (!in_history() && gamestate_slot_count < GAMESTATE_MAX_SLOTS) {
+            start_new_save();
+        }
     } else if (edge & BIT(5)) {
         play_sound(snd_back);
         close_gamestate();
     } else if (edge & BIT(4)) {
-        if (has_any_state()) {
+        const int row = focused_row();
+        if (row < 0) return;
+
+        if (in_trash()) {
             play_sound(snd_confirm);
 
-            const struct gamestate_slot *sel = state_at_row(current_item_index);
+            const int entry = row - state_row_count - history_row_count;
+            const int restored = gamestate_trash_restore(entry) == 0;
+
+            rebuild_rows();
+            focus_row(0);
+            refresh_thumbnail();
+
+            if (!restored) pause_menu_show_toast(lang.muxretro.gamestate.restore_failed);
+        } else if (in_history()) {
+            play_sound(snd_confirm);
+
+            const int restored = history_restore(row - state_row_count) == 0;
+
+            close_gamestate();
+            pause_menu_toggle();
+            pause_menu_show_toast(
+                restored ? lang.muxretro.gamestate.history_restored : lang.muxretro.gamestate.history_failed
+            );
+        } else {
+            play_sound(snd_confirm);
+
+            const struct gamestate_slot *sel = state_at_row(row);
             if (sel && !gamestate_metadata_matches(sel)) {
                 dialogue_open(&mismatch_dlg, &theme);
             } else {

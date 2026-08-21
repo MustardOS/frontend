@@ -6,21 +6,32 @@
 #include "../settings/submenu.h"
 #include "hw_render.h"
 
-enum { row_filter = 0, row_shader, row_brightness, row_contrast, row_saturation, row_hue_shift, row_gamma, row_count };
-
-static const char *row_labels[row_count] = {
-    lang.muxretro.display_screen.filter,     lang.muxretro.display_screen.shaders,
-    lang.muxretro.display_screen.brightness, lang.muxretro.display_screen.contrast,
-    lang.muxretro.display_screen.saturation, lang.muxretro.display_screen.hue_shift,
-    lang.muxretro.display_screen.gamma
+enum {
+    row_vignette = 0,
+    row_filter,
+    row_shader,
+    row_brightness,
+    row_contrast,
+    row_saturation,
+    row_hue_shift,
+    row_gamma,
+    row_count
 };
 
-static const char *row_glyphs[row_count] = {"filter", "shader", "brightness", "contrast", "saturation", "hue", "gamma"};
+static const char *row_labels[row_count] = {
+    lang.muxretro.display_screen.vignette,  lang.muxretro.display_screen.filter,
+    lang.muxretro.display_screen.shaders,   lang.muxretro.display_screen.brightness,
+    lang.muxretro.display_screen.contrast,  lang.muxretro.display_screen.saturation,
+    lang.muxretro.display_screen.hue_shift, lang.muxretro.display_screen.gamma
+};
 
-static const char *row_help[row_count] = {lang.muxretro.help.display.filter,     lang.muxretro.help.display.shader,
-                                          lang.muxretro.help.display.brightness, lang.muxretro.help.display.contrast,
-                                          lang.muxretro.help.display.saturation, lang.muxretro.help.display.hue_shift,
-                                          lang.muxretro.help.display.gamma};
+static const char *row_glyphs[row_count] = {"border",   "filter",     "shader", "brightness",
+                                            "contrast", "saturation", "hue",    "gamma"};
+
+static const char *row_help[row_count] = {lang.muxretro.help.display.vignette,  lang.muxretro.help.display.filter,
+                                          lang.muxretro.help.display.shader,    lang.muxretro.help.display.brightness,
+                                          lang.muxretro.help.display.contrast,  lang.muxretro.help.display.saturation,
+                                          lang.muxretro.help.display.hue_shift, lang.muxretro.help.display.gamma};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
@@ -74,7 +85,7 @@ static void cycle_row(const int index, const int direction) {
 }
 
 static int row_is_action(const int index) {
-    return index == row_filter || index == row_shader;
+    return index == row_filter || index == row_shader || index == row_vignette;
 }
 
 static void row_action(const int index) {
@@ -82,6 +93,8 @@ static void row_action(const int index) {
         colfilter_menu_open();
     } else if (index == row_shader) {
         shader_menu_open();
+    } else if (index == row_vignette) {
+        vignette_menu_open();
     }
 }
 
@@ -93,6 +106,11 @@ static int child_tick(void) {
 
     if (shader_menu_is_active()) {
         shader_menu_tick();
+        return 1;
+    }
+
+    if (vignette_menu_is_active()) {
+        vignette_menu_tick();
         return 1;
     }
 
@@ -131,6 +149,7 @@ void display_menu_init(void) {
 
     colfilter_menu_init();
     shader_menu_init();
+    vignette_menu_init();
 }
 
 void display_menu_open(void) {
@@ -152,6 +171,10 @@ void display_menu_reopen_filter(void) {
 
 void display_menu_reopen_shader(void) {
     settings_menu_reopen_visuals_at(row_shader);
+}
+
+void display_menu_reopen_vignette(void) {
+    settings_menu_reopen_visuals_at(row_vignette);
 }
 
 const submenu_def *visuals_menu_definition(void) {

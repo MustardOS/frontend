@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,27 +25,33 @@ int is_network_connected(void) {
     return 0;
 }
 
-int get_network_ipv4_address(char *output, const size_t output_size) {
-    if (!output || output_size == 0 || !device.network.interface[0]) return 0;
-
+static int scan_ipv4_address(const char *wanted, char *output, const size_t output_size) {
     output[0] = '\0';
 
     struct ifaddrs *interfaces = NULL;
-    if (getifaddrs(&interfaces) == 0) {
-        for (const struct ifaddrs *entry = interfaces; entry; entry = entry->ifa_next) {
-            if (!entry->ifa_addr || entry->ifa_addr->sa_family != AF_INET) continue;
-            if (strcmp(entry->ifa_name, device.network.interface) != 0) continue;
+    if (getifaddrs(&interfaces) != 0) return 0;
 
-            const struct sockaddr_in *address = (const struct sockaddr_in *) entry->ifa_addr;
-            if (address->sin_addr.s_addr == htonl(INADDR_ANY)) continue;
+    for (const struct ifaddrs *entry = interfaces; entry; entry = entry->ifa_next) {
+        if (!entry->ifa_addr || entry->ifa_addr->sa_family != AF_INET) continue;
 
-            if (inet_ntop(AF_INET, &address->sin_addr, output, output_size)) break;
+        if (wanted) {
+            if (strcmp(entry->ifa_name, wanted) != 0) continue;
+        } else {
+            if (!(entry->ifa_flags & IFF_UP) || !(entry->ifa_flags & IFF_RUNNING)) continue;
+            if (entry->ifa_flags & IFF_LOOPBACK) continue;
         }
 
-        freeifaddrs(interfaces);
-        if (output[0]) return 1;
+        const struct sockaddr_in *address = (const struct sockaddr_in *) entry->ifa_addr;
+        if (address->sin_addr.s_addr == htonl(INADDR_ANY)) continue;
+
+        if (inet_ntop(AF_INET, &address->sin_addr, output, output_size)) break;
     }
 
+    freeifaddrs(interfaces);
+    return output[0] ? 1 : 0;
+}
+
+static int saved_ipv4_address(char *output, const size_t output_size) {
     char *saved = read_line_char_from(CONF_CONFIG_PATH "network/address", 1);
     if (!saved) return 0;
 
@@ -54,6 +61,22 @@ int get_network_ipv4_address(char *output, const size_t output_size) {
     free(saved);
 
     return valid;
+}
+
+int get_network_ipv4_address(char *output, const size_t output_size) {
+    if (!output || output_size == 0 || !device.network.interface[0]) return 0;
+    if (scan_ipv4_address(device.network.interface, output, output_size)) return 1;
+
+    return saved_ipv4_address(output, output_size);
+}
+
+int get_any_ipv4_address(char *output, const size_t output_size) {
+    if (!output || output_size == 0) return 0;
+
+    if (device.network.interface[0] && scan_ipv4_address(device.network.interface, output, output_size)) return 1;
+    if (scan_ipv4_address(NULL, output, output_size)) return 1;
+
+    return saved_ipv4_address(output, output_size);
 }
 
 int is_bluetooth_connected(void) {

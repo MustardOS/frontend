@@ -590,6 +590,7 @@ static const module_entry modules[] = {
     {"network", "net_profile", "muxnetprofile", muxnetprofile_main, NULL},
     {"netadv", "connect", "muxnetadv", muxnetadv_main, NULL},
     {"net_proxy", "connect", "muxnetproxy", muxnetproxy_main, NULL},
+    {"link", "connect", "muxlink", muxlink_main, NULL},
     {"webserv", "connect", "muxwebserv", muxwebserv_main, NULL},
     {"btall", "connect", "muxbtall", muxbtall_main, NULL},
     {"btcon", "btall", "muxbtcon", muxbtcon_main, NULL},

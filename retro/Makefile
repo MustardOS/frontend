@@ -17,7 +17,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        core/governor_boost.c core/power.c core/power_protocol.c \
        video/video.c video/gl_dispatch.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_viewport.c \
-       video/ui_viewportadjust.c video/ui_viewportcrop.c video/ui_overlay.c \
+       video/ui_viewportadjust.c video/ui_viewportcrop.c video/ui_overlay.c video/ui_vignette.c \
        video/image_writer.c video/ui_videosettings.c video/hw_render.c \
        video/filters/filters.c video/filters/scale2x.c video/filters/super_eagle.c \
        audio/audio.c audio/ui_soundsettings.c \
@@ -29,13 +29,13 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        core/subsystem.c \
        state/core_state.c state/state_writer.c state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
        state/content_hash.c state/bios_check.c state/sram.c \
-       state/patch.c state/ui_storagesettings.c state/manual.c \
+       state/patch.c state/ui_storagesettings.c state/manual.c state/history.c \
        cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/cheevo.c cheevo/ui_cheevo.c \
        netplay/address.c netplay/wire.c netplay/netplay.c netplay/ui_netplay.c \
        link/link.c link/ui_link.c \
        settings/settings.c settings/submenu.c settings/ui_settings.c \
        settings/ui_performancesettings.c settings/ui_hudsettings.c \
-       ui/ui_pause.c ui/ui_loading.c ui/options.c ui/ui_options.c ui/ui_information.c \
+       ui/ui_pause.c ui/ui_advisory.c ui/ui_loading.c ui/options.c ui/ui_options.c ui/ui_information.c \
        ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c ui/ui_patch.c ui/ui_manual.c
 
 OBJ := $(SRC:.c=.o)

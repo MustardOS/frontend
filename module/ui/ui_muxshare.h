@@ -196,6 +196,7 @@
     CONNECT(network, "network")                                                                                        \
     CONNECT(net_adv, "netadv")                                                                                         \
     CONNECT(proxy, "net_proxy")                                                                                        \
+    CONNECT(link, "link")                                                                                              \
     CONNECT(services, "service")                                                                                       \
     CONNECT(bluetooth, "bluetooth")
 
@@ -665,6 +666,14 @@
     VISUAL(shuffle, "shuffle")
 
 #define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS
+
+#define LINK_ELEMENTS                                                                                                  \
+    LINK(enabled, "enabled")                                                                                           \
+    LINK(status, "status")                                                                                             \
+    LINK(interface, "interface")                                                                                       \
+    LINK(address, "address")                                                                                           \
+    LINK(peer_address, "peeraddress")                                                                                  \
+    LINK(peer_mac, "peermac")
 
 #define WEBSERV_ELEMENTS                                                                                               \
     WEBSERV(sshd, "sshd")                                                                                              \

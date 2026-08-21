@@ -157,9 +157,11 @@ struct session_settings_t {
     int hotkey_manual_enabled;
     int auto_save;
     int sram_flush_seconds;
-    int sram_backup_enabled;
     int timeline_interval;
     int timeline_count;
+    int history_depth;
+    int trash_count;
+    int state_thumbnail;
     int colour_brightness;
     int colour_contrast;
     int colour_saturation;
@@ -167,6 +169,14 @@ struct session_settings_t {
     int colour_gamma;
     int colour_filter;
     int colour_shader;
+    int vignette_shape;
+    int vignette_width;
+    int vignette_height;
+    int vignette_offset_x;
+    int vignette_offset_y;
+    int vignette_softness;
+    int vignette_strength;
+    int vignette_colour;
     int overlay_source;
     int overlay_pattern;
     int overlay_opacity;
@@ -260,6 +270,65 @@ int session_settings_timeline_interval_ms(void);
 void session_settings_cycle_timeline_interval(int direction);
 
 void session_settings_cycle_timeline_count(int direction);
+
+#define VIGNETTE_SIZE_MIN   10
+#define VIGNETTE_SIZE_MAX   200
+#define VIGNETTE_OFFSET_MIN (-50)
+#define VIGNETTE_OFFSET_MAX 50
+
+enum {
+    vignette_shape_off = 0,
+    vignette_shape_round,
+    vignette_shape_square,
+    vignette_shape_cycle_count,
+    vignette_shape_star = vignette_shape_cycle_count,
+    vignette_shape_triangle,
+    vignette_shape_count
+};
+
+enum { vignette_colour_black = 0, vignette_colour_white, vignette_colour_count };
+
+const char *session_settings_vignette_shape_name(int value);
+
+const char *session_settings_vignette_colour_name(int value);
+
+const char *session_settings_vignette_size_name(int value);
+
+const char *session_settings_vignette_offset_name(int value);
+
+const char *session_settings_vignette_percent_name(int value);
+
+int session_settings_vignette_active(void);
+
+void session_settings_cycle_vignette_shape(int direction);
+
+void session_settings_cycle_vignette_width(int direction);
+
+void session_settings_cycle_vignette_height(int direction);
+
+void session_settings_cycle_vignette_offset_x(int direction);
+
+void session_settings_cycle_vignette_offset_y(int direction);
+
+void session_settings_cycle_vignette_softness(int direction);
+
+void session_settings_cycle_vignette_strength(int direction);
+
+void session_settings_cycle_vignette_colour(int direction);
+
+void session_settings_cycle_history_depth(int direction);
+
+const char *session_settings_trash_count_name(int value);
+
+void session_settings_cycle_trash_count(int direction);
+
+enum { state_thumbnail_small = 0, state_thumbnail_medium, state_thumbnail_large, state_thumbnail_count };
+
+const char *session_settings_state_thumbnail_name(int value);
+
+int session_settings_state_thumbnail_width(void);
+
+void session_settings_cycle_state_thumbnail(int direction);
 
 const char *session_settings_auto_save_name(int mode);
 
@@ -404,8 +473,6 @@ void session_settings_cycle_hotkey_manual_enabled(int direction);
 void session_settings_cycle_auto_save(int direction);
 
 void session_settings_cycle_sram_flush(int direction);
-
-void session_settings_cycle_sram_backup_enabled(int direction);
 
 void session_settings_cycle_colour_brightness(int direction);
 

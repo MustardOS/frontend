@@ -1,6 +1,8 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 #include <sys/eventfd.h>
 #include <limits.h>
 #include <netdb.h>
@@ -1346,11 +1348,15 @@ static int peer_start(const int socket_fd, const int server, const unsigned inde
     return -1;
 }
 
-static void send_discovery(const int socket_fd) {
+static void announce_to(const int socket_fd, const struct in_addr target, const uint8_t *message, const size_t size) {
     struct sockaddr_in destination = {0};
     destination.sin_family = AF_INET;
     destination.sin_port = htons(NETPLAY_DISCOVERY_PORT);
-    destination.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    destination.sin_addr = target;
+    sendto(socket_fd, message, size, MSG_DONTWAIT, (struct sockaddr *) &destination, sizeof(destination));
+}
+
+static void send_discovery(const int socket_fd) {
     uint8_t message[64] = {0};
     memcpy(message, "PKND", 4);
     message[4] = NETPLAY_PROTOCOL;
@@ -1358,7 +1364,31 @@ static void send_discovery(const int socket_fd) {
     pthread_mutex_lock(&netplay.mutex);
     snprintf((char *) message + 8, sizeof(message) - 8, "%s", netplay.host_name);
     pthread_mutex_unlock(&netplay.mutex);
-    sendto(socket_fd, message, sizeof(message), MSG_DONTWAIT, (struct sockaddr *) &destination, sizeof(destination));
+
+    struct ifaddrs *interfaces = NULL;
+    int announced = 0;
+
+    if (getifaddrs(&interfaces) == 0) {
+        for (const struct ifaddrs *entry = interfaces; entry; entry = entry->ifa_next) {
+            if (!entry->ifa_addr || entry->ifa_addr->sa_family != AF_INET) continue;
+            if (!(entry->ifa_flags & IFF_UP) || !(entry->ifa_flags & IFF_RUNNING)) continue;
+            if (entry->ifa_flags & IFF_LOOPBACK) continue;
+            if (!(entry->ifa_flags & IFF_BROADCAST) || !entry->ifa_broadaddr) continue;
+
+            const struct sockaddr_in *broadcast = (const struct sockaddr_in *) entry->ifa_broadaddr;
+            if (broadcast->sin_addr.s_addr == htonl(INADDR_ANY)) continue;
+
+            announce_to(socket_fd, broadcast->sin_addr, message, sizeof(message));
+            announced = 1;
+        }
+
+        freeifaddrs(interfaces);
+    }
+
+    if (!announced) {
+        const struct in_addr limited = {.s_addr = htonl(INADDR_BROADCAST)};
+        announce_to(socket_fd, limited, message, sizeof(message));
+    }
 }
 
 static void *discovery_thread(void *unused) {

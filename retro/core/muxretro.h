@@ -234,6 +234,12 @@ void pause_menu_shutdown(void);
 
 int pause_menu_is_active(void);
 
+void advisory_init(const char *content_path);
+
+void advisory_tick(uint32_t now);
+
+void advisory_shutdown(void);
+
 int pause_menu_peek_allowed(void);
 
 int pause_menu_take_menu_tap(void);
@@ -481,6 +487,16 @@ void colfilter_menu_open(void);
 int colfilter_menu_is_active(void);
 
 void colfilter_menu_tick(void);
+
+void vignette_menu_init(void);
+
+void vignette_menu_open(void);
+
+int vignette_menu_is_active(void);
+
+void vignette_menu_tick(void);
+
+void display_menu_reopen_vignette(void);
 
 void shader_menu_init(void);
 

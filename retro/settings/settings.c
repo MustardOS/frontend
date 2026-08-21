@@ -24,6 +24,8 @@
 #include "../input/deck.h"
 #include "../input/rumble.h"
 #include "../macro/macro.h"
+#include "../state/gamestate.h"
+#include "../state/history.h"
 #include "../ui/options.h"
 #include "../video/overlay_bridge.h"
 #include "../core/paths.h"
@@ -62,9 +64,11 @@ static const struct session_settings_t defaults = {
     .hotkey_manual_enabled = 1,
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
-    .sram_backup_enabled = 1,
     .timeline_interval = 0,
     .timeline_count = 3,
+    .history_depth = 5,
+    .trash_count = 5,
+    .state_thumbnail = state_thumbnail_medium,
     .colour_brightness = 0,
     .colour_contrast = 100,
     .colour_saturation = 100,
@@ -72,6 +76,14 @@ static const struct session_settings_t defaults = {
     .colour_gamma = 100,
     .colour_filter = 0,
     .colour_shader = 0,
+    .vignette_shape = vignette_shape_off,
+    .vignette_width = 100,
+    .vignette_height = 100,
+    .vignette_offset_x = 0,
+    .vignette_offset_y = 0,
+    .vignette_softness = 50,
+    .vignette_strength = 70,
+    .vignette_colour = vignette_colour_black,
     .overlay_source = overlay_source_off,
     .overlay_pattern = 0,
     .overlay_opacity = 100,
@@ -234,7 +246,7 @@ static const int audio_rate_control_choices[] = {0, 25, 50, 100, 200};
 #define AUDIO_RATE_CONTROL_CHOICE_COUNT                                                                                \
     ((int) (sizeof(audio_rate_control_choices) / sizeof(audio_rate_control_choices[0])))
 
-static const int sram_flush_choices[] = {15, 30, 60, 90, 120, 240, 300};
+static const int sram_flush_choices[] = {0, 15, 30, 60, 90, 120, 240, 300};
 #define SRAM_FLUSH_CHOICE_COUNT ((int) (sizeof(sram_flush_choices) / sizeof(sram_flush_choices[0])))
 
 static const int frame_delay_choices[] = {FRAME_DELAY_OFF, FRAME_DELAY_AUTO, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16};
@@ -301,9 +313,11 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(hotkey_manual_enabled, 0, 1),
     SETTING_RANGE(auto_save, 0, auto_save_count - 1),
     SETTING_CHOICES(sram_flush_seconds, sram_flush_choices),
-    SETTING_RANGE(sram_backup_enabled, 0, 1),
     SETTING_RANGE(timeline_interval, 0, 6),
     SETTING_RANGE(timeline_count, 2, 10),
+    SETTING_RANGE(history_depth, 0, HISTORY_DEPTH_MAX),
+    SETTING_RANGE(trash_count, 0, GAMESTATE_TRASH_MAX),
+    SETTING_RANGE(state_thumbnail, 0, state_thumbnail_count - 1),
     SETTING_RANGE(colour_brightness, COLOUR_BRIGHTNESS_MIN, COLOUR_BRIGHTNESS_MAX),
     SETTING_RANGE(colour_contrast, COLOUR_CONTRAST_MIN, COLOUR_CONTRAST_MAX),
     SETTING_RANGE(colour_saturation, COLOUR_SATURATION_MIN, COLOUR_SATURATION_MAX),
@@ -311,6 +325,14 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(colour_gamma, COLOUR_GAMMA_MIN, COLOUR_GAMMA_MAX),
     SETTING_SPECIAL(colour_filter, setting_colour_filter),
     SETTING_SPECIAL(colour_shader, setting_colour_shader),
+    SETTING_RANGE(vignette_shape, 0, vignette_shape_count - 1),
+    SETTING_RANGE(vignette_width, VIGNETTE_SIZE_MIN, VIGNETTE_SIZE_MAX),
+    SETTING_RANGE(vignette_height, VIGNETTE_SIZE_MIN, VIGNETTE_SIZE_MAX),
+    SETTING_RANGE(vignette_offset_x, VIGNETTE_OFFSET_MIN, VIGNETTE_OFFSET_MAX),
+    SETTING_RANGE(vignette_offset_y, VIGNETTE_OFFSET_MIN, VIGNETTE_OFFSET_MAX),
+    SETTING_RANGE(vignette_softness, 0, 100),
+    SETTING_RANGE(vignette_strength, 0, 100),
+    SETTING_RANGE(vignette_colour, 0, vignette_colour_count - 1),
     SETTING_RANGE(overlay_source, 0, overlay_source_count - 1),
     SETTING_SPECIAL(overlay_pattern, setting_overlay_pattern),
     SETTING_RANGE(overlay_opacity, 0, 100),
@@ -576,6 +598,8 @@ double session_settings_slowmo_speed_value(const int mode) {
 }
 
 const char *session_settings_sram_flush_name(const int seconds) {
+    if (seconds <= 0) return lang.generic.disabled;
+
     static char buf[16];
     snprintf(buf, sizeof(buf), "%ds", seconds);
     return buf;
@@ -606,6 +630,55 @@ void session_settings_cycle_timeline_count(const int direction) {
     if (next < 2) next = 10;
     if (next > 10) next = 2;
     session_settings.timeline_count = next;
+}
+
+const char *session_settings_state_thumbnail_name(const int value) {
+    switch (value) {
+        case state_thumbnail_small:
+            return lang.muxretro.settings_screen.thumbnail_small;
+        case state_thumbnail_large:
+            return lang.muxretro.settings_screen.thumbnail_large;
+        default:
+            return lang.muxretro.settings_screen.thumbnail_medium;
+    }
+}
+
+int session_settings_state_thumbnail_width(void) {
+    switch (session_settings.state_thumbnail) {
+        case state_thumbnail_small:
+            return device.mux.width / 4;
+        case state_thumbnail_large:
+            return device.mux.width / 2;
+        default:
+            return device.mux.width / 3;
+    }
+}
+
+void session_settings_cycle_state_thumbnail(const int direction) {
+    session_settings.state_thumbnail =
+        (session_settings.state_thumbnail + direction + state_thumbnail_count) % state_thumbnail_count;
+}
+
+const char *session_settings_trash_count_name(const int value) {
+    if (value <= 0) return lang.generic.disabled;
+
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d", value);
+    return buf;
+}
+
+void session_settings_cycle_trash_count(const int direction) {
+    int next = session_settings.trash_count + (direction > 0 ? 1 : -1);
+    if (next < 0) next = GAMESTATE_TRASH_MAX;
+    if (next > GAMESTATE_TRASH_MAX) next = 0;
+    session_settings.trash_count = next;
+}
+
+void session_settings_cycle_history_depth(const int direction) {
+    int next = session_settings.history_depth + (direction > 0 ? 1 : -1);
+    if (next < 0) next = HISTORY_DEPTH_MAX;
+    if (next > HISTORY_DEPTH_MAX) next = 0;
+    session_settings.history_depth = next;
 }
 
 const char *session_settings_auto_save_name(const int mode) {
@@ -1795,11 +1868,6 @@ void session_settings_cycle_sram_flush(const int direction) {
     session_settings.sram_flush_seconds = sram_flush_choices[idx];
 }
 
-void session_settings_cycle_sram_backup_enabled(const int direction) {
-    (void) direction;
-    session_settings.sram_backup_enabled = !session_settings.sram_backup_enabled;
-}
-
 void session_settings_cycle_colour_brightness(const int direction) {
     session_settings.colour_brightness += direction * COLOUR_STEP;
     if (session_settings.colour_brightness < COLOUR_BRIGHTNESS_MIN)
@@ -1866,6 +1934,91 @@ void session_settings_cycle_overlay_pattern(const int direction) {
     const int count = overlay_pattern_count();
     session_settings.overlay_pattern = (session_settings.overlay_pattern + direction + count) % count;
     overlay_bridge_apply();
+}
+
+static void step_clamped(int *value, const int direction, const int step, const int low, const int high) {
+    *value += direction * step;
+    if (*value < low) *value = low;
+    if (*value > high) *value = high;
+}
+
+const char *session_settings_vignette_shape_name(const int value) {
+    switch (value) {
+        case vignette_shape_round:
+            return lang.muxretro.vignette_screen.shape_round;
+        case vignette_shape_square:
+            return lang.muxretro.vignette_screen.shape_square;
+        case vignette_shape_star:
+            return lang.muxretro.vignette_screen.shape_star;
+        case vignette_shape_triangle:
+            return lang.muxretro.vignette_screen.shape_triangle;
+        default:
+            return lang.generic.disabled;
+    }
+}
+
+const char *session_settings_vignette_colour_name(const int value) {
+    return value == vignette_colour_white ? lang.muxretro.vignette_screen.colour_white
+                                          : lang.muxretro.vignette_screen.colour_black;
+}
+
+const char *session_settings_vignette_size_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
+const char *session_settings_vignette_offset_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%+d%%", value);
+    return buf;
+}
+
+const char *session_settings_vignette_percent_name(const int value) {
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "%d%%", value);
+    return buf;
+}
+
+int session_settings_vignette_active(void) {
+    return session_settings.vignette_shape != vignette_shape_off && session_settings.vignette_strength > 0;
+}
+
+void session_settings_cycle_vignette_shape(const int direction) {
+    int current = session_settings.vignette_shape;
+    if (current >= vignette_shape_cycle_count) current = vignette_shape_round;
+
+    session_settings.vignette_shape = (current + direction + vignette_shape_cycle_count) % vignette_shape_cycle_count;
+}
+
+void session_settings_cycle_vignette_width(const int direction) {
+    step_clamped(&session_settings.vignette_width, direction, 5, VIGNETTE_SIZE_MIN, VIGNETTE_SIZE_MAX);
+}
+
+void session_settings_cycle_vignette_height(const int direction) {
+    step_clamped(&session_settings.vignette_height, direction, 5, VIGNETTE_SIZE_MIN, VIGNETTE_SIZE_MAX);
+}
+
+void session_settings_cycle_vignette_offset_x(const int direction) {
+    step_clamped(&session_settings.vignette_offset_x, direction, 1, VIGNETTE_OFFSET_MIN, VIGNETTE_OFFSET_MAX);
+}
+
+void session_settings_cycle_vignette_offset_y(const int direction) {
+    step_clamped(&session_settings.vignette_offset_y, direction, 1, VIGNETTE_OFFSET_MIN, VIGNETTE_OFFSET_MAX);
+}
+
+void session_settings_cycle_vignette_softness(const int direction) {
+    step_clamped(&session_settings.vignette_softness, direction, 5, 0, 100);
+}
+
+void session_settings_cycle_vignette_strength(const int direction) {
+    step_clamped(&session_settings.vignette_strength, direction, 5, 0, 100);
+}
+
+void session_settings_cycle_vignette_colour(const int direction) {
+    (void) direction;
+    session_settings.vignette_colour =
+        session_settings.vignette_colour == vignette_colour_white ? vignette_colour_black : vignette_colour_white;
 }
 
 void session_settings_cycle_overlay_opacity(const int direction) {

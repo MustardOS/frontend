@@ -500,12 +500,14 @@ struct mux_lang {
         char proxy[MAX_BUFFER_SIZE];
         char services[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
+        char link[MAX_BUFFER_SIZE];
         struct {
             char bluetooth[MAX_BUFFER_SIZE];
             char net_adv[MAX_BUFFER_SIZE];
             char proxy[MAX_BUFFER_SIZE];
             char services[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
+            char link[MAX_BUFFER_SIZE];
         } help;
     } muxconnect;
 
@@ -1293,6 +1295,28 @@ struct mux_lang {
         } help;
         char overview[MAX_BUFFER_SIZE];
     } muxlaunch;
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char enabled[MAX_BUFFER_SIZE];
+        char status[MAX_BUFFER_SIZE];
+        char interface[MAX_BUFFER_SIZE];
+        char address[MAX_BUFFER_SIZE];
+        char peer_address[MAX_BUFFER_SIZE];
+        char peer_mac[MAX_BUFFER_SIZE];
+        char status_absent[MAX_BUFFER_SIZE];
+        char status_unplugged[MAX_BUFFER_SIZE];
+        char status_waiting[MAX_BUFFER_SIZE];
+        char status_paired[MAX_BUFFER_SIZE];
+        struct {
+            char enabled[MAX_BUFFER_SIZE];
+            char status[MAX_BUFFER_SIZE];
+            char interface[MAX_BUFFER_SIZE];
+            char address[MAX_BUFFER_SIZE];
+            char peer_address[MAX_BUFFER_SIZE];
+            char peer_mac[MAX_BUFFER_SIZE];
+        } help;
+    } muxlink;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -1967,6 +1991,25 @@ struct mux_lang {
             char preserved[MAX_BUFFER_SIZE];
             char mismatch_notice[MAX_BUFFER_SIZE];
             char mismatch_load[MAX_BUFFER_SIZE];
+            char history[MAX_BUFFER_SIZE];
+            char section_states[MAX_BUFFER_SIZE];
+            char trash[MAX_BUFFER_SIZE];
+            char trash_none[MAX_BUFFER_SIZE];
+            char restore[MAX_BUFFER_SIZE];
+            char restore_failed[MAX_BUFFER_SIZE];
+            char purge[MAX_BUFFER_SIZE];
+            char purge_title[MAX_BUFFER_SIZE];
+            char purge_desc[MAX_BUFFER_SIZE];
+            char empty[MAX_BUFFER_SIZE];
+            char empty_title[MAX_BUFFER_SIZE];
+            char empty_desc[MAX_BUFFER_SIZE];
+            char history_none[MAX_BUFFER_SIZE];
+            char history_restored[MAX_BUFFER_SIZE];
+            char history_failed[MAX_BUFFER_SIZE];
+            char source_quick[MAX_BUFFER_SIZE];
+            char source_auto[MAX_BUFFER_SIZE];
+            char source_timeline[MAX_BUFFER_SIZE];
+            char source_standard[MAX_BUFFER_SIZE];
         } gamestate;
         struct {
             char none_found[MAX_BUFFER_SIZE];
@@ -2010,6 +2053,8 @@ struct mux_lang {
             char hotkeys_desc[MAX_BUFFER_SIZE];
             char display_title[MAX_BUFFER_SIZE];
             char display_desc[MAX_BUFFER_SIZE];
+            char vignette_title[MAX_BUFFER_SIZE];
+            char vignette_desc[MAX_BUFFER_SIZE];
             char viewport_title[MAX_BUFFER_SIZE];
             char viewport_desc[MAX_BUFFER_SIZE];
             char video_title[MAX_BUFFER_SIZE];
@@ -2096,10 +2141,15 @@ struct mux_lang {
             char header_battery[MAX_BUFFER_SIZE];
             char header_both[MAX_BUFFER_SIZE];
             char sram_flush[MAX_BUFFER_SIZE];
-            char sram_backup[MAX_BUFFER_SIZE];
             char content_precache[MAX_BUFFER_SIZE];
             char timeline_saves[MAX_BUFFER_SIZE];
             char timeline_count[MAX_BUFFER_SIZE];
+            char history_states[MAX_BUFFER_SIZE];
+            char trash_count[MAX_BUFFER_SIZE];
+            char state_thumbnail[MAX_BUFFER_SIZE];
+            char thumbnail_small[MAX_BUFFER_SIZE];
+            char thumbnail_medium[MAX_BUFFER_SIZE];
+            char thumbnail_large[MAX_BUFFER_SIZE];
             char auto_save[MAX_BUFFER_SIZE];
             char auto_save_idle[MAX_BUFFER_SIZE];
             char auto_save_quit[MAX_BUFFER_SIZE];
@@ -2270,7 +2320,24 @@ struct mux_lang {
             char overlay_pattern[MAX_BUFFER_SIZE];
             char overlay_opacity[MAX_BUFFER_SIZE];
             char viewport[MAX_BUFFER_SIZE];
+            char vignette[MAX_BUFFER_SIZE];
         } display_screen;
+        struct {
+            char shape[MAX_BUFFER_SIZE];
+            char shape_round[MAX_BUFFER_SIZE];
+            char shape_square[MAX_BUFFER_SIZE];
+            char shape_star[MAX_BUFFER_SIZE];
+            char shape_triangle[MAX_BUFFER_SIZE];
+            char width[MAX_BUFFER_SIZE];
+            char height[MAX_BUFFER_SIZE];
+            char offset_x[MAX_BUFFER_SIZE];
+            char offset_y[MAX_BUFFER_SIZE];
+            char softness[MAX_BUFFER_SIZE];
+            char strength[MAX_BUFFER_SIZE];
+            char colour[MAX_BUFFER_SIZE];
+            char colour_black[MAX_BUFFER_SIZE];
+            char colour_white[MAX_BUFFER_SIZE];
+        } vignette_screen;
         struct {
             char adjustment[MAX_BUFFER_SIZE];
             char cropping[MAX_BUFFER_SIZE];
@@ -2411,8 +2478,9 @@ struct mux_lang {
                 char auto_save[MAX_BUFFER_SIZE];
                 char timeline[MAX_BUFFER_SIZE];
                 char timeline_count[MAX_BUFFER_SIZE];
+                char history_states[MAX_BUFFER_SIZE];
+                char trash_count[MAX_BUFFER_SIZE];
                 char sram_flush[MAX_BUFFER_SIZE];
-                char sram_backup[MAX_BUFFER_SIZE];
                 char precache[MAX_BUFFER_SIZE];
             } storage;
             struct {
@@ -2421,6 +2489,7 @@ struct mux_lang {
                 char run_ahead[MAX_BUFFER_SIZE];
                 char gpu_hard_sync[MAX_BUFFER_SIZE];
                 char capture[MAX_BUFFER_SIZE];
+                char state_thumbnail[MAX_BUFFER_SIZE];
             } performance;
             struct {
                 char viewport[MAX_BUFFER_SIZE];
@@ -2444,7 +2513,18 @@ struct mux_lang {
                 char saturation[MAX_BUFFER_SIZE];
                 char hue_shift[MAX_BUFFER_SIZE];
                 char gamma[MAX_BUFFER_SIZE];
+                char vignette[MAX_BUFFER_SIZE];
             } display;
+            struct {
+                char shape[MAX_BUFFER_SIZE];
+                char width[MAX_BUFFER_SIZE];
+                char height[MAX_BUFFER_SIZE];
+                char offset_x[MAX_BUFFER_SIZE];
+                char offset_y[MAX_BUFFER_SIZE];
+                char softness[MAX_BUFFER_SIZE];
+                char strength[MAX_BUFFER_SIZE];
+                char colour[MAX_BUFFER_SIZE];
+            } vignette;
             struct {
                 char adjustment[MAX_BUFFER_SIZE];
                 char cropping[MAX_BUFFER_SIZE];

@@ -49,6 +49,7 @@
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../state/sram.h"
+#include "../state/history.h"
 
 #define RESUME_COOLDOWN_MS  1500
 #define AUDIO_MAX_CATCHUP   3
@@ -596,6 +597,7 @@ int main(const int argc, char *argv[]) {
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
 
+    advisory_init(content_path);
     pause_menu_playtime_reset();
 
     if (device.board.has_network) cheevo_init(core_resolved_content_path);
@@ -828,7 +830,7 @@ int main(const int argc, char *argv[]) {
             status_deadline = loop_now + TIMER_STATUS;
         }
 
-        if (loop_now >= sram_flush_deadline) {
+        if (session_settings.sram_flush_seconds > 0 && loop_now >= sram_flush_deadline) {
             sram_bridge_save();
             sram_flush_deadline = loop_now + (uint32_t) session_settings.sram_flush_seconds * 1000;
         }
@@ -1005,6 +1007,7 @@ int main(const int argc, char *argv[]) {
 
         const uint64_t ui_tick_start = perf_begin();
         pause_menu_service_tick(loop_now);
+        advisory_tick(loop_now);
 
         const int paused_now = pause_menu_is_active();
         const int ui_visible = paused_now || netplay_wait_visible;
@@ -1060,9 +1063,11 @@ int main(const int argc, char *argv[]) {
     if (netplay_wait_visible) loading_message_hide();
     if (netplay_governor_active) governor_boost_end();
 
+    advisory_shutdown();
     pause_menu_shutdown();
     netplay_shutdown();
     gamestate_publish_flush();
+    history_shutdown();
     state_shutdown();
     cheevo_shutdown();
     image_writer_shutdown();

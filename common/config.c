@@ -188,6 +188,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/network", "wait_timer", CFG_OFF(settings.network.wait), 0, {.i = 5}, 1, 1, 30},
     {CONF_CONFIG_PATH "settings/network", "mod_retry", CFG_OFF(settings.network.mod_retry), 0, {.i = 1}, 1, 1, 30},
     {CONF_CONFIG_PATH "settings/network", "proxy_enabled", CFG_OFF(settings.network.proxy_enabled), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/network", "link", CFG_OFF(settings.network.link), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/network", "proxy_type", CFG_OFF(settings.network.proxy_type), 0, {.i = 0}, 1, 0, 2},
     {CONF_CONFIG_PATH "settings/network", "proxy_server", CFG_OFF(settings.network.proxy_server), 1, {.s = ""}},
     {CONF_CONFIG_PATH "settings/network", "proxy_noproxy", CFG_OFF(settings.network.proxy_noproxy), 1, {.s = "localhost,127.0.0.1,::1"}},

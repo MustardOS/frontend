@@ -372,6 +372,8 @@ int muxtweakadv_main(void);
 
 int muxtweakgen_main(void);
 
+int muxlink_main(void);
+
 int muxwebserv_main(void);
 
 void resolve_grid_item_images(

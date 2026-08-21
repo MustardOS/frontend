@@ -565,6 +565,14 @@ static submenu_def join_definition = {
     .save_desc = NULL,
 };
 
+static int configure_root_rows(void) {
+    const int wanted = netplay_is_active() ? root_row_count : root_row_count - 1;
+    if (root_definition.row_count == wanted) return 0;
+
+    root_definition.row_count = wanted;
+    return 1;
+}
+
 void netplay_menu_init(void) {
     if (!device.board.has_network) return;
 
@@ -597,6 +605,7 @@ void netplay_menu_init(void) {
     join_definition.save_title = lang.muxretro.netplay.join_network;
     join_definition.save_desc = lang.muxretro.netplay.join_menu_desc;
 
+    configure_root_rows();
     submenu_init(&root_menu, &root_definition);
     submenu_init(&host_menu, &host_definition);
     submenu_init(&join_menu, &join_definition);
@@ -607,6 +616,7 @@ void netplay_menu_open(void) {
     if (!device.board.has_network) return;
     if (!menus_initialised) netplay_menu_init();
     pairing_focused = 0;
+    configure_root_rows();
     submenu_open(&root_menu);
 }
 
@@ -620,6 +630,13 @@ void netplay_menu_tick(void) {
         return;
     }
     if (!submenu_is_active(&host_menu) && !submenu_is_active(&join_menu)) {
+        if (configure_root_rows() && submenu_is_active(&root_menu)) {
+            int row = current_item_index;
+            if (row >= root_definition.row_count) row = root_definition.row_count - 1;
+
+            submenu_reopen_at(&root_menu, row);
+        }
+
         submenu_refresh_values(&root_menu);
         submenu_refresh_nav(&root_menu);
     }

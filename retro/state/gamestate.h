@@ -5,6 +5,7 @@
 #define GAMESTATE_MAX_SLOTS      64
 #define GAMESTATE_NAME_MAX       128
 #define GAMESTATE_TIMELINE_DEPTH 10
+#define GAMESTATE_TRASH_MAX      10
 
 struct gamestate_slot {
     int index;
@@ -26,9 +27,20 @@ extern int gamestate_quicksave_exists;
 extern struct gamestate_slot gamestate_timeline[GAMESTATE_TIMELINE_DEPTH];
 extern int gamestate_timeline_exists[GAMESTATE_TIMELINE_DEPTH];
 
+extern struct gamestate_slot gamestate_trash[GAMESTATE_TRASH_MAX];
+extern int gamestate_trash_count;
+
+int gamestate_trash_restore(int index);
+
+int gamestate_trash_delete(int index);
+
+int gamestate_trash_empty(void);
+
 int gamestate_init(const char *state_dir);
 
 void gamestate_capture_pending(int restore_visibility);
+
+const char *gamestate_pending_thumbnail(void);
 
 void gamestate_publish_task(void);
 

@@ -6,6 +6,9 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muwarn muxcharge muxfrontend muxmessage muremap
 
+# Plain daemons, linked without the interface libraries so they stay small
+DAEMONS = mulink
+
 DEPENDENCIES = plutosvg common lvgl module
 
 CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS)
@@ -24,20 +27,21 @@ $(shell mkdir -p $(DEPDIR))
 CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)
 CONFIG_STAMP := .build-config
 
-.PHONY: all $(MODULES) prebuild vendor-external thirdparty config-guard clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) prebuild vendor-external thirdparty config-guard clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro
 
 .DEFAULT_GOAL := all
 
-all: info prebuild $(MODULES) notify
+all: info prebuild $(MODULES) $(DAEMONS) notify
 
-$(MODULES): | prebuild
-notify: | $(MODULES)
+$(MODULES) $(DAEMONS): | prebuild
+notify: | $(MODULES) $(DAEMONS)
 
 info:
 	@echo "======== MustardOS Frontend Builder ========"
 	@echo "Targeting: $(DEVICE)"
 	@echo "Modules: $(MODULES)"
+	@echo "Daemons: $(DAEMONS)"
 	@echo "Dependencies: $(DEPENDENCIES)"
 
 vendor-external:
@@ -101,7 +105,14 @@ $(MODULES):
 		-MF $(DEP_ROOT)/root/$@.d $(LDLIBS) $(LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }; \
 	mkdir -p $(BIN_DIR); mv $@ $(BIN_DIR) || { echo "Error moving $@ to $(BIN_DIR)"; exit 1; }
 
+$(DAEMONS):
+	@echo "Building Daemon: $@"
+	@mkdir -p $(DEPDIR) $(BIN_DIR)
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c -o $(BIN_DIR)/$@ \
+		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+
 notify:
-	@printf "Compiled %d Modules\n============== Complete! ==============\n" "$(words $(MODULES))"
+	@printf "Compiled %d Modules and %d Daemons\n============== Complete! ==============\n" \
+		"$(words $(MODULES))" "$(words $(DAEMONS))"
 
 -include $(wildcard $(DEPDIR)/*.d)

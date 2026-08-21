@@ -604,6 +604,10 @@ static int child_tick(void) {
         shader_menu_tick();
         return 1;
     }
+    if (vignette_menu_is_active()) {
+        vignette_menu_tick();
+        return 1;
+    }
     if (input_port_menu_is_active()) {
         input_port_menu_tick();
         return 1;

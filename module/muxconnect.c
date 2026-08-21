@@ -43,6 +43,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, connect, network, lang.muxconnect.network, "network", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, net_adv, lang.muxconnect.net_adv, "netadv", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, proxy, lang.muxconnect.proxy, "net_proxy", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, link, lang.muxconnect.link, "link", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, services, lang.muxconnect.services, "service", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, bluetooth, lang.muxconnect.bluetooth, "bluetooth", NULL, 0);
 
@@ -53,6 +54,7 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(connect, network);
         HIDE_OPTION_ITEM(connect, net_adv);
         HIDE_OPTION_ITEM(connect, proxy);
+        HIDE_OPTION_ITEM(connect, link);
         HIDE_OPTION_ITEM(connect, services);
     }
 
@@ -98,6 +100,7 @@ static void handle_a(void) {
         {"net_profile", &kiosk.config.network, menu_general, visible_network_opt},
         {"netadv", &kiosk.config.net_settings, menu_general, visible_network_opt},
         {"net_proxy", &kiosk.config.proxy, menu_general, visible_network_opt},
+        {"link", &kiosk.config.network, menu_general, visible_network_opt},
         {"webserv", &kiosk.config.web_services, menu_general, visible_network_opt},
         {"btall", &kiosk_pass, menu_general, visible_bluetooth_opt}
     };

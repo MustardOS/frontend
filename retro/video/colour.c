@@ -50,12 +50,25 @@ static const char *fs_src = "precision mediump float;"
                             "uniform float u_saturation;"
                             "uniform float u_cosH;"
                             "uniform float u_sinH;"
-                            "uniform float u_gamma;"
+                            "uniform int u_colour_enabled;"
+                            "uniform int u_gamma_enabled;"
+                            "uniform float u_gamma_inv;"
                             "uniform mat3 u_filter;"
                             "uniform int u_filter_enabled;"
+                            "uniform int u_vig_shape;"
+                            "uniform vec2 u_vig_centre;"
+                            "uniform vec2 u_vig_scale;"
+                            "uniform vec2 u_vig_ramp;"
+                            "uniform float u_vig_tone;"
+                            "uniform float u_vig_amount;"
                             "varying highp vec2 v_uv;"
 
                             "vec3 apply_colour(vec3 c) {"
+                            "    if (u_colour_enabled == 0) {"
+                            "        if (u_filter_enabled != 0) { c = clamp(u_filter * c, 0.0, 1.0); }"
+                            "        if (u_gamma_enabled != 0) { c = pow(c, vec3(u_gamma_inv)); }"
+                            "        return c;"
+                            "    }"
                             "    c += u_brightness;"
                             "    c = (c - 0.5) * u_contrast + 0.5;"
                             "    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));"
@@ -70,14 +83,34 @@ static const char *fs_src = "precision mediump float;"
                             "    );"
                             "    c = clamp(hueMat * c, 0.0, 1.0);"
                             "    if (u_filter_enabled != 0) { c = clamp(u_filter * c, 0.0, 1.0); }"
-                            "    c = pow(c, vec3(1.0 / u_gamma));"
+                            "    if (u_gamma_enabled != 0) { c = pow(c, vec3(u_gamma_inv)); }"
                             "    return c;"
+                            "}"
+
+                            "vec3 apply_vignette(vec3 c) {"
+                            "    if (u_vig_shape == 0) { return c; }"
+                            "    vec2 p = (v_uv - u_vig_centre) * u_vig_scale;"
+                            "    float d;"
+                            "    if (u_vig_shape == 2) { d = max(abs(p.x), abs(p.y)); }"
+                            "    else if (u_vig_shape == 3) {"
+                            "        float seg = 1.2566371;"
+                            "        float a = mod(atan(p.y, p.x) + 6.2831853, seg) - seg * 0.5;"
+                            "        d = length(p) / (1.0 - 0.7 * (abs(a) / (seg * 0.5)));"
+                            "    }"
+                            "    else if (u_vig_shape == 4) {"
+                            "        float q = p.y * 1.5 - 0.5;"
+                            "        d = max(abs(p.x) * 1.2 - q * 0.5, q);"
+                            "    }"
+                            "    else { d = length(p); }"
+                            "    float t = clamp(d * u_vig_ramp.x + u_vig_ramp.y, 0.0, 1.0);"
+                            "    t = t * t * (3.0 - 2.0 * t);"
+                            "    return mix(c, vec3(u_vig_tone), t * u_vig_amount);"
                             "}"
 
                             "void main(){"
                             "    vec4 t = texture2D(u_tex, v_uv);"
                             "    vec3 corrected = vec3(t.b, t.g, t.r);"
-                            "    gl_FragColor = vec4(apply_colour(corrected), 1.0);"
+                            "    gl_FragColor = vec4(apply_vignette(apply_colour(corrected)), 1.0);"
                             "}";
 
 static const char *shader_vs_src = "attribute vec2 a_pos;\n"
@@ -99,7 +132,10 @@ static const char *shader_fs_preamble = "precision mediump float;\n"
 static GLuint prog = 0;
 static GLint a_pos = -1, a_uv = -1;
 static GLint u_tex = -1, u_brightness = -1, u_contrast = -1, u_saturation = -1;
-static GLint u_cos_h = -1, u_sin_h = -1, u_gamma = -1, u_filter = -1, u_filter_enabled = -1;
+static GLint u_cos_h = -1, u_sin_h = -1, u_filter = -1, u_filter_enabled = -1;
+static GLint u_colour_enabled = -1, u_gamma_enabled = -1, u_gamma_inv = -1;
+static GLint u_vig_shape = -1, u_vig_centre = -1, u_vig_scale = -1;
+static GLint u_vig_ramp = -1, u_vig_tone = -1, u_vig_amount = -1;
 static int prog_attempted = 0;
 static int prog_ready = 0;
 
@@ -373,6 +409,7 @@ int colour_pass_needed(void) {
     if (session_settings.colour_hueshift != 0) return 1;
     if (session_settings.colour_gamma != 100) return 1;
     if (session_settings.colour_shader != 0) return 1;
+    if (session_settings_vignette_active()) return 1;
     return current_filter()->enabled;
 }
 
@@ -441,9 +478,17 @@ static void ensure_program(void) {
     u_saturation = gl->GetUniformLocation(prog, "u_saturation");
     u_cos_h = gl->GetUniformLocation(prog, "u_cosH");
     u_sin_h = gl->GetUniformLocation(prog, "u_sinH");
-    u_gamma = gl->GetUniformLocation(prog, "u_gamma");
+    u_colour_enabled = gl->GetUniformLocation(prog, "u_colour_enabled");
+    u_gamma_enabled = gl->GetUniformLocation(prog, "u_gamma_enabled");
+    u_gamma_inv = gl->GetUniformLocation(prog, "u_gamma_inv");
     u_filter = gl->GetUniformLocation(prog, "u_filter");
     u_filter_enabled = gl->GetUniformLocation(prog, "u_filter_enabled");
+    u_vig_shape = gl->GetUniformLocation(prog, "u_vig_shape");
+    u_vig_centre = gl->GetUniformLocation(prog, "u_vig_centre");
+    u_vig_scale = gl->GetUniformLocation(prog, "u_vig_scale");
+    u_vig_ramp = gl->GetUniformLocation(prog, "u_vig_ramp");
+    u_vig_tone = gl->GetUniformLocation(prog, "u_vig_tone");
+    u_vig_amount = gl->GetUniformLocation(prog, "u_vig_amount");
 
     prog_ready = 1;
     LOG_INFO(mux_module, "Colour: shader program ready");
@@ -574,12 +619,41 @@ static int ensure_target(SDL_Renderer *renderer, SDL_Texture **tex, int *tw, int
     return 1;
 }
 
-static void set_colour_uniforms(void) {
+static void set_vignette_uniforms(const int flip_v) {
+    const int active = preset_effects_enabled() && session_settings_vignette_active();
+
+    if (u_vig_shape >= 0) gl->Uniform1i(u_vig_shape, active ? session_settings.vignette_shape : 0);
+    if (!active) return;
+
+    const float half_w = (float) session_settings.vignette_width / 200.0f;
+    const float half_h = (float) session_settings.vignette_height / 200.0f;
+    const float offset_x = (float) session_settings.vignette_offset_x / 100.0f;
+    const float offset_y = (float) session_settings.vignette_offset_y / 100.0f;
+
+    const float inner = 1.0f - (float) session_settings.vignette_softness / 100.0f;
+    const float range = 1.0f - inner > 0.001f ? 1.0f - inner : 0.001f;
+    const float amount = (float) session_settings.vignette_strength / 100.0f;
+    const float tone = session_settings.vignette_colour == vignette_colour_white ? 1.0f : 0.0f;
+
+    const float centre_y = flip_v ? 0.5f - offset_y : 0.5f + offset_y;
+    const float scale_y = flip_v ? -1.0f / half_h : 1.0f / half_h;
+
+    if (u_vig_centre >= 0) gl->Uniform2f(u_vig_centre, 0.5f + offset_x, centre_y);
+    if (u_vig_scale >= 0) gl->Uniform2f(u_vig_scale, 1.0f / half_w, scale_y);
+    if (u_vig_ramp >= 0) gl->Uniform2f(u_vig_ramp, 1.0f / range, -inner / range);
+    if (u_vig_tone >= 0) gl->Uniform1f(u_vig_tone, tone);
+    if (u_vig_amount >= 0) gl->Uniform1f(u_vig_amount, amount);
+}
+
+static void set_colour_uniforms(const int flip_v) {
     const float brightness = (float) session_settings.colour_brightness / 100.0f;
     const float contrast = (float) session_settings.colour_contrast / 100.0f;
     const float saturation = (float) session_settings.colour_saturation / 100.0f;
     const float hue_rad = (float) session_settings.colour_hueshift * (float) M_PI / 180.0f;
     const float gamma = (float) session_settings.colour_gamma / 100.0f;
+
+    const int colour_enabled = session_settings.colour_brightness != 0 || session_settings.colour_contrast != 100
+                               || session_settings.colour_saturation != 100 || session_settings.colour_hueshift != 0;
     static const colour_filter_matrix_t disabled_filter = {0};
     const colour_filter_matrix_t *filter = preset_effects_enabled() ? current_filter() : &disabled_filter;
 
@@ -589,9 +663,13 @@ static void set_colour_uniforms(void) {
     if (u_saturation >= 0) gl->Uniform1f(u_saturation, saturation);
     if (u_cos_h >= 0) gl->Uniform1f(u_cos_h, cosf(hue_rad));
     if (u_sin_h >= 0) gl->Uniform1f(u_sin_h, sinf(hue_rad));
-    if (u_gamma >= 0) gl->Uniform1f(u_gamma, gamma);
+    if (u_colour_enabled >= 0) gl->Uniform1i(u_colour_enabled, colour_enabled);
+    if (u_gamma_enabled >= 0) gl->Uniform1i(u_gamma_enabled, session_settings.colour_gamma != 100);
+    if (u_gamma_inv >= 0) gl->Uniform1f(u_gamma_inv, 1.0f / gamma);
     if (u_filter_enabled >= 0) gl->Uniform1i(u_filter_enabled, filter->enabled);
     if (u_filter >= 0) gl->UniformMatrix3fv(u_filter, 1, GL_FALSE, filter->matrix);
+
+    set_vignette_uniforms(flip_v);
 }
 
 static void set_shader_uniforms(const int res_w, const int res_h) {
@@ -633,7 +711,7 @@ static int draw_gl_pass(
     if (user_prog) {
         set_shader_uniforms(res_w, res_h);
     } else {
-        set_colour_uniforms();
+        set_colour_uniforms(flip_v);
     }
 
     gl->BindBuffer(GL_ARRAY_BUFFER, 0);

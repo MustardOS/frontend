@@ -8,20 +8,28 @@
 #include "pages.h"
 #include "submenu.h"
 
-enum { row_fps_limit = 0, row_frame_delay, row_run_ahead, row_gpu_hard_sync, row_performance_capture, row_count };
-
-static const char *row_labels[row_count] = {
-    lang.muxretro.settings_screen.fps_limit, lang.muxretro.settings_screen.frame_delay,
-    lang.muxretro.settings_screen.run_ahead, lang.muxretro.settings_screen.gpu_hard_sync,
-    lang.muxretro.settings_screen.performance_capture
+enum {
+    row_fps_limit = 0,
+    row_frame_delay,
+    row_run_ahead,
+    row_gpu_hard_sync,
+    row_state_thumbnail,
+    row_performance_capture,
+    row_count
 };
 
-static const char *row_glyphs[row_count] = {"fpslimit", "framedelay", "runahead", "hardsync", "info"};
+static const char *row_labels[row_count] = {
+    lang.muxretro.settings_screen.fps_limit,       lang.muxretro.settings_screen.frame_delay,
+    lang.muxretro.settings_screen.run_ahead,       lang.muxretro.settings_screen.gpu_hard_sync,
+    lang.muxretro.settings_screen.state_thumbnail, lang.muxretro.settings_screen.performance_capture
+};
+
+static const char *row_glyphs[row_count] = {"fpslimit", "framedelay", "runahead", "hardsync", "state", "info"};
 
 static const char *row_help[row_count] = {
-    lang.muxretro.help.performance.fps_limit, lang.muxretro.help.performance.frame_delay,
-    lang.muxretro.help.performance.run_ahead, lang.muxretro.help.performance.gpu_hard_sync,
-    lang.muxretro.help.performance.capture
+    lang.muxretro.help.performance.fps_limit,       lang.muxretro.help.performance.frame_delay,
+    lang.muxretro.help.performance.run_ahead,       lang.muxretro.help.performance.gpu_hard_sync,
+    lang.muxretro.help.performance.state_thumbnail, lang.muxretro.help.performance.capture
 };
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
@@ -37,6 +45,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_gpu_hard_sync:
             snprintf(buf, buf_len, "%s", session_settings.gpu_hard_sync ? lang.generic.enabled : lang.generic.disabled);
+            break;
+        case row_state_thumbnail:
+            snprintf(buf, buf_len, "%s", session_settings_state_thumbnail_name(session_settings.state_thumbnail));
             break;
         case row_performance_capture:
             snprintf(buf, buf_len, "%s", perf_is_capture_active() ? lang.generic.enabled : lang.generic.disabled);
@@ -62,6 +73,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_gpu_hard_sync:
             session_settings_cycle_gpu_hard_sync(direction);
+            break;
+        case row_state_thumbnail:
+            session_settings_cycle_state_thumbnail(direction);
             break;
         case row_performance_capture:
             perf_set_capture_active(!perf_is_capture_active());

@@ -67,7 +67,7 @@ static void link_value_text(const int index, char *buffer, const size_t length) 
             char host[LINK_HOST_LEN];
 
             if (link_get_mode() == link_mode_host) {
-                if (!get_network_ipv4_address(host, sizeof(host))) {
+                if (!get_any_ipv4_address(host, sizeof(host))) {
                     snprintf(buffer, length, "%s", lang.muxretro.link.no_address);
                     return;
                 }

@@ -146,7 +146,6 @@ static int read_whole_sram_file(const char *path, void *data, const size_t size,
 
 // Rotate the SRAM backup with 'bk0' being the newset and 'bk9' being the oldest.
 static void rotate_sram_backups(const char *path) {
-    if (!session_settings.sram_backup_enabled) return;
     if (!file_exist(path)) return;
 
     char oldest[MAX_BUFFER_SIZE];

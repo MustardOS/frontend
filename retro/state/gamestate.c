@@ -14,6 +14,7 @@
 #include "../video/image_writer.h"
 #include "gamestate.h"
 #include "content_hash.h"
+#include "history.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
 #include "../core/paths.h"
@@ -33,6 +34,9 @@ int gamestate_quicksave_exists = 0;
 
 struct gamestate_slot gamestate_timeline[GAMESTATE_TIMELINE_DEPTH];
 int gamestate_timeline_exists[GAMESTATE_TIMELINE_DEPTH];
+
+struct gamestate_slot gamestate_trash[GAMESTATE_TRASH_MAX];
+int gamestate_trash_count = 0;
 
 static char base_dir[MAX_STATE_SIZE] = "";
 static char manifest_path[MAX_STATE_SIZE] = "";
@@ -205,6 +209,11 @@ static void refresh_resume_index(void) {
 static void slot_paths(const int index, char *state_path, char *thumb_path) {
     str_format_checked(state_path, MAX_STATE_SIZE, "%s/slot_%d.state", base_dir, index);
     str_format_checked(thumb_path, MAX_STATE_SIZE, "%s/slot_%d.png", base_dir, index);
+}
+
+static void trash_paths(const int index, char *state_path, char *thumb_path) {
+    str_format_checked(state_path, MAX_STATE_SIZE, "%s/trash_%d.state", base_dir, index);
+    str_format_checked(thumb_path, MAX_STATE_SIZE, "%s/trash_%d.png", base_dir, index);
 }
 
 static void timeline_paths(const int slot, char *state_path, char *thumb_path) {
@@ -411,6 +420,7 @@ int gamestate_init(const char *state_dir) {
     }
 
     create_directories(manifest_path, 1);
+    history_set_directory(base_dir);
 
     gamestate_slot_count = 0;
     gamestate_autosave_exists = 0;
@@ -482,6 +492,29 @@ int gamestate_init(const char *state_dir) {
             continue;
         }
 
+        int trash_index = -1;
+        if (sscanf(group->id, "trash_%d", &trash_index) == 1) {
+            if (trash_index < 0 || gamestate_trash_count >= GAMESTATE_TRASH_MAX) continue;
+
+            struct gamestate_slot *entry = &gamestate_trash[gamestate_trash_count];
+            entry->index = trash_index;
+            snprintf(
+                entry->name, sizeof(entry->name), "%s",
+                get_ini_string(ini, group->id, "name", lang.muxretro.gamestate.state)
+            );
+            entry->created = mini_get_int(ini, group->id, "created", 0);
+            trash_paths(trash_index, entry->state_path, entry->thumb_path);
+            read_manifest_meta(ini, group->id, entry);
+
+            if (!state_file_timestamp(entry->state_path, NULL)) {
+                LOG_WARN(mux_module, "Ignoring stale bin manifest entry '%s'", entry->state_path);
+                continue;
+            }
+
+            gamestate_trash_count++;
+            continue;
+        }
+
         const int index = slot_index_from_group_id(group->id);
         if (index < 0) continue;
 
@@ -504,6 +537,10 @@ int gamestate_init(const char *state_dir) {
 
     mini_free(ini);
     return 1;
+}
+
+const char *gamestate_pending_thumbnail(void) {
+    return pending_path[0] ? pending_path : NULL;
 }
 
 void gamestate_capture_pending(const int restore_visibility) {
@@ -565,6 +602,124 @@ int gamestate_rename(const int index, const char *new_name) {
     return 0;
 }
 
+static int trash_next_index(void) {
+    int highest = -1;
+    for (int i = 0; i < gamestate_trash_count; i++)
+        if (gamestate_trash[i].index > highest) highest = gamestate_trash[i].index;
+
+    return highest + 1;
+}
+
+static void forget_manifest_group(const char *group_id) {
+    mini_t *ini = mini_try_load(manifest_path);
+    if (!ini) return;
+
+    mini_delete_group(ini, group_id);
+    mini_save(ini, 0);
+    mini_free(ini);
+}
+
+static int trash_capacity(void) {
+    int wanted = session_settings.trash_count;
+    if (wanted < 0) wanted = 0;
+    if (wanted > GAMESTATE_TRASH_MAX) wanted = GAMESTATE_TRASH_MAX;
+    return wanted;
+}
+
+static int trash_absorb(const struct gamestate_slot *source, const char *group_id) {
+    const int capacity = trash_capacity();
+
+    if (capacity <= 0) return -1;
+
+    while (gamestate_trash_count >= capacity)
+        if (gamestate_trash_delete(0) != 0) return -1;
+
+    const int index = trash_next_index();
+
+    struct gamestate_slot *entry = &gamestate_trash[gamestate_trash_count];
+    *entry = *source;
+    entry->index = index;
+    trash_paths(index, entry->state_path, entry->thumb_path);
+
+    if (rename(source->state_path, entry->state_path) != 0) {
+        LOG_ERROR(mux_module, "Could not move '%s' into the bin", source->state_path);
+        return -1;
+    }
+
+    if (rename(source->thumb_path, entry->thumb_path) != 0) entry->thumb_path[0] = '\0';
+
+    char trash_group[32];
+    snprintf(trash_group, sizeof(trash_group), "trash_%d", index);
+    write_manifest_group(trash_group, entry->name, entry->created, entry);
+
+    forget_manifest_group(group_id);
+    gamestate_trash_count++;
+
+    return 0;
+}
+
+int gamestate_trash_restore(const int index) {
+    gamestate_publish_flush();
+    if (index < 0 || index >= gamestate_trash_count) return -1;
+    if (gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return -1;
+
+    const struct gamestate_slot *entry = &gamestate_trash[index];
+
+    struct gamestate_slot *slot = &gamestate_slots[gamestate_slot_count];
+    *slot = *entry;
+    slot->index = next_free_index();
+    slot_paths(slot->index, slot->state_path, slot->thumb_path);
+
+    if (rename(entry->state_path, slot->state_path) != 0) {
+        LOG_ERROR(mux_module, "Could not bring '%s' back out of the bin", entry->state_path);
+        return -1;
+    }
+
+    if (entry->thumb_path[0]) rename(entry->thumb_path, slot->thumb_path);
+
+    write_manifest_entry(slot->index, slot->name, slot->created, slot);
+
+    char trash_group[32];
+    snprintf(trash_group, sizeof(trash_group), "trash_%d", entry->index);
+    forget_manifest_group(trash_group);
+
+    for (int i = index; i < gamestate_trash_count - 1; i++)
+        gamestate_trash[i] = gamestate_trash[i + 1];
+
+    gamestate_trash_count--;
+    gamestate_slot_count++;
+    refresh_resume_index();
+
+    return 0;
+}
+
+int gamestate_trash_delete(const int index) {
+    if (index < 0 || index >= gamestate_trash_count) return -1;
+
+    const struct gamestate_slot *entry = &gamestate_trash[index];
+
+    remove(entry->state_path);
+    if (entry->thumb_path[0]) remove(entry->thumb_path);
+
+    char trash_group[32];
+    snprintf(trash_group, sizeof(trash_group), "trash_%d", entry->index);
+    forget_manifest_group(trash_group);
+
+    for (int i = index; i < gamestate_trash_count - 1; i++)
+        gamestate_trash[i] = gamestate_trash[i + 1];
+
+    gamestate_trash_count--;
+
+    return 0;
+}
+
+int gamestate_trash_empty(void) {
+    while (gamestate_trash_count > 0)
+        if (gamestate_trash_delete(gamestate_trash_count - 1) != 0) return -1;
+
+    return 0;
+}
+
 int gamestate_delete(const int index) {
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_slot_count) return -1;
@@ -572,16 +727,13 @@ int gamestate_delete(const int index) {
 
     const struct gamestate_slot *slot = &gamestate_slots[index];
 
-    remove(slot->state_path);
-    remove(slot->thumb_path);
+    char group_id[32];
+    snprintf(group_id, sizeof(group_id), "slot_%d", slot->index);
 
-    mini_t *ini = mini_try_load(manifest_path);
-    if (ini) {
-        char group_id[32];
-        snprintf(group_id, sizeof(group_id), "slot_%d", slot->index);
-        mini_delete_group(ini, group_id);
-        mini_save(ini, 0);
-        mini_free(ini);
+    if (trash_absorb(slot, group_id) != 0) {
+        remove(slot->state_path);
+        remove(slot->thumb_path);
+        forget_manifest_group(group_id);
     }
 
     for (int i = index; i < gamestate_slot_count - 1; i++) {
@@ -596,6 +748,7 @@ int gamestate_delete(const int index) {
 int gamestate_load(const int index) {
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_slot_count) return -1;
+    history_push(history_source_standard);
     return state_load(gamestate_slots[index].state_path, 1);
 }
 
@@ -649,28 +802,29 @@ int gamestate_autosave_is_armed(void) {
 
 int gamestate_autosave_load(void) {
     if (!gamestate_autosave_exists) return -1;
+    history_push(history_source_auto);
     return state_load(gamestate_autosave.state_path, 1);
 }
 
-int gamestate_autosave_delete(void) {
+static int autosave_remove(const int to_trash) {
     gamestate_publish_flush();
     if (!gamestate_autosave_exists) return -1;
     if (state_flush() != 0) return -1;
 
-    remove(gamestate_autosave.state_path);
-    remove(gamestate_autosave.thumb_path);
-
-    mini_t *ini = mini_try_load(manifest_path);
-    if (ini) {
-        mini_delete_group(ini, "autosave");
-        mini_save(ini, 0);
-        mini_free(ini);
+    if (!to_trash || trash_absorb(&gamestate_autosave, "autosave") != 0) {
+        remove(gamestate_autosave.state_path);
+        remove(gamestate_autosave.thumb_path);
+        forget_manifest_group("autosave");
     }
 
     gamestate_autosave_exists = 0;
     refresh_resume_index();
 
     return 0;
+}
+
+int gamestate_autosave_delete(void) {
+    return autosave_remove(1);
 }
 
 int gamestate_quicksave_save(void) {
@@ -707,6 +861,7 @@ int gamestate_quicksave_save(void) {
 
 int gamestate_quicksave_load(void) {
     if (!gamestate_quicksave_exists) return -1;
+    history_push(history_source_quick);
     return state_load(gamestate_quicksave.state_path, 1);
 }
 
@@ -715,14 +870,10 @@ int gamestate_quicksave_delete(void) {
     if (!gamestate_quicksave_exists) return -1;
     if (state_flush() != 0) return -1;
 
-    remove(gamestate_quicksave.state_path);
-    remove(gamestate_quicksave.thumb_path);
-
-    mini_t *ini = mini_try_load(manifest_path);
-    if (ini) {
-        mini_delete_group(ini, "quicksave");
-        mini_save(ini, 0);
-        mini_free(ini);
+    if (trash_absorb(&gamestate_quicksave, "quicksave") != 0) {
+        remove(gamestate_quicksave.state_path);
+        remove(gamestate_quicksave.thumb_path);
+        forget_manifest_group("quicksave");
     }
 
     gamestate_quicksave_exists = 0;
@@ -785,6 +936,7 @@ int gamestate_timeline_save(void) {
 
 int gamestate_timeline_load(const int slot) {
     if (slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot]) return -1;
+    history_push(history_source_timeline);
     return state_load(gamestate_timeline[slot].state_path, 1);
 }
 
@@ -793,16 +945,13 @@ int gamestate_timeline_delete(const int slot) {
     if (slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot]) return -1;
     if (state_flush() != 0) return -1;
 
-    remove(gamestate_timeline[slot].state_path);
-    remove(gamestate_timeline[slot].thumb_path);
+    char group_id[32];
+    snprintf(group_id, sizeof(group_id), "timeline_%d", slot);
 
-    mini_t *ini = mini_try_load(manifest_path);
-    if (ini) {
-        char group_id[32];
-        snprintf(group_id, sizeof(group_id), "timeline_%d", slot);
-        mini_delete_group(ini, group_id);
-        mini_save(ini, 0);
-        mini_free(ini);
+    if (trash_absorb(&gamestate_timeline[slot], group_id) != 0) {
+        remove(gamestate_timeline[slot].state_path);
+        remove(gamestate_timeline[slot].thumb_path);
+        forget_manifest_group(group_id);
     }
 
     gamestate_timeline_exists[slot] = 0;
@@ -841,7 +990,7 @@ int gamestate_protect_mismatched_autosave(void) {
     write_manifest_entry(index, slot->name, slot->created, slot);
     gamestate_slot_count++;
 
-    gamestate_autosave_delete();
+    autosave_remove(0);
 
     LOG_INFO(mux_module, "Preserved mismatched autosave as slot %d", index);
     return 1;
