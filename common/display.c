@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
@@ -634,15 +635,24 @@ void sdl_init(void) {
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+    LOG_INFO("video", "SDL video ready (driver: %s)", SDL_GetCurrentVideoDriver());
+
+    if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) LOG_ERROR("video", "SDL Joystick Init Failed: %s", SDL_GetError());
+    LOG_INFO("video", "SDL joystick ready");
+
+    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) < 0)
+        LOG_ERROR("video", "SDL Game Controller Init Failed: %s", SDL_GetError());
+    LOG_INFO("video", "SDL game controller ready");
 
     SDL_GameControllerEventState(SDL_ENABLE);
     SDL_JoystickEventState(SDL_ENABLE);
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) LOG_ERROR("video", "PNG Init Failed: %s", IMG_GetError());
+    LOG_INFO("video", "PNG decoder ready");
 
     SDL_ShowCursor(SDL_DISABLE);
     update_render_state();
@@ -956,6 +966,30 @@ void display_map_logical_rect(const SDL_Rect *logical, SDL_Rect *physical) {
     if (logical->h > 0 && physical->h < 1) physical->h = 1;
 }
 
+static void mark_first_paint(void) {
+    static int marked = 0;
+    if (marked) return;
+    marked = 1;
+
+    const char *paint_marker = strcmp(mux_module, "muxmessage") == 0 ? LOADING_PAINT : FIRST_PAINT;
+    if (file_exist(paint_marker)) return;
+
+    char uptime[64] = "";
+    FILE *up = fopen("/proc/uptime", "r");
+    if (up) {
+        if (!fgets(uptime, sizeof(uptime), up)) uptime[0] = '\0';
+        fclose(up);
+    }
+
+    if (!uptime[0]) return;
+
+    FILE *out = fopen(paint_marker, "w");
+    if (!out) return;
+
+    fputs(uptime, out);
+    fclose(out);
+}
+
 void display_render_logical_texture(SDL_Renderer *renderer, SDL_Texture *texture) {
     if (!renderer || !texture) return;
 
@@ -1064,6 +1098,8 @@ static void composite_to(SDL_Texture *target, const int present) {
 
     SDL_RenderPresent(monitor.renderer);
     present_serial++;
+
+    mark_first_paint();
 
     if (hard_sync_query_fn && hard_sync_query_fn()) {
         static void (*p_gl_finish)(void) = NULL;

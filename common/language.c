@@ -504,11 +504,11 @@ static const lang_field lang_fields[] = {
     {"muxdistemp", LANG_OFF(muxdistemp.temperature), lang_specific, "Temperature"},
     {"muxdistemp", LANG_OFF(muxdistemp.invalid_time), lang_specific, "Sunrise Time must be before Sunset Time"},
     {"muxdistemp", LANG_OFF(muxdistemp.help.schedule), lang_specific, "Warms the screen colours automatically on a sunrise and sunset schedule.\n\nWith this off, the single temperature below is used all day."},
-    {"muxdistemp", LANG_OFF(muxdistemp.help.sunrise_temp), lang_specific, "The colour temperature used through the daytime hours.\n\nHigher is cooler and bluer."},
-    {"muxdistemp", LANG_OFF(muxdistemp.help.sunset_temp), lang_specific, "The colour temperature used through the evening hours.\n\nLower is warmer and easier on the eyes at night."},
+    {"muxdistemp", LANG_OFF(muxdistemp.help.sunrise_temp), lang_specific, "The colour temperature used through the daytime hours.\n\nLower is cooler and bluer."},
+    {"muxdistemp", LANG_OFF(muxdistemp.help.sunset_temp), lang_specific, "The colour temperature used through the evening hours.\n\nHigher is warmer and easier on the eyes at night."},
     {"muxdistemp", LANG_OFF(muxdistemp.help.sunrise_time), lang_specific, "When the daytime temperature takes over."},
     {"muxdistemp", LANG_OFF(muxdistemp.help.sunset_time), lang_specific, "When the evening temperature takes over. Remember to go to bed at an appropriate time!"},
-    {"muxdistemp", LANG_OFF(muxdistemp.help.temperature), lang_specific, "The colour temperature applied to the screen.\n\nLower is warmer and yellower, higher is cooler and bluer."},
+    {"muxdistemp", LANG_OFF(muxdistemp.help.temperature), lang_specific, "The colour temperature applied to the screen.\n\nLower is cooler and bluer, higher is warmer and yellower."},
 
     // muxcolfilter
     {"muxcolfilter", LANG_OFF(muxcolfilter.title), lang_specific, "Colour Filter"},

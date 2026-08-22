@@ -89,6 +89,9 @@
 #define CHIME_DONE "/tmp/chime_done"
 #define SAFE_QUIT  RUN_PATH "safe_quit"
 
+#define FIRST_PAINT   RUN_PATH "first_paint"
+#define LOADING_PAINT RUN_PATH "loading_paint"
+
 #define EXPLORE_DIR  "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
@@ -96,8 +99,8 @@
 
 #define INTERNAL_FONTS OPT_PATH "share/font/internal"
 
-#define USER_FONTS     "MUOS/font" // Fonts the user supplies on any storage
-#define USER_LOGOS     "MUOS/logo" // Boot logos the user supplies on any storage
+#define USER_FONTS "MUOS/font" // Fonts the user supplies on any storage
+#define USER_LOGOS "MUOS/logo" // Boot logos the user supplies on any storage
 
 #define INTERNAL_LOGOS OPT_PATH "share/logo"
 #define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
@@ -151,9 +154,9 @@
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
 
-#define MUOS_ARCH_PATH "ARCHIVE"
+#define MUOS_ARCH_PATH   "ARCHIVE"
 #define MUOS_BACKUP_PATH "BACKUP"
-#define MUOS_BASE_PATH "MUOS"
+#define MUOS_BASE_PATH   "MUOS"
 
 #define MUOS_APPS_PATH MUOS_BASE_PATH "/application"
 #define MUOS_INFO_PATH MUOS_BASE_PATH "/info"

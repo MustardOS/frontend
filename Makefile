@@ -4,10 +4,15 @@ BIN_DIR = ./bin
 LIB_DIR = $(BIN_DIR)/lib
 
 MODULE_DIR = module
-MODULES = mubattery mucredits mufbset muhotkey mulog mulookup murgb musplash muwarn muxcharge muxfrontend muxmessage muremap
+MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-# Plain daemons, linked without the interface libraries so they stay small
 DAEMONS = mulink
+TOOLS = muvarctl murgb
+
+muvarctl_SRC = common/var_store.c
+
+murgb_SRC = common/rgb_args.c common/config.c common/config_value.c common/colour.c \
+            common/fileio_lite.c common/strpath.c common/theme_base.c common/log.c common/debug.c
 
 DEPENDENCIES = plutosvg common lvgl module
 
@@ -27,21 +32,22 @@ $(shell mkdir -p $(DEPDIR))
 CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)
 CONFIG_STAMP := .build-config
 
-.PHONY: all $(MODULES) $(DAEMONS) prebuild vendor-external thirdparty config-guard clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) prebuild vendor-external thirdparty config-guard clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro
 
 .DEFAULT_GOAL := all
 
-all: info prebuild $(MODULES) $(DAEMONS) notify
+all: info prebuild $(MODULES) $(DAEMONS) $(TOOLS) notify
 
-$(MODULES) $(DAEMONS): | prebuild
-notify: | $(MODULES) $(DAEMONS)
+$(MODULES) $(DAEMONS) $(TOOLS): | prebuild
+notify: | $(MODULES) $(DAEMONS) $(TOOLS)
 
 info:
 	@echo "======== MustardOS Frontend Builder ========"
 	@echo "Targeting: $(DEVICE)"
 	@echo "Modules: $(MODULES)"
 	@echo "Daemons: $(DAEMONS)"
+	@echo "Tools: $(TOOLS)"
 	@echo "Dependencies: $(DEPENDENCIES)"
 
 vendor-external:
@@ -58,7 +64,6 @@ config-guard: | vendor-external
 thirdparty: | config-guard
 	$(VERBOSE)./gen_thirdparty.sh $(QUIET) || exit 1
 
-# plutosvg, lvgl, and stage have no dependencies so -j can run them together
 dep-stage dep-plutosvg dep-lvgl: | thirdparty
 dep-common: dep-plutosvg
 dep-module: dep-common dep-lvgl
@@ -111,8 +116,14 @@ $(DAEMONS):
 	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
+$(TOOLS):
+	@echo "Building Tool: $@"
+	@mkdir -p $(DEPDIR) $(BIN_DIR)
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
+		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+
 notify:
-	@printf "Compiled %d Modules and %d Daemons\n============== Complete! ==============\n" \
-		"$(words $(MODULES))" "$(words $(DAEMONS))"
+	@printf "Compiled %d Modules, %d Daemons and %d Tools\n============== Complete! ==============\n" \
+		"$(words $(MODULES))" "$(words $(DAEMONS))" "$(words $(TOOLS))"
 
 -include $(wildcard $(DEPDIR)/*.d)

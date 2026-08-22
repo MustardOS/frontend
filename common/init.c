@@ -3,7 +3,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/stat.h>
 #include "../lvgl/lvgl.h"
 #include "../lvgl/src/draw/sdl/lv_draw_sdl.h"
 #include "display.h"
@@ -175,8 +174,8 @@ void init_display(void) {
     LOG_INFO("video", "HDMI in use: %s", hdmi_mode ? "yes" : "no");
 
     if (hdmi_mode) {
-        int ext_w = read_line_int_from("/opt/muos/device/config/screen/external/width", 1);
-        int ext_h = read_line_int_from("/opt/muos/device/config/screen/external/height", 1);
+        const int ext_w = read_line_int_from("/opt/muos/device/config/screen/external/width", 1);
+        const int ext_h = read_line_int_from("/opt/muos/device/config/screen/external/height", 1);
 
         if (ext_w > 0 && ext_h > 0) {
             LOG_INFO("video", "Overriding MUX resolution for HDMI: %dx%d", ext_w, ext_h);
@@ -188,18 +187,23 @@ void init_display(void) {
     }
 
     lv_init();
+    LOG_INFO("video", "LVGL initialised");
+
     img_init();
     svg_init();
+    LOG_INFO("video", "Image decoders registered");
+
     sdl_init();
+    LOG_INFO("video", "SDL video initialised");
 
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
 
     const int double_buffer = config.settings.advanced.double_buffer;
-    uint32_t disp_buf_lines = (uint32_t) device.mux.height;
+    const uint32_t disp_buf_lines = (uint32_t) device.mux.height;
 
-    uint32_t disp_buf_size = (uint32_t) device.mux.width * disp_buf_lines;
-    size_t disp_buf_bytes = (size_t) disp_buf_size * sizeof(lv_color_t);
+    const uint32_t disp_buf_size = (uint32_t) device.mux.width * disp_buf_lines;
+    const size_t disp_buf_bytes = (size_t) disp_buf_size * sizeof(lv_color_t);
 
     LOG_INFO(
         "init", "Draw buffer: %s, %u lines (%lu KB)", double_buffer ? "double" : "single", disp_buf_lines,

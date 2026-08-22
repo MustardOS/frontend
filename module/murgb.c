@@ -11,10 +11,14 @@
 #include "../common/colour.h"
 #include "../common/config.h"
 #include "../common/fileio.h"
+#include "../common/init.h"
 #include "../common/rgb.h"
 #include "../common/rgb_args.h"
 #include "../common/strutil.h"
-#include "../common/theme.h"
+#include "../common/theme_base.h"
+
+struct mux_config config;
+char mux_module[MAX_BUFFER_SIZE];
 
 #define MUOS_CONFIG_PATH "/opt/muos/config/"
 

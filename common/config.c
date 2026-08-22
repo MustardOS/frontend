@@ -398,13 +398,17 @@ void load_config(struct mux_config *config) {
     }
 
     // theme/ - storage_theme and theme_cat_path are built from the "active" theme name
-    snprintf(
+    const int theme_len = snprintf(
         config->theme.storage_theme, sizeof(config->theme.storage_theme), RUN_STORAGE_PATH "theme/%s",
         config->theme.active
     );
-    snprintf(
+    if (theme_len < 0 || (size_t) theme_len >= sizeof(config->theme.storage_theme))
+        config->theme.storage_theme[0] = '\0';
+
+    const int cat_len = snprintf(
         config->theme.theme_cat_path, sizeof(config->theme.theme_cat_path), "%s/catalogue", config->theme.storage_theme
     );
+    if (cat_len < 0 || (size_t) cat_len >= sizeof(config->theme.theme_cat_path)) config->theme.theme_cat_path[0] = '\0';
 
     // theme/filter/ - resolution flags are derived from the active device resolution
     if (!config->theme.filter.all_themes) {

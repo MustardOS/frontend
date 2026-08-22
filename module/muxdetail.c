@@ -455,6 +455,9 @@ static const char *get_bat_design_cap(void) {
     return buffer;
 }
 
+#define TIME_FLOOR 1735689600L
+#define TIME_CEILING 4102444799L
+
 static const char *get_last_charged(void) {
     static char buffer[UI_BUFFER];
     char ts_str[32];
@@ -463,7 +466,7 @@ static const char *get_last_charged(void) {
         return "-";
 
     const long ts = strtol(ts_str, NULL, 10);
-    if (ts <= 0) return "-";
+    if (ts < TIME_FLOOR || ts > TIME_CEILING) return "-";
 
     const time_t t = ts;
     struct tm *tm_info = localtime(&t);

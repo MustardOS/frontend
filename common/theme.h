@@ -2,19 +2,13 @@
 
 #include "../lvgl/lvgl.h"
 #include "options.h"
-
-enum { theme_compat = 8 };
+#include "theme_base.h"
 
 enum time_type { time_12_h, time_24_h };
-
-extern const char *theme_base;
-extern char *theme_back_compat[];
 
 extern struct theme_config theme;
 extern struct mux_config config;
 extern struct mux_device device;
-
-const char *get_theme_base(void);
 
 struct pt_big {
     lv_obj_t *e;
