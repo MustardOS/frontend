@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 
 #define GCB_PATH_MAIN "/usr/lib/gamecontrollerdb.txt"
@@ -43,11 +44,25 @@ static const slot_def slots[SLOT_COUNT] = {
 };
 
 static char phys[SLOT_COUNT][32];
-static volatile int quit = 0;
+static volatile sig_atomic_t quit = 0;
+static volatile sig_atomic_t skip = 0;
+static volatile time_t last_interrupt = 0;
 
 static void handle_signal(const int sig) {
-    (void) sig;
-    quit = 1;
+    if (sig != SIGINT) {
+        quit = 1;
+        return;
+    }
+
+    const time_t now = time(NULL);
+
+    if (last_interrupt != 0 && now - last_interrupt <= 1) {
+        quit = 1;
+    } else {
+        skip = 1;
+    }
+
+    last_interrupt = now;
 }
 
 static int capture_event(const int slot_idx, char *out) {
@@ -55,7 +70,7 @@ static int capture_event(const int slot_idx, char *out) {
     fflush(stdout);
 
     SDL_Event ev;
-    while (!quit) {
+    while (!quit && !skip) {
         if (!SDL_WaitEventTimeout(&ev, 250)) continue;
 
         switch (ev.type) {
@@ -91,7 +106,9 @@ static int capture_event(const int slot_idx, char *out) {
         }
     }
 
-    printf("(skipped)\n");
+    skip = 0;
+    printf("%s\n", quit ? "(stopping)" : "(skipped)");
+
     return 0;
 }
 
@@ -162,20 +179,13 @@ int main(const int argc, char **argv) {
         SDL_JoystickNumHats(joy)
     );
     printf("Press each physical input when prompted.\n");
-    printf("Press Ctrl-C during a prompt to skip that slot.\n\n");
+    printf("Press Ctrl-C during a prompt to skip that slot.\n");
+    printf("Press it twice in a row to stop and print what you have.\n\n");
 
     memset(phys, 0, sizeof(phys));
 
     for (int i = 0; i < SLOT_COUNT && !quit; i++) {
-        const int was_quit = quit;
-
-        quit = 0;
         capture_event(i, phys[i]);
-
-        if (was_quit) {
-            quit = 1;
-            break;
-        }
     }
 
     char mapping[4096];
