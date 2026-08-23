@@ -25,6 +25,7 @@ static const board_info_t board_table[] = {
     {"Anbernic RG40-V", "rg40xx-v", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
 
     {"Anbernic RGCUBE-H", "rgcubexx-h", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RGSP", "rgsp", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
     {"Anbernic Vita Pro", "rg-vita-pro", board_special_vita_pro, ev7, ev0, nop, TOUCH_EVENT_OFFSET(ev7, 1), regular},
 
     {"Batlexp G350", "rk-g350-v", board_special_g350, ev3, ev0, nop, NO_EVENT_OFFSET, regular},
