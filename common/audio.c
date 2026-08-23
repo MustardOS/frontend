@@ -149,11 +149,10 @@ int init_audio_backend(void) {
         return 0;
     }
 
-    const int flags = MIX_INIT_OGG;
+    const int flags = MIX_INIT_OGG | MIX_INIT_MID;
     const int inited = Mix_Init(flags);
-    if ((inited & flags) != flags) {
-        LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
-    }
+    if (!(inited & MIX_INIT_OGG)) LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
+    if (!(inited & MIX_INIT_MID)) LOG_WARN("audio", "Missing SDL_mixer support for MIDI");
 
     if (Mix_OpenAudio(44100, AUDIO_F32LSB, 2, 2048) < 0) {
         LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());

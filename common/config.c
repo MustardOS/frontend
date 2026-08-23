@@ -166,6 +166,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/general", "theme_scaling", CFG_OFF(settings.general.theme_scaling), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/general", "startup", CFG_OFF(settings.general.startup), 1, {.s = "launcher"}},
     {CONF_CONFIG_PATH "settings/general", "language", CFG_OFF(settings.general.language), 1, {.s = "English"}},
+    {CONF_CONFIG_PATH "settings/general", "soundfont", CFG_OFF(settings.general.soundfont), 1, {.s = ""}},
 
     // settings/hotkey/
     {CONF_CONFIG_PATH "settings/hotkey", "dpad_toggle", CFG_OFF(settings.general.hkdpad), 0, {.i = 1}},

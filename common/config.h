@@ -177,6 +177,7 @@ struct mux_config {
             int16_t volume;
             int16_t rgb;
             char language[MAX_BUFFER_SIZE];
+            char soundfont[MAX_BUFFER_SIZE];
             int16_t theme_scaling;
             int16_t theme_resolution;
             int16_t theme_resolution_width;

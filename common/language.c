@@ -2513,6 +2513,15 @@ static const lang_field lang_fields[] = {
     {"muxshot", LANG_OFF(muxshot.none), lang_specific, "No Screenshots Found"},
     {"muxshot", LANG_OFF(muxshot.none_hint), lang_specific, "Screenshots are saved here when you use the screenshot hotkey while content is running."},
 
+    // muxsoundfont
+    {"muxsoundfont", LANG_OFF(muxsoundfont.title), lang_specific, "Soundfont"},
+    {"muxsoundfont", LANG_OFF(muxsoundfont.overview), lang_specific, "Chooses the soundfont used for General MIDI music. Soundfonts change how MIDI instruments sound, so the same tune can be warm and orchestral or thin and synthetic depending on the one you pick. Extra soundfonts can be placed in the MUOS/soundfont folder on any storage."},
+    {"muxsoundfont", LANG_OFF(muxsoundfont.help), lang_specific, "Select your preferred soundfont for MIDI music"},
+    {"muxsoundfont", LANG_OFF(muxsoundfont.none), lang_specific, "No Soundfonts Found..."},
+    {"muxsoundfont", LANG_OFF(muxsoundfont.preview), lang_specific, "Preview"},
+    {"muxsoundfont", LANG_OFF(muxsoundfont.loading), lang_specific, "Loading Preview"},
+    {"muxsoundfont", LANG_OFF(muxsoundfont.error_preview), lang_specific, "Could Not Play Preview"},
+
     // muxsort
     {"muxsort", LANG_OFF(muxsort.title), lang_specific, "Tag Sort Priority"},
     {"muxsort", LANG_OFF(muxsort.overview), lang_specific, "Chooses how this list is arranged, from alphabetical through to how recently or how often something was played. The order can apply just to this folder or to every folder at once."},
@@ -2871,6 +2880,7 @@ static const lang_field lang_fields[] = {
     {"muxtweakgen", LANG_OFF(muxtweakgen.hkdpad), lang_specific, "DPAD Swap Hotkey"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.hkshot), lang_specific, "Screenshot Hotkey"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.audiosink), lang_specific, "Audio Output"},
+    {"muxtweakgen", LANG_OFF(muxtweakgen.soundfont), lang_specific, "Soundfont"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.startup.title), lang_specific, "Device Startup"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.startup.menu), lang_specific, "Main Menu"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.startup.explore), lang_specific, "Content Explorer"},
@@ -2888,6 +2898,7 @@ static const lang_field lang_fields[] = {
     {"muxtweakgen", LANG_OFF(muxtweakgen.help.hk_shot), lang_specific, "Which button combination takes a screenshot."},
     {"muxtweakgen", LANG_OFF(muxtweakgen.help.startup), lang_specific, "Which screen the device opens on when it starts.\n\nSet it to Explore or a collection to land on your content without going through the menu first."},
     {"muxtweakgen", LANG_OFF(muxtweakgen.help.audio_sink), lang_specific, "Where sound is sent, whether that is the built in speakers, headphones, or something connected over Bluetooth.\n\nThis follows along on its own as you plug headphones in and take them out again."},
+    {"muxtweakgen", LANG_OFF(muxtweakgen.help.soundfont), lang_specific, "The soundfont used for General MIDI music, which decides how MIDI instruments sound.\n\nEach soundfont can be previewed before you commit to it."},
     {"muxtweakgen", LANG_OFF(muxtweakgen.help.pass_code), lang_specific, "Sets a code that must be entered at boot, before launching content, or before changing settings.\n\nUseful for keeping small hands out of your settings."},
     {"muxtweakgen", LANG_OFF(muxtweakgen.help.input_remap), lang_specific, "Changes which physical buttons the frontend menus respond to.\n\nThis covers the menus only. Content and emulators keep their own controls entirely separate."},
     {"muxtweakgen", LANG_OFF(muxtweakgen.help.display_temp), lang_specific, "Warm the screen colours on a sunrise and sunset schedule, which is easier on the eyes at night"},

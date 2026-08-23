@@ -386,6 +386,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, startup, lang.muxtweakgen.startup.title, "startup", startup_options, 6);
     INIT_OPTION_ITEM(-1, tweakgen, rtc, lang.muxtweakgen.rtc, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, language, lang.muxtweakgen.language, "language", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, soundfont, lang.muxtweakgen.soundfont, "soundfont", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, hdmi, lang.muxtweakgen.hdmi, "hdmi", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, rgb, lang.muxtweakgen.rgb, "rgb", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, input_remap, lang.muxtweakgen.inputremap, "inputremap", NULL, 0);
@@ -617,6 +618,7 @@ static const menu_entry tweakgen_menu_entries[ui_count_dynamic] = {
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Startup Mode
     {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
     {"language", &kiosk.config.language, menu_clock, NULL},
+    {"soundfont", &kiosk_pass, menu_clock, NULL},
     {"hdmi", &kiosk.setting.hdmi, menu_hdmi, visible_hdmi},
     {"rgb", &kiosk.setting.rgb, menu_rgb, visible_rgb},
     {"remap", &kiosk_pass, menu_remap, NULL},

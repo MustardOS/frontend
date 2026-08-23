@@ -99,8 +99,9 @@
 
 #define INTERNAL_FONTS OPT_PATH "share/font/internal"
 
-#define USER_FONTS "MUOS/font" // Fonts the user supplies on any storage
-#define USER_LOGOS "MUOS/logo" // Boot logos the user supplies on any storage
+#define USER_FONTS      "MUOS/font"      // Fonts the user supplies on any storage
+#define USER_LOGOS      "MUOS/logo"      // Boot logos the user supplies on any storage
+#define USER_SOUNDFONTS "MUOS/soundfont" // Soundfonts the user supplies on any storage
 
 #define INTERNAL_LOGOS OPT_PATH "share/logo"
 #define INTERNAL_THEME OPT_PATH "share/theme/MustardOS"
@@ -132,13 +133,17 @@
 #define STORAGE_BIOS    RUN_STORAGE_PATH "bios"
 #define STORAGE_NETWORK RUN_STORAGE_PATH "network"
 
-#define STORAGE_HOTKEY  OPT_SHARE_PATH "hotkey"
-#define STORAGE_SOUND   OPT_SHARE_PATH "media/sound"
-#define STORAGE_LANG    OPT_SHARE_PATH "language"
-#define STORAGE_OVERLAY OPT_SHARE_PATH "overlay"
-#define STORAGE_FILTER  OPT_SHARE_PATH "filter"
-#define STORAGE_SHADER  OPT_SHARE_PATH "shader"
-#define STORAGE_VOLUME  OPT_SHARE_PATH "volume"
+#define STORAGE_HOTKEY    OPT_SHARE_PATH "hotkey"
+#define STORAGE_SOUND     OPT_SHARE_PATH "media/sound"
+#define STORAGE_LANG      OPT_SHARE_PATH "language"
+#define STORAGE_OVERLAY   OPT_SHARE_PATH "overlay"
+#define STORAGE_FILTER    OPT_SHARE_PATH "filter"
+#define STORAGE_SHADER    OPT_SHARE_PATH "shader"
+#define STORAGE_SOUNDFONT OPT_SHARE_PATH "soundfont"
+#define STORAGE_VOLUME    OPT_SHARE_PATH "volume"
+
+#define SOUNDFONT_PREVIEW     OPT_SHARE_PATH "media/soundfont.mid"
+#define SOUNDFONT_PREVIEW_ALT OPT_SHARE_PATH "media/soundfont_alt.mid"
 
 #define FWD_HIST_FILE OPT_SHARE_PATH "info/fwd_hist.txt"
 

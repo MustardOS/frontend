@@ -612,6 +612,7 @@
 #define TWEAKGEN_SUBMENU_ELEMENTS                                                                                      \
     TWEAKGEN(rtc, "clock")                                                                                             \
     TWEAKGEN(language, "language")                                                                                     \
+    TWEAKGEN(soundfont, "soundfont")                                                                                   \
     TWEAKGEN(hdmi, "hdmi")                                                                                             \
     TWEAKGEN(rgb, "rgb")                                                                                               \
     TWEAKGEN(input_remap, "inputremap")                                                                                \

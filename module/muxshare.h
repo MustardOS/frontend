@@ -294,6 +294,8 @@ int muxkiosk_main(void);
 
 int muxlanguage_main(void);
 
+int muxsoundfont_main(void);
+
 int muxlaunch_main(void);
 
 int muxlogo_main(void);

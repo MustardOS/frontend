@@ -2717,6 +2717,16 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
+        char none[MAX_BUFFER_SIZE];
+        char preview[MAX_BUFFER_SIZE];
+        char loading[MAX_BUFFER_SIZE];
+        char error_preview[MAX_BUFFER_SIZE];
+    } muxsoundfont;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
         char primary[MAX_BUFFER_SIZE];
         char secondary[MAX_BUFFER_SIZE];
         char external[MAX_BUFFER_SIZE];
@@ -3090,6 +3100,7 @@ struct mux_lang {
         char hkdpad[MAX_BUFFER_SIZE];
         char hkshot[MAX_BUFFER_SIZE];
         char audiosink[MAX_BUFFER_SIZE];
+        char soundfont[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char menu[MAX_BUFFER_SIZE];
@@ -3119,6 +3130,7 @@ struct mux_lang {
             char hk_dpad[MAX_BUFFER_SIZE];
             char hk_shot[MAX_BUFFER_SIZE];
             char audio_sink[MAX_BUFFER_SIZE];
+            char soundfont[MAX_BUFFER_SIZE];
             char input_remap[MAX_BUFFER_SIZE];
             char pass_code[MAX_BUFFER_SIZE];
             char display_temp[MAX_BUFFER_SIZE];
