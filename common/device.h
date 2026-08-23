@@ -85,7 +85,13 @@ struct mux_device {
         char available[MAX_BUFFER_SIZE];
         char governor[MAX_BUFFER_SIZE];
         char scaler[MAX_BUFFER_SIZE];
+        char max_freq[MAX_BUFFER_SIZE];
+        char max_freq_default[MAX_BUFFER_SIZE];
     } cpu;
+
+    struct {
+        char max_freq_default[MAX_BUFFER_SIZE];
+    } gpu;
 
     struct {
         char module[MAX_BUFFER_SIZE];

@@ -30,3 +30,8 @@ const int time_slice_values[] = {10, 100, 200, 300, 400, 500, 600, 700, 800, 900
 const char *cardmode_values[] = {"deadline", "noop"};
 
 const char *state_values[] = {"mem", "freeze"};
+
+// These are specific to the H700 devices with modified tables!
+const char *overclock_values[] = {"1512000", "1608000", "1704000"};
+
+const char *gpu_overclock_values[] = {"0", "1"};

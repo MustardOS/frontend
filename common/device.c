@@ -84,6 +84,11 @@ void load_device(struct mux_device *device) {
     DEV_STR(device->cpu.available, "available");
     DEV_STR(device->cpu.governor, "governor");
     DEV_STR(device->cpu.scaler, "scaler");
+    DEV_STR(device->cpu.max_freq, "max_freq");
+    DEV_STR(device->cpu.max_freq_default, "max_freq_default");
+
+    cfg_dir_scan(&d, CONF_DEVICE_PATH "gpu");
+    DEV_STR(device->gpu.max_freq_default, "max_freq_default");
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "network");
     DEV_STR(device->network.module, "module");

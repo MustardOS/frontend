@@ -1,3 +1,4 @@
+#include <glob.h>
 #include "muxshare.h"
 #include "../common/ui/orientation.h"
 #include "../common/ui/list_frame.h"
@@ -188,6 +189,102 @@ static const char *get_scaling_governor(void) {
         snprintf(buffer, sizeof(buffer), "%s", lang.generic.unknown);
     }
 
+    return buffer;
+}
+
+static int gpu_devfreq_path(const char *leaf, char *out) {
+    char pattern[UI_BUFFER];
+    snprintf(pattern, sizeof(pattern), "/sys/class/devfreq/*gpu*/%s", leaf);
+
+    glob_t found;
+    if (glob(pattern, 0, NULL, &found) != 0) return -1;
+
+    if (found.gl_pathc == 0) {
+        globfree(&found);
+        return -1;
+    }
+
+    snprintf(out, UI_BUFFER, "%s", found.gl_pathv[0]);
+    globfree(&found);
+
+    return 0;
+}
+
+static const char *get_gpu_model(void) {
+    static char buffer[UI_BUFFER];
+
+    if (read_file_trim("/sys/devices/platform/gpu/gpuinfo", buffer) == 0 && *buffer) {
+        char *space = strchr(buffer, ' ');
+        if (space) *space = '\0';
+        return buffer;
+    }
+
+    char compatible[UI_BUFFER];
+    if (read_file_trim("/sys/devices/platform/gpu/of_node/compatible", compatible) == 0) {
+        if (strstr(compatible, "img")) {
+            snprintf(buffer, sizeof(buffer), "PowerVR Rogue");
+            return buffer;
+        }
+        if (strstr(compatible, "mali")) {
+            snprintf(buffer, sizeof(buffer), "Mali");
+            return buffer;
+        }
+    }
+
+    snprintf(buffer, sizeof(buffer), "%s", lang.generic.unknown);
+    return buffer;
+}
+
+static const char *get_gpu_frequency(void) {
+    static char buffer[UI_BUFFER];
+    char path[UI_BUFFER];
+
+    unsigned long long hz = 0;
+
+    if (gpu_devfreq_path("cur_freq", path) == 0) read_ll_from_file(path, &hz);
+    if (hz == 0) read_ll_from_file("/sys/kernel/debug/clk/pll_gpu/clk_rate", &hz);
+
+    if (hz == 0) {
+        snprintf(buffer, sizeof(buffer), "%s", lang.generic.unknown);
+        return buffer;
+    }
+
+    snprintf(buffer, sizeof(buffer), "%llu MHz", hz / 1000000ULL);
+    return buffer;
+}
+
+static const char *get_gpu_speed_range(void) {
+    static char buffer[UI_BUFFER];
+    char path[UI_BUFFER];
+    char listing[UI_BUFFER];
+
+    if (gpu_devfreq_path("available_frequencies", path) != 0) return lang.generic.unknown;
+    if (read_file_trim(path, listing) != 0) return lang.generic.unknown;
+
+    unsigned long long low = 0, high = 0;
+
+    char *save = NULL;
+    for (const char *tok = strtok_r(listing, " \t\n", &save); tok; tok = strtok_r(NULL, " \t\n", &save)) {
+        const unsigned long long value = strtoull(tok, NULL, 10);
+        if (value == 0) continue;
+
+        if (low == 0 || value < low) low = value;
+        if (value > high) high = value;
+    }
+
+    if (low == 0 || high == 0) return lang.generic.unknown;
+
+    snprintf(buffer, sizeof(buffer), "%llu - %llu MHz", low / 1000000ULL, high / 1000000ULL);
+    return buffer;
+}
+
+static const char *get_gpu_governor(void) {
+    static char buffer[UI_BUFFER];
+    char path[UI_BUFFER];
+
+    if (gpu_devfreq_path("governor", path) == 0 && read_file_trim(path, buffer) == 0 && *buffer) return buffer;
+
+    snprintf(buffer, sizeof(buffer), "%s", lang.generic.unknown);
     return buffer;
 }
 
@@ -455,7 +552,7 @@ static const char *get_bat_design_cap(void) {
     return buffer;
 }
 
-#define TIME_FLOOR 1735689600L
+#define TIME_FLOOR   1735689600L
 #define TIME_CEILING 4102444799L
 
 static const char *get_last_charged(void) {
@@ -947,6 +1044,10 @@ static void update_detail_info(void) {
     set_detail_value(ui_val_speed_detail, get_current_frequency());
     set_detail_value(ui_val_speed_range_detail, get_speed_range());
     set_detail_value(ui_val_governor_detail, get_scaling_governor());
+    set_detail_value(ui_val_gpu_detail, get_gpu_model());
+    set_detail_value(ui_val_gpu_speed_detail, get_gpu_frequency());
+    set_detail_value(ui_val_gpu_speed_range_detail, get_gpu_speed_range());
+    set_detail_value(ui_val_gpu_governor_detail, get_gpu_governor());
 
     set_detail_value(ui_val_capacity_detail, get_bat_capacity());
     set_detail_value(ui_val_voltage_detail, get_bat_voltage());
@@ -1006,6 +1107,10 @@ static void export_diagnostics(void) {
     fprintf(f, "%s: %s\n", lang.muxdetail.label.speed, get_current_frequency());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.speed_range, get_speed_range());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.governor, get_scaling_governor());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.gpu, get_gpu_model());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.gpu_speed, get_gpu_frequency());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.gpu_speed_range, get_gpu_speed_range());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.gpu_governor, get_gpu_governor());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.capacity, get_bat_capacity());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.voltage, get_bat_voltage());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.status, get_bat_status());

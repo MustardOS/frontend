@@ -866,6 +866,8 @@ struct mux_lang {
         char tunescale[MAX_BUFFER_SIZE];
         char cardmode[MAX_BUFFER_SIZE];
         char state[MAX_BUFFER_SIZE];
+        char overclock[MAX_BUFFER_SIZE];
+        char gpuoverclock[MAX_BUFFER_SIZE];
         char warn[MAX_BUFFER_SIZE];
         struct {
             char vm_swap[MAX_BUFFER_SIZE];
@@ -883,6 +885,8 @@ struct mux_lang {
             char tune_scale[MAX_BUFFER_SIZE];
             char card_mode[MAX_BUFFER_SIZE];
             char state[MAX_BUFFER_SIZE];
+            char overclock[MAX_BUFFER_SIZE];
+            char gpu_overclock[MAX_BUFFER_SIZE];
             char kernel_log[MAX_BUFFER_SIZE];
         } help;
     } muxdanger;
@@ -934,6 +938,10 @@ struct mux_lang {
             char speed[MAX_BUFFER_SIZE];
             char speed_range[MAX_BUFFER_SIZE];
             char governor[MAX_BUFFER_SIZE];
+            char gpu[MAX_BUFFER_SIZE];
+            char gpu_speed[MAX_BUFFER_SIZE];
+            char gpu_speed_range[MAX_BUFFER_SIZE];
+            char gpu_governor[MAX_BUFFER_SIZE];
             char capacity[MAX_BUFFER_SIZE];
             char voltage[MAX_BUFFER_SIZE];
             char status[MAX_BUFFER_SIZE];
@@ -974,6 +982,10 @@ struct mux_lang {
             char speed[MAX_BUFFER_SIZE];
             char speed_range[MAX_BUFFER_SIZE];
             char governor[MAX_BUFFER_SIZE];
+            char gpu[MAX_BUFFER_SIZE];
+            char gpu_speed[MAX_BUFFER_SIZE];
+            char gpu_speed_range[MAX_BUFFER_SIZE];
+            char gpu_governor[MAX_BUFFER_SIZE];
             char capacity[MAX_BUFFER_SIZE];
             char voltage[MAX_BUFFER_SIZE];
             char status[MAX_BUFFER_SIZE];

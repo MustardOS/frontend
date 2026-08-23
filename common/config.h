@@ -387,6 +387,8 @@ struct mux_config {
         int16_t tune_scale;
         char card_mode[MAX_BUFFER_SIZE];
         char state[MAX_BUFFER_SIZE];
+        char overclock[MAX_BUFFER_SIZE];
+        char gpu_overclock[MAX_BUFFER_SIZE];
     } danger;
 };
 

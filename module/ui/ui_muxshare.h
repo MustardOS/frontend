@@ -125,7 +125,11 @@
     DETAIL(cores, "cores")                                                                                             \
     DETAIL(speed, "speed")                                                                                             \
     DETAIL(speed_range, "speedrange")                                                                                  \
-    DETAIL(governor, "governor")
+    DETAIL(governor, "governor")                                                                                       \
+    DETAIL(gpu, "gpu")                                                                                                 \
+    DETAIL(gpu_speed, "gpuspeed")                                                                                      \
+    DETAIL(gpu_speed_range, "gpuspeedrange")                                                                           \
+    DETAIL(gpu_governor, "gpugovernor")
 
 #define DETAIL_BATTERY_ELEMENTS                                                                                        \
     DETAIL(capacity, "capacity")                                                                                       \
@@ -242,7 +246,9 @@
     DANGER(child_first, "child")                                                                                       \
     DANGER(tune_scale, "tunescale")                                                                                    \
     DANGER(card_mode, "cardmode")                                                                                      \
-    DANGER(state, "state")
+    DANGER(state, "state")                                                                                             \
+    DANGER(overclock, "overclock")                                                                                     \
+    DANGER(gpu_overclock, "gpuoverclock")
 
 #define DEVICE_ELEMENTS                                                                                                \
     DEVICE(has_bluetooth, "bluetooth")                                                                                 \
