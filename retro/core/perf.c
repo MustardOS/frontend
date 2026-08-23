@@ -179,8 +179,6 @@ static void reset(void) {
     audio_queue_min_ms = UINT32_MAX;
     audio_queue_below_low_samples = 0;
     audio_queue_empty_samples = 0;
-
-    if (current_core.pickles_ppsspp_perf_reset) current_core.pickles_ppsspp_perf_reset();
 }
 
 static void note_present_timing(const double draw_ms, const double flip_ms) {
@@ -599,118 +597,6 @@ int perf_export_trace(const char *path) {
         f, "core_version,%s\n",
         core_cached_system_info(&core_info) && core_info.library_version ? core_info.library_version : "unknown"
     );
-
-    struct pickles_ppsspp_perf_stats ppsspp_perf = {0};
-    if (current_core.pickles_ppsspp_perf_get && current_core.pickles_ppsspp_perf_get(&ppsspp_perf, sizeof(ppsspp_perf))
-        && ppsspp_perf.version >= 1) {
-        fprintf(f, "ppsspp_pickles_frame_wait_calls,%llu\n", (unsigned long long) ppsspp_perf.frame_wait_calls);
-        fprintf(f, "ppsspp_pickles_frame_wait_polls,%llu\n", (unsigned long long) ppsspp_perf.frame_wait_polls);
-        fprintf(
-            f, "ppsspp_pickles_frame_wait_polls_per_call,%.4f\n",
-            ppsspp_perf.frame_wait_calls ? (double) ppsspp_perf.frame_wait_polls / (double) ppsspp_perf.frame_wait_calls
-                                         : 0.0
-        );
-        fprintf(
-            f, "ppsspp_pickles_frame_wait_mean_ms,%.4f\n",
-            ppsspp_perf.frame_wait_calls
-                ? (double) ppsspp_perf.frame_wait_us / (double) ppsspp_perf.frame_wait_calls / 1000.0
-                : 0.0
-        );
-        fprintf(f, "ppsspp_pickles_frame_wait_peak_ms,%.4f\n", (double) ppsspp_perf.frame_wait_peak_us / 1000.0);
-        fprintf(f, "ppsspp_pickles_frame_wait_fallbacks,%llu\n", (unsigned long long) ppsspp_perf.frame_wait_fallbacks);
-        fprintf(f, "ppsspp_pickles_audio_poll_drains,%llu\n", (unsigned long long) ppsspp_perf.poll_audio_drains);
-        fprintf(f, "ppsspp_pickles_audio_poll_frames,%llu\n", (unsigned long long) ppsspp_perf.poll_audio_frames);
-        fprintf(f, "ppsspp_pickles_audio_poll_ms,%.3f\n", (double) ppsspp_perf.poll_audio_frames * 1000.0 / 44100.0);
-        if (ppsspp_perf.version >= 2) {
-            fprintf(
-                f, "ppsspp_pickles_frame_execute_mean_ms,%.4f\n",
-                ppsspp_perf.frame_wait_calls
-                    ? (double) ppsspp_perf.frame_execute_us / (double) ppsspp_perf.frame_wait_calls / 1000.0
-                    : 0.0
-            );
-            fprintf(
-                f, "ppsspp_pickles_frame_execute_peak_ms,%.4f\n", (double) ppsspp_perf.frame_execute_peak_us / 1000.0
-            );
-            fprintf(
-                f, "ppsspp_pickles_frame_idle_mean_ms,%.4f\n",
-                ppsspp_perf.frame_wait_calls
-                    ? (double) ppsspp_perf.frame_idle_us / (double) ppsspp_perf.frame_wait_calls / 1000.0
-                    : 0.0
-            );
-            fprintf(f, "ppsspp_pickles_frame_idle_peak_ms,%.4f\n", (double) ppsspp_perf.frame_idle_peak_us / 1000.0);
-            fprintf(
-                f, "ppsspp_pickles_render_service_calls,%llu\n", (unsigned long long) ppsspp_perf.render_service_calls
-            );
-            fprintf(
-                f, "ppsspp_pickles_render_audio_drains,%llu\n", (unsigned long long) ppsspp_perf.render_audio_drains
-            );
-            fprintf(
-                f, "ppsspp_pickles_render_audio_frames,%llu\n", (unsigned long long) ppsspp_perf.render_audio_frames
-            );
-            fprintf(
-                f, "ppsspp_pickles_render_audio_ms,%.3f\n", (double) ppsspp_perf.render_audio_frames * 1000.0 / 44100.0
-            );
-            fprintf(
-                f, "ppsspp_pickles_render_audio_hit_percent,%.2f\n",
-                ppsspp_perf.render_service_calls
-                    ? (double) ppsspp_perf.render_audio_drains * 100.0 / (double) ppsspp_perf.render_service_calls
-                    : 0.0
-            );
-            fprintf(
-                f, "ppsspp_pickles_render_audio_mean_frames,%.2f\n",
-                ppsspp_perf.render_audio_drains
-                    ? (double) ppsspp_perf.render_audio_frames / (double) ppsspp_perf.render_audio_drains
-                    : 0.0
-            );
-        }
-        if (ppsspp_perf.version >= 3) {
-            fprintf(
-                f, "ppsspp_pickles_render_audio_deferred,%llu\n", (unsigned long long) ppsspp_perf.render_audio_deferred
-            );
-            fprintf(f, "ppsspp_pickles_gl_render_steps,%llu\n", (unsigned long long) ppsspp_perf.gl_render_steps);
-            fprintf(f, "ppsspp_pickles_gl_render_ms,%.3f\n", (double) ppsspp_perf.gl_render_us / 1000.0);
-            fprintf(
-                f, "ppsspp_pickles_gl_render_mean_step_ms,%.4f\n",
-                ppsspp_perf.gl_render_steps
-                    ? (double) ppsspp_perf.gl_render_us / (double) ppsspp_perf.gl_render_steps / 1000.0
-                    : 0.0
-            );
-            fprintf(f, "ppsspp_pickles_gl_copy_steps,%llu\n", (unsigned long long) ppsspp_perf.gl_copy_steps);
-            fprintf(f, "ppsspp_pickles_gl_copy_ms,%.3f\n", (double) ppsspp_perf.gl_copy_us / 1000.0);
-            fprintf(f, "ppsspp_pickles_gl_blit_steps,%llu\n", (unsigned long long) ppsspp_perf.gl_blit_steps);
-            fprintf(f, "ppsspp_pickles_gl_blit_ms,%.3f\n", (double) ppsspp_perf.gl_blit_us / 1000.0);
-            fprintf(
-                f, "ppsspp_pickles_gl_readback_steps,%llu\n",
-                (unsigned long long) (ppsspp_perf.gl_readback_steps + ppsspp_perf.gl_readback_image_steps)
-            );
-            fprintf(
-                f, "ppsspp_pickles_gl_readback_ms,%.3f\n",
-                (double) (ppsspp_perf.gl_readback_us + ppsspp_perf.gl_readback_image_us) / 1000.0
-            );
-            fprintf(f, "ppsspp_pickles_gl_render_commands,%llu\n", (unsigned long long) ppsspp_perf.gl_render_commands);
-            fprintf(f, "ppsspp_pickles_gl_draws,%llu\n", (unsigned long long) ppsspp_perf.gl_draw_commands);
-            fprintf(
-                f, "ppsspp_pickles_gl_draws_per_frame,%.2f\n",
-                ppsspp_perf.frame_wait_calls
-                    ? (double) ppsspp_perf.gl_draw_commands / (double) ppsspp_perf.frame_wait_calls
-                    : 0.0
-            );
-            fprintf(
-                f, "ppsspp_pickles_gl_texture_uploads,%llu\n",
-                (unsigned long long) ppsspp_perf.gl_texture_upload_commands
-            );
-            fprintf(
-                f, "ppsspp_pickles_gl_texture_uploads_per_frame,%.2f\n",
-                ppsspp_perf.frame_wait_calls
-                    ? (double) ppsspp_perf.gl_texture_upload_commands / (double) ppsspp_perf.frame_wait_calls
-                    : 0.0
-            );
-            fprintf(f, "ppsspp_pickles_gl_clears,%llu\n", (unsigned long long) ppsspp_perf.gl_clear_commands);
-            fprintf(
-                f, "ppsspp_pickles_gl_texture_binds,%llu\n", (unsigned long long) ppsspp_perf.gl_bind_texture_commands
-            );
-        }
-    }
 
     static const char *const ppsspp_options[] = {
         "ppsspp_cpu_core",

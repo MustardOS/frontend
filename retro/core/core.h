@@ -6,41 +6,6 @@
 #include <stdint.h>
 #include "libretro.h"
 
-struct pickles_ppsspp_perf_stats {
-    uint32_t version;
-    uint32_t size;
-    uint64_t frame_wait_calls;
-    uint64_t frame_wait_polls;
-    uint64_t frame_wait_fallbacks;
-    uint64_t frame_wait_us;
-    uint64_t frame_wait_peak_us;
-    uint64_t poll_audio_drains;
-    uint64_t poll_audio_frames;
-    uint64_t frame_execute_us;
-    uint64_t frame_execute_peak_us;
-    uint64_t frame_idle_us;
-    uint64_t frame_idle_peak_us;
-    uint64_t render_service_calls;
-    uint64_t render_audio_drains;
-    uint64_t render_audio_frames;
-    uint64_t render_audio_deferred;
-    uint64_t gl_render_steps;
-    uint64_t gl_copy_steps;
-    uint64_t gl_blit_steps;
-    uint64_t gl_readback_steps;
-    uint64_t gl_readback_image_steps;
-    uint64_t gl_render_us;
-    uint64_t gl_copy_us;
-    uint64_t gl_blit_us;
-    uint64_t gl_readback_us;
-    uint64_t gl_readback_image_us;
-    uint64_t gl_render_commands;
-    uint64_t gl_draw_commands;
-    uint64_t gl_texture_upload_commands;
-    uint64_t gl_clear_commands;
-    uint64_t gl_bind_texture_commands;
-};
-
 struct core_cbs {
     bool initialised;
     void *handle;
@@ -68,9 +33,6 @@ struct core_cbs {
     void (*retro_cheat_reset)(void);
     void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
 
-    // Optional Pickles extension exported only by the custom built PPSSPP core, hooray!
-    void (*pickles_ppsspp_perf_reset)(void);
-    bool (*pickles_ppsspp_perf_get)(struct pickles_ppsspp_perf_stats *stats, size_t size);
 };
 
 extern struct core_cbs current_core;

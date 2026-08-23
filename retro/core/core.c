@@ -112,11 +112,6 @@ static int open_core(const char *corefile) {
     MUOS_FUNCTION_ASSIGN(current_core.retro_get_memory_size, dlsym(current_core.handle, "retro_get_memory_size"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_cheat_reset, dlsym(current_core.handle, "retro_cheat_reset"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_cheat_set, dlsym(current_core.handle, "retro_cheat_set"));
-    MUOS_FUNCTION_ASSIGN(
-        current_core.pickles_ppsspp_perf_reset, dlsym(current_core.handle, "pickles_ppsspp_perf_reset")
-    );
-    MUOS_FUNCTION_ASSIGN(current_core.pickles_ppsspp_perf_get, dlsym(current_core.handle, "pickles_ppsspp_perf_get"));
-
     MUOS_FUNCTION_ASSIGN(set_environment, dlsym(current_core.handle, "retro_set_environment"));
     MUOS_FUNCTION_ASSIGN(set_video_refresh, dlsym(current_core.handle, "retro_set_video_refresh"));
     MUOS_FUNCTION_ASSIGN(set_audio_sample, dlsym(current_core.handle, "retro_set_audio_sample"));
