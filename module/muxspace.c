@@ -737,6 +737,7 @@ static mux_dialogue commit_dlg;
 
 static int task_pending = 0;
 static const char *chosen_fs = NULL;
+static const char *chosen_fs_label = NULL;
 
 #define MATH_CHOICES 6
 
@@ -787,7 +788,7 @@ static void ask_prepare_system_layout(void) {
 
     char message[MAX_BUFFER_SIZE];
     snprintf(
-        message, sizeof(message), lang.muxspace_system_layout, prepare_label(), layout.partition_count,
+        message, sizeof(message), lang.muxspace.internal_emmc, prepare_label(), layout.partition_count,
         layout.capacity_gib
     );
 
@@ -905,11 +906,6 @@ static fs_choice_text format_text(void) {
     return (fs_choice_text) {
         .title = lang.muxspace.prepare.title,
         .description = lang.muxspace.prepare.choose,
-        .no_tooling = lang.muxspace.prepare.no_tooling,
-        .name = {lang.muxspace.prepare.vfat, lang.muxspace.prepare.exfat, lang.muxspace.prepare.ext4},
-        .about = {
-            lang.muxspace.prepare.about_vfat, lang.muxspace.prepare.about_exfat, lang.muxspace.prepare.about_ext4
-        },
     };
 }
 
@@ -920,7 +916,9 @@ static void format_describe(void) {
 
 static void ask_prepare_commit(void) {
     char message[MAX_BUFFER_SIZE];
-    snprintf(message, sizeof(message), lang.muxspace.prepare.commit, prepare_label(), chosen_fs ? chosen_fs : "");
+    snprintf(
+        message, sizeof(message), lang.muxspace.prepare.commit, prepare_label(), chosen_fs_label ? chosen_fs_label : ""
+    );
 
     dialogue_init_confirm(
         &commit_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, lang.generic.yes, lang.generic.no,
@@ -992,6 +990,7 @@ static void finish_prepare(void) {
     task_exec_acknowledge();
 
     chosen_fs = NULL;
+    chosen_fs_label = NULL;
 
     update_storage_info();
     apply_bar_visibility();
@@ -1030,6 +1029,7 @@ static void handle_a(void) {
         dialogue_dismiss(&format_dlg);
 
         chosen_fs = fs_choice_name(slot);
+        chosen_fs_label = fs_choice_label(slot);
         if (!chosen_fs) return;
 
         block_layout layout;

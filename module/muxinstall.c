@@ -130,12 +130,6 @@ static fs_choice_text format_text(void) {
     return (fs_choice_text) {
         .title = lang.muxinstall.filesystem.title,
         .description = lang.muxinstall.filesystem.desc,
-        .no_tooling = lang.muxinstall.filesystem.no_tooling,
-        .name = {lang.muxinstall.filesystem.vfat, lang.muxinstall.filesystem.exfat, lang.muxinstall.filesystem.ext4},
-        .about = {
-            lang.muxinstall.filesystem.about_vfat, lang.muxinstall.filesystem.about_exfat,
-            lang.muxinstall.filesystem.about_ext4
-        },
     };
 }
 

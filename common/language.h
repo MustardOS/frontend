@@ -204,6 +204,15 @@ struct mux_lang {
         char random[MAX_BUFFER_SIZE];
         char power_loss_title[MAX_BUFFER_SIZE];
         char power_loss_message[MAX_BUFFER_SIZE];
+        struct {
+            char vfat[MAX_BUFFER_SIZE];
+            char exfat[MAX_BUFFER_SIZE];
+            char ext4[MAX_BUFFER_SIZE];
+            char about_vfat[MAX_BUFFER_SIZE];
+            char about_exfat[MAX_BUFFER_SIZE];
+            char about_ext4[MAX_BUFFER_SIZE];
+            char no_tooling[MAX_BUFFER_SIZE];
+        } filesystem;
     } generic;
 
     struct {
@@ -1148,13 +1157,6 @@ struct mux_lang {
         struct {
             char title[MAX_BUFFER_SIZE];
             char desc[MAX_BUFFER_SIZE];
-            char vfat[MAX_BUFFER_SIZE];
-            char exfat[MAX_BUFFER_SIZE];
-            char ext4[MAX_BUFFER_SIZE];
-            char about_vfat[MAX_BUFFER_SIZE];
-            char about_exfat[MAX_BUFFER_SIZE];
-            char about_ext4[MAX_BUFFER_SIZE];
-            char no_tooling[MAX_BUFFER_SIZE];
         } filesystem;
     } muxinstall;
 
@@ -2734,6 +2736,7 @@ struct mux_lang {
         char checking[MAX_BUFFER_SIZE];
         char unreadable[MAX_BUFFER_SIZE];
         char unreadable_hint[MAX_BUFFER_SIZE];
+        char internal_emmc[MAX_BUFFER_SIZE];
         struct {
             char module[MAX_BUFFER_SIZE];
             char primary[MAX_BUFFER_SIZE];
@@ -2771,14 +2774,7 @@ struct mux_lang {
             char challenge[MAX_BUFFER_SIZE];
             char challenge_invert[MAX_BUFFER_SIZE];
             char wrong[MAX_BUFFER_SIZE];
-            char no_tooling[MAX_BUFFER_SIZE];
             char choose[MAX_BUFFER_SIZE];
-            char exfat[MAX_BUFFER_SIZE];
-            char vfat[MAX_BUFFER_SIZE];
-            char ext4[MAX_BUFFER_SIZE];
-            char about_exfat[MAX_BUFFER_SIZE];
-            char about_vfat[MAX_BUFFER_SIZE];
-            char about_ext4[MAX_BUFFER_SIZE];
             char warning[MAX_BUFFER_SIZE];
             char final[MAX_BUFFER_SIZE];
             char commit[MAX_BUFFER_SIZE];
