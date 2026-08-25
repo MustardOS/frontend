@@ -300,6 +300,13 @@ typedef struct {
     lv_obj_t *row_value[SPACE_INFO_ROWS];
 } storage_entry;
 
+typedef struct {
+    double capacity_gib;
+    int partition_count;
+    int potential_system_layout;
+    char node[64];
+} block_layout;
+
 static storage_entry *storage_table(void) {
     static storage_entry table[4];
 
@@ -373,6 +380,62 @@ static int node_exists(const char *node) {
     return stat(path, &st) == 0 && S_ISBLK(st.st_mode);
 }
 
+static int read_block_layout(const storage_entry *entry, block_layout *layout) {
+    memset(layout, 0, sizeof(*layout));
+
+    if (!entry || !entry->node || !*entry->node) return 0;
+
+    const char *base = entry->node;
+    if (!strncmp(base, "/dev/", 5)) base += 5;
+
+    if (!*base || strchr(base, '/')) return 0;
+
+    char path[PATH_MAX];
+    char text[64];
+
+    snprintf(path, sizeof(path), "/sys/class/block/%s/size", base);
+    if (!read_sysfs_text(path, text, sizeof(text))) return 0;
+
+    const unsigned long long sectors = strtoull(text, NULL, 10);
+    if (!sectors) return 0;
+
+    layout->capacity_gib = (double) sectors * 512.0 / (1024.0 * 1024.0 * 1024.0);
+    snprintf(layout->node, sizeof(layout->node), "/dev/%s", base);
+
+    FILE *fp = fopen("/proc/partitions", "r");
+    if (fp) {
+        char line[128];
+        unsigned int major, minor;
+        unsigned long long blocks;
+        char name[64];
+        const size_t base_len = strlen(base);
+
+        while (fgets(line, sizeof(line), fp)) {
+            if (sscanf(line, "%u %u %llu %63s", &major, &minor, &blocks, name) != 4) continue;
+            if (strncmp(name, base, base_len) != 0) continue;
+
+            const char *suffix = name + base_len;
+            if (*suffix == 'p') suffix++;
+            if (*suffix < '0' || *suffix > '9') continue;
+
+            layout->partition_count++;
+        }
+
+        fclose(fp);
+    }
+
+    int removable = 1;
+    snprintf(path, sizeof(path), "/sys/class/block/%s/removable", base);
+    if (read_sysfs_text(path, text, sizeof(text))) removable = atoi(text);
+
+    snprintf(path, sizeof(path), "/dev/%sboot0", base);
+    struct stat st;
+    const int has_emmc_boot = stat(path, &st) == 0 && S_ISBLK(st.st_mode);
+
+    layout->potential_system_layout = !removable && has_emmc_boot && layout->partition_count > 1;
+    return 1;
+}
+
 static void set_row_value(lv_obj_t *value, const char *text) {
     if (!value) return;
 
@@ -385,7 +448,15 @@ static void update_storage_details(
 ) {
     char text[64];
 
-    snprintf(text, sizeof(text), "%.2f GB", total_space);
+    block_layout layout;
+    const int show_device_layout =
+        index == 1 && read_block_layout(entry, &layout) && layout.partition_count > 1;
+
+    if (show_device_layout) {
+        snprintf(text, sizeof(text), "%.2f GB device (%.2f GB mounted)", layout.capacity_gib, total_space);
+    } else {
+        snprintf(text, sizeof(text), "%.2f GB", total_space);
+    }
     set_row_value(entry->row_value[0], text);
 
     snprintf(text, sizeof(text), "%.2f GB", used_space);
@@ -398,7 +469,12 @@ static void update_storage_details(
     resolve_mount(entry->partition, dev_src, fs_type);
 
     set_row_value(entry->row_value[3], fs_type);
-    set_row_value(entry->row_value[4], dev_src);
+    if (show_device_layout) {
+        snprintf(text, sizeof(text), "%s (%d partitions)", dev_src, layout.partition_count);
+        set_row_value(entry->row_value[4], text);
+    } else {
+        set_row_value(entry->row_value[4], dev_src);
+    }
 
     msd_info msd = {0};
     if (entry->show_msd && !read_msd_info(dev_src, &msd)) read_usb_info(dev_src, &msd);
@@ -411,18 +487,33 @@ static void update_storage_details(
     LV_UNUSED(index);
 }
 
-static void update_storage_unreadable(const storage_entry *entry) {
-    set_row_value(entry->row_value[0], NULL);
+static void update_storage_unreadable(const storage_entry *entry, const int index) {
+    block_layout layout;
+    const int show_device_layout =
+        index == 1 && read_block_layout(entry, &layout) && layout.partition_count > 1;
+
+    if (show_device_layout) {
+        char text[64];
+        snprintf(text, sizeof(text), "%.2f GB device", layout.capacity_gib);
+        set_row_value(entry->row_value[0], text);
+    } else {
+        set_row_value(entry->row_value[0], NULL);
+    }
     set_row_value(entry->row_value[1], NULL);
     set_row_value(entry->row_value[2], NULL);
     set_row_value(entry->row_value[3], lang.muxspace.unreadable);
 
     char node[MAX_BUFFER_SIZE];
-    snprintf(node, sizeof(node), "/dev/%s", entry->node ? entry->node : "");
+    if (show_device_layout) {
+        snprintf(node, sizeof(node), "%s (%d partitions)", layout.node, layout.partition_count);
+    } else {
+        snprintf(node, sizeof(node), "/dev/%s", entry->node ? entry->node : "");
+    }
     set_row_value(entry->row_value[4], node);
 
     msd_info msd = {0};
-    if (entry->show_msd && !read_msd_info(node, &msd)) read_usb_info(node, &msd);
+    const char *device_node = show_device_layout ? layout.node : node;
+    if (entry->show_msd && !read_msd_info(device_node, &msd)) read_usb_info(device_node, &msd);
 
     set_row_value(entry->row_value[5], msd.manufacturer);
     set_row_value(entry->row_value[6], msd.model);
@@ -444,7 +535,7 @@ static void update_storage_info(void) {
 
         if (!storage_present[i]) {
             lv_label_set_text(storage_info[i].value, lang.muxspace.unreadable);
-            update_storage_unreadable(&storage_info[i]);
+            update_storage_unreadable(&storage_info[i], (int) i);
 
             lv_obj_set_height(storage_info[i].bar_panel, SPACE_BAR_BASE_PX);
             lv_bar_set_value(storage_info[i].bar, 100, LV_ANIM_OFF);
@@ -631,7 +722,15 @@ static const char *prepare_label(void) {
     }
 }
 
+static int prepare_system_layout(block_layout *layout) {
+    const int index = focused_storage();
+    if (index != 1) return 0;
+
+    return read_block_layout(&storage_table()[index], layout) && layout->potential_system_layout;
+}
+
 static mux_dialogue format_dlg;
+static mux_dialogue system_layout_dlg;
 static mux_dialogue warn_dlg;
 static mux_dialogue final_dlg;
 static mux_dialogue commit_dlg;
@@ -677,6 +776,27 @@ static void ask_prepare_warning(void) {
     );
 
     dialogue_open(&warn_dlg, &theme);
+}
+
+static void ask_prepare_system_layout(void) {
+    block_layout layout;
+    if (!prepare_system_layout(&layout)) {
+        ask_prepare_warning();
+        return;
+    }
+
+    char message[MAX_BUFFER_SIZE];
+    snprintf(
+        message, sizeof(message), lang.muxspace_system_layout, prepare_label(), layout.partition_count,
+        layout.capacity_gib
+    );
+
+    dialogue_init_confirm(
+        &system_layout_dlg, &theme, ui_screen, lang.muxspace.prepare.title, message, lang.generic.yes, lang.generic.no,
+        lang.generic.select, lang.generic.cancel
+    );
+
+    dialogue_open(&system_layout_dlg, &theme);
 }
 
 static void ask_prepare_final(void) {
@@ -821,6 +941,7 @@ static void format_describe(void);
 static mux_dialogue *active_dialogue(void) {
     if (dialogue_active(&math_dlg)) return &math_dlg;
     if (dialogue_active(&format_dlg)) return &format_dlg;
+    if (dialogue_active(&system_layout_dlg)) return &system_layout_dlg;
     if (dialogue_active(&warn_dlg)) return &warn_dlg;
     if (dialogue_active(&final_dlg)) return &final_dlg;
     if (dialogue_active(&commit_dlg)) return &commit_dlg;
@@ -911,7 +1032,20 @@ static void handle_a(void) {
         chosen_fs = fs_choice_name(slot);
         if (!chosen_fs) return;
 
-        ask_prepare_warning();
+        block_layout layout;
+        if (prepare_system_layout(&layout)) {
+            ask_prepare_system_layout();
+        } else {
+            ask_prepare_warning();
+        }
+        return;
+    }
+
+    if (dialogue_active(&system_layout_dlg)) {
+        const mux_confirm_opt opt = (mux_confirm_opt) system_layout_dlg.selected;
+        dialogue_dismiss(&system_layout_dlg);
+
+        if (opt == mux_confirm_yep) ask_prepare_warning();
         return;
     }
 
@@ -971,6 +1105,11 @@ static void handle_b(void) {
 
     if (dialogue_active(&format_dlg)) {
         dialogue_cancel(&format_dlg);
+        return;
+    }
+
+    if (dialogue_active(&system_layout_dlg)) {
+        dialogue_cancel(&system_layout_dlg);
         return;
     }
 
