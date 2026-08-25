@@ -67,6 +67,10 @@ char *grab_ext(const char *text);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
 
+int content_label_module(void);
+
+void adjust_content_label(char *text);
+
 char *generate_number_string(
     int min, int max, int increment, const char *prefix, const char *infix, const char *suffix, int infix_position
 );

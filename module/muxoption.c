@@ -286,11 +286,7 @@ static void populate_info_values(void) {
     lv_label_set_text(ui_val_folder_option, curr_dir);
 
     if (!is_dir) {
-        char friendly_name[MAX_BUFFER_SIZE];
-        resolve_friendly_name(file_path, friendly_name);
-        adjust_visual_label(friendly_name, config.visual.name, config.visual.dash);
-
-        lv_label_set_text(ui_val_name_option, friendly_name);
+        lv_label_set_text(ui_val_name_option, get_file_name(file_path));
         lv_label_set_text(ui_val_time_option, get_time_played());
         lv_label_set_text(ui_val_launch_option, get_launch_count());
     }

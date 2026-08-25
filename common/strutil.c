@@ -13,6 +13,7 @@
 #include "util.h"
 #include "log.h"
 #include "language.h"
+#include "config.h"
 #include "skip.h"
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
@@ -562,6 +563,24 @@ void adjust_visual_label(char *text, const int method, const int rep_dash) {
             found[1] = ' ';
         }
     }
+}
+
+// Only the modules that list game names get the name bracket setting!
+int content_label_module(void) {
+    static const char *allowed[] = {"muxplore",    "muxcollect",   "muxhistory",  "muxsearch",
+                                    "muxactivity", "muxactdetail", "muxactglobal"};
+
+    for (size_t i = 0; i < sizeof(allowed) / sizeof(allowed[0]); i++) {
+        if (strcasecmp(mux_module, allowed[i]) == 0) return 1;
+    }
+
+    return 0;
+}
+
+void adjust_content_label(char *text) {
+    if (!content_label_module()) return;
+
+    adjust_visual_label(text, config.visual.name, config.visual.dash);
 }
 
 char *generate_number_string(

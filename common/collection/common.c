@@ -55,11 +55,11 @@ content_item *add_item(
     (*content_items)[*count].group_tag[0] = '\0';
     (*content_items)[*count].order = (order_key) {0};
 
-    if (config.visual.the_title_format) {
+    if (config.visual.the_title_format && content_label_module()) {
         reformat_display_name((*content_items)[*count].display_name);
     }
 
-    adjust_visual_label((*content_items)[*count].display_name, config.visual.name, config.visual.dash);
+    adjust_content_label((*content_items)[*count].display_name);
 
     (*count)++;
 

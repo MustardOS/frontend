@@ -332,7 +332,7 @@ static void process_results(const char *json_results) {
                 snprintf(content_full_path, sizeof(content_full_path), "%s/%s", folder_name, file_name);
             }
 
-            adjust_visual_label(display_name, config.visual.name, config.visual.dash);
+            adjust_content_label(display_name);
             add_item(
                 &folder_items, &folder_item_count, display_name, display_name, content_full_path, content_type_item
             );

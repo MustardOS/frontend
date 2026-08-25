@@ -536,7 +536,7 @@ void update_title(
     const char *folder_path, const int fn_valid, const struct json fn_json, const char *label, const char *module_path
 ) {
     char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
-    adjust_visual_label(display_title, config.visual.name, config.visual.dash);
+    adjust_content_label(display_title);
 
     char title[PATH_MAX];
     const char *module_type = "";

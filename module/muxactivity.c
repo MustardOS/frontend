@@ -934,7 +934,7 @@ static void load_activity_items(void) {
                 char raw_name[MAX_BUFFER_SIZE];
                 json_string_copy(name_json, raw_name, sizeof(raw_name));
                 resolve_friendly_name(full_path, it->name);
-                adjust_visual_label(it->name, config.visual.name, config.visual.dash);
+                adjust_content_label(it->name);
 
                 it->total_time = json_size_positive(time_json);
                 it->launch_count = json_size_positive(launches_json);
