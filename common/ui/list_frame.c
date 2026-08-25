@@ -3,6 +3,7 @@
 #include "../../module/muxshare.h"
 #include "../options.h"
 #include "common.h"
+#include "nav.h"
 
 // Room for every row a paged screen might hold
 #define LIST_FRAME_ROWS_MAX 96
@@ -12,6 +13,8 @@ static struct theme_config *theme_ref = NULL;
 static list_frame frames[LIST_FRAME_MAX];
 static int frame_count = 0;
 static int current = 0;
+
+static lv_obj_t *content = NULL;
 
 static lv_obj_t **row_panels = NULL;
 static lv_obj_t **row_labels = NULL;
@@ -32,6 +35,7 @@ void list_frame_reset(void) {
     frame_count = 0;
     current = 0;
     row_total = 0;
+    content = NULL;
     bar = NULL;
     bar_label = NULL;
     bar_glyph = NULL;
@@ -146,6 +150,7 @@ int list_frame_init(
     }
 
     theme_ref = t;
+    content = parent;
 
     for (int i = 0; i < count; i++)
         frames[i] = list[i];
@@ -216,6 +221,25 @@ void list_frame_apply(void) {
     if (bar) lv_obj_move_to_index(bar, 0);
 
     current_item_index = 0;
+
+    list_frame_reposition();
+}
+
+void list_frame_reposition(void) {
+    if (!list_frame_active() || !content || !lv_obj_is_valid(content)) return;
+
+    lv_obj_update_layout(content);
+
+    update_scroll_position(
+        theme_ref->mux.item.count, theme_ref->mux.item.panel, ui_count_static, current_item_index, content
+    );
+
+    set_option_label_scroll_mode(lv_group_get_focused(ui_group));
+    set_option_value_scroll_mode(lv_group_get_focused(ui_group_value));
+
+    nav_refresh_list_overflow(content);
+
+    nav_moved = 1;
 }
 
 int list_frame_focused(void) {

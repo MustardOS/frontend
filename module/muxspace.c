@@ -1185,6 +1185,7 @@ static void handle_section_prev(void) {
     if (list_frame_move(-1)) {
         play_sound(snd_navigate);
         section_changed();
+        list_frame_reposition();
         nav_refresh();
     }
 }
@@ -1196,6 +1197,7 @@ static void handle_section_next(void) {
     if (list_frame_move(+1)) {
         play_sound(snd_navigate);
         section_changed();
+        list_frame_reposition();
         nav_refresh();
     }
 }

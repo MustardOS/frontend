@@ -42,6 +42,8 @@ int list_frame_restore_key(const char *key);
 
 void list_frame_apply(void);
 
+void list_frame_reposition(void);
+
 int list_frame_move(int direction);
 
 int list_frame_go(int index);

@@ -245,8 +245,6 @@ static void handle_section_step(const int direction) {
 
     if (list_frame_move(direction)) {
         play_sound(snd_navigate);
-        gen_step_movement(0, +1, 2, 0, 0);
-
         nav_refresh();
         nav_moved = 1;
     }

@@ -499,7 +499,6 @@ static void handle_frame_prev(void) {
 
     if (list_frame_move(-1)) {
         play_sound(snd_option);
-        gen_step_movement(0, +1, 2, 0, 0);
         check_focus();
     }
 }
@@ -509,7 +508,6 @@ static void handle_frame_next(void) {
 
     if (list_frame_move(+1)) {
         play_sound(snd_option);
-        gen_step_movement(0, +1, 2, 0, 0);
         check_focus();
     }
 }
@@ -528,7 +526,6 @@ static void handle_option_prev(void) {
     if (list_frame_focused()) {
         if (list_frame_move(-1)) {
             play_sound(snd_option);
-            gen_step_movement(0, +1, 2, 0, 0);
             check_focus();
         }
 
@@ -552,7 +549,6 @@ static void handle_option_next(void) {
     if (list_frame_focused()) {
         if (list_frame_move(+1)) {
             play_sound(snd_option);
-            gen_step_movement(0, +1, 2, 0, 0);
             check_focus();
         }
 
