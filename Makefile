@@ -6,8 +6,11 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-DAEMONS = mulink
+MODULE_DAEMONS = mulink
+INPUT_DAEMON = muinput
+DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
 TOOLS = muvarctl murgb
+CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 muvarctl_SRC = common/var_store.c
 
@@ -31,13 +34,14 @@ $(shell mkdir -p $(DEPDIR))
 
 CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)
 CONFIG_STAMP := .build-config
+DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
-.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) prebuild vendor-external thirdparty config-guard clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external thirdparty config-guard clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro
 
 .DEFAULT_GOAL := all
 
-all: info prebuild $(MODULES) $(DAEMONS) $(TOOLS) notify
+all: info prebuild cursor $(MODULES) $(DAEMONS) $(TOOLS) notify
 
 $(MODULES) $(DAEMONS) $(TOOLS): | prebuild
 notify: | $(MODULES) $(DAEMONS) $(TOOLS)
@@ -55,10 +59,12 @@ vendor-external:
 	$(VERBOSE)DEVICE="$(DEVICE)" EXT_ARCH_FLAGS="$(ARCH)" $(EXTERNAL_BUILD) $(QUIET) || exit 1
 
 config-guard: | vendor-external
-	$(VERBOSE)if [ "$$(cat $(CONFIG_STAMP) 2>/dev/null)" != "$(CONFIG_ID)" ]; then \
-		echo "Build configuration changed, starting clean"; \
+	$(VERBOSE)if [ ! -f "$(DEP_READY_STAMP)" ] || [ "$$(cat $(CONFIG_STAMP) 2>/dev/null)" != "$(CONFIG_ID)" ]; then \
+		echo "Build dependency state changed, starting clean"; \
 		$(MAKE) --no-print-directory clean $(QUIET); \
-		printf '%s' "$(CONFIG_ID)" > $(CONFIG_STAMP); \
+		mkdir -p "$(DEP_ROOT)"; \
+		printf '%s' "$(CONFIG_ID)" >"$(CONFIG_STAMP)"; \
+		: >"$(DEP_READY_STAMP)"; \
 	fi
 
 thirdparty: | config-guard
@@ -110,17 +116,32 @@ $(MODULES):
 		-MF $(DEP_ROOT)/root/$@.d $(LDLIBS) $(LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }; \
 	mkdir -p $(BIN_DIR); mv $@ $(BIN_DIR) || { echo "Error moving $@ to $(BIN_DIR)"; exit 1; }
 
-$(DAEMONS):
+$(MODULE_DAEMONS):
 	@echo "Building Daemon: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
 	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+
+$(INPUT_DAEMON):
+	@echo "Building Input Service: $@"
+	@mkdir -p $(BIN_DIR)
+	$(VERBOSE)$(MAKE) -C input CC="$(CC)" CFLAGS="$(CFLAGS)" \
+		LDFLAGS="$(BIN_LDFLAGS)" BUILDDIR="$(abspath $(DEP_ROOT)/input)" $(QUIET) || exit 1
+	$(VERBOSE)cp "$(DEP_ROOT)/input/bin/$(INPUT_DAEMON)" "$(BIN_DIR)/$(INPUT_DAEMON)"
 
 $(TOOLS):
 	@echo "Building Tool: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
 	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+
+cursor: $(CURSOR_LIB)
+
+$(CURSOR_LIB): common/sdl_cursor.c
+	@echo "Building SDL Cursor Compatibility Library: $@"
+	@mkdir -p $(LIB_DIR)
+	$(VERBOSE)$(CC) $(CFLAGS) $(SHARED_PIC) $< -o $@ -ldl $(LIB_LDFLAGS) $(QUIET) || \
+		{ echo "Error building $@"; exit 1; }
 
 notify:
 	@printf "Compiled %d Modules, %d Daemons and %d Tools\n============== Complete! ==============\n" \
