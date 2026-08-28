@@ -11,25 +11,25 @@ static const board_info_t board_table[] = {
     {"Generic H36S", "gcs-h36s", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
     {"MagicX Zero28", "mgx-zero28", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
 
-    {"Anbernic RG28-H", "rg28xx-h", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG34-H", "rg34xx-h", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG34-SP", "rg34xx-sp", board_special_none, nop, ev0, ev0, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG28-H", "rg28xx-h", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG34-H", "rg34xx-h", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG34-SP", "rg34xx-sp", board_special_h700, nop, ev0, ev0, NO_EVENT_OFFSET, regular},
 
-    {"Anbernic RG35-2024", "rg35xx-2024", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG35-H", "rg35xx-h", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG35-PLUS", "rg35xx-plus", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG35-PRO", "rg35xx-pro", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG35-SP", "rg35xx-sp", board_special_none, nop, ev0, ev0, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG35-2024", "rg35xx-2024", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG35-H", "rg35xx-h", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG35-PLUS", "rg35xx-plus", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG35-PRO", "rg35xx-pro", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG35-SP", "rg35xx-sp", board_special_h700, nop, ev0, ev0, NO_EVENT_OFFSET, regular},
 
-    {"Anbernic RG40-H", "rg40xx-h", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RG40-V", "rg40xx-v", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG40-H", "rg40xx-h", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RG40-V", "rg40xx-v", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
 
-    {"Anbernic RGCUBE-H", "rgcubexx-h", board_special_none, nop, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"Anbernic RGSP", "rgsp", board_special_none, nop, ev0, ev0, NO_EVENT_OFFSET, regular},
+    {"Anbernic RGCUBE-H", "rgcubexx-h", board_special_h700, nop, ev0, nop, NO_EVENT_OFFSET, regular},
+    {"Anbernic RGSP", "rgsp", board_special_h700, nop, ev0, ev0, NO_EVENT_OFFSET, regular},
     {"Anbernic Vita Pro", "rg-vita-pro", board_special_vita_pro, ev7, ev0, nop, TOUCH_EVENT_OFFSET(ev7, 1), regular},
 
     {"Batlexp G350", "rk-g350-v", board_special_g350, ev3, ev0, nop, NO_EVENT_OFFSET, regular},
-    {"GKD Pixel 2", "rk-pixel-2", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
+    {"GKD Pixel 2", "rk-pixel-2", board_special_none, ev1, nop, nop, NO_EVENT_OFFSET, regular},
 
     {"TrimUI Brick", "tui-brick", board_special_tui_brick, nop, ev1, nop, NO_EVENT_OFFSET, goofy},
     {"TrimUI Brick Pro", "tui-brick-pro", board_special_tui_brick_pro, nop, ev1, nop, NO_EVENT_OFFSET, goofy},

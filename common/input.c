@@ -322,6 +322,22 @@ static void map_vol_buttons(mux_input_type *map, const int down_idx, const int u
     map[up_idx] = mux_input_vol_up;
 }
 
+static int map_sdl_volume_buttons(void) {
+    const char *down = strstr(device.board.sdl_map, ",volumedown:b");
+    const char *up = strstr(device.board.sdl_map, ",volumeup:b");
+    int down_idx = -1;
+    int up_idx = -1;
+
+    if (!down || !up || sscanf(down, ",volumedown:b%d", &down_idx) != 1
+        || sscanf(up, ",volumeup:b%d", &up_idx) != 1 || down_idx < 0 || down_idx >= 32 || up_idx < 0
+        || up_idx >= 32 || down_idx == up_idx) {
+        return 0;
+    }
+
+    map_vol_buttons(joy_button_map, down_idx, up_idx);
+    return 1;
+}
+
 static void apply_face_button_layout(void) {
     // Some weirdo devices have SDL gamecontrollerdb updates that don't reliably affect
     // their actual runtime GUID, so fall back to swapping the logical button map directly
@@ -410,24 +426,29 @@ static void init_input_maps(void) {
     input_map[SDL_SCANCODE_A] = mux_input_dpad_left;
     input_map[SDL_SCANCODE_D] = mux_input_dpad_right;
 
-    switch (board_special()) {
-        case board_special_tui_spoon:
-            map_vol_buttons(joy_button_map, 11, 12);
-            break;
-        case board_special_tui_brick:
-            map_vol_buttons(joy_button_map, 0, 1);
-            break;
-        case board_special_tui_brick_pro:
-            map_vol_buttons(joy_button_map, 2, 3);
-            break;
-        case board_special_vita_pro:
-            map_vol_buttons(joy_button_map, 13, 14);
-            break;
-        case board_special_g350:
-            break;
-        default:
-            map_vol_buttons(joy_button_map, 1, 2);
-            break;
+    if (!map_sdl_volume_buttons()) {
+        switch (board_special()) {
+            case board_special_h700:
+                map_vol_buttons(joy_button_map, 0, 1);
+                break;
+            case board_special_tui_spoon:
+                map_vol_buttons(joy_button_map, 11, 12);
+                break;
+            case board_special_tui_brick:
+                map_vol_buttons(joy_button_map, 0, 1);
+                break;
+            case board_special_tui_brick_pro:
+                map_vol_buttons(joy_button_map, 2, 3);
+                break;
+            case board_special_vita_pro:
+                map_vol_buttons(joy_button_map, 13, 14);
+                break;
+            case board_special_g350:
+                break;
+            default:
+                map_vol_buttons(joy_button_map, 1, 2);
+                break;
+        }
     }
 
     input_map[SDL_SCANCODE_PAGEUP] = mux_input_vol_up;
