@@ -192,10 +192,7 @@ static const char *get_scaling_governor(void) {
     return buffer;
 }
 
-static int gpu_devfreq_path(const char *leaf, char *out) {
-    char pattern[UI_BUFFER];
-    snprintf(pattern, sizeof(pattern), "/sys/class/devfreq/*gpu*/%s", leaf);
-
+static int first_glob_path(const char *pattern, char *out, const size_t out_size) {
     glob_t found;
     if (glob(pattern, 0, NULL, &found) != 0) return -1;
 
@@ -204,16 +201,30 @@ static int gpu_devfreq_path(const char *leaf, char *out) {
         return -1;
     }
 
-    snprintf(out, UI_BUFFER, "%s", found.gl_pathv[0]);
+    snprintf(out, out_size, "%s", found.gl_pathv[0]);
     globfree(&found);
 
     return 0;
+}
+
+static int gpu_devfreq_path(const char *leaf, char *out) {
+    char pattern[UI_BUFFER];
+    snprintf(pattern, sizeof(pattern), "/sys/class/devfreq/*gpu*/%s", leaf);
+    return first_glob_path(pattern, out, UI_BUFFER);
 }
 
 static const char *get_gpu_model(void) {
     static char buffer[UI_BUFFER];
 
     if (read_file_trim("/sys/devices/platform/gpu/gpuinfo", buffer) == 0 && *buffer) {
+        char *space = strchr(buffer, ' ');
+        if (space) *space = '\0';
+        return buffer;
+    }
+
+    char path[UI_BUFFER];
+    if (first_glob_path("/sys/devices/platform/*gpu*/gpuinfo", path, sizeof(path)) == 0 &&
+        read_file_trim(path, buffer) == 0 && *buffer) {
         char *space = strchr(buffer, ' ');
         if (space) *space = '\0';
         return buffer;
@@ -229,6 +240,12 @@ static const char *get_gpu_model(void) {
             snprintf(buffer, sizeof(buffer), "Mali");
             return buffer;
         }
+    }
+
+    if (first_glob_path("/sys/devices/platform/*gpu*/of_node/compatible", path, sizeof(path)) == 0 &&
+        read_file_trim(path, compatible) == 0 && strstr(compatible, "mali")) {
+        snprintf(buffer, sizeof(buffer), "Mali");
+        return buffer;
     }
 
     snprintf(buffer, sizeof(buffer), "%s", lang.generic.unknown);
@@ -729,9 +746,39 @@ static const char *get_ssid(void) {
 
     static char ssid[64];
     const char *const argv[] = {"iw", "dev", device.network.interface, "link", NULL};
-    if (!command_prefixed_value(argv, "SSID:", ssid, sizeof(ssid))) return lang.generic.unknown;
+    if (command_prefixed_value(argv, "SSID:", ssid, sizeof(ssid))) return ssid;
 
-    return ssid;
+    const char *const wpa_argv[] = {"wpa_cli", "-i", device.network.interface, "status", NULL};
+    if (command_prefixed_value(wpa_argv, "ssid=", ssid, sizeof(ssid))) return ssid;
+
+    const char *const wext_argv[] = {"iwconfig", device.network.interface, NULL};
+    char *result = get_execute_result_argv(wext_argv, -1);
+    if (!result) return lang.generic.unknown;
+
+    const char *value = strstr(result, "ESSID:");
+    if (value) {
+        value += strlen("ESSID:");
+        if (*value == '"') value++;
+
+        const char *end = strchr(value, '"');
+        if (!end) {
+            end = value;
+            while (*end && !isspace((unsigned char) *end))
+                end++;
+        }
+
+        const size_t len = (size_t) (end - value);
+        if (len > 0 && len < sizeof(ssid)) {
+            memcpy(ssid, value, len);
+            ssid[len] = '\0';
+            free(result);
+            return ssid;
+        }
+    }
+
+    free(result);
+
+    return lang.generic.unknown;
 }
 
 static const char *get_gateway(void) {
@@ -784,23 +831,73 @@ static const char *get_signal_strength(void) {
 
     char result[64];
     const char *const argv[] = {"iw", "dev", device.network.interface, "link", NULL};
-    if (!command_prefixed_value(argv, "signal:", result, sizeof(result))) return lang.generic.unknown;
+    int dbm = 0;
+    int percent = -1;
 
-    char *space = strchr(result, ' ');
-    if (space) *space = '\0';
-    const int dbm = safe_atoi(result, -100);
+    if (command_prefixed_value(argv, "signal:", result, sizeof(result))) {
+        char *space = strchr(result, ' ');
+        if (space) *space = '\0';
+        dbm = safe_atoi(result, -100);
 
-    int percent;
-    if (dbm <= -100) {
-        percent = 0;
-    } else if (dbm >= -10) {
-        percent = 100;
+        if (dbm <= -100) {
+            percent = 0;
+        } else if (dbm >= -10) {
+            percent = 100;
+        } else {
+            percent = (dbm + 100) * 100 / 90;
+        }
     } else {
-        percent = (dbm + 100) * 100 / 90;
+        const char *const wext_argv[] = {"iwconfig", device.network.interface, NULL};
+        char *wext = get_execute_result_argv(wext_argv, -1);
+        if (!wext) return lang.generic.unknown;
+
+        const char *value = strstr(wext, "Signal level=");
+        if (value) {
+            value += strlen("Signal level=");
+            char *end = NULL;
+            const long level = strtol(value, &end, 10);
+
+            if (end != value && (level < 0 || strstr(end, "dBm") == end + strspn(end, " \t"))) {
+                dbm = (int) level;
+                if (dbm <= -100) {
+                    percent = 0;
+                } else if (dbm >= -10) {
+                    percent = 100;
+                } else {
+                    percent = (dbm + 100) * 100 / 90;
+                }
+            }
+        }
+
+        if (percent < 0) {
+            value = strstr(wext, "Link Quality=");
+            if (value) {
+                value += strlen("Link Quality=");
+                char *end = NULL;
+                const long quality = strtol(value, &end, 10);
+                if (end != value && *end == '/') {
+                    char *maximum_end = NULL;
+                    const long maximum = strtol(end + 1, &maximum_end, 10);
+                    if (maximum_end != end + 1 && maximum > 0) {
+                        percent = (int) (quality * 100 / maximum);
+                        if (percent < 0) percent = 0;
+                        if (percent > 100) percent = 100;
+                    }
+                }
+            }
+        }
+
+        free(wext);
     }
 
+    if (percent < 0) return lang.generic.unknown;
+
     static char signal[32];
-    snprintf(signal, sizeof(signal), "%d%% (%d dBm)", percent, dbm);
+    if (dbm) {
+        snprintf(signal, sizeof(signal), "%d%% (%d dBm)", percent, dbm);
+    } else {
+        snprintf(signal, sizeof(signal), "%d%%", percent);
+    }
 
     return signal;
 }
@@ -811,11 +908,42 @@ static const char *get_channel_info(void) {
 
     char result[64];
     const char *const argv[] = {"iw", "dev", device.network.interface, "link", NULL};
-    if (!command_prefixed_value(argv, "freq:", result, sizeof(result))) return lang.generic.unknown;
+    int freq = 0;
+    if (command_prefixed_value(argv, "freq:", result, sizeof(result))) {
+        char *space = strchr(result, ' ');
+        if (space) *space = '\0';
+        freq = safe_atoi(result, 0);
+    }
 
-    char *space = strchr(result, ' ');
-    if (space) *space = '\0';
-    const int freq = safe_atoi(result, 0);
+    if (freq <= 0) {
+        const char *const wpa_argv[] = {"wpa_cli", "-i", device.network.interface, "status", NULL};
+        if (command_prefixed_value(wpa_argv, "freq=", result, sizeof(result))) freq = safe_atoi(result, 0);
+    }
+
+    if (freq <= 0) {
+        const char *const wext_argv[] = {"iwconfig", device.network.interface, NULL};
+        char *wext = get_execute_result_argv(wext_argv, -1);
+        if (wext) {
+            const char *value = strstr(wext, "Frequency:");
+            if (value) {
+                value += strlen("Frequency:");
+                char *end = NULL;
+                const double frequency = strtod(value, &end);
+                if (end != value) {
+                    while (*end && isspace((unsigned char) *end))
+                        end++;
+                    if (strncmp(end, "GHz", 3) == 0) {
+                        freq = (int) (frequency * 1000.0 + 0.5);
+                    } else if (strncmp(end, "MHz", 3) == 0) {
+                        freq = (int) (frequency + 0.5);
+                    }
+                }
+            }
+            free(wext);
+        }
+    }
+
+    if (freq <= 0) return lang.generic.unknown;
 
     static const struct {
         int freq;
