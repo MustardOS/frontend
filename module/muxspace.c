@@ -5,6 +5,7 @@
 #include "../common/ui/task_progress.h"
 #include "ui/ui_muxspace.h"
 #include "../common/ui/fs_choice.h"
+#include <sys/sysmacros.h>
 
 #define SPACE(NAME, UDATA)          1,
 #define SPACE_ROW(NAME, GLYPH, KEY) 1,
@@ -74,6 +75,39 @@ static void init_space_bars(void) {
     lv_bar_set_mode(ui_bar_system_space, LV_BAR_MODE_NORMAL);
 }
 
+static int resolve_mounted_block_device(const char *mount_point, char *dev_out, const size_t dev_len) {
+    struct stat mount_stat;
+    if (stat(mount_point, &mount_stat) != 0) return 0;
+
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "/sys/dev/block/%u:%u/uevent", major(mount_stat.st_dev), minor(mount_stat.st_dev));
+
+    FILE *fp = fopen(path, "r");
+    if (!fp) return 0;
+
+    char line[PATH_MAX];
+    int found = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        if (strncmp(line, "DEVNAME=", 8) != 0) continue;
+
+        char *name = line + 8;
+        name[strcspn(name, "\r\n")] = '\0';
+        if (!*name) break;
+
+        snprintf(dev_out, dev_len, "/dev/%s", name);
+        found = 1;
+        break;
+    }
+
+    fclose(fp);
+    return found;
+}
+
+static int is_block_device(const char *path) {
+    struct stat st;
+    return path && *path && stat(path, &st) == 0 && S_ISBLK(st.st_mode);
+}
+
 static void resolve_mount(const char *mount_point, char *dev_out, char *fs_out) {
     dev_out[0] = '\0';
     fs_out[0] = '\0';
@@ -92,6 +126,10 @@ static void resolve_mount(const char *mount_point, char *dev_out, char *fs_out) 
     }
 
     fclose(fp);
+
+    if (!strcmp(dev_out, "/dev/root") || !is_block_device(dev_out)) {
+        resolve_mounted_block_device(mount_point, dev_out, 128);
+    }
 }
 
 static int extract_kv(const char *line, const char *key, char *out, const size_t out_len) {
