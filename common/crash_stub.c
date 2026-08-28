@@ -21,6 +21,10 @@ int crash_ui_dismiss(void) {
     return 0;
 }
 
+int crash_ui_showing(void) {
+    return 0;
+}
+
 void power_loss_ui_apply_font(const lv_obj_t *source) {
     (void) source;
 }
@@ -35,5 +39,9 @@ void power_loss_ui_check(
 }
 
 int power_loss_ui_dismiss(void) {
+    return 0;
+}
+
+int power_loss_ui_showing(void) {
     return 0;
 }

@@ -3006,6 +3006,7 @@ struct mux_lang {
         char box_art_pad_div[MAX_BUFFER_SIZE];
         char adb[MAX_BUFFER_SIZE];
         char mtp[MAX_BUFFER_SIZE];
+        char rumble_strength[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char dpad[MAX_BUFFER_SIZE];
@@ -3056,6 +3057,7 @@ struct mux_lang {
             char zramfile[MAX_BUFFER_SIZE];
             char lid_switch[MAX_BUFFER_SIZE];
             char rumble[MAX_BUFFER_SIZE];
+            char rumble_strength[MAX_BUFFER_SIZE];
             char brightness[MAX_BUFFER_SIZE];
             char volume[MAX_BUFFER_SIZE];
             char stick_nav[MAX_BUFFER_SIZE];

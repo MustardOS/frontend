@@ -155,6 +155,10 @@ void crash_ui_apply_font(const lv_obj_t *source) {
     lv_obj_set_y(crash_dlg.panel, (LV_VER_RES - panel_h) / 2);
 }
 
+int crash_ui_showing(void) {
+    return crash_dlg_active;
+}
+
 int crash_ui_dismiss(void) {
     if (crash_dlg_active) {
         crash_dlg_active = 0;
@@ -195,6 +199,10 @@ void power_loss_ui_check(struct theme_config *t, const struct mux_lang *l, lv_ob
 
     *msgbox_active = 1;
     power_loss_dlg_active = 1;
+}
+
+int power_loss_ui_showing(void) {
+    return power_loss_dlg_active;
 }
 
 int power_loss_ui_dismiss(void) {
