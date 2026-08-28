@@ -18,6 +18,7 @@
 #include "../anim.h"
 #include "../input/list_nav.h"
 #include "../strutil.h"
+#include "../util.h"
 #include "../fileio.h"
 #include "../audio.h"
 #include "orientation.h"
@@ -1567,8 +1568,8 @@ int ui_common_progress_tick(void) {
         last_brightness = current_brightness;
         brightness_changed = 0;
 
-        char buffer[MAX_BUFFER_SIZE];
-        CFG_INT_FIELD(config.settings.general.brightness, CONF_CONFIG_PATH "settings/general/brightness", 90);
+        config.settings.general.brightness = current_brightness;
+        set_setting_value("bright", current_brightness, 0);
 
         blank_check();
         need_update = 1;
