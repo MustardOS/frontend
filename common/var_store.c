@@ -204,7 +204,7 @@ void vs_close(var_store_t *vs) {
 
 static long find_slot(const var_store_t *vs, const var_ns_t ns, const char *key, const uint32_t hash) {
     const uint32_t cap = vs->hdr->capacity;
-    uint32_t idx = hash & cap - 1;
+    uint32_t idx = hash & (cap - 1);
 
     for (uint32_t i = 0; i < cap; i++) {
         const var_slot_t *s = &vs->slots[idx];
@@ -213,7 +213,7 @@ static long find_slot(const var_store_t *vs, const var_ns_t ns, const char *key,
             && strncmp(s->key, key, VS_KEY_MAX) == 0) {
             return idx;
         }
-        idx = idx + 1 & cap - 1;
+        idx = (idx + 1) & (cap - 1);
     }
 
     return -1;
@@ -221,7 +221,7 @@ static long find_slot(const var_store_t *vs, const var_ns_t ns, const char *key,
 
 static long find_slot_for_insert(const var_store_t *vs, const var_ns_t ns, const char *key, const uint32_t hash) {
     const uint32_t cap = vs->hdr->capacity;
-    uint32_t idx = hash & cap - 1;
+    uint32_t idx = hash & (cap - 1);
     long first_free = -1;
 
     for (uint32_t i = 0; i < cap; i++) {
@@ -232,7 +232,7 @@ static long find_slot_for_insert(const var_store_t *vs, const var_ns_t ns, const
         }
         if (first_free < 0 && (!s->occupied || s->tombstone)) first_free = (long) idx;
         if (!s->occupied && !s->tombstone) break;
-        idx = idx + 1 & cap - 1;
+        idx = (idx + 1) & (cap - 1);
     }
 
     return first_free;
