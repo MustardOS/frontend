@@ -136,9 +136,16 @@ static void show_help(void) {
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
+static void handle_confirm_dialogue(void);
+
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
-    if (dialogue_active(&save_dlg)) return;
+
+    if (dialogue_active(&save_dlg)) {
+        handle_confirm_dialogue();
+        return;
+    }
+
     if (current_item_index == row_enabled) cycle_enabled();
 }
 
@@ -167,10 +174,12 @@ static void handle_b(void) {
 }
 
 static void handle_confirm_dialogue(void) {
-    const mux_confirm_opt opt = (mux_confirm_opt) save_dlg.selected;
+    const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
     dialogue_dismiss(&save_dlg);
 
-    if (opt == mux_confirm_yep) save_settings();
+    if (opt == mux_unsaved_nope) return;
+    if (opt == mux_unsaved_save) save_settings();
+
     leave_module();
 }
 
