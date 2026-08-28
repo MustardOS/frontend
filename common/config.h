@@ -134,6 +134,7 @@ struct mux_config {
             int16_t verbose;
             int16_t debug_log;
             int16_t rumble;
+            int16_t rumble_strength;
             int16_t user_init;
             int16_t dpad_swap;
             int16_t overdrive;

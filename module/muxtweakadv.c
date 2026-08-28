@@ -81,6 +81,9 @@ static void restore_tweak_options(void) {
     );
     map_drop_down_to_index(ui_dro_swapfile_tweakadv, config.settings.advanced.swapfile, swap_values, 11, 0);
     map_drop_down_to_index(ui_dro_zramfile_tweakadv, config.settings.advanced.zramfile, swap_values, 11, 0);
+    map_drop_down_to_index(
+        ui_dro_rumble_strength_tweakadv, config.settings.advanced.rumble_strength, rumble_strength_values, 21, 20
+    );
 }
 
 static void normalise_overdrive(const int overdrive_old, const int overdrive_new) {
@@ -124,6 +127,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, rumble, "settings/advanced/rumble", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, user_init, "settings/advanced/user_init", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, dpad_swap, "settings/advanced/dpad_swap", INT, 0);
+    CHECK_AND_SAVE_DEV_VAL(tweakadv, rumble_strength, "board/strength", INT, rumble_strength_values);
     CHECK_AND_SAVE_STD(tweakadv, lid_switch, "settings/advanced/lidswitch", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, disp_suspend, "settings/advanced/disp_suspend", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, stage_overlay, "settings/advanced/stage_overlay", INT, 0);
@@ -209,6 +213,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, repeat_delay, lang.muxtweakadv.repeatdelay, "repeat", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, stick_nav, lang.muxtweakadv.sticknav.title, "sticknav", sticknav_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, dpad_swap, lang.muxtweakadv.dpadswap, "dpadswap", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, rumble_strength, lang.muxtweakadv.rumble_strength, "rumble", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, brightness, lang.muxtweakadv.brightness.title, "brightness", brightness_options, 4);
     INIT_OPTION_ITEM(-1, tweakadv, inc_bright, lang.muxtweakadv.incbright, "incbright", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, disp_suspend, lang.muxtweakadv.dispsuspend, "dispsuspend", disabled_enabled, 2);
@@ -277,6 +282,12 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_lbl_inc_volume_tweakadv, ui_dro_inc_volume_tweakadv, increment_values);
     free(increment_values);
 
+    char *rumble_strength_options = generate_number_string(0, 100, 5, NULL, "%", NULL, 1);
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_rumble_strength_tweakadv, ui_dro_rumble_strength_tweakadv, rumble_strength_options
+    );
+    free(rumble_strength_options);
+
     char bt_scan_seconds[MAX_BUFFER_SIZE];
     snprintf(bt_scan_seconds, sizeof(bt_scan_seconds), " %s", lang.muxtweakadv.seconds);
 
@@ -291,6 +302,7 @@ static void init_navigation_group(void) {
     if (!device.board.has_network) HIDE_OPTION_ITEM(tweakadv, retro_wait);
     if (!device.board.has_lid) HIDE_OPTION_ITEM(tweakadv, lid_switch);
     if (!device.board.has_stick) HIDE_OPTION_ITEM(tweakadv, stick_nav);
+    if (!device.board.rumble[0]) HIDE_OPTION_ITEM(tweakadv, rumble_strength);
     if (!device.board.has_bluetooth) HIDE_OPTION_ITEM(tweakadv, bt_scan_timeout);
 
     // Removal of verbose messages due to changes to muterm not playing ball

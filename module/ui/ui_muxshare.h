@@ -539,7 +539,8 @@
     TWEAKADV(accelerate, "accelerate")                                                                                 \
     TWEAKADV(repeat_delay, "repeat")                                                                                   \
     TWEAKADV(stick_nav, "sticknav")                                                                                    \
-    TWEAKADV(dpad_swap, "dpadswap")
+    TWEAKADV(dpad_swap, "dpadswap")                                                                                    \
+    TWEAKADV(rumble_strength, "rumble")
 
 #define TWEAKADV_DISPLAY_ELEMENTS                                                                                      \
     TWEAKADV(brightness, "brightness")                                                                                 \

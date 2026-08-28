@@ -144,6 +144,8 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/advanced", "trust_remove", CFG_OFF(settings.advanced.trust_remove), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "boxartpaddiv", CFG_OFF(settings.advanced.box_art_pad_div), 0, {.i = 3}},
 
+    {CONF_DEVICE_PATH "board", "strength", CFG_OFF(settings.advanced.rumble_strength), 0, {.i = 100}, 1, 0, 100},
+
     // settings/colour/
     {CONF_CONFIG_PATH "settings/colour", "schedule_mode", CFG_OFF(settings.colour.schedule_mode), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/colour", "sunrise_temp", CFG_OFF(settings.colour.sunrise_temp), 0, {.i = DEFAULT_TEMPERATURE}},
