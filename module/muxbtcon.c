@@ -115,6 +115,26 @@ static void cancel_scan(void) {
     hide_progress_bar();
 }
 
+static int device_is_connected(const char *mac) {
+    const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "info", mac, NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    FILE *file = fopen("/run/muos/bt_info", "r");
+    if (!file) return 0;
+
+    int connected = 0;
+    char line[64];
+    while (fgets(line, sizeof(line), file)) {
+        if (strcmp(line, "Connected: yes\n") == 0 || strcmp(line, "Connected: yes") == 0) {
+            connected = 1;
+            break;
+        }
+    }
+
+    fclose(file);
+    return connected;
+}
+
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
@@ -134,6 +154,11 @@ static void handle_a(void) {
 
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "connect", mac_copy, NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
+
+    if (!device_is_connected(mac_copy)) {
+        toast_message(lang.muxbtdev.connect_failed, tst_wait_l);
+        return;
+    }
 
     load_mux("btall");
     mux_input_stop();
