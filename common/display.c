@@ -266,6 +266,8 @@ enum {
 
 static char video_saver_path[MAX_BUFFER_SIZE];
 static char video_saver_prev_path[MAX_BUFFER_SIZE];
+static display_overlay_fn video_saver_prev_bg = NULL;
+static int video_saver_prev_bg_opaque = 0;
 static int video_saver_running = 0;
 static int active_saver = -1;
 static saver_state_t video_saver_base;
@@ -296,6 +298,8 @@ static void saver_update(void) {
                 video_saver_prev_path, sizeof(video_saver_prev_path), "%s",
                 video_wallpaper_active() ? video_wallpaper_path() : ""
             );
+            video_saver_prev_bg = video_bg_fn_ptr;
+            video_saver_prev_bg_opaque = video_bg_opaque;
             video_wallpaper_play(video_saver_path);
             video_saver_running = 1;
         }
@@ -366,14 +370,26 @@ static void saver_render(SDL_Renderer *r) {
         bsod_render(r);
 }
 
+// Puts back whatever was drawing the background before the video saver took it over
+static void video_saver_restore(void) {
+    video_wallpaper_stop();
+
+    if (video_saver_prev_path[0]) {
+        video_wallpaper_play(video_saver_prev_path);
+        video_saver_prev_path[0] = '\0';
+    } else if (video_saver_prev_bg) {
+        video_bg_fn_ptr = video_saver_prev_bg;
+        video_bg_opaque = video_saver_prev_bg_opaque;
+    }
+
+    video_saver_prev_bg = NULL;
+    video_saver_prev_bg_opaque = 0;
+    video_saver_running = 0;
+}
+
 static void saver_stop(void) {
     if (active_saver == saver_type_video) {
-        video_wallpaper_stop();
-        if (video_saver_prev_path[0]) {
-            video_wallpaper_play(video_saver_prev_path);
-            video_saver_prev_path[0] = '\0';
-        }
-        video_saver_running = 0;
+        video_saver_restore();
         saver_stop_base(&video_saver_base);
         return;
     }
@@ -409,12 +425,7 @@ static void saver_stop(void) {
 
 static void reload_saver(void) {
     if (active_saver == saver_type_video && video_saver_running) {
-        video_wallpaper_stop();
-        if (video_saver_prev_path[0]) {
-            video_wallpaper_play(video_saver_prev_path);
-            video_saver_prev_path[0] = '\0';
-        }
-        video_saver_running = 0;
+        video_saver_restore();
     }
 
     dvd_shutdown();
