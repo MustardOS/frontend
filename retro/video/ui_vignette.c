@@ -6,6 +6,7 @@
 
 enum {
     row_shape = 0,
+    row_scaling,
     row_width,
     row_height,
     row_offset_x,
@@ -17,24 +18,29 @@ enum {
 };
 
 static const char *row_labels[row_count] = {
-    lang.muxretro.vignette_screen.shape,    lang.muxretro.vignette_screen.width,
-    lang.muxretro.vignette_screen.height,   lang.muxretro.vignette_screen.offset_x,
-    lang.muxretro.vignette_screen.offset_y, lang.muxretro.vignette_screen.softness,
-    lang.muxretro.vignette_screen.strength, lang.muxretro.vignette_screen.colour
+    lang.muxretro.vignette_screen.shape,    lang.muxretro.vignette_screen.scaling,
+    lang.muxretro.vignette_screen.width,    lang.muxretro.vignette_screen.height,
+    lang.muxretro.vignette_screen.offset_x, lang.muxretro.vignette_screen.offset_y,
+    lang.muxretro.vignette_screen.softness, lang.muxretro.vignette_screen.strength,
+    lang.muxretro.vignette_screen.colour
 };
 
-static const char *row_glyphs[row_count] = {"border",    "viewportx",     "viewporty", "viewportx",
+static const char *row_glyphs[row_count] = {"border",    "aspectratio",   "viewportx", "viewporty", "viewportx",
                                             "viewporty", "texturefilter", "contrast",  "saturation"};
 
-static const char *row_help[row_count] = {lang.muxretro.help.vignette.shape,    lang.muxretro.help.vignette.width,
-                                          lang.muxretro.help.vignette.height,   lang.muxretro.help.vignette.offset_x,
-                                          lang.muxretro.help.vignette.offset_y, lang.muxretro.help.vignette.softness,
-                                          lang.muxretro.help.vignette.strength, lang.muxretro.help.vignette.colour};
+static const char *row_help[row_count] = {lang.muxretro.help.vignette.shape,    lang.muxretro.help.vignette.scaling,
+                                          lang.muxretro.help.vignette.width,    lang.muxretro.help.vignette.height,
+                                          lang.muxretro.help.vignette.offset_x, lang.muxretro.help.vignette.offset_y,
+                                          lang.muxretro.help.vignette.softness, lang.muxretro.help.vignette.strength,
+                                          lang.muxretro.help.vignette.colour};
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
         case row_shape:
             snprintf(buf, buf_len, "%s", session_settings_vignette_shape_name(session_settings.vignette_shape));
+            break;
+        case row_scaling:
+            snprintf(buf, buf_len, "%s", session_settings_vignette_scaling_name(session_settings.vignette_scaling));
             break;
         case row_width:
             snprintf(buf, buf_len, "%s", session_settings_vignette_size_name(session_settings.vignette_width));
@@ -67,6 +73,9 @@ static void cycle_row(const int index, const int direction) {
     switch (index) {
         case row_shape:
             session_settings_cycle_vignette_shape(direction);
+            break;
+        case row_scaling:
+            session_settings_cycle_vignette_scaling(direction);
             break;
         case row_width:
             session_settings_cycle_vignette_width(direction);
@@ -103,7 +112,7 @@ static int secret_holding[2];
 static int secret_fired[2];
 
 static int secret_tick(void) {
-    static const int shapes[2] = {vignette_shape_star, vignette_shape_triangle};
+    static const int shapes[2] = {vignette_shape_flower, vignette_shape_triangle};
     const int held[2] = {mux_input_pressed(mux_input_x), mux_input_pressed(mux_input_y)};
     const int on_shape_row = current_item_index == row_shape;
     const uint32_t now = SDL_GetTicks();
@@ -134,7 +143,7 @@ static int secret_tick(void) {
 }
 
 static int row_coarse_step(const int index) {
-    return index == row_shape || index == row_colour ? 0 : 5;
+    return index == row_shape || index == row_scaling || index == row_colour ? 0 : 5;
 }
 
 static void closed(void) {

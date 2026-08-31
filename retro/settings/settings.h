@@ -170,6 +170,7 @@ struct session_settings_t {
     int colour_filter;
     int colour_shader;
     int vignette_shape;
+    int vignette_scaling;
     int vignette_width;
     int vignette_height;
     int vignette_offset_x;
@@ -280,15 +281,20 @@ enum {
     vignette_shape_off = 0,
     vignette_shape_round,
     vignette_shape_square,
+    vignette_shape_squircle,
     vignette_shape_cycle_count,
-    vignette_shape_star = vignette_shape_cycle_count,
+    vignette_shape_flower = vignette_shape_cycle_count,
     vignette_shape_triangle,
     vignette_shape_count
 };
 
+enum { vignette_scale_frame = 0, vignette_scale_aspect, vignette_scale_count };
+
 enum { vignette_colour_black = 0, vignette_colour_white, vignette_colour_count };
 
 const char *session_settings_vignette_shape_name(int value);
+
+const char *session_settings_vignette_scaling_name(int value);
 
 const char *session_settings_vignette_colour_name(int value);
 
@@ -301,6 +307,8 @@ const char *session_settings_vignette_percent_name(int value);
 int session_settings_vignette_active(void);
 
 void session_settings_cycle_vignette_shape(int direction);
+
+void session_settings_cycle_vignette_scaling(int direction);
 
 void session_settings_cycle_vignette_width(int direction);
 

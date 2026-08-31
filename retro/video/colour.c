@@ -91,13 +91,24 @@ static const char *fs_src = "precision mediump float;"
                             "    if (u_vig_shape == 0) { return c; }"
                             "    vec2 p = (v_uv - u_vig_centre) * u_vig_scale;"
                             "    float d;"
-                            "    if (u_vig_shape == 2) { d = max(abs(p.x), abs(p.y)); }"
+                            "    if (u_vig_shape == 2) {"
+                            "        vec2 q = min(abs(p), 1.5);"
+                            "        q = q * q;"
+                            "        q = q * q;"
+                            "        q = q * q;"
+                            "        d = sqrt(sqrt(sqrt(sqrt(dot(q, q)))));"
+                            "    }"
                             "    else if (u_vig_shape == 3) {"
+                            "        vec2 q = min(abs(p), 1.5);"
+                            "        q = q * q;"
+                            "        d = sqrt(sqrt(dot(q, q)));"
+                            "    }"
+                            "    else if (u_vig_shape == 4) {"
                             "        float seg = 1.2566371;"
                             "        float a = mod(atan(p.y, p.x) + 6.2831853, seg) - seg * 0.5;"
                             "        d = length(p) / (1.0 - 0.7 * (abs(a) / (seg * 0.5)));"
                             "    }"
-                            "    else if (u_vig_shape == 4) {"
+                            "    else if (u_vig_shape == 5) {"
                             "        float q = p.y * 1.5 - 0.5;"
                             "        d = max(abs(p.x) * 1.2 - q * 0.5, q);"
                             "    }"
@@ -622,15 +633,20 @@ static int ensure_target(SDL_Renderer *renderer, SDL_Texture **tex, int *tw, int
     return 1;
 }
 
-static void set_vignette_uniforms(const int flip_v, const int content_w, const int content_h) {
+static void set_vignette_uniforms(const int content_w, const int content_h) {
     const int active = content_w > 0 && content_h > 0 && preset_effects_enabled() && session_settings_vignette_active();
 
     if (u_vig_shape >= 0) gl->Uniform1i(u_vig_shape, active ? session_settings.vignette_shape : 0);
     if (!active) return;
 
-    const float short_axis = (float) (content_w < content_h ? content_w : content_h);
-    const float half_w = (float) session_settings.vignette_width * short_axis / (200.0f * (float) content_w);
-    const float half_h = (float) session_settings.vignette_height * short_axis / (200.0f * (float) content_h);
+    // Frame stretches the shape to the picture, Aspect keeps it true by measuring off the shorter side
+    const int aspect = session_settings.vignette_scaling == vignette_scale_aspect;
+    const float shorter = (float) (content_w < content_h ? content_w : content_h);
+    const float scale_w = aspect ? shorter / (float) content_w : 1.0f;
+    const float scale_h = aspect ? shorter / (float) content_h : 1.0f;
+
+    const float half_w = (float) session_settings.vignette_width * scale_w / 200.0f;
+    const float half_h = (float) session_settings.vignette_height * scale_h / 200.0f;
     const float offset_x = (float) session_settings.vignette_offset_x / 100.0f;
     const float offset_y = (float) session_settings.vignette_offset_y / 100.0f;
 
@@ -639,17 +655,14 @@ static void set_vignette_uniforms(const int flip_v, const int content_w, const i
     const float amount = (float) session_settings.vignette_strength / 100.0f;
     const float tone = session_settings.vignette_colour == vignette_colour_white ? 1.0f : 0.0f;
 
-    const float centre_y = flip_v ? 0.5f - offset_y : 0.5f + offset_y;
-    const float scale_y = flip_v ? -1.0f / half_h : 1.0f / half_h;
-
-    if (u_vig_centre >= 0) gl->Uniform2f(u_vig_centre, 0.5f + offset_x, centre_y);
-    if (u_vig_scale >= 0) gl->Uniform2f(u_vig_scale, 1.0f / half_w, scale_y);
+    if (u_vig_centre >= 0) gl->Uniform2f(u_vig_centre, 0.5f + offset_x, 0.5f + offset_y);
+    if (u_vig_scale >= 0) gl->Uniform2f(u_vig_scale, 1.0f / half_w, 1.0f / half_h);
     if (u_vig_ramp >= 0) gl->Uniform2f(u_vig_ramp, 1.0f / range, -inner / range);
     if (u_vig_tone >= 0) gl->Uniform1f(u_vig_tone, tone);
     if (u_vig_amount >= 0) gl->Uniform1f(u_vig_amount, amount);
 }
 
-static void set_colour_uniforms(const int flip_v, const int content_w, const int content_h) {
+static void set_colour_uniforms(const int content_w, const int content_h) {
     const float brightness = (float) session_settings.colour_brightness / 100.0f;
     const float contrast = (float) session_settings.colour_contrast / 100.0f;
     const float saturation = (float) session_settings.colour_saturation / 100.0f;
@@ -673,7 +686,7 @@ static void set_colour_uniforms(const int flip_v, const int content_w, const int
     if (u_filter_enabled >= 0) gl->Uniform1i(u_filter_enabled, filter->enabled);
     if (u_filter >= 0) gl->UniformMatrix3fv(u_filter, 1, GL_FALSE, filter->matrix);
 
-    set_vignette_uniforms(flip_v, content_w, content_h);
+    set_vignette_uniforms(content_w, content_h);
 }
 
 static void set_shader_uniforms(const int res_w, const int res_h) {
@@ -688,15 +701,15 @@ static void set_shader_uniforms(const int res_w, const int res_h) {
 }
 
 static int draw_gl_pass(
-    SDL_Texture *src, const int user_prog, const float l, const float r, const float t, const float b,
-    const int sample_flip_v, const int effect_flip_v, const int vp_w, const int vp_h, const int res_w, const int res_h
+    SDL_Texture *src, const int user_prog, const float l, const float r, const float t, const float b, const int vp_w,
+    const int vp_h, const int res_w, const int res_h
 ) {
     float texw = 1.0f, texh = 1.0f;
     if (SDL_GL_BindTexture(src, &texw, &texh) != 0) return 0;
     gl->ActiveTexture(GL_TEXTURE0);
 
-    const GLfloat v_at_top = sample_flip_v ? texh : 0.0f;
-    const GLfloat v_at_bottom = sample_flip_v ? 0.0f : texh;
+    const GLfloat v_at_top = 0.0f;
+    const GLfloat v_at_bottom = texh;
 
     const GLfloat verts[] = {
         l, t, 0.0f, v_at_top,    // top left
@@ -715,7 +728,7 @@ static int draw_gl_pass(
     if (user_prog) {
         set_shader_uniforms(res_w, res_h);
     } else {
-        set_colour_uniforms(effect_flip_v, res_w, res_h);
+        set_colour_uniforms(res_w, res_h);
     }
 
     gl->BindBuffer(GL_ARRAY_BUFFER, 0);
@@ -793,22 +806,21 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     if (use_shader) {
         if (SDL_SetRenderTarget(renderer, work_tex) == 0) {
             const int colour_ok = draw_gl_pass(
-                gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
+                gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
             );
 
             if (colour_ok && SDL_SetRenderTarget(renderer, output_tex) == 0) {
                 shader_frame_count++;
                 drew = draw_gl_pass(
-                    work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
+                    work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
                 );
             }
         }
     }
 
     if (!drew && SDL_SetRenderTarget(renderer, output_tex) == 0)
-        drew = draw_gl_pass(
-            gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
-        );
+        drew =
+            draw_gl_pass(gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h);
 
     gl->UseProgram((GLuint) prev_program);
     gl->Viewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);

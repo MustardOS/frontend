@@ -2340,8 +2340,12 @@ struct mux_lang {
             char shape[MAX_BUFFER_SIZE];
             char shape_round[MAX_BUFFER_SIZE];
             char shape_square[MAX_BUFFER_SIZE];
-            char shape_star[MAX_BUFFER_SIZE];
+            char shape_squircle[MAX_BUFFER_SIZE];
+            char shape_flower[MAX_BUFFER_SIZE];
             char shape_triangle[MAX_BUFFER_SIZE];
+            char scaling[MAX_BUFFER_SIZE];
+            char scaling_frame[MAX_BUFFER_SIZE];
+            char scaling_aspect[MAX_BUFFER_SIZE];
             char width[MAX_BUFFER_SIZE];
             char height[MAX_BUFFER_SIZE];
             char offset_x[MAX_BUFFER_SIZE];
@@ -2531,6 +2535,7 @@ struct mux_lang {
             } display;
             struct {
                 char shape[MAX_BUFFER_SIZE];
+                char scaling[MAX_BUFFER_SIZE];
                 char width[MAX_BUFFER_SIZE];
                 char height[MAX_BUFFER_SIZE];
                 char offset_x[MAX_BUFFER_SIZE];

@@ -77,6 +77,7 @@ static const struct session_settings_t defaults = {
     .colour_filter = 0,
     .colour_shader = 0,
     .vignette_shape = vignette_shape_off,
+    .vignette_scaling = vignette_scale_frame,
     .vignette_width = 100,
     .vignette_height = 100,
     .vignette_offset_x = 0,
@@ -326,6 +327,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_SPECIAL(colour_filter, setting_colour_filter),
     SETTING_SPECIAL(colour_shader, setting_colour_shader),
     SETTING_RANGE(vignette_shape, 0, vignette_shape_count - 1),
+    SETTING_RANGE(vignette_scaling, 0, vignette_scale_count - 1),
     SETTING_RANGE(vignette_width, VIGNETTE_SIZE_MIN, VIGNETTE_SIZE_MAX),
     SETTING_RANGE(vignette_height, VIGNETTE_SIZE_MIN, VIGNETTE_SIZE_MAX),
     SETTING_RANGE(vignette_offset_x, VIGNETTE_OFFSET_MIN, VIGNETTE_OFFSET_MAX),
@@ -1948,13 +1950,20 @@ const char *session_settings_vignette_shape_name(const int value) {
             return lang.muxretro.vignette_screen.shape_round;
         case vignette_shape_square:
             return lang.muxretro.vignette_screen.shape_square;
-        case vignette_shape_star:
-            return lang.muxretro.vignette_screen.shape_star;
+        case vignette_shape_squircle:
+            return lang.muxretro.vignette_screen.shape_squircle;
+        case vignette_shape_flower:
+            return lang.muxretro.vignette_screen.shape_flower;
         case vignette_shape_triangle:
             return lang.muxretro.vignette_screen.shape_triangle;
         default:
             return lang.generic.disabled;
     }
+}
+
+const char *session_settings_vignette_scaling_name(const int value) {
+    return value == vignette_scale_aspect ? lang.muxretro.vignette_screen.scaling_aspect
+                                          : lang.muxretro.vignette_screen.scaling_frame;
 }
 
 const char *session_settings_vignette_colour_name(const int value) {
@@ -1989,6 +1998,11 @@ void session_settings_cycle_vignette_shape(const int direction) {
     if (current >= vignette_shape_cycle_count) current = vignette_shape_round;
 
     session_settings.vignette_shape = (current + direction + vignette_shape_cycle_count) % vignette_shape_cycle_count;
+}
+
+void session_settings_cycle_vignette_scaling(const int direction) {
+    session_settings.vignette_scaling =
+        (session_settings.vignette_scaling + direction + vignette_scale_count) % vignette_scale_count;
 }
 
 void session_settings_cycle_vignette_width(const int direction) {
