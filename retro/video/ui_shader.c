@@ -19,8 +19,21 @@ static nav_repeat_t rpt_down = {0};
 
 static mux_dialogue save_dlg;
 
+#define NAV_X_BIT BIT(6)
+
 static uint64_t current_nav_mask(void) {
-    return nav_mask_standard();
+    return nav_mask_standard() | (mux_input_pressed(mux_input_x) ? NAV_X_BIT : 0);
+}
+
+static void refresh_nav(void) {
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.muxretro.shader_screen.adjust, 0},
+                                  {NULL, NULL, 0}});
+    pause_menu_fix_nav_order();
 }
 
 static void build_row(const int index) {
@@ -86,6 +99,8 @@ static void close_screen(void) {
 }
 
 void shader_menu_init(void) {
+    shader_adjust_menu_init();
+
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
         lang.muxretro.save.session_save, lang.generic.discard
@@ -96,20 +111,18 @@ void shader_menu_init(void) {
     );
 }
 
-void shader_menu_open(void) {
+void shader_menu_reopen(void) {
     active = 1;
     prev_nav_mask = current_nav_mask();
-    entry_value = session_settings.colour_shader;
 
     rebuild_rows();
     focus_item(session_settings.colour_shader);
+    refresh_nav();
+}
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                  {ui_lbl_nav_a, lang.generic.select, 0},
-                                  {ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {NULL, NULL, 0}});
-    pause_menu_fix_nav_order();
+void shader_menu_open(void) {
+    entry_value = session_settings.colour_shader;
+    shader_menu_reopen();
 }
 
 int shader_menu_is_active(void) {
@@ -117,6 +130,11 @@ int shader_menu_is_active(void) {
 }
 
 void shader_menu_tick(void) {
+    if (shader_adjust_menu_is_active()) {
+        shader_adjust_menu_tick();
+        return;
+    }
+
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
@@ -159,6 +177,16 @@ void shader_menu_tick(void) {
         session_settings_set_colour_shader(current_item_index);
     } else if (nav_page_tick(edge, mask, 2)) {
         session_settings_set_colour_shader(current_item_index);
+    } else if (edge & NAV_X_BIT) {
+        session_settings_set_colour_shader(current_item_index);
+
+        if (colour_shader_param_count() > 0) {
+            play_sound(snd_confirm);
+            shader_adjust_menu_open();
+        } else {
+            play_sound(snd_error);
+            pause_menu_show_toast(lang.muxretro.shader_screen.no_adjust);
+        }
     } else if (edge & BIT(4)) {
         play_sound(snd_confirm);
         session_settings_set_colour_shader(current_item_index);

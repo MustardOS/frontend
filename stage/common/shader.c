@@ -20,13 +20,17 @@ static char active_shader_path[PATH_MAX] = {0};
 
 static const char vertex[] = "attribute vec2 a_pos;\n"
                              "attribute vec2 a_uv;\n"
-                             "varying vec2 v_uv;\n"
+                             "varying highp vec2 v_uv;\n"
                              "void main() {\n"
                              "    gl_Position = vec4(a_pos, 0.0, 1.0);\n"
                              "    v_uv = a_uv;\n"
                              "}\n";
 
-static const char frag[] = "precision mediump float;\n"
+static const char frag[] = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                           "precision highp float;\n"
+                           "#else\n"
+                           "precision mediump float;\n"
+                           "#endif\n"
                            "uniform sampler2D u_tex;\n"
                            "uniform vec2 u_resolution;\n"
                            "uniform vec2 u_native_resolution;\n"

@@ -504,6 +504,16 @@ void shader_menu_open(void);
 
 int shader_menu_is_active(void);
 
+void shader_menu_reopen(void);
+
+void shader_adjust_menu_init(void);
+
+void shader_adjust_menu_open(void);
+
+int shader_adjust_menu_is_active(void);
+
+void shader_adjust_menu_tick(void);
+
 void shader_menu_tick(void);
 
 void viewport_menu_init(void);

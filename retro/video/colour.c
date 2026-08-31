@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <dirent.h>
 #include <math.h>
 #include <stdio.h>
@@ -5,12 +6,15 @@
 #include <string.h>
 #include <GLES2/gl2.h>
 #include "../../common/config.h"
+#include "../../common/fileio.h"
+#include "../../common/ini.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
 #include "colour.h"
 #include "gl_dispatch.h"
 #include "hw_render.h"
 #include "../core/muxretro.h"
+#include "../core/paths.h"
 #include "../settings/settings.h"
 
 #define FILTER_DIR "/opt/muos/share/filter/"
@@ -61,7 +65,11 @@ static const char *fs_src = "precision mediump float;"
                             "uniform vec2 u_vig_ramp;"
                             "uniform float u_vig_tone;"
                             "uniform float u_vig_amount;"
-                            "varying highp vec2 v_uv;"
+                            "\n#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                            "varying highp vec2 v_uv;\n"
+                            "#else\n"
+                            "varying mediump vec2 v_uv;\n"
+                            "#endif\n"
 
                             "vec3 apply_colour(vec3 c) {"
                             "    if (u_colour_enabled == 0) {"
@@ -120,18 +128,22 @@ static const char *fs_src = "precision mediump float;"
 
                             "void main(){"
                             "    vec4 t = texture2D(u_tex, v_uv);"
-                            "    gl_FragColor = vec4(apply_vignette(apply_colour(t.rgb)), 1.0);"
+                            "    gl_FragColor = vec4(apply_vignette(apply_colour(t.bgr)), 1.0);"
                             "}";
 
 static const char *shader_vs_src = "attribute vec2 a_pos;\n"
                                    "attribute vec2 a_uv;\n"
-                                   "varying vec2 v_uv;\n"
+                                   "varying highp vec2 v_uv;\n"
                                    "void main() {\n"
                                    "    gl_Position = vec4(a_pos, 0.0, 1.0);\n"
                                    "    v_uv = a_uv;\n"
                                    "}\n";
 
-static const char *shader_fs_preamble = "precision mediump float;\n"
+static const char *shader_fs_preamble = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                                        "precision highp float;\n"
+                                        "#else\n"
+                                        "precision mediump float;\n"
+                                        "#endif\n"
                                         "uniform sampler2D u_tex;\n"
                                         "uniform vec2 u_resolution;\n"
                                         "uniform vec2 u_native_resolution;\n"
@@ -154,6 +166,21 @@ static GLint sh_a_pos = -1, sh_a_uv = -1;
 static GLint sh_u_tex = -1, sh_u_resolution = -1, sh_u_native_resolution = -1, sh_u_time = -1, sh_u_frame = -1;
 static int shader_loaded_index = -1;
 static int shader_frame_count = 0;
+
+typedef struct {
+    char name[32];
+    char label[48];
+    float value;
+    float def;
+    float min;
+    float max;
+    float step;
+    GLint loc;
+} shader_param_t;
+
+static shader_param_t shader_params[COLOUR_SHADER_PARAM_MAX];
+static int shader_params_count = 0;
+static int shader_params_dirty = 0;
 
 static SDL_Texture *adjusted_tex = NULL;
 static int adjusted_w = 0;
@@ -538,6 +565,168 @@ static char *read_shader_file(const char *path) {
     return buf;
 }
 
+// We'll pinch this methodology from RetroArch since it somewhat makes sense!
+static int parse_shader_params(const char *src) {
+    int count = 0;
+    const char *p = src;
+
+    while (count < COLOUR_SHADER_PARAM_MAX && (p = strstr(p, "#pragma parameter")) != NULL) {
+        p += strlen("#pragma parameter");
+
+        shader_param_t sp = {0};
+        sp.loc = -1;
+
+        while (*p == ' ' || *p == '\t')
+            p++;
+
+        size_t n = 0;
+        while (*p && !isspace((unsigned char) *p) && n < sizeof(sp.name) - 1)
+            sp.name[n++] = *p++;
+        sp.name[n] = '\0';
+
+        while (*p == ' ' || *p == '\t')
+            p++;
+
+        if (*p == '"') {
+            p++;
+            size_t l = 0;
+            while (*p && *p != '"' && l < sizeof(sp.label) - 1)
+                sp.label[l++] = *p++;
+            sp.label[l] = '\0';
+            if (*p == '"') p++;
+        }
+
+        char *end;
+        sp.def = strtof(p, &end);
+        if (end == p) continue;
+        p = end;
+        sp.min = strtof(p, &end);
+        if (end == p) continue;
+        p = end;
+        sp.max = strtof(p, &end);
+        if (end == p) continue;
+        p = end;
+        sp.step = strtof(p, &end);
+        if (end != p) p = end;
+
+        if (!sp.name[0] || sp.max <= sp.min) continue;
+        if (!sp.label[0]) snprintf(sp.label, sizeof(sp.label), "%s", sp.name);
+        if (sp.step <= 0.0f) sp.step = (sp.max - sp.min) / 20.0f;
+        if (sp.def < sp.min) sp.def = sp.min;
+        if (sp.def > sp.max) sp.def = sp.max;
+
+        sp.value = sp.def;
+        shader_params[count++] = sp;
+    }
+
+    return count;
+}
+
+static void blank_shader_params(char *src) {
+    char *p = src;
+
+    while ((p = strstr(p, "#pragma parameter")) != NULL) {
+        while (*p && *p != '\n')
+            *p++ = ' ';
+    }
+}
+
+static void shader_params_ini_path(char *out, const size_t len, const char *stem) {
+    snprintf(out, len, "%s/%s.ini", RETRO_SHP_PATH, stem);
+}
+
+static void shader_params_load(const char *stem) {
+    char path[PATH_MAX];
+    shader_params_ini_path(path, sizeof(path), stem);
+
+    mini_t *ini = mini_try_load(path);
+    if (!ini) return;
+
+    for (int i = 0; i < shader_params_count; i++) {
+        shader_param_t *sp = &shader_params[i];
+        float v = get_ini_float(ini, "parameters", sp->name, sp->def);
+        if (v < sp->min) v = sp->min;
+        if (v > sp->max) v = sp->max;
+        sp->value = v;
+    }
+
+    mini_free(ini);
+}
+
+void colour_shader_params_save(void) {
+    if (!shader_params_dirty || shader_params_count <= 0) return;
+    if (shader_loaded_index <= 0 || shader_loaded_index >= shader_count) return;
+
+    char path[PATH_MAX];
+    shader_params_ini_path(path, sizeof(path), shader_names[shader_loaded_index]);
+    create_directories(path, 1);
+
+    mini_t *ini = mini_try_load(path);
+    if (!ini) ini = mini_create(path);
+    if (!ini) return;
+
+    for (int i = 0; i < shader_params_count; i++) {
+        char value[32];
+        snprintf(value, sizeof(value), "%g", (double) shader_params[i].value);
+        mini_set_string(ini, "parameters", shader_params[i].name, value);
+    }
+
+    mini_save(ini, 0);
+    mini_free(ini);
+
+    shader_params_dirty = 0;
+}
+
+int colour_shader_param_count(void) {
+    return shader_params_count;
+}
+
+const char *colour_shader_param_label(const int index) {
+    if (index < 0 || index >= shader_params_count) return "";
+    return shader_params[index].label;
+}
+
+void colour_shader_param_value_text(const int index, char *buf, const size_t len) {
+    if (index < 0 || index >= shader_params_count) {
+        if (len) buf[0] = '\0';
+        return;
+    }
+
+    const shader_param_t *sp = &shader_params[index];
+
+    const char *fmt = sp->step >= 1.0f     ? "%.0f"
+                      : sp->step >= 0.1f   ? "%.1f"
+                      : sp->step >= 0.01f  ? "%.2f"
+                      : sp->step >= 0.001f ? "%.3f"
+                                           : "%.4f";
+    snprintf(buf, len, fmt, (double) sp->value);
+}
+
+void colour_shader_param_cycle(const int index, const int direction) {
+    if (index < 0 || index >= shader_params_count || direction == 0) return;
+
+    shader_param_t *sp = &shader_params[index];
+
+    float v = sp->value + sp->step * (float) direction;
+    if (v < sp->min) v = sp->min;
+    if (v > sp->max) v = sp->max;
+
+    const float snapped = sp->min + roundf((v - sp->min) / sp->step) * sp->step;
+    if (snapped >= sp->min && snapped <= sp->max) v = snapped;
+
+    if (v == sp->value) return;
+
+    sp->value = v;
+    shader_params_dirty = 1;
+}
+
+void colour_shader_params_reset(void) {
+    for (int i = 0; i < shader_params_count; i++)
+        shader_params[i].value = shader_params[i].def;
+
+    shader_params_dirty = 1;
+}
+
 static void ensure_shader_program(void) {
     const int index = preset_effects_enabled() ? session_settings.colour_shader : 0;
     if (index == shader_loaded_index) return;
@@ -549,6 +738,8 @@ static void ensure_shader_program(void) {
     }
     sh_a_pos = sh_a_uv = -1;
     sh_u_tex = sh_u_resolution = sh_u_native_resolution = sh_u_time = sh_u_frame = -1;
+    shader_params_count = 0;
+    shader_params_dirty = 0;
 
     if (index <= 0 || index >= shader_count) return;
 
@@ -558,13 +749,25 @@ static void ensure_shader_program(void) {
     char *body = read_shader_file(path);
     if (!body) return;
 
-    const size_t total = strlen(shader_fs_preamble) + strlen(body) + 1;
+    char *strip = body;
+    while (*strip == ' ' || *strip == '\t' || *strip == '\n' || *strip == '\r')
+        strip++;
+    if (strncmp(strip, "#version", 8) == 0) {
+        char *eol = strchr(strip, '\n');
+        LOG_WARN(mux_module, "Colour: ignoring #version in %s", path);
+        strip = eol ? eol + 1 : strip + strlen(strip);
+    }
+
+    shader_params_count = parse_shader_params(strip);
+    blank_shader_params(strip);
+
+    const size_t total = strlen(shader_fs_preamble) + strlen(strip) + 1;
     char *full_src = malloc(total);
     if (!full_src) {
         free(body);
         return;
     }
-    snprintf(full_src, total, "%s%s", shader_fs_preamble, body);
+    snprintf(full_src, total, "%s%s", shader_fs_preamble, strip);
     free(body);
 
     const GLuint vs = compile_shader(GL_VERTEX_SHADER, shader_vs_src);
@@ -608,10 +811,20 @@ static void ensure_shader_program(void) {
     sh_u_time = gl->GetUniformLocation(shader_prog, "u_time");
     sh_u_frame = gl->GetUniformLocation(shader_prog, "u_frame");
 
-    LOG_INFO(mux_module, "Colour: user shader ready: %s", shader_names[index]);
+    for (int i = 0; i < shader_params_count; i++)
+        shader_params[i].loc = gl->GetUniformLocation(shader_prog, shader_params[i].name);
+
+    shader_params_load(shader_names[index]);
+
+    LOG_INFO(
+        mux_module, "Colour: user shader ready: %s (%d parameter%s)", shader_names[index], shader_params_count,
+        shader_params_count == 1 ? "" : "s"
+    );
 }
 
-static int ensure_target(SDL_Renderer *renderer, SDL_Texture **tex, int *tw, int *th, const int w, const int h) {
+static int ensure_target(
+    SDL_Renderer *renderer, SDL_Texture **tex, int *tw, int *th, const int w, const int h, const Uint32 format
+) {
     if (w <= 0 || h <= 0) return 0;
     if (*tex && w == *tw && h == *th) return 1;
 
@@ -620,7 +833,7 @@ static int ensure_target(SDL_Renderer *renderer, SDL_Texture **tex, int *tw, int
         *tex = NULL;
     }
 
-    *tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, w, h);
+    *tex = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
     if (!*tex) {
         LOG_ERROR(mux_module, "Colour: failed to create render target: %s", SDL_GetError());
         *tw = 0;
@@ -698,6 +911,9 @@ static void set_shader_uniforms(const int res_w, const int res_h) {
     if (sh_u_native_resolution >= 0) gl->Uniform2f(sh_u_native_resolution, (float) native_w, (float) native_h);
     if (sh_u_time >= 0) gl->Uniform1f(sh_u_time, (float) shader_frame_count);
     if (sh_u_frame >= 0) gl->Uniform1i(sh_u_frame, shader_frame_count);
+
+    for (int i = 0; i < shader_params_count; i++)
+        if (shader_params[i].loc >= 0) gl->Uniform1f(shader_params[i].loc, shader_params[i].value);
 }
 
 static int draw_gl_pass(
@@ -768,13 +984,16 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
 
     ensure_shader_program();
     const int use_shader =
-        shader_prog != 0 && ensure_target(renderer, &work_tex, &work_w, &work_h, dest_rect->w, dest_rect->h);
+        shader_prog != 0
+        && ensure_target(renderer, &work_tex, &work_w, &work_h, dest_rect->w, dest_rect->h, SDL_PIXELFORMAT_ABGR8888);
 
     SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
     SDL_Texture *gl_src = tex;
 
     if (mux_retro_get_pixel_format() != RETRO_PIXEL_FORMAT_XRGB8888 || src_rect) {
-        if (!ensure_target(renderer, &adjusted_tex, &adjusted_w, &adjusted_h, dest_rect->w, dest_rect->h)
+        if (!ensure_target(
+                renderer, &adjusted_tex, &adjusted_w, &adjusted_h, dest_rect->w, dest_rect->h, SDL_PIXELFORMAT_ARGB8888
+            )
             || SDL_SetRenderTarget(renderer, adjusted_tex) != 0) {
             SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
             return;
@@ -784,7 +1003,9 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         gl_src = adjusted_tex;
     }
 
-    if (!ensure_target(renderer, &output_tex, &output_w, &output_h, dest_rect->w, dest_rect->h)) {
+    if (!ensure_target(
+            renderer, &output_tex, &output_w, &output_h, dest_rect->w, dest_rect->h, SDL_PIXELFORMAT_ABGR8888
+        )) {
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
         return;
     }

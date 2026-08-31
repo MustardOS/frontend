@@ -16,7 +16,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        core/main.c core/startup.c core/core.c core/environment.c core/runahead.c core/perf.c \
        core/governor_boost.c core/power.c core/power_protocol.c \
        video/video.c video/gl_dispatch.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
-       video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_viewport.c \
+       video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_shaderadjust.c video/ui_viewport.c \
        video/ui_viewportadjust.c video/ui_viewportcrop.c video/ui_overlay.c video/ui_vignette.c \
        video/image_writer.c video/ui_videosettings.c video/hw_render.c \
        video/filters/filters.c video/filters/scale2x.c video/filters/super_eagle.c \

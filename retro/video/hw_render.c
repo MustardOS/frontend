@@ -53,13 +53,17 @@
 
 static const char *vs_src = "attribute vec2 a_pos;"
                             "attribute vec2 a_uv;"
-                            "varying vec2 v_uv;"
+                            "varying highp vec2 v_uv;"
                             "void main(){"
                             "    gl_Position = vec4(a_pos, 0.0, 1.0);"
                             "    v_uv = a_uv;"
                             "}";
 
-static const char *fs_src = "precision mediump float;"
+static const char *fs_src = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                            "precision highp float;\n"
+                            "#else\n"
+                            "precision mediump float;\n"
+                            "#endif\n"
                             "uniform sampler2D u_tex;"
                             "uniform int u_swap;"
                             "varying vec2 v_uv;"

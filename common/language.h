@@ -2337,6 +2337,11 @@ struct mux_lang {
             char vignette[MAX_BUFFER_SIZE];
         } display_screen;
         struct {
+            char adjust[MAX_BUFFER_SIZE];
+            char no_adjust[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
+        } shader_screen;
+        struct {
             char shape[MAX_BUFFER_SIZE];
             char shape_round[MAX_BUFFER_SIZE];
             char shape_square[MAX_BUFFER_SIZE];
@@ -2544,6 +2549,10 @@ struct mux_lang {
                 char strength[MAX_BUFFER_SIZE];
                 char colour[MAX_BUFFER_SIZE];
             } vignette;
+            struct {
+                char parameter[MAX_BUFFER_SIZE];
+                char reset[MAX_BUFFER_SIZE];
+            } shader_adjust;
             struct {
                 char adjustment[MAX_BUFFER_SIZE];
                 char cropping[MAX_BUFFER_SIZE];
