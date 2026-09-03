@@ -61,6 +61,7 @@ int blank_exists = 0;
 unsigned idle_state_changes = 0;
 unsigned saver_type_changes = 0;
 unsigned charging_changes = 0;
+unsigned brightness_config_changes = 0;
 int hdmi_mode = 0;
 int g350_menu_pressed = 0;
 
@@ -94,6 +95,12 @@ void inotify_init(void) {
 
     static int charging_exists;
     inotify_track(ino_proc, "/run/muos/battery", "charging", &charging_exists, &charging_changes);
+
+    static int brightness_config_exists;
+    inotify_track(
+        ino_proc, CONF_CONFIG_PATH "settings/general", "brightness", &brightness_config_exists,
+        &brightness_config_changes
+    );
 }
 
 void detach_parent_process(void) {

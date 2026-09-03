@@ -29,6 +29,7 @@ extern unsigned idle_state_changes;
 extern unsigned notify_drop_changes;
 extern unsigned saver_type_changes;
 extern unsigned charging_changes;
+extern unsigned brightness_config_changes;
 extern int hdmi_mode;
 extern int g350_menu_pressed;
 

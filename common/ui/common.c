@@ -18,7 +18,6 @@
 #include "../anim.h"
 #include "../input/list_nav.h"
 #include "../strutil.h"
-#include "../util.h"
 #include "../fileio.h"
 #include "../audio.h"
 #include "orientation.h"
@@ -128,6 +127,8 @@ int volume_changed = 0;
 int last_brightness = -1;
 int last_volume = -1;
 int fade_in_done = 0;
+
+static int initial_brightness_pending = 1;
 
 static lv_obj_t *canvas;
 
@@ -629,7 +630,6 @@ void init_ui_common_screen(
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
 
     apply_gradient_to_ui_screen(ui_screen_container, theme, device);
-    /* GPU SDL renders the background via SDL compositing; keep LVGL root transparent */
     lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
     ui_blank = lv_obj_create(ui_screen_container);
@@ -1261,17 +1261,6 @@ void init_ui_common_screen(
 
     current_brightness = config.settings.general.brightness;
 
-    static int brightness_applied = 0;
-    if (!brightness_applied && strcmp(mux_module, "muxcharge") != 0) {
-        brightness_applied = 1;
-
-        char bright_value[8];
-        snprintf(bright_value, sizeof(bright_value), "%d", config.settings.general.brightness);
-
-        const char *bright_args[] = {DEV_SCRIPT "bright.sh", bright_value, NULL};
-        run_exec(bright_args, A_SIZE(bright_args), 0, 0, NULL, NULL);
-    }
-
     ui_bar_progress_brightness = lv_bar_create(ui_pnl_progress_brightness);
     lv_bar_set_value(
         ui_bar_progress_brightness, brightness_to_percent(config.settings.general.brightness), LV_ANIM_OFF
@@ -1481,35 +1470,10 @@ static void progress_show(lv_obj_t *show, lv_obj_t *hide) {
     lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
 }
 
-static void adjust_brightness(const int direction) {
+static void show_brightness_progress(void) {
     if (!ui_common_check(0) || !progress_onscreen) return;
 
-    const int inc_bright = config.settings.advanced.inc_bright;
-
-    if (direction > 0) {
-        current_brightness += current_brightness <= inc_bright - 1 ? 1 : inc_bright;
-        if (current_brightness > device.screen.bright) current_brightness = device.screen.bright;
-    } else {
-        current_brightness -= current_brightness <= inc_bright ? 1 : inc_bright;
-        if (current_brightness < 0) current_brightness = 0;
-    }
-
-    const int percent = brightness_to_percent(current_brightness);
-
-    const char *glyph = "bright_0";
-    if (percent > 70) {
-        glyph = "bright_3";
-    } else if (percent > 35) {
-        glyph = "bright_2";
-    } else if (percent > 0) {
-        glyph = "bright_1";
-    }
-
-    update_glyph(ui_ico_progress_brightness, "bar", glyph);
-
     progress_show(ui_pnl_progress_brightness, ui_pnl_progress_volume);
-
-    brightness_changed = 1;
 }
 
 static void adjust_volume(const int direction) {
@@ -1544,11 +1508,11 @@ static void adjust_volume(const int direction) {
 }
 
 void ui_common_handle_bright_up(void) {
-    adjust_brightness(+1);
+    show_brightness_progress();
 }
 
 void ui_common_handle_bright_down(void) {
-    adjust_brightness(-1);
+    show_brightness_progress();
 }
 
 void ui_common_handle_volume_up(void) {
@@ -1562,14 +1526,47 @@ void ui_common_handle_volume_down(void) {
 int ui_common_progress_tick(void) {
     int need_update = 0;
 
+    static unsigned brightness_changes_seen = 0;
+    if (brightness_config_changes != brightness_changes_seen) {
+        brightness_changes_seen = brightness_config_changes;
+
+        const int saved_brightness = read_line_int_from(CONF_CONFIG_PATH "settings/general/brightness", 1);
+        if (saved_brightness >= 0 && saved_brightness <= device.screen.bright) {
+            current_brightness = saved_brightness;
+            brightness_changed = 1;
+        }
+    }
+
     if (brightness_changed || last_brightness != current_brightness) {
-        lv_bar_set_value(ui_bar_progress_brightness, brightness_to_percent(current_brightness), LV_ANIM_OFF);
+        const int percent = brightness_to_percent(current_brightness);
+        lv_bar_set_value(ui_bar_progress_brightness, percent, LV_ANIM_OFF);
+
+        const char *glyph = "bright_0";
+        if (percent > 70) {
+            glyph = "bright_3";
+        } else if (percent > 35) {
+            glyph = "bright_2";
+        } else if (percent > 0) {
+            glyph = "bright_1";
+        }
+        update_glyph(ui_ico_progress_brightness, "bar", glyph);
 
         last_brightness = current_brightness;
         brightness_changed = 0;
 
         config.settings.general.brightness = current_brightness;
-        set_setting_value("bright", current_brightness, 0);
+
+        if (initial_brightness_pending) {
+            initial_brightness_pending = 0;
+
+            if (strcmp(mux_module, "muxcharge") != 0) {
+                char bright_value[8];
+                snprintf(bright_value, sizeof(bright_value), "%d", current_brightness);
+
+                const char *bright_args[] = {DEV_SCRIPT "bright.sh", bright_value, NULL};
+                run_exec(bright_args, A_SIZE(bright_args), 0, 0, NULL, NULL);
+            }
+        }
 
         blank_check();
         need_update = 1;
@@ -2328,8 +2325,7 @@ void create_grid_item(
     lv_obj_add_style(cell_pnl, &grid_cell_shadow_style, 0);
 
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->grid.cell_default.background), MU_OBJ_MAIN_DEFAULT);
-    /* opa_layered renders bg+children into an off-screen layer so semi-transparent
-     * cells composite correctly via premultiplied alpha over the video background. */
+
     if (theme->grid.cell_default.background_alpha > LV_OPA_TRANSP
         && theme->grid.cell_default.background_alpha < LV_OPA_COVER
         && theme->grid.cell_default.background_gradient_direction > 0) {
