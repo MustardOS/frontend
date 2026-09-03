@@ -244,7 +244,7 @@ static void handle_section_step(const int direction) {
     if (msgbox_active || hold_call || task_progress_active() || active_dialogue()) return;
 
     if (list_frame_move(direction)) {
-        play_sound(snd_navigate);
+        play_sound(snd_option);
         nav_refresh();
         nav_moved = 1;
     }
@@ -607,6 +607,8 @@ int muxstorage_main(void) {
         .hold_handler = {
             [mux_input_dpad_up] = handle_dpad_up_hold,
             [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_dpad_left] = handle_dpad_left,
+            [mux_input_dpad_right] = handle_dpad_right,
             [mux_input_l1] = handle_section_prev,
             [mux_input_r1] = handle_section_next,
         }

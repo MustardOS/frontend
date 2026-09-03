@@ -223,8 +223,8 @@ static const char *get_gpu_model(void) {
     }
 
     char path[UI_BUFFER];
-    if (first_glob_path("/sys/devices/platform/*gpu*/gpuinfo", path, sizeof(path)) == 0 &&
-        read_file_trim(path, buffer) == 0 && *buffer) {
+    if (first_glob_path("/sys/devices/platform/*gpu*/gpuinfo", path, sizeof(path)) == 0
+        && read_file_trim(path, buffer) == 0 && *buffer) {
         char *space = strchr(buffer, ' ');
         if (space) *space = '\0';
         return buffer;
@@ -242,8 +242,8 @@ static const char *get_gpu_model(void) {
         }
     }
 
-    if (first_glob_path("/sys/devices/platform/*gpu*/of_node/compatible", path, sizeof(path)) == 0 &&
-        read_file_trim(path, compatible) == 0 && strstr(compatible, "mali")) {
+    if (first_glob_path("/sys/devices/platform/*gpu*/of_node/compatible", path, sizeof(path)) == 0
+        && read_file_trim(path, compatible) == 0 && strstr(compatible, "mali")) {
         snprintf(buffer, sizeof(buffer), "Mali");
         return buffer;
     }
@@ -1374,10 +1374,10 @@ static void nav_refresh(void) {
 }
 
 static void handle_section_prev(void) {
-    if (key_show || dialogue_active(&warn_dlg)) return;
+    if (msgbox_active || key_show || dialogue_active(&warn_dlg) || dialogue_active(&export_dlg)) return;
 
     if (list_frame_move(-1)) {
-        play_sound(snd_navigate);
+        play_sound(snd_option);
         update_detail_info();
         nav_refresh();
 
@@ -1386,10 +1386,10 @@ static void handle_section_prev(void) {
 }
 
 static void handle_section_next(void) {
-    if (key_show || dialogue_active(&warn_dlg)) return;
+    if (msgbox_active || key_show || dialogue_active(&warn_dlg) || dialogue_active(&export_dlg)) return;
 
     if (list_frame_move(+1)) {
-        play_sound(snd_navigate);
+        play_sound(snd_option);
         update_detail_info();
         nav_refresh();
 
@@ -1715,11 +1715,25 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_dpad_left_hold(void) {
-    if (key_show) key_left();
+    if (key_show) {
+        key_left();
+        return;
+    }
+
+    if (!list_frame_focused()) return;
+
+    handle_section_prev();
 }
 
 static void handle_dpad_right_hold(void) {
-    if (key_show) key_right();
+    if (key_show) {
+        key_right();
+        return;
+    }
+
+    if (!list_frame_focused()) return;
+
+    handle_section_next();
 }
 
 static void handle_l1(void) {

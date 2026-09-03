@@ -154,7 +154,6 @@ static void handle_a(void) {
         write_text_to_file(CONF_DEVICE_PATH "storage/rom/type", "w", CHAR, chosen);
         LOG_INFO(mux_module, "Install will format the storage as %s", chosen);
 
-        play_sound(snd_confirm);
         show_confirm("install", &confirm_install_dlg);
 
         return;
@@ -212,7 +211,6 @@ static void handle_b(void) {
 
     if (dialogue_active(&format_dlg)) {
         dialogue_cancel(&format_dlg);
-        play_sound(snd_back);
 
         return;
     }

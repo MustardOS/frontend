@@ -1216,28 +1216,45 @@ static void nav_refresh(void) {
     }
 }
 
-static void handle_section_prev(void) {
-    if (task_progress_active()) return;
-    if (dialogue_step(-1)) return;
-
-    if (list_frame_move(-1)) {
-        play_sound(snd_navigate);
+static void section_step(const int direction) {
+    if (list_frame_move(direction)) {
+        play_sound(snd_option);
         section_changed();
         list_frame_reposition();
         nav_refresh();
     }
 }
 
+static void handle_section_prev(void) {
+    if (task_progress_active()) return;
+    if (dialogue_step(-1)) return;
+
+    section_step(-1);
+}
+
 static void handle_section_next(void) {
     if (task_progress_active()) return;
     if (dialogue_step(+1)) return;
 
-    if (list_frame_move(+1)) {
-        play_sound(snd_navigate);
-        section_changed();
-        list_frame_reposition();
-        nav_refresh();
-    }
+    section_step(+1);
+}
+
+static void handle_dpad_left(void) {
+    if (task_progress_active()) return;
+    if (dialogue_step(-1)) return;
+
+    if (!list_frame_focused()) return;
+
+    section_step(-1);
+}
+
+static void handle_dpad_right(void) {
+    if (task_progress_active()) return;
+    if (dialogue_step(+1)) return;
+
+    if (!list_frame_focused()) return;
+
+    section_step(+1);
 }
 
 static void init_elements(void) {
@@ -1291,8 +1308,8 @@ int muxspace_main(void) {
                 [mux_input_x] = handle_x,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
-                [mux_input_dpad_left] = handle_section_prev,
-                [mux_input_dpad_right] = handle_section_next,
+                [mux_input_dpad_left] = handle_dpad_left,
+                [mux_input_dpad_right] = handle_dpad_right,
                 [mux_input_l1] = handle_section_prev,
                 [mux_input_r1] = handle_section_next,
             },
@@ -1303,6 +1320,8 @@ int muxspace_main(void) {
         .hold_handler = {
             [mux_input_dpad_up] = handle_dpad_up_hold,
             [mux_input_dpad_down] = handle_dpad_down_hold,
+            [mux_input_dpad_left] = handle_dpad_left,
+            [mux_input_dpad_right] = handle_dpad_right,
             [mux_input_l1] = handle_section_prev,
             [mux_input_r1] = handle_section_next,
         }

@@ -983,10 +983,7 @@ static void handle_up(void) {
     }
 
     if (more_active(&more_menu)) {
-        if (!swap_axis) {
-            more_dpad(&more_menu, &theme, -1, 1);
-            play_sound(snd_navigate);
-        }
+        more_dpad(&more_menu, &theme, -1, !swap_axis);
         return;
     }
 
@@ -1027,10 +1024,7 @@ static void handle_down(void) {
     }
 
     if (more_active(&more_menu)) {
-        if (!swap_axis) {
-            more_dpad(&more_menu, &theme, +1, 1);
-            play_sound(snd_navigate);
-        }
+        more_dpad(&more_menu, &theme, +1, !swap_axis);
         return;
     }
 
@@ -1071,10 +1065,7 @@ static void handle_left(void) {
     }
 
     if (more_active(&more_menu)) {
-        if (swap_axis) {
-            more_dpad(&more_menu, &theme, -1, 1);
-            play_sound(snd_navigate);
-        }
+        more_dpad(&more_menu, &theme, -1, swap_axis);
         return;
     }
 
@@ -1096,10 +1087,7 @@ static void handle_right(void) {
     }
 
     if (more_active(&more_menu)) {
-        if (swap_axis) {
-            more_dpad(&more_menu, &theme, +1, 1);
-            play_sound(snd_navigate);
-        }
+        more_dpad(&more_menu, &theme, +1, swap_axis);
         return;
     }
 

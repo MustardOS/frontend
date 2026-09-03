@@ -737,15 +737,8 @@ void handle_msgbox_dismiss(void) {
 
     orientation_clear_showing();
 
-    if (crash_ui_dismiss()) {
-        play_sound(snd_confirm);
-        return;
-    }
-
-    if (power_loss_ui_dismiss()) {
-        play_sound(snd_confirm);
-        return;
-    }
+    if (crash_ui_dismiss()) return;
+    if (power_loss_ui_dismiss()) return;
 
     play_sound(snd_info_close);
     if (msgbox_element == ui_pnl_help) {
