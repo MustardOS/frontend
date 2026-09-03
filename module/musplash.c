@@ -33,6 +33,7 @@ typedef struct {
     uint8_t *mem;
     uint8_t *base;
     size_t mem_size;
+    int buffered;
 
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
@@ -580,21 +581,41 @@ static int open_fb(const char *path, fb_t *fb) {
 
     fb->bytes_per_pixel = fb->bpp / 8;
 
-    fb->mem = mmap(NULL, fb->mem_size, PROT_READ | PROT_WRITE, MAP_SHARED, fb->fd, 0);
-    if (fb->mem == MAP_FAILED) {
+    const size_t visible_offset =
+        (size_t) fb->var.yoffset * (size_t) fb->stride + (size_t) fb->var.xoffset * (size_t) fb->bytes_per_pixel;
+    const size_t visible_size = (size_t) fb->stride * (size_t) fb->height;
+    if (visible_offset >= fb->mem_size || visible_size > fb->mem_size - visible_offset) {
         close(fb->fd);
         fb->fd = -1;
         return -1;
     }
 
-    const size_t visible_offset =
-        (size_t) fb->var.yoffset * (size_t) fb->stride + (size_t) fb->var.xoffset * (size_t) fb->bytes_per_pixel;
-    if (visible_offset >= fb->mem_size) {
-        munmap(fb->mem, fb->mem_size);
-        close(fb->fd);
-        fb->fd = -1;
-        fb->mem = NULL;
-        return -1;
+    fb->buffered = strncmp(fb->fix.id, "rockchip", 8) == 0;
+    if (fb->buffered) {
+        fb->mem = calloc(1, fb->mem_size);
+        if (!fb->mem) {
+            close(fb->fd);
+            fb->fd = -1;
+            return -1;
+        }
+
+        size_t offset = 0;
+        while (offset < fb->mem_size) {
+            const ssize_t read_size = pread(fb->fd, fb->mem + offset, fb->mem_size - offset, (off_t) offset);
+            if (read_size > 0) {
+                offset += (size_t) read_size;
+                continue;
+            }
+            if (read_size < 0 && errno == EINTR) continue;
+            break;
+        }
+    } else {
+        fb->mem = mmap(NULL, fb->mem_size, PROT_READ | PROT_WRITE, MAP_SHARED, fb->fd, 0);
+        if (fb->mem == MAP_FAILED) {
+            close(fb->fd);
+            fb->fd = -1;
+            return -1;
+        }
     }
 
     fb->base = fb->mem + visible_offset;
@@ -602,10 +623,31 @@ static int open_fb(const char *path, fb_t *fb) {
     return 0;
 }
 
+static int flush_fb(const fb_t *fb) {
+    if (!fb->mem || fb->mem == MAP_FAILED) return -1;
+
+    if (!fb->buffered) return msync(fb->mem, fb->mem_size, MS_SYNC);
+
+    size_t offset = 0;
+    while (offset < fb->mem_size) {
+        const ssize_t write_size = pwrite(fb->fd, fb->mem + offset, fb->mem_size - offset, (off_t) offset);
+        if (write_size > 0) {
+            offset += (size_t) write_size;
+            continue;
+        }
+        if (write_size < 0 && errno == EINTR) continue;
+        return -1;
+    }
+
+    return 0;
+}
+
 static void close_fb(fb_t *fb) {
     if (fb->mem && fb->mem != MAP_FAILED) {
-        msync(fb->mem, fb->mem_size, MS_SYNC);
-        munmap(fb->mem, fb->mem_size);
+        if (fb->buffered)
+            free(fb->mem);
+        else
+            munmap(fb->mem, fb->mem_size);
     }
 
     if (fb->fd >= 0) close(fb->fd);
@@ -1149,8 +1191,6 @@ static void draw_image(const fb_t *fb, const image_t *img, const options_t *opts
     }
 
     free(bg_lut);
-
-    msync(fb->mem, fb->mem_size, MS_SYNC);
 }
 
 static void free_image(image_t *img) {
@@ -1178,7 +1218,11 @@ static int run_clear(const options_t *opts) {
     log_msg(opts, "Clearing framebuffer");
 
     clear_fb(&fb, 0, 0, 0);
-    msync(fb.mem, fb.mem_size, MS_SYNC);
+    if (flush_fb(&fb) != 0) {
+        log_msg(opts, "Failed to flush framebuffer");
+        close_fb(&fb);
+        return 1;
+    }
 
     unblank_fb(opts->fb_path);
     close_fb(&fb);
@@ -1237,6 +1281,13 @@ static int run_draw(const options_t *opts) {
     }
 
     draw_image(&fb, &img, opts);
+
+    if (flush_fb(&fb) != 0) {
+        log_msg(opts, "Failed to flush framebuffer");
+        close_fb(&fb);
+        free_image(&img);
+        return 1;
+    }
 
     unblank_fb(opts->fb_path);
 
