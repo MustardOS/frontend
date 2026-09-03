@@ -265,6 +265,24 @@ static unsigned short map_dpad_key(unsigned short code) {
 }
 
 static unsigned short map_key(const struct portable_profile *profile, unsigned short code) {
+    if (profile->layout == LAYOUT_G350) {
+        switch (code) {
+            case BTN_SOUTH:
+                return BTN_EAST;
+            case BTN_EAST:
+                return BTN_SOUTH;
+            case BTN_TRIGGER_HAPPY1:
+                return BTN_SELECT;
+            case BTN_TRIGGER_HAPPY2:
+                return BTN_START;
+            case BTN_TRIGGER_HAPPY3:
+                return BTN_THUMBL;
+            case BTN_TRIGGER_HAPPY4:
+                return BTN_THUMBR;
+            case BTN_TRIGGER_HAPPY5:
+                return BTN_MODE;
+        }
+    }
     if (profile->layout == LAYOUT_ZERO28 && code == KEY_BACK) return BTN_MODE;
     if (profile->layout == LAYOUT_PIXEL2) {
         if (code == BTN_SOUTH) return BTN_EAST;
@@ -390,6 +408,20 @@ static struct rumble_sysfs_config rumble_config(enum portable_rumble_id rumble) 
     }
 }
 
+static int initialise_rumble(struct portable_state *state, const struct device_options *options) {
+    if (state->profile->layout == LAYOUT_G350) {
+        const struct rumble_sysfs_config config = {"/sys/class/gpio/gpio15/value", "1", "0"};
+        return device_rumble_initialise(
+            &state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength
+        );
+    }
+
+    struct rumble_sysfs_config config = rumble_config(state->profile->rumble);
+    return device_rumble_initialise(
+        &state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength
+    );
+}
+
 static int portable_initialise(
     void **context, struct gamepad *gamepad, struct axis_state *lx, struct axis_state *ly, struct axis_state *rx,
     struct axis_state *ry, const struct device_options *options
@@ -410,9 +442,8 @@ static int portable_initialise(
         free(state);
         return -1;
     }
-    struct rumble_sysfs_config config = rumble_config(profile->rumble);
-    if (device_rumble_initialise(&state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength) < 0
-        && options->verbose) {
+    seed_axis_calibration(state);
+    if (initialise_rumble(state, options) < 0 && options->verbose) {
         fprintf(stderr, "Rumble is unavailable for %s\n", profile->id);
     }
     if (profile->dpad_switch) state->dpad_to_stick = access(PIXEL_SWAP_PATH, F_OK) == 0;
@@ -420,9 +451,7 @@ static int portable_initialise(
     return 0;
 }
 
-static int portable_poll(void *context) {
-    struct portable_state *state = context;
-    if (!device_rumble_poll(&state->rumble, state->gamepad)) return 0;
+static int poll_source(struct portable_state *state) {
     struct input_event events[64];
     int dirty = 0;
     unsigned int processed = 0;
@@ -468,6 +497,12 @@ static int portable_poll(void *context) {
     }
     if (dirty) gamepad_sync(state->gamepad);
     return 1;
+}
+
+static int portable_poll(void *context) {
+    struct portable_state *state = context;
+    if (!device_rumble_poll(&state->rumble, state->gamepad)) return 0;
+    return poll_source(state);
 }
 
 static void portable_refresh(void *context) {
