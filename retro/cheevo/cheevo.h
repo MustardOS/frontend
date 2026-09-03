@@ -9,8 +9,7 @@ typedef enum {
     cheevo_status_signed_out,
     cheevo_status_signing_in,
     cheevo_status_identifying,
-    cheevo_status_active_softcore,
-    cheevo_status_active_hardcore,
+    cheevo_status_active,
     cheevo_status_offline,
     cheevo_status_unsupported,
     cheevo_status_failed
@@ -38,7 +37,6 @@ typedef enum { cheevo_view_achievements = 0, cheevo_view_leaderboards, cheevo_vi
 
 typedef struct {
     int enabled;
-    int hardcore;
     int unofficial;
     int notifications;
     char username[128];
@@ -49,6 +47,7 @@ typedef struct {
     char failure[256];
     uint32_t unlocked;
     uint32_t total;
+    uint32_t pending;
 } cheevo_info;
 
 typedef enum { cheevo_game_entry_achievement = 0, cheevo_game_entry_leaderboard } cheevo_game_entry_type;
@@ -102,9 +101,7 @@ void cheevo_idle(void);
 
 int cheevo_is_starting(void);
 
-void cheevo_play_without(void);
-
-void cheevo_reset(void);
+void cheevo_change_media(const char *content_path);
 
 void cheevo_set_memory_map(const struct retro_memory_map *map);
 
@@ -140,8 +137,6 @@ void cheevo_logout(void);
 
 int cheevo_set_enabled(int enabled);
 
-int cheevo_set_hardcore(int enabled);
-
 int cheevo_set_unofficial(int enabled);
 
 int cheevo_set_notifications(cheevo_notification_mode mode);
@@ -153,12 +148,6 @@ cheevo_achievement_view cheevo_get_achievement_view(void);
 int cheevo_set_achievement_preferences(cheevo_achievement_sort sort, cheevo_achievement_view view);
 
 int cheevo_refresh_data(void);
-
-int cheevo_hardcore_active(void);
-
-int cheevo_restricted(void);
-
-int cheevo_can_pause(uint32_t *frames_remaining);
 
 size_t cheevo_progress_size(void);
 

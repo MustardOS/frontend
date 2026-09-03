@@ -32,7 +32,6 @@ struct core_cbs {
     size_t (*retro_get_memory_size)(unsigned id);
     void (*retro_cheat_reset)(void);
     void (*retro_cheat_set)(unsigned index, bool enabled, const char *code);
-
 };
 
 extern struct core_cbs current_core;

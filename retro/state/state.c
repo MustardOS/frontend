@@ -105,11 +105,6 @@ int state_load(const char *path, const int show_message) {
         LOG_ERROR(mux_module, "Cannot load '%s' because its pending state write failed", path);
         return -1;
     }
-    if (cheevo_hardcore_active()) {
-        pause_menu_show_toast_timed("Save states cannot be loaded in Hardcore mode", tst_wait_s);
-        return -1;
-    }
-
     if (show_message) loading_message_show(lang.muxretro.content_resuming);
     governor_boost_begin("state load");
 

@@ -85,15 +85,15 @@ static void compute_row_indices(void) {
 
     int i = 0;
     row_resume = i++;
-    row_game_state = state_saves_supported() && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
+    row_game_state = state_saves_supported() && !netplay_is_active() ? i++ : -1;
     row_netplay =
         device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay) && state_saves_supported() ? i++
                                                                                                                   : -1;
     row_cheevo = device.board.has_network && cheevo_is_configured() && cheevo_has_game_entries() ? i++ : -1;
     row_game_link = link_is_supported() && !netplay_is_active() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
-    row_cheats = cheats_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
-    row_patches = patch_manual_count > 0 && !netplay_is_active() && !cheevo_hardcore_active() ? i++ : -1;
+    row_cheats = cheats_count > 0 && !netplay_is_active() ? i++ : -1;
+    row_patches = patch_manual_count > 0 && !netplay_is_active() ? i++ : -1;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -959,16 +959,6 @@ int pause_menu_store_clean_screenshot(const char *path, const int restore_visibi
 }
 
 void pause_menu_toggle(void) {
-    if (!active) {
-        uint32_t frames_remaining = 0;
-        if (!cheevo_can_pause(&frames_remaining)) {
-            char message[128];
-            snprintf(message, sizeof(message), lang.muxretro.netplay.hardcore_pause, frames_remaining);
-            pause_menu_show_toast_timed(message, tst_wait_s);
-            return;
-        }
-    }
-
     active = !active;
     LOG_DEBUG(mux_module, "pause_menu_toggle: active=%d", active);
 

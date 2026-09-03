@@ -73,8 +73,6 @@ int cheevo_account_load(cheevo_account *account) {
 
         if (strcmp(line, "enabled") == 0)
             account->enabled = atoi(equals) != 0;
-        else if (strcmp(line, "hardcore") == 0)
-            account->hardcore = atoi(equals) != 0;
         else if (strcmp(line, "unofficial") == 0)
             account->unofficial = atoi(equals) != 0;
         else if (strcmp(line, "notifications") == 0) {
@@ -141,10 +139,10 @@ int cheevo_account_save(const cheevo_account *account) {
     int okay =
         fprintf(
             file,
-            "enabled=%d\nhardcore=%d\nunofficial=%d\nnotifications=%d\nachievement_sort=%d\nachievement_view=%"
-            "d\nusername=%s\ntoken=%s\n",
-            account->enabled, account->hardcore, account->unofficial, account->notifications,
-            account->achievement_sort, account->achievement_view, account->username, account->token
+            "enabled=%d\nunofficial=%d\nnotifications=%d\nachievement_sort=%d\nachievement_view=%d\n"
+            "username=%s\ntoken=%s\n",
+            account->enabled, account->unofficial, account->notifications, account->achievement_sort,
+            account->achievement_view, account->username, account->token
         ) > 0
         && fflush(file) == 0 && fsync(descriptor) == 0;
     if (fclose(file) != 0) okay = 0;

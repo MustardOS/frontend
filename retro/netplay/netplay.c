@@ -2110,7 +2110,7 @@ void netplay_disconnect(void) {
     netplay.packet_queue_overflows = 0;
     input_bridge_set_netplay_state(0, 0);
     cheevo_set_netplay_active(0);
-    cheats_set_suppressed(cheevo_restricted());
+    cheats_set_suppressed(0);
     atomic_store(&netplay.stop, 0);
     atomic_store(&netplay.discovery_stop, 0);
     atomic_store(&netplay.disconnecting, 0);

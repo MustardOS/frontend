@@ -255,7 +255,7 @@ static unsigned run_core_batch(const unsigned frames) {
         const int network_frame = network_active && netplay_is_playing();
         if (network_frame && !netplay_before_frame()) break;
         environment_notify_frame_time();
-        if (is_last && !network_active && !cheevo_restricted()) runahead_before_frame(frames == 1);
+        if (is_last && !network_active) runahead_before_frame(frames == 1);
 
         const uint64_t run_start = SDL_GetPerformanceCounter();
         current_core.retro_run();
@@ -753,9 +753,7 @@ int main(const int argc, char *argv[]) {
     }
 
     const cheevo_status startup_cheevo_status = cheevo_get_status();
-    if (show_startup_messages && !cheevo_connecting_background
-        && (startup_cheevo_status == cheevo_status_active_softcore
-            || startup_cheevo_status == cheevo_status_active_hardcore)) {
+    if (show_startup_messages && !cheevo_connecting_background && startup_cheevo_status == cheevo_status_active) {
         cheevo_info startup_cheevo_info;
         cheevo_get_info(&startup_cheevo_info);
         if (startup_cheevo_info.notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.active, tst_wait_s);
@@ -862,7 +860,7 @@ int main(const int argc, char *argv[]) {
         }
 
         if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported() && !netplay_active
-            && !cheevo_restricted() && loop_now >= timeline_deadline) {
+            && loop_now >= timeline_deadline) {
             gamestate_timeline_save();
             timeline_deadline = loop_now + (uint32_t) timeline_ms;
         }

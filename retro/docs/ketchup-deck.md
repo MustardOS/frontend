@@ -138,8 +138,8 @@ Controller 2 -> Ketchup Deck -> Ketchup Controls: Port 1
   R1      -> Turbo A       the mashing they'd rather not
 ```
 
-Leave anything unbound that the helper shouldn't touch. With priority off, the helper genuinely can't take control
-away.  Perhaps one player can steer, and another can accelerate and brake?
+Leave anything unbound that the helper shouldn't touch. With priority off, the helper genuinely can't take control away.
+Perhaps one player can steer, and another can accelerate and brake?
 
 ## Working examples
 

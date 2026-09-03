@@ -1,8 +1,10 @@
+#include <limits.h>
 #include <stdio.h>
 #include "../../common/audio.h"
 #include "../../common/input.h"
 #include "../../common/ui/common.h"
 #include "../../module/muxshare.h"
+#include "../cheevo/cheevo.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
 #include "../state/history.h"
@@ -133,6 +135,10 @@ static void select_disc(const int index) {
 
     mux_retro_disk_set_image_index((unsigned) index);
     mux_retro_disk_set_eject_state(false);
+
+    // Achievements are tied to the disc that was identified, so the swap has to be declared
+    char disc_path[PATH_MAX];
+    if (mux_retro_disk_get_image_path((unsigned) index, disc_path, sizeof(disc_path))) cheevo_change_media(disc_path);
 
     history_clear();
 

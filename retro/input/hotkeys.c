@@ -9,7 +9,6 @@
 #include "../state/manual.h"
 #include "../link/link.h"
 #include "../netplay/netplay.h"
-#include "../cheevo/cheevo.h"
 #include "hotkeys.h"
 #include "../core/muxretro.h"
 #include "nav_repeat.h"
@@ -173,19 +172,14 @@ int hotkeys_task(void) {
             menu_combo_consumed = 1;
         }
 
-        if (l1_now && !prev_l1 && session_settings.hotkey_slowmo_enabled && !netplay_is_active()
-            && !cheevo_restricted()) {
+        if (l1_now && !prev_l1 && session_settings.hotkey_slowmo_enabled && !netplay_is_active()) {
             toggle_slow_motion();
             input_bridge_suppress(mux_input_l1);
             menu_combo_consumed = 1;
         }
 
         if (b_now && !prev_b && session_settings.hotkey_pause_enabled && !netplay_is_active()) {
-            uint32_t frames_remaining = 0;
-            if (cheevo_can_pause(&frames_remaining))
-                toggle_content_pause();
-            else
-                pause_menu_show_toast_timed("Hardcore pause is not available yet", tst_wait_s);
+            toggle_content_pause();
             input_bridge_suppress(mux_input_b);
             menu_combo_consumed = 1;
         }

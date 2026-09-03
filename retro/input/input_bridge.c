@@ -4,7 +4,6 @@
 #include "../core/muxretro.h"
 #include "../core/perf.h"
 #include "../macro/runtime.h"
-#include "../cheevo/cheevo.h"
 #include "../link/link.h"
 #include "../netplay/netplay.h"
 #include "../settings/settings.h"
@@ -99,8 +98,7 @@ static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, 
     return raw_held;
 }
 
-static uint16_t
-build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress, const int restricted) {
+static uint16_t build_retropad_mask(const int port, const uint64_t mask, const int apply_suppress) {
     uint16_t out = 0;
     const double fps = core_get_target_fps();
 
@@ -119,7 +117,7 @@ build_retropad_mask(const int port, const uint64_t mask, const int apply_suppres
         const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
 
         const int macro_index = source_macro[s];
-        if (macro_index >= 0 && !restricted) {
+        if (macro_index >= 0) {
             out |=
                 macro_runtime_drive(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress), mask, fps);
             continue;
@@ -131,7 +129,7 @@ build_retropad_mask(const int port, const uint64_t mask, const int apply_suppres
         const int raw_held = resolve_raw_held(mux_type, mask, apply_suppress);
 
         int held = raw_held;
-        const int rate = restricted ? 0 : source_turbo[s];
+        const int rate = source_turbo[s];
 
         if (rate > 0) {
             if (raw_held) {
@@ -272,7 +270,6 @@ static void resolve_port_assignments_cached(void) {
 
 static void input_bridge_build_snapshot(void) {
     const int track_latency = perf_is_enabled();
-    const int restricted = cheevo_restricted();
     const int frontend_modifier_held = mux_input_pressed(mux_input_menu);
     const uint64_t previous_signature = track_latency ? input_bridge_snapshot_signature() : 0;
 
@@ -310,12 +307,11 @@ static void input_bridge_build_snapshot(void) {
             continue;
         }
 
-        port_retropad_mask[port] =
-            build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0, restricted);
+        port_retropad_mask[port] = build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0);
 
         for (int s = 0; s < 2; s++) {
             // A playing stick macro owns that stick outright and ignores any axis transform
-            if (!restricted && macro_runtime_stick(port, s, &port_stick_x[port][s], &port_stick_y[port][s])) continue;
+            if (macro_runtime_stick(port, s, &port_stick_x[port][s], &port_stick_y[port][s])) continue;
 
             // A button bound to a axis direction takes the stick over only while it is actually held
             if (bound_stick_active[port][s]) {

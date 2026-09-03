@@ -18,7 +18,7 @@
 #include "cheevo.h"
 #include "ui_cheevo.h"
 
-enum { row_account = 0, row_mode, row_notifications, row_refresh, row_count };
+enum { row_account = 0, row_notifications, row_refresh, row_count };
 
 typedef enum { entry_none = 0, entry_username, entry_password } entry_state;
 
@@ -80,11 +80,10 @@ static const char *login_glyphs[login_row_count] = {"user", "lock", "network", "
 
 static const char *row_labels[row_count];
 
-static const char *row_glyphs[row_count] = {"user", "performance", "message", "refresh"};
+static const char *row_glyphs[row_count] = {"user", "message", "refresh"};
 
 static const char *row_help[row_count] = {
-    lang.muxretro.help.cheevo.account, lang.muxretro.help.cheevo.mode, lang.muxretro.help.cheevo.notifications,
-    lang.muxretro.help.cheevo.refresh
+    lang.muxretro.help.cheevo.account, lang.muxretro.help.cheevo.notifications, lang.muxretro.help.cheevo.refresh
 };
 
 static void detail_nav_show_x(const int show, const char *text) {
@@ -129,12 +128,10 @@ static void row_value_text(const int index, char *buffer, const size_t length) {
                 snprintf(buffer, length, "%s", lang.muxretro.cheevo.signed_out);
             break;
         case row_refresh:
-            buffer[0] = '\0';
-            break;
-        case row_mode:
-            snprintf(
-                buffer, length, "%s", info.hardcore ? lang.muxretro.cheevo.hardcore : lang.muxretro.cheevo.softcore
-            );
+            if (info.pending)
+                snprintf(buffer, length, lang.muxretro.cheevo.held, info.pending);
+            else
+                buffer[0] = '\0';
             break;
         case row_notifications:
             snprintf(
@@ -544,15 +541,6 @@ static void row_action(const int index) {
             else
                 pause_menu_show_toast_timed(lang.muxretro.cheevo.refresh_unavailable, tst_wait_s);
             break;
-        case row_mode:
-            if (cheevo_set_hardcore(!info.hardcore) != 0)
-                pause_menu_show_toast_timed(lang.muxretro.cheevo.hardcore_unavailable, tst_wait_s);
-            else
-                pause_menu_show_toast_timed(
-                    info.hardcore ? lang.muxretro.cheevo.softcore_enabled : lang.muxretro.cheevo.hardcore_enabled,
-                    tst_wait_s
-                );
-            break;
         default:
             break;
     }
@@ -928,7 +916,6 @@ void cheevo_menu_init(void) {
 
     row_labels[row_account] = lang.muxretro.cheevo.account;
     row_labels[row_refresh] = lang.muxretro.cheevo.refresh_data;
-    row_labels[row_mode] = lang.muxretro.cheevo.mode;
     row_labels[row_notifications] = lang.muxretro.cheevo.notifications;
 
     definition.save_title = lang.muxretro.retroachievements;

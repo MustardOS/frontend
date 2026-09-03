@@ -108,6 +108,14 @@ bool mux_retro_disk_get_image_label(const unsigned index, char *label, const siz
     return false;
 }
 
+bool mux_retro_disk_get_image_path(const unsigned index, char *path, const size_t len) {
+    if (len) path[0] = '\0';
+    if (disk_control_ext_cb && disk_control_ext_cb->get_image_path) {
+        return disk_control_ext_cb->get_image_path(index, path, len) && path[0];
+    }
+    return false;
+}
+
 static void mux_retro_log_printf(const enum retro_log_level level, const char *fmt, ...) {
     char msg[512];
 

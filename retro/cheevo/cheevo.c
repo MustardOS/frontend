@@ -32,25 +32,27 @@
 #include "account.h"
 #include "cache.h"
 #include "cheevo.h"
+#include "spool.h"
 #include "../state/vfs.h"
 #include <rc_client.h>
 #include <rc_error.h>
 #include <rc_hash.h>
 #include <rc_libretro.h>
 
-#define CHEEVO_ACCOUNT_DIR              STORAGE_NETWORK "/cheevo"
-#define CHEEVO_PREVIEW_DIR              CHEEVO_ACCOUNT_DIR "/previews"
-#define CHEEVO_PREVIEW_CAP              16
-#define CHEEVO_HTTP_CAP                 (2U * 1024U * 1024U)
-#define CHEEVO_QUEUE_CAP                8
-#define CHEEVO_PROGRESS_CAP             (16U * 1024U * 1024U)
-#define CHEEVO_UNKNOWN_EMULATOR_WARNING "Warning: Unknown Emulator"
-#define CHEEVO_LEADERBOARD_CAP          10
-#define CHEEVO_MEMORY_DESCRIPTOR_CAP    256
-#define CHEEVO_MEMORY_WAIT_FRAMES       120
-#define CHEEVO_UNLOCK_TOAST_MS          3192
-#define CHEEVO_FRAME_COMPLETIONS        1
-#define CHEEVO_STARTUP_COMPLETIONS      4
+#define CHEEVO_ACCOUNT_DIR           STORAGE_NETWORK "/cheevo"
+#define CHEEVO_PREVIEW_DIR           CHEEVO_ACCOUNT_DIR "/previews"
+#define CHEEVO_PREVIEW_CAP           16
+#define CHEEVO_HTTP_CAP              (2U * 1024U * 1024U)
+#define CHEEVO_QUEUE_CAP             8
+#define CHEEVO_PROGRESS_CAP          (16U * 1024U * 1024U)
+#define CHEEVO_LEADERBOARD_CAP       10
+#define CHEEVO_MEMORY_DESCRIPTOR_CAP 256
+#define CHEEVO_MEMORY_WAIT_FRAMES    120
+#define CHEEVO_UNLOCK_TOAST_MS       3192
+#define CHEEVO_FRAME_COMPLETIONS     1
+#define CHEEVO_STARTUP_COMPLETIONS   4
+#define CHEEVO_SPOOL_INTERVAL_MS     1500
+#define CHEEVO_SPOOL_RETRY_MS        30000
 
 typedef struct {
     char *url;
@@ -58,6 +60,7 @@ typedef struct {
     rc_client_server_callback_t callback;
     void *callback_data;
     char cache_name[96];
+    char spool_name[32];
     int cache_read;
     int cache_write;
     int cache_fallback;
@@ -71,6 +74,7 @@ typedef struct {
     char error[256];
     rc_client_server_callback_t callback;
     void *callback_data;
+    char spool_name[32];
     uint64_t queued_at;
     int cache_hit;
     int cache_miss;
@@ -115,7 +119,6 @@ static char username[128];
 static char token[256];
 static char failure[256];
 static int enabled;
-static int hardcore_preference;
 static int unofficial;
 static int notifications;
 static cheevo_achievement_sort achievement_sort;
@@ -133,11 +136,20 @@ static unsigned preview_achievement_count;
 static uint64_t preview_queued_at;
 static unsigned preview_drops;
 static int cache_refresh_pending;
+static char dorequest_url[512];
+static int spool_pending;
+static int spool_pending_valid;
+static int spool_in_flight;
+static uint32_t spool_last_attempt;
+static int network_ok = 1;
 static int memory_available;
 static int memory_initialisation_deferred;
 static int memory_wait_frames;
 static rc_client_async_handle_t *leaderboard_fetch_handle;
+static rc_client_async_handle_t *media_change_handle;
 static cheevo_leaderboard_state leaderboard_state;
+static char user_agent[192];
+static int has_entries_cache = -1;
 static cheevo_leaderboard_rank leaderboard_ranks[CHEEVO_LEADERBOARD_CAP];
 static unsigned leaderboard_rank_count;
 static unsigned leaderboard_total;
@@ -228,7 +240,6 @@ static void account_load(void) {
     const int result = cheevo_account_load(&account);
     if (result == -2) LOG_WARN(mux_module, "cheevo: refusing an insecure or invalid account file");
     enabled = account.enabled;
-    hardcore_preference = account.hardcore;
     unofficial = account.unofficial;
     notifications = account.notifications;
     achievement_sort = account.achievement_sort;
@@ -241,7 +252,6 @@ static void account_load(void) {
 static int account_save(void) {
     cheevo_account account = {
         .enabled = enabled,
-        .hardcore = hardcore_preference,
         .unofficial = unofficial,
         .notifications = (cheevo_notification_mode) notifications,
         .achievement_sort = achievement_sort,
@@ -307,6 +317,7 @@ static cheevo_http_completion request_perform(cheevo_http_request *request) {
     completion.callback = request->callback;
     completion.callback_data = request->callback_data;
     completion.queued_at = request->queued_at;
+    memcpy(completion.spool_name, request->spool_name, sizeof(completion.spool_name));
 
     if (request->cache_read && cheevo_cache_load(request->cache_name, &completion.body, &completion.body_size) == 0) {
         completion.status = 200;
@@ -322,9 +333,7 @@ static cheevo_http_completion request_perform(cheevo_http_request *request) {
     }
 
     cheevo_http_buffer buffer = {0};
-    char user_agent[256];
     char curl_error[CURL_ERROR_SIZE] = {0};
-    snprintf(user_agent, sizeof(user_agent), "Pickles/1.0 (MustardOS) rcheevos/12.4.0");
 
     curl_easy_setopt(curl, CURLOPT_URL, request->url);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent);
@@ -480,6 +489,25 @@ static void server_error_now(rc_client_server_callback_t callback, void *callbac
     callback(&response, callback_data);
 }
 
+// Hands a prepared request to the worker. Takes ownership of the request on success only.
+static int queue_request(cheevo_http_request *queued) {
+    pthread_mutex_lock(&http_worker.mutex);
+    if (http_worker.request_count >= CHEEVO_QUEUE_CAP || atomic_load(&http_worker.stop)) {
+        http_worker.queue_rejections++;
+        pthread_mutex_unlock(&http_worker.mutex);
+        return -1;
+    }
+
+    const unsigned tail = (http_worker.request_head + http_worker.request_count) % CHEEVO_QUEUE_CAP;
+    http_worker.requests[tail] = *queued;
+    http_worker.request_count++;
+    pthread_cond_signal(&http_worker.wake);
+    pthread_mutex_unlock(&http_worker.mutex);
+
+    memset(queued, 0, sizeof(*queued));
+    return 0;
+}
+
 static void server_call(
     const rc_api_request_t *request, rc_client_server_callback_t callback, void *callback_data, rc_client_t *unused
 ) {
@@ -502,29 +530,29 @@ static void server_call(
         return;
     }
 
-    const int cache_policy = cheevo_cache_request_name(queued.post, queued.cache_name, sizeof(queued.cache_name));
-    if (cache_policy) {
-        queued.cache_read =
-            (cache_policy == 1 && !cache_refresh_pending) || (cache_policy == 2 && status == cheevo_status_offline);
+    // Remembered so held submissions can be replayed later without rebuilding the endpoint
+    snprintf(dorequest_url, sizeof(dorequest_url), "%s", request->url);
+
+    if (cheevo_cache_request_name(queued.post, queued.cache_name, sizeof(queued.cache_name))) {
+        // Cached bodies exist so a device with no network can still get as far as playing.
+        // An explicit refresh wants the real answer, including the failure if there is one.
+        queued.cache_read = status == cheevo_status_offline && !cache_refresh_pending;
         queued.cache_write = 1;
-        queued.cache_fallback = cache_policy == 2;
-        if (cache_policy == 1) cache_refresh_pending = 0;
+        queued.cache_fallback = !cache_refresh_pending;
     }
 
-    pthread_mutex_lock(&http_worker.mutex);
-    if (http_worker.request_count >= CHEEVO_QUEUE_CAP || atomic_load(&http_worker.stop)) {
-        http_worker.queue_rejections++;
-        pthread_mutex_unlock(&http_worker.mutex);
+    // Unlocks and leaderboard entries are written down before they are sent, so a session that
+    // ends offline still has them to send next time
+    if (cheevo_spool_record(queued.post, queued.spool_name, sizeof(queued.spool_name)) == 1) {
+        spool_pending_valid = 0;
+        LOG_INFO(mux_module, "cheevo: holding a submission until RetroAchievements is reachable");
+    }
+
+    if (queue_request(&queued) != 0) {
         request_free(&queued);
         server_error_now(callback, callback_data, lang.muxretro.cheevo.request_queue_full);
         return;
     }
-
-    const unsigned tail = (http_worker.request_head + http_worker.request_count) % CHEEVO_QUEUE_CAP;
-    http_worker.requests[tail] = queued;
-    http_worker.request_count++;
-    pthread_cond_signal(&http_worker.wake);
-    pthread_mutex_unlock(&http_worker.mutex);
 }
 
 static int http_drain_limited(const unsigned budget) {
@@ -556,9 +584,38 @@ static int http_drain_limited(const unsigned budget) {
         response.body_length = completion.error[0] ? strlen(completion.error) : completion.body_size;
         response.http_status_code =
             completion.error[0] ? RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR : (int) completion.status;
-        const uint64_t callback_start = perf_begin();
-        completion.callback(&response, completion.callback_data);
-        perf_end(perf_stage_cheevo_callback, callback_start);
+
+        const int accepted = !completion.error[0] && completion.status >= 200 && completion.status < 300;
+        const int from_server = accepted && !completion.cache_hit && !completion.cache_fallback;
+
+        if (completion.cache_fallback) {
+            network_ok = 0;
+            if (status == cheevo_status_active) status = cheevo_status_offline;
+        } else if (from_server) {
+            network_ok = 1;
+            if (status == cheevo_status_offline && rc_client_is_game_loaded(client)) status = cheevo_status_active;
+        }
+
+        // A submission that landed no longer needs holding. A cached body is not an answer from
+        // the server, so anything answered from cache stays held.
+        if (completion.spool_name[0] && from_server) {
+            cheevo_spool_clear(completion.spool_name);
+            spool_pending_valid = 0;
+        }
+
+        if (completion.callback) {
+            const uint64_t callback_start = perf_begin();
+            completion.callback(&response, completion.callback_data);
+            perf_end(perf_stage_cheevo_callback, callback_start);
+        } else {
+            // A replayed submission has no rcheevos callback waiting on it
+            spool_in_flight = 0;
+            if (accepted)
+                LOG_SUCCESS(mux_module, "cheevo: a held submission was accepted");
+            else
+                LOG_WARN(mux_module, "cheevo: a held submission could not be sent yet");
+        }
+
         completion_free(&completion);
         drained = 1;
         taken++;
@@ -640,6 +697,8 @@ read_memory(const uint32_t address, uint8_t *buffer, const uint32_t bytes, rc_cl
 static void game_loaded(const int result, const char *error, rc_client_t *unused, void *userdata) {
     (void) unused;
     (void) userdata;
+    has_entries_cache = -1;
+    cache_refresh_pending = 0;
     if (result != RC_OK) {
         status = result == RC_NO_GAME_LOADED ? cheevo_status_unsupported : cheevo_status_failed;
         snprintf(failure, sizeof(failure), "%s", error ? error : rc_error_str(result));
@@ -658,12 +717,7 @@ static void game_loaded(const int result, const char *error, rc_client_t *unused
         return;
     }
     failure[0] = '\0';
-    const int allow_hardcore = hardcore_preference && core_active_patch_count == 0 && !netplay_active;
-    rc_client_set_hardcore_enabled(client, allow_hardcore);
-    cheats_set_suppressed(allow_hardcore);
-    status = allow_hardcore ? cheevo_status_active_hardcore : cheevo_status_active_softcore;
-    if (hardcore_preference && !allow_hardcore && core_active_patch_count > 0)
-        pause_menu_show_toast_timed(lang.muxretro.cheevo.hardcore_patches, tst_wait_s);
+    status = network_ok ? cheevo_status_active : cheevo_status_offline;
 
     rc_client_user_game_summary_t summary = {0};
     const rc_client_game_t *game = rc_client_get_game_info(client);
@@ -693,6 +747,7 @@ static int core_memory_ready(void) {
 }
 
 static void begin_game_now(void) {
+    has_entries_cache = -1;
     leaderboard_reset();
     rc_libretro_memory_destroy(&memory_regions);
     memory_available = 0;
@@ -751,6 +806,23 @@ static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
             event->achievement->id, event->achievement->points
         );
     }
+    // Connection state drives the offline cache and the status shown to the player, so it is
+    // handled whether or not the player wants to see notifications
+    switch (event->type) {
+        case RC_CLIENT_EVENT_DISCONNECTED:
+            status = cheevo_status_offline;
+            LOG_WARN(mux_module, "cheevo: RetroAchievements is unreachable, unlocks are being held");
+            if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.offline_retry, tst_wait_s);
+            return;
+        case RC_CLIENT_EVENT_RECONNECTED:
+            status = cheevo_status_active;
+            LOG_SUCCESS(mux_module, "cheevo: RetroAchievements is reachable again, held unlocks were sent");
+            if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.reconnected, tst_wait_s);
+            return;
+        default:
+            break;
+    }
+
     if (!notifications && event->type != RC_CLIENT_EVENT_RESET && event->type != RC_CLIENT_EVENT_SERVER_ERROR) return;
     char message[512];
 
@@ -794,8 +866,9 @@ static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
         case RC_CLIENT_EVENT_LEADERBOARD_SCOREBOARD:
             if (notifications < cheevo_notifications_detailed) break;
             snprintf(
-                message, sizeof(message), lang.muxretro.cheevo.leaderboard_submitted,
-                event->leaderboard_scoreboard->submitted_score
+                message, sizeof(message), lang.muxretro.cheevo.leaderboard_scoreboard,
+                event->leaderboard_scoreboard->submitted_score, event->leaderboard_scoreboard->new_rank,
+                event->leaderboard_scoreboard->num_entries
             );
             pause_menu_show_toast_timed(message, tst_wait_s);
             break;
@@ -808,15 +881,6 @@ static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
             break;
         case RC_CLIENT_EVENT_RESET:
             reset_pending = 1;
-            break;
-        case RC_CLIENT_EVENT_DISCONNECTED:
-            status = cheevo_status_offline;
-            pause_menu_show_toast_timed(lang.muxretro.cheevo.offline_retry, tst_wait_s);
-            break;
-        case RC_CLIENT_EVENT_RECONNECTED:
-            status =
-                rc_client_get_hardcore_enabled(client) ? cheevo_status_active_hardcore : cheevo_status_active_softcore;
-            pause_menu_show_toast_timed(lang.muxretro.cheevo.reconnected, tst_wait_s);
             break;
         case RC_CLIENT_EVENT_SERVER_ERROR:
             LOG_WARN(mux_module, "cheevo: %s failed: %s", event->server_error->api, event->server_error->error_message);
@@ -924,32 +988,49 @@ static int runtime_start(void) {
         }
         curl_ready = 1;
     }
-    if (http_start() != 0) {
-        status = cheevo_status_failed;
-        snprintf(failure, sizeof(failure), "%s", lang.muxretro.cheevo.network_worker_failed);
-        return -1;
-    }
-
     client = rc_client_create(read_memory, server_call);
     if (!client) {
-        http_stop();
         status = cheevo_status_failed;
         snprintf(failure, sizeof(failure), "%s", lang.muxretro.cheevo.client_failed);
         return -1;
     }
 
-    rc_hash_init_custom_filereader(&hash_reader);
+    rc_hash_callbacks_t hash_callbacks = {0};
+    memcpy(&hash_callbacks.filereader, &hash_reader, sizeof(hash_reader));
+    rc_client_set_hash_callbacks(client, &hash_callbacks);
+
+    // RetroAchievements identifies clients by user agent, and the rcheevos clause has to come
+    // from rcheevos itself so it cannot drift when the vendored version is bumped
+    char rcheevos_clause[96];
+    rc_client_get_user_agent_clause(client, rcheevos_clause, sizeof(rcheevos_clause));
+    snprintf(user_agent, sizeof(user_agent), "Pickles/1.0 (MustardOS) %s", rcheevos_clause);
 
     rc_client_enable_logging(client, RC_CLIENT_LOG_LEVEL_WARN, log_message);
     rc_libretro_init_verbose_message_callback(memory_log_message);
     rc_client_set_event_handler(client, event_handler);
+    // Pickles is not a verified RetroAchievements client, so hardcore stays off
     rc_client_set_hardcore_enabled(client, 0);
     rc_client_set_unofficial_enabled(client, unofficial);
     rc_client_set_allow_background_memory_reads(client, 0);
+
+    // Started last so the worker never reads the user agent while it is still being built
+    if (http_start() != 0) {
+        rc_client_destroy(client);
+        client = NULL;
+        status = cheevo_status_failed;
+        snprintf(failure, sizeof(failure), "%s", lang.muxretro.cheevo.network_worker_failed);
+        return -1;
+    }
+
     return 0;
 }
 
 static void runtime_stop(void) {
+    has_entries_cache = -1;
+    spool_in_flight = 0;
+    spool_pending_valid = 0;
+    if (client && media_change_handle) rc_client_abort_async(client, media_change_handle);
+    media_change_handle = NULL;
     leaderboard_reset();
     if (client) rc_client_unload_game(client);
     http_stop();
@@ -960,6 +1041,10 @@ static void runtime_stop(void) {
 
 int cheevo_init(const char *content_path) {
     account_load();
+    network_ok = 1;
+    spool_pending_valid = 0;
+    spool_in_flight = 0;
+    spool_last_attempt = 0;
     failure[0] = '\0';
     snprintf(content_file, sizeof(content_file), "%s", content_path ? content_path : "");
     status = enabled ? cheevo_status_signed_out : cheevo_status_disabled;
@@ -1034,11 +1119,61 @@ static void cheevo_note_performance(void) {
     perf_note_cheevo(&snapshot);
 }
 
+// True once there is a live session that held submissions could actually be sent over.
+static int spool_ready(void) {
+    return client && !spool_in_flight && !netplay_active && dorequest_url[0] && username[0] && token[0]
+           && (status == cheevo_status_active || status == cheevo_status_offline);
+}
+
+static int spool_count(void) {
+    if (!spool_pending_valid) {
+        spool_pending = (int) cheevo_spool_count();
+        spool_pending_valid = 1;
+    }
+    return spool_pending;
+}
+
+// True when a held submission should be sent now. While offline the send doubles as the probe
+// for network coming back, so it is spaced out much further.
+static int spool_due(void) {
+    if (!spool_ready() || spool_count() <= 0) return 0;
+
+    const uint32_t interval = status == cheevo_status_offline ? CHEEVO_SPOOL_RETRY_MS : CHEEVO_SPOOL_INTERVAL_MS;
+    return !spool_last_attempt || SDL_GetTicks() - spool_last_attempt >= interval;
+}
+
+// Sends one held submission at a time so a large backlog cannot stall a frame or flood the server.
+static void spool_replay(void) {
+    if (!spool_due()) return;
+    spool_last_attempt = SDL_GetTicks();
+
+    cheevo_http_request queued = {0};
+    char *post = NULL;
+    size_t post_size = 0;
+    if (cheevo_spool_next(username, token, queued.spool_name, sizeof(queued.spool_name), &post, &post_size) != 0) {
+        spool_pending_valid = 0;
+        return;
+    }
+
+    (void) post_size;
+    queued.url = strdup(dorequest_url);
+    queued.post = post;
+    queued.queued_at = SDL_GetPerformanceCounter();
+
+    if (!queued.url || queue_request(&queued) != 0) {
+        request_free(&queued);
+        return;
+    }
+
+    spool_in_flight = 1;
+}
+
 void cheevo_present_tick(void) {
     if (!client) return;
     if (!cheevo_is_starting()) {
         http_drain_limited(CHEEVO_FRAME_COMPLETIONS);
         preview_capture();
+        spool_replay();
     }
     cheevo_note_performance();
 }
@@ -1063,7 +1198,8 @@ int cheevo_needs_tick(void) {
 
 int cheevo_needs_present_tick(void) {
     if (!client || cheevo_is_starting()) return 0;
-    return preview_achievement_count || (http_worker.running && atomic_load(&http_worker.completion_pending));
+    if (preview_achievement_count || (http_worker.running && atomic_load(&http_worker.completion_pending))) return 1;
+    return spool_due();
 }
 
 static void memory_wait_tick(void) {
@@ -1086,15 +1222,12 @@ void cheevo_do_frame(void) {
 
     memory_wait_tick();
 
-    if (status == cheevo_status_active_softcore || status == cheevo_status_active_hardcore
-        || status == cheevo_status_offline)
-        rc_client_do_frame(client);
+    if (status == cheevo_status_active || status == cheevo_status_offline) rc_client_do_frame(client);
 }
 
 int cheevo_needs_frame(void) {
     if (!client || netplay_active) return 0;
-    return memory_wait_frames > 0 || status == cheevo_status_active_softcore || status == cheevo_status_active_hardcore
-           || status == cheevo_status_offline;
+    return memory_wait_frames > 0 || status == cheevo_status_active || status == cheevo_status_offline;
 }
 
 void cheevo_idle(void) {
@@ -1107,18 +1240,6 @@ void cheevo_idle(void) {
 
 int cheevo_is_starting(void) {
     return status == cheevo_status_signing_in || status == cheevo_status_identifying;
-}
-
-void cheevo_play_without(void) {
-    runtime_stop();
-    status = cheevo_status_disabled;
-    reset_pending = 0;
-}
-
-void cheevo_reset(void) {
-    if (!client) return;
-    rc_client_reset(client);
-    cheevo_refresh_memory();
 }
 
 void cheevo_set_memory_map(const struct retro_memory_map *map) {
@@ -1151,9 +1272,40 @@ void cheevo_set_memory_map(const struct retro_memory_map *map) {
     cheevo_refresh_memory();
 }
 
+static void media_changed(const int result, const char *error, rc_client_t *unused, void *userdata) {
+    (void) unused;
+    (void) userdata;
+    media_change_handle = NULL;
+    has_entries_cache = -1;
+
+    if (result == RC_OK) {
+        LOG_SUCCESS(mux_module, "cheevo: disc change accepted for the loaded achievement set");
+        return;
+    }
+
+    // The disc does not belong to this game, so nothing further should be credited against it
+    LOG_WARN(mux_module, "cheevo: disc change rejected: %s", error ? error : rc_error_str(result));
+    snprintf(failure, sizeof(failure), "%s", error ? error : rc_error_str(result));
+    status = cheevo_status_unsupported;
+    rc_client_unload_game(client);
+    if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.media_rejected, tst_wait_s);
+}
+
+void cheevo_change_media(const char *content_path) {
+    if (!client || !content_path || !content_path[0] || !rc_client_is_game_loaded(client)) return;
+
+    if (media_change_handle) rc_client_abort_async(client, media_change_handle);
+    media_change_handle = NULL;
+
+    leaderboard_reset();
+    LOG_INFO(mux_module, "cheevo: identifying swapped disc '%s'", content_path);
+    media_change_handle = rc_client_begin_identify_and_change_media(client, content_path, NULL, 0, media_changed, NULL);
+}
+
 void cheevo_set_core_support(const int supported) {
     core_supports_cheevo = supported;
     if (!supported && client && rc_client_is_game_loaded(client)) {
+        has_entries_cache = -1;
         rc_client_unload_game(client);
         status = cheevo_status_unsupported;
     }
@@ -1167,10 +1319,8 @@ void cheevo_set_netplay_active(const int active) {
     netplay_active = active != 0;
     if (client) {
         rc_client_set_spectator_mode_enabled(client, netplay_active);
-        rc_client_set_hardcore_enabled(client, netplay_active ? 0 : hardcore_preference);
-        cheats_set_suppressed(netplay_active || hardcore_preference);
-        if (!netplay_active && rc_client_is_game_loaded(client))
-            status = hardcore_preference ? cheevo_status_active_hardcore : cheevo_status_active_softcore;
+        cheats_set_suppressed(netplay_active);
+        if (!netplay_active && rc_client_is_game_loaded(client)) status = cheevo_status_active;
     }
 }
 
@@ -1190,11 +1340,12 @@ void cheevo_get_info(cheevo_info *info) {
     if (!info) return;
     memset(info, 0, sizeof(*info));
     info->enabled = enabled;
-    info->hardcore = cheevo_hardcore_active();
     info->unofficial = unofficial;
     info->notifications = notifications;
     snprintf(info->username, sizeof(info->username), "%s", username);
     snprintf(info->failure, sizeof(info->failure), "%s", failure);
+    const int held = spool_count();
+    info->pending = held > 0 ? (uint32_t) held : 0;
 
     if (!client) return;
     const rc_client_user_t *user = rc_client_get_user_info(client);
@@ -1227,9 +1378,7 @@ unsigned cheevo_game_entries(const cheevo_game_entry_type type, cheevo_game_entr
                 const rc_client_achievement_bucket_t *group = &achievements->buckets[bucket];
                 for (uint32_t index = 0; index < group->num_achievements && count < capacity; index++) {
                     const rc_client_achievement_t *source = group->achievements[index];
-                    if (!source || source->id == 0
-                        || (source->title && strcmp(source->title, CHEEVO_UNKNOWN_EMULATOR_WARNING) == 0))
-                        continue;
+                    if (!source || source->id == 0) continue;
                     cheevo_game_entry *entry = &entries[count++];
                     memset(entry, 0, sizeof(*entry));
                     entry->type = cheevo_game_entry_achievement;
@@ -1244,10 +1393,8 @@ unsigned cheevo_game_entries(const cheevo_game_entry_type type, cheevo_game_entr
                     );
                     snprintf(entry->progress, sizeof(entry->progress), "%s", source->measured_progress);
                     entry->points = source->points;
-                    const int hardcore = cheevo_hardcore_active();
-                    entry->rarity = hardcore ? source->rarity_hardcore : source->rarity;
-                    entry->unlocked = hardcore ? (source->unlocked & RC_CLIENT_ACHIEVEMENT_UNLOCKED_HARDCORE) != 0
-                                               : source->unlocked != RC_CLIENT_ACHIEVEMENT_UNLOCKED_NONE;
+                    entry->rarity = source->rarity;
+                    entry->unlocked = source->unlocked != RC_CLIENT_ACHIEVEMENT_UNLOCKED_NONE;
                     if (game && game->id)
                         preview_path(entry->preview_path, sizeof(entry->preview_path), game->id, source->id);
                 }
@@ -1290,9 +1437,12 @@ unsigned cheevo_game_entries(const cheevo_game_entry_type type, cheevo_game_entr
 }
 
 int cheevo_has_game_entries(void) {
+    if (has_entries_cache >= 0) return has_entries_cache;
+
     cheevo_game_entry entry;
-    return cheevo_game_entries(cheevo_game_entry_achievement, &entry, 1) > 0
-           || cheevo_game_entries(cheevo_game_entry_leaderboard, &entry, 1) > 0;
+    has_entries_cache = cheevo_game_entries(cheevo_game_entry_achievement, &entry, 1) > 0
+                        || cheevo_game_entries(cheevo_game_entry_leaderboard, &entry, 1) > 0;
+    return has_entries_cache;
 }
 
 int cheevo_leaderboard_fetch(const uint32_t requested_id) {
@@ -1360,17 +1510,6 @@ int cheevo_set_enabled(const int new_enabled) {
     return account_save();
 }
 
-int cheevo_set_hardcore(const int new_enabled) {
-    if (!client || !rc_client_is_game_loaded(client) || netplay_active || (new_enabled && core_active_patch_count > 0))
-        return -1;
-    hardcore_preference = new_enabled != 0;
-    rc_client_set_hardcore_enabled(client, hardcore_preference);
-    cheats_set_suppressed(hardcore_preference);
-    status = hardcore_preference ? cheevo_status_active_hardcore : cheevo_status_active_softcore;
-    account_save();
-    return 0;
-}
-
 int cheevo_set_unofficial(const int new_enabled) {
     unofficial = new_enabled != 0;
     if (client) {
@@ -1419,18 +1558,6 @@ int cheevo_refresh_data(void) {
     rc_client_unload_game(client);
     begin_game();
     return 0;
-}
-
-int cheevo_hardcore_active(void) {
-    return client && rc_client_get_hardcore_enabled(client);
-}
-
-int cheevo_restricted(void) {
-    return cheevo_hardcore_active();
-}
-
-int cheevo_can_pause(uint32_t *frames_remaining) {
-    return !client || !cheevo_hardcore_active() || rc_client_can_pause(client, frames_remaining);
 }
 
 size_t cheevo_progress_size(void) {

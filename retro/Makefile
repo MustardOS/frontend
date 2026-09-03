@@ -30,7 +30,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        state/core_state.c state/state_writer.c state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
        state/content_hash.c state/bios_check.c state/sram.c \
        state/patch.c state/ui_storagesettings.c state/manual.c state/history.c \
-       cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/cheevo.c cheevo/ui_cheevo.c \
+       cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/spool.c cheevo/cheevo.c cheevo/ui_cheevo.c \
        netplay/address.c netplay/wire.c netplay/netplay.c netplay/ui_netplay.c \
        link/link.c link/ui_link.c \
        settings/settings.c settings/submenu.c settings/ui_settings.c \

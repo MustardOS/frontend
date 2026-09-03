@@ -4,7 +4,6 @@
 #include "../../common/fileio.h"
 #include "../../common/init.h"
 #include "../../common/log.h"
-#include "../cheevo/cheevo.h"
 #include "../core/governor_boost.h"
 #include "../core/muxretro.h"
 #include "../core/runahead.h"
@@ -68,7 +67,6 @@ static int history_allowed(void) {
     if (!state_saves_supported()) return 0;
     if (netplay_is_active()) return 0;
     if (link_local_active()) return 0;
-    if (cheevo_hardcore_active()) return 0;
     return 1;
 }
 

@@ -20,6 +20,8 @@ bool mux_retro_disk_get_eject_state(void);
 
 bool mux_retro_disk_get_image_label(unsigned index, char *label, size_t len);
 
+bool mux_retro_disk_get_image_path(unsigned index, char *path, size_t len);
+
 void mux_retro_video_refresh_cb(const void *data, unsigned width, unsigned height, size_t pitch);
 
 void video_bridge_init(void);

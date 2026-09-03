@@ -4,7 +4,6 @@
 
 typedef struct {
     int enabled;
-    int hardcore;
     int unofficial;
     cheevo_notification_mode notifications;
     cheevo_achievement_sort achievement_sort;
