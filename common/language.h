@@ -1854,7 +1854,6 @@ struct mux_lang {
             char menu_desc[MAX_BUFFER_SIZE];
             char host_menu_desc[MAX_BUFFER_SIZE];
             char join_menu_desc[MAX_BUFFER_SIZE];
-            char hardcore_pause[MAX_BUFFER_SIZE];
             char startup_invalid[MAX_BUFFER_SIZE];
             char startup_join_failed[MAX_BUFFER_SIZE];
             char failed[MAX_BUFFER_SIZE];
@@ -1918,8 +1917,6 @@ struct mux_lang {
             char signed_out[MAX_BUFFER_SIZE];
             char account_score[MAX_BUFFER_SIZE];
             char progress[MAX_BUFFER_SIZE];
-            char hardcore[MAX_BUFFER_SIZE];
-            char softcore[MAX_BUFFER_SIZE];
             char not_entered[MAX_BUFFER_SIZE];
             char session_saved[MAX_BUFFER_SIZE];
             char signing_in[MAX_BUFFER_SIZE];
@@ -1935,9 +1932,6 @@ struct mux_lang {
             char no_data[MAX_BUFFER_SIZE];
             char refresh_started[MAX_BUFFER_SIZE];
             char refresh_unavailable[MAX_BUFFER_SIZE];
-            char hardcore_unavailable[MAX_BUFFER_SIZE];
-            char softcore_enabled[MAX_BUFFER_SIZE];
-            char hardcore_enabled[MAX_BUFFER_SIZE];
             char entry_active[MAX_BUFFER_SIZE];
             char achievement[MAX_BUFFER_SIZE];
             char leaderboard[MAX_BUFFER_SIZE];
@@ -1961,7 +1955,8 @@ struct mux_lang {
             char account_desc[MAX_BUFFER_SIZE];
             char achievements_desc[MAX_BUFFER_SIZE];
             char identify_failed[MAX_BUFFER_SIZE];
-            char hardcore_patches[MAX_BUFFER_SIZE];
+            char media_rejected[MAX_BUFFER_SIZE];
+            char held[MAX_BUFFER_SIZE];
             char active[MAX_BUFFER_SIZE];
             char sign_in_failed[MAX_BUFFER_SIZE];
             char account_save_failed[MAX_BUFFER_SIZE];
@@ -1971,6 +1966,7 @@ struct mux_lang {
             char leaderboard_started[MAX_BUFFER_SIZE];
             char leaderboard_ended[MAX_BUFFER_SIZE];
             char leaderboard_submitted[MAX_BUFFER_SIZE];
+            char leaderboard_scoreboard[MAX_BUFFER_SIZE];
             char game_completed[MAX_BUFFER_SIZE];
             char subset_completed[MAX_BUFFER_SIZE];
             char offline_retry[MAX_BUFFER_SIZE];
@@ -2619,7 +2615,6 @@ struct mux_lang {
             } controller;
             struct {
                 char account[MAX_BUFFER_SIZE];
-                char mode[MAX_BUFFER_SIZE];
                 char notifications[MAX_BUFFER_SIZE];
                 char refresh[MAX_BUFFER_SIZE];
             } cheevo;
