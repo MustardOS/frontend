@@ -49,7 +49,7 @@ static int set_ioctl_bit(int fd, unsigned long request, unsigned long value, con
     return 0;
 }
 
-static int set_abs(int fd, const struct gamepad_abs_desc *axis) {
+static int set_abs(int fd, const struct gamepad_abs_desc *axis, int supports_setup_ioctl) {
     struct uinput_abs_setup abs = {
         .code = axis->code,
         .absinfo = {
@@ -63,8 +63,40 @@ static int set_abs(int fd, const struct gamepad_abs_desc *axis) {
     if (!set_ioctl_bit(fd, UI_SET_ABSBIT, axis->code, "UI_SET_ABSBIT")) {
         return 0;
     }
+    if (!supports_setup_ioctl) {
+        return 1;
+    }
     if (ioctl(fd, UI_ABS_SETUP, &abs) < 0) {
         perror("UI_ABS_SETUP");
+        return 0;
+    }
+    return 1;
+}
+
+static int write_legacy_setup(int fd, const struct gamepad_desc *desc) {
+    struct uinput_user_dev setup;
+    memset(&setup, 0, sizeof(setup));
+    setup.id = desc->id;
+    setup.ff_effects_max = desc->ff_effects_max;
+    snprintf(setup.name, UINPUT_MAX_NAME_SIZE, "%s", desc->name);
+
+    for (size_t i = 0; i < desc->axis_count; ++i) {
+        const struct gamepad_abs_desc *axis = &desc->axes[i];
+        setup.absmin[axis->code] = axis->min;
+        setup.absmax[axis->code] = axis->max;
+        setup.absfuzz[axis->code] = axis->fuzz;
+        setup.absflat[axis->code] = axis->flat;
+    }
+
+    ssize_t written;
+    do {
+        written = write(fd, &setup, sizeof(setup));
+    } while (written < 0 && errno == EINTR);
+    if (written != (ssize_t) sizeof(setup)) {
+        if (written < 0)
+            perror("write uinput legacy setup");
+        else
+            fprintf(stderr, "short write of uinput legacy setup\n");
         return 0;
     }
     return 1;
@@ -80,6 +112,9 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
         perror("open /dev/uinput");
         return NULL;
     }
+
+    int uinput_version = 0;
+    int supports_setup_ioctl = ioctl(fd, UI_GET_VERSION, &uinput_version) == 0 && uinput_version >= 5;
 
     if (desc->key_count > 0) {
         if (!set_ioctl_bit(fd, UI_SET_EVBIT, EV_KEY, "UI_SET_EVBIT EV_KEY")) {
@@ -100,7 +135,7 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
             return NULL;
         }
         for (size_t i = 0; i < desc->axis_count; ++i) {
-            if (!set_abs(fd, &desc->axes[i])) {
+            if (!set_abs(fd, &desc->axes[i], supports_setup_ioctl)) {
                 close(fd);
                 return NULL;
             }
@@ -140,14 +175,19 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
         }
     }
 
-    struct uinput_setup setup;
-    memset(&setup, 0, sizeof(setup));
-    setup.id = desc->id;
-    setup.ff_effects_max = desc->ff_effects_max;
-    snprintf(setup.name, UINPUT_MAX_NAME_SIZE, "%s", desc->name);
+    if (supports_setup_ioctl) {
+        struct uinput_setup setup;
+        memset(&setup, 0, sizeof(setup));
+        setup.id = desc->id;
+        setup.ff_effects_max = desc->ff_effects_max;
+        snprintf(setup.name, UINPUT_MAX_NAME_SIZE, "%s", desc->name);
 
-    if (ioctl(fd, UI_DEV_SETUP, &setup) < 0) {
-        perror("UI_DEV_SETUP");
+        if (ioctl(fd, UI_DEV_SETUP, &setup) < 0) {
+            perror("UI_DEV_SETUP");
+            close(fd);
+            return NULL;
+        }
+    } else if (!write_legacy_setup(fd, desc)) {
         close(fd);
         return NULL;
     }
