@@ -33,8 +33,8 @@ static void update_font_for_language(const char *new_language) {
         }
     }
 
-    write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, 1);
-    write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, "Noto Sans");
+    write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, 2);
+    write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, DEFAULT_FONT_NAME);
 }
 
 static void show_help(void) {

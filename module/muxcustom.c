@@ -194,7 +194,16 @@ static int populate_user_font_names(void) {
     return added;
 }
 
+static void select_font_name(const char *wanted) {
+    int32_t idx = wanted && *wanted ? lv_dropdown_get_option_index(ui_dro_font_name_font, wanted) : -1;
+    if (idx < 0) idx = lv_dropdown_get_option_index(ui_dro_font_name_font, DEFAULT_FONT_NAME);
+    lv_dropdown_set_selected(ui_dro_font_name_font, idx >= 0 ? (uint32_t) idx : 0);
+}
+
 static void populate_font_names(void) {
+    char previous[MAX_BUFFER_SIZE];
+    lv_dropdown_get_selected_str(ui_dro_font_name_font, previous, sizeof(previous));
+
     lv_dropdown_clear_options(ui_dro_font_name_font);
 
     const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
@@ -203,6 +212,7 @@ static void populate_font_names(void) {
         if (!populate_user_font_names())
             lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
 
+        select_font_name(previous);
         return;
     }
 
@@ -218,6 +228,7 @@ static void populate_font_names(void) {
 
     if (n < 0) {
         lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
+        select_font_name(previous);
         return;
     }
 
@@ -236,6 +247,8 @@ static void populate_font_names(void) {
     free(entries);
 
     if (!added) lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
+
+    select_font_name(previous);
 }
 
 static void apply_current_font_settings(void) {
@@ -946,10 +959,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_dro_type_font, type_to_dropdown(canonical));
 
     populate_font_names();
-
-    int32_t name_idx = lv_dropdown_get_option_index(ui_dro_font_name_font, config.settings.font.name);
-    if (name_idx < 0) name_idx = lv_dropdown_get_option_index(ui_dro_font_name_font, "Noto Sans");
-    lv_dropdown_set_selected(ui_dro_font_name_font, name_idx >= 0 ? (uint32_t) name_idx : 0);
+    select_font_name(config.settings.font.name);
 
     map_drop_down_to_index(ui_dro_list_size_font, config.settings.font.list_size, font_size_values, font_size_count, 0);
     map_drop_down_to_index(

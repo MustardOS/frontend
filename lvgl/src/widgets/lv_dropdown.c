@@ -267,6 +267,9 @@ void lv_dropdown_clear_options(lv_obj_t *obj) {
     dropdown->static_txt = 0;
     dropdown->option_cnt = 0;
 
+    dropdown->sel_opt_id = 0;
+    dropdown->sel_opt_id_orig = 0;
+
     lv_obj_invalidate(obj);
     if (dropdown->list) lv_obj_invalidate(dropdown->list);
 }
@@ -275,9 +278,12 @@ void lv_dropdown_set_selected(lv_obj_t *obj, uint16_t sel_opt) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     lv_dropdown_t *dropdown = (lv_dropdown_t *) obj;
-    if (dropdown->sel_opt_id == sel_opt) return;
 
-    dropdown->sel_opt_id = sel_opt < dropdown->option_cnt ? sel_opt : dropdown->option_cnt - 1;
+    uint16_t clamped = 0;
+    if (dropdown->option_cnt) clamped = sel_opt < dropdown->option_cnt ? sel_opt : dropdown->option_cnt - 1;
+    if (dropdown->sel_opt_id == clamped && dropdown->sel_opt_id_orig == clamped) return;
+
+    dropdown->sel_opt_id = clamped;
     dropdown->sel_opt_id_orig = dropdown->sel_opt_id;
 
     if (dropdown->list) {

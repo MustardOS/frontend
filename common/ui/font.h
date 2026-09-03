@@ -2,6 +2,8 @@
 
 #include "../../lvgl/lvgl.h"
 
+#define DEFAULT_FONT_NAME "Noto Sans"
+
 void font_cache_clear(void);
 
 int get_font_size(void);

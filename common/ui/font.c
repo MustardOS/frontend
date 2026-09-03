@@ -13,7 +13,7 @@
 #include "../strutil.h"
 #include "../input/list_nav.h"
 
-#define DEFAULT_NAME "Noto Sans"
+#define DEFAULT_NAME DEFAULT_FONT_NAME
 #define DEFAULT_FONT INTERNAL_FONTS "/" DEFAULT_NAME ".ttf"
 
 // Max TTF file size accepted (64 MB). Protects against accidentally pointing at a
