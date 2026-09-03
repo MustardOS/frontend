@@ -9,7 +9,7 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mulink
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-TOOLS = muvarctl murgb
+TOOLS = muvarctl murgb mususpend
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 muvarctl_SRC = common/var_store.c
