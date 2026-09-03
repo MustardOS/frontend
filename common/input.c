@@ -328,9 +328,8 @@ static int map_sdl_volume_buttons(void) {
     int down_idx = -1;
     int up_idx = -1;
 
-    if (!down || !up || sscanf(down, ",volumedown:b%d", &down_idx) != 1
-        || sscanf(up, ",volumeup:b%d", &up_idx) != 1 || down_idx < 0 || down_idx >= 32 || up_idx < 0
-        || up_idx >= 32 || down_idx == up_idx) {
+    if (!down || !up || sscanf(down, ",volumedown:b%d", &down_idx) != 1 || sscanf(up, ",volumeup:b%d", &up_idx) != 1
+        || down_idx < 0 || down_idx >= 32 || up_idx < 0 || up_idx >= 32 || down_idx == up_idx) {
         return 0;
     }
 
