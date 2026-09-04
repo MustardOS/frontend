@@ -111,6 +111,19 @@
     DETAIL(arch, "arch")                                                                                               \
     DETAIL(display, "display")
 
+#define DETAIL_MODIFICATION_ELEMENTS                                                                                   \
+    DETAIL(integrity_signature, "integritysignature")                                                                  \
+    DETAIL(provenance, "provenance")                                                                                   \
+    DETAIL(system_scripts, "systemscripts")                                                                            \
+    DETAIL(frontend_integrity, "frontendintegrity")                                                                    \
+    DETAIL(device_package, "devicepackage")                                                                            \
+    DETAIL(kernel_integrity, "kernelintegrity")                                                                        \
+    DETAIL(kernel_modules, "kernelmodules")                                                                            \
+    DETAIL(device_tree, "devicetree")                                                                                  \
+    DETAIL(initial_ramdisk, "initialramdisk")                                                                          \
+    DETAIL(bootloader, "bootloader")                                                                                   \
+    DETAIL(boot_resources, "bootresources")
+
 #define DETAIL_RUNTIME_ELEMENTS                                                                                        \
     DETAIL(uptime, "uptime")                                                                                           \
     DETAIL(boot_time, "boottime")                                                                                      \
@@ -160,6 +173,7 @@
 
 #define DETAIL_ELEMENTS                                                                                                \
     DETAIL_SYSTEM_ELEMENTS                                                                                             \
+    DETAIL_MODIFICATION_ELEMENTS                                                                                       \
     DETAIL_RUNTIME_ELEMENTS                                                                                            \
     DETAIL_PROCESSOR_ELEMENTS                                                                                          \
     DETAIL_BATTERY_ELEMENTS                                                                                            \
@@ -247,6 +261,7 @@
     DANGER(tune_scale, "tunescale")                                                                                    \
     DANGER(card_mode, "cardmode")                                                                                      \
     DANGER(state, "state")                                                                                             \
+    DANGER(online_cores, "onlinecores")                                                                                \
     DANGER(overclock, "overclock")                                                                                     \
     DANGER(gpu_overclock, "gpuoverclock")
 
@@ -583,6 +598,7 @@
     TWEAKADV(activity, "activity")                                                                                     \
     TWEAKADV(verbose, "verbose")                                                                                       \
     TWEAKADV(debug_log, "debuglog")                                                                                    \
+    TWEAKADV(perf_counters, "perfcounters")                                                                            \
     TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
     TWEAKADV(remember_section, "remembersection")
@@ -666,6 +682,7 @@
     VISUAL(box_art_scale, "boxartscale")                                                                               \
     VISUAL(box_art_padding, "boxartpadding")                                                                           \
     VISUAL(box_art_placeholder, "boxartplaceholder")                                                                   \
+    VISUAL(save_screenshot, "savescreenshot")                                                                          \
     VISUAL(grid_mode_content, "gridmodecontent")                                                                       \
     VISUAL(box_art_hide, "boxarthide")                                                                                 \
     VISUAL(launch_swap, "launch_swap")                                                                                 \

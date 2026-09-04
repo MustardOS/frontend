@@ -78,6 +78,14 @@ static void image_refresh(const char *image_type) {
     if (!ui_count_static) return;
     if (strcasecmp(image_type, "box") == 0 && config.visual.box_art == 8) return;
 
+    if (strcasecmp(image_type, "box") == 0) {
+        char save_image[MAX_BUFFER_SIZE];
+        if (resolve_save_screenshot(items[current_item_index].extra_data, 2, save_image, sizeof(save_image))) {
+            render_box_image(save_image, &starter_image);
+            return;
+        }
+    }
+
     char h_core_artwork[MAX_BUFFER_SIZE];
     char h_file_name[MAX_BUFFER_SIZE];
     resolve_content_artwork_names(h_core_artwork, sizeof(h_core_artwork), h_file_name, sizeof(h_file_name));

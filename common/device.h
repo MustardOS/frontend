@@ -81,6 +81,7 @@ struct mux_device {
     } storage;
 
     struct {
+        int16_t cores;
         char dflt[MAX_BUFFER_SIZE];
         char available[MAX_BUFFER_SIZE];
         char governor[MAX_BUFFER_SIZE];

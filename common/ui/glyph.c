@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "../init.h"
+#include "../perf.h"
 #include "../log.h"
 #include "../theme.h"
 #include "../config.h"
@@ -78,12 +79,12 @@ void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const 
     if (zoom > 0xFFFF) zoom = 0xFFFF;
 
     // Calculate the scaled image width.
-    const int scaled_w = ((int)header.w * zoom) / LV_IMG_ZOOM_NONE;
+    const int scaled_w = (int) header.w * zoom / LV_IMG_ZOOM_NONE;
 
     // LVGL zooms around the center, so compensate for the increase/decrease in width.
-    const int offset_x = (scaled_w - (int)header.w) / 2;
+    const int offset_x = (scaled_w - (int) header.w) / 2;
 
-    lv_img_set_zoom(img, (uint16_t)zoom);
+    lv_img_set_zoom(img, (uint16_t) zoom);
 
     // Keep the visible left edge at the configured X.
     lv_obj_set_x(img, theme.list_default.glyph_padding_left + offset_x);
@@ -100,14 +101,19 @@ int glyph_explicit_px(const int16_t runtime_size, const int16_t section_size, co
 }
 
 void set_list_glyph_image(lv_obj_t *img, const char *embed) {
+    const uint64_t glyph_start = fe_perf_begin();
+
     lv_img_set_src(img, embed);
     const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height);
     apply_glyph_scale(img, embed, px, px);
+
+    fe_perf_end(fe_perf_stage_glyph, glyph_start);
 }
 
 void set_footer_glyph_image(lv_obj_t *img, const char *embed) {
     lv_img_set_src(img, embed);
-    const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
+    const int px =
+        glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
     apply_glyph_scale(img, embed, px, px);
 }
 

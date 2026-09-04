@@ -215,6 +215,10 @@ void render_image_refresh(
     lv_obj_t *ui_viewport_objects[], int *starter_image, int *splash_valid
 );
 
+int resolve_save_screenshot(const char *content_path, int scope, char *out, size_t out_size);
+
+void render_box_image(const char *image, int *starter_image);
+
 void clear_box_image(void);
 
 void render_video_refresh(const char *h_core_artwork, const char *h_file_name);

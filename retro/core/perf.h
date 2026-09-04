@@ -7,6 +7,7 @@ enum perf_stage {
     perf_stage_frame = 0,
     perf_stage_core,
     perf_stage_video,
+    perf_stage_video_upload,
     perf_stage_present,
     perf_stage_present_draw,
     perf_stage_present_flip,

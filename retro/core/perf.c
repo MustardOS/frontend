@@ -398,15 +398,17 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
 
     snprintf(
         buf, len,
-        "%.2f FPS\nFrame %.2f/%.2f/%.2f ms\nCore %.2f  Video %.2f ms\nDraw %.2f  Flip %.2f ms\nAudio %.2f ms  Lag "
+        "%.2f FPS\nFrame %.2f/%.2f/%.2f ms\nCore %.2f  Video %.2f ms\nUpload %.2f ms\n"
+        "Draw %.2f  Flip %.2f ms\nAudio %.2f ms  Lag "
         "%s\nIdle %.2f ms  Delay %.2f ms\nQueue %u ms  GL %.2f ms\nSvc %.2f  UI %.2f/%.2f ms\nMissed %u  "
         "Dupes %u\nSubmit %.2f  Rotate %.2f  Pace %.2f ms%s",
         fps, mean(&series[perf_stage_frame]), percentile95(&series[perf_stage_frame]),
         percentile99(&series[perf_stage_frame]), mean(&series[perf_stage_core]), mean(&series[perf_stage_video]),
-        mean(&series[perf_stage_present_draw]), mean(&series[perf_stage_present_flip]),
-        mean(&series[perf_stage_audio_wait]), lag_text, mean(&series[perf_stage_present_to_poll]),
-        mean(&series[perf_stage_frame_delay]), audio_bridge_queued_ms(), gl_ms, mean(&series[perf_stage_services]),
-        mean(&series[perf_stage_ui_logic]), mean(&series[perf_stage_ui_task]), missed_refreshes, video_duplicate_frames,
+        mean(&series[perf_stage_video_upload]), mean(&series[perf_stage_present_draw]),
+        mean(&series[perf_stage_present_flip]), mean(&series[perf_stage_audio_wait]), lag_text,
+        mean(&series[perf_stage_present_to_poll]), mean(&series[perf_stage_frame_delay]), audio_bridge_queued_ms(),
+        gl_ms, mean(&series[perf_stage_services]), mean(&series[perf_stage_ui_logic]),
+        mean(&series[perf_stage_ui_task]), missed_refreshes, video_duplicate_frames,
         mean(&series[perf_stage_gl_submit]), mean(&series[perf_stage_gl_rotate]), mean(&series[perf_stage_pace_sleep]),
         netplay_text
     );
@@ -414,22 +416,15 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
 
 int perf_export_trace(const char *path) {
     static const char *names[perf_stage_count] = {
-        "frame",          "core",
-        "video",          "present",
-        "present_draw",   "present_flip",
-        "audio_wait",     "audio_backpressure",
-        "input_present",  "present_to_poll",
-        "frame_delay",    "gl_enter",
-        "gl_leave",       "gl_submit",
-        "gl_rotate",      "pace_sleep",
-        "netplay_digest", "cheevo_callback",
-        "screenshot",     "state_save",
-        "services",       "cheevo_tick",
-        "netplay_tick",   "maintenance",
-        "control",        "ui_logic",
-        "ui_task",        "audio_queue",
-        "cheevo_frame",
+        "frame",           "core",         "video",          "video_upload",       "present",
+        "present_draw",    "present_flip", "audio_wait",     "audio_backpressure", "input_present",
+        "present_to_poll", "frame_delay",  "gl_enter",       "gl_leave",           "gl_submit",
+        "gl_rotate",       "pace_sleep",   "netplay_digest", "cheevo_callback",    "screenshot",
+        "state_save",      "services",     "cheevo_tick",    "netplay_tick",       "maintenance",
+        "control",         "ui_logic",     "ui_task",        "audio_queue",        "cheevo_frame",
     };
+
+    _Static_assert(sizeof(names) / sizeof(names[0]) == perf_stage_count, "perf stage names are out of step");
 
     FILE *f = fopen(path, "w");
     if (!f) return -1;

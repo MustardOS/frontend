@@ -9,13 +9,15 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mulink
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-TOOLS = muvarctl murgb mususpend
+TOOLS = muvarctl murgb mususpend muverify
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 muvarctl_SRC = common/var_store.c
 
 murgb_SRC = common/rgb_args.c common/config.c common/config_value.c common/colour.c \
             common/fileio_lite.c common/strpath.c common/theme_base.c common/log.c common/debug.c
+
+muverify_LDLIBS = $(EXTERNAL_LIB)/libcrypto.a -ldl -lpthread $(EXTERNAL_HIDE)
 
 DEPENDENCIES = plutosvg common lvgl module
 
@@ -133,7 +135,7 @@ $(TOOLS):
 	@echo "Building Tool: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
 	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
-		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 cursor: $(CURSOR_LIB)
 

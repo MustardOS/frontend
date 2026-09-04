@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "../init.h"
+#include "../perf.h"
 #include "common.h"
 #include "image.h"
 #include "cache.h"
@@ -650,7 +651,7 @@ static void scale_and_set_raster(
     lv_obj_move_foreground(ui_img_obj);
 }
 
-void update_image(lv_obj_t *ui_img_obj, const struct image_settings image_settings) {
+static void update_image_inner(lv_obj_t *ui_img_obj, const struct image_settings image_settings) {
     clear_image(ui_img_obj);
 
     if (file_exist(image_settings.image_path)) {
@@ -701,4 +702,10 @@ void update_image(lv_obj_t *ui_img_obj, const struct image_settings image_settin
         lv_img_set_src(ui_img_obj, image_path);
         lv_obj_move_foreground(ui_img_obj);
     }
+}
+
+void update_image(lv_obj_t *ui_img_obj, const struct image_settings image_settings) {
+    const uint64_t image_start = fe_perf_begin();
+    update_image_inner(ui_img_obj, image_settings);
+    fe_perf_end(fe_perf_stage_image, image_start);
 }

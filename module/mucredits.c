@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -18,12 +17,13 @@
 #define REF_H 480
 
 #define MIN_COLUMNS   2
-#define PAGE_PAD_FRAC 0.06f
+#define MAX_COLUMNS   4
+#define PAGE_PAD_FRAC 0.05f
 
-#define INTRO_HOLD_S 0.8f
+#define INTRO_HOLD_S 0.5f
 #define OUTRO_HOLD_S 3.0f
 
-#define SCROLL_PX_PER_S 38.0f
+#define SCROLL_PX_PER_S 42.0f
 #define MUSIC_FADE_IN_S 2.0f
 
 #define QUIT_FADE_S 0.6f
@@ -200,7 +200,6 @@ static TTF_Font *g_font_sml = NULL;
 static Mix_Music *g_music = NULL;
 
 static int g_reel_height = 0;
-static int g_last_content_y_centre = 0;
 static float g_scroll_y = 0.0f;
 
 static block_t *g_quote_block = NULL;
@@ -607,7 +606,7 @@ static void add_kofi_qr(void) {
     char path[512];
     snprintf(path, sizeof(path), "%s/kofi_qr.png", MEDIA_DIR);
 
-    const int target_w = (int) ((float) g_screen_h * 0.45f);
+    const int target_w = (int) ((float) g_screen_h * 0.42f);
     int w = 0, h = 0;
     SDL_Texture *t = load_image_scaled(path, target_w, &w, &h);
     if (!t) return;
@@ -623,11 +622,13 @@ static void add_logo(void) {
     char path[512];
     snprintf(path, sizeof(path), "%s/logo.png", MEDIA_DIR);
 
-    int natural_w = 0, natural_h = 0;
-    SDL_Texture *natural = load_image_scaled(path, 0, &natural_w, &natural_h);
-    if (!natural) return;
+    SDL_Surface *tmp = IMG_Load(path);
+    if (!tmp) return;
+    const int natural_w = tmp->w;
+    const int natural_h = tmp->h;
+    SDL_FreeSurface(tmp);
 
-    int target_h = (int) ((float) g_screen_h * 0.32f);
+    int target_h = (int) ((float) g_screen_h * 0.30f);
     const float aspect = natural_h > 0 ? (float) natural_w / (float) natural_h : 1.0f;
     int target_w = (int) lroundf((float) target_h * aspect);
 
@@ -638,11 +639,15 @@ static void add_logo(void) {
         target_h = (int) lroundf((float) target_w / aspect);
     }
 
+    int w = 0, h = 0;
+    SDL_Texture *t = load_image_scaled(path, target_w, &w, &h);
+    if (!t) return;
+
     block_t *b = new_block(blk_qr, "intro");
-    b->image = natural;
-    b->img_w = target_w;
-    b->img_h = target_h;
-    b->height = target_h;
+    b->image = t;
+    b->img_w = w;
+    b->img_h = h;
+    b->height = h;
 }
 
 static void add_title(TTF_Font *font, const char *text, const SDL_Color col, const char *bg_key) {
@@ -682,17 +687,19 @@ static block_t *add_paragraph(const char *text, const SDL_Color col, const char 
     return b;
 }
 
-#define ADD_NAMES(arr, col, key, cols)                                                                                 \
-    add_names_impl((arr), (int) (sizeof(arr) / sizeof((arr)[0])), (col), (key), (cols))
+#define ADD_NAMES(arr, col, key, top_cols)                                                                             \
+    add_names_impl((arr), (int) (sizeof(arr) / sizeof((arr)[0])), (col), (key), (top_cols))
 
-static void add_names_impl(const char **names, const int n, const SDL_Color col, const char *bg_key, const int f_cols) {
+static void add_names_impl(const char **names, const int n, const SDL_Color col, const char *bg_key, const int t_cols) {
     int *widths = NULL;
-    int *regular = NULL;
-    int *oversized = NULL;
+    int *tier = NULL;
     SDL_Surface *full = NULL;
 
+    if (n < 1) return;
+
     widths = malloc(sizeof(*widths) * (size_t) n);
-    if (!widths) goto cleanup;
+    tier = malloc(sizeof(*tier) * (size_t) n);
+    if (!widths || !tier) goto cleanup;
 
     int total_name_w = 0;
     for (int i = 0; i < n; ++i) {
@@ -707,58 +714,40 @@ static void add_names_impl(const char **names, const int n, const SDL_Color col,
     const int avail = g_screen_w - 2 * page_pad;
     if (avail < 1) goto cleanup;
 
-    const int cell_inset = sx(8);
-    int line_h = TTF_FontHeight(g_font_sml) + sx(4) + text_shadow_offset();
+    const int cell_inset = sx(10);
+    int line_h = TTF_FontHeight(g_font_sml) + sx(6) + text_shadow_offset();
     if (line_h < 1) line_h = 1;
 
-    int desired_cols;
-    if (f_cols > 0) {
-        desired_cols = f_cols;
+    int top_cols;
+    if (t_cols > 0) {
+        top_cols = t_cols;
     } else {
-        desired_cols = avail / (avg_name_w + cell_inset);
-        if (desired_cols > 4) desired_cols = 4;
+        top_cols = avail / (avg_name_w + cell_inset);
+        if (top_cols > MAX_COLUMNS) top_cols = MAX_COLUMNS;
     }
+    if (top_cols < MIN_COLUMNS) top_cols = MIN_COLUMNS;
 
-    if (desired_cols < MIN_COLUMNS) desired_cols = MIN_COLUMNS;
+    for (int i = 0; i < n; ++i)
+        tier[i] = 1;
 
-    const int lenient_cell_w = avail / MIN_COLUMNS;
-    int cell_budget = lenient_cell_w - cell_inset;
-    if (cell_budget < 1) cell_budget = 1;
-
-    regular = malloc(sizeof(*regular) * (size_t) n);
-    oversized = malloc(sizeof(*oversized) * (size_t) n);
-    if (!regular || !oversized) goto cleanup;
-
-    int reg_n = 0, over_n = 0;
     for (int i = 0; i < n; ++i) {
-        if (widths[i] > cell_budget)
-            oversized[over_n++] = i;
-        else
-            regular[reg_n++] = i;
-    }
-
-    int cols = MIN_COLUMNS;
-    for (int c = desired_cols; c > cols; c--) {
-        const int budget_c = avail / c - cell_inset;
-        int all_fit = 1;
-        for (int i = 0; i < reg_n; ++i) {
-            if (widths[regular[i]] > budget_c) {
-                all_fit = 0;
+        for (int c = top_cols; c >= 1; --c) {
+            const int budget = avail / c - cell_inset;
+            if (budget > 0 && widths[i] <= budget) {
+                tier[i] = c;
                 break;
             }
         }
-        if (all_fit) {
-            cols = c;
-            break;
-        }
     }
 
-    if (reg_n < cols) cols = reg_n > 0 ? reg_n : 1;
-    if (cols < 1) cols = 1;
+    int total_rows = 0;
+    for (int c = top_cols; c >= 1; --c) {
+        int count = 0;
+        for (int i = 0; i < n; ++i)
+            if (tier[i] == c) count++;
 
-    const int cell_w2 = avail / cols;
-    const int reg_rows = (reg_n + cols - 1) / cols;
-    const int total_rows = reg_rows + over_n;
+        total_rows += (count + c - 1) / c;
+    }
 
     if (total_rows == 0) goto cleanup;
 
@@ -771,70 +760,60 @@ static void add_names_impl(const char **names, const int n, const SDL_Color col,
 
     int cursor_y = 0;
 
-    for (int r = 0; r < reg_rows; ++r) {
-        int cells_in_row = cols;
-        if (r == reg_rows - 1) {
-            const int leftover = reg_n - r * cols;
-            if (leftover > 0 && leftover < cols) cells_in_row = leftover;
-        }
+    for (int c = top_cols; c >= 1; --c) {
+        const int cell_w = avail / c;
+        int placed = 0;
 
-        const int row_x_offset = (avail - cells_in_row * cell_w2) / 2;
+        for (int i = 0; i < n; ++i) {
+            if (tier[i] != c) continue;
 
-        for (int c = 0; c < cells_in_row; ++c) {
-            const int reg_idx = r * cols + c;
-            if (reg_idx >= reg_n) break;
+            if (placed % c == 0) {
+                int remaining = 0;
+                for (int j = i; j < n; ++j)
+                    if (tier[j] == c) remaining++;
 
-            const int idx = regular[reg_idx];
-            SDL_Surface *ns = render_text_surface(g_font_sml, names[idx], col);
-            if (!ns) continue;
+                const int cells_in_row = remaining < c ? remaining : c;
+                const int row_x_offset = (avail - cells_in_row * cell_w) / 2;
 
-            SDL_Rect dst;
-            dst.x = row_x_offset + c * cell_w2 + (cell_w2 - ns->w) / 2;
-            dst.y = cursor_y + (line_h - ns->h) / 2;
-            dst.w = ns->w;
-            dst.h = ns->h;
+                for (int r = 0, k = i; r < cells_in_row && k < n; ++k) {
+                    if (tier[k] != c) continue;
 
-            SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
-            SDL_BlitSurface(ns, NULL, full, &dst);
-            SDL_FreeSurface(ns);
-        }
+                    SDL_Surface *ns = render_text_surface(g_font_sml, names[k], col);
+                    if (ns) {
+                        SDL_Rect dst;
+                        dst.y = cursor_y + (line_h - ns->h) / 2;
+                        dst.h = ns->h;
 
-        cursor_y += line_h;
-    }
+                        if (ns->w <= cell_w) {
+                            dst.x = row_x_offset + r * cell_w + (cell_w - ns->w) / 2;
+                            dst.w = ns->w;
 
-    for (int o = 0; o < over_n; ++o) {
-        const int idx = oversized[o];
+                            SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
+                            SDL_BlitSurface(ns, NULL, full, &dst);
+                        } else {
+                            const float shrink = (float) avail / (float) ns->w;
+                            const int th = (int) lroundf((float) ns->h * shrink);
 
-        SDL_Surface *ns = render_text_surface(g_font_sml, names[idx], col);
-        if (ns) {
-            SDL_Rect dst;
+                            dst.x = 0;
+                            dst.y = cursor_y + (line_h - th) / 2;
+                            dst.w = avail;
+                            dst.h = th;
 
-            if (ns->w <= avail) {
-                dst.x = (avail - ns->w) / 2;
-                dst.y = cursor_y + (line_h - ns->h) / 2;
-                dst.w = ns->w;
-                dst.h = ns->h;
+                            SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
+                            SDL_BlitScaled(ns, NULL, full, &dst);
+                        }
 
-                SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
-                SDL_BlitSurface(ns, NULL, full, &dst);
-            } else {
-                const float k = (float) avail / (float) ns->w;
-                const int tw = avail;
-                const int th = (int) lroundf((float) ns->h * k);
+                        SDL_FreeSurface(ns);
+                    }
 
-                dst.x = 0;
-                dst.y = cursor_y + (line_h - th) / 2;
-                dst.w = tw;
-                dst.h = th;
+                    r++;
+                }
 
-                SDL_SetSurfaceBlendMode(ns, SDL_BLENDMODE_BLEND);
-                SDL_BlitScaled(ns, NULL, full, &dst);
+                cursor_y += line_h;
             }
 
-            SDL_FreeSurface(ns);
+            placed++;
         }
-
-        cursor_y += line_h;
     }
 
     SDL_Texture *tex = SDL_CreateTextureFromSurface(g_renderer, full);
@@ -849,8 +828,7 @@ static void add_names_impl(const char **names, const int n, const SDL_Color col,
 cleanup:
     if (full) SDL_FreeSurface(full);
     free(widths);
-    free(regular);
-    free(oversized);
+    free(tier);
 }
 
 static void relayout_reel(void) {
@@ -862,15 +840,6 @@ static void relayout_reel(void) {
     }
 
     g_reel_height = y;
-
-    g_last_content_y_centre = g_reel_height / 2;
-    for (int i = g_block_count - 1; i >= 0; --i) {
-        const block_t *b = &g_blocks[i];
-        if (b->kind != blk_spacer) {
-            g_last_content_y_centre = b->y_top + b->height / 2;
-            break;
-        }
-    }
 }
 
 static int replace_quote_block(block_t *b, const char *quote) {
@@ -926,11 +895,11 @@ static void build_reel(void) {
     const SDL_Color c_knt = {COL_KNIGHT_R, COL_KNIGHT_G, COL_KNIGHT_B, 255};
     const SDL_Color c_con = {COL_CON_R, COL_CON_G, COL_CON_B, 255};
 
-    const int big_gap = sx(80);
-    const int sec_gap = sx(48);
-    const int sml_gap = sx(20);
+    const int big_gap = sx(70);
+    const int sec_gap = sx(44);
+    const int sml_gap = sx(18);
 
-    const int wrap_head = sx(60);
+    const int wrap_head = sx(50);
     const int wrap_tail = sx(60);
 
     add_spacer(wrap_head, "intro");
@@ -944,27 +913,27 @@ static void build_reel(void) {
 
     add_title(g_font_big, "Commanders", c_cmd, "commanders");
     add_spacer(sml_gap, "commanders");
-    ADD_NAMES(commanders, c_cmd, "commanders", 0);
+    ADD_NAMES(commanders, c_cmd, "commanders", 3);
     add_spacer(sec_gap, "commanders");
 
     add_title(g_font_big, "Enforcers", c_enf, "commanders");
     add_spacer(sml_gap, "commanders");
-    ADD_NAMES(enforcers, c_enf, "commanders", 0);
+    ADD_NAMES(enforcers, c_enf, "commanders", 3);
     add_spacer(big_gap, "commanders");
 
     add_title(g_font_big, "Wizards", c_wiz, "wizards");
     add_spacer(sml_gap, "wizards");
-    ADD_NAMES(wizards, c_wiz, "wizards", 0);
+    ADD_NAMES(wizards, c_wiz, "wizards", 3);
     add_spacer(big_gap, "wizards");
 
     add_title(g_font_big, "Heroes", c_hero, "heroes");
     add_spacer(sml_gap, "heroes");
-    ADD_NAMES(heroes, c_hero, "heroes", 0);
+    ADD_NAMES(heroes, c_hero, "heroes", 3);
     add_spacer(big_gap, "heroes");
 
     add_title(g_font_big, "Knights", c_knt, "knights");
     add_spacer(sml_gap, "knights");
-    ADD_NAMES(knights, c_knt, "knights", 2);
+    ADD_NAMES(knights, c_knt, "knights", 3);
     add_spacer(big_gap, "knights");
 
     char ctitle[128];
@@ -977,7 +946,7 @@ static void build_reel(void) {
 
     add_title(g_font_big, ctitle, c_con, "contributors");
     add_spacer(sml_gap, "contributors");
-    ADD_NAMES(contributors, c_con, "contributors", 0);
+    ADD_NAMES(contributors, c_con, "contributors", 3);
     add_spacer(big_gap, "contributors");
 
     add_title(g_font_big, LANG_SPECIAL, c_con, "special");
@@ -1057,12 +1026,14 @@ static void render_block(const block_t *b, const float draw_y) {
         default: {
             float y = draw_y;
             for (int i = 0; i < b->line_count; ++i) {
-                SDL_FRect dst;
-                dst.w = (float) b->line_w[i];
-                dst.h = (float) b->line_h[i];
-                dst.x = (float) (g_screen_w - b->line_w[i]) / 2.0f;
-                dst.y = y;
-                SDL_RenderCopyF(g_renderer, b->lines[i], NULL, &dst);
+                if (b->lines[i]) {
+                    SDL_FRect dst;
+                    dst.w = (float) b->line_w[i];
+                    dst.h = (float) b->line_h[i];
+                    dst.x = (float) (g_screen_w - b->line_w[i]) / 2.0f;
+                    dst.y = y;
+                    SDL_RenderCopyF(g_renderer, b->lines[i], NULL, &dst);
+                }
                 y += (float) b->line_h[i];
             }
             break;
@@ -1220,9 +1191,9 @@ static void init_sdl(void) {
 }
 
 static void load_fonts(void) {
-    const int s_huge = sx(40);
-    const int s_big = sx(30);
-    const int s_med = sx(22);
+    const int s_huge = sx(44);
+    const int s_big = sx(32);
+    const int s_med = sx(24);
     const int s_sml = sx(22);
 
     g_font_huge = TTF_OpenFont(FONT_FILE, s_huge);

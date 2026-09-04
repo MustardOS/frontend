@@ -4,6 +4,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "init.h"
+#include "perf.h"
 #include "ui/common.h"
 #include "config.h"
 #include "device.h"
@@ -782,7 +783,7 @@ static void load_active_controller_mappings(void) {
 
 static void open_all_input_devices(void) {
     static uint32_t last_no_device_log = UINT32_MAX;
-    int was_empty = device_count == 0;
+    const int was_empty = device_count == 0;
 
     if (!mappings_loaded) {
         load_active_controller_mappings();
@@ -795,10 +796,10 @@ static void open_all_input_devices(void) {
     SDL_JoystickUpdate();
 
     const char *video_driver = SDL_GetCurrentVideoDriver();
-    int num_joy = SDL_NumJoysticks();
+    const int num_joy = SDL_NumJoysticks();
 
     if (num_joy <= 0) {
-        uint32_t j_now = (uint32_t) mux_tick();
+        const uint32_t j_now = (uint32_t) mux_tick();
 
         // Avoid log spam during retry loops...
         if (last_no_device_log == UINT32_MAX || j_now - last_no_device_log >= 2000U) {
@@ -826,14 +827,14 @@ static void open_all_input_devices(void) {
         }
 
         SDL_Joystick *joy = SDL_GameControllerGetJoystick(gc);
-        SDL_JoystickID inst = SDL_JoystickInstanceID(joy);
+        const SDL_JoystickID inst = SDL_JoystickInstanceID(joy);
 
         if (is_tracked_instance(inst)) {
             SDL_GameControllerClose(gc);
             continue;
         }
 
-        SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
+        const SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
         char guid_str[64];
         SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
 
@@ -861,14 +862,14 @@ static void open_all_input_devices(void) {
             continue;
         }
 
-        SDL_JoystickID inst = SDL_JoystickInstanceID(joy);
+        const SDL_JoystickID inst = SDL_JoystickInstanceID(joy);
 
         if (is_tracked_instance(inst)) {
             SDL_JoystickClose(joy);
             continue;
         }
 
-        SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
+        const SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
         char guid_str[64];
         SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
 
@@ -1102,12 +1103,12 @@ static void handle_inputs(const mux_input_options *opts) {
     uint64_t vertical = BIT(mux_input_dpad_up) | BIT(mux_input_dpad_down);
     uint64_t horizontal = BIT(mux_input_dpad_left) | BIT(mux_input_dpad_right);
 
-    if (opts->remap_to_dpad && (opts->nav & NAV_LEFT_STICK)) {
+    if (opts->remap_to_dpad && opts->nav & NAV_LEFT_STICK) {
         vertical |= BIT(mux_input_ls_up) | BIT(mux_input_ls_down);
         horizontal |= BIT(mux_input_ls_left) | BIT(mux_input_ls_right);
     }
 
-    if (opts->remap_to_dpad && (opts->nav & NAV_RIGHT_STICK)) {
+    if (opts->remap_to_dpad && opts->nav & NAV_RIGHT_STICK) {
         vertical |= BIT(mux_input_rs_up) | BIT(mux_input_rs_down);
         horizontal |= BIT(mux_input_rs_left) | BIT(mux_input_rs_right);
     }
@@ -1494,10 +1495,15 @@ void mux_input_task(const mux_input_options *opts) {
         if (anim_is_active() && timeout > IDLE_MS) timeout = IDLE_MS;
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
+        const uint64_t loop_start = fe_perf_begin();
+        const uint64_t input_start = fe_perf_begin();
+
         do {
             dispatch_input_event(&ev, &next_retry_tick, &retry_count);
             if (opts->raw_event_handler) opts->raw_event_handler(&ev);
         } while (!stop_flag && SDL_PollEvent(&ev));
+
+        fe_perf_end(fe_perf_stage_input, input_start);
 
         if (anim_is_active()) display_composite_frame();
 
@@ -1523,22 +1529,40 @@ void mux_input_task(const mux_input_options *opts) {
             pressed = 0;
             held = 0;
 
-            if (opts->idle_handler) opts->idle_handler();
+            if (opts->idle_handler) {
+                const uint64_t idle_start = fe_perf_begin();
+                opts->idle_handler();
+                fe_perf_end(fe_perf_stage_idle, idle_start);
+            }
+
+            fe_perf_end(fe_perf_stage_loop, loop_start);
+            fe_perf_loop_complete();
             continue;
         }
 
+        const uint64_t handle_start = fe_perf_begin();
         update_hold_modifier(opts);
 
         handle_inputs(opts);
         handle_combos(opts);
 
         if (opts->analog_handler) opts->analog_handler(raw_ls_x, raw_ls_y, raw_rs_x, raw_rs_y);
-        if (opts->idle_handler) opts->idle_handler();
+        fe_perf_end(fe_perf_stage_nav, handle_start);
+
+        if (opts->idle_handler) {
+            const uint64_t idle_start = fe_perf_begin();
+            opts->idle_handler();
+            fe_perf_end(fe_perf_stage_idle, idle_start);
+        }
+
+        fe_perf_end(fe_perf_stage_loop, loop_start);
+        fe_perf_loop_complete();
 
         // Inputs pressed at the end of one iteration are held at the start of the next.
         held = pressed;
     }
 
+    fe_perf_flush();
     close_all_devices();
 }
 

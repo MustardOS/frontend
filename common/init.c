@@ -7,6 +7,7 @@
 #include "../lvgl/src/draw/sdl/lv_draw_sdl.h"
 #include "display.h"
 #include "init.h"
+#include "perf.h"
 #include "ui/modal.h"
 #include "input.h"
 #include "inotify.h"
@@ -151,11 +152,15 @@ static void mux_idle_poll(lv_timer_t *timer) {
 }
 
 void refresh_screen(const lv_obj_t *screen, const int flush) {
+    const uint64_t task_start = fe_perf_begin();
+
     for (int i = 0, n = flush > 0 ? flush : 1; i < n; i++) {
         lv_obj_invalidate(screen);
         lv_refr_now(NULL);
         lv_task_handler();
     }
+
+    fe_perf_end(fe_perf_stage_lv_task, task_start);
 }
 
 void safe_quit(const int exit_status) {
@@ -164,6 +169,7 @@ void safe_quit(const int exit_status) {
 
 void init_module(const char *module) {
     modal_reset();
+    fe_perf_init();
     snprintf(mux_module, sizeof(mux_module), "%s", module_from_func(module));
     set_process_name(mux_module);
     load_lang(&lang);

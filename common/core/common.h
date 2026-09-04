@@ -31,6 +31,10 @@ int remove_dir_config(const char *dir, const char *core);
 
 int remove_core_config(const char *core);
 
+int muxretro_content_state_dir(const char *content_path, const char *core, char *out, size_t out_size);
+
+int muxretro_latest_state_image(const char *content_path, const char *core, char *out, size_t out_size);
+
 int remove_muxretro_content_config(const char *content_path);
 
 int remove_muxretro_dir_config(const char *dir);

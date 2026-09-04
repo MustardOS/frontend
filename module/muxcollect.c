@@ -56,6 +56,14 @@ static void image_refresh(const char *image_type) {
     if (!ui_count_static) return;
     if (strcasecmp(image_type, "box") == 0 && config.visual.box_art == 8) return;
 
+    if (strcasecmp(image_type, "box") == 0) {
+        char save_image[MAX_BUFFER_SIZE];
+        if (resolve_save_screenshot(items[current_item_index].extra_data, 1, save_image, sizeof(save_image))) {
+            render_box_image(save_image, &starter_image);
+            return;
+        }
+    }
+
     char core_desc[MAX_BUFFER_SIZE];
     char item_no_ext[MAX_BUFFER_SIZE];
     resolve_content_artwork_names(core_desc, sizeof(core_desc), item_no_ext, sizeof(item_no_ext));

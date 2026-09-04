@@ -571,6 +571,10 @@ static void init_navigation_group(void) {
         lang.muxcontent.box_art.transition.shoot_left,  lang.muxcontent.box_art.transition.shoot_up,
         lang.muxcontent.box_art.transition.shoot_down,  lang.generic.disabled
     };
+    char *save_screenshot_options[] = {
+        lang.generic.disabled, lang.muxcontent.save_screenshot.collection, lang.muxcontent.save_screenshot.history,
+        lang.muxcontent.save_screenshot.both
+    };
     char *video_preview_options[] = {
         lang.generic.disabled, lang.muxcontent.video_preview.delay_3, lang.muxcontent.video_preview.delay_5,
         lang.muxcontent.video_preview.delay_10
@@ -677,6 +681,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, box_art_padding, lang.muxcontent.box_art.padding, "boxartpadding", NULL, 0);
     INIT_OPTION_ITEM(
         -1, visual, box_art_placeholder, lang.muxcontent.box_art.placeholder, "boxartplaceholder", disabled_enabled, 2
+    );
+    INIT_OPTION_ITEM(
+        -1, visual, save_screenshot, lang.muxcontent.save_screenshot.title, "savescreenshot", save_screenshot_options, 4
     );
     INIT_OPTION_ITEM(-1, visual, grid_mode_content, lang.muxcontent.grid_mode, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, box_art_hide, lang.muxcontent.grid_mode_art, "boxarthide", disabled_enabled, 2);
@@ -1109,6 +1116,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, box_art_scale, "visual/boxartscale", INT, 0);
     CHECK_AND_SAVE_STD(visual, box_art_padding, "visual/boxartpadding", INT, 0);
     CHECK_AND_SAVE_STD(visual, box_art_placeholder, "visual/boxartplaceholder", INT, 0);
+    CHECK_AND_SAVE_STD(visual, save_screenshot, "visual/savescreenshot", INT, 0);
     CHECK_AND_SAVE_STD(visual, video_preview, "visual/videopreview", INT, 0);
 
     const int modified_before_font = is_modified;
@@ -1330,6 +1338,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_scale
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_padding
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_placeholder
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // save_screenshot
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // grid_mode_content
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_hide
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launch_swap

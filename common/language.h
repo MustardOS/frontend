@@ -680,6 +680,12 @@ struct mux_lang {
             char delay_10[MAX_BUFFER_SIZE];
         } video_preview;
         struct {
+            char title[MAX_BUFFER_SIZE];
+            char collection[MAX_BUFFER_SIZE];
+            char history[MAX_BUFFER_SIZE];
+            char both[MAX_BUFFER_SIZE];
+        } save_screenshot;
+        struct {
             char launch_swap[MAX_BUFFER_SIZE];
             char shuffle[MAX_BUFFER_SIZE];
             char box_art_image[MAX_BUFFER_SIZE];
@@ -693,6 +699,7 @@ struct mux_lang {
             char box_art_placeholder[MAX_BUFFER_SIZE];
             char box_art_transition[MAX_BUFFER_SIZE];
             char video_preview[MAX_BUFFER_SIZE];
+            char save_screenshot[MAX_BUFFER_SIZE];
         } help;
     } muxcontent;
 
@@ -875,6 +882,7 @@ struct mux_lang {
         char tunescale[MAX_BUFFER_SIZE];
         char cardmode[MAX_BUFFER_SIZE];
         char state[MAX_BUFFER_SIZE];
+        char onlinecores[MAX_BUFFER_SIZE];
         char overclock[MAX_BUFFER_SIZE];
         char gpuoverclock[MAX_BUFFER_SIZE];
         char warn[MAX_BUFFER_SIZE];
@@ -894,6 +902,7 @@ struct mux_lang {
             char tune_scale[MAX_BUFFER_SIZE];
             char card_mode[MAX_BUFFER_SIZE];
             char state[MAX_BUFFER_SIZE];
+            char online_cores[MAX_BUFFER_SIZE];
             char overclock[MAX_BUFFER_SIZE];
             char gpu_overclock[MAX_BUFFER_SIZE];
             char kernel_log[MAX_BUFFER_SIZE];
@@ -918,8 +927,10 @@ struct mux_lang {
         char report_ok[MAX_BUFFER_SIZE];
         char report_saved[MAX_BUFFER_SIZE];
         char report_fail[MAX_BUFFER_SIZE];
+        char checking[MAX_BUFFER_SIZE];
         struct {
             char system[MAX_BUFFER_SIZE];
+            char modifications[MAX_BUFFER_SIZE];
             char runtime[MAX_BUFFER_SIZE];
             char processor[MAX_BUFFER_SIZE];
             char battery[MAX_BUFFER_SIZE];
@@ -935,6 +946,17 @@ struct mux_lang {
             char kernel[MAX_BUFFER_SIZE];
             char arch[MAX_BUFFER_SIZE];
             char display[MAX_BUFFER_SIZE];
+            char integrity_signature[MAX_BUFFER_SIZE];
+            char provenance[MAX_BUFFER_SIZE];
+            char system_scripts[MAX_BUFFER_SIZE];
+            char frontend_integrity[MAX_BUFFER_SIZE];
+            char device_package[MAX_BUFFER_SIZE];
+            char kernel_integrity[MAX_BUFFER_SIZE];
+            char kernel_modules[MAX_BUFFER_SIZE];
+            char device_tree[MAX_BUFFER_SIZE];
+            char initial_ramdisk[MAX_BUFFER_SIZE];
+            char bootloader[MAX_BUFFER_SIZE];
+            char boot_resources[MAX_BUFFER_SIZE];
             char uptime[MAX_BUFFER_SIZE];
             char boot_time[MAX_BUFFER_SIZE];
             char load_avg[MAX_BUFFER_SIZE];
@@ -979,6 +1001,17 @@ struct mux_lang {
             char kernel[MAX_BUFFER_SIZE];
             char arch[MAX_BUFFER_SIZE];
             char display[MAX_BUFFER_SIZE];
+            char integrity_signature[MAX_BUFFER_SIZE];
+            char provenance[MAX_BUFFER_SIZE];
+            char system_scripts[MAX_BUFFER_SIZE];
+            char frontend_integrity[MAX_BUFFER_SIZE];
+            char device_package[MAX_BUFFER_SIZE];
+            char kernel_integrity[MAX_BUFFER_SIZE];
+            char kernel_modules[MAX_BUFFER_SIZE];
+            char device_tree[MAX_BUFFER_SIZE];
+            char initial_ramdisk[MAX_BUFFER_SIZE];
+            char bootloader[MAX_BUFFER_SIZE];
+            char boot_resources[MAX_BUFFER_SIZE];
             char uptime[MAX_BUFFER_SIZE];
             char boot_time[MAX_BUFFER_SIZE];
             char load_avg[MAX_BUFFER_SIZE];
@@ -2987,6 +3020,7 @@ struct mux_lang {
         char activity[MAX_BUFFER_SIZE];
         char verbose[MAX_BUFFER_SIZE];
         char debuglog[MAX_BUFFER_SIZE];
+        char perfcounters[MAX_BUFFER_SIZE];
         char userinit[MAX_BUFFER_SIZE];
         char dpadswap[MAX_BUFFER_SIZE];
         char overdrive[MAX_BUFFER_SIZE];
@@ -3059,6 +3093,7 @@ struct mux_lang {
             char activity[MAX_BUFFER_SIZE];
             char verbose[MAX_BUFFER_SIZE];
             char debug_log[MAX_BUFFER_SIZE];
+            char perf_counters[MAX_BUFFER_SIZE];
             char user_init[MAX_BUFFER_SIZE];
             char dpad_swap[MAX_BUFFER_SIZE];
             char overdrive[MAX_BUFFER_SIZE];
@@ -3322,6 +3357,7 @@ struct mux_lang {
             char box_art_scale[MAX_BUFFER_SIZE];
             char box_art_padding[MAX_BUFFER_SIZE];
             char box_art_placeholder[MAX_BUFFER_SIZE];
+            char save_screenshot[MAX_BUFFER_SIZE];
             char video_preview[MAX_BUFFER_SIZE];
             char content_width[MAX_BUFFER_SIZE];
             char page_skip[MAX_BUFFER_SIZE];

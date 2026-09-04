@@ -3,6 +3,7 @@
 #include <string.h>
 #include <dirent.h>
 #include "init.h"
+#include "perf.h"
 #include "log.h"
 #include "config.h"
 #include "theme.h"
@@ -163,6 +164,8 @@ int load_image_catalogue(
         return 0;
     }
 
+    const uint64_t catalogue_start = fe_perf_begin();
+
     for (int j = 0; j < ext_count; j++) {
         for (size_t i = 0; i < A_SIZE(args); i++) {
             if ((args[i].kind == cat_theme && skip_theme) || !args[i].catalogue_path || !args[i].catalogue_path[0]
@@ -210,16 +213,17 @@ int load_image_catalogue(
 
             snprintf(image_path, path_size, "%s", full_path);
             LOG_DEBUG(mux_module, "Catalogue image found: %s", image_path);
+            fe_perf_end(fe_perf_stage_catalogue, catalogue_start);
             return 1;
         }
     }
 
+    fe_perf_end(fe_perf_stage_catalogue, catalogue_start);
     return 0;
 }
 
 int load_manual_catalogue(
-    const char *catalogue_name, const char *program, const char *program_alt, char *manual_path,
-    const size_t path_size
+    const char *catalogue_name, const char *program, const char *program_alt, char *manual_path, const size_t path_size
 ) {
     const char *programs[] = {program, program_alt};
 

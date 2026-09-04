@@ -708,15 +708,19 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     frame_h = (int) height;
     if (size_changed) recompute_dest_rect();
 
+    const uint64_t upload_start = perf_begin();
     memcpy(raw_frame_buf, data, raw_needed);
 
     if (texture_filter_is_cpu_scaled(session_settings.texture_filter)) {
         frame_dirty = 1;
+        perf_end(perf_stage_video_upload, upload_start);
         return;
     }
 
     if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format())))
         SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
+
+    perf_end(perf_stage_video_upload, upload_start);
 }
 
 static int video_output_is_opaque(void) {

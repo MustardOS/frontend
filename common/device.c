@@ -80,6 +80,7 @@ void load_device(struct mux_device *device) {
 #undef DEV_MNT
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "cpu");
+    DEV_INT_RANGE(device->cpu.cores, "cores", 1, 1, INT16_MAX);
     DEV_STR(device->cpu.dflt, "default");
     DEV_STR(device->cpu.available, "available");
     DEV_STR(device->cpu.governor, "governor");

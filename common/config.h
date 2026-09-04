@@ -133,6 +133,7 @@ struct mux_config {
             int16_t usb_function;
             int16_t verbose;
             int16_t debug_log;
+            int16_t perf_counters;
             int16_t rumble;
             int16_t rumble_strength;
             int16_t user_init;
@@ -314,6 +315,7 @@ struct mux_config {
         int16_t box_art_scale;
         int16_t box_art_padding;
         int16_t box_art_placeholder;
+        int16_t save_screenshot;
         int16_t box_art_transition;
         int16_t video_preview;
         int16_t content_width;
@@ -387,6 +389,7 @@ struct mux_config {
         int16_t child_first;
         int16_t time_slice;
         int16_t tune_scale;
+        int16_t online_cores;
         char card_mode[MAX_BUFFER_SIZE];
         char state[MAX_BUFFER_SIZE];
         char overclock[MAX_BUFFER_SIZE];

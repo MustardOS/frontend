@@ -41,6 +41,17 @@ static int cpu_can_overclock(void) {
     return highest_frequency_in(listing) > stock;
 }
 
+static int cpu_cores_can_change(void) {
+    if (device.cpu.cores < 2) return 0;
+
+    glob_t found;
+    if (glob("/sys/devices/system/cpu/cpu[1-9]*/online", 0, NULL, &found) != 0) return 0;
+
+    const int can_change = found.gl_pathc > 0;
+    globfree(&found);
+    return can_change;
+}
+
 static int gpu_can_overclock(void) {
     const long stock = strtol(device.gpu.max_freq_default, NULL, 10);
     if (stock <= 0) return 0;
@@ -100,6 +111,11 @@ static void restore_danger_options(void) {
 
     lv_dropdown_set_selected(ui_dro_card_mode_danger, strcasecmp(config.danger.card_mode, "deadline") != 0);
     lv_dropdown_set_selected(ui_dro_state_danger, strcasecmp(config.danger.state, "mem") != 0);
+    lv_dropdown_set_selected(
+        ui_dro_online_cores_danger, config.danger.online_cores >= 1 && config.danger.online_cores <= device.cpu.cores
+                                        ? config.danger.online_cores
+                                        : 0
+    );
 
     lv_dropdown_set_selected(ui_dro_overclock_danger, index_of_value(config.danger.overclock, overclock_values, 3));
     lv_dropdown_set_selected(
@@ -110,6 +126,7 @@ static void restore_danger_options(void) {
 static void save_danger_options(void) {
     int is_modified = 0;
     int save_failed = 0;
+    int online_cores_modified = 0;
 
     CHECK_AND_SAVE_STD(danger, kernel_log, "danger/kernellog", INT, 0);
     CHECK_AND_SAVE_STD(danger, io_stats, "danger/iostats", INT, 0);
@@ -117,6 +134,13 @@ static void save_danger_options(void) {
     CHECK_AND_SAVE_STD(danger, child_first, "danger/child_first", INT, 0);
     CHECK_AND_SAVE_STD(danger, tune_scale, "danger/tune_scale", INT, 0);
     CHECK_AND_SAVE_STD(danger, page_cluster, "danger/page_cluster", INT, 0);
+
+    const int online_cores = lv_dropdown_get_selected(ui_dro_online_cores_danger);
+    if (online_cores != online_cores_original) {
+        is_modified++;
+        online_cores_modified = 1;
+        if (!write_text_to_file(CONF_CONFIG_PATH "danger/online_cores", "w", INT, online_cores)) save_failed++;
+    }
 
     CHECK_AND_SAVE_MAP(danger, vm_swap, "danger/vmswap", four_values, 25, 3);
     CHECK_AND_SAVE_MAP(danger, dirty_ratio, "danger/dirty_ratio", four_values, 25, 4);
@@ -133,8 +157,12 @@ static void save_danger_options(void) {
     CHECK_AND_SAVE_VAL(danger, gpu_overclock, "danger/gpuoverclock", CHAR, gpu_overclock_values);
 
     if (is_modified > 0) {
-        toast_message(lang.generic.saving, tst_wait_f);
-        refresh_config = 1;
+        if (online_cores_modified) {
+            run_tweak_script(lang.generic.saving);
+        } else {
+            toast_message(lang.generic.saving, tst_wait_f);
+            refresh_config = 1;
+        }
     }
 
     REPORT_SAVE_FAILURE();
@@ -168,12 +196,14 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, danger, tune_scale, lang.muxdanger.tunescale, "tunescale", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, danger, card_mode, lang.muxdanger.cardmode, "cardmode", cardmode_options, 2);
     INIT_OPTION_ITEM(-1, danger, state, lang.muxdanger.state, "state", state_options, 2);
+    INIT_OPTION_ITEM(-1, danger, online_cores, lang.muxdanger.onlinecores, "cores", NULL, 0);
 
     char *overclock_options[] = {lang.generic.disabled, "1608 MHz", "1704 MHz"};
     INIT_OPTION_ITEM(-1, danger, overclock, lang.muxdanger.overclock, "overclock", overclock_options, 3);
     INIT_OPTION_ITEM(-1, danger, gpu_overclock, lang.muxdanger.gpuoverclock, "gpuoverclock", disabled_enabled, 2);
 
     if (!cpu_can_overclock()) HIDE_OPTION_ITEM(danger, overclock);
+    if (!cpu_cores_can_change()) HIDE_OPTION_ITEM(danger, online_cores);
     if (!gpu_can_overclock()) HIDE_OPTION_ITEM(danger, gpu_overclock);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
@@ -194,6 +224,10 @@ static void init_navigation_group(void) {
     char *cluster_values = generate_number_string(0, 10, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_lbl_page_cluster_danger, ui_dro_page_cluster_danger, cluster_values);
     free(cluster_values);
+
+    char *online_core_values = generate_number_string(1, device.cpu.cores, 1, lang.generic.all, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_lbl_online_cores_danger, ui_dro_online_cores_danger, online_core_values);
+    free(online_core_values);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

@@ -129,6 +129,7 @@
 #define OPT_SHARE_PATH   OPT_PATH "share/"
 
 #define STORAGE_SHOTS   RUN_STORAGE_PATH "screenshot"
+#define STORAGE_PERF    RUN_STORAGE_PATH "performance"
 #define STORAGE_MUSIC   RUN_STORAGE_PATH "music"
 #define STORAGE_BIOS    RUN_STORAGE_PATH "bios"
 #define STORAGE_NETWORK RUN_STORAGE_PATH "network"

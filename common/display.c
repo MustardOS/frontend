@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "../lvgl/src/draw/sdl/lv_draw_sdl.h"
+#include "perf.h"
 #include "../lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h"
 #include "anim.h"
 #include "log.h"
@@ -1133,7 +1134,9 @@ static void composite_to(SDL_Texture *target, const int present) {
 }
 
 void display_composite_frame(void) {
+    const uint64_t render_start = fe_perf_begin();
     composite_to(NULL, 1);
+    fe_perf_end(fe_perf_stage_render, render_start);
 }
 
 uint64_t display_present_serial(void) {

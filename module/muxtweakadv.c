@@ -114,6 +114,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, retro_cache, "settings/advanced/retrocache", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, activity, "settings/advanced/activity", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, verbose, "settings/advanced/verbose", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, perf_counters, "settings/advanced/perf_counters", INT, 0);
 
     do {
         const int debuglog_current = lv_dropdown_get_selected(ui_dro_debug_log_tweakadv);
@@ -244,6 +245,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, activity, lang.muxtweakadv.activity, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, verbose, lang.muxtweakadv.verbose, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, debug_log, lang.muxtweakadv.debuglog, "debuglog", debug_log_mode, 3);
+    INIT_OPTION_ITEM(-1, tweakadv, perf_counters, lang.muxtweakadv.perfcounters, "perfcounters", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, user_init, lang.muxtweakadv.userinit, "userinit", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, bt_scan_timeout, lang.muxtweakadv.btscantimeout, "btscan", NULL, 0);
     INIT_OPTION_ITEM(

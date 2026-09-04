@@ -8,11 +8,12 @@
 #define DETAIL(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(DETAIL_ELEMENTS) };
 
-// section offsets follow the element lists so the numbers cannot drift
 enum {
     detail_off_system = 0,
     detail_len_system = E_SIZE(DETAIL_SYSTEM_ELEMENTS),
-    detail_off_runtime = detail_off_system + detail_len_system,
+    detail_off_modifications = detail_off_system + detail_len_system,
+    detail_len_modifications = E_SIZE(DETAIL_MODIFICATION_ELEMENTS),
+    detail_off_runtime = detail_off_modifications + detail_len_modifications,
     detail_len_runtime = E_SIZE(DETAIL_RUNTIME_ELEMENTS),
     detail_off_processor = detail_off_runtime + detail_len_runtime,
     detail_len_processor = E_SIZE(DETAIL_PROCESSOR_ELEMENTS),
@@ -27,8 +28,10 @@ enum {
 };
 #undef DETAIL
 
-#define UI_BUFFER 128
-#define RUN_BATT  "/run/muos/battery"
+#define UI_BUFFER        128
+#define RUN_BATT         "/run/muos/battery"
+#define RUN_INTEGRITY    "/run/muos/integrity"
+#define INTEGRITY_SCRIPT "/opt/muos/script/system/tegridy.sh"
 
 static struct sysinfo sysinfo_cache;
 static char hostname[32];
@@ -1150,14 +1153,45 @@ static void set_detail_value(lv_obj_t *label, const char *value) {
     lv_label_set_text(label, value);
 }
 
+static const char *get_integrity_result(const char *category) {
+    char path[MAX_BUFFER_SIZE];
+    char result[UI_BUFFER];
+
+    if (!file_exist(RUN_INTEGRITY "/complete")) return lang.muxdetail.checking;
+
+    snprintf(path, sizeof(path), RUN_INTEGRITY "/%s", category);
+    if (read_file_trim(path, result) == 0 && strcmp(result, "Clean") == 0) return lang.generic.clean;
+
+    return lang.generic.modified;
+}
+
+static void start_integrity_check(void) {
+    if (!file_exist(INTEGRITY_SCRIPT) || file_exist(RUN_INTEGRITY "/complete")) return;
+
+    const char *args[] = {"sh", INTEGRITY_SCRIPT, NULL};
+    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+}
+
 static void update_detail_info(void) {
-    set_detail_value(ui_val_version_detail, get_version(verify_check));
+    set_detail_value(ui_val_version_detail, get_version(0));
     set_detail_value(ui_val_build_detail, get_build());
     set_detail_value(ui_val_device_detail, get_device_info());
     set_detail_value(ui_val_serial_detail, get_serial());
     set_detail_value(ui_val_kernel_detail, get_kernel_version());
     set_detail_value(ui_val_arch_detail, get_cpu_arch());
     set_detail_value(ui_val_display_detail, get_display_mode());
+
+    set_detail_value(ui_val_integrity_signature_detail, get_integrity_result("signature"));
+    set_detail_value(ui_val_provenance_detail, get_integrity_result("provenance"));
+    set_detail_value(ui_val_system_scripts_detail, get_integrity_result("scripts"));
+    set_detail_value(ui_val_frontend_integrity_detail, get_integrity_result("frontend"));
+    set_detail_value(ui_val_device_package_detail, get_integrity_result("device"));
+    set_detail_value(ui_val_kernel_integrity_detail, get_integrity_result("kernel"));
+    set_detail_value(ui_val_kernel_modules_detail, get_integrity_result("modules"));
+    set_detail_value(ui_val_device_tree_detail, get_integrity_result("dtb"));
+    set_detail_value(ui_val_initial_ramdisk_detail, get_integrity_result("ramdisk"));
+    set_detail_value(ui_val_bootloader_detail, get_integrity_result("bootloader"));
+    set_detail_value(ui_val_boot_resources_detail, get_integrity_result("boot_resources"));
 
     set_detail_value(ui_val_uptime_detail, get_system_uptime());
     set_detail_value(ui_val_boot_time_detail, get_boot_time());
@@ -1216,13 +1250,25 @@ static void export_diagnostics(void) {
         return;
     }
 
-    fprintf(f, "%s: %s\n", lang.muxdetail.label.version, get_version(verify_check));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.version, get_version(0));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.build, get_build());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.device, get_device_info());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.serial, get_serial());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel, get_kernel_version());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.arch, get_cpu_arch());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.display, get_display_mode());
+    fprintf(f, "\n[%s]\n", lang.muxdetail.section.modifications);
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.integrity_signature, get_integrity_result("signature"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.provenance, get_integrity_result("provenance"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.system_scripts, get_integrity_result("scripts"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.frontend_integrity, get_integrity_result("frontend"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.device_package, get_integrity_result("device"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel_integrity, get_integrity_result("kernel"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel_modules, get_integrity_result("modules"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.device_tree, get_integrity_result("dtb"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.initial_ramdisk, get_integrity_result("ramdisk"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.bootloader, get_integrity_result("bootloader"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.boot_resources, get_integrity_result("boot_resources"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.uptime, get_system_uptime());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.boot_time, get_boot_time());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.load_avg, get_load_average());
@@ -1302,10 +1348,12 @@ static void init_navigation_group(void) {
 
     if (!battery_used_available()) HIDE_VALUE_ITEM(detail, battery_used);
 
-    list_frame frames[7];
+    list_frame frames[8];
     int frame_count = 0;
 
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.system, detail_off_system, detail_len_system};
+    frames[frame_count++] =
+        (list_frame) {lang.muxdetail.section.modifications, detail_off_modifications, detail_len_modifications};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.runtime, detail_off_runtime, detail_len_runtime};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.processor, detail_off_processor, detail_len_processor};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.battery, detail_off_battery, detail_len_battery};
@@ -1356,8 +1404,8 @@ static void nav_refresh(void) {
 
         if (e_focused == ui_lbl_hostname_detail) {
             action = lang.generic.edit;
-        } else if (e_focused == ui_lbl_version_detail || e_focused == ui_lbl_build_detail
-                   || e_focused == ui_lbl_kernel_detail || e_focused == ui_lbl_memory_detail) {
+        } else if (e_focused == ui_lbl_build_detail || e_focused == ui_lbl_kernel_detail
+                   || e_focused == ui_lbl_memory_detail) {
             action = lang.generic.select;
         }
     }
@@ -1498,12 +1546,6 @@ static void handle_a(void) {
         osk_show(ui_pnl_entry_detail);
         lv_textarea_set_text(ui_txt_entry_detail, lv_label_get_text(lv_group_get_focused(ui_group_value)));
 
-        return;
-    }
-
-    if (e_focused == ui_lbl_version_detail) {
-        toast_message(verify_check ? lang.generic.modified : lang.generic.clean, tst_wait_s);
-        refresh_screen(ui_screen, 1);
         return;
     }
 
@@ -1843,6 +1885,7 @@ int muxdetail_main(void) {
 
     init_fonts();
     init_navigation_group();
+    start_integrity_check();
     update_detail_info();
 
     init_osk(ui_pnl_entry_detail, ui_txt_entry_detail, 0, 0, 1024);

@@ -10,7 +10,7 @@ extern char current_wall[MAX_BUFFER_SIZE];
 enum wall_type { wall_application, wall_archive, wall_general, wall_task };
 
 struct image_settings {
-    char *image_path;
+    const char *image_path;
     int16_t align;
     int16_t max_width;
     int16_t max_height;

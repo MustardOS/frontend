@@ -1138,23 +1138,7 @@ static void render_splash_refresh(lv_obj_t *ui_img_splash, char *image, int *spl
     lv_img_set_src(ui_img_splash, image_path);
 }
 
-static void render_box_refresh(
-    char *image, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_viewport_objects[], int *starter_image
-) {
-    if (strcasecmp(box_image_previous_path, image) == 0) return;
-
-    char artwork_config_path[MAX_BUFFER_SIZE];
-    snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/%s.ini", h_core_artwork);
-
-    if (!file_exist(artwork_config_path))
-        snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/default.ini");
-
-    if (file_exist(artwork_config_path)) {
-        viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
-        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-        return;
-    }
-
+static void render_box_single(const char *image, int *starter_image) {
     if (!file_exist(image)) {
         apply_box_blank_or_fallback(NULL, starter_image);
         return;
@@ -1204,6 +1188,125 @@ static void render_box_refresh(
     }
 
     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+}
+
+static void render_box_refresh(
+    char *image, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_viewport_objects[], int *starter_image
+) {
+    if (strcasecmp(box_image_previous_path, image) == 0) return;
+
+    char artwork_config_path[MAX_BUFFER_SIZE];
+    snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/%s.ini", h_core_artwork);
+
+    if (!file_exist(artwork_config_path))
+        snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/default.ini");
+
+    if (file_exist(artwork_config_path)) {
+        viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+        return;
+    }
+
+    render_box_single(image, starter_image);
+}
+
+static int content_cfg_lines(char *sys_dir, const char *file_name, char lines[][MAX_BUFFER_SIZE], const int count) {
+    char subdir_buf[MAX_BUFFER_SIZE];
+    snprintf(subdir_buf, sizeof(subdir_buf), "%s", sys_dir);
+    const char *subdir = get_last_subdir(subdir_buf, '/', 4);
+
+    char path[MAX_BUFFER_SIZE];
+    if (file_name) {
+        char stem[MAX_BUFFER_SIZE];
+        snprintf(stem, sizeof(stem), "%s", file_name);
+        char *dot = strrchr(stem, '.');
+        if (dot) *dot = '\0';
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/%s.cfg", subdir, stem);
+    } else {
+        snprintf(path, sizeof(path), INFO_CON_PATH "/%s/core.cfg", subdir);
+    }
+    remove_double_slashes(path);
+
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
+
+    int read = 0;
+    while (read < count && fgets(lines[read], MAX_BUFFER_SIZE, file)) {
+        lines[read][strcspn(lines[read], "\r\n")] = '\0';
+        read++;
+    }
+
+    fclose(file);
+    return read;
+}
+
+static int content_muxretro_core(const char *resolved, char *core_name, const size_t core_size) {
+    static char cached_path[PATH_MAX];
+    static char cached_core[MAX_BUFFER_SIZE];
+    static int cached_is_muxretro;
+    static int cached_valid;
+
+    if (cached_valid && strcmp(cached_path, resolved) == 0) {
+        if (!cached_is_muxretro) return 0;
+        snprintf(core_name, core_size, "%s", cached_core);
+        return 1;
+    }
+
+    cached_valid = 1;
+    cached_is_muxretro = 0;
+    cached_core[0] = '\0';
+    snprintf(cached_path, sizeof(cached_path), "%s", resolved);
+
+    char *sys_dir = get_content_path(resolved);
+    if (!sys_dir) return 0;
+
+    char lines[6][MAX_BUFFER_SIZE];
+    int count = content_cfg_lines(sys_dir, get_file_name(resolved), lines, 6);
+    int core_index = 1, assign_index = 2, launch_index = 5;
+
+    if (count < 6 || !lines[launch_index][0]) {
+        count = content_cfg_lines(sys_dir, NULL, lines, 5);
+        core_index = 0;
+        assign_index = 1;
+        launch_index = 4;
+        if (count < 5) {
+            free(sys_dir);
+            return 0;
+        }
+    }
+    free(sys_dir);
+
+    if (!lines[core_index][0] || !lines[assign_index][0] || !lines[launch_index][0]) return 0;
+
+    char assign_dir[MAX_BUFFER_SIZE];
+    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", lines[assign_index]);
+    if (!core_uses_muxretro(assign_dir, lines[launch_index])) return 0;
+
+    cached_is_muxretro = 1;
+    snprintf(cached_core, sizeof(cached_core), "%s", lines[core_index]);
+    snprintf(core_name, core_size, "%s", cached_core);
+    return 1;
+}
+
+int resolve_save_screenshot(const char *content_path, const int scope, char *out, const size_t out_size) {
+    if (!content_path || !*content_path || !out) return 0;
+    if (!(config.visual.save_screenshot & scope)) return 0;
+    if (grid_mode_enabled && config.visual.box_art_hide) return 0;
+
+    char resolved[PATH_MAX];
+    if (!union_resolve_to_real(content_path, resolved, sizeof(resolved)))
+        snprintf(resolved, sizeof(resolved), "%s", content_path);
+
+    char core_name[MAX_BUFFER_SIZE];
+    if (!content_muxretro_core(resolved, core_name, sizeof(core_name))) return 0;
+
+    return muxretro_latest_state_image(resolved, core_name, out, out_size);
+}
+
+void render_box_image(const char *image, int *starter_image) {
+    if (strcasecmp(box_image_previous_path, image) == 0) return;
+
+    render_box_single(image, starter_image);
 }
 
 void render_image_refresh(

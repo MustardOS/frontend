@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdatomic.h>
 #include "../init.h"
+#include "../perf.h"
 #include <limits.h>
 #include "common.h"
 #include "nav.h"
@@ -606,6 +607,8 @@ void list_win_update_items(
     const int max = (int) item_count - start_index;
     if (max <= 0) return;
 
+    const uint64_t list_start = fe_perf_begin();
+
     int count = theme.mux.item.count;
     if (count > max) count = max;
 
@@ -613,6 +616,8 @@ void list_win_update_items(
         const lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_content, index);
         update_item_cb(lv_obj_get_child(panel_item, 0), lv_obj_get_child(panel_item, 1), start_index + index);
     }
+
+    fe_perf_end(fe_perf_stage_list, list_start);
 }
 
 void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)) {

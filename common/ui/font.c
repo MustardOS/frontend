@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include "font.h"
+#include "../perf.h"
 #include "../fileio.h"
 #include "../content.h"
 #include "../init.h"
@@ -316,10 +317,10 @@ static uint32_t font_key_hash(const char *path, const int size) {
 
 static lv_font_t *cache_lookup(const char *path, const int size) {
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
+    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        const font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
+        const font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
         if (e->path[0] == '\0') return NULL;
         if (e->hash == h && e->size == size && strcmp(e->path, path) == 0) return e->font;
     }
@@ -340,10 +341,10 @@ static int cache_store(const char *path, const int size, lv_font_t *font, void *
     }
 
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
+    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
+        font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
 
         if (e->path[0] != '\0') continue;
         e->hash = h;
@@ -384,7 +385,7 @@ static lv_font_t *load_font_cached_bin(const char *path) {
     return font;
 }
 
-static lv_font_t *load_ttf_impl(const char *path, int size, int set_fallback) {
+static lv_font_t *load_ttf_impl(const char *path, const int size, const int set_fallback) {
     lv_font_t *hit = cache_lookup(path, size);
     if (hit) return hit;
 
@@ -395,7 +396,7 @@ static lv_font_t *load_ttf_impl(const char *path, int size, int set_fallback) {
     }
 
     fseek(f, 0, SEEK_END);
-    long file_size = ftell(f);
+    const long file_size = ftell(f);
     rewind(f);
 
     if (file_size <= 0 || file_size > TTF_MAX_FILE_BYTES) {
@@ -545,7 +546,7 @@ find_theme_font(const char *curr_lang, const char *section, const int use_grid, 
     return font;
 }
 
-void load_font_text(lv_obj_t *screen) {
+static void load_font_text_inner(lv_obj_t *screen) {
     const int eff_type = effective_type();
 
     int lang_size;
@@ -606,6 +607,12 @@ void load_font_text(lv_obj_t *screen) {
 
     LOG_INFO(mux_module, "Loading Default Language Font");
     apply_font(screen, guaranteed_font(lang_size));
+}
+
+void load_font_text(lv_obj_t *screen) {
+    const uint64_t font_start = fe_perf_begin();
+    load_font_text_inner(screen);
+    fe_perf_end(fe_perf_stage_font, font_start);
 }
 
 void load_font_section(const char *section, lv_obj_t *element) {
