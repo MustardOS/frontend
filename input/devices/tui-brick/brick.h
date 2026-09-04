@@ -4,7 +4,7 @@
 #include "brick_structs.h"
 #include "../device.h"
 
-extern const struct device_backend TUI_BRICK_PROFILE;
+extern const struct device_backend tui_brick_profile;
 
 struct axis_state;
 

@@ -41,24 +41,24 @@ struct h700_layout {
     int has_sticks;
 };
 
-static const struct h700_layout H700_LAYOUTS[] = {
-    {"rgsp", &RGSP_GAMEPAD, 0},
-    {"rg28xx-h", &RG28XX_H_GAMEPAD, 0},
-    {"rg34xx-h", &RG34XX_H_GAMEPAD, 0},
-    {"rg35xx-2024", &RG35XX_2024_GAMEPAD, 0},
-    {"rg35xx-plus", &RG35XX_PLUS_GAMEPAD, 0},
-    {"rg35xx-sp", &RG35XX_SP_GAMEPAD, 0},
-    {"rg34xx-sp", &RG34XX_SP_GAMEPAD, 1},
-    {"rg35xx-h", &RG35XX_H_GAMEPAD, 1},
-    {"rg35xx-pro", &RG35XX_PRO_GAMEPAD, 1},
-    {"rg40xx-h", &RG40XX_H_GAMEPAD, 1},
-    {"rg40xx-v", &RG40XX_V_GAMEPAD, 1},
-    {"rgcubexx-h", &RGCUBEXX_H_GAMEPAD, 1},
+static const struct h700_layout h700_layouts[] = {
+    {"rgsp", &rgsp_gamepad, 0},
+    {"rg28xx-h", &rg28xx_h_gamepad, 0},
+    {"rg34xx-h", &rg34xx_h_gamepad, 0},
+    {"rg35xx-2024", &rg35xx_2024_gamepad, 0},
+    {"rg35xx-plus", &rg35xx_plus_gamepad, 0},
+    {"rg35xx-sp", &rg35xx_sp_gamepad, 0},
+    {"rg34xx-sp", &rg34xx_sp_gamepad, 1},
+    {"rg35xx-h", &rg35xx_h_gamepad, 1},
+    {"rg35xx-pro", &rg35xx_pro_gamepad, 1},
+    {"rg40xx-h", &rg40xx_h_gamepad, 1},
+    {"rg40xx-v", &rg40xx_v_gamepad, 1},
+    {"rgcubexx-h", &rgcubexx_h_gamepad, 1},
 };
 
 static const struct h700_layout *find_layout(const char *id) {
-    for (size_t i = 0; i < sizeof(H700_LAYOUTS) / sizeof(H700_LAYOUTS[0]); ++i) {
-        if (id && strcmp(id, H700_LAYOUTS[i].id) == 0) return &H700_LAYOUTS[i];
+    for (size_t i = 0; i < sizeof(h700_layouts) / sizeof(h700_layouts[0]); ++i) {
+        if (id && strcmp(id, h700_layouts[i].id) == 0) return &h700_layouts[i];
     }
     return NULL;
 }
@@ -345,17 +345,17 @@ static void h700_set_rumble_strength(void *context, unsigned int strength_percen
         .poll_interval_us = 1000,                                                                                      \
     }
 
-H700_BACKEND(RGSP_PROFILE, "rgsp", "ANBERNIC RG SP", RGSP_GAMEPAD);
-H700_BACKEND(RG28XX_H_PROFILE, "rg28xx-h", "ANBERNIC RG28XX H", RG28XX_H_GAMEPAD);
-H700_BACKEND(RG34XX_H_PROFILE, "rg34xx-h", "ANBERNIC RG34XX H", RG34XX_H_GAMEPAD);
-H700_BACKEND(RG34XX_SP_PROFILE, "rg34xx-sp", "ANBERNIC RG34XX SP", RG34XX_SP_GAMEPAD);
-H700_BACKEND(RG35XX_2024_PROFILE, "rg35xx-2024", "ANBERNIC RG35XX 2024", RG35XX_2024_GAMEPAD);
-H700_BACKEND(RG35XX_H_PROFILE, "rg35xx-h", "ANBERNIC RG35XX H", RG35XX_H_GAMEPAD);
-H700_BACKEND(RG35XX_PLUS_PROFILE, "rg35xx-plus", "ANBERNIC RG35XX PLUS", RG35XX_PLUS_GAMEPAD);
-H700_BACKEND(RG35XX_PRO_PROFILE, "rg35xx-pro", "ANBERNIC RG35XX PRO", RG35XX_PRO_GAMEPAD);
-H700_BACKEND(RG35XX_SP_PROFILE, "rg35xx-sp", "ANBERNIC RG35XX SP", RG35XX_SP_GAMEPAD);
-H700_BACKEND(RG40XX_H_PROFILE, "rg40xx-h", "ANBERNIC RG40XX H", RG40XX_H_GAMEPAD);
-H700_BACKEND(RG40XX_V_PROFILE, "rg40xx-v", "ANBERNIC RG40XX V", RG40XX_V_GAMEPAD);
-H700_BACKEND(RGCUBEXX_H_PROFILE, "rgcubexx-h", "ANBERNIC RGCUBEXX H", RGCUBEXX_H_GAMEPAD);
+H700_BACKEND(rgsp_profile, "rgsp", "ANBERNIC RG SP", rgsp_gamepad);
+H700_BACKEND(rg28xx_h_profile, "rg28xx-h", "ANBERNIC RG28XX H", rg28xx_h_gamepad);
+H700_BACKEND(rg34xx_h_profile, "rg34xx-h", "ANBERNIC RG34XX H", rg34xx_h_gamepad);
+H700_BACKEND(rg34xx_sp_profile, "rg34xx-sp", "ANBERNIC RG34XX SP", rg34xx_sp_gamepad);
+H700_BACKEND(rg35xx_2024_profile, "rg35xx-2024", "ANBERNIC RG35XX 2024", rg35xx_2024_gamepad);
+H700_BACKEND(rg35xx_h_profile, "rg35xx-h", "ANBERNIC RG35XX H", rg35xx_h_gamepad);
+H700_BACKEND(rg35xx_plus_profile, "rg35xx-plus", "ANBERNIC RG35XX PLUS", rg35xx_plus_gamepad);
+H700_BACKEND(rg35xx_pro_profile, "rg35xx-pro", "ANBERNIC RG35XX PRO", rg35xx_pro_gamepad);
+H700_BACKEND(rg35xx_sp_profile, "rg35xx-sp", "ANBERNIC RG35XX SP", rg35xx_sp_gamepad);
+H700_BACKEND(rg40xx_h_profile, "rg40xx-h", "ANBERNIC RG40XX H", rg40xx_h_gamepad);
+H700_BACKEND(rg40xx_v_profile, "rg40xx-v", "ANBERNIC RG40XX V", rg40xx_v_gamepad);
+H700_BACKEND(rgcubexx_h_profile, "rgcubexx-h", "ANBERNIC RGCUBEXX H", rgcubexx_h_gamepad);
 
 #undef H700_BACKEND

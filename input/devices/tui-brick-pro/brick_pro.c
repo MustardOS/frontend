@@ -14,10 +14,10 @@
 
 static struct brick_pro_state brick_pro_ctx;
 
-static const struct device_axis_cfg BRICK_PRO_AXIS_LEFT_CFG = {
+static const struct device_axis_cfg brick_pro_axis_left_cfg = {
     .abs_code_x = ABS_X, .abs_code_y = ABS_Y, .invert_x = 1, .invert_y = 1
 };
-static const struct device_axis_cfg BRICK_PRO_AXIS_RIGHT_CFG = {
+static const struct device_axis_cfg brick_pro_axis_right_cfg = {
     .abs_code_x = ABS_RX, .abs_code_y = ABS_RY, .invert_x = 1, .invert_y = 1
 };
 
@@ -35,7 +35,7 @@ static int initialise_pin(int pin) {
 }
 
 static int poll_switch(struct brick_pro_state *st) {
-    int val = sunxi_gpio_input((uint32_t) BRICK_PRO_GPIO_SWITCH);
+    int val = sunxi_gpio_input((uint32_t) brick_pro_gpio_switch);
     if (val < 0) {
         return 0;
     }
@@ -74,28 +74,28 @@ int brick_pro_initialise(
     memset(st, 0, sizeof(*st));
     st->gp = gp;
     initialise_active_low(st);
-    memcpy(st->buttons, BRICK_PRO_BUTTON_DEFS, sizeof(BRICK_PRO_BUTTON_DEFS));
-    memcpy(st->hat_pins, BRICK_PRO_HAT_PINS, sizeof(BRICK_PRO_HAT_PINS));
+    memcpy(st->buttons, brick_pro_button_defs, sizeof(brick_pro_button_defs));
+    memcpy(st->hat_pins, brick_pro_hat_pins, sizeof(brick_pro_hat_pins));
     if (device_rumble_initialise(&st->rumble, rumble_a133_driver(), NULL, options->rumble_strength) < 0) {
         sunxi_gpio_close();
         return -1;
     }
 
-    for (size_t i = 0; i < BRICK_PRO_BUTTON_COUNT; ++i) {
+    for (size_t i = 0; i < brick_pro_button_count; ++i) {
         if (initialise_pin(st->buttons[i].gpio) < 0) {
             device_rumble_close(&st->rumble);
             sunxi_gpio_close();
             return -1;
         }
     }
-    for (size_t i = 0; i < BRICK_PRO_HAT_PIN_COUNT; ++i) {
+    for (size_t i = 0; i < brick_pro_hat_pin_count; ++i) {
         if (initialise_pin(st->hat_pins[i]) < 0) {
             device_rumble_close(&st->rumble);
             sunxi_gpio_close();
             return -1;
         }
     }
-    if (initialise_pin(BRICK_PRO_GPIO_SWITCH) < 0) {
+    if (initialise_pin(brick_pro_gpio_switch) < 0) {
         device_rumble_close(&st->rumble);
         sunxi_gpio_close();
         return -1;
@@ -110,8 +110,8 @@ int brick_pro_initialise(
 
     st->last_switch = -1;
     st->hat = (struct device_hat_state) {.x = 0, .y = 0, .left = 0, .right = 0, .up = 0, .down = 0};
-    st->turbo_count = BRICK_PRO_TURBO_CFG_COUNT;
-    turbo_initialise_bindings(st->turbo, st->turbo_count, BRICK_PRO_TURBO_CFG);
+    st->turbo_count = brick_pro_turbo_cfg_count;
+    turbo_initialise_bindings(st->turbo, st->turbo_count, brick_pro_turbo_cfg);
 
     st->ax_lx = lx;
     st->ax_ly = ly;
@@ -133,7 +133,7 @@ int brick_pro_poll(void *ctx) {
     }
     device_dirty_reset(&st->dirty, poll_switch(st));
 
-    for (size_t i = 0; i < BRICK_PRO_BUTTON_COUNT; ++i) {
+    for (size_t i = 0; i < brick_pro_button_count; ++i) {
         int v = sunxi_gpio_input((uint32_t) st->buttons[i].gpio);
         if (v < 0) {
             continue;
@@ -149,8 +149,8 @@ int brick_pro_poll(void *ctx) {
         }
     }
 
-    int *hat_targets[BRICK_PRO_HAT_PIN_COUNT] = {&st->hat.up, &st->hat.down, &st->hat.left, &st->hat.right};
-    for (size_t i = 0; i < BRICK_PRO_HAT_PIN_COUNT; ++i) {
+    int *hat_targets[brick_pro_hat_pin_count] = {&st->hat.up, &st->hat.down, &st->hat.left, &st->hat.right};
+    for (size_t i = 0; i < brick_pro_hat_pin_count; ++i) {
         int value = sunxi_gpio_input((uint32_t) st->hat_pins[i]);
         if (value < 0) {
             continue;
@@ -163,13 +163,13 @@ int brick_pro_poll(void *ctx) {
     int lx, ly, rx, ry;
     if (read_stick(st->i2c_fd, BRICK_PRO_I2C_ADDR_L, &lx, &ly)) {
         device_axes_process_pair(
-            st->gp, st->ax_lx, st->ax_ly, (uint16_t) lx, (uint16_t) ly, &BRICK_PRO_AXIS_LEFT_CFG, &st->last_lx,
+            st->gp, st->ax_lx, st->ax_ly, (uint16_t) lx, (uint16_t) ly, &brick_pro_axis_left_cfg, &st->last_lx,
             &st->last_ly, &st->dirty
         );
     }
     if (read_stick(st->i2c_fd, BRICK_PRO_I2C_ADDR_R, &rx, &ry)) {
         device_axes_process_pair(
-            st->gp, st->ax_rx, st->ax_ry, (uint16_t) rx, (uint16_t) ry, &BRICK_PRO_AXIS_RIGHT_CFG, &st->last_rx,
+            st->gp, st->ax_rx, st->ax_ry, (uint16_t) rx, (uint16_t) ry, &brick_pro_axis_right_cfg, &st->last_rx,
             &st->last_ry, &st->dirty
         );
     }
@@ -204,12 +204,12 @@ static void brick_pro_set_rumble_strength(void *ctx, unsigned int strength_perce
     if (st) device_rumble_set_strength(&st->rumble, strength_percent);
 }
 
-const struct device_backend TUI_BRICK_PRO_PROFILE = {
+const struct device_backend tui_brick_pro_profile = {
     .id = "tui-brick-pro",
     .name = "TRIMUI BRICK PRO",
     .probe_priority = 100,
     .probe = brick_pro_probe,
-    .gamepad = &BRICK_PRO_GAMEPAD_DESC,
+    .gamepad = &brick_pro_gamepad_desc,
     .has_analogue_calibration = 1,
     .ops =
         {

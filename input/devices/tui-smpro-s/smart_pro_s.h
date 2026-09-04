@@ -5,7 +5,7 @@
 #include "smart_pro_s_structs.h"
 #include "../device.h"
 
-extern const struct device_backend TUI_SMPRO_S_PROFILE;
+extern const struct device_backend tui_smpro_s_profile;
 
 struct gamepad;
 struct axis_state;

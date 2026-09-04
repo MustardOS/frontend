@@ -1,8 +1,7 @@
-#include "calibration.h"
-
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "calibration.h"
 
 #define RAW_MIN            0.0
 #define RAW_MAX            4095.0
@@ -39,23 +38,27 @@
 #define PARK_REQUIRED 60
 #define PARK_ALPHA    0.06
 
-static double clampd(double v, double lo, double hi) {
+static double clampd(const double v, const double lo, const double hi) {
     if (!isfinite(v)) return lo;
+
     if (v < lo) return lo;
     if (v > hi) return hi;
+
     return v;
 }
 
 static int cmp_double(const void *a, const void *b) {
-    double da = *(const double *) a;
-    double db = *(const double *) b;
-    return (da < db) ? -1 : (da > db) ? 1 : 0;
+    const double da = *(const double *) a;
+    const double db = *(const double *) b;
+
+    return da < db ? -1 : da > db ? 1 : 0;
 }
 
-static double median_of(double *buf, int n) {
-    qsort(buf, (size_t) n, sizeof(double), cmp_double);
-    if (n & 1) return buf[n / 2];
-    return 0.5 * (buf[n / 2 - 1] + buf[n / 2]);
+static double median_of(double *buf) {
+    qsort(buf, BOOT_SAMPLES, sizeof(double), cmp_double);
+    if (BOOT_SAMPLES & 1) return buf[BOOT_SAMPLES / 2];
+
+    return (buf[BOOT_SAMPLES / 2 - 1] + buf[BOOT_SAMPLES / 2]) / 2.0;
 }
 
 static double smootherstep(double t) {
@@ -63,11 +66,13 @@ static double smootherstep(double t) {
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 }
 
-static double soft_knee_0to1(double a) {
+static double soft_knee_0_to1(double a) {
     a = clampd(a, 0.0, 1.0);
     if (a <= KNEE_START) return a;
-    double t = (a - KNEE_START) / (1.0 - KNEE_START);
-    double s = smootherstep(t);
+
+    const double t = (a - KNEE_START) / (1.0 - KNEE_START);
+    const double s = smootherstep(t);
+
     return KNEE_START + (1.0 - KNEE_START) * s;
 }
 
@@ -81,47 +86,56 @@ static void recompute_minmax(struct axis_state *a) {
     a->max = clampd(a->centre + a->pos_span, a->centre, RAW_MAX);
 }
 
-void cal_initialise(struct axis_state *a) {
-    memset(a, 0, sizeof(*a));
+void cal_initialise(struct axis_state *axis) {
+    memset(axis, 0, sizeof(*axis));
 
-    a->initialised = 0;
-    a->samples = 0;
+    axis->initialised = 0;
+    axis->samples = 0;
 
-    a->boot_count = 0;
-    a->boot_rejections = 0;
+    axis->boot_count = 0;
+    axis->boot_rejections = 0;
     for (int i = 0; i < BOOT_SAMPLES; i++)
-        a->boot_buf[i] = RAW_CENTRE_DEFAULT;
+        axis->boot_buf[i] = RAW_CENTRE_DEFAULT;
 
-    a->centre = RAW_CENTRE_DEFAULT;
+    axis->centre = RAW_CENTRE_DEFAULT;
 
-    a->neg_span = START_HALF_SPAN;
-    a->pos_span = START_HALF_SPAN;
+    axis->neg_span = START_HALF_SPAN;
+    axis->pos_span = START_HALF_SPAN;
 
-    a->deadzone = DEADZONE_USER_MIN;
+    axis->deadzone = DEADZONE_USER_MIN;
 
-    a->filt = RAW_CENTRE_DEFAULT;
-    a->prev_filt = RAW_CENTRE_DEFAULT;
-    a->idle_count = 0;
+    axis->filt = RAW_CENTRE_DEFAULT;
+    axis->prev_filt = RAW_CENTRE_DEFAULT;
+    axis->idle_count = 0;
 
-    a->noise_ema = 0.0;
+    axis->noise_ema = 0.0;
 
-    a->park_sum = 0.0;
-    a->park_count = 0;
+    axis->park_sum = 0.0;
+    axis->park_count = 0;
 
-    recompute_minmax(a);
+    recompute_minmax(axis);
+}
+
+void cal_seed(struct axis_state *axis, const int raw) {
+    if (!axis || axis->initialised) return;
+
+    for (int i = 0; i <= BOOT_SAMPLES && !axis->initialised; ++i)
+        cal_update(axis, raw);
 }
 
 static int finish_boot_calibration(struct axis_state *a) {
     double sample_min = a->boot_buf[0];
     double sample_max = a->boot_buf[0];
+
     for (int i = 1; i < BOOT_SAMPLES; ++i) {
         sample_min = fmin(sample_min, a->boot_buf[i]);
         sample_max = fmax(sample_max, a->boot_buf[i]);
     }
 
-    double centre = median_of(a->boot_buf, BOOT_SAMPLES);
-    int stable = (sample_max - sample_min) <= BOOT_MAX_SPREAD;
-    int plausible_centre = fabs(centre - RAW_CENTRE_DEFAULT) <= BOOT_MAX_CENTRE_OFFSET;
+    const double centre = median_of(a->boot_buf);
+    const int stable = sample_max - sample_min <= BOOT_MAX_SPREAD;
+    const int plausible_centre = fabs(centre - RAW_CENTRE_DEFAULT) <= BOOT_MAX_CENTRE_OFFSET;
+
     if (!stable || !plausible_centre) {
 
         a->boot_count = 0;
@@ -145,107 +159,110 @@ static int finish_boot_calibration(struct axis_state *a) {
     a->noise_ema = startup_noise;
     a->deadzone = clampd(DEADZONE_NOISE_BASE + NOISE_MULT * startup_noise, DEADZONE_USER_MIN, DEADZONE_USER_MAX);
     a->idle_count = 0;
+
     recompute_minmax(a);
     return 1;
 }
 
-void cal_update(struct axis_state *a, int raw) {
-    double val = clampd((double) raw, RAW_MIN, RAW_MAX);
+void cal_update(struct axis_state *axis, const int raw) {
+    if (!axis) return;
 
-    if (!a->initialised) {
-        if (a->boot_count < BOOT_SAMPLES) {
-            a->boot_buf[a->boot_count++] = val;
+    const double val = clampd(raw, RAW_MIN, RAW_MAX);
+
+    if (!axis->initialised) {
+        if (axis->boot_count < BOOT_SAMPLES) {
+            axis->boot_buf[axis->boot_count++] = val;
             return;
         }
 
-        finish_boot_calibration(a);
+        finish_boot_calibration(axis);
         return;
     }
 
-    a->samples++;
+    axis->samples++;
 
-    a->filt = a->filt + FILTER_ALPHA * (val - a->filt);
-    double vel = fabs(a->filt - a->prev_filt);
-    a->prev_filt = a->filt;
+    axis->filt = axis->filt + FILTER_ALPHA * (val - axis->filt);
+    const double vel = fabs(axis->filt - axis->prev_filt);
+    axis->prev_filt = axis->filt;
 
-    int near_centre = fabs(a->filt - a->centre) <= CENTRE_LEARN_BAND;
-    int slow = vel <= VEL_THRESH;
+    const int near_centre = fabs(axis->filt - axis->centre) <= CENTRE_LEARN_BAND;
+    const int slow = vel <= VEL_THRESH;
 
     if (near_centre && slow)
-        a->idle_count++;
+        axis->idle_count++;
     else
-        a->idle_count = 0;
+        axis->idle_count = 0;
 
-    int idle = a->idle_count >= IDLE_REQUIRED;
+    const int idle = axis->idle_count >= IDLE_REQUIRED;
 
     if (idle) {
-        a->centre = a->centre + CENTRE_ALPHA * (a->filt - a->centre);
+        axis->centre = axis->centre + CENTRE_ALPHA * (axis->filt - axis->centre);
 
-        double dev = fabs(a->filt - a->centre);
-        a->noise_ema = a->noise_ema + NOISE_ALPHA * (dev - a->noise_ema);
+        const double dev = fabs(axis->filt - axis->centre);
+        axis->noise_ema = axis->noise_ema + NOISE_ALPHA * (dev - axis->noise_ema);
 
-        double dz = DEADZONE_NOISE_BASE + NOISE_MULT * a->noise_ema;
-        a->deadzone = clampd(dz, DEADZONE_USER_MIN, DEADZONE_USER_MAX);
+        const double dz = DEADZONE_NOISE_BASE + NOISE_MULT * axis->noise_ema;
+        axis->deadzone = clampd(dz, DEADZONE_USER_MIN, DEADZONE_USER_MAX);
     }
 
-    int park_near = fabs(a->filt - a->centre) <= PARK_BAND;
-    int park_slow = vel <= VEL_THRESH;
+    const int park_near = fabs(axis->filt - axis->centre) <= PARK_BAND;
+    const int park_slow = vel <= VEL_THRESH;
 
     if (park_near && park_slow) {
-        a->park_sum += a->filt;
-        a->park_count++;
+        axis->park_sum += axis->filt;
+        axis->park_count++;
 
-        if (a->park_count >= PARK_REQUIRED) {
-            double target = a->park_sum / (double) a->park_count;
-            a->centre = a->centre + PARK_ALPHA * (target - a->centre);
+        if (axis->park_count >= PARK_REQUIRED) {
+            const double target = axis->park_sum / (double) axis->park_count;
+            axis->centre = axis->centre + PARK_ALPHA * (target - axis->centre);
 
-            a->park_sum = 0.0;
-            a->park_count = 0;
+            axis->park_sum = 0.0;
+            axis->park_count = 0;
         }
     } else {
-        a->park_sum = 0.0;
-        a->park_count = 0;
+        axis->park_sum = 0.0;
+        axis->park_count = 0;
     }
 
-    double d = a->filt - a->centre;
+    const double d = axis->filt - axis->centre;
 
     if (d > 0.0) {
-        double gate = a->pos_span * OUTER_GATE_RATIO;
+        const double gate = axis->pos_span * OUTER_GATE_RATIO;
         if (d >= gate) {
-            double cand = d;
-            double alpha = (cand > a->pos_span) ? SPAN_ALPHA_UP : SPAN_ALPHA_DOWN;
-            a->pos_span = a->pos_span + alpha * (cand - a->pos_span);
+            const double cand = d;
+            const double alpha = cand > axis->pos_span ? SPAN_ALPHA_UP : SPAN_ALPHA_DOWN;
+            axis->pos_span = axis->pos_span + alpha * (cand - axis->pos_span);
         }
     } else if (d < 0.0) {
-        double ad = -d;
-        double gate = a->neg_span * OUTER_GATE_RATIO;
+        const double ad = -d;
+        const double gate = axis->neg_span * OUTER_GATE_RATIO;
         if (ad >= gate) {
-            double cand = ad;
-            double alpha = (cand > a->neg_span) ? SPAN_ALPHA_UP : SPAN_ALPHA_DOWN;
-            a->neg_span = a->neg_span + alpha * (cand - a->neg_span);
+            const double cand = ad;
+            const double alpha = cand > axis->neg_span ? SPAN_ALPHA_UP : SPAN_ALPHA_DOWN;
+            axis->neg_span = axis->neg_span + alpha * (cand - axis->neg_span);
         }
     }
 
-    recompute_minmax(a);
+    recompute_minmax(axis);
 }
 
-void cal_update2(struct axis_state *ax, struct axis_state *ay, int raw_x, int raw_y) {
+void cal_update2(struct axis_state *ax, struct axis_state *ay, const int raw_x, const int raw_y) {
     cal_update(ax, raw_x);
     cal_update(ay, raw_y);
 }
 
-int cal_apply(struct axis_state *a, int raw) {
-    if (!a->initialised) return 0;
+int cal_apply(const struct axis_state *axis, const int raw) {
+    if (!axis || !axis->initialised) return 0;
 
-    double val = clampd((double) raw, RAW_MIN, RAW_MAX);
-    double d = val - a->centre;
+    const double val = clampd(raw, RAW_MIN, RAW_MAX);
+    const double d = val - axis->centre;
 
-    double dz = a->deadzone;
+    const double dz = axis->deadzone;
 
-    double ad = fabs(d);
+    const double ad = fabs(d);
     if (ad <= dz) return 0;
 
-    double span = (d >= 0.0) ? a->pos_span : a->neg_span;
+    double span = d >= 0.0 ? axis->pos_span : axis->neg_span;
     span = fmax(span, MIN_ACTIVE_SPAN);
 
     double denom = span - dz;
@@ -254,7 +271,7 @@ int cal_apply(struct axis_state *a, int raw) {
     double a_norm = (ad - dz) / denom;
     a_norm = clampd(a_norm, 0.0, 1.0);
 
-    a_norm = soft_knee_0to1(a_norm);
+    a_norm = soft_knee_0_to1(a_norm);
 
     double out = a_norm * OUTPUT_MAX;
     if (d < 0.0) out = -out;
@@ -265,6 +282,6 @@ int cal_apply(struct axis_state *a, int raw) {
     return (int) lrint(out);
 }
 
-int cal_ready(const struct axis_state *a) {
-    return a && a->initialised;
+int cal_ready(const struct axis_state *axis) {
+    return axis && axis->initialised;
 }

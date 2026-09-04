@@ -2,15 +2,15 @@
 
 #include "../device.h"
 
-extern const struct device_backend RGSP_PROFILE;
-extern const struct device_backend RG28XX_H_PROFILE;
-extern const struct device_backend RG34XX_H_PROFILE;
-extern const struct device_backend RG34XX_SP_PROFILE;
-extern const struct device_backend RG35XX_2024_PROFILE;
-extern const struct device_backend RG35XX_H_PROFILE;
-extern const struct device_backend RG35XX_PLUS_PROFILE;
-extern const struct device_backend RG35XX_PRO_PROFILE;
-extern const struct device_backend RG35XX_SP_PROFILE;
-extern const struct device_backend RG40XX_H_PROFILE;
-extern const struct device_backend RG40XX_V_PROFILE;
-extern const struct device_backend RGCUBEXX_H_PROFILE;
+extern const struct device_backend rgsp_profile;
+extern const struct device_backend rg28xx_h_profile;
+extern const struct device_backend rg34xx_h_profile;
+extern const struct device_backend rg34xx_sp_profile;
+extern const struct device_backend rg35xx_2024_profile;
+extern const struct device_backend rg35xx_h_profile;
+extern const struct device_backend rg35xx_plus_profile;
+extern const struct device_backend rg35xx_pro_profile;
+extern const struct device_backend rg35xx_sp_profile;
+extern const struct device_backend rg40xx_h_profile;
+extern const struct device_backend rg40xx_v_profile;
+extern const struct device_backend rgcubexx_h_profile;

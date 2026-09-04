@@ -13,13 +13,13 @@ struct brick_pro_button {
     int prev;
 };
 
-static const struct turbo_binding_cfg BRICK_PRO_TURBO_CFG[] = {
+static const struct turbo_binding_cfg brick_pro_turbo_cfg[] = {
     {TURBO_FLAG_PREFIX "a", BTN_EAST}, {TURBO_FLAG_PREFIX "b", BTN_SOUTH}, {TURBO_FLAG_PREFIX "x", BTN_NORTH},
     {TURBO_FLAG_PREFIX "y", BTN_WEST}, {TURBO_FLAG_PREFIX "l", BTN_TL},    {TURBO_FLAG_PREFIX "l2", BTN_TL2},
     {TURBO_FLAG_PREFIX "r", BTN_TR},   {TURBO_FLAG_PREFIX "r2", BTN_TR2},
 };
 
-enum { BRICK_PRO_TURBO_CFG_COUNT = sizeof(BRICK_PRO_TURBO_CFG) / sizeof(BRICK_PRO_TURBO_CFG[0]) };
+enum { brick_pro_turbo_cfg_count = sizeof(brick_pro_turbo_cfg) / sizeof(brick_pro_turbo_cfg[0]) };
 
 struct brick_pro_state {
     struct gamepad *gp;

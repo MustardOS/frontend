@@ -1,7 +1,5 @@
 #define _DEFAULT_SOURCE
 
-#include "tester.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/input.h>
@@ -15,7 +13,7 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-
+#include "tester.h"
 #include "calibration.h"
 #include "../devices/device.h"
 #include "uinput.h"
@@ -74,7 +72,7 @@ static uint64_t monotonic_milliseconds(void) {
     return (uint64_t) now.tv_sec * 1000u + (uint64_t) now.tv_nsec / 1000000u;
 }
 
-static const char *key_name(unsigned short code) {
+static const char *key_name(const unsigned short code) {
     switch (code) {
         case BTN_SOUTH:
             return "SOUTH";
@@ -121,7 +119,7 @@ static const char *key_name(unsigned short code) {
     }
 }
 
-static const char *axis_name(unsigned short code) {
+static const char *axis_name(const unsigned short code) {
     switch (code) {
         case ABS_X:
             return "LX";
@@ -144,7 +142,7 @@ static const char *axis_name(unsigned short code) {
     }
 }
 
-static const char *switch_name(unsigned short code) {
+static const char *switch_name(const unsigned short code) {
     return code == SW_TABLET_MODE ? "TABLET" : "SWITCH";
 }
 
@@ -231,7 +229,7 @@ static void reset_coverage(struct input_tester *tester) {
 
 static int run_rumble_child(struct gamepad *gamepad, const char *event_path) {
     close(gamepad_get_fd(gamepad));
-    int event_fd = open(event_path, O_RDWR);
+    const int event_fd = open(event_path, O_RDWR);
     if (event_fd < 0) {
         return 2;
     }
@@ -294,7 +292,7 @@ static void start_rumble_test(struct input_tester *tester) {
         return;
     }
 
-    pid_t pid = fork();
+    const pid_t pid = fork();
     if (pid < 0) {
         snprintf(tester->rumble_status, sizeof(tester->rumble_status), "failed: fork: %s", strerror(errno));
     } else if (pid == 0) {
@@ -313,7 +311,7 @@ static void poll_rumble_test(struct input_tester *tester) {
         return;
     }
     int status = 0;
-    pid_t result = waitpid(tester->rumble_pid, &status, WNOHANG);
+    const pid_t result = waitpid(tester->rumble_pid, &status, WNOHANG);
     if (result == 0) {
         return;
     }
@@ -324,7 +322,7 @@ static void poll_rumble_test(struct input_tester *tester) {
             tester->rumble_strength
         );
     } else {
-        int code = result > 0 && WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+        const int code = result > 0 && WIFEXITED(status) ? WEXITSTATUS(status) : -1;
         snprintf(tester->rumble_status, sizeof(tester->rumble_status), "failed (code %d)", code);
     }
     tester->dirty = 1;
@@ -346,8 +344,8 @@ static void reset_calibration(struct input_tester *tester) {
 }
 
 struct input_tester *input_tester_create(
-    const struct device_backend *backend, struct gamepad *gamepad, unsigned int rumble_strength, struct axis_state *lx,
-    struct axis_state *ly, struct axis_state *rx, struct axis_state *ry
+    const struct device_backend *backend, struct gamepad *gamepad, const unsigned int rumble_strength,
+    struct axis_state *lx, struct axis_state *ly, struct axis_state *rx, struct axis_state *ry
 ) {
     if (!backend || !backend->gamepad || !gamepad) {
         return NULL;
@@ -428,9 +426,9 @@ int input_tester_poll(struct input_tester *tester) {
     return !tester->quit;
 }
 
-void input_tester_render(struct input_tester *tester, int force) {
+void input_tester_render(struct input_tester *tester, const int force) {
     if (!tester) return;
-    uint64_t now = monotonic_milliseconds();
+    const uint64_t now = monotonic_milliseconds();
     if (!force && !tester->dirty && now - tester->last_render_ms < 200u) return;
     if (!force && now - tester->last_render_ms < 200u) return;
     tester->last_render_ms = now;

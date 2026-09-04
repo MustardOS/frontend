@@ -12,14 +12,14 @@
 #include "evdev/portable.h"
 
 static const struct device_backend *const BACKENDS[] = {
-    &TUI_SMPRO_S_PROFILE, &TUI_SPOON_PROFILE,  &TUI_BRICK_PRO_PROFILE, &TUI_BRICK_PROFILE,   &RGSP_PROFILE,
-    &RG28XX_H_PROFILE,    &RG34XX_H_PROFILE,   &RG34XX_SP_PROFILE,     &RG35XX_2024_PROFILE, &RG35XX_H_PROFILE,
-    &RG35XX_PLUS_PROFILE, &RG35XX_PRO_PROFILE, &RG35XX_SP_PROFILE,     &RG40XX_H_PROFILE,    &RG40XX_V_PROFILE,
-    &RGCUBEXX_H_PROFILE,  &GCS_H36S_PROFILE,   &MGX_ZERO28_PROFILE,    &RK_G350_V_PROFILE,   &RK_PIXEL_2_PROFILE,
-    &RG_VITA_PRO_PROFILE,
+    &tui_smpro_s_profile, &tui_spoon_profile,  &tui_brick_pro_profile, &tui_brick_profile,   &rgsp_profile,
+    &rg28xx_h_profile,    &rg34xx_h_profile,   &rg34xx_sp_profile,     &rg35xx_2024_profile, &rg35xx_h_profile,
+    &rg35xx_plus_profile, &rg35xx_pro_profile, &rg35xx_sp_profile,     &rg40xx_h_profile,    &rg40xx_v_profile,
+    &rgcubexx_h_profile,  &gcs_h36s_profile,   &mgx_zero28_profile,    &rk_g350_v_profile,   &rk_pixel_2_profile,
+    &rg_vita_pro_profile,
 };
 
-static const char BOARD_NAME_PATH[] = "/opt/muos/device/config/board/name";
+static const char board_name_path[] = "/opt/muos/device/config/board/name";
 
 const struct device_backend *const *device_registry_all(size_t *count) {
     if (count) {
@@ -44,11 +44,11 @@ const struct device_backend *device_registry_find(const char *id) {
 }
 
 const struct device_backend *device_registry_detect(void) {
-    FILE *board_name = fopen(BOARD_NAME_PATH, "r");
+    FILE *board_name = fopen(board_name_path, "r");
     if (board_name) {
         char id[64];
         if (!fgets(id, sizeof(id), board_name)) {
-            fprintf(stderr, "Unable to read board name from %s\n", BOARD_NAME_PATH);
+            fprintf(stderr, "Unable to read board name from %s\n", board_name_path);
             fclose(board_name);
             return NULL;
         }
@@ -56,7 +56,7 @@ const struct device_backend *device_registry_detect(void) {
         int truncated = !strchr(id, '\n') && !feof(board_name);
         fclose(board_name);
         if (truncated) {
-            fprintf(stderr, "Board name in %s is too long\n", BOARD_NAME_PATH);
+            fprintf(stderr, "Board name in %s is too long\n", board_name_path);
             return NULL;
         }
 
@@ -70,13 +70,13 @@ const struct device_backend *device_registry_detect(void) {
 
         const struct device_backend *configured = device_registry_find(start);
         if (!configured) {
-            fprintf(stderr, "Unsupported board '%s' in %s\n", start, BOARD_NAME_PATH);
+            fprintf(stderr, "Unsupported board '%s' in %s\n", start, board_name_path);
             return NULL;
         }
         return configured;
     }
     if (errno != ENOENT) {
-        fprintf(stderr, "Unable to open %s: %s\n", BOARD_NAME_PATH, strerror(errno));
+        fprintf(stderr, "Unable to open %s: %s\n", board_name_path, strerror(errno));
         return NULL;
     }
 

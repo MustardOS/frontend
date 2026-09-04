@@ -7,7 +7,7 @@
 
 #include "../common/uinput.h"
 
-enum { DEVICE_RUMBLE_EFFECT_SLOTS = 4 };
+enum { device_rumble_effect_slots = 4 };
 
 struct device_rumble_driver {
     const char *name;
@@ -26,7 +26,7 @@ struct device_rumble_slot {
 };
 
 struct device_rumble_state {
-    struct device_rumble_slot slots[DEVICE_RUMBLE_EFFECT_SLOTS];
+    struct device_rumble_slot slots[device_rumble_effect_slots];
     int active_id;
     int has_stop_time;
     struct timespec stop_time;

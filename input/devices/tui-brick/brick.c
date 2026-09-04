@@ -13,7 +13,7 @@
 #include "../../drivers/sunxi-gpio/sunxi-gpio.h"
 
 static struct brick_state brick_ctx;
-static const int BRICK_AXIS_MAX = 32767;
+static const int brick_axis_max = 32767;
 
 static int file_exists(const char *path) {
     return access(path, F_OK) == 0;
@@ -33,18 +33,18 @@ static inline void update_button_state(struct brick_state *st, size_t idx, int p
 
 static enum brick_dpad2axis_mode is_dpad2axis_enable(const struct brick_state *st) {
     if (st->toggle_dpad2axis) {
-        return BRICK_D2A_MODE_GLOBAL;
+        return brick_d2a_mode_global;
     }
     if ((st->state_buttons & st->alt_dpad2axis_bits) != 0) {
-        return BRICK_D2A_MODE_HOLD;
+        return brick_d2a_mode_hold;
     }
-    return BRICK_D2A_MODE_DISABLED;
+    return brick_d2a_mode_disabled;
 }
 
 static void check_dpad_to_axis_settings(struct brick_state *st) {
     uint32_t alt_bits = 0;
-    for (size_t i = 0; i < BRICK_HOLD_MAP_COUNT; ++i) {
-        const struct brick_hold_map *entry = &BRICK_HOLD_MAP[i];
+    for (size_t i = 0; i < brick_hold_map_count; ++i) {
+        const struct brick_hold_map *entry = &brick_hold_map[i];
         if (file_exists(entry->path)) {
             alt_bits |= entry->bit;
         }
@@ -66,7 +66,7 @@ static inline int axis_from_dpad(int negative, int positive) {
     if (negative == positive) {
         return 0;
     }
-    return negative ? -BRICK_AXIS_MAX : BRICK_AXIS_MAX;
+    return negative ? -brick_axis_max : brick_axis_max;
 }
 
 static void emit_synth_axis(struct brick_state *st, int x, int y) {
@@ -99,7 +99,7 @@ static int initialise_pin(int pin) {
 }
 
 static int poll_switch(struct brick_state *st) {
-    int val = sunxi_gpio_input((uint32_t) BRICK_GPIO_SWITCH);
+    int val = sunxi_gpio_input((uint32_t) brick_gpio_switch);
     if (val < 0) {
         return 0;
     }
@@ -128,14 +128,14 @@ int brick_initialise(
     memset(st, 0, sizeof(*st));
     st->gp = gp;
     initialise_active_low(st);
-    memcpy(st->buttons, BRICK_BUTTON_DEFS, sizeof(BRICK_BUTTON_DEFS));
-    memcpy(st->hat_pins, BRICK_HAT_PINS, sizeof(BRICK_HAT_PINS));
+    memcpy(st->buttons, brick_button_defs, sizeof(brick_button_defs));
+    memcpy(st->hat_pins, brick_hat_pins, sizeof(brick_hat_pins));
     if (device_rumble_initialise(&st->rumble, rumble_a133_driver(), NULL, options->rumble_strength) < 0) {
         sunxi_gpio_close();
         return -1;
     }
 
-    for (size_t i = 0; i < BRICK_BUTTON_COUNT; ++i) {
+    for (size_t i = 0; i < brick_button_count; ++i) {
         if (st->buttons[i].gpio < 0) {
             continue;
         }
@@ -145,22 +145,22 @@ int brick_initialise(
             return -1;
         }
     }
-    for (size_t i = 0; i < BRICK_HAT_PIN_COUNT; ++i) {
+    for (size_t i = 0; i < brick_hat_pin_count; ++i) {
         if (initialise_pin(st->hat_pins[i]) < 0) {
             device_rumble_close(&st->rumble);
             sunxi_gpio_close();
             return -1;
         }
     }
-    if (initialise_pin(BRICK_GPIO_SWITCH) < 0) {
+    if (initialise_pin(brick_gpio_switch) < 0) {
         device_rumble_close(&st->rumble);
         sunxi_gpio_close();
         return -1;
     }
 
     st->last_switch = -1;
-    st->turbo_count = BRICK_TURBO_CFG_COUNT;
-    turbo_initialise_bindings(st->turbo, st->turbo_count, BRICK_TURBO_CFG);
+    st->turbo_count = brick_turbo_cfg_count;
+    turbo_initialise_bindings(st->turbo, st->turbo_count, brick_turbo_cfg);
     st->toggle_dpad = 1;
     *ctx = st;
     return 0;
@@ -173,7 +173,7 @@ int brick_poll(void *ctx) {
     }
     device_dirty_reset(&st->dirty, poll_switch(st));
 
-    for (size_t i = 0; i < BRICK_BUTTON_COUNT; ++i) {
+    for (size_t i = 0; i < brick_button_count; ++i) {
         if (st->buttons[i].gpio < 0) {
             continue;
         }
@@ -193,9 +193,9 @@ int brick_poll(void *ctx) {
         }
     }
 
-    int dpad_vals[BRICK_HAT_PIN_COUNT] = {0};
-    int *hat_targets[BRICK_HAT_PIN_COUNT] = {&st->hat.up, &st->hat.down, &st->hat.left, &st->hat.right};
-    for (size_t i = 0; i < BRICK_HAT_PIN_COUNT; ++i) {
+    int dpad_vals[brick_hat_pin_count] = {0};
+    int *hat_targets[brick_hat_pin_count] = {&st->hat.up, &st->hat.down, &st->hat.left, &st->hat.right};
+    for (size_t i = 0; i < brick_hat_pin_count; ++i) {
         int value = sunxi_gpio_input((uint32_t) st->hat_pins[i]);
         if (value < 0) {
             continue;
@@ -210,16 +210,16 @@ int brick_poll(void *ctx) {
     int axis_x = axis_from_dpad(dpad_vals[2], dpad_vals[3]);
     int axis_y = axis_from_dpad(dpad_vals[0], dpad_vals[1]);
 
-    int allow_hat = st->toggle_dpad && mode == BRICK_D2A_MODE_DISABLED;
+    int allow_hat = st->toggle_dpad && mode == brick_d2a_mode_disabled;
     if (allow_hat) {
         device_dirty_merge(&st->dirty, device_hat_emit(st->gp, &st->hat));
     } else if (st->hat.x != 0 || st->hat.y != 0) {
         clear_hat_output(st);
     }
 
-    if (mode != BRICK_D2A_MODE_DISABLED) {
+    if (mode != brick_d2a_mode_disabled) {
         emit_synth_axis(st, axis_x, axis_y);
-    } else if (st->d2a_last_mode != BRICK_D2A_MODE_DISABLED) {
+    } else if (st->d2a_last_mode != brick_d2a_mode_disabled) {
         emit_synth_axis(st, 0, 0);
     }
 
@@ -263,12 +263,12 @@ static void brick_set_rumble_strength(void *ctx, unsigned int strength_percent) 
     if (st) device_rumble_set_strength(&st->rumble, strength_percent);
 }
 
-const struct device_backend TUI_BRICK_PROFILE = {
+const struct device_backend tui_brick_profile = {
     .id = "tui-brick",
     .name = "TRIMUI BRICK",
     .probe_priority = 0,
     .probe = brick_probe,
-    .gamepad = &BRICK_GAMEPAD_DESC,
+    .gamepad = &brick_gamepad_desc,
     .ops =
         {
             .name = "TRIMUI BRICK",

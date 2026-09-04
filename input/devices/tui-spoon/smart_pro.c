@@ -15,15 +15,15 @@
 #include "../../drivers/gpio/gpio.h"
 
 static struct smart_pro_device smart_pro_ctx;
-static const struct device_axis_cfg SP_AXIS_LEFT_CFG = {
+static const struct device_axis_cfg sp_axis_left_cfg = {
     .abs_code_x = ABS_X, .abs_code_y = ABS_Y, .invert_x = 1, .invert_y = 1
 };
-static const struct device_axis_cfg SP_AXIS_RIGHT_CFG = {
+static const struct device_axis_cfg sp_axis_right_cfg = {
     .abs_code_x = ABS_Z, .abs_code_y = ABS_RZ, .invert_x = 1, .invert_y = 1
 };
 
 static int smart_pro_gpio_initialise(void) {
-    const int output_pins[] = {SP_GPIO_OUT1, SP_GPIO_OUT2};
+    const int output_pins[] = {sp_gpio_out1, sp_gpio_out2};
     for (size_t i = 0; i < sizeof(output_pins) / sizeof(output_pins[0]); ++i) {
         if (gpio_export(output_pins[i]) < 0 || gpio_set_direction(output_pins[i], 1) < 0
             || gpio_write(output_pins[i], 1) < 0) {
@@ -33,7 +33,7 @@ static int smart_pro_gpio_initialise(void) {
     if (sunxi_gpio_initialise() < 0) {
         return -1;
     }
-    if (sunxi_gpio_set_cfgpin((uint32_t) SP_GPIO_INPUT, SUNXI_GPIO_INPUT) < 0) {
+    if (sunxi_gpio_set_cfgpin((uint32_t) sp_gpio_input, SUNXI_GPIO_INPUT) < 0) {
         sunxi_gpio_close();
         return -1;
     }
@@ -88,20 +88,20 @@ static void process_left_frame_bytes(
 
     if (axes_changed) {
         device_axes_process_pair(
-            ctx->c.gp, ctx->c.ax, ctx->c.ay, raw_x, raw_y, &SP_AXIS_LEFT_CFG, &ctx->c.last_x, &ctx->c.last_y, dirty
+            ctx->c.gp, ctx->c.ax, ctx->c.ay, raw_x, raw_y, &sp_axis_left_cfg, &ctx->c.last_x, &ctx->c.last_y, dirty
         );
     }
 
     if (diff) {
         device_hat_apply_masks(
-            &ctx->hat, btn_raw, diff, SP_BTN_DPAD_UP_MASK, SP_BTN_DPAD_DOWN_MASK, SP_BTN_DPAD_LEFT_MASK,
-            SP_BTN_DPAD_RIGHT_MASK
+            &ctx->hat, btn_raw, diff, sp_btn_dpad_up_mask, sp_btn_dpad_down_mask, sp_btn_dpad_left_mask,
+            sp_btn_dpad_right_mask
         );
         emit_buttons_from_map(
-            ctx->c.gp, btn_raw, diff, SP_LEFT_BUTTON_MAP, SP_LEFT_BUTTON_MAP_COUNT, dirty, turbo, turbo_count
+            ctx->c.gp, btn_raw, diff, sp_left_button_map, sp_left_button_map_count, dirty, turbo, turbo_count
         );
 
-        if (diff & SP_DPAD_MASK) {
+        if (diff & sp_dpad_mask) {
             device_dirty_merge(dirty, device_hat_emit(ctx->c.gp, &ctx->hat));
         }
     }
@@ -129,13 +129,13 @@ static void process_right_frame_bytes(
 
     if (axes_changed) {
         device_axes_process_pair(
-            ctx->c.gp, ctx->c.ax, ctx->c.ay, raw_x, raw_y, &SP_AXIS_RIGHT_CFG, &ctx->c.last_x, &ctx->c.last_y, dirty
+            ctx->c.gp, ctx->c.ax, ctx->c.ay, raw_x, raw_y, &sp_axis_right_cfg, &ctx->c.last_x, &ctx->c.last_y, dirty
         );
     }
 
     if (diff) {
         emit_buttons_from_map(
-            ctx->c.gp, btn_raw, diff, SP_RIGHT_BUTTON_MAP, SP_RIGHT_BUTTON_MAP_COUNT, dirty, turbo, turbo_count
+            ctx->c.gp, btn_raw, diff, sp_right_button_map, sp_right_button_map_count, dirty, turbo, turbo_count
         );
     }
 
@@ -187,8 +187,8 @@ int smart_pro_initialise(
 
     rb_initialise(&dev->left.c.rb);
     rb_initialise(&dev->right.c.rb);
-    dev->turbo_count = SP_TURBO_CFG_COUNT;
-    turbo_initialise_bindings(dev->turbo, dev->turbo_count, SP_TURBO_CFG);
+    dev->turbo_count = sp_turbo_cfg_count;
+    turbo_initialise_bindings(dev->turbo, dev->turbo_count, sp_turbo_cfg);
     dev->pfds[0] = (struct pollfd) {.fd = fd_left, .events = POLLIN};
     dev->pfds[1] = (struct pollfd) {.fd = fd_right, .events = POLLIN};
 
@@ -207,7 +207,7 @@ int smart_pro_poll(void *ctx) {
     struct smart_pro_device *dev = ctx;
     uint8_t buf[128];
     uint8_t frame_bytes[8];
-    device_dirty_reset(&dev->dirty, poll_switch(dev->left.c.gp, SP_GPIO_INPUT, &dev->left.last_switch));
+    device_dirty_reset(&dev->dirty, poll_switch(dev->left.c.gp, sp_gpio_input, &dev->left.last_switch));
 
     if (!device_rumble_poll(&dev->rumble, dev->left.c.gp)) {
         return 0;
@@ -283,12 +283,12 @@ static void smart_pro_set_rumble_strength(void *ctx, unsigned int strength_perce
     if (dev) device_rumble_set_strength(&dev->rumble, strength_percent);
 }
 
-const struct device_backend TUI_SPOON_PROFILE = {
+const struct device_backend tui_spoon_profile = {
     .id = "tui-spoon",
     .name = "TRIMUI SMART PRO",
     .probe_priority = 200,
     .probe = smart_pro_probe,
-    .gamepad = &SMART_PRO_GAMEPAD_DESC,
+    .gamepad = &smart_pro_gamepad_desc,
     .has_analogue_calibration = 1,
     .ops =
         {

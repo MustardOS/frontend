@@ -40,13 +40,13 @@ struct sp_button_map_entry {
     unsigned short code;
 };
 
-static const struct turbo_binding_cfg SP_TURBO_CFG[] = {
+static const struct turbo_binding_cfg sp_turbo_cfg[] = {
     {TURBO_FLAG_PREFIX "a", BTN_EAST}, {TURBO_FLAG_PREFIX "b", BTN_SOUTH}, {TURBO_FLAG_PREFIX "x", BTN_NORTH},
     {TURBO_FLAG_PREFIX "y", BTN_WEST}, {TURBO_FLAG_PREFIX "l", BTN_TL},    {TURBO_FLAG_PREFIX "l2", BTN_TL2},
     {TURBO_FLAG_PREFIX "r", BTN_TR},   {TURBO_FLAG_PREFIX "r2", BTN_TR2},
 };
 
-enum { SP_TURBO_CFG_COUNT = sizeof(SP_TURBO_CFG) / sizeof(SP_TURBO_CFG[0]) };
+enum { sp_turbo_cfg_count = sizeof(sp_turbo_cfg) / sizeof(sp_turbo_cfg[0]) };
 
 #pragma pack(push, 1)
 

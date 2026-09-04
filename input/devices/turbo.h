@@ -9,7 +9,7 @@
 
 #define TURBO_FLAG_PREFIX MUINPUT_STATE_DIR "/turbo_"
 
-enum { TURBO_TOGGLE_PERIOD = 3 };
+enum { turbo_toggle_period = 3 };
 
 struct turbo_state {
     int enabled;

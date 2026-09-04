@@ -32,10 +32,12 @@ struct axis_state {
 
 void cal_initialise(struct axis_state *axis);
 
+void cal_seed(struct axis_state *axis, int raw);
+
 void cal_update(struct axis_state *axis, int raw);
 
 void cal_update2(struct axis_state *ax, struct axis_state *ay, int raw_x, int raw_y);
 
-int cal_apply(struct axis_state *axis, int raw);
+int cal_apply(const struct axis_state *axis, int raw);
 
 int cal_ready(const struct axis_state *axis);

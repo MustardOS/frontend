@@ -6,82 +6,82 @@
 #include "smart_pro_s_structs.h"
 
 enum {
-    SP_S_BTN_A_MASK = 0x00000001,
-    SP_S_BTN_X_MASK = 0x00000002,
-    SP_S_BTN_SELECT_MASK = 0x00000004,
-    SP_S_BTN_START_MASK = 0x00000008,
-    SP_S_BTN_DPAD_UP_MASK = 0x00000010,
-    SP_S_BTN_DPAD_DOWN_MASK = 0x00000020,
-    SP_S_BTN_DPAD_LEFT_MASK = 0x00000040,
-    SP_S_BTN_DPAD_RIGHT_MASK = 0x00000080,
-    SP_S_BTN_B_MASK = 0x00000100,
-    SP_S_BTN_Y_MASK = 0x00000200,
-    SP_S_BTN_L1_MASK = 0x00000400,
-    SP_S_BTN_R1_MASK = 0x00000800,
-    SP_S_BTN_L2_MASK = 0x00001000,
-    SP_S_BTN_R2_MASK = 0x00002000,
-    SP_S_BTN_L3_MASK = 0x00004000,
-    SP_S_BTN_R3_MASK = 0x00008000,
-    SP_S_BTN_MODE_MASK = 0x00010000,
+    sp_s_btn_a_mask = 0x00000001,
+    sp_s_btn_x_mask = 0x00000002,
+    sp_s_btn_select_mask = 0x00000004,
+    sp_s_btn_start_mask = 0x00000008,
+    sp_s_btn_dpad_up_mask = 0x00000010,
+    sp_s_btn_dpad_down_mask = 0x00000020,
+    sp_s_btn_dpad_left_mask = 0x00000040,
+    sp_s_btn_dpad_right_mask = 0x00000080,
+    sp_s_btn_b_mask = 0x00000100,
+    sp_s_btn_y_mask = 0x00000200,
+    sp_s_btn_l1_mask = 0x00000400,
+    sp_s_btn_r1_mask = 0x00000800,
+    sp_s_btn_l2_mask = 0x00001000,
+    sp_s_btn_r2_mask = 0x00002000,
+    sp_s_btn_l3_mask = 0x00004000,
+    sp_s_btn_r3_mask = 0x00008000,
+    sp_s_btn_mode_mask = 0x00010000,
 };
 
 enum {
-    SP_S_DPAD_MASK =
-        SP_S_BTN_DPAD_UP_MASK | SP_S_BTN_DPAD_DOWN_MASK | SP_S_BTN_DPAD_LEFT_MASK | SP_S_BTN_DPAD_RIGHT_MASK
+    sp_s_dpad_mask =
+        sp_s_btn_dpad_up_mask | sp_s_btn_dpad_down_mask | sp_s_btn_dpad_left_mask | sp_s_btn_dpad_right_mask
 };
 
 enum {
-    SP_S_GPIO_LEFT_ENABLE = 332,
-    SP_S_GPIO_RIGHT_ENABLE = 336,
-    SP_S_GPIO_INPUT = 363,
+    sp_s_gpio_left_enable = 332,
+    sp_s_gpio_right_enable = 336,
+    sp_s_gpio_input = 363,
 };
 
 #define SP_S_AXIS_DESC(_code, _min, _max)                                                                              \
     {.code = (_code), .min = (_min), .max = (_max), .flat = 0, .fuzz = 0, .resolution = 0}
 
-static const struct sp_s_button_map_entry SP_S_LEFT_BUTTON_MAP[] = {
-    {SP_S_BTN_L1_MASK, BTN_TL},
-    {SP_S_BTN_L2_MASK, BTN_TL2},
-    {SP_S_BTN_L3_MASK, BTN_THUMBL},
-    {SP_S_BTN_MODE_MASK, BTN_MODE},
+static const struct sp_s_button_map_entry sp_s_left_button_map[] = {
+    {sp_s_btn_l1_mask, BTN_TL},
+    {sp_s_btn_l2_mask, BTN_TL2},
+    {sp_s_btn_l3_mask, BTN_THUMBL},
+    {sp_s_btn_mode_mask, BTN_MODE},
 };
 
-static const struct sp_s_button_map_entry SP_S_RIGHT_BUTTON_MAP[] = {
-    {SP_S_BTN_A_MASK, BTN_SOUTH},   {SP_S_BTN_B_MASK, BTN_EAST},      {SP_S_BTN_Y_MASK, BTN_WEST},
-    {SP_S_BTN_X_MASK, BTN_NORTH},   {SP_S_BTN_R1_MASK, BTN_TR},       {SP_S_BTN_R2_MASK, BTN_TR2},
-    {SP_S_BTN_R3_MASK, BTN_THUMBR}, {SP_S_BTN_START_MASK, BTN_START}, {SP_S_BTN_SELECT_MASK, BTN_SELECT},
+static const struct sp_s_button_map_entry sp_s_right_button_map[] = {
+    {sp_s_btn_a_mask, BTN_SOUTH},   {sp_s_btn_b_mask, BTN_EAST},      {sp_s_btn_y_mask, BTN_WEST},
+    {sp_s_btn_x_mask, BTN_NORTH},   {sp_s_btn_r1_mask, BTN_TR},       {sp_s_btn_r2_mask, BTN_TR2},
+    {sp_s_btn_r3_mask, BTN_THUMBR}, {sp_s_btn_start_mask, BTN_START}, {sp_s_btn_select_mask, BTN_SELECT},
 };
 
 enum {
-    SP_S_LEFT_BUTTON_MAP_COUNT = sizeof(SP_S_LEFT_BUTTON_MAP) / sizeof(SP_S_LEFT_BUTTON_MAP[0]),
-    SP_S_RIGHT_BUTTON_MAP_COUNT = sizeof(SP_S_RIGHT_BUTTON_MAP) / sizeof(SP_S_RIGHT_BUTTON_MAP[0]),
+    sp_s_left_button_map_count = sizeof(sp_s_left_button_map) / sizeof(sp_s_left_button_map[0]),
+    sp_s_right_button_map_count = sizeof(sp_s_right_button_map) / sizeof(sp_s_right_button_map[0]),
 };
 
-static const unsigned short SP_S_KEYS[] = {BTN_SOUTH,  BTN_EAST, BTN_WEST,   BTN_NORTH,  BTN_TL,  BTN_TR, BTN_START,
+static const unsigned short sp_s_keys[] = {BTN_SOUTH,  BTN_EAST, BTN_WEST,   BTN_NORTH,  BTN_TL,  BTN_TR, BTN_START,
                                            BTN_SELECT, BTN_MODE, BTN_THUMBR, BTN_THUMBL, BTN_TL2, BTN_TR2};
 
-static const struct gamepad_abs_desc SP_S_AXES[] = {
+static const struct gamepad_abs_desc sp_s_axes[] = {
     SP_S_AXIS_DESC(ABS_X, -32767, 32767),  SP_S_AXIS_DESC(ABS_Y, -32767, 32767), SP_S_AXIS_DESC(ABS_RX, -32767, 32767),
     SP_S_AXIS_DESC(ABS_RY, -32767, 32767), SP_S_AXIS_DESC(ABS_HAT0X, -1, 1),     SP_S_AXIS_DESC(ABS_HAT0Y, -1, 1),
 };
 
-static const unsigned short SP_S_SWITCHES[] = {SW_TABLET_MODE};
+static const unsigned short sp_s_switches[] = {SW_TABLET_MODE};
 
-static const struct gamepad_desc SMART_PRO_S_GAMEPAD_DESC = {
+static const struct gamepad_desc smart_pro_s_gamepad_desc = {
     .name = MUOS_GAMEPAD_NAME,
     .id =
         {
             .bustype = BUS_VIRTUAL,
-            .vendor = MUOS_INPUT_VENDOR,
-            .product = MUOS_PRODUCT_TUI_SMPRO_S,
-            .version = MUOS_INPUT_VERSION,
+            .vendor = muos_input_vendor,
+            .product = muos_product_tui_smpro_s,
+            .version = muos_input_version,
         },
-    .keys = SP_S_KEYS,
-    .key_count = sizeof(SP_S_KEYS) / sizeof(SP_S_KEYS[0]),
-    .axes = SP_S_AXES,
-    .axis_count = sizeof(SP_S_AXES) / sizeof(SP_S_AXES[0]),
-    .switches = SP_S_SWITCHES,
-    .switch_count = sizeof(SP_S_SWITCHES) / sizeof(SP_S_SWITCHES[0]),
+    .keys = sp_s_keys,
+    .key_count = sizeof(sp_s_keys) / sizeof(sp_s_keys[0]),
+    .axes = sp_s_axes,
+    .axis_count = sizeof(sp_s_axes) / sizeof(sp_s_axes[0]),
+    .switches = sp_s_switches,
+    .switch_count = sizeof(sp_s_switches) / sizeof(sp_s_switches[0]),
 
     .ff_effects_max = 0,
     .enable_ff_rumble = 0,

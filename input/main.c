@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
         .rumble_strength = 100u,
     };
     if (load_strength_file(&options.rumble_strength) < 0) {
-        return EXIT_FAILURE;
+        fprintf(stderr, "Ignoring the stored rumble strength, using %u%%\n", options.rumble_strength);
     }
     const char *environment_strength = getenv("MUOS_RUMBLE_STRENGTH");
     if (environment_strength && parse_strength(environment_strength, &options.rumble_strength) < 0) {

@@ -95,7 +95,7 @@ static void handle_play_event(struct device_rumble_state *st, int effect_id, int
         stop_rumble(st);
         return;
     }
-    if (effect_id < 0 || effect_id >= DEVICE_RUMBLE_EFFECT_SLOTS) {
+    if (effect_id < 0 || effect_id >= device_rumble_effect_slots) {
         return;
     }
     if (!st->slots[effect_id].used || st->slots[effect_id].effect.type != FF_RUMBLE) {
@@ -133,7 +133,7 @@ static void handle_upload(struct device_rumble_state *st, int fd, uint32_t reque
     }
 
     int id = upload.effect.id;
-    if (upload.effect.type != FF_RUMBLE || id < 0 || id >= DEVICE_RUMBLE_EFFECT_SLOTS) {
+    if (upload.effect.type != FF_RUMBLE || id < 0 || id >= device_rumble_effect_slots) {
         upload.retval = -EINVAL;
     } else {
         st->slots[id].effect = upload.effect;
@@ -160,7 +160,7 @@ static void handle_erase(struct device_rumble_state *st, int fd, uint32_t reques
     }
 
     int id = (int) erase.effect_id;
-    if (id < 0 || id >= DEVICE_RUMBLE_EFFECT_SLOTS) {
+    if (id < 0 || id >= device_rumble_effect_slots) {
         erase.retval = -EINVAL;
     } else {
         st->slots[id].used = 0;

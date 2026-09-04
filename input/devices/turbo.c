@@ -71,7 +71,7 @@ void turbo_process_frame(
                 st->frame_counter = 0;
             }
             st->frame_counter++;
-            if (st->frame_counter >= TURBO_TOGGLE_PERIOD) {
+            if (st->frame_counter >= turbo_toggle_period) {
                 st->virtual_down = !st->virtual_down;
                 st->frame_counter = 0;
             }

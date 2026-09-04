@@ -1,5 +1,3 @@
-#include "uinput.h"
-
 #include <errno.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -8,6 +6,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include "uinput.h"
 
 struct gamepad {
     int fd;
@@ -23,7 +22,7 @@ static int flush_events(struct gamepad *gp) {
         return 1;
     }
 
-    size_t bytes = gp->pending_count * sizeof(gp->pending[0]);
+    const size_t bytes = gp->pending_count * sizeof(gp->pending[0]);
     ssize_t written;
     do {
         written = write(gp->fd, gp->pending, bytes);
@@ -41,7 +40,7 @@ static int flush_events(struct gamepad *gp) {
     return 1;
 }
 
-static int set_ioctl_bit(int fd, unsigned long request, unsigned long value, const char *label) {
+static int set_ioctl_bit(const int fd, const unsigned long request, const unsigned long value, const char *label) {
     if (ioctl(fd, request, value) == 0) {
         return 1;
     }
@@ -49,7 +48,7 @@ static int set_ioctl_bit(int fd, unsigned long request, unsigned long value, con
     return 0;
 }
 
-static int set_abs(int fd, const struct gamepad_abs_desc *axis, int supports_setup_ioctl) {
+static int set_abs(const int fd, const struct gamepad_abs_desc *axis, const int supports_setup_ioctl) {
     struct uinput_abs_setup abs = {
         .code = axis->code,
         .absinfo = {
@@ -73,15 +72,19 @@ static int set_abs(int fd, const struct gamepad_abs_desc *axis, int supports_set
     return 1;
 }
 
-static int write_legacy_setup(int fd, const struct gamepad_desc *desc) {
-    struct uinput_user_dev setup;
-    memset(&setup, 0, sizeof(setup));
+static int write_legacy_setup(const int fd, const struct gamepad_desc *desc) {
+    struct uinput_user_dev setup = {0};
     setup.id = desc->id;
     setup.ff_effects_max = desc->ff_effects_max;
     snprintf(setup.name, UINPUT_MAX_NAME_SIZE, "%s", desc->name);
 
     for (size_t i = 0; i < desc->axis_count; ++i) {
         const struct gamepad_abs_desc *axis = &desc->axes[i];
+        // The legacy setup struct is only sized for the standard axis codes
+        if (axis->code >= ABS_CNT) {
+            fprintf(stderr, "axis code 0x%x is out of range for the legacy uinput setup\n", axis->code);
+            return 0;
+        }
         setup.absmin[axis->code] = axis->min;
         setup.absmax[axis->code] = axis->max;
         setup.absfuzz[axis->code] = axis->fuzz;
@@ -107,14 +110,14 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
         return NULL;
     }
 
-    int fd = open("/dev/uinput", O_RDWR | O_NONBLOCK);
+    const int fd = open("/dev/uinput", O_RDWR | O_NONBLOCK);
     if (fd < 0) {
         perror("open /dev/uinput");
         return NULL;
     }
 
     int uinput_version = 0;
-    int supports_setup_ioctl = ioctl(fd, UI_GET_VERSION, &uinput_version) == 0 && uinput_version >= 5;
+    const int supports_setup_ioctl = ioctl(fd, UI_GET_VERSION, &uinput_version) == 0 && uinput_version >= 5;
 
     if (desc->key_count > 0) {
         if (!set_ioctl_bit(fd, UI_SET_EVBIT, EV_KEY, "UI_SET_EVBIT EV_KEY")) {
@@ -163,9 +166,9 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
 
         const unsigned short default_ff[] = {FF_RUMBLE};
         const unsigned short *ff_effects = desc->ff_effects ? desc->ff_effects : default_ff;
-        size_t ff_count = (desc->ff_effects && desc->ff_effect_count > 0)
-                              ? desc->ff_effect_count
-                              : (sizeof(default_ff) / sizeof(default_ff[0]));
+        const size_t ff_count = desc->ff_effects && desc->ff_effect_count > 0
+                                    ? desc->ff_effect_count
+                              : sizeof(default_ff) / sizeof(default_ff[0]);
 
         for (size_t i = 0; i < ff_count; ++i) {
             if (!set_ioctl_bit(fd, UI_SET_FFBIT, ff_effects[i], "UI_SET_FFBIT")) {
@@ -176,8 +179,7 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
     }
 
     if (supports_setup_ioctl) {
-        struct uinput_setup setup;
-        memset(&setup, 0, sizeof(setup));
+        struct uinput_setup setup = {0};
         setup.id = desc->id;
         setup.ff_effects_max = desc->ff_effects_max;
         snprintf(setup.name, UINPUT_MAX_NAME_SIZE, "%s", desc->name);
@@ -213,7 +215,7 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
     return gp;
 }
 
-static void emit_event(struct gamepad *gp, unsigned short type, unsigned short code, int value) {
+static void emit_event(struct gamepad *gp, const unsigned short type, const unsigned short code, const int value) {
     if (!gp) {
         return;
     }
@@ -232,15 +234,15 @@ static void emit_event(struct gamepad *gp, unsigned short type, unsigned short c
     }
 }
 
-void gamepad_emit_key(struct gamepad *gp, unsigned short code, int value) {
+void gamepad_emit_key(struct gamepad *gp, const unsigned short code, const int value) {
     emit_event(gp, EV_KEY, code, value);
 }
 
-void gamepad_emit_abs(struct gamepad *gp, unsigned short code, int value) {
+void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int value) {
     emit_event(gp, EV_ABS, code, value);
 }
 
-void gamepad_emit_sw(struct gamepad *gp, unsigned short code, int value) {
+void gamepad_emit_sw(struct gamepad *gp, const unsigned short code, const int value) {
     emit_event(gp, EV_SW, code, value);
 }
 
@@ -269,7 +271,7 @@ int gamepad_read_event(struct gamepad *gp, struct input_event *ev) {
     if (!gp || !ev) {
         return -1;
     }
-    ssize_t r = read(gp->fd, ev, sizeof(*ev));
+    const ssize_t r = read(gp->fd, ev, sizeof(*ev));
     if (r < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             return 0;
@@ -287,7 +289,7 @@ int gamepad_read_event(struct gamepad *gp, struct input_event *ev) {
     return 1;
 }
 
-void gamepad_set_event_observer(struct gamepad *gp, gamepad_event_observer observer, void *context) {
+void gamepad_set_event_observer(struct gamepad *gp, const gamepad_event_observer observer, void *context) {
     if (!gp) {
         return;
     }
@@ -295,7 +297,7 @@ void gamepad_set_event_observer(struct gamepad *gp, gamepad_event_observer obser
     gp->observer_context = context;
 }
 
-int gamepad_get_event_path(struct gamepad *gp, char *path, size_t path_size) {
+int gamepad_get_event_path(struct gamepad *gp, char *path, const size_t path_size) {
     if (!gp || !path || path_size == 0 || !gp->sysname[0]) {
         return -1;
     }
@@ -316,7 +318,7 @@ int gamepad_get_event_path(struct gamepad *gp, char *path, size_t path_size) {
         if (strncmp(entry->d_name, "event", 5) != 0) {
             continue;
         }
-        int length = snprintf(path, path_size, "/dev/input/%s", entry->d_name);
+        const int length = snprintf(path, path_size, "/dev/input/%s", entry->d_name);
         if (length > 0 && (size_t) length < path_size) {
             result = 0;
         }
