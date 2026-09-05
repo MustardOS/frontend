@@ -28,7 +28,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        macro/macro.c macro/relish.c macro/runtime.c macro/ui_macros.c \
        core/subsystem.c \
        state/core_state.c state/state_writer.c state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \
-       state/content_hash.c state/bios_check.c state/sram.c \
+       state/content_hash.c state/bios_check.c state/persistent.c \
        state/patch.c state/ui_storagesettings.c state/manual.c state/history.c \
        cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/spool.c cheevo/cheevo.c cheevo/ui_cheevo.c \
        netplay/address.c netplay/wire.c netplay/netplay.c netplay/ui_netplay.c \
@@ -40,7 +40,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
 
 OBJ := $(SRC:.c=.o)
 
-state/content_hash.o state/patch.o state/sram.o state/vfs.o: CFLAGS += -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
+state/content_hash.o state/patch.o state/persistent.o state/vfs.o: CFLAGS += -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
 
 .PHONY: all clean
 

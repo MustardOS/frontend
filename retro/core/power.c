@@ -7,7 +7,7 @@
 #include "../../common/log.h"
 #include "../netplay/netplay.h"
 #include "../state/gamestate.h"
-#include "../state/sram.h"
+#include "../state/persistent.h"
 #include "../video/image_writer.h"
 #include "muxretro.h"
 #include "power.h"
@@ -56,8 +56,11 @@ static void prepare_power_save(const char *reason) {
         }
     }
 
-    sram_bridge_save();
-    sram_bridge_flush();
+    persistent_memory_save();
+    if (persistent_memory_flush() != 0) {
+        LOG_WARN(mux_module, "Persistent memory could not be flushed before %s", reason);
+        state_saved = 0;
+    }
     power_save_prepared = state_saved;
 }
 

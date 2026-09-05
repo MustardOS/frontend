@@ -99,7 +99,7 @@ retro/
 | `state.c`                           | `state_save`/`state_load`, the Pickles state envelope, achievement progress append and validation.                                                       |
 | `state_writer.c` / `state_writer.h` | Single bounded worker for state CRC calculation and atomic persistence, with lifecycle flush and shutdown.                                               |
 | `gamestate.c` / `gamestate.h`       | Quicksave/autosave/numbered-slot savestate management, screenshot thumbnails, most-recent auto load and the bounded shared resume index.                 |
-| `sram.c` / `sram.h`                 | SRAM (battery save) bridge: dirty-aware, atomic (tmp+rename+fsync), written on a background worker thread.                                               |
+| `persistent.c` / `persistent.h`     | Libretro SRAM and RTC persistence bridge: dirty-aware, atomic (tmp+rename+fsync), checksummed and written on a background worker thread.                 |
 | `vfs.c` / `vfs.h`                   | libretro VFS incl. reading content directly out of an archive member, with a persistent size/mtime-keyed cache.                                          |
 | `content_hash.c` / `content_hash.h` | Background-threaded CRC32 of the content file, cached by size+mtime.                                                                                     |
 | `patch.c` / `patch.h`               | Softpatch engine - IPS, BPS, and UPS appliers, stacking numbered patches (`.ips`, `.1.ips`, ...).                                                        |

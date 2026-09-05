@@ -48,7 +48,7 @@
 #include "power.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
-#include "../state/sram.h"
+#include "../state/persistent.h"
 #include "../state/history.h"
 
 #define RESUME_COOLDOWN_MS  1500
@@ -227,10 +227,10 @@ static void idle_poll(void) {
 
     if (mux_idle_state_exists && mux_idle_state_changes != last_seen_changes && !is_paused
         && SDL_GetTicks() >= resume_cooldown_until) {
-        LOG_DEBUG(mux_module, "idle_poll: triggering pause_menu_toggle + SRAM save");
+        LOG_DEBUG(mux_module, "idle_poll: triggering pause_menu_toggle + persistent-memory save");
         pause_menu_toggle();
 
-        sram_bridge_save();
+        persistent_memory_save();
         if (!netplay_is_active() && session_settings_auto_save_on_idle()) gamestate_autosave_save();
     }
     last_seen_changes = mux_idle_state_changes;
@@ -602,7 +602,7 @@ int main(const int argc, char *argv[]) {
 
     if (device.board.has_network) cheevo_init(core_resolved_content_path);
 
-    sram_bridge_init(core_path_arg, content_path);
+    persistent_memory_init(core_path_arg, content_path);
     cheats_init(core_path_arg, content_path);
     manual_init(core_path_arg, content_path);
     overlay_bridge_init(core_path_arg, content_path);
@@ -829,7 +829,7 @@ int main(const int argc, char *argv[]) {
         }
 
         if (session_settings.sram_flush_seconds > 0 && loop_now >= sram_flush_deadline) {
-            sram_bridge_save();
+            persistent_memory_save();
             sram_flush_deadline = loop_now + (uint32_t) session_settings.sram_flush_seconds * 1000;
         }
 
@@ -1075,8 +1075,8 @@ int main(const int argc, char *argv[]) {
     audio_bridge_close();
     rumble_bridge_shutdown();
 
-    sram_bridge_save();
-    sram_bridge_shutdown();
+    persistent_memory_save();
+    persistent_memory_shutdown();
 
     core_prepare_content_unload();
     hw_render_bridge_prepare_core_unload();
