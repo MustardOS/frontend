@@ -162,9 +162,13 @@ int hotkeys_task(void) {
 
         if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled && !netplay_is_active()) {
             if (state_saves_supported()) {
-                gamestate_quicksave_save();
-                LOG_INFO(mux_module, "Quick Save (hotkey)");
-                pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
+                if (gamestate_quicksave_save() == 0) {
+                    LOG_INFO(mux_module, "Quick Save (hotkey)");
+                    pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
+                } else {
+                    LOG_WARN(mux_module, "Quick Save (hotkey) failed");
+                    pause_menu_show_toast(lang.generic.save_fail);
+                }
             } else {
                 pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
             }

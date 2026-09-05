@@ -581,6 +581,8 @@ static void finish_new_save_confirm(void) {
             rebuild_rows();
             focus_row(pinned_row_offset() + position);
             refresh_thumbnail();
+        } else {
+            pause_menu_show_toast(lang.generic.save_fail);
         }
     }
 

@@ -60,6 +60,7 @@ static int persistence_thread_running = 0;
 static int worker_shutdown = 0;
 static int write_in_flight = 0;
 static int write_failed = 0;
+static int write_failure_reported = 0;
 
 static int resize_buffer(uint8_t **buffer, size_t *capacity, const size_t required) {
     if (required <= *capacity) return 1;
@@ -539,6 +540,7 @@ void persistent_memory_init(const char *core_path, const char *content_path) {
     worker_shutdown = 0;
     write_in_flight = 0;
     write_failed = 0;
+    write_failure_reported = 0;
 
     if (!current_core.retro_get_memory_data || !current_core.retro_get_memory_size) return;
 
@@ -631,6 +633,14 @@ int persistent_memory_flush(void) {
     write_failed = 0;
     pthread_mutex_unlock(&persistence_mutex);
     return result;
+}
+
+int persistent_memory_failure_unreported(void) {
+    pthread_mutex_lock(&persistence_mutex);
+    const int report = write_failed && !write_failure_reported;
+    if (report) write_failure_reported = 1;
+    pthread_mutex_unlock(&persistence_mutex);
+    return report;
 }
 
 void persistent_memory_shutdown(void) {

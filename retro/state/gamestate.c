@@ -388,6 +388,7 @@ void gamestate_publish_task(void) {
 
     if (result != 0) {
         publish_rollback();
+        pause_menu_show_toast(lang.generic.save_fail);
         return;
     }
 

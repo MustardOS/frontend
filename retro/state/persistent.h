@@ -6,4 +6,6 @@ void persistent_memory_save(void);
 
 int persistent_memory_flush(void);
 
+int persistent_memory_failure_unreported(void);
+
 void persistent_memory_shutdown(void);
