@@ -196,8 +196,6 @@ static char settings_core_name[MAX_BUFFER_SIZE] = "";
 static char settings_content_name[MAX_BUFFER_SIZE] = "";
 static char settings_content_stem[MAX_BUFFER_SIZE] = "";
 static char active_user_profile_path[MAX_BUFFER_SIZE] = "";
-static struct session_settings_t active_user_profile_settings;
-static int active_user_profile_options[OPTIONS_MAX];
 static enum play_profile active_play_profile = play_profile_unmatched;
 static struct session_settings_t active_play_profile_settings;
 static int active_play_profile_options[OPTIONS_MAX];
@@ -1177,32 +1175,45 @@ int session_settings_user_profile_apply(const int index) {
     session_settings_discard_to(&next);
     options_profile_apply(profile->option_indices, profile->option_present);
     snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", profile->path);
-    active_user_profile_settings = session_settings;
-    options_profile_capture(active_user_profile_options);
     active_play_profile = play_profile_unmatched;
     return profile->field_count;
 }
 
+static int user_profile_values_match(const user_profile *profile) {
+    struct session_settings_t expected = profile->values;
+    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) expected.run_ahead = 0;
+
+    return memcmp(&session_settings, &expected, sizeof(session_settings)) == 0
+           && options_profile_resolved_matches(profile->option_indices, profile->option_present);
+}
+
 int session_settings_user_profile_current(void) {
-    if (!active_user_profile_path[0]
-        || memcmp(&session_settings, &active_user_profile_settings, sizeof(session_settings)) != 0
-        || !options_profile_matches(active_user_profile_options))
+    // A built-in profile and a user profile are distinct choices even when their
+    // resolved values happen to match. Preserve an explicit built-in selection;
+    // user-profile matching remains the restart fallback when no built-in is active.
+    if (session_settings_play_profile() != play_profile_unmatched) {
+        active_user_profile_path[0] = '\0';
         return -1;
+    }
+
+    // Prefer the explicitly selected profile when duplicate files describe the same
+    // configuration, then fall back to configuration matching after a restart.
+    for (int index = 0; index < user_profile_count; index++) {
+        const user_profile *profile = &user_profiles[index];
+        if (active_user_profile_path[0] && strcmp(profile->path, active_user_profile_path) == 0
+            && user_profile_values_match(profile))
+            return index;
+    }
 
     for (int index = 0; index < user_profile_count; index++) {
         const user_profile *profile = &user_profiles[index];
-        if (strcmp(profile->path, active_user_profile_path) != 0) continue;
+        if (!user_profile_values_match(profile)) continue;
 
-        for (int i = 0; i < setting_descriptor_count; i++) {
-            if (!profile->present[i]) continue;
-            const struct setting_descriptor *descriptor = &setting_descriptors[i];
-            if (*setting_field_const(&session_settings, descriptor)
-                != *setting_field_const(&profile->values, descriptor))
-                return -1;
-        }
+        snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", profile->path);
         return index;
     }
 
+    active_user_profile_path[0] = '\0';
     return -1;
 }
 
@@ -1346,8 +1357,6 @@ int session_settings_user_profile_create(const char *name, const enum user_profi
     char final_path[MAX_BUFFER_SIZE];
     if (!str_format_checked(final_path, sizeof(final_path), "%s/%s", RETRO_PRO_PATH, final_name)) return -1;
     snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", final_path);
-    active_user_profile_settings = session_settings;
-    options_profile_capture(active_user_profile_options);
 
     session_settings_refresh_user_profiles();
     for (int index = 0; index < user_profile_count; index++)
@@ -1412,13 +1421,18 @@ static struct session_settings_t tier_base(const int with_core, const int with_d
     return base;
 }
 
-static void write_ini_delta(const char *path, const struct session_settings_t *base) {
-    remove(path);
-
-    if (memcmp(&session_settings, base, sizeof(session_settings)) == 0) return;
+static int write_ini_delta(const char *path, const struct session_settings_t *base) {
+    if (memcmp(&session_settings, base, sizeof(session_settings)) == 0) {
+        if (unlink(path) == 0 || errno == ENOENT) return 1;
+        LOG_ERROR(mux_module, "Could not remove redundant settings '%s': %s", path, strerror(errno));
+        return 0;
+    }
 
     mini_t *ini = mini_create(path);
-    if (!ini) return;
+    if (!ini) {
+        LOG_ERROR(mux_module, "Could not create settings document: %s", path);
+        return 0;
+    }
 
     for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
@@ -1477,8 +1491,10 @@ static void write_ini_delta(const char *path, const struct session_settings_t *b
         }
     }
 
-    mini_save(ini, 0);
+    const int saved = mini_save(ini, 0) == MINI_OK;
     mini_free(ini);
+    if (!saved) LOG_ERROR(mux_module, "Could not safely write settings: %s", path);
+    return saved;
 }
 
 void session_settings_init(const char *core_path_arg, const char *content_path) {
@@ -3117,14 +3133,12 @@ void session_settings_discard(void) {
 
 void session_settings_save_content(void) {
     const struct session_settings_t base = tier_base(1, 1);
-    write_ini_delta(content_ini_path, &base);
-    baseline_settings = session_settings;
+    if (write_ini_delta(content_ini_path, &base)) baseline_settings = session_settings;
 }
 
 void session_settings_save_core(void) {
     const struct session_settings_t base = tier_base(0, 0);
-    write_ini_delta(core_ini_path, &base);
-    baseline_settings = session_settings;
+    if (write_ini_delta(core_ini_path, &base)) baseline_settings = session_settings;
 }
 
 static int delete_saved_settings_file(const char *path) {
@@ -3165,6 +3179,5 @@ int session_settings_delete_saved_overrides(void) {
 
 void session_settings_save_directory(void) {
     const struct session_settings_t base = tier_base(1, 0);
-    write_ini_delta(directory_ini_path, &base);
-    baseline_settings = session_settings;
+    if (write_ini_delta(directory_ini_path, &base)) baseline_settings = session_settings;
 }
