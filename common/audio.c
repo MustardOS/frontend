@@ -28,6 +28,8 @@ const char *snd_names[sound_total] = {"confirm", "back",     "keypress", "naviga
 static char **bgm_files = NULL;
 static size_t bgm_file_count = 0;
 
+#define SOUND_WAIT_TIMEOUT_MS 5000U
+
 int play_sound_wait(const int sound) {
     if (!fe_snd || sound < 0 || sound >= sound_total) return 0;
 
@@ -42,8 +44,16 @@ int play_sound_wait(const int sound) {
     const int channel = Mix_PlayChannel(-1, cs->chunk, 0);
     if (channel < 0) return 0;
 
-    while (Mix_Playing(channel))
+    const Uint32 started = SDL_GetTicks();
+    while (Mix_Playing(channel)) {
+        if ((Uint32) (SDL_GetTicks() - started) >= SOUND_WAIT_TIMEOUT_MS) {
+            LOG_WARN("audio", "Timed out waiting for sound: %s.wav", snd_names[sound]);
+            Mix_HaltChannel(channel);
+            return 0;
+        }
+
         SDL_Delay(10);
+    }
 
     return 1;
 }
