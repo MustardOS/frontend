@@ -49,7 +49,7 @@ static void reset_connect_state(void) {
 
 static void list_nav_move(int steps, int direction);
 
-static void save_profile_ini(void);
+static int save_profile_ini(void);
 
 static void check_focus(void);
 
@@ -493,8 +493,9 @@ static void escape_wpa_string(const char *src, char *dst) {
     dst[di] = '\0';
 }
 
-static void save_network_config(void) {
+static int save_network_config(void) {
     int idx_type = 0;
+    int save_failed = 0;
 
     if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) idx_type = 1;
 
@@ -506,23 +507,40 @@ static void save_network_config(void) {
     escape_wpa_string(ssid ? ssid : "", esc_ssid);
     snprintf(pass_buf, sizeof(pass_buf), "%s", pending_password);
 
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type);
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, ssid ? ssid : "");
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid);
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, pass_buf);
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type)) save_failed++;
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, ssid ? ssid : "")) save_failed++;
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid)) save_failed++;
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, pass_buf)) save_failed++;
 
     if (idx_type) {
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, lv_label_get_text(ui_val_address_network));
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, lv_label_get_text(ui_val_subnet_network));
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, lv_label_get_text(ui_val_gateway_network));
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR, lv_label_get_text(ui_val_dns_network));
+        if (!write_text_to_file_atomic(
+                CONF_CONFIG_PATH "network/address", CHAR, lv_label_get_text(ui_val_address_network)
+            ))
+            save_failed++;
+        if (!write_text_to_file_atomic(
+                CONF_CONFIG_PATH "network/subnet", CHAR, lv_label_get_text(ui_val_subnet_network)
+            ))
+            save_failed++;
+        if (!write_text_to_file_atomic(
+                CONF_CONFIG_PATH "network/gateway", CHAR, lv_label_get_text(ui_val_gateway_network)
+            ))
+            save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/dns", CHAR, lv_label_get_text(ui_val_dns_network)))
+            save_failed++;
     } else {
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, "");
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, "");
-        write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, "");
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/address", CHAR, "")) save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/subnet", CHAR, "")) save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/gateway", CHAR, "")) save_failed++;
     }
 
     refresh_config = 1;
+
+    if (save_failed) {
+        LOG_ERROR(mux_module, "Failed to save %d active network setting(s)", save_failed);
+        return 0;
+    }
+
+    return 1;
 }
 
 static void init_navigation_group(void) {
@@ -756,9 +774,14 @@ static void handle_profile_save(void) {
         return;
     }
 
+    if (!save_profile_ini() || !save_network_config()) {
+        play_sound(snd_error);
+        toast_message(lang.generic.save_fail, tst_wait_m);
+        memset(password_buf, 0, sizeof(password_buf));
+        return;
+    }
+
     play_sound(snd_confirm);
-    save_network_config();
-    save_profile_ini();
     network_saved = 1;
 
     if (cv_pass_len > 0) {
@@ -871,7 +894,11 @@ static void handle_scan(void) {
     if (!lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
         play_sound(snd_confirm);
 
-        save_network_config();
+        if (!save_network_config()) {
+            play_sound(snd_error);
+            toast_message(lang.generic.save_fail, tst_wait_m);
+            return;
+        }
         load_mux("net_scan");
 
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_obj_get_user_data(lv_group_get_focused(ui_group)));
@@ -894,9 +921,16 @@ static void do_forget_profile(void) {
         return;
     }
 
-    remove(profile_file);
+    if (remove(profile_file) != 0) {
+        LOG_ERROR(mux_module, "Failed to forget network profile '%s': %s", profile_name_raw, strerror(errno));
+        play_sound(snd_error);
+        toast_message(lang.generic.remove_fail, tst_wait_m);
+        free(profile_name_raw);
+        return;
+    }
 
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/profile_name", CHAR, "");
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/profile_name", CHAR, ""))
+        LOG_ERROR(mux_module, "Forgot profile but failed to clear the active profile selection");
     viewing_existing_profile = 0;
     free(profile_name_raw);
 }
@@ -965,9 +999,9 @@ static int derive_psk(const char *ssid, const char *pass, char *out) {
     return 0;
 }
 
-static void save_profile_ini(void) {
+static int save_profile_ini(void) {
     const char *ssid = lv_label_get_text(ui_val_identifier_network);
-    if (!ssid || !*ssid) return;
+    if (!ssid || !*ssid) return 0;
 
     const char *profile_name_raw = lv_label_get_text(ui_val_profile_name_network);
     char profile_name[MAX_BUFFER_SIZE];
@@ -979,23 +1013,26 @@ static void save_profile_ini(void) {
         name_ok = sanitise_ssid_name(profile_name, ssid);
     }
 
-    if (!name_ok) return;
+    if (!name_ok) return 0;
 
-    mkdir(STORAGE_NETWORK, 0755);
+    if (mkdir(STORAGE_NETWORK, 0755) != 0 && errno != EEXIST) {
+        LOG_ERROR(mux_module, "Failed to create network profile directory: %s", strerror(errno));
+        return 0;
+    }
 
+    char old_file[MAX_BUFFER_SIZE] = "";
     if (viewing_existing_profile) {
         char *old_name = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
         if (old_name && *old_name && strcmp(old_name, profile_name) != 0) {
-            char old_file[MAX_BUFFER_SIZE];
             const int of_len = snprintf(old_file, sizeof(old_file), STORAGE_NETWORK "/%s.ini", old_name);
-            if (of_len >= 0 && (size_t) of_len < sizeof(old_file)) remove(old_file);
+            if (of_len < 0 || (size_t) of_len >= sizeof(old_file)) old_file[0] = '\0';
         }
         free(old_name);
     }
 
     char profile_file[MAX_BUFFER_SIZE];
     const int pf_len = snprintf(profile_file, sizeof(profile_file), STORAGE_NETWORK "/%s.ini", profile_name);
-    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return;
+    if (pf_len < 0 || (size_t) pf_len >= sizeof(profile_file)) return 0;
 
     const int is_static = strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0;
 
@@ -1027,15 +1064,30 @@ static void save_profile_ini(void) {
     if (pri > 9) pri = 9;
 
     mini_set_int(net, "network", "priority", pri);
-    mini_save(net, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    const int save_result = mini_save(net, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net);
 
-    write_text_to_file_atomic(CONF_CONFIG_PATH "network/profile_name", CHAR, profile_name);
+    if (save_result != MINI_OK) {
+        LOG_ERROR(mux_module, "Failed to save network profile '%s' (mini error %d)", profile_name, save_result);
+        return 0;
+    }
+
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/profile_name", CHAR, profile_name)) {
+        LOG_ERROR(mux_module, "Saved network profile '%s' but failed to select it", profile_name);
+        return 0;
+    }
+
     snprintf(current_profile, sizeof(current_profile), "%s", profile_name);
     viewing_existing_profile = 1;
 
+    // A renamed profile is removed only after its replacement and selection are durable.
+    if (*old_file && remove(old_file) != 0 && errno != ENOENT)
+        LOG_WARN(mux_module, "Saved renamed network profile but could not remove '%s': %s", old_file, strerror(errno));
+
     lv_obj_clear_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    return 1;
 }
 
 static void handle_a(void) {
@@ -1059,8 +1111,14 @@ static void handle_a(void) {
         dialogue_dismiss(&save_dlg);
 
         if (opt == mux_confirm_yep) {
-            if (viewing_active_profile) save_network_config();
-            save_profile_ini();
+            const int profile_saved = save_profile_ini();
+            const int active_saved = profile_saved && (!viewing_active_profile || save_network_config());
+            if (!profile_saved || !active_saved) {
+                play_sound(snd_error);
+                toast_message(lang.generic.save_fail, tst_wait_m);
+                return;
+            }
+            network_saved = 1;
         }
 
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "net_profile");
