@@ -1147,6 +1147,12 @@ static const char *get_integrity_result(const char *category) {
     return lang.generic.modified;
 }
 
+static const char *get_script_integrity_result(void) {
+    static int modified = -1;
+    if (modified < 0) modified = script_hash_check();
+    return modified ? lang.generic.modified : lang.generic.clean;
+}
+
 static void start_integrity_check(void) {
     if (!file_exist(INTEGRITY_SCRIPT) || file_exist(RUN_INTEGRITY "/complete")) return;
 
@@ -1165,7 +1171,7 @@ static void update_detail_info(void) {
 
     set_detail_value(ui_val_integrity_signature_detail, get_integrity_result("signature"));
     set_detail_value(ui_val_provenance_detail, get_integrity_result("provenance"));
-    set_detail_value(ui_val_system_scripts_detail, get_integrity_result("scripts"));
+    set_detail_value(ui_val_system_scripts_detail, get_script_integrity_result());
     set_detail_value(ui_val_kernel_integrity_detail, get_integrity_result("kernel"));
     set_detail_value(ui_val_device_tree_detail, get_integrity_result("dtb"));
     set_detail_value(ui_val_initial_ramdisk_detail, get_integrity_result("ramdisk"));
@@ -1238,7 +1244,7 @@ static void export_diagnostics(void) {
     fprintf(f, "\n[%s]\n", lang.muxdetail.section.modifications);
     fprintf(f, "%s: %s\n", lang.muxdetail.label.integrity_signature, get_integrity_result("signature"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.provenance, get_integrity_result("provenance"));
-    fprintf(f, "%s: %s\n", lang.muxdetail.label.system_scripts, get_integrity_result("scripts"));
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.system_scripts, get_script_integrity_result());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel_integrity, get_integrity_result("kernel"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.device_tree, get_integrity_result("dtb"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.initial_ramdisk, get_integrity_result("ramdisk"));
