@@ -92,7 +92,7 @@ static void compute_row_indices(void) {
     row_cheevo = device.board.has_network && cheevo_is_configured() && cheevo_has_game_entries() ? i++ : -1;
     row_game_link = link_is_supported() && !netplay_is_active() ? i++ : -1;
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
-    row_cheats = cheats_count > 0 && !netplay_is_active() ? i++ : -1;
+    row_cheats = cheats_supported() && !netplay_is_active() ? i++ : -1;
     row_patches = patch_manual_count > 0 && !netplay_is_active() ? i++ : -1;
     row_settings = i++;
     row_information = i++;

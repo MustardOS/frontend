@@ -114,6 +114,14 @@ static int cheat_code_exists(const char *code) {
     return 0;
 }
 
+static int cheat_code_exists_elsewhere(const char *code, const int excluded_index) {
+    for (int i = 0; i < cheats_count; i++) {
+        if (i != excluded_index && strcmp(cheats_list[i].code, code) == 0) return 1;
+    }
+
+    return 0;
+}
+
 static int load_ra_cht(const char *save_prefix, const char *content_stem) {
     char cht_path[MAX_BUFFER_SIZE];
     char directory[MAX_BUFFER_SIZE];
@@ -249,8 +257,8 @@ void cheats_init(const char *core_path_arg, const char *content_path) {
 static int write_cheats(void) {
     if (!cheats_path[0]) return 0;
 
-    mini_t *ini = mini_try_load(cheats_path);
-    if (!ini) ini = mini_create(cheats_path);
+    // Rebuild the managed file so deleting an entry cannot leave stale groups behind.
+    mini_t *ini = mini_create(cheats_path);
     if (!ini) return 0;
 
     mini_set_bool(ini, "meta", "managed", 1);
@@ -271,11 +279,95 @@ static int write_cheats(void) {
     return ok;
 }
 
-void cheats_toggle(const int index) {
-    if (index < 0 || index >= cheats_count) return;
+int cheats_supported(void) {
+    return current_core.retro_cheat_set != NULL;
+}
+
+int cheats_toggle(const int index) {
+    if (index < 0 || index >= cheats_count) return 0;
 
     cheats_list[index].enabled = !cheats_list[index].enabled;
 
+    if (!write_cheats()) {
+        cheats_list[index].enabled = !cheats_list[index].enabled;
+        LOG_ERROR(mux_module, "Failed to save cheat toggle to '%s'", cheats_path);
+        return 0;
+    }
+
     apply_enabled_cheats();
-    write_cheats();
+    return 1;
+}
+
+int cheats_create(const char *description, const char *code) {
+    if (!description || !description[0] || !code || !code[0] || cheats_count >= CHEAT_MAX
+        || cheat_code_exists(code))
+        return 0;
+
+    struct cheat_entry *entry = &cheats_list[cheats_count];
+    if (!str_copy_checked(entry->desc, sizeof(entry->desc), description)
+        || !str_copy_checked(entry->code, sizeof(entry->code), code))
+        return 0;
+    entry->enabled = 0;
+    cheats_count++;
+
+    if (!write_cheats()) {
+        cheats_count--;
+        memset(entry, 0, sizeof(*entry));
+        LOG_ERROR(mux_module, "Failed to create cheat in '%s'", cheats_path);
+        return 0;
+    }
+
+    return 1;
+}
+
+int cheats_update(const int index, const char *description, const char *code) {
+    if (index < 0 || index >= cheats_count || !description || !description[0] || !code || !code[0]
+        || cheat_code_exists_elsewhere(code, index))
+        return 0;
+
+    const struct cheat_entry previous = cheats_list[index];
+    if (!str_copy_checked(cheats_list[index].desc, sizeof(cheats_list[index].desc), description)
+        || !str_copy_checked(cheats_list[index].code, sizeof(cheats_list[index].code), code)) {
+        cheats_list[index] = previous;
+        return 0;
+    }
+
+    if (!write_cheats()) {
+        cheats_list[index] = previous;
+        LOG_ERROR(mux_module, "Failed to update cheat in '%s'", cheats_path);
+        return 0;
+    }
+
+    apply_enabled_cheats();
+    return 1;
+}
+
+int cheats_delete(const int index) {
+    if (index < 0 || index >= cheats_count) return 0;
+
+    const struct cheat_entry removed = cheats_list[index];
+    if (index + 1 < cheats_count) {
+        memmove(
+            &cheats_list[index], &cheats_list[index + 1],
+            (size_t) (cheats_count - index - 1) * sizeof(cheats_list[0])
+        );
+    }
+    cheats_count--;
+    memset(&cheats_list[cheats_count], 0, sizeof(cheats_list[0]));
+
+    if (!write_cheats()) {
+        if (index < cheats_count) {
+            memmove(
+                &cheats_list[index + 1], &cheats_list[index],
+                (size_t) (cheats_count - index) * sizeof(cheats_list[0])
+            );
+        }
+        cheats_list[index] = removed;
+        cheats_count++;
+        LOG_ERROR(mux_module, "Failed to delete cheat from '%s'", cheats_path);
+        return 0;
+    }
+
+    apply_enabled_cheats();
+    return 1;
 }
