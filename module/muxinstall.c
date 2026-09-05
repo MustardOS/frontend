@@ -151,7 +151,7 @@ static void handle_a(void) {
         const char *chosen = fs_choice_name(picked);
         if (!chosen) return;
 
-        write_text_to_file(CONF_DEVICE_PATH "storage/rom/type", "w", CHAR, chosen);
+        write_text_to_file_atomic(CONF_DEVICE_PATH "storage/rom/type", CHAR, chosen);
         LOG_INFO(mux_module, "Install will format the storage as %s", chosen);
 
         show_confirm("install", &confirm_install_dlg);

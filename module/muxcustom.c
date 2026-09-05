@@ -701,6 +701,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, theme_resolution, lang.muxcustom.themeresolution, "resolution", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, theme_scaling, lang.muxcustom.themescaling, "scaling", theme_scaling_options, 3);
     INIT_OPTION_ITEM(-1, custom, theme_alternate, lang.muxcustom.themealternate, "alternate", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, random_theme, lang.muxcustom.randomtheme, "randomtheme", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, header_height, lang.muxthemeopt.header_height, "headerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, footer_height, lang.muxthemeopt.footer_height, "footerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, content_item_count, lang.muxthemeopt.content_item_count, "count", NULL, 0);
@@ -816,9 +817,9 @@ static void init_navigation_group(void) {
         {lang.muxvisual.section.labels, 15, 7},     {lang.muxvisual.section.font, 22, 6},
         {lang.muxvisual.section.folders, 28, 6},    {lang.muxvisual.section.content, 34, 8},
         {lang.muxvisual.section.box_art, 42, 8},    {lang.muxvisual.section.launching, 50, 4},
-        {lang.muxcustom.section.packages, 54, 3},   {lang.muxcustom.section.theme, 57, 4},
-        {lang.muxcustom.section.layout, 61, 4},     {lang.muxcustom.section.glyphs, 65, 4},
-        {lang.muxcustom.section.background, 69, 3}, {lang.muxcustom.section.audio, 72, 5},
+        {lang.muxcustom.section.packages, 54, 3},   {lang.muxcustom.section.theme, 57, 5},
+        {lang.muxcustom.section.layout, 62, 4},     {lang.muxcustom.section.glyphs, 66, 4},
+        {lang.muxcustom.section.background, 70, 3}, {lang.muxcustom.section.audio, 73, 5},
     };
 
     list_frame_init(
@@ -1023,6 +1024,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_dro_sound_volume_custom, int_to_pct(config.settings.general.soundvol, 0, 100));
     lv_dropdown_set_selected(ui_dro_chime_custom, config.settings.general.chime);
     lv_dropdown_set_selected(ui_dro_theme_scaling_custom, config.settings.general.theme_scaling);
+    lv_dropdown_set_selected(ui_dro_random_theme_custom, config.settings.advanced.random_theme);
 
     lv_dropdown_set_selected(ui_dro_header_height_custom, (uint32_t) (config.settings.themeopt.header_height + 1));
     lv_dropdown_set_selected(ui_dro_footer_height_custom, (uint32_t) (config.settings.themeopt.footer_height + 1));
@@ -1123,7 +1125,7 @@ static int save_custom_options(void) {
 
     if ((int) config.settings.advanced.font != type_to_canonical((uint32_t) type_original)) {
         is_modified++;
-        if (!write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, config.settings.advanced.font))
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, config.settings.advanced.font))
             save_failed++;
     }
     CHECK_AND_SAVE_VAL(font, list_size, "settings/font/list_size", INT, font_size_values);
@@ -1136,7 +1138,7 @@ static int save_custom_options(void) {
         lv_dropdown_get_selected_str(ui_dro_font_name_font, name_current, sizeof(name_current));
         if (strcasecmp(name_current, font_name_saved) != 0) {
             is_modified++;
-            if (!write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, name_current)) save_failed++;
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, name_current)) save_failed++;
         }
     }
 
@@ -1151,6 +1153,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_PCT(custom, sound_volume, "settings/general/soundvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, chime, "settings/general/chime", INT, 0);
     CHECK_AND_SAVE_STD(custom, theme_scaling, "settings/general/theme_scaling", INT, 0);
+    CHECK_AND_SAVE_STD(custom, random_theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(custom, header_height, "settings/theme/header_height", INT, -1);
     CHECK_AND_SAVE_STD(custom, footer_height, "settings/theme/footer_height", INT, -1);
     CHECK_AND_SAVE_STD(custom, content_item_count, "settings/theme/content_item_count", INT, 0);
@@ -1183,7 +1186,7 @@ static int save_custom_options(void) {
     if (lv_dropdown_get_selected(ui_dro_theme_resolution_custom) != theme_resolution_original) {
         is_modified++;
 
-        if (!write_text_to_file(CONF_CONFIG_PATH "settings/general/theme_resolution", "w", INT, idx_theme_resolution))
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/general/theme_resolution", INT, idx_theme_resolution))
             save_failed++;
         refresh_resolution = 1;
     }
@@ -1352,6 +1355,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // theme_resolution
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // theme_scaling
     {NULL, NULL, &kiosk_pass, menu_theme_alternate, visible_theme_alternate},
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // random_theme
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // header_height
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // footer_height
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_item_count

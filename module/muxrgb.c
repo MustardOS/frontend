@@ -460,7 +460,7 @@ static void apply_option_change(void) {
         if (new_mode == current_mode) return;
 
         current_mode = new_mode;
-        write_text_to_file(CONF_CONFIG_PATH "settings/rgb/mode", "w", INT, current_mode);
+        write_text_to_file_atomic(CONF_CONFIG_PATH "settings/rgb/mode", INT, current_mode);
         refresh_config = 1;
 
         show_zone_list();
@@ -472,7 +472,7 @@ static void apply_option_change(void) {
         update_reset_nav_visibility();
     } else if (current_mode == RGB_MODE_THEME_SUPPLIED) {
         const int bright_val = pct_to_int(lv_dropdown_get_selected(ui_dro_bright_rgb), 0, 255);
-        write_text_to_file(CONF_CONFIG_PATH "settings/rgb/bright_theme", "w", INT, bright_val);
+        write_text_to_file_atomic(CONF_CONFIG_PATH "settings/rgb/bright_theme", INT, bright_val);
         refresh_config = 1;
     } else {
         return;

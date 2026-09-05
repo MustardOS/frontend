@@ -229,13 +229,18 @@ static void write_state(const struct link_state *state, const int carrier) {
     mkdir(LINK_STATE_DIR, 0755);
 
     char temporary[PATH_MAX];
-    snprintf(temporary, sizeof(temporary), "%s.tmp", LINK_STATE_FILE);
+    snprintf(temporary, sizeof(temporary), "%s.tmp.%ld", LINK_STATE_FILE, (long) getpid());
 
-    FILE *file = fopen(temporary, "w");
-    if (!file) return;
+    const int descriptor = open(temporary, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0644);
+    FILE *file = descriptor >= 0 ? fdopen(descriptor, "w") : NULL;
+    if (!file) {
+        if (descriptor >= 0) close(descriptor);
+        unlink(temporary);
+        return;
+    }
 
     const char *status = "absent";
-    if (state->peer_seen)
+    if (state->peer_seen && state->applied)
         status = "paired";
     else if (carrier)
         status = "waiting";
@@ -243,7 +248,7 @@ static void write_state(const struct link_state *state, const int carrier) {
         status = "unplugged";
 
     fprintf(file, "status=%s\n", status);
-    fprintf(file, "interface=%s\n", state->iface[0] ? state->iface : "-");
+    fprintf(file, "interface=%s\n", carrier && state->iface[0] ? state->iface : "-");
 
     char buffer[64];
     format_mac(state->self_mac, buffer, sizeof(buffer));
@@ -258,8 +263,9 @@ static void write_state(const struct link_state *state, const int carrier) {
         fprintf(file, "peer_address=%s\n", buffer);
     }
 
-    fclose(file);
-    rename(temporary, LINK_STATE_FILE);
+    int okay = fflush(file) == 0 && fsync(descriptor) == 0;
+    if (fclose(file) != 0) okay = 0;
+    if (!okay || rename(temporary, LINK_STATE_FILE) != 0) unlink(temporary);
 }
 
 static int open_beacon_socket(const char *iface, const int control_fd) {
@@ -395,8 +401,11 @@ int main(void) {
                 }
 
                 memset(&state.peer_mac, 0, sizeof(state.peer_mac));
+                memset(&state.self_mac, 0, sizeof(state.self_mac));
                 state.peer_seen = 0;
                 state.applied = 0;
+                state.local_ip = 0;
+                state.peer_ip = 0;
                 snprintf(state.iface, sizeof(state.iface), "%s", iface);
                 carrier = found;
 
@@ -479,8 +488,11 @@ int main(void) {
         }
 
         if (state.peer_seen && now_ms() - state.peer_last_ms > PEER_TIMEOUT_MS) {
+            memset(&state.peer_mac, 0, sizeof(state.peer_mac));
             state.peer_seen = 0;
             state.applied = 0;
+            state.local_ip = 0;
+            state.peer_ip = 0;
             write_state(&state, carrier);
         }
 

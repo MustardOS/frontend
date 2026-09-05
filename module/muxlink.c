@@ -90,10 +90,11 @@ static void refresh_values(void) {
     read_link_report();
 
     const int paired = config.settings.network.link && strcmp(report.status, "paired") == 0;
+    const int interface_available = paired || strcmp(report.status, "waiting") == 0;
 
     set_value(row_enabled, config.settings.network.link ? lang.generic.enabled : lang.generic.disabled);
     set_value(row_status, status_label());
-    set_value(row_interface, field_or_dash(report.interface));
+    set_value(row_interface, interface_available ? field_or_dash(report.interface) : lang.muxlink.connection_none);
     set_value(row_address, paired ? field_or_dash(report.address) : lang.generic.unknown);
     set_value(row_peer_address, paired ? field_or_dash(report.peer_address) : lang.generic.unknown);
     set_value(row_peer_mac, paired ? field_or_dash(report.peer_mac) : lang.generic.unknown);
@@ -117,8 +118,8 @@ static void cycle_enabled(void) {
 }
 
 static void save_settings(void) {
-    write_text_to_file(CONF_CONFIG_PATH "settings/network/link", "w", INT, config.settings.network.link);
-    settings_changed = 0;
+    if (write_text_to_file_atomic(CONF_CONFIG_PATH "settings/network/link", INT, config.settings.network.link))
+        settings_changed = 0;
 }
 
 static void leave_module(void) {

@@ -261,7 +261,7 @@ static void save_tweak_options(void) {
 
         if (sink_mod != audio_sink_original) {
             is_modified++;
-            if (!write_text_to_file(CONF_CONFIG_PATH "settings/general/audiosink", "w", INT, sink_mod)) save_failed++;
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/general/audiosink", INT, sink_mod)) save_failed++;
 
             char idx_str[8];
             snprintf(idx_str, sizeof(idx_str), "%d", sink_mod);

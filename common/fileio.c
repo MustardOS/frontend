@@ -247,15 +247,22 @@ int write_text_to_file(const char *filename, const char *mode, const int type, .
 
 int write_text_to_file_atomic(const char *filename, const int type, ...) {
     char tmp[PATH_MAX];
-    const int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp", filename);
+    const int tmp_len = snprintf(tmp, sizeof(tmp), "%s.tmp.%ld", filename, (long) getpid());
 
     if (tmp_len < 0 || (size_t) tmp_len >= sizeof(tmp)) {
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return 0;
     }
 
-    FILE *f = fopen(tmp, "w");
+    int descriptor = open(tmp, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+    if (descriptor < 0 && errno == EEXIST) {
+        unlink(tmp);
+        descriptor = open(tmp, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+    }
+    FILE *f = descriptor >= 0 ? fdopen(descriptor, "w") : NULL;
     if (!f) {
+        if (descriptor >= 0) close(descriptor);
+        unlink(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return 0;
     }
@@ -273,14 +280,32 @@ int write_text_to_file_atomic(const char *filename, const int type, ...) {
     va_end(args);
 
     if (fflush(f) != 0) ok = 0;
-    if (ok && fsync(fileno(f)) != 0) LOG_WARN(mux_module, "%s: %s", lang.system.fail_file_write, filename);
+    if (ok && fsync(descriptor) != 0) ok = 0;
 
     if (fclose(f) != 0) ok = 0;
 
     if (!ok || rename(tmp, filename) != 0) {
-        remove(tmp);
+        unlink(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return 0;
+    }
+
+    char directory[PATH_MAX];
+    if (str_copy_checked(directory, sizeof(directory), filename)) {
+        char *separator = strrchr(directory, '/');
+        if (separator == directory)
+            separator[1] = '\0';
+        else if (separator)
+            *separator = '\0';
+        else
+            snprintf(directory, sizeof(directory), ".");
+
+        const int directory_descriptor = open(directory, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+        if (directory_descriptor >= 0) {
+            if (fsync(directory_descriptor) != 0 && errno != EINVAL && errno != EROFS)
+                LOG_WARN(mux_module, "%s: %s", lang.system.fail_file_write, filename);
+            close(directory_descriptor);
+        }
     }
 
     vs_invalidate_path(filename);

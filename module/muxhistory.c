@@ -81,7 +81,7 @@ static void image_refresh(const char *image_type) {
     if (strcasecmp(image_type, "box") == 0) {
         char save_image[MAX_BUFFER_SIZE];
         if (resolve_save_screenshot(items[current_item_index].extra_data, 2, save_image, sizeof(save_image))) {
-            render_box_image(save_image, &starter_image);
+            render_save_screenshot(save_image, ui_viewport_objects, &starter_image);
             return;
         }
     }

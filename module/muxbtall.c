@@ -275,7 +275,7 @@ static void handle_a(void) {
     const char *info_args[] = {OPT_PATH "script/mux/bt_device.sh", "info", mac_copy, NULL};
     run_exec(info_args, A_SIZE(info_args), 0, 1, NULL, NULL);
 
-    write_text_to_file(CONF_CONFIG_PATH "bluetooth/selected", "w", CHAR, mac_copy);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "bluetooth/selected", CHAR, mac_copy);
     write_text_to_file(MUOS_BTI_LOAD, "w", INT, current_item_index);
     load_mux("btdev");
     mux_input_stop();

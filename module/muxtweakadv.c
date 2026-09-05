@@ -93,7 +93,7 @@ static void normalise_overdrive(const int overdrive_old, const int overdrive_new
         if (current > 100) {
             const int new_volume = current * 100 / 200;
 
-            write_text_to_file(CONF_CONFIG_PATH "settings/general/volume", "w", INT, new_volume);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/general/volume", INT, new_volume);
             set_setting_value("audio", new_volume, 0);
         }
     }
@@ -108,7 +108,6 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, brightness, "settings/advanced/brightness", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, thermal, "settings/advanced/thermal", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, led, "settings/advanced/led", INT, 0);
-    CHECK_AND_SAVE_STD(tweakadv, random_theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, retro_wait, "settings/advanced/retrowait", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, retro_cache, "settings/advanced/retrocache", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, activity, "settings/advanced/activity", INT, 0);
@@ -165,7 +164,7 @@ static void save_tweak_options(void) {
         const int overdrive_current = lv_dropdown_get_selected(ui_dro_overdrive_tweakadv);
         if (overdrive_current != overdrive_original) {
             is_modified++;
-            if (!write_text_to_file(CONF_CONFIG_PATH "settings/advanced/overdrive", "w", INT, overdrive_current))
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/overdrive", INT, overdrive_current))
                 save_failed++;
             normalise_overdrive(overdrive_original, overdrive_current);
         }
@@ -232,6 +231,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, double_buffer, lang.muxtweakadv.doublebuffer, "doublebuffer", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, swapfile, lang.muxtweakadv.swapfile, "swapfile", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, zramfile, lang.muxtweakadv.zramfile, "zramfile", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakadv, perf_counters, lang.muxtweakadv.perfcounters, "perfcounters", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, second_part, lang.muxtweakadv.secondpart, "secondpart", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, usb_part, lang.muxtweakadv.usbpart, "usbpart", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, usb_function, lang.muxtweakadv.usbfunction, "usbfunction", usb_functions, 3);
@@ -239,11 +239,9 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, retro_cache, lang.muxtweakadv.retrocache, "retrocache", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, led, lang.muxtweakadv.led, "led", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, rumble, lang.muxtweakadv.rumble.title, "rumble", rumble_options, 7);
-    INIT_OPTION_ITEM(-1, tweakadv, random_theme, lang.muxtweakadv.randomtheme, "randomtheme", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, activity, lang.muxtweakadv.activity, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, verbose, lang.muxtweakadv.verbose, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, debug_log, lang.muxtweakadv.debuglog, "debuglog", debug_log_mode, 3);
-    INIT_OPTION_ITEM(-1, tweakadv, perf_counters, lang.muxtweakadv.perfcounters, "perfcounters", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, user_init, lang.muxtweakadv.userinit, "userinit", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, bt_scan_timeout, lang.muxtweakadv.btscantimeout, "btscan", NULL, 0);
     INIT_OPTION_ITEM(

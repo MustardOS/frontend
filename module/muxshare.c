@@ -1079,11 +1079,9 @@ static void apply_box_blank_or_fallback(lv_obj_t *ui_viewport_objects[], int *st
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", none_box);
     } else {
         lv_img_set_src(ui_img_box, &ui_img_blank);
-        if (ui_viewport_objects) {
-            for (int i = 1; i < 6; i++) {
-                if (ui_viewport_objects[i]) lv_img_set_src(ui_viewport_objects[i], &ui_img_blank);
-            }
-        }
+        if (ui_viewport_objects)
+            for (int i = 1; i < 6; i++)
+                clear_image(ui_viewport_objects[i]);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
     }
 }
@@ -1145,6 +1143,7 @@ static void render_box_single(const char *image, int *starter_image) {
     }
 
     *starter_image = 1;
+    lv_obj_set_align(ui_img_box, config.visual.box_art_align);
 
     const int box_w = device.mux.width;
     const int fullscreen = config.visual.box_art == 2 || config.visual.box_art == 3;
@@ -1202,11 +1201,15 @@ static void render_box_refresh(
         snprintf(artwork_config_path, sizeof(artwork_config_path), INFO_CAT_PATH "/default.ini");
 
     if (file_exist(artwork_config_path)) {
+        clear_image(ui_img_box);
         viewport_refresh(ui_viewport_objects, artwork_config_path, h_core_artwork, h_file_name);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
         return;
     }
 
+    if (ui_viewport_objects)
+        for (int i = 1; i < 6; i++)
+            clear_image(ui_viewport_objects[i]);
     render_box_single(image, starter_image);
 }
 
@@ -1303,10 +1306,35 @@ int resolve_save_screenshot(const char *content_path, const int scope, char *out
     return muxretro_latest_state_image(resolved, core_name, out, out_size);
 }
 
-void render_box_image(const char *image, int *starter_image) {
+void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], int *starter_image) {
     if (strcasecmp(box_image_previous_path, image) == 0) return;
 
-    render_box_single(image, starter_image);
+    if (!file_exist(image)) {
+        apply_box_blank_or_fallback(ui_viewport_objects, starter_image);
+        return;
+    }
+
+    if (ui_viewport_objects)
+        for (int i = 1; i < 6; i++)
+            clear_image(ui_viewport_objects[i]);
+
+    *starter_image = 1;
+
+    const int panel_height = config.visual.box_art == 2 || config.visual.box_art == 3
+                                 ? device.mux.height
+                                 : device.mux.height - theme.header.height - theme.footer.height - 4;
+    const struct image_settings image_settings = {
+        image,
+        LV_ALIGN_BOTTOM_RIGHT,
+        validate_int16((int16_t) (device.mux.width * 42 / 100), "width"),
+        validate_int16((int16_t) ((panel_height > 0 ? panel_height : device.mux.height) * 42 / 100), "height"),
+        0,
+        theme.image_list.pad_right,
+        0,
+        theme.image_list.pad_bottom
+    };
+    update_image(ui_img_box, image_settings);
+    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
 }
 
 void render_image_refresh(

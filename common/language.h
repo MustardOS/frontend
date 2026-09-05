@@ -722,6 +722,7 @@ struct mux_lang {
         char themescaling[MAX_BUFFER_SIZE];
         char screen[MAX_BUFFER_SIZE];
         char themealternate[MAX_BUFFER_SIZE];
+        char randomtheme[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
         struct {
             char content[MAX_BUFFER_SIZE];
@@ -799,6 +800,7 @@ struct mux_lang {
             char theme_scaling[MAX_BUFFER_SIZE];
             char theme_resolution[MAX_BUFFER_SIZE];
             char theme_alternate[MAX_BUFFER_SIZE];
+            char random_theme[MAX_BUFFER_SIZE];
             char video_wallpaper[MAX_BUFFER_SIZE];
             char background_scale[MAX_BUFFER_SIZE];
             char boxartimage[MAX_BUFFER_SIZE];
@@ -1355,6 +1357,7 @@ struct mux_lang {
         char status_unplugged[MAX_BUFFER_SIZE];
         char status_waiting[MAX_BUFFER_SIZE];
         char status_paired[MAX_BUFFER_SIZE];
+        char connection_none[MAX_BUFFER_SIZE];
         struct {
             char enabled[MAX_BUFFER_SIZE];
             char status[MAX_BUFFER_SIZE];
@@ -2343,6 +2346,21 @@ struct mux_lang {
         } options_screen;
         struct {
             char no_cheats[MAX_BUFFER_SIZE];
+            char empty_help[MAX_BUFFER_SIZE];
+            char toggle[MAX_BUFFER_SIZE];
+            char manage[MAX_BUFFER_SIZE];
+            char edit[MAX_BUFFER_SIZE];
+            char delete[MAX_BUFFER_SIZE];
+            char delete_title[MAX_BUFFER_SIZE];
+            char delete_desc[MAX_BUFFER_SIZE];
+            char name[MAX_BUFFER_SIZE];
+            char code[MAX_BUFFER_SIZE];
+            char name_needed[MAX_BUFFER_SIZE];
+            char code_needed[MAX_BUFFER_SIZE];
+            char saved[MAX_BUFFER_SIZE];
+            char save_failed[MAX_BUFFER_SIZE];
+            char deleted[MAX_BUFFER_SIZE];
+            char limit_reached[MAX_BUFFER_SIZE];
         } cheats_screen;
         struct {
             char restart_required[MAX_BUFFER_SIZE];
@@ -3013,9 +3031,7 @@ struct mux_lang {
         char repeatdelay[MAX_BUFFER_SIZE];
         char thermal[MAX_BUFFER_SIZE];
         char led[MAX_BUFFER_SIZE];
-        char randomtheme[MAX_BUFFER_SIZE];
         char retrowait[MAX_BUFFER_SIZE];
-        char retrofree[MAX_BUFFER_SIZE];
         char retrocache[MAX_BUFFER_SIZE];
         char activity[MAX_BUFFER_SIZE];
         char verbose[MAX_BUFFER_SIZE];
@@ -3086,9 +3102,7 @@ struct mux_lang {
             char repeat_delay[MAX_BUFFER_SIZE];
             char thermal[MAX_BUFFER_SIZE];
             char led[MAX_BUFFER_SIZE];
-            char random_theme[MAX_BUFFER_SIZE];
             char retro_wait[MAX_BUFFER_SIZE];
-            char retro_free[MAX_BUFFER_SIZE];
             char retro_cache[MAX_BUFFER_SIZE];
             char activity[MAX_BUFFER_SIZE];
             char verbose[MAX_BUFFER_SIZE];

@@ -87,7 +87,7 @@ static void handle_a(void) {
     play_sound(snd_confirm);
 
     toast_message(lang.generic.saving, tst_wait_f);
-    write_text_to_file(CONF_CONFIG_PATH "settings/general/soundfont", "w", CHAR, items[current_item_index].name);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/general/soundfont", CHAR, items[current_item_index].name);
 
     refresh_config = 1;
 

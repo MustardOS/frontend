@@ -62,10 +62,10 @@ static void toggle_custom_format(const int show) {
 }
 
 static void confirm_rtc_config(void) {
-    write_text_to_file(CONF_CONFIG_PATH "clock/notation", "w", INT, rtc.notation);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "clock/notation", INT, rtc.notation);
 
     if (rtc.notation == NOTATION_CUSTOM) {
-        write_text_to_file(CONF_CONFIG_PATH "clock/custom", "w", CHAR, rtc.custom_fmt);
+        write_text_to_file_atomic(CONF_CONFIG_PATH "clock/custom", CHAR, rtc.custom_fmt);
     }
 
     const char *args[] = {"hwclock", "-w", NULL};
@@ -431,7 +431,7 @@ static void handle_a(void) {
         dialogue_dismiss(&save_dlg);
 
         if (config.boot.factory_reset) {
-            write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "boot/clock_setup", INT, 0);
         } else {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
         }
@@ -500,7 +500,7 @@ static void handle_b(void) {
     play_sound(snd_back);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
-    if (config.boot.factory_reset) write_text_to_file(CONF_CONFIG_PATH "boot/clock_setup", "w", INT, 0);
+    if (config.boot.factory_reset) write_text_to_file_atomic(CONF_CONFIG_PATH "boot/clock_setup", INT, 0);
 
     save_and_exit(lang.generic.saving);
 }

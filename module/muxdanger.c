@@ -139,7 +139,7 @@ static void save_danger_options(void) {
     if (online_cores != online_cores_original) {
         is_modified++;
         online_cores_modified = 1;
-        if (!write_text_to_file(CONF_CONFIG_PATH "danger/online_cores", "w", INT, online_cores)) save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "danger/online_cores", INT, online_cores)) save_failed++;
     }
 
     CHECK_AND_SAVE_MAP(danger, vm_swap, "danger/vmswap", four_values, 25, 3);

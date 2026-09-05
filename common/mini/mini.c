@@ -412,18 +412,30 @@ int mini_save(const mini_t *mini, int flags) {
     return result;
 #else
     char tmp[PATH_MAX];
-    if (snprintf(tmp, sizeof(tmp), "%s.tmp", mini->path) >= (int) sizeof(tmp)) return MINI_INVALID_PATH;
+    const int temporary_length = snprintf(tmp, sizeof(tmp), "%s.tmp.%ld", mini->path, (long) getpid());
+    if (temporary_length < 0 || temporary_length >= (int) sizeof(tmp)) return MINI_INVALID_PATH;
 
-    FILE *fp = fopen(tmp, "w");
-    if (!fp) return MINI_ACCESS_DENIED;
+    int descriptor = open(tmp, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+    if (descriptor < 0 && errno == EEXIST) {
+        unlink(tmp);
+        descriptor = open(tmp, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+    }
+    if (descriptor < 0) return MINI_ACCESS_DENIED;
+
+    FILE *fp = fdopen(descriptor, "w");
+    if (!fp) {
+        close(descriptor);
+        unlink(tmp);
+        return MINI_ACCESS_DENIED;
+    }
 
     int result = mini_savef(mini, fp, flags);
 
-    if (fflush(fp) != 0 || fsync(fileno(fp)) != 0) result = MINI_ACCESS_DENIED;
-    fclose(fp);
+    if (fflush(fp) != 0 || fsync(descriptor) != 0) result = MINI_ACCESS_DENIED;
+    if (fclose(fp) != 0) result = MINI_ACCESS_DENIED;
 
     if (result != MINI_OK || rename(tmp, mini->path) != 0) {
-        remove(tmp);
+        unlink(tmp);
         return MINI_ACCESS_DENIED;
     }
 
@@ -439,11 +451,11 @@ int mini_save(const mini_t *mini, int flags) {
     }
     int dir_fd = open(dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (dir_fd >= 0) {
-        fsync(dir_fd);
+        if (fsync(dir_fd) != 0 && errno != EINVAL && errno != EROFS) result = MINI_ACCESS_DENIED;
         close(dir_fd);
     }
 
-    return MINI_OK;
+    return result;
 #endif
 }
 

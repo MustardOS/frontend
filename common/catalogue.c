@@ -103,9 +103,11 @@ static cat_dir_entry *cat_dir_lookup(const char *dir_path) {
     return e;
 }
 
-static int cat_dir_has_file(cat_dir_entry *e, const char *filename) {
-    if (!e || e->count == 0) return 0;
-    return bsearch(&filename, e->files, (size_t) e->count, sizeof(char *), cat_file_cmp) != NULL;
+static const char *cat_dir_find_file(cat_dir_entry *e, const char *filename) {
+    if (!e || e->count == 0) return NULL;
+
+    char **match = bsearch(&filename, e->files, (size_t) e->count, sizeof(char *), cat_file_cmp);
+    return match ? *match : NULL;
 }
 
 void load_splash_image_fallback(const char *mux_dim, char *image, const size_t image_size) {
@@ -206,7 +208,10 @@ int load_image_catalogue(
 
             cat_dir_entry *e = cat_dir_lookup(dir);
             if (e) {
-                if (!cat_dir_has_file(e, filename)) continue;
+                const char *matched_name = cat_dir_find_file(e, filename);
+                if (!matched_name) continue;
+                const int matched_length = snprintf(full_path, sizeof(full_path), "%s/%s", dir, matched_name);
+                if (matched_length < 0 || (size_t) matched_length >= sizeof(full_path)) continue;
             } else if (!file_exist_nocase(full_path, full_path, sizeof(full_path))) {
                 continue;
             }

@@ -378,7 +378,7 @@ static void apply_layout(const int layout) {
     remap_layout = layout;
     config.settings.remap.layout = (int16_t) layout;
     create_directories(CONF_CONFIG_PATH "settings/remap/layout", 1);
-    write_text_to_file(CONF_CONFIG_PATH "settings/remap/layout", "w", INT, layout);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/remap/layout", INT, layout);
     mux_input_reload_mappings();
 
     load_current_mapping();

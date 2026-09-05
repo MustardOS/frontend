@@ -217,7 +217,7 @@ void render_image_refresh(
 
 int resolve_save_screenshot(const char *content_path, int scope, char *out, size_t out_size);
 
-void render_box_image(const char *image, int *starter_image);
+void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], int *starter_image);
 
 void clear_box_image(void);
 
@@ -535,7 +535,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_KIOSK_PATH FILE, "w", TYPE, current)) save_failed++;                          \
+            if (!write_text_to_file_atomic(CONF_KIOSK_PATH FILE, TYPE, current)) save_failed++;                        \
         }                                                                                                              \
     } while (0)
 
@@ -544,7 +544,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, current + OFFSET)) save_failed++;                \
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH FILE, TYPE, current + OFFSET)) save_failed++;              \
         }                                                                                                              \
     } while (0)
 
@@ -553,7 +553,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, current + OFFSET)) save_failed++;                \
+            if (!write_text_to_file_atomic(CONF_DEVICE_PATH FILE, TYPE, current + OFFSET)) save_failed++;              \
         }                                                                                                              \
     } while (0)
 
@@ -562,7 +562,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_DEVICE_PATH FILE, "w", TYPE, VALUES[current])) save_failed++;                 \
+            if (!write_text_to_file_atomic(CONF_DEVICE_PATH FILE, TYPE, VALUES[current])) save_failed++;               \
         }                                                                                                              \
     } while (0)
 
@@ -571,7 +571,7 @@ void resolve_grid_item_images(
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, VALUES[current])) save_failed++;                 \
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH FILE, TYPE, VALUES[current])) save_failed++;               \
         }                                                                                                              \
     } while (0)
 
@@ -581,7 +581,7 @@ void resolve_grid_item_images(
         if (current != NAME##_original) {                                                                              \
             int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT);                                      \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", INT, mapped)) save_failed++;                           \
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH FILE, INT, mapped)) save_failed++;                         \
         }                                                                                                              \
     } while (0)
 
@@ -591,7 +591,7 @@ void resolve_grid_item_images(
         int value = ((VAL_MIN) == (VAL_MAX)) ? (VAL_MIN) : pct_to_int(current, VAL_MIN, VAL_MAX);                      \
         if (value != NAME##_original) {                                                                                \
             is_modified++;                                                                                             \
-            if (!write_text_to_file(CONF_CONFIG_PATH FILE, "w", TYPE, value)) save_failed++;                           \
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH FILE, TYPE, value)) save_failed++;                         \
         }                                                                                                              \
     } while (0)
 

@@ -11,9 +11,7 @@ enum { ui_count_dynamic = E_SIZE(DETAIL_ELEMENTS) };
 enum {
     detail_off_system = 0,
     detail_len_system = E_SIZE(DETAIL_SYSTEM_ELEMENTS),
-    detail_off_modifications = detail_off_system + detail_len_system,
-    detail_len_modifications = E_SIZE(DETAIL_MODIFICATION_ELEMENTS),
-    detail_off_runtime = detail_off_modifications + detail_len_modifications,
+    detail_off_runtime = detail_off_system + detail_len_system,
     detail_len_runtime = E_SIZE(DETAIL_RUNTIME_ELEMENTS),
     detail_off_processor = detail_off_runtime + detail_len_runtime,
     detail_len_processor = E_SIZE(DETAIL_PROCESSOR_ELEMENTS),
@@ -25,6 +23,8 @@ enum {
     detail_len_network = E_SIZE(DETAIL_NETWORK_ELEMENTS),
     detail_off_traffic = detail_off_network + detail_len_network,
     detail_len_traffic = E_SIZE(DETAIL_TRAFFIC_ELEMENTS),
+    detail_off_modifications = detail_off_traffic + detail_len_traffic,
+    detail_len_modifications = E_SIZE(DETAIL_MODIFICATION_ELEMENTS),
 };
 #undef DETAIL
 
@@ -150,8 +150,10 @@ static const char *get_cpu_model(void) {
 
     if (!model[0]) return lang.generic.unknown;
 
-    snprintf(cached, sizeof(cached), "%s", model);
-    LV_UNUSED(cpu_cores);
+    if (cpu_cores > 0)
+        snprintf(cached, sizeof(cached), "%s (%llu %s)", model, cpu_cores, lang.muxdetail.label.cores);
+    else
+        snprintf(cached, sizeof(cached), "%s", model);
 
     cached_ok = 1;
     return cached;
@@ -1089,26 +1091,6 @@ static const char *get_display_mode(void) {
     return buffer;
 }
 
-static const char *get_core_count(void) {
-    static char buffer[UI_BUFFER];
-
-    unsigned long long cores = 0;
-    FILE *fp = fopen("/proc/cpuinfo", "r");
-
-    if (fp) {
-        char line[256];
-        while (fgets(line, sizeof(line), fp))
-            if (strncmp(line, "processor", 9) == 0) cores++;
-
-        fclose(fp);
-    }
-
-    if (cores == 0) return lang.generic.unknown;
-
-    snprintf(buffer, sizeof(buffer), "%llu", cores);
-    return buffer;
-}
-
 static const char *get_speed_range(void) {
     static char buffer[UI_BUFFER];
 
@@ -1184,10 +1166,7 @@ static void update_detail_info(void) {
     set_detail_value(ui_val_integrity_signature_detail, get_integrity_result("signature"));
     set_detail_value(ui_val_provenance_detail, get_integrity_result("provenance"));
     set_detail_value(ui_val_system_scripts_detail, get_integrity_result("scripts"));
-    set_detail_value(ui_val_frontend_integrity_detail, get_integrity_result("frontend"));
-    set_detail_value(ui_val_device_package_detail, get_integrity_result("device"));
     set_detail_value(ui_val_kernel_integrity_detail, get_integrity_result("kernel"));
-    set_detail_value(ui_val_kernel_modules_detail, get_integrity_result("modules"));
     set_detail_value(ui_val_device_tree_detail, get_integrity_result("dtb"));
     set_detail_value(ui_val_initial_ramdisk_detail, get_integrity_result("ramdisk"));
     set_detail_value(ui_val_bootloader_detail, get_integrity_result("bootloader"));
@@ -1202,7 +1181,6 @@ static void update_detail_info(void) {
     set_detail_value(ui_val_temp_detail, get_temperature());
 
     set_detail_value(ui_val_cpu_detail, get_cpu_model());
-    set_detail_value(ui_val_cores_detail, get_core_count());
     set_detail_value(ui_val_speed_detail, get_current_frequency());
     set_detail_value(ui_val_speed_range_detail, get_speed_range());
     set_detail_value(ui_val_governor_detail, get_scaling_governor());
@@ -1261,10 +1239,7 @@ static void export_diagnostics(void) {
     fprintf(f, "%s: %s\n", lang.muxdetail.label.integrity_signature, get_integrity_result("signature"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.provenance, get_integrity_result("provenance"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.system_scripts, get_integrity_result("scripts"));
-    fprintf(f, "%s: %s\n", lang.muxdetail.label.frontend_integrity, get_integrity_result("frontend"));
-    fprintf(f, "%s: %s\n", lang.muxdetail.label.device_package, get_integrity_result("device"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel_integrity, get_integrity_result("kernel"));
-    fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel_modules, get_integrity_result("modules"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.device_tree, get_integrity_result("dtb"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.initial_ramdisk, get_integrity_result("ramdisk"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.bootloader, get_integrity_result("bootloader"));
@@ -1277,7 +1252,6 @@ static void export_diagnostics(void) {
     fprintf(f, "%s: %s\n", lang.muxdetail.label.swap, get_swap_usage());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.temp, get_temperature());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.cpu, get_cpu_model());
-    fprintf(f, "%s: %s\n", lang.muxdetail.label.cores, get_core_count());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.speed, get_current_frequency());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.speed_range, get_speed_range());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.governor, get_scaling_governor());
@@ -1352,8 +1326,6 @@ static void init_navigation_group(void) {
     int frame_count = 0;
 
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.system, detail_off_system, detail_len_system};
-    frames[frame_count++] =
-        (list_frame) {lang.muxdetail.section.modifications, detail_off_modifications, detail_len_modifications};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.runtime, detail_off_runtime, detail_len_runtime};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.processor, detail_off_processor, detail_len_processor};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.battery, detail_off_battery, detail_len_battery};
@@ -1363,9 +1335,12 @@ static void init_navigation_group(void) {
         frames[frame_count++] = (list_frame) {lang.muxdetail.section.network, detail_off_network, detail_len_network};
         frames[frame_count++] = (list_frame) {lang.muxdetail.section.traffic, detail_off_traffic, detail_len_traffic};
     } else {
-        for (int i = detail_off_network; i < ui_count_dynamic; i++)
+        for (int i = detail_off_network; i < detail_off_modifications; i++)
             lv_obj_add_flag(ui_objects_panel[i], LV_OBJ_FLAG_HIDDEN);
     }
+
+    frames[frame_count++] =
+        (list_frame) {lang.muxdetail.section.modifications, detail_off_modifications, detail_len_modifications};
 
     list_frame_init(
         &theme, ui_pnl_content, frames, frame_count, ui_objects_panel, ui_objects, ui_objects_glyph, ui_objects_value,
@@ -1565,8 +1540,8 @@ static void handle_a(void) {
             const float z = zooms[(size_t) (random() % (long) A_SIZE(zooms))];
             snprintf(s_zoom_str, sizeof(s_zoom_str), "%.2f", z);
 
-            write_text_to_file(CONF_DEVICE_PATH "screen/s_rotate", "w", CHAR, s_rotate_str);
-            write_text_to_file(CONF_DEVICE_PATH "screen/s_zoom", "w", CHAR, s_zoom_str);
+            write_text_to_file_atomic(CONF_DEVICE_PATH "screen/s_rotate", CHAR, s_rotate_str);
+            write_text_to_file_atomic(CONF_DEVICE_PATH "screen/s_zoom", CHAR, s_zoom_str);
 
             refresh_config = 1;
             refresh_device = 1;

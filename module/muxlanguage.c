@@ -27,14 +27,14 @@ static void update_font_for_language(const char *new_language) {
         free(entries);
 
         if (first_name[0]) {
-            write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, 0);
-            write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, first_name);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, 0);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, first_name);
             return;
         }
     }
 
-    write_text_to_file(CONF_CONFIG_PATH "settings/advanced/font", "w", INT, 2);
-    write_text_to_file(CONF_CONFIG_PATH "settings/font/name", "w", CHAR, DEFAULT_FONT_NAME);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, 2);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, DEFAULT_FONT_NAME);
 }
 
 static void show_help(void) {
@@ -145,7 +145,7 @@ static void handle_a(void) {
 
     toast_message(lang.generic.saving, tst_wait_f);
 
-    write_text_to_file(CONF_CONFIG_PATH "settings/general/language", "w", CHAR, items[current_item_index].name);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/general/language", CHAR, items[current_item_index].name);
 
     update_font_for_language(items[current_item_index].name);
 

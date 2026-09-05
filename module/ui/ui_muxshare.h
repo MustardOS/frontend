@@ -115,10 +115,7 @@
     DETAIL(integrity_signature, "integritysignature")                                                                  \
     DETAIL(provenance, "provenance")                                                                                   \
     DETAIL(system_scripts, "systemscripts")                                                                            \
-    DETAIL(frontend_integrity, "frontendintegrity")                                                                    \
-    DETAIL(device_package, "devicepackage")                                                                            \
     DETAIL(kernel_integrity, "kernelintegrity")                                                                        \
-    DETAIL(kernel_modules, "kernelmodules")                                                                            \
     DETAIL(device_tree, "devicetree")                                                                                  \
     DETAIL(initial_ramdisk, "initialramdisk")                                                                          \
     DETAIL(bootloader, "bootloader")                                                                                   \
@@ -135,7 +132,6 @@
 
 #define DETAIL_PROCESSOR_ELEMENTS                                                                                      \
     DETAIL(cpu, "cpu")                                                                                                 \
-    DETAIL(cores, "cores")                                                                                             \
     DETAIL(speed, "speed")                                                                                             \
     DETAIL(speed_range, "speedrange")                                                                                  \
     DETAIL(governor, "governor")                                                                                       \
@@ -173,13 +169,13 @@
 
 #define DETAIL_ELEMENTS                                                                                                \
     DETAIL_SYSTEM_ELEMENTS                                                                                             \
-    DETAIL_MODIFICATION_ELEMENTS                                                                                       \
     DETAIL_RUNTIME_ELEMENTS                                                                                            \
     DETAIL_PROCESSOR_ELEMENTS                                                                                          \
     DETAIL_BATTERY_ELEMENTS                                                                                            \
     DETAIL_POWER_ELEMENTS                                                                                              \
     DETAIL_NETWORK_ELEMENTS                                                                                            \
-    DETAIL_TRAFFIC_ELEMENTS
+    DETAIL_TRAFFIC_ELEMENTS                                                                                            \
+    DETAIL_MODIFICATION_ELEMENTS
 
 #define BTALL_ELEMENTS BTALL(auto_connect, "autoconnect")
 
@@ -227,6 +223,7 @@
     CUSTOM(theme_resolution, "resolution")                                                                             \
     CUSTOM(theme_scaling, "scaling")                                                                                   \
     CUSTOM(theme_alternate, "alternate")                                                                               \
+    CUSTOM(random_theme, "randomtheme")                                                                                \
     CUSTOM(header_height, "headerheight")                                                                              \
     CUSTOM(footer_height, "footerheight")                                                                              \
     CUSTOM(content_item_count, "count")                                                                                \
@@ -579,7 +576,8 @@
     TWEAKADV(max_gpu, "maxgpu")                                                                                        \
     TWEAKADV(double_buffer, "doublebuffer")                                                                            \
     TWEAKADV(swapfile, "swapfile")                                                                                     \
-    TWEAKADV(zramfile, "zramfile")
+    TWEAKADV(zramfile, "zramfile")                                                                                     \
+    TWEAKADV(perf_counters, "perfcounters")
 
 #define TWEAKADV_STORAGE_ELEMENTS                                                                                      \
     TWEAKADV(second_part, "secondpart")                                                                                \
@@ -588,17 +586,14 @@
 
 #define TWEAKADV_RETROARCH_ELEMENTS                                                                                    \
     TWEAKADV(retro_wait, "retrowait")                                                                                  \
-    TWEAKADV(retro_free, "retrofree")                                                                                  \
     TWEAKADV(retro_cache, "retrocache")
 
 #define TWEAKADV_SYSTEM_ELEMENTS                                                                                       \
     TWEAKADV(led, "led")                                                                                               \
     TWEAKADV(rumble, "rumble")                                                                                         \
-    TWEAKADV(random_theme, "randomtheme")                                                                              \
     TWEAKADV(activity, "activity")                                                                                     \
     TWEAKADV(verbose, "verbose")                                                                                       \
     TWEAKADV(debug_log, "debuglog")                                                                                    \
-    TWEAKADV(perf_counters, "perfcounters")                                                                            \
     TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
     TWEAKADV(remember_section, "remembersection")
