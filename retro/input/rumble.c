@@ -11,6 +11,7 @@ static int rumble_on_value(void) {
 }
 
 static int rumble_off_value(void) {
+    if (strcmp(device.board.name, "rk-g350-v") == 0) return 0;
     if (strncmp(device.board.name, "rk", 2) == 0) return 1000000;
     if (strncmp(device.board.name, "rg-vita", 7) == 0) return 1;
     return 0;
@@ -27,8 +28,8 @@ static int test_active = 0;
 static void rumble_write(const int want_on) {
     if (!device.board.rumble[0] || want_on == rumble_last_on) return;
 
-    write_text_to_file(device.board.rumble, "w", INT, want_on ? rumble_on_value() : rumble_off_value());
-    rumble_last_on = want_on;
+    if (write_text_to_file(device.board.rumble, "w", INT, want_on ? rumble_on_value() : rumble_off_value()))
+        rumble_last_on = want_on;
 }
 
 static int rumble_requested(void) {
