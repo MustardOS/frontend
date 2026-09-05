@@ -5,7 +5,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "../../common/fileio.h"
+#include "../../common/init.h"
 #include "../../common/language.h"
+#include "../../common/log.h"
 #include "../../common/mini/mini.h"
 #include "../../common/miniz/miniz.h"
 #include "content_hash.h"
@@ -82,7 +84,7 @@ cache_write(const enum content_hash_kind kind, const long long size, const long 
     mini_set_int(ini, section, "mtime", mtime);
     mini_set_string(ini, section, "value", value);
 
-    mini_save(ini, 0);
+    if (mini_save(ini, 0) != MINI_OK) LOG_WARN(mux_module, "Could not safely update content hash cache: %s", cache_path);
     mini_free(ini);
 }
 

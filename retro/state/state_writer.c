@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -31,14 +32,20 @@ static int writer_result;
 
 static int atomic_write(const char *path, const void *data, const size_t size) {
     char temporary[MAX_BUFFER_SIZE];
-    const int path_length = snprintf(temporary, sizeof(temporary), "%s.tmp", path);
+    const int path_length = snprintf(temporary, sizeof(temporary), "%s.tmp.%ld", path, (long) getpid());
     if (path_length < 0 || (size_t) path_length >= sizeof(temporary)) {
         LOG_ERROR(mux_module, "Save-state path is too long: '%s'", path);
         return -1;
     }
 
-    FILE *file = fopen(temporary, "wb");
+    int descriptor = open(temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+    if (descriptor < 0 && errno == EEXIST) {
+        unlink(temporary);
+        descriptor = open(temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
+    }
+    FILE *file = descriptor >= 0 ? fdopen(descriptor, "wb") : NULL;
     if (!file) {
+        if (descriptor >= 0) close(descriptor);
         LOG_ERROR(mux_module, "Failed to open '%s' for save state", temporary);
         return -1;
     }
@@ -69,10 +76,17 @@ static int atomic_write(const char *path, const void *data, const size_t size) {
         snprintf(directory, sizeof(directory), ".");
     }
 
-    const int directory_fd = open(directory, O_RDONLY | O_CLOEXEC);
-    if (directory_fd >= 0) {
-        fsync(directory_fd);
-        close(directory_fd);
+    const int directory_fd = open(directory, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (directory_fd < 0) {
+        LOG_ERROR(mux_module, "Failed to open save-state directory '%s'", directory);
+        return -1;
+    }
+    const int sync_result = fsync(directory_fd);
+    const int sync_error = errno;
+    close(directory_fd);
+    if (sync_result != 0 && sync_error != EINVAL && sync_error != EROFS) {
+        LOG_ERROR(mux_module, "Failed to synchronise save-state directory '%s'", directory);
+        return -1;
     }
     return 0;
 }

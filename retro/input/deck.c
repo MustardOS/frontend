@@ -7,7 +7,9 @@
 #include <time.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
+#include "../../common/init.h"
 #include "../../common/language.h"
+#include "../../common/log.h"
 #include "../macro/macro.h"
 #include "deck.h"
 
@@ -62,9 +64,9 @@ static void assign_unique_path(struct deck_entry *entry) {
     }
 }
 
-static void write_manifest_entry(const struct deck_entry *entry) {
+static int write_manifest_entry(const struct deck_entry *entry) {
     mini_t *ini = mini_create(entry->path);
-    if (!ini) return;
+    if (!ini) return 0;
 
     mini_set_string(ini, DECK_GROUP, "name", entry->name);
     mini_set_int(ini, DECK_GROUP, "created", entry->created);
@@ -85,8 +87,10 @@ static void write_manifest_entry(const struct deck_entry *entry) {
         mini_set_string(ini, "map", key, entry->source_macro_name[source]);
     }
 
-    mini_save(ini, 0);
+    const int saved = mini_save(ini, 0) == MINI_OK;
     mini_free(ini);
+    if (!saved) LOG_ERROR(mux_module, "Could not safely write controller profile: %s", entry->path);
+    return saved;
 }
 
 static int next_free_index(void) {
@@ -255,7 +259,10 @@ int decks_create(const char *name) {
     }
 
     assign_unique_path(entry);
-    write_manifest_entry(entry);
+    if (!write_manifest_entry(entry)) {
+        memset(entry, 0, sizeof(*entry));
+        return -1;
+    }
 
     deck_count++;
     decks_rebuild_lookup();
@@ -267,13 +274,20 @@ int decks_rename(const int position, const char *new_name) {
 
     struct deck_entry *entry = &deck_list[position];
     char old_path[DECK_PATH_MAX];
+    char old_name[DECK_NAME_MAX];
     snprintf(old_path, sizeof(old_path), "%s", entry->path);
+    snprintf(old_name, sizeof(old_name), "%s", entry->name);
 
     snprintf(entry->name, sizeof(entry->name), "%s", new_name);
     assign_unique_path(entry);
 
-    if (strcmp(old_path, entry->path) != 0) remove(old_path);
-    write_manifest_entry(entry);
+    if (!write_manifest_entry(entry)) {
+        snprintf(entry->path, sizeof(entry->path), "%s", old_path);
+        snprintf(entry->name, sizeof(entry->name), "%s", old_name);
+        return -1;
+    }
+    if (strcmp(old_path, entry->path) != 0 && remove(old_path) != 0)
+        LOG_WARN(mux_module, "Could not remove renamed controller profile: %s", old_path);
 
     return 0;
 }
@@ -281,7 +295,10 @@ int decks_rename(const int position, const char *new_name) {
 int decks_delete(const int position) {
     if (position < 0 || position >= deck_count) return -1;
 
-    remove(deck_list[position].path);
+    if (remove(deck_list[position].path) != 0) {
+        LOG_ERROR(mux_module, "Could not delete controller profile: %s", deck_list[position].path);
+        return -1;
+    }
 
     for (int i = position; i < deck_count - 1; i++) {
         deck_list[i] = deck_list[i + 1];
@@ -295,7 +312,7 @@ int decks_delete(const int position) {
 int decks_save(const int position) {
     if (position < 0 || position >= deck_count) return -1;
 
-    write_manifest_entry(&deck_list[position]);
+    if (!write_manifest_entry(&deck_list[position])) return -1;
     deck_list[position].dirty = 0;
 
     return 0;

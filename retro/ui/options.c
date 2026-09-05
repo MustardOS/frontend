@@ -301,10 +301,13 @@ void options_cycle(const int index, const int direction) {
     options_dirty = true;
 }
 
-static void options_save(const char *path) {
+static int options_save(const char *path) {
     mini_t *ini = mini_try_load(path);
     if (!ini) ini = mini_create(path);
-    if (!ini) return;
+    if (!ini) {
+        LOG_ERROR(mux_module, "Could not create core-options document: %s", path);
+        return 0;
+    }
 
     for (int i = 0; i < options_count; i++) {
         const struct core_option_entry *e = &options_list[i];
@@ -312,8 +315,10 @@ static void options_save(const char *path) {
         mini_set_string(ini, "options", e->key, e->values[e->current_index]);
     }
 
-    mini_save(ini, 0);
+    const int saved = mini_save(ini, 0) == MINI_OK;
     mini_free(ini);
+    if (!saved) LOG_ERROR(mux_module, "Could not safely write core options: %s", path);
+    return saved;
 }
 
 static void snapshot_baseline(void) {
@@ -408,6 +413,17 @@ int options_profile_matches(const int indices[OPTIONS_MAX]) {
     return 1;
 }
 
+int options_profile_resolved_matches(const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]) {
+    for (int i = 0; i < options_count; i++) {
+        int expected = baseline_indices[i];
+        if (indices && present && present[i] && indices[i] >= 0 && indices[i] < options_list[i].value_count)
+            expected = indices[i];
+        if (expected != options_list[i].current_index) return 0;
+    }
+
+    return 1;
+}
+
 int options_profile_baseline_matches(void) {
     for (int i = 0; i < options_count; i++)
         if (baseline_indices[i] != options_list[i].current_index) return 0;
@@ -454,18 +470,15 @@ void options_discard(void) {
 }
 
 void options_save_content(void) {
-    options_save(content_ini_path);
-    snapshot_baseline();
+    if (options_save(content_ini_path)) snapshot_baseline();
 }
 
 void options_save_core(void) {
-    options_save(core_ini_path);
-    snapshot_baseline();
+    if (options_save(core_ini_path)) snapshot_baseline();
 }
 
 void options_save_directory(void) {
-    options_save(directory_ini_path);
-    snapshot_baseline();
+    if (options_save(directory_ini_path)) snapshot_baseline();
 }
 
 static int delete_saved_option_file(const char *path) {

@@ -296,7 +296,7 @@ static void write_manifest_group(
         mini_set_string(ini, group_id, "core_version", meta->core_version);
     }
 
-    mini_save(ini, 0);
+    if (mini_save(ini, 0) != MINI_OK) LOG_WARN(mux_module, "Could not safely update save-state metadata: %s", manifest_path);
     mini_free(ini);
 }
 
@@ -615,7 +615,7 @@ static void forget_manifest_group(const char *group_id) {
     if (!ini) return;
 
     mini_delete_group(ini, group_id);
-    mini_save(ini, 0);
+    if (mini_save(ini, 0) != MINI_OK) LOG_WARN(mux_module, "Could not safely update save-state metadata: %s", manifest_path);
     mini_free(ini);
 }
 

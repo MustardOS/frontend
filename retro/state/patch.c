@@ -690,7 +690,7 @@ static void write_patch_manual(void) {
     }
 
     create_directories(patch_ini_path, 1);
-    mini_save(ini, 0);
+    if (mini_save(ini, 0) != MINI_OK) LOG_ERROR(mux_module, "Could not safely write patch selection: %s", patch_ini_path);
     mini_free(ini);
 }
 

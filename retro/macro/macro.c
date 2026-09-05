@@ -6,7 +6,9 @@
 #include <time.h>
 #include "../../common/fileio.h"
 #include "../../common/ini.h"
+#include "../../common/init.h"
 #include "../../common/language.h"
+#include "../../common/log.h"
 #include "macro.h"
 #include "relish.h"
 
@@ -61,9 +63,9 @@ static void assign_unique_path(struct macro_entry *entry) {
     }
 }
 
-static void write_manifest_entry(const struct macro_entry *entry) {
+static int write_manifest_entry(const struct macro_entry *entry) {
     mini_t *ini = mini_create(entry->path);
-    if (!ini) return;
+    if (!ini) return 0;
 
     mini_set_string(ini, MACRO_GROUP, "name", entry->name);
     mini_set_int(ini, MACRO_GROUP, "created", entry->created);
@@ -81,8 +83,10 @@ static void write_manifest_entry(const struct macro_entry *entry) {
         mini_set_int(ini, group, "repeat", entry->steps[i].repeat);
     }
 
-    mini_save(ini, 0);
+    const int saved = mini_save(ini, 0) == MINI_OK;
     mini_free(ini);
+    if (!saved) LOG_ERROR(mux_module, "Could not safely write input macro: %s", entry->path);
+    return saved;
 }
 
 static int next_free_index(void) {
@@ -256,7 +260,10 @@ int macros_create(const char *name) {
     }
 
     assign_unique_path(entry);
-    write_manifest_entry(entry);
+    if (!write_manifest_entry(entry)) {
+        memset(entry, 0, sizeof(*entry));
+        return -1;
+    }
 
     macro_count++;
     macros_rebuild_lookup();
@@ -269,13 +276,20 @@ int macros_rename(const int position, const char *new_name) {
 
     struct macro_entry *entry = &macro_list[position];
     char old_path[MACRO_PATH_MAX];
+    char old_name[MACRO_NAME_MAX];
     snprintf(old_path, sizeof(old_path), "%s", entry->path);
+    snprintf(old_name, sizeof(old_name), "%s", entry->name);
 
     snprintf(entry->name, sizeof(entry->name), "%s", new_name);
     assign_unique_path(entry);
 
-    if (strcmp(old_path, entry->path) != 0) remove(old_path);
-    write_manifest_entry(entry);
+    if (!write_manifest_entry(entry)) {
+        snprintf(entry->path, sizeof(entry->path), "%s", old_path);
+        snprintf(entry->name, sizeof(entry->name), "%s", old_name);
+        return -1;
+    }
+    if (strcmp(old_path, entry->path) != 0 && remove(old_path) != 0)
+        LOG_WARN(mux_module, "Could not remove renamed input macro: %s", old_path);
 
     return 0;
 }
@@ -283,7 +297,10 @@ int macros_rename(const int position, const char *new_name) {
 int macros_delete(const int position) {
     if (position < 0 || position >= macro_count) return -1;
 
-    remove(macro_list[position].path);
+    if (remove(macro_list[position].path) != 0) {
+        LOG_ERROR(mux_module, "Could not delete input macro: %s", macro_list[position].path);
+        return -1;
+    }
 
     for (int i = position; i < macro_count - 1; i++) {
         macro_list[i] = macro_list[i + 1];
@@ -296,8 +313,7 @@ int macros_delete(const int position) {
 
 int macros_save(const int position) {
     if (position < 0 || position >= macro_count) return -1;
-    write_manifest_entry(&macro_list[position]);
-    return 0;
+    return write_manifest_entry(&macro_list[position]) ? 0 : -1;
 }
 
 int macros_add_step(const int position, const struct macro_step *new_step) {

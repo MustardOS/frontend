@@ -671,10 +671,12 @@ void colour_shader_params_save(void) {
         mini_set_string(ini, "parameters", shader_params[i].name, value);
     }
 
-    mini_save(ini, 0);
+    const int saved = mini_save(ini, 0) == MINI_OK;
     mini_free(ini);
-
-    shader_params_dirty = 0;
+    if (saved)
+        shader_params_dirty = 0;
+    else
+        LOG_ERROR(mux_module, "Could not safely write shader parameters: %s", path);
 }
 
 int colour_shader_param_count(void) {

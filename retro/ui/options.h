@@ -53,6 +53,10 @@ void options_profile_capture(int indices[OPTIONS_MAX]);
 
 int options_profile_matches(const int indices[OPTIONS_MAX]);
 
+int options_profile_resolved_matches(
+    const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]
+);
+
 int options_profile_baseline_matches(void);
 
 int options_profile_value_index(int option_index, const char *value);
