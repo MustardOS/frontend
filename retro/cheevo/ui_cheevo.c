@@ -463,6 +463,16 @@ static int detail_rarity_band(const float rarity) {
 static int detail_compare(const void *left_value, const void *right_value) {
     const cheevo_game_entry *left = left_value;
     const cheevo_game_entry *right = right_value;
+    if (current_detail_sort == cheevo_sort_display_order_first
+        || current_detail_sort == cheevo_sort_display_order_last) {
+        if (left->display_order != right->display_order) {
+            if (current_detail_sort == cheevo_sort_display_order_last)
+                return left->display_order < right->display_order ? 1 : -1;
+            return left->display_order > right->display_order ? 1 : -1;
+        }
+        if (left->id != right->id) return left->id > right->id ? 1 : -1;
+        return 0;
+    }
     if (current_detail_sort == cheevo_sort_easy_points) {
         const int left_band = detail_rarity_band(left->rarity);
         const int right_band = detail_rarity_band(right->rarity);
@@ -663,6 +673,10 @@ static const char *detail_sort_name(void) {
             return lang.muxretro.cheevo.sort_unlocked;
         case cheevo_sort_easy_points:
             return lang.muxretro.cheevo.sort_easy_points;
+        case cheevo_sort_display_order_first:
+            return lang.muxretro.cheevo.sort_display_order_first;
+        case cheevo_sort_display_order_last:
+            return lang.muxretro.cheevo.sort_display_order_last;
         case cheevo_sort_alphanumeric_ascending:
         default:
             return lang.muxretro.cheevo.sort_alphanumeric_ascending;
@@ -835,7 +849,8 @@ static int detail_child_tick(void) {
 
     if (edge & BIT(5)) {
         detail_set_preview(0);
-        return 0;
+        details.prev_nav_mask = mask;
+        return 1;
     }
     if (!vertical && edge & (BIT(2) | BIT(3))) {
         play_sound(snd_option);

@@ -66,8 +66,8 @@ Open the pause menu and select **Achievements**.
 - Press B to return to the main pause menu.
 
 The selected achievement or leaderboard mode and sort order are remembered globally. Available achievement sorts are
-alphanumeric ascending, alphanumeric descending, points highest, points lowest, percentage common, percentage rarest,
-unlocked first and easy points.
+display order first, display order last, alphanumeric ascending, alphanumeric descending, points highest, points lowest,
+percentage common, percentage rarest, unlocked first and easy points.
 
 In leaderboard mode, press A on a leaderboard to request its details. Pickles displays up to the top ten returned
 entries, including the current user when supplied by RetroAchievements.
@@ -76,11 +76,13 @@ entries, including the current user when supplied by RetroAchievements.
 
 Pickles caches suitable achievement responses so previously loaded information can be reused and startup does not need
 to download everything again. If data appears outdated, open **Settings** > **RetroAchievements** and select
-**Refresh Data**. Refreshing requires a working connection and reloads the current game's achievement information.
+**Refresh Data**. Refreshing tries the service first and reloads the current game's achievement information. If the
+connection drops during the refresh, Pickles falls back to the last usable cached copy when one is available.
 
 If the service becomes unavailable during play, Pickles enters an offline state and lets the RetroAchievements client
-retry its pending work. A reconnect notification appears when service returns. Cached descriptions and saved previews
-may remain available, but new awards and leaderboard submissions still depend on the server accepting them.
+retry its pending work. Interrupted token sign-in and game identification are retried in the background with increasing
+delays. A reconnect notification appears when service returns. Cached descriptions and saved previews may remain
+available, but new awards and leaderboard submissions still depend on the server accepting them.
 
 ## Brief Technical Notes
 
@@ -90,6 +92,8 @@ may remain available, but new awards and leaderboard submissions still depend on
   TLS certificates are verified.
 - Account storage contains the username and returned token, never the entered password. The directory uses owner-only
   permissions, files are written atomically and unsafe links or ownership are rejected.
+- Unlocks and leaderboard results are written to an owner-only durable queue before transmission. Held records use
+  increasing retry delays and are removed only after an explicit successful API response.
 - The response cache is limited to 32 MiB and entries expire after 30 days. **Refresh Data** bypasses the normal cached
   game-data lookup.
 - Unlock previews are stored per game and achievement. Missing or failed captures safely fall back to the normal trophy

@@ -36,7 +36,7 @@ void cheevo_account_defaults(cheevo_account *account) {
     if (!account) return;
     memset(account, 0, sizeof(*account));
     account->notifications = cheevo_notifications_basic;
-    account->achievement_sort = cheevo_sort_alphanumeric_ascending;
+    account->achievement_sort = cheevo_sort_display_order_first;
     account->achievement_view = cheevo_view_achievements;
 }
 

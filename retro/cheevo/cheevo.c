@@ -53,6 +53,7 @@
 #define CHEEVO_STARTUP_COMPLETIONS   4
 #define CHEEVO_SPOOL_INTERVAL_MS     1500
 #define CHEEVO_SPOOL_RETRY_MS        30000
+#define CHEEVO_SPOOL_RETRY_MAX_MS    120000
 
 typedef struct {
     char *url;
@@ -64,6 +65,7 @@ typedef struct {
     int cache_read;
     int cache_write;
     int cache_fallback;
+    int achievement_data;
     uint64_t queued_at;
 } cheevo_http_request;
 
@@ -79,6 +81,7 @@ typedef struct {
     int cache_hit;
     int cache_miss;
     int cache_fallback;
+    int achievement_data;
 } cheevo_http_completion;
 
 typedef struct {
@@ -108,6 +111,12 @@ typedef struct {
     int failed;
 } cheevo_http_buffer;
 
+typedef enum {
+    cheevo_recovery_none,
+    cheevo_recovery_login,
+    cheevo_recovery_game,
+} cheevo_recovery_action;
+
 static rc_client_t *client;
 static rc_libretro_memory_regions_t memory_regions;
 static struct retro_memory_descriptor *memory_descriptors;
@@ -123,6 +132,8 @@ static int unofficial;
 static int notifications;
 static cheevo_achievement_sort achievement_sort;
 static cheevo_achievement_view achievement_view;
+static uint32_t *achievement_display_ids;
+static size_t achievement_display_count;
 static int core_supports_cheevo = 1;
 static int netplay_active;
 static uint32_t cheevo_last_idle;
@@ -141,7 +152,12 @@ static int spool_pending;
 static int spool_pending_valid;
 static int spool_in_flight;
 static uint32_t spool_last_attempt;
+static unsigned spool_retry_count;
 static int network_ok = 1;
+static cheevo_recovery_action recovery_action;
+static uint32_t recovery_due;
+static unsigned recovery_attempts;
+static int token_login_pending;
 static int memory_available;
 static int memory_initialisation_deferred;
 static int memory_wait_frames;
@@ -156,6 +172,7 @@ static unsigned leaderboard_total;
 static uint32_t leaderboard_id;
 
 static void leaderboard_reset(void);
+static void begin_game(void);
 
 static int text_safe(const char *value) {
     return value && !strchr(value, '\n') && !strchr(value, '\r');
@@ -267,6 +284,19 @@ static int account_save(void) {
 static void account_delete(void) {
     cheevo_account_delete();
 }
+
+static int response_success(const char *body, const size_t body_size) {
+    if (!body || !body_size || !json_validn(body, body_size)) return 0;
+    const struct json root = json_parsen(body, body_size);
+    if (json_type(json_object_get(root, "Success")) == JSON_TRUE) return 1;
+
+    // Awarding is idempotent. The service reports an already-earned achievement
+    // as Success=false even though the durable queue has reached its desired state.
+    char error[64] = "";
+    json_string_copy(json_object_get(root, "Error"), error, sizeof(error));
+    return strncmp(error, "User already has", sizeof("User already has") - 1) == 0;
+}
+
 static size_t http_write(void *data, const size_t size, const size_t count, void *userdata) {
     cheevo_http_buffer *buffer = userdata;
     if (size != 0 && count > SIZE_MAX / size) return 0;
@@ -317,6 +347,7 @@ static cheevo_http_completion request_perform(cheevo_http_request *request) {
     completion.callback = request->callback;
     completion.callback_data = request->callback_data;
     completion.queued_at = request->queued_at;
+    completion.achievement_data = request->achievement_data;
     memcpy(completion.spool_name, request->spool_name, sizeof(completion.spool_name));
 
     if (request->cache_read && cheevo_cache_load(request->cache_name, &completion.body, &completion.body_size) == 0) {
@@ -524,6 +555,8 @@ static void server_call(
     queued.callback = callback;
     queued.callback_data = callback_data;
     queued.queued_at = SDL_GetPerformanceCounter();
+    queued.achievement_data =
+        request->post_data && strncmp(request->post_data, "r=achievementsets&", sizeof("r=achievementsets&") - 1) == 0;
     if (!queued.url || (request->post_data && !queued.post)) {
         request_free(&queued);
         server_error_now(callback, callback_data, lang.muxretro.cheevo.request_memory_failed);
@@ -535,10 +568,11 @@ static void server_call(
 
     if (cheevo_cache_request_name(queued.post, queued.cache_name, sizeof(queued.cache_name))) {
         // Cached bodies exist so a device with no network can still get as far as playing.
-        // An explicit refresh wants the real answer, including the failure if there is one.
+        // Refresh still goes to the server first, but retains the last usable copy if the
+        // connection drops while the refresh is in flight.
         queued.cache_read = status == cheevo_status_offline && !cache_refresh_pending;
         queued.cache_write = 1;
-        queued.cache_fallback = !cache_refresh_pending;
+        queued.cache_fallback = 1;
     }
 
     // Unlocks and leaderboard entries are written down before they are sent, so a session that
@@ -553,6 +587,49 @@ static void server_call(
         server_error_now(callback, callback_data, lang.muxretro.cheevo.request_queue_full);
         return;
     }
+}
+
+static void achievement_display_order_load(const char *body, const size_t body_size) {
+    free(achievement_display_ids);
+    achievement_display_ids = NULL;
+    achievement_display_count = 0;
+
+    if (!body || !body_size || !json_validn(body, body_size)) return;
+    const struct json root = json_parsen(body, body_size);
+    if (!json_bool(json_object_get(root, "Success"))) return;
+
+    const struct json sets = json_object_get(root, "Sets");
+    if (json_type(sets) != JSON_ARRAY) return;
+
+    size_t total = 0;
+    for (struct json set = json_first(sets); json_exists(set); set = json_next(set)) {
+        const struct json achievements = json_object_get(set, "Achievements");
+        if (json_type(achievements) == JSON_ARRAY) total += json_array_count(achievements);
+    }
+    if (!total || total > SIZE_MAX / sizeof(*achievement_display_ids)) return;
+
+    achievement_display_ids = malloc(total * sizeof(*achievement_display_ids));
+    if (!achievement_display_ids) return;
+
+    for (struct json set = json_first(sets); json_exists(set); set = json_next(set)) {
+        const struct json achievements = json_object_get(set, "Achievements");
+        if (json_type(achievements) != JSON_ARRAY) continue;
+        for (struct json item = json_first(achievements); json_exists(item); item = json_next(item)) {
+            const uint64_t id = json_uint64(json_object_get(item, "ID"));
+            if (id && id <= UINT32_MAX) achievement_display_ids[achievement_display_count++] = (uint32_t) id;
+        }
+    }
+}
+
+static uint32_t achievement_display_order(const uint32_t id) {
+    for (size_t index = 0; index < achievement_display_count; index++)
+        if (achievement_display_ids[index] == id) return (uint32_t) index;
+    return UINT32_MAX;
+}
+
+static int transient_response_failure(const cheevo_http_completion *completion) {
+    if (completion->cache_fallback || completion->error[0]) return 1;
+    return completion->status == 408 || completion->status == 429 || completion->status >= 500;
 }
 
 static int http_drain_limited(const unsigned budget) {
@@ -587,8 +664,15 @@ static int http_drain_limited(const unsigned budget) {
 
         const int accepted = !completion.error[0] && completion.status >= 200 && completion.status < 300;
         const int from_server = accepted && !completion.cache_hit && !completion.cache_fallback;
+        const int api_success = from_server && response_success(completion.body, completion.body_size);
+
+        if (completion.achievement_data && accepted)
+            achievement_display_order_load(completion.body, completion.body_size);
 
         if (completion.cache_fallback) {
+            network_ok = 0;
+            if (status == cheevo_status_active) status = cheevo_status_offline;
+        } else if (transient_response_failure(&completion)) {
             network_ok = 0;
             if (status == cheevo_status_active) status = cheevo_status_offline;
         } else if (from_server) {
@@ -596,11 +680,14 @@ static int http_drain_limited(const unsigned budget) {
             if (status == cheevo_status_offline && rc_client_is_game_loaded(client)) status = cheevo_status_active;
         }
 
-        // A submission that landed no longer needs holding. A cached body is not an answer from
-        // the server, so anything answered from cache stays held.
-        if (completion.spool_name[0] && from_server) {
+        // HTTP success alone is not enough: RetroAchievements reports API rejection in a JSON
+        // body with Success=false. Keep the durable copy until the service explicitly accepts it.
+        if (completion.spool_name[0] && api_success) {
             cheevo_spool_clear(completion.spool_name);
             spool_pending_valid = 0;
+            spool_retry_count = 0;
+        } else if (completion.spool_name[0] && spool_retry_count < 3) {
+            spool_retry_count++;
         }
 
         if (completion.callback) {
@@ -610,10 +697,10 @@ static int http_drain_limited(const unsigned budget) {
         } else {
             // A replayed submission has no rcheevos callback waiting on it
             spool_in_flight = 0;
-            if (accepted)
+            if (api_success)
                 LOG_SUCCESS(mux_module, "cheevo: a held submission was accepted");
             else
-                LOG_WARN(mux_module, "cheevo: a held submission could not be sent yet");
+                LOG_WARN(mux_module, "cheevo: a held submission was not accepted and remains queued");
         }
 
         completion_free(&completion);
@@ -679,6 +766,24 @@ void cheevo_refresh_memory(void) {
     memory_init(client);
 }
 
+static void recovery_clear(void) {
+    recovery_action = cheevo_recovery_none;
+    recovery_due = 0;
+    recovery_attempts = 0;
+}
+
+static int recovery_schedule(const cheevo_recovery_action action) {
+    static const uint32_t delays[] = {5000, 15000, 30000, 60000, 120000};
+    const int first_attempt = recovery_action != action;
+    if (first_attempt) recovery_attempts = 0;
+
+    recovery_action = action;
+    const unsigned delay_index = recovery_attempts < 5 ? recovery_attempts : 4;
+    recovery_due = SDL_GetTicks() + delays[delay_index];
+    if (recovery_attempts < 5) recovery_attempts++;
+    return first_attempt;
+}
+
 static uint32_t
 read_memory(const uint32_t address, uint8_t *buffer, const uint32_t bytes, rc_client_t *runtime_client) {
     if (!runtime_client || !buffer) return 0;
@@ -700,12 +805,24 @@ static void game_loaded(const int result, const char *error, rc_client_t *unused
     has_entries_cache = -1;
     cache_refresh_pending = 0;
     if (result != RC_OK) {
+        if (!network_ok && username[0] && token[0]) {
+            status = cheevo_status_offline;
+            snprintf(failure, sizeof(failure), "%s", error ? error : rc_error_str(result));
+            const int first_attempt = recovery_schedule(cheevo_recovery_game);
+            LOG_WARN(mux_module, "cheevo: identification interrupted by network loss, retrying in the background");
+            if (first_attempt && notifications)
+                pause_menu_show_toast_timed(lang.muxretro.cheevo.offline_retry, tst_wait_s);
+            return;
+        }
+        recovery_clear();
         status = result == RC_NO_GAME_LOADED ? cheevo_status_unsupported : cheevo_status_failed;
         snprintf(failure, sizeof(failure), "%s", error ? error : rc_error_str(result));
         LOG_WARN(mux_module, "cheevo: content identification failed: %s", error ? error : rc_error_str(result));
         if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.identify_failed, tst_wait_s);
         return;
     }
+
+    recovery_clear();
 
     cheevo_refresh_memory();
     if (!memory_available) {
@@ -773,13 +890,27 @@ static void begin_game(void) {
 static void login_complete(const int result, const char *error, rc_client_t *unused, void *userdata) {
     (void) unused;
     (void) userdata;
+    const int saved_token_attempt = token_login_pending;
+    token_login_pending = 0;
     if (result != RC_OK) {
+        if (saved_token_attempt && !network_ok && username[0] && token[0]) {
+            status = cheevo_status_offline;
+            snprintf(failure, sizeof(failure), "%s", error ? error : rc_error_str(result));
+            const int first_attempt = recovery_schedule(cheevo_recovery_login);
+            LOG_WARN(mux_module, "cheevo: sign-in interrupted by network loss, retrying in the background");
+            if (first_attempt && notifications)
+                pause_menu_show_toast_timed(lang.muxretro.cheevo.offline_retry, tst_wait_s);
+            return;
+        }
+        recovery_clear();
         status = cheevo_status_signed_out;
         snprintf(failure, sizeof(failure), "%s", error ? error : rc_error_str(result));
         LOG_WARN(mux_module, "cheevo: login failed: %s", error ? error : rc_error_str(result));
         if (notifications) pause_menu_show_toast_timed(lang.muxretro.cheevo.sign_in_failed, tst_wait_s);
         return;
     }
+
+    recovery_clear();
 
     const rc_client_user_t *user = rc_client_get_user_info(client);
     failure[0] = '\0';
@@ -794,6 +925,23 @@ static void login_complete(const int result, const char *error, rc_client_t *unu
         }
     }
     begin_game();
+}
+
+static void recovery_tick(void) {
+    if (!client || recovery_action == cheevo_recovery_none || !recovery_due || netplay_active || cheevo_is_starting())
+        return;
+
+    const uint32_t now = SDL_GetTicks();
+    if ((int32_t) (now - recovery_due) < 0) return;
+
+    recovery_due = 0;
+    if (recovery_action == cheevo_recovery_login) {
+        status = cheevo_status_signing_in;
+        token_login_pending = 1;
+        rc_client_begin_login_with_token(client, username, token, login_complete, NULL);
+    } else if (recovery_action == cheevo_recovery_game) {
+        begin_game();
+    }
 }
 
 static void event_handler(const rc_client_event_t *event, rc_client_t *unused) {
@@ -1029,6 +1177,9 @@ static void runtime_stop(void) {
     has_entries_cache = -1;
     spool_in_flight = 0;
     spool_pending_valid = 0;
+    spool_retry_count = 0;
+    recovery_clear();
+    token_login_pending = 0;
     if (client && media_change_handle) rc_client_abort_async(client, media_change_handle);
     media_change_handle = NULL;
     leaderboard_reset();
@@ -1045,6 +1196,9 @@ int cheevo_init(const char *content_path) {
     spool_pending_valid = 0;
     spool_in_flight = 0;
     spool_last_attempt = 0;
+    spool_retry_count = 0;
+    recovery_clear();
+    token_login_pending = 0;
     failure[0] = '\0';
     snprintf(content_file, sizeof(content_file), "%s", content_path ? content_path : "");
     status = enabled ? cheevo_status_signed_out : cheevo_status_disabled;
@@ -1053,6 +1207,7 @@ int cheevo_init(const char *content_path) {
 
     if (enabled && username[0] && token[0]) {
         status = cheevo_status_signing_in;
+        token_login_pending = 1;
         rc_client_begin_login_with_token(client, username, token, login_complete, NULL);
     }
     return 0;
@@ -1071,6 +1226,9 @@ void cheevo_shutdown(void) {
     pending_progress_size = 0;
     preview_game_id = 0;
     preview_achievement_count = 0;
+    free(achievement_display_ids);
+    achievement_display_ids = NULL;
+    achievement_display_count = 0;
     preview_queued_at = 0;
     preview_drops = 0;
     cache_refresh_pending = 0;
@@ -1138,7 +1296,11 @@ static int spool_count(void) {
 static int spool_due(void) {
     if (!spool_ready() || spool_count() <= 0) return 0;
 
-    const uint32_t interval = status == cheevo_status_offline ? CHEEVO_SPOOL_RETRY_MS : CHEEVO_SPOOL_INTERVAL_MS;
+    uint32_t interval = status == cheevo_status_offline ? CHEEVO_SPOOL_RETRY_MS : CHEEVO_SPOOL_INTERVAL_MS;
+    if (spool_retry_count) {
+        interval = CHEEVO_SPOOL_RETRY_MS << (spool_retry_count - 1);
+        if (interval > CHEEVO_SPOOL_RETRY_MAX_MS) interval = CHEEVO_SPOOL_RETRY_MAX_MS;
+    }
     return !spool_last_attempt || SDL_GetTicks() - spool_last_attempt >= interval;
 }
 
@@ -1221,13 +1383,16 @@ void cheevo_do_frame(void) {
     if (!client || netplay_active) return;
 
     memory_wait_tick();
+    recovery_tick();
 
-    if (status == cheevo_status_active || status == cheevo_status_offline) rc_client_do_frame(client);
+    if ((status == cheevo_status_active || status == cheevo_status_offline) && rc_client_is_game_loaded(client))
+        rc_client_do_frame(client);
 }
 
 int cheevo_needs_frame(void) {
     if (!client || netplay_active) return 0;
-    return memory_wait_frames > 0 || status == cheevo_status_active || status == cheevo_status_offline;
+    return memory_wait_frames > 0 || recovery_action != cheevo_recovery_none || status == cheevo_status_active
+           || status == cheevo_status_offline;
 }
 
 void cheevo_idle(void) {
@@ -1383,6 +1548,7 @@ unsigned cheevo_game_entries(const cheevo_game_entry_type type, cheevo_game_entr
                     memset(entry, 0, sizeof(*entry));
                     entry->type = cheevo_game_entry_achievement;
                     entry->id = source->id;
+                    entry->display_order = achievement_display_order(source->id);
                     snprintf(
                         entry->title, sizeof(entry->title), "%s",
                         source->title ? source->title : lang.muxretro.cheevo.achievement
@@ -1477,6 +1643,8 @@ int cheevo_login(const char *new_username, const char *password) {
     if (!text_safe(new_username) || !password || !new_username[0] || !password[0]) return -1;
     if (runtime_start() != 0) return -1;
     failure[0] = '\0';
+    recovery_clear();
+    token_login_pending = 0;
     status = cheevo_status_signing_in;
     rc_client_begin_login_with_password(client, new_username, password, login_complete, NULL);
     return 0;
@@ -1503,6 +1671,7 @@ int cheevo_set_enabled(const int new_enabled) {
         status = cheevo_status_disabled;
     } else if (username[0] && token[0] && runtime_start() == 0) {
         status = cheevo_status_signing_in;
+        token_login_pending = 1;
         rc_client_begin_login_with_token(client, username, token, login_complete, NULL);
     } else {
         status = cheevo_status_signed_out;
@@ -1555,6 +1724,7 @@ int cheevo_refresh_data(void) {
     if (!client || !username[0] || !content_file[0] || netplay_active || !core_supports_cheevo || cheevo_is_starting())
         return -1;
     cache_refresh_pending = 1;
+    recovery_clear();
     rc_client_unload_game(client);
     begin_game();
     return 0;

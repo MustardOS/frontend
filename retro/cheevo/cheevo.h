@@ -30,6 +30,8 @@ typedef enum {
     cheevo_sort_percentage_rarest,
     cheevo_sort_unlocked,
     cheevo_sort_easy_points,
+    cheevo_sort_display_order_first,
+    cheevo_sort_display_order_last,
     cheevo_sort_count
 } cheevo_achievement_sort;
 
@@ -60,6 +62,7 @@ typedef struct {
     char progress[32];
     char preview_path[256];
     uint32_t points;
+    uint32_t display_order;
     float rarity;
     int unlocked;
     int active;
