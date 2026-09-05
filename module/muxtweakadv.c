@@ -110,7 +110,6 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, led, "settings/advanced/led", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, random_theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, retro_wait, "settings/advanced/retrowait", INT, 0);
-    CHECK_AND_SAVE_STD(tweakadv, retro_free, "settings/advanced/retrofree", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, retro_cache, "settings/advanced/retrocache", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, activity, "settings/advanced/activity", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, verbose, "settings/advanced/verbose", INT, 0);
@@ -237,7 +236,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, usb_part, lang.muxtweakadv.usbpart, "usbpart", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, usb_function, lang.muxtweakadv.usbfunction, "usbfunction", usb_functions, 3);
     INIT_OPTION_ITEM(-1, tweakadv, retro_wait, lang.muxtweakadv.retrowait, "retrowait", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, retro_free, lang.muxtweakadv.retrofree, "retrofree", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, retro_cache, lang.muxtweakadv.retrocache, "retrocache", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, led, lang.muxtweakadv.led, "led", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, rumble, lang.muxtweakadv.rumble.title, "rumble", rumble_options, 7);

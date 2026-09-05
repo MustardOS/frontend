@@ -110,7 +110,6 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/advanced", "led", CFG_OFF(settings.advanced.led), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "random_theme", CFG_OFF(settings.advanced.random_theme), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "retrowait", CFG_OFF(settings.advanced.retro_wait), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "settings/advanced", "retrofree", CFG_OFF(settings.advanced.retro_free), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "retrocache", CFG_OFF(settings.advanced.retro_cache), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "activity", CFG_OFF(settings.advanced.activity), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/advanced", "usb_function", CFG_OFF(settings.advanced.usb_function), 0, {.i = 0}},
