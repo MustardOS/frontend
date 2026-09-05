@@ -40,8 +40,10 @@ static lv_style_t style_list_glyph_focused;
 int load_scheme(
     const char *theme_base, const char *mux_dim, const char *file_name, char *scheme, const size_t scheme_size
 ) {
-    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dim, file_name) && file_exist(scheme))
-           || (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, file_name) && file_exist(scheme));
+    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dim, file_name)
+            && file_exist_nocase(scheme, scheme, scheme_size))
+           || (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, file_name)
+               && file_exist_nocase(scheme, scheme, scheme_size));
 }
 
 void init_theme_config(struct theme_config *theme, const struct mux_device *device) {
@@ -1061,7 +1063,7 @@ int get_alt_scheme_path(char *alt_scheme_path, const size_t alt_scheme_path_size
         free(cleaned);
         free(active);
 
-        return file_exist(alt_scheme_path);
+        return file_exist_nocase(alt_scheme_path, alt_scheme_path, alt_scheme_path_size);
     }
 
     return 0;
@@ -1844,10 +1846,12 @@ int get_theme_preview_path(
 
         snprintf(fallback_path, sizeof(fallback_path), "%s/640x480/%s%s.png", base_path, base_file_name, suffixes[i]);
 
-        if (!file_exist(preview_path) && !file_exist(fallback_path)) {
+        const int has_preview = file_exist_nocase(preview_path, preview_path, sizeof(preview_path));
+        const int has_fallback = file_exist_nocase(fallback_path, fallback_path, sizeof(fallback_path));
+        if (!has_preview && !has_fallback) {
             snprintf(image_path, image_path_size, "%s", "");
         } else {
-            snprintf(image_path, image_path_size, "%s", file_exist(preview_path) ? preview_path : fallback_path);
+            snprintf(image_path, image_path_size, "%s", has_preview ? preview_path : fallback_path);
             return i;
         }
     }

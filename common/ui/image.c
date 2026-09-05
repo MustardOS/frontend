@@ -58,7 +58,7 @@ int load_element_image_specifics(
                         break;
                 }
 
-                if (written >= 0 && file_exist(image_path)) found = 1;
+                if (written >= 0 && file_exist_nocase(image_path, image_path, path_size)) found = 1;
             }
         }
     }
@@ -116,7 +116,7 @@ int load_image_specifics(
                 break;
         }
 
-        if (written >= 0 && file_exist(image_path)) found = 1;
+        if (written >= 0 && file_exist_nocase(image_path, image_path, path_size)) found = 1;
     }
 
     asset_cache_put(cache_key, image_path, found);
@@ -172,7 +172,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
                     wall_image_path, sizeof(wall_image_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[dim_idx],
                     program
                 );
-                if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path) && file_exist(wall_image_path)) {
+                if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path)
+                    && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
                     TRY_EMBED(wall_image_path);
                     return wall_image_embed;
                 }
@@ -180,7 +181,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
             mp4_w = snprintf(
                 wall_image_path, sizeof(wall_image_path), "%s/%simage/background.mp4", theme_base, ad_dims[dim_idx]
             );
-            if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path) && file_exist(wall_image_path)) {
+            if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path)
+                && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
                 TRY_EMBED(wall_image_path);
                 return wall_image_embed;
             }
@@ -450,7 +452,7 @@ int load_terminal_resource(const char *resource, const char *extension, char *bu
 
     for (size_t i = 0; i < 2; i++) {
         snprintf(buffer, size, "%s/%s%s/muterm.%s", theme_base, dims[i], resource, extension);
-        if (file_exist(buffer)) return 1;
+        if (file_exist_nocase(buffer, buffer, size)) return 1;
     }
 
     return 0;
@@ -656,7 +658,7 @@ static void update_image_inner(lv_obj_t *ui_img_obj, const struct image_settings
 
     if (file_exist(image_settings.image_path)) {
         const size_t plen = strlen(image_settings.image_path);
-        const int is_svg = plen > 4 && strcmp(image_settings.image_path + plen - 4, ".svg") == 0;
+        const int is_svg = plen > 4 && strcasecmp(image_settings.image_path + plen - 4, ".svg") == 0;
 
         if (!is_svg && image_settings.max_width > 0 && image_settings.max_height > 0) {
             int iw = 0, ih = 0;

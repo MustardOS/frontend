@@ -232,7 +232,7 @@ int set_splash_image_path(char *splash_image_name) {
         }
 
         if (written < 0 || (size_t) written >= sizeof(splash_image_path)) continue;
-        if (file_exist(splash_image_path)) return 1;
+        if (file_exist_nocase(splash_image_path, splash_image_path, sizeof(splash_image_path))) return 1;
     }
 
     return 0;

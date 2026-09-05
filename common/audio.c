@@ -191,7 +191,7 @@ void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {
         char path[MAX_BUFFER_SIZE];
         snprintf(path, sizeof(path), "%s/%s.wav", base_path, snd_names[i]);
 
-        if (file_exist(path)) {
+        if (file_exist_nocase(path, path, sizeof(path))) {
             sound_cache[i].chunk = Mix_LoadWAV(path);
         } else {
             sound_cache[i].chunk = NULL;

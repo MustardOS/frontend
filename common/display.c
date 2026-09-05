@@ -207,9 +207,9 @@ static void reload_background(const char *active_theme) {
     char back_image[MAX_BUFFER_SIZE];
     snprintf(back_image, sizeof(back_image), "%s/%simage/background.png", theme_base, mux_dim);
 
-    if (!file_exist(back_image)) {
+    if (!file_exist_nocase(back_image, back_image, sizeof(back_image))) {
         snprintf(back_image, sizeof(back_image), "%s/image/background.png", theme_base);
-        if (!file_exist(back_image)) {
+        if (!file_exist_nocase(back_image, back_image, sizeof(back_image))) {
             if (monitor.background_image) {
                 SDL_DestroyTexture(monitor.background_image);
                 monitor.background_image = NULL;
@@ -481,9 +481,9 @@ static void reload_saver(void) {
             char saver_video[MAX_BUFFER_SIZE];
             snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
 
-            if (!file_exist(saver_video)) {
+            if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video))) {
                 snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
-                if (!file_exist(saver_video))
+                if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video)))
                     snprintf(saver_video, sizeof(saver_video), OPT_SHARE_PATH "media/logo.mp4");
             }
 
@@ -496,9 +496,9 @@ static void reload_saver(void) {
             char saver_image[MAX_BUFFER_SIZE];
             snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
 
-            if (!file_exist(saver_image)) {
+            if (!file_exist_nocase(saver_image, saver_image, sizeof(saver_image))) {
                 snprintf(saver_image, sizeof(saver_image), "%s/image/screensaver.png", theme_base);
-                if (!file_exist(saver_image))
+                if (!file_exist_nocase(saver_image, saver_image, sizeof(saver_image)))
                     snprintf(saver_image, sizeof(saver_image), OPT_SHARE_PATH "media/logo.png");
             }
 

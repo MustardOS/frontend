@@ -379,8 +379,10 @@ void viewport_refresh(
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
-        if (!file_exist(image))
+        if (!file_exist_nocase(image, image, sizeof(image))) {
             snprintf(image, sizeof(image), "%s/%s/%s/default.png", INFO_CAT_PATH, catalogue_folder, folder_name);
+            file_exist_nocase(image, image, sizeof(image));
+        }
 
         const struct image_settings image_settings = {
             image,

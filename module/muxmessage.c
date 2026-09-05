@@ -120,9 +120,11 @@ int main(const int argc, char *argv[]) {
             init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dim, mux_module
         );
 
-        if (!wall_ready || !file_exist(init_wall))
+        if (!wall_ready || !file_exist_nocase(init_wall, init_wall, sizeof(init_wall)))
             wall_ready =
                 str_format_checked(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
+
+        wall_ready = wall_ready && file_exist_nocase(init_wall, init_wall, sizeof(init_wall));
 
         char lv_wall[MAX_BUFFER_SIZE];
         if (wall_ready && str_format_checked(lv_wall, sizeof(lv_wall), "M:%s", init_wall))

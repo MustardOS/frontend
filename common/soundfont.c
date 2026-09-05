@@ -145,7 +145,7 @@ int soundfont_resolve(const char *name, char *path, const size_t path_size) {
             char candidate[PATH_MAX];
             snprintf(candidate, sizeof(candidate), "%s/%s%s", dirs[d], name, sf_exts[e]);
 
-            if (file_exist(candidate)) {
+            if (file_exist_nocase(candidate, candidate, sizeof(candidate))) {
                 snprintf(path, path_size, "%s", candidate);
                 return 1;
             }
@@ -186,7 +186,7 @@ static void soundfont_preview_midi(const char *font_path, char *midi) {
     char candidate[PATH_MAX];
     snprintf(candidate, sizeof(candidate), "%s.mid", stem);
 
-    if (file_exist(candidate)) {
+    if (file_exist_nocase(candidate, candidate, sizeof(candidate))) {
         snprintf(midi, PATH_MAX, "%s", candidate);
         return;
     }

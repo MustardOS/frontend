@@ -54,7 +54,7 @@ void build_embed_path(char *embed, const size_t embed_size, const char *path, co
     }
 
     const size_t len = strlen(path);
-    if (len <= 4 || strcmp(path + len - 4, ".svg") != 0) return;
+    if (len <= 4 || strcasecmp(path + len - 4, ".svg") != 0) return;
 
     snprintf(embed + written, embed_size - (size_t) written, "?%dx%d", hint_w, hint_h);
 }
@@ -175,7 +175,7 @@ int get_glyph_path(
                     }
 
                     LOG_DEBUG(mux_module, "Glyph path check: %s", glyph_image_path);
-                    if (file_exist(glyph_image_path)) found = 1;
+                    if (file_exist_nocase(glyph_image_path, glyph_image_path, sizeof(glyph_image_path))) found = 1;
                 }
             }
         }
@@ -226,7 +226,7 @@ void apply_app_glyph(const char *app_folder, const char *glyph_name, lv_obj_t *u
                 }
 
                 LOG_DEBUG(mux_module, "Application glyph path check: %s", glyph_image_path);
-                if (file_exist(glyph_image_path)) found = 1;
+                if (file_exist_nocase(glyph_image_path, glyph_image_path, sizeof(glyph_image_path))) found = 1;
             }
         }
 
@@ -290,13 +290,13 @@ void get_app_grid_glyph(
                     image_path, sizeof(image_path), "%s/grid/%s/%s.%s", app_folder, dim_clean, glyph_name, exts[e]
                 );
                 LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);
-                if (file_exist(image_path)) found = 1;
+                if (file_exist_nocase(image_path, image_path, sizeof(image_path))) found = 1;
             }
 
             if (!found) {
                 snprintf(image_path, sizeof(image_path), "%s/grid/%s.%s", app_folder, glyph_name, exts[e]);
                 LOG_DEBUG(mux_module, "Application grid image check: %s", image_path);
-                if (file_exist(image_path)) found = 1;
+                if (file_exist_nocase(image_path, image_path, sizeof(image_path))) found = 1;
             }
         }
 

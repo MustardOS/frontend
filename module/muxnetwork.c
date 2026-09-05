@@ -346,8 +346,18 @@ static void toggle_focused_autoconnect(void) {
     int priority = (int) mini_get_int(net, "network", "priority", 5);
 
     mini_set_int(net, "network", "autoconnect", autoconnect);
-    mini_save(net, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    const int save_result = mini_save(net, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net);
+
+    if (save_result != MINI_OK) {
+        LOG_ERROR(
+            mux_module, "Failed to change automatic connection for profile '%s' (mini error %d)", profile_name,
+            save_result
+        );
+        play_sound(snd_error);
+        toast_message(lang.generic.save_fail, tst_wait_m);
+        return;
+    }
 
     play_sound(snd_option);
 

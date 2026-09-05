@@ -129,7 +129,7 @@ int user_font_path(const char *name, char *out, const size_t out_size) {
         snprintf(out, out_size, "%s/%s/%s.ttf", mounts[i], USER_FONTS, name);
         remove_double_slashes(out);
 
-        if (file_exist(out)) return 1;
+        if (file_exist_nocase(out, out, out_size)) return 1;
     }
 
     return 0;
@@ -455,7 +455,7 @@ static lv_font_t *try_font_at(const char *base, char *resolved, const int size) 
         return f;
     }
 
-    if (file_exist(path)) {
+    if (file_exist_nocase(path, path, sizeof(path))) {
         f = load_font_cached_ttf(path, size, 1);
         if (f) {
             snprintf(resolved, MAX_BUFFER_SIZE, "%s", path);
@@ -470,7 +470,7 @@ static lv_font_t *try_font_at(const char *base, char *resolved, const int size) 
         return f;
     }
 
-    if (file_exist(path)) {
+    if (file_exist_nocase(path, path, sizeof(path))) {
         f = load_font_cached_bin(path);
         if (f) {
             snprintf(resolved, MAX_BUFFER_SIZE, "%s", path);
