@@ -2538,6 +2538,14 @@ int netplay_menu_paused(void) {
     return paused;
 }
 
+int netplay_menu_pause_requested(void) {
+    if (!netplay_initialised || atomic_load(&netplay_fast_status) != netplay_status_playing) return 0;
+    pthread_mutex_lock(&netplay.mutex);
+    const int requested = netplay.menu_pause_value;
+    pthread_mutex_unlock(&netplay.mutex);
+    return requested;
+}
+
 int netplay_blocks_core(void) {
     if (!netplay_initialised) return 0;
     const netplay_status status = (netplay_status) atomic_load(&netplay_fast_status);

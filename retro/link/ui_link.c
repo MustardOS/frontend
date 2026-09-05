@@ -52,6 +52,8 @@ static const char *mode_label(const enum link_mode mode) {
             return lang.muxretro.link.mode_join;
         case link_mode_local:
             return lang.muxretro.link.mode_local;
+        case link_mode_direct:
+            return lang.muxretro.link.mode_direct;
         default:
             return lang.generic.disabled;
     }
@@ -66,7 +68,13 @@ static void link_value_text(const int index, char *buffer, const size_t length) 
         case link_row_address: {
             char host[LINK_HOST_LEN];
 
-            if (link_get_mode() == link_mode_host) {
+            if (link_get_mode() == link_mode_direct) {
+                link_direct_get_host(host, sizeof(host));
+                if (!host[0]) {
+                    snprintf(buffer, length, "%s", lang.muxretro.link.direct_waiting);
+                    return;
+                }
+            } else if (link_get_mode() == link_mode_host) {
                 if (!get_any_ipv4_address(host, sizeof(host))) {
                     snprintf(buffer, length, "%s", lang.muxretro.link.no_address);
                     return;
@@ -121,7 +129,7 @@ static void link_cycle(const int index, const int direction) {
     }
 
     if (!link_set_mode((enum link_mode) next)) return;
-    options_save_content();
+    if (next != link_mode_direct) options_save_content();
 
     if (next == link_mode_local) pause_menu_show_toast(lang.muxretro.link.restart_needed);
 }
@@ -284,7 +292,7 @@ static void apply_row_count(void) {
     int n = 0;
     row_map[n++] = link_row_mode;
 
-    if (mode == link_mode_host || mode == link_mode_join)
+    if (mode == link_mode_host || mode == link_mode_join || mode == link_mode_direct)
         row_map[n++] = link_row_address;
     else if (mode == link_mode_local)
         row_map[n++] = link_row_single;
@@ -335,6 +343,7 @@ void link_menu_tick(void) {
     }
 
     submenu_tick(&link_menu);
+    submenu_refresh_values(&link_menu);
 
     if (shown_mode != link_get_mode()) {
         shown_mode = link_get_mode();

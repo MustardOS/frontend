@@ -136,12 +136,12 @@ static int find_wired_interface(const int control_fd, char *out, const size_t si
         if (entry->d_name[0] == '.') continue;
         if (!iface_is_candidate(entry->d_name)) continue;
 
-        if (!any_name[0]) snprintf(any_name, sizeof(any_name), "%.*s", IF_NAMESIZE - 1, entry->d_name);
+        if (!any_name[0] || strcmp(entry->d_name, any_name) < 0)
+            snprintf(any_name, sizeof(any_name), "%.*s", IF_NAMESIZE - 1, entry->d_name);
         interface_up(control_fd, entry->d_name);
 
-        if (iface_has_carrier(entry->d_name)) {
+        if (iface_has_carrier(entry->d_name) && (!carrier_name[0] || strcmp(entry->d_name, carrier_name) < 0)) {
             snprintf(carrier_name, sizeof(carrier_name), "%.*s", IF_NAMESIZE - 1, entry->d_name);
-            break;
         }
     }
 

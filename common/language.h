@@ -1836,6 +1836,7 @@ struct mux_lang {
             char mode_host[MAX_BUFFER_SIZE];
             char mode_join[MAX_BUFFER_SIZE];
             char mode_local[MAX_BUFFER_SIZE];
+            char mode_direct[MAX_BUFFER_SIZE];
             char restart_needed[MAX_BUFFER_SIZE];
             char focus_moved[MAX_BUFFER_SIZE];
             char single_screen[MAX_BUFFER_SIZE];
@@ -1844,6 +1845,8 @@ struct mux_lang {
             char address_saved[MAX_BUFFER_SIZE];
             char invalid_address[MAX_BUFFER_SIZE];
             char no_address[MAX_BUFFER_SIZE];
+            char direct_waiting[MAX_BUFFER_SIZE];
+            char pause_menu_open[MAX_BUFFER_SIZE];
         } link;
         struct {
             char status[MAX_BUFFER_SIZE];
@@ -1942,6 +1945,8 @@ struct mux_lang {
             char sort_percentage_rarest[MAX_BUFFER_SIZE];
             char sort_unlocked[MAX_BUFFER_SIZE];
             char sort_easy_points[MAX_BUFFER_SIZE];
+            char sort_display_order_first[MAX_BUFFER_SIZE];
+            char sort_display_order_last[MAX_BUFFER_SIZE];
             char sort_selected[MAX_BUFFER_SIZE];
             char notifications[MAX_BUFFER_SIZE];
             char basic[MAX_BUFFER_SIZE];

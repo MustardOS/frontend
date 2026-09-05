@@ -108,6 +108,8 @@ int netplay_is_playing(void);
 
 int netplay_menu_paused(void);
 
+int netplay_menu_pause_requested(void);
+
 int netplay_blocks_core(void);
 
 void netplay_get_info(netplay_info *info);

@@ -62,7 +62,7 @@ taking turns without passing one device around. Simultaneous opposing directions
 - Pickles keeps every device on the same emulated timeline. A weak or busy connection may cause a brief pause rather
   than allowing the games to drift apart.
 - If anyone opens the pause menu, all devices pause on a shared frame. Devices without the menu open show a dimmed
-  message until every open pause menu has closed.
+  message as soon as the request arrives, and keep it visible until every open pause menu has closed.
 - The performance governor remains stable for the whole session and returns to its previous setting afterwards.
 - Run-ahead, fast-forward, slow motion, local state loading, timeline states, cheats and achievement processing are
   suspended while Network Play is active.
@@ -96,4 +96,3 @@ an input backlog that exceeded its recovery limit.
   ending a session that continues to diverge.
 - Cores that expose the libretro netpacket interface manage their own game networking through the separate core-managed
   path.
-

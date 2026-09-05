@@ -7,6 +7,7 @@ enum link_mode {
     link_mode_host,
     link_mode_join,
     link_mode_local,
+    link_mode_direct,
     link_mode_count,
 };
 
@@ -15,6 +16,18 @@ enum link_mode link_get_mode(void);
 int link_is_supported(void);
 
 int link_is_engaged(void);
+
+void link_direct_init(void);
+
+void link_tick(unsigned int now, int local_menu_open);
+
+int link_direct_is_paired(void);
+
+void link_direct_get_host(char *out, int len);
+
+int link_menu_paused(void);
+
+int link_peer_menu_open(void);
 
 int link_local_supported(void);
 

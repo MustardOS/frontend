@@ -618,6 +618,7 @@ int main(const int argc, char *argv[]) {
 
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
+    link_direct_init();
 
     if (device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay)
         && netplay_init(core_path_arg, content_path) != 0)
@@ -769,7 +770,8 @@ int main(const int argc, char *argv[]) {
     int quit = 0;
     int peeking = 0;
     int prev_paused = 0;
-    int netplay_wait_visible = 0;
+    int peer_wait_visible = 0;
+    int peer_wait_kind = 0;
     int netplay_governor_active = 0;
 
     uint32_t fps_frame_count = 0;
@@ -791,6 +793,7 @@ int main(const int argc, char *argv[]) {
         const uint64_t services_start = perf_begin();
 
         mux_input_poll();
+        link_tick(loop_now, pause_menu_is_active());
         if (cheevo_needs_tick()) {
             const uint64_t cheevo_tick_start = perf_begin();
             cheevo_tick();
@@ -822,6 +825,7 @@ int main(const int argc, char *argv[]) {
         display_check_idle_saver();
         hotkeys_volume_bright_task();
         gamestate_publish_task();
+        if (persistent_memory_failure_unreported()) pause_menu_show_toast(lang.generic.save_fail);
 
         if (loop_now >= status_deadline) {
             status_task(NULL);
@@ -835,17 +839,25 @@ int main(const int argc, char *argv[]) {
 
         const int paused = pause_menu_is_active();
         const int network_menu_paused = netplay_menu_paused();
-        const int show_netplay_wait = network_menu_paused && !paused;
+        const int game_link_paused = link_menu_paused();
+        const int show_netplay_wait = netplay_menu_pause_requested() && !paused;
+        const int show_game_link_wait = link_peer_menu_open() && !paused;
+        const int show_peer_wait = show_netplay_wait || show_game_link_wait;
+        const int peer_wait_kind_now = show_netplay_wait ? 1 : show_game_link_wait ? 2 : 0;
 
-        if (show_netplay_wait != netplay_wait_visible) {
-            if (show_netplay_wait)
-                loading_message_show(lang.muxretro.netplay.pause_menu_open);
+        if (show_peer_wait != peer_wait_visible || peer_wait_kind_now != peer_wait_kind) {
+            if (show_peer_wait)
+                loading_message_show(
+                    show_netplay_wait ? lang.muxretro.netplay.pause_menu_open : lang.muxretro.link.pause_menu_open
+                );
             else
                 loading_message_hide();
-            netplay_wait_visible = show_netplay_wait;
+            peer_wait_visible = show_peer_wait;
+            peer_wait_kind = peer_wait_kind_now;
         }
 
-        const int content_paused = (paused && !netplay_is_playing() && !link_is_engaged()) || network_menu_paused;
+        const int content_paused = network_menu_paused || game_link_paused
+                                   || (paused && !netplay_is_playing() && !link_is_engaged());
 
         if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
         if (prev_paused && !content_paused) core_prime_audio();
@@ -885,7 +897,9 @@ int main(const int argc, char *argv[]) {
                 if (pause_menu_tick()) quit = 1;
             }
 
-            if (!quit && (netplay_is_playing() || link_is_engaged()) && !network_menu_paused)
+            if (!quit
+                && ((netplay_is_playing() && !network_menu_paused)
+                    || (link_is_engaged() && !game_link_paused)))
                 run_gameplay = 1;
             else {
                 perf_end(perf_stage_control, control_start);
@@ -909,7 +923,7 @@ int main(const int argc, char *argv[]) {
             perf_end(perf_stage_control, control_start);
             control_start = 0;
             SDL_Delay(5);
-        } else if (network_menu_paused) {
+        } else if (network_menu_paused || game_link_paused) {
             perf_end(perf_stage_control, control_start);
             control_start = 0;
             SDL_Delay(10);
@@ -1008,7 +1022,7 @@ int main(const int argc, char *argv[]) {
         advisory_tick(loop_now);
 
         const int paused_now = pause_menu_is_active();
-        const int ui_visible = paused_now || netplay_wait_visible;
+        const int ui_visible = paused_now || peer_wait_visible;
 
         if (ui_visible) {
             if (!peeking) display_set_ui_hidden(0);
@@ -1058,7 +1072,7 @@ int main(const int argc, char *argv[]) {
             LOG_INFO(mux_module, "Performance capture written to " RETRO_SHARE_PATH "performance.csv");
     }
 
-    if (netplay_wait_visible) loading_message_hide();
+    if (peer_wait_visible) loading_message_hide();
     if (netplay_governor_active) governor_boost_end();
 
     advisory_shutdown();
