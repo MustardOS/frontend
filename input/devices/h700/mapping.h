@@ -30,8 +30,10 @@ static inline unsigned short h700_map_key(unsigned short source_code, int has_st
             return BTN_TL2;
         case BTN_START:
             return BTN_TR2;
+        case BTN_TR2:
         case BTN_THUMBL:
             return has_sticks ? BTN_THUMBL : KEY_RESERVED;
+        case BTN_MODE:
         case BTN_THUMBR:
             return has_sticks ? BTN_THUMBR : KEY_RESERVED;
         default:
@@ -41,13 +43,15 @@ static inline unsigned short h700_map_key(unsigned short source_code, int has_st
 
 static inline unsigned short h700_map_abs(unsigned short source_code, int has_sticks) {
     switch (source_code) {
+        case ABS_Y:
+            return has_sticks ? ABS_X : ABS_CNT;
+        case ABS_Z:
+            return has_sticks ? ABS_Y : ABS_CNT;
         case ABS_RX:
-            return ABS_X;
+            return has_sticks ? ABS_CNT : ABS_X;
         case ABS_RY:
-            return ABS_Y;
+            return has_sticks ? ABS_RX : ABS_Y;
         case ABS_RZ:
-            return has_sticks ? ABS_RX : ABS_CNT;
-        case ABS_THROTTLE:
             return has_sticks ? ABS_RY : ABS_CNT;
         case ABS_HAT0X:
             return ABS_HAT0X;
