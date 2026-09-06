@@ -4,7 +4,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "muxshare.h"
-#include "text.h"
+#include <common/display/text.h>
 
 #define SHARE_DIR "/opt/muos/share/"
 #define MEDIA_DIR SHARE_DIR "media"

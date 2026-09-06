@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 #include "ui/ui_muxappcon.h"
 
 #define APPCON(NAME, UDATA) 1,

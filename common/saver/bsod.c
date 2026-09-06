@@ -4,10 +4,10 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "../log.h"
-#include "../saver.h"
-#include "../options.h"
-#include "bsod.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/base/options.h>
+#include <common/saver/bsod.h>
 
 #define BSOD_FONT_FILE    OPT_PATH "share/font/muterm.ttf"
 #define BSOD_MESSAGE_FILE OPT_SHARE_PATH "message.txt"

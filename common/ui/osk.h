@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <linux/input.h>
-#include "../../lvgl/lvgl.h"
+#include <lvgl/lvgl.h>
 
 extern int key_show;
 extern int key_curr;

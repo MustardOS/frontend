@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../task_exec.h"
-#include "../theme.h"
-#include "dialogue.h"
+#include <lvgl/lvgl.h>
+#include <common/runtime/task_exec.h>
+#include <common/display/theme.h>
+#include <common/ui/dialogue.h>
 
 #define TASK_PROMPT_MAX_OPTIONS TASK_OPTION_MAX
 

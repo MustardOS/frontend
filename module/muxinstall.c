@@ -1,6 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxinstall.h"
-#include "../common/ui/fs_choice.h"
+#include <common/ui/fs_choice.h>
 
 #define INSTALL(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(INSTALL_ELEMENTS) };

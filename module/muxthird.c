@@ -1,6 +1,6 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/thirdparty.h"
+#include <common/ui/orientation.h>
+#include <common/generated/thirdparty.h>
 
 static void list_nav_move(int steps, int direction);
 

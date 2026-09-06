@@ -1,9 +1,9 @@
 #include <unistd.h>
-#include "fs_choice.h"
-#include "../../module/muxshare.h"
-#include "../language.h"
-#include "../options.h"
-#include "common.h"
+#include <common/ui/fs_choice.h>
+#include <module/muxshare.h>
+#include <common/display/language.h>
+#include <common/base/options.h>
+#include <common/ui/common.h>
 
 typedef enum { fs_vfat = 0, fs_exfat, fs_ext4 } fs_opt;
 

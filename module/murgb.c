@@ -8,14 +8,14 @@
 #include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
-#include "../common/colour.h"
-#include "../common/config.h"
-#include "../common/fileio.h"
-#include "../common/init.h"
-#include "../common/rgb.h"
-#include "../common/rgb_args.h"
-#include "../common/strutil.h"
-#include "../common/theme_base.h"
+#include <common/display/colour.h>
+#include <common/config/config.h>
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
+#include <common/platform/rgb.h>
+#include <common/tooling/rgb_args.h>
+#include <common/base/strutil.h>
+#include <common/display/theme_base.h>
 
 struct mux_config config;
 char mux_module[MAX_BUFFER_SIZE];

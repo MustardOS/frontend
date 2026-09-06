@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../../common/theme.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
 #include "ui_muxshare.h"
 
 void init_muxpasscfg(lv_obj_t *ui_screen, lv_obj_t *ui_pnl_content, const struct theme_config *theme);

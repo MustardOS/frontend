@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 #include <SDL2/SDL.h>
 
 #define EMPTY_SLOT "---"

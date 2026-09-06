@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ui_muxshare.h"
-#include "../../lvgl/lvgl.h"
+#include <lvgl/lvgl.h>
 
 void init_muxrtc(lv_obj_t *ui_screen, lv_obj_t *ui_pnl_content);
 

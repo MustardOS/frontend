@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdatomic.h>
-#include "../options.h"
-#include "../init.h"
+#include <common/base/options.h>
+#include <common/runtime/init.h>
 
 #define PROGRESS_INDETERMINATE (-1)
 

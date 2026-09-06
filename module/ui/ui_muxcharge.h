@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
+#include <lvgl/lvgl.h>
 
 void init_muxcharge(void);
 

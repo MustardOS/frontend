@@ -8,9 +8,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <openssl/rand.h>
-#include "../../common/fileio.h"
-#include "../../common/json/json.h"
-#include "../../common/options.h"
+#include <common/storage/fileio.h>
+#include <json/json.h>
+#include <common/base/options.h>
 #include "cache.h"
 
 #define CHEEVO_CACHE_DIR  STORAGE_NETWORK "/cheevo/cache"

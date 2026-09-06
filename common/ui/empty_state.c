@@ -1,7 +1,7 @@
-#include "empty_state.h"
-#include "../options.h"
-#include "common.h"
-#include "glyph.h"
+#include <common/ui/empty_state.h>
+#include <common/base/options.h>
+#include <common/ui/common.h>
+#include <common/ui/glyph.h>
 
 #define EMPTY_STATE_WIDTH_PCT 80
 

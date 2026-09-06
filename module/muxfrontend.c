@@ -2,8 +2,9 @@
 #include <sys/prctl.h>
 
 #include "muxshare.h"
-#include "../common/battery.h"
-#include "../common/inotify.h"
+#include <common/platform/battery.h>
+#include <common/storage/inotify.h>
+#include <common/storage/verify.h>
 
 #define DISPATCH_SLOTS 128
 #define DISPATCH_MASK  (DISPATCH_SLOTS - 1)

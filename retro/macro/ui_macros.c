@@ -1,10 +1,10 @@
 #include <stdlib.h>
-#include "../../common/audio.h"
-#include "../../common/input.h"
-#include "../../common/ui/common.h"
-#include "../../common/ui/dialogue.h"
-#include "../../common/ui/osk.h"
-#include "../../common/randname.h"
+#include <common/platform/audio.h>
+#include <common/platform/input.h>
+#include <common/ui/common.h>
+#include <common/ui/dialogue.h>
+#include <common/ui/osk.h>
+#include <common/base/randname.h>
 #include "../../module/muxshare.h"
 #include "macro.h"
 #include "../core/muxretro.h"

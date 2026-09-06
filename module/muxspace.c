@@ -1,10 +1,10 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/list_frame.h"
-#include "../common/task_exec.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/orientation.h>
+#include <common/ui/list_frame.h>
+#include <common/runtime/task_exec.h>
+#include <common/ui/task_progress.h>
 #include "ui/ui_muxspace.h"
-#include "../common/ui/fs_choice.h"
+#include <common/ui/fs_choice.h>
 #include <sys/sysmacros.h>
 
 #define SPACE(NAME, UDATA)          1,

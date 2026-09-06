@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../init.h"
-#include "common.h"
-#include "grid.h"
-#include "../log.h"
-#include "../language.h"
-#include "../theme.h"
-#include "../config.h"
-#include "../input/list_nav.h"
-#include "../core/common.h"
-#include "../../module/muxshare.h"
+#include <common/runtime/init.h>
+#include <common/ui/common.h>
+#include <common/ui/grid.h>
+#include <common/runtime/log.h>
+#include <common/display/language.h>
+#include <common/display/theme.h>
+#include <common/config/config.h>
+#include <common/ui/navigation/list_nav.h>
+#include <common/content/core/common.h>
+#include <module/muxshare.h>
 
 struct grid_info grid_info;
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../../common/theme.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
 
 void init_muxtext(lv_obj_t *ui_screen, const struct theme_config *theme);
 

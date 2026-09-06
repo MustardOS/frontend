@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "cache.h"
-#include "../init.h"
-#include "../theme.h"
-#include "../config.h"
-#include "../content.h"
-#include "../log.h"
+#include <common/ui/cache.h>
+#include <common/runtime/init.h>
+#include <common/display/theme.h>
+#include <common/config/config.h>
+#include <common/content/content.h>
+#include <common/runtime/log.h>
 
 #define ASSET_CACHE_SLOTS 1024
 #define ASSET_CACHE_MAX   512

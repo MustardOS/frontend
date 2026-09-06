@@ -1,8 +1,8 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
-#include "../common/download.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
+#include <common/storage/download.h>
+#include <common/ui/task_progress.h>
 
 static char language_data_local_path[MAX_BUFFER_SIZE];
 static int extract_pending = 0;

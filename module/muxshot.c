@@ -1,7 +1,7 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/empty_state.h"
-#include "../common/ui/more.h"
+#include <common/ui/orientation.h>
+#include <common/ui/empty_state.h>
+#include <common/ui/more.h>
 
 lv_obj_t *ui_img_screenshot;
 static int is_fullscreen = 0;

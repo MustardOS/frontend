@@ -1,9 +1,9 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/empty_state.h"
-#include "../common/ui/more.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
+#include <common/ui/empty_state.h>
+#include <common/ui/more.h>
+#include <common/ui/task_progress.h>
 
 static int mount_points_init = 0;
 static int extract_pending = 0;

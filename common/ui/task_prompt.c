@@ -1,8 +1,8 @@
 #include <string.h>
-#include "task_prompt.h"
-#include "../audio.h"
-#include "../language.h"
-#include "../log.h"
+#include <common/ui/task_prompt.h>
+#include <common/platform/audio.h>
+#include <common/display/language.h>
+#include <common/runtime/log.h>
 
 static struct theme_config *theme_ref = NULL;
 static lv_obj_t *parent_ref = NULL;

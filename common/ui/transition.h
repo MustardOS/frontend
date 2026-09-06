@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
+#include <lvgl/lvgl.h>
 
 #define TSN_FADE_IN 0
 

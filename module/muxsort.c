@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 
 static int default_original;
 static int collection_original;

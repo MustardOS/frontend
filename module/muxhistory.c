@@ -1,8 +1,8 @@
 #include "muxshare.h"
-#include "../common/ui/empty_state.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/empty_state.h>
+#include <common/ui/orientation.h>
 #include "ui/ui_muxhistory.h"
-#include "../common/ui/more.h"
+#include <common/ui/more.h>
 
 static lv_obj_t *ui_img_splash;
 static lv_obj_t *ui_viewport_objects[7];

@@ -15,10 +15,11 @@ USAGE() {
 	printf "\n"
 	printf "%s\n" "Usage:"
 	printf "  %s                     guided setup so no flags to remember\n" "$0"
-	printf "  %s [print|make [args...]]\n" "$0"
+	printf "  %s [print|generate|make [args...]]\n" "$0"
 	printf "\n"
 	printf "%s\n" "Examples:"
 	printf "  %s print\n" "$0"
+	printf "  %s generate\n" "$0"
 	printf "  %s make -j4\n" "$0"
 	printf "  DEVICE=ARM32 BUILD=release %s make -j4\n" "$0"
 	printf "\n"
@@ -28,6 +29,10 @@ USAGE() {
 	printf "  DEBUG    0 quiet, 1 normal, 2 verbose\n"
 	printf "  XTOOL    toolchain root, default %s/x-tools\n" "$HOME"
 	printf "  XDIR     toolchain directory under XTOOL, detected when unset\n"
+	printf "  INTERNAL_SCRIPT_DIR  internal scripts used to generate verification data\n"
+	printf "  LANGUAGE_OUTPUT      generated language template output path\n"
+	printf "  THIRDPARTY_OUTPUT    generated third party header output path\n"
+	printf "  VERIFY_OUTPUT        generated script verification data output path\n"
 	printf "\n"
 	printf "Keep Shell Variables:\n"
 	printf "  . %s\n" "$0"
@@ -345,6 +350,227 @@ CHECK_TOOLS() {
 
 	export PKG_CONFIG
 }
+
+GEN_INSTALL() {
+	GEN_TMP=$1
+	GEN_OUT=$2
+
+	if [ -f "$GEN_OUT" ] && cmp -s "$GEN_OUT" "$GEN_TMP"; then
+		rm -f "$GEN_TMP"
+		return 0
+	fi
+
+	mv "$GEN_TMP" "$GEN_OUT"
+	printf 'Wrote %s\n' "$GEN_OUT"
+}
+
+GEN_LANGUAGE() {
+	GEN_SRC="$FRONTEND_DIR/common/display/language.c"
+	GEN_OUT=${LANGUAGE_OUTPUT:-"$FRONTEND_DIR/common/generated/language.json"}
+	mkdir -p "$(dirname "$GEN_OUT")"
+	GEN_TMP="$GEN_OUT.tmp"
+
+	[ -f "$GEN_SRC" ] || {
+		printf 'Error: language source not found: %s\n' "$GEN_SRC" 1>&2
+		exit 1
+	}
+
+	awk '
+        /^static const lang_field lang_fields\[\] = \{/ { intable = 1; next }
+        intable && /^\/\/ clang-format on/ { intable = 0 }
+        !intable { next }
+        !/^    \{/ { next }
+        {
+            split($0, f, "\"")
+            module = f[2]
+            type = f[3]
+            str = f[4]
+
+            sub(/^, LANG_OFF\([^)]*\), /, "", type)
+            sub(/,[ \t]*$/, "", type)
+
+            if (type == "lang_system") next
+            if (seen[module SUBSEP str]++) next
+
+            keys[module] = keys[module] str "\n"
+            if (!(module in modseen)) { modorder[++nmod] = module; modseen[module] = 1 }
+        }
+        END {
+            for (i = 1; i <= nmod; i++) msort[i] = modorder[i]
+            for (i = 2; i <= nmod; i++) {
+                v = msort[i]; j = i - 1
+                while (j >= 1 && msort[j] > v) { msort[j + 1] = msort[j]; j-- }
+                msort[j + 1] = v
+            }
+
+            printf "{\n"
+            for (i = 1; i <= nmod; i++) {
+                m = msort[i]
+
+                delete sortk
+                nk = split(keys[m], arr, "\n")
+                realn = 0
+                for (k = 1; k <= nk; k++) if (arr[k] != "") sortk[++realn] = arr[k]
+                for (a = 2; a <= realn; a++) {
+                    v = sortk[a]; b = a - 1
+                    while (b >= 1 && sortk[b] > v) { sortk[b + 1] = sortk[b]; b-- }
+                    sortk[b + 1] = v
+                }
+
+                printf "  \"%s\": {\n", m
+                for (k = 1; k <= realn; k++) {
+                    printf "    \"%s\": \"%s\"%s\n", sortk[k], sortk[k], (k < realn ? "," : "")
+                }
+                printf "  }%s\n", (i < nmod ? "," : "")
+
+                delete arr
+            }
+            printf "}\n"
+        }
+    ' "$GEN_SRC" >"$GEN_TMP"
+
+	GEN_INSTALL "$GEN_TMP" "$GEN_OUT"
+}
+
+GEN_EXTERNAL_VERSION() {
+	sed -n 's/^VERSION="\([^"]*\)".*/\1/p' "$FRONTEND_DIR/external/$1.sh" | head -1
+}
+
+GEN_MACRO_VERSION() {
+	GEN_FILE=$1
+	shift
+	GEN_VERSION=""
+
+	for GEN_MACRO in "$@"; do
+		GEN_PART=$(sed -n "s/^#define[[:space:]]*${GEN_MACRO}[[:space:]]*\([0-9][0-9]*\).*/\1/p" "$GEN_FILE" | head -1)
+		[ -n "$GEN_PART" ] || return 0
+		GEN_VERSION="${GEN_VERSION:+$GEN_VERSION.}$GEN_PART"
+	done
+
+	printf '%s' "$GEN_VERSION"
+}
+
+GEN_STRING_VERSION() {
+	sed -n "s/^#define[[:space:]]*$2[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$1" | head -1
+}
+
+GEN_THIRDPARTY() {
+	GEN_OUT=${THIRDPARTY_OUTPUT:-"$FRONTEND_DIR/common/generated/thirdparty.h"}
+	mkdir -p "$(dirname "$GEN_OUT")"
+	GEN_TMP="$GEN_OUT.tmp"
+
+	GEN_ROWS=$(
+		printf '%s\t%s\n' "darkhttpd" "1.17"
+		printf '%s\t%s\n' "FFmpeg" "$(GEN_EXTERNAL_VERSION ffmpeg)"
+		printf '%s\t%s\n' "json.c" ""
+		printf '%s\t%s\n' "libarchive" "$(GEN_EXTERNAL_VERSION libarchive)"
+		printf '%s\t%s\n' "LVGL" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/lvgl/lvgl.h" LVGL_VERSION_MAJOR LVGL_VERSION_MINOR LVGL_VERSION_PATCH)"
+		printf '%s\t%s\n' "mdns" "a569c475"
+		printf '%s\t%s\n' "minic" ""
+		printf '%s\t%s\n' "miniz" "$(GEN_STRING_VERSION "$FRONTEND_DIR/vendor/miniz/miniz.h" MZ_VERSION)"
+		printf '%s\t%s\n' "Mojibake" "$(GEN_EXTERNAL_VERSION mojibake)"
+		printf '%s\t%s\n' "OpenSSL" "$(GEN_EXTERNAL_VERSION openssl)"
+		printf '%s\t%s\n' "PlutoSVG" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/plutosvg/source/plutosvg.h" PLUTOSVG_VERSION_MAJOR PLUTOSVG_VERSION_MINOR PLUTOSVG_VERSION_MICRO)"
+		printf '%s\t%s\n' "PlutoVG" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/plutosvg/plutovg/include/plutovg.h" PLUTOVG_VERSION_MAJOR PLUTOVG_VERSION_MINOR PLUTOVG_VERSION_MICRO)"
+		printf '%s\t%s\n' "rcheevos" "$(GEN_EXTERNAL_VERSION rcheevos)"
+		printf '%s\t%s\n' "stb_image_write" "1.16"
+		printf '%s\t%s\n' "stb_rect_pack" "1.01"
+		printf '%s\t%s\n' "stb_truetype" "1.26"
+		printf '%s\t%s\n' "xxHash" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/xxhash/xxhash.h" XXH_VERSION_MAJOR XXH_VERSION_MINOR XXH_VERSION_RELEASE)"
+	)
+
+	{
+		echo "#pragma once"
+		echo
+		echo "// Generated by build.sh - do not edit"
+		echo
+		echo "struct third_party_lib {"
+		echo "    const char *name;"
+		echo "    const char *version;"
+		echo "};"
+		echo
+		echo "static const struct third_party_lib third_party_libs[] = {"
+
+		printf '%s\n' "$GEN_ROWS" | LC_ALL=C sort -f | while IFS="$(printf '\t')" read -r GEN_NAME GEN_VERSION; do
+			[ -n "$GEN_NAME" ] || continue
+			[ -n "$GEN_VERSION" ] || GEN_VERSION="-"
+			printf '    {"%s", "%s"},\n' "$GEN_NAME" "$GEN_VERSION"
+		done
+
+		echo "};"
+	} >"$GEN_TMP"
+
+	GEN_INSTALL "$GEN_TMP" "$GEN_OUT"
+}
+
+GEN_VERIFY() {
+	GEN_INTERNAL=${INTERNAL_SCRIPT_DIR:-"$FRONTEND_DIR/../internal/script"}
+	GEN_OUT=${VERIFY_OUTPUT:-"$FRONTEND_DIR/common/generated/verify_data.h"}
+	GEN_TARGET_BASE="/opt/muos/script"
+	GEN_DIRS="archive control device init launch mount mux package system var web"
+
+	if [ ! -d "$GEN_INTERNAL" ]; then
+		[ -f "$GEN_OUT" ] || {
+			printf 'Error: internal script directory not found: %s\n' "$GEN_INTERNAL" 1>&2
+			exit 1
+		}
+		printf 'Using existing verification data; internal scripts not found at %s\n' "$GEN_INTERNAL"
+		return 0
+	fi
+
+	command -v xxhsum >/dev/null 2>&1 || {
+		printf '%s\n' "Error: xxhsum is required to generate script verification data" 1>&2
+		exit 1
+	}
+
+	GEN_INTERNAL=${GEN_INTERNAL%/}
+	mkdir -p "$(dirname "$GEN_OUT")"
+	GEN_TMP="$GEN_OUT.tmp"
+
+	{
+		echo "#pragma once"
+		echo
+		echo "// Generated by build.sh - do not edit"
+		echo
+		echo "struct int_script_hash {"
+		echo "    const char *path;"
+		echo "    const char *hash;"
+		echo "};"
+		echo
+		echo "static const struct int_script_hash int_scripts[] = {"
+
+		for GEN_DIR in $GEN_DIRS; do
+			[ -d "$GEN_INTERNAL/$GEN_DIR" ] || continue
+			find "$GEN_INTERNAL/$GEN_DIR" -type f
+		done |
+			LC_ALL=C sort |
+			while IFS= read -r GEN_FILE; do
+				GEN_HASH_LINE=$(xxhsum <"$GEN_FILE")
+				GEN_HASH=${GEN_HASH_LINE%% *}
+				[ -n "$GEN_HASH" ] || exit 1
+				GEN_TARGET_PATH=$(printf '%s\n' "$GEN_FILE" | sed "s|^$GEN_INTERNAL|$GEN_TARGET_BASE|")
+				printf "    { \"%s\", \"%s\" },\n" "$GEN_TARGET_PATH" "$GEN_HASH"
+			done
+
+		echo "};"
+	} >"$GEN_TMP"
+
+	GEN_INSTALL "$GEN_TMP" "$GEN_OUT"
+}
+
+GENERATE() {
+	FRONTEND_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+	GEN_LANGUAGE
+	GEN_THIRDPARTY
+	GEN_VERIFY
+}
+
+if [ "${1-}" = "generate" ]; then
+	shift
+	[ $# -eq 0 ] || USAGE
+	GENERATE
+	exit 0
+fi
 
 WIZARD_JOBS=""
 if [ $# -eq 0 ] && [ -t 0 ] && [ -t 1 ]; then

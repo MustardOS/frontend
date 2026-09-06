@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxmessage.h"
-#include "../common/message_args.h"
-#include "../common/inotify.h"
+#include <common/tooling/message_args.h>
+#include <common/storage/inotify.h>
 
 #define FINISH_FILE   "/tmp/msg_finish"
 #define PROGRESS_FILE "/tmp/msg_progress"

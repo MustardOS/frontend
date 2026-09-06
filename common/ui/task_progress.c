@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <string.h>
-#include "task_progress.h"
-#include "task_prompt.h"
-#include "dialogue.h"
-#include "../audio.h"
-#include "../device.h"
-#include "modal.h"
-#include "../language.h"
-#include "common.h"
-#include "glyph.h"
+#include <common/ui/task_progress.h>
+#include <common/ui/task_prompt.h>
+#include <common/ui/dialogue.h>
+#include <common/platform/audio.h>
+#include <common/platform/device.h>
+#include <common/ui/modal.h>
+#include <common/display/language.h>
+#include <common/ui/common.h>
+#include <common/ui/glyph.h>
 
 #define BOUNCE_WIDTH    20
 #define BOUNCE_CYCLE_MS 1500

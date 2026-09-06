@@ -1,6 +1,6 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/download.h"
+#include <common/ui/orientation.h>
+#include <common/storage/download.h>
 
 #define NEWS_TEXT_BUF (MAX_BUFFER_SIZE * 4)
 

@@ -14,8 +14,8 @@
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
-#include "../common/options.h"
-#include "../common/log.h"
+#include <common/base/options.h>
+#include <common/runtime/log.h>
 
 #define LOG_DIR "/opt/muos/log"
 #define LOG_SCK "/run/muos/arborist.sock"

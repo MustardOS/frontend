@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <openssl/rand.h>
-#include "../../common/fileio.h"
-#include "../../common/options.h"
+#include <common/storage/fileio.h>
+#include <common/base/options.h>
 #include "account.h"
 
 #define CHEEVO_ACCOUNT_DIR  STORAGE_NETWORK "/cheevo"

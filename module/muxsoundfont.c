@@ -1,6 +1,6 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/soundfont.h"
+#include <common/ui/orientation.h>
+#include <common/platform/soundfont.h>
 
 static int preview_toast = 0;
 

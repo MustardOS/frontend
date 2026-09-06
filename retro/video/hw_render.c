@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <GLES2/gl2.h>
-#include "../../common/display.h"
-#include "../../common/function_pointer.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/platform/display.h>
+#include <common/base/function_pointer.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "colour.h"
 #include "filters/filters.h"
 #include "gl_dispatch.h"

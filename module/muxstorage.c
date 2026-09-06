@@ -1,9 +1,9 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
 #include "ui/ui_muxstorage.h"
-#include "../common/ui/list_frame.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/list_frame.h>
+#include <common/ui/task_progress.h>
 
 #define STORAGE(NAME, UDATA) 1,
 enum {

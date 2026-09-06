@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 
 #define ZONE_REGION_OTHER "Other"
 #define ZONE_REGION_MAX   64

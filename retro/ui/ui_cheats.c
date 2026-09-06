@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include "../../common/input.h"
-#include "../../common/ui/common.h"
-#include "../../common/ui/dialogue.h"
-#include "../../common/ui/osk.h"
+#include <common/platform/input.h>
+#include <common/ui/common.h>
+#include <common/ui/dialogue.h>
+#include <common/ui/osk.h>
 #include "../../module/muxshare.h"
 #include "cheats.h"
 #include "../core/muxretro.h"

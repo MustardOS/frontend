@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 
 static lv_obj_t *ui_objects_label[order_count];
 static lv_obj_t *ui_objects_value[order_count];

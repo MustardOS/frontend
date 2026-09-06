@@ -2,8 +2,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "../options.h"
-#include "../init.h"
+#include <common/base/options.h>
+#include <common/runtime/init.h>
 
 extern char current_wall[MAX_BUFFER_SIZE];
 

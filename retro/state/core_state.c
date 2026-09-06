@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "../core/core.h"
 #include "../coreinfo/coreinfo.h"
 #include "../video/hw_render.h"

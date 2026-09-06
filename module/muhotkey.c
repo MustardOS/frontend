@@ -10,17 +10,17 @@
 #include <linux/input.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include "../common/init.h"
-#include "../common/fileio.h"
-#include "../common/log.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/board.h"
-#include "../common/theme.h"
-#include "../common/strutil.h"
-#include "../common/exec.h"
-#include "../common/util.h"
-#include "../common/json/json.h"
+#include <common/runtime/init.h>
+#include <common/storage/fileio.h>
+#include <common/runtime/log.h>
+#include <common/config/config.h>
+#include <common/platform/device.h>
+#include <common/platform/board.h>
+#include <common/display/theme.h>
+#include <common/base/strutil.h>
+#include <common/runtime/exec.h>
+#include <common/base/util.h>
+#include <json/json.h>
 
 #define SEQ_BUF_SIZE 32
 #define MAX_SEQUENCE 16

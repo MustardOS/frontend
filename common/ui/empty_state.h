@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../device.h"
-#include "../theme.h"
+#include <lvgl/lvgl.h>
+#include <common/platform/device.h>
+#include <common/display/theme.h>
 
 void empty_state_init(struct theme_config *t, struct mux_device *d, lv_obj_t *parent);
 

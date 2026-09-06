@@ -1,6 +1,6 @@
 #include <stddef.h>
-#include "modal.h"
-#include "../video.h"
+#include <common/ui/modal.h>
+#include <common/platform/video.h>
 
 // Any bigger than 8 and it's a bit too much for 640x480 displays...
 #define MODAL_STACK_MAX 8

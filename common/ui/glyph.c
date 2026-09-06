@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "../init.h"
-#include "../perf.h"
-#include "../log.h"
-#include "../theme.h"
-#include "../config.h"
-#include "../fileio.h"
-#include "../image.h"
-#include "glyph.h"
-#include "cache.h"
+#include <common/runtime/init.h>
+#include <common/runtime/perf.h>
+#include <common/runtime/log.h>
+#include <common/display/theme.h>
+#include <common/config/config.h>
+#include <common/storage/fileio.h>
+#include <common/display/image.h>
+#include <common/ui/glyph.h>
+#include <common/ui/cache.h>
 
 int resolve_glyph_size(const int16_t runtime_size, const int16_t section_size, const int auto_px) {
     const int size = runtime_size == -2 ? section_size : runtime_size;

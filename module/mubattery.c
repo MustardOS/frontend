@@ -1,7 +1,7 @@
 #include <signal.h>
 #include <time.h>
 
-#include "../common/battery.h"
+#include <common/platform/battery.h>
 
 static volatile int running = 1;
 

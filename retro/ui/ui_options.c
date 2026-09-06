@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
-#include "../../common/audio.h"
-#include "../../common/input.h"
-#include "../../common/ui/common.h"
-#include "../../common/ui/dialogue.h"
+#include <common/platform/audio.h>
+#include <common/platform/input.h>
+#include <common/ui/common.h>
+#include <common/ui/dialogue.h>
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
-#include "../../common/device.h"
-#include "../../common/fileio.h"
+#include <common/platform/device.h>
+#include <common/storage/fileio.h>
 #include "rumble.h"
 #include "../settings/settings.h"
 

@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <SDL2/SDL.h>
 #include "common.h"
-#include "../../common/log.h"
+#include <common/runtime/log.h>
 
 SDL_Window *render_window;
 

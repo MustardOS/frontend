@@ -1,6 +1,6 @@
 #include <math.h>
 #include <string.h>
-#include "../../common/log.h"
+#include <common/runtime/log.h>
 #include "common.h"
 #include "colour.h"
 

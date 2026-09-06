@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include "../../common/init.h"
-#include "../../common/input.h"
-#include "../../common/language.h"
-#include "../../common/log.h"
-#include "../../common/ui/common.h"
-#include "../../common/ui/nav.h"
+#include <common/runtime/init.h>
+#include <common/platform/input.h>
+#include <common/display/language.h>
+#include <common/runtime/log.h>
+#include <common/ui/common.h>
+#include <common/ui/nav.h>
 #include "../state/gamestate.h"
 #include "../state/manual.h"
 #include "../link/link.h"

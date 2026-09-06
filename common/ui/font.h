@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
+#include <lvgl/lvgl.h>
 
 #define DEFAULT_FONT_NAME "Noto Sans"
 

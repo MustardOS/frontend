@@ -23,7 +23,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "../common/options.h"
+#include <common/base/options.h>
 
 #define LINK_ETHERTYPE  0x88B5
 #define LINK_MAGIC      "MUOSLINK"

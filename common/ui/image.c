@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "../init.h"
-#include "../perf.h"
-#include "common.h"
-#include "image.h"
-#include "cache.h"
-#include "../video.h"
-#include "../config.h"
-#include "../device.h"
-#include "../theme.h"
-#include "../../module/muxshare.h"
-#include "../../lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h"
+#include <common/runtime/init.h>
+#include <common/runtime/perf.h>
+#include <common/ui/common.h>
+#include <common/ui/image.h>
+#include <common/ui/cache.h>
+#include <common/platform/video.h>
+#include <common/config/config.h>
+#include <common/platform/device.h>
+#include <common/display/theme.h>
+#include <module/muxshare.h>
+#include <lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h>
 
 char current_wall[MAX_BUFFER_SIZE];
 

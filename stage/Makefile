@@ -8,9 +8,9 @@ CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -fPIC
 LDFLAGS := -shared -Wl,--strip-all $(STAGE_LDFLAGS) -ldl -lSDL2 -lSDL2_image -lGLESv2 -lEGL -lm -lpthread
 
 RUNTIME_SYMS := ^(gl|egl|vk|drm|SDL_|IMG_|Mix_)
-INCLUDES := -I. -I./common -I./overlay -I./render -I../common
+INCLUDES := -I. -I.. -I./common -I./overlay -I./render
 
-SRC := hook.c common/common.c ../common/debug.c ../common/inotify.c ../common/log.c \
+SRC := hook.c common/common.c ../common/runtime/debug.c ../common/storage/inotify.c ../common/runtime/log.c \
 	common/alpha.c common/anchor.c common/colour.c common/filter.c common/overlay.c \
 	common/rotate.c common/scale.c common/stretch.c common/shader.c \
 	overlay/base.c overlay/battery.c overlay/bright.c overlay/volume.c \

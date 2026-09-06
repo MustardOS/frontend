@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../collection/common.h"
+#include <lvgl/lvgl.h>
+#include <common/content/collection/common.h>
 
 extern const lv_img_dsc_t ui_img_blank;
 

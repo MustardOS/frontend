@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "../../common/input.h"
+#include <common/platform/input.h>
 #include "core_input_meta.h"
 
 #define CORE_INPUT_META_PORT_COUNT      (1 + MUX_INPUT_MAX_EXTRA_PLAYERS)

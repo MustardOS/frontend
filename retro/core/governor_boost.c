@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../common/device.h"
-#include "../../common/exec.h"
-#include "../../common/fileio.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/platform/device.h>
+#include <common/runtime/exec.h>
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "governor_boost.h"
 
 #define GOVERNOR_NAME_MAX 64

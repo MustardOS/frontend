@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "list_frame.h"
-#include "../../module/muxshare.h"
-#include "../options.h"
-#include "common.h"
-#include "nav.h"
+#include <common/ui/list_frame.h>
+#include <module/muxshare.h>
+#include <common/base/options.h>
+#include <common/ui/common.h>
+#include <common/ui/nav.h>
 
 // Room for every row a paged screen might hold
 #define LIST_FRAME_ROWS_MAX 96

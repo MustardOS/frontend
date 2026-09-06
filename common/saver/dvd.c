@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "../log.h"
-#include "../saver.h"
-#include "dvd.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/dvd.h>
 
 typedef struct {
     saver_state_t base;

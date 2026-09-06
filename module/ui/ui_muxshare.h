@@ -696,6 +696,8 @@
     LINK(peer_mac, "peermac")
 
 #define WEBSERV_ELEMENTS                                                                                               \
+    WEBSERV(mdns, "mdns")                                                                                              \
+    WEBSERV(landing, "landing")                                                                                        \
     WEBSERV(sshd, "sshd")                                                                                              \
     WEBSERV(sftp_go, "sftpgo")                                                                                         \
     WEBSERV(ttyd, "ttyd")                                                                                              \

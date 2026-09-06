@@ -1,5 +1,5 @@
 #include "ui_muxcollect.h"
-#include "../../common/device.h"
+#include <common/platform/device.h>
 
 lv_obj_t *ui_lbl_counter_collect;
 

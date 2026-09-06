@@ -1,7 +1,7 @@
 #include <string.h>
 #include <time.h>
 #include <SDL2/SDL.h>
-#include "../../common/display.h"
+#include <common/platform/display.h>
 #include "../input/hotkeys.h"
 #include "../core/muxretro.h"
 #include "../settings/settings.h"

@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 #include "ui/ui_muxconnect.h"
 
 #define CONNECT(NAME, UDATA) 1,

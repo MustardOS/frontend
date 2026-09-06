@@ -1,9 +1,9 @@
 #include "muxshare.h"
-#include "../common/ui/empty_state.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/more.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/empty_state.h>
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
+#include <common/ui/more.h>
+#include <common/ui/task_progress.h>
 
 static char base_dir[PATH_MAX];
 static char picker_type[32];

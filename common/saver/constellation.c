@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "constellation.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/constellation.h>
 
 #define CONSTELLATION_POINT_COUNT 64
 #define CONSTELLATION_LINK_DIST   118

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../theme.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
 
 #define LIST_FRAME_MAX 16
 

@@ -3,10 +3,10 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <zlib.h>
-#include "../../common/init.h"
-#include "../../common/language.h"
-#include "../../common/log.h"
-#include "../../common/ui/nav.h"
+#include <common/runtime/init.h>
+#include <common/display/language.h>
+#include <common/runtime/log.h>
+#include <common/ui/nav.h>
 #include "../core/governor_boost.h"
 #include "../core/perf.h"
 #include "../core/muxretro.h"

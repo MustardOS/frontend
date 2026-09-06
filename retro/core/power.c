@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "../netplay/netplay.h"
 #include "../state/gamestate.h"
 #include "../state/persistent.h"

@@ -1,10 +1,10 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/empty_state.h"
-#include "../common/task_exec.h"
-#include "../common/ui/task_progress.h"
-#include "../common/image.h"
-#include "../common/ui/notify.h"
+#include <common/ui/orientation.h>
+#include <common/ui/empty_state.h>
+#include <common/runtime/task_exec.h>
+#include <common/ui/task_progress.h>
+#include <common/display/image.h>
+#include <common/ui/notify.h>
 
 static int task_pending = 0;
 

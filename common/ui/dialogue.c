@@ -1,12 +1,12 @@
-#include "dialogue.h"
-#include "modal.h"
-#include "common.h"
-#include "../audio.h"
-#include "../config.h"
-#include "../core/common.h"
-#include "transition.h"
-#include "../language.h"
-#include "../init.h"
+#include <common/ui/dialogue.h>
+#include <common/ui/modal.h>
+#include <common/ui/common.h>
+#include <common/platform/audio.h>
+#include <common/config/config.h>
+#include <common/content/core/common.h>
+#include <common/ui/transition.h>
+#include <common/display/language.h>
+#include <common/runtime/init.h>
 
 static void dialogue_force_redraw(mux_dialogue *dlg) {
     if (!dlg || !dlg->panel) return;

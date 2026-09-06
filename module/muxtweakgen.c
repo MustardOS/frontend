@@ -1,6 +1,6 @@
 #include "muxshare.h"
-#include "../common/ui/list_frame.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/list_frame.h>
+#include <common/ui/orientation.h>
 #include "ui/ui_muxtweakgen.h"
 
 static mux_dialogue save_dlg;

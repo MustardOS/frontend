@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];

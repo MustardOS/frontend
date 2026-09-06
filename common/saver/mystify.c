@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "mystify.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/mystify.h>
 
 #define MYST_VERT_COUNT   4
 #define MYST_TRAIL_LEN    24

@@ -6,12 +6,12 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#include "../../common/fileio.h"
-#include "../../common/init.h"
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
 #include <libarchive/archive.h>
 #include <libarchive/archive_entry.h>
-#include "../../common/log.h"
-#include "../../common/miniz/miniz.h"
+#include <common/runtime/log.h>
+#include <miniz/miniz.h>
 #include "../core/paths.h"
 #include "vfs.h"
 

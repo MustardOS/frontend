@@ -1,8 +1,8 @@
 #include <limits.h>
 #include <stdio.h>
-#include "../../common/audio.h"
-#include "../../common/input.h"
-#include "../../common/ui/common.h"
+#include <common/platform/audio.h>
+#include <common/platform/input.h>
+#include <common/ui/common.h>
 #include "../../module/muxshare.h"
 #include "../cheevo/cheevo.h"
 #include "../core/muxretro.h"

@@ -1,6 +1,6 @@
 #include "ui_muxshare.h"
 #include "ui_muxnetproxy.h"
-#include "../../common/device.h"
+#include <common/platform/device.h>
 
 #define PROXY(NAME, UDATA)                                                                                             \
     lv_obj_t *ui_pnl_##NAME##_proxy;                                                                                   \

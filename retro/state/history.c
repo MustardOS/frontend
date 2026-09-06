@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "../../common/fileio.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "../core/governor_boost.h"
 #include "../core/muxretro.h"
 #include "../core/runahead.h"

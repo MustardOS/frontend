@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include "../../common/init.h"
-#include "../../common/log.h"
-#include "../../common/options.h"
-#include "../../common/strutil.h"
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
+#include <common/base/options.h>
+#include <common/base/strutil.h>
 #include "../core/core.h"
 #include "coreinfo.h"
 

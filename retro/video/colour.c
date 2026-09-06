@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <GLES2/gl2.h>
-#include "../../common/config.h"
-#include "../../common/fileio.h"
-#include "../../common/ini.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/config/config.h>
+#include <common/storage/fileio.h>
+#include <common/config/ini.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "colour.h"
 #include "gl_dispatch.h"
 #include "hw_render.h"

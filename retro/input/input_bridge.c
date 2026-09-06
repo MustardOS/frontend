@@ -1,5 +1,5 @@
 #include <string.h>
-#include "../../common/input.h"
+#include <common/platform/input.h>
 #include "../core/core.h"
 #include "../core/muxretro.h"
 #include "../core/perf.h"

@@ -5,11 +5,11 @@
 #include <string.h>
 #include <strings.h>
 #include <time.h>
-#include "../../common/fileio.h"
-#include "../../common/ini.h"
-#include "../../common/init.h"
-#include "../../common/language.h"
-#include "../../common/log.h"
+#include <common/storage/fileio.h>
+#include <common/config/ini.h>
+#include <common/runtime/init.h>
+#include <common/display/language.h>
+#include <common/runtime/log.h>
 #include "../macro/macro.h"
 #include "deck.h"
 

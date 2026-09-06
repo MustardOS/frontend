@@ -1,9 +1,9 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
-#include "../common/collection/theme.h"
-#include "../common/download.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
+#include <common/content/collection/theme.h>
+#include <common/storage/download.h>
+#include <common/ui/task_progress.h>
 
 static int theme_extracting = 0;
 static char theme_data_local_path[MAX_BUFFER_SIZE];

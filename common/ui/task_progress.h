@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../task_exec.h"
-#include "../theme.h"
+#include <lvgl/lvgl.h>
+#include <common/runtime/task_exec.h>
+#include <common/display/theme.h>
 
 void task_progress_init(struct theme_config *t, lv_obj_t *parent);
 

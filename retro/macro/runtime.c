@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../../common/input.h"
+#include <common/platform/input.h>
 #include "../core/muxretro.h"
 #include "../settings/settings.h"
 #include "macro.h"

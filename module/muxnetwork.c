@@ -1,6 +1,6 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/empty_state.h"
+#include <common/ui/orientation.h>
+#include <common/ui/empty_state.h>
 
 static void show_help(void) {
     show_info_box(lang.muxnetwork.title, lang.muxnetwork.help, 0);

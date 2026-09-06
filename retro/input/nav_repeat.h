@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../../common/input.h"
+#include <common/platform/input.h>
 
 #define NAV_PAGE_UP_BIT   BIT(12)
 #define NAV_PAGE_DOWN_BIT BIT(13)

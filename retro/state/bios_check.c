@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-#include "../../common/fileio.h"
-#include "../../common/options.h"
-#include "../../common/strutil.h"
+#include <common/storage/fileio.h>
+#include <common/base/options.h>
+#include <common/base/strutil.h>
 #include "bios_check.h"
 
 #define CORE_INFO_PATH OPT_SHARE_PATH "emulator/retroarch/info/"

@@ -1,8 +1,8 @@
 #include "ui_muxshare.h"
 #include "ui_muxspace.h"
 
-#include "../../common/device.h"
-#include "../../common/theme.h"
+#include <common/platform/device.h>
+#include <common/display/theme.h>
 
 #define SPACE(NAME, UDATA)                                                                                             \
     lv_obj_t *ui_pnl_##NAME##_space;                                                                                   \

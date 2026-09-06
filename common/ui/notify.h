@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-#include "../../lvgl/lvgl.h"
-#include "../theme.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
 
 typedef enum {
     notify_info = 0, // Ordinary progress and whatever message

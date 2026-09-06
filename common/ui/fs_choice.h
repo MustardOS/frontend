@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../theme.h"
-#include "dialogue.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
+#include <common/ui/dialogue.h>
 
 #define FS_CHOICE_COUNT 3
 

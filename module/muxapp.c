@@ -1,8 +1,8 @@
 #include "muxshare.h"
 
 #define THIRD_PARTY_DIR CONF_CONFIG_PATH "third_party"
-#include "../common/ui/empty_state.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/empty_state.h>
+#include <common/ui/orientation.h>
 
 typedef struct {
     char *name;

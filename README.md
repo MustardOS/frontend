@@ -117,6 +117,22 @@ under `.deps/`, one directory per component, so a rebuild only touches what actu
 Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with
 different flags cannot be reused. The current configuration is recorded in `.build-config`.
 
+### Generated metadata
+
+Every normal build refreshes the generated language template, third-party version table, and internal script hashes
+after any configuration-driven clean. Output is compared before replacement, so unchanged metadata keeps its timestamp
+and does not cause unnecessary recompilation.
+
+```sh
+# Refresh generated files without compiling
+./build.sh generate
+```
+
+The standard outputs are `common/generated/language.json`, `common/generated/thirdparty.h`, and
+`common/generated/verify_data.h`. Verification data is refreshed from the sibling `internal/script` tree when it is
+available; otherwise the checked-in data is retained. Set `INTERNAL_SCRIPT_DIR`, `LANGUAGE_OUTPUT`,
+`THIRDPARTY_OUTPUT`, or `VERIFY_OUTPUT` to override those paths. Generating verification data requires `xxhsum`.
+
 ---
 
 ### External Dependencies
@@ -139,12 +155,14 @@ Linking them statically means the version shipped in a device rootfs never matte
 
 * `common`: Common Libraries and Functions
 * `external`: Third party dependencies fetched and built from source
-* `lookup`: Friendly name lookup table mainly for arcade content
-* `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `module`: Frontend menu system modules
-* `plutosvg`: Bundled SVG rendering library
 * `retro`: LibRetro core host
 * `stage`: Hardware overlay staging system
+* `vendor`: Bundled third party source and licence files
+
+The `common` source tree is grouped into `base`, `compat`, `config`, `content`, `display`, `generated`, `platform`,
+`runtime`, `saver`, `storage`, `tooling`, and `ui`. See [`common/README.md`](common/README.md) for ownership and migration
+rules. Its Makefile uses explicit source groups so adding a file does not silently alter `libmuxcom.so`.
 
 ### Independent
 
@@ -239,6 +257,14 @@ Linking them statically means the version shipped in a device rootfs never matte
 
 ### Bundled In This Repository
 
+#### [darkhttpd](https://github.com/emikulic/darkhttpd)
+
+Small static web server used for the on-device MustardOS landing page.
+
+- Version: 1.17
+- License: ISC
+- Location: `vendor/darkhttpd/`
+
 #### [LVGL](https://github.com/lvgl/lvgl)
 
 Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for
@@ -246,7 +272,7 @@ glyph rasterisation.
 
 - Version: 8.4.0
 - License: MIT
-- Location: `lvgl/`
+- Location: `vendor/lvgl/`
 
 #### [PlutoSVG](https://github.com/sammycage/plutosvg)
 
@@ -259,7 +285,15 @@ it is built on.
 - PlutoVG Version: 1.3.3
 - Author: Samuel Ugochukwu
 - License: MIT
-- Location: `plutosvg/`
+- Location: `vendor/plutosvg/`
+
+#### [mdns](https://github.com/mjansson/mdns)
+
+Header-only multicast DNS and DNS-SD implementation used by the `mudns` local discovery helper.
+
+- Revision: `a569c475`
+- License: Public domain
+- Location: `vendor/mdns/`
 
 #### [json.c](https://github.com/tidwall/json.c)
 
@@ -268,7 +302,7 @@ data, and API responses.
 
 - Author: Josh Baker
 - License: MIT
-- Location: `common/json/`
+- Location: `vendor/json/`
 
 #### [minic](https://github.com/univrsal/minic)
 
@@ -276,7 +310,7 @@ Minimal C INI file parser. Used for reading and writing `.ini` configuration fil
 
 - Author: univrsal
 - License: BSD 2-Clause
-- Location: `common/mini/`
+- Location: `vendor/mini/`
 
 #### [miniz](https://github.com/richgeldreich/miniz)
 
@@ -285,7 +319,7 @@ extract downloaded ZIP archives.
 
 - Version: 11.3.0
 - License: MIT (portions also released as public domain / Unlicense)
-- Location: `common/miniz/`
+- Location: `vendor/miniz/`
 
 #### [xxHash](https://github.com/Cyan4973/xxHash)
 
@@ -298,7 +332,7 @@ Extremely fast non-cryptographic hash algorithm. Used to compute file checksums 
 - Version: 0.8.3
 - Author: Yann Collet
 - License: BSD 2-Clause
-- Location: `common/xxhash/`
+- Location: `vendor/xxhash/`
 
 #### [stb_truetype](https://github.com/nothings/stb)
 
@@ -308,7 +342,7 @@ render custom TTF fonts at runtime.
 - Version: 1.26
 - Author: Sean Barrett
 - License: Public domain
-- Location: `common/stb/stb_truetype.h`
+- Location: `vendor/stb/stb_truetype.h`
 
 #### [stb_rect_pack](https://github.com/nothings/stb)
 
@@ -318,7 +352,7 @@ textures.
 - Version: 1.01
 - Author: Sean Barrett
 - License: Public domain
-- Location: `common/stb/stb_rect_pack.h`
+- Location: `vendor/stb/stb_rect_pack.h`
 
 #### [stb_image_write](https://github.com/nothings/stb)
 
@@ -328,7 +362,7 @@ the framebuffer.
 - Version: 1.16
 - Author: Sean Barrett
 - License: Public domain
-- Location: `common/stb/stb_image_write.h`
+- Location: `vendor/stb/stb_image_write.h`
 
 ---
 
@@ -341,7 +375,7 @@ a trimmed static copy into `external/prefix/$DEVICE`. Versions and checksums are
 #### [FFmpeg](https://ffmpeg.org)
 
 Audio and video decoding for theme wallpapers, the screensaver, the boot logo, and content video previews. Built with
-`--disable-everything` plus only the MP4 demuxer and the handful of decoders `common/video.c` uses.
+`--disable-everything` plus only the MP4 demuxer and the handful of decoders `common/platform/video.c` uses.
 
 - Version: 9.0.1
 - License: LGPL 2.1 or later

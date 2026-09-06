@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "trace.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/trace.h>
 
 #define TRACE_HEAD_COUNT 12
 #define TRACE_SEG_COUNT  192

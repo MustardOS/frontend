@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../common/fileio.h"
-#include "../../common/ini.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
-#include "../../common/options.h"
-#include "../../common/strutil.h"
+#include <common/storage/fileio.h>
+#include <common/config/ini.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
+#include <common/base/options.h>
+#include <common/base/strutil.h>
 #include "../core/core.h"
 #include "../coredef/coredef.h"
 #include "options.h"
@@ -395,22 +395,6 @@ void options_log_resolved(void) {
 void options_capture_baseline(void) {
     snapshot_baseline();
     options_log_resolved();
-}
-
-void options_profile_capture(int indices[OPTIONS_MAX]) {
-    if (!indices) return;
-
-    for (int i = 0; i < OPTIONS_MAX; i++)
-        indices[i] = i < options_count ? options_list[i].current_index : -1;
-}
-
-int options_profile_matches(const int indices[OPTIONS_MAX]) {
-    if (!indices) return 0;
-
-    for (int i = 0; i < options_count; i++)
-        if (indices[i] != options_list[i].current_index) return 0;
-
-    return 1;
 }
 
 int options_profile_resolved_matches(const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]) {

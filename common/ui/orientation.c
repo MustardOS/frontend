@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <sys/stat.h>
-#include "orientation.h"
-#include "../../module/muxshare.h"
-#include "nav.h"
-#include "modal.h"
-#include "task_progress.h"
-#include "../audio.h"
-#include "../config.h"
-#include "../fileio.h"
-#include "../options.h"
+#include <common/ui/orientation.h>
+#include <module/muxshare.h>
+#include <common/ui/nav.h>
+#include <common/ui/modal.h>
+#include <common/ui/task_progress.h>
+#include <common/platform/audio.h>
+#include <common/config/config.h>
+#include <common/storage/fileio.h>
+#include <common/base/options.h>
 
 #define ORIENTATION_DIR  CONF_CONFIG_PATH "orientation"
 #define ORIENTATION_FLAG CONF_CONFIG_PATH "settings/general/orientation"

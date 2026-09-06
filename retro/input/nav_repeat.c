@@ -1,5 +1,5 @@
-#include "../../common/config.h"
-#include "../../common/input.h"
+#include <common/config/config.h>
+#include <common/platform/input.h>
 #include "../../module/muxshare.h"
 #include "nav_repeat.h"
 

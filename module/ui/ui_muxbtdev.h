@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ui_muxshare.h"
-#include "../../lvgl/lvgl.h"
-#include "../../common/theme.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
 
 void init_muxbtdev(lv_obj_t *ui_screen, lv_obj_t *ui_pnl_content, const struct theme_config *theme);
 

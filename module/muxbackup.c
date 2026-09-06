@@ -1,9 +1,9 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/list_frame.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/notify.h>
+#include <common/ui/list_frame.h>
+#include <common/ui/orientation.h>
 #include "ui/ui_muxbackup.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/task_progress.h>
 
 #define BACKUP(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(BACKUP_ELEMENTS), storage_count = ui_count_dynamic - E_SIZE(BACKUP_ACTION_ELEMENTS) };

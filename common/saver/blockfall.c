@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "blockfall.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/blockfall.h>
 
 #define BLOCKFALL_TARGET_CELL 36
 #define BLOCKFALL_SHAPE_COUNT 7

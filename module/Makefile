@@ -1,9 +1,6 @@
 include ../common.mk
 
-CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS) \
-         -I./ui -I../font -I../common \
-         -I../common/img -I../common/input -I../common/json \
-         -I../common/mini -I../common/miniz
+CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I. -I.. -I./ui -I../font -I../vendor
 
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
           -L../bin/lib -lui -lmuxcom -lplutosvg

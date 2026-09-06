@@ -6,8 +6,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "../../common/ini.h"
-#include "../../common/options.h"
+#include <common/config/ini.h>
+#include <common/base/options.h>
 #include "relish.h"
 
 #define RELISH_GROUP          "relish_index"

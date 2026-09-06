@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
-#include "../../common/catalogue.h"
-#include "../../common/core/common.h"
-#include "../../common/display.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
-#include "../../common/overlay.h"
-#include "../../common/strutil.h"
-#include "../../common/ui/image.h"
-#include "../../common/util.h"
+#include <common/content/catalogue.h>
+#include <common/content/core/common.h>
+#include <common/platform/display.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
+#include <common/display/overlay.h>
+#include <common/base/strutil.h>
+#include <common/ui/image.h>
+#include <common/base/util.h>
 #include "overlay_bridge.h"
 #include "../settings/settings.h"
 

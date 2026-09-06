@@ -1,7 +1,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
-#include "../../common/function_pointer.h"
-#include "../../common/log.h"
+#include <common/base/function_pointer.h>
+#include <common/runtime/log.h>
 #include "gl_dispatch.h"
 
 static gl_dispatch_t dispatch;

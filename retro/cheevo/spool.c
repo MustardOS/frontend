@@ -10,8 +10,8 @@
 #include <unistd.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-#include "../../common/fileio.h"
-#include "../../common/options.h"
+#include <common/storage/fileio.h>
+#include <common/base/options.h>
 #include "spool.h"
 
 #define CHEEVO_SPOOL_DIR        STORAGE_NETWORK "/cheevo/spool"

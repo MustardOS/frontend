@@ -3,9 +3,9 @@
 #include <string.h>
 #include <limits.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "maze.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/maze.h>
 
 #define MAZE_MIN_CELL 10
 #define MAZE_MAX_CELL 24

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dialogue.h"
+#include <common/ui/dialogue.h>
 
 typedef enum {
     more_information = 0,

@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-#include "../../common/display.h"
-#include "../../common/log.h"
-#include "../../common/init.h"
+#include <common/platform/display.h>
+#include <common/runtime/log.h>
+#include <common/runtime/init.h>
 #include "perf.h"
 #include "core.h"
 #include "muxretro.h"

@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-#include "../../common/fileio.h"
-#include "../../common/display.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/storage/fileio.h>
+#include <common/platform/display.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "core.h"
 #include "../input/core_input_meta.h"
 #include "../input/hotkeys.h"

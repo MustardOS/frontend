@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../lvgl/lvgl.h"
-#include "../../common/theme.h"
+#include <lvgl/lvgl.h>
+#include <common/display/theme.h>
 
 extern lv_obj_t *ui_lbl_counter_history;
 

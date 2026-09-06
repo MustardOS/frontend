@@ -4,14 +4,14 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <linux/limits.h>
-#include "../common/options.h"
-#include "../common/fileio.h"
-#include "../common/strutil.h"
-#include "../common/sysinfo.h"
-#include "../common/util.h"
-#include "../common/lookup.h"
-#include "../common/lookup_args.h"
-#include "../common/json/json.h"
+#include <common/base/options.h>
+#include <common/storage/fileio.h>
+#include <common/base/strutil.h>
+#include <common/platform/sysinfo.h>
+#include <common/base/util.h>
+#include <common/content/lookup.h>
+#include <common/tooling/lookup_args.h>
+#include <json/json.h>
 
 #define LOOKUP_DIR_PATH OPT_SHARE_PATH "lookup/"
 

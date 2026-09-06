@@ -1,8 +1,8 @@
-#include "../../common/theme.h"
-#include "../../common/ui/common.h"
-#include "../../common/display.h"
-#include "../../common/ui/font.h"
-#include "../../lvgl/lvgl.h"
+#include <common/display/theme.h>
+#include <common/ui/common.h>
+#include <common/platform/display.h>
+#include <common/ui/font.h>
+#include <lvgl/lvgl.h>
 #include "ui_loading.h"
 
 static lv_obj_t *loading_root = NULL;

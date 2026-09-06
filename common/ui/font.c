@@ -1,18 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
-#include "font.h"
-#include "../perf.h"
-#include "../fileio.h"
-#include "../content.h"
-#include "../init.h"
+#include <common/ui/font.h>
+#include <common/runtime/perf.h>
+#include <common/storage/fileio.h>
+#include <common/content/content.h>
+#include <common/runtime/init.h>
 
-#include "../theme.h"
-#include "../log.h"
-#include "../config.h"
-#include "../device.h"
-#include "../strutil.h"
-#include "../input/list_nav.h"
+#include <common/display/theme.h>
+#include <common/runtime/log.h>
+#include <common/config/config.h>
+#include <common/platform/device.h>
+#include <common/base/strutil.h>
+#include <common/ui/navigation/list_nav.h>
 
 #define DEFAULT_NAME DEFAULT_FONT_NAME
 #define DEFAULT_FONT INTERNAL_FONTS "/" DEFAULT_NAME ".ttf"

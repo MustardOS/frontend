@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "../core/muxretro.h"
 #include "../core/perf.h"
 #include "../netplay/netplay.h"

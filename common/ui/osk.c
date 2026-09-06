@@ -1,13 +1,13 @@
-#include "../../lvgl/lvgl.h"
-#include "../config.h"
-#include "../device.h"
-#include "../theme.h"
-#include "../language.h"
-#include "../init.h"
-#include "../audio.h"
-#include "osk.h"
-#include "common.h"
-#include "glyph.h"
+#include <lvgl/lvgl.h>
+#include <common/config/config.h>
+#include <common/platform/device.h>
+#include <common/display/theme.h>
+#include <common/display/language.h>
+#include <common/runtime/init.h>
+#include <common/platform/audio.h>
+#include <common/ui/osk.h>
+#include <common/ui/common.h>
+#include <common/ui/glyph.h>
 
 int key_show;
 int key_curr;

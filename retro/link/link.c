@@ -8,10 +8,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
-#include "../../common/config.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
-#include "../../common/options.h"
+#include <common/config/config.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
+#include <common/base/options.h>
 #include "../core/subsystem.h"
 #include "../ui/options.h"
 #include "link.h"

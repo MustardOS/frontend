@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <linux/limits.h>
-#include "../../common/log.h"
+#include <common/runtime/log.h>
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"

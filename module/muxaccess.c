@@ -1,6 +1,6 @@
 #include "muxshare.h"
-#include "../common/ui/font.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/font.h>
+#include <common/ui/orientation.h>
 #include "ui/ui_muxaccess.h"
 
 #define ACCESS(NAME, UDATA) 1,

@@ -6,7 +6,7 @@
 #include <GLES2/gl2.h>
 #include "shader.h"
 #include "common.h"
-#include "../../common/log.h"
+#include <common/runtime/log.h>
 
 #define SHADER_DIR       INTERNAL_SHARE "/shader/"
 #define SHADER_NAME_PATH OVERLAY_RUNNER "shader"

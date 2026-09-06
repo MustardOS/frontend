@@ -1,8 +1,8 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
-#include "../common/download.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
+#include <common/storage/download.h>
+#include <common/ui/task_progress.h>
 
 static char data_local_path[MAX_BUFFER_SIZE];
 static char data_type[MAX_BUFFER_SIZE];

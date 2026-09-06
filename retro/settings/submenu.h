@@ -2,8 +2,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "../../common/ui/dialogue.h"
-#include "../../common/ui/list_frame.h"
+#include <common/ui/dialogue.h>
+#include <common/ui/list_frame.h>
 #include "../input/nav_repeat.h"
 #include "settings.h"
 

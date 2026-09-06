@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "star.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/star.h>
 
 #define STAR_Z_SCALE 8
 #define STAR_Z_NEAR  32

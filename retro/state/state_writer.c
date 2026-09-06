@@ -6,9 +6,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <zlib.h>
-#include "../../common/init.h"
-#include "../../common/log.h"
-#include "../../common/options.h"
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
+#include <common/base/options.h>
 #include "state_format.h"
 #include "state_writer.h"
 

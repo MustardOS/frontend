@@ -1,9 +1,9 @@
 #include "muxshare.h"
-#include "../common/ui/notify.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/empty_state.h"
-#include "../common/task_exec.h"
-#include "../common/ui/task_progress.h"
+#include <common/ui/notify.h>
+#include <common/ui/orientation.h>
+#include <common/ui/empty_state.h>
+#include <common/runtime/task_exec.h>
+#include <common/ui/task_progress.h>
 
 static char base_dir[PATH_MAX];
 
@@ -17,6 +17,32 @@ static void show_help(void) {
     show_info_box(TRS(title), TRS(message), 0);
 }
 
+static int task_dir_has_content(const char *dir_path, const int depth) {
+    if (depth > 8) return 0;
+
+    struct dirent *tf;
+
+    DIR *td = opendir(dir_path);
+    if (!td) return 0;
+
+    int has_content = 0;
+
+    while (!has_content && (tf = readdir(td))) {
+        if (tf->d_type == DT_DIR && strcmp(tf->d_name, ".") != 0 && strcmp(tf->d_name, "..") != 0) {
+            char sub_dir[PATH_MAX];
+            snprintf(sub_dir, sizeof(sub_dir), "%s/%s", dir_path, tf->d_name);
+
+            has_content = task_dir_has_content(sub_dir, depth + 1);
+        } else if (tf->d_type == DT_REG) {
+            const char *last_dot = strrchr(tf->d_name, '.');
+            if (last_dot && strcasecmp(last_dot, ".sh") == 0) has_content = 1;
+        }
+    }
+
+    closedir(td);
+    return has_content;
+}
+
 static void create_task_items(void) {
     struct dirent *tf;
 
@@ -25,6 +51,11 @@ static void create_task_items(void) {
 
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_DIR && strcmp(tf->d_name, ".") != 0 && strcmp(tf->d_name, "..") != 0) {
+            char sub_dir[PATH_MAX];
+            snprintf(sub_dir, sizeof(sub_dir), "%s/%s", sys_dir, tf->d_name);
+
+            if (!task_dir_has_content(sub_dir, 0)) continue;
+
             add_item(&items, &item_count, tf->d_name, tf->d_name, "", content_type_folder);
         } else if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
@@ -266,9 +297,9 @@ int muxtask_main(char *ex_dir) {
         }
     }
 
-    lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
-
     if (ui_count_static > 0) {
+        lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
+
         if (tin_index > -1 && tin_index <= ui_count_static && current_item_index < ui_count_static)
             gen_step_movement(tin_index, +1, 1, 0, 1);
     } else {

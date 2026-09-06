@@ -3,11 +3,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
-#include "../../common/audio.h"
-#include "../../common/device.h"
-#include "../../common/input.h"
-#include "../../common/ui/common.h"
-#include "../../common/ui/list_frame.h"
+#include <common/platform/audio.h>
+#include <common/platform/device.h>
+#include <common/platform/input.h>
+#include <common/ui/common.h>
+#include <common/ui/list_frame.h>
 #include "../../module/muxshare.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"

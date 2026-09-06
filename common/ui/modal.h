@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../input.h"
+#include <common/platform/input.h>
 
 #define MODAL_INPUT(type) (1ULL << (type))
 

@@ -2,20 +2,20 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdatomic.h>
-#include "../init.h"
-#include "../perf.h"
+#include <common/runtime/init.h>
+#include <common/runtime/perf.h>
 #include <limits.h>
-#include "common.h"
-#include "nav.h"
-#include "modal.h"
-#include "orientation.h"
-#include "grid.h"
-#include "transition.h"
-#include "../audio.h"
-#include "../fileio.h"
-#include "../config.h"
-#include "../theme.h"
-#include "../../module/muxshare.h"
+#include <common/ui/common.h>
+#include <common/ui/nav.h>
+#include <common/ui/modal.h>
+#include <common/ui/orientation.h>
+#include <common/ui/grid.h>
+#include <common/ui/transition.h>
+#include <common/platform/audio.h>
+#include <common/storage/fileio.h>
+#include <common/config/config.h>
+#include <common/display/theme.h>
+#include <module/muxshare.h>
 
 char progress_bar_message[MAX_BUFFER_SIZE];
 _Atomic int progress_bar_value = 0;

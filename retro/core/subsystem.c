@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
-#include "../../common/fileio.h"
-#include "../../common/init.h"
-#include "../../common/options.h"
-#include "../../common/log.h"
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
+#include <common/base/options.h>
+#include <common/runtime/log.h>
 #include "subsystem.h"
 
 struct subsystem_entry subsystem_list[SUBSYSTEM_MAX];

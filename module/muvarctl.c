@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include "../common/var_store.h"
+#include <common/config/var_store.h>
 
 static int parse_ns(const char *s) {
     if (!s) return -1;

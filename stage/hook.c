@@ -1,8 +1,8 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include "hook.h"
-#include "../common/function_pointer.h"
-#include "../common/log.h"
+#include <common/base/function_pointer.h>
+#include <common/runtime/log.h>
 
 #define RENDER_SDL "SDL_RenderPresent"
 #define RENDER_EGL "eglSwapBuffers"

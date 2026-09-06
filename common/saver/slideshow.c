@@ -7,12 +7,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include "../image.h"
-#include "../log.h"
-#include "../options.h"
-#include "../saver.h"
-#include "../language.h"
-#include "slideshow.h"
+#include <common/display/image.h>
+#include <common/runtime/log.h>
+#include <common/base/options.h>
+#include <common/saver/saver.h>
+#include <common/display/language.h>
+#include <common/saver/slideshow.h>
 
 #define CROSSFADE_MS 1500u
 

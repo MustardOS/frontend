@@ -15,9 +15,9 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include "../../common/function_pointer.h"
-#include "../../common/log.h"
-#include "../../common/inotify.h"
+#include <common/base/function_pointer.h>
+#include <common/runtime/log.h>
+#include <common/storage/inotify.h>
 #include "../common/common.h"
 #include "../common/alpha.h"
 #include "../common/anchor.h"

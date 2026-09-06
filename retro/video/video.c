@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-#include "../../common/device.h"
-#include "../../common/display.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
+#include <common/platform/device.h>
+#include <common/platform/display.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include "colour.h"
 #include "filters/filters.h"
 #include "hw_render.h"

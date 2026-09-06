@@ -9,8 +9,7 @@ LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl
 
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
-INCLUDES := -I../module -I../module/ui -I../common \
-            -I../common/input -I../common/mini -Icore
+INCLUDES := -I. -I.. -I../module -I../module/ui -I../vendor -Icore
 
 SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        core/main.c core/startup.c core/core.c core/environment.c core/runahead.c core/perf.c \

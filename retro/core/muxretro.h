@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../../common/input.h"
+#include <common/platform/input.h>
 #include "libretro.h"
 
 bool mux_retro_environment_cb(unsigned cmd, void *data);

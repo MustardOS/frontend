@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common/options.h"
+#include <common/base/options.h>
 
 #define RETRO_INSTANCE_LOCK RUN_PATH "muxretro.lock"
 #define RETRO_SHARE_PATH    RUN_STORAGE_PATH "save/pickles/"

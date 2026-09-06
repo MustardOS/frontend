@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "../../common/fileio.h"
-#include "../../common/init.h"
-#include "../../common/log.h"
-#include "../../common/screenshot.h"
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
+#include <common/runtime/log.h>
+#include <common/display/screenshot.h>
 #include "image_writer.h"
 
 static struct {

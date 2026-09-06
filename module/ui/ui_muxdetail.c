@@ -1,7 +1,7 @@
 #include "ui_muxshare.h"
 #include "ui_muxdetail.h"
-#include "../../common/device.h"
-#include "../../common/theme.h"
+#include <common/platform/device.h>
+#include <common/display/theme.h>
 
 lv_obj_t *ui_pnl_entry_detail;
 lv_obj_t *ui_txt_entry_detail;

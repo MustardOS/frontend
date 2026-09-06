@@ -1,6 +1,6 @@
 #include "ui_muxshare.h"
 #include "ui_muxwebserv.h"
-#include "../../common/device.h"
+#include <common/platform/device.h>
 
 #define WEBSERV(NAME, UDATA)                                                                                           \
     lv_obj_t *ui_pnl_##NAME##_webserv;                                                                                 \

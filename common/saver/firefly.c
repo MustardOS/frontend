@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "../log.h"
-#include "../saver.h"
-#include "firefly.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/saver/firefly.h>
 
 #define FIREFLY_COUNT       48
 #define FIREFLY_SEP_RADIUS  32

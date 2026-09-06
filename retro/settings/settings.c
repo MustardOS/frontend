@@ -7,15 +7,15 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "../../common/device.h"
-#include "../../common/fileio.h"
-#include "../../common/init.h"
-#include "../../common/language.h"
-#include "../../common/log.h"
-#include "../../common/mini/mini.h"
-#include "../../common/options.h"
-#include "../../common/overlay.h"
-#include "../../common/strutil.h"
+#include <common/platform/device.h>
+#include <common/storage/fileio.h>
+#include <common/runtime/init.h>
+#include <common/display/language.h>
+#include <common/runtime/log.h>
+#include <mini/mini.h>
+#include <common/base/options.h>
+#include <common/display/overlay.h>
+#include <common/base/strutil.h>
 #include "../video/colour.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
@@ -196,9 +196,9 @@ static char settings_core_name[MAX_BUFFER_SIZE] = "";
 static char settings_content_name[MAX_BUFFER_SIZE] = "";
 static char settings_content_stem[MAX_BUFFER_SIZE] = "";
 static char active_user_profile_path[MAX_BUFFER_SIZE] = "";
-static enum play_profile active_play_profile = play_profile_unmatched;
-static struct session_settings_t active_play_profile_settings;
-static int active_play_profile_options[OPTIONS_MAX];
+
+// Defined with the user profile machinery below, needed by session_settings_play_profile().
+static int user_profile_selection_active(void);
 
 static const char *scale_names[video_scale_count] = {
     lang.muxretro.settings_screen.aspect_ratio, lang.muxretro.settings_screen.integer_mode,
@@ -411,25 +411,21 @@ static int play_profile_values_match(const enum play_profile profile) {
     return memcmp(&session_settings, &expected, sizeof(session_settings)) == 0;
 }
 
-static void play_profile_track_current(void) {
-    active_play_profile = play_profile_unmatched;
-    if (!options_profile_baseline_matches()) return;
-
-    for (int profile = 0; profile < play_profile_count; profile++) {
-        if (!play_profile_values_match((enum play_profile) profile)) continue;
-        active_play_profile = (enum play_profile) profile;
-        active_play_profile_settings = session_settings;
-        options_profile_capture(active_play_profile_options);
-        break;
-    }
-}
-
+// Derived from live state on every call so it cannot go stale against settings, core
+// options or profile files that are loaded in a different order.
 enum play_profile session_settings_play_profile(void) {
-    if (active_play_profile < 0 || active_play_profile >= play_profile_count
-        || memcmp(&session_settings, &active_play_profile_settings, sizeof(session_settings)) != 0
-        || !options_profile_matches(active_play_profile_options))
-        return play_profile_unmatched;
-    return active_play_profile;
+    // An explicit user profile choice stays current even when its values are identical
+    // to a built-in one, but only for as long as it still describes the live settings.
+    if (user_profile_selection_active()) return play_profile_unmatched;
+
+    // Applying a built-in profile returns the core options to their baseline, so options
+    // moved away from it mean no built-in profile describes the session any more.
+    if (!options_profile_baseline_matches()) return play_profile_unmatched;
+
+    for (int profile = 0; profile < play_profile_count; profile++)
+        if (play_profile_values_match((enum play_profile) profile)) return (enum play_profile) profile;
+
+    return play_profile_unmatched;
 }
 
 void session_settings_apply_play_profile(const enum play_profile profile) {
@@ -439,9 +435,6 @@ void session_settings_apply_play_profile(const enum play_profile profile) {
     session_settings_discard_to(&next);
     options_profile_apply(NULL, NULL);
     active_user_profile_path[0] = '\0';
-    active_play_profile = profile;
-    active_play_profile_settings = session_settings;
-    options_profile_capture(active_play_profile_options);
 }
 
 static const char *show_fps_names[show_fps_count] = {
@@ -1175,7 +1168,6 @@ int session_settings_user_profile_apply(const int index) {
     session_settings_discard_to(&next);
     options_profile_apply(profile->option_indices, profile->option_present);
     snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", profile->path);
-    active_play_profile = play_profile_unmatched;
     return profile->field_count;
 }
 
@@ -1187,10 +1179,20 @@ static int user_profile_values_match(const user_profile *profile) {
            && options_profile_resolved_matches(profile->option_indices, profile->option_present);
 }
 
+static int user_profile_selection_active(void) {
+    if (!active_user_profile_path[0]) return 0;
+
+    for (int index = 0; index < user_profile_count; index++)
+        if (strcmp(user_profiles[index].path, active_user_profile_path) == 0)
+            return user_profile_values_match(&user_profiles[index]);
+
+    return 0;
+}
+
 int session_settings_user_profile_current(void) {
     // A built-in profile and a user profile are distinct choices even when their
-    // resolved values happen to match. Preserve an explicit built-in selection;
-    // user-profile matching remains the restart fallback when no built-in is active.
+    // resolved values happen to match, so an explicit user selection wins there. Reaching
+    // a built-in means any remembered selection no longer describes the session.
     if (session_settings_play_profile() != play_profile_unmatched) {
         active_user_profile_path[0] = '\0';
         return -1;
@@ -1502,7 +1504,6 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
 
     session_settings = default_settings();
     active_user_profile_path[0] = '\0';
-    play_profile_track_current();
     settings_core_name[0] = '\0';
     settings_content_name[0] = '\0';
     settings_content_stem[0] = '\0';
@@ -1572,7 +1573,6 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     session_settings_apply_fps_mode();
 
     baseline_settings = session_settings;
-    play_profile_track_current();
 }
 
 static int write_settings_snapshot(const char *path, const struct session_settings_t *settings) {
@@ -3113,7 +3113,6 @@ void session_settings_apply_save_choice(const int choice) {
 void session_settings_discard_to(const struct session_settings_t *snapshot) {
     session_settings = *snapshot;
     active_user_profile_path[0] = '\0';
-    play_profile_track_current();
     video_bridge_apply_scaling();
     video_bridge_apply_filter();
     session_settings_apply_fps_mode();

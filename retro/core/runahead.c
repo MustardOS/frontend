@@ -1,7 +1,7 @@
 #include <stdlib.h>
-#include "../../common/init.h"
-#include "../../common/language.h"
-#include "../../common/log.h"
+#include <common/runtime/init.h>
+#include <common/display/language.h>
+#include <common/runtime/log.h>
 #include "../input/hotkeys.h"
 #include "../input/rumble.h"
 #include "../coreinfo/coreinfo.h"

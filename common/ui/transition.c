@@ -1,6 +1,6 @@
-#include "transition.h"
-#include "common.h"
-#include "../device.h"
+#include <common/ui/transition.h>
+#include <common/ui/common.h>
+#include <common/platform/device.h>
 
 #define SCROLL_STOP_MS 350
 

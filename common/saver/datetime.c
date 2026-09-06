@@ -5,10 +5,10 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "../log.h"
-#include "../saver.h"
-#include "../config.h"
-#include "datetime.h"
+#include <common/runtime/log.h>
+#include <common/saver/saver.h>
+#include <common/config/config.h>
+#include <common/saver/datetime.h>
 
 #define DT_FADE_IN_MS   1200
 #define DT_FADE_HOLD_MS 6000

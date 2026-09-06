@@ -1,11 +1,11 @@
 #include <string.h>
-#include "notify.h"
-#include "common.h"
-#include "nav.h"
-#include "../config.h"
-#include "../language.h"
-#include "../init.h"
-#include "../options.h"
+#include <common/ui/notify.h>
+#include <common/ui/common.h>
+#include <common/ui/nav.h>
+#include <common/config/config.h>
+#include <common/display/language.h>
+#include <common/runtime/init.h>
+#include <common/base/options.h>
 #include <stdio.h>
 
 #define NOTIFY_QUEUE_MAX 8

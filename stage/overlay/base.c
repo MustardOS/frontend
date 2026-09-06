@@ -3,9 +3,9 @@
 #include <GLES2/gl2.h>
 #include <sys/stat.h>
 #include <linux/limits.h>
-#include "../../common/log.h"
+#include <common/runtime/log.h>
 #include "../common/common.h"
-#include "../../common/inotify.h"
+#include <common/storage/inotify.h>
 #include "../common/alpha.h"
 #include "../common/anchor.h"
 #include "../common/scale.h"

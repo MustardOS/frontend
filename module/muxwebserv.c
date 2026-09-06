@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 #include "ui/ui_muxwebserv.h"
 
 #define WEBSERV(NAME, UDATA) 1,
@@ -8,6 +8,8 @@ enum { ui_count_dynamic = E_SIZE(WEBSERV_ELEMENTS) };
 
 enum web_service {
     web_service_none = -1,
+    web_service_mdns,
+    web_service_landing,
     web_service_sshd,
     web_service_sftpgo,
     web_service_ttyd,
@@ -16,7 +18,14 @@ enum web_service {
     web_service_count
 };
 
-enum web_field { web_field_none, web_field_port, web_field_secondary_port, web_field_username, web_field_password };
+enum web_field {
+    web_field_none,
+    web_field_local_name,
+    web_field_port,
+    web_field_secondary_port,
+    web_field_username,
+    web_field_password
+};
 
 static lv_obj_t *ui_objects[ui_count_dynamic];
 static lv_obj_t *ui_objects_value[ui_count_dynamic];
@@ -32,16 +41,21 @@ static char editing_port[6];
 static char editing_secondary_port[6];
 static char editing_username[33];
 static char editing_password[129];
+static char editing_local_name[64];
 
 static mux_dialogue save_dlg;
 
 static const char *service_key(const enum web_service service) {
-    static const char *keys[web_service_count] = {"sshd", "sftpgo", "ttyd", "syncthing", "tailscaled"};
+    static const char *keys[web_service_count] = {"mdns", "landing", "sshd", "sftpgo", "ttyd", "syncthing", "tailscaled"};
     return service >= 0 && service < web_service_count ? keys[service] : "";
 }
 
 static const char *service_title(const enum web_service service) {
     switch (service) {
+        case web_service_mdns:
+            return lang.muxwebserv.mdns;
+        case web_service_landing:
+            return lang.muxwebserv.landing;
         case web_service_sshd:
             return lang.muxwebserv.sshd;
         case web_service_sftpgo:
@@ -59,6 +73,10 @@ static const char *service_title(const enum web_service service) {
 
 static int16_t *service_enabled(const enum web_service service) {
     switch (service) {
+        case web_service_mdns:
+            return &config.web.mdns;
+        case web_service_landing:
+            return &config.web.landing;
         case web_service_sshd:
             return &config.web.sshd;
         case web_service_sftpgo:
@@ -76,6 +94,8 @@ static int16_t *service_enabled(const enum web_service service) {
 
 static char *service_port(const enum web_service service) {
     switch (service) {
+        case web_service_landing:
+            return config.web.landing_port;
         case web_service_sshd:
             return config.web.sshd_port;
         case web_service_sftpgo:
@@ -91,6 +111,8 @@ static char *service_port(const enum web_service service) {
 
 static const char *service_default_port(const enum web_service service) {
     switch (service) {
+        case web_service_landing:
+            return "80";
         case web_service_sshd:
             return "22";
         case web_service_sftpgo:
@@ -110,6 +132,10 @@ static char *service_secondary_port(const enum web_service service) {
 
 static int service_has_login(const enum web_service service) {
     return service == web_service_ttyd;
+}
+
+static int service_has_local_name(const enum web_service service) {
+    return service == web_service_mdns;
 }
 
 static void set_row_visible(const int index, const int visible) {
@@ -165,17 +191,22 @@ static void show_main_view(void) {
     editing_field = web_field_none;
 
     lv_label_set_text(ui_lbl_title, lang.muxwebserv.title);
-    set_row(0, lang.muxwebserv.sshd, "sshd", config.web.sshd ? lang.generic.enabled : lang.generic.disabled, "sshd");
+    set_row(0, lang.muxwebserv.mdns, "mdns", config.web.mdns ? lang.generic.enabled : lang.generic.disabled, "mdns");
     set_row(
-        1, lang.muxwebserv.sftpgo, "sftpgo", config.web.sftp_go ? lang.generic.enabled : lang.generic.disabled, "sftpgo"
+        1, lang.muxwebserv.landing, "landing", config.web.landing ? lang.generic.enabled : lang.generic.disabled,
+        "landing"
     );
-    set_row(2, lang.muxwebserv.ttyd, "ttyd", config.web.ttyd ? lang.generic.enabled : lang.generic.disabled, "ttyd");
+    set_row(2, lang.muxwebserv.sshd, "sshd", config.web.sshd ? lang.generic.enabled : lang.generic.disabled, "sshd");
     set_row(
-        3, lang.muxwebserv.syncthing, "syncthing", config.web.syncthing ? lang.generic.enabled : lang.generic.disabled,
+        3, lang.muxwebserv.sftpgo, "sftpgo", config.web.sftp_go ? lang.generic.enabled : lang.generic.disabled, "sftpgo"
+    );
+    set_row(4, lang.muxwebserv.ttyd, "ttyd", config.web.ttyd ? lang.generic.enabled : lang.generic.disabled, "ttyd");
+    set_row(
+        5, lang.muxwebserv.syncthing, "syncthing", config.web.syncthing ? lang.generic.enabled : lang.generic.disabled,
         "syncthing"
     );
     set_row(
-        4, lang.muxwebserv.tailscaled, "tailscaled",
+        6, lang.muxwebserv.tailscaled, "tailscaled",
         config.web.tailscaled ? lang.generic.enabled : lang.generic.disabled, "tailscaled"
     );
 
@@ -195,6 +226,9 @@ static void load_service_values(void) {
     );
     snprintf(editing_username, sizeof(editing_username), "%s", config.web.ttyd_user);
     snprintf(editing_password, sizeof(editing_password), "%s", config.web.ttyd_pass);
+    snprintf(
+        editing_local_name, sizeof(editing_local_name), "%s", config.web.mdns_name[0] ? config.web.mdns_name : "muos"
+    );
 }
 
 static int service_changed(void) {
@@ -209,6 +243,10 @@ static int service_changed(void) {
 
     if (service_has_login(selected_service)
         && (strcmp(editing_username, config.web.ttyd_user) != 0 || strcmp(editing_password, config.web.ttyd_pass) != 0))
+        return 1;
+
+    if (service_has_local_name(selected_service)
+        && strcmp(editing_local_name, config.web.mdns_name[0] ? config.web.mdns_name : "muos") != 0)
         return 1;
 
     return 0;
@@ -227,8 +265,14 @@ static void show_detail_view(const enum web_service service) {
     );
 
     int count = 1;
+    if (service_has_local_name(service)) {
+        char local_address[72];
+        snprintf(local_address, sizeof(local_address), "%s.local", editing_local_name);
+        set_row(count++, lang.muxwebserv.local_name, "local_name", local_address, "local_name");
+    }
     if (service_port(service)) {
-        const int web_port = service == web_service_sftpgo || service == web_service_syncthing;
+        const int web_port = service == web_service_landing || service == web_service_sftpgo
+                             || service == web_service_syncthing;
         set_row(
             count++, web_port ? lang.muxwebserv.web_port : lang.muxwebserv.port, "port", editing_port,
             web_port ? "web_port" : "port"
@@ -265,7 +309,22 @@ static int valid_port(const char *port) {
     return errno == 0 && end && *end == '\0' && value >= 1 && value <= 65535;
 }
 
+static int valid_local_name(const char *name) {
+    const size_t length = strlen(name);
+    if (!length || length > 63 || name[0] == '-' || name[length - 1] == '-') return 0;
+    for (const unsigned char *p = (const unsigned char *) name; *p; p++) {
+        if (!isalnum(*p) && *p != '-') return 0;
+    }
+    return 1;
+}
+
 static int validate_service(void) {
+    if (service_has_local_name(selected_service) && !valid_local_name(editing_local_name)) {
+        play_sound(snd_error);
+        toast_message(lang.muxwebserv.invalid_local_name, tst_wait_s);
+        return 0;
+    }
+
     if (service_port(selected_service) && !valid_port(editing_port)) {
         play_sound(snd_error);
         toast_message(lang.muxwebserv.invalid_port, tst_wait_s);
@@ -335,6 +394,13 @@ static int save_service(void) {
         snprintf(config.web.ttyd_pass, sizeof(config.web.ttyd_pass), "%s", editing_password);
     }
 
+    if (service_has_local_name(selected_service)) {
+        for (size_t i = 0; editing_local_name[i]; i++)
+            editing_local_name[i] = (char) tolower((unsigned char) editing_local_name[i]);
+        write_text_to_file_atomic(CONF_CONFIG_PATH "web/mdns_name", CHAR, editing_local_name);
+        snprintf(config.web.mdns_name, sizeof(config.web.mdns_name), "%s", editing_local_name);
+    }
+
     toast_message(lang.generic.saving, tst_wait_m);
 
     const char *args[] = {OPT_PATH "script/web/service.sh", "apply", key, NULL};
@@ -348,6 +414,8 @@ static int save_service(void) {
 static void show_help(void) {
     if (selected_service == web_service_none) {
         const struct help_msg help_messages[] = {
+            {"mdns", lang.muxwebserv.help.mdns},
+            {"landing", lang.muxwebserv.help.landing},
             {"sshd", lang.muxwebserv.help.sshd},
             {"sftpgo", lang.muxwebserv.help.sftp_go},
             {"ttyd", lang.muxwebserv.help.ttyd},
@@ -361,7 +429,8 @@ static void show_help(void) {
     const struct help_msg help_messages[] = {
         {"enabled", lang.muxwebserv.help.service},   {"port", lang.muxwebserv.help.port},
         {"web_port", lang.muxwebserv.help.web_port}, {"sftp_port", lang.muxwebserv.help.sftp_port},
-        {"username", lang.muxwebserv.help.username}, {"password", lang.muxwebserv.help.password}
+        {"username", lang.muxwebserv.help.username}, {"password", lang.muxwebserv.help.password},
+        {"local_name", lang.muxwebserv.help.local_name}
     };
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
@@ -377,6 +446,13 @@ static void handle_keyboard_ok_press(void) {
     const char *text = lv_textarea_get_text(ui_txt_entry_webserv);
 
     switch (editing_field) {
+        case web_field_local_name: {
+            snprintf(editing_local_name, sizeof(editing_local_name), "%s", text);
+            char local_address[72];
+            snprintf(local_address, sizeof(local_address), "%s.local", editing_local_name);
+            lv_label_set_text(ui_objects_value[1], local_address);
+            break;
+        }
         case web_field_port:
             snprintf(editing_port, sizeof(editing_port), "%s", text);
             lv_label_set_text(ui_objects_value[1], editing_port);
@@ -427,7 +503,9 @@ static void open_editor(const enum web_field field) {
 
     const int numeric = field == web_field_port || field == web_field_secondary_port;
     lv_textarea_set_password_mode(ui_txt_entry_webserv, field == web_field_password);
-    lv_textarea_set_max_length(ui_txt_entry_webserv, numeric ? 5 : field == web_field_username ? 32 : 128);
+    lv_textarea_set_max_length(
+        ui_txt_entry_webserv, numeric ? 5 : field == web_field_local_name ? 63 : field == web_field_username ? 32 : 128
+    );
 
     if (numeric) {
         lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
@@ -442,7 +520,11 @@ static void open_editor(const enum web_field field) {
         lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_state(num_entry, LV_STATE_DISABLED);
         key_show = 1;
-        lv_textarea_set_text(ui_txt_entry_webserv, field == web_field_username ? editing_username : editing_password);
+        lv_textarea_set_text(
+            ui_txt_entry_webserv,
+            field == web_field_local_name ? editing_local_name : field == web_field_username ? editing_username
+                                                                                             : editing_password
+        );
     }
 
     play_sound(snd_confirm);
@@ -459,6 +541,11 @@ static void handle_confirm(void) {
 
     if (current_item_index == 0) {
         cycle_enabled();
+        return;
+    }
+
+    if (service_has_local_name(selected_service) && current_item_index == 1) {
+        open_editor(web_field_local_name);
         return;
     }
 
@@ -638,6 +725,8 @@ static void adjust_panels(void) {
 }
 
 static void init_navigation_group(void) {
+    INIT_VALUE_ITEM(-1, webserv, mdns, lang.muxwebserv.mdns, "mdns", "");
+    INIT_VALUE_ITEM(-1, webserv, landing, lang.muxwebserv.landing, "landing", "");
     INIT_VALUE_ITEM(-1, webserv, sshd, lang.muxwebserv.sshd, "sshd", "");
     INIT_VALUE_ITEM(-1, webserv, sftp_go, lang.muxwebserv.sftpgo, "sftpgo", "");
     INIT_VALUE_ITEM(-1, webserv, ttyd, lang.muxwebserv.ttyd, "ttyd", "");

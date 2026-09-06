@@ -1,7 +1,7 @@
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
+#include <common/ui/orientation.h>
 #include "ui/ui_muxrgb.h"
-#include "../common/rgb.h"
+#include <common/platform/rgb.h>
 
 #define RGB(NAME, UDATA)     1,
 #define RGBMODE(NAME, UDATA) 1,

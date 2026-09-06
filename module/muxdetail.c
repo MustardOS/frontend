@@ -1,8 +1,9 @@
 #include <glob.h>
 #include "muxshare.h"
-#include "../common/ui/orientation.h"
-#include "../common/ui/list_frame.h"
-#include "../common/battery.h"
+#include <common/ui/orientation.h>
+#include <common/ui/list_frame.h>
+#include <common/platform/battery.h>
+#include <common/storage/verify.h>
 #include "ui/ui_muxdetail.h"
 
 #define DETAIL(NAME, UDATA) 1,

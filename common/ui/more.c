@@ -1,5 +1,5 @@
-#include "more.h"
-#include "../language.h"
+#include <common/ui/more.h>
+#include <common/display/language.h>
 
 #define MORE_DISABLED_OPA 120
 

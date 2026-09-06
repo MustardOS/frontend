@@ -6,16 +6,17 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-MODULE_DAEMONS = mulink
+MODULE_DAEMONS = mudns mulink
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
 TOOLS = muvarctl murgb mususpend muverify
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
-muvarctl_SRC = common/var_store.c
+muvarctl_SRC = common/config/var_store.c
 
-murgb_SRC = common/rgb_args.c common/config.c common/config_value.c common/colour.c \
-            common/fileio_lite.c common/strpath.c common/theme_base.c common/log.c common/debug.c
+murgb_SRC = common/tooling/rgb_args.c common/config/config.c common/config/config_value.c \
+            common/display/colour.c common/storage/fileio_lite.c common/base/strpath.c \
+            common/display/theme_base.c common/runtime/log.c common/runtime/debug.c
 
 muverify_LDLIBS = $(EXTERNAL_LIB)/libcrypto.a -ldl -lpthread $(EXTERNAL_HIDE)
 
@@ -23,9 +24,7 @@ DEPENDENCIES = plutosvg common lvgl module
 
 CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS)
 
-INCLUDES = -I./module/ui -I./common \
-           -I./common/input -I./common/json \
-           -I./common/mini -I./common/miniz
+INCLUDES = -I. -I./module/ui -I./vendor
 
 LDLIBS = -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
@@ -38,7 +37,7 @@ CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)
 CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
-.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external thirdparty config-guard clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) darkhttpd cursor prebuild vendor-external generated config-guard clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro
 
 .DEFAULT_GOAL := all
@@ -69,10 +68,10 @@ config-guard: | vendor-external
 		: >"$(DEP_READY_STAMP)"; \
 	fi
 
-thirdparty: | config-guard
-	$(VERBOSE)./gen_thirdparty.sh $(QUIET) || exit 1
+generated: | config-guard
+	$(VERBOSE)./build.sh generate $(QUIET) || exit 1
 
-dep-stage dep-plutosvg dep-lvgl: | thirdparty
+dep-stage dep-plutosvg dep-lvgl: | generated
 dep-common: dep-plutosvg
 dep-module: dep-common dep-lvgl
 dep-retro: dep-module
@@ -81,9 +80,17 @@ dep-stage:
 	@echo "Building Stage Overlay: libmustage.so"
 	$(VERBOSE)$(MAKE) -C stage DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
-dep-plutosvg dep-lvgl dep-common dep-module:
+dep-common dep-module:
 	@echo "Building Dependency: $(@:dep-%=%)"
 	$(VERBOSE)$(MAKE) -C $(@:dep-%=%) DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
+
+dep-plutosvg:
+	@echo "Building Dependency: plutosvg"
+	$(VERBOSE)$(MAKE) -C vendor/plutosvg DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
+
+dep-lvgl:
+	@echo "Building Dependency: lvgl"
+	$(VERBOSE)$(MAKE) -C vendor/lvgl DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
 dep-retro:
 	@echo "Building Libretro Host: muxretro"
@@ -92,7 +99,8 @@ dep-retro:
 prebuild: dep-stage dep-retro
 
 clean:
-	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) lvgl/build common/thirdparty.h
+	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build \
+		common/generated/language.json common/generated/thirdparty.h
 	$(VERBOSE)find . \( -name "*.o" -o -name "*.d" \) \
 		-not -path "./.git/*" -not -path "./external/*" -exec rm -f {} +
 
@@ -121,8 +129,14 @@ $(MODULES):
 $(MODULE_DAEMONS):
 	@echo "Building Daemon: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c -o $(BIN_DIR)/$@ \
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+
+darkhttpd:
+	@echo "Building Web Server: $@"
+	@mkdir -p $(BIN_DIR)
+	$(VERBOSE)$(CC) $(filter-out -D_GNU_SOURCE,$(CFLAGS)) vendor/darkhttpd/darkhttpd.c -o $(BIN_DIR)/$@ \
+		$(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 $(INPUT_DAEMON):
 	@echo "Building Input Service: $@"
@@ -134,12 +148,12 @@ $(INPUT_DAEMON):
 $(TOOLS):
 	@echo "Building Tool: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 cursor: $(CURSOR_LIB)
 
-$(CURSOR_LIB): common/sdl_cursor.c
+$(CURSOR_LIB): common/compat/sdl_cursor.c | prebuild
 	@echo "Building SDL Cursor Compatibility Library: $@"
 	@mkdir -p $(LIB_DIR)
 	$(VERBOSE)$(CC) $(CFLAGS) $(SHARED_PIC) $< -o $@ -ldl $(LIB_LDFLAGS) $(QUIET) || \

@@ -1,8 +1,8 @@
 #include "ui_muxcharge.h"
-#include "../../common/init.h"
-#include "../../common/ui/common.h"
-#include "../../common/device.h"
-#include "../../common/theme.h"
+#include <common/runtime/init.h>
+#include <common/ui/common.h>
+#include <common/platform/device.h>
+#include <common/display/theme.h>
 
 lv_obj_t *ui_scr_charge_charge;
 lv_obj_t *ui_blank_charge;

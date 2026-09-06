@@ -5,10 +5,10 @@
 #include <linux/fb.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include "../common/fbset_args.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/log.h"
+#include <common/tooling/fbset_args.h>
+#include <common/config/config.h>
+#include <common/platform/device.h>
+#include <common/runtime/log.h>
 
 static char *module = "fbset";
 int verbose = 0;
