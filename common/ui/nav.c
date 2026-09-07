@@ -511,7 +511,11 @@ static void blank_overflow_rows(const lv_obj_t *panel) {
 
         if (row_dim_active && want != LV_OPA_TRANSP && (int) i != row_dim_index) want = (lv_opa_t) (want / 2);
 
-        if (lv_obj_get_style_opa(child, LV_PART_MAIN) != want) {
+        lv_style_value_t normal_opa;
+        const lv_style_res_t normal_opa_result =
+            lv_obj_get_local_style_prop(child, LV_STYLE_OPA, &normal_opa, MU_OBJ_MAIN_DEFAULT);
+
+        if (normal_opa_result != LV_STYLE_RES_FOUND || normal_opa.num != want) {
             lv_obj_set_style_opa(child, want, MU_OBJ_MAIN_DEFAULT);
         }
     }

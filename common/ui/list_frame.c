@@ -122,6 +122,7 @@ static void build_bar(lv_obj_t *parent) {
 
     lv_dropdown_clear_options(bar_value);
     lv_obj_add_flag(bar_value, LV_OBJ_FLAG_FLOATING);
+    lv_obj_clear_flag(bar_value, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_size(bar_value, 0, 0);
     lv_obj_set_style_opa(bar_value, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
 
@@ -281,6 +282,32 @@ void list_frame_set_inert(const int row, const int value) {
     inert[row] = value ? 1 : 0;
 }
 
+int list_frame_set_suppressed(const int row, const int suppress) {
+    if (row < 0 || row >= LIST_FRAME_ROWS_MAX) return 0;
+
+    const int state = suppress ? 1 : 0;
+    if (suppressed[row] == state) return 0;
+
+    suppressed[row] = state;
+
+    return 1;
+}
+
+int list_frame_steps_to_row(const int row) {
+    if (!list_frame_active() || row < 0 || row >= row_total) return 0;
+
+    const list_frame *f = &frames[current];
+
+    if (row < f->first || row >= f->first + f->count) return 0;
+    if (suppressed[row] || inert[row]) return 0;
+
+    int steps = 1;
+    for (int i = f->first; i < row; i++)
+        if (!suppressed[i] && !inert[i]) steps++;
+
+    return steps;
+}
+
 void list_frame_remember(const lv_obj_t *label) {
     if (!list_frame_active() || !label || !row_labels) return;
     if (!config.settings.advanced.remember_section) return;
@@ -315,10 +342,14 @@ int list_frame_restore_key(const char *key) {
     char path[MAX_BUFFER_SIZE];
     marker_path(path, key);
 
-    if (!file_exist(path)) return 0;
+    if (!file_exist(path)) {
+        list_frame_apply();
+        return 0;
+    }
 
     if (!config.settings.advanced.remember_section) {
         remove(path);
+        list_frame_apply();
         return 0;
     }
 
@@ -327,19 +358,15 @@ int list_frame_restore_key(const char *key) {
 
     remove(path);
 
-    if (frame < 0 || frame >= frame_count || !frame_has_rows(frame)) return 0;
+    if (frame < 0 || frame >= frame_count || !frame_has_rows(frame)) {
+        list_frame_apply();
+        return 0;
+    }
 
     current = frame;
     list_frame_apply();
 
-    if (row < frames[frame].first || row >= frames[frame].first + frames[frame].count) return 0;
-    if (row >= row_total || suppressed[row]) return 0;
-
-    int steps = 1;
-    for (int i = frames[frame].first; i < row; i++)
-        if (!suppressed[i]) steps++;
-
-    return steps;
+    return list_frame_steps_to_row(row);
 }
 
 int list_frame_current(void) {

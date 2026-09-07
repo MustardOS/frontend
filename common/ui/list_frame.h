@@ -34,6 +34,10 @@ int list_frame_current(void);
 
 void list_frame_set_inert(int row, int inert);
 
+int list_frame_set_suppressed(int row, int suppress);
+
+int list_frame_steps_to_row(int row);
+
 int list_frame_row_of(const lv_obj_t *label);
 
 int list_frame_restore(void);

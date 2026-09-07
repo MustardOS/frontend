@@ -46,7 +46,15 @@ static char audio_sink_name_seen[MAX_BUFFER_SIZE] = {0};
 
 static void list_nav_move(int steps, int direction);
 
+static void check_focus(void);
+
 static void show_help(void) {
+    if (list_frame_focused()) {
+        list_frame_help();
+
+        return;
+    }
+
     const struct help_msg help_messages[] = {
 #define TWEAKGEN(NAME, UDATA) {UDATA, lang.muxtweakgen.help.NAME},
         TWEAKGEN_ELEMENTS
@@ -100,6 +108,19 @@ static int visible_audiosink(void) {
     return !lv_obj_has_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
 }
 
+static void show_audio_sink_row(void) {
+    const int row = list_frame_row_of(ui_lbl_audio_sink_tweakgen);
+    if (row < 0) return;
+
+    const int focused = list_frame_current_row();
+    if (!list_frame_set_suppressed(row, 0)) return;
+
+    list_frame_apply();
+
+    gen_step_movement(list_frame_steps_to_row(focused), +1, 2, 0, 0);
+    check_focus();
+}
+
 static void reload_audio_sinks(void) {
     if (audio_sinks) {
         for (int i = 0; i < audio_sink_count; i++)
@@ -118,7 +139,7 @@ static void reload_audio_sinks(void) {
     const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", 0);
     lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamp_range(live_sink, 0, audio_sink_count - 1));
 
-    lv_obj_clear_flag(ui_pnl_audio_sink_tweakgen, LV_OBJ_FLAG_HIDDEN);
+    show_audio_sink_row();
 }
 
 static void tweakgen_refresh_task(lv_timer_t *timer) {
@@ -429,7 +450,6 @@ static void init_navigation_group(void) {
         &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
         ui_objects_value, ui_count_dynamic
     );
-    list_frame_apply();
 
     list_nav_move(list_frame_restore(), +1);
 }

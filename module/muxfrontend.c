@@ -65,6 +65,10 @@ static void on_signal(const int sig) {
     quit_signal = sig ? sig : 1;
 }
 
+static int stop_requested(void) {
+    return quit_signal != 0;
+}
+
 static void install_signal_handlers(void) {
     struct sigaction sa = {0};
     sa.sa_handler = on_signal;
@@ -129,6 +133,7 @@ static void quit_watchdog(lv_timer_t *timer __attribute__((unused))) {
     if (quit_signal) {
         LOG_DEBUG("muxfrontend", "Signal %d received, requesting safe quit...", (int) quit_signal);
         shutting_down = 1;
+        safe_quit(0);
 
         cleanup_all();
         exit(0);
@@ -742,6 +747,7 @@ static void parallel_load(param_loader *loaders) {
 
 int main(void) {
     install_signal_handlers();
+    display_set_stop_requested_query(stop_requested);
     verify_check = script_hash_check();
 
     // If parent (frontend.sh) dies, ask the kernel nicely to send us a SIGTERM hopefully

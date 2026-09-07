@@ -18,6 +18,8 @@ void display_check_idle_saver(void);
 
 void display_set_idle_saver_suppressed_query(int (*fn)(void));
 
+void display_set_stop_requested_query(int (*fn)(void));
+
 void display_set_fade_alpha(uint8_t alpha);
 
 void display_composite_frame(void);

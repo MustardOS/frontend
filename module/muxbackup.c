@@ -145,7 +145,6 @@ static void init_navigation_group(void) {
         &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
         ui_objects_value, ui_count_dynamic
     );
-    list_frame_apply();
 
     int dbi_index = -1;
     if (file_exist(MUOS_DBI_LOAD)) {
@@ -155,8 +154,10 @@ static void init_navigation_group(void) {
 
     if (dbi_index < 0) {
         gen_step_movement(list_frame_restore(), +1, 2, 0, 1);
-    } else if (ui_count_static > 0 && dbi_index < ui_count_static && current_item_index < ui_count_static) {
-        gen_step_movement(dbi_index, 1, 2, 0, 1);
+    } else {
+        list_frame_apply();
+        if (ui_count_static > 0 && dbi_index < ui_count_static && current_item_index < ui_count_static)
+            gen_step_movement(dbi_index, 1, 2, 0, 1);
     }
 }
 

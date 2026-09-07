@@ -1547,7 +1547,7 @@ void apply_theme_list_drop_down(
     const lv_coord_t font_height = lv_font_get_line_height(font);
     lv_obj_set_height(ui_lbl_item_value, font_height);
     lv_obj_set_align(ui_lbl_item_value, LV_ALIGN_RIGHT_MID);
-    lv_obj_add_flag(ui_lbl_item_value, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_lbl_item_value, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_scrollbar_mode(ui_lbl_item_value, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lbl_item_value, LV_DIR_RIGHT);
     lv_obj_set_style_text_color(ui_lbl_item_value, lv_color_hex(d_theme->list_default.text), MU_OBJ_MAIN_DEFAULT);

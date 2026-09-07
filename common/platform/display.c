@@ -72,6 +72,7 @@ static monitor_t monitor;
 
 static uint32_t last_saver_exit = 0;
 static int (*idle_saver_suppressed_query)(void) = NULL;
+static int (*stop_requested_query)(void) = NULL;
 static int idle_saver_was_suppressed = 0;
 static uint8_t display_fade_alpha = 0;
 static int gradient_captured = 0;
@@ -856,6 +857,8 @@ static void run_saver_loop(int preview) {
     uint32_t last_status = SDL_GetTicks();
 
     while (preview || saver_active()) {
+        if (stop_requested_query && stop_requested_query()) break;
+
         const uint32_t frame_ms = IDLE_MS;
         uint32_t now = SDL_GetTicks();
         const int timeout = (int) (next > now ? next - now : 0);
@@ -1258,6 +1261,10 @@ void display_check_idle_saver(void) {
 
 void display_set_idle_saver_suppressed_query(int (*fn)(void)) {
     idle_saver_suppressed_query = fn;
+}
+
+void display_set_stop_requested_query(int (*fn)(void)) {
+    stop_requested_query = fn;
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {

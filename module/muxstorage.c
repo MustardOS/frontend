@@ -146,7 +146,6 @@ static void init_navigation_group(void) {
         &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
         ui_objects_value, ui_count_dynamic
     );
-    list_frame_apply();
 
     update_storage_info();
 

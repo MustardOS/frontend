@@ -1354,8 +1354,6 @@ static void init_navigation_group(void) {
         ui_count_dynamic
     );
 
-    list_frame_apply();
-
     list_nav_move(list_frame_restore(), +1);
     nav_refresh();
 }
