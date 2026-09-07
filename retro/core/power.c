@@ -38,10 +38,11 @@ static void acknowledge_power_save(void) {
 static void prepare_power_save(const char *reason) {
     LOG_INFO(mux_module, "Preparing content for %s", reason);
 
+    const int save_states_allowed = state_saves_allowed();
     if (netplay_is_active()) netplay_disconnect();
 
     int state_saved = 1;
-    if (state_saves_supported()) {
+    if (save_states_allowed) {
         if (!gamestate_autosave_is_armed()) {
             LOG_INFO(mux_module, "Preserving the previous autosave because gameplay has not begun");
         } else {

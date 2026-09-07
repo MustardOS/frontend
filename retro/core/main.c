@@ -231,7 +231,7 @@ static void idle_poll(void) {
         pause_menu_toggle();
 
         persistent_memory_save();
-        if (!netplay_is_active() && session_settings_auto_save_on_idle()) gamestate_autosave_save();
+        if (state_saves_allowed() && session_settings_auto_save_on_idle()) gamestate_autosave_save();
     }
     last_seen_changes = mux_idle_state_changes;
 }
@@ -567,7 +567,8 @@ int main(const int argc, char *argv[]) {
 
     char resume_path[512] = "";
     int load_blocked = 0;
-    int has_resume = !startup.fresh && state_saves_supported()
+    const int startup_netplay = startup.netplay_host || startup.netplay_address[0];
+    int has_resume = !startup.fresh && !startup_netplay && state_saves_supported()
                      && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
     if (show_startup_messages) loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
 
@@ -676,11 +677,11 @@ int main(const int argc, char *argv[]) {
     input_bridge_suppress_held();
 
     int state_preserved = 0;
-    if (state_saves_supported()) state_preserved = gamestate_protect_mismatched_autosave();
+    if (state_saves_allowed()) state_preserved = gamestate_protect_mismatched_autosave();
 
     resume_path[0] = '\0';
     load_blocked = 0;
-    has_resume = !startup.fresh && state_saves_supported()
+    has_resume = !startup.fresh && !startup_netplay && state_saves_allowed()
                  && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
 
     if (has_resume) {
@@ -772,6 +773,7 @@ int main(const int argc, char *argv[]) {
     int prev_paused = 0;
     int peer_wait_visible = 0;
     int peer_wait_kind = 0;
+    uint32_t peer_wait_redraw_at = 0;
     int netplay_governor_active = 0;
 
     uint32_t fps_frame_count = 0;
@@ -829,6 +831,7 @@ int main(const int argc, char *argv[]) {
 
         if (loop_now >= status_deadline) {
             status_task(NULL);
+            pause_menu_update_header();
             status_deadline = loop_now + TIMER_STATUS;
         }
 
@@ -845,16 +848,20 @@ int main(const int argc, char *argv[]) {
         const int show_peer_wait = show_netplay_wait || show_game_link_wait;
         const int peer_wait_kind_now = show_netplay_wait ? 1 : show_game_link_wait ? 2 : 0;
 
-        if (show_peer_wait != peer_wait_visible || peer_wait_kind_now != peer_wait_kind) {
-            if (show_peer_wait)
+        if (show_peer_wait) {
+            if (!peer_wait_visible || peer_wait_kind_now != peer_wait_kind
+                || SDL_TICKS_PASSED(loop_now, peer_wait_redraw_at)) {
                 loading_message_show(
                     show_netplay_wait ? lang.muxretro.netplay.pause_menu_open : lang.muxretro.link.pause_menu_open
                 );
-            else
-                loading_message_hide();
-            peer_wait_visible = show_peer_wait;
-            peer_wait_kind = peer_wait_kind_now;
+                peer_wait_redraw_at = loop_now + 100;
+            }
+        } else if (peer_wait_visible) {
+            loading_message_hide();
+            peer_wait_redraw_at = 0;
         }
+        peer_wait_visible = show_peer_wait;
+        peer_wait_kind = peer_wait_kind_now;
 
         const int content_paused = network_menu_paused || game_link_paused
                                    || (paused && !netplay_is_playing() && !link_is_engaged());
@@ -871,8 +878,9 @@ int main(const int argc, char *argv[]) {
             timeline_deadline = timeline_ms > 0 ? loop_now + (uint32_t) timeline_ms : 0;
         }
 
-        if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && state_saves_supported() && !netplay_active
-            && loop_now >= timeline_deadline) {
+        if (timeline_ms > 0 && !state_saves_allowed()) {
+            timeline_deadline = loop_now + (uint32_t) timeline_ms;
+        } else if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && loop_now >= timeline_deadline) {
             gamestate_timeline_save();
             timeline_deadline = loop_now + (uint32_t) timeline_ms;
         }

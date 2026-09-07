@@ -218,6 +218,8 @@ void state_saves_init(const char *core_file_path);
 
 int state_saves_supported(void);
 
+int state_saves_allowed(void);
+
 int state_saves_warmup_frames(void);
 
 int state_save(const char *path);

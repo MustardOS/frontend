@@ -1922,6 +1922,7 @@ int netplay_host(const uint16_t requested_port) {
     netplay.public_info.input_delay = netplay.netpacket_available ? 0U : 2U;
     netplay.public_info.player_count = netplay.host_slots + 1U;
     netplay.peer_count = 0;
+    runahead_invalidate();
     if (RAND_bytes((uint8_t *) &netplay.session_id, sizeof(netplay.session_id)) != 1) {
         set_failure(lang.muxretro.netplay.hosting_start_failed);
         return -1;
@@ -1984,6 +1985,7 @@ int netplay_join(const char *address, const uint16_t requested_port) {
     netplay.public_info.local_port = 1;
     netplay.public_info.input_delay = netplay.netpacket_available ? 0U : 2U;
     netplay.public_info.player_count = 2;
+    runahead_invalidate();
     snprintf(netplay.join_address, sizeof(netplay.join_address), "%s", address);
     snprintf(netplay.public_info.peer, sizeof(netplay.public_info.peer), "%s", address);
     atomic_store(&netplay.stop, 0);

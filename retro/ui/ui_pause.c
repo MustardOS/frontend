@@ -85,7 +85,7 @@ static void compute_row_indices(void) {
 
     int i = 0;
     row_resume = i++;
-    row_game_state = state_saves_supported() && !netplay_is_active() ? i++ : -1;
+    row_game_state = state_saves_allowed() ? i++ : -1;
     row_netplay =
         device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay) && state_saves_supported() ? i++
                                                                                                                   : -1;
@@ -967,7 +967,7 @@ void pause_menu_toggle(void) {
 
     if (active) {
         if (!netplay_is_playing()) audio_bridge_set_paused(1);
-        if (!netplay_is_active()) gamestate_capture_pending(0);
+        if (state_saves_allowed()) gamestate_capture_pending(0);
         hotkeys_reset();
     } else {
         input_bridge_suppress_held();
@@ -1114,7 +1114,7 @@ int pause_menu_tick(void) {
             return 1;
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
-            if (!netplay_is_active() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
+            if (state_saves_allowed() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
             fade_out_screen_forced();
             return 1;
         }

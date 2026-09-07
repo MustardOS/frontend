@@ -59,10 +59,14 @@ static int ensure_anchor_buf(void) {
 }
 
 void runahead_before_frame(const int allow_replay) {
+    if (!state_saves_allowed()) {
+        runahead_invalidate();
+        return;
+    }
+
     if (!session_settings.run_ahead || failed) return;
 
-    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead) || !state_saves_supported()
-        || hw_render_bridge_active())
+    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead) || hw_render_bridge_active())
         return;
     if (!current_core.retro_serialize || !current_core.retro_unserialize || !current_core.retro_serialize_size) return;
 

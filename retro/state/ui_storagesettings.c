@@ -41,7 +41,7 @@ static int item_is_shown(const int item) {
         case item_timeline_count:
         case item_history:
         case item_trash:
-            return state_saves_supported();
+            return state_saves_allowed();
         default:
             return 1;
     }

@@ -64,8 +64,9 @@ taking turns without passing one device around. Simultaneous opposing directions
 - If anyone opens the pause menu, all devices pause on a shared frame. Devices without the menu open show a dimmed
   message as soon as the request arrives, and keep it visible until every open pause menu has closed.
 - The performance governor remains stable for the whole session and returns to its previous setting afterwards.
-- Run-ahead, fast-forward, slow motion, local state loading, timeline states, cheats and achievement processing are
-  suspended while Network Play is active.
+- All local save-state functionality is suspended while Network Play is active, including manual states, quick
+  save/load, autosaves, timeline saves, history and run-ahead. Fast-forward, slow motion, cheats and achievement
+  processing are also suspended.
 - Select **Disconnect** from the main Network Play menu to end the session cleanly.
 
 ## If a Session Will Not Connect

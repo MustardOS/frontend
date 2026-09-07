@@ -545,7 +545,7 @@ const char *gamestate_pending_thumbnail(void) {
 }
 
 void gamestate_capture_pending(const int restore_visibility) {
-    if (!base_dir[0] || !state_saves_supported()) return;
+    if (!base_dir[0] || !state_saves_allowed()) return;
     pause_menu_store_clean_screenshot(pending_path, restore_visibility);
 }
 
@@ -558,7 +558,7 @@ static int next_free_index(void) {
 }
 
 int gamestate_create(const char *name) {
-    if (!base_dir[0] || gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return -1;
+    if (!base_dir[0] || !state_saves_allowed() || gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return -1;
     gamestate_publish_flush();
 
     const int position = gamestate_slot_count;
@@ -592,6 +592,7 @@ int gamestate_create(const char *name) {
 }
 
 int gamestate_rename(const int index, const char *new_name) {
+    if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_slot_count) return -1;
 
@@ -660,6 +661,7 @@ static int trash_absorb(const struct gamestate_slot *source, const char *group_i
 }
 
 int gamestate_trash_restore(const int index) {
+    if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_trash_count) return -1;
     if (gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return -1;
@@ -695,6 +697,7 @@ int gamestate_trash_restore(const int index) {
 }
 
 int gamestate_trash_delete(const int index) {
+    if (!state_saves_allowed()) return -1;
     if (index < 0 || index >= gamestate_trash_count) return -1;
 
     const struct gamestate_slot *entry = &gamestate_trash[index];
@@ -715,6 +718,7 @@ int gamestate_trash_delete(const int index) {
 }
 
 int gamestate_trash_empty(void) {
+    if (!state_saves_allowed()) return -1;
     while (gamestate_trash_count > 0)
         if (gamestate_trash_delete(gamestate_trash_count - 1) != 0) return -1;
 
@@ -722,6 +726,7 @@ int gamestate_trash_empty(void) {
 }
 
 int gamestate_delete(const int index) {
+    if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_slot_count) return -1;
     if (state_flush() != 0) return -1;
@@ -747,6 +752,7 @@ int gamestate_delete(const int index) {
 }
 
 int gamestate_load(const int index) {
+    if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_slot_count) return -1;
     history_push(history_source_standard);
@@ -754,7 +760,7 @@ int gamestate_load(const int index) {
 }
 
 int gamestate_autosave_save(void) {
-    if (!base_dir[0] || !state_saves_supported() || !gamestate_autosave_armed) {
+    if (!base_dir[0] || !state_saves_allowed() || !gamestate_autosave_armed) {
         if (!gamestate_autosave_armed)
             LOG_INFO(mux_module, "Ignored automatic save before the first post-resume gameplay frame");
         return -1;
@@ -792,7 +798,7 @@ int gamestate_autosave_save(void) {
 }
 
 void gamestate_autosave_arm(void) {
-    if (gamestate_autosave_armed) return;
+    if (gamestate_autosave_armed || !state_saves_allowed()) return;
     gamestate_autosave_armed = 1;
     LOG_DEBUG(mux_module, "Automatic state saves armed after gameplay began");
 }
@@ -802,7 +808,7 @@ int gamestate_autosave_is_armed(void) {
 }
 
 int gamestate_autosave_load(void) {
-    if (!gamestate_autosave_exists) return -1;
+    if (!state_saves_allowed() || !gamestate_autosave_exists) return -1;
     history_push(history_source_auto);
     return state_load(gamestate_autosave.state_path, 1);
 }
@@ -825,11 +831,12 @@ static int autosave_remove(const int to_trash) {
 }
 
 int gamestate_autosave_delete(void) {
+    if (!state_saves_allowed()) return -1;
     return autosave_remove(1);
 }
 
 int gamestate_quicksave_save(void) {
-    if (!base_dir[0]) return -1;
+    if (!base_dir[0] || !state_saves_allowed()) return -1;
     gamestate_publish_flush();
 
     const struct gamestate_slot previous = gamestate_quicksave;
@@ -861,12 +868,13 @@ int gamestate_quicksave_save(void) {
 }
 
 int gamestate_quicksave_load(void) {
-    if (!gamestate_quicksave_exists) return -1;
+    if (!state_saves_allowed() || !gamestate_quicksave_exists) return -1;
     history_push(history_source_quick);
     return state_load(gamestate_quicksave.state_path, 1);
 }
 
 int gamestate_quicksave_delete(void) {
+    if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (!gamestate_quicksave_exists) return -1;
     if (state_flush() != 0) return -1;
@@ -904,7 +912,7 @@ static int timeline_next_slot(void) {
 }
 
 int gamestate_timeline_save(void) {
-    if (!base_dir[0] || !state_saves_supported()) return -1;
+    if (!base_dir[0] || !state_saves_allowed()) return -1;
     gamestate_publish_flush();
 
     const int slot = timeline_next_slot();
@@ -936,12 +944,14 @@ int gamestate_timeline_save(void) {
 }
 
 int gamestate_timeline_load(const int slot) {
-    if (slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot]) return -1;
+    if (!state_saves_allowed() || slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot])
+        return -1;
     history_push(history_source_timeline);
     return state_load(gamestate_timeline[slot].state_path, 1);
 }
 
 int gamestate_timeline_delete(const int slot) {
+    if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot]) return -1;
     if (state_flush() != 0) return -1;
@@ -963,7 +973,7 @@ int gamestate_timeline_delete(const int slot) {
 
 int gamestate_protect_mismatched_autosave(void) {
     gamestate_publish_flush();
-    if (!base_dir[0] || !gamestate_autosave_exists) return 0;
+    if (!base_dir[0] || !state_saves_allowed() || !gamestate_autosave_exists) return 0;
     if (gamestate_resume_matches(&gamestate_autosave)) return 0;
     if (gamestate_slot_count >= GAMESTATE_MAX_SLOTS) return 0;
     if (state_flush() != 0) return 0;
@@ -1013,6 +1023,8 @@ int gamestate_find_most_recent(char *path, const size_t path_len, int *mismatch_
 }
 
 int gamestate_load_most_recent(int *mismatch_blocked, const int show_message) {
+    if (!state_saves_allowed()) return -1;
+
     struct resume_candidate candidates[RESUME_CANDIDATE_LIMIT];
     const int count = collect_resume_candidates(candidates);
 

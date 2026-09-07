@@ -37,6 +37,8 @@ See [`architecture.md`](architecture.md#state) for the file-by-file breakdown of
 - Automatic state writes are disarmed during content startup and resume. Pickles arms them only after the first genuine
   post-resume gameplay frame, so an idle or power event queued during a slow core load cannot replace the previous
   autosave with the core's freshly booted state.
+- Network Play and every Game Link mode disable manual states, quick save/load, autosaves, timeline states, history and
+  run-ahead for the duration of the session. In-game battery-backed SRAM remains independent and continues saving.
 - A save appears in the on-screen list straight away, but nothing is recorded on disk until its write lands. The
   `states.ini` entry and the `resume.ini` index are both written from the completion path, so a save that never reaches
   storage leaves no entry behind. If the write fails, the listing rolls back to what it was before the save and any

@@ -22,6 +22,8 @@ void loading_message_show(const char *message) {
 
     if (loading_label && lv_obj_is_valid(loading_label)) {
         lv_label_set_text(loading_label, message);
+        lv_obj_move_foreground(loading_dim);
+        lv_obj_move_foreground(loading_panel);
         lv_obj_update_layout(loading_panel);
         lv_obj_invalidate(lv_scr_act());
         lv_refr_now(NULL);

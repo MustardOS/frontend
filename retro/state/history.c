@@ -64,10 +64,7 @@ const char *history_thumbnail(const int index) {
 
 static int history_allowed(void) {
     if (session_settings.history_depth <= 0) return 0;
-    if (!state_saves_supported()) return 0;
-    if (netplay_is_active()) return 0;
-    if (link_local_active()) return 0;
-    return 1;
+    return state_saves_allowed();
 }
 
 static size_t history_budget_bytes(void) {

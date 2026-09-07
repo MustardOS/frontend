@@ -160,7 +160,7 @@ int hotkeys_task(void) {
             }
         }
 
-        if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled && !netplay_is_active()) {
+        if (r2_now && !prev_r2 && session_settings.hotkey_quicksave_enabled && state_saves_allowed()) {
             if (state_saves_supported()) {
                 if (gamestate_quicksave_save() == 0) {
                     LOG_INFO(mux_module, "Quick Save (hotkey)");
@@ -188,7 +188,7 @@ int hotkeys_task(void) {
             menu_combo_consumed = 1;
         }
 
-        if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled && !netplay_is_active()) {
+        if (l2_now && !prev_l2 && session_settings.hotkey_quickload_enabled && state_saves_allowed()) {
             if (!state_saves_supported()) {
                 pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
             } else if (gamestate_quicksave_exists && !gamestate_metadata_matches(&gamestate_quicksave)) {
@@ -226,7 +226,7 @@ int hotkeys_task(void) {
         }
 
         if (start_now && !prev_start && session_settings.hotkey_quit_enabled) {
-            if (!netplay_is_active() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
+            if (state_saves_allowed() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
             LOG_INFO(mux_module, "Quit (hotkey)");
             quit_requested = 1;
             input_bridge_suppress(mux_input_start);

@@ -13,6 +13,8 @@
 #include "../core/runahead.h"
 #include "../coreinfo/coreinfo.h"
 #include "../cheevo/cheevo.h"
+#include "../link/link.h"
+#include "../netplay/netplay.h"
 #include "../ui/ui_loading.h"
 #include "core_state.h"
 #include "state_format.h"
@@ -33,12 +35,16 @@ int state_saves_supported(void) {
     return core_state_available();
 }
 
+int state_saves_allowed(void) {
+    return core_state_available() && !netplay_is_active() && link_get_mode() == link_mode_off;
+}
+
 int state_saves_warmup_frames(void) {
     return saves_warmup_frames;
 }
 
 int state_save(const char *path) {
-    if (!core_state_available() || !path) return -1;
+    if (!state_saves_allowed() || !path) return -1;
 
     if (state_flush() != 0) LOG_WARN(mux_module, "The previous save-state write did not complete successfully");
 
@@ -100,7 +106,7 @@ int state_save(const char *path) {
 }
 
 int state_load(const char *path, const int show_message) {
-    if (!core_state_available()) return -1;
+    if (!state_saves_allowed()) return -1;
     if (state_flush() != 0) {
         LOG_ERROR(mux_module, "Cannot load '%s' because its pending state write failed", path);
         return -1;
