@@ -410,7 +410,8 @@ static void status_tick(lv_timer_t *timer) {
 
     if (ticks % 4u == 0 && device.board.has_network && config.visual.network) network_task(timer);
     if (ticks % 4u == 2 && device.board.has_bluetooth && config.visual.bluetooth) bluetooth_task(timer);
-    if (ticks % 8u == 3 && config.visual.clock) datetime_task(timer);
+
+    if (config.visual.clock) datetime_task(timer);
     if (ticks % 8u == 7 && config.visual.battery) battery_capacity_task(timer);
 }
 

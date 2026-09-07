@@ -1,3 +1,4 @@
+#include <string.h>
 #include <time.h>
 #include <common/display/datetime.h>
 #include <common/runtime/init.h>
@@ -40,5 +41,9 @@ char *get_datetime(void) {
 
 void datetime_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
-    if (ui_lbl_datetime) lv_label_set_text(ui_lbl_datetime, get_datetime());
+    if (!ui_lbl_datetime) return;
+
+    const char *datetime = get_datetime();
+    const char *displayed = lv_label_get_text(ui_lbl_datetime);
+    if (!displayed || strcmp(displayed, datetime)) lv_label_set_text(ui_lbl_datetime, datetime);
 }
