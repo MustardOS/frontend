@@ -14,30 +14,28 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-enum { row_enabled = 0, row_status, row_interface, row_address, row_peer_address, row_peer_mac };
+enum { row_status = 0, row_interface, row_address, row_mac, row_peer_address, row_peer_mac };
 
 struct link_report {
     char status[LINK_FIELD_MAX];
     char interface[LINK_FIELD_MAX];
     char address[LINK_FIELD_MAX];
+    char mac[LINK_FIELD_MAX];
     char peer_address[LINK_FIELD_MAX];
     char peer_mac[LINK_FIELD_MAX];
 };
 
 static struct link_report report;
-static int settings_changed = 0;
-static int nav_action_shown = -1;
-
-static mux_dialogue save_dlg;
+static int details_visible = -1;
 
 static void store_field(const char *key, const char *value) {
     struct {
         const char *key;
         char *target;
     } fields[] = {
-        {"status", report.status},     {"interface", report.interface},
-        {"address", report.address},   {"peer_address", report.peer_address},
-        {"peer_mac", report.peer_mac},
+        {"status", report.status},           {"interface", report.interface},
+        {"address", report.address},         {"mac", report.mac},
+        {"peer_address", report.peer_address}, {"peer_mac", report.peer_mac},
     };
 
     for (size_t i = 0; i < A_SIZE(fields); i++) {
@@ -69,7 +67,6 @@ static void read_link_report(void) {
 }
 
 static const char *status_label(void) {
-    if (!config.settings.network.link) return lang.generic.disabled;
     if (strcmp(report.status, "paired") == 0) return lang.muxlink.status_paired;
     if (strcmp(report.status, "waiting") == 0) return lang.muxlink.status_waiting;
     if (strcmp(report.status, "unplugged") == 0) return lang.muxlink.status_unplugged;
@@ -86,40 +83,50 @@ static void set_value(const int row, const char *text) {
     lv_label_set_text(ui_objects_value[row], text);
 }
 
+static void set_details_visible(const int visible) {
+    if (details_visible == visible) return;
+
+    if (visible) {
+        SHOW_VALUE_ITEM(link, address);
+        SHOW_VALUE_ITEM(link, mac);
+        SHOW_VALUE_ITEM(link, peer_address);
+        SHOW_VALUE_ITEM(link, peer_mac);
+    } else {
+        HIDE_VALUE_ITEM(link, address);
+        HIDE_VALUE_ITEM(link, mac);
+        HIDE_VALUE_ITEM(link, peer_address);
+        HIDE_VALUE_ITEM(link, peer_mac);
+    }
+
+    details_visible = visible;
+    if (current_item_index >= ui_count_static) {
+        current_item_index = row_status;
+        lv_group_focus_obj(ui_objects[row_status]);
+        lv_group_focus_obj(ui_objects_value[row_status]);
+        lv_group_focus_obj(ui_objects_glyph[row_status]);
+        lv_group_focus_obj(ui_objects_panel[row_status]);
+    }
+
+    lv_obj_update_layout(ui_pnl_content);
+    nav_refresh_list_overflow(ui_pnl_content);
+    nav_moved = 1;
+}
+
 static void refresh_values(void) {
     read_link_report();
 
-    const int paired = config.settings.network.link && strcmp(report.status, "paired") == 0;
+    const int paired = strcmp(report.status, "paired") == 0;
     const int interface_available = paired || strcmp(report.status, "waiting") == 0;
 
-    set_value(row_enabled, config.settings.network.link ? lang.generic.enabled : lang.generic.disabled);
+    set_details_visible(paired);
     set_value(row_status, status_label());
     set_value(row_interface, interface_available ? field_or_dash(report.interface) : lang.muxlink.connection_none);
-    set_value(row_address, paired ? field_or_dash(report.address) : lang.generic.unknown);
-    set_value(row_peer_address, paired ? field_or_dash(report.peer_address) : lang.generic.unknown);
-    set_value(row_peer_mac, paired ? field_or_dash(report.peer_mac) : lang.generic.unknown);
-}
-
-static void refresh_nav(void) {
-    const int actionable = current_item_index == row_enabled;
-
-    if (nav_action_shown == actionable) return;
-    nav_action_shown = actionable;
-
-    nav_show_a(actionable, lang.generic.change);
-}
-
-static void cycle_enabled(void) {
-    config.settings.network.link = !config.settings.network.link;
-    settings_changed = 1;
-
-    play_sound(snd_navigate);
-    refresh_values();
-}
-
-static void save_settings(void) {
-    if (write_text_to_file_atomic(CONF_CONFIG_PATH "settings/network/link", INT, config.settings.network.link))
-        settings_changed = 0;
+    if (paired) {
+        set_value(row_address, field_or_dash(report.address));
+        set_value(row_mac, field_or_dash(report.mac));
+        set_value(row_peer_address, field_or_dash(report.peer_address));
+        set_value(row_peer_mac, field_or_dash(report.peer_mac));
+    }
 }
 
 static void leave_module(void) {
@@ -129,25 +136,12 @@ static void leave_module(void) {
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
-        {"enabled", lang.muxlink.help.enabled},          {"status", lang.muxlink.help.status},
-        {"interface", lang.muxlink.help.interface},      {"address", lang.muxlink.help.address},
+        {"status", lang.muxlink.help.status},            {"interface", lang.muxlink.help.interface},
+        {"address", lang.muxlink.help.address},          {"mac", lang.muxlink.help.mac},
         {"peeraddress", lang.muxlink.help.peer_address}, {"peermac", lang.muxlink.help.peer_mac},
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
-}
-
-static void handle_confirm_dialogue(void);
-
-static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
-
-    if (dialogue_active(&save_dlg)) {
-        handle_confirm_dialogue();
-        return;
-    }
-
-    if (current_item_index == row_enabled) cycle_enabled();
 }
 
 static void handle_b(void) {
@@ -158,74 +152,24 @@ static void handle_b(void) {
         return;
     }
 
-    if (dialogue_active(&save_dlg)) {
-        dialogue_mark_cancelled(&save_dlg);
-        dialogue_dismiss(&save_dlg);
-        return;
-    }
-
     play_sound(snd_back);
-
-    if (settings_changed) {
-        dialogue_open(&save_dlg, &theme);
-        return;
-    }
-
     leave_module();
-}
-
-static void handle_confirm_dialogue(void) {
-    const mux_unsaved_opt opt = (mux_unsaved_opt) save_dlg.selected;
-    dialogue_dismiss(&save_dlg);
-
-    if (opt == mux_unsaved_nope) return;
-    if (opt == mux_unsaved_save) save_settings();
-
-    leave_module();
-}
-
-static void handle_left(void) {
-    if (dialogue_active(&save_dlg)) {
-        dialogue_handle_dpad(&save_dlg, &theme, -1, swap_axis);
-        return;
-    }
-    if (current_item_index == row_enabled) cycle_enabled();
-}
-
-static void handle_right(void) {
-    if (dialogue_active(&save_dlg)) {
-        dialogue_handle_dpad(&save_dlg, &theme, +1, swap_axis);
-        return;
-    }
-    if (current_item_index == row_enabled) cycle_enabled();
 }
 
 static void handle_up(void) {
-    if (dialogue_active(&save_dlg)) {
-        dialogue_handle_dpad(&save_dlg, &theme, -1, !swap_axis);
-        return;
-    }
     handle_list_nav_up();
 }
 
 static void handle_down(void) {
-    if (dialogue_active(&save_dlg)) {
-        dialogue_handle_dpad(&save_dlg, &theme, +1, !swap_axis);
-        return;
-    }
     handle_list_nav_down();
 }
 
 static void handle_up_hold(void) {
-    if (!dialogue_active(&save_dlg)) handle_list_nav_up_hold();
+    handle_list_nav_up_hold();
 }
 
 static void handle_down_hold(void) {
-    if (!dialogue_active(&save_dlg)) handle_list_nav_down_hold();
-}
-
-static void handle_start(void) {
-    if (dialogue_active(&save_dlg)) handle_confirm_dialogue();
+    handle_list_nav_down_hold();
 }
 
 static void handle_x(void) {
@@ -233,7 +177,7 @@ static void handle_x(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || dialogue_active(&save_dlg)) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -246,26 +190,24 @@ static void adjust_panels(void) {
 }
 
 static void init_navigation_group(void) {
-    INIT_VALUE_ITEM(-1, link, enabled, lang.muxlink.enabled, "enabled", "");
     INIT_VALUE_ITEM(-1, link, status, lang.muxlink.status, "status", "");
     INIT_VALUE_ITEM(-1, link, interface, lang.muxlink.interface, "interface", "");
     INIT_VALUE_ITEM(-1, link, address, lang.muxlink.address, "address", "");
+    INIT_VALUE_ITEM(-1, link, mac, lang.muxlink.mac, "mac", "");
     INIT_VALUE_ITEM(-1, link, peer_address, lang.muxlink.peer_address, "peeraddress", "");
     INIT_VALUE_ITEM(-1, link, peer_mac, lang.muxlink.peer_mac, "peermac", "");
 
-    lv_obj_set_user_data(ui_lbl_enabled_link, "enabled");
     lv_obj_set_user_data(ui_lbl_status_link, "status");
     lv_obj_set_user_data(ui_lbl_interface_link, "interface");
     lv_obj_set_user_data(ui_lbl_address_link, "address");
+    lv_obj_set_user_data(ui_lbl_mac_link, "mac");
     lv_obj_set_user_data(ui_lbl_peer_address_link, "peeraddress");
     lv_obj_set_user_data(ui_lbl_peer_mac_link, "peermac");
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                  {ui_lbl_nav_a, lang.generic.change, 0},
-                                  {ui_lbl_nav_b_glyph, "", 0},
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
 
@@ -273,7 +215,6 @@ static void init_navigation_group(void) {
 
     gen_step_movement(0, +1, 2, 0, 0);
     nav_refresh_list_overflow(ui_pnl_content);
-    refresh_nav();
 
     nav_moved = 1;
 }
@@ -287,16 +228,11 @@ static void init_elements(void) {
 static void ui_refresh_task(lv_timer_t *timer) {
     ui_gen_refresh_task(timer);
 
-    if (dialogue_active(&save_dlg)) return;
-
     refresh_values();
-    refresh_nav();
 }
 
 int muxlink_main(void) {
-    settings_changed = 0;
-    nav_action_shown = -1;
-    save_dlg.active = 0;
+    details_visible = -1;
 
     init_module(__func__);
     init_theme(1, 0);
@@ -313,25 +249,16 @@ int muxlink_main(void) {
     init_fonts();
     init_navigation_group();
 
-    dialogue_init_unsaved(
-        &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,
-        lang.generic.select, lang.generic.cancel
-    );
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts =
         {.swap_axis = theme.misc.navigation_type == 1,
          .press_handler =
              {
-                 [mux_input_a] = handle_a,
                  [mux_input_b] = handle_b,
                  [mux_input_x] = handle_x,
                  [mux_input_dpad_up] = handle_up,
                  [mux_input_dpad_down] = handle_down,
-                 [mux_input_dpad_left] = handle_left,
-                 [mux_input_dpad_right] = handle_right,
-                 [mux_input_start] = handle_start,
              },
          .release_handler =
              {

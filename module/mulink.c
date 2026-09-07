@@ -12,7 +12,6 @@
 #include <netpacket/packet.h>
 #include <poll.h>
 #include <signal.h>
-#include <sys/inotify.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,9 +38,6 @@
 #define PEER_TIMEOUT_MS 15000
 
 #define SYS_NET "/sys/class/net"
-
-#define LINK_SETTING_DIR  CONF_CONFIG_PATH "settings/network"
-#define LINK_SETTING_FILE LINK_SETTING_DIR "/link"
 
 static volatile sig_atomic_t running = 1;
 
@@ -320,31 +316,6 @@ static int receive_beacon(const int fd, const uint8_t *self_mac, uint8_t *peer_m
     }
 }
 
-static int link_is_enabled(void) {
-    char value[32];
-    if (read_small_file(LINK_SETTING_FILE, value, sizeof(value)) != 0) return 1;
-
-    return strtol(value, NULL, 10) != 0;
-}
-
-static int open_setting_watch(void) {
-    const int fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
-    if (fd < 0) return -1;
-
-    if (inotify_add_watch(fd, LINK_SETTING_DIR, IN_CLOSE_WRITE | IN_MOVED_TO) < 0) {
-        close(fd);
-        return -1;
-    }
-
-    return fd;
-}
-
-static void drain_watch(const int fd) {
-    uint8_t buffer[sizeof(struct inotify_event) + NAME_MAX + 1];
-    while (read(fd, buffer, sizeof(buffer)) > 0) {
-    }
-}
-
 static int open_netlink_socket(void) {
     const int fd = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC | SOCK_NONBLOCK, NETLINK_ROUTE);
     if (fd < 0) return -1;
@@ -378,21 +349,17 @@ int main(void) {
         return 1;
     }
 
-    const int watch_fd = open_setting_watch();
-
     struct link_state state = {0};
     int beacon_fd = -1;
     int carrier = 0;
     int rescan = 1;
-    int enabled = 1;
 
     while (running) {
         if (rescan) {
             rescan = 0;
-            enabled = link_is_enabled();
 
             char iface[IF_NAMESIZE] = "";
-            const int found = enabled ? find_wired_interface(control_fd, iface, sizeof(iface)) : 0;
+            const int found = find_wired_interface(control_fd, iface, sizeof(iface));
 
             if (strcmp(iface, state.iface) != 0 || found != carrier) {
                 if (beacon_fd >= 0) {
@@ -416,21 +383,13 @@ int main(void) {
             }
         }
 
-        struct pollfd watch[3];
+        struct pollfd watch[2];
         int count = 0;
 
         const int netlink_slot = count;
         watch[count].fd = netlink_fd;
         watch[count].events = POLLIN;
         count++;
-
-        int watch_slot = -1;
-        if (watch_fd >= 0) {
-            watch_slot = count;
-            watch[count].fd = watch_fd;
-            watch[count].events = POLLIN;
-            count++;
-        }
 
         int beacon_slot = -1;
         if (beacon_fd >= 0) {
@@ -446,12 +405,6 @@ int main(void) {
         const int ready = poll(watch, (nfds_t) count, timeout);
         if (ready < 0 && errno != EINTR) break;
         if (!running) break;
-
-        if (watch_slot >= 0 && watch[watch_slot].revents & POLLIN) {
-            drain_watch(watch_fd);
-            rescan = 1;
-            continue;
-        }
 
         if (watch[netlink_slot].revents & POLLIN) {
             drain_netlink(netlink_fd);
@@ -500,7 +453,6 @@ int main(void) {
     }
 
     if (beacon_fd >= 0) close(beacon_fd);
-    if (watch_fd >= 0) close(watch_fd);
     close(netlink_fd);
     close(control_fd);
     remove(LINK_STATE_FILE);

@@ -209,7 +209,6 @@ struct mux_config {
             char proxy_server[MAX_BUFFER_SIZE];
             char proxy_noproxy[MAX_BUFFER_SIZE];
             int16_t system_dns;
-            int16_t link;
         } network;
         struct {
             int16_t gen_alpha;

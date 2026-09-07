@@ -1347,10 +1347,10 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char enabled[MAX_BUFFER_SIZE];
         char status[MAX_BUFFER_SIZE];
         char interface[MAX_BUFFER_SIZE];
         char address[MAX_BUFFER_SIZE];
+        char mac[MAX_BUFFER_SIZE];
         char peer_address[MAX_BUFFER_SIZE];
         char peer_mac[MAX_BUFFER_SIZE];
         char status_absent[MAX_BUFFER_SIZE];
@@ -1359,10 +1359,10 @@ struct mux_lang {
         char status_paired[MAX_BUFFER_SIZE];
         char connection_none[MAX_BUFFER_SIZE];
         struct {
-            char enabled[MAX_BUFFER_SIZE];
             char status[MAX_BUFFER_SIZE];
             char interface[MAX_BUFFER_SIZE];
             char address[MAX_BUFFER_SIZE];
+            char mac[MAX_BUFFER_SIZE];
             char peer_address[MAX_BUFFER_SIZE];
             char peer_mac[MAX_BUFFER_SIZE];
         } help;

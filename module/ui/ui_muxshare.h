@@ -688,10 +688,10 @@
 #define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS
 
 #define LINK_ELEMENTS                                                                                                  \
-    LINK(enabled, "enabled")                                                                                           \
     LINK(status, "status")                                                                                             \
     LINK(interface, "interface")                                                                                       \
     LINK(address, "address")                                                                                           \
+    LINK(mac, "mac")                                                                                                   \
     LINK(peer_address, "peeraddress")                                                                                  \
     LINK(peer_mac, "peermac")
 

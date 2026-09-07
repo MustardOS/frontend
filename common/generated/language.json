@@ -1109,10 +1109,11 @@
     "The address of the device at the other end of the cable.": "The address of the device at the other end of the cable.",
     "The address this device answers to over the cable.\n\nIt is chosen automatically and only used between the two devices.": "The address this device answers to over the cable.\n\nIt is chosen automatically and only used between the two devices.",
     "The hardware identifier of the adapter at the other end, handy for telling two devices apart.": "The hardware identifier of the adapter at the other end, handy for telling two devices apart.",
+    "The hardware identifier of this device's adapter, handy for comparing it with the device at the other end.": "The hardware identifier of this device's adapter, handy for comparing it with the device at the other end.",
     "The network adapter the cable is plugged into.": "The network adapter the cable is plugged into.",
     "This Device": "This Device",
-    "Where things are up to.\n\nA cable needs to be connected at both ends, and the other device needs this turned on as well.": "Where things are up to.\n\nA cable needs to be connected at both ends, and the other device needs this turned on as well.",
-    "Whether two devices joined by a network cable should set themselves up automatically.\n\nWi-Fi is left alone either way, so the internet keeps working as normal.": "Whether two devices joined by a network cable should set themselves up automatically.\n\nWi-Fi is left alone either way, so the internet keeps working as normal."
+    "This Device ID": "This Device ID",
+    "Where things are up to.\n\nA cable needs to be connected at both ends and Direct Link will set itself up automatically.": "Where things are up to.\n\nA cable needs to be connected at both ends and Direct Link will set itself up automatically."
   },
   "muxlogo": {
     "Add images to the MUOS/logo folder on your current storage to choose from them here.": "Add images to the MUOS/logo folder on your current storage to choose from them here.",
