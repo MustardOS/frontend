@@ -37,6 +37,8 @@ static enum web_field editing_field = web_field_none;
 static int main_service_index;
 static int fields_modified;
 static int editing_enabled;
+static int editing_auth;
+static int auth_row_index = -1;
 static char editing_port[6];
 static char editing_secondary_port[6];
 static char editing_username[33];
@@ -46,7 +48,8 @@ static char editing_local_name[64];
 static mux_dialogue save_dlg;
 
 static const char *service_key(const enum web_service service) {
-    static const char *keys[web_service_count] = {"mdns", "landing", "sshd", "sftpgo", "ttyd", "syncthing", "tailscaled"};
+    static const char *keys[web_service_count] = {"mdns", "landing",   "sshd",      "sftpgo",
+                                                  "ttyd", "syncthing", "tailscaled"};
     return service >= 0 && service < web_service_count ? keys[service] : "";
 }
 
@@ -134,6 +137,12 @@ static int service_has_login(const enum web_service service) {
     return service == web_service_ttyd;
 }
 
+/* Only the dashboard can change anything on the device, so it is the only service that
+   has something to authenticate. */
+static int service_has_auth(const enum web_service service) {
+    return service == web_service_landing;
+}
+
 static int service_has_local_name(const enum web_service service) {
     return service == web_service_mdns;
 }
@@ -219,6 +228,7 @@ static void load_service_values(void) {
     const char *port = service_port(selected_service);
 
     editing_enabled = enabled ? *enabled : 0;
+    editing_auth = config.web.landing_auth != 0;
     snprintf(editing_port, sizeof(editing_port), "%s", port && *port ? port : service_default_port(selected_service));
     snprintf(
         editing_secondary_port, sizeof(editing_secondary_port), "%s",
@@ -234,6 +244,8 @@ static void load_service_values(void) {
 static int service_changed(void) {
     const int16_t *enabled = service_enabled(selected_service);
     if (enabled && editing_enabled != (*enabled != 0)) return 1;
+
+    if (service_has_auth(selected_service) && editing_auth != (config.web.landing_auth != 0)) return 1;
 
     const char *port = service_port(selected_service);
     if (port && strcmp(editing_port, *port ? port : service_default_port(selected_service)) != 0) return 1;
@@ -271,8 +283,8 @@ static void show_detail_view(const enum web_service service) {
         set_row(count++, lang.muxwebserv.local_name, "local_name", local_address, "local_name");
     }
     if (service_port(service)) {
-        const int web_port = service == web_service_landing || service == web_service_sftpgo
-                             || service == web_service_syncthing;
+        const int web_port =
+            service == web_service_landing || service == web_service_sftpgo || service == web_service_syncthing;
         set_row(
             count++, web_port ? lang.muxwebserv.web_port : lang.muxwebserv.port, "port", editing_port,
             web_port ? "web_port" : "port"
@@ -289,6 +301,15 @@ static void show_detail_view(const enum web_service service) {
         set_row(
             count++, lang.muxwebserv.password, "password", editing_password[0] ? "********" : lang.muxwebserv.not_set,
             "password"
+        );
+    }
+
+    auth_row_index = -1;
+    if (service_has_auth(service)) {
+        auth_row_index = count;
+        set_row(
+            count++, lang.muxwebserv.authentication, "authentication",
+            editing_auth ? lang.generic.enabled : lang.generic.disabled, "authentication"
         );
     }
 
@@ -372,6 +393,11 @@ static int save_service(void) {
     int16_t *enabled = service_enabled(selected_service);
     if (enabled) *enabled = editing_enabled;
 
+    if (service_has_auth(selected_service)) {
+        write_text_to_file_atomic(CONF_CONFIG_PATH "web/landing_auth", INT, editing_auth);
+        config.web.landing_auth = editing_auth;
+    }
+
     char *port = service_port(selected_service);
     if (port) {
         snprintf(path, sizeof(path), CONF_CONFIG_PATH "web/%s_port", key);
@@ -427,10 +453,10 @@ static void show_help(void) {
     }
 
     const struct help_msg help_messages[] = {
-        {"enabled", lang.muxwebserv.help.service},   {"port", lang.muxwebserv.help.port},
-        {"web_port", lang.muxwebserv.help.web_port}, {"sftp_port", lang.muxwebserv.help.sftp_port},
-        {"username", lang.muxwebserv.help.username}, {"password", lang.muxwebserv.help.password},
-        {"local_name", lang.muxwebserv.help.local_name}
+        {"enabled", lang.muxwebserv.help.service},       {"port", lang.muxwebserv.help.port},
+        {"web_port", lang.muxwebserv.help.web_port},     {"sftp_port", lang.muxwebserv.help.sftp_port},
+        {"username", lang.muxwebserv.help.username},     {"password", lang.muxwebserv.help.password},
+        {"local_name", lang.muxwebserv.help.local_name}, {"authentication", lang.muxwebserv.help.authentication}
     };
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
@@ -438,6 +464,13 @@ static void show_help(void) {
 static void cycle_enabled(void) {
     editing_enabled = !editing_enabled;
     lv_label_set_text(ui_objects_value[0], editing_enabled ? lang.generic.enabled : lang.generic.disabled);
+    play_sound(snd_option);
+    fields_modified = service_changed();
+}
+
+static void cycle_auth(void) {
+    editing_auth = !editing_auth;
+    lv_label_set_text(ui_objects_value[auth_row_index], editing_auth ? lang.generic.enabled : lang.generic.disabled);
     play_sound(snd_option);
     fields_modified = service_changed();
 }
@@ -504,7 +537,10 @@ static void open_editor(const enum web_field field) {
     const int numeric = field == web_field_port || field == web_field_secondary_port;
     lv_textarea_set_password_mode(ui_txt_entry_webserv, field == web_field_password);
     lv_textarea_set_max_length(
-        ui_txt_entry_webserv, numeric ? 5 : field == web_field_local_name ? 63 : field == web_field_username ? 32 : 128
+        ui_txt_entry_webserv, numeric                         ? 5
+                              : field == web_field_local_name ? 63
+                              : field == web_field_username   ? 32
+                                                              : 128
     );
 
     if (numeric) {
@@ -521,9 +557,9 @@ static void open_editor(const enum web_field field) {
         lv_obj_add_state(num_entry, LV_STATE_DISABLED);
         key_show = 1;
         lv_textarea_set_text(
-            ui_txt_entry_webserv,
-            field == web_field_local_name ? editing_local_name : field == web_field_username ? editing_username
-                                                                                             : editing_password
+            ui_txt_entry_webserv, field == web_field_local_name ? editing_local_name
+                                  : field == web_field_username ? editing_username
+                                                                : editing_password
         );
     }
 
@@ -541,6 +577,11 @@ static void handle_confirm(void) {
 
     if (current_item_index == 0) {
         cycle_enabled();
+        return;
+    }
+
+    if (auth_row_index >= 0 && current_item_index == auth_row_index) {
+        cycle_auth();
         return;
     }
 

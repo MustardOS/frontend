@@ -365,6 +365,7 @@ struct mux_config {
         int16_t ttyd;
         int16_t syncthing;
         int16_t tailscaled;
+        int16_t landing_auth;
         char mdns_name[MAX_BUFFER_SIZE];
         char landing_port[MAX_BUFFER_SIZE];
         char sshd_port[MAX_BUFFER_SIZE];

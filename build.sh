@@ -460,7 +460,6 @@ GEN_THIRDPARTY() {
 	GEN_TMP="$GEN_OUT.tmp"
 
 	GEN_ROWS=$(
-		printf '%s\t%s\n' "darkhttpd" "1.17"
 		printf '%s\t%s\n' "FFmpeg" "$(GEN_EXTERNAL_VERSION ffmpeg)"
 		printf '%s\t%s\n' "json.c" ""
 		printf '%s\t%s\n' "libarchive" "$(GEN_EXTERNAL_VERSION libarchive)"

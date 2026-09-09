@@ -343,6 +343,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "web", "ttyd", CFG_OFF(web.ttyd), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "syncthing", CFG_OFF(web.syncthing), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "tailscaled", CFG_OFF(web.tailscaled), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "landing_auth", CFG_OFF(web.landing_auth), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "mdns_name", CFG_OFF(web.mdns_name), 2, {.s = "muos"}},
     {CONF_CONFIG_PATH "web", "landing_port", CFG_OFF(web.landing_port), 2, {.s = "80"}},
     {CONF_CONFIG_PATH "web", "sshd_port", CFG_OFF(web.sshd_port), 2, {.s = "22"}},

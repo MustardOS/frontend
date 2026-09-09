@@ -510,6 +510,7 @@ struct mux_lang {
         char services[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char link[MAX_BUFFER_SIZE];
+        char webcode[MAX_BUFFER_SIZE];
         struct {
             char bluetooth[MAX_BUFFER_SIZE];
             char net_adv[MAX_BUFFER_SIZE];
@@ -517,6 +518,7 @@ struct mux_lang {
             char services[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char link[MAX_BUFFER_SIZE];
+            char webcode[MAX_BUFFER_SIZE];
         } help;
     } muxconnect;
 
@@ -3406,6 +3408,7 @@ struct mux_lang {
         char username[MAX_BUFFER_SIZE];
         char password[MAX_BUFFER_SIZE];
         char local_name[MAX_BUFFER_SIZE];
+        char authentication[MAX_BUFFER_SIZE];
         char not_set[MAX_BUFFER_SIZE];
         char invalid_port[MAX_BUFFER_SIZE];
         char invalid_local_name[MAX_BUFFER_SIZE];
@@ -3426,8 +3429,19 @@ struct mux_lang {
             char username[MAX_BUFFER_SIZE];
             char password[MAX_BUFFER_SIZE];
             char local_name[MAX_BUFFER_SIZE];
+            char authentication[MAX_BUFFER_SIZE];
         } help;
     } muxwebserv;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char expires[MAX_BUFFER_SIZE];
+        char no_auth[MAX_BUFFER_SIZE];
+        char no_service[MAX_BUFFER_SIZE];
+        char no_address[MAX_BUFFER_SIZE];
+        char unavailable[MAX_BUFFER_SIZE];
+    } muxwebcode;
 };
 
 void load_lang(struct mux_lang *lang);

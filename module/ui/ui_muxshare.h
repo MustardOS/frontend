@@ -212,6 +212,7 @@
     CONNECT(proxy, "net_proxy")                                                                                        \
     CONNECT(link, "link")                                                                                              \
     CONNECT(services, "service")                                                                                       \
+    CONNECT(webcode, "webcode")                                                                                        \
     CONNECT(bluetooth, "bluetooth")
 
 #define CUSTOM_ELEMENTS                                                                                                \

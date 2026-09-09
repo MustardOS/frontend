@@ -6,11 +6,13 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-MODULE_DAEMONS = mudns mulink
+MODULE_DAEMONS = mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
 TOOLS = muvarctl murgb mususpend muverify
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
+
+muweb_SRC = common/base/totp.c common/content/lookup.c
 
 muvarctl_SRC = common/config/var_store.c
 
@@ -37,7 +39,7 @@ CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)
 CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
-.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) darkhttpd cursor prebuild vendor-external generated config-guard clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro
 
 .DEFAULT_GOAL := all
@@ -129,14 +131,8 @@ $(MODULES):
 $(MODULE_DAEMONS):
 	@echo "Building Daemon: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c -o $(BIN_DIR)/$@ \
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
-
-darkhttpd:
-	@echo "Building Web Server: $@"
-	@mkdir -p $(BIN_DIR)
-	$(VERBOSE)$(CC) $(filter-out -D_GNU_SOURCE,$(CFLAGS)) vendor/darkhttpd/darkhttpd.c -o $(BIN_DIR)/$@ \
-		$(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 $(INPUT_DAEMON):
 	@echo "Building Input Service: $@"

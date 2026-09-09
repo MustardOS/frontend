@@ -6,7 +6,7 @@ CFLAGS   = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I.. -I../vendor \
 LDFLAGS  = $(COMMON_LIBS) $(COMMON_EXTERNAL_LDFLAGS) $(LIB_LDFLAGS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
 BASE_SRCS = \
-    base/randname.c base/strpath.c base/strutil.c base/util.c
+    base/randname.c base/strpath.c base/strutil.c base/totp.c base/util.c
 
 RUNTIME_SRCS = \
     runtime/debug.c runtime/exec.c runtime/init.c runtime/log.c runtime/perf.c \

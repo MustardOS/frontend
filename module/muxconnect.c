@@ -45,6 +45,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, connect, proxy, lang.muxconnect.proxy, "net_proxy", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, link, lang.muxconnect.link, "link", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, services, lang.muxconnect.services, "service", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, webcode, lang.muxconnect.webcode, "webcode", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, bluetooth, lang.muxconnect.bluetooth, "bluetooth", NULL, 0);
 
     reset_ui_groups();
@@ -56,6 +57,7 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(connect, proxy);
         HIDE_OPTION_ITEM(connect, link);
         HIDE_OPTION_ITEM(connect, services);
+        HIDE_OPTION_ITEM(connect, webcode);
     }
 
     if (!device.board.has_bluetooth) {
@@ -102,6 +104,7 @@ static void handle_a(void) {
         {"net_proxy", &kiosk.config.proxy, menu_general, visible_network_opt},
         {"link", &kiosk.config.network, menu_general, visible_network_opt},
         {"webserv", &kiosk.config.web_services, menu_general, visible_network_opt},
+        {"webcode", &kiosk.config.web_services, menu_general, visible_network_opt},
         {"btall", &kiosk_pass, menu_general, visible_bluetooth_opt}
     };
 

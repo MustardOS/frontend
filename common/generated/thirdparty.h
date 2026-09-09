@@ -8,7 +8,6 @@ struct third_party_lib {
 };
 
 static const struct third_party_lib third_party_libs[] = {
-    {"darkhttpd", "1.17"},
     {"FFmpeg", "9.0.1"},
     {"json.c", "-"},
     {"libarchive", "3.8.9"},

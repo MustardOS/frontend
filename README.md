@@ -176,6 +176,7 @@ rules. Its Makefile uses explicit source groups so adding a file does not silent
 * `murgb`: RGB LED and MCU controller daemon
 * `musplash`: Standalone PNG splash screen
 * `muwarn`: First Install Disclaimer Message
+* `muweb`: Landing page web server, catalogue and save management API
 * `muxcharge`: Charging Information Screen
 * `muxfrontend`: Main Frontend Specific Runner
 * `muxmessage`: Information and Progress Screen
@@ -256,14 +257,6 @@ rules. Its Makefile uses explicit source groups so adding a file does not silent
 ## Third Party Libraries
 
 ### Bundled In This Repository
-
-#### [darkhttpd](https://github.com/emikulic/darkhttpd)
-
-Small static web server used for the on-device MustardOS landing page.
-
-- Version: 1.17
-- License: ISC
-- Location: `vendor/darkhttpd/`
 
 #### [LVGL](https://github.com/lvgl/lvgl)
 

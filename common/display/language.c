@@ -579,12 +579,23 @@ static const lang_field lang_fields[] = {
     {"muxconnect", LANG_OFF(muxconnect.link), lang_specific, "Direct Link"},
     {"muxconnect", LANG_OFF(muxconnect.net_adv), lang_specific, "Network Settings"},
     {"muxconnect", LANG_OFF(muxconnect.proxy), lang_specific, "Proxy Settings"},
+    {"muxconnect", LANG_OFF(muxconnect.webcode), lang_specific, "Web Dashboard Code"},
     {"muxconnect", LANG_OFF(muxconnect.help.services), lang_specific, "Web based services such as file transfer, a terminal and remote access.\n\nThese need an active network connection to be of any use."},
     {"muxconnect", LANG_OFF(muxconnect.help.network), lang_specific, "Join a Wi-Fi network, either by choosing one nearby or from a profile you have saved."},
     {"muxconnect", LANG_OFF(muxconnect.help.link), lang_specific, "Join two devices together with a network cable between them for playing together.\n\nWi-Fi carries on as normal for everything else."},
     {"muxconnect", LANG_OFF(muxconnect.help.net_adv), lang_specific, "The finer network settings, covering DNS, hostname and what happens at boot."},
     {"muxconnect", LANG_OFF(muxconnect.help.proxy), lang_specific, "Sends outbound traffic through a proxy.\n\nOnly needed on networks that require one, such as some school or workplace connections."},
     {"muxconnect", LANG_OFF(muxconnect.help.bluetooth), lang_specific, "Pair, connect and manage Bluetooth devices such as controllers and headphones."},
+    {"muxconnect", LANG_OFF(muxconnect.help.webcode), lang_specific, "Shows the code a browser needs before it can change anything through the Web Dashboard.\n\nThe code is only ever shown here, so whoever is managing the device has to be holding it."},
+
+    // muxwebcode
+    {"muxwebcode", LANG_OFF(muxwebcode.title), lang_specific, "Web Dashboard Code"},
+    {"muxwebcode", LANG_OFF(muxwebcode.overview), lang_specific, "The code the Web Dashboard asks for before it will upload or delete anything. It changes every thirty seconds, and is only ever shown on this screen."},
+    {"muxwebcode", LANG_OFF(muxwebcode.expires), lang_specific, "Changes in %d seconds"},
+    {"muxwebcode", LANG_OFF(muxwebcode.no_auth), lang_specific, "Authentication is turned off, so the Web Dashboard cannot change anything and needs no code."},
+    {"muxwebcode", LANG_OFF(muxwebcode.no_service), lang_specific, "Turn the Web Dashboard on to use a code."},
+    {"muxwebcode", LANG_OFF(muxwebcode.no_address), lang_specific, "No network address yet"},
+    {"muxwebcode", LANG_OFF(muxwebcode.unavailable), lang_specific, "The device code could not be read."},
 
     // muxbtall
     {"muxbtall", LANG_OFF(muxbtall.title), lang_specific, "Bluetooth"},
@@ -3091,7 +3102,7 @@ static const lang_field lang_fields[] = {
     {"muxwebserv", LANG_OFF(muxwebserv.title), lang_specific, "Web Services"},
     {"muxwebserv", LANG_OFF(muxwebserv.overview), lang_specific, "Manage each network service and its connection settings. Each service runs only while enabled."},
     {"muxwebserv", LANG_OFF(muxwebserv.mdns), lang_specific, "Local DNS Resolver"},
-    {"muxwebserv", LANG_OFF(muxwebserv.landing), lang_specific, "Landing Page"},
+    {"muxwebserv", LANG_OFF(muxwebserv.landing), lang_specific, "Web Dashboard"},
     {"muxwebserv", LANG_OFF(muxwebserv.ttyd), lang_specific, "Virtual Terminal"},
     {"muxwebserv", LANG_OFF(muxwebserv.syncthing), lang_specific, "Syncthing"},
     {"muxwebserv", LANG_OFF(muxwebserv.sshd), lang_specific, "Secure Shell"},
@@ -3104,13 +3115,14 @@ static const lang_field lang_fields[] = {
     {"muxwebserv", LANG_OFF(muxwebserv.username), lang_specific, "Username"},
     {"muxwebserv", LANG_OFF(muxwebserv.password), lang_specific, "Password"},
     {"muxwebserv", LANG_OFF(muxwebserv.local_name), lang_specific, "Local Name"},
+    {"muxwebserv", LANG_OFF(muxwebserv.authentication), lang_specific, "Authentication"},
     {"muxwebserv", LANG_OFF(muxwebserv.not_set), lang_specific, "Not Set"},
     {"muxwebserv", LANG_OFF(muxwebserv.invalid_port), lang_specific, "Enter a port from 1 to 65535"},
     {"muxwebserv", LANG_OFF(muxwebserv.invalid_local_name), lang_specific, "Use 1 to 63 letters, numbers, or hyphens"},
     {"muxwebserv", LANG_OFF(muxwebserv.incomplete_login), lang_specific, "Enter both login fields or leave both blank"},
     {"muxwebserv", LANG_OFF(muxwebserv.invalid_login), lang_specific, "Login details contain unsupported characters"},
     {"muxwebserv", LANG_OFF(muxwebserv.help.mdns), lang_specific, "Makes the device available at a memorable .local address without changing its system hostname.\n\nUse a different local name when more than one muOS device shares a network."},
-    {"muxwebserv", LANG_OFF(muxwebserv.help.landing), lang_specific, "A lightweight home page for opening enabled device services and finding MustardOS help and community links."},
+    {"muxwebserv", LANG_OFF(muxwebserv.help.landing), lang_specific, "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves.\n\nSelect this to open its settings."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.ttyd), lang_specific, "Open Virtual Terminal settings. Login details are optional on this single-user system."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.syncthing), lang_specific, "Keeps folders in step with another machine over the network.\n\nSelect this to open its settings."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.sshd), lang_specific, "A secure shell for connecting to the device from a computer.\n\nSelect this to open its settings."},
@@ -3123,6 +3135,7 @@ static const lang_field lang_fields[] = {
     {"muxwebserv", LANG_OFF(muxwebserv.help.username), lang_specific, "Set an optional Virtual Terminal login name. Leave both login fields blank for direct access."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.password), lang_specific, "Set an optional Virtual Terminal password. Leave both login fields blank for direct access."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.local_name), lang_specific, "The address used before .local in a browser.\n\nFor example, muos becomes muos.local. This does not alter the device hostname."},
+    {"muxwebserv", LANG_OFF(muxwebserv.help.authentication), lang_specific, "Whether the Web Dashboard may change anything.\n\nDisabled, it can only browse and download. Enabled, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code."},
 };
 // clang-format on
 

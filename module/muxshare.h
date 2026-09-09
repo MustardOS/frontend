@@ -381,6 +381,8 @@ int muxlink_main(void);
 
 int muxwebserv_main(void);
 
+int muxwebcode_main(void);
+
 void resolve_grid_item_images(
     const char *mux_dim, const char *mux_module, const char *glyph_name, char *grid_img, size_t img_size,
     char *grid_img_foc, size_t foc_size

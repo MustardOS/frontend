@@ -468,7 +468,9 @@
     "Pair, connect and manage Bluetooth devices such as controllers and headphones.": "Pair, connect and manage Bluetooth devices such as controllers and headphones.",
     "Proxy Settings": "Proxy Settings",
     "Sends outbound traffic through a proxy.\n\nOnly needed on networks that require one, such as some school or workplace connections.": "Sends outbound traffic through a proxy.\n\nOnly needed on networks that require one, such as some school or workplace connections.",
+    "Shows the code a browser needs before it can change anything through the Web Dashboard.\n\nThe code is only ever shown here, so whoever is managing the device has to be holding it.": "Shows the code a browser needs before it can change anything through the Web Dashboard.\n\nThe code is only ever shown here, so whoever is managing the device has to be holding it.",
     "The finer network settings, covering DNS, hostname and what happens at boot.": "The finer network settings, covering DNS, hostname and what happens at boot.",
+    "Web Dashboard Code": "Web Dashboard Code",
     "Web Services": "Web Services",
     "Web based services such as file transfer, a terminal and remote access.\n\nThese need an active network connection to be of any use.": "Web based services such as file transfer, a terminal and remote access.\n\nThese need an active network connection to be of any use.",
     "Wi-Fi Network": "Wi-Fi Network"
@@ -2884,15 +2886,24 @@
     "Whether your recent history appears inside Content Explorer as well as on its own screen.": "Whether your recent history appears inside Content Explorer as well as on its own screen.",
     "Which artwork is preferred when a piece of content has more than one image to choose from.\n\nThe first kind that exists for an item is the one you will see.": "Which artwork is preferred when a piece of content has more than one image to choose from.\n\nThe first kind that exists for an item is the one you will see."
   },
+  "muxwebcode": {
+    "Authentication is turned off, so the Web Dashboard cannot change anything and needs no code.": "Authentication is turned off, so the Web Dashboard cannot change anything and needs no code.",
+    "Changes in %d seconds": "Changes in %d seconds",
+    "No network address yet": "No network address yet",
+    "The code the Web Dashboard asks for before it will upload or delete anything. It changes every thirty seconds, and is only ever shown on this screen.": "The code the Web Dashboard asks for before it will upload or delete anything. It changes every thirty seconds, and is only ever shown on this screen.",
+    "The device code could not be read.": "The device code could not be read.",
+    "Turn the Web Dashboard on to use a code.": "Turn the Web Dashboard on to use a code.",
+    "Web Dashboard Code": "Web Dashboard Code"
+  },
   "muxwebserv": {
-    "A lightweight home page for opening enabled device services and finding MustardOS help and community links.": "A lightweight home page for opening enabled device services and finding MustardOS help and community links.",
+    "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves.\n\nSelect this to open its settings.": "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves.\n\nSelect this to open its settings.",
     "A secure shell for connecting to the device from a computer.\n\nSelect this to open its settings.": "A secure shell for connecting to the device from a computer.\n\nSelect this to open its settings.",
+    "Authentication": "Authentication",
     "Enter a port from 1 to 65535": "Enter a port from 1 to 65535",
     "Enter both login fields or leave both blank": "Enter both login fields or leave both blank",
     "File transfer and a browser based file manager.\n\nSelect this to open its settings.": "File transfer and a browser based file manager.\n\nSelect this to open its settings.",
     "Joins the device to a private Tailscale network, so it can be reached from elsewhere.\n\nSelect this to open its settings.": "Joins the device to a private Tailscale network, so it can be reached from elsewhere.\n\nSelect this to open its settings.",
     "Keeps folders in step with another machine over the network.\n\nSelect this to open its settings.": "Keeps folders in step with another machine over the network.\n\nSelect this to open its settings.",
-    "Landing Page": "Landing Page",
     "Local DNS Resolver": "Local DNS Resolver",
     "Local Name": "Local Name",
     "Login details contain unsupported characters": "Login details contain unsupported characters",
@@ -2917,8 +2928,10 @@
     "Use 1 to 63 letters, numbers, or hyphens": "Use 1 to 63 letters, numbers, or hyphens",
     "Username": "Username",
     "Virtual Terminal": "Virtual Terminal",
+    "Web Dashboard": "Web Dashboard",
     "Web Port": "Web Port",
     "Web Services": "Web Services",
+    "Whether the Web Dashboard may change anything.\n\nDisabled, it can only browse and download. Enabled, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code.": "Whether the Web Dashboard may change anything.\n\nDisabled, it can only browse and download. Enabled, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code.",
     "Whether this service runs.\n\nEach one costs a little battery and memory while it is on, so leave off what you do not use.": "Whether this service runs.\n\nEach one costs a little battery and memory while it is on, so leave off what you do not use."
   }
 }
