@@ -63,6 +63,27 @@ Other context types (GL core profile, GLES3, Vulkan) are rejected so the core ca
 - **Run Ahead**: see below.
 - **FPS Limit**: 60 (vsync), 50 (paced), or none.
 
+## Fragment shader contract
+
+Pickles runs a `.frag` preset against a source-resolution texture and scales that pass directly to the output. This
+keeps source-pixel offsets stable and avoids an additional full-resolution preparation pass. The fragment preamble
+provides:
+
+- `u_tex`: prepared source texture.
+- `u_resolution`: shader output size in pixels.
+- `u_native_resolution`: native core frame size in pixels.
+- `u_source_resolution`: active source texture size in pixels. This can differ from the native size after a CPU filter.
+- `u_texture_resolution`: backing GL texture size in pixels.
+- `u_source_uv_extent`: active source extent within the backing texture.
+- `u_frame`: displayed shader frame counter. `u_time` retains the corresponding legacy floating-point frame value.
+- `v_uv`: source coordinates from `(0, 0)` to `u_source_uv_extent`.
+
+Sampling inherits the selected Texture Filter unless the shader declares an override. Use `// Filter: Linear`,
+`// Filter: Nearest`, or `#pragma filter linear|nearest|inherit`. A RetroArch port should map `OutputSize` to
+`u_resolution`, `InputSize` to `u_native_resolution`, and `TextureSize` to `u_texture_resolution`. Presets whose
+RetroArch `.glslp` specifies `filter_linear0 = true`, including zFast CRT, must declare linear filtering in their
+Pickles fragment file.
+
 ## Run Ahead
 
 Implemented as **preemptive frames**. The cheaper, and easier to implement, variant of actual run ahead: each frame the

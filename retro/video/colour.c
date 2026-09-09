@@ -170,6 +170,9 @@ static const char *shader_fs_preamble = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
                                         "uniform sampler2D u_tex;\n"
                                         "uniform vec2 u_resolution;\n"
                                         "uniform vec2 u_native_resolution;\n"
+                                        "uniform vec2 u_source_resolution;\n"
+                                        "uniform vec2 u_texture_resolution;\n"
+                                        "uniform vec2 u_source_uv_extent;\n"
                                         "uniform float u_time;\n"
                                         "uniform int u_frame;\n"
                                         "varying vec2 v_uv;\n";
@@ -188,8 +191,17 @@ static int prog_ready = 0;
 static GLuint shader_prog = 0;
 static GLint sh_a_pos = -1, sh_a_uv = -1;
 static GLint sh_u_tex = -1, sh_u_resolution = -1, sh_u_native_resolution = -1, sh_u_time = -1, sh_u_frame = -1;
+static GLint sh_u_source_resolution = -1, sh_u_texture_resolution = -1, sh_u_source_uv_extent = -1;
 static int shader_loaded_index = -1;
 static int shader_frame_count = 0;
+
+enum shader_filter_mode {
+    shader_filter_inherit = 0,
+    shader_filter_nearest,
+    shader_filter_linear,
+};
+
+static enum shader_filter_mode shader_filter = shader_filter_inherit;
 
 typedef struct {
     char name[32];
@@ -659,6 +671,71 @@ static void blank_shader_params(char *src) {
     }
 }
 
+static int shader_filter_value(const char *value, enum shader_filter_mode *mode) {
+    while (*value == ' ' || *value == '\t')
+        value++;
+
+    if (strncasecmp(value, "linear", 6) == 0 || strncasecmp(value, "true", 4) == 0 || strncmp(value, "1", 1) == 0) {
+        *mode = shader_filter_linear;
+        return 1;
+    }
+    if (strncasecmp(value, "nearest", 7) == 0 || strncasecmp(value, "false", 5) == 0 || strncmp(value, "0", 1) == 0) {
+        *mode = shader_filter_nearest;
+        return 1;
+    }
+    if (strncasecmp(value, "inherit", 7) == 0) {
+        *mode = shader_filter_inherit;
+        return 1;
+    }
+
+    return 0;
+}
+
+static enum shader_filter_mode parse_shader_filter(const char *src) {
+    enum shader_filter_mode mode = shader_filter_inherit;
+    const char *line = src;
+
+    while (*line) {
+        const char *end = strchr(line, '\n');
+        const size_t len = end ? (size_t) (end - line) : strlen(line);
+        const char *p = line;
+        while ((size_t) (p - line) < len && (*p == ' ' || *p == '\t'))
+            p++;
+
+        const char *value = NULL;
+        if ((size_t) (p - line) + 10 <= len && strncasecmp(p, "// Filter:", 10) == 0) {
+            value = p + 10;
+        } else if ((size_t) (p - line) + 14 <= len && strncasecmp(p, "#pragma filter", 14) == 0) {
+            value = p + 14;
+            if (strncasecmp(value, "_linear", 7) == 0) value += 7;
+        }
+
+        if (value && shader_filter_value(value, &mode)) return mode;
+        if (!end) break;
+        line = end + 1;
+    }
+
+    return mode;
+}
+
+static void blank_shader_filter_pragmas(char *src) {
+    char *line = src;
+
+    while (*line) {
+        char *end = strchr(line, '\n');
+        char *p = line;
+        while (*p && *p != '\n' && (*p == ' ' || *p == '\t'))
+            p++;
+
+        if (strncasecmp(p, "#pragma filter", 14) == 0)
+            while (*p && *p != '\n')
+                *p++ = ' ';
+
+        if (!end) break;
+        line = end + 1;
+    }
+}
+
 static void shader_params_ini_path(char *out, const size_t len, const char *stem) {
     snprintf(out, len, "%s/%s.ini", RETRO_SHP_PATH, stem);
 }
@@ -768,6 +845,8 @@ static void ensure_shader_program(void) {
     }
     sh_a_pos = sh_a_uv = -1;
     sh_u_tex = sh_u_resolution = sh_u_native_resolution = sh_u_time = sh_u_frame = -1;
+    sh_u_source_resolution = sh_u_texture_resolution = sh_u_source_uv_extent = -1;
+    shader_filter = shader_filter_inherit;
     shader_params_count = 0;
     shader_params_dirty = 0;
 
@@ -789,7 +868,9 @@ static void ensure_shader_program(void) {
     }
 
     shader_params_count = parse_shader_params(strip);
+    shader_filter = parse_shader_filter(strip);
     blank_shader_params(strip);
+    blank_shader_filter_pragmas(strip);
 
     const size_t total = strlen(shader_fs_preamble) + strlen(strip) + 1;
     char *full_src = malloc(total);
@@ -838,6 +919,9 @@ static void ensure_shader_program(void) {
     sh_u_tex = gl->GetUniformLocation(shader_prog, "u_tex");
     sh_u_resolution = gl->GetUniformLocation(shader_prog, "u_resolution");
     sh_u_native_resolution = gl->GetUniformLocation(shader_prog, "u_native_resolution");
+    sh_u_source_resolution = gl->GetUniformLocation(shader_prog, "u_source_resolution");
+    sh_u_texture_resolution = gl->GetUniformLocation(shader_prog, "u_texture_resolution");
+    sh_u_source_uv_extent = gl->GetUniformLocation(shader_prog, "u_source_uv_extent");
     sh_u_time = gl->GetUniformLocation(shader_prog, "u_time");
     sh_u_frame = gl->GetUniformLocation(shader_prog, "u_frame");
 
@@ -847,8 +931,11 @@ static void ensure_shader_program(void) {
     shader_params_load(shader_names[index]);
 
     LOG_INFO(
-        mux_module, "Colour: user shader ready: %s (%d parameter%s)", shader_names[index], shader_params_count,
-        shader_params_count == 1 ? "" : "s"
+        mux_module, "Colour: user shader ready: %s (%d parameter%s, %s filtering)", shader_names[index],
+        shader_params_count, shader_params_count == 1 ? "" : "s",
+        shader_filter == shader_filter_linear    ? "linear"
+        : shader_filter == shader_filter_nearest ? "nearest"
+                                                 : "inherited"
     );
 }
 
@@ -939,13 +1026,23 @@ static void set_colour_uniforms(
     set_vignette_uniforms(content_w, content_h);
 }
 
-static void set_shader_uniforms(const int res_w, const int res_h) {
+static void set_shader_uniforms(
+    const int res_w, const int res_h, const int source_w, const int source_h, const float uv_w, const float uv_h
+) {
     int native_w = 0, native_h = 0;
     video_bridge_get_frame_size(&native_w, &native_h);
+    if (native_w <= 0) native_w = source_w;
+    if (native_h <= 0) native_h = source_h;
+
+    const float texture_w = uv_w > 0.0f ? (float) source_w / uv_w : (float) source_w;
+    const float texture_h = uv_h > 0.0f ? (float) source_h / uv_h : (float) source_h;
 
     if (sh_u_tex >= 0) gl->Uniform1i(sh_u_tex, 0);
     if (sh_u_resolution >= 0) gl->Uniform2f(sh_u_resolution, (float) res_w, (float) res_h);
     if (sh_u_native_resolution >= 0) gl->Uniform2f(sh_u_native_resolution, (float) native_w, (float) native_h);
+    if (sh_u_source_resolution >= 0) gl->Uniform2f(sh_u_source_resolution, (float) source_w, (float) source_h);
+    if (sh_u_texture_resolution >= 0) gl->Uniform2f(sh_u_texture_resolution, texture_w, texture_h);
+    if (sh_u_source_uv_extent >= 0) gl->Uniform2f(sh_u_source_uv_extent, uv_w, uv_h);
     if (sh_u_time >= 0) gl->Uniform1f(sh_u_time, (float) shader_frame_count);
     if (sh_u_frame >= 0) gl->Uniform1i(sh_u_frame, shader_frame_count);
 
@@ -955,7 +1052,7 @@ static void set_shader_uniforms(const int res_w, const int res_h) {
 
 static int draw_gl_pass(
     SDL_Texture *src, const int user_prog, const float l, const float r, const float t, const float b, const int vp_w,
-    const int vp_h, const int res_w, const int res_h, const int area_scale
+    const int vp_h, const int res_w, const int res_h, const int area_scale, const enum shader_filter_mode sample_filter
 ) {
     int src_w = 0, src_h = 0;
     if (SDL_QueryTexture(src, NULL, NULL, &src_w, &src_h) != 0 || src_w <= 0 || src_h <= 0) return 0;
@@ -964,9 +1061,13 @@ static int draw_gl_pass(
     gl->ActiveTexture(GL_TEXTURE0);
     if (SDL_GL_BindTexture(src, &texw, &texh) != 0) return 0;
 
-    if (area_scale) {
-        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    SDL_ScaleMode original_scale = SDL_ScaleModeNearest;
+    const int restore_filter = SDL_GetTextureScaleMode(src, &original_scale) == 0;
+    const enum shader_filter_mode forced_filter = area_scale ? shader_filter_linear : sample_filter;
+    if (forced_filter != shader_filter_inherit) {
+        const GLint gl_filter = forced_filter == shader_filter_linear ? GL_LINEAR : GL_NEAREST;
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);
     }
 
     const GLfloat v_at_top = 0.0f;
@@ -987,7 +1088,7 @@ static int draw_gl_pass(
     gl->UseProgram(user_prog ? shader_prog : prog);
 
     if (user_prog) {
-        set_shader_uniforms(res_w, res_h);
+        set_shader_uniforms(res_w, res_h, src_w, src_h, texw, texh);
     } else {
         set_colour_uniforms(res_w, res_h, src_w, src_h, texw, texh, area_scale);
     }
@@ -1005,9 +1106,10 @@ static int draw_gl_pass(
 
     gl->DrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    if (area_scale) {
-        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    if (forced_filter != shader_filter_inherit && restore_filter) {
+        const GLint gl_filter = original_scale == SDL_ScaleModeLinear ? GL_LINEAR : GL_NEAREST;
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);
     }
 
     if (pass_a_pos >= 0) gl->DisableVertexAttribArray(pass_a_pos);
@@ -1053,9 +1155,7 @@ static void colour_render_pass_internal(
     SDL_RenderFlush(renderer);
 
     ensure_shader_program();
-    const int use_shader =
-        shader_prog != 0
-        && ensure_target(renderer, &work_tex, &work_w, &work_h, dest_rect->w, dest_rect->h, SDL_PIXELFORMAT_ABGR8888);
+    const int use_shader = shader_prog != 0;
 
     SDL_Texture *prev_target = SDL_GetRenderTarget(renderer);
     SDL_Texture *gl_src = tex;
@@ -1063,7 +1163,7 @@ static void colour_render_pass_internal(
     if (mux_retro_get_pixel_format() != RETRO_PIXEL_FORMAT_XRGB8888 || src_rect) {
         int source_w = dest_rect->w;
         int source_h = dest_rect->h;
-        if (area_scale) {
+        if (use_shader || area_scale) {
             if (src_rect) {
                 source_w = src_rect->w;
                 source_h = src_rect->h;
@@ -1107,23 +1207,37 @@ static void colour_render_pass_internal(
     int drew = 0;
 
     if (use_shader) {
-        if (SDL_SetRenderTarget(renderer, work_tex) == 0) {
-            const int colour_ok = draw_gl_pass(
-                gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale
-            );
+        int source_w = 0;
+        int source_h = 0;
+        SDL_ScaleMode source_scale = SDL_ScaleModeNearest;
 
-            if (colour_ok && SDL_SetRenderTarget(renderer, output_tex) == 0) {
-                shader_frame_count++;
-                drew = draw_gl_pass(
-                    work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, 0
+        if (SDL_QueryTexture(gl_src, NULL, NULL, &source_w, &source_h) == 0 && source_w > 0 && source_h > 0
+            && ensure_target(renderer, &work_tex, &work_w, &work_h, source_w, source_h, SDL_PIXELFORMAT_ABGR8888)) {
+            if (SDL_GetTextureScaleMode(gl_src, &source_scale) != 0) source_scale = SDL_ScaleModeNearest;
+            SDL_SetTextureScaleMode(work_tex, source_scale);
+
+            if (SDL_SetRenderTarget(renderer, work_tex) == 0) {
+                // Prepare colour and channel order without changing the shader's source-pixel grid.
+                const int colour_ok = draw_gl_pass(
+                    gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, source_w, source_h, source_w, source_h, 0,
+                    shader_filter_inherit
                 );
+
+                if (colour_ok && SDL_SetRenderTarget(renderer, output_tex) == 0) {
+                    shader_frame_count++;
+                    drew = draw_gl_pass(
+                        work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h,
+                        0, shader_filter
+                    );
+                }
             }
         }
     }
 
     if (!drew && SDL_SetRenderTarget(renderer, output_tex) == 0)
         drew = draw_gl_pass(
-            gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale
+            gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale,
+            shader_filter_inherit
         );
 
     gl->UseProgram((GLuint) prev_program);
