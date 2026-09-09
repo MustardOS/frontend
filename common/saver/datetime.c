@@ -43,6 +43,18 @@ typedef struct {
     int time_w, time_h;
     int date_w, date_h;
     int gap;
+
+    SDL_Texture *tex_time;
+    SDL_Texture *tex_time_left;
+    SDL_Texture *tex_colon;
+    SDL_Texture *tex_time_right;
+    SDL_Texture *tex_date;
+
+    char cached_time[32];
+    char cached_date[64];
+    time_t cached_second;
+    int time_left_w;
+    int colon_w;
 } datetime_module_t;
 
 static datetime_module_t mod = {0};
@@ -78,6 +90,8 @@ static int dt_load_fonts(int screen_h) {
 
     if (!mod.font_date) {
         LOG_ERROR("saver", "DateTime: failed to open date font: %s", TTF_GetError());
+        TTF_CloseFont(mod.font_time);
+        mod.font_time = NULL;
         return 0;
     }
 
@@ -85,35 +99,6 @@ static int dt_load_fonts(int screen_h) {
 }
 
 static void dt_pick_position(void) {
-    time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
-
-    char time_str[32];
-    char date_str[64];
-
-    if (config.clock.notation == 0) {
-        strftime(time_str, sizeof(time_str), "%I:%M %p", tm);
-    } else {
-        strftime(time_str, sizeof(time_str), "%H:%M", tm);
-    }
-
-    char wday[16], mon[16];
-    strftime(wday, sizeof(wday), "%a", tm);
-    strftime(mon, sizeof(mon), "%b", tm);
-    snprintf(date_str, sizeof(date_str), "%s %d %s, %d", wday, tm->tm_mday, mon, tm->tm_year + 1900);
-
-    int tw = 0, th = 0, dw = 0, dh = 0;
-    TTF_SizeUTF8(mod.font_time, time_str, &tw, &th);
-    TTF_SizeUTF8(mod.font_date, date_str, &dw, &dh);
-
-    mod.time_w = tw;
-    mod.time_h = th;
-    mod.date_w = dw;
-    mod.date_h = dh;
-    mod.block_w = (tw > dw) ? tw : dw;
-    mod.gap = th / 8;
-    mod.block_h = th + mod.gap + dh;
-
     int max_x = mod.base.screen_w - mod.block_w - DT_MARGIN * 2;
     int max_y = mod.base.screen_h - mod.block_h - DT_MARGIN * 2;
 
@@ -216,31 +201,121 @@ static uint8_t dt_current_alpha(uint32_t now) {
     return mod.col_a;
 }
 
-static SDL_Texture *dt_render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text, uint8_t alpha) {
-    SDL_Color c = {mod.col_r, mod.col_g, mod.col_b, alpha};
+static void dt_destroy_texture(SDL_Texture **tex) {
+    if (!*tex) return;
+
+    SDL_DestroyTexture(*tex);
+    *tex = NULL;
+}
+
+static SDL_Texture *dt_render_text(SDL_Renderer *renderer, TTF_Font *font, const char *text) {
+    SDL_Color c = {mod.col_r, mod.col_g, mod.col_b, 255};
     SDL_Surface *surf = TTF_RenderUTF8_Blended(font, text, c);
     if (!surf) return NULL;
 
     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
     SDL_FreeSurface(surf);
+
+    if (tex) SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
     return tex;
 }
 
-static void dt_blit(SDL_Renderer *renderer, SDL_Texture *tex, int x, int y) {
+static void dt_blit(SDL_Renderer *renderer, SDL_Texture *tex, int x, int y, uint8_t alpha) {
     if (!tex) return;
     int w, h;
 
     SDL_QueryTexture(tex, NULL, NULL, &w, &h);
     SDL_Rect r = {x, y, w, h};
 
+    SDL_SetTextureAlphaMod(tex, alpha);
     SDL_RenderCopy(renderer, tex, NULL, &r);
-    SDL_DestroyTexture(tex);
+}
+
+static void dt_format_strings(const struct tm *tm, char time_str[32], char date_str[64]) {
+    if (config.clock.notation == 0)
+        strftime(time_str, 32, "%I:%M %p", tm);
+    else
+        strftime(time_str, 32, "%H:%M", tm);
+
+    char wday[16], mon[16];
+    strftime(wday, sizeof(wday), "%a", tm);
+    strftime(mon, sizeof(mon), "%b", tm);
+    snprintf(date_str, 64, "%s %d %s, %d", wday, tm->tm_mday, mon, tm->tm_year + 1900);
+}
+
+static void dt_refresh_time_texture(SDL_Renderer *renderer, const char *time_str) {
+    if (strcmp(mod.cached_time, time_str) == 0) return;
+
+    dt_destroy_texture(&mod.tex_time);
+    dt_destroy_texture(&mod.tex_time_left);
+    dt_destroy_texture(&mod.tex_colon);
+    dt_destroy_texture(&mod.tex_time_right);
+
+    mod.time_left_w = 0;
+    mod.colon_w = 0;
+
+    TTF_SizeUTF8(mod.font_time, time_str, &mod.time_w, &mod.time_h);
+
+    if (config.clock.notation == 0) {
+        const char *cp = strchr(time_str, ':');
+        if (cp) {
+            char left[16];
+            char right[16];
+            const size_t left_len = (size_t) (cp - time_str);
+
+            memcpy(left, time_str, left_len);
+            left[left_len] = '\0';
+            snprintf(right, sizeof(right), "%s", cp + 1);
+
+            mod.tex_time_left = dt_render_text(renderer, mod.font_time, left);
+            mod.tex_colon = dt_render_text(renderer, mod.font_time, ":");
+            mod.tex_time_right = dt_render_text(renderer, mod.font_time, right);
+
+            int dummy;
+            TTF_SizeUTF8(mod.font_time, left, &mod.time_left_w, &dummy);
+            TTF_SizeUTF8(mod.font_time, ":", &mod.colon_w, &dummy);
+        } else {
+            mod.tex_time = dt_render_text(renderer, mod.font_time, time_str);
+        }
+    } else {
+        mod.tex_time = dt_render_text(renderer, mod.font_time, time_str);
+    }
+
+    snprintf(mod.cached_time, sizeof(mod.cached_time), "%s", time_str);
+}
+
+static void dt_refresh_date_texture(SDL_Renderer *renderer, const char *date_str) {
+    if (strcmp(mod.cached_date, date_str) == 0) return;
+
+    dt_destroy_texture(&mod.tex_date);
+    TTF_SizeUTF8(mod.font_date, date_str, &mod.date_w, &mod.date_h);
+    mod.tex_date = dt_render_text(renderer, mod.font_date, date_str);
+    snprintf(mod.cached_date, sizeof(mod.cached_date), "%s", date_str);
+}
+
+static void dt_update_block_size(void) {
+    mod.block_w = mod.time_w > mod.date_w ? mod.time_w : mod.date_w;
+    mod.gap = mod.time_h / 8;
+    mod.block_h = mod.time_h + mod.gap + mod.date_h;
 }
 
 void datetime_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active || !mod.font_time || !mod.font_date) return;
 
     uint32_t now = SDL_GetTicks();
+
+    const time_t t = time(NULL);
+    if (!mod.cached_time[0] || t != mod.cached_second) {
+        const struct tm *tm = localtime(&t);
+        char time_str[32];
+        char date_str[64];
+
+        dt_format_strings(tm, time_str, date_str);
+        dt_refresh_time_texture(renderer, time_str);
+        dt_refresh_date_texture(renderer, date_str);
+        dt_update_block_size();
+        mod.cached_second = t;
+    }
 
     if (mod.reposition_pending) {
         dt_pick_position();
@@ -251,71 +326,39 @@ void datetime_render(SDL_Renderer *renderer) {
     uint8_t alpha = dt_current_alpha(now);
     if (alpha == 0) return;
 
-    time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
-
     int is_12h = config.clock.notation == 0;
     int time_x = mod.pos_x + (mod.block_w - mod.time_w) / 2;
 
-    if (is_12h) {
-        char full[32];
-        strftime(full, sizeof(full), "%I:%M %p", tm);
+    if (is_12h && mod.tex_colon) {
+        uint8_t colon_alpha = alpha;
+        if (mod.fade_state == DT_FADE_HOLD) {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
 
-        char *cp = strchr(full, ':');
-        if (!cp) {
-            dt_blit(renderer, dt_render_text(renderer, mod.font_time, full, alpha), time_x, mod.pos_y);
-        } else {
-            char left[16], colon_str[2] = ":", right[16];
-            int left_len = (int) (cp - full);
+            long sub_ms = ts.tv_nsec / 1000000L;
+            int colon_on = (ts.tv_sec % 2) == 0;
 
-            strncpy(left, full, (size_t) left_len);
-            left[left_len] = '\0';
-
-            strncpy(right, cp + 1, sizeof(right) - 1);
-            right[sizeof(right) - 1] = '\0';
-
-            uint8_t colon_alpha = alpha;
-            if (mod.fade_state == DT_FADE_HOLD) {
-                struct timespec ts;
-                clock_gettime(CLOCK_REALTIME, &ts);
-
-                long sub_ms = ts.tv_nsec / 1000000L;
-                int colon_on = (ts.tv_sec % 2) == 0;
-
-                float factor;
-                if (colon_on) {
-                    factor = (sub_ms < DT_COLON_FADE_MS) ? (float) sub_ms / (float) DT_COLON_FADE_MS : 1.0f;
-                } else {
-                    factor = (sub_ms < DT_COLON_FADE_MS) ? 1.0f - (float) sub_ms / (float) DT_COLON_FADE_MS : 0.0f;
-                }
-
-                uint8_t colon_dim = alpha / 8;
-                colon_alpha = colon_dim + (uint8_t) ((float) (alpha - colon_dim) * factor);
+            float factor;
+            if (colon_on) {
+                factor = (sub_ms < DT_COLON_FADE_MS) ? (float) sub_ms / (float) DT_COLON_FADE_MS : 1.0f;
+            } else {
+                factor = (sub_ms < DT_COLON_FADE_MS) ? 1.0f - (float) sub_ms / (float) DT_COLON_FADE_MS : 0.0f;
             }
 
-            int lw = 0, cw = 0, dummy;
-            TTF_SizeUTF8(mod.font_time, left, &lw, &dummy);
-            TTF_SizeUTF8(mod.font_time, colon_str, &cw, &dummy);
-
-            dt_blit(renderer, dt_render_text(renderer, mod.font_time, left, alpha), time_x, mod.pos_y);
-            dt_blit(renderer, dt_render_text(renderer, mod.font_time, colon_str, colon_alpha), time_x + lw, mod.pos_y);
-            dt_blit(renderer, dt_render_text(renderer, mod.font_time, right, alpha), time_x + lw + cw, mod.pos_y);
+            uint8_t colon_dim = alpha / 8;
+            colon_alpha = colon_dim + (uint8_t) ((float) (alpha - colon_dim) * factor);
         }
+
+        dt_blit(renderer, mod.tex_time_left, time_x, mod.pos_y, alpha);
+        dt_blit(renderer, mod.tex_colon, time_x + mod.time_left_w, mod.pos_y, colon_alpha);
+        dt_blit(renderer, mod.tex_time_right, time_x + mod.time_left_w + mod.colon_w, mod.pos_y, alpha);
     } else {
-        char time_str[32];
-        strftime(time_str, sizeof(time_str), "%H:%M", tm);
-        dt_blit(renderer, dt_render_text(renderer, mod.font_time, time_str, alpha), time_x, mod.pos_y);
+        dt_blit(renderer, mod.tex_time, time_x, mod.pos_y, alpha);
     }
 
     int date_x = mod.pos_x + (mod.block_w - mod.date_w) / 2;
     int date_y = mod.pos_y + mod.time_h + mod.gap;
-
-    char wday[16], mon[16], date_str[64];
-    strftime(wday, sizeof(wday), "%a", tm);
-    strftime(mon, sizeof(mon), "%b", tm);
-    snprintf(date_str, sizeof(date_str), "%s %d %s, %d", wday, tm->tm_mday, mon, tm->tm_year + 1900);
-
-    dt_blit(renderer, dt_render_text(renderer, mod.font_date, date_str, alpha), date_x, date_y);
+    dt_blit(renderer, mod.tex_date, date_x, date_y, alpha);
 }
 
 int datetime_active(void) {
@@ -327,6 +370,16 @@ void datetime_stop(void) {
 }
 
 void datetime_shutdown(void) {
+    dt_destroy_texture(&mod.tex_time);
+    dt_destroy_texture(&mod.tex_time_left);
+    dt_destroy_texture(&mod.tex_colon);
+    dt_destroy_texture(&mod.tex_time_right);
+    dt_destroy_texture(&mod.tex_date);
+
+    mod.cached_time[0] = '\0';
+    mod.cached_date[0] = '\0';
+    mod.cached_second = 0;
+
     if (mod.font_time) {
         TTF_CloseFont(mod.font_time);
         mod.font_time = NULL;

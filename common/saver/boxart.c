@@ -76,7 +76,7 @@ static float randf01(void) {
 }
 
 static float vy_base(void) {
-    int speed = saver_read_speed();
+    int speed = mod.base.speed;
     if (speed <= 0) speed = SAVER_SPEED_DEFAULT;
 
     return (float) mod.base.screen_h * (float) speed / 540000.0f;

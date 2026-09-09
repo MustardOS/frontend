@@ -49,7 +49,7 @@ static float randf01(void) {
 }
 
 static uint32_t compute_slide_ms(void) {
-    int speed = saver_read_speed();
+    int speed = mod.base.speed;
     if (speed <= 0) speed = SAVER_SPEED_DEFAULT;
     const uint32_t ms = 900000u / (uint32_t) speed;
     const uint32_t min_ms = CROSSFADE_MS + 1000u;

@@ -32,7 +32,7 @@ static void dvd_bounce_colour(void) {
     saver_pastel_pick(index, &r, &g, &b);
 
     if (mod.tex) SDL_SetTextureColorMod(mod.tex, r, g, b);
-    LOG_INFO("saver", "DVD Colour Change: #%02X%02X%02X", r, g, b);
+    LOG_DEBUG("saver", "DVD Colour Change: #%02X%02X%02X", r, g, b);
 
     last_index = index;
     index = (index + 1) % SAVER_PASTEL_COUNT;
@@ -55,6 +55,30 @@ static void dvd_launch(void) {
 
     mod.vx = sx;
     mod.vy = sy;
+}
+
+static int dvd_advance_axis(int32_t *position, int32_t *velocity, const int32_t limit, const int64_t step) {
+    if (limit <= 0) {
+        *position = 0;
+        return 0;
+    }
+
+    int bounced = 0;
+    int64_t next = (int64_t) *position + (int64_t) *velocity * step;
+
+    while ((next <= 0 && *velocity < 0) || (next >= limit && *velocity > 0)) {
+        if (next <= 0) {
+            next = -next;
+        } else {
+            next = (int64_t) limit * 2 - next;
+        }
+
+        *velocity = -*velocity;
+        bounced = 1;
+    }
+
+    *position = (int32_t) next;
+    return bounced;
 }
 
 static void dvd_on_speed_changed(void *user) {
@@ -92,6 +116,9 @@ int dvd_init(SDL_Renderer *renderer, const char *png_path, int screen_w, int scr
     mod.tex = SDL_CreateTextureFromSurface(renderer, surf);
     SDL_FreeSurface(surf);
     if (!mod.tex) return 0;
+
+    SDL_SetTextureBlendMode(mod.tex, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(mod.tex, 255);
 
     SDL_QueryTexture(mod.tex, NULL, NULL, &mod.rect.w, &mod.rect.h);
 
@@ -131,31 +158,10 @@ void dvd_update(void) {
     mod.base.last_tick = now;
 
     if (mod.speed_fp_per_ms == 0) return;
-    int32_t step = mod.speed_fp_per_ms * (int32_t) elapsed;
-
-    mod.fx += mod.vx * step;
-    mod.fy += mod.vy * step;
-
-    int bounced = 0;
-    if (mod.fx <= 0) {
-        mod.fx = 0;
-        mod.vx = -mod.vx;
-        bounced = 1;
-    } else if (mod.fx >= mod.max_fx) {
-        mod.fx = mod.max_fx;
-        mod.vx = -mod.vx;
-        bounced = 1;
-    }
-
-    if (mod.fy <= 0) {
-        mod.fy = 0;
-        mod.vy = -mod.vy;
-        bounced = 1;
-    } else if (mod.fy >= mod.max_fy) {
-        mod.fy = mod.max_fy;
-        mod.vy = -mod.vy;
-        bounced = 1;
-    }
+    const int64_t step = (int64_t) mod.speed_fp_per_ms * elapsed;
+    const int bounced_x = dvd_advance_axis(&mod.fx, &mod.vx, mod.max_fx, step);
+    const int bounced_y = dvd_advance_axis(&mod.fy, &mod.vy, mod.max_fy, step);
+    const int bounced = bounced_x || bounced_y;
 
     if (bounced && mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) dvd_bounce_colour();
 
@@ -168,8 +174,6 @@ void dvd_update(void) {
 void dvd_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active || !mod.tex) return;
 
-    SDL_SetTextureBlendMode(mod.tex, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(mod.tex, 255);
     SDL_RenderCopy(renderer, mod.tex, NULL, &mod.rect);
 
     if (mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) {

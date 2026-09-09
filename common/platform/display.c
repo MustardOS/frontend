@@ -802,6 +802,18 @@ static void render_saver_frame(void) {
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
+#define SAVER_TARGET_FPS 30u
+
+static void advance_saver_deadline(uint32_t *deadline, uint32_t *remainder) {
+    *deadline += 1000u / SAVER_TARGET_FPS;
+    *remainder += 1000u % SAVER_TARGET_FPS;
+
+    if (*remainder >= SAVER_TARGET_FPS) {
+        *deadline += 1;
+        *remainder -= SAVER_TARGET_FPS;
+    }
+}
+
 static int saver_event_is_touch(const SDL_Event *ev) {
     if (!device.board.has_touch) return 0;
 
@@ -853,15 +865,15 @@ static void run_saver_loop(int preview) {
     if (preview) drain_saver_launch_input();
 
     SDL_Event ev;
-    uint32_t next = SDL_GetTicks();
-    uint32_t last_status = SDL_GetTicks();
+    uint32_t next_frame = SDL_GetTicks();
+    uint32_t frame_remainder = 0;
 
     while (preview || saver_active()) {
         if (stop_requested_query && stop_requested_query()) break;
 
-        const uint32_t frame_ms = IDLE_MS;
         uint32_t now = SDL_GetTicks();
-        const int timeout = (int) (next > now ? next - now : 0);
+        const int32_t until_frame = (int32_t) (next_frame - now);
+        const int timeout = until_frame > 0 ? until_frame : 0;
 
         if (SDL_WaitEventTimeout(&ev, timeout)) {
             do {
@@ -880,21 +892,21 @@ static void run_saver_loop(int preview) {
 
         if (!preview && !saver_active()) break;
 
+        now = SDL_GetTicks();
+        if ((int32_t) (now - next_frame) < 0) continue;
+
         saver_update();
 
         if (!preview && !saver_active()) break;
 
         render_saver_frame();
-        next += frame_ms;
-
         now = SDL_GetTicks();
-        if (now - last_status >= TIMER_STATUS) {
-            status_poll();
-            last_status = now;
-        }
-
-        if (next <= now) next = now + frame_ms;
+        do {
+            advance_saver_deadline(&next_frame, &frame_remainder);
+        } while ((int32_t) (now - next_frame) >= 0);
     }
+
+    status_poll();
 
     monitor.force_clear = 1;
     monitor.refresh = 1;
