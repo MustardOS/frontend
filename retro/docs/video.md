@@ -6,9 +6,21 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
 
 - **Scaling Modes**: Fit Screen (default - largest aspect-correct size that fully fits, height-first with width
   fallback), Aspect, Integer, Stretch, Full Height, Full Width.
+- **Image Corrections**: child page for targeted artifact fixes. See
+  [`image-corrections.md`](image-corrections.md) for the shipped controls and candidate assessment.
 - **Shimmer Fix**: optional snap of the destination rect to exact integer multiples of the native frame size on both
   axes, eliminating the fractional-scale resampling shimmer visible on scrolling repeated textures (e.g. SMB1 bricks).
   Well it at least _tries_ to, it's not exactly perfect but gets the job done in most cases.
+- **Anti-Flicker**: optional, core-independent temporal filtering for software-rendered content. It requires each pixel
+  to exactly repeat its value from two frames ago and differ strongly from the previous frame before confirming an A/B/A
+  alternation. Confirmed pixels remain blended for three further frames, covering the changing background visible during
+  the opposite phase and one missed comparison without turning the effect into full-screen motion blur. This restores
+  deliberate transparency and temporal smoothing effects designed around CRT phosphor or early LCD persistence. Exact
+  repeat detection makes the ordinary non-flickering path inexpensive; held pixels skip repeat and luminance detection.
+  ARM builds use NEON for all three libretro software pixel formats; frames at or above 1280×720 are split into four
+  independent row ranges. The three helper threads, two-frame history, and one-byte-per-pixel confidence mask exist only
+  while enabled and are released when it is disabled. History and confidence are reset across pauses, hidden core runs,
+  geometry or pixel-format changes, resets, and state loads. Hardware-rendered cores do not expose the row.
 - **Rotation**: 0°/90°/180°/270° via an off screen canvas, composable with **Mirrored** (horizontal flip).
   Core-requested rotation (`SET_ROTATION`) combines with the user's setting.
 - **Viewport Offsets**: X/Y pixel offset and zoom with one-tap reset, applied on top of any scaling mode.

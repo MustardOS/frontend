@@ -12,6 +12,23 @@ allows. These built-in profiles change only their named picture, timing and audi
 adjustments and every unrelated preference remain untouched. Pickles remembers the complete settings state when a
 built-in profile is applied, so changing any setting removes its **Current** marker.
 
+Anti-Flicker remains disabled in every built-in profile because it is a content-dependent compatibility effect. It can
+be enabled for a content, core, or directory profile from **Video > Image Corrections** and is available to every
+software-rendered core rather than being tied to a particular emulator. Shimmer Fix is on the same child page. Moving
+the two controls changes only navigation; their saved keys and existing profiles remain compatible.
+
+### Load safety
+
+Pickles settings are sparse, layered INI files: canonical defaults are established first, then core, directory, and
+content overrides are applied. A missing key therefore keeps the safe value already resolved from that hierarchy. An
+explicit value is accepted only when its entire value is a valid decimal integer and it passes the field's range or
+choice validation; otherwise that field is reset to its canonical default. The same rule covers controller mappings,
+user profiles, and last-working snapshots.
+
+Settings and profile readers accept only regular files up to 64 KiB. Unknown keys are ignored. Loading never renames,
+rewrites, upgrades, or otherwise migrates an older file; incompatible or malformed data simply cannot enter the live
+settings model.
+
 User-made profiles live in `/run/muos/storage/save/pickles/profile/`. Pickles reads ordinary `.ini` files from this
 directory and shows a profile only when its optional core and content targets match the game being played. Leave both
 targets out to make a profile available everywhere. Applying a profile changes only the valid settings named in its

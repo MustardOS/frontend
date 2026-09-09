@@ -19,9 +19,9 @@ const gl_dispatch_t *gl_dispatch_acquire(const char *consumer, const unsigned ca
 
 #define LOAD_REQUIRED(NAME)                                                                                            \
     do {                                                                                                               \
-        if (!dispatch.NAME) MUOS_FUNCTION_ASSIGN(dispatch.NAME, SDL_GL_GetProcAddress("gl" #NAME));                  \
+        if (!dispatch.NAME) MUOS_FUNCTION_ASSIGN(dispatch.NAME, SDL_GL_GetProcAddress("gl" #NAME));                    \
         if (!dispatch.NAME) {                                                                                          \
-            LOG_ERROR("muxretro", "%s: failed to resolve GL function gl%s", consumer, #NAME);                       \
+            LOG_ERROR("muxretro", "%s: failed to resolve GL function gl%s", consumer, #NAME);                          \
             return NULL;                                                                                               \
         }                                                                                                              \
     } while (0)
@@ -52,6 +52,7 @@ const gl_dispatch_t *gl_dispatch_acquire(const char *consumer, const unsigned ca
         LOAD_REQUIRED(DrawArrays);
         LOAD_REQUIRED(BindBuffer);
         LOAD_REQUIRED(ActiveTexture);
+        LOAD_REQUIRED(TexParameteri);
         LOAD_REQUIRED(BindAttribLocation);
         LOAD_REQUIRED(Enable);
         LOAD_REQUIRED(Disable);
@@ -127,7 +128,7 @@ const gl_dispatch_t *gl_dispatch_acquire(const char *consumer, const unsigned ca
 
 #define LOAD_OPTIONAL(NAME)                                                                                            \
     do {                                                                                                               \
-        if (!dispatch.NAME) MUOS_FUNCTION_ASSIGN(dispatch.NAME, SDL_GL_GetProcAddress("gl" #NAME));                  \
+        if (!dispatch.NAME) MUOS_FUNCTION_ASSIGN(dispatch.NAME, SDL_GL_GetProcAddress("gl" #NAME));                    \
     } while (0)
     if (capabilities & gl_dispatch_hardware) {
         LOAD_OPTIONAL(BindVertexArray);

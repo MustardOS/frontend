@@ -4,8 +4,8 @@ BIN_DIR := ../bin
 LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(BIN_DIR)/muxretro
 
-CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE
-LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl
+CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE -pthread
+LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread
 
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
@@ -14,10 +14,10 @@ INCLUDES := -I. -I.. -I../module -I../module/ui -I../vendor -Icore
 SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        core/main.c core/startup.c core/core.c core/environment.c core/runahead.c core/perf.c \
        core/governor_boost.c core/power.c core/power_protocol.c \
-       video/video.c video/gl_dispatch.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
+       video/video.c video/interframe_blend.c video/gl_dispatch.c video/colour.c video/overlay_bridge.c video/frame_pacer.c \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_shaderadjust.c video/ui_viewport.c \
        video/ui_viewportadjust.c video/ui_viewportcrop.c video/ui_overlay.c video/ui_vignette.c \
-       video/image_writer.c video/ui_videosettings.c video/hw_render.c \
+       video/image_writer.c video/ui_videosettings.c video/ui_imagecorrections.c video/hw_render.c \
        video/filters/filters.c video/filters/scale2x.c video/filters/super_eagle.c \
        audio/audio.c audio/ui_soundsettings.c \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
@@ -32,7 +32,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        cheevo/account.c cheevo/cache.c cheevo/cache_key.c cheevo/spool.c cheevo/cheevo.c cheevo/ui_cheevo.c \
        netplay/address.c netplay/wire.c netplay/netplay.c netplay/ui_netplay.c \
        link/link.c link/ui_link.c \
-       settings/settings.c settings/submenu.c settings/ui_settings.c \
+       settings/settings.c settings/safe_ini.c settings/submenu.c settings/ui_settings.c \
        settings/ui_performancesettings.c settings/ui_hudsettings.c \
        ui/ui_pause.c ui/ui_advisory.c ui/ui_loading.c ui/options.c ui/ui_options.c ui/ui_information.c \
        ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c ui/ui_patch.c ui/ui_manual.c

@@ -25,3 +25,5 @@ const submenu_def *cheevo_settings_definition(void);
 int cheevo_settings_child_tick(void);
 
 int viewport_settings_child_tick(void);
+
+int image_corrections_settings_child_tick(void);

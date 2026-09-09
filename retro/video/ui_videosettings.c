@@ -4,36 +4,47 @@
 #include "../settings/settings.h"
 #include "../settings/pages.h"
 #include "../settings/submenu.h"
+#include "hw_render.h"
 
 enum {
-    row_scaling = 0,
+    row_image_corrections = 0,
+    row_scaling,
     row_rotate,
     row_mirrored,
     row_aspect_ratio,
     row_integer_scale,
     row_filter,
-    row_shimmer_fix,
     row_border,
     row_game_renderer,
     row_max
 };
 
 static const char *all_labels[row_max] = {
-    lang.muxretro.settings_screen.scaling_mode,  lang.muxretro.settings_screen.rotate,
-    lang.muxretro.settings_screen.mirrored,      lang.muxretro.settings_screen.aspect_ratio_mode,
-    lang.muxretro.settings_screen.integer_scale, lang.muxretro.settings_screen.texture_filter,
-    lang.muxretro.settings_screen.shimmer_fix,   lang.muxretro.settings_screen.border_colour,
+    lang.muxretro.settings_screen.image_corrections,
+    lang.muxretro.settings_screen.scaling_mode,
+    lang.muxretro.settings_screen.rotate,
+    lang.muxretro.settings_screen.mirrored,
+    lang.muxretro.settings_screen.aspect_ratio_mode,
+    lang.muxretro.settings_screen.integer_scale,
+    lang.muxretro.settings_screen.texture_filter,
+    lang.muxretro.settings_screen.border_colour,
     lang.muxretro.settings_screen.game_renderer
 };
 
-static const char *all_glyphs[row_max] = {"scaling",       "rotate",     "mirrored", "aspectratio", "integerscale",
-                                          "texturefilter", "shimmerfix", "border",   "gamerenderer"};
+static const char *all_glyphs[row_max] = {"shimmerfix",   "scaling",       "rotate", "mirrored",    "aspectratio",
+                                          "integerscale", "texturefilter", "border", "gamerenderer"};
 
-static const char *all_help[row_max] = {lang.muxretro.help.video.scaling,       lang.muxretro.help.video.rotate,
-                                        lang.muxretro.help.video.mirrored,      lang.muxretro.help.video.aspect_ratio,
-                                        lang.muxretro.help.video.integer_scale, lang.muxretro.help.video.texture_filter,
-                                        lang.muxretro.help.video.shimmer_fix,   lang.muxretro.help.video.border,
-                                        lang.muxretro.help.video.game_renderer};
+static const char *all_help[row_max] = {
+    lang.muxretro.help.video.image_corrections,
+    lang.muxretro.help.video.scaling,
+    lang.muxretro.help.video.rotate,
+    lang.muxretro.help.video.mirrored,
+    lang.muxretro.help.video.aspect_ratio,
+    lang.muxretro.help.video.integer_scale,
+    lang.muxretro.help.video.texture_filter,
+    lang.muxretro.help.video.border,
+    lang.muxretro.help.video.game_renderer
+};
 
 // The renderer choice only means anything to a core that asked for hardware rendering!
 static const char *row_labels[row_max];
@@ -78,9 +89,6 @@ static void row_value_text(const int display_index, char *buf, const size_t buf_
         case row_filter:
             snprintf(buf, buf_len, "%s", session_settings_filter_name(session_settings.texture_filter));
             break;
-        case row_shimmer_fix:
-            snprintf(buf, buf_len, "%s", session_settings.shimmer_fix ? lang.generic.enabled : lang.generic.disabled);
-            break;
         case row_border:
             snprintf(buf, buf_len, "%s", session_settings_border_name(session_settings.border_colour));
             break;
@@ -115,9 +123,6 @@ static void cycle_row(const int display_index, const int direction) {
         case row_filter:
             session_settings_cycle_filter(direction);
             break;
-        case row_shimmer_fix:
-            session_settings_cycle_shimmer_fix(direction);
-            break;
         case row_border:
             session_settings_cycle_border(direction);
             break;
@@ -128,6 +133,18 @@ static void cycle_row(const int display_index, const int direction) {
         default:
             break;
     }
+}
+
+static int row_is_action(const int display_index) {
+    return row_map[display_index] == row_image_corrections;
+}
+
+static void row_action(const int display_index) {
+    if (row_map[display_index] == row_image_corrections) image_corrections_menu_open();
+}
+
+static int child_tick(void) {
+    return image_corrections_settings_child_tick();
 }
 
 static submenu self;
@@ -143,6 +160,9 @@ static submenu_def def = {
     .row_count = row_max,
     .value_text = row_value_text,
     .cycle = cycle_row,
+    .row_is_action = row_is_action,
+    .action = row_action,
+    .child_tick = child_tick,
     .closed = closed,
     .save_title = lang.muxretro.save.video_title,
     .save_desc = lang.muxretro.save.video_desc,
@@ -153,6 +173,7 @@ void video_menu_init(void) {
     def.row_count = row_total;
 
     submenu_init(&self, &def);
+    image_corrections_menu_init();
 }
 
 void video_menu_open(void) {
@@ -168,6 +189,21 @@ int video_menu_is_active(void) {
 
 void video_menu_tick(void) {
     submenu_tick(&self);
+}
+
+void video_menu_reopen_image_corrections(void) {
+    build_rows();
+    def.row_count = row_total;
+
+    int display_index = 0;
+    while (display_index < row_total && row_map[display_index] != row_image_corrections)
+        display_index++;
+    if (display_index >= row_total) display_index = 0;
+
+    if (submenu_is_active(&self))
+        submenu_reopen_at(&self, display_index);
+    else
+        settings_menu_reopen_video_at(display_index);
 }
 
 const submenu_def *video_menu_definition(void) {

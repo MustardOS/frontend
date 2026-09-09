@@ -403,7 +403,9 @@ static void pace_core_output(const uint64_t frame_start) {
     const int slowmo_active = hotkeys_is_slow_motion_active();
 
     const int audio_master_paced = !slowmo_active && core_pacing_uses_audio_clock();
-    const int deadline_content_paced = !audio_master_paced && core_content_needs_pacing();
+    const int auto_locked_paced = !slowmo_active && session_settings.fps_limit == fps_limit_auto && !netplay_is_active()
+                                  && !link_is_engaged() && audio_bridge_locked_content_fps() > 0.0;
+    const int deadline_content_paced = !audio_master_paced && (core_content_needs_pacing() || auto_locked_paced);
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
@@ -426,7 +428,7 @@ static void pace_core_output(const uint64_t frame_start) {
 
     const double audio_target_ms = !slowmo_active ? core_auto_pace_target_ms() : 0.0;
 
-    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_target_ms <= 0.0) {
+    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_target_ms <= 0.0 && !auto_locked_paced) {
         fps_limit_deadline = 0.0;
         fps_limit_target_ms = 0.0;
         return;
@@ -867,7 +869,10 @@ int main(const int argc, char *argv[]) {
                                    || (paused && !netplay_is_playing() && !link_is_engaged());
 
         if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
-        if (prev_paused && !content_paused) core_prime_audio();
+        if (prev_paused && !content_paused) {
+            core_prime_audio();
+            video_bridge_reset_temporal();
+        }
 
         prev_paused = content_paused;
         audio_bridge_set_paused(content_paused);

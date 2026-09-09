@@ -25,6 +25,10 @@ void colour_set_suppressed(int suppressed);
 
 void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect);
 
+void colour_render_pass_area_scaled(
+    SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect
+);
+
 int colour_shader_param_count(void);
 
 const char *colour_shader_param_label(int index);
@@ -36,4 +40,3 @@ void colour_shader_param_cycle(int index, int direction);
 void colour_shader_params_reset(void);
 
 void colour_shader_params_save(void);
-

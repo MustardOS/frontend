@@ -9,6 +9,7 @@
 #include "colour.h"
 #include "filters/filters.h"
 #include "hw_render.h"
+#include "interframe_blend.h"
 #include "../core/muxretro.h"
 #include "../core/perf.h"
 #include "overlay_bridge.h"
@@ -36,6 +37,20 @@ static unsigned raw_frame_bpp = 0;
 static uint8_t *scaled_buf = NULL;
 static size_t scaled_buf_cap = 0;
 
+// This may need to be increased or perhaps set by device later on...
+enum { anti_flicker_history_frames = 4 };
+
+static void *anti_flicker_history[anti_flicker_history_frames] = {NULL};
+static size_t anti_flicker_history_cap[anti_flicker_history_frames] = {0};
+static uint8_t *anti_flicker_persistence = NULL;
+static size_t anti_flicker_persistence_cap = 0;
+static size_t anti_flicker_history_pitch = 0;
+static int anti_flicker_history_w = 0;
+static int anti_flicker_history_h = 0;
+static enum retro_pixel_format anti_flicker_history_format = RETRO_PIXEL_FORMAT_0RGB1555;
+static unsigned anti_flicker_history_count = 0;
+static int anti_flicker_available = 1;
+
 static SDL_Texture *sharp_bilinear_tex = NULL;
 static int sharp_bilinear_tex_w = 0;
 static int sharp_bilinear_tex_h = 0;
@@ -53,6 +68,113 @@ static int frame_skip = 0;
 static int applied_swap_interval = -2;
 
 static void upload_frame(void);
+
+static void reset_anti_flicker_history(const int release) {
+    anti_flicker_history_count = 0;
+    anti_flicker_history_pitch = 0;
+    anti_flicker_history_w = 0;
+    anti_flicker_history_h = 0;
+    if (anti_flicker_persistence) memset(anti_flicker_persistence, 0, anti_flicker_persistence_cap);
+
+    if (!release) return;
+
+    for (int i = 0; i < anti_flicker_history_frames; i++) {
+        free(anti_flicker_history[i]);
+        anti_flicker_history[i] = NULL;
+        anti_flicker_history_cap[i] = 0;
+    }
+    free(anti_flicker_persistence);
+    anti_flicker_persistence = NULL;
+    anti_flicker_persistence_cap = 0;
+    interframe_blend_shutdown();
+}
+
+void video_bridge_reset_temporal(void) {
+    reset_anti_flicker_history(0);
+}
+
+void video_bridge_apply_anti_flicker(void) {
+    anti_flicker_available = 1;
+    reset_anti_flicker_history(!session_settings.anti_flicker);
+}
+
+static int ensure_anti_flicker_history(const size_t needed, const size_t persistence_needed) {
+    for (int i = 0; i < anti_flicker_history_frames; i++) {
+        if (anti_flicker_history_cap[i] >= needed) continue;
+
+        void *grown = realloc(anti_flicker_history[i], needed);
+        if (!grown) {
+            LOG_ERROR(mux_module, "Failed to allocate Anti-Flicker frame history");
+            reset_anti_flicker_history(1);
+            anti_flicker_available = 0;
+            return 0;
+        }
+
+        anti_flicker_history[i] = grown;
+        anti_flicker_history_cap[i] = needed;
+    }
+
+    if (anti_flicker_persistence_cap < persistence_needed) {
+        uint8_t *grown = realloc(anti_flicker_persistence, persistence_needed);
+        if (!grown) {
+            LOG_ERROR(mux_module, "Failed to allocate Anti-Flicker persistence mask");
+            reset_anti_flicker_history(1);
+            anti_flicker_available = 0;
+            return 0;
+        }
+        anti_flicker_persistence = grown;
+        anti_flicker_persistence_cap = persistence_needed;
+        memset(anti_flicker_persistence, 0, persistence_needed);
+    }
+
+    return 1;
+}
+
+static void apply_anti_flicker(
+    const void *original, const unsigned width, const unsigned height, const size_t pitch,
+    const enum retro_pixel_format format
+) {
+    if (!session_settings.anti_flicker || !anti_flicker_available) return;
+
+    const size_t bytes_per_pixel = format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
+    if (width > SIZE_MAX / bytes_per_pixel || pitch < (size_t) width * bytes_per_pixel || pitch % bytes_per_pixel != 0
+        || height > SIZE_MAX / pitch || height > SIZE_MAX / width)
+        return;
+
+    if (anti_flicker_history_w != (int) width || anti_flicker_history_h != (int) height
+        || anti_flicker_history_pitch != pitch || anti_flicker_history_format != format) {
+        reset_anti_flicker_history(0);
+        anti_flicker_history_w = (int) width;
+        anti_flicker_history_h = (int) height;
+        anti_flicker_history_pitch = pitch;
+        anti_flicker_history_format = format;
+    }
+
+    const size_t needed = pitch * height;
+    const size_t persistence_needed = (size_t) width * height;
+    if (!ensure_anti_flicker_history(needed, persistence_needed)) return;
+
+    if (anti_flicker_history_count >= 2) {
+        interframe_blend_detected(
+            raw_frame_buf, anti_flicker_history[0], anti_flicker_history[1],
+            anti_flicker_history_count >= 4 ? anti_flicker_history[2] : NULL,
+            anti_flicker_history_count >= 4 ? anti_flicker_history[3] : NULL, width, height, pitch, format,
+            anti_flicker_persistence, width
+        );
+    }
+
+    void *oldest = anti_flicker_history[anti_flicker_history_frames - 1];
+    const size_t oldest_cap = anti_flicker_history_cap[anti_flicker_history_frames - 1];
+    for (int i = anti_flicker_history_frames - 1; i > 0; i--) {
+        anti_flicker_history[i] = anti_flicker_history[i - 1];
+        anti_flicker_history_cap[i] = anti_flicker_history_cap[i - 1];
+    }
+    anti_flicker_history[0] = oldest;
+    anti_flicker_history_cap[0] = oldest_cap;
+
+    memcpy(anti_flicker_history[0], original, needed);
+    if (anti_flicker_history_count < anti_flicker_history_frames) anti_flicker_history_count++;
+}
 
 static Uint32 sdl_format_for_pixel_format(const enum retro_pixel_format fmt) {
     switch (fmt) {
@@ -244,7 +366,11 @@ static void draw_video_content(SDL_Renderer *renderer, const int physical_output
     if (physical_output) display_map_logical_rect(&dest_rect, &output_rect);
 
     if (session_settings.border_colour != border_colour_theme) {
-        const SDL_Color *c = &border_colours[session_settings.border_colour];
+        const int border_index =
+            session_settings.border_colour >= 0 && session_settings.border_colour < border_colour_count
+                ? session_settings.border_colour
+                : border_colour_theme;
+        const SDL_Color *c = &border_colours[border_index];
         SDL_SetRenderDrawColor(renderer, c->r, c->g, c->b, c->a);
         SDL_RenderFillRect(renderer, NULL);
     }
@@ -255,9 +381,11 @@ static void draw_video_content(SDL_Renderer *renderer, const int physical_output
         draw_sharp_bilinear(renderer, &output_rect);
     } else {
         SDL_Rect crop_src;
-        colour_render_pass(
-            renderer, frame_tex, crop_tex_rect(&crop_src, frame_w > 0 ? tex_w / frame_w : 1), &output_rect
-        );
+        const SDL_Rect *source = crop_tex_rect(&crop_src, frame_w > 0 ? tex_w / frame_w : 1);
+        if (session_settings.texture_filter == texture_filter_nearest)
+            colour_render_pass_area_scaled(renderer, frame_tex, source, &output_rect);
+        else
+            colour_render_pass(renderer, frame_tex, source, &output_rect);
     }
 
     int canvas_w, canvas_h;
@@ -656,6 +784,8 @@ void video_bridge_shutdown(void) {
     scaled_buf = NULL;
     scaled_buf_cap = 0;
 
+    reset_anti_flicker_history(1);
+
     frame_w = 0;
     frame_h = 0;
     tex_w = 0;
@@ -666,6 +796,7 @@ void video_bridge_shutdown(void) {
 }
 
 void video_bridge_set_frame_skip(const int skip) {
+    if (skip && !frame_skip) video_bridge_reset_temporal();
     frame_skip = skip;
 }
 
@@ -692,6 +823,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 
     if (!data || width == 0 || height == 0) return;
 
+    const enum retro_pixel_format pixel_format = mux_retro_get_pixel_format();
     raw_frame_bpp = bpp_for_pixel_format();
     const size_t raw_needed = pitch * height;
     if (raw_needed > raw_frame_buf_cap) {
@@ -710,6 +842,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 
     const uint64_t upload_start = perf_begin();
     memcpy(raw_frame_buf, data, raw_needed);
+    apply_anti_flicker(data, width, height, pitch, pixel_format);
 
     if (texture_filter_is_cpu_scaled(session_settings.texture_filter)) {
         frame_dirty = 1;

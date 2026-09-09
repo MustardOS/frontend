@@ -202,6 +202,7 @@ struct session_settings_t {
     int audio_rate_control;
     int game_renderer;
     int shimmer_fix;
+    int anti_flicker;
     int run_ahead;
     int gpu_hard_sync;
     int port_assignment[MUX_INPUT_PORT_COUNT];
@@ -543,6 +544,8 @@ void session_settings_cycle_audio_rate_control(int direction);
 void session_settings_cycle_game_renderer(int direction);
 
 void session_settings_cycle_shimmer_fix(int direction);
+
+void session_settings_cycle_anti_flicker(int direction);
 
 void session_settings_cycle_run_ahead(int direction);
 

@@ -3,6 +3,7 @@
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include "../core/core.h"
+#include "../core/muxretro.h"
 #include "../coreinfo/coreinfo.h"
 #include "../video/hw_render.h"
 #include "core_state.h"
@@ -167,6 +168,7 @@ int core_state_restore(const void *data, const size_t size, const size_t caller_
 
     const int okay = current_core.retro_unserialize(data, size);
     hw_render_bridge_exit_core_call();
+    if (okay) video_bridge_reset_temporal();
     LOG_DEBUG(
         mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu policy=%s result=%s", operation, reported,
         size, limit, coreinfo_state_load_policy() == coreinfo_state_load_exact ? "exact" : "core",

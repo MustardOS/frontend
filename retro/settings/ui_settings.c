@@ -416,7 +416,7 @@ static void perform_reset(const reset_scope scope) {
 }
 
 static int reset_modal_tick(void) {
-    mux_dialogue *active = dialogue_active(&reset_scope_dlg)   ? &reset_scope_dlg
+    mux_dialogue *active = dialogue_active(&reset_scope_dlg)     ? &reset_scope_dlg
                            : dialogue_active(&reset_confirm_dlg) ? &reset_confirm_dlg
                                                                  : NULL;
     if (!active) return 0;
@@ -596,6 +596,7 @@ static int child_tick(void) {
         return 1;
     }
     if (viewport_settings_child_tick()) return 1;
+    if (image_corrections_settings_child_tick()) return 1;
     if (colfilter_menu_is_active()) {
         colfilter_menu_tick();
         return 1;
@@ -802,8 +803,12 @@ void settings_menu_tick(void) {
 }
 
 void settings_menu_reopen_video(void) {
+    settings_menu_reopen_video_at(0);
+}
+
+void settings_menu_reopen_video_at(const int local_index) {
     build_rows();
-    submenu_reopen_at(&self, row_for_definition(video_menu_definition(), 0));
+    submenu_reopen_at(&self, row_for_definition(video_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_visuals(void) {

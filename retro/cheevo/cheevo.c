@@ -1348,6 +1348,7 @@ void cheevo_tick(void) {
         hw_render_bridge_enter_core_call();
         if (current_core.retro_reset) current_core.retro_reset();
         hw_render_bridge_exit_core_call();
+        video_bridge_reset_temporal();
         audio_bridge_clear_queued();
         runahead_invalidate();
         rc_client_reset(client);

@@ -31,6 +31,7 @@
 #include "../core/paths.h"
 #include "../core/perf.h"
 #include "settings.h"
+#include "safe_ini.h"
 
 static const struct session_settings_t defaults = {
     .scaling_mode = video_scale_fit,
@@ -109,6 +110,7 @@ static const struct session_settings_t defaults = {
     .audio_rate_control = 50,
     .game_renderer = game_renderer_hardware,
     .shimmer_fix = 0,
+    .anti_flicker = 0,
     .run_ahead = 0,
     .gpu_hard_sync = 0,
     .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
@@ -357,6 +359,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_CHOICES(audio_rate_control, audio_rate_control_choices),
     SETTING_RANGE(game_renderer, 0, game_renderer_count - 1),
     SETTING_RANGE(shimmer_fix, 0, 1),
+    SETTING_RANGE(anti_flicker, 0, 1),
     SETTING_RANGE(run_ahead, 0, 1),
     SETTING_RANGE(gpu_hard_sync, 0, 1),
 };
@@ -377,6 +380,7 @@ static const char *audio_latency_names[audio_latency_count] = {
 struct play_profile_settings {
     int texture_filter;
     int shimmer_fix;
+    int anti_flicker;
     int frame_delay_ms;
     int run_ahead;
     int gpu_hard_sync;
@@ -386,9 +390,9 @@ struct play_profile_settings {
 };
 
 static const struct play_profile_settings play_profiles[play_profile_count] = {
-    {texture_filter_nearest, 0, FRAME_DELAY_OFF, 0, 0, audio_latency_compat, 1024, 100},
-    {texture_filter_nearest, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50},
-    {texture_filter_sharp_bilinear, 1, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50}
+    {texture_filter_nearest, 0, 0, FRAME_DELAY_OFF, 0, 0, audio_latency_compat, 1024, 100},
+    {texture_filter_nearest, 0, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50},
+    {texture_filter_sharp_bilinear, 1, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50}
 };
 
 static struct session_settings_t play_profile_resolve(const enum play_profile profile) {
@@ -397,6 +401,7 @@ static struct session_settings_t play_profile_resolve(const enum play_profile pr
 
     resolved.texture_filter = values->texture_filter;
     resolved.shimmer_fix = values->shimmer_fix;
+    resolved.anti_flicker = values->anti_flicker;
     resolved.frame_delay_ms = values->frame_delay_ms;
     resolved.run_ahead = values->run_ahead;
     resolved.gpu_hard_sync = values->gpu_hard_sync;
@@ -411,15 +416,8 @@ static int play_profile_values_match(const enum play_profile profile) {
     return memcmp(&session_settings, &expected, sizeof(session_settings)) == 0;
 }
 
-// Derived from live state on every call so it cannot go stale against settings, core
-// options or profile files that are loaded in a different order.
 enum play_profile session_settings_play_profile(void) {
-    // An explicit user profile choice stays current even when its values are identical
-    // to a built-in one, but only for as long as it still describes the live settings.
     if (user_profile_selection_active()) return play_profile_unmatched;
-
-    // Applying a built-in profile returns the core options to their baseline, so options
-    // moved away from it mean no built-in profile describes the session any more.
     if (!options_profile_baseline_matches()) return play_profile_unmatched;
 
     for (int profile = 0; profile < play_profile_count; profile++)
@@ -858,7 +856,7 @@ setting_field_const(const struct session_settings_t *settings, const struct sett
 enum {
     setting_descriptor_count = sizeof(setting_descriptors) / sizeof(setting_descriptors[0]),
     user_profile_scan_limit = 64,
-    user_profile_file_limit = 64 * 1024
+    settings_file_limit = 64 * 1024
 };
 
 typedef struct {
@@ -876,99 +874,94 @@ typedef struct {
 static user_profile user_profiles[SESSION_USER_PROFILE_LIMIT];
 static int user_profile_count;
 
-static int apply_input_settings_to(mini_t *ini, struct session_settings_t *settings) {
+static int apply_loaded_int(
+    mini_t *ini, const char *key, const long long minimum, const long long maximum, const int fallback, int *target,
+    const char *source
+) {
+    long long value = 0;
+    const enum safe_ini_value_status status = safe_ini_get_int(ini, "settings", key, &value);
+    if (status == safe_ini_value_missing) return 0;
+
+    if (status == safe_ini_value_valid && value >= minimum && value <= maximum) {
+        *target = (int) value;
+    } else {
+        *target = fallback;
+        LOG_WARN(mux_module, "Defaulting invalid setting '%s' in %s", key, source ? source : "settings");
+    }
+    return 1;
+}
+
+static int setting_string_valid(const char *value, const size_t capacity) {
+    if (!value || strlen(value) >= capacity) return 0;
+    for (const unsigned char *cursor = (const unsigned char *) value; *cursor; cursor++)
+        if (*cursor < 0x20 || *cursor == 0x7f) return 0;
+    return 1;
+}
+
+static int apply_input_settings_to(
+    mini_t *ini, struct session_settings_t *settings, const struct session_settings_t *fallback, const char *source
+) {
     int applied = 0;
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
-        long long value;
 
         snprintf(key, sizeof(key), "port%d_assignment", i);
-        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-            value = mini_get_int(ini, "settings", key, LLONG_MIN);
-            if (value >= port_assignment_auto && value <= port_assignment_remembered) {
-                settings->port_assignment[i] = (int) value;
-                applied++;
-            }
-        }
+        applied += apply_loaded_int(
+            ini, key, port_assignment_auto, port_assignment_remembered, fallback->port_assignment[i],
+            &settings->port_assignment[i], source
+        );
 
         snprintf(key, sizeof(key), "port%d_device_key", i);
         if (mini_value_exists(ini, "settings", key) == MINI_OK) {
             const char *device_key = mini_get_string(ini, "settings", key, "");
-            snprintf(settings->port_device_key[i], sizeof(settings->port_device_key[i]), "%s", device_key);
+            if (setting_string_valid(device_key, sizeof(settings->port_device_key[i]))) {
+                snprintf(settings->port_device_key[i], sizeof(settings->port_device_key[i]), "%s", device_key);
+            } else {
+                snprintf(
+                    settings->port_device_key[i], sizeof(settings->port_device_key[i]), "%s",
+                    fallback->port_device_key[i]
+                );
+                LOG_WARN(mux_module, "Defaulting invalid setting '%s' in %s", key, source ? source : "settings");
+            }
             applied++;
         }
 
         snprintf(key, sizeof(key), "port%d_device_id", i);
-        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-            value = mini_get_int(ini, "settings", key, LLONG_MIN);
-            if (value >= 0 && value <= INT_MAX) {
-                settings->port_device_id[i] = (int) value;
-                applied++;
-            }
-        }
+        applied +=
+            apply_loaded_int(ini, key, 0, INT_MAX, fallback->port_device_id[i], &settings->port_device_id[i], source);
 
-        int role_stated = 0;
         snprintf(key, sizeof(key), "port%d_role", i);
-        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-            value = mini_get_int(ini, "settings", key, LLONG_MIN);
-            if (value >= port_role_player && value <= port_role_ketchup) {
-                settings->port_role[i] = (int) value;
-                role_stated = 1;
-                applied++;
-            }
-        }
+        applied += apply_loaded_int(
+            ini, key, port_role_player, port_role_ketchup, fallback->port_role[i], &settings->port_role[i], source
+        );
 
         snprintf(key, sizeof(key), "port%d_deck", i);
-        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-            value = mini_get_int(ini, "settings", key, LLONG_MIN);
-            if (value >= -1 && value < DECK_MAX) {
-                settings->port_deck[i] = (int) value;
-                applied++;
-            }
-        }
-
-        if (!role_stated && settings->port_deck[i] >= 0) {
-            settings->port_role[i] = port_role_ketchup;
-            applied++;
-        }
+        applied +=
+            apply_loaded_int(ini, key, -1, DECK_MAX - 1, fallback->port_deck[i], &settings->port_deck[i], source);
 
         snprintf(key, sizeof(key), "port%d_stick_forced", i);
-        if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-            value = mini_get_int(ini, "settings", key, LLONG_MIN);
-            if (value >= 0 && value <= 2) {
-                settings->port_stick_forced[i] = (int) value;
-                applied++;
-            }
-        }
+        applied +=
+            apply_loaded_int(ini, key, 0, 2, fallback->port_stick_forced[i], &settings->port_stick_forced[i], source);
 
-        for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
-            snprintf(key, sizeof(key), "port%d_src_%d", i, source);
-            if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-                value = mini_get_int(ini, "settings", key, LLONG_MIN);
-                if (value >= -1 && value < PORT_TARGET_COUNT) {
-                    settings->port_source_target[i][source] = (int) value;
-                    applied++;
-                }
-            }
+        for (int binding = 0; binding < PORT_SOURCE_COUNT; binding++) {
+            snprintf(key, sizeof(key), "port%d_src_%d", i, binding);
+            applied += apply_loaded_int(
+                ini, key, -1, PORT_TARGET_COUNT - 1, fallback->port_source_target[i][binding],
+                &settings->port_source_target[i][binding], source
+            );
 
-            snprintf(key, sizeof(key), "port%d_srcms_%d", i, source);
-            if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-                value = mini_get_int(ini, "settings", key, LLONG_MIN);
-                if (value >= 0 && value <= 65535) {
-                    settings->port_source_turbo[i][source] = (int) value;
-                    applied++;
-                }
-            }
+            snprintf(key, sizeof(key), "port%d_srcms_%d", i, binding);
+            applied += apply_loaded_int(
+                ini, key, 0, 65535, fallback->port_source_turbo[i][binding], &settings->port_source_turbo[i][binding],
+                source
+            );
 
-            snprintf(key, sizeof(key), "port%d_macro_%d", i, source);
-            if (mini_value_exists(ini, "settings", key) == MINI_OK) {
-                value = mini_get_int(ini, "settings", key, LLONG_MIN);
-                if (value >= -1 && value < MACRO_MAX) {
-                    settings->port_source_macro[i][source] = (int) value;
-                    applied++;
-                }
-            }
+            snprintf(key, sizeof(key), "port%d_macro_%d", i, binding);
+            applied += apply_loaded_int(
+                ini, key, -1, MACRO_MAX - 1, fallback->port_source_macro[i][binding],
+                &settings->port_source_macro[i][binding], source
+            );
         }
     }
 
@@ -1017,13 +1010,15 @@ static int user_profile_target_matches(const char *wanted, const char *first, co
 }
 
 static int user_profile_load(const char *path, const char *file_name, user_profile *profile) {
-    mini_t *ini = mini_load(path);
+    mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return 0;
 
-    const int version = (int) mini_get_int(ini, "profile", "version", 1);
+    long long parsed_version = 1;
+    const enum safe_ini_value_status version_status = safe_ini_get_int(ini, "profile", "version", &parsed_version);
     const char *wanted_core = mini_get_string(ini, "profile", "core", "");
     const char *wanted_content = mini_get_string(ini, "profile", "content", "");
-    if (version != 1 || !user_profile_target_matches(wanted_core, settings_core_name, NULL)
+    if (version_status == safe_ini_value_invalid || (version_status == safe_ini_value_valid && parsed_version != 1)
+        || !user_profile_target_matches(wanted_core, settings_core_name, NULL)
         || !user_profile_target_matches(wanted_content, settings_content_name, settings_content_stem)) {
         mini_free(ini);
         return 0;
@@ -1031,6 +1026,7 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
 
     memset(profile, 0, sizeof(*profile));
     profile->values = baseline_settings;
+    const struct session_settings_t fallback = default_settings();
     snprintf(profile->path, sizeof(profile->path), "%s", path);
 
     const char *display_name = mini_get_string(ini, "profile", "name", "");
@@ -1055,18 +1051,19 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
         if (mini_value_exists(ini, "settings", descriptor->key) != MINI_OK) continue;
 
-        const long long value = mini_get_int(ini, "settings", descriptor->key, LLONG_MIN);
-        if (!setting_value_valid(descriptor, value)) {
-            LOG_WARN(mux_module, "Ignoring invalid user profile value '%s' in %s", descriptor->key, file_name);
-            continue;
+        long long value = 0;
+        const enum safe_ini_value_status status = safe_ini_get_int(ini, "settings", descriptor->key, &value);
+        if (status == safe_ini_value_valid && setting_value_valid(descriptor, value)) {
+            *setting_field(&profile->values, descriptor) = (int) value;
+        } else {
+            *setting_field(&profile->values, descriptor) = *setting_field_const(&fallback, descriptor);
+            LOG_WARN(mux_module, "Defaulting invalid user profile value '%s' in %s", descriptor->key, file_name);
         }
-
-        *setting_field(&profile->values, descriptor) = (int) value;
         profile->present[i] = 1;
         profile->field_count++;
     }
 
-    const int input_fields = apply_input_settings_to(ini, &profile->values);
+    const int input_fields = apply_input_settings_to(ini, &profile->values, &fallback, file_name);
     profile->input_present = input_fields > 0;
     profile->field_count += input_fields;
 
@@ -1110,7 +1107,7 @@ int session_settings_refresh_user_profiles(void) {
 
         struct stat file_status;
         if (lstat(path, &file_status) != 0 || !S_ISREG(file_status.st_mode) || file_status.st_size <= 0
-            || file_status.st_size > user_profile_file_limit)
+            || file_status.st_size > settings_file_limit)
             continue;
 
         snprintf(file_names[file_count], sizeof(file_names[file_count]), "%s", entry->d_name);
@@ -1190,16 +1187,11 @@ static int user_profile_selection_active(void) {
 }
 
 int session_settings_user_profile_current(void) {
-    // A built-in profile and a user profile are distinct choices even when their
-    // resolved values happen to match, so an explicit user selection wins there. Reaching
-    // a built-in means any remembered selection no longer describes the session.
     if (session_settings_play_profile() != play_profile_unmatched) {
         active_user_profile_path[0] = '\0';
         return -1;
     }
 
-    // Prefer the explicitly selected profile when duplicate files describe the same
-    // configuration, then fall back to configuration matching after a restart.
     for (int index = 0; index < user_profile_count; index++) {
         const user_profile *profile = &user_profiles[index];
         if (active_user_profile_path[0] && strcmp(profile->path, active_user_profile_path) == 0
@@ -1388,24 +1380,32 @@ int session_settings_user_profile_delete(const int index) {
     return 1;
 }
 
-static void apply_scalar_settings_to(mini_t *ini, struct session_settings_t *settings) {
+static void apply_scalar_settings_to(
+    mini_t *ini, struct session_settings_t *settings, const struct session_settings_t *fallback,
+    const int default_missing, const char *source
+) {
     for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
-        const long long value = mini_get_int(ini, "settings", descriptor->key, INT_MIN);
-        if (setting_value_valid(descriptor, value)) {
+        long long value = 0;
+        const enum safe_ini_value_status status = safe_ini_get_int(ini, "settings", descriptor->key, &value);
+        if (status == safe_ini_value_missing) {
+            if (default_missing) *setting_field(settings, descriptor) = *setting_field_const(fallback, descriptor);
+        } else if (status == safe_ini_value_valid && setting_value_valid(descriptor, value)) {
             *setting_field(settings, descriptor) = (int) value;
-        } else if (value != INT_MIN && descriptor->offset == offsetof(struct session_settings_t, integer_scale)) {
-            settings->integer_scale = integer_scale_auto;
+        } else {
+            *setting_field(settings, descriptor) = *setting_field_const(fallback, descriptor);
+            LOG_WARN(mux_module, "Defaulting invalid setting '%s' in %s", descriptor->key, source);
         }
     }
 }
 
 static void apply_ini(const char *path) {
-    mini_t *ini = mini_try_load(path);
+    mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return;
 
-    apply_scalar_settings_to(ini, &session_settings);
-    apply_input_settings_to(ini, &session_settings);
+    const struct session_settings_t fallback = default_settings();
+    apply_scalar_settings_to(ini, &session_settings, &fallback, 0, path);
+    apply_input_settings_to(ini, &session_settings, &fallback, path);
 
     mini_free(ini);
 }
@@ -1591,11 +1591,15 @@ static int write_settings_snapshot(const char *path, const struct session_settin
 }
 
 static int read_settings_snapshot(const char *path, struct session_settings_t *settings) {
-    mini_t *ini = mini_try_load(path);
+    mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return 0;
 
-    const int valid = mini_get_int(ini, "snapshot", "version", 0) == 1;
-    if (valid) apply_scalar_settings_to(ini, settings);
+    long long version = 0;
+    const int valid = safe_ini_get_int(ini, "snapshot", "version", &version) == safe_ini_value_valid && version == 1;
+    if (valid) {
+        const struct session_settings_t fallback = default_settings();
+        apply_scalar_settings_to(ini, settings, &fallback, 1, path);
+    }
     mini_free(ini);
     return valid;
 }
@@ -2192,6 +2196,12 @@ void session_settings_cycle_shimmer_fix(const int direction) {
     (void) direction;
     session_settings.shimmer_fix = !session_settings.shimmer_fix;
     video_bridge_apply_scaling();
+}
+
+void session_settings_cycle_anti_flicker(const int direction) {
+    (void) direction;
+    session_settings.anti_flicker = !session_settings.anti_flicker;
+    video_bridge_apply_anti_flicker();
 }
 
 void session_settings_cycle_run_ahead(const int direction) {
@@ -3115,6 +3125,7 @@ void session_settings_discard_to(const struct session_settings_t *snapshot) {
     active_user_profile_path[0] = '\0';
     video_bridge_apply_scaling();
     video_bridge_apply_filter();
+    video_bridge_apply_anti_flicker();
     session_settings_apply_fps_mode();
     audio_bridge_reset_period_floor();
     audio_bridge_apply_sample_rate();

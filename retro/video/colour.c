@@ -47,8 +47,16 @@ static const char *vs_src = "attribute vec2 a_pos;"
                             "    v_uv = a_uv;"
                             "}";
 
-static const char *fs_src = "precision mediump float;"
+static const char *fs_src = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                            "precision highp float;\n"
+                            "#else\n"
+                            "precision mediump float;\n"
+                            "#endif\n"
                             "uniform sampler2D u_tex;"
+                            "uniform vec2 u_sample_src_size;"
+                            "uniform vec2 u_sample_dst_size;"
+                            "uniform vec2 u_uv_extent;"
+                            "uniform int u_area_scale_enabled;"
                             "uniform float u_brightness;"
                             "uniform float u_contrast;"
                             "uniform float u_saturation;"
@@ -126,8 +134,23 @@ static const char *fs_src = "precision mediump float;"
                             "    return mix(c, vec3(u_vig_tone), t * u_vig_amount);"
                             "}"
 
+                            "vec2 area_scaled_uv() {"
+                            "    if (u_area_scale_enabled == 0) { return v_uv; }"
+                            "    vec2 scale = u_sample_dst_size / u_sample_src_size;"
+                            "    vec2 invscale = u_sample_src_size / u_sample_dst_size;"
+                            "    vec2 pixel = (v_uv / u_uv_extent) * u_sample_dst_size;"
+                            "    vec2 pixel_tl = floor(pixel);"
+                            "    vec2 pixel_br = ceil(pixel);"
+                            "    vec2 texel_tl = floor(invscale * pixel_tl);"
+                            "    vec2 texel_br = floor(invscale * pixel_br);"
+                            "    vec2 mod_texel = texel_br + vec2(0.5);"
+                            "    mod_texel -= (vec2(1.0) - step(texel_br, texel_tl))"
+                            "                 * (scale * texel_br - pixel_tl);"
+                            "    return (mod_texel / u_sample_src_size) * u_uv_extent;"
+                            "}"
+
                             "void main(){"
-                            "    vec4 t = texture2D(u_tex, v_uv);"
+                            "    vec4 t = texture2D(u_tex, area_scaled_uv());"
                             "    gl_FragColor = vec4(apply_vignette(apply_colour(t.bgr)), 1.0);"
                             "}";
 
@@ -154,6 +177,7 @@ static const char *shader_fs_preamble = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
 static GLuint prog = 0;
 static GLint a_pos = -1, a_uv = -1;
 static GLint u_tex = -1, u_brightness = -1, u_contrast = -1, u_saturation = -1;
+static GLint u_sample_src_size = -1, u_sample_dst_size = -1, u_uv_extent = -1, u_area_scale_enabled = -1;
 static GLint u_cos_h = -1, u_sin_h = -1, u_filter = -1, u_filter_enabled = -1;
 static GLint u_colour_enabled = -1, u_gamma_enabled = -1, u_gamma_inv = -1;
 static GLint u_vig_shape = -1, u_vig_centre = -1, u_vig_scale = -1;
@@ -514,6 +538,10 @@ static void ensure_program(void) {
     a_pos = gl->GetAttribLocation(prog, "a_pos");
     a_uv = gl->GetAttribLocation(prog, "a_uv");
     u_tex = gl->GetUniformLocation(prog, "u_tex");
+    u_sample_src_size = gl->GetUniformLocation(prog, "u_sample_src_size");
+    u_sample_dst_size = gl->GetUniformLocation(prog, "u_sample_dst_size");
+    u_uv_extent = gl->GetUniformLocation(prog, "u_uv_extent");
+    u_area_scale_enabled = gl->GetUniformLocation(prog, "u_area_scale_enabled");
     u_brightness = gl->GetUniformLocation(prog, "u_brightness");
     u_contrast = gl->GetUniformLocation(prog, "u_contrast");
     u_saturation = gl->GetUniformLocation(prog, "u_saturation");
@@ -877,7 +905,10 @@ static void set_vignette_uniforms(const int content_w, const int content_h) {
     if (u_vig_amount >= 0) gl->Uniform1f(u_vig_amount, amount);
 }
 
-static void set_colour_uniforms(const int content_w, const int content_h) {
+static void set_colour_uniforms(
+    const int content_w, const int content_h, const int sample_src_w, const int sample_src_h, const float uv_w,
+    const float uv_h, const int area_scale
+) {
     const float brightness = (float) session_settings.colour_brightness / 100.0f;
     const float contrast = (float) session_settings.colour_contrast / 100.0f;
     const float saturation = (float) session_settings.colour_saturation / 100.0f;
@@ -890,6 +921,10 @@ static void set_colour_uniforms(const int content_w, const int content_h) {
     const colour_filter_matrix_t *filter = preset_effects_enabled() ? current_filter() : &disabled_filter;
 
     if (u_tex >= 0) gl->Uniform1i(u_tex, 0);
+    if (u_sample_src_size >= 0) gl->Uniform2f(u_sample_src_size, (float) sample_src_w, (float) sample_src_h);
+    if (u_sample_dst_size >= 0) gl->Uniform2f(u_sample_dst_size, (float) content_w, (float) content_h);
+    if (u_uv_extent >= 0) gl->Uniform2f(u_uv_extent, uv_w, uv_h);
+    if (u_area_scale_enabled >= 0) gl->Uniform1i(u_area_scale_enabled, area_scale);
     if (u_brightness >= 0) gl->Uniform1f(u_brightness, brightness);
     if (u_contrast >= 0) gl->Uniform1f(u_contrast, contrast);
     if (u_saturation >= 0) gl->Uniform1f(u_saturation, saturation);
@@ -920,11 +955,19 @@ static void set_shader_uniforms(const int res_w, const int res_h) {
 
 static int draw_gl_pass(
     SDL_Texture *src, const int user_prog, const float l, const float r, const float t, const float b, const int vp_w,
-    const int vp_h, const int res_w, const int res_h
+    const int vp_h, const int res_w, const int res_h, const int area_scale
 ) {
+    int src_w = 0, src_h = 0;
+    if (SDL_QueryTexture(src, NULL, NULL, &src_w, &src_h) != 0 || src_w <= 0 || src_h <= 0) return 0;
+
     float texw = 1.0f, texh = 1.0f;
-    if (SDL_GL_BindTexture(src, &texw, &texh) != 0) return 0;
     gl->ActiveTexture(GL_TEXTURE0);
+    if (SDL_GL_BindTexture(src, &texw, &texh) != 0) return 0;
+
+    if (area_scale) {
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
 
     const GLfloat v_at_top = 0.0f;
     const GLfloat v_at_bottom = texh;
@@ -946,7 +989,7 @@ static int draw_gl_pass(
     if (user_prog) {
         set_shader_uniforms(res_w, res_h);
     } else {
-        set_colour_uniforms(res_w, res_h);
+        set_colour_uniforms(res_w, res_h, src_w, src_h, texw, texh, area_scale);
     }
 
     gl->BindBuffer(GL_ARRAY_BUFFER, 0);
@@ -962,6 +1005,11 @@ static int draw_gl_pass(
 
     gl->DrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+    if (area_scale) {
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl->TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
+
     if (pass_a_pos >= 0) gl->DisableVertexAttribArray(pass_a_pos);
     if (pass_a_uv >= 0) gl->DisableVertexAttribArray(pass_a_uv);
 
@@ -969,8 +1017,28 @@ static int draw_gl_pass(
     return 1;
 }
 
-void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect) {
-    if (!colour_pass_needed()) {
+static int
+area_scale_needed(SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect, const int requested) {
+    if (!requested || pass_suppressed || !tex || !dest_rect || dest_rect->w <= 0 || dest_rect->h <= 0) return 0;
+
+    int src_w = 0, src_h = 0;
+    if (src_rect) {
+        src_w = src_rect->w;
+        src_h = src_rect->h;
+    } else if (SDL_QueryTexture(tex, NULL, NULL, &src_w, &src_h) != 0) {
+        return 0;
+    }
+
+    if (src_w <= 0 || src_h <= 0 || dest_rect->w < src_w || dest_rect->h < src_h) return 0;
+    return dest_rect->w % src_w != 0 || dest_rect->h % src_h != 0;
+}
+
+static void colour_render_pass_internal(
+    SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect,
+    const int request_area_scale
+) {
+    const int area_scale = area_scale_needed(tex, src_rect, dest_rect, request_area_scale);
+    if (!colour_pass_needed() && !area_scale) {
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
         return;
     }
@@ -993,8 +1061,20 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     SDL_Texture *gl_src = tex;
 
     if (mux_retro_get_pixel_format() != RETRO_PIXEL_FORMAT_XRGB8888 || src_rect) {
+        int source_w = dest_rect->w;
+        int source_h = dest_rect->h;
+        if (area_scale) {
+            if (src_rect) {
+                source_w = src_rect->w;
+                source_h = src_rect->h;
+            } else if (SDL_QueryTexture(tex, NULL, NULL, &source_w, &source_h) != 0) {
+                source_w = dest_rect->w;
+                source_h = dest_rect->h;
+            }
+        }
+
         if (!ensure_target(
-                renderer, &adjusted_tex, &adjusted_w, &adjusted_h, dest_rect->w, dest_rect->h, SDL_PIXELFORMAT_ARGB8888
+                renderer, &adjusted_tex, &adjusted_w, &adjusted_h, source_w, source_h, SDL_PIXELFORMAT_ARGB8888
             )
             || SDL_SetRenderTarget(renderer, adjusted_tex) != 0) {
             SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
@@ -1029,21 +1109,22 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
     if (use_shader) {
         if (SDL_SetRenderTarget(renderer, work_tex) == 0) {
             const int colour_ok = draw_gl_pass(
-                gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
+                gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale
             );
 
             if (colour_ok && SDL_SetRenderTarget(renderer, output_tex) == 0) {
                 shader_frame_count++;
                 drew = draw_gl_pass(
-                    work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h
+                    work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, 0
                 );
             }
         }
     }
 
     if (!drew && SDL_SetRenderTarget(renderer, output_tex) == 0)
-        drew =
-            draw_gl_pass(gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h);
+        drew = draw_gl_pass(
+            gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale
+        );
 
     gl->UseProgram((GLuint) prev_program);
     gl->Viewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);
@@ -1056,4 +1137,14 @@ void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect
         SDL_RenderCopy(renderer, output_tex, NULL, dest_rect);
     else
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+}
+
+void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect) {
+    colour_render_pass_internal(renderer, tex, src_rect, dest_rect, 0);
+}
+
+void colour_render_pass_area_scaled(
+    SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect
+) {
+    colour_render_pass_internal(renderer, tex, src_rect, dest_rect, 1);
 }

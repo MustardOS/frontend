@@ -1,0 +1,556 @@
+#include <pthread.h>
+#include <stdint.h>
+#include <string.h>
+#include "interframe_blend.h"
+
+// This reminds of working on the OG RG35XX RA code for NEON specific performance bumps!
+#if (defined(__ARM_NEON) || defined(__ARM_NEON__)) && !defined(INTERFRAME_BLEND_DISABLE_NEON)
+#include <arm_neon.h>
+#define INTERFRAME_BLEND_NEON 1
+#endif
+
+#define LUMA_DIFFERENCE_THRESHOLD 128
+#define FLICKER_HOLD_FRAMES       3
+
+static int difference(const int a, const int b) {
+    return a > b ? a - b : b - a;
+}
+
+static int luma_rgb888(const unsigned r, const unsigned g, const unsigned b) {
+    // antiflicker shader: 0.2989 R + 0.5870 G + 0.1140 B.
+    return (77 * (int) r + 150 * (int) g + 29 * (int) b) >> 8;
+}
+
+static int luma_xrgb8888(const uint32_t pixel) {
+    return luma_rgb888((pixel >> 16) & 0xff, (pixel >> 8) & 0xff, pixel & 0xff);
+}
+
+static int luma_rgb565(const uint16_t pixel) {
+    const unsigned r5 = (pixel >> 11) & 0x1f;
+    const unsigned g6 = (pixel >> 5) & 0x3f;
+    const unsigned b5 = pixel & 0x1f;
+    return luma_rgb888((r5 << 3) | (r5 >> 2), (g6 << 2) | (g6 >> 4), (b5 << 3) | (b5 >> 2));
+}
+
+static int luma_xrgb1555(const uint16_t pixel) {
+    const unsigned r5 = (pixel >> 10) & 0x1f;
+    const unsigned g5 = (pixel >> 5) & 0x1f;
+    const unsigned b5 = pixel & 0x1f;
+    return luma_rgb888((r5 << 3) | (r5 >> 2), (g5 << 3) | (g5 >> 2), (b5 << 3) | (b5 >> 2));
+}
+
+static int should_blend(const int current, const int previous) {
+    return difference(current, previous) >= LUMA_DIFFERENCE_THRESHOLD;
+}
+
+static uint32_t average_xrgb8888(const uint32_t a, const uint32_t b) {
+    // Average colour bytes independently and preserve the unused X byte.
+    return (a & 0xff000000U) | (((a & b) + (((a ^ b) & 0x00fefefeU) >> 1)) & 0x00ffffffU);
+}
+
+static uint16_t average_rgb565(const uint16_t a, const uint16_t b) {
+    return (uint16_t) ((a & b) + (((a ^ b) & 0xf7deU) >> 1));
+}
+
+static uint16_t average_xrgb1555(const uint16_t a, const uint16_t b) {
+    return (uint16_t) ((a & 0x8000U) | (((a & b) + (((a ^ b) & 0x7bdeU) >> 1)) & 0x7fffU));
+}
+
+static int row_has_persistence(const uint8_t *persistence, const unsigned width) {
+    unsigned x = 0;
+    for (; x + sizeof(uint64_t) <= width; x += sizeof(uint64_t)) {
+        uint64_t values;
+        memcpy(&values, &persistence[x], sizeof(values));
+        if (values) return 1;
+    }
+    for (; x < width; x++)
+        if (persistence[x]) return 1;
+    return 0;
+}
+
+#ifdef INTERFRAME_BLEND_NEON
+static int neon_mask_any_u8(const uint8x8_t mask) {
+    return vget_lane_u64(vreinterpret_u64_u8(mask), 0) != 0;
+}
+
+static int neon_mask_any_u16(const uint16x8_t mask) {
+    const uint64x2_t packed = vreinterpretq_u64_u16(mask);
+    return (vgetq_lane_u64(packed, 0) | vgetq_lane_u64(packed, 1)) != 0;
+}
+
+static uint8x8_t neon_luma_xrgb8888(const uint8x8x4_t pixel) {
+    uint16x8_t luma = vmull_u8(pixel.val[2], vdup_n_u8(77));
+    luma = vmlal_u8(luma, pixel.val[1], vdup_n_u8(150));
+    luma = vmlal_u8(luma, pixel.val[0], vdup_n_u8(29));
+    return vshrn_n_u16(luma, 8);
+}
+
+static uint16x8_t neon_luma_rgb565(const uint16x8_t pixel) {
+    const uint16x8_t r5 = vandq_u16(vshrq_n_u16(pixel, 11), vdupq_n_u16(0x1f));
+    const uint16x8_t g6 = vandq_u16(vshrq_n_u16(pixel, 5), vdupq_n_u16(0x3f));
+    const uint16x8_t b5 = vandq_u16(pixel, vdupq_n_u16(0x1f));
+    const uint16x8_t r8 = vorrq_u16(vshlq_n_u16(r5, 3), vshrq_n_u16(r5, 2));
+    const uint16x8_t g8 = vorrq_u16(vshlq_n_u16(g6, 2), vshrq_n_u16(g6, 4));
+    const uint16x8_t b8 = vorrq_u16(vshlq_n_u16(b5, 3), vshrq_n_u16(b5, 2));
+    uint16x8_t luma = vmulq_n_u16(r8, 77);
+    luma = vmlaq_n_u16(luma, g8, 150);
+    luma = vmlaq_n_u16(luma, b8, 29);
+    return vshrq_n_u16(luma, 8);
+}
+
+static uint16x8_t neon_luma_xrgb1555(const uint16x8_t pixel) {
+    const uint16x8_t r5 = vandq_u16(vshrq_n_u16(pixel, 10), vdupq_n_u16(0x1f));
+    const uint16x8_t g5 = vandq_u16(vshrq_n_u16(pixel, 5), vdupq_n_u16(0x1f));
+    const uint16x8_t b5 = vandq_u16(pixel, vdupq_n_u16(0x1f));
+    const uint16x8_t r8 = vorrq_u16(vshlq_n_u16(r5, 3), vshrq_n_u16(r5, 2));
+    const uint16x8_t g8 = vorrq_u16(vshlq_n_u16(g5, 3), vshrq_n_u16(g5, 2));
+    const uint16x8_t b8 = vorrq_u16(vshlq_n_u16(b5, 3), vshrq_n_u16(b5, 2));
+    uint16x8_t luma = vmulq_n_u16(r8, 77);
+    luma = vmlaq_n_u16(luma, g8, 150);
+    luma = vmlaq_n_u16(luma, b8, 29);
+    return vshrq_n_u16(luma, 8);
+}
+#endif
+
+static void blend_xrgb8888_rows(
+    void *current, const void *previous, const void *two_back, const void *three_back, const void *four_back,
+    const unsigned width, const unsigned start_y, const unsigned end_y, const size_t pitch, uint8_t *persistence,
+    const size_t persistence_pitch
+) {
+    for (unsigned y = start_y; y < end_y; y++) {
+        uint32_t *dst = (uint32_t *) ((uint8_t *) current + (size_t) y * pitch);
+        const uint32_t *prev = (const uint32_t *) ((const uint8_t *) previous + (size_t) y * pitch);
+        const uint32_t *prev2 = (const uint32_t *) ((const uint8_t *) two_back + (size_t) y * pitch);
+        const uint32_t *prev3 =
+            three_back ? (const uint32_t *) ((const uint8_t *) three_back + (size_t) y * pitch) : NULL;
+        const uint32_t *prev4 =
+            four_back ? (const uint32_t *) ((const uint8_t *) four_back + (size_t) y * pitch) : NULL;
+        uint8_t *hold = persistence + (size_t) y * persistence_pitch;
+        if (memcmp(dst, prev, (size_t) width * sizeof(*dst)) == 0 && !row_has_persistence(hold, width)) continue;
+
+        unsigned x = 0;
+#ifdef INTERFRAME_BLEND_NEON
+        for (; x + 8 <= width; x += 8) {
+            uint8x8x4_t curr = vld4_u8((const uint8_t *) &dst[x]);
+            const uint8x8x4_t prior = vld4_u8((const uint8_t *) &prev[x]);
+            const uint8x8x4_t prior2 = vld4_u8((const uint8_t *) &prev2[x]);
+            uint8x8_t changed = vmvn_u8(vceq_u8(curr.val[0], prior.val[0]));
+            changed = vorr_u8(changed, vmvn_u8(vceq_u8(curr.val[1], prior.val[1])));
+            changed = vorr_u8(changed, vmvn_u8(vceq_u8(curr.val[2], prior.val[2])));
+            const uint8x8_t old_hold = vld1_u8(&hold[x]);
+            const uint8x8_t held = vcgt_u8(old_hold, vdup_n_u8(0));
+            const uint8x8_t untracked_changed = vand_u8(changed, vmvn_u8(held));
+            if (!neon_mask_any_u8(untracked_changed) && !neon_mask_any_u8(held)) continue;
+            uint8x8_t repeats = vceq_u8(curr.val[0], prior2.val[0]);
+            repeats = vand_u8(repeats, vceq_u8(curr.val[1], prior2.val[1]));
+            repeats = vand_u8(repeats, vceq_u8(curr.val[2], prior2.val[2]));
+            uint8x8_t exact_repeat = vand_u8(repeats, untracked_changed);
+            if (prev3 && prev4 && neon_mask_any_u8(untracked_changed)) {
+                const uint8x8x4_t prior3 = vld4_u8((const uint8_t *) &prev3[x]);
+                const uint8x8x4_t prior4 = vld4_u8((const uint8_t *) &prev4[x]);
+                uint8x8_t cadence2 = vceq_u8(curr.val[0], prior3.val[0]);
+                cadence2 = vand_u8(cadence2, vceq_u8(curr.val[1], prior3.val[1]));
+                cadence2 = vand_u8(cadence2, vceq_u8(curr.val[2], prior3.val[2]));
+                cadence2 = vand_u8(cadence2, vceq_u8(prior3.val[0], prior4.val[0]));
+                cadence2 = vand_u8(cadence2, vceq_u8(prior3.val[1], prior4.val[1]));
+                cadence2 = vand_u8(cadence2, vceq_u8(prior3.val[2], prior4.val[2]));
+                cadence2 = vand_u8(cadence2, vceq_u8(prior.val[0], prior2.val[0]));
+                cadence2 = vand_u8(cadence2, vceq_u8(prior.val[1], prior2.val[1]));
+                cadence2 = vand_u8(cadence2, vceq_u8(prior.val[2], prior2.val[2]));
+                exact_repeat = vorr_u8(exact_repeat, vand_u8(cadence2, untracked_changed));
+            }
+            uint8x8_t confirmed = vdup_n_u8(0);
+            if (neon_mask_any_u8(exact_repeat)) {
+                const uint8x8_t prior_contrast = vcge_u8(
+                    vabd_u8(neon_luma_xrgb8888(curr), neon_luma_xrgb8888(prior)), vdup_n_u8(LUMA_DIFFERENCE_THRESHOLD)
+                );
+                confirmed = vand_u8(exact_repeat, prior_contrast);
+            }
+            const uint8x8_t blend = vorr_u8(confirmed, held);
+            const uint8x8_t next_hold =
+                vbsl_u8(confirmed, vdup_n_u8(FLICKER_HOLD_FRAMES), vqsub_u8(old_hold, vdup_n_u8(1)));
+            if (neon_mask_any_u8(blend)) {
+                const uint8x8_t use_prior = vorr_u8(confirmed, vand_u8(held, changed));
+                const uint8x8_t reference0 = vbsl_u8(use_prior, prior.val[0], prior2.val[0]);
+                const uint8x8_t reference1 = vbsl_u8(use_prior, prior.val[1], prior2.val[1]);
+                const uint8x8_t reference2 = vbsl_u8(use_prior, prior.val[2], prior2.val[2]);
+                curr.val[0] = vbsl_u8(blend, vhadd_u8(curr.val[0], reference0), curr.val[0]);
+                curr.val[1] = vbsl_u8(blend, vhadd_u8(curr.val[1], reference1), curr.val[1]);
+                curr.val[2] = vbsl_u8(blend, vhadd_u8(curr.val[2], reference2), curr.val[2]);
+                vst4_u8((uint8_t *) &dst[x], curr);
+            }
+            vst1_u8(&hold[x], next_hold);
+        }
+#endif
+        for (; x < width; x++) {
+            if (hold[x]) {
+                if (((dst[x] ^ prev[x]) & 0x00ffffffU) != 0)
+                    dst[x] = average_xrgb8888(dst[x], prev[x]);
+                else
+                    dst[x] = average_xrgb8888(dst[x], prev2[x]);
+                hold[x]--;
+                continue;
+            }
+            const int changed = ((dst[x] ^ prev[x]) & 0x00ffffffU) != 0;
+            const int cadence1 = ((dst[x] ^ prev2[x]) & 0x00ffffffU) == 0;
+            const int cadence2 = prev3 && prev4 && ((dst[x] ^ prev3[x]) & 0x00ffffffU) == 0
+                                 && ((prev3[x] ^ prev4[x]) & 0x00ffffffU) == 0
+                                 && ((prev[x] ^ prev2[x]) & 0x00ffffffU) == 0;
+            const int exact_repeat = changed && (cadence1 || cadence2);
+            const int confirmed = exact_repeat && should_blend(luma_xrgb8888(dst[x]), luma_xrgb8888(prev[x]));
+            if (confirmed) {
+                dst[x] = average_xrgb8888(dst[x], prev[x]);
+                hold[x] = FLICKER_HOLD_FRAMES;
+            }
+        }
+    }
+}
+
+static void blend_rgb565_rows(
+    void *current, const void *previous, const void *two_back, const void *three_back, const void *four_back,
+    const unsigned width, const unsigned start_y, const unsigned end_y, const size_t pitch, uint8_t *persistence,
+    const size_t persistence_pitch
+) {
+    for (unsigned y = start_y; y < end_y; y++) {
+        uint16_t *dst = (uint16_t *) ((uint8_t *) current + (size_t) y * pitch);
+        const uint16_t *prev = (const uint16_t *) ((const uint8_t *) previous + (size_t) y * pitch);
+        const uint16_t *prev2 = (const uint16_t *) ((const uint8_t *) two_back + (size_t) y * pitch);
+        const uint16_t *prev3 =
+            three_back ? (const uint16_t *) ((const uint8_t *) three_back + (size_t) y * pitch) : NULL;
+        const uint16_t *prev4 =
+            four_back ? (const uint16_t *) ((const uint8_t *) four_back + (size_t) y * pitch) : NULL;
+        uint8_t *hold = persistence + (size_t) y * persistence_pitch;
+        if (memcmp(dst, prev, (size_t) width * sizeof(*dst)) == 0 && !row_has_persistence(hold, width)) continue;
+
+        unsigned x = 0;
+#ifdef INTERFRAME_BLEND_NEON
+        for (; x + 8 <= width; x += 8) {
+            const uint16x8_t curr = vld1q_u16(&dst[x]);
+            const uint16x8_t prior = vld1q_u16(&prev[x]);
+            const uint16x8_t prior2 = vld1q_u16(&prev2[x]);
+            const uint16x8_t changed = vmvnq_u16(vceqq_u16(curr, prior));
+            const uint8x8_t old_hold = vld1_u8(&hold[x]);
+            const uint16x8_t held = vcgtq_u16(vmovl_u8(old_hold), vdupq_n_u16(0));
+            const uint16x8_t untracked_changed = vandq_u16(changed, vmvnq_u16(held));
+            if (!neon_mask_any_u16(untracked_changed) && !neon_mask_any_u16(held)) continue;
+            uint16x8_t exact_repeat = vandq_u16(vceqq_u16(curr, prior2), untracked_changed);
+            if (prev3 && prev4 && neon_mask_any_u16(untracked_changed)) {
+                const uint16x8_t prior3 = vld1q_u16(&prev3[x]);
+                const uint16x8_t prior4 = vld1q_u16(&prev4[x]);
+                const uint16x8_t cadence2 =
+                    vandq_u16(vceqq_u16(curr, prior3), vandq_u16(vceqq_u16(prior3, prior4), vceqq_u16(prior, prior2)));
+                exact_repeat = vorrq_u16(exact_repeat, vandq_u16(cadence2, untracked_changed));
+            }
+            uint16x8_t confirmed = vdupq_n_u16(0);
+            if (neon_mask_any_u16(exact_repeat)) {
+                const uint16x8_t prior_contrast = vcgeq_u16(
+                    vabdq_u16(neon_luma_rgb565(curr), neon_luma_rgb565(prior)), vdupq_n_u16(LUMA_DIFFERENCE_THRESHOLD)
+                );
+                confirmed = vandq_u16(exact_repeat, prior_contrast);
+            }
+            const uint16x8_t blend = vorrq_u16(confirmed, held);
+            const uint8x8_t confirmed_bytes = vmovn_u16(confirmed);
+            const uint8x8_t next_hold =
+                vbsl_u8(confirmed_bytes, vdup_n_u8(FLICKER_HOLD_FRAMES), vqsub_u8(old_hold, vdup_n_u8(1)));
+            if (neon_mask_any_u16(blend)) {
+                const uint16x8_t use_prior = vorrq_u16(confirmed, vandq_u16(held, changed));
+                const uint16x8_t reference = vbslq_u16(use_prior, prior, prior2);
+                const uint16x8_t average = vaddq_u16(
+                    vandq_u16(curr, reference),
+                    vshrq_n_u16(vandq_u16(veorq_u16(curr, reference), vdupq_n_u16(0xf7de)), 1)
+                );
+                vst1q_u16(&dst[x], vbslq_u16(blend, average, curr));
+            }
+            vst1_u8(&hold[x], next_hold);
+        }
+#endif
+        for (; x < width; x++) {
+            if (hold[x]) {
+                if (dst[x] != prev[x])
+                    dst[x] = average_rgb565(dst[x], prev[x]);
+                else
+                    dst[x] = average_rgb565(dst[x], prev2[x]);
+                hold[x]--;
+                continue;
+            }
+            const int cadence1 = dst[x] == prev2[x];
+            const int cadence2 = prev3 && prev4 && dst[x] == prev3[x] && prev3[x] == prev4[x] && prev[x] == prev2[x];
+            const int exact_repeat = dst[x] != prev[x] && (cadence1 || cadence2);
+            const int confirmed = exact_repeat && should_blend(luma_rgb565(dst[x]), luma_rgb565(prev[x]));
+            if (confirmed) {
+                dst[x] = average_rgb565(dst[x], prev[x]);
+                hold[x] = FLICKER_HOLD_FRAMES;
+            }
+        }
+    }
+}
+
+static void blend_xrgb1555_rows(
+    void *current, const void *previous, const void *two_back, const void *three_back, const void *four_back,
+    const unsigned width, const unsigned start_y, const unsigned end_y, const size_t pitch, uint8_t *persistence,
+    const size_t persistence_pitch
+) {
+    for (unsigned y = start_y; y < end_y; y++) {
+        uint16_t *dst = (uint16_t *) ((uint8_t *) current + (size_t) y * pitch);
+        const uint16_t *prev = (const uint16_t *) ((const uint8_t *) previous + (size_t) y * pitch);
+        const uint16_t *prev2 = (const uint16_t *) ((const uint8_t *) two_back + (size_t) y * pitch);
+        const uint16_t *prev3 =
+            three_back ? (const uint16_t *) ((const uint8_t *) three_back + (size_t) y * pitch) : NULL;
+        const uint16_t *prev4 =
+            four_back ? (const uint16_t *) ((const uint8_t *) four_back + (size_t) y * pitch) : NULL;
+        uint8_t *hold = persistence + (size_t) y * persistence_pitch;
+        if (memcmp(dst, prev, (size_t) width * sizeof(*dst)) == 0 && !row_has_persistence(hold, width)) continue;
+
+        unsigned x = 0;
+#ifdef INTERFRAME_BLEND_NEON
+        const uint16x8_t colour_mask = vdupq_n_u16(0x7fff);
+        for (; x + 8 <= width; x += 8) {
+            const uint16x8_t curr = vld1q_u16(&dst[x]);
+            const uint16x8_t prior = vld1q_u16(&prev[x]);
+            const uint16x8_t prior2 = vld1q_u16(&prev2[x]);
+            const uint16x8_t curr_colour = vandq_u16(curr, colour_mask);
+            const uint16x8_t prior_colour = vandq_u16(prior, colour_mask);
+            const uint16x8_t prior2_colour = vandq_u16(prior2, colour_mask);
+            const uint16x8_t changed = vmvnq_u16(vceqq_u16(curr_colour, prior_colour));
+            const uint8x8_t old_hold = vld1_u8(&hold[x]);
+            const uint16x8_t held = vcgtq_u16(vmovl_u8(old_hold), vdupq_n_u16(0));
+            const uint16x8_t untracked_changed = vandq_u16(changed, vmvnq_u16(held));
+            if (!neon_mask_any_u16(untracked_changed) && !neon_mask_any_u16(held)) continue;
+            uint16x8_t exact_repeat = vandq_u16(vceqq_u16(curr_colour, prior2_colour), untracked_changed);
+            if (prev3 && prev4 && neon_mask_any_u16(untracked_changed)) {
+                const uint16x8_t prior3_colour = vandq_u16(vld1q_u16(&prev3[x]), colour_mask);
+                const uint16x8_t prior4_colour = vandq_u16(vld1q_u16(&prev4[x]), colour_mask);
+                const uint16x8_t cadence2 = vandq_u16(
+                    vceqq_u16(curr_colour, prior3_colour),
+                    vandq_u16(vceqq_u16(prior3_colour, prior4_colour), vceqq_u16(prior_colour, prior2_colour))
+                );
+                exact_repeat = vorrq_u16(exact_repeat, vandq_u16(cadence2, untracked_changed));
+            }
+            uint16x8_t confirmed = vdupq_n_u16(0);
+            if (neon_mask_any_u16(exact_repeat)) {
+                const uint16x8_t prior_contrast = vcgeq_u16(
+                    vabdq_u16(neon_luma_xrgb1555(curr), neon_luma_xrgb1555(prior)),
+                    vdupq_n_u16(LUMA_DIFFERENCE_THRESHOLD)
+                );
+                confirmed = vandq_u16(exact_repeat, prior_contrast);
+            }
+            const uint16x8_t blend = vorrq_u16(confirmed, held);
+            const uint8x8_t confirmed_bytes = vmovn_u16(confirmed);
+            const uint8x8_t next_hold =
+                vbsl_u8(confirmed_bytes, vdup_n_u8(FLICKER_HOLD_FRAMES), vqsub_u8(old_hold, vdup_n_u8(1)));
+            if (neon_mask_any_u16(blend)) {
+                const uint16x8_t use_prior = vorrq_u16(confirmed, vandq_u16(held, changed));
+                const uint16x8_t reference = vbslq_u16(use_prior, prior, prior2);
+                uint16x8_t average = vaddq_u16(
+                    vandq_u16(curr, reference),
+                    vshrq_n_u16(vandq_u16(veorq_u16(curr, reference), vdupq_n_u16(0x7bde)), 1)
+                );
+                average = vorrq_u16(vandq_u16(average, colour_mask), vandq_u16(curr, vdupq_n_u16(0x8000)));
+                vst1q_u16(&dst[x], vbslq_u16(blend, average, curr));
+            }
+            vst1_u8(&hold[x], next_hold);
+        }
+#endif
+        for (; x < width; x++) {
+            if (hold[x]) {
+                if (((dst[x] ^ prev[x]) & 0x7fffU) != 0)
+                    dst[x] = average_xrgb1555(dst[x], prev[x]);
+                else
+                    dst[x] = average_xrgb1555(dst[x], prev2[x]);
+                hold[x]--;
+                continue;
+            }
+            const int changed = ((dst[x] ^ prev[x]) & 0x7fffU) != 0;
+            const int cadence1 = ((dst[x] ^ prev2[x]) & 0x7fffU) == 0;
+            const int cadence2 = prev3 && prev4 && ((dst[x] ^ prev3[x]) & 0x7fffU) == 0
+                                 && ((prev3[x] ^ prev4[x]) & 0x7fffU) == 0 && ((prev[x] ^ prev2[x]) & 0x7fffU) == 0;
+            const int exact_repeat = changed && (cadence1 || cadence2);
+            const int confirmed = exact_repeat && should_blend(luma_xrgb1555(dst[x]), luma_xrgb1555(prev[x]));
+            if (confirmed) {
+                dst[x] = average_xrgb1555(dst[x], prev[x]);
+                hold[x] = FLICKER_HOLD_FRAMES;
+            }
+        }
+    }
+}
+
+static void blend_rows(
+    void *current, const void *previous, const void *two_back, const void *three_back, const void *four_back,
+    const unsigned width, const unsigned start_y, const unsigned end_y, const size_t pitch,
+    const enum retro_pixel_format format, uint8_t *persistence, const size_t persistence_pitch
+) {
+    switch (format) {
+        case RETRO_PIXEL_FORMAT_XRGB8888:
+            blend_xrgb8888_rows(
+                current, previous, two_back, three_back, four_back, width, start_y, end_y, pitch, persistence,
+                persistence_pitch
+            );
+            break;
+        case RETRO_PIXEL_FORMAT_RGB565:
+            blend_rgb565_rows(
+                current, previous, two_back, three_back, four_back, width, start_y, end_y, pitch, persistence,
+                persistence_pitch
+            );
+            break;
+        case RETRO_PIXEL_FORMAT_0RGB1555:
+        default:
+            blend_xrgb1555_rows(
+                current, previous, two_back, three_back, four_back, width, start_y, end_y, pitch, persistence,
+                persistence_pitch
+            );
+            break;
+    }
+}
+
+enum { high_resolution_pixels = 1280 * 720, filter_threads = 4, filter_workers = filter_threads - 1 };
+
+struct filter_job {
+    void *current;
+    const void *previous;
+    const void *two_back;
+    const void *three_back;
+    const void *four_back;
+    unsigned width;
+    unsigned height;
+    size_t pitch;
+    uint8_t *persistence;
+    size_t persistence_pitch;
+    enum retro_pixel_format format;
+};
+
+static pthread_mutex_t worker_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t worker_start = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t worker_done = PTHREAD_COND_INITIALIZER;
+static pthread_t worker_threads[filter_workers];
+static unsigned worker_indices[filter_workers];
+static uint64_t worker_generation = 0;
+static unsigned workers_completed = 0;
+static unsigned workers_created = 0;
+static int workers_running = 0;
+static int workers_failed = 0;
+static int workers_stop = 0;
+static struct filter_job active_job = {0};
+
+static void *filter_worker(void *opaque) {
+    const unsigned slice = *(const unsigned *) opaque;
+    uint64_t seen_generation = 0;
+
+    pthread_mutex_lock(&worker_mutex);
+    for (;;) {
+        while (!workers_stop && seen_generation == worker_generation)
+            pthread_cond_wait(&worker_start, &worker_mutex);
+        if (workers_stop) break;
+
+        seen_generation = worker_generation;
+        const struct filter_job job = active_job;
+        pthread_mutex_unlock(&worker_mutex);
+
+        const unsigned start_y = (unsigned) (((uint64_t) job.height * slice) / filter_threads);
+        const unsigned end_y = (unsigned) (((uint64_t) job.height * (slice + 1)) / filter_threads);
+        blend_rows(
+            job.current, job.previous, job.two_back, job.three_back, job.four_back, job.width, start_y, end_y,
+            job.pitch, job.format, job.persistence, job.persistence_pitch
+        );
+
+        pthread_mutex_lock(&worker_mutex);
+        workers_completed++;
+        if (workers_completed == filter_workers) pthread_cond_signal(&worker_done);
+    }
+    pthread_mutex_unlock(&worker_mutex);
+    return NULL;
+}
+
+static int start_workers(void) {
+    if (workers_running) return 1;
+    if (workers_failed) return 0;
+
+    workers_stop = 0;
+    workers_created = 0;
+    worker_generation = 0;
+    for (unsigned i = 0; i < filter_workers; i++) {
+        worker_indices[i] = i + 1;
+        if (pthread_create(&worker_threads[i], NULL, filter_worker, &worker_indices[i]) != 0) {
+            pthread_mutex_lock(&worker_mutex);
+            workers_stop = 1;
+            pthread_cond_broadcast(&worker_start);
+            pthread_mutex_unlock(&worker_mutex);
+            for (unsigned joined = 0; joined < workers_created; joined++)
+                pthread_join(worker_threads[joined], NULL);
+            workers_created = 0;
+            workers_stop = 0;
+            workers_failed = 1;
+            return 0;
+        }
+        workers_created++;
+    }
+
+    workers_running = 1;
+    return 1;
+}
+
+void interframe_blend_shutdown(void) {
+    if (!workers_running) {
+        workers_failed = 0;
+        return;
+    }
+
+    pthread_mutex_lock(&worker_mutex);
+    workers_stop = 1;
+    pthread_cond_broadcast(&worker_start);
+    pthread_mutex_unlock(&worker_mutex);
+    for (unsigned i = 0; i < workers_created; i++)
+        pthread_join(worker_threads[i], NULL);
+
+    workers_created = 0;
+    workers_running = 0;
+    workers_failed = 0;
+    workers_stop = 0;
+    worker_generation = 0;
+}
+
+void interframe_blend_detected(
+    void *current, const void *previous, const void *two_back, const void *three_back, const void *four_back,
+    const unsigned width, const unsigned height, const size_t pitch, const enum retro_pixel_format format,
+    uint8_t *persistence, const size_t persistence_pitch
+) {
+    if (!current || !previous || !two_back || !persistence || width == 0 || height == 0 || persistence_pitch < width)
+        return;
+
+    const size_t pixels = (size_t) width * height;
+    if (pixels < high_resolution_pixels || !start_workers()) {
+        blend_rows(
+            current, previous, two_back, three_back, four_back, width, 0, height, pitch, format, persistence,
+            persistence_pitch
+        );
+        return;
+    }
+
+    pthread_mutex_lock(&worker_mutex);
+    active_job = (struct filter_job) {
+        .current = current,
+        .previous = previous,
+        .two_back = two_back,
+        .three_back = three_back,
+        .four_back = four_back,
+        .width = width,
+        .height = height,
+        .pitch = pitch,
+        .format = format,
+        .persistence = persistence,
+        .persistence_pitch = persistence_pitch,
+    };
+    workers_completed = 0;
+    worker_generation++;
+    pthread_cond_broadcast(&worker_start);
+    pthread_mutex_unlock(&worker_mutex);
+
+    blend_rows(
+        current, previous, two_back, three_back, four_back, width, 0, (unsigned) ((uint64_t) height / filter_threads),
+        pitch, format, persistence, persistence_pitch
+    );
+
+    pthread_mutex_lock(&worker_mutex);
+    while (workers_completed != filter_workers)
+        pthread_cond_wait(&worker_done, &worker_mutex);
+    pthread_mutex_unlock(&worker_mutex);
+}

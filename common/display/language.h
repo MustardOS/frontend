@@ -2150,7 +2150,9 @@ struct mux_lang {
             char full_width[MAX_BUFFER_SIZE];
             char fit_screen[MAX_BUFFER_SIZE];
             char texture_filter[MAX_BUFFER_SIZE];
+            char image_corrections[MAX_BUFFER_SIZE];
             char shimmer_fix[MAX_BUFFER_SIZE];
+            char anti_flicker[MAX_BUFFER_SIZE];
             char run_ahead[MAX_BUFFER_SIZE];
             char run_ahead_failed[MAX_BUFFER_SIZE];
             char refresh_mismatch[MAX_BUFFER_SIZE];
@@ -2578,7 +2580,9 @@ struct mux_lang {
                 char aspect_ratio[MAX_BUFFER_SIZE];
                 char integer_scale[MAX_BUFFER_SIZE];
                 char texture_filter[MAX_BUFFER_SIZE];
+                char image_corrections[MAX_BUFFER_SIZE];
                 char shimmer_fix[MAX_BUFFER_SIZE];
+                char anti_flicker[MAX_BUFFER_SIZE];
                 char border[MAX_BUFFER_SIZE];
                 char game_renderer[MAX_BUFFER_SIZE];
             } video;

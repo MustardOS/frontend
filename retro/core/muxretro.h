@@ -38,6 +38,10 @@ void video_bridge_set_core_rotation(int quarter_turns);
 
 void video_bridge_apply_filter(void);
 
+void video_bridge_apply_anti_flicker(void);
+
+void video_bridge_reset_temporal(void);
+
 void video_bridge_apply_fps_limit(void);
 
 int video_bridge_get_swap_interval(void);
@@ -352,6 +356,8 @@ void input_menu_reopen_hotkeys(void);
 
 void settings_menu_reopen_video(void);
 
+void settings_menu_reopen_video_at(int local_index);
+
 void settings_menu_reopen_visuals(void);
 
 void settings_menu_reopen_visuals_at(int local_index);
@@ -383,6 +389,16 @@ void video_menu_open(void);
 int video_menu_is_active(void);
 
 void video_menu_tick(void);
+
+void video_menu_reopen_image_corrections(void);
+
+void image_corrections_menu_init(void);
+
+void image_corrections_menu_open(void);
+
+int image_corrections_menu_is_active(void);
+
+void image_corrections_menu_tick(void);
 
 void sound_menu_init(void);
 
