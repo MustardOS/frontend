@@ -9,38 +9,37 @@
 #define INTERFRAME_BLEND_NEON 1
 #endif
 
-#define LUMA_DIFFERENCE_THRESHOLD 128
-#define FLICKER_HOLD_FRAMES       3
+#define COLOUR_DIFFERENCE_THRESHOLD 64
+#define FLICKER_HOLD_FRAMES          3
 
-static int difference(const int a, const int b) {
+static unsigned channel_difference(const unsigned a, const unsigned b) {
     return a > b ? a - b : b - a;
 }
 
-static int luma_rgb888(const unsigned r, const unsigned g, const unsigned b) {
-    // antiflicker shader: 0.2989 R + 0.5870 G + 0.1140 B.
-    return (77 * (int) r + 150 * (int) g + 29 * (int) b) >> 8;
+static int colour_contrast_rgb888(
+    const unsigned ar, const unsigned ag, const unsigned ab, const unsigned br, const unsigned bg, const unsigned bb
+) {
+    return channel_difference(ar, br) >= COLOUR_DIFFERENCE_THRESHOLD
+           || channel_difference(ag, bg) >= COLOUR_DIFFERENCE_THRESHOLD
+           || channel_difference(ab, bb) >= COLOUR_DIFFERENCE_THRESHOLD;
 }
 
-static int luma_xrgb8888(const uint32_t pixel) {
-    return luma_rgb888((pixel >> 16) & 0xff, (pixel >> 8) & 0xff, pixel & 0xff);
+static int colour_contrast_xrgb8888(const uint32_t a, const uint32_t b) {
+    return colour_contrast_rgb888(
+        (a >> 16) & 0xff, (a >> 8) & 0xff, a & 0xff, (b >> 16) & 0xff, (b >> 8) & 0xff, b & 0xff
+    );
 }
 
-static int luma_rgb565(const uint16_t pixel) {
-    const unsigned r5 = (pixel >> 11) & 0x1f;
-    const unsigned g6 = (pixel >> 5) & 0x3f;
-    const unsigned b5 = pixel & 0x1f;
-    return luma_rgb888((r5 << 3) | (r5 >> 2), (g6 << 2) | (g6 >> 4), (b5 << 3) | (b5 >> 2));
+static int colour_contrast_rgb565(const uint16_t a, const uint16_t b) {
+    return channel_difference((a >> 11) & 0x1f, (b >> 11) & 0x1f) >= COLOUR_DIFFERENCE_THRESHOLD / 8
+           || channel_difference((a >> 5) & 0x3f, (b >> 5) & 0x3f) >= COLOUR_DIFFERENCE_THRESHOLD / 4
+           || channel_difference(a & 0x1f, b & 0x1f) >= COLOUR_DIFFERENCE_THRESHOLD / 8;
 }
 
-static int luma_xrgb1555(const uint16_t pixel) {
-    const unsigned r5 = (pixel >> 10) & 0x1f;
-    const unsigned g5 = (pixel >> 5) & 0x1f;
-    const unsigned b5 = pixel & 0x1f;
-    return luma_rgb888((r5 << 3) | (r5 >> 2), (g5 << 3) | (g5 >> 2), (b5 << 3) | (b5 >> 2));
-}
-
-static int should_blend(const int current, const int previous) {
-    return difference(current, previous) >= LUMA_DIFFERENCE_THRESHOLD;
+static int colour_contrast_xrgb1555(const uint16_t a, const uint16_t b) {
+    return channel_difference((a >> 10) & 0x1f, (b >> 10) & 0x1f) >= COLOUR_DIFFERENCE_THRESHOLD / 8
+           || channel_difference((a >> 5) & 0x1f, (b >> 5) & 0x1f) >= COLOUR_DIFFERENCE_THRESHOLD / 8
+           || channel_difference(a & 0x1f, b & 0x1f) >= COLOUR_DIFFERENCE_THRESHOLD / 8;
 }
 
 static uint32_t average_xrgb8888(const uint32_t a, const uint32_t b) {
@@ -78,37 +77,43 @@ static int neon_mask_any_u16(const uint16x8_t mask) {
     return (vgetq_lane_u64(packed, 0) | vgetq_lane_u64(packed, 1)) != 0;
 }
 
-static uint8x8_t neon_luma_xrgb8888(const uint8x8x4_t pixel) {
-    uint16x8_t luma = vmull_u8(pixel.val[2], vdup_n_u8(77));
-    luma = vmlal_u8(luma, pixel.val[1], vdup_n_u8(150));
-    luma = vmlal_u8(luma, pixel.val[0], vdup_n_u8(29));
-    return vshrn_n_u16(luma, 8);
+static uint8x8_t neon_colour_contrast_xrgb8888(const uint8x8x4_t a, const uint8x8x4_t b) {
+    uint8x8_t contrast = vabd_u8(a.val[0], b.val[0]);
+    contrast = vmax_u8(contrast, vabd_u8(a.val[1], b.val[1]));
+    contrast = vmax_u8(contrast, vabd_u8(a.val[2], b.val[2]));
+    return vcge_u8(contrast, vdup_n_u8(COLOUR_DIFFERENCE_THRESHOLD));
 }
 
-static uint16x8_t neon_luma_rgb565(const uint16x8_t pixel) {
-    const uint16x8_t r5 = vandq_u16(vshrq_n_u16(pixel, 11), vdupq_n_u16(0x1f));
-    const uint16x8_t g6 = vandq_u16(vshrq_n_u16(pixel, 5), vdupq_n_u16(0x3f));
-    const uint16x8_t b5 = vandq_u16(pixel, vdupq_n_u16(0x1f));
-    const uint16x8_t r8 = vorrq_u16(vshlq_n_u16(r5, 3), vshrq_n_u16(r5, 2));
-    const uint16x8_t g8 = vorrq_u16(vshlq_n_u16(g6, 2), vshrq_n_u16(g6, 4));
-    const uint16x8_t b8 = vorrq_u16(vshlq_n_u16(b5, 3), vshrq_n_u16(b5, 2));
-    uint16x8_t luma = vmulq_n_u16(r8, 77);
-    luma = vmlaq_n_u16(luma, g8, 150);
-    luma = vmlaq_n_u16(luma, b8, 29);
-    return vshrq_n_u16(luma, 8);
+static uint16x8_t neon_colour_contrast_rgb565(const uint16x8_t a, const uint16x8_t b) {
+    const uint16x8_t rdiff = vabdq_u16(vshrq_n_u16(a, 11), vshrq_n_u16(b, 11));
+    const uint16x8_t gdiff = vabdq_u16(
+        vandq_u16(vshrq_n_u16(a, 5), vdupq_n_u16(0x3f)),
+        vandq_u16(vshrq_n_u16(b, 5), vdupq_n_u16(0x3f))
+    );
+    const uint16x8_t bdiff = vabdq_u16(vandq_u16(a, vdupq_n_u16(0x1f)), vandq_u16(b, vdupq_n_u16(0x1f)));
+    return vorrq_u16(
+        vcgeq_u16(rdiff, vdupq_n_u16(COLOUR_DIFFERENCE_THRESHOLD / 8)),
+        vorrq_u16(
+            vcgeq_u16(gdiff, vdupq_n_u16(COLOUR_DIFFERENCE_THRESHOLD / 4)),
+            vcgeq_u16(bdiff, vdupq_n_u16(COLOUR_DIFFERENCE_THRESHOLD / 8))
+        )
+    );
 }
 
-static uint16x8_t neon_luma_xrgb1555(const uint16x8_t pixel) {
-    const uint16x8_t r5 = vandq_u16(vshrq_n_u16(pixel, 10), vdupq_n_u16(0x1f));
-    const uint16x8_t g5 = vandq_u16(vshrq_n_u16(pixel, 5), vdupq_n_u16(0x1f));
-    const uint16x8_t b5 = vandq_u16(pixel, vdupq_n_u16(0x1f));
-    const uint16x8_t r8 = vorrq_u16(vshlq_n_u16(r5, 3), vshrq_n_u16(r5, 2));
-    const uint16x8_t g8 = vorrq_u16(vshlq_n_u16(g5, 3), vshrq_n_u16(g5, 2));
-    const uint16x8_t b8 = vorrq_u16(vshlq_n_u16(b5, 3), vshrq_n_u16(b5, 2));
-    uint16x8_t luma = vmulq_n_u16(r8, 77);
-    luma = vmlaq_n_u16(luma, g8, 150);
-    luma = vmlaq_n_u16(luma, b8, 29);
-    return vshrq_n_u16(luma, 8);
+static uint16x8_t neon_colour_contrast_xrgb1555(const uint16x8_t a, const uint16x8_t b) {
+    const uint16x8_t rdiff = vabdq_u16(
+        vandq_u16(vshrq_n_u16(a, 10), vdupq_n_u16(0x1f)),
+        vandq_u16(vshrq_n_u16(b, 10), vdupq_n_u16(0x1f))
+    );
+    const uint16x8_t gdiff = vabdq_u16(
+        vandq_u16(vshrq_n_u16(a, 5), vdupq_n_u16(0x1f)),
+        vandq_u16(vshrq_n_u16(b, 5), vdupq_n_u16(0x1f))
+    );
+    const uint16x8_t bdiff = vabdq_u16(vandq_u16(a, vdupq_n_u16(0x1f)), vandq_u16(b, vdupq_n_u16(0x1f)));
+    const uint16x8_t threshold = vdupq_n_u16(COLOUR_DIFFERENCE_THRESHOLD / 8);
+    return vorrq_u16(
+        vcgeq_u16(rdiff, threshold), vorrq_u16(vcgeq_u16(gdiff, threshold), vcgeq_u16(bdiff, threshold))
+    );
 }
 #endif
 
@@ -161,9 +166,7 @@ static void blend_xrgb8888_rows(
             }
             uint8x8_t confirmed = vdup_n_u8(0);
             if (neon_mask_any_u8(exact_repeat)) {
-                const uint8x8_t prior_contrast = vcge_u8(
-                    vabd_u8(neon_luma_xrgb8888(curr), neon_luma_xrgb8888(prior)), vdup_n_u8(LUMA_DIFFERENCE_THRESHOLD)
-                );
+                const uint8x8_t prior_contrast = neon_colour_contrast_xrgb8888(curr, prior);
                 confirmed = vand_u8(exact_repeat, prior_contrast);
             }
             const uint8x8_t blend = vorr_u8(confirmed, held);
@@ -197,7 +200,7 @@ static void blend_xrgb8888_rows(
                                  && ((prev3[x] ^ prev4[x]) & 0x00ffffffU) == 0
                                  && ((prev[x] ^ prev2[x]) & 0x00ffffffU) == 0;
             const int exact_repeat = changed && (cadence1 || cadence2);
-            const int confirmed = exact_repeat && should_blend(luma_xrgb8888(dst[x]), luma_xrgb8888(prev[x]));
+            const int confirmed = exact_repeat && colour_contrast_xrgb8888(dst[x], prev[x]);
             if (confirmed) {
                 dst[x] = average_xrgb8888(dst[x], prev[x]);
                 hold[x] = FLICKER_HOLD_FRAMES;
@@ -243,9 +246,7 @@ static void blend_rgb565_rows(
             }
             uint16x8_t confirmed = vdupq_n_u16(0);
             if (neon_mask_any_u16(exact_repeat)) {
-                const uint16x8_t prior_contrast = vcgeq_u16(
-                    vabdq_u16(neon_luma_rgb565(curr), neon_luma_rgb565(prior)), vdupq_n_u16(LUMA_DIFFERENCE_THRESHOLD)
-                );
+                const uint16x8_t prior_contrast = neon_colour_contrast_rgb565(curr, prior);
                 confirmed = vandq_u16(exact_repeat, prior_contrast);
             }
             const uint16x8_t blend = vorrq_u16(confirmed, held);
@@ -276,7 +277,7 @@ static void blend_rgb565_rows(
             const int cadence1 = dst[x] == prev2[x];
             const int cadence2 = prev3 && prev4 && dst[x] == prev3[x] && prev3[x] == prev4[x] && prev[x] == prev2[x];
             const int exact_repeat = dst[x] != prev[x] && (cadence1 || cadence2);
-            const int confirmed = exact_repeat && should_blend(luma_rgb565(dst[x]), luma_rgb565(prev[x]));
+            const int confirmed = exact_repeat && colour_contrast_rgb565(dst[x], prev[x]);
             if (confirmed) {
                 dst[x] = average_rgb565(dst[x], prev[x]);
                 hold[x] = FLICKER_HOLD_FRAMES;
@@ -328,10 +329,7 @@ static void blend_xrgb1555_rows(
             }
             uint16x8_t confirmed = vdupq_n_u16(0);
             if (neon_mask_any_u16(exact_repeat)) {
-                const uint16x8_t prior_contrast = vcgeq_u16(
-                    vabdq_u16(neon_luma_xrgb1555(curr), neon_luma_xrgb1555(prior)),
-                    vdupq_n_u16(LUMA_DIFFERENCE_THRESHOLD)
-                );
+                const uint16x8_t prior_contrast = neon_colour_contrast_xrgb1555(curr, prior);
                 confirmed = vandq_u16(exact_repeat, prior_contrast);
             }
             const uint16x8_t blend = vorrq_u16(confirmed, held);
@@ -365,7 +363,7 @@ static void blend_xrgb1555_rows(
             const int cadence2 = prev3 && prev4 && ((dst[x] ^ prev3[x]) & 0x7fffU) == 0
                                  && ((prev3[x] ^ prev4[x]) & 0x7fffU) == 0 && ((prev[x] ^ prev2[x]) & 0x7fffU) == 0;
             const int exact_repeat = changed && (cadence1 || cadence2);
-            const int confirmed = exact_repeat && should_blend(luma_xrgb1555(dst[x]), luma_xrgb1555(prev[x]));
+            const int confirmed = exact_repeat && colour_contrast_xrgb1555(dst[x], prev[x]);
             if (confirmed) {
                 dst[x] = average_xrgb1555(dst[x], prev[x]);
                 hold[x] = FLICKER_HOLD_FRAMES;

@@ -12,11 +12,13 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
   axes, eliminating the fractional-scale resampling shimmer visible on scrolling repeated textures (e.g. SMB1 bricks).
   Well it at least _tries_ to, it's not exactly perfect but gets the job done in most cases.
 - **Anti-Flicker**: optional, core-independent temporal filtering for software-rendered content. It requires each pixel
-  to exactly repeat its value from two frames ago and differ strongly from the previous frame before confirming an A/B/A
-  alternation. Confirmed pixels remain blended for three further frames, covering the changing background visible during
-  the opposite phase and one missed comparison without turning the effect into full-screen motion blur. This restores
-  deliberate transparency and temporal smoothing effects designed around CRT phosphor or early LCD persistence. Exact
-  repeat detection makes the ordinary non-flickering path inexpensive; held pixels skip repeat and luminance detection.
+  to exactly repeat its value from two frames ago and differ strongly in at least one colour channel from the previous
+  frame before confirming an A/B/A alternation. Per-channel contrast is intentional: saturated transparency colours can
+  have nearly the same luminance as the background and must not bypass detection. Confirmed pixels remain blended for
+  three further frames, covering the changing background visible during the opposite phase and one missed comparison
+  without turning the effect into full-screen motion blur. This restores deliberate transparency and temporal smoothing
+  effects designed around CRT phosphor or early LCD persistence. Exact repeat detection makes the ordinary non-flickering
+  path inexpensive; held pixels skip repeat and contrast detection.
   ARM builds use NEON for all three libretro software pixel formats; frames at or above 1280×720 are split into four
   independent row ranges. The three helper threads, two-frame history, and one-byte-per-pixel confidence mask exist only
   while enabled and are released when it is disabled. History and confidence are reset across pauses, hidden core runs,
@@ -55,9 +57,12 @@ Other context types (GL core profile, GLES3, Vulkan) are rejected so the core ca
 - **Late Input Polling**: input is repolled inside `input_bridge_begin_run()`, _after_ the Frame Delay wait, so the core
   always sees the freshest possible input.
 - **Frame Delay**: off / auto (p95-adaptive) / 1-16 ms. Delays the core run within the frame period to shrink the
-  'input to run' gap.
-- **Pacing After Present**: all pacing sleeps (audio headroom, 50 Hz, slowmotion timing etc.) run _after_ the frame is
-  presented, never betwixt the core runs and the present frame.
+  'input to run' gap. A reported panel rate is the scheduling period; a separately windowed presentation-cadence
+  estimate is diagnostic only and cannot redefine the physical refresh rate.
+- **Pacing After Present**: normal automatic, 50 Hz, slow-motion, and audio-headroom pacing all run _after_ the frame is
+  presented, never between the core run and presentation. Normal automatic mode uses one monotonic frame deadline from
+  the first frame; libretro audio callbacks only enqueue samples, while queue depth feeds dynamic rate correction and
+  stale-queue recovery.
 - **Adaptive Audio**: when the audio queue runs low, extra hidden frames are only granted out of measured headroom using
   frame calculations (`frame period / rolling core cost`), so a heavy core is never pushed into a catch up death spiral.
 - **Run Ahead**: see below.

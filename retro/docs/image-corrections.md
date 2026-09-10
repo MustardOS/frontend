@@ -9,8 +9,10 @@ default when content-dependent, and have a bounded fast path when enabled.
 - **Shimmer Fix** snaps the output rectangle to whole multiples of the native core frame. It addresses uneven pixel
   sizing during scrolling and remains available for software- and hardware-rendered cores.
 - **Anti-Flicker** detects exact, high-contrast A/B/A and AA/BB/AA temporal alternation and selectively blends confirmed
-  pixels. The second cadence covers games or cores that hold each flicker phase for two output frames. It operates on
-  libretro software frame buffers, so it is hidden for hardware-rendered cores.
+  pixels. Contrast is measured per colour channel rather than from luminance alone, preserving detection when a saturated
+  transparency colour and its background have similar brightness. The second cadence covers games or cores that hold each
+  flicker phase for two output frames. It operates on libretro software frame buffers, so it is hidden for hardware-rendered
+  cores.
 
 Both settings retain their existing content/core/directory/session persistence. Moving them into the child page changes
 only navigation, not configuration keys or profile compatibility.

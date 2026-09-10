@@ -9,10 +9,11 @@
 
 #define FRAME_PACER_EMERGENCY_AUDIO_MS 20
 #define FRAME_PACER_MISS_RATIO         1.5
-#define FRAME_PACER_OUTLIER_RATIO      3.0
 
 #define FRAME_PACER_WORK_HISTORY 32
 #define FRAME_PACER_MIN_SAMPLES  8
+
+#define FRAME_PACER_REFRESH_WINDOW 30
 
 #define FRAME_PACER_FLIP_TARGET_NS 1500000.0
 
@@ -34,6 +35,8 @@ static int work_next = 0;
 
 static double refresh_period_ns = 0.0;
 static int refresh_period_known = 0;
+static double refresh_window_sum_ns = 0.0;
+static unsigned refresh_window_count = 0;
 static uint64_t last_present_counter = 0;
 static int last_tick_missed = 0;
 static double extra_margin_ns = 0.0;
@@ -61,6 +64,8 @@ static void frame_pacer_reset_state(void) {
 
     refresh_period_ns = 0.0;
     refresh_period_known = 0;
+    refresh_window_sum_ns = 0.0;
+    refresh_window_count = 0;
     last_present_counter = 0;
     last_tick_missed = 0;
 
@@ -85,6 +90,12 @@ static int refresh_interval_plausible(const double interval_ns) {
     return interval_ns >= min_period_ns && interval_ns <= max_period_ns;
 }
 
+static double scheduling_period_ns(void) {
+    const int panel_hz = display_panel_refresh_hz();
+    if (panel_hz > 0) return 1e9 / (double) panel_hz;
+    return refresh_period_known ? refresh_period_ns : 0.0;
+}
+
 static void work_push(const double ns) {
     work_samples_ns[work_next] = ns;
     work_next = (work_next + 1) % FRAME_PACER_WORK_HISTORY;
@@ -107,16 +118,17 @@ static void frame_pacer_wait(void) {
     if (!frame_pacer_timing_available()) return;
 
     uint64_t sleep_ns;
+    const double period_ns = scheduling_period_ns();
 
     if (session_settings.frame_delay_ms == FRAME_DELAY_AUTO) {
         if (hw_render_bridge_active()) return;
 
-        if (!refresh_period_known || work_count < FRAME_PACER_MIN_SAMPLES || last_present_counter == 0) return;
+        if (period_ns <= 0.0 || work_count < FRAME_PACER_MIN_SAMPLES || last_present_counter == 0) return;
 
         const double work_ns = work_worst_ns();
-        if (work_ns >= refresh_period_ns * FRAME_PACER_WORK_CEILING_RATIO) return;
+        if (work_ns >= period_ns * FRAME_PACER_WORK_CEILING_RATIO) return;
 
-        const double budget_ns = refresh_period_ns - work_ns - FRAME_PACER_FLIP_TARGET_NS - extra_margin_ns;
+        const double budget_ns = period_ns - work_ns - FRAME_PACER_FLIP_TARGET_NS - extra_margin_ns;
         if (budget_ns <= 0.0) return;
 
         const double spent_ns = perf_ns(SDL_GetPerformanceCounter() - last_present_counter);
@@ -127,8 +139,7 @@ static void frame_pacer_wait(void) {
         if (last_tick_missed) return;
 
         sleep_ns = (uint64_t) session_settings.frame_delay_ms * 1000000ULL;
-        if (refresh_period_known && (double) sleep_ns > refresh_period_ns * 0.9)
-            sleep_ns = (uint64_t) (refresh_period_ns * 0.9);
+        if (period_ns > 0.0 && (double) sleep_ns > period_ns * 0.9) sleep_ns = (uint64_t) (period_ns * 0.9);
     }
 
     if (sleep_ns == 0) return;
@@ -159,6 +170,8 @@ void frame_pacer_after_present(void) {
     if (!frame_pacer_timing_available()) {
         last_present_counter = 0;
         measuring = 0;
+        refresh_window_sum_ns = 0.0;
+        refresh_window_count = 0;
         return;
     }
 
@@ -186,31 +199,33 @@ void frame_pacer_after_present(void) {
         return;
     }
 
-    if (!refresh_period_known) {
-        if (!refresh_interval_plausible(interval_ns)) return;
-
-        refresh_period_ns = interval_ns;
-        refresh_period_known = 1;
-        return;
-    }
-
-    if (interval_ns > refresh_period_ns * FRAME_PACER_OUTLIER_RATIO) return;
-
-    last_tick_missed = interval_ns > refresh_period_ns * FRAME_PACER_MISS_RATIO;
+    const double period_ns = scheduling_period_ns();
+    last_tick_missed = period_ns > 0.0 && interval_ns > period_ns * FRAME_PACER_MISS_RATIO;
 
     if (last_tick_missed) {
         extra_margin_ns += FRAME_PACER_MARGIN_GROW_NS;
         if (extra_margin_ns > FRAME_PACER_MARGIN_MAX_NS) extra_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
-        return;
+    } else {
+        extra_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
+        if (extra_margin_ns < 0.0) extra_margin_ns = 0.0;
     }
 
-    extra_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
-    if (extra_margin_ns < 0.0) extra_margin_ns = 0.0;
+    refresh_window_sum_ns += interval_ns;
+    refresh_window_count++;
+    if (refresh_window_count < FRAME_PACER_REFRESH_WINDOW) return;
 
-    if (!refresh_interval_plausible(interval_ns)) return;
+    const double candidate_ns = refresh_window_sum_ns / (double) refresh_window_count;
+    refresh_window_sum_ns = 0.0;
+    refresh_window_count = 0;
+    if (!refresh_interval_plausible(candidate_ns)) return;
 
-    refresh_period_ns =
-        refresh_period_ns * (1.0 - FRAME_PACER_REFRESH_SMOOTHING) + interval_ns * FRAME_PACER_REFRESH_SMOOTHING;
+    if (!refresh_period_known) {
+        refresh_period_ns = candidate_ns;
+        refresh_period_known = 1;
+    } else {
+        refresh_period_ns = refresh_period_ns * (1.0 - FRAME_PACER_REFRESH_SMOOTHING)
+                            + candidate_ns * FRAME_PACER_REFRESH_SMOOTHING;
+    }
 }
 
 void frame_pacer_wait_until(const uint64_t deadline_counter) {
@@ -226,8 +241,15 @@ void frame_pacer_wait_until(const uint64_t deadline_counter) {
 }
 
 float frame_pacer_get_refresh_hz(void) {
+    const int panel_hz = display_panel_refresh_hz();
+    if (panel_hz > 0) return (float) panel_hz;
     if (refresh_period_known && refresh_period_ns > 0.0) return (float) (1e9 / refresh_period_ns);
     return 60.0f;
+}
+
+float frame_pacer_get_observed_hz(void) {
+    if (refresh_period_known && refresh_period_ns > 0.0) return (float) (1e9 / refresh_period_ns);
+    return 0.0f;
 }
 
 float frame_pacer_get_delay_ms(void) {
