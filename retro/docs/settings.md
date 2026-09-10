@@ -98,20 +98,26 @@ alter core options, controls or save data.
 
 ## Hotkeys
 
-All hotkeys are `MENU + <button>` combos, each individually toggleable in the Hotkey Controls screen:
+All hotkeys are `MENU + <button>` combos. The Hotkey Buttons submenu changes the second button; choosing one already in
+use swaps the two assignments so every combo remains unique. The defaults are:
 
 | Combo                           | Action                                                                            |
 |---------------------------------|-----------------------------------------------------------------------------------|
-| MENU+R1                         | Toggle Fast Forward                                                               |
+| MENU+R1                         | Fast Forward                                                                      |
 | MENU+R2                         | Quick Save                                                                        |
-| MENU+L1                         | Toggle Slow Motion                                                                |
+| MENU+L1                         | Slow Motion                                                                       |
 | MENU+L2                         | Quick Load                                                                        |
 | MENU+B                          | Toggle Pause Content - freezes the core in place without opening the pause menu   |
 | MENU+Y                          | Toggle FPS display                                                                |
 | MENU+X                          | Cycle header visibility (None / Clock / Battery / Clock+Battery)                  |
 | MENU+START                      | Quit (autosaves first if Auto Save covers "On Quit")                              |
+| MENU+SELECT                     | Open the content manual, when available                                           |
 | MENU (release, no combo)        | Open the pause menu                                                               |
 | MENU (hold, in settings screen) | Peek at the content underneath for a live preview of the current display settings |
+
+Fast Forward and Slow Motion each offer **Disabled**, **Press**, and **Hold**. Press toggles the speed on each combo
+press. Hold keeps the speed active only while both buttons remain down. Value `1` retains the original press-to-toggle
+behaviour in existing settings files; Hold is stored as `2`.
 
 Fast Forward, Slow Motion, and Pause Content each have an independent on screen glyph toggle, so a hotkey can keep
 working with its indicator hidden. Pausing this way won't disturb Fast Forward/Slow Motion. Resuming drops straight back

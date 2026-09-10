@@ -5,7 +5,8 @@
 #include "../settings/submenu.h"
 
 enum {
-    row_ff_enabled = 0,
+    row_button_assignments = 0,
+    row_ff_enabled,
     row_ff_speed,
     row_ff_glyph_enabled,
     row_slowmo_enabled,
@@ -23,6 +24,7 @@ enum {
 };
 
 static const char *row_labels[row_count] = {
+    lang.muxretro.hotkeys_screen.button_assignments,
     lang.muxretro.hotkeys_screen.fast_forward,
     lang.muxretro.hotkeys_screen.ff_speed,
     lang.muxretro.hotkeys_screen.ff_glyph,
@@ -39,18 +41,26 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.manual
 };
 
-static const char *row_glyphs[row_count] = {"fastforward", "ffspeed",      "ffglyph",    "slowmotion", "slowmospeed",
-                                            "slowmoglyph", "pause",        "pauseglyph", "quicksave",  "quickload",
-                                            "togglefps",   "toggleheader", "quit",       "manual"};
+static const char *row_glyphs[row_count] = {"hotkeys",     "fastforward", "ffspeed",      "ffglyph",    "slowmotion",
+                                            "slowmospeed", "slowmoglyph", "pause",        "pauseglyph", "quicksave",
+                                            "quickload",   "togglefps",   "toggleheader", "quit",       "manual"};
 
 static const char *row_help[row_count] = {
-    lang.muxretro.help.hotkeys.fast_forward,  lang.muxretro.help.hotkeys.ff_speed,
-    lang.muxretro.help.hotkeys.ff_glyph,      lang.muxretro.help.hotkeys.slow_motion,
-    lang.muxretro.help.hotkeys.slowmo_speed,  lang.muxretro.help.hotkeys.slowmo_glyph,
-    lang.muxretro.help.hotkeys.pause_content, lang.muxretro.help.hotkeys.pause_glyph,
-    lang.muxretro.help.hotkeys.quick_save,    lang.muxretro.help.hotkeys.quick_load,
-    lang.muxretro.help.hotkeys.toggle_fps,    lang.muxretro.help.hotkeys.toggle_header,
-    lang.muxretro.help.hotkeys.quit,          lang.muxretro.help.hotkeys.manual
+    lang.muxretro.help.hotkeys.button_assignments,
+    lang.muxretro.help.hotkeys.fast_forward,
+    lang.muxretro.help.hotkeys.ff_speed,
+    lang.muxretro.help.hotkeys.ff_glyph,
+    lang.muxretro.help.hotkeys.slow_motion,
+    lang.muxretro.help.hotkeys.slowmo_speed,
+    lang.muxretro.help.hotkeys.slowmo_glyph,
+    lang.muxretro.help.hotkeys.pause_content,
+    lang.muxretro.help.hotkeys.pause_glyph,
+    lang.muxretro.help.hotkeys.quick_save,
+    lang.muxretro.help.hotkeys.quick_load,
+    lang.muxretro.help.hotkeys.toggle_fps,
+    lang.muxretro.help.hotkeys.toggle_header,
+    lang.muxretro.help.hotkeys.quit,
+    lang.muxretro.help.hotkeys.manual
 };
 
 static void enabled_text(char *buf, const size_t buf_len, const int enabled, const char *combo) {
@@ -61,10 +71,24 @@ static void enabled_text(char *buf, const size_t buf_len, const int enabled, con
     }
 }
 
+static void hotkey_mode_text(char *buf, const size_t buf_len, const int mode, const enum hotkey_binding binding) {
+    if (mode == hotkey_activation_disabled) {
+        snprintf(buf, buf_len, "%s", lang.generic.disabled);
+        return;
+    }
+
+    char combo[64];
+    session_settings_hotkey_combo_name(binding, combo, sizeof(combo));
+    snprintf(buf, buf_len, "%s (%s)", session_settings_hotkey_mode_name(mode), combo);
+}
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
     switch (index) {
+        case row_button_assignments:
+            buf[0] = '\0';
+            break;
         case row_ff_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_ff_enabled, "M+R1");
+            hotkey_mode_text(buf, buf_len, session_settings.hotkey_ff_enabled, hotkey_binding_fast_forward);
             break;
         case row_ff_speed:
             snprintf(buf, buf_len, "%s", session_settings_ff_speed_name(session_settings.ff_speed));
@@ -76,7 +100,7 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             );
             break;
         case row_slowmo_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_slowmo_enabled, "M+L1");
+            hotkey_mode_text(buf, buf_len, session_settings.hotkey_slowmo_enabled, hotkey_binding_slow_motion);
             break;
         case row_slowmo_speed:
             snprintf(buf, buf_len, "%s", session_settings_slowmo_speed_name(session_settings.slowmo_speed));
@@ -87,33 +111,47 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
                 session_settings.hotkey_slowmo_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
             );
             break;
-        case row_pause_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_pause_enabled, "M+B");
-            break;
+        case row_pause_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_pause, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_pause_enabled, combo);
+        } break;
         case row_pause_glyph_enabled:
             snprintf(
                 buf, buf_len, "%s",
                 session_settings.hotkey_pause_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
             );
             break;
-        case row_quicksave_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_quicksave_enabled, "M+R2");
-            break;
-        case row_quickload_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_quickload_enabled, "M+L2");
-            break;
-        case row_toggle_fps_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_toggle_fps_enabled, "M+Y");
-            break;
-        case row_header_toggle_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_header_toggle_enabled, "M+X");
-            break;
-        case row_quit_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_quit_enabled, "M+START");
-            break;
-        case row_manual_enabled:
-            enabled_text(buf, buf_len, session_settings.hotkey_manual_enabled, "M+SELECT");
-            break;
+        case row_quicksave_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_quicksave, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_quicksave_enabled, combo);
+        } break;
+        case row_quickload_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_quickload, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_quickload_enabled, combo);
+        } break;
+        case row_toggle_fps_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_toggle_fps, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_toggle_fps_enabled, combo);
+        } break;
+        case row_header_toggle_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_toggle_header, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_header_toggle_enabled, combo);
+        } break;
+        case row_quit_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_quit, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_quit_enabled, combo);
+        } break;
+        case row_manual_enabled: {
+            char combo[64];
+            session_settings_hotkey_combo_name(hotkey_binding_manual, combo, sizeof(combo));
+            enabled_text(buf, buf_len, session_settings.hotkey_manual_enabled, combo);
+        } break;
         default:
             buf[0] = '\0';
             break;
@@ -169,11 +207,70 @@ static void cycle_row(const int index, const int direction) {
     }
 }
 
-static void closed(void) {
-    input_menu_reopen_hotkeys();
+static const char *button_labels[hotkey_binding_count] = {
+    lang.muxretro.hotkeys_screen.fast_forward,  lang.muxretro.hotkeys_screen.slow_motion,
+    lang.muxretro.hotkeys_screen.pause_content, lang.muxretro.hotkeys_screen.quick_save,
+    lang.muxretro.hotkeys_screen.quick_load,    lang.muxretro.hotkeys_screen.toggle_fps,
+    lang.muxretro.hotkeys_screen.toggle_header, lang.muxretro.quit,
+    lang.muxretro.hotkeys_screen.manual
+};
+
+static const char *button_glyphs[hotkey_binding_count] = {"fastforward",  "slowmotion", "pause",
+                                                          "quicksave",    "quickload",  "togglefps",
+                                                          "toggleheader", "quit",       "manual"};
+
+static const char *button_help[hotkey_binding_count] = {
+    lang.muxretro.help.hotkeys.button_assignments, lang.muxretro.help.hotkeys.button_assignments,
+    lang.muxretro.help.hotkeys.button_assignments, lang.muxretro.help.hotkeys.button_assignments,
+    lang.muxretro.help.hotkeys.button_assignments, lang.muxretro.help.hotkeys.button_assignments,
+    lang.muxretro.help.hotkeys.button_assignments, lang.muxretro.help.hotkeys.button_assignments,
+    lang.muxretro.help.hotkeys.button_assignments
+};
+
+static void button_value_text(const int index, char *buf, const size_t buf_len) {
+    session_settings_hotkey_combo_name((enum hotkey_binding) index, buf, buf_len);
+}
+
+static void cycle_button(const int index, const int direction) {
+    session_settings_cycle_hotkey_button((enum hotkey_binding) index, direction);
 }
 
 static submenu self;
+static submenu buttons_self;
+
+static void buttons_closed(void) {
+    submenu_reopen_at(&self, row_button_assignments);
+}
+
+static const submenu_def buttons_def = {
+    .labels = button_labels,
+    .glyphs = button_glyphs,
+    .help = button_help,
+    .row_count = hotkey_binding_count,
+    .value_text = button_value_text,
+    .cycle = cycle_button,
+    .closed = buttons_closed,
+    .save_title = lang.muxretro.save.hotkeys_title,
+    .save_desc = lang.muxretro.save.hotkeys_desc,
+};
+
+static int row_is_action(const int index) {
+    return index == row_button_assignments;
+}
+
+static void row_action(const int index) {
+    if (index == row_button_assignments) submenu_open(&buttons_self);
+}
+
+static int child_tick(void) {
+    if (!submenu_is_active(&buttons_self)) return 0;
+    submenu_tick(&buttons_self);
+    return 1;
+}
+
+static void closed(void) {
+    input_menu_reopen_hotkeys();
+}
 
 static const submenu_def def = {
     .labels = row_labels,
@@ -182,6 +279,9 @@ static const submenu_def def = {
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,
+    .row_is_action = row_is_action,
+    .action = row_action,
+    .child_tick = child_tick,
     .closed = closed,
     .save_title = lang.muxretro.save.hotkeys_title,
     .save_desc = lang.muxretro.save.hotkeys_desc,
@@ -189,6 +289,7 @@ static const submenu_def def = {
 
 void hotkeys_menu_init(void) {
     submenu_init(&self, &def);
+    submenu_init(&buttons_self, &buttons_def);
 }
 
 void hotkeys_menu_open(void) {

@@ -144,17 +144,26 @@ struct session_settings_t {
     int ff_speed;
     int slowmo_speed;
     int hotkey_ff_enabled;
+    int hotkey_ff_button;
     int hotkey_ff_glyph_enabled;
     int hotkey_slowmo_enabled;
+    int hotkey_slowmo_button;
     int hotkey_slowmo_glyph_enabled;
     int hotkey_pause_enabled;
+    int hotkey_pause_button;
     int hotkey_pause_glyph_enabled;
     int hotkey_quicksave_enabled;
+    int hotkey_quicksave_button;
     int hotkey_quickload_enabled;
+    int hotkey_quickload_button;
     int hotkey_toggle_fps_enabled;
+    int hotkey_toggle_fps_button;
     int hotkey_header_toggle_enabled;
+    int hotkey_header_toggle_button;
     int hotkey_quit_enabled;
+    int hotkey_quit_button;
     int hotkey_manual_enabled;
+    int hotkey_manual_button;
     int auto_save;
     int sram_flush_seconds;
     int timeline_interval;
@@ -220,6 +229,26 @@ struct session_settings_t {
 #define PORT_DIGITAL_COUNT 16
 #define PORT_TARGET_COUNT  24
 #define PORT_STICK_FULL    32767
+
+enum hotkey_activation_mode {
+    hotkey_activation_disabled = 0,
+    hotkey_activation_press,
+    hotkey_activation_hold,
+    hotkey_activation_count
+};
+
+enum hotkey_binding {
+    hotkey_binding_fast_forward = 0,
+    hotkey_binding_slow_motion,
+    hotkey_binding_pause,
+    hotkey_binding_quicksave,
+    hotkey_binding_quickload,
+    hotkey_binding_toggle_fps,
+    hotkey_binding_toggle_header,
+    hotkey_binding_quit,
+    hotkey_binding_manual,
+    hotkey_binding_count
+};
 
 extern const int session_settings_source_types[PORT_SOURCE_COUNT];
 
@@ -454,6 +483,16 @@ void session_settings_cycle_header_visibility(int direction);
 void session_settings_cycle_ff_speed(int direction);
 
 void session_settings_cycle_slowmo_speed(int direction);
+
+const char *session_settings_hotkey_mode_name(int mode);
+
+int session_settings_hotkey_button(enum hotkey_binding binding);
+
+const char *session_settings_hotkey_button_name(enum hotkey_binding binding);
+
+void session_settings_hotkey_combo_name(enum hotkey_binding binding, char *buf, size_t len);
+
+void session_settings_cycle_hotkey_button(enum hotkey_binding binding, int direction);
 
 void session_settings_cycle_hotkey_ff_enabled(int direction);
 

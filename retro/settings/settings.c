@@ -51,18 +51,27 @@ static const struct session_settings_t defaults = {
     .header_visibility = header_visibility_none,
     .ff_speed = ff_speed_4_x,
     .slowmo_speed = slowmo_speed_1_2_x,
-    .hotkey_ff_enabled = 1,
+    .hotkey_ff_enabled = hotkey_activation_press,
+    .hotkey_ff_button = mux_input_r1,
     .hotkey_ff_glyph_enabled = 1,
-    .hotkey_slowmo_enabled = 1,
+    .hotkey_slowmo_enabled = hotkey_activation_press,
+    .hotkey_slowmo_button = mux_input_l1,
     .hotkey_slowmo_glyph_enabled = 1,
     .hotkey_pause_enabled = 1,
+    .hotkey_pause_button = mux_input_b,
     .hotkey_pause_glyph_enabled = 1,
     .hotkey_quicksave_enabled = 1,
+    .hotkey_quicksave_button = mux_input_r2,
     .hotkey_quickload_enabled = 1,
+    .hotkey_quickload_button = mux_input_l2,
     .hotkey_toggle_fps_enabled = 1,
+    .hotkey_toggle_fps_button = mux_input_y,
     .hotkey_header_toggle_enabled = 1,
+    .hotkey_header_toggle_button = mux_input_x,
     .hotkey_quit_enabled = 1,
+    .hotkey_quit_button = mux_input_start,
     .hotkey_manual_enabled = 1,
+    .hotkey_manual_button = mux_input_select,
     .auto_save = auto_save_idle_quit,
     .sram_flush_seconds = 60,
     .timeline_interval = 0,
@@ -253,6 +262,10 @@ static const int sram_flush_choices[] = {0, 15, 30, 60, 90, 120, 240, 300};
 static const int frame_delay_choices[] = {FRAME_DELAY_OFF, FRAME_DELAY_AUTO, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16};
 #define FRAME_DELAY_CHOICE_COUNT ((int) (sizeof(frame_delay_choices) / sizeof(frame_delay_choices[0])))
 
+static const int hotkey_button_choices[] = {mux_input_b,  mux_input_x,      mux_input_y,    mux_input_l1,
+                                            mux_input_r1, mux_input_l2,     mux_input_r2,   mux_input_l3,
+                                            mux_input_r3, mux_input_select, mux_input_start};
+
 enum setting_validation {
     setting_range,
     setting_choices,
@@ -300,18 +313,27 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(header_visibility, 0, header_visibility_count - 1),
     SETTING_RANGE(ff_speed, 0, ff_speed_count - 1),
     SETTING_RANGE(slowmo_speed, 0, slowmo_speed_count - 1),
-    SETTING_RANGE(hotkey_ff_enabled, 0, 1),
+    SETTING_RANGE(hotkey_ff_enabled, 0, hotkey_activation_count - 1),
+    SETTING_CHOICES(hotkey_ff_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_ff_glyph_enabled, 0, 1),
-    SETTING_RANGE(hotkey_slowmo_enabled, 0, 1),
+    SETTING_RANGE(hotkey_slowmo_enabled, 0, hotkey_activation_count - 1),
+    SETTING_CHOICES(hotkey_slowmo_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_slowmo_glyph_enabled, 0, 1),
     SETTING_RANGE(hotkey_pause_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_pause_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_pause_glyph_enabled, 0, 1),
     SETTING_RANGE(hotkey_quicksave_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_quicksave_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_quickload_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_quickload_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_toggle_fps_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_toggle_fps_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_header_toggle_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_header_toggle_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_quit_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_quit_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_manual_enabled, 0, 1),
+    SETTING_CHOICES(hotkey_manual_button, hotkey_button_choices),
     SETTING_RANGE(auto_save, 0, auto_save_count - 1),
     SETTING_CHOICES(sram_flush_seconds, sram_flush_choices),
     SETTING_RANGE(timeline_interval, 0, 6),
@@ -1813,9 +1835,87 @@ void session_settings_cycle_slowmo_speed(const int direction) {
         (session_settings.slowmo_speed + direction + slowmo_speed_count) % slowmo_speed_count;
 }
 
+const char *session_settings_hotkey_mode_name(const int mode) {
+    switch (mode) {
+        case hotkey_activation_press:
+            return lang.generic.press;
+        case hotkey_activation_hold:
+            return lang.generic.hold;
+        default:
+            return lang.generic.disabled;
+    }
+}
+
+static int *hotkey_button_field(const enum hotkey_binding binding) {
+    switch (binding) {
+        case hotkey_binding_fast_forward:
+            return &session_settings.hotkey_ff_button;
+        case hotkey_binding_slow_motion:
+            return &session_settings.hotkey_slowmo_button;
+        case hotkey_binding_pause:
+            return &session_settings.hotkey_pause_button;
+        case hotkey_binding_quicksave:
+            return &session_settings.hotkey_quicksave_button;
+        case hotkey_binding_quickload:
+            return &session_settings.hotkey_quickload_button;
+        case hotkey_binding_toggle_fps:
+            return &session_settings.hotkey_toggle_fps_button;
+        case hotkey_binding_toggle_header:
+            return &session_settings.hotkey_header_toggle_button;
+        case hotkey_binding_quit:
+            return &session_settings.hotkey_quit_button;
+        case hotkey_binding_manual:
+            return &session_settings.hotkey_manual_button;
+        default:
+            return NULL;
+    }
+}
+
+int session_settings_hotkey_button(const enum hotkey_binding binding) {
+    const int *field = hotkey_button_field(binding);
+    return field ? *field : mux_input_count;
+}
+
+const char *session_settings_hotkey_button_name(const enum hotkey_binding binding) {
+    return session_settings_button_type_label(session_settings_hotkey_button(binding));
+}
+
+void session_settings_hotkey_combo_name(const enum hotkey_binding binding, char *buf, const size_t len) {
+    if (!buf || !len) return;
+    snprintf(buf, len, "M+%s", session_settings_hotkey_button_name(binding));
+}
+
+void session_settings_cycle_hotkey_button(const enum hotkey_binding binding, const int direction) {
+    int *field = hotkey_button_field(binding);
+    if (!field) return;
+
+    int position = 0;
+    const int count = (int) A_SIZE(hotkey_button_choices);
+    while (position < count && hotkey_button_choices[position] != *field)
+        position++;
+    if (position >= count) position = 0;
+
+    const int next = (position + (direction < 0 ? -1 : 1) + count) % count;
+    const int replacement = hotkey_button_choices[next];
+
+    // Keep every combo unique. Reassigning an occupied button swaps the two
+    // actions, so no shortcut can silently trigger more than one operation.
+    for (int other = 0; other < hotkey_binding_count; other++) {
+        if (other == binding) continue;
+        int *other_field = hotkey_button_field((enum hotkey_binding) other);
+        if (other_field && *other_field == replacement) {
+            *other_field = *field;
+            break;
+        }
+    }
+
+    *field = replacement;
+}
+
 void session_settings_cycle_hotkey_ff_enabled(const int direction) {
-    (void) direction;
-    session_settings.hotkey_ff_enabled = !session_settings.hotkey_ff_enabled;
+    session_settings.hotkey_ff_enabled =
+        (session_settings.hotkey_ff_enabled + (direction < 0 ? -1 : 1) + hotkey_activation_count)
+        % hotkey_activation_count;
 }
 
 void session_settings_cycle_hotkey_ff_glyph_enabled(const int direction) {
@@ -1824,8 +1924,9 @@ void session_settings_cycle_hotkey_ff_glyph_enabled(const int direction) {
 }
 
 void session_settings_cycle_hotkey_slowmo_enabled(const int direction) {
-    (void) direction;
-    session_settings.hotkey_slowmo_enabled = !session_settings.hotkey_slowmo_enabled;
+    session_settings.hotkey_slowmo_enabled =
+        (session_settings.hotkey_slowmo_enabled + (direction < 0 ? -1 : 1) + hotkey_activation_count)
+        % hotkey_activation_count;
 }
 
 void session_settings_cycle_hotkey_slowmo_glyph_enabled(const int direction) {

@@ -73,6 +73,7 @@ struct mux_lang {
         char filter[MAX_BUFFER_SIZE];
         char forget[MAX_BUFFER_SIZE];
         char hidden[MAX_BUFFER_SIZE];
+        char hold[MAX_BUFFER_SIZE];
         char hold_remove[MAX_BUFFER_SIZE];
         char hold_reset[MAX_BUFFER_SIZE];
         char included[MAX_BUFFER_SIZE];
@@ -124,6 +125,7 @@ struct mux_lang {
         char online[MAX_BUFFER_SIZE];
         char open[MAX_BUFFER_SIZE];
         char option[MAX_BUFFER_SIZE];
+        char press[MAX_BUFFER_SIZE];
         char preview[MAX_BUFFER_SIZE];
         char previous[MAX_BUFFER_SIZE];
         char read[MAX_BUFFER_SIZE];
@@ -2334,6 +2336,7 @@ struct mux_lang {
             char macro_turbo_blocked[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
+            char button_assignments[MAX_BUFFER_SIZE];
             char fast_forward[MAX_BUFFER_SIZE];
             char slow_motion[MAX_BUFFER_SIZE];
             char quick_save[MAX_BUFFER_SIZE];
@@ -2642,6 +2645,7 @@ struct mux_lang {
                 char reset_input[MAX_BUFFER_SIZE];
             } input;
             struct {
+                char button_assignments[MAX_BUFFER_SIZE];
                 char fast_forward[MAX_BUFFER_SIZE];
                 char ff_speed[MAX_BUFFER_SIZE];
                 char ff_glyph[MAX_BUFFER_SIZE];
