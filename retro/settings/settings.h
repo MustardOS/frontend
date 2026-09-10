@@ -494,6 +494,8 @@ void session_settings_hotkey_combo_name(enum hotkey_binding binding, char *buf, 
 
 void session_settings_cycle_hotkey_button(enum hotkey_binding binding, int direction);
 
+void session_settings_reset_hotkey_buttons(void);
+
 void session_settings_cycle_hotkey_ff_enabled(int direction);
 
 void session_settings_cycle_hotkey_ff_glyph_enabled(int direction);

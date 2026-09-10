@@ -99,7 +99,8 @@ alter core options, controls or save data.
 ## Hotkeys
 
 All hotkeys are `MENU + <button>` combos. The Hotkey Buttons submenu changes the second button; choosing one already in
-use swaps the two assignments so every combo remains unique. The defaults are:
+use swaps the two assignments so every combo remains unique. Press X anywhere in that submenu to restore every button
+assignment to its default. The defaults are:
 
 | Combo                           | Action                                                                            |
 |---------------------------------|-----------------------------------------------------------------------------------|

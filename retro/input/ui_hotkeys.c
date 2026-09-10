@@ -238,6 +238,17 @@ static void cycle_button(const int index, const int direction) {
 static submenu self;
 static submenu buttons_self;
 
+static const char *button_extra_label(const int index) {
+    (void) index;
+    return lang.generic.reset;
+}
+
+static void reset_buttons(const int index) {
+    (void) index;
+    session_settings_reset_hotkey_buttons();
+    submenu_refresh_values(&buttons_self);
+}
+
 static void buttons_closed(void) {
     submenu_reopen_at(&self, row_button_assignments);
 }
@@ -249,6 +260,8 @@ static const submenu_def buttons_def = {
     .row_count = hotkey_binding_count,
     .value_text = button_value_text,
     .cycle = cycle_button,
+    .extra_label = button_extra_label,
+    .extra_action = reset_buttons,
     .closed = buttons_closed,
     .save_title = lang.muxretro.save.hotkeys_title,
     .save_desc = lang.muxretro.save.hotkeys_desc,

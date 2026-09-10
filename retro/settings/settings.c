@@ -1912,6 +1912,18 @@ void session_settings_cycle_hotkey_button(const enum hotkey_binding binding, con
     *field = replacement;
 }
 
+void session_settings_reset_hotkey_buttons(void) {
+    session_settings.hotkey_ff_button = defaults.hotkey_ff_button;
+    session_settings.hotkey_slowmo_button = defaults.hotkey_slowmo_button;
+    session_settings.hotkey_pause_button = defaults.hotkey_pause_button;
+    session_settings.hotkey_quicksave_button = defaults.hotkey_quicksave_button;
+    session_settings.hotkey_quickload_button = defaults.hotkey_quickload_button;
+    session_settings.hotkey_toggle_fps_button = defaults.hotkey_toggle_fps_button;
+    session_settings.hotkey_header_toggle_button = defaults.hotkey_header_toggle_button;
+    session_settings.hotkey_quit_button = defaults.hotkey_quit_button;
+    session_settings.hotkey_manual_button = defaults.hotkey_manual_button;
+}
+
 void session_settings_cycle_hotkey_ff_enabled(const int direction) {
     session_settings.hotkey_ff_enabled =
         (session_settings.hotkey_ff_enabled + (direction < 0 ? -1 : 1) + hotkey_activation_count)
