@@ -90,8 +90,6 @@ uint32_t audio_bridge_backpressure_ceiling_ms(void);
 
 void audio_bridge_wait_for_headroom(uint32_t budget_ms);
 
-void audio_bridge_wait_for_cadence(void);
-
 void audio_bridge_recover_cadence(void);
 
 void audio_bridge_note_core_frames(unsigned frames);
@@ -200,6 +198,8 @@ void frame_pacer_wait_until(uint64_t deadline_counter);
 
 float frame_pacer_get_refresh_hz(void);
 
+float frame_pacer_get_observed_hz(void);
+
 float frame_pacer_get_delay_ms(void);
 
 void core_set_target_fps(double new_fps);
@@ -211,8 +211,6 @@ double core_pace_divisor(void);
 int core_content_needs_pacing(void);
 
 double core_auto_pace_target_ms(void);
-
-int core_pacing_uses_audio_clock(void);
 
 void input_bridge_suppress_held(void);
 

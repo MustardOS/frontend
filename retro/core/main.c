@@ -351,11 +351,6 @@ double core_auto_pace_target_ms(void) {
     return pace_fps > 0.0 ? 1000.0 / pace_fps : 0.0;
 }
 
-int core_pacing_uses_audio_clock(void) {
-    return core_pace_divisor() == 1.0 && session_settings.fps_limit == fps_limit_auto && !link_is_engaged()
-           && audio_bridge_is_active() && !audio_bridge_is_muted() && audio_bridge_locked_content_fps() <= 0.0;
-}
-
 static double core_nominal_emulation_fps(void) {
     if (core_declared_rate_needs_pacing()) {
         const double divisor = core_pace_divisor();
@@ -402,33 +397,23 @@ static void pace_core_output(const uint64_t frame_start) {
     const double slack_ms = budget_ms - spent_ms;
     const int slowmo_active = hotkeys_is_slow_motion_active();
 
-    const int audio_master_paced = !slowmo_active && core_pacing_uses_audio_clock();
-    const int auto_locked_paced = !slowmo_active && session_settings.fps_limit == fps_limit_auto && !netplay_is_active()
-                                  && !link_is_engaged() && audio_bridge_locked_content_fps() > 0.0;
-    const int deadline_content_paced = !audio_master_paced && (core_content_needs_pacing() || auto_locked_paced);
+    const int auto_deadline_paced = !slowmo_active && session_settings.fps_limit == fps_limit_auto
+                                    && !netplay_is_active() && !link_is_engaged();
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
     perf_record(perf_stage_audio_queue, audio_bridge_queued_ms());
     if (!link_is_engaged()) {
-        if (audio_master_paced)
-            audio_bridge_wait_for_cadence();
-        else if (deadline_content_paced)
+        if (auto_deadline_paced)
             audio_bridge_recover_cadence();
         else
             audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
     }
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
-    if (audio_master_paced) {
-        fps_limit_deadline = 0.0;
-        fps_limit_target_ms = 0.0;
-        return;
-    }
-
     const double audio_target_ms = !slowmo_active ? core_auto_pace_target_ms() : 0.0;
 
-    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_target_ms <= 0.0 && !auto_locked_paced) {
+    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && !auto_deadline_paced) {
         fps_limit_deadline = 0.0;
         fps_limit_target_ms = 0.0;
         return;

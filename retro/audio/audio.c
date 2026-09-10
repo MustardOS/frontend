@@ -42,13 +42,6 @@
 #define HEADROOM_RECOVERY_QUEUE_MS  1000
 #define HEADROOM_FORCED_WAIT_MS     20
 
-#define CADENCE_RECOVERY_QUEUE_MS 250
-#define CADENCE_MAX_WAIT_MS       50
-#define CADENCE_WAIT_GAIN_NUM     2
-#define CADENCE_WAIT_GAIN_DEN     3
-
-#define AUDIO_WRITE_BACKPRESSURE_MAX_MS 100
-
 #define CONTENT_FPS_SMOOTHING 0.25
 #define CONTENT_FPS_MIN       20.0
 #define CONTENT_FPS_MAX       130.0
@@ -145,8 +138,6 @@ static uint32_t last_queued_ms_sample = 0;
 static int last_queued_ms_valid = 0;
 
 static void audio_bridge_maybe_finish_resume(void);
-
-static void audio_bridge_wait_after_write(void);
 
 static int16_t scale_sample(const int16_t sample) {
     const int32_t scaled = (int32_t) sample * session_settings.volume / 100;
@@ -433,9 +424,6 @@ void audio_bridge_flush_sample_fifo(void) {
 
     if (audio_dev && !audio_muted) {
         submit_audio_frames(sample_fifo, sample_fifo_count);
-        const uint64_t wait_start = perf_begin();
-        audio_bridge_wait_after_write();
-        perf_end(perf_stage_audio_backpressure, wait_start);
 
         single_sample_flushes++;
         if (sample_fifo_count > single_sample_max_batch) single_sample_max_batch = sample_fifo_count;
@@ -1087,44 +1075,11 @@ static uint32_t recover_stale_audio(uint32_t queued, const uint32_t ceiling_ms) 
     return queued;
 }
 
-void audio_bridge_wait_for_cadence(void) {
-    audio_bridge_maybe_finish_resume();
-    if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
-
-    uint32_t queued = audio_bridge_queued_ms();
-    queued = recover_stale_audio(queued, CADENCE_RECOVERY_QUEUE_MS);
-
-    const uint32_t low = audio_bridge_low_water_ms();
-    const uint32_t high = audio_bridge_high_water_ms();
-    const uint32_t target = (low + high) / 2;
-    if (queued <= target) return;
-
-    uint32_t wait_ms = (queued - target) * CADENCE_WAIT_GAIN_NUM / CADENCE_WAIT_GAIN_DEN;
-    if (wait_ms > CADENCE_MAX_WAIT_MS) wait_ms = CADENCE_MAX_WAIT_MS;
-    if (wait_ms == 0) return;
-
-    SDL_Delay(wait_ms);
-}
-
 void audio_bridge_recover_cadence(void) {
     audio_bridge_maybe_finish_resume();
     if (!audio_dev || audio_muted || device_paused || opened_freq == 0) return;
 
     recover_stale_audio(audio_bridge_queued_ms(), HEADROOM_RECOVERY_QUEUE_MS);
-}
-
-static void audio_bridge_wait_after_write(void) {
-    audio_bridge_maybe_finish_resume();
-    if (!audio_dev || audio_muted || device_paused || opened_freq == 0 || netplay_is_active()) return;
-
-    const uint32_t ceiling = audio_bridge_backpressure_ceiling_ms();
-    if (ceiling == 0) return;
-
-    const uint32_t started = SDL_GetTicks();
-    while (audio_bridge_queued_ms() > ceiling) {
-        if (SDL_GetTicks() - started >= AUDIO_WRITE_BACKPRESSURE_MAX_MS) break;
-        SDL_Delay(1);
-    }
 }
 
 void audio_bridge_wait_for_headroom(const uint32_t budget_ms) {
@@ -1253,9 +1208,6 @@ size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames)
     if (frames > batch_peak_frames) batch_peak_frames = frames;
 
     submit_audio_frames(data, frames);
-    const uint64_t wait_start = perf_begin();
-    audio_bridge_wait_after_write();
-    perf_end(perf_stage_audio_backpressure, wait_start);
     return frames;
 }
 

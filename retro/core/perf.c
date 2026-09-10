@@ -260,12 +260,14 @@ void perf_record(const enum perf_stage stage, const double ms) {
 }
 
 static double perf_target_hz(void) {
-    if (core_content_needs_pacing()) {
+    if (session_settings.fps_limit == fps_limit_50) return 50.0;
+
+    if (session_settings.fps_limit == fps_limit_auto) {
         const double pace_ms = core_auto_pace_target_ms();
         if (pace_ms > 0.0) return 1000.0 / pace_ms;
-        const double locked = audio_bridge_locked_content_fps();
-        if (locked > 0.0) return locked;
-        return core_get_target_fps();
+
+        const double core_hz = core_get_target_fps();
+        if (core_hz > 0.0) return core_hz;
     }
 
     const int panel = display_panel_refresh_hz();
@@ -464,6 +466,7 @@ int perf_export_trace(const char *path) {
     fprintf(f, "core_batch_peak_frames,%u\n", batch_frames_peak);
     fprintf(f, "core_batch_catchup_percent,%.2f\n", batch_catchup_percent());
     fprintf(f, "refresh_hz,%.4f\n", (double) frame_pacer_get_refresh_hz());
+    fprintf(f, "observed_present_hz,%.4f\n", (double) frame_pacer_get_observed_hz());
     fprintf(f, "frames_observed,%u\n", frames_observed);
     fprintf(f, "core_run_hz,%.4f\n", observed_core_run_hz);
     fprintf(f, "emulation_fps,%.4f\n", observed_emulation_fps);
@@ -565,7 +568,6 @@ int perf_export_trace(const char *path) {
     fprintf(f, "content_locked_hz,%.4f\n", audio_bridge_locked_content_fps());
     fprintf(f, "content_quantum_hz,%.4f\n", audio_bridge_content_quantum_fps());
     fprintf(f, "content_paced,%d\n", core_content_needs_pacing());
-    fprintf(f, "pacing_clock,%s\n", core_pacing_uses_audio_clock() ? "audio" : "deadline");
     fprintf(f, "audio_pace_target_ms,%.4f\n", core_auto_pace_target_ms());
     fprintf(f, "paced_target_hz,%.4f\n", perf_target_hz());
     fprintf(f, "core_target_hz,%.4f\n", core_get_target_fps());
