@@ -500,14 +500,11 @@ static const char *mime_for(const char *name) {
 static int upload_extension_allowed(const char *type, const char *extension) {
     static const char *const images[] = {"svg", "png", "jpg", "jpeg", "webp", "qoi", "tga", "gif", "bmp", "pcx", NULL};
     static const char *const documents[] = {"txt", NULL};
-    static const char *const manuals[] = {"pdf", "txt", NULL};
-    static const char *const videos[] = {"mp4", "webm", NULL};
+    static const char *const videos[] = {"mp4", NULL};
 
     const char *const *allowed = images;
-    if (strcmp(type, "text") == 0)
+    if (strcmp(type, "text") == 0 || strcmp(type, "manual") == 0)
         allowed = documents;
-    else if (strcmp(type, "manual") == 0)
-        allowed = manuals;
     else if (strcmp(type, "video") == 0)
         allowed = videos;
 
@@ -1497,6 +1494,56 @@ static int content_index_json(struct buffer *out) {
     return ok && buffer_puts(out, "]}");
 }
 
+#define OVERLAY_STEPS 10
+
+static const char *const overlay_steps[] = {"overlay/battery", "overlay/bright", "overlay/volume"};
+#define OVERLAY_STEP_COUNT (sizeof(overlay_steps) / sizeof(overlay_steps[0]))
+
+static int overlay_is_stepped(const char *type) {
+    for (size_t i = 0; i < OVERLAY_STEP_COUNT; ++i)
+        if (strcmp(overlay_steps[i], type) == 0) return 1;
+
+    return 0;
+}
+
+static int overlays_json(struct buffer *out, const struct catalogue_view *view) {
+    if (!buffer_puts(out, ",\"overlays\":{")) return 0;
+
+    for (size_t i = 0; i < OVERLAY_STEP_COUNT; ++i) {
+        const char *key = overlay_steps[i];
+        const char *leaf = strchr(key, '/') + 1;
+
+        size_t index = CATALOGUE_TYPE_COUNT;
+        for (size_t type = 0; type < CATALOGUE_TYPE_COUNT; ++type)
+            if (strcmp(catalogue_types[type], key) == 0) index = type;
+
+        if (i && !buffer_puts(out, ",")) return 0;
+        if (!json_string(out, leaf) || !buffer_puts(out, ":{")) return 0;
+
+        int first = 1;
+        for (int step = 0; index < CATALOGUE_TYPE_COUNT && step < OVERLAY_STEPS; ++step) {
+            char want[NAME_MAX + 1];
+            snprintf(want, sizeof(want), "%s_%d", leaf, step);
+
+            for (size_t file = 0; file < view->scans[index].count; ++file) {
+                if (strcmp(view->scans[index].files[file].stem, want) != 0) continue;
+
+                char label[16];
+                snprintf(label, sizeof(label), "%d", step);
+
+                if (!first && !buffer_puts(out, ",")) return 0;
+                if (!json_field(out, label, view->scans[index].files[file].relative)) return 0;
+                first = 0;
+                break;
+            }
+        }
+
+        if (!buffer_puts(out, "}")) return 0;
+    }
+
+    return buffer_puts(out, "}");
+}
+
 static int content_folder_json(struct buffer *out, const char *relative) {
     struct child_list directories = {0};
     struct child_list files = {0};
@@ -1580,8 +1627,12 @@ static int content_folder_json(struct buffer *out, const char *relative) {
     const int names_catalogue = catalogue && assign_lookup(leaf) != NULL;
 
     for (size_t type = 0; ok && names_catalogue && type < CATALOGUE_TYPE_COUNT; ++type) {
+        if (overlay_is_stepped(catalogue_types[type])) continue;
+
         for (size_t file = 0; ok && file < system.scans[type].count; ++file) {
             const char *stem = system.scans[type].files[file].stem;
+
+            if (strcmp(stem, "default") == 0) continue;
             int known = content_holds(catalogue, stem);
 
             for (size_t earlier = 0; !known && earlier < type; ++earlier)
@@ -1607,11 +1658,14 @@ static int content_folder_json(struct buffer *out, const char *relative) {
         }
     }
 
+    ok = ok && buffer_puts(out, "]");
+    if (ok && catalogue) ok = overlays_json(out, &system);
+
     catalogue_view_free(&folders);
     catalogue_view_free(&system);
     child_list_free(&directories);
     child_list_free(&files);
-    return ok && buffer_puts(out, "]}");
+    return ok && buffer_puts(out, "}");
 }
 
 static long long directory_bytes(const char *path, const int depth) {
@@ -2219,7 +2273,7 @@ static int response_headers(
         "Connection: close\r\n"
         "%s"
         "X-Content-Type-Options: nosniff\r\n"
-        "Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self'; "
+        "Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' blob:; "
         "media-src 'self'; style-src 'self'; script-src 'self'\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %lld\r\n"
