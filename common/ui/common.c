@@ -1765,7 +1765,7 @@ void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_
     }
 }
 
-static void update_status_glyph(
+static int update_status_glyph(
     lv_obj_t *ui_img, const struct theme_config *theme, const char *glyph_folder, const char *glyph_name,
     const int size_pct
 ) {
@@ -1786,7 +1786,10 @@ static void update_status_glyph(
         append_glyph_size_hint(image_embed, sizeof(image_embed), header_target);
         lv_img_set_src(ui_img, image_embed);
         apply_glyph_scale(ui_img, image_embed, header_px, header_px);
+        return 1;
     }
+
+    return 0;
 }
 
 static int header_extra_glyph(
@@ -1901,7 +1904,10 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
         const char *status;
     } status_style;
 
-    if (force_glyph == 1 || (force_glyph == 0 && device.board.has_network && is_network_connected())) {
+    const int connected = force_glyph == 1 || (force_glyph == 0 && device.board.has_network && is_network_connected());
+    const int signal = connected && force_glyph == 0 ? get_network_signal_percent() : -1;
+
+    if (connected) {
         status_style.color = lv_color_hex(theme->status.network.active);
         status_style.alpha = theme->status.network.active_alpha;
         status_style.status = "active";
@@ -1911,10 +1917,33 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
         status_style.status = "normal";
     }
 
+    int signal_band = -1;
+    if (signal >= 0) {
+        if (signal < 20)
+            signal_band = 0;
+        else if (signal < 45)
+            signal_band = 25;
+        else if (signal < 70)
+            signal_band = 50;
+        else if (signal < 90)
+            signal_band = 75;
+        else
+            signal_band = 100;
+
+        const int level = signal_band / 25;
+        status_style.alpha = (lv_opa_t) ((int) status_style.alpha * (45 + level * 55 / 4) / 100);
+    }
+
     lv_obj_set_style_img_recolor(ui_sta_network, status_style.color, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_sta_network, status_style.alpha, MU_OBJ_MAIN_DEFAULT);
 
-    const char *network_status_filename = status_style.status[0] == 'a' ? "network_active" : "network_normal";
+    const char *network_status_filename = connected ? "network_active" : "network_normal";
+
+    if (connected && signal_band >= 0) {
+        char strength_filename[32];
+        snprintf(strength_filename, sizeof(strength_filename), "network_active_%d", signal_band);
+        if (update_status_glyph(ui_sta_network, theme, "header", strength_filename, 75)) return;
+    }
 
     update_status_glyph(ui_sta_network, theme, "header", network_status_filename, 75);
 }
@@ -1998,8 +2027,8 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
             for (size_t i = 0; i < 2 && !video_played; i++) {
                 const int w =
                     snprintf(mp4_path, sizeof(mp4_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[i], program);
-                const int exists = w > 0 && (size_t) w < sizeof(mp4_path)
-                                   && file_exist_nocase(mp4_path, mp4_path, sizeof(mp4_path));
+                const int exists =
+                    w > 0 && (size_t) w < sizeof(mp4_path) && file_exist_nocase(mp4_path, mp4_path, sizeof(mp4_path));
                 LOG_DEBUG(mux_module, "Wallpaper video check: %s (%s)", mp4_path, exists ? "yes" : "no");
                 if (exists) {
                     video_wallpaper_play(mp4_path);

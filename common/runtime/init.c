@@ -553,13 +553,17 @@ void network_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
 
     static int last_ui_connected = -1;
+    static int last_signal_band = -2;
 
     if (!ui_sta_network || !lv_obj_is_valid(ui_sta_network)) return;
     if (strcasecmp(mux_module, "muxnetwork") == 0) return;
 
     const int connected = device.board.has_network && is_network_connected();
-    if (connected == last_ui_connected) return;
+    const int signal = connected ? get_network_signal_percent() : -1;
+    const int signal_band = signal < 0 ? -1 : signal < 20 ? 0 : signal < 45 ? 1 : signal < 70 ? 2 : signal < 90 ? 3 : 4;
+    if (connected == last_ui_connected && signal_band == last_signal_band) return;
 
     last_ui_connected = connected;
+    last_signal_band = signal_band;
     update_network_status(ui_sta_network, &theme, 0);
 }

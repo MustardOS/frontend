@@ -5,6 +5,8 @@
 
 int is_network_connected(void);
 
+int get_network_signal_percent(void);
+
 int get_network_ipv4_address(char *output, size_t output_size);
 
 int get_any_ipv4_address(char *output, size_t output_size);
