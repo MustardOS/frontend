@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdio.h>
 #include <SDL2/SDL.h>
 
 #define COLOUR_FILTER_MAX       32
@@ -40,3 +41,5 @@ void colour_shader_param_cycle(int index, int direction);
 void colour_shader_params_reset(void);
 
 void colour_shader_params_save(void);
+
+void colour_shader_export_contract(FILE *stream);

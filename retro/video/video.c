@@ -7,6 +7,7 @@
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include "colour.h"
+#include "geometry.h"
 #include "filters/filters.h"
 #include "hw_render.h"
 #include "interframe_blend.h"
@@ -24,6 +25,7 @@ static int tex_h = 0;
 static Uint32 tex_format = 0;
 static SDL_Rect dest_rect = {0};
 static SDL_Rect crop_src_rect = {0};
+static SDL_Rect last_output_rect = {0};
 static int crop_active = 0;
 
 static double core_aspect_ratio = 0.0;
@@ -319,8 +321,8 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer, const SDL_Rect *output_r
     const int vis_w = crop_active ? crop_src_rect.w : frame_w;
     const int vis_h = crop_active ? crop_src_rect.h : frame_h;
 
-    int int_scale = vis_w > 0 ? dest_rect.w / vis_w : 1;
-    const int int_scale_h = vis_h > 0 ? dest_rect.h / vis_h : 1;
+    int int_scale = vis_w > 0 ? output_rect->w / vis_w : 1;
+    const int int_scale_h = vis_h > 0 ? output_rect->h / vis_h : 1;
     if (int_scale_h < int_scale) int_scale = int_scale_h;
     if (int_scale < 1) int_scale = 1;
 
@@ -364,6 +366,11 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer, const SDL_Rect *output_r
 static void draw_video_content(SDL_Renderer *renderer, const int physical_output) {
     SDL_Rect output_rect = dest_rect;
     if (physical_output) display_map_logical_rect(&dest_rect, &output_rect);
+
+    const int source_w = crop_active ? crop_src_rect.w : split_frame_w();
+    const int source_h = crop_active ? crop_src_rect.h : split_frame_h();
+    if (session_settings.shimmer_fix) video_geometry_snap_integer(&output_rect, source_w, source_h);
+    last_output_rect = output_rect;
 
     if (session_settings.border_colour != border_colour_theme) {
         const int border_index =
@@ -490,6 +497,8 @@ static void draw_video_background(SDL_Renderer *renderer) {
 static void recompute_dest_rect(void) {
     if (frame_w == 0 || frame_h == 0) return;
 
+    last_output_rect = (SDL_Rect) {0};
+
     int canvas_w, canvas_h;
     get_canvas_size(&canvas_w, &canvas_h);
 
@@ -568,16 +577,6 @@ static void recompute_dest_rect(void) {
         }
     }
 
-    if (session_settings.shimmer_fix) {
-        int width_scale = (dest_rect.w + frame_w / 2) / frame_w;
-        if (width_scale < 1) width_scale = 1;
-        int height_scale = (dest_rect.h + frame_h / 2) / frame_h;
-        if (height_scale < 1) height_scale = 1;
-
-        dest_rect.w = frame_w * width_scale;
-        dest_rect.h = frame_h * height_scale;
-    }
-
     if (session_settings.viewport_zoom != 100) {
         dest_rect.w = dest_rect.w * session_settings.viewport_zoom / 100;
         dest_rect.h = dest_rect.h * session_settings.viewport_zoom / 100;
@@ -592,6 +591,7 @@ static void recompute_dest_rect(void) {
     dest_rect.y = (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y;
 
     apply_viewport_crop(canvas_w, canvas_h);
+
 }
 
 void video_bridge_apply_scaling(void) {
@@ -658,6 +658,23 @@ void video_bridge_get_frame_size(int *w, int *h) {
 void video_bridge_get_dest_size(int *w, int *h) {
     *w = dest_rect.w;
     *h = dest_rect.h;
+}
+
+void video_bridge_get_output_geometry(
+    int *source_w, int *source_h, int *logical_w, int *logical_h, int *output_w, int *output_h,
+    int *integer_mapped
+) {
+    const int visible_w = crop_active ? crop_src_rect.w : split_frame_w();
+    const int visible_h = crop_active ? crop_src_rect.h : split_frame_h();
+    const SDL_Rect *output = last_output_rect.w > 0 && last_output_rect.h > 0 ? &last_output_rect : &dest_rect;
+
+    if (source_w) *source_w = visible_w;
+    if (source_h) *source_h = visible_h;
+    if (logical_w) *logical_w = dest_rect.w;
+    if (logical_h) *logical_h = dest_rect.h;
+    if (output_w) *output_w = output->w;
+    if (output_h) *output_h = output->h;
+    if (integer_mapped) *integer_mapped = video_geometry_is_integer(output, visible_w, visible_h);
 }
 
 static void compute_target_tex_size(int *w, int *h) {

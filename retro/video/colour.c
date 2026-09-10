@@ -201,7 +201,13 @@ enum shader_filter_mode {
     shader_filter_linear,
 };
 
-static enum shader_filter_mode shader_filter = shader_filter_inherit;
+static enum shader_filter_mode shader_filter = shader_filter_linear;
+static int shader_filter_declared = 0;
+static int shader_contract_output_w = 0, shader_contract_output_h = 0;
+static int shader_contract_native_w = 0, shader_contract_native_h = 0;
+static int shader_contract_source_w = 0, shader_contract_source_h = 0;
+static float shader_contract_texture_w = 0.0f, shader_contract_texture_h = 0.0f;
+static float shader_contract_uv_w = 0.0f, shader_contract_uv_h = 0.0f;
 
 typedef struct {
     char name[32];
@@ -691,9 +697,11 @@ static int shader_filter_value(const char *value, enum shader_filter_mode *mode)
     return 0;
 }
 
-static enum shader_filter_mode parse_shader_filter(const char *src) {
-    enum shader_filter_mode mode = shader_filter_inherit;
+static enum shader_filter_mode parse_shader_filter(const char *src, int *declared) {
+    enum shader_filter_mode mode = shader_filter_linear;
     const char *line = src;
+
+    *declared = 0;
 
     while (*line) {
         const char *end = strchr(line, '\n');
@@ -710,7 +718,10 @@ static enum shader_filter_mode parse_shader_filter(const char *src) {
             if (strncasecmp(value, "_linear", 7) == 0) value += 7;
         }
 
-        if (value && shader_filter_value(value, &mode)) return mode;
+        if (value && shader_filter_value(value, &mode)) {
+            *declared = 1;
+            return mode;
+        }
         if (!end) break;
         line = end + 1;
     }
@@ -846,7 +857,13 @@ static void ensure_shader_program(void) {
     sh_a_pos = sh_a_uv = -1;
     sh_u_tex = sh_u_resolution = sh_u_native_resolution = sh_u_time = sh_u_frame = -1;
     sh_u_source_resolution = sh_u_texture_resolution = sh_u_source_uv_extent = -1;
-    shader_filter = shader_filter_inherit;
+    shader_filter = shader_filter_linear;
+    shader_filter_declared = 0;
+    shader_contract_output_w = shader_contract_output_h = 0;
+    shader_contract_native_w = shader_contract_native_h = 0;
+    shader_contract_source_w = shader_contract_source_h = 0;
+    shader_contract_texture_w = shader_contract_texture_h = 0.0f;
+    shader_contract_uv_w = shader_contract_uv_h = 0.0f;
     shader_params_count = 0;
     shader_params_dirty = 0;
 
@@ -868,7 +885,7 @@ static void ensure_shader_program(void) {
     }
 
     shader_params_count = parse_shader_params(strip);
-    shader_filter = parse_shader_filter(strip);
+    shader_filter = parse_shader_filter(strip, &shader_filter_declared);
     blank_shader_params(strip);
     blank_shader_filter_pragmas(strip);
 
@@ -931,11 +948,12 @@ static void ensure_shader_program(void) {
     shader_params_load(shader_names[index]);
 
     LOG_INFO(
-        mux_module, "Colour: user shader ready: %s (%d parameter%s, %s filtering)", shader_names[index],
+        mux_module, "Colour: user shader ready: %s (%d parameter%s, %s filtering, %s)", shader_names[index],
         shader_params_count, shader_params_count == 1 ? "" : "s",
         shader_filter == shader_filter_linear    ? "linear"
         : shader_filter == shader_filter_nearest ? "nearest"
-                                                 : "inherited"
+                                                 : "inherited",
+        shader_filter_declared ? "declared" : "global default"
     );
 }
 
@@ -1036,6 +1054,17 @@ static void set_shader_uniforms(
 
     const float texture_w = uv_w > 0.0f ? (float) source_w / uv_w : (float) source_w;
     const float texture_h = uv_h > 0.0f ? (float) source_h / uv_h : (float) source_h;
+
+    shader_contract_output_w = res_w;
+    shader_contract_output_h = res_h;
+    shader_contract_native_w = native_w;
+    shader_contract_native_h = native_h;
+    shader_contract_source_w = source_w;
+    shader_contract_source_h = source_h;
+    shader_contract_texture_w = texture_w;
+    shader_contract_texture_h = texture_h;
+    shader_contract_uv_w = uv_w;
+    shader_contract_uv_h = uv_h;
 
     if (sh_u_tex >= 0) gl->Uniform1i(sh_u_tex, 0);
     if (sh_u_resolution >= 0) gl->Uniform2f(sh_u_resolution, (float) res_w, (float) res_h);
@@ -1261,4 +1290,32 @@ void colour_render_pass_area_scaled(
     SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect
 ) {
     colour_render_pass_internal(renderer, tex, src_rect, dest_rect, 1);
+}
+
+void colour_shader_export_contract(FILE *stream) {
+    if (!stream) return;
+
+    const int active = shader_prog != 0 && shader_loaded_index > 0 && shader_loaded_index < shader_count;
+    const char *name = active ? shader_names[shader_loaded_index] : "none";
+    const char *filter = shader_filter == shader_filter_linear    ? "linear"
+                         : shader_filter == shader_filter_nearest ? "nearest"
+                                                                  : "inherit";
+
+    fprintf(stream, "shader_active,%d\n", active);
+    fprintf(stream, "shader_name,%s\n", name);
+    fprintf(stream, "shader_filter,%s\n", filter);
+    fprintf(stream, "shader_filter_source,%s\n", shader_filter_declared ? "declared" : "global_default");
+    fprintf(stream, "shader_u_tex,0\n");
+    fprintf(stream, "shader_u_resolution,%dx%d\n", shader_contract_output_w, shader_contract_output_h);
+    fprintf(stream, "shader_u_native_resolution,%dx%d\n", shader_contract_native_w, shader_contract_native_h);
+    fprintf(stream, "shader_u_source_resolution,%dx%d\n", shader_contract_source_w, shader_contract_source_h);
+    fprintf(
+        stream, "shader_u_texture_resolution,%.4fx%.4f\n", shader_contract_texture_w, shader_contract_texture_h
+    );
+    fprintf(stream, "shader_u_source_uv_extent,%.6fx%.6f\n", shader_contract_uv_w, shader_contract_uv_h);
+    fprintf(stream, "shader_u_frame,%d\n", shader_frame_count);
+    fprintf(stream, "shader_u_time,%.1f\n", (double) shader_frame_count);
+    fprintf(stream, "shader_parameter_count,%d\n", shader_params_count);
+    for (int i = 0; i < shader_params_count; i++)
+        fprintf(stream, "shader_parameter_%s,%.6f\n", shader_params[i].name, (double) shader_params[i].value);
 }

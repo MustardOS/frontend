@@ -8,9 +8,10 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
   fallback), Aspect, Integer, Stretch, Full Height, Full Width.
 - **Image Corrections**: child page for targeted artifact fixes. See
   [`image-corrections.md`](image-corrections.md) for the shipped controls and candidate assessment.
-- **Shimmer Fix**: optional snap of the destination rect to exact integer multiples of the native frame size on both
-  axes, eliminating the fractional-scale resampling shimmer visible on scrolling repeated textures (e.g. SMB1 bricks).
-  Well it at least _tries_ to, it's not exactly perfect but gets the job done in most cases.
+- **Shimmer Fix**: optional snap of the final displayed rectangle to the largest uniform integer multiple of the visible
+  source that fits the requested size, eliminating the fractional-scale resampling pattern visible on scrolling
+  repeated textures without distorting or unnecessarily cropping the image. The snap runs after crop, zoom, stretch,
+  and the logical-to-physical display mapping, so a later viewport transform cannot silently undo it.
 - **Anti-Flicker**: optional, core-independent temporal filtering for software-rendered content. It requires each pixel
   to exactly repeat its value from two frames ago and differ strongly in at least one colour channel from the previous
   frame before confirming an A/B/A alternation. Per-channel contrast is intentional: saturated transparency colours can
@@ -83,11 +84,16 @@ provides:
 - `u_frame`: displayed shader frame counter. `u_time` retains the corresponding legacy floating-point frame value.
 - `v_uv`: source coordinates from `(0, 0)` to `u_source_uv_extent`.
 
-Sampling inherits the selected Texture Filter unless the shader declares an override. Use `// Filter: Linear`,
-`// Filter: Nearest`, or `#pragma filter linear|nearest|inherit`. A RetroArch port should map `OutputSize` to
-`u_resolution`, `InputSize` to `u_native_resolution`, and `TextureSize` to `u_texture_resolution`. Presets whose
-RetroArch `.glslp` specifies `filter_linear0 = true`, including zFast CRT, must declare linear filtering in their
-Pickles fragment file.
+Shader sampling defaults globally to linear, matching the expected input filtering of common one-pass ports such as
+zFast CRT without exposing another end-user setting. A shader can override that contract with `// Filter: Linear`,
+`// Filter: Nearest`, or `#pragma filter linear|nearest|inherit`; `inherit` deliberately follows the selected Texture
+Filter. A RetroArch port should map `OutputSize` to `u_resolution`, `InputSize` to `u_native_resolution`, and
+`TextureSize` to `u_texture_resolution`.
+
+The performance export records the effective filter and its source, every standard shader uniform, parameter values,
+visible source size, logical destination, physical destination, and whether the physical mapping is an exact integer
+multiple. This makes differences in input, texture, native, output, UV, frame, filter, or parameters explicit when a
+shader issue is investigated.
 
 ## Run Ahead
 

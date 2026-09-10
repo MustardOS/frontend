@@ -56,6 +56,11 @@ void video_bridge_get_frame_size(int *w, int *h);
 
 void video_bridge_get_dest_size(int *w, int *h);
 
+void video_bridge_get_output_geometry(
+    int *source_w, int *source_h, int *logical_w, int *logical_h, int *output_w, int *output_h,
+    int *integer_mapped
+);
+
 void mux_retro_audio_sample_cb(int16_t left, int16_t right);
 
 size_t mux_retro_audio_sample_batch_cb(const int16_t *data, size_t frames);

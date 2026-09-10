@@ -9,6 +9,7 @@
 #include "core.h"
 #include "muxretro.h"
 #include "../video/hw_render.h"
+#include "../video/colour.h"
 #include "../settings/settings.h"
 #include "../ui/options.h"
 
@@ -578,6 +579,29 @@ int perf_export_trace(const char *path) {
     fprintf(f, "frame_time_callback,%d\n", environment_frame_time_callback_active());
     fprintf(f, "frame_time_clamps,%u\n", environment_frame_time_clamp_count() - frame_time_clamp_baseline);
     fprintf(f, "frame_time_clamp_peak_ms,%.4f\n", environment_frame_time_clamp_peak_ms());
+
+    int source_w = 0, source_h = 0;
+    int logical_w = 0, logical_h = 0;
+    int output_w = 0, output_h = 0;
+    int integer_mapped = 0;
+    video_bridge_get_output_geometry(
+        &source_w, &source_h, &logical_w, &logical_h, &output_w, &output_h, &integer_mapped
+    );
+    fprintf(f, "video_source_resolution,%dx%d\n", source_w, source_h);
+    fprintf(f, "video_logical_resolution,%dx%d\n", logical_w, logical_h);
+    fprintf(f, "video_output_resolution,%dx%d\n", output_w, output_h);
+    fprintf(f, "video_output_scale_x,%.6f\n", source_w > 0 ? (double) output_w / (double) source_w : 0.0);
+    fprintf(f, "video_output_scale_y,%.6f\n", source_h > 0 ? (double) output_h / (double) source_h : 0.0);
+    fprintf(f, "video_output_integer_mapped,%d\n", integer_mapped);
+    fprintf(f, "shimmer_fix,%d\n", session_settings.shimmer_fix);
+    fprintf(f, "viewport_zoom,%d\n", session_settings.viewport_zoom);
+    fprintf(f, "viewport_stretch_x,%d\n", session_settings.viewport_stretch_x);
+    fprintf(f, "viewport_stretch_y,%d\n", session_settings.viewport_stretch_y);
+    fprintf(f, "viewport_crop_left,%d\n", session_settings.viewport_crop_left);
+    fprintf(f, "viewport_crop_right,%d\n", session_settings.viewport_crop_right);
+    fprintf(f, "viewport_crop_top,%d\n", session_settings.viewport_crop_top);
+    fprintf(f, "viewport_crop_bottom,%d\n", session_settings.viewport_crop_bottom);
+    colour_shader_export_contract(f);
 
     const char *gl_context = "none";
     if (hw_render_bridge_active()) gl_context = hw_render_bridge_owns_context() ? "dedicated" : "shared";
