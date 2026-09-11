@@ -61,6 +61,12 @@ void video_bridge_get_output_geometry(
     int *integer_mapped
 );
 
+size_t video_bridge_anti_flicker_bytes(void);
+
+int video_bridge_anti_flicker_available(void);
+
+int video_bridge_cpu_filter_active(void);
+
 void mux_retro_audio_sample_cb(int16_t left, int16_t right);
 
 size_t mux_retro_audio_sample_batch_cb(const int16_t *data, size_t frames);
@@ -377,6 +383,8 @@ void settings_menu_reopen_input_at(int local_index);
 
 void settings_menu_reopen_performance(void);
 
+void settings_menu_reopen_video_diagnostics(void);
+
 void settings_menu_reopen_hud(void);
 
 void settings_menu_reopen_storage(void);
@@ -460,12 +468,6 @@ int macros_menu_is_active(void);
 void macros_menu_tick(void);
 
 void performance_menu_init(void);
-
-void performance_menu_open(void);
-
-int performance_menu_is_active(void);
-
-void performance_menu_tick(void);
 
 void hud_menu_init(void);
 

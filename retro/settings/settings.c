@@ -210,6 +210,9 @@ static char active_user_profile_path[MAX_BUFFER_SIZE] = "";
 
 // Defined with the user profile machinery below, needed by session_settings_play_profile().
 static int user_profile_selection_active(void);
+static int *hotkey_button_field_in(struct session_settings_t *settings, enum hotkey_binding binding);
+static int *hotkey_button_field(enum hotkey_binding binding);
+static void normalise_hotkey_buttons(void);
 
 static const char *scale_names[video_scale_count] = {
     lang.muxretro.settings_screen.aspect_ratio, lang.muxretro.settings_screen.integer_mode,
@@ -1185,6 +1188,7 @@ int session_settings_user_profile_apply(const int index) {
 
     if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) next.run_ahead = 0;
     session_settings_discard_to(&next);
+    normalise_hotkey_buttons();
     options_profile_apply(profile->option_indices, profile->option_present);
     snprintf(active_user_profile_path, sizeof(active_user_profile_path), "%s", profile->path);
     return profile->field_count;
@@ -1432,6 +1436,41 @@ static void apply_ini(const char *path) {
     mini_free(ini);
 }
 
+static void normalise_hotkey_buttons(void) {
+    unsigned used = 0;
+    struct session_settings_t fallback = defaults;
+
+    for (int binding = 0; binding < hotkey_binding_count; binding++) {
+        int *field = hotkey_button_field((enum hotkey_binding) binding);
+        if (!field) continue;
+
+        int choice = 0;
+        while (choice < (int) A_SIZE(hotkey_button_choices) && hotkey_button_choices[choice] != *field)
+            choice++;
+        if (choice < (int) A_SIZE(hotkey_button_choices) && !(used & BIT(choice))) {
+            used |= BIT(choice);
+            continue;
+        }
+
+        const int *default_field = hotkey_button_field_in(&fallback, (enum hotkey_binding) binding);
+        const int wanted_default = default_field ? *default_field : mux_input_count;
+        int replacement = 0;
+        while (replacement < (int) A_SIZE(hotkey_button_choices)
+               && (hotkey_button_choices[replacement] != wanted_default || (used & BIT(replacement))))
+            replacement++;
+        if (replacement >= (int) A_SIZE(hotkey_button_choices)) {
+            replacement = 0;
+            while (replacement < (int) A_SIZE(hotkey_button_choices) && (used & BIT(replacement)))
+                replacement++;
+        }
+        if (replacement >= (int) A_SIZE(hotkey_button_choices)) continue;
+
+        LOG_WARN(mux_module, "Defaulting duplicate hotkey binding %d", binding);
+        *field = hotkey_button_choices[replacement];
+        used |= BIT(replacement);
+    }
+}
+
 static struct session_settings_t tier_base(const int with_core, const int with_directory) {
     const struct session_settings_t live = session_settings;
 
@@ -1443,6 +1482,37 @@ static struct session_settings_t tier_base(const int with_core, const int with_d
     session_settings = live;
 
     return base;
+}
+
+void session_settings_reset_changed_to_inherited(const struct session_settings_t *snapshot) {
+    if (!snapshot) return;
+
+    const struct session_settings_t inherited = tier_base(1, 1);
+    struct session_settings_t next = session_settings;
+    for (int i = 0; i < setting_descriptor_count; i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        if (*setting_field_const(&session_settings, descriptor) == *setting_field_const(snapshot, descriptor)) continue;
+        *setting_field(&next, descriptor) = *setting_field_const(&inherited, descriptor);
+    }
+
+#define RESET_CHANGED_ARRAY(FIELD)                                                                                     \
+    do {                                                                                                               \
+        if (memcmp(session_settings.FIELD, snapshot->FIELD, sizeof(session_settings.FIELD)) != 0)                      \
+            memcpy(next.FIELD, inherited.FIELD, sizeof(next.FIELD));                                                   \
+    } while (0)
+    RESET_CHANGED_ARRAY(port_assignment);
+    RESET_CHANGED_ARRAY(port_device_key);
+    RESET_CHANGED_ARRAY(port_device_id);
+    RESET_CHANGED_ARRAY(port_role);
+    RESET_CHANGED_ARRAY(port_deck);
+    RESET_CHANGED_ARRAY(port_stick_forced);
+    RESET_CHANGED_ARRAY(port_source_target);
+    RESET_CHANGED_ARRAY(port_source_turbo);
+    RESET_CHANGED_ARRAY(port_source_macro);
+#undef RESET_CHANGED_ARRAY
+
+    session_settings_discard_to(&next);
+    session_settings_save_content();
 }
 
 static int write_ini_delta(const char *path, const struct session_settings_t *base) {
@@ -1591,6 +1661,7 @@ void session_settings_init(const char *core_path_arg, const char *content_path) 
     apply_ini(core_ini_path);
     apply_ini(directory_ini_path);
     apply_ini(content_ini_path);
+    normalise_hotkey_buttons();
 
     session_settings_apply_fps_mode();
 
@@ -1846,29 +1917,35 @@ const char *session_settings_hotkey_mode_name(const int mode) {
     }
 }
 
-static int *hotkey_button_field(const enum hotkey_binding binding) {
+static int *hotkey_button_field_in(struct session_settings_t *settings, const enum hotkey_binding binding) {
+    if (!settings) return NULL;
+
     switch (binding) {
         case hotkey_binding_fast_forward:
-            return &session_settings.hotkey_ff_button;
+            return &settings->hotkey_ff_button;
         case hotkey_binding_slow_motion:
-            return &session_settings.hotkey_slowmo_button;
+            return &settings->hotkey_slowmo_button;
         case hotkey_binding_pause:
-            return &session_settings.hotkey_pause_button;
+            return &settings->hotkey_pause_button;
         case hotkey_binding_quicksave:
-            return &session_settings.hotkey_quicksave_button;
+            return &settings->hotkey_quicksave_button;
         case hotkey_binding_quickload:
-            return &session_settings.hotkey_quickload_button;
+            return &settings->hotkey_quickload_button;
         case hotkey_binding_toggle_fps:
-            return &session_settings.hotkey_toggle_fps_button;
+            return &settings->hotkey_toggle_fps_button;
         case hotkey_binding_toggle_header:
-            return &session_settings.hotkey_header_toggle_button;
+            return &settings->hotkey_header_toggle_button;
         case hotkey_binding_quit:
-            return &session_settings.hotkey_quit_button;
+            return &settings->hotkey_quit_button;
         case hotkey_binding_manual:
-            return &session_settings.hotkey_manual_button;
+            return &settings->hotkey_manual_button;
         default:
             return NULL;
     }
+}
+
+static int *hotkey_button_field(const enum hotkey_binding binding) {
+    return hotkey_button_field_in(&session_settings, binding);
 }
 
 int session_settings_hotkey_button(const enum hotkey_binding binding) {

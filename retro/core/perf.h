@@ -34,6 +34,13 @@ enum perf_stage {
     perf_stage_ui_task,
     perf_stage_audio_queue,
     perf_stage_cheevo_frame,
+    perf_stage_anti_flicker,
+    perf_stage_texture_filter,
+    perf_stage_runahead_capture,
+    perf_stage_runahead_restore,
+    perf_stage_runahead_replay,
+    perf_stage_colour_pass,
+    perf_stage_state_load,
     perf_stage_count
 };
 
@@ -75,6 +82,12 @@ int perf_is_enabled(void);
 
 int perf_has_samples(void);
 
+double perf_stage_mean_ms(enum perf_stage stage);
+
+double perf_stage_p95_ms(enum perf_stage stage);
+
+int perf_external_stage_active(void);
+
 uint64_t perf_begin(void);
 
 void perf_end(enum perf_stage stage, uint64_t start);
@@ -82,6 +95,8 @@ void perf_end(enum perf_stage stage, uint64_t start);
 void perf_record(enum perf_stage stage, double ms);
 
 void perf_frame_complete(int record);
+
+void perf_exclude_current_frame(enum perf_stage reason);
 
 void perf_note_input_change(void);
 

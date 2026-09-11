@@ -19,6 +19,7 @@
 #include <common/runtime/log.h>
 #include <common/base/strutil.h>
 #include <common/ui/common.h>
+#include <common/ui/image.h>
 #include <common/ui/nav.h>
 #include "../ui/cheats.h"
 #include "../cheevo/cheevo.h"
@@ -397,8 +398,8 @@ static void pace_core_output(const uint64_t frame_start) {
     const double slack_ms = budget_ms - spent_ms;
     const int slowmo_active = hotkeys_is_slow_motion_active();
 
-    const int auto_deadline_paced = !slowmo_active && session_settings.fps_limit == fps_limit_auto
-                                    && !netplay_is_active() && !link_is_engaged();
+    const int auto_deadline_paced =
+        !slowmo_active && session_settings.fps_limit == fps_limit_auto && !netplay_is_active() && !link_is_engaged();
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
@@ -495,6 +496,7 @@ int main(const int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    setenv("DISABLE_HW_OVERLAY", "1", 1);
     if (!instance_lock_acquire()) return EXIT_FAILURE;
 
     const char *core_path_arg = startup.core_path;
@@ -850,8 +852,8 @@ int main(const int argc, char *argv[]) {
         peer_wait_visible = show_peer_wait;
         peer_wait_kind = peer_wait_kind_now;
 
-        const int content_paused = network_menu_paused || game_link_paused
-                                   || (paused && !netplay_is_playing() && !link_is_engaged());
+        const int content_paused =
+            network_menu_paused || game_link_paused || (paused && !netplay_is_playing() && !link_is_engaged());
 
         if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
         if (prev_paused && !content_paused) {
@@ -895,9 +897,7 @@ int main(const int argc, char *argv[]) {
                 if (pause_menu_tick()) quit = 1;
             }
 
-            if (!quit
-                && ((netplay_is_playing() && !network_menu_paused)
-                    || (link_is_engaged() && !game_link_paused)))
+            if (!quit && ((netplay_is_playing() && !network_menu_paused) || (link_is_engaged() && !game_link_paused)))
                 run_gameplay = 1;
             else {
                 perf_end(perf_stage_control, control_start);
@@ -1023,6 +1023,7 @@ int main(const int argc, char *argv[]) {
         const int ui_visible = paused_now || peer_wait_visible;
 
         if (ui_visible) {
+            image_async_tick();
             if (!peeking) display_set_ui_hidden(0);
         } else {
             const int hud_active = pause_menu_gameplay_hud_active();

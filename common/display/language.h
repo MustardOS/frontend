@@ -2140,6 +2140,7 @@ struct mux_lang {
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
             char session_save[MAX_BUFFER_SIZE];
+            char reset_inherited[MAX_BUFFER_SIZE];
             char controller_options_title[MAX_BUFFER_SIZE];
             char controller_options_desc[MAX_BUFFER_SIZE];
             char input_port_title[MAX_BUFFER_SIZE];
@@ -2288,6 +2289,23 @@ struct mux_lang {
             char export_diagnostics_done[MAX_BUFFER_SIZE];
             char export_diagnostics_failed[MAX_BUFFER_SIZE];
             char export_diagnostics_empty[MAX_BUFFER_SIZE];
+            char video_diagnostics[MAX_BUFFER_SIZE];
+            char diagnostic_refresh[MAX_BUFFER_SIZE];
+            char diagnostic_cadence[MAX_BUFFER_SIZE];
+            char diagnostic_source[MAX_BUFFER_SIZE];
+            char diagnostic_output[MAX_BUFFER_SIZE];
+            char diagnostic_integer_mapping[MAX_BUFFER_SIZE];
+            char diagnostic_filter[MAX_BUFFER_SIZE];
+            char diagnostic_shader[MAX_BUFFER_SIZE];
+            char diagnostic_shader_work[MAX_BUFFER_SIZE];
+            char diagnostic_audio_queue[MAX_BUFFER_SIZE];
+            char diagnostic_corrections[MAX_BUFFER_SIZE];
+            char diagnostic_run_ahead[MAX_BUFFER_SIZE];
+            char diagnostic_stage[MAX_BUFFER_SIZE];
+            char diagnostic_no_samples[MAX_BUFFER_SIZE];
+            char diagnostic_inactive[MAX_BUFFER_SIZE];
+            char diagnostic_bypassed[MAX_BUFFER_SIZE];
+            char diagnostic_unavailable[MAX_BUFFER_SIZE];
             char category_video[MAX_BUFFER_SIZE];
             char category_display[MAX_BUFFER_SIZE];
             char category_sound[MAX_BUFFER_SIZE];
@@ -2364,6 +2382,9 @@ struct mux_lang {
             char pause_glyph[MAX_BUFFER_SIZE];
             char paused[MAX_BUFFER_SIZE];
             char manual[MAX_BUFFER_SIZE];
+            char enabled_combo[MAX_BUFFER_SIZE];
+            char mode_combo[MAX_BUFFER_SIZE];
+            char reassigned_combo[MAX_BUFFER_SIZE];
         } hotkeys_screen;
         struct {
             char miscellaneous[MAX_BUFFER_SIZE];
@@ -2582,6 +2603,7 @@ struct mux_lang {
                 char frame_delay[MAX_BUFFER_SIZE];
                 char run_ahead[MAX_BUFFER_SIZE];
                 char gpu_hard_sync[MAX_BUFFER_SIZE];
+                char diagnostics[MAX_BUFFER_SIZE];
                 char capture[MAX_BUFFER_SIZE];
                 char state_thumbnail[MAX_BUFFER_SIZE];
             } performance;

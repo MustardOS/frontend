@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
@@ -43,3 +44,7 @@ void colour_shader_params_reset(void);
 void colour_shader_params_save(void);
 
 void colour_shader_export_contract(FILE *stream);
+
+unsigned colour_shader_render_operations(void);
+
+uint64_t colour_shader_processed_pixels(void);

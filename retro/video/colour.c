@@ -11,6 +11,7 @@
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include "colour.h"
+#include "../core/perf.h"
 #include "gl_dispatch.h"
 #include "hw_render.h"
 #include "../core/muxretro.h"
@@ -204,6 +205,9 @@ enum shader_filter_mode {
 static enum shader_filter_mode shader_filter = shader_filter_linear;
 static int shader_filter_declared = 0;
 static int shader_contract_output_w = 0, shader_contract_output_h = 0;
+static unsigned shader_contract_render_operations = 0;
+static uint64_t shader_contract_pixels = 0;
+static int shader_contract_preparation_copy = 0;
 static int shader_contract_native_w = 0, shader_contract_native_h = 0;
 static int shader_contract_source_w = 0, shader_contract_source_h = 0;
 static float shader_contract_texture_w = 0.0f, shader_contract_texture_h = 0.0f;
@@ -1168,9 +1172,17 @@ static void colour_render_pass_internal(
     SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect,
     const int request_area_scale
 ) {
+    const uint64_t pass_start = perf_begin();
+    shader_contract_render_operations = 0;
+    shader_contract_pixels = 0;
+    shader_contract_preparation_copy = 0;
     const int area_scale = area_scale_needed(tex, src_rect, dest_rect, request_area_scale);
     if (!colour_pass_needed() && !area_scale) {
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+        shader_contract_render_operations = 1;
+        shader_contract_pixels =
+            dest_rect && dest_rect->w > 0 && dest_rect->h > 0 ? (uint64_t) dest_rect->w * (uint64_t) dest_rect->h : 0;
+        perf_end(perf_stage_colour_pass, pass_start);
         return;
     }
 
@@ -1178,6 +1190,10 @@ static void colour_render_pass_internal(
 
     if (!prog_ready) {
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+        shader_contract_render_operations = 1;
+        shader_contract_pixels =
+            dest_rect && dest_rect->w > 0 && dest_rect->h > 0 ? (uint64_t) dest_rect->w * (uint64_t) dest_rect->h : 0;
+        perf_end(perf_stage_colour_pass, pass_start);
         return;
     }
 
@@ -1207,9 +1223,15 @@ static void colour_render_pass_internal(
             )
             || SDL_SetRenderTarget(renderer, adjusted_tex) != 0) {
             SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+            shader_contract_render_operations++;
+            shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
+            perf_end(perf_stage_colour_pass, pass_start);
             return;
         }
         SDL_RenderCopy(renderer, tex, src_rect, NULL);
+        shader_contract_render_operations++;
+        shader_contract_preparation_copy = 1;
+        shader_contract_pixels += (uint64_t) source_w * (uint64_t) source_h;
         SDL_SetRenderTarget(renderer, prev_target);
         gl_src = adjusted_tex;
     }
@@ -1218,6 +1240,9 @@ static void colour_render_pass_internal(
             renderer, &output_tex, &output_w, &output_h, dest_rect->w, dest_rect->h, SDL_PIXELFORMAT_ABGR8888
         )) {
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+        shader_contract_render_operations++;
+        shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
+        perf_end(perf_stage_colour_pass, pass_start);
         return;
     }
 
@@ -1251,6 +1276,9 @@ static void colour_render_pass_internal(
                     gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, source_w, source_h, source_w, source_h, 0,
                     shader_filter_inherit
                 );
+                shader_contract_render_operations++;
+                shader_contract_preparation_copy = 1;
+                shader_contract_pixels += (uint64_t) source_w * (uint64_t) source_h;
 
                 if (colour_ok && SDL_SetRenderTarget(renderer, output_tex) == 0) {
                     shader_frame_count++;
@@ -1258,16 +1286,21 @@ static void colour_render_pass_internal(
                         work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h,
                         0, shader_filter
                     );
+                    shader_contract_render_operations++;
+                    shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
                 }
             }
         }
     }
 
-    if (!drew && SDL_SetRenderTarget(renderer, output_tex) == 0)
+    if (!drew && SDL_SetRenderTarget(renderer, output_tex) == 0) {
         drew = draw_gl_pass(
             gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale,
             shader_filter_inherit
         );
+        shader_contract_render_operations++;
+        shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
+    }
 
     gl->UseProgram((GLuint) prev_program);
     gl->Viewport(prev_viewport[0], prev_viewport[1], prev_viewport[2], prev_viewport[3]);
@@ -1280,6 +1313,9 @@ static void colour_render_pass_internal(
         SDL_RenderCopy(renderer, output_tex, NULL, dest_rect);
     else
         SDL_RenderCopy(renderer, tex, src_rect, dest_rect);
+    shader_contract_render_operations++;
+    shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
+    perf_end(perf_stage_colour_pass, pass_start);
 }
 
 void colour_render_pass(SDL_Renderer *renderer, SDL_Texture *tex, const SDL_Rect *src_rect, const SDL_Rect *dest_rect) {
@@ -1316,6 +1352,17 @@ void colour_shader_export_contract(FILE *stream) {
     fprintf(stream, "shader_u_frame,%d\n", shader_frame_count);
     fprintf(stream, "shader_u_time,%.1f\n", (double) shader_frame_count);
     fprintf(stream, "shader_parameter_count,%d\n", shader_params_count);
+    fprintf(stream, "shader_render_operations,%u\n", shader_contract_render_operations);
+    fprintf(stream, "shader_processed_pixels,%llu\n", (unsigned long long) shader_contract_pixels);
+    fprintf(stream, "shader_preparation_copy,%d\n", shader_contract_preparation_copy);
     for (int i = 0; i < shader_params_count; i++)
         fprintf(stream, "shader_parameter_%s,%.6f\n", shader_params[i].name, (double) shader_params[i].value);
+}
+
+unsigned colour_shader_render_operations(void) {
+    return shader_contract_render_operations;
+}
+
+uint64_t colour_shader_processed_pixels(void) {
+    return shader_contract_pixels;
 }

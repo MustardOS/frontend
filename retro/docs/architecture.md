@@ -117,7 +117,7 @@ retro/
 | `settings.c` / `settings.h` | `session_settings_t` model, built-in play profiles, bounded user profile loading and atomic creation/deletion, per-content last-working launch recovery, every enum, cycling functions, three-tier ini persistence and shared save-choice dispatch. |
 | `submenu.c` / `submenu.h`   | Table-driven engine behind every settings screen (see [Settings screens](settings.md#settings-screens)).                                                                                                                                            |
 | `ui_settings.c`             | Section-based Settings hub, profile picker and save-state-style user profile management.                                                                                                                                                            |
-| `ui_performancesettings.c`  | Performance settings with manual timing controls and optional diagnostic capture and export.                                                                                                                                                        |
+| `ui_performancesettings.c`  | Performance settings with manual timing controls and optional diagnostic capture/export, plus the read-only Video Diagnostics child page opened from the Settings hub.                                                                              |
 | `ui_hudsettings.c`          | Screen Info screen (FPS counter, header visibility).                                                                                                                                                                                                |
 
 ## ui/

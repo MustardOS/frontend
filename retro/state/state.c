@@ -106,6 +106,8 @@ int state_save(const char *path) {
 }
 
 int state_load(const char *path, const int show_message) {
+    perf_exclude_current_frame(perf_stage_state_load);
+    const uint64_t perf_load_start = perf_begin();
     if (!state_saves_allowed()) return -1;
     if (state_flush() != 0) {
         LOG_ERROR(mux_module, "Cannot load '%s' because its pending state write failed", path);
@@ -220,6 +222,7 @@ int state_load(const char *path, const int show_message) {
     );
 
     LOG_SUCCESS(mux_module, "Loaded state from '%s'", path);
+    perf_end(perf_stage_state_load, perf_load_start);
     governor_boost_end();
     loading_message_hide();
     return 0;

@@ -52,6 +52,7 @@ static int anti_flicker_history_h = 0;
 static enum retro_pixel_format anti_flicker_history_format = RETRO_PIXEL_FORMAT_0RGB1555;
 static unsigned anti_flicker_history_count = 0;
 static int anti_flicker_available = 1;
+static size_t anti_flicker_allocated_bytes = 0;
 
 static SDL_Texture *sharp_bilinear_tex = NULL;
 static int sharp_bilinear_tex_w = 0;
@@ -68,6 +69,10 @@ static int output_canvas_h = 0;
 static int frame_dirty = 0;
 static int frame_skip = 0;
 static int applied_swap_interval = -2;
+static int cpu_filter_active = 0;
+static int cpu_filter_limit_logged = 0;
+
+enum { max_output_pixels = 1920 * 1080, max_output_dimension = 1920, anti_flicker_max_bytes = 64 * 1024 * 1024 };
 
 static void upload_frame(void);
 
@@ -88,6 +93,7 @@ static void reset_anti_flicker_history(const int release) {
     free(anti_flicker_persistence);
     anti_flicker_persistence = NULL;
     anti_flicker_persistence_cap = 0;
+    anti_flicker_allocated_bytes = 0;
     interframe_blend_shutdown();
 }
 
@@ -101,6 +107,13 @@ void video_bridge_apply_anti_flicker(void) {
 }
 
 static int ensure_anti_flicker_history(const size_t needed, const size_t persistence_needed) {
+    if (persistence_needed > anti_flicker_max_bytes || needed > SIZE_MAX / anti_flicker_history_frames
+        || needed * anti_flicker_history_frames > anti_flicker_max_bytes - persistence_needed) {
+        LOG_WARN(mux_module, "Anti-Flicker disabled: frame history exceeds the 64 MiB production budget");
+        reset_anti_flicker_history(1);
+        anti_flicker_available = 0;
+        return 0;
+    }
     for (int i = 0; i < anti_flicker_history_frames; i++) {
         if (anti_flicker_history_cap[i] >= needed) continue;
 
@@ -129,7 +142,21 @@ static int ensure_anti_flicker_history(const size_t needed, const size_t persist
         memset(anti_flicker_persistence, 0, persistence_needed);
     }
 
+    anti_flicker_allocated_bytes = needed * anti_flicker_history_frames + persistence_needed;
+
     return 1;
+}
+
+size_t video_bridge_anti_flicker_bytes(void) {
+    return anti_flicker_allocated_bytes;
+}
+
+int video_bridge_anti_flicker_available(void) {
+    return anti_flicker_available && !hw_render_bridge_active();
+}
+
+int video_bridge_cpu_filter_active(void) {
+    return cpu_filter_active;
 }
 
 static void apply_anti_flicker(
@@ -157,12 +184,14 @@ static void apply_anti_flicker(
     if (!ensure_anti_flicker_history(needed, persistence_needed)) return;
 
     if (anti_flicker_history_count >= 2) {
+        const uint64_t filter_start = perf_begin();
         interframe_blend_detected(
             raw_frame_buf, anti_flicker_history[0], anti_flicker_history[1],
             anti_flicker_history_count >= 4 ? anti_flicker_history[2] : NULL,
             anti_flicker_history_count >= 4 ? anti_flicker_history[3] : NULL, width, height, pitch, format,
             anti_flicker_persistence, width
         );
+        perf_end(perf_stage_anti_flicker, filter_start);
     }
 
     void *oldest = anti_flicker_history[anti_flicker_history_frames - 1];
@@ -679,8 +708,23 @@ void video_bridge_get_output_geometry(
 
 static void compute_target_tex_size(int *w, int *h) {
     const int scale = texture_filter_scale_factor(session_settings.texture_filter);
-    *w = frame_w * scale;
-    *h = frame_h * scale;
+    const int64_t want_w = (int64_t) frame_w * scale;
+    const int64_t want_h = (int64_t) frame_h * scale;
+    const int within_budget = scale > 1 && want_w > 0 && want_h > 0 && want_w <= max_output_dimension
+                              && want_h <= max_output_dimension && want_w * want_h <= max_output_pixels;
+    cpu_filter_active = within_budget;
+    *w = within_budget ? (int) want_w : frame_w;
+    *h = within_budget ? (int) want_h : frame_h;
+
+    if (scale > 1 && !within_budget && !cpu_filter_limit_logged) {
+        LOG_WARN(
+            mux_module, "CPU texture filter bypassed: requested %lldx%lld exceeds the 1920x1080 pixel budget",
+            (long long) want_w, (long long) want_h
+        );
+        cpu_filter_limit_logged = 1;
+    } else if (within_budget) {
+        cpu_filter_limit_logged = 0;
+    }
 }
 
 static int ensure_frame_tex(const int want_w, const int want_h, const Uint32 want_format) {
@@ -713,7 +757,7 @@ static void upload_frame(void) {
 
     if (!ensure_frame_tex(want_w, want_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format()))) return;
 
-    if (!texture_filter_is_cpu_scaled(session_settings.texture_filter)) {
+    if (!cpu_filter_active) {
         SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
         return;
     }
@@ -729,10 +773,12 @@ static void upload_frame(void) {
 
     const int src_pitch_px = (int) (raw_frame_pitch / raw_frame_bpp);
 
+    const uint64_t filter_start = perf_begin();
     texture_filter_apply(
         session_settings.texture_filter, raw_frame_buf, scaled_buf, frame_w, frame_h, src_pitch_px, want_w,
         raw_frame_bpp, mux_retro_get_pixel_format()
     );
+    perf_end(perf_stage_texture_filter, filter_start);
 
     SDL_UpdateTexture(frame_tex, NULL, scaled_buf, want_w * (int) raw_frame_bpp);
 }
@@ -861,7 +907,9 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     memcpy(raw_frame_buf, data, raw_needed);
     apply_anti_flicker(data, width, height, pitch, pixel_format);
 
-    if (texture_filter_is_cpu_scaled(session_settings.texture_filter)) {
+    int target_w = 0, target_h = 0;
+    compute_target_tex_size(&target_w, &target_h);
+    if (cpu_filter_active) {
         frame_dirty = 1;
         perf_end(perf_stage_video_upload, upload_start);
         return;

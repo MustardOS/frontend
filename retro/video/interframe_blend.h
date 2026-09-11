@@ -11,3 +11,9 @@ void interframe_blend_detected(
 );
 
 void interframe_blend_shutdown(void);
+
+double interframe_blend_last_ms(void);
+
+unsigned interframe_blend_thread_count(void);
+
+size_t interframe_blend_thread_threshold_pixels(void);

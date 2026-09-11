@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <SDL2/SDL.h>
 #include <common/platform/display.h>
 #include <common/runtime/log.h>
@@ -10,6 +11,7 @@
 #include "muxretro.h"
 #include "../video/hw_render.h"
 #include "../video/colour.h"
+#include "../video/interframe_blend.h"
 #include "../settings/settings.h"
 #include "../ui/options.h"
 
@@ -82,12 +84,35 @@ static double observed_audio_rate_limit_percent;
 static uint32_t audio_queue_min_ms;
 static unsigned audio_queue_below_low_samples;
 static unsigned audio_queue_empty_samples;
+static unsigned excluded_interaction_frames;
+static unsigned excluded_long_frames;
+static unsigned frame_histogram[6];
+static int exclude_current_frame;
 static int hud_active;
 static int capture_active;
 static int capture_automatic;
 static int enabled;
 
 static double perf_target_hz(void);
+
+static int read_runtime_value(const char *path, char *buf, const size_t len) {
+    if (!buf || len == 0) return 0;
+    buf[0] = '\0';
+
+    FILE *stream = fopen(path, "r");
+    if (!stream) return 0;
+    const size_t read = fread(buf, 1, len - 1, stream);
+    fclose(stream);
+    buf[read] = '\0';
+    for (size_t i = 0; i < read; i++) {
+        if (buf[i] == '\n' || buf[i] == '\r') {
+            buf[i] = '\0';
+            break;
+        }
+        if (buf[i] == ',') buf[i] = ';';
+    }
+    return buf[0] != '\0';
+}
 
 static double elapsed_ms(const uint64_t start) {
     return (double) (SDL_GetPerformanceCounter() - start) * ticks_to_ms;
@@ -180,6 +205,10 @@ static void reset(void) {
     audio_queue_min_ms = UINT32_MAX;
     audio_queue_below_low_samples = 0;
     audio_queue_empty_samples = 0;
+    excluded_interaction_frames = 0;
+    excluded_long_frames = 0;
+    memset(frame_histogram, 0, sizeof(frame_histogram));
+    exclude_current_frame = 0;
 }
 
 static void note_present_timing(const double draw_ms, const double flip_ms) {
@@ -195,6 +224,12 @@ void perf_init(void) {
     capture_active = 0;
     enabled = 0;
     reset();
+
+    if (perf_external_stage_active())
+        LOG_INFO(
+            mux_module, "External stage library is mapped; overlay execution is %s",
+            getenv("DISABLE_HW_OVERLAY") ? "delegated to Pickles" : "enabled"
+        );
 
     const char *env = getenv("MUXRETRO_PERF_CAPTURE");
     if (env && *env == '1') {
@@ -240,6 +275,36 @@ int perf_has_samples(void) {
     return series[perf_stage_frame].count != 0;
 }
 
+double perf_stage_mean_ms(const enum perf_stage stage) {
+    return (unsigned) stage < perf_stage_count ? mean(&series[stage]) : 0.0;
+}
+
+double perf_stage_p95_ms(const enum perf_stage stage) {
+    return (unsigned) stage < perf_stage_count ? percentile95(&series[stage]) : 0.0;
+}
+
+int perf_external_stage_active(void) {
+    static int cached = -1;
+    if (cached >= 0) return cached;
+
+    const char *preload = getenv("LD_PRELOAD");
+    if (preload && strstr(preload, "libmustage")) return cached = 1;
+
+    FILE *maps = fopen("/proc/self/maps", "r");
+    if (!maps) return cached = 0;
+
+    char line[512];
+    int active = 0;
+    while (fgets(line, sizeof(line), maps)) {
+        if (!strstr(line, "libmustage")) continue;
+        active = 1;
+        break;
+    }
+    fclose(maps);
+    cached = active;
+    return cached;
+}
+
 uint64_t perf_begin(void) {
     return enabled ? SDL_GetPerformanceCounter() : 0;
 }
@@ -247,6 +312,8 @@ uint64_t perf_begin(void) {
 void perf_end(const enum perf_stage stage, const uint64_t start) {
     if (!enabled || !start || (unsigned) stage >= perf_stage_count) return;
     push(&series[stage], elapsed_ms(start));
+    if (stage == perf_stage_screenshot || stage == perf_stage_state_save || stage == perf_stage_state_load)
+        perf_exclude_current_frame(stage);
 
     if (stage == perf_stage_present && pending_present_timing) {
         pending_present_timing = 0;
@@ -258,6 +325,12 @@ void perf_end(const enum perf_stage stage, const uint64_t start) {
 void perf_record(const enum perf_stage stage, const double ms) {
     if (!enabled || (unsigned) stage >= perf_stage_count) return;
     push(&series[stage], ms);
+}
+
+void perf_exclude_current_frame(const enum perf_stage reason) {
+    if (!enabled) return;
+    if (reason == perf_stage_screenshot || reason == perf_stage_state_save || reason == perf_stage_state_load)
+        exclude_current_frame = 1;
 }
 
 static double perf_target_hz(void) {
@@ -281,20 +354,33 @@ void perf_frame_complete(const int record) {
     if (!enabled) return;
 
     const uint64_t now = SDL_GetPerformanceCounter();
-    if (record && frame_start) {
+    if (record && frame_start && !exclude_current_frame) {
         const double frame_ms = (double) (now - frame_start) * ticks_to_ms;
-        push(&series[perf_stage_frame], frame_ms);
-        frames_observed++;
-        observed_audio_rate_correction_percent = audio_bridge_rate_correction_percent();
-        observed_audio_rate_limit_percent = audio_bridge_rate_limit_percent();
-        const uint32_t audio_queue_ms = audio_bridge_queued_ms();
-        if (audio_queue_ms < audio_queue_min_ms) audio_queue_min_ms = audio_queue_ms;
-        if (audio_queue_ms < audio_bridge_low_water_ms()) audio_queue_below_low_samples++;
-        if (audio_queue_ms == 0) audio_queue_empty_samples++;
+        if (frame_ms > 250.0) {
+            excluded_long_frames++;
+        } else {
+            push(&series[perf_stage_frame], frame_ms);
+            frames_observed++;
+            const unsigned bucket = frame_ms < 12.0   ? 0
+                                    : frame_ms < 15.0 ? 1
+                                    : frame_ms < 18.5 ? 2
+                                    : frame_ms < 25.0 ? 3
+                                    : frame_ms < 50.0 ? 4
+                                                      : 5;
+            frame_histogram[bucket]++;
+            observed_audio_rate_correction_percent = audio_bridge_rate_correction_percent();
+            observed_audio_rate_limit_percent = audio_bridge_rate_limit_percent();
+            const uint32_t audio_queue_ms = audio_bridge_queued_ms();
+            if (audio_queue_ms < audio_queue_min_ms) audio_queue_min_ms = audio_queue_ms;
+            if (audio_queue_ms < audio_bridge_low_water_ms()) audio_queue_below_low_samples++;
+            if (audio_queue_ms == 0) audio_queue_empty_samples++;
 
-        const double target_hz = perf_target_hz();
-        if (target_hz > 0.0 && frame_ms > 1000.0 / target_hz * 1.5) missed_refreshes++;
+            const double target_hz = perf_target_hz();
+            if (target_hz > 0.0 && frame_ms > 1000.0 / target_hz * 1.5) missed_refreshes++;
+        }
     }
+    if (record && exclude_current_frame) excluded_interaction_frames++;
+    exclude_current_frame = 0;
     frame_start = now;
 }
 
@@ -425,19 +511,122 @@ int perf_export_trace(const char *path) {
         "gl_rotate",       "pace_sleep",   "netplay_digest", "cheevo_callback",    "screenshot",
         "state_save",      "services",     "cheevo_tick",    "netplay_tick",       "maintenance",
         "control",         "ui_logic",     "ui_task",        "audio_queue",        "cheevo_frame",
+        "anti_flicker",
+        "texture_filter",
+        "runahead_capture",
+        "runahead_restore",
+        "runahead_replay",
+        "colour_pass",
+        "state_load",
     };
+
+    static const int parents[perf_stage_count] = {
+        -1,
+        -1,
+        -1,
+        perf_stage_core,
+        -1,
+        perf_stage_present,
+        perf_stage_present,
+        -1,
+        perf_stage_core,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        perf_stage_cheevo_tick,
+        -1,
+        -1,
+        -1,
+        perf_stage_services,
+        perf_stage_services,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        perf_stage_video_upload,
+        perf_stage_video,
+        -1,
+        -1,
+        -1,
+        perf_stage_present,
+        -1,
+    };
+
+    static const char *const scopes[perf_stage_count] = {
+        "gameplay cadence",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "latency",
+        "idle",
+        "value",
+        "work",
+        "work",
+        "work",
+        "work",
+        "wait",
+        "work",
+        "work",
+        "interaction",
+        "interaction",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "value",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "interaction",
+    };
+    _Static_assert(sizeof(parents) / sizeof(parents[0]) == perf_stage_count, "perf stage parents are out of step");
+    _Static_assert(sizeof(scopes) / sizeof(scopes[0]) == perf_stage_count, "perf stage scopes are out of step");
 
     _Static_assert(sizeof(names) / sizeof(names[0]) == perf_stage_count, "perf stage names are out of step");
 
     FILE *f = fopen(path, "w");
     if (!f) return -1;
 
-    fputs("stage,mean_ms,p50_ms,p95_ms,p99_ms,peak_ms,samples\n", f);
-    for (int i = 0; i < perf_stage_count; i++)
+    fputs("stage,parent,scope,mean_ms,exclusive_mean_ms,p50_ms,p95_ms,p99_ms,peak_ms,samples\n", f);
+    for (int i = 0; i < perf_stage_count; i++) {
+        double child_sum = 0.0;
+        for (int child = 0; child < perf_stage_count; child++)
+            if (parents[child] == i) child_sum += series[child].sum;
+        double exclusive = series[i].count ? (series[i].sum - child_sum) / (double) series[i].count : 0.0;
+        if (exclusive < 0.0) exclusive = 0.0;
         fprintf(
-            f, "%s,%.4f,%.4f,%.4f,%.4f,%.4f,%u\n", names[i], mean(&series[i]), percentile(&series[i], 50),
-            percentile95(&series[i]), percentile99(&series[i]), peak(&series[i]), series[i].count
+            f, "%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%u\n", names[i], parents[i] >= 0 ? names[parents[i]] : "none",
+            scopes[i], mean(&series[i]), exclusive,
+            percentile(&series[i], 50), percentile95(&series[i]), percentile99(&series[i]), peak(&series[i]),
+            series[i].count
         );
+    }
+
+    fputs("\nframe_interval_ms\n", f);
+    const perf_series *frames = &series[perf_stage_frame];
+    const unsigned oldest = frames->count == PERF_HISTORY ? frames->next : 0;
+    for (unsigned i = 0; i < frames->count; i++)
+        fprintf(f, "%.4f\n", frames->samples[(oldest + i) % PERF_HISTORY]);
 
     static const char *netplay_names[netplay_metric_count] = {"tx_queue_packets", "rx_queue_packets",
                                                               "input_age_frames", "state_jobs",
@@ -469,6 +658,61 @@ int perf_export_trace(const char *path) {
     fprintf(f, "refresh_hz,%.4f\n", (double) frame_pacer_get_refresh_hz());
     fprintf(f, "observed_present_hz,%.4f\n", (double) frame_pacer_get_observed_hz());
     fprintf(f, "frames_observed,%u\n", frames_observed);
+    fprintf(f, "frames_excluded_interaction,%u\n", excluded_interaction_frames);
+    fprintf(f, "frames_excluded_long_gap,%u\n", excluded_long_frames);
+    fprintf(f, "frame_histogram_under_12_ms,%u\n", frame_histogram[0]);
+    fprintf(f, "frame_histogram_12_to_15_ms,%u\n", frame_histogram[1]);
+    fprintf(f, "frame_histogram_15_to_18_5_ms,%u\n", frame_histogram[2]);
+    fprintf(f, "frame_histogram_18_5_to_25_ms,%u\n", frame_histogram[3]);
+    fprintf(f, "frame_histogram_25_to_50_ms,%u\n", frame_histogram[4]);
+    fprintf(f, "frame_histogram_50_to_250_ms,%u\n", frame_histogram[5]);
+    fprintf(f, "process_id,%ld\n", (long) getpid());
+    fprintf(f, "parent_process_id,%ld\n", (long) getppid());
+    char runtime_value[256];
+    char runtime_path[64];
+    snprintf(runtime_path, sizeof(runtime_path), "/proc/%ld/comm", (long) getppid());
+    fprintf(
+        f, "parent_process_name,%s\n",
+        read_runtime_value(runtime_path, runtime_value, sizeof(runtime_value)) ? runtime_value : "unknown"
+    );
+    fprintf(
+        f, "cpu_governor,%s\n",
+        read_runtime_value(
+            "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", runtime_value, sizeof(runtime_value)
+        )
+            ? runtime_value
+            : "unknown"
+    );
+    fprintf(
+        f, "cpu_frequency_khz,%s\n",
+        read_runtime_value(
+            "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", runtime_value, sizeof(runtime_value)
+        )
+            ? runtime_value
+            : "unknown"
+    );
+    fprintf(f, "sdl_video_driver,%s\n", SDL_GetCurrentVideoDriver() ? SDL_GetCurrentVideoDriver() : "unknown");
+    fprintf(f, "sdl_audio_driver,%s\n", SDL_GetCurrentAudioDriver() ? SDL_GetCurrentAudioDriver() : "unknown");
+    SDL_RendererInfo renderer_info = {0};
+    SDL_Renderer *renderer = display_get_renderer();
+    if (renderer && SDL_GetRendererInfo(renderer, &renderer_info) == 0)
+        fprintf(f, "sdl_renderer,%s\n", renderer_info.name ? renderer_info.name : "unknown");
+    int window_w = 0, window_h = 0;
+    SDL_Window *window = display_get_window();
+    if (window) SDL_GetWindowSize(window, &window_w, &window_h);
+    fprintf(f, "display_window_resolution,%dx%d\n", window_w, window_h);
+    static const char *const environment_names[] = {
+        "SDL_VIDEODRIVER", "SDL_RENDER_DRIVER", "SDL_AUDIODRIVER", "EGL_PLATFORM"
+    };
+    for (size_t i = 0; i < sizeof(environment_names) / sizeof(environment_names[0]); i++) {
+        const char *value = getenv(environment_names[i]);
+        fprintf(f, "env_%s,%s\n", environment_names[i], value && *value ? value : "unset");
+    }
+    const char *preload = getenv("LD_PRELOAD");
+    fprintf(f, "external_stage_preload,%d\n", preload && strstr(preload, "libmustage") != NULL);
+    fprintf(f, "external_stage_mapped,%d\n", perf_external_stage_active());
+    const char *stage_disabled = getenv("DISABLE_HW_OVERLAY");
+    fprintf(f, "external_stage_disabled,%d\n", stage_disabled && *stage_disabled == '1');
     fprintf(f, "core_run_hz,%.4f\n", observed_core_run_hz);
     fprintf(f, "emulation_fps,%.4f\n", observed_emulation_fps);
     fprintf(f, "missed_refreshes,%u\n", missed_refreshes);
@@ -575,6 +819,7 @@ int perf_export_trace(const char *path) {
     fprintf(f, "core_pace_divisor,%.4f\n", core_pace_divisor());
     fprintf(f, "panel_hz,%d\n", display_panel_refresh_hz());
     fprintf(f, "fps_limit_mode,%d\n", session_settings.fps_limit);
+    fprintf(f, "gpu_hard_sync,%d\n", session_settings.gpu_hard_sync);
     fprintf(f, "swap_interval,%d\n", video_bridge_get_swap_interval());
     fprintf(f, "frame_time_callback,%d\n", environment_frame_time_callback_active());
     fprintf(f, "frame_time_clamps,%u\n", environment_frame_time_clamp_count() - frame_time_clamp_baseline);
@@ -593,6 +838,12 @@ int perf_export_trace(const char *path) {
     fprintf(f, "video_output_scale_x,%.6f\n", source_w > 0 ? (double) output_w / (double) source_w : 0.0);
     fprintf(f, "video_output_scale_y,%.6f\n", source_h > 0 ? (double) output_h / (double) source_h : 0.0);
     fprintf(f, "video_output_integer_mapped,%d\n", integer_mapped);
+    fprintf(f, "anti_flicker_available,%d\n", video_bridge_anti_flicker_available());
+    fprintf(f, "anti_flicker_history_bytes,%zu\n", video_bridge_anti_flicker_bytes());
+    fprintf(f, "anti_flicker_last_ms,%.4f\n", interframe_blend_last_ms());
+    fprintf(f, "anti_flicker_threads,%u\n", interframe_blend_thread_count());
+    fprintf(f, "anti_flicker_thread_threshold_pixels,%zu\n", interframe_blend_thread_threshold_pixels());
+    fprintf(f, "cpu_texture_filter_active,%d\n", video_bridge_cpu_filter_active());
     fprintf(f, "shimmer_fix,%d\n", session_settings.shimmer_fix);
     fprintf(f, "viewport_zoom,%d\n", session_settings.viewport_zoom);
     fprintf(f, "viewport_stretch_x,%d\n", session_settings.viewport_stretch_x);

@@ -19,6 +19,7 @@ enum { settings_row_limit = 96, settings_frame_limit = 12 };
 typedef enum {
     settings_special_none = 0,
     settings_special_core_options,
+    settings_special_video_diagnostics,
     settings_special_reset,
     settings_special_save
 } settings_special;
@@ -576,6 +577,8 @@ static void row_action(const int index) {
 
     if (special == settings_special_core_options)
         options_menu_open();
+    else if (special == settings_special_video_diagnostics)
+        video_diagnostics_menu_open();
     else if (special == settings_special_reset)
         start_reset();
     else if (definition && definition->action)
@@ -593,6 +596,10 @@ static int child_tick(void) {
     if (profile_modal_tick()) return 1;
     if (options_menu_is_active()) {
         options_menu_tick();
+        return 1;
+    }
+    if (video_diagnostics_menu_is_active()) {
+        video_diagnostics_menu_tick();
         return 1;
     }
     if (viewport_settings_child_tick()) return 1;
@@ -724,6 +731,10 @@ static void build_rows(void) {
         add_special_row(
             settings_special_core_options, lang.muxretro.core_options, "core", lang.muxretro.help.settings.core_options
         );
+    add_special_row(
+        settings_special_video_diagnostics, lang.muxretro.settings_screen.video_diagnostics, "info",
+        lang.muxretro.help.performance.diagnostics
+    );
     add_definition(performance_menu_definition());
     add_special_row(
         settings_special_reset, lang.muxretro.settings_screen.reset, "reset", lang.muxretro.help.settings.reset
@@ -847,6 +858,12 @@ void settings_menu_reopen_input_at(const int local_index) {
 void settings_menu_reopen_performance(void) {
     build_rows();
     submenu_reopen_at(&self, row_for_definition(performance_menu_definition(), 0));
+}
+
+void settings_menu_reopen_video_diagnostics(void) {
+    build_rows();
+    const int row = row_for_special(settings_special_video_diagnostics);
+    if (row >= 0) submenu_reopen_at(&self, row);
 }
 
 void settings_menu_reopen_hud(void) {

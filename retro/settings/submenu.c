@@ -8,7 +8,7 @@
 #include "settings.h"
 #include "submenu.h"
 
-#define SUBMENU_VALUE_MAX       64
+#define SUBMENU_VALUE_MAX       256
 #define SUBMENU_STACK_MAX       8
 #define SUBMENU_HELP_MAX        64
 #define SUBMENU_SECTION_ROW_MAX 96
@@ -89,6 +89,25 @@ static void row_value(const submenu *m, const int index, char *buf) {
     if (m->def->value_text) m->def->value_text(index, buf, SUBMENU_VALUE_MAX);
 }
 
+static void apply_row_availability(const submenu *m, const int index, lv_obj_t *panel) {
+    if (!panel || !m->def->cycle || row_is_action(m, index)) return;
+
+    const int available = row_can_cycle(m, index);
+    lv_obj_t *label = lv_obj_get_child(panel, 0);
+    lv_obj_t *glyph = lv_obj_get_child(panel, 1);
+    lv_obj_t *value = lv_obj_get_child(panel, 2);
+    const lv_opa_t opacity = available ? LV_OPA_COVER : (lv_opa_t) theme.list_disabled.text_alpha;
+
+    if (label) {
+        lv_obj_set_style_text_color(
+            label, lv_color_hex(available ? theme.list_default.text : theme.list_disabled.text), MU_OBJ_MAIN_DEFAULT
+        );
+        lv_obj_set_style_text_opa(label, opacity, MU_OBJ_MAIN_DEFAULT);
+    }
+    if (glyph) lv_obj_set_style_img_opa(glyph, opacity, MU_OBJ_MAIN_DEFAULT);
+    if (value) lv_obj_set_style_text_opa(value, opacity, MU_OBJ_MAIN_DEFAULT);
+}
+
 static void build_row(const submenu *m, const int index) {
     const int create_value_label = !m->def->skip_value_object_creation;
     lv_obj_t *panel = lv_obj_create(ui_pnl_content);
@@ -104,6 +123,7 @@ static void build_row(const submenu *m, const int index) {
         row_value(m, index, value_text);
         apply_theme_list_value(&theme, value, value_text);
     }
+    apply_row_availability(m, index, panel);
 
     apply_size_to_content(&theme, ui_pnl_content, label, icon, m->def->labels[index]);
     apply_text_long_dot(&theme, label);
@@ -213,6 +233,7 @@ void submenu_refresh_values(const submenu *m) {
         char value_text[SUBMENU_VALUE_MAX];
         row_value(m, i, value_text);
         if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
+        apply_row_availability(m, i, panel);
     }
 }
 
@@ -332,12 +353,13 @@ void submenu_stack_resync(void) {
 }
 
 void submenu_init(submenu *m, const submenu_def *def) {
-    static const char *save_options[5];
+    static const char *save_options[6];
     save_options[0] = lang.muxretro.save.content_save;
     save_options[1] = lang.muxretro.save.core_save;
     save_options[2] = lang.muxretro.save.directory_save;
     save_options[3] = lang.muxretro.save.session_save;
-    save_options[4] = lang.generic.discard;
+    save_options[4] = lang.muxretro.save.reset_inherited;
+    save_options[5] = lang.generic.discard;
 
     m->def = def;
     m->active = 0;
@@ -350,7 +372,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->pending_action_row = -1;
 
     dialogue_init(
-        &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 5, lang.generic.select,
+        &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 6, lang.generic.select,
         lang.generic.cancel
     );
 
@@ -452,8 +474,11 @@ void submenu_tick(submenu *m) {
             const int opt = m->save_dlg.selected;
             dialogue_dismiss(&m->save_dlg);
 
-            if (opt == 4) {
+            if (opt == 5) {
                 session_settings_discard_to(&m->entry_snapshot);
+            } else if (opt == 4) {
+                session_settings_reset_changed_to_inherited(&m->entry_snapshot);
+                submenu_stack_resync();
             } else if (opt == 3) {
                 submenu_stack_resync();
             } else {
@@ -526,10 +551,12 @@ void submenu_tick(submenu *m) {
         }
     } else if (do_left && cycle_allowed) {
         m->def->cycle(row, -1);
+        submenu_refresh_values(m);
         refresh_row(m, row, nav_dir_left);
         play_sound(snd_option);
     } else if (do_right && cycle_allowed) {
         m->def->cycle(row, +1);
+        submenu_refresh_values(m);
         refresh_row(m, row, nav_dir_right);
         play_sound(snd_option);
     } else if (sectioned(m) && mask & (NAV_PAGE_UP_BIT | NAV_PAGE_DOWN_BIT)) {

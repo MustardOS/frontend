@@ -11,6 +11,7 @@
 #include "core.h"
 #include "muxretro.h"
 #include "runahead.h"
+#include "perf.h"
 
 static struct core_state_buffer anchor;
 static size_t anchor_size = 0;
@@ -83,28 +84,36 @@ void runahead_before_frame(const int allow_replay) {
     const uint64_t sig = input_bridge_snapshot_signature();
 
     if (allow_replay && anchor_valid && sig != anchor_sig) {
+        const uint64_t restore_start = perf_begin();
         if (core_state_restore(anchor.data, anchor.size, 0, "run-ahead restore") == 0) {
+            perf_end(perf_stage_runahead_restore, restore_start);
             rumble_bridge_set_suppressed(1);
             audio_bridge_set_muted(1);
             video_bridge_set_frame_skip(1);
 
+            const uint64_t replay_start = perf_begin();
             current_core.retro_run();
+            perf_end(perf_stage_runahead_replay, replay_start);
 
             video_bridge_set_frame_skip(0);
             audio_bridge_discard_sample_fifo();
             audio_bridge_set_muted(0);
             rumble_bridge_set_suppressed(0);
         } else {
+            perf_end(perf_stage_runahead_restore, restore_start);
             runahead_fail("retro_unserialize failed");
             return;
         }
     }
 
+    const uint64_t capture_start = perf_begin();
     if (core_state_capture(&anchor, anchor_size, 0, 0, "run-ahead capture") != 0) {
+        perf_end(perf_stage_runahead_capture, capture_start);
         size_refresh_countdown = 0;
         runahead_fail("retro_serialize failed");
         return;
     }
+    perf_end(perf_stage_runahead_capture, capture_start);
 
     anchor_size = anchor.size;
     anchor_valid = 1;
@@ -122,4 +131,12 @@ void runahead_shutdown(void) {
     anchor_valid = 0;
     failed = 0;
     failure_announced = 0;
+}
+
+size_t runahead_state_size(void) {
+    return anchor_size;
+}
+
+int runahead_session_failed(void) {
+    return failed;
 }

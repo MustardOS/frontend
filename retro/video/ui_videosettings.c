@@ -5,6 +5,7 @@
 #include "../settings/pages.h"
 #include "../settings/submenu.h"
 #include "hw_render.h"
+#include "filters/filters.h"
 
 enum {
     row_image_corrections = 0,
@@ -87,7 +88,13 @@ static void row_value_text(const int display_index, char *buf, const size_t buf_
             snprintf(buf, buf_len, "%s", session_settings_integer_scale_name(session_settings.integer_scale));
             break;
         case row_filter:
-            snprintf(buf, buf_len, "%s", session_settings_filter_name(session_settings.texture_filter));
+            if (texture_filter_is_cpu_scaled(session_settings.texture_filter) && !video_bridge_cpu_filter_active())
+                snprintf(
+                    buf, buf_len, "%s (%s)", session_settings_filter_name(session_settings.texture_filter),
+                    lang.muxretro.settings_screen.diagnostic_bypassed
+                );
+            else
+                snprintf(buf, buf_len, "%s", session_settings_filter_name(session_settings.texture_filter));
             break;
         case row_border:
             snprintf(buf, buf_len, "%s", session_settings_border_name(session_settings.border_colour));

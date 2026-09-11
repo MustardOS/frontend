@@ -65,7 +65,7 @@ static const char *row_help[row_count] = {
 
 static void enabled_text(char *buf, const size_t buf_len, const int enabled, const char *combo) {
     if (enabled) {
-        snprintf(buf, buf_len, "%s (%s)", lang.generic.enabled, combo);
+        snprintf(buf, buf_len, lang.muxretro.hotkeys_screen.enabled_combo, lang.generic.enabled, combo);
     } else {
         snprintf(buf, buf_len, "%s", lang.generic.disabled);
     }
@@ -79,7 +79,7 @@ static void hotkey_mode_text(char *buf, const size_t buf_len, const int mode, co
 
     char combo[64];
     session_settings_hotkey_combo_name(binding, combo, sizeof(combo));
-    snprintf(buf, buf_len, "%s (%s)", session_settings_hotkey_mode_name(mode), combo);
+    snprintf(buf, buf_len, lang.muxretro.hotkeys_screen.mode_combo, session_settings_hotkey_mode_name(mode), combo);
 }
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
@@ -232,7 +232,18 @@ static void button_value_text(const int index, char *buf, const size_t buf_len) 
 }
 
 static void cycle_button(const int index, const int direction) {
+    const int displaced = session_settings_hotkey_button((enum hotkey_binding) index);
     session_settings_cycle_hotkey_button((enum hotkey_binding) index, direction);
+    for (int other = 0; other < hotkey_binding_count; other++) {
+        if (other == index || session_settings_hotkey_button((enum hotkey_binding) other) != displaced) continue;
+
+        char message[256];
+        char combo[64];
+        session_settings_hotkey_combo_name((enum hotkey_binding) other, combo, sizeof(combo));
+        snprintf(message, sizeof(message), lang.muxretro.hotkeys_screen.reassigned_combo, button_labels[other], combo);
+        pause_menu_show_toast(message);
+        break;
+    }
 }
 
 static submenu self;
@@ -271,6 +282,18 @@ static int row_is_action(const int index) {
     return index == row_button_assignments;
 }
 
+static int row_can_cycle(const int index) {
+    if (index == row_button_assignments) return 0;
+    if ((index == row_ff_speed || index == row_ff_glyph_enabled)
+        && session_settings.hotkey_ff_enabled == hotkey_activation_disabled)
+        return 0;
+    if ((index == row_slowmo_speed || index == row_slowmo_glyph_enabled)
+        && session_settings.hotkey_slowmo_enabled == hotkey_activation_disabled)
+        return 0;
+    if (index == row_pause_glyph_enabled && !session_settings.hotkey_pause_enabled) return 0;
+    return 1;
+}
+
 static void row_action(const int index) {
     if (index == row_button_assignments) submenu_open(&buttons_self);
 }
@@ -292,6 +315,7 @@ static const submenu_def def = {
     .row_count = row_count,
     .value_text = row_value_text,
     .cycle = cycle_row,
+    .row_can_cycle = row_can_cycle,
     .row_is_action = row_is_action,
     .action = row_action,
     .child_tick = child_tick,

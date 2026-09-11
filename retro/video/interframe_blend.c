@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <string.h>
+#include <SDL2/SDL.h>
 #include "interframe_blend.h"
 
 // This reminds of working on the OG RG35XX RA code for NEON specific performance bumps!
@@ -400,7 +401,7 @@ static void blend_rows(
     }
 }
 
-enum { high_resolution_pixels = 1280 * 720, filter_threads = 4, filter_workers = filter_threads - 1 };
+enum { initial_thread_threshold_pixels = 1280 * 720, max_filter_threads = 4, max_filter_workers = 3 };
 
 struct filter_job {
     void *current;
@@ -414,13 +415,14 @@ struct filter_job {
     uint8_t *persistence;
     size_t persistence_pitch;
     enum retro_pixel_format format;
+    unsigned threads;
 };
 
 static pthread_mutex_t worker_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t worker_start = PTHREAD_COND_INITIALIZER;
 static pthread_cond_t worker_done = PTHREAD_COND_INITIALIZER;
-static pthread_t worker_threads[filter_workers];
-static unsigned worker_indices[filter_workers];
+static pthread_t worker_threads[max_filter_workers];
+static unsigned worker_indices[max_filter_workers];
 static uint64_t worker_generation = 0;
 static unsigned workers_completed = 0;
 static unsigned workers_created = 0;
@@ -428,6 +430,9 @@ static int workers_running = 0;
 static int workers_failed = 0;
 static int workers_stop = 0;
 static struct filter_job active_job = {0};
+static size_t adaptive_thread_threshold = initial_thread_threshold_pixels;
+static double last_filter_ms = 0.0;
+static unsigned last_filter_threads = 1;
 
 static void *filter_worker(void *opaque) {
     const unsigned slice = *(const unsigned *) opaque;
@@ -443,16 +448,18 @@ static void *filter_worker(void *opaque) {
         const struct filter_job job = active_job;
         pthread_mutex_unlock(&worker_mutex);
 
-        const unsigned start_y = (unsigned) (((uint64_t) job.height * slice) / filter_threads);
-        const unsigned end_y = (unsigned) (((uint64_t) job.height * (slice + 1)) / filter_threads);
-        blend_rows(
-            job.current, job.previous, job.two_back, job.three_back, job.four_back, job.width, start_y, end_y,
-            job.pitch, job.format, job.persistence, job.persistence_pitch
-        );
+        if (slice < job.threads) {
+            const unsigned start_y = (unsigned) (((uint64_t) job.height * slice) / job.threads);
+            const unsigned end_y = (unsigned) (((uint64_t) job.height * (slice + 1)) / job.threads);
+            blend_rows(
+                job.current, job.previous, job.two_back, job.three_back, job.four_back, job.width, start_y, end_y,
+                job.pitch, job.format, job.persistence, job.persistence_pitch
+            );
+        }
 
         pthread_mutex_lock(&worker_mutex);
         workers_completed++;
-        if (workers_completed == filter_workers) pthread_cond_signal(&worker_done);
+        if (workers_completed == workers_created) pthread_cond_signal(&worker_done);
     }
     pthread_mutex_unlock(&worker_mutex);
     return NULL;
@@ -465,7 +472,11 @@ static int start_workers(void) {
     workers_stop = 0;
     workers_created = 0;
     worker_generation = 0;
-    for (unsigned i = 0; i < filter_workers; i++) {
+    unsigned wanted_workers = SDL_GetCPUCount() > 1 ? (unsigned) SDL_GetCPUCount() - 1 : 0;
+    if (wanted_workers > max_filter_workers) wanted_workers = max_filter_workers;
+    if (!wanted_workers) return 0;
+
+    for (unsigned i = 0; i < wanted_workers; i++) {
         worker_indices[i] = i + 1;
         if (pthread_create(&worker_threads[i], NULL, filter_worker, &worker_indices[i]) != 0) {
             pthread_mutex_lock(&worker_mutex);
@@ -487,6 +498,10 @@ static int start_workers(void) {
 }
 
 void interframe_blend_shutdown(void) {
+    adaptive_thread_threshold = initial_thread_threshold_pixels;
+    last_filter_ms = 0.0;
+    last_filter_threads = 1;
+
     if (!workers_running) {
         workers_failed = 0;
         return;
@@ -506,6 +521,18 @@ void interframe_blend_shutdown(void) {
     worker_generation = 0;
 }
 
+double interframe_blend_last_ms(void) {
+    return last_filter_ms;
+}
+
+unsigned interframe_blend_thread_count(void) {
+    return last_filter_threads;
+}
+
+size_t interframe_blend_thread_threshold_pixels(void) {
+    return adaptive_thread_threshold;
+}
+
 void interframe_blend_detected(
     void *current, const void *previous, const void *two_back, const void *three_back, const void *four_back,
     const unsigned width, const unsigned height, const size_t pitch, const enum retro_pixel_format format,
@@ -514,14 +541,27 @@ void interframe_blend_detected(
     if (!current || !previous || !two_back || !persistence || width == 0 || height == 0 || persistence_pitch < width)
         return;
 
+    const uint64_t started = SDL_GetPerformanceCounter();
     const size_t pixels = (size_t) width * height;
-    if (pixels < high_resolution_pixels || !start_workers()) {
+    const int threaded = pixels >= adaptive_thread_threshold && start_workers();
+    if (!threaded) {
         blend_rows(
             current, previous, two_back, three_back, four_back, width, 0, height, pitch, format, persistence,
             persistence_pitch
         );
+        last_filter_ms =
+            (double) (SDL_GetPerformanceCounter() - started) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+        last_filter_threads = 1;
+        if (last_filter_ms > 1.25 && pixels >= 320u * 240u) {
+            adaptive_thread_threshold = pixels;
+        } else if (last_filter_ms < 0.45 && pixels >= adaptive_thread_threshold / 2) {
+            adaptive_thread_threshold = pixels + pixels / 2;
+        }
         return;
     }
+
+    unsigned active_threads = workers_created + 1;
+    if (active_threads > 2 && pixels < adaptive_thread_threshold * 2) active_threads = 2;
 
     pthread_mutex_lock(&worker_mutex);
     active_job = (struct filter_job) {
@@ -536,6 +576,7 @@ void interframe_blend_detected(
         .format = format,
         .persistence = persistence,
         .persistence_pitch = persistence_pitch,
+        .threads = active_threads,
     };
     workers_completed = 0;
     worker_generation++;
@@ -543,12 +584,14 @@ void interframe_blend_detected(
     pthread_mutex_unlock(&worker_mutex);
 
     blend_rows(
-        current, previous, two_back, three_back, four_back, width, 0, (unsigned) ((uint64_t) height / filter_threads),
+        current, previous, two_back, three_back, four_back, width, 0, (unsigned) ((uint64_t) height / active_threads),
         pitch, format, persistence, persistence_pitch
     );
 
     pthread_mutex_lock(&worker_mutex);
-    while (workers_completed != filter_workers)
+    while (workers_completed != workers_created)
         pthread_cond_wait(&worker_done, &worker_mutex);
     pthread_mutex_unlock(&worker_mutex);
+    last_filter_ms = (double) (SDL_GetPerformanceCounter() - started) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+    last_filter_threads = active_threads;
 }

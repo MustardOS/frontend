@@ -20,6 +20,12 @@ const submenu_def *storage_menu_definition(void);
 
 const submenu_def *performance_menu_definition(void);
 
+void video_diagnostics_menu_open(void);
+
+int video_diagnostics_menu_is_active(void);
+
+void video_diagnostics_menu_tick(void);
+
 const submenu_def *cheevo_settings_definition(void);
 
 int cheevo_settings_child_tick(void);

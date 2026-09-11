@@ -11,7 +11,7 @@ static const char *all_labels[row_max] = {
     lang.muxretro.settings_screen.shimmer_fix, lang.muxretro.settings_screen.anti_flicker
 };
 
-static const char *all_glyphs[row_max] = {"shimmerfix", "shimmerfix"};
+static const char *all_glyphs[row_max] = {"shimmerfix", "framedelay"};
 
 static const char *all_help[row_max] = {lang.muxretro.help.video.shimmer_fix, lang.muxretro.help.video.anti_flicker};
 
@@ -25,8 +25,6 @@ static void build_rows(void) {
     row_total = 0;
 
     for (int i = 0; i < row_max; i++) {
-        if (i == row_anti_flicker && hw_render_bridge_active()) continue;
-
         row_labels[row_total] = all_labels[i];
         row_glyphs[row_total] = all_glyphs[i];
         row_help[row_total] = all_help[i];
@@ -38,15 +36,40 @@ static void build_rows(void) {
 static void row_value_text(const int display_index, char *buf, const size_t buf_len) {
     switch (row_map[display_index]) {
         case row_shimmer_fix:
-            snprintf(buf, buf_len, "%s", session_settings.shimmer_fix ? lang.generic.enabled : lang.generic.disabled);
+            if (session_settings.shimmer_fix) {
+                int source_w = 0, source_h = 0, output_w = 0, output_h = 0, integer = 0;
+                video_bridge_get_output_geometry(&source_w, &source_h, NULL, NULL, &output_w, &output_h, &integer);
+                const int scale =
+                    source_w > 0 && source_h > 0 && integer
+                        ? ((output_w / source_w) < (output_h / source_h) ? output_w / source_w : output_h / source_h)
+                        : 0;
+                if (scale > 0)
+                    snprintf(buf, buf_len, "%s (%dx)", lang.generic.enabled, scale);
+                else
+                    snprintf(buf, buf_len, "%s", lang.generic.enabled);
+            } else {
+                snprintf(buf, buf_len, "%s", lang.generic.disabled);
+            }
             break;
         case row_anti_flicker:
-            snprintf(buf, buf_len, "%s", session_settings.anti_flicker ? lang.generic.enabled : lang.generic.disabled);
+            if (hw_render_bridge_active() || (session_settings.anti_flicker && !video_bridge_anti_flicker_available()))
+                snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.diagnostic_unavailable);
+            else if (session_settings.anti_flicker)
+                snprintf(
+                    buf, buf_len, "%s (%.1f MiB)", lang.generic.enabled,
+                    (double) video_bridge_anti_flicker_bytes() / (1024.0 * 1024.0)
+                );
+            else
+                snprintf(buf, buf_len, "%s", lang.generic.disabled);
             break;
         default:
             buf[0] = '\0';
             break;
     }
+}
+
+static int row_can_cycle(const int display_index) {
+    return row_map[display_index] != row_anti_flicker || !hw_render_bridge_active();
 }
 
 static void cycle_row(const int display_index, const int direction) {
@@ -75,6 +98,7 @@ static submenu_def def = {
     .row_count = row_max,
     .value_text = row_value_text,
     .cycle = cycle_row,
+    .row_can_cycle = row_can_cycle,
     .closed = closed,
     .save_title = lang.muxretro.save.video_title,
     .save_desc = lang.muxretro.save.video_desc,

@@ -66,7 +66,9 @@ needed.
 
 **Visuals** contains colour adjustment, filter and shader choices, while **Overlay** has its own section. **Display**
 contains Adjustment and Cropping submenus, Reset Viewport and Screen Info directly. **Advanced** contains Core Options,
-Performance and Save All so experienced users retain full control without placing technical choices in the normal path.
+the read-only Video Diagnostics page, Performance and Save All so experienced users retain full control without placing
+technical choices in the normal path. Video Diagnostics is placed directly below Core Options and reports live display,
+cadence, filter, shader, audio, correction and Run Ahead state without changing settings.
 Hotkey Controls remain under Input. Every screen is driven by the table engine in
 `settings/submenu.c`: a screen supplies label/glyph tables, a value/cycle switch, and optional action/child hooks. The
 engine does section and row building, focus, navbar switching, hold repeats, the save dialogue, and submenu dispatch.
@@ -90,8 +92,8 @@ alter core options, controls or save data.
   highlighted row. The other sections retain core name/version, content name, resolution, display/audio output and disc
   count. The footer shows **L/R Change** only while the section selector is highlighted, with no select action on
   informational rows.
-- Performance retains manual timing controls and optional diagnostic capture. Beginner-facing performance choices live
-  in Profiles, while the individual controls remain available under Advanced.
+- Performance retains manual timing controls and optional diagnostic capture/export. Beginner-facing performance choices
+  live in Profiles, while the individual controls remain available under Advanced.
 - Core capabilities retain a typed reason when unavailable. Pickles can distinguish an upstream core declaration, a
   packaged MustardOS compatibility rule and a feature that depends on save states, rather than exposing the same generic
   failure for every case.
