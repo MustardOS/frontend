@@ -8,6 +8,7 @@
 #include <SDL2/SDL_image.h>
 #include <common/display/image.h>
 #include <common/runtime/log.h>
+#include <common/runtime/perf.h>
 #include <common/saver/saver.h>
 #include <common/saver/boxart.h>
 
@@ -187,8 +188,20 @@ static box_cache_entry_t *cache_load_path(const int path_index) {
     box_cache_entry_t *slot = cache_find_slot();
     if (!slot) return NULL;
 
+    if (!saver_image_file_allowed(mod.paths[path_index])) {
+        if (mod.bad_paths) mod.bad_paths[path_index] = 1;
+        return NULL;
+    }
+
+    const uint64_t decode_start = fe_perf_begin();
     SDL_Surface *surf = IMG_Load(mod.paths[path_index]);
+    fe_perf_end(fe_perf_stage_saver_decode, decode_start);
     if (!surf) {
+        if (mod.bad_paths) mod.bad_paths[path_index] = 1;
+        return NULL;
+    }
+    if (!saver_image_dimensions_allowed(surf->w, surf->h)) {
+        SDL_FreeSurface(surf);
         if (mod.bad_paths) mod.bad_paths[path_index] = 1;
         return NULL;
     }
@@ -336,7 +349,13 @@ static void collect_box_images(const char *cat_path, char ***paths, int *count, 
     if (!sys_d) return;
 
     struct dirent *sys_ent;
+    int visited_dirs = 0;
+    int visited_entries = 0;
     while ((sys_ent = readdir(sys_d)) != NULL) {
+        if (++visited_dirs > 512 || visited_entries >= 16384) {
+            LOG_WARN("saver", "Box Art: catalogue scan reached its safety limit");
+            break;
+        }
         if (sys_ent->d_name[0] == '.') continue;
         if (is_excluded(sys_ent->d_name)) continue;
 
@@ -349,6 +368,7 @@ static void collect_box_images(const char *cat_path, char ***paths, int *count, 
 
         struct dirent *img_ent;
         while ((img_ent = readdir(box_d)) != NULL && *count < BOX_PATH_MAX) {
+            if (++visited_entries > 16384) break;
             if (img_ent->d_name[0] == '.') continue;
 
             const char *dot = strrchr(img_ent->d_name, '.');
@@ -404,7 +424,9 @@ int boxart_init(SDL_Renderer *renderer, const char *catalogue_path, const int sc
     int count = 0;
     int cap = 0;
 
+    const uint64_t scan_start = fe_perf_begin();
     collect_box_images(catalogue_path, &paths, &count, &cap);
+    fe_perf_end(fe_perf_stage_saver_scan, scan_start);
 
     mod.paths = paths;
     mod.path_count = count;
@@ -447,6 +469,7 @@ void boxart_render(SDL_Renderer *renderer) {
     if (mod.path_count == 0) return;
 
     int order[BOX_PARTICLE_COUNT];
+    unsigned draw_calls = 0;
     for (int i = 0; i < BOX_PARTICLE_COUNT; i++) {
         order[i] = i;
     }
@@ -487,7 +510,9 @@ void boxart_render(SDL_Renderer *renderer) {
 
         SDL_SetTextureAlphaMod(entry->tex, (uint8_t) (alpha * 255.0f));
         SDL_RenderCopy(renderer, entry->tex, NULL, &rect);
+        draw_calls++;
     }
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int boxart_active(void) {

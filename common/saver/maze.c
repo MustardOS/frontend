@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <SDL2/SDL.h>
+#include <common/display/theme.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/maze.h>
@@ -106,6 +107,9 @@ typedef struct {
 
     int32_t runner_speed_fp_per_ms;
     int32_t hunter_speed_fp_per_ms;
+
+    SDL_Texture *topology_texture;
+    int topology_dirty;
 } maze_module_t;
 
 static maze_module_t mod = {0};
@@ -854,6 +858,7 @@ static void maze_begin_chase(void) {
     mod.active_generation = 0;
     mod.chase_active = 1;
     mod.hunter_connect_pending = 0;
+    mod.topology_dirty = 1;
 
     maze_clear_trace_flags();
 
@@ -908,6 +913,7 @@ static void maze_reset(void) {
 
     mod.active_generation = 1;
     mod.chase_active = 0;
+    mod.topology_dirty = 1;
     mod.hunter_connect_pending = 0;
 
     mod.runner_panicking = 0;
@@ -1183,8 +1189,6 @@ static void on_idle_enter(void *user) {
 }
 
 int maze_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
-    (void) renderer;
-
     saver_init_base(&mod.base, screen_w, screen_h, "Maze Runner", 130, 180, 220, on_speed_changed, on_idle_enter, &mod);
 
     if (!maze_alloc()) {
@@ -1194,6 +1198,15 @@ int maze_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
 
     refresh_speed_factor();
     maze_reset();
+
+    mod.topology_texture = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, mod.cols * mod.cell_size, mod.rows * mod.cell_size
+    );
+    if (mod.topology_texture) {
+        SDL_SetTextureBlendMode(mod.topology_texture, SDL_BLENDMODE_NONE);
+    } else {
+        LOG_WARN("saver", "Maze topology cache unavailable: %s", SDL_GetError());
+    }
 
     LOG_INFO(
         "saver", "Maze Runner Initialised (%dx%d, grid=%dx%d, cell=%d, speed=%d)", screen_w, screen_h, mod.cols,
@@ -1229,7 +1242,7 @@ void maze_update(void) {
     maze_reset();
 }
 
-void maze_render(SDL_Renderer *renderer) {
+static unsigned maze_render_topology(SDL_Renderer *renderer) {
     int y;
     int x;
 
@@ -1237,14 +1250,11 @@ void maze_render(SDL_Renderer *renderer) {
     uint8_t wall_g;
     uint8_t wall_b;
 
-    if (!mod.base.enabled || !mod.base.idle_active || !mod.cell) return;
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
     wall_r = saver_clamp_u8(mod.base.colour_r + 28);
     wall_g = saver_clamp_u8(mod.base.colour_g + 28);
     wall_b = saver_clamp_u8(mod.base.colour_b + 28);
 
+    unsigned calls = 0;
     for (y = 0; y < mod.rows; y++) {
         for (x = 0; x < mod.cols; x++) {
             const maze_cell_t *cell;
@@ -1267,33 +1277,85 @@ void maze_render(SDL_Renderer *renderer) {
 
                 SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, 12);
                 SDL_RenderFillRect(renderer, &fill);
-            }
-
-            if (flags & MAZE_RUNNER_TRACE) {
-                SDL_Rect fill = {px + mod.cell_size / 3, py + mod.cell_size / 3, mod.cell_size / 3, mod.cell_size / 3};
-
-                SDL_SetRenderDrawColor(renderer, MAZE_RUNNER_R, MAZE_RUNNER_G, MAZE_RUNNER_B, 86);
-                SDL_RenderFillRect(renderer, &fill);
-            }
-
-            if (flags & MAZE_HUNTER_TRACE) {
-                SDL_Rect fill = {px + mod.cell_size / 3, py + mod.cell_size / 3, mod.cell_size / 3, mod.cell_size / 3};
-
-                SDL_SetRenderDrawColor(renderer, MAZE_HUNTER_R, MAZE_HUNTER_G, MAZE_HUNTER_B, 86);
-                SDL_RenderFillRect(renderer, &fill);
+                calls++;
             }
 
             SDL_SetRenderDrawColor(renderer, wall_r, wall_g, wall_b, 118);
 
-            if (walls & (1u << MAZE_DIR_RIGHT))
+            if (walls & (1u << MAZE_DIR_RIGHT)) {
                 SDL_RenderDrawLine(renderer, px + mod.cell_size, py, px + mod.cell_size, py + mod.cell_size);
-            if (walls & (1u << MAZE_DIR_DOWN))
+                calls++;
+            }
+            if (walls & (1u << MAZE_DIR_DOWN)) {
                 SDL_RenderDrawLine(renderer, px, py + mod.cell_size, px + mod.cell_size, py + mod.cell_size);
+                calls++;
+            }
 
-            if (x == 0 && (walls & (1u << MAZE_DIR_LEFT))) SDL_RenderDrawLine(renderer, px, py, px, py + mod.cell_size);
-            if (y == 0 && (walls & (1u << MAZE_DIR_UP))) SDL_RenderDrawLine(renderer, px, py, px + mod.cell_size, py);
+            if (x == 0 && (walls & (1u << MAZE_DIR_LEFT))) {
+                SDL_RenderDrawLine(renderer, px, py, px, py + mod.cell_size);
+                calls++;
+            }
+            if (y == 0 && (walls & (1u << MAZE_DIR_UP))) {
+                SDL_RenderDrawLine(renderer, px, py, px + mod.cell_size, py);
+                calls++;
+            }
         }
     }
+
+    return calls;
+}
+
+static unsigned maze_render_trace_cells(SDL_Renderer *renderer) {
+    unsigned calls = 0;
+    for (int y = 0; y < mod.rows; y++) {
+        for (int x = 0; x < mod.cols; x++) {
+            const uint8_t flags = mod.cell[maze_index(x, y)].flags;
+            if (!(flags & (MAZE_RUNNER_TRACE | MAZE_HUNTER_TRACE))) continue;
+            const SDL_Rect fill = {
+                x * mod.cell_size + mod.cell_size / 3, y * mod.cell_size + mod.cell_size / 3, mod.cell_size / 3,
+                mod.cell_size / 3
+            };
+            if (flags & MAZE_RUNNER_TRACE) {
+                SDL_SetRenderDrawColor(renderer, MAZE_RUNNER_R, MAZE_RUNNER_G, MAZE_RUNNER_B, 86);
+                SDL_RenderFillRect(renderer, &fill);
+                calls++;
+            }
+            if (flags & MAZE_HUNTER_TRACE) {
+                SDL_SetRenderDrawColor(renderer, MAZE_HUNTER_R, MAZE_HUNTER_G, MAZE_HUNTER_B, 86);
+                SDL_RenderFillRect(renderer, &fill);
+                calls++;
+            }
+        }
+    }
+    return calls;
+}
+
+void maze_render(SDL_Renderer *renderer) {
+    if (!mod.base.enabled || !mod.base.idle_active || !mod.cell) return;
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    unsigned draw_calls = 0;
+
+    if (mod.chase_active && mod.topology_texture) {
+        if (mod.topology_dirty) {
+            SDL_Texture *old_target = SDL_GetRenderTarget(renderer);
+            SDL_SetRenderTarget(renderer, mod.topology_texture);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+            SDL_SetRenderDrawColor(renderer, theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255);
+            SDL_RenderClear(renderer);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            maze_render_topology(renderer);
+            SDL_SetRenderTarget(renderer, old_target);
+            mod.topology_dirty = 0;
+        }
+        const SDL_Rect dst = {0, 0, mod.cols * mod.cell_size, mod.rows * mod.cell_size};
+        SDL_RenderCopy(renderer, mod.topology_texture, NULL, &dst);
+        draw_calls++;
+    } else {
+        draw_calls += maze_render_topology(renderer);
+    }
+
+    draw_calls += maze_render_trace_cells(renderer);
 
     maze_render_trail(renderer, &mod.runner, MAZE_RUNNER_R, MAZE_RUNNER_G, MAZE_RUNNER_B);
     maze_render_trail(renderer, &mod.hunter, MAZE_HUNTER_R, MAZE_HUNTER_G, MAZE_HUNTER_B);
@@ -1332,6 +1394,7 @@ void maze_render(SDL_Renderer *renderer) {
     maze_render_actor(renderer, &mod.hunter, MAZE_HUNTER_R, MAZE_HUNTER_G, MAZE_HUNTER_B);
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls + 8u);
 }
 
 int maze_active(void) {
@@ -1343,6 +1406,10 @@ void maze_stop(void) {
 }
 
 void maze_shutdown(void) {
+    if (mod.topology_texture) {
+        SDL_DestroyTexture(mod.topology_texture);
+        mod.topology_texture = NULL;
+    }
     free(mod.cell);
     free(mod.runner_stack);
     free(mod.hunter_stack);

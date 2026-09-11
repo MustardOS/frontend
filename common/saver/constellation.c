@@ -8,6 +8,8 @@
 #define CONSTELLATION_POINT_COUNT 64
 #define CONSTELLATION_LINK_DIST   118
 #define CONSTELLATION_MAX_SIZE    4
+#define CONSTELLATION_MAX_LINKS   6
+#define CONSTELLATION_MAX_BUCKETS 1024
 
 typedef struct {
     int32_t fx, fy;
@@ -201,6 +203,24 @@ void constellation_render(SDL_Renderer *renderer) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     const int link_dist_sq = CONSTELLATION_LINK_DIST * CONSTELLATION_LINK_DIST;
+    const int bucket_cols = (mod.base.screen_w + CONSTELLATION_LINK_DIST - 1) / CONSTELLATION_LINK_DIST;
+    const int bucket_rows = (mod.base.screen_h + CONSTELLATION_LINK_DIST - 1) / CONSTELLATION_LINK_DIST;
+    const int bucket_count = bucket_cols * bucket_rows;
+    int bucket_head[CONSTELLATION_MAX_BUCKETS];
+    int bucket_next[CONSTELLATION_POINT_COUNT];
+    unsigned draw_calls = 0;
+
+    if (bucket_count > 0 && bucket_count <= CONSTELLATION_MAX_BUCKETS) {
+        for (int i = 0; i < bucket_count; i++)
+            bucket_head[i] = -1;
+        for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
+            const int x = mod.point[i].fx >> SAVER_FRAME_SHF;
+            const int y = mod.point[i].fy >> SAVER_FRAME_SHF;
+            const int bucket = (y / CONSTELLATION_LINK_DIST) * bucket_cols + x / CONSTELLATION_LINK_DIST;
+            bucket_next[i] = bucket_head[bucket];
+            bucket_head[bucket] = i;
+        }
+    }
 
     for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
         const cpoint_t *a = &mod.point[i];
@@ -208,27 +228,55 @@ void constellation_render(SDL_Renderer *renderer) {
         int ax = a->fx >> SAVER_FRAME_SHF;
         int ay = a->fy >> SAVER_FRAME_SHF;
 
-        for (int j = i + 1; j < CONSTELLATION_POINT_COUNT; j++) {
-            const cpoint_t *b = &mod.point[j];
+        int links = 0;
+        const int base_bx = ax / CONSTELLATION_LINK_DIST;
+        const int base_by = ay / CONSTELLATION_LINK_DIST;
+        const int neighbour_count = bucket_count > 0 && bucket_count <= CONSTELLATION_MAX_BUCKETS ? 9 : 1;
 
-            int bx = b->fx >> SAVER_FRAME_SHF;
-            int dx = ax - bx;
-            if (dx > CONSTELLATION_LINK_DIST) continue;
-            if (dx < -CONSTELLATION_LINK_DIST) continue;
+        for (int neighbour = 0; neighbour < neighbour_count && links < CONSTELLATION_MAX_LINKS; neighbour++) {
+            const int bx_cell = base_bx + neighbour % 3 - 1;
+            const int by_cell = base_by + neighbour / 3 - 1;
+            if (neighbour_count == 9
+                && (bx_cell < 0 || bx_cell >= bucket_cols || by_cell < 0 || by_cell >= bucket_rows))
+                continue;
 
-            int by = b->fy >> SAVER_FRAME_SHF;
-            int dy = ay - by;
-            if (dy > CONSTELLATION_LINK_DIST) continue;
-            if (dy < -CONSTELLATION_LINK_DIST) continue;
+            int j = neighbour_count == 9 ? bucket_head[by_cell * bucket_cols + bx_cell] : i + 1;
+            while (j >= 0 && j < CONSTELLATION_POINT_COUNT && links < CONSTELLATION_MAX_LINKS) {
+                if (j <= i) {
+                    j = neighbour_count == 9 ? bucket_next[j] : j + 1;
+                    continue;
+                }
+                const cpoint_t *b = &mod.point[j];
 
-            int dist_sq = dx * dx + dy * dy;
-            if (dist_sq > link_dist_sq) continue;
+                int bx = b->fx >> SAVER_FRAME_SHF;
+                int dx = ax - bx;
+                if (dx > CONSTELLATION_LINK_DIST || dx < -CONSTELLATION_LINK_DIST) {
+                    j = neighbour_count == 9 ? bucket_next[j] : j + 1;
+                    continue;
+                }
 
-            int alpha = 200 - ((dist_sq * 176) / link_dist_sq);
-            if (alpha < 24) alpha = 24;
+                int by = b->fy >> SAVER_FRAME_SHF;
+                int dy = ay - by;
+                if (dy > CONSTELLATION_LINK_DIST || dy < -CONSTELLATION_LINK_DIST) {
+                    j = neighbour_count == 9 ? bucket_next[j] : j + 1;
+                    continue;
+                }
 
-            SDL_SetRenderDrawColor(renderer, a->r, a->g, a->b, (uint8_t) alpha);
-            SDL_RenderDrawLine(renderer, ax, ay, bx, by);
+                int dist_sq = dx * dx + dy * dy;
+                if (dist_sq > link_dist_sq) {
+                    j = neighbour_count == 9 ? bucket_next[j] : j + 1;
+                    continue;
+                }
+
+                int alpha = 200 - ((dist_sq * 176) / link_dist_sq);
+                if (alpha < 24) alpha = 24;
+
+                SDL_SetRenderDrawColor(renderer, a->r, a->g, a->b, (uint8_t) alpha);
+                SDL_RenderDrawLine(renderer, ax, ay, bx, by);
+                links++;
+                draw_calls++;
+                j = neighbour_count == 9 ? bucket_next[j] : j + 1;
+            }
         }
     }
 
@@ -250,6 +298,7 @@ void constellation_render(SDL_Renderer *renderer) {
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls + CONSTELLATION_POINT_COUNT * 2u);
 }
 
 int constellation_active(void) {

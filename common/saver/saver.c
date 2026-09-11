@@ -2,10 +2,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/stat.h>
 #include <SDL2/SDL.h>
 #include <common/runtime/log.h>
 #include <common/storage/inotify.h>
 #include <common/runtime/init.h>
+#include <common/runtime/perf.h>
 #include <common/base/options.h>
 #include <common/storage/fileio.h>
 #include <common/saver/saver.h>
@@ -74,6 +76,22 @@ void saver_pastel_pick(const int idx, uint8_t *r, uint8_t *g, uint8_t *b) {
     *r = saver_pastel_r[i];
     *g = saver_pastel_g[i];
     *b = saver_pastel_b[i];
+}
+
+void saver_perf_note_draw_calls(const unsigned count) {
+    fe_perf_note_saver_draw_calls(count);
+}
+
+int saver_image_file_allowed(const char *path) {
+    enum { max_image_file_bytes = 32 * 1024 * 1024 };
+    struct stat st;
+    return path && stat(path, &st) == 0 && S_ISREG(st.st_mode) && st.st_size > 0 && st.st_size <= max_image_file_bytes;
+}
+
+int saver_image_dimensions_allowed(const int width, const int height) {
+    enum { max_dimension = 8192, max_pixels = 16 * 1024 * 1024 };
+    return width > 0 && height > 0 && width <= max_dimension && height <= max_dimension
+           && (int64_t) width * (int64_t) height <= max_pixels;
 }
 
 void saver_init_base(

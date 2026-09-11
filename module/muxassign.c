@@ -61,6 +61,26 @@ static int find_system_item_index(const char *system_name) {
     return idx;
 }
 
+static void sort_core_items(content_item *core_items, const size_t core_count, const char *assign_dir) {
+    sort_items(core_items, core_count);
+    if (!core_items || core_count < 2) return;
+
+    content_item *ordered = malloc(core_count * sizeof(*ordered));
+    if (!ordered) return;
+
+    size_t next = 0;
+    for (int use_muxretro = 1; use_muxretro >= 0; use_muxretro--) {
+        for (size_t i = 0; i < core_count; i++) {
+            if (!!core_uses_muxretro(assign_dir, core_items[i].sort_name) == use_muxretro) {
+                ordered[next++] = core_items[i];
+            }
+        }
+    }
+
+    memcpy(core_items, ordered, core_count * sizeof(*core_items));
+    free(ordered);
+}
+
 static int find_core_item_index(const char *system) {
     const char *file_def_core = get_content_line(rom_dir, rom_name, "cfg", 6);
     const char *dir_def_core = get_content_line(rom_dir, NULL, "cfg", 5);
@@ -121,7 +141,7 @@ static int find_core_item_index(const char *system) {
     closedir(ad);
 
     if (!tmp_items) return 0;
-    sort_items(tmp_items, tmp_count);
+    sort_core_items(tmp_items, tmp_count, assign_dir);
 
     int idx = -1;
     if (def_core && *def_core) {
@@ -255,7 +275,7 @@ static void create_core_items(const char *target) {
     }
 
     closedir(ad);
-    sort_items(items, item_count);
+    sort_core_items(items, item_count, assign_dir);
 
     reset_ui_groups();
 

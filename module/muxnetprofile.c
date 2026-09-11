@@ -37,6 +37,7 @@ static int fields_modified = 0;
 static int network_saved = 0;
 static int viewing_existing_profile = 0;
 static int viewing_active_profile = 0;
+static uint32_t next_connection_label_tick = 0;
 
 static mux_dialogue save_dlg;
 
@@ -173,6 +174,46 @@ static void set_connect_value(const char *value) {
     if (!curr || strcmp(curr, value) != 0) lv_label_set_text(ui_val_connect_network, value);
 }
 
+static void set_active_connection_value(const int force) {
+    const uint32_t now = SDL_GetTicks();
+    if (!force && next_connection_label_tick && (int32_t) (now - next_connection_label_tick) < 0) return;
+    next_connection_label_tick = now + 1000;
+
+    const int signal = get_network_signal_percent();
+    const int reachability = get_network_reachability();
+    const char *internet;
+    switch (reachability) {
+        case network_reachability_checking:
+            internet = lang.muxnetprofile.status.internet_checking;
+            break;
+        case network_reachability_online:
+            internet = lang.muxnetprofile.status.internet_online;
+            break;
+        case network_reachability_sign_in:
+            internet = lang.muxnetprofile.status.internet_sign_in;
+            break;
+        case network_reachability_timeout:
+            internet = lang.muxnetprofile.status.internet_timeout;
+            break;
+        default:
+            internet = lang.muxnetprofile.status.internet_unavailable;
+            break;
+    }
+
+    char value[MAX_BUFFER_SIZE];
+    if (signal >= 0) {
+        snprintf(
+            value, sizeof(value), "%s %d%% / %s %s", lang.muxnetprofile.wifi, signal, lang.muxnetprofile.internet,
+            internet
+        );
+    } else {
+        snprintf(
+            value, sizeof(value), "%s / %s %s", lang.muxnetprofile.connected, lang.muxnetprofile.internet, internet
+        );
+    }
+    set_connect_value(value);
+}
+
 static void nav_scan_hide(const int hide) {
     if (hide) {
         lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -301,7 +342,7 @@ static int get_current_ip(void) {
         viewing_active_profile = 1;
         write_text_to_file_atomic(CONF_CONFIG_PATH "network/active", CHAR, current_profile);
 
-        set_connect_value(ip);
+        set_active_connection_value(1);
         lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
 
         nav_scan_hide(1);
@@ -1418,6 +1459,8 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
         update_network_label();
     }
 
+    if (viewing_active_profile && !ui_network_locked) set_active_connection_value(0);
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_panels();
@@ -1476,7 +1519,7 @@ int muxnetprofile_main(void) {
     if (viewing_active_profile) {
         char ip[IP_OCTET] = {0};
         if (read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0) {
-            set_connect_value(ip);
+            set_active_connection_value(1);
         } else {
             set_connect_value(lang.muxnetprofile.connected);
         }

@@ -8,9 +8,11 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
+#include <curl/curl.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include <common/platform/device.h>
+#include <common/platform/sysinfo.h>
 #include <common/config/config.h>
 #include <common/storage/fileio.h>
 #include <common/base/strutil.h>
@@ -147,6 +149,87 @@ int get_network_signal_percent(void) {
 
     pthread_mutex_unlock(&signal_mutex);
     return cached;
+}
+
+static pthread_mutex_t reachability_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_once_t reachability_curl_once = PTHREAD_ONCE_INIT;
+static int reachability_state = network_reachability_unknown;
+static int reachability_worker_running;
+static int reachability_curl_ready;
+static uint64_t reachability_next_poll_ms;
+
+static void network_reachability_curl_init(void) {
+    reachability_curl_ready = curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
+}
+
+static size_t discard_reachability_body(void *data, size_t size, size_t count, void *unused) {
+    (void) data;
+    (void) unused;
+    return size * count;
+}
+
+static void *network_reachability_worker(void *unused) {
+    (void) unused;
+    int state = network_reachability_unavailable;
+    CURL *curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://connectivitycheck.gstatic.com/generate_204");
+        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 2500L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 4000L);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, discard_reachability_body);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "MustardOS-Connectivity-Check/1");
+
+        const CURLcode result = curl_easy_perform(curl);
+        long status = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+        if (result == CURLE_OK && status == 204)
+            state = network_reachability_online;
+        else if (result == CURLE_OK && status >= 200 && status < 400)
+            state = network_reachability_sign_in;
+        else if (result == CURLE_OPERATION_TIMEDOUT)
+            state = network_reachability_timeout;
+        curl_easy_cleanup(curl);
+    }
+
+    pthread_mutex_lock(&reachability_mutex);
+    reachability_state = state;
+    reachability_worker_running = 0;
+    reachability_next_poll_ms = monotonic_ms() + 30000u;
+    pthread_mutex_unlock(&reachability_mutex);
+    return NULL;
+}
+
+int get_network_reachability(void) {
+    if (!is_network_connected()) {
+        pthread_mutex_lock(&reachability_mutex);
+        reachability_state = network_reachability_unknown;
+        reachability_next_poll_ms = 0;
+        pthread_mutex_unlock(&reachability_mutex);
+        return network_reachability_unknown;
+    }
+
+    pthread_once(&reachability_curl_once, network_reachability_curl_init);
+    if (!reachability_curl_ready) return network_reachability_unavailable;
+
+    const uint64_t now = monotonic_ms();
+    pthread_mutex_lock(&reachability_mutex);
+    if (!reachability_worker_running && now >= reachability_next_poll_ms) {
+        pthread_t worker;
+        reachability_worker_running = 1;
+        reachability_state = network_reachability_checking;
+        if (pthread_create(&worker, NULL, network_reachability_worker, NULL) == 0) {
+            pthread_detach(worker);
+        } else {
+            reachability_worker_running = 0;
+            reachability_state = network_reachability_unavailable;
+            reachability_next_poll_ms = now + 5000u;
+        }
+    }
+    const int state = reachability_state;
+    pthread_mutex_unlock(&reachability_mutex);
+    return state;
 }
 
 static int scan_ipv4_address(const char *wanted, char *output, const size_t output_size) {

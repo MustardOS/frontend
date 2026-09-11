@@ -381,10 +381,26 @@ GEN_LANGUAGE() {
         !intable { next }
         !/^    \{/ { next }
         {
+            raw = $0
             split($0, f, "\"")
             module = f[2]
             type = f[3]
             str = f[4]
+
+            start = index(raw, "LANG_OFF(")
+            rest = substr(raw, start + 9)
+            finish = index(rest, ")")
+            member = substr(rest, 1, finish - 1)
+            if (!start || !finish || module == "" || member == "" || str == "") {
+                printf "Invalid language field: %s\n", raw > "/dev/stderr"
+                errors++
+                next
+            }
+            if (member_seen[member]++) {
+                printf "Duplicate language destination: %s\n", member > "/dev/stderr"
+                errors++
+                next
+            }
 
             sub(/^, LANG_OFF\([^)]*\), /, "", type)
             sub(/,[ \t]*$/, "", type)
@@ -396,6 +412,7 @@ GEN_LANGUAGE() {
             if (!(module in modseen)) { modorder[++nmod] = module; modseen[module] = 1 }
         }
         END {
+            if (errors) exit 1
             for (i = 1; i <= nmod; i++) msort[i] = modorder[i]
             for (i = 2; i <= nmod; i++) {
                 v = msort[i]; j = i - 1

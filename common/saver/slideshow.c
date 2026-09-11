@@ -9,12 +9,14 @@
 #include <SDL2/SDL_ttf.h>
 #include <common/display/image.h>
 #include <common/runtime/log.h>
+#include <common/runtime/perf.h>
 #include <common/base/options.h>
 #include <common/saver/saver.h>
 #include <common/display/language.h>
 #include <common/saver/slideshow.h>
 
 #define CROSSFADE_MS 1500u
+#define SLIDESHOW_PATH_MAX 4096
 
 #define SLIDESHOW_FONT_FILE OPT_PATH "share/font/mucredits.ttf"
 
@@ -115,9 +117,21 @@ static void load_slide(slide_t *s, SDL_Renderer *renderer, const char *path, con
     if (s->tex) SDL_DestroyTexture(s->tex);
     memset(s, 0, sizeof(*s));
 
+    if (!saver_image_file_allowed(path)) {
+        LOG_WARN("saver", "Slideshow: rejected missing or oversized image");
+        return;
+    }
+
+    const uint64_t decode_start = fe_perf_begin();
     SDL_Surface *surf = IMG_Load(path);
+    fe_perf_end(fe_perf_stage_saver_decode, decode_start);
     if (!surf) {
         LOG_WARN("saver", "Slideshow: failed to load '%s': %s", path, IMG_GetError());
+        return;
+    }
+    if (!saver_image_dimensions_allowed(surf->w, surf->h)) {
+        LOG_WARN("saver", "Slideshow: rejected image dimensions %dx%d", surf->w, surf->h);
+        SDL_FreeSurface(surf);
         return;
     }
 
@@ -209,7 +223,13 @@ static void scan_dir(const char *dir, char ***paths, int *count, int *cap) {
     if (!d) return;
 
     struct dirent *entry;
+    int visited = 0;
     while ((entry = readdir(d)) != NULL) {
+        if (++visited > 16384) {
+            LOG_WARN("saver", "Slideshow: directory scan capped at 16384 entries");
+            break;
+        }
+        if (*count >= SLIDESHOW_PATH_MAX) break;
         if (entry->d_type != DT_REG && entry->d_type != DT_LNK && entry->d_type != DT_UNKNOWN) continue;
 
         const char *dot = strrchr(entry->d_name, '.');
@@ -247,7 +267,8 @@ int slideshow_init(
     char **paths = NULL;
     int count = 0, cap = 0;
 
-    for (int i = 0; i < dir_count; i++) {
+    const uint64_t scan_start = fe_perf_begin();
+    for (int i = 0; i < dir_count && count < SLIDESHOW_PATH_MAX; i++) {
         int dup = 0;
         for (int j = 0; j < i; j++) {
             if (strcmp(dirs[i], dirs[j]) == 0) {
@@ -257,6 +278,7 @@ int slideshow_init(
         }
         if (!dup) scan_dir(dirs[i], &paths, &count, &cap);
     }
+    fe_perf_end(fe_perf_stage_saver_scan, scan_start);
 
     if (count > 0) {
         qsort(paths, (size_t) count, sizeof(char *), path_cmp);
@@ -328,6 +350,7 @@ void slideshow_render(SDL_Renderer *renderer) {
 
     if (mod.path_count == 0) {
         render_empty_state(renderer);
+        saver_perf_note_draw_calls((unsigned) (1 + !!mod.tex_empty));
         return;
     }
 
@@ -345,6 +368,7 @@ void slideshow_render(SDL_Renderer *renderer) {
         SDL_SetTextureAlphaMod(mod.next.tex, (uint8_t) (ft * 255.0f));
         SDL_RenderCopy(renderer, mod.next.tex, NULL, &nr);
     }
+    saver_perf_note_draw_calls((unsigned) (1 + (mod.fading && mod.next.tex)));
 }
 
 int slideshow_active(void) {

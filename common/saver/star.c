@@ -307,6 +307,7 @@ void star_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active) return;
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    unsigned draw_calls = 0;
 
     for (int i = 0; i < STAR_DRIFTER_COUNT; i++) {
         const drifter_t *d = &mod.drifter[i];
@@ -323,6 +324,7 @@ void star_render(SDL_Renderer *renderer) {
             SDL_Rect rect = {x, y, d->size, d->size};
             SDL_RenderFillRect(renderer, &rect);
         }
+        draw_calls++;
     }
 
     const int32_t z_near_fp = STAR_Z_NEAR << SAVER_FRAME_SHF;
@@ -364,6 +366,7 @@ void star_render(SDL_Renderer *renderer) {
 
                 SDL_SetRenderDrawColor(renderer, s->r, s->g, s->b, (uint8_t) seg_alpha);
                 SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+                draw_calls++;
 
                 cur_idx = prev_idx;
             }
@@ -374,9 +377,11 @@ void star_render(SDL_Renderer *renderer) {
         SDL_SetRenderDrawColor(renderer, s->r, s->g, s->b, (uint8_t) alpha);
         SDL_Rect rect = {sx - size / 2, sy - size / 2, size, size};
         SDL_RenderFillRect(renderer, &rect);
+        draw_calls++;
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int star_active(void) {

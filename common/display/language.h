@@ -489,6 +489,11 @@ struct mux_lang {
         char textsize[MAX_BUFFER_SIZE];
         char legiblefont[MAX_BUFFER_SIZE];
         struct {
+            char full[MAX_BUFFER_SIZE];
+            char reduced[MAX_BUFFER_SIZE];
+            char off[MAX_BUFFER_SIZE];
+        } motion;
+        struct {
             char theme[MAX_BUFFER_SIZE];
             char large[MAX_BUFFER_SIZE];
             char larger[MAX_BUFFER_SIZE];
@@ -1460,6 +1465,8 @@ struct mux_lang {
         char check[MAX_BUFFER_SIZE];
         char forget[MAX_BUFFER_SIZE];
         char forget_confirm[MAX_BUFFER_SIZE];
+        char wifi[MAX_BUFFER_SIZE];
+        char internet[MAX_BUFFER_SIZE];
         struct {
             char associating[MAX_BUFFER_SIZE];
             char authenticating[MAX_BUFFER_SIZE];
@@ -1471,6 +1478,11 @@ struct mux_lang {
             char dhcp_failed[MAX_BUFFER_SIZE];
             char link_timeout[MAX_BUFFER_SIZE];
             char wpa_start_failed[MAX_BUFFER_SIZE];
+            char internet_checking[MAX_BUFFER_SIZE];
+            char internet_online[MAX_BUFFER_SIZE];
+            char internet_sign_in[MAX_BUFFER_SIZE];
+            char internet_timeout[MAX_BUFFER_SIZE];
+            char internet_unavailable[MAX_BUFFER_SIZE];
         } status;
         struct {
             char type[MAX_BUFFER_SIZE];

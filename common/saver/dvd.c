@@ -191,6 +191,7 @@ void dvd_render(SDL_Renderer *renderer) {
         SDL_SetTextureBlendMode(mod.tex, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(mod.tex, 255);
     }
+    saver_perf_note_draw_calls(mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD ? 2u : 1u);
 }
 
 int dvd_active(void) {

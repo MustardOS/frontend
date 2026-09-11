@@ -16,6 +16,7 @@
 #include <common/platform/display.h>
 #include <common/base/function_pointer.h>
 #include <common/ui/common.h>
+#include <common/ui/image.h>
 #include <common/storage/inotify.h>
 #include <common/storage/fileio.h>
 #include <common/saver/saver.h>
@@ -274,6 +275,14 @@ static int video_saver_running = 0;
 static int active_saver = -1;
 static saver_state_t video_saver_base;
 
+static const char *saver_type_name(const int type) {
+    static const char *const names[] = {
+        "disabled", "dvd",  "starfield", "matrix",   "firefly", "pulse_grid", "trace",  "constellation",
+        "mystify",  "maze", "blockfall", "datetime", "video",   "slideshow",  "boxart", "blue_screen",
+    };
+    return type >= 0 && type < (int) (sizeof(names) / sizeof(names[0])) ? names[type] : "unknown";
+}
+
 static int saver_active(void) {
     if (active_saver == saver_type_bsod) return bsod_active();
     if (active_saver == saver_type_boxart) return boxart_active();
@@ -340,6 +349,7 @@ static void saver_update(void) {
 static void saver_render(SDL_Renderer *r) {
     if (active_saver == saver_type_video) {
         video_wallpaper_render_frame(r);
+        saver_perf_note_draw_calls(1);
         return;
     }
     if (active_saver == saver_type_datetime)
@@ -707,20 +717,25 @@ void sdl_init(void) {
     SDL_SetTextureScaleMode(monitor.texture, SDL_ScaleModeNearest);
     update_blend_mode();
 
-    monitor.shadow_layer = SDL_CreateTexture(
-        monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
-    );
-    if (!monitor.shadow_layer) {
-        LOG_ERROR("video", "Shadow layer texture creation failed: %s", SDL_GetError());
-        exit(EXIT_FAILURE);
-    }
-    SDL_SetTextureBlendMode(monitor.shadow_layer, SDL_BLENDMODE_BLEND);
+    if (config.visual.render_shadows) {
+        monitor.shadow_layer = SDL_CreateTexture(
+            monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
+        );
+        if (!monitor.shadow_layer) {
+            LOG_WARN("video", "Shadow layer unavailable, continuing without shadows: %s", SDL_GetError());
+        } else {
+            SDL_SetTextureBlendMode(monitor.shadow_layer, SDL_BLENDMODE_BLEND);
 
-    /* Clear both render-target textures to transparent black */
-    SDL_SetRenderTarget(monitor.renderer, monitor.shadow_layer);
-    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
-    SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 0);
-    SDL_RenderFillRect(monitor.renderer, NULL);
+            SDL_SetRenderTarget(monitor.renderer, monitor.shadow_layer);
+            SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
+            SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 0);
+            SDL_RenderFillRect(monitor.renderer, NULL);
+        }
+    } else {
+        LOG_INFO("video", "Shadow render target disabled");
+    }
+
+    /* Clear the UI render-target texture to transparent black. */
 
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
     SDL_RenderFillRect(monitor.renderer, NULL);
@@ -743,6 +758,7 @@ void sdl_init(void) {
 }
 
 void sdl_cleanup(void) {
+    image_async_shutdown();
     anim_unload();
     if (active_saver == saver_type_video && video_saver_running) {
         video_wallpaper_stop();
@@ -795,22 +811,24 @@ static void render_saver_frame(void) {
     SDL_SetRenderDrawColor(monitor.renderer, theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255);
     SDL_RenderClear(monitor.renderer);
 
+    const uint64_t render_start = fe_perf_begin();
     saver_render(monitor.renderer);
+    fe_perf_end(fe_perf_stage_saver_render, render_start);
 
+    const uint64_t present_start = fe_perf_begin();
     SDL_RenderPresent(monitor.renderer);
+    fe_perf_end(fe_perf_stage_saver_present, present_start);
     present_serial++;
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
-#define SAVER_TARGET_FPS 30u
+static void advance_saver_deadline(uint32_t *deadline, uint32_t *remainder, const uint32_t target_fps) {
+    *deadline += 1000u / target_fps;
+    *remainder += 1000u % target_fps;
 
-static void advance_saver_deadline(uint32_t *deadline, uint32_t *remainder) {
-    *deadline += 1000u / SAVER_TARGET_FPS;
-    *remainder += 1000u % SAVER_TARGET_FPS;
-
-    if (*remainder >= SAVER_TARGET_FPS) {
+    if (*remainder >= target_fps) {
         *deadline += 1;
-        *remainder -= SAVER_TARGET_FPS;
+        *remainder -= target_fps;
     }
 }
 
@@ -867,13 +885,17 @@ static void run_saver_loop(int preview) {
     SDL_Event ev;
     uint32_t next_frame = SDL_GetTicks();
     uint32_t frame_remainder = 0;
+    const uint32_t target_fps = config.visual.reduce_motion == 1 ? 20u : 30u;
+    int static_frame_rendered = 0;
+    fe_perf_set_saver(saver_type_name(active_saver));
 
     while (preview || saver_active()) {
         if (stop_requested_query && stop_requested_query()) break;
 
         uint32_t now = SDL_GetTicks();
         const int32_t until_frame = (int32_t) (next_frame - now);
-        const int timeout = until_frame > 0 ? until_frame : 0;
+        int timeout = until_frame > 0 ? until_frame : 0;
+        if (config.visual.reduce_motion >= 2 && static_frame_rendered) timeout = 250;
 
         if (SDL_WaitEventTimeout(&ev, timeout)) {
             do {
@@ -892,18 +914,27 @@ static void run_saver_loop(int preview) {
 
         if (!preview && !saver_active()) break;
 
+        if (config.visual.reduce_motion >= 2 && static_frame_rendered) continue;
+
         now = SDL_GetTicks();
         if ((int32_t) (now - next_frame) < 0) continue;
 
+        const uint64_t update_start = fe_perf_begin();
         saver_update();
+        fe_perf_end(fe_perf_stage_saver_update, update_start);
 
         if (!preview && !saver_active()) break;
 
         render_saver_frame();
+        static_frame_rendered = 1;
         now = SDL_GetTicks();
+        unsigned skipped = 0;
         do {
-            advance_saver_deadline(&next_frame, &frame_remainder);
+            advance_saver_deadline(&next_frame, &frame_remainder, target_fps);
+            if ((int32_t) (now - next_frame) >= 0) skipped++;
         } while ((int32_t) (now - next_frame) >= 0);
+        if (skipped) fe_perf_note_saver_deadline_miss(skipped);
+        fe_perf_loop_complete();
     }
 
     status_poll();

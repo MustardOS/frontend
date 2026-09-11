@@ -325,6 +325,7 @@ void trace_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active) return;
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    unsigned draw_calls = 0;
 
     for (int i = 0; i < TRACE_SEG_COUNT; i++) {
         const seg_t *s = &mod.seg[i];
@@ -335,6 +336,7 @@ void trace_render(SDL_Renderer *renderer) {
 
         SDL_SetRenderDrawColor(renderer, s->r, s->g, s->b, (uint8_t) alpha);
         SDL_RenderDrawLine(renderer, s->x1, s->y1, s->x2, s->y2);
+        draw_calls += 5;
 
         const int halo = alpha / 3;
         SDL_SetRenderDrawColor(renderer, s->r, s->g, s->b, (uint8_t) halo);
@@ -345,6 +347,7 @@ void trace_render(SDL_Renderer *renderer) {
 
         if (mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) {
             draw_pad(renderer, s->x2, s->y2, s->r, s->g, s->b, (uint8_t) alpha);
+            draw_calls++;
         }
     }
 
@@ -356,6 +359,7 @@ void trace_render(SDL_Renderer *renderer) {
         const int y = h->fy >> SAVER_FRAME_SHF;
 
         draw_pad(renderer, x, y, 255, 255, 255, 220);
+        draw_calls += 2;
 
         SDL_SetRenderDrawColor(renderer, h->r, h->g, h->b, 96);
 
@@ -367,6 +371,7 @@ void trace_render(SDL_Renderer *renderer) {
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int trace_active(void) {

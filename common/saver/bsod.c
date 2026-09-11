@@ -369,6 +369,7 @@ void bsod_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active || !mod.font) return;
 
     if (mod.state == bsod_state_crash) {
+        unsigned draw_calls = 3;
         SDL_SetRenderDrawColor(renderer, BSOD_BG_R, BSOD_BG_G, BSOD_BG_B, 255);
         SDL_RenderFillRect(renderer, NULL);
 
@@ -384,30 +385,38 @@ void bsod_render(SDL_Renderer *renderer) {
                 mod.title_w, mod.title_h
             };
             SDL_RenderCopy(renderer, mod.tex_title, NULL, &dst);
+            draw_calls++;
         }
 
         if (mod.tex_body) {
             const SDL_Rect dst = {mod.body_x, mod.body_y, mod.body_w, mod.body_h};
             SDL_RenderCopy(renderer, mod.tex_body, NULL, &dst);
+            draw_calls++;
         }
 
         if (mod.footer_visible) {
             const SDL_Rect dst = {(mod.base.screen_w - mod.footer_w) / 2, mod.footer_y, mod.footer_w, mod.footer_h};
             SDL_RenderCopy(renderer, mod.tex_footer, NULL, &dst);
+            draw_calls++;
         }
+        saver_perf_note_draw_calls(draw_calls);
     } else {
+        unsigned draw_calls = 1;
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderFillRect(renderer, NULL);
 
         if (mod.tex_reboot) {
             const SDL_Rect dst = {mod.reboot_x, mod.reboot_y, mod.reboot_w, mod.reboot_h};
             SDL_RenderCopy(renderer, mod.tex_reboot, NULL, &dst);
+            draw_calls++;
         }
 
         if (mod.cursor_on && mod.tex_cursor) {
             const SDL_Rect dst = {mod.cursor_x, mod.cursor_y, mod.cursor_w, mod.cursor_h};
             SDL_RenderCopy(renderer, mod.tex_cursor, NULL, &dst);
+            draw_calls++;
         }
+        saver_perf_note_draw_calls(draw_calls);
     }
 }
 

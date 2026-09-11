@@ -21,6 +21,8 @@ typedef struct {
     drop_t *drop;
     int cell;
     int columns;
+    SDL_Rect *rect_batch;
+    size_t batch_capacity;
 } matrix_module_t;
 
 static matrix_module_t mod = {0};
@@ -91,6 +93,10 @@ static void rebuild_columns(void) {
         return;
     }
 
+    free(mod.rect_batch);
+    mod.batch_capacity = (size_t) mod.columns * 32u;
+    mod.rect_batch = malloc(mod.batch_capacity * 12u * sizeof(*mod.rect_batch));
+
     seed_all();
 }
 
@@ -139,6 +145,83 @@ void matrix_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active || !mod.drop) return;
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    if (mod.base.speed < SAVER_SPEED_COLOUR_THRESHOLD && mod.rect_batch) {
+        int counts[12] = {0};
+        const uint8_t mid_r = (uint8_t) ((255 + mod.base.colour_r) / 2);
+        const uint8_t mid_g = (uint8_t) ((255 + mod.base.colour_g) / 2);
+        const uint8_t mid_b = (uint8_t) ((255 + mod.base.colour_b) / 2);
+
+        for (int i = 0; i < mod.columns; i++) {
+            const drop_t *d = &mod.drop[i];
+            const int head_y = d->y >> SAVER_FRAME_SHF;
+            int first_j = head_y >= mod.base.screen_h ? (head_y - (mod.base.screen_h - 1)) / mod.cell : 0;
+            if (first_j < 0) first_j = 0;
+            int last_j = d->len - 1;
+            const int max_visible = head_y / mod.cell + 1;
+            if (last_j > max_visible) last_j = max_visible;
+
+            for (int j = first_j; j <= last_j; j++) {
+                const int y = head_y - j * mod.cell;
+                if (y + mod.cell < 0 || y >= mod.base.screen_h) continue;
+                int group;
+                if (j == 0)
+                    group = 8;
+                else if (j == 1)
+                    group = 9;
+                else {
+                    const int t = (j * 1024) / d->len;
+                    int alpha = 16 + ((1024 - t * t / 1024) * 160) / 1024;
+                    if (alpha < 16) alpha = 16;
+                    if (alpha > 200) alpha = 200;
+                    group = alpha >> 5;
+                    if (group > 7) group = 7;
+                }
+                if ((size_t) counts[group] >= mod.batch_capacity) continue;
+                SDL_Rect rect = {d->x + 1, y + 1, mod.cell - 2, mod.cell - 2};
+                if (rect.w < 1) rect.w = 1;
+                if (rect.h < 1) rect.h = 1;
+                mod.rect_batch[(size_t) group * mod.batch_capacity + (size_t) counts[group]++] = rect;
+            }
+
+            if (head_y >= 0 && head_y < mod.base.screen_h && (size_t) counts[10] < mod.batch_capacity) {
+                const int bloom_size = mod.cell + 4;
+                mod.rect_batch[10u * mod.batch_capacity + (size_t) counts[10]++] =
+                    (SDL_Rect) {d->x + (mod.cell - bloom_size) / 2, head_y + (mod.cell - bloom_size) / 2, bloom_size,
+                                bloom_size};
+            }
+        }
+
+        unsigned calls = 0;
+        for (int group = 0; group < 8; group++) {
+            if (!counts[group]) continue;
+            SDL_SetRenderDrawColor(
+                renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, (uint8_t) (group * 32 + 16)
+            );
+            SDL_RenderFillRects(renderer, &mod.rect_batch[(size_t) group * mod.batch_capacity], counts[group]);
+            calls++;
+        }
+        if (counts[8]) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            SDL_RenderFillRects(renderer, &mod.rect_batch[8u * mod.batch_capacity], counts[8]);
+            calls++;
+        }
+        if (counts[9]) {
+            SDL_SetRenderDrawColor(renderer, mid_r, mid_g, mid_b, 220);
+            SDL_RenderFillRects(renderer, &mod.rect_batch[9u * mod.batch_capacity], counts[9]);
+            calls++;
+        }
+        if (counts[10]) {
+            SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, 90);
+            SDL_RenderFillRects(renderer, &mod.rect_batch[10u * mod.batch_capacity], counts[10]);
+            calls++;
+        }
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        saver_perf_note_draw_calls(calls);
+        return;
+    }
+
+    unsigned draw_calls = 0;
 
     for (int i = 0; i < mod.columns; i++) {
         const drop_t *d = &mod.drop[i];
@@ -199,6 +282,7 @@ void matrix_render(SDL_Renderer *renderer) {
 
             SDL_SetRenderDrawColor(renderer, r, g, b, (uint8_t) alpha);
             SDL_RenderFillRect(renderer, &rect);
+            draw_calls++;
         }
 
         if (head_y >= 0 && head_y < mod.base.screen_h) {
@@ -209,10 +293,12 @@ void matrix_render(SDL_Renderer *renderer) {
 
             SDL_SetRenderDrawColor(renderer, d->r, d->g, d->b, 90);
             SDL_RenderFillRect(renderer, &bloom);
+            draw_calls++;
         }
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int matrix_active(void) {
@@ -227,5 +313,8 @@ void matrix_shutdown(void) {
     free(mod.drop);
     mod.drop = NULL;
     mod.columns = 0;
+    free(mod.rect_batch);
+    mod.rect_batch = NULL;
+    mod.batch_capacity = 0;
     saver_shutdown_base(&mod.base);
 }

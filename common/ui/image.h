@@ -51,3 +51,7 @@ void unload_image_animation(void);
 void clear_image(lv_obj_t *ui_img_obj);
 
 void update_image(lv_obj_t *ui_img_obj, struct image_settings image_settings);
+
+void image_async_tick(void);
+
+void image_async_shutdown(void);

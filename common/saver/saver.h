@@ -74,3 +74,9 @@ void saver_stop_base(saver_state_t *s);
 void saver_shutdown_base(saver_state_t *s);
 
 void saver_pastel_pick(int idx, uint8_t *r, uint8_t *g, uint8_t *b);
+
+void saver_perf_note_draw_calls(unsigned count);
+
+int saver_image_file_allowed(const char *path);
+
+int saver_image_dimensions_allowed(int width, int height);

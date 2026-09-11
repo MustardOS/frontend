@@ -323,6 +323,7 @@ void firefly_render(SDL_Renderer *renderer) {
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(FIREFLY_COUNT * 3u);
 }
 
 int firefly_active(void) {

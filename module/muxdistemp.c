@@ -181,11 +181,11 @@ static int is_temp_row(void) {
            || focused == ui_dro_temp_distemp;
 }
 
-static void refresh_x_nav(void) {
+static void refresh_set_nav(void) {
     const int show = is_temp_row();
     const struct nav_flag nav_e[] = {
-        {ui_lbl_nav_x_glyph, show},
-        {ui_lbl_nav_x, show},
+        {ui_lbl_nav_a_glyph, show},
+        {ui_lbl_nav_a, show},
     };
     set_nav_flags(nav_e, A_SIZE(nav_e));
     footer_nav_check_scroll();
@@ -245,7 +245,7 @@ static void handle_dpad_up(void) {
     }
 
     handle_list_nav_up();
-    refresh_x_nav();
+    refresh_set_nav();
 }
 
 static void handle_dpad_down(void) {
@@ -258,7 +258,7 @@ static void handle_dpad_down(void) {
     }
 
     handle_list_nav_down();
-    refresh_x_nav();
+    refresh_set_nav();
 }
 
 static void handle_dpad_up_hold(void) {
@@ -268,6 +268,7 @@ static void handle_dpad_up_hold(void) {
     }
 
     handle_list_nav_up_hold();
+    refresh_set_nav();
 }
 
 static void handle_dpad_down_hold(void) {
@@ -277,6 +278,7 @@ static void handle_dpad_down_hold(void) {
     }
 
     handle_list_nav_down_hold();
+    refresh_set_nav();
 }
 
 static void handle_a(void) {
@@ -302,6 +304,14 @@ static void handle_a(void) {
     }
 
     if (msgbox_active || hold_call) return;
+
+    if (is_temp_row()) {
+        const int temp = (int) lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) - 255;
+
+        play_sound(snd_confirm);
+        apply_colour_temp(temp);
+        return;
+    }
 
     handle_option_next();
 }
@@ -346,15 +356,7 @@ static void handle_help(void) {
 }
 
 static void handle_x(void) {
-    if (orientation_handle_skip()) return;
-
-    if (dialogue_active(&save_dlg) || msgbox_active || hold_call) return;
-    if (!is_temp_row()) return;
-
-    const int temp = (int) lv_dropdown_get_selected(lv_group_get_focused(ui_group_value)) - 255;
-
-    play_sound(snd_confirm);
-    apply_colour_temp(temp);
+    orientation_handle_skip();
 }
 
 static void init_elements(void) {
@@ -362,10 +364,10 @@ static void init_elements(void) {
 
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                   {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.set, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.generic.set, 0},
                                   {NULL, NULL, 0}});
 
 #define DISTEMP(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_distemp, UDATA);
@@ -395,7 +397,7 @@ int muxdistemp_main(void) {
     init_dropdown_settings();
 
     refresh_navigation();
-    refresh_x_nav();
+    refresh_set_nav();
 
     dialogue_init_unsaved(
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,

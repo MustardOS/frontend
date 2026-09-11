@@ -671,6 +671,7 @@ static void init_navigation_group(void) {
         -1, visual, video_preview, lang.muxcontent.video_preview.title, "videopreview", video_preview_options, 4
     );
     INIT_OPTION_ITEM(-1, visual, page_skip, lang.muxvisual.pageskip, "pageskip", page_skip_options, 2);
+    INIT_OPTION_ITEM(-1, visual, shuffle, lang.muxcontent.shuffle, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, box_art, lang.muxcontent.box_art.title, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, visual, box_art_align, lang.muxcontent.box_art.align.title, "align", boxart_align, 9);
     INIT_OPTION_ITEM(
@@ -693,7 +694,7 @@ static void init_navigation_group(void) {
         -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
         disabled_enabled, 2
     );
-    INIT_OPTION_ITEM(-1, visual, shuffle, lang.muxcontent.shuffle, "shuffle", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, black_fade, lang.muxcustom.blackfade, "blackfade", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, catalogue, lang.muxcustom.catalogue, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, config, lang.muxcustom.config, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, logo, lang.muxcustom.logo, "logo", NULL, 0);
@@ -714,7 +715,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(
         -1, custom, background_scale, lang.muxcustom.backgroundscale, "backgroundscale", background_scale_options, 3
     );
-    INIT_OPTION_ITEM(-1, custom, black_fade, lang.muxcustom.blackfade, "blackfade", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, music, lang.muxcustom.music.title, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, music_volume, lang.muxcustom.music.volume, "musicvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, sound, lang.muxcustom.sound.title, "sound", sound_options, 3);
@@ -815,11 +815,12 @@ static void init_navigation_group(void) {
     static const list_frame frames[] = {
         {lang.muxvisual.section.header_bar, 0, 7},  {lang.muxvisual.section.appearance, 7, 8},
         {lang.muxvisual.section.labels, 15, 7},     {lang.muxvisual.section.font, 22, 6},
-        {lang.muxvisual.section.folders, 28, 6},    {lang.muxvisual.section.content, 34, 8},
-        {lang.muxvisual.section.box_art, 42, 8},    {lang.muxvisual.section.launching, 50, 4},
-        {lang.muxcustom.section.packages, 54, 3},   {lang.muxcustom.section.theme, 57, 5},
-        {lang.muxcustom.section.layout, 62, 4},     {lang.muxcustom.section.glyphs, 66, 4},
-        {lang.muxcustom.section.background, 70, 3}, {lang.muxcustom.section.audio, 73, 5},
+        {lang.muxvisual.section.folders, 28, 6},   {lang.muxvisual.section.content, 34, 9},
+        {lang.muxvisual.section.box_art, 43, 7},   {lang.muxvisual.section.grid, 50, 2},
+        {lang.muxvisual.section.launching, 52, 4}, {lang.muxcustom.section.packages, 56, 2},
+        {lang.muxcustom.section.theme, 58, 5},     {lang.muxcustom.section.layout, 63, 5},
+        {lang.muxcustom.section.glyphs, 68, 4},    {lang.muxcustom.section.background, 72, 2},
+        {lang.muxcustom.section.audio, 74, 5},
     };
 
     list_frame_init(
@@ -1334,6 +1335,7 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_width
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // video_preview
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // page_skip
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // shuffle
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_align
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_transition
@@ -1345,8 +1347,8 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_hide
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launch_swap
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launchsplash
-    {NULL, NULL, &kiosk_pass, menu_option, NULL},
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // shuffle
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // pickles_startup_messages
+    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // black_fade
     {"catalogue", "package/catalogue", &kiosk.custom.catalogue, menu_catalogue, NULL},
     {"config", "package/config", &kiosk.custom.raconfig, menu_config, NULL},
     {"logo", NULL, &kiosk_pass, menu_logo, NULL},
@@ -1365,7 +1367,6 @@ static const menu_entry custom_menu_entries[ui_count_dynamic] = {
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // glyph_grid
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // video_wallpaper
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // background_scale
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // black_fade
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // music
     {NULL, NULL, &kiosk_pass, menu_music_volume, NULL},
     {NULL, NULL, &kiosk_pass, menu_option, NULL}, // sound

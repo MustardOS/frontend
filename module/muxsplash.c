@@ -28,7 +28,7 @@ int muxsplash_main(char *splash_image, const int apply_recolour) {
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);
 
-    refresh_screen(ui_screen, 3);
+    refresh_screen(ui_screen, 1);
 
     return 0;
 }

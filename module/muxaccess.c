@@ -163,8 +163,8 @@ static void restore_access_options(void) {
     lv_dropdown_set_selected(ui_dro_legible_font_access, legible_font_index());
 }
 
-static void preset_motion(const int reduced) {
-    if (!reduced) {
+static void preset_motion(const int mode) {
+    if (!mode) {
         for (size_t i = 0; i < A_SIZE(motion_keys); i++)
             revert_int(motion_keys[i]);
 
@@ -173,10 +173,23 @@ static void preset_motion(const int reduced) {
         return;
     }
 
-    for (size_t i = 0; i < A_SIZE(motion_keys); i++)
-        preset_int(motion_keys[i], 0);
-
-    preset_int("visual/boxarttransition", 13);
+    if (mode == 1) {
+        preset_int("visual/elementtransition", 0);
+        preset_int("visual/selectionanimation", 1);
+        preset_int("visual/blackfade", 1);
+        preset_int("visual/namescroll", 0);
+        preset_int("visual/video_wallpaper", 0);
+        preset_int("visual/videopreview", 0);
+        preset_int("visual/boxarttransition", 0);
+    } else {
+        preset_int("visual/elementtransition", 13);
+        preset_int("visual/selectionanimation", 0);
+        preset_int("visual/blackfade", 0);
+        preset_int("visual/namescroll", 0);
+        preset_int("visual/video_wallpaper", 0);
+        preset_int("visual/videopreview", 0);
+        preset_int("visual/boxarttransition", 13);
+    }
 }
 
 static void preset_bold(const int bold) {
@@ -247,11 +260,12 @@ static void save_access_options(void) {
 }
 
 static void init_navigation_group(void) {
+    char *motion_options[] = {lang.muxaccess.motion.full, lang.muxaccess.motion.reduced, lang.muxaccess.motion.off};
     char *text_size_options[] = {
         lang.muxaccess.size.theme, lang.muxaccess.size.large, lang.muxaccess.size.larger, lang.muxaccess.size.largest
     };
 
-    INIT_OPTION_ITEM(-1, access, reduce_motion, lang.muxaccess.reducemotion, "reducemotion", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, access, reduce_motion, lang.muxaccess.reducemotion, "reducemotion", motion_options, 3);
     INIT_OPTION_ITEM(-1, access, high_contrast, lang.muxaccess.highcontrast, "highcontrast", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, access, bold_focus, lang.muxaccess.boldfocus, "boldfocus", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, access, text_size, lang.muxaccess.textsize, "textsize", text_size_options, 4);

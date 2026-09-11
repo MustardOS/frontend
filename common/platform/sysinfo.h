@@ -7,6 +7,17 @@ int is_network_connected(void);
 
 int get_network_signal_percent(void);
 
+enum network_reachability {
+    network_reachability_unknown = 0,
+    network_reachability_checking,
+    network_reachability_online,
+    network_reachability_sign_in,
+    network_reachability_timeout,
+    network_reachability_unavailable,
+};
+
+int get_network_reachability(void);
+
 int get_network_ipv4_address(char *output, size_t output_size);
 
 int get_any_ipv4_address(char *output, size_t output_size);

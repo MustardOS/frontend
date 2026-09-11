@@ -1138,6 +1138,20 @@ static void render_splash_refresh(lv_obj_t *ui_img_splash, char *image, int *spl
     lv_img_set_src(ui_img_splash, image_path);
 }
 
+static void resolve_box_art_padding(const int box_h, int *pad_left, int *pad_right, int *pad_top, int *pad_bottom) {
+    const int explicit_align = config.visual.box_art_align > 0;
+    static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
+
+    const int pad_div_idx = config.settings.advanced.box_art_pad_div;
+    const int pad_div = pad_div_idx >= 0 && pad_div_idx < 6 ? pad_div_map[pad_div_idx] : 400;
+    const int user_pad = config.visual.box_art_padding > 0 ? box_h * config.visual.box_art_padding / pad_div : 0;
+
+    *pad_left = (explicit_align ? 0 : theme.image_list.pad_left) + user_pad;
+    *pad_right = (explicit_align ? 0 : theme.image_list.pad_right) + user_pad;
+    *pad_top = (explicit_align ? 0 : theme.image_list.pad_top) + user_pad;
+    *pad_bottom = (explicit_align ? 0 : theme.image_list.pad_bottom) + user_pad;
+}
+
 static void render_box_single(const char *image, int *starter_image) {
     if (!file_exist(image)) {
         apply_box_blank_or_fallback(NULL, starter_image);
@@ -1155,18 +1169,11 @@ static void render_box_single(const char *image, int *starter_image) {
 
     const int16_t max_w = (int16_t) (config.visual.box_art_scale > 0 ? box_w * config.visual.box_art_scale / 100 : 0);
 
-    const int explicit_align = config.visual.box_art_align > 0;
-    static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
-
-    const int pad_div_idx = config.settings.advanced.box_art_pad_div;
-    const int pad_div = pad_div_idx >= 0 && pad_div_idx < 6 ? pad_div_map[pad_div_idx] : 400;
-
-    const int user_pad = config.visual.box_art_padding > 0 ? box_h * config.visual.box_art_padding / pad_div : 0;
-
-    const int pad_l = (explicit_align ? 0 : theme.image_list.pad_left) + user_pad;
-    const int pad_r = (explicit_align ? 0 : theme.image_list.pad_right) + user_pad;
-    const int pad_t = (explicit_align ? 0 : theme.image_list.pad_top) + user_pad;
-    const int pad_b = (explicit_align ? 0 : theme.image_list.pad_bottom) + user_pad;
+    int pad_l;
+    int pad_r;
+    int pad_t;
+    int pad_b;
+    resolve_box_art_padding(box_h, &pad_l, &pad_r, &pad_t, &pad_b);
 
     char image_path[MAX_BUFFER_SIZE];
     const size_t ilen = strlen(image);
@@ -1322,18 +1329,26 @@ void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], 
 
     *starter_image = 1;
 
-    const int panel_height = config.visual.box_art == 2 || config.visual.box_art == 3
-                                 ? device.mux.height
-                                 : device.mux.height - theme.header.height - theme.footer.height - 4;
+    int panel_height = config.visual.box_art == 2 || config.visual.box_art == 3
+                           ? device.mux.height
+                           : device.mux.height - theme.header.height - theme.footer.height - 4;
+    if (panel_height <= 0) panel_height = device.mux.height;
+
+    int pad_l;
+    int pad_r;
+    int pad_t;
+    int pad_b;
+    resolve_box_art_padding(panel_height, &pad_l, &pad_r, &pad_t, &pad_b);
+
     const struct image_settings image_settings = {
         image,
-        LV_ALIGN_BOTTOM_RIGHT,
+        config.visual.box_art_align,
         validate_int16((int16_t) (device.mux.width * 42 / 100), "width"),
-        validate_int16((int16_t) ((panel_height > 0 ? panel_height : device.mux.height) * 42 / 100), "height"),
-        0,
-        theme.image_list.pad_right,
-        0,
-        theme.image_list.pad_bottom
+        validate_int16((int16_t) (panel_height * 42 / 100), "height"),
+        validate_int16((int16_t) pad_l, "pad_left"),
+        validate_int16((int16_t) pad_r, "pad_right"),
+        validate_int16((int16_t) pad_t, "pad_top"),
+        validate_int16((int16_t) pad_b, "pad_bottom")
     };
     update_image(ui_img_box, image_settings);
     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);

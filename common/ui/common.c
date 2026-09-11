@@ -1606,7 +1606,7 @@ void ui_common_handle_idle(void) {
         lv_obj_invalidate(ui_pnl_footer);
         lv_obj_invalidate(ui_screen);
 
-        refresh_screen(ui_screen, 3);
+        refresh_screen(ui_screen, 1);
         need_update = 1;
     }
 
@@ -1985,7 +1985,7 @@ void toast_present(const char *msg, const uint32_t delay, const uint32_t border)
 
     if (delay == tst_wait_f) {
         lv_obj_move_foreground(ui_pnl_message);
-        refresh_screen(ui_screen, 3);
+        refresh_screen(ui_screen, 1);
         usleep(256);
     }
 }

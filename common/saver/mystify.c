@@ -262,6 +262,7 @@ void mystify_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active) return;
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    unsigned draw_calls = 0;
 
     for (int pi = 0; pi < mod.poly_count; pi++) {
         const myst_poly_t *p = &mod.poly[pi];
@@ -286,6 +287,7 @@ void mystify_render(SDL_Renderer *renderer) {
                 renderer, p->trail_x[idx], p->trail_y[idx], p->trail_r[idx], p->trail_g[idx], p->trail_b[idx],
                 (uint8_t) alpha
             );
+            draw_calls += MYST_VERT_COUNT;
         }
 
         int16_t live_x[MYST_VERT_COUNT], live_y[MYST_VERT_COUNT];
@@ -295,9 +297,11 @@ void mystify_render(SDL_Renderer *renderer) {
         }
 
         render_polygon_outline(renderer, live_x, live_y, p->r, p->g, p->b, 240);
+        draw_calls += MYST_VERT_COUNT;
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int mystify_active(void) {

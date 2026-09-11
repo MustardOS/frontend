@@ -15,6 +15,11 @@ enum fe_perf_stage {
     fe_perf_stage_lv_task,
     fe_perf_stage_render,
     fe_perf_stage_idle,
+    fe_perf_stage_saver_update,
+    fe_perf_stage_saver_render,
+    fe_perf_stage_saver_present,
+    fe_perf_stage_saver_scan,
+    fe_perf_stage_saver_decode,
     fe_perf_stage_count
 };
 
@@ -34,6 +39,14 @@ void fe_perf_record(enum fe_perf_stage stage, double ms);
 
 void fe_perf_loop_complete(void);
 
+void fe_perf_set_saver(const char *name);
+
+void fe_perf_note_saver_draw_calls(unsigned count);
+
+void fe_perf_note_saver_deadline_miss(unsigned count);
+
 int fe_perf_export_trace(const char *path);
+
+int fe_perf_export_support(const char *path);
 
 void fe_perf_flush(void);

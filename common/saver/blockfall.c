@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include <common/display/theme.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/blockfall.h>
@@ -24,6 +25,8 @@ typedef struct {
     int cols, rows;
 
     uint8_t *grid;
+    SDL_Texture *grid_texture;
+    int board_dirty;
     piece_t piece;
 
     int cell, board_x, board_y, board_w, board_h;
@@ -96,6 +99,7 @@ static void refresh_speed_factor(void) {
 
 static void clear_board(void) {
     if (mod.grid) memset(mod.grid, 0, (size_t) mod.cols * mod.rows);
+    mod.board_dirty = 1;
 }
 
 static void spawn_piece(void) {
@@ -135,6 +139,7 @@ static void lock_piece(void) {
     }
 
     if (row_max >= 0) {
+        mod.board_dirty = 1;
         mod.lock_flash_until = SDL_GetTicks() + 120;
         mod.lock_flash_row_min = row_min;
         mod.lock_flash_row_max = row_max;
@@ -233,12 +238,19 @@ static void on_idle_enter(void *user) {
 }
 
 int blockfall_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
-    (void) renderer;
-
     saver_init_base(&mod.base, screen_w, screen_h, "Block Fall", 153, 255, 220, on_speed_changed, on_idle_enter, &mod);
 
     refresh_speed_factor();
     recompute_layout();
+    if (mod.base.enabled) {
+        mod.grid_texture =
+            SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, mod.board_w, mod.board_h);
+        if (mod.grid_texture) {
+            SDL_SetTextureBlendMode(mod.grid_texture, SDL_BLENDMODE_NONE);
+        } else {
+            LOG_WARN("saver", "Block Fall grid cache unavailable: %s", SDL_GetError());
+        }
+    }
     clear_board();
     spawn_piece();
 
@@ -308,6 +320,45 @@ static void draw_cell(SDL_Renderer *renderer, int gx, int gy, int id, int alpha)
     SDL_RenderDrawLine(renderer, rect.x, rect.y, rect.x, rect.y + rect.h);
 }
 
+static void rebuild_board_texture(SDL_Renderer *renderer) {
+    if (!mod.grid_texture || !mod.board_dirty) return;
+
+    SDL_Texture *old_target = SDL_GetRenderTarget(renderer);
+    const int old_x = mod.board_x;
+    const int old_y = mod.board_y;
+    mod.board_x = 0;
+    mod.board_y = 0;
+
+    SDL_SetRenderTarget(renderer, mod.grid_texture);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(renderer, theme.sdl.solid.r, theme.sdl.solid.g, theme.sdl.solid.b, 255);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    if (mod.cell >= 10) {
+        const size_t count = (size_t) mod.cols * (size_t) mod.rows;
+        SDL_Rect *dots = malloc(count * sizeof(*dots));
+        if (dots) {
+            size_t used = 0;
+            for (int y = 0; y < mod.rows; y++)
+                for (int x = 0; x < mod.cols; x++)
+                    dots[used++] = (SDL_Rect) {x * mod.cell + mod.cell / 2, y * mod.cell + mod.cell / 2, 1, 1};
+            SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, 10);
+            SDL_RenderFillRects(renderer, dots, (int) used);
+            free(dots);
+        }
+    }
+
+    for (int y = 0; y < mod.rows; y++)
+        for (int x = 0; x < mod.cols; x++)
+            if (mod.grid[y * mod.cols + x]) draw_cell(renderer, x, y, mod.grid[y * mod.cols + x], 180);
+
+    SDL_SetRenderTarget(renderer, old_target);
+    mod.board_x = old_x;
+    mod.board_y = old_y;
+    mod.board_dirty = 0;
+}
+
 void blockfall_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active || !mod.grid) return;
 
@@ -316,16 +367,24 @@ void blockfall_render(SDL_Renderer *renderer) {
     uint32_t now = SDL_GetTicks();
     int flash_active = now < mod.lock_flash_until;
     int flash_alpha_boost = 0;
+    unsigned draw_calls = 0;
 
     if (flash_active) {
         int remaining = (int) (mod.lock_flash_until - now);
         flash_alpha_boost = (remaining * 60) / 120;
     }
 
+    if (mod.grid_texture) {
+        rebuild_board_texture(renderer);
+        const SDL_Rect dst = {mod.board_x, mod.board_y, mod.board_w, mod.board_h};
+        SDL_RenderCopy(renderer, mod.grid_texture, NULL, &dst);
+        draw_calls++;
+    }
+
     for (int y = 0; y < mod.rows; y++) {
         for (int x = 0; x < mod.cols; x++) {
             uint8_t id = mod.grid[y * mod.cols + x];
-            if (id) {
+            if (id && !mod.grid_texture) {
                 int alpha = 180;
                 if (flash_active && y >= mod.lock_flash_row_min && y <= mod.lock_flash_row_max) {
                     alpha += flash_alpha_boost;
@@ -333,12 +392,18 @@ void blockfall_render(SDL_Renderer *renderer) {
                 }
 
                 draw_cell(renderer, x, y, id, alpha);
-            } else if (mod.cell >= 10) {
+                draw_calls += 3;
+            } else if (id && mod.grid_texture && flash_active && y >= mod.lock_flash_row_min
+                       && y <= mod.lock_flash_row_max && flash_alpha_boost > 0) {
+                draw_cell(renderer, x, y, id, flash_alpha_boost);
+                draw_calls += 3;
+            } else if (!mod.grid_texture && mod.cell >= 10) {
                 SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, 10);
                 SDL_Rect dot = {
                     mod.board_x + x * mod.cell + mod.cell / 2, mod.board_y + y * mod.cell + mod.cell / 2, 1, 1
                 };
                 SDL_RenderFillRect(renderer, &dot);
+                draw_calls++;
             }
         }
     }
@@ -351,10 +416,12 @@ void blockfall_render(SDL_Renderer *renderer) {
             int gy = p->y + y;
             if (gx < 0 || gx >= mod.cols || gy < 0 || gy >= mod.rows) continue;
             draw_cell(renderer, gx, gy, p->shape + 1, 230);
+            draw_calls += 3;
         }
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int blockfall_active(void) {
@@ -366,6 +433,10 @@ void blockfall_stop(void) {
 }
 
 void blockfall_shutdown(void) {
+    if (mod.grid_texture) {
+        SDL_DestroyTexture(mod.grid_texture);
+        mod.grid_texture = NULL;
+    }
     free(mod.grid);
     mod.grid = NULL;
     mod.cols = 0;

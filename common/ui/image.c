@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <sys/stat.h>
+#include <SDL2/SDL_image.h>
+#if defined(__aarch64__)
+#include <arm_neon.h>
+#endif
 #include <common/runtime/init.h>
 #include <common/runtime/perf.h>
 #include <common/ui/common.h>
@@ -16,6 +23,349 @@
 char current_wall[MAX_BUFFER_SIZE];
 
 static void read_image_dims(const char *path, int *w, int *h);
+static void free_scaled_raster(lv_obj_t *ui_img_obj);
+
+#define IMAGE_JOB_CAPACITY 16
+#define IMAGE_CACHE_COUNT  6
+#define IMAGE_CACHE_BUDGET (24u * 1024u * 1024u)
+
+typedef struct {
+    lv_obj_t *obj;
+    uint64_t generation;
+    char path[MAX_BUFFER_SIZE];
+    int tw, th, align, pad_l, pad_r, pad_t, pad_b;
+} image_job_t;
+
+typedef struct {
+    image_job_t job;
+    uint8_t *pixels;
+    size_t bytes;
+    double work_ms;
+} image_result_t;
+
+typedef struct {
+    lv_obj_t *obj;
+    uint64_t generation;
+} image_generation_t;
+
+typedef struct {
+    char path[MAX_BUFFER_SIZE];
+    int tw, th;
+    off_t file_size;
+    time_t mtime;
+    uint8_t *pixels;
+    size_t bytes;
+    uint64_t used;
+} image_cache_t;
+
+static pthread_mutex_t image_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t image_cond = PTHREAD_COND_INITIALIZER;
+static pthread_t image_thread;
+static int image_thread_started;
+static int image_thread_stop;
+static image_job_t image_jobs[IMAGE_JOB_CAPACITY];
+static int image_job_count;
+static image_result_t image_results[IMAGE_JOB_CAPACITY];
+static int image_result_count;
+static image_generation_t image_generations[IMAGE_JOB_CAPACITY * 2];
+static unsigned image_generation_replace;
+static image_cache_t image_cache[IMAGE_CACHE_COUNT];
+static size_t image_cache_bytes;
+static uint64_t image_cache_serial;
+
+static uint64_t image_next_generation(lv_obj_t *obj) {
+    uint64_t generation = 1;
+    pthread_mutex_lock(&image_lock);
+    int slot = -1;
+    for (size_t i = 0; i < A_SIZE(image_generations); i++) {
+        if (image_generations[i].obj == obj) {
+            slot = (int) i;
+            break;
+        }
+        if (slot < 0 && !image_generations[i].obj) slot = (int) i;
+    }
+    if (slot < 0) slot = (int) (image_generation_replace++ % A_SIZE(image_generations));
+    image_generations[slot].obj = obj;
+    generation = ++image_generations[slot].generation;
+    pthread_mutex_unlock(&image_lock);
+    return generation;
+}
+
+static int image_generation_current(lv_obj_t *obj, const uint64_t generation) {
+    int current = 0;
+    pthread_mutex_lock(&image_lock);
+    for (size_t i = 0; i < A_SIZE(image_generations); i++) {
+        if (image_generations[i].obj == obj) {
+            current = image_generations[i].generation == generation;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&image_lock);
+    return current;
+}
+
+static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
+    struct stat st;
+    if (stat(job->path, &st) != 0 || st.st_size <= 0 || st.st_size > 32 * 1024 * 1024) return NULL;
+    if (job->tw <= 0 || job->th <= 0 || job->tw > 1920 || job->th > 1920 || (int64_t) job->tw * job->th > 1920 * 1080)
+        return NULL;
+
+    for (int i = 0; i < IMAGE_CACHE_COUNT; i++) {
+        image_cache_t *cache = &image_cache[i];
+        if (cache->pixels && cache->tw == job->tw && cache->th == job->th && cache->file_size == st.st_size
+            && cache->mtime == st.st_mtime && strcmp(cache->path, job->path) == 0) {
+            uint8_t *copy = malloc(cache->bytes);
+            if (!copy) return NULL;
+            memcpy(copy, cache->pixels, cache->bytes);
+            cache->used = ++image_cache_serial;
+            *out_bytes = cache->bytes;
+            return copy;
+        }
+    }
+
+    SDL_Surface *loaded = IMG_Load(job->path);
+    if (!loaded || loaded->w <= 0 || loaded->h <= 0 || loaded->w > 8192 || loaded->h > 8192
+        || (int64_t) loaded->w * loaded->h > 16 * 1024 * 1024) {
+        if (loaded) SDL_FreeSurface(loaded);
+        return NULL;
+    }
+    SDL_Surface *surface = SDL_ConvertSurfaceFormat(loaded, SDL_PIXELFORMAT_BGRA32, 0);
+    SDL_FreeSurface(loaded);
+    if (!surface) return NULL;
+
+    const size_t bytes = (size_t) job->tw * (size_t) job->th * 4u;
+    uint8_t *dst = malloc(bytes);
+    int *sx0 = malloc(sizeof(*sx0) * (size_t) job->tw);
+    int *sx1 = malloc(sizeof(*sx1) * (size_t) job->tw);
+    int *sy0 = malloc(sizeof(*sy0) * (size_t) job->th);
+    int *sy1 = malloc(sizeof(*sy1) * (size_t) job->th);
+    if (!dst || !sx0 || !sx1 || !sy0 || !sy1) {
+        free(dst);
+        free(sx0);
+        free(sx1);
+        free(sy0);
+        free(sy1);
+        SDL_FreeSurface(surface);
+        return NULL;
+    }
+
+    for (int x = 0; x < job->tw; x++) {
+        sx0[x] = x * surface->w / job->tw;
+        sx1[x] = (x + 1) * surface->w / job->tw;
+        if (sx1[x] <= sx0[x]) sx1[x] = sx0[x] + 1;
+    }
+    for (int y = 0; y < job->th; y++) {
+        sy0[y] = y * surface->h / job->th;
+        sy1[y] = (y + 1) * surface->h / job->th;
+        if (sy1[y] <= sy0[y]) sy1[y] = sy0[y] + 1;
+    }
+
+    for (int y = 0; y < job->th; y++) {
+        uint8_t *out = dst + (size_t) y * (size_t) job->tw * 4u;
+        for (int x = 0; x < job->tw; x++) {
+            uint32_t sum[4] = {0};
+            for (int sy = sy0[y]; sy < sy1[y]; sy++) {
+                const uint8_t *row = (const uint8_t *) surface->pixels + (size_t) sy * (size_t) surface->pitch;
+                int sx = sx0[x];
+#if defined(__aarch64__)
+                for (; sx + 8 <= sx1[x]; sx += 8) {
+                    const uint8x8x4_t pixels = vld4_u8(row + (size_t) sx * 4u);
+                    sum[0] += vaddlv_u8(pixels.val[0]);
+                    sum[1] += vaddlv_u8(pixels.val[1]);
+                    sum[2] += vaddlv_u8(pixels.val[2]);
+                    sum[3] += vaddlv_u8(pixels.val[3]);
+                }
+#endif
+                for (; sx < sx1[x]; sx++) {
+                    const uint8_t *p = row + (size_t) sx * 4u;
+                    sum[0] += p[0];
+                    sum[1] += p[1];
+                    sum[2] += p[2];
+                    sum[3] += p[3];
+                }
+            }
+            const uint32_t count = (uint32_t) (sx1[x] - sx0[x]) * (uint32_t) (sy1[y] - sy0[y]);
+            out[0] = (uint8_t) (sum[0] / count);
+            out[1] = (uint8_t) (sum[1] / count);
+            out[2] = (uint8_t) (sum[2] / count);
+            out[3] = (uint8_t) (sum[3] / count);
+            out += 4;
+        }
+    }
+    free(sx0);
+    free(sx1);
+    free(sy0);
+    free(sy1);
+    SDL_FreeSurface(surface);
+
+    if (bytes <= IMAGE_CACHE_BUDGET / 2u) {
+        int slot = -1;
+        for (int i = 0; i < IMAGE_CACHE_COUNT; i++) {
+            if (!image_cache[i].pixels) {
+                slot = i;
+                break;
+            }
+            if (slot < 0 || image_cache[i].used < image_cache[slot].used) slot = i;
+        }
+        while (slot >= 0 && image_cache_bytes + bytes > IMAGE_CACHE_BUDGET) {
+            image_cache_bytes -= image_cache[slot].bytes;
+            free(image_cache[slot].pixels);
+            memset(&image_cache[slot], 0, sizeof(image_cache[slot]));
+            slot = -1;
+            for (int i = 0; i < IMAGE_CACHE_COUNT; i++) {
+                if (!image_cache[i].pixels) {
+                    slot = i;
+                    break;
+                }
+                if (slot < 0 || image_cache[i].used < image_cache[slot].used) slot = i;
+            }
+        }
+        if (slot >= 0) {
+            uint8_t *copy = malloc(bytes);
+            if (copy) {
+                if (image_cache[slot].pixels) image_cache_bytes -= image_cache[slot].bytes;
+                free(image_cache[slot].pixels);
+                memcpy(copy, dst, bytes);
+                image_cache[slot] = (image_cache_t) {.tw = job->tw,
+                                                     .th = job->th,
+                                                     .file_size = st.st_size,
+                                                     .mtime = st.st_mtime,
+                                                     .pixels = copy,
+                                                     .bytes = bytes,
+                                                     .used = ++image_cache_serial};
+                snprintf(image_cache[slot].path, sizeof(image_cache[slot].path), "%s", job->path);
+                image_cache_bytes += bytes;
+            }
+        }
+    }
+    *out_bytes = bytes;
+    return dst;
+}
+
+static void *image_worker(void *unused) {
+    (void) unused;
+    for (;;) {
+        pthread_mutex_lock(&image_lock);
+        while (!image_thread_stop && image_job_count == 0)
+            pthread_cond_wait(&image_cond, &image_lock);
+        if (image_thread_stop) {
+            pthread_mutex_unlock(&image_lock);
+            break;
+        }
+        const image_job_t job = image_jobs[0];
+        memmove(image_jobs, image_jobs + 1, (size_t) (--image_job_count) * sizeof(*image_jobs));
+        pthread_mutex_unlock(&image_lock);
+
+        const uint64_t start = SDL_GetPerformanceCounter();
+        size_t bytes = 0;
+        uint8_t *pixels = image_scale_bgra(&job, &bytes);
+        const double work_ms =
+            (double) (SDL_GetPerformanceCounter() - start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+
+        pthread_mutex_lock(&image_lock);
+        if (pixels) {
+            if (image_result_count == IMAGE_JOB_CAPACITY) {
+                free(image_results[0].pixels);
+                memmove(image_results, image_results + 1, (IMAGE_JOB_CAPACITY - 1u) * sizeof(*image_results));
+                image_result_count--;
+            }
+            image_results[image_result_count++] =
+                (image_result_t) {.job = job, .pixels = pixels, .bytes = bytes, .work_ms = work_ms};
+        }
+        pthread_mutex_unlock(&image_lock);
+    }
+    return NULL;
+}
+
+static int image_async_enqueue(const image_job_t *job) {
+    pthread_mutex_lock(&image_lock);
+    if (!image_thread_started) {
+        image_thread_stop = 0;
+        if (pthread_create(&image_thread, NULL, image_worker, NULL) == 0) image_thread_started = 1;
+    }
+    if (!image_thread_started) {
+        pthread_mutex_unlock(&image_lock);
+        return 0;
+    }
+    for (int i = image_job_count - 1; i >= 0; i--) {
+        if (image_jobs[i].obj != job->obj) continue;
+        memmove(&image_jobs[i], &image_jobs[i + 1], (size_t) (image_job_count - i - 1) * sizeof(*image_jobs));
+        image_job_count--;
+    }
+    if (image_job_count == IMAGE_JOB_CAPACITY) {
+        memmove(image_jobs, image_jobs + 1, (IMAGE_JOB_CAPACITY - 1u) * sizeof(*image_jobs));
+        image_job_count--;
+    }
+    image_jobs[image_job_count++] = *job;
+    pthread_cond_signal(&image_cond);
+    pthread_mutex_unlock(&image_lock);
+    return 1;
+}
+
+void image_async_tick(void) {
+    for (;;) {
+        pthread_mutex_lock(&image_lock);
+        if (!image_result_count) {
+            pthread_mutex_unlock(&image_lock);
+            break;
+        }
+        image_result_t result = image_results[0];
+        memmove(image_results, image_results + 1, (size_t) (--image_result_count) * sizeof(*image_results));
+        pthread_mutex_unlock(&image_lock);
+
+        fe_perf_record(fe_perf_stage_image, result.work_ms);
+        if (!image_generation_current(result.job.obj, result.job.generation) || !lv_obj_is_valid(result.job.obj)) {
+            free(result.pixels);
+            continue;
+        }
+
+        lv_img_dsc_t *dsc = lv_img_buf_alloc(result.job.tw, result.job.th, LV_IMG_CF_TRUE_COLOR_ALPHA);
+        if (!dsc || result.bytes != (size_t) result.job.tw * (size_t) result.job.th * LV_IMG_PX_SIZE_ALPHA_BYTE) {
+            if (dsc) lv_img_buf_free(dsc);
+            free(result.pixels);
+            continue;
+        }
+        memcpy((void *) dsc->data, result.pixels, result.bytes);
+        free(result.pixels);
+
+        free_scaled_raster(result.job.obj);
+        lv_obj_set_user_data(result.job.obj, dsc);
+        lv_img_set_size_mode(result.job.obj, LV_IMG_SIZE_MODE_VIRTUAL);
+        lv_img_set_zoom(result.job.obj, LV_IMG_ZOOM_NONE);
+        if (result.job.align >= 0) lv_obj_set_align(result.job.obj, result.job.align);
+        lv_obj_set_style_pad_left(result.job.obj, result.job.pad_l, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_right(result.job.obj, result.job.pad_r, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_top(result.job.obj, result.job.pad_t, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(result.job.obj, result.job.pad_b, MU_OBJ_MAIN_DEFAULT);
+        lv_img_set_src(result.job.obj, dsc);
+        lv_obj_move_foreground(result.job.obj);
+    }
+}
+
+void image_async_shutdown(void) {
+    pthread_mutex_lock(&image_lock);
+    const int join = image_thread_started;
+    image_thread_stop = 1;
+    pthread_cond_signal(&image_cond);
+    pthread_mutex_unlock(&image_lock);
+
+    if (join) pthread_join(image_thread, NULL);
+
+    pthread_mutex_lock(&image_lock);
+    for (int i = 0; i < image_result_count; i++)
+        free(image_results[i].pixels);
+    for (int i = 0; i < IMAGE_CACHE_COUNT; i++)
+        free(image_cache[i].pixels);
+    memset(image_results, 0, sizeof(image_results));
+    memset(image_jobs, 0, sizeof(image_jobs));
+    memset(image_cache, 0, sizeof(image_cache));
+    memset(image_generations, 0, sizeof(image_generations));
+    image_result_count = 0;
+    image_job_count = 0;
+    image_cache_bytes = 0;
+    image_thread_started = 0;
+    pthread_mutex_unlock(&image_lock);
+}
 
 int load_element_image_specifics(
     const char *mux_dim, const char *program, const char *image_type, const char *element, const char *element_fallback,
@@ -504,6 +854,16 @@ static void read_image_dims(const char *path, int *w, int *h) {
     }
 
     fclose(f);
+
+    if (*w <= 0 || *h <= 0) {
+        char source[MAX_BUFFER_SIZE];
+        lv_img_header_t header;
+        const int written = snprintf(source, sizeof(source), "M:%s", path);
+        if (written > 0 && (size_t) written < sizeof(source) && lv_img_decoder_get_info(source, &header) == LV_RES_OK) {
+            *w = header.w;
+            *h = header.h;
+        }
+    }
 }
 
 static void free_scaled_raster(lv_obj_t *ui_img_obj) {
@@ -523,6 +883,7 @@ static void free_scaled_raster(lv_obj_t *ui_img_obj) {
 
 void clear_image(lv_obj_t *ui_img_obj) {
     if (!ui_img_obj) return;
+    image_next_generation(ui_img_obj);
     lv_img_set_src(ui_img_obj, &ui_img_blank);
     free_scaled_raster(ui_img_obj);
 }
@@ -663,7 +1024,7 @@ static void update_image_inner(lv_obj_t *ui_img_obj, const struct image_settings
         if (!is_svg && image_settings.max_width > 0 && image_settings.max_height > 0) {
             int iw = 0, ih = 0;
             read_image_dims(image_settings.image_path, &iw, &ih);
-            if (iw > 0 && ih > 0) {
+            if (iw > 0 && ih > 0 && iw <= 8192 && ih <= 8192 && (int64_t) iw * ih <= 16 * 1024 * 1024) {
                 const float wr = (float) image_settings.max_width / (float) iw;
                 const float hr = (float) image_settings.max_height / (float) ih;
 
@@ -673,10 +1034,25 @@ static void update_image_inner(lv_obj_t *ui_img_obj, const struct image_settings
                 const int th = (int) ((float) ih * zr);
 
                 if (tw > 0 && th > 0) {
-                    scale_and_set_raster(
-                        ui_img_obj, image_settings.image_path, tw, th, image_settings.align, image_settings.pad_left,
-                        image_settings.pad_right, image_settings.pad_top, image_settings.pad_bottom
-                    );
+                    image_job_t job = {
+                        .obj = ui_img_obj,
+                        .generation = image_next_generation(ui_img_obj),
+                        .tw = tw,
+                        .th = th,
+                        .align = image_settings.align,
+                        .pad_l = image_settings.pad_left,
+                        .pad_r = image_settings.pad_right,
+                        .pad_t = image_settings.pad_top,
+                        .pad_b = image_settings.pad_bottom,
+                    };
+                    snprintf(job.path, sizeof(job.path), "%s", image_settings.image_path);
+                    if (!image_async_enqueue(&job)) {
+                        scale_and_set_raster(
+                            ui_img_obj, image_settings.image_path, tw, th, image_settings.align,
+                            image_settings.pad_left, image_settings.pad_right, image_settings.pad_top,
+                            image_settings.pad_bottom
+                        );
+                    }
                     return;
                 }
             }

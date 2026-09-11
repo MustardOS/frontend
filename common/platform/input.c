@@ -1089,7 +1089,7 @@ static void handle_inputs(const mux_input_options *opts) {
 
         if (!mask) continue;
 
-        /* Ignore single-key combos */
+        // Ignore single key combos
         if (__builtin_popcountll(mask) <= 1) continue;
 
         if ((pressed & mask) == mask) {
@@ -1519,10 +1519,12 @@ void mux_input_task(const mux_input_options *opts) {
             open_all_input_devices();
             next_retry_tick = tick + interval;
             if (device_count > 0) retry_count = 0;
-        } else if (device_count > 0 && SDL_NumJoysticks() > device_count && tick >= next_retry_tick) {
-            LOG_INFO("input", "New input device detected via poll, rescanning");
-            open_all_input_devices();
+        } else if (device_count > 0 && tick >= next_retry_tick) {
             next_retry_tick = tick + retry_interval_slow_ms;
+            if (SDL_NumJoysticks() > device_count) {
+                LOG_INFO("input", "New input device detected via poll, rescanning");
+                open_all_input_devices();
+            }
         }
 
         if (input_is_suppressed()) {

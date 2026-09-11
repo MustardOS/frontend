@@ -359,6 +359,7 @@ void datetime_render(SDL_Renderer *renderer) {
     int date_x = mod.pos_x + (mod.block_w - mod.date_w) / 2;
     int date_y = mod.pos_y + mod.time_h + mod.gap;
     dt_blit(renderer, mod.tex_date, date_x, date_y, alpha);
+    saver_perf_note_draw_calls(is_12h && mod.tex_colon ? 4u : 2u);
 }
 
 int datetime_active(void) {

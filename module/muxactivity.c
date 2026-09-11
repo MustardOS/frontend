@@ -1811,6 +1811,7 @@ static void do_remove(void) {
 
 static void hide_nav(void) {
     lv_obj_add_flag(ui_img_box, MU_OBJ_FLAG_HIDE_FLOAT);
+    if (ui_viewport_objects[0]) lv_obj_add_flag(ui_viewport_objects[0], MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_counter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -1825,6 +1826,7 @@ static void show_nav_x(const char *label) {
 
 static void show_nav(void) {
     lv_obj_clear_flag(ui_img_box, MU_OBJ_FLAG_HIDE_FLOAT);
+    if (ui_viewport_objects[0]) lv_obj_clear_flag(ui_viewport_objects[0], MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_counter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);

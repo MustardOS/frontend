@@ -28,6 +28,7 @@
 #include <common/display/svg.h>
 #include <common/runtime/crash.h>
 #include <common/display/image.h>
+#include <common/ui/image.h>
 #include <common/storage/fileio.h>
 #include <common/runtime/exec.h>
 #include <common/display/datetime.h>
@@ -213,7 +214,11 @@ void init_display(void) {
     static lv_disp_draw_buf_t disp_buf;
 
     const int double_buffer = config.settings.advanced.double_buffer;
-    const uint32_t disp_buf_lines = (uint32_t) device.mux.height;
+    const size_t draw_buffer_budget = 2u * 1024u * 1024u;
+
+    uint32_t disp_buf_lines = (uint32_t) (draw_buffer_budget / ((size_t) device.mux.width * sizeof(lv_color_t)));
+    if (disp_buf_lines < 16u) disp_buf_lines = 16u;
+    if (disp_buf_lines > (uint32_t) device.mux.height) disp_buf_lines = (uint32_t) device.mux.height;
 
     const uint32_t disp_buf_size = (uint32_t) device.mux.width * disp_buf_lines;
     const size_t disp_buf_bytes = (size_t) disp_buf_size * sizeof(lv_color_t);
@@ -393,6 +398,7 @@ void timer_action(const int action) {
 static void (*ui_refresh_cb)(lv_timer_t *) = NULL;
 
 static void ui_refresh_tick(lv_timer_t *timer) {
+    image_async_tick();
     notify_tick();
     orientation_tick();
 

@@ -26,6 +26,8 @@ typedef struct {
     int rows;
 
     uint8_t *shimmer_phase;
+    SDL_Rect *rect_batch;
+    size_t cell_total;
 
     uint32_t last_spawn;
     int32_t shimmer_clock;
@@ -118,11 +120,13 @@ static void rebuild_grid(void) {
     if (mod.rows < 1) mod.rows = 1;
 
     free(mod.shimmer_phase);
-    const size_t cell_total = (size_t) mod.cols * (size_t) mod.rows;
-    mod.shimmer_phase = malloc(cell_total);
+    free(mod.rect_batch);
+    mod.cell_total = (size_t) mod.cols * (size_t) mod.rows;
+    mod.shimmer_phase = malloc(mod.cell_total);
+    mod.rect_batch = malloc(mod.cell_total * 8u * sizeof(*mod.rect_batch));
 
     if (mod.shimmer_phase) {
-        for (size_t i = 0; i < cell_total; i++) {
+        for (size_t i = 0; i < mod.cell_total; i++) {
             mod.shimmer_phase[i] = (uint8_t) saver_rand_range(256);
         }
     }
@@ -205,7 +209,9 @@ void pulse_render(SDL_Renderer *renderer) {
     if (ring_width < 1) ring_width = 1;
 
     const int shimmer_t = mod.shimmer_clock / 12 & 511; /* slow drift */
-    if (mod.shimmer_phase) {
+    unsigned draw_calls = 0;
+    if (mod.shimmer_phase && mod.rect_batch) {
+        int counts[4] = {0};
         for (int gy = 0; gy < mod.rows; gy++) {
             const int y = gy * mod.cell;
             for (int gx = 0; gx < mod.cols; gx++) {
@@ -213,7 +219,7 @@ void pulse_render(SDL_Renderer *renderer) {
 
                 const int phase = mod.shimmer_phase[gy * mod.cols + gx];
                 const int wave = tri256(shimmer_t + phase * 2);
-                const int alpha = 4 + wave * 14 / 256;
+                const int bin = wave >> 6;
 
                 int inset = mod.cell / 5;
                 if (inset < 1) inset = 1;
@@ -223,10 +229,35 @@ void pulse_render(SDL_Renderer *renderer) {
                 if (rect.w < 1) rect.w = 1;
                 if (rect.h < 1) rect.h = 1;
 
+                mod.rect_batch[(size_t) bin * mod.cell_total + (size_t) counts[bin]++] = rect;
+            }
+        }
+        for (int bin = 0; bin < 4; bin++) {
+            if (!counts[bin]) continue;
+            const int alpha = 4 + (bin * 64 + 32) * 14 / 256;
+            SDL_SetRenderDrawColor(renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, (uint8_t) alpha);
+            SDL_RenderFillRects(renderer, &mod.rect_batch[(size_t) bin * mod.cell_total], counts[bin]);
+            draw_calls++;
+        }
+    } else if (mod.shimmer_phase) {
+        for (int gy = 0; gy < mod.rows; gy++) {
+            const int y = gy * mod.cell;
+            for (int gx = 0; gx < mod.cols; gx++) {
+                const int x = gx * mod.cell;
+                const int phase = mod.shimmer_phase[gy * mod.cols + gx];
+                const int wave = tri256(shimmer_t + phase * 2);
+                int inset = mod.cell / 5;
+                if (inset < 1) inset = 1;
+
+                SDL_Rect rect = {x + inset, y + inset, mod.cell - inset * 2, mod.cell - inset * 2};
+                if (rect.w < 1) rect.w = 1;
+                if (rect.h < 1) rect.h = 1;
+
                 SDL_SetRenderDrawColor(
-                    renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, (uint8_t) alpha
+                    renderer, mod.base.colour_r, mod.base.colour_g, mod.base.colour_b, (uint8_t) (4 + wave * 14 / 256)
                 );
                 SDL_RenderFillRect(renderer, &rect);
+                draw_calls++;
             }
         }
     }
@@ -259,6 +290,7 @@ void pulse_render(SDL_Renderer *renderer) {
 
         const int outer_sq = outer * outer;
 
+        int counts[8] = {0};
         for (int gy = gy0; gy <= gy1; gy++) {
             const int cy = gy * mod.cell + half_cell;
             const int dy = cy - r->origin_y;
@@ -288,13 +320,29 @@ void pulse_render(SDL_Renderer *renderer) {
                 if (rect.w < 1) rect.w = 1;
                 if (rect.h < 1) rect.h = 1;
 
-                SDL_SetRenderDrawColor(renderer, r->r, r->g, r->b, (uint8_t) hit);
-                SDL_RenderFillRect(renderer, &rect);
+                if (mod.rect_batch) {
+                    const int bin = hit >> 5;
+                    mod.rect_batch[(size_t) bin * mod.cell_total + (size_t) counts[bin]++] = rect;
+                } else {
+                    SDL_SetRenderDrawColor(renderer, r->r, r->g, r->b, (uint8_t) hit);
+                    SDL_RenderFillRect(renderer, &rect);
+                    draw_calls++;
+                }
+            }
+        }
+        if (mod.rect_batch) {
+            for (int bin = 0; bin < 8; bin++) {
+                if (!counts[bin]) continue;
+                const uint8_t alpha = (uint8_t) (bin * 32 + 16);
+                SDL_SetRenderDrawColor(renderer, r->r, r->g, r->b, alpha);
+                SDL_RenderFillRects(renderer, &mod.rect_batch[(size_t) bin * mod.cell_total], counts[bin]);
+                draw_calls++;
             }
         }
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    saver_perf_note_draw_calls(draw_calls);
 }
 
 int pulse_active(void) {
@@ -308,5 +356,8 @@ void pulse_stop(void) {
 void pulse_shutdown(void) {
     free(mod.shimmer_phase);
     mod.shimmer_phase = NULL;
+    free(mod.rect_batch);
+    mod.rect_batch = NULL;
+    mod.cell_total = 0;
     saver_shutdown_base(&mod.base);
 }
