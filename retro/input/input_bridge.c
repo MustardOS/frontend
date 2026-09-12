@@ -34,6 +34,36 @@ static int bound_stick_x[MUX_RETRO_PORT_COUNT][2];
 static int bound_stick_y[MUX_RETRO_PORT_COUNT][2];
 static int bound_stick_active[MUX_RETRO_PORT_COUNT][2];
 
+typedef struct {
+    int source;
+    mux_input_type type;
+    int target;
+    int macro;
+    int stick;
+    int axis_x;
+    int axis_y;
+    uint32_t turbo_period;
+    int turbo_ms;
+} input_route_t;
+
+typedef struct {
+    int target[PORT_SOURCE_COUNT];
+    int turbo[PORT_SOURCE_COUNT];
+    int macro[PORT_SOURCE_COUNT];
+} input_route_key_t;
+
+static input_route_t input_routes[MUX_RETRO_PORT_COUNT][PORT_SOURCE_COUNT];
+static int input_route_count[MUX_RETRO_PORT_COUNT];
+static int input_route_stick_bound[MUX_RETRO_PORT_COUNT][2];
+static input_route_key_t input_route_keys[MUX_RETRO_PORT_COUNT];
+static int input_route_valid[MUX_RETRO_PORT_COUNT];
+static double input_route_fps[MUX_RETRO_PORT_COUNT];
+
+static int stick_transform_key[3] = {-1, -1, -1};
+static double stick_deadzone_raw;
+static double stick_transform_slope;
+static double stick_transform_intercept;
+
 static int16_t clamp_axis(const int value) {
     if (value > PORT_STICK_FULL) return PORT_STICK_FULL;
     if (value < -PORT_STICK_FULL) return -PORT_STICK_FULL;
@@ -70,21 +100,70 @@ static uint16_t merge_buttons(uint16_t player, const uint16_t deck, const int pr
     return (uint16_t) (player | deck);
 }
 
-static void push_bound_stick(const int port, const int target) {
-    int stick = 0;
-    int axis_x = 0;
-    int axis_y = 0;
-
-    if (!session_settings_target_stick(target, &stick, &axis_x, &axis_y)) return;
-    if (stick < 0 || stick > 1) return;
-
-    bound_stick_x[port][stick] += axis_x;
-    bound_stick_y[port][stick] += axis_y;
-    bound_stick_active[port][stick] = 1;
-}
-
 static uint32_t ms_to_frames(const int ms, const double fps) {
     return (uint32_t) (fps > 0.0 ? (double) ms / 1000.0 * fps + 0.5 : 6);
+}
+
+static void refresh_route_periods(const int port, const double fps) {
+    if (input_route_fps[port] == fps) return;
+    input_route_fps[port] = fps;
+
+    for (int index = 0; index < input_route_count[port]; index++) {
+        input_route_t *route = &input_routes[port][index];
+        route->turbo_period = route->turbo_ms > 0 ? ms_to_frames(route->turbo_ms, fps) : 0;
+        if (route->turbo_period > 0 && route->turbo_period < 2) route->turbo_period = 2;
+    }
+}
+
+static void compile_input_routes(const int port, const double fps) {
+    const int *target = session_settings_source_target(port);
+    const int *turbo = session_settings_source_turbo(port);
+    const int *macro = session_settings_source_macro(port);
+    input_route_key_t *key = &input_route_keys[port];
+
+    if (input_route_valid[port] && memcmp(key->target, target, sizeof(key->target)) == 0
+        && memcmp(key->turbo, turbo, sizeof(key->turbo)) == 0
+        && memcmp(key->macro, macro, sizeof(key->macro)) == 0) {
+        refresh_route_periods(port, fps);
+        return;
+    }
+
+    memcpy(key->target, target, sizeof(key->target));
+    memcpy(key->turbo, turbo, sizeof(key->turbo));
+    memcpy(key->macro, macro, sizeof(key->macro));
+    input_route_count[port] = 0;
+    input_route_stick_bound[port][0] = 0;
+    input_route_stick_bound[port][1] = 0;
+
+    for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
+        if (macro[source] < 0 && (target[source] < 0 || target[source] >= PORT_TARGET_COUNT)) continue;
+
+        input_route_t *route = &input_routes[port][input_route_count[port]++];
+        *route = (input_route_t) {
+            .source = source,
+            .type = (mux_input_type) session_settings_source_types[source],
+            .target = target[source],
+            .macro = macro[source],
+            .stick = -1,
+            .turbo_ms = turbo[source],
+        };
+        if (route->target >= PORT_DIGITAL_COUNT)
+            session_settings_target_stick(route->target, &route->stick, &route->axis_x, &route->axis_y);
+    }
+
+    for (int stick = 0; stick < 2; stick++) {
+        const int first = PORT_DIGITAL_COUNT + stick * 4;
+        for (int source = first; source < first + 4; source++) {
+            if (target[source] >= 0 || macro[source] >= 0) {
+                input_route_stick_bound[port][stick] = 1;
+                break;
+            }
+        }
+    }
+
+    input_route_valid[port] = 1;
+    input_route_fps[port] = -1.0;
+    refresh_route_periods(port, fps);
 }
 
 static int resolve_raw_held(const mux_input_type mux_type, const uint64_t mask, const int apply_suppress) {
@@ -103,93 +182,80 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
     const double fps = core_get_target_fps();
 
     macro_runtime_begin_port(port);
-
-    const int *source_target = session_settings_source_target(port);
-    const int *source_turbo = session_settings_source_turbo(port);
-    const int *source_macro = session_settings_source_macro(port);
+    compile_input_routes(port, fps);
 
     bound_stick_x[port][0] = bound_stick_y[port][0] = 0;
     bound_stick_x[port][1] = bound_stick_y[port][1] = 0;
     bound_stick_active[port][0] = 0;
     bound_stick_active[port][1] = 0;
 
-    for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-        const mux_input_type mux_type = (mux_input_type) session_settings_source_types[s];
+    for (int index = 0; index < input_route_count[port]; index++) {
+        const input_route_t *route = &input_routes[port][index];
+        const int source = route->source;
 
-        const int macro_index = source_macro[s];
-        if (macro_index >= 0) {
+        if (route->macro >= 0) {
             out |=
-                macro_runtime_drive(port, s, macro_index, resolve_raw_held(mux_type, mask, apply_suppress), mask, fps);
+                macro_runtime_drive(port, source, route->macro, resolve_raw_held(route->type, mask, apply_suppress), mask, fps);
             continue;
         }
 
-        const int target = source_target[s];
-        if (target < 0 || target >= PORT_TARGET_COUNT) continue;
-
-        const int raw_held = resolve_raw_held(mux_type, mask, apply_suppress);
+        const int raw_held = resolve_raw_held(route->type, mask, apply_suppress);
 
         int held = raw_held;
-        const int rate = source_turbo[s];
-
-        if (rate > 0) {
+        if (route->turbo_period > 0) {
             if (raw_held) {
-                if (!turbo_held_prev[port][s]) {
-                    turbo_phase[port][s] = 0; // immediate first press turbo go!
+                if (!turbo_held_prev[port][source]) {
+                    turbo_phase[port][source] = 0;
                 } else {
-                    turbo_phase[port][s]++;
+                    turbo_phase[port][source]++;
                 }
 
-                uint32_t period = ms_to_frames(rate, fps);
-                if (period < 2) period = 2;
-                held = turbo_phase[port][s] % period < period / 2;
+                held = turbo_phase[port][source] % route->turbo_period < route->turbo_period / 2;
             } else {
-                turbo_phase[port][s] = 0;
+                turbo_phase[port][source] = 0;
             }
         }
 
-        turbo_held_prev[port][s] = raw_held;
+        turbo_held_prev[port][source] = raw_held;
 
         if (!held) continue;
 
-        if (target < PORT_DIGITAL_COUNT) {
-            out |= (uint16_t) (1u << target);
-        } else {
-            push_bound_stick(port, target);
+        if (route->target < PORT_DIGITAL_COUNT) {
+            out |= (uint16_t) (1u << route->target);
+        } else if (route->stick >= 0 && route->stick < 2) {
+            bound_stick_x[port][route->stick] += route->axis_x;
+            bound_stick_y[port][route->stick] += route->axis_y;
+            bound_stick_active[port][route->stick] = 1;
         }
     }
 
     return out;
 }
 
-static int stick_has_bound_direction(const int port, const int stick) {
-    const int first = PORT_DIGITAL_COUNT + stick * 4;
-    const int *source_target = session_settings_source_target(port);
-    const int *source_macro = session_settings_source_macro(port);
+static int16_t apply_stick_transform(const int16_t raw) {
+    if (stick_transform_key[0] != session_settings.stick_deadzone
+        || stick_transform_key[1] != session_settings.stick_anti_deadzone
+        || stick_transform_key[2] != session_settings.stick_sensitivity) {
+        stick_transform_key[0] = session_settings.stick_deadzone;
+        stick_transform_key[1] = session_settings.stick_anti_deadzone;
+        stick_transform_key[2] = session_settings.stick_sensitivity;
 
-    for (int s = first; s < first + 4; s++) {
-        if (source_target[s] >= 0 || source_macro[s] >= 0) return 1;
+        const double dz = (double) session_settings.stick_deadzone / 100.0;
+        const double adz = (double) session_settings.stick_anti_deadzone / 100.0;
+        const double sens = (double) session_settings.stick_sensitivity / 100.0;
+        stick_deadzone_raw = dz * 32767.0;
+        stick_transform_slope = dz >= 1.0 ? 0.0 : (1.0 - adz) * sens / ((1.0 - dz) * 32767.0);
+        stick_transform_intercept = dz >= 1.0 ? 0.0 : (adz - dz * (1.0 - adz) / (1.0 - dz)) * sens;
     }
 
-    return 0;
-}
+    int magnitude = raw < 0 ? -(int) raw : (int) raw;
+    if (magnitude > PORT_STICK_FULL) magnitude = PORT_STICK_FULL;
+    if ((double) magnitude < stick_deadzone_raw) return 0;
 
-static int16_t apply_stick_transform(const int16_t raw) {
-    const double dz = (double) session_settings.stick_deadzone / 100.0;
-    const double adz = (double) session_settings.stick_anti_deadzone / 100.0;
-    const double sens = (double) session_settings.stick_sensitivity / 100.0;
-
-    double v = (double) raw / 32767.0;
-    if (v > 1.0) v = 1.0;
-    if (v < -1.0) v = -1.0;
-
-    const double mag = v < 0.0 ? -v : v;
-    if (mag < dz) return 0;
-
-    double scaled = dz >= 1.0 ? 0.0 : adz + (mag - dz) / (1.0 - dz) * (1.0 - adz);
-    scaled *= sens;
+    double scaled = (double) magnitude * stick_transform_slope + stick_transform_intercept;
     if (scaled > 1.0) scaled = 1.0;
 
-    return (int16_t) ((v < 0.0 ? -scaled : scaled) * 32767.0);
+    return (int16_t) ((raw < 0 ? -scaled : scaled) * 32767.0);
 }
 
 static int16_t invert_y_if_needed(const int16_t y) {
@@ -320,7 +386,7 @@ static void input_bridge_build_snapshot(void) {
                 continue;
             }
 
-            if (stick_has_bound_direction(port, s)) {
+            if (input_route_stick_bound[port][s]) {
                 port_stick_x[port][s] = 0;
                 port_stick_y[port][s] = 0;
                 continue;
