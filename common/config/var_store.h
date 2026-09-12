@@ -83,7 +83,11 @@ int vs_set(const var_store_t *vs, var_ns_t ns, const char *key, const char *valu
 
 int vs_write(const var_dirs_t *dirs, var_ns_t ns, const char *key, const char *value);
 
+int vs_write_durable(const var_dirs_t *dirs, var_ns_t ns, const char *key, const char *value);
+
 int vs_store(const var_store_t *vs, const var_dirs_t *dirs, var_ns_t ns, const char *key, const char *value);
+
+int vs_store_durable(const var_store_t *vs, const var_dirs_t *dirs, var_ns_t ns, const char *key, const char *value);
 
 int vs_del(const var_store_t *vs, var_ns_t ns, const char *key);
 

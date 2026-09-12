@@ -319,7 +319,9 @@ int vs_set(const var_store_t *vs, const var_ns_t ns, const char *key, const char
     return rc;
 }
 
-static int atomic_write_file(const char *path, const char *value) {
+static int parent_dir_of(const char *path, char *out);
+
+static int atomic_write_file(const char *path, const char *value, const int durable) {
     char tmp[PATH_MAX];
     const int n = snprintf(tmp, sizeof(tmp), "%s.tmp.%d", path, (int) getpid());
     if (n < 0 || (size_t) n >= sizeof(tmp)) return -1;
@@ -329,9 +331,10 @@ static int atomic_write_file(const char *path, const char *value) {
 
     const size_t len = strlen(value);
     const ssize_t written = len ? write(fd, value, len) : 0;
+    const int sync_error = durable && written >= 0 && (size_t) written == len ? fsync(fd) : 0;
     const int cerr = close(fd);
 
-    if (written < 0 || (size_t) written != len || cerr != 0) {
+    if (written < 0 || (size_t) written != len || sync_error != 0 || cerr != 0) {
         unlink(tmp);
         return -1;
     }
@@ -341,7 +344,16 @@ static int atomic_write_file(const char *path, const char *value) {
         return -1;
     }
 
-    return 0;
+    if (!durable) return 0;
+
+    char parent[PATH_MAX];
+    if (parent_dir_of(path, parent) != 0) return -1;
+
+    const int parent_fd = open(parent, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (parent_fd < 0) return -1;
+    const int parent_error = fsync(parent_fd);
+    const int parent_close_error = close(parent_fd);
+    return parent_error == 0 && parent_close_error == 0 ? 0 : -1;
 }
 
 static int parent_dir_of(const char *path, char *out) {
@@ -363,7 +375,9 @@ static int slot_path(const var_dirs_t *dirs, const var_ns_t ns, const char *key,
     return n < 0 || (size_t) n >= MAX_LEN_SZ ? -1 : 0;
 }
 
-int vs_write(const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value) {
+static int vs_write_mode(
+    const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value, const int durable
+) {
     if (dirs == NULL || value == NULL) return vs_err_inval;
     if (strlen(value) >= VS_VAL_MAX) return vs_err_inval;
 
@@ -379,10 +393,21 @@ int vs_write(const var_dirs_t *dirs, const var_ns_t ns, const char *key, const c
         return vs_err_io;
     }
 
-    return atomic_write_file(path, value) == 0 ? vs_ok : vs_err_io;
+    return atomic_write_file(path, value, durable) == 0 ? vs_ok : vs_err_io;
 }
 
-int vs_store(const var_store_t *vs, const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value) {
+int vs_write(const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value) {
+    return vs_write_mode(dirs, ns, key, value, 0);
+}
+
+int vs_write_durable(const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value) {
+    return vs_write_mode(dirs, ns, key, value, 1);
+}
+
+static int vs_store_mode(
+    const var_store_t *vs, const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value,
+    const int durable
+) {
     if (vs == NULL || dirs == NULL || value == NULL) return vs_err_inval;
     if (!vs->writable) return vs_err_inval;
 
@@ -392,11 +417,21 @@ int vs_store(const var_store_t *vs, const var_dirs_t *dirs, const var_ns_t ns, c
 
     if (flock(vs->fd, LOCK_EX) != 0) return vs_err_lock;
 
-    int rc = vs_write(dirs, cns, ckey, value);
+    int rc = vs_write_mode(dirs, cns, ckey, value, durable);
     if (rc == vs_ok) rc = vs_set_locked(vs, cns, ckey, value, 0);
 
     flock(vs->fd, LOCK_UN);
     return rc;
+}
+
+int vs_store(const var_store_t *vs, const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value) {
+    return vs_store_mode(vs, dirs, ns, key, value, 0);
+}
+
+int vs_store_durable(
+    const var_store_t *vs, const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value
+) {
+    return vs_store_mode(vs, dirs, ns, key, value, 1);
 }
 
 static int vs_del_locked(const var_store_t *vs, const var_ns_t ns, const char *key) {
@@ -613,7 +648,7 @@ int vs_flush(const var_store_t *vs, const var_dirs_t *dirs) {
             continue;
         }
 
-        if (atomic_write_file(path, value) != 0) {
+        if (atomic_write_file(path, value, 0) != 0) {
             failed++;
             continue;
         }

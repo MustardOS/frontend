@@ -66,7 +66,9 @@ static int cmd_get(const char *ns_arg, const char *key) {
     return rc == vs_err_inval ? 1 : 0;
 }
 
-static int cmd_set(const char *ns_arg, const char *key, const char *value, const int defer) {
+static int cmd_set(
+    const char *ns_arg, const char *key, const char *value, const int defer, const int durable
+) {
     const int ns = parse_ns(ns_arg);
     if (ns < 0 || !key || !value) return 1;
 
@@ -75,10 +77,19 @@ static int cmd_set(const char *ns_arg, const char *key, const char *value, const
     vs_default_dirs(&dirs);
 
     if (vs_open(&vs, vs_cache_path(), 1, VS_DEF_CAP, 1) != vs_ok) {
-        return defer || vs_write(&dirs, (var_ns_t) ns, key, value) != vs_ok;
+        if (defer) return 1;
+        const int rc = durable ? vs_write_durable(&dirs, (var_ns_t) ns, key, value)
+                               : vs_write(&dirs, (var_ns_t) ns, key, value);
+        return rc != vs_ok;
     }
 
-    const int rc = defer ? vs_set(&vs, (var_ns_t) ns, key, value) : vs_store(&vs, &dirs, (var_ns_t) ns, key, value);
+    int rc;
+    if (defer)
+        rc = vs_set(&vs, (var_ns_t) ns, key, value);
+    else if (durable)
+        rc = vs_store_durable(&vs, &dirs, (var_ns_t) ns, key, value);
+    else
+        rc = vs_store(&vs, &dirs, (var_ns_t) ns, key, value);
     vs_close(&vs);
 
     return rc == vs_ok ? 0 : 1;
@@ -145,7 +156,7 @@ static void usage(const char *argv0) {
         stderr,
         "usage: %s build\n"
         "       %s get   <ns> <key>\n"
-        "       %s set   [--defer] <ns> <key> <value>\n"
+        "       %s set   [--defer|--durable] <ns> <key> <value>\n"
         "       %s del   <ns> <key>\n"
         "       %s flush\n"
         "       %s dump  [ns]\n"
@@ -174,12 +185,13 @@ int main(const int argc, char **argv) {
 
     if (strcmp(argv[1], "set") == 0) {
         const int defer = argc > 2 && strcmp(argv[2], "--defer") == 0;
-        const int base = defer ? 3 : 2;
+        const int durable = argc > 2 && strcmp(argv[2], "--durable") == 0;
+        const int base = defer || durable ? 3 : 2;
         if (argc != base + 3) {
             usage(argv[0]);
             return 2;
         }
-        return cmd_set(argv[base], argv[base + 1], argv[base + 2], defer);
+        return cmd_set(argv[base], argv[base + 1], argv[base + 2], defer, durable);
     }
 
     if (strcmp(argv[1], "del") == 0) {
