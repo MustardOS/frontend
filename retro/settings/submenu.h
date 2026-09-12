@@ -20,6 +20,7 @@ typedef struct {
     int skip_value_object_creation;
     void (*cycle)(int index, int direction);
     int (*row_can_cycle)(int index);
+    int (*row_depends_on)(int index, int changed_index);
     int (*row_is_action)(int index);
     int (*row_is_save)(int index);
     int (*row_coarse_step)(int index);

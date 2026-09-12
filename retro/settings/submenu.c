@@ -209,17 +209,30 @@ static void focus_row(const submenu *m, const int index) {
     );
 }
 
-static void refresh_row(const submenu *m, const int index, const enum nav_direction shake_dir) {
+static void refresh_row(
+    const submenu *m, const int index, const enum nav_direction shake_dir, const int play_shake
+) {
     lv_obj_t *panel = sectioned(m) ? section_panels[index] : lv_obj_get_child(ui_pnl_content, index);
     if (!panel) return;
 
     lv_obj_t *value = lv_obj_get_child(panel, 2);
-    if (!value) return;
+    if (value) {
+        char value_text[SUBMENU_VALUE_MAX];
+        row_value(m, index, value_text);
+        if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
+        if (play_shake) nav_play_shake(value, shake_dir);
+    }
+    apply_row_availability(m, index, panel);
+}
 
-    char value_text[SUBMENU_VALUE_MAX];
-    row_value(m, index, value_text);
-    if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
-    nav_play_shake(value, shake_dir);
+static void refresh_cycle_result(const submenu *m, const int changed_index, const enum nav_direction shake_dir) {
+    refresh_row(m, changed_index, shake_dir, 1);
+    if (!m->def->row_depends_on) return;
+
+    for (int index = 0; index < m->def->row_count; index++) {
+        if (index != changed_index && m->def->row_depends_on(index, changed_index))
+            refresh_row(m, index, shake_dir, 0);
+    }
 }
 
 void submenu_refresh_values(const submenu *m) {
@@ -441,7 +454,7 @@ static int coarse_step_tick(submenu *m, const uint64_t edge, const uint64_t mask
     if (!down && !up) return 0;
 
     m->def->cycle(row, up ? step : -step);
-    refresh_row(m, row, up ? nav_dir_right : nav_dir_left);
+    refresh_cycle_result(m, row, up ? nav_dir_right : nav_dir_left);
     play_sound(snd_option);
 
     return 1;
@@ -551,13 +564,11 @@ void submenu_tick(submenu *m) {
         }
     } else if (do_left && cycle_allowed) {
         m->def->cycle(row, -1);
-        submenu_refresh_values(m);
-        refresh_row(m, row, nav_dir_left);
+        refresh_cycle_result(m, row, nav_dir_left);
         play_sound(snd_option);
     } else if (do_right && cycle_allowed) {
         m->def->cycle(row, +1);
-        submenu_refresh_values(m);
-        refresh_row(m, row, nav_dir_right);
+        refresh_cycle_result(m, row, nav_dir_right);
         play_sound(snd_option);
     } else if (sectioned(m) && mask & (NAV_PAGE_UP_BIT | NAV_PAGE_DOWN_BIT)) {
         const int direction = edge & NAV_PAGE_UP_BIT ? -1 : edge & NAV_PAGE_DOWN_BIT ? +1 : 0;

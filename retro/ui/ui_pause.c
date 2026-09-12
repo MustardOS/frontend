@@ -10,6 +10,7 @@
 #include <common/base/options.h>
 #include <common/display/theme.h>
 #include <common/ui/common.h>
+#include <common/ui/dialogue.h>
 #include <common/ui/transition.h>
 #include <common/ui/font.h>
 #include <common/ui/glyph.h>
@@ -79,6 +80,10 @@ static int row_information;
 static int row_restart;
 static int row_quit;
 static int row_count;
+static mux_dialogue destructive_dlg;
+
+typedef enum { destructive_none = 0, destructive_restart, destructive_quit } destructive_action;
+static destructive_action pending_destructive_action = destructive_none;
 
 static void compute_row_indices(void) {
     has_disc_control = mux_retro_disk_get_num_images() > 1;
@@ -99,6 +104,26 @@ static void compute_row_indices(void) {
     row_restart = i++;
     row_quit = i++;
     row_count = i;
+}
+
+static int perform_restart(void) {
+    loading_message_show(lang.muxretro.content_restarting);
+    core_restart_requested = 1;
+    return 1;
+}
+
+static int perform_quit(void) {
+    fade_out_screen_forced();
+    return 1;
+}
+
+static void request_destructive_action(const destructive_action action) {
+    pending_destructive_action = action;
+    dialogue_set_description(
+        &destructive_dlg,
+        action == destructive_restart ? lang.muxretro.help.pause.restart : lang.muxretro.help.pause.quit
+    );
+    dialogue_open(&destructive_dlg, &theme);
 }
 
 static nav_repeat_t rpt_up = {0};
@@ -867,6 +892,11 @@ void pause_menu_init(void) {
     cheats_menu_init();
     patch_menu_init();
     manual_menu_init();
+    dialogue_init_confirm(
+        &destructive_dlg, &theme, ui_screen, lang.generic.confirm, lang.muxretro.help.pause.restart,
+        lang.generic.confirm, lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
+    destructive_dlg.safe_default = mux_confirm_nah;
 
     pause_menu_rebuild();
 
@@ -1043,6 +1073,26 @@ int pause_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    if (dialogue_active(&destructive_dlg)) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&destructive_dlg, &theme, edge & BIT(1) ? 1 : -1, 1);
+        } else if (edge & BIT(2)) {
+            const mux_confirm_opt option = (mux_confirm_opt) destructive_dlg.selected;
+            const destructive_action action = pending_destructive_action;
+            dialogue_dismiss(&destructive_dlg);
+            pending_destructive_action = destructive_none;
+            if (option == mux_confirm_yep) {
+                if (action == destructive_restart) return perform_restart();
+                if (action == destructive_quit) return perform_quit();
+            }
+        } else if (edge & BIT(3)) {
+            dialogue_mark_cancelled(&destructive_dlg);
+            dialogue_dismiss(&destructive_dlg);
+            pending_destructive_action = destructive_none;
+        }
+        return 0;
+    }
+
     const int menu_tap = pause_menu_take_menu_tap();
     if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(2) | BIT(3)))) return 0;
 
@@ -1109,14 +1159,14 @@ int pause_menu_tick(void) {
             information_menu_open();
         } else if (current_item_index == row_restart) {
             play_sound(snd_confirm);
-            loading_message_show(lang.muxretro.content_restarting);
-            core_restart_requested = 1;
-            return 1;
+            if (gamestate_autosave_exists) return perform_restart();
+            request_destructive_action(destructive_restart);
         } else if (current_item_index == row_quit) {
             play_sound(snd_confirm);
-            if (state_saves_allowed() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
-            fade_out_screen_forced();
-            return 1;
+            if (state_saves_allowed() && session_settings_auto_save_on_quit() && gamestate_autosave_save())
+                return perform_quit();
+            if (gamestate_autosave_exists) return perform_quit();
+            request_destructive_action(destructive_quit);
         }
     }
 

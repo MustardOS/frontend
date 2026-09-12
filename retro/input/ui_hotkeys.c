@@ -246,6 +246,10 @@ static void cycle_button(const int index, const int direction) {
     }
 }
 
+static int button_row_depends_on(const int index, const int changed_index) {
+    return index != changed_index;
+}
+
 static submenu self;
 static submenu buttons_self;
 
@@ -271,6 +275,7 @@ static const submenu_def buttons_def = {
     .row_count = hotkey_binding_count,
     .value_text = button_value_text,
     .cycle = cycle_button,
+    .row_depends_on = button_row_depends_on,
     .extra_label = button_extra_label,
     .extra_action = reset_buttons,
     .closed = buttons_closed,
@@ -292,6 +297,15 @@ static int row_can_cycle(const int index) {
         return 0;
     if (index == row_pause_glyph_enabled && !session_settings.hotkey_pause_enabled) return 0;
     return 1;
+}
+
+static int row_depends_on(const int index, const int changed_index) {
+    if (changed_index == row_ff_enabled)
+        return index == row_ff_speed || index == row_ff_glyph_enabled;
+    if (changed_index == row_slowmo_enabled)
+        return index == row_slowmo_speed || index == row_slowmo_glyph_enabled;
+    if (changed_index == row_pause_enabled) return index == row_pause_glyph_enabled;
+    return 0;
 }
 
 static void row_action(const int index) {
@@ -316,6 +330,7 @@ static const submenu_def def = {
     .value_text = row_value_text,
     .cycle = cycle_row,
     .row_can_cycle = row_can_cycle,
+    .row_depends_on = row_depends_on,
     .row_is_action = row_is_action,
     .action = row_action,
     .child_tick = child_tick,

@@ -539,6 +539,13 @@ static void row_cycle(const int index, const int direction) {
     if (definition && definition->cycle) definition->cycle(row_local_index(index), direction);
 }
 
+static int row_depends_on(const int index, const int changed_index) {
+    const submenu_def *definition = row_definition(index);
+    const submenu_def *changed_definition = row_definition(changed_index);
+    return definition && definition == changed_definition && definition->row_depends_on
+           && definition->row_depends_on(row_local_index(index), row_local_index(changed_index));
+}
+
 static int row_coarse_step(const int index) {
     const submenu_def *definition = row_definition(index);
     return definition && definition->row_coarse_step ? definition->row_coarse_step(row_local_index(index)) : 0;
@@ -649,6 +656,7 @@ static submenu_def def = {
     .value_text = row_value_text,
     .cycle = row_cycle,
     .row_can_cycle = row_can_cycle,
+    .row_depends_on = row_depends_on,
     .row_is_action = row_is_action,
     .row_is_save = row_is_save,
     .row_coarse_step = row_coarse_step,
