@@ -844,6 +844,9 @@ int perf_export_trace(const char *path) {
     fprintf(f, "anti_flicker_threads,%u\n", interframe_blend_thread_count());
     fprintf(f, "anti_flicker_thread_threshold_pixels,%zu\n", interframe_blend_thread_threshold_pixels());
     fprintf(f, "cpu_texture_filter_active,%d\n", video_bridge_cpu_filter_active());
+    fprintf(f, "video_direct_upload_frames,%llu\n", (unsigned long long) video_bridge_direct_upload_frames());
+    fprintf(f, "video_staged_upload_frames,%llu\n", (unsigned long long) video_bridge_staged_upload_frames());
+    fprintf(f, "video_staged_upload_bytes,%llu\n", (unsigned long long) video_bridge_staged_upload_bytes());
     fprintf(f, "shimmer_fix,%d\n", session_settings.shimmer_fix);
     fprintf(f, "viewport_zoom,%d\n", session_settings.viewport_zoom);
     fprintf(f, "viewport_stretch_x,%d\n", session_settings.viewport_stretch_x);

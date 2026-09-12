@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,10 @@ static void *raw_frame_buf = NULL;
 static size_t raw_frame_buf_cap = 0;
 static size_t raw_frame_pitch = 0;
 static unsigned raw_frame_bpp = 0;
+static int raw_frame_valid = 0;
+static uint64_t direct_upload_frames = 0;
+static uint64_t staged_upload_frames = 0;
+static uint64_t staged_upload_bytes = 0;
 
 static uint8_t *scaled_buf = NULL;
 static size_t scaled_buf_cap = 0;
@@ -157,6 +162,18 @@ int video_bridge_anti_flicker_available(void) {
 
 int video_bridge_cpu_filter_active(void) {
     return cpu_filter_active;
+}
+
+uint64_t video_bridge_direct_upload_frames(void) {
+    return direct_upload_frames;
+}
+
+uint64_t video_bridge_staged_upload_frames(void) {
+    return staged_upload_frames;
+}
+
+uint64_t video_bridge_staged_upload_bytes(void) {
+    return staged_upload_bytes;
 }
 
 static void apply_anti_flicker(
@@ -750,7 +767,7 @@ static int ensure_frame_tex(const int want_w, const int want_h, const Uint32 wan
 }
 
 static void upload_frame(void) {
-    if (!raw_frame_buf || frame_w == 0 || frame_h == 0) return;
+    if (!raw_frame_valid || !raw_frame_buf || frame_w == 0 || frame_h == 0) return;
 
     int want_w, want_h;
     compute_target_tex_size(&want_w, &want_h);
@@ -842,6 +859,7 @@ void video_bridge_shutdown(void) {
     free(raw_frame_buf);
     raw_frame_buf = NULL;
     raw_frame_buf_cap = 0;
+    raw_frame_valid = 0;
 
     free(scaled_buf);
     scaled_buf = NULL;
@@ -888,15 +906,8 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 
     const enum retro_pixel_format pixel_format = mux_retro_get_pixel_format();
     raw_frame_bpp = bpp_for_pixel_format();
-    const size_t raw_needed = pitch * height;
-    if (raw_needed > raw_frame_buf_cap) {
-        void *grown = malloc(raw_needed);
-        if (!grown) return;
-        free(raw_frame_buf);
-        raw_frame_buf = grown;
-        raw_frame_buf_cap = raw_needed;
-    }
-
+    if (pitch > INT_MAX || pitch < (size_t) width * raw_frame_bpp || (pitch > 0 && height > SIZE_MAX / pitch))
+        return;
     raw_frame_pitch = pitch;
     const int size_changed = (int) width != frame_w || (int) height != frame_h;
     frame_w = (int) width;
@@ -904,7 +915,33 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     if (size_changed) recompute_dest_rect();
 
     const uint64_t upload_start = perf_begin();
+    if (!session_settings.anti_flicker && !cpu_filter_active) {
+        raw_frame_valid = 0;
+        if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(pixel_format))) {
+            SDL_UpdateTexture(frame_tex, NULL, data, (int) pitch);
+            direct_upload_frames++;
+        }
+        perf_end(perf_stage_video_upload, upload_start);
+        return;
+    }
+
+    const size_t raw_needed = pitch * height;
+    if (raw_needed > raw_frame_buf_cap) {
+        void *grown = malloc(raw_needed);
+        if (!grown) {
+            raw_frame_valid = 0;
+            perf_end(perf_stage_video_upload, upload_start);
+            return;
+        }
+        free(raw_frame_buf);
+        raw_frame_buf = grown;
+        raw_frame_buf_cap = raw_needed;
+    }
+
     memcpy(raw_frame_buf, data, raw_needed);
+    raw_frame_valid = 1;
+    staged_upload_frames++;
+    staged_upload_bytes += raw_needed;
     apply_anti_flicker(data, width, height, pitch, pixel_format);
 
     int target_w = 0, target_h = 0;

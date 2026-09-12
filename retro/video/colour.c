@@ -204,6 +204,7 @@ enum shader_filter_mode {
 
 static enum shader_filter_mode shader_filter = shader_filter_linear;
 static int shader_filter_declared = 0;
+static int shader_direct_source = 0;
 static int shader_contract_output_w = 0, shader_contract_output_h = 0;
 static unsigned shader_contract_render_operations = 0;
 static uint64_t shader_contract_pixels = 0;
@@ -227,6 +228,27 @@ typedef struct {
 static shader_param_t shader_params[COLOUR_SHADER_PARAM_MAX];
 static int shader_params_count = 0;
 static int shader_params_dirty = 0;
+static int shader_params_upload_dirty = 1;
+
+typedef struct {
+    int content_w, content_h, sample_src_w, sample_src_h, area_scale;
+    int effects_enabled;
+    int brightness, contrast, saturation, hueshift, gamma;
+    int vignette_shape, vignette_scaling, vignette_width, vignette_height;
+    int vignette_offset_x, vignette_offset_y, vignette_softness, vignette_strength, vignette_colour;
+    float uv_w, uv_h;
+    colour_filter_matrix_t filter;
+} colour_uniform_key_t;
+
+typedef struct {
+    int res_w, res_h, native_w, native_h, source_w, source_h;
+    float texture_w, texture_h, uv_w, uv_h;
+} shader_uniform_key_t;
+
+static colour_uniform_key_t colour_uniform_key;
+static shader_uniform_key_t shader_uniform_key;
+static int colour_uniform_key_valid = 0;
+static int shader_uniform_key_valid = 0;
 
 static SDL_Texture *adjusted_tex = NULL;
 static int adjusted_w = 0;
@@ -500,6 +522,15 @@ int colour_pass_needed(void) {
     return current_filter()->enabled;
 }
 
+static int colour_adjustment_needed(void) {
+    if (!preset_effects_enabled()) return 0;
+    if (session_settings.colour_brightness != 0 || session_settings.colour_contrast != 100
+        || session_settings.colour_saturation != 100 || session_settings.colour_hueshift != 0
+        || session_settings.colour_gamma != 100 || session_settings_vignette_active())
+        return 1;
+    return current_filter()->enabled;
+}
+
 static GLuint compile_shader(const GLenum type, const char *src) {
     const GLuint shader = gl->CreateShader(type);
     gl->ShaderSource(shader, 1, &src, NULL);
@@ -581,6 +612,7 @@ static void ensure_program(void) {
     u_vig_tone = gl->GetUniformLocation(prog, "u_vig_tone");
     u_vig_amount = gl->GetUniformLocation(prog, "u_vig_amount");
 
+    colour_uniform_key_valid = 0;
     prog_ready = 1;
     LOG_INFO(mux_module, "Colour: shader program ready");
 }
@@ -751,6 +783,37 @@ static void blank_shader_filter_pragmas(char *src) {
     }
 }
 
+static int parse_shader_direct_source(const char *src) {
+    const char *line = src;
+    while (*line) {
+        const char *end = strchr(line, '\n');
+        const size_t len = end ? (size_t) (end - line) : strlen(line);
+        const char *p = line;
+        while ((size_t) (p - line) < len && (*p == ' ' || *p == '\t'))
+            p++;
+        if ((size_t) (p - line) + 29 <= len && strncasecmp(p, "#pragma pickles_direct_source", 29) == 0)
+            return 1;
+        if (!end) break;
+        line = end + 1;
+    }
+    return 0;
+}
+
+static void blank_shader_direct_source_pragmas(char *src) {
+    char *line = src;
+    while (*line) {
+        char *end = strchr(line, '\n');
+        char *p = line;
+        while (*p && *p != '\n' && (*p == ' ' || *p == '\t'))
+            p++;
+        if (strncasecmp(p, "#pragma pickles_direct_source", 29) == 0)
+            while (*p && *p != '\n')
+                *p++ = ' ';
+        if (!end) break;
+        line = end + 1;
+    }
+}
+
 static void shader_params_ini_path(char *out, const size_t len, const char *stem) {
     snprintf(out, len, "%s/%s.ini", RETRO_SHP_PATH, stem);
 }
@@ -840,6 +903,7 @@ void colour_shader_param_cycle(const int index, const int direction) {
 
     sp->value = v;
     shader_params_dirty = 1;
+    shader_params_upload_dirty = 1;
 }
 
 void colour_shader_params_reset(void) {
@@ -847,6 +911,7 @@ void colour_shader_params_reset(void) {
         shader_params[i].value = shader_params[i].def;
 
     shader_params_dirty = 1;
+    shader_params_upload_dirty = 1;
 }
 
 static void ensure_shader_program(void) {
@@ -863,6 +928,7 @@ static void ensure_shader_program(void) {
     sh_u_source_resolution = sh_u_texture_resolution = sh_u_source_uv_extent = -1;
     shader_filter = shader_filter_linear;
     shader_filter_declared = 0;
+    shader_direct_source = 0;
     shader_contract_output_w = shader_contract_output_h = 0;
     shader_contract_native_w = shader_contract_native_h = 0;
     shader_contract_source_w = shader_contract_source_h = 0;
@@ -870,6 +936,8 @@ static void ensure_shader_program(void) {
     shader_contract_uv_w = shader_contract_uv_h = 0.0f;
     shader_params_count = 0;
     shader_params_dirty = 0;
+    shader_params_upload_dirty = 1;
+    shader_uniform_key_valid = 0;
 
     if (index <= 0 || index >= shader_count) return;
 
@@ -890,8 +958,10 @@ static void ensure_shader_program(void) {
 
     shader_params_count = parse_shader_params(strip);
     shader_filter = parse_shader_filter(strip, &shader_filter_declared);
+    shader_direct_source = parse_shader_direct_source(strip);
     blank_shader_params(strip);
     blank_shader_filter_pragmas(strip);
+    blank_shader_direct_source_pragmas(strip);
 
     const size_t total = strlen(shader_fs_preamble) + strlen(strip) + 1;
     char *full_src = malloc(total);
@@ -1018,6 +1088,37 @@ static void set_colour_uniforms(
     const int content_w, const int content_h, const int sample_src_w, const int sample_src_h, const float uv_w,
     const float uv_h, const int area_scale
 ) {
+    static const colour_filter_matrix_t disabled_filter = {0};
+    const colour_filter_matrix_t *filter = preset_effects_enabled() ? current_filter() : &disabled_filter;
+    colour_uniform_key_t key = {0};
+    key.content_w = content_w;
+    key.content_h = content_h;
+    key.sample_src_w = sample_src_w;
+    key.sample_src_h = sample_src_h;
+    key.area_scale = area_scale;
+    key.effects_enabled = preset_effects_enabled();
+    key.brightness = session_settings.colour_brightness;
+    key.contrast = session_settings.colour_contrast;
+    key.saturation = session_settings.colour_saturation;
+    key.hueshift = session_settings.colour_hueshift;
+    key.gamma = session_settings.colour_gamma;
+    key.vignette_shape = session_settings.vignette_shape;
+    key.vignette_scaling = session_settings.vignette_scaling;
+    key.vignette_width = session_settings.vignette_width;
+    key.vignette_height = session_settings.vignette_height;
+    key.vignette_offset_x = session_settings.vignette_offset_x;
+    key.vignette_offset_y = session_settings.vignette_offset_y;
+    key.vignette_softness = session_settings.vignette_softness;
+    key.vignette_strength = session_settings.vignette_strength;
+    key.vignette_colour = session_settings.vignette_colour;
+    key.uv_w = uv_w;
+    key.uv_h = uv_h;
+    key.filter = *filter;
+
+    if (colour_uniform_key_valid && memcmp(&key, &colour_uniform_key, sizeof(key)) == 0) return;
+    colour_uniform_key = key;
+    colour_uniform_key_valid = 1;
+
     const float brightness = (float) session_settings.colour_brightness / 100.0f;
     const float contrast = (float) session_settings.colour_contrast / 100.0f;
     const float saturation = (float) session_settings.colour_saturation / 100.0f;
@@ -1026,9 +1127,6 @@ static void set_colour_uniforms(
 
     const int colour_enabled = session_settings.colour_brightness != 0 || session_settings.colour_contrast != 100
                                || session_settings.colour_saturation != 100 || session_settings.colour_hueshift != 0;
-    static const colour_filter_matrix_t disabled_filter = {0};
-    const colour_filter_matrix_t *filter = preset_effects_enabled() ? current_filter() : &disabled_filter;
-
     if (u_tex >= 0) gl->Uniform1i(u_tex, 0);
     if (u_sample_src_size >= 0) gl->Uniform2f(u_sample_src_size, (float) sample_src_w, (float) sample_src_h);
     if (u_sample_dst_size >= 0) gl->Uniform2f(u_sample_dst_size, (float) content_w, (float) content_h);
@@ -1059,6 +1157,19 @@ static void set_shader_uniforms(
     const float texture_w = uv_w > 0.0f ? (float) source_w / uv_w : (float) source_w;
     const float texture_h = uv_h > 0.0f ? (float) source_h / uv_h : (float) source_h;
 
+    const shader_uniform_key_t key = {
+        .res_w = res_w,
+        .res_h = res_h,
+        .native_w = native_w,
+        .native_h = native_h,
+        .source_w = source_w,
+        .source_h = source_h,
+        .texture_w = texture_w,
+        .texture_h = texture_h,
+        .uv_w = uv_w,
+        .uv_h = uv_h,
+    };
+
     shader_contract_output_w = res_w;
     shader_contract_output_h = res_h;
     shader_contract_native_w = native_w;
@@ -1070,17 +1181,24 @@ static void set_shader_uniforms(
     shader_contract_uv_w = uv_w;
     shader_contract_uv_h = uv_h;
 
-    if (sh_u_tex >= 0) gl->Uniform1i(sh_u_tex, 0);
-    if (sh_u_resolution >= 0) gl->Uniform2f(sh_u_resolution, (float) res_w, (float) res_h);
-    if (sh_u_native_resolution >= 0) gl->Uniform2f(sh_u_native_resolution, (float) native_w, (float) native_h);
-    if (sh_u_source_resolution >= 0) gl->Uniform2f(sh_u_source_resolution, (float) source_w, (float) source_h);
-    if (sh_u_texture_resolution >= 0) gl->Uniform2f(sh_u_texture_resolution, texture_w, texture_h);
-    if (sh_u_source_uv_extent >= 0) gl->Uniform2f(sh_u_source_uv_extent, uv_w, uv_h);
+    if (!shader_uniform_key_valid || memcmp(&key, &shader_uniform_key, sizeof(key)) != 0) {
+        shader_uniform_key = key;
+        shader_uniform_key_valid = 1;
+        if (sh_u_tex >= 0) gl->Uniform1i(sh_u_tex, 0);
+        if (sh_u_resolution >= 0) gl->Uniform2f(sh_u_resolution, (float) res_w, (float) res_h);
+        if (sh_u_native_resolution >= 0) gl->Uniform2f(sh_u_native_resolution, (float) native_w, (float) native_h);
+        if (sh_u_source_resolution >= 0) gl->Uniform2f(sh_u_source_resolution, (float) source_w, (float) source_h);
+        if (sh_u_texture_resolution >= 0) gl->Uniform2f(sh_u_texture_resolution, texture_w, texture_h);
+        if (sh_u_source_uv_extent >= 0) gl->Uniform2f(sh_u_source_uv_extent, uv_w, uv_h);
+    }
     if (sh_u_time >= 0) gl->Uniform1f(sh_u_time, (float) shader_frame_count);
     if (sh_u_frame >= 0) gl->Uniform1i(sh_u_frame, shader_frame_count);
 
-    for (int i = 0; i < shader_params_count; i++)
-        if (shader_params[i].loc >= 0) gl->Uniform1f(shader_params[i].loc, shader_params[i].value);
+    if (shader_params_upload_dirty) {
+        for (int i = 0; i < shader_params_count; i++)
+            if (shader_params[i].loc >= 0) gl->Uniform1f(shader_params[i].loc, shader_params[i].value);
+        shader_params_upload_dirty = 0;
+    }
 }
 
 static int draw_gl_pass(
@@ -1260,7 +1378,18 @@ static void colour_render_pass_internal(
 
     int drew = 0;
 
-    if (use_shader) {
+    if (use_shader && shader_direct_source && !area_scale && !src_rect
+        && mux_retro_get_pixel_format() == RETRO_PIXEL_FORMAT_XRGB8888 && !colour_adjustment_needed()) {
+        if (SDL_SetRenderTarget(renderer, output_tex) == 0) {
+            shader_frame_count++;
+            drew = draw_gl_pass(
+                gl_src, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, 0,
+                shader_filter
+            );
+            shader_contract_render_operations++;
+            shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
+        }
+    } else if (use_shader) {
         int source_w = 0;
         int source_h = 0;
         SDL_ScaleMode source_scale = SDL_ScaleModeNearest;
@@ -1341,6 +1470,7 @@ void colour_shader_export_contract(FILE *stream) {
     fprintf(stream, "shader_name,%s\n", name);
     fprintf(stream, "shader_filter,%s\n", filter);
     fprintf(stream, "shader_filter_source,%s\n", shader_filter_declared ? "declared" : "global_default");
+    fprintf(stream, "shader_direct_source,%d\n", shader_direct_source);
     fprintf(stream, "shader_u_tex,0\n");
     fprintf(stream, "shader_u_resolution,%dx%d\n", shader_contract_output_w, shader_contract_output_h);
     fprintf(stream, "shader_u_native_resolution,%dx%d\n", shader_contract_native_w, shader_contract_native_h);

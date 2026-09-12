@@ -65,6 +65,12 @@ size_t video_bridge_anti_flicker_bytes(void);
 
 int video_bridge_anti_flicker_available(void);
 
+uint64_t video_bridge_direct_upload_frames(void);
+
+uint64_t video_bridge_staged_upload_frames(void);
+
+uint64_t video_bridge_staged_upload_bytes(void);
+
 int video_bridge_cpu_filter_active(void);
 
 void mux_retro_audio_sample_cb(int16_t left, int16_t right);
