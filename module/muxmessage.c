@@ -5,6 +5,7 @@
 
 #define FINISH_FILE   "/tmp/msg_finish"
 #define PROGRESS_FILE "/tmp/msg_progress"
+#define RELEASED_FILE "/run/muos/loading_released"
 
 char **messages = NULL;
 int message_count = 0;
@@ -217,5 +218,8 @@ int main(const int argc, char *argv[]) {
     }
 
     sdl_cleanup();
+
+    FILE *released = fopen(RELEASED_FILE, "w");
+    if (released) fclose(released);
     return 0;
 }

@@ -1467,6 +1467,7 @@ struct mux_lang {
         char forget_confirm[MAX_BUFFER_SIZE];
         char wifi[MAX_BUFFER_SIZE];
         char internet[MAX_BUFFER_SIZE];
+        char status_label[MAX_BUFFER_SIZE];
         struct {
             char associating[MAX_BUFFER_SIZE];
             char authenticating[MAX_BUFFER_SIZE];
@@ -1495,6 +1496,7 @@ struct mux_lang {
             char dns[MAX_BUFFER_SIZE];
             char address[MAX_BUFFER_SIZE];
             char connect[MAX_BUFFER_SIZE];
+            char status[MAX_BUFFER_SIZE];
         } help;
     } muxnetprofile;
 

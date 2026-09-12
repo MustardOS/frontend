@@ -1415,6 +1415,7 @@ static const lang_field lang_fields[] = {
     {"muxnetprofile", LANG_OFF(muxnetprofile.forget_confirm), lang_specific, "Forget this network?"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.wifi), lang_specific, "Wi-Fi"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.internet), lang_specific, "Internet"},
+    {"muxnetprofile", LANG_OFF(muxnetprofile.status_label), lang_specific, "Status"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.status.associating), lang_specific, "Associating"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.status.authenticating), lang_specific, "Authenticating"},
     {"muxnetprofile", LANG_OFF(muxnetprofile.status.waiting_ip), lang_specific, "Getting IP"},
@@ -1440,6 +1441,7 @@ static const lang_field lang_fields[] = {
     {"muxnetprofile", LANG_OFF(muxnetprofile.help.address), lang_specific, "The address this device should take on the network.\n\nOnly needed when the type is set to Static."},
     {"muxnetprofile", LANG_OFF(muxnetprofile.help.dns), lang_specific, "The server used to look up names on the network.\n\nOnly needed when the type is set to Static."},
     {"muxnetprofile", LANG_OFF(muxnetprofile.help.connect), lang_specific, "Joins the network using everything entered above."},
+    {"muxnetprofile", LANG_OFF(muxnetprofile.help.status), lang_specific, "Shows Wi-Fi signal strength and Internet availability separately."},
 
     // muxnetscan
     {"muxnetscan", LANG_OFF(muxnetscan.title), lang_specific, "Network Scan"},

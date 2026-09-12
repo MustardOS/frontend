@@ -174,6 +174,13 @@ static void set_connect_value(const char *value) {
     if (!curr || strcmp(curr, value) != 0) lv_label_set_text(ui_val_connect_network, value);
 }
 
+static void set_status_value(const char *value) {
+    if (!ui_val_status_network || !value) return;
+
+    const char *curr = lv_label_get_text(ui_val_status_network);
+    if (!curr || strcmp(curr, value) != 0) lv_label_set_text(ui_val_status_network, value);
+}
+
 static void set_active_connection_value(const int force) {
     const uint32_t now = SDL_GetTicks();
     if (!force && next_connection_label_tick && (int32_t) (now - next_connection_label_tick) < 0) return;
@@ -211,7 +218,9 @@ static void set_active_connection_value(const int force) {
             value, sizeof(value), "%s / %s %s", lang.muxnetprofile.connected, lang.muxnetprofile.internet, internet
         );
     }
-    set_connect_value(value);
+    char ip[IP_OCTET];
+    if (read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0) set_connect_value(ip);
+    set_status_value(value);
 }
 
 static void nav_scan_hide(const int hide) {
@@ -304,6 +313,7 @@ static void show_connect_failure(const int exit_code) {
 
     clear_current_active_profile();
     set_connect_value(net_status_label(id));
+    set_status_value(net_status_label(id));
 
     lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.connect);
     nav_scan_hide(0);
@@ -315,6 +325,7 @@ static void can_scan_check(const int forced_disconnect) {
         lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
         nav_scan_hide(1);
         update_network_status(ui_sta_network, &theme, 0);
+        set_status_value(lang.muxnetprofile.connect_try);
         return;
     }
 
@@ -322,6 +333,7 @@ static void can_scan_check(const int forced_disconnect) {
         lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
         nav_scan_hide(1);
         update_network_status(ui_sta_network, &theme, 0);
+        set_active_connection_value(1);
         return;
     }
 
@@ -329,6 +341,7 @@ static void can_scan_check(const int forced_disconnect) {
     nav_scan_hide(0);
 
     set_connect_value(lang.muxnetprofile.not_connected);
+    set_status_value(lang.muxnetprofile.not_connected);
     update_network_status(ui_sta_network, &theme, 2);
 }
 
@@ -600,6 +613,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, network, gateway, lang.muxnetprofile.gateway, "gateway", "");
     INIT_VALUE_ITEM(-1, network, dns, lang.muxnetprofile.dns, "dns", "");
     INIT_VALUE_ITEM(-1, network, connect, lang.muxnetprofile.connect, "connect", "");
+    INIT_VALUE_ITEM(-1, network, status, lang.muxnetprofile.status_label, "status", "");
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
@@ -905,6 +919,7 @@ static void handle_confirm(void) {
     if (handle_navigate()) return;
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
+    if (e_focused == ui_lbl_status_network) return;
     if (e_focused == ui_lbl_connect_network) {
         if (lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
             handle_connect_toggle();
@@ -1440,7 +1455,8 @@ static void init_elements(void) {
                                   {NULL, NULL, 0}});
 
     lv_obj_t *connect_items[] = {ui_pnl_profile_name_network, ui_pnl_identifier_network, ui_pnl_password_network,
-                                 ui_pnl_type_network,         ui_pnl_connect_network,    NULL};
+                                 ui_pnl_type_network,         ui_pnl_connect_network,    ui_pnl_status_network,
+                                 NULL};
     for (int i = 0; connect_items[i]; i++)
         lv_obj_clear_flag(connect_items[i], LV_OBJ_FLAG_HIDDEN);
 

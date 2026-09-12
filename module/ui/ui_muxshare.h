@@ -392,7 +392,8 @@
     NETWORK(subnet, "subnet")                                                                                          \
     NETWORK(gateway, "gateway")                                                                                        \
     NETWORK(dns, "dns")                                                                                                \
-    NETWORK(connect, "connect")
+    NETWORK(connect, "connect")                                                                                        \
+    NETWORK(status, "status")
 
 #define OPTION_ELEMENTS                                                                                                \
     OPTION(core, "core")                                                                                               \
