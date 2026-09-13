@@ -22,6 +22,7 @@ const char *coredef_lookup(const char *core_name, const char *key);
 
 // One entry per core file in this directory!
 #define COREDEF_LIST                                                                                                   \
+    COREDEF(dosbox_pure)                                                                                               \
     COREDEF(duckstation)                                                                                               \
     COREDEF(flycast)                                                                                                   \
     COREDEF(flycastvl)                                                                                                 \
@@ -29,7 +30,12 @@ const char *coredef_lookup(const char *core_name, const char *key);
     COREDEF(mednafen_pce)                                                                                              \
     COREDEF(mednafen_pce_fast)                                                                                         \
     COREDEF(mednafen_supergrafx)                                                                                       \
+    COREDEF(mgba)                                                                                                      \
+    COREDEF(mgba_rumble)                                                                                               \
     COREDEF(mupen64plus_next)                                                                                          \
+    COREDEF(parallel_n64)                                                                                              \
+    COREDEF(pcsx_rearmed)                                                                                              \
     COREDEF(ppsspp)                                                                                                    \
     COREDEF(sameboy)                                                                                                   \
-    COREDEF(swanstation)
+    COREDEF(swanstation)                                                                                               \
+    COREDEF(vbam)
