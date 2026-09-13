@@ -1629,7 +1629,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (key_show) {
-        close_osk(key_entry, ui_group, ui_txt_entry_detail, ui_pnl_entry_detail);
+        key_backspace(ui_txt_entry_detail);
         return;
     }
 
