@@ -195,6 +195,16 @@ void init_display(void) {
             LOG_INFO("video", "Overriding MUX resolution for HDMI: %dx%d", ext_w, ext_h);
             device.mux.width = (int16_t) ext_w;
             device.mux.height = (int16_t) ext_h;
+
+            // screen.width and screen.height are the physical output everywhere they are read:
+            // the window SDL creates, the reference update_render_state() centres the destination
+            // rect against, the wallpaper, the screensavers, the overlay resolution match and the
+            // screen capture used for screenshots and achievements. Only the external resolution
+            // was being applied, so on HDMI the destination rect came out centred on the panel
+            // size and landed at a negative offset, which the hardware render path then turned
+            // into a quad of the wrong size because it works the rect out against the real output.
+            device.screen.width = (int16_t) ext_w;
+            device.screen.height = (int16_t) ext_h;
         } else {
             LOG_WARN("video", "Failed to read HDMI external resolution, using default MUX size");
         }
