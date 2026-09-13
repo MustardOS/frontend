@@ -18,6 +18,12 @@
 
 #define INPUT_COOLDOWN 256
 
+// muinput opens the kernel controller, relocates its node under /dev/muinput and republishes a
+// normalised BUS_VIRTUAL "muOS-Keys" device, so ideally this name never reaches SDL. It does when
+// we get in before muinput has isolated it, and its button zero and one are then the face buttons
+// where the board mapping puts volume, which is how A and B end up changing the volume.
+#define MUOS_INPUT_SOURCE_NAME "muOS-Input-Source"
+
 #define AXIS_THRESHOLD    ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
 #define TRIGGER_THRESHOLD ((int16_t) ((float) AXIS_MAX * AXIS_THRESHOLD_FRACTION))
 
@@ -297,6 +303,39 @@ static int is_tracked_instance(const SDL_JoystickID id) {
 static int is_tracked_as_controller(const SDL_JoystickID id) {
     const int idx = find_device_by_instance(id);
     return idx >= 0 && devices[idx].controller != NULL;
+}
+
+static int is_muinput_source(const char *name) {
+    return name && strcmp(name, MUOS_INPUT_SOURCE_NAME) == 0;
+}
+
+// The board sdl_map describes the device muinput publishes, so the GUID it opens with identifies
+// the handheld controls. joy_button_map only ever carries the volume keys, which belong to no
+// other device, and firing them from a stray joystick is what makes A and B change the volume.
+static int is_board_device(const SDL_JoystickID id) {
+    static SDL_JoystickGUID board_guid;
+    static int board_guid_state = 0;
+
+    if (board_guid_state == 0) {
+        const char *comma = strchr(device.board.sdl_map, ',');
+        const size_t len = comma ? (size_t) (comma - device.board.sdl_map) : 0;
+        char guid_str[64];
+
+        if (len > 0 && len < sizeof(guid_str)) {
+            memcpy(guid_str, device.board.sdl_map, len);
+            guid_str[len] = '\0';
+            board_guid = SDL_JoystickGetGUIDFromString(guid_str);
+            board_guid_state = 1;
+        } else {
+            // No board mapping to compare against, so every device keeps the old behaviour
+            board_guid_state = -1;
+        }
+    }
+
+    if (board_guid_state < 0) return 1;
+
+    const int idx = find_device_by_instance(id);
+    return idx >= 0 && memcmp(&board_guid, &devices[idx].guid, sizeof(board_guid)) == 0;
 }
 
 static int input_is_suppressed(void) {
@@ -819,6 +858,7 @@ static void open_all_input_devices(void) {
 
     for (int i = 0; i < num_joy && device_count < MAX_INPUT_DEVICES; i++) {
         if (!SDL_IsGameController(i)) continue;
+        if (is_muinput_source(SDL_JoystickNameForIndex(i))) continue;
 
         SDL_GameController *gc = SDL_GameControllerOpen(i);
         if (!gc) {
@@ -853,36 +893,48 @@ static void open_all_input_devices(void) {
         devices[device_count++] = (tracked_device) {.controller = gc, .joystick = joy, .instance = inst, .guid = guid};
     }
 
-    for (int i = 0; i < num_joy && device_count < MAX_INPUT_DEVICES; i++) {
-        if (SDL_IsGameController(i)) continue;
+    // Two passes, so the muinput transport is only ever opened when nothing else turned up and the
+    // alternative is a device with no controls at all
+    for (int pass = 0; pass < 2; pass++) {
+        if (pass == 1 && device_count > 0) break;
 
-        SDL_Joystick *joy = SDL_JoystickOpen(i);
-        if (!joy) {
-            LOG_WARN("input", "Failed to open joystick %d: %s", i, SDL_GetError());
-            continue;
+        for (int i = 0; i < num_joy && device_count < MAX_INPUT_DEVICES; i++) {
+            if (SDL_IsGameController(i)) continue;
+
+            const char *probe = SDL_JoystickNameForIndex(i);
+            if (pass == 0 && is_muinput_source(probe)) {
+                LOG_INFO("input", "Ignoring muinput transport device: %s", probe);
+                continue;
+            }
+
+            SDL_Joystick *joy = SDL_JoystickOpen(i);
+            if (!joy) {
+                LOG_WARN("input", "Failed to open joystick %d: %s", i, SDL_GetError());
+                continue;
+            }
+
+            const SDL_JoystickID inst = SDL_JoystickInstanceID(joy);
+
+            if (is_tracked_instance(inst)) {
+                SDL_JoystickClose(joy);
+                continue;
+            }
+
+            const SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
+            char guid_str[64];
+            SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
+
+            const char *name = SDL_JoystickName(joy);
+            LOG_WARN("input", "Using raw joystick fallback: %s", name ? name : "unknown");
+            LOG_DEBUG("input", "Raw joystick GUID: %s", guid_str);
+            LOG_INFO("input", "Raw joystick axes: %d", SDL_JoystickNumAxes(joy));
+            LOG_INFO("input", "Raw joystick buttons: %d", SDL_JoystickNumButtons(joy));
+
+            if (SDL_JoystickNumAxes(joy) < 2) LOG_WARN("input", "Raw joystick fallback has no usable stick axes");
+
+            devices[device_count++] =
+                (tracked_device) {.controller = NULL, .joystick = joy, .instance = inst, .guid = guid};
         }
-
-        const SDL_JoystickID inst = SDL_JoystickInstanceID(joy);
-
-        if (is_tracked_instance(inst)) {
-            SDL_JoystickClose(joy);
-            continue;
-        }
-
-        const SDL_JoystickGUID guid = SDL_JoystickGetGUID(joy);
-        char guid_str[64];
-        SDL_JoystickGetGUIDString(guid, guid_str, sizeof(guid_str));
-
-        const char *name = SDL_JoystickName(joy);
-        LOG_WARN("input", "Using raw joystick fallback: %s", name ? name : "unknown");
-        LOG_DEBUG("input", "Raw joystick GUID: %s", guid_str);
-        LOG_INFO("input", "Raw joystick axes: %d", SDL_JoystickNumAxes(joy));
-        LOG_INFO("input", "Raw joystick buttons: %d", SDL_JoystickNumButtons(joy));
-
-        if (SDL_JoystickNumAxes(joy) < 2) LOG_WARN("input", "Raw joystick fallback has no usable stick axes");
-
-        devices[device_count++] =
-            (tracked_device) {.controller = NULL, .joystick = joy, .instance = inst, .guid = guid};
     }
 
     if (device_count == 0) LOG_WARN("input", "No usable input device found");
@@ -891,6 +943,20 @@ static void open_all_input_devices(void) {
         primary_instance = devices[0].instance;
         LOG_INFO("input", "Primary input device set (instance %d)", primary_instance);
         bump_source_generation();
+    }
+
+    // An earlier scan can settle on a raw fallback before the controller muinput publishes exists,
+    // and the raw device must not keep the primary slot once the real one shows up
+    if (primary_instance >= 0 && !is_tracked_as_controller(primary_instance)) {
+        for (int i = 0; i < device_count; i++) {
+            if (!devices[i].controller) continue;
+
+            release_extra_player_slot(devices[i].instance);
+            primary_instance = devices[i].instance;
+            LOG_INFO("input", "Primary input device promoted to controller (instance %d)", primary_instance);
+            bump_source_generation();
+            break;
+        }
     }
 
     for (int i = 0; i < device_count; i++) {
@@ -1343,14 +1409,14 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
             }
             break;
         case SDL_JOYBUTTONDOWN:
-            if (ev->jbutton.which == primary_instance) {
+            if (ev->jbutton.which == primary_instance && is_board_device(ev->jbutton.which)) {
                 process_sdl_joy_button(ev->jbutton.which, ev->jbutton.button, 1);
                 if (ev->jbutton.button < 32)
                     update_primary_pressed(ev->jbutton.which, joy_button_map[ev->jbutton.button], 1);
             }
             break;
         case SDL_JOYBUTTONUP:
-            if (ev->jbutton.which == primary_instance) {
+            if (ev->jbutton.which == primary_instance && is_board_device(ev->jbutton.which)) {
                 process_sdl_joy_button(ev->jbutton.which, ev->jbutton.button, 0);
                 if (ev->jbutton.button < 32)
                     update_primary_pressed(ev->jbutton.which, joy_button_map[ev->jbutton.button], 0);
