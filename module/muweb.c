@@ -1393,11 +1393,41 @@ static const char *path_leaf(const char *relative) {
     return slash ? slash + 1 : relative;
 }
 
+struct child {
+    char name[NAME_MAX + 1];
+    long long bytes;
+    long long modified;
+};
+
 struct child_list {
-    char **names;
+    struct child *items;
     size_t count;
     size_t capacity;
 };
+
+static int child_add(struct child_list *list, const char *name, const long long bytes, const long long modified) {
+    for (size_t i = 0; i < list->count; ++i)
+        if (strcmp(list->items[i].name, name) == 0) return 1;
+
+    if (list->count == list->capacity) {
+        const size_t next = list->capacity ? list->capacity * 2 : 64;
+        struct child *grown = realloc(list->items, next * sizeof(*grown));
+        if (!grown) return 0;
+        list->items = grown;
+        list->capacity = next;
+    }
+
+    struct child *item = &list->items[list->count];
+    snprintf(item->name, sizeof(item->name), "%s", name);
+    item->bytes = bytes;
+    item->modified = modified;
+    list->count += 1;
+    return 1;
+}
+
+static int child_compare(const void *left, const void *right) {
+    return strcasecmp(((const struct child *) left)->name, ((const struct child *) right)->name);
+}
 
 static void children_of(const char *relative, struct child_list *directories, struct child_list *files) {
     for (size_t root = 0; root < content_root_count; ++root) {
@@ -1434,26 +1464,32 @@ static void children_of(const char *relative, struct child_list *directories, st
             }
 
             if (is_directory) {
-                string_array_add(&directories->names, &directories->count, &directories->capacity, entry->d_name);
+                child_add(directories, entry->d_name, 0, 0);
                 continue;
             }
 
             char stem[NAME_MAX + 1];
             snprintf(stem, sizeof(stem), "%s", entry->d_name);
             strip_extension(stem);
-            if (stem[0]) string_array_add(&files->names, &files->count, &files->capacity, stem);
+            if (!stem[0]) continue;
+
+            struct stat about;
+            if (stat(child, &about) == 0)
+                child_add(files, stem, (long long) about.st_size, (long long) about.st_mtime);
+            else
+                child_add(files, stem, 0, 0);
         }
 
         closedir(directory);
     }
 
-    directories->count = string_array_dedupe(directories->names, directories->count);
-    files->count = string_array_dedupe(files->names, files->count);
+    qsort(directories->items, directories->count, sizeof(struct child), child_compare);
+    qsort(files->items, files->count, sizeof(struct child), child_compare);
 }
 
 static void child_list_free(struct child_list *list) {
-    string_array_free(list->names, list->count);
-    list->names = NULL;
+    free(list->items);
+    list->items = NULL;
     list->count = 0;
     list->capacity = 0;
 }
@@ -1594,32 +1630,34 @@ static int content_folder_json(struct buffer *out, const char *relative) {
         bytes = 0;
         modified = 0;
 
-        ok = buffer_puts(out, ",{") && json_field(out, "stem", files.names[i]) && buffer_puts(out, ",");
+        ok = buffer_puts(out, ",{") && json_field(out, "stem", files.items[i].name) && buffer_puts(out, ",");
 
-        const char *friendly = friendly_content_name(leaf, files.names[i]);
+        const char *friendly = friendly_content_name(leaf, files.items[i].name);
         if (ok && friendly) ok = json_field(out, "friendly", friendly) && buffer_puts(out, ",");
         if (ok && catalogue) ok = json_field(out, "catalogue", catalogue) && buffer_puts(out, ",");
 
-        ok = ok && catalogue_files_json(out, catalogue ? &system : &folders, files.names[i], &bytes, &modified)
-             && buffer_puts(out, ",") && json_number(out, "bytes", bytes) && buffer_puts(out, ",")
-             && json_number(out, "modified", modified) && buffer_puts(out, "}");
+        ok = ok && catalogue_files_json(out, catalogue ? &system : &folders, files.items[i].name, &bytes, &modified)
+             && buffer_puts(out, ",") && json_number(out, "bytes", files.items[i].bytes) && buffer_puts(out, ",")
+             && json_number(out, "modified", files.items[i].modified) && buffer_puts(out, ",")
+             && json_number(out, "artBytes", bytes) && buffer_puts(out, ",")
+             && json_number(out, "artModified", modified) && buffer_puts(out, "}");
     }
 
     for (size_t i = 0; ok && i < directories.count; ++i) {
         char within[PATH_MAX];
-        if ((size_t) snprintf(within, sizeof(within), "%s/%s", relative, directories.names[i]) >= sizeof(within))
+        if ((size_t) snprintf(within, sizeof(within), "%s/%s", relative, directories.items[i].name) >= sizeof(within))
             continue;
 
         bytes = 0;
         modified = 0;
 
-        const char *sub_friendly = friendly_folder_name(directories.names[i]);
+        const char *sub_friendly = friendly_folder_name(directories.items[i].name);
 
-        ok = buffer_puts(out, ",{") && json_field(out, "stem", directories.names[i]) && buffer_puts(out, ",")
+        ok = buffer_puts(out, ",{") && json_field(out, "stem", directories.items[i].name) && buffer_puts(out, ",")
              && (!sub_friendly || (json_field(out, "friendly", sub_friendly) && buffer_puts(out, ",")))
              && json_field(out, "path", within) && buffer_puts(out, ",")
              && json_field(out, "catalogue", CATALOGUE_FOLDER) && buffer_puts(out, ",\"folder\":true,")
-             && catalogue_files_json(out, &folders, directories.names[i], &bytes, &modified) && buffer_puts(out, ",")
+             && catalogue_files_json(out, &folders, directories.items[i].name, &bytes, &modified) && buffer_puts(out, ",")
              && json_number(out, "bytes", bytes) && buffer_puts(out, ",") && json_number(out, "modified", modified)
              && buffer_puts(out, "}");
     }
