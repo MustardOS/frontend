@@ -87,12 +87,23 @@ static void ui_refresh_task(lv_timer_t *timer) {
 }
 
 static void handle_b(void) {
-    if (msgbox_active || hold_call) return;
+    if (hold_call) return;
+
+    if (orientation_handle_skip()) return;
+
+    if (msgbox_active) {
+        handle_msgbox_dismiss();
+        return;
+    }
 
     play_sound(snd_back);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "webcode");
 
     mux_input_stop();
+}
+
+static void handle_x(void) {
+    orientation_handle_skip();
 }
 
 static void handle_help(void) {
@@ -182,7 +193,7 @@ int muxwebcode_main(void) {
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,
-        .press_handler = {[mux_input_b] = handle_b},
+        .press_handler = {[mux_input_b] = handle_b, [mux_input_x] = handle_x},
         .release_handler = {[mux_input_menu] = handle_help}
     };
 
