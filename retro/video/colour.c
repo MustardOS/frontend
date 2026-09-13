@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <GLES2/gl2.h>
 #include <common/config/config.h>
 #include <common/storage/fileio.h>
@@ -354,33 +355,86 @@ static void load_shader_label(const char *stem, char *out, const size_t out_len)
     fclose(f);
 }
 
-static int scan_presets(const char *dir_path, const char *ext, char names[][64], const int max_count) {
-    int count = 0;
-    snprintf(names[count++], 64, "none");
+// Subdirectories are walked as well, and a preset found inside one is recorded as a
+// relative path such as "CRT/scanlines". The name is only ever used to build a file path,
+// so a subpath needs no special handling at the point of use. Depth is bounded so a
+// symlink loop or a deeply nested collection cannot stall startup.
+#define PRESET_SCAN_MAX_DEPTH 4
+
+static void scan_presets_dir(
+    const char *root, const char *prefix, const char *ext, char scanned[][64], int *scanned_count,
+    const int max_count, const int depth
+) {
+    char dir_path[PATH_MAX];
+    if (prefix && *prefix) {
+        // The prefix is relative to the root and already ends in a separator
+        snprintf(dir_path, sizeof(dir_path), "%s/%s", root, prefix);
+    } else {
+        snprintf(dir_path, sizeof(dir_path), "%s", root);
+    }
 
     DIR *dir = opendir(dir_path);
-    if (!dir) return count;
-
-    char scanned[COLOUR_SHADER_MAX][64];
-    int scanned_count = 0;
+    if (!dir) return;
 
     const size_t ext_len = strlen(ext);
 
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL && scanned_count < max_count) {
-        const size_t name_len = strlen(entry->d_name);
-        if (name_len <= ext_len || strcmp(entry->d_name + name_len - ext_len, ext) != 0) continue;
+    while ((entry = readdir(dir)) != NULL && *scanned_count < max_count) {
+        if (entry->d_name[0] == '.') continue;
+
+        char relative[64];
+        if (prefix && *prefix) {
+            if ((size_t) snprintf(relative, sizeof(relative), "%s%s", prefix, entry->d_name) >= sizeof(relative))
+                continue;
+        } else {
+            if ((size_t) snprintf(relative, sizeof(relative), "%s", entry->d_name) >= sizeof(relative)) continue;
+        }
+
+        int is_dir = entry->d_type == DT_DIR;
+        if (entry->d_type == DT_UNKNOWN) {
+            char probe[PATH_MAX];
+            snprintf(probe, sizeof(probe), "%s/%s", dir_path, entry->d_name);
+
+            struct stat st;
+            if (stat(probe, &st) != 0) continue;
+            is_dir = S_ISDIR(st.st_mode);
+        }
+
+        if (is_dir) {
+            if (depth + 1 >= PRESET_SCAN_MAX_DEPTH) continue;
+
+            char nested[64];
+            if ((size_t) snprintf(nested, sizeof(nested), "%s/", relative) >= sizeof(nested)) continue;
+
+            scan_presets_dir(root, nested, ext, scanned, scanned_count, max_count, depth + 1);
+            continue;
+        }
+
+        const size_t name_len = strlen(relative);
+        if (name_len <= ext_len || strcmp(relative + name_len - ext_len, ext) != 0) continue;
 
         const size_t stem_len = name_len - ext_len;
         if (stem_len == 0 || stem_len >= 64) continue;
 
-        if (stem_len == 4 && strncmp(entry->d_name, "none", 4) == 0) continue;
+        if (stem_len == 4 && strncmp(relative, "none", 4) == 0) continue;
 
-        snprintf(scanned[scanned_count], 64, "%.*s", (int) stem_len, entry->d_name);
-        scanned_count++;
+        snprintf(scanned[*scanned_count], 64, "%.*s", (int) stem_len, relative);
+        (*scanned_count)++;
     }
-    closedir(dir);
 
+    closedir(dir);
+}
+
+static int scan_presets(const char *dir_path, const char *ext, char names[][64], const int max_count) {
+    int count = 0;
+    snprintf(names[count++], 64, "none");
+
+    char scanned[COLOUR_SHADER_MAX][64];
+    int scanned_count = 0;
+
+    scan_presets_dir(dir_path, NULL, ext, scanned, &scanned_count, max_count, 0);
+
+    // Sorting the relative paths keeps each folder's presets together and in order.
     qsort(scanned, (size_t) scanned_count, sizeof(scanned[0]), name_cmp);
 
     for (int i = 0; i < scanned_count && count < max_count; i++)
@@ -816,6 +870,10 @@ static void blank_shader_direct_source_pragmas(char *src) {
 
 static void shader_params_ini_path(char *out, const size_t len, const char *stem) {
     snprintf(out, len, "%s/%s.ini", RETRO_SHP_PATH, stem);
+
+    // A shader kept in a subdirectory mirrors that structure here, so the parent has to
+    // exist before anything tries to write parameters into it.
+    if (strchr(stem, '/')) create_directories(out, 1);
 }
 
 static void shader_params_load(const char *stem) {
