@@ -178,6 +178,73 @@ static uint32_t type_to_dropdown(const int canonical) {
 }
 
 // Lists every TTF the user has placed under MUOS/font, by filename alone
+// A font shipped as a family lives in its own folder, with one file per weight or style.
+// Those are offered as "Family/Variant", which the existing path resolution already
+// understands because it only ever appends .ttf to whatever name is stored.
+static int add_font_options_from(const char *dir, const int dedupe) {
+    struct dirent **entries;
+    const int n = scandir(dir, &entries, NULL, alphasort);
+    if (n < 0) return 0;
+
+    int added = 0;
+    for (int i = 0; i < n; i++) {
+        const char *name = entries[i]->d_name;
+
+        if (name[0] == '.') {
+            free(entries[i]);
+            continue;
+        }
+
+        const size_t len = strlen(name);
+        if (len > 4 && strcasecmp(name + len - 4, ".ttf") == 0) {
+            char stem[MAX_BUFFER_SIZE];
+            snprintf(stem, sizeof(stem), "%.*s", (int) (len - 4), name);
+
+            if (!dedupe || lv_dropdown_get_option_index(ui_dro_font_name_font, stem) < 0) {
+                lv_dropdown_add_option(ui_dro_font_name_font, stem, LV_DROPDOWN_POS_LAST);
+                added++;
+            }
+
+            free(entries[i]);
+            continue;
+        }
+
+        char nested[MAX_BUFFER_SIZE];
+        snprintf(nested, sizeof(nested), "%s/%s", dir, name);
+
+        struct stat st;
+        if (stat(nested, &st) == 0 && S_ISDIR(st.st_mode)) {
+            struct dirent **variants;
+            const int vn = scandir(nested, &variants, NULL, alphasort);
+
+            for (int v = 0; v < vn; v++) {
+                const char *variant = variants[v]->d_name;
+                const size_t vlen = strlen(variant);
+
+                if (variant[0] != '.' && vlen > 4 && strcasecmp(variant + vlen - 4, ".ttf") == 0) {
+                    char label[MAX_BUFFER_SIZE];
+                    snprintf(label, sizeof(label), "%s/%.*s", name, (int) (vlen - 4), variant);
+
+                    if (!dedupe || lv_dropdown_get_option_index(ui_dro_font_name_font, label) < 0) {
+                        lv_dropdown_add_option(ui_dro_font_name_font, label, LV_DROPDOWN_POS_LAST);
+                        added++;
+                    }
+                }
+
+                free(variants[v]);
+            }
+
+            if (vn >= 0) free(variants);
+        }
+
+        free(entries[i]);
+    }
+
+    free(entries);
+
+    return added;
+}
+
 static int populate_user_font_names(void) {
     const char *mounts[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
 
@@ -189,29 +256,8 @@ static int populate_user_font_names(void) {
         snprintf(dir, sizeof(dir), "%s/%s", mounts[m], USER_FONTS);
         remove_double_slashes(dir);
 
-        struct dirent **entries;
-        const int n = scandir(dir, &entries, NULL, alphasort);
-        if (n < 0) continue;
-
-        for (int i = 0; i < n; i++) {
-            const char *file = entries[i]->d_name;
-            const size_t len = strlen(file);
-
-            if (len > 4 && strcasecmp(file + len - 4, ".ttf") == 0) {
-                char name[MAX_BUFFER_SIZE];
-                snprintf(name, sizeof(name), "%.*s", (int) (len - 4), file);
-
-                // The same font on two storages should only be offered once
-                if (lv_dropdown_get_option_index(ui_dro_font_name_font, name) < 0) {
-                    lv_dropdown_add_option(ui_dro_font_name_font, name, LV_DROPDOWN_POS_LAST);
-                    added++;
-                }
-            }
-
-            free(entries[i]);
-        }
-
-        free(entries);
+        // The same font on two storages should only be offered once
+        added += add_font_options_from(dir, 1);
     }
 
     return added;
@@ -246,28 +292,7 @@ static void populate_font_names(void) {
         snprintf(dir, sizeof(dir), "%s", INTERNAL_FONTS);
     }
 
-    struct dirent **entries;
-    const int n = scandir(dir, &entries, NULL, alphasort);
-
-    if (n < 0) {
-        lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
-        select_font_name(previous);
-        return;
-    }
-
-    int added = 0;
-    for (int i = 0; i < n; i++) {
-        const char *font_name = entries[i]->d_name;
-        const size_t len = strlen(font_name);
-        if (len > 4 && strcasecmp(font_name + len - 4, ".ttf") == 0) {
-            char name_no_ext[MAX_BUFFER_SIZE];
-            snprintf(name_no_ext, sizeof(name_no_ext), "%.*s", (int) (len - 4), font_name);
-            lv_dropdown_add_option(ui_dro_font_name_font, name_no_ext, LV_DROPDOWN_POS_LAST);
-            added++;
-        }
-        free(entries[i]);
-    }
-    free(entries);
+    const int added = add_font_options_from(dir, 0);
 
     if (!added) lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
 

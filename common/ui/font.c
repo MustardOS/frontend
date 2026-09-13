@@ -151,8 +151,33 @@ int user_font_count(void) {
         if (n < 0) continue;
 
         for (int e = 0; e < n; e++) {
-            const size_t len = strlen(entries[e]->d_name);
-            if (len > 4 && strcasecmp(entries[e]->d_name + len - 4, ".ttf") == 0) total++;
+            const char *name = entries[e]->d_name;
+            const size_t len = strlen(name);
+
+            if (len > 4 && strcasecmp(name + len - 4, ".ttf") == 0) {
+                total++;
+                free(entries[e]);
+                continue;
+            }
+
+            // A font family supplied as a folder of weights counts for as many as it holds,
+            // otherwise a user who only has families would be told they have no fonts at all
+            if (name[0] != '.') {
+                char nested[MAX_BUFFER_SIZE];
+                snprintf(nested, sizeof(nested), "%s/%s", dir, name);
+
+                struct dirent **variants;
+                const int vn = scandir(nested, &variants, NULL, alphasort);
+
+                for (int v = 0; v < vn; v++) {
+                    const size_t vlen = strlen(variants[v]->d_name);
+                    if (vlen > 4 && strcasecmp(variants[v]->d_name + vlen - 4, ".ttf") == 0) total++;
+
+                    free(variants[v]);
+                }
+
+                if (vn >= 0) free(variants);
+            }
 
             free(entries[e]);
         }
