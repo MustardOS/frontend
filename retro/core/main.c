@@ -381,7 +381,7 @@ static double core_reported_emulation_fps(const double core_run_hz) {
     return core_run_hz * core_nominal_emulation_fps() / locked;
 }
 
-static void pace_core_output(const uint64_t frame_start) {
+static void pace_core_output(const uint64_t frame_start, const unsigned frames) {
     static double fps_limit_deadline = 0.0;
     static double fps_limit_target_ms = 0.0;
 
@@ -427,21 +427,27 @@ static void pace_core_output(const uint64_t frame_start) {
 
     const uint64_t frequency = SDL_GetPerformanceFrequency();
     const uint64_t now_counter = SDL_GetPerformanceCounter();
+    
+    // Every frame the core advanced costs a frame period, so a batch of N owes N of them...
+    const double batch = frames > 0 ? (double) frames : 1.0;
+    const double batch_ms = target_ms * batch;
+
     const double pacing_spent_ms = (double) (now_counter - frame_start) * 1000.0 / (double) frequency;
-    if (pacing_spent_ms >= target_ms) {
+    if (pacing_spent_ms >= batch_ms) {
         fps_limit_deadline = (double) now_counter;
         fps_limit_target_ms = target_ms;
         return;
     }
 
     const double target_ticks = target_ms * (double) frequency / 1000.0;
+    const double batch_ticks = target_ticks * batch;
     const double target_change =
         target_ms > fps_limit_target_ms ? target_ms - fps_limit_target_ms : fps_limit_target_ms - target_ms;
-    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < (double) now_counter - target_ticks || target_change > 0.01)
+    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < (double) now_counter - batch_ticks || target_change > 0.01)
         fps_limit_deadline = (double) frame_start;
     fps_limit_target_ms = target_ms;
 
-    fps_limit_deadline += target_ticks;
+    fps_limit_deadline += batch_ticks;
     if (fps_limit_deadline > (double) now_counter) {
         const uint64_t sleep_start = perf_begin();
         frame_pacer_wait_until((uint64_t) fps_limit_deadline);
@@ -778,6 +784,7 @@ int main(const int argc, char *argv[]) {
 
     while (!quit) {
         int core_ran = 0;
+        unsigned core_frames = 0;
 
         const uint64_t frame_start = SDL_GetPerformanceCounter();
         const uint32_t loop_now = SDL_GetTicks();
@@ -967,6 +974,7 @@ int main(const int argc, char *argv[]) {
             const unsigned ran_frames = run_core_batch(frames);
             audio_bridge_note_core_frames(ran_frames);
             core_ran = ran_frames > 0;
+            core_frames = ran_frames;
 
             if (core_ran) {
                 gamestate_autosave_arm();
@@ -1062,7 +1070,7 @@ int main(const int argc, char *argv[]) {
             perf_autodump_deadline = loop_now + PERF_AUTODUMP_INTERVAL_MS;
         }
 
-        if (core_ran) pace_core_output(frame_start);
+        if (core_ran) pace_core_output(frame_start, core_frames);
         perf_frame_complete(core_ran);
     }
 

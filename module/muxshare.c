@@ -463,11 +463,38 @@ char *get_friendly_folder_name(char *folder_name, const int fn_valid, const stru
     return friendly_folder_name;
 }
 
+#define MUX_NAME_FILE "muxname.txt"
+
+static int launch_item_own_name(const char *file_path, char *out, const size_t out_size) {
+    char dir_path[MAX_BUFFER_SIZE];
+    snprintf(dir_path, sizeof(dir_path), "%s", file_path);
+
+    char *slash = strrchr(dir_path, '/');
+    if (!slash) return 0;
+    *slash = '\0';
+
+    char name_path[MAX_BUFFER_SIZE];
+    snprintf(name_path, sizeof(name_path), "%s/%s", dir_path, MUX_NAME_FILE);
+    if (!file_exist(name_path)) return 0;
+
+    char *line = read_line_char_from(name_path, 1);
+    if (!line) return 0;
+
+    const char *trimmed = str_trim(line);
+    const int ok = trimmed && *trimmed;
+    if (ok) snprintf(out, out_size, "%s", trimmed);
+
+    free(line);
+
+    return ok;
+}
+
 static int register_launch_item(const char *file_path, const char *item_name) {
     if (!file_exist(file_path)) return 0;
 
     char fn_name[MAX_BUFFER_SIZE];
-    resolve_friendly_name(file_path, fn_name);
+    if (!launch_item_own_name(file_path, fn_name, sizeof(fn_name))) resolve_friendly_name(file_path, fn_name);
+
     add_item(&items, &item_count, item_name, fn_name, file_path, content_type_item);
 
     return 1;
@@ -483,6 +510,15 @@ int folder_has_launch_file_with_extension(char *base_dir, char *dir_name, char *
     return register_launch_item(file_path, item_name);
 }
 
+static const char *const self_marking_extensions[] = {".scummvm", ".doom", ".wolf"};
+
+static int folder_is_self_marking(const char *dir_name) {
+    for (size_t i = 0; i < A_SIZE(self_marking_extensions); i++)
+        if (ends_with(dir_name, (char *) self_marking_extensions[i])) return 1;
+
+    return 0;
+}
+
 int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
     if (strchr(dir_name, '.') == NULL) {
         return 0;
@@ -491,7 +527,7 @@ int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
     char file_path[MAX_BUFFER_SIZE];
     snprintf(file_path, sizeof(file_path), "%s/%s/%s", base_dir, dir_name, dir_name);
 
-    if (ends_with(dir_name, ".scummvm") && !file_exist(file_path)) {
+    if (folder_is_self_marking(dir_name) && !file_exist(file_path)) {
         write_text_to_file(file_path, "w", CHAR, "");
     }
 
