@@ -46,6 +46,8 @@ void video_bridge_apply_fps_limit(void);
 
 int video_bridge_get_swap_interval(void);
 
+int video_bridge_vsync_active(void);
+
 void video_bridge_flush_frame(void);
 
 void video_bridge_set_frame_skip(int skip);

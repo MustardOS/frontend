@@ -74,6 +74,7 @@ static int output_canvas_h = 0;
 static int frame_dirty = 0;
 static int frame_skip = 0;
 static int applied_swap_interval = -2;
+static int vsync_in_effect = 0;
 static int cpu_filter_active = 0;
 static int cpu_filter_limit_logged = 0;
 
@@ -653,8 +654,10 @@ void video_bridge_apply_fps_limit(void) {
 
     if (SDL_RenderSetVSync(renderer, want_vsync) != 0) {
         LOG_ERROR(mux_module, "SDL_RenderSetVSync(%d) failed: %s", want_vsync, SDL_GetError());
+        vsync_in_effect = 0;
     } else {
         LOG_INFO(mux_module, "SDL_RenderSetVSync(%d) applied", want_vsync);
+        vsync_in_effect = want_vsync;
     }
 
     applied_swap_interval = -2;
@@ -673,6 +676,13 @@ void video_bridge_apply_fps_limit(void) {
     }
 
     applied_swap_interval = SDL_GL_GetSwapInterval();
+    // The driver has the final say. If it hands back interval zero after being asked for vsync
+    // then nothing is pacing the frame, and the software deadline has to take over instead.
+    if (want_vsync && applied_swap_interval == 0) {
+        vsync_in_effect = 0;
+        LOG_WARN(mux_module, "Vsync requested but the driver reports interval 0, pacing in software");
+    }
+
     LOG_INFO(
         mux_module, "GL swap interval %d applied (requested %d, software paced=%d)", applied_swap_interval,
         requested_interval, software_paced
@@ -681,6 +691,10 @@ void video_bridge_apply_fps_limit(void) {
 
 int video_bridge_get_swap_interval(void) {
     return applied_swap_interval;
+}
+
+int video_bridge_vsync_active(void) {
+    return vsync_in_effect;
 }
 
 static void apply_texture_filter(void) {

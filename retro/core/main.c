@@ -398,14 +398,23 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames) 
     const double slack_ms = budget_ms - spent_ms;
     const int slowmo_active = hotkeys_is_slow_motion_active();
 
-    const int auto_deadline_paced =
+    const int auto_cadence =
         !slowmo_active && session_settings.fps_limit == fps_limit_auto && !netplay_is_active() && !link_is_engaged();
+
+    // video_bridge_apply_fps_limit() turns vsync on for exactly the cores this deadline used to
+    // fight: one running at the panel rate is already paced by the panel, and a software deadline
+    // on top gates the same frame twice against two different periods, the rate the core declares
+    // and the rate the panel actually runs at. The release time then walks against the vblank grid
+    // until it loses or gains a refresh, which is the frame delivery wobbling rather than the rate
+    // being wrong. The deadline stays for a core vsync cannot pace, and as the fallback for when
+    // the driver did not give us vsync at all.
+    const int auto_deadline_paced = auto_cadence && (core_content_needs_pacing() || !video_bridge_vsync_active());
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
     perf_record(perf_stage_audio_queue, audio_bridge_queued_ms());
     if (!link_is_engaged()) {
-        if (auto_deadline_paced)
+        if (auto_cadence)
             audio_bridge_recover_cadence();
         else
             audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
