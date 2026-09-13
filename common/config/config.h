@@ -88,6 +88,9 @@ struct mux_config {
         struct {
             char data[MAX_BUFFER_SIZE];
         } language;
+        struct {
+            char data[MAX_BUFFER_SIZE];
+        } core;
     } extra;
 
     struct {

@@ -143,6 +143,7 @@ static void init_navigation_group(void) {
     INIT_STATIC_ITEM(-1, config, power, lang.muxconfig.power, "power", 0);
     INIT_STATIC_ITEM(-1, config, storage, lang.muxconfig.storage, "storage", 0);
     INIT_STATIC_ITEM(-1, config, backup, lang.muxconfig.backup, "backup", 0);
+    INIT_STATIC_ITEM(-1, config, core, lang.muxconfig.core, "core", 0);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
@@ -197,6 +198,7 @@ static void handle_a(void) {
         {"power", &kiosk.setting.power, NULL},
         {"storage", &kiosk.config.storage, storage_available},
         {"backup", &kiosk.config.backup, NULL},
+        {"core", &kiosk_pass, NULL},
     };
 
     SELECT_VISIBLE_ENTRY(entries, entry);

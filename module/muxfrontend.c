@@ -591,6 +591,7 @@ static const module_entry modules[] = {
     {"access", "config", "muxaccess", muxaccess_main, NULL},
     {"custom", "config", "muxcustom", muxcustom_main, NULL},
     {"logo", "custom", "muxlogo", muxlogo_main, NULL},
+    {"core", "config", "muxcore", muxcore_main, NULL},
     {"language", "tweakgen", "muxlanguage", muxlanguage_main, NULL},
     {"soundfont", "tweakgen", "muxsoundfont", muxsoundfont_main, NULL},
     {"net_profile", "connect", "muxnetwork", muxnetwork_main, NULL},

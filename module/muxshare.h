@@ -267,6 +267,8 @@ int muxcollect_main(int add, const char *dir, int last_index);
 
 int muxconfig_main(void);
 
+int muxcore_main(void);
+
 int muxconnect_main(void);
 
 void muxcontrol_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);

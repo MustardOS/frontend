@@ -446,6 +446,7 @@
     "Configuration": "Configuration",
     "Configuration gathers everything that changes how your device looks and behaves. Here you can adjust the interface, manage storage and networks, configure power and language, and back up your data.\n\nEach entry opens its own screen, and pressing MENU anywhere will show help for what you are looking at.": "Configuration gathers everything that changes how your device looks and behaves. Here you can adjust the interface, manage storage and networks, configure power and language, and back up your data.\n\nEach entry opens its own screen, and pressing MENU anywhere will show help for what you are looking at.",
     "Connectivity": "Connectivity",
+    "Cores": "Cores",
     "Customisation": "Customisation",
     "General": "General",
     "How the frontend looks, what appears in the header and footer, and the way lists behave as you move through them.": "How the frontend looks, what appears in the header and footer, and the way lists behave as you move through them.",
@@ -460,6 +461,7 @@
     "The everyday settings, covering the clock, language, brightness, volume, audio output and where the device starts up.\n\nMost of what you will want to change is in here.": "The everyday settings, covering the clock, language, brightness, volume, audio output and where the device starts up.\n\nMost of what you will want to change is in here.",
     "Themes, catalogue artwork, fonts, and anything else installed to change how MustardOS looks and sounds.\n\nContent options, backups and the advanced settings live here too.": "Themes, catalogue artwork, fonts, and anything else installed to change how MustardOS looks and sounds.\n\nContent options, backups and the advanced settings live here too.",
     "What is mounted where, how much room is left, and the tools for moving content between cards.\n\nCome here if content is not showing up or a card seems fuller than it should be.": "What is mounted where, how much room is left, and the tools for moving content between cards.\n\nCome here if content is not showing up or a card seems fuller than it should be.",
+    "Which emulator cores are installed, what each was built from, and whether a newer build has been published.\n\nRefresh to check, then pick a core to bring it up to date.": "Which emulator cores are installed, what each was built from, and whether a newer build has been published.\n\nRefresh to check, then pick a core to bring it up to date.",
     "Wi-Fi, Bluetooth, web services, and what happens when you plug the device into a computer.\n\nStart here if you need to get online or talk to something else.": "Wi-Fi, Bluetooth, web services, and what happens when you plug the device into a computer.\n\nStart here if you need to get online or talk to something else."
   },
   "muxconnect": {
@@ -554,6 +556,25 @@
     "Chooses the control scheme for the content you selected, which decides how the physical buttons map to that system's controller.": "Chooses the control scheme for the content you selected, which decides how the physical buttons map to that system's controller.",
     "Control": "Control",
     "No Control Schemes Found...": "No Control Schemes Found..."
+  },
+  "muxcore": {
+    "A newer build of this core has been published.": "A newer build of this core has been published.",
+    "Available:": "Available:",
+    "Checking for updates": "Checking for updates",
+    "Cores": "Cores",
+    "Could not check for updates": "Could not check for updates",
+    "Could not download the core": "Could not download the core",
+    "Downloading core": "Downloading core",
+    "Every emulator core on the device, what it was built from, and whether a newer build has been published.\n\nPress X to check, then pick a core to bring it up to date.": "Every emulator core on the device, what it was built from, and whether a newer build has been published.\n\nPress X to check, then pick a core to bring it up to date.",
+    "Installed:": "Installed:",
+    "No cores found": "No cores found",
+    "Press X to check for updates first": "Press X to check for updates first",
+    "Reinstall": "Reinstall",
+    "This core is not in the latest release": "This core is not in the latest release",
+    "This core is published but not installed.": "This core is published but not installed.",
+    "This core matches the published build.": "This core matches the published build.",
+    "Update": "Update",
+    "unknown": "unknown"
   },
   "muxcustom": {
     "Alternative Theme": "Alternative Theme",

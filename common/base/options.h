@@ -179,6 +179,10 @@
 #define STORE_LOC_TRAK MUOS_BASE_PATH "/info/track"
 
 #define STORE_LOC_ASIN OPT_SHARE_PATH "info/assign"
+
+#define CORE_MANIFEST_LOCAL  OPT_SHARE_PATH "info/core/manifest.json"
+#define CORE_MANIFEST_REMOTE "core-manifest.json"
+
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_MUSI MUOS_BASE_PATH "/music"
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"

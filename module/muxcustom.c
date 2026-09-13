@@ -107,6 +107,29 @@ save_width_dropdown(const lv_obj_t *dropdown, const int original, const char *ke
     (*is_modified)++;
 }
 
+#define CONTENT_ITEM_COUNT_MIN 3
+
+static void restore_count_dropdown(lv_obj_t *dropdown, const int16_t stored) {
+    uint32_t idx = 0;
+
+    // A stored count below the minimum predates the minimum being raised.
+    if (stored > 0) idx = (uint32_t) (stored > CONTENT_ITEM_COUNT_MIN ? stored - CONTENT_ITEM_COUNT_MIN + 1 : 1);
+
+    lv_dropdown_set_selected(dropdown, idx);
+}
+
+static void
+save_count_dropdown(const lv_obj_t *dropdown, const int original, const char *key, int16_t *cfg, int *is_modified) {
+    const uint32_t sel = lv_dropdown_get_selected(dropdown);
+    if ((int) sel == original) return;
+
+    const int16_t val = (int16_t) (sel >= 1 ? (int) sel + CONTENT_ITEM_COUNT_MIN - 1 : 0);
+    write_text_to_file(key, "w", INT, (int) val);
+
+    *cfg = val;
+    (*is_modified)++;
+}
+
 static int overlay_config_to_dropdown(const int config_val) {
     if (!has_theme_overlay) {
         if (config_val == 1) return 0;
@@ -765,7 +788,8 @@ static void init_navigation_group(void) {
     );
 
     char *height_options = generate_number_string(0, 64, 1, lang.muxthemeopt.size_default, NULL, NULL, 0);
-    char *count_options = generate_number_string(1, 64, 1, lang.muxthemeopt.size_default, NULL, NULL, 0);
+    char *count_options =
+        generate_number_string(CONTENT_ITEM_COUNT_MIN, 64, 1, lang.muxthemeopt.size_default, NULL, NULL, 0);
     char *width_options = generate_number_string(10, 100, 1, lang.muxthemeopt.size_default, "%", NULL, 1);
 
     char glyph_options[256];
@@ -1028,7 +1052,7 @@ static void restore_custom_options(void) {
 
     lv_dropdown_set_selected(ui_dro_header_height_custom, (uint32_t) (config.settings.themeopt.header_height + 1));
     lv_dropdown_set_selected(ui_dro_footer_height_custom, (uint32_t) (config.settings.themeopt.footer_height + 1));
-    lv_dropdown_set_selected(ui_dro_content_item_count_custom, (uint32_t) config.settings.themeopt.content_item_count);
+    restore_count_dropdown(ui_dro_content_item_count_custom, config.settings.themeopt.content_item_count);
 
     restore_glyph_dropdown(ui_dro_glyph_list_custom, config.settings.themeopt.glyph_size_list);
     restore_glyph_dropdown(ui_dro_glyph_header_custom, config.settings.themeopt.glyph_size_header);
@@ -1156,7 +1180,11 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, random_theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(custom, header_height, "settings/theme/header_height", INT, -1);
     CHECK_AND_SAVE_STD(custom, footer_height, "settings/theme/footer_height", INT, -1);
-    CHECK_AND_SAVE_STD(custom, content_item_count, "settings/theme/content_item_count", INT, 0);
+    save_count_dropdown(
+        ui_dro_content_item_count_custom, content_item_count_original,
+        CONF_CONFIG_PATH "settings/theme/content_item_count", &config.settings.themeopt.content_item_count,
+        &is_modified
+    );
 
     save_glyph_dropdown(
         ui_dro_glyph_list_custom, glyph_list_original, CONF_CONFIG_PATH "settings/theme/glyph_size_list",
@@ -1431,6 +1459,8 @@ static void handle_a(void) {
 
             play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
             toast_message(lang.generic.loading, tst_wait_f);
+
+            list_frame_remember(lv_group_get_focused(ui_group));
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, pending_pdi);
 
             if (pending_pik[0]) write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, pending_pik);

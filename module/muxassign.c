@@ -10,8 +10,6 @@ static char rom_system[PATH_MAX];
 static int is_dir = 0;
 static int prefer_directory_scope = 0;
 
-static lv_obj_t *ui_lbl_core_downloader;
-
 static mux_dialogue assign_dlg;
 
 static int find_assigned_system(char *out_system) {
@@ -36,9 +34,6 @@ static int find_assigned_system(char *out_system) {
 static int find_system_item_index(const char *system_name) {
     content_item *tmp_items = NULL;
     size_t tmp_count = 0;
-
-    if (device.board.has_network)
-        add_item(&tmp_items, &tmp_count, lang.muxassign.core_down, lang.muxassign.core_down, "", content_type_menu);
 
     DIR *ad = opendir(STORE_LOC_ASIN);
     if (ad) {
@@ -165,9 +160,6 @@ static void show_help(void) {
 }
 
 static void create_system_items(void) {
-    if (device.board.has_network)
-        add_item(&items, &item_count, lang.muxassign.core_down, lang.muxassign.core_down, "", content_type_menu);
-
     struct dirent *af;
 
     char assign_dir[PATH_MAX];
@@ -201,7 +193,7 @@ static void create_system_items(void) {
         lv_obj_t *ui_lbl_system_item_glyph = lv_img_create(ui_pnl_system);
         apply_theme_list_glyph(
             &theme, ui_lbl_system_item_glyph, mux_module,
-            items[i].content_type == content_type_menu ? "download" : "system"
+            "system"
         );
 
         lv_group_add_obj(ui_group, ui_lbl_system_item);
@@ -211,7 +203,6 @@ static void create_system_items(void) {
         apply_size_to_content(&theme, ui_pnl_content, ui_lbl_system_item, ui_lbl_system_item_glyph, items[i].name);
         apply_text_long_dot(&theme, ui_lbl_system_item);
 
-        if (items[i].content_type == content_type_menu) ui_lbl_core_downloader = ui_lbl_system_item;
     }
 
     if (ui_count_static > 0) {
@@ -475,17 +466,7 @@ static void handle_a(void) {
 
     if (msgbox_active || hold_call) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lbl_core_downloader) {
-        if (is_network_connected()) {
-            play_sound(snd_confirm);
-            load_assign(MUOS_ASS_LOAD "_temp", rom_name, explore_dir, "none", 0, 0);
-            load_mux("coredown");
-        } else {
-            play_sound(snd_error);
-            toast_message(lang.generic.need_connect, tst_wait_m);
-            return;
-        }
-    } else if (strcasecmp(rom_system, "none") == 0) {
+    if (strcasecmp(rom_system, "none") == 0) {
         play_sound(snd_confirm);
         load_assign(MUOS_ASS_LOAD, rom_name, explore_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0, 0);
     } else {

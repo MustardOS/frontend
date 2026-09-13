@@ -466,6 +466,7 @@ struct mux_lang {
         char power[MAX_BUFFER_SIZE];
         char interface[MAX_BUFFER_SIZE];
         char backup[MAX_BUFFER_SIZE];
+        char core[MAX_BUFFER_SIZE];
         struct {
             char connect[MAX_BUFFER_SIZE];
             char custom[MAX_BUFFER_SIZE];
@@ -476,6 +477,7 @@ struct mux_lang {
             char power[MAX_BUFFER_SIZE];
             char interface[MAX_BUFFER_SIZE];
             char backup[MAX_BUFFER_SIZE];
+            char core[MAX_BUFFER_SIZE];
         } help;
         char overview[MAX_BUFFER_SIZE];
     } muxconfig;
@@ -1081,6 +1083,30 @@ struct mux_lang {
             char has_portmaster[MAX_BUFFER_SIZE];
         } help;
     } muxdevice;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char installed[MAX_BUFFER_SIZE];
+        char available[MAX_BUFFER_SIZE];
+        char unknown[MAX_BUFFER_SIZE];
+        char reinstall[MAX_BUFFER_SIZE];
+        char update[MAX_BUFFER_SIZE];
+        char no_cores[MAX_BUFFER_SIZE];
+        char need_refresh[MAX_BUFFER_SIZE];
+        char not_published[MAX_BUFFER_SIZE];
+        char error_get_core[MAX_BUFFER_SIZE];
+        char error_get_data[MAX_BUFFER_SIZE];
+        struct {
+            char core[MAX_BUFFER_SIZE];
+            char data[MAX_BUFFER_SIZE];
+        } down;
+        struct {
+            char current[MAX_BUFFER_SIZE];
+            char update[MAX_BUFFER_SIZE];
+            char absent[MAX_BUFFER_SIZE];
+        } help;
+    } muxcore;
 
     struct {
         char error_get_data[MAX_BUFFER_SIZE];

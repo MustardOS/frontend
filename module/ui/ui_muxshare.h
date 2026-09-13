@@ -204,7 +204,8 @@
     CONFIG(access, "access")                                                                                           \
     CONFIG(power, "power")                                                                                             \
     CONFIG(storage, "storage")                                                                                         \
-    CONFIG(backup, "backup")
+    CONFIG(backup, "backup")                                                                                           \
+    CONFIG(core, "core")
 
 #define CONNECT_ELEMENTS                                                                                               \
     CONNECT(network, "network")                                                                                        \
