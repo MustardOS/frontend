@@ -439,15 +439,13 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames) 
     
     // Every frame the core advanced costs a frame period, so a batch of N owes N of them...
     const double batch = frames > 0 ? (double) frames : 1.0;
-    const double batch_ms = target_ms * batch;
 
-    const double pacing_spent_ms = (double) (now_counter - frame_start) * 1000.0 / (double) frequency;
-    if (pacing_spent_ms >= batch_ms) {
-        fps_limit_deadline = (double) now_counter;
-        fps_limit_target_ms = target_ms;
-        return;
-    }
-
+    // A frame that overran its budget used to reset the deadline to now, which threw away the
+    // phase the pacer had built up and made the next frame start from wherever this one happened
+    // to finish. One slow frame then cost two frames of smoothness. Letting the deadline keep
+    // accumulating means a transient overrun is simply absorbed by the following frame sleeping a
+    // little less, and a core that is persistently too slow still resyncs through the check below
+    // once it falls a whole batch behind.
     const double target_ticks = target_ms * (double) frequency / 1000.0;
     const double batch_ticks = target_ticks * batch;
     const double target_change =

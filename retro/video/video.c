@@ -929,6 +929,14 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     if (size_changed) recompute_dest_rect();
 
     const uint64_t upload_start = perf_begin();
+
+    // compute_target_tex_size() is what decides cpu_filter_active, so it has to run before the
+    // branch that reads it. It used to be called further down, which left this frame deciding on
+    // the previous frame's answer and dropping or applying the filter one frame late every time
+    // the setting changed.
+    int target_w = 0, target_h = 0;
+    compute_target_tex_size(&target_w, &target_h);
+
     if (!session_settings.anti_flicker && !cpu_filter_active) {
         raw_frame_valid = 0;
         if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(pixel_format))) {
@@ -958,8 +966,6 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     staged_upload_bytes += raw_needed;
     apply_anti_flicker(data, width, height, pitch, pixel_format);
 
-    int target_w = 0, target_h = 0;
-    compute_target_tex_size(&target_w, &target_h);
     if (cpu_filter_active) {
         frame_dirty = 1;
         perf_end(perf_stage_video_upload, upload_start);
