@@ -19,6 +19,7 @@
 #include "../video/colour.h"
 #include "../core/core.h"
 #include "../core/muxretro.h"
+#include "../coredef/coredef.h"
 #include "../coreinfo/coreinfo.h"
 #include "../input/core_input_meta.h"
 #include "../input/deck.h"
@@ -142,6 +143,12 @@ const int session_settings_source_types[PORT_SOURCE_COUNT] = {
 static const int default_source_target[PORT_SOURCE_COUNT] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
                                                              4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
 
+_Static_assert(COREDEF_SOURCE_COUNT == PORT_SOURCE_COUNT, "coredef control maps must cover every source");
+
+// The map new settings start from. A core whose own button assignment suits something other than
+// a handheld can supply its own, see coredef_source_target()
+static const int *active_source_target = default_source_target;
+
 static struct session_settings_t default_settings(void) {
     struct session_settings_t out = defaults;
 
@@ -150,7 +157,7 @@ static struct session_settings_t default_settings(void) {
         out.port_stick_forced[port] = 0;
 
         for (int source = 0; source < PORT_SOURCE_COUNT; source++) {
-            out.port_source_target[port][source] = default_source_target[source];
+            out.port_source_target[port][source] = active_source_target[source];
             out.port_source_macro[port][source] = -1;
         }
     }
@@ -1594,14 +1601,21 @@ static int write_ini_delta(const char *path, const struct session_settings_t *ba
 void session_settings_init(const char *core_path_arg, const char *content_path) {
     colour_init();
 
+    char core_name[MAX_BUFFER_SIZE];
+    const int core_named = core_get_name(core_path_arg, core_name, sizeof(core_name));
+
+    // The starting control map belongs to the core, so it has to be chosen before the defaults
+    // are taken rather than corrected afterwards
+    const int *core_map = core_named ? coredef_source_target(core_name) : NULL;
+    active_source_target = core_map ? core_map : default_source_target;
+
     session_settings = default_settings();
     active_user_profile_path[0] = '\0';
     settings_core_name[0] = '\0';
     settings_content_name[0] = '\0';
     settings_content_stem[0] = '\0';
 
-    char core_name[MAX_BUFFER_SIZE];
-    if (!core_get_name(core_path_arg, core_name, sizeof(core_name))
+    if (!core_named
         || !str_format_checked(core_ini_path, sizeof(core_ini_path), "%s/core/%s.ini", RETRO_SET_PATH, core_name)) {
         LOG_ERROR(mux_module, "Settings core path is too long");
         baseline_settings = session_settings;
@@ -2614,7 +2628,7 @@ static const char *port_label(const int port) {
 
 int session_settings_default_source_target(const int source) {
     if (source < 0 || source >= PORT_SOURCE_COUNT) return -1;
-    return default_source_target[source];
+    return active_source_target[source];
 }
 
 int session_settings_port_is_deck(const int port) {
@@ -3023,7 +3037,7 @@ void session_settings_source_value(const int port, const int source, char *buf, 
 
 int session_settings_target_for_button(const int pressed_type) {
     for (int i = 0; i < PORT_DIGITAL_COUNT; i++) {
-        if (session_settings_source_types[i] == pressed_type) return default_source_target[i];
+        if (session_settings_source_types[i] == pressed_type) return active_source_target[i];
     }
 
     for (int i = PORT_DIGITAL_COUNT; i < PORT_SOURCE_COUNT; i++) {
@@ -3180,7 +3194,7 @@ void session_settings_cycle_source_turbo(const int port, const int source, const
 
 void session_settings_reset_source(const int port, const int source) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
-    session_settings_source_target(port)[source] = default_source_target[source];
+    session_settings_source_target(port)[source] = active_source_target[source];
     session_settings_source_turbo(port)[source] = 0;
     session_settings_source_macro(port)[source] = -1;
     deck_sync_macro(port, source);
@@ -3218,7 +3232,7 @@ void session_settings_clear_macro_references(const int macro_index) {
 
 static void reset_button_map(const int port) {
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-        session_settings_source_target(port)[s] = default_source_target[s];
+        session_settings_source_target(port)[s] = active_source_target[s];
         session_settings_source_turbo(port)[s] = 0;
         session_settings_source_macro(port)[s] = -1;
         deck_sync_macro(port, s);

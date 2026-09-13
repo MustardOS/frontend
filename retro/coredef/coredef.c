@@ -26,3 +26,12 @@ const char *coredef_lookup(const char *core_name, const char *key) {
 
     return NULL;
 }
+
+const int *coredef_source_target(const char *core_name) {
+    if (!core_name || !*core_name) return NULL;
+
+    for (size_t i = 0; i < sizeof(registry) / sizeof(registry[0]); i++)
+        if (strcmp(registry[i]->name, core_name) == 0) return registry[i]->source_target;
+
+    return NULL;
+}
