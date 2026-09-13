@@ -114,6 +114,7 @@ struct mux_device {
         int16_t wait;
         int16_t width;
         int16_t height;
+        float refresh;
         float zoom;
         float zoom_width;
         float zoom_height;

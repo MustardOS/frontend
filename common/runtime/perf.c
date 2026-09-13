@@ -205,7 +205,7 @@ int fe_perf_export_support(const char *path) {
     fprintf(f, "build=%s\n", config.system.build);
     fprintf(f, "device=%s\n", device.board.name);
     fprintf(f, "display=%dx%d\n", device.mux.width, device.mux.height);
-    fprintf(f, "panel_refresh_hz=%d\n", display_panel_refresh_hz());
+    fprintf(f, "panel_refresh_hz=%.3f\n", display_panel_refresh_hz());
     fprintf(f, "renderer=%s\n", renderer.name ? renderer.name : "unknown");
     fprintf(f, "renderer_max_texture=%dx%d\n", renderer.max_texture_width, renderer.max_texture_height);
     fprintf(f, "rss_kb=%ld\n", rss_kb);

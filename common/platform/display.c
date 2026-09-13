@@ -88,9 +88,9 @@ static double last_flip_ms = 0.0;
 static int flip_pending = 0;
 static uint64_t present_serial = 0;
 static int monitor_blend_configured = 0;
-static int panel_refresh_hz = 0;
+static double panel_refresh_hz = 0.0;
 
-int display_panel_refresh_hz(void) {
+double display_panel_refresh_hz(void) {
     return panel_refresh_hz;
 }
 
@@ -691,8 +691,13 @@ void sdl_init(void) {
 
     SDL_DisplayMode display_mode;
     if (SDL_GetWindowDisplayMode(monitor.window, &display_mode) == 0) {
-        panel_refresh_hz = display_mode.refresh_rate;
+        panel_refresh_hz = (double) display_mode.refresh_rate;
         LOG_INFO("video", "Display reports %dx%d @ %dHz", display_mode.w, display_mode.h, display_mode.refresh_rate);
+    }
+
+    if (!hdmi_mode && device.screen.refresh > 0.0f) {
+        panel_refresh_hz = (double) device.screen.refresh;
+        LOG_INFO("video", "Panel rate %.3fHz from device configuration", panel_refresh_hz);
     }
 
     monitor.renderer = SDL_CreateRenderer(

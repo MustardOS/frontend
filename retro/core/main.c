@@ -287,8 +287,8 @@ static unsigned run_core_batch(const unsigned frames) {
 }
 
 static double core_panel_rate(void) {
-    const int reported = display_panel_refresh_hz();
-    return reported > 0 ? (double) reported : (double) frame_pacer_get_refresh_hz();
+    const double reported = display_panel_refresh_hz();
+    return reported > 0.0 ? reported : (double) frame_pacer_get_refresh_hz();
 }
 
 static int ppsspp_adaptive_frameskip_active(void);

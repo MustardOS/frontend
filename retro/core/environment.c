@@ -395,8 +395,8 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE: {
             if (data) {
-                const int panel_hz = display_panel_refresh_hz();
-                *(float *) data = panel_hz > 0 ? (float) panel_hz : frame_pacer_get_refresh_hz();
+                const double panel_hz = display_panel_refresh_hz();
+                *(float *) data = panel_hz > 0.0 ? (float) panel_hz : frame_pacer_get_refresh_hz();
             }
             return true;
         }
@@ -428,8 +428,8 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
                     throttle->rate =
                         (float) (run_rate * session_settings_slowmo_speed_value(session_settings.slowmo_speed));
                 } else if (session_settings.fps_limit == fps_limit_auto) {
-                    const int panel_hz = display_panel_refresh_hz();
-                    throttle->mode = core_content_needs_pacing() || (panel_hz > 0 && run_rate > (double) panel_hz)
+                    const double panel_hz = display_panel_refresh_hz();
+                    throttle->mode = core_content_needs_pacing() || (panel_hz > 0.0 && run_rate > panel_hz)
                                          ? RETRO_THROTTLE_VSYNC
                                          : RETRO_THROTTLE_NONE;
                     throttle->rate = (float) run_rate;

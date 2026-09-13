@@ -106,6 +106,8 @@ void load_device(struct mux_device *device) {
     DEV_INT_RANGE(device->screen.width, "width", 0, 1, 16384);
     DEV_INT_RANGE(device->screen.height, "height", 0, 1, 16384);
 
+    device->screen.refresh = (float) config_float_value(cfg_dir_get(&d, "refresh"), 0.0, 1, 20.0, 240.0);
+
     DEV_INT_RANGE(device->screen.rotate, "rotate", 0, 0, 359);
     device->screen.rotate = config_i16_value(cfg_dir_get(&d, "s_rotate"), device->screen.rotate, 1, 0, 359);
 

@@ -105,7 +105,7 @@ static void diagnostic_value_text(const int index, char *buf, const size_t buf_l
 
     switch (index) {
         case diagnostic_refresh:
-            snprintf(buf, buf_len, "%d / %.2f Hz", display_panel_refresh_hz(), frame_pacer_get_observed_hz());
+            snprintf(buf, buf_len, "%.2f / %.2f Hz", display_panel_refresh_hz(), frame_pacer_get_observed_hz());
             break;
         case diagnostic_cadence:
             if (perf_has_samples())

@@ -344,8 +344,8 @@ static double perf_target_hz(void) {
         if (core_hz > 0.0) return core_hz;
     }
 
-    const int panel = display_panel_refresh_hz();
-    if (panel > 0) return panel;
+    const double panel = display_panel_refresh_hz();
+    if (panel > 0.0) return panel;
 
     return frame_pacer_get_refresh_hz();
 }
@@ -817,7 +817,7 @@ int perf_export_trace(const char *path) {
     fprintf(f, "paced_target_hz,%.4f\n", perf_target_hz());
     fprintf(f, "core_target_hz,%.4f\n", core_get_target_fps());
     fprintf(f, "core_pace_divisor,%.4f\n", core_pace_divisor());
-    fprintf(f, "panel_hz,%d\n", display_panel_refresh_hz());
+    fprintf(f, "panel_hz,%.4f\n", display_panel_refresh_hz());
     fprintf(f, "fps_limit_mode,%d\n", session_settings.fps_limit);
     fprintf(f, "gpu_hard_sync,%d\n", session_settings.gpu_hard_sync);
     fprintf(f, "swap_interval,%d\n", video_bridge_get_swap_interval());

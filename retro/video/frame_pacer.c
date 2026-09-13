@@ -91,8 +91,8 @@ static int refresh_interval_plausible(const double interval_ns) {
 }
 
 static double scheduling_period_ns(void) {
-    const int panel_hz = display_panel_refresh_hz();
-    if (panel_hz > 0) return 1e9 / (double) panel_hz;
+    const double panel_hz = display_panel_refresh_hz();
+    if (panel_hz > 0.0) return 1e9 / panel_hz;
     return refresh_period_known ? refresh_period_ns : 0.0;
 }
 
@@ -241,8 +241,8 @@ void frame_pacer_wait_until(const uint64_t deadline_counter) {
 }
 
 float frame_pacer_get_refresh_hz(void) {
-    const int panel_hz = display_panel_refresh_hz();
-    if (panel_hz > 0) return (float) panel_hz;
+    const double panel_hz = display_panel_refresh_hz();
+    if (panel_hz > 0.0) return (float) panel_hz;
     if (refresh_period_known && refresh_period_ns > 0.0) return (float) (1e9 / refresh_period_ns);
     return 60.0f;
 }
