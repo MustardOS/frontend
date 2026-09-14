@@ -14,10 +14,7 @@ static int extract_pending = 0;
 static void sanitise_download_name(char *dest, const char *src) {
     size_t j = 0;
     while (*src && j < MAX_BUFFER_SIZE - 1) {
-        if (*src == '/' || *src == '\\') {
-            dest[j++] = '_';
-            src++;
-        } else if (src[0] == '.' && src[1] == '.') {
+        if (src[0] == '.' && src[1] == '.') {
             dest[j++] = '.';
             src += 2;
         } else {
@@ -25,6 +22,10 @@ static void sanitise_download_name(char *dest, const char *src) {
         }
     }
     dest[j] = '\0';
+
+    char safe[MAX_BUFFER_SIZE];
+    str_safe_filename(dest, safe, sizeof(safe), "download");
+    snprintf(dest, MAX_BUFFER_SIZE, "%s", safe);
 }
 
 static void show_help(void) {

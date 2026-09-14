@@ -164,6 +164,12 @@ static int sanitise_ssid_name(char *dest, const char *src) {
         start++;
     if (start > 0) memmove(dest, dest + start, j - start + 1);
 
+    if (dest[0] == '\0') return 0;
+
+    char safe[MAX_BUFFER_SIZE];
+    str_safe_filename(dest, safe, sizeof(safe), "network");
+    snprintf(dest, MAX_BUFFER_SIZE, "%s", safe);
+
     return dest[0] != '\0';
 }
 

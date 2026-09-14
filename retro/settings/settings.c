@@ -1259,10 +1259,16 @@ static void user_profile_file_stem(const char *name, char *stem, const size_t le
         }
     }
 
-    if (output == 0)
+    if (output == 0) {
         snprintf(stem, length, "%s", "profile");
-    else
-        stem[output] = '\0';
+        return;
+    }
+
+    stem[output] = '\0';
+
+    char safe[64];
+    str_safe_filename(stem, safe, sizeof(safe) < length ? sizeof(safe) : length, "profile");
+    snprintf(stem, length, "%s", safe);
 }
 
 static int user_profile_write(FILE *file, const char *name, const enum user_profile_scope scope) {

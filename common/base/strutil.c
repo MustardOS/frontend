@@ -723,3 +723,78 @@ void free_array(char **array, const size_t count) {
         free(array[i]);
     free(array);
 }
+
+static int reserved_device_name(const char *name) {
+    static const char *const devices[] = {"CON", "PRN", "AUX", "NUL"};
+
+    size_t stem = 0;
+    while (name[stem] && name[stem] != '.')
+        stem++;
+
+    for (size_t i = 0; i < sizeof(devices) / sizeof(devices[0]); i++) {
+        if (stem == strlen(devices[i]) && strncasecmp(name, devices[i], stem) == 0) return 1;
+    }
+
+    if (stem == 4 && (strncasecmp(name, "COM", 3) == 0 || strncasecmp(name, "LPT", 3) == 0)
+        && name[3] >= '0' && name[3] <= '9') {
+        return 1;
+    }
+
+    return 0;
+}
+
+int str_safe_filename(const char *name, char *out, const size_t out_size, const char *fallback) {
+    if (!out || out_size == 0) return 0;
+
+    const char *source = name ? name : "";
+    size_t written = 0;
+
+    for (size_t i = 0; source[i] && written + 1 < out_size; i++) {
+        const unsigned char letter = (unsigned char) source[i];
+        const int forbidden = letter < 0x20 || letter == 0x7F || letter == '"' || letter == '*' || letter == '/'
+                              || letter == ':' || letter == '<' || letter == '>' || letter == '?' || letter == '\\'
+                              || letter == '|';
+        out[written++] = forbidden ? '_' : (char) letter;
+    }
+    out[written] = '\0';
+
+    size_t tail = written;
+    while (tail > 0 && ((unsigned char) out[tail - 1] & 0xC0) == 0x80)
+        tail--;
+    if (tail > 0) {
+        const unsigned char lead = (unsigned char) out[tail - 1];
+        size_t needed = 0;
+        if ((lead & 0xE0) == 0xC0)
+            needed = 2;
+        else if ((lead & 0xF0) == 0xE0)
+            needed = 3;
+        else if ((lead & 0xF8) == 0xF0)
+            needed = 4;
+
+        if (needed > 0 && written - (tail - 1) < needed) {
+            written = tail - 1;
+            out[written] = '\0';
+        }
+    }
+
+    while (written > 0 && (out[written - 1] == ' ' || out[written - 1] == '.'))
+        out[--written] = '\0';
+
+    size_t start = 0;
+    while (out[start] == ' ' || out[start] == '.')
+        start++;
+    if (start > 0) {
+        memmove(out, out + start, written - start + 1);
+        written -= start;
+    }
+
+    if (written == 0) return str_copy_checked(out, out_size, fallback && *fallback ? fallback : "untitled");
+
+    if (reserved_device_name(out)) {
+        if (written + 2 > out_size) out[--written] = '\0';
+        memmove(out + 1, out, written + 1);
+        out[0] = '_';
+    }
+
+    return 1;
+}

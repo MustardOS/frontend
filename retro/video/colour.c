@@ -870,10 +870,6 @@ static void blank_shader_direct_source_pragmas(char *src) {
 
 static void shader_params_ini_path(char *out, const size_t len, const char *stem) {
     snprintf(out, len, "%s/%s.ini", RETRO_SHP_PATH, stem);
-
-    // A shader kept in a subdirectory mirrors that structure here, so the parent has to
-    // exist before anything tries to write parameters into it.
-    if (strchr(stem, '/')) create_directories(out, 1);
 }
 
 static void shader_params_load(const char *stem) {

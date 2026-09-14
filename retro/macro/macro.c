@@ -9,6 +9,7 @@
 #include <common/runtime/init.h>
 #include <common/display/language.h>
 #include <common/runtime/log.h>
+#include <common/base/strutil.h>
 #include "macro.h"
 #include "relish.h"
 
@@ -47,7 +48,9 @@ static void sanitize_filename(const char *name, char *out, const size_t out_len)
         start++;
     if (start > 0) memmove(out, out + start, j - start + 1);
 
-    if (out[0] == '\0') snprintf(out, out_len, "macro");
+    char safe[MACRO_NAME_MAX];
+    str_safe_filename(out, safe, sizeof(safe) < out_len ? sizeof(safe) : out_len, "macro");
+    snprintf(out, out_len, "%s", safe);
 }
 
 static void assign_unique_path(struct macro_entry *entry) {

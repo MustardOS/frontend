@@ -512,10 +512,13 @@ static void do_remove(void) {
 static void handle_keyboard_ok_press(void) {
     key_show = 0;
 
-    snprintf(new_dir, sizeof(new_dir), "%s/%s", sys_dir, lv_textarea_get_text(ui_txt_entry_collect));
+    char collection_name[MAX_BUFFER_SIZE];
+    str_safe_filename(lv_textarea_get_text(ui_txt_entry_collect), collection_name, sizeof(collection_name), "Collection");
+
+    snprintf(new_dir, sizeof(new_dir), "%s/%s", sys_dir, collection_name);
     create_directories(new_dir, 0);
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txt_entry_collect));
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, collection_name);
     load_mux("collection");
 
     skip_confirm = 0;

@@ -36,6 +36,7 @@ static int font_cache_count = 0;
 static uint32_t last_font_key_hash = 0;
 static int cached_theme_font_scalable = -1;
 static int cached_has_theme_font = -1;
+static int cached_user_font_count = -1;
 
 // Open address hash table for the font cache
 // Must be a power-of-2 and at least 2× FONT_CACHE_MAX so load factor stays ≤ 50%
@@ -136,6 +137,8 @@ int user_font_path(const char *name, char *out, const size_t out_size) {
 }
 
 int user_font_count(void) {
+    if (cached_user_font_count >= 0) return cached_user_font_count;
+
     const char *mounts[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
 
     int total = 0;
@@ -160,8 +163,6 @@ int user_font_count(void) {
                 continue;
             }
 
-            // A font family supplied as a folder of weights counts for as many as it holds,
-            // otherwise a user who only has families would be told they have no fonts at all
             if (name[0] != '.') {
                 char nested[MAX_BUFFER_SIZE];
                 snprintf(nested, sizeof(nested), "%s/%s", dir, name);
@@ -184,6 +185,8 @@ int user_font_count(void) {
 
         free(entries);
     }
+
+    cached_user_font_count = total;
 
     return total;
 }
@@ -302,6 +305,7 @@ void font_cache_clear(void) {
     memset(font_cache, 0, sizeof(font_cache));
     font_cache_count = 0;
     cached_has_theme_font = -1;
+    cached_user_font_count = -1;
     LOG_SUCCESS(mux_module, "Font cache has been cleared");
 }
 

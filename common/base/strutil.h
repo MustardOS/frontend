@@ -25,6 +25,8 @@ int str_format_checked(char *destination, size_t capacity, const char *format, .
 
 int path_join_checked(char *destination, size_t capacity, const char *const *parts, size_t count);
 
+int str_safe_filename(const char *name, char *out, size_t out_size, const char *fallback);
+
 char *str_nonew(char *text);
 
 char *str_tolower(const char *text);
