@@ -109,7 +109,7 @@ static const struct session_settings_t defaults = {
     .viewport_crop_left = 0,
     .viewport_crop_right = 0,
     .viewport_centre_crop = 0,
-    .frame_delay_ms = FRAME_DELAY_AUTO,
+    .frame_delay_ms = FRAME_DELAY_OFF,
     .stick_deadzone = 15,
     .stick_anti_deadzone = 0,
     .stick_sensitivity = 100,
@@ -422,9 +422,9 @@ struct play_profile_settings {
 };
 
 static const struct play_profile_settings play_profiles[play_profile_count] = {
-    {texture_filter_nearest, 0, 0, FRAME_DELAY_OFF, 0, 0, audio_latency_compat, 1024, 100},
-    {texture_filter_nearest, 0, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50},
-    {texture_filter_sharp_bilinear, 1, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_balanced, 512, 50}
+    {texture_filter_nearest, 0, 0, FRAME_DELAY_AUTO, 0, 0, audio_latency_compat, 1024, 100},
+    {texture_filter_nearest, 0, 0, FRAME_DELAY_OFF, 0, 0, audio_latency_balanced, 512, 50},
+    {texture_filter_sharp_bilinear, 1, 1, FRAME_DELAY_OFF, 0, 0, audio_latency_balanced, 256, 50}
 };
 
 static struct session_settings_t play_profile_resolve(const enum play_profile profile) {
