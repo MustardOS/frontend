@@ -20,6 +20,8 @@
 #define FRAME_PACER_MARGIN_MAX_NS    8000000.0
 #define FRAME_PACER_MARGIN_GROW_NS   1000000.0
 #define FRAME_PACER_MARGIN_SHRINK_NS 8000.0
+#define FRAME_PACER_FLOOR_PROBE_FRAMES 1800
+#define FRAME_PACER_FLOOR_PROBE_NS     250000.0
 
 #define FRAME_PACER_WORK_CEILING_RATIO 0.70
 
@@ -40,6 +42,8 @@ static unsigned refresh_window_count = 0;
 static uint64_t last_present_counter = 0;
 static int last_tick_missed = 0;
 static double extra_margin_ns = 0.0;
+static double margin_floor_ns = 0.0;
+static int clean_frames = 0;
 static uint64_t measure_start_counter = 0;
 static int measuring = 0;
 static double last_delay_ns = 0.0;
@@ -70,6 +74,8 @@ static void frame_pacer_reset_state(void) {
     last_tick_missed = 0;
 
     extra_margin_ns = 0.0;
+    margin_floor_ns = 0.0;
+    clean_frames = 0;
     measure_start_counter = 0;
     measuring = 0;
     last_delay_ns = 0.0;
@@ -203,11 +209,21 @@ void frame_pacer_after_present(void) {
     last_tick_missed = period_ns > 0.0 && interval_ns > period_ns * FRAME_PACER_MISS_RATIO;
 
     if (last_tick_missed) {
-        extra_margin_ns += FRAME_PACER_MARGIN_GROW_NS;
-        if (extra_margin_ns > FRAME_PACER_MARGIN_MAX_NS) extra_margin_ns = FRAME_PACER_MARGIN_MAX_NS;
+        clean_frames = 0;
+        margin_floor_ns = extra_margin_ns + FRAME_PACER_MARGIN_GROW_NS;
+        if (margin_floor_ns > FRAME_PACER_MARGIN_MAX_NS) margin_floor_ns = FRAME_PACER_MARGIN_MAX_NS;
+        extra_margin_ns = margin_floor_ns;
     } else {
-        extra_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
-        if (extra_margin_ns < 0.0) extra_margin_ns = 0.0;
+        if (++clean_frames >= FRAME_PACER_FLOOR_PROBE_FRAMES) {
+            clean_frames = 0;
+            margin_floor_ns -= FRAME_PACER_FLOOR_PROBE_NS;
+            if (margin_floor_ns < 0.0) margin_floor_ns = 0.0;
+        }
+
+        if (extra_margin_ns > margin_floor_ns) {
+            extra_margin_ns -= FRAME_PACER_MARGIN_SHRINK_NS;
+            if (extra_margin_ns < margin_floor_ns) extra_margin_ns = margin_floor_ns;
+        }
     }
 
     refresh_window_sum_ns += interval_ns;
