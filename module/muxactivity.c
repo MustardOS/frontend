@@ -146,10 +146,7 @@ static int activity_item_uses_muxretro(const activity_item_t *it) {
     }
     if (!*def_core || !*sys) return 0;
 
-    char assign_dir[MAX_BUFFER_SIZE];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", sys);
-
-    return core_uses_muxretro(assign_dir, def_core);
+    return core_uses_muxretro(def_core);
 }
 
 static void show_help(void) {

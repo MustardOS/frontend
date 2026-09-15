@@ -114,9 +114,7 @@ static void detect_core_is_retroarch(void) {
         assign_sys = get_content_line(sys_dir, NULL, "cfg", 2);
     }
 
-    char assign_dir[MAX_BUFFER_SIZE];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", assign_sys);
-    const int core_uses_pickles = *def_core && *assign_sys ? core_uses_muxretro(assign_dir, def_core) : 0;
+    const int core_uses_pickles = *def_core && *assign_sys ? core_uses_muxretro(def_core) : 0;
 
     const char *core_value = *core_file ? core_file : core_dir;
     const char *core_label = *core_value ? format_core_name(core_value, 0, core_uses_pickles) : "";

@@ -211,7 +211,7 @@ void muxraopt_main(const int auto_assign, const char *name, const char *dir, con
         if (file_exist(core_file)) return;
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
+        snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
 
         char *assign_content = read_all_char_from(assign_file);
         if (json_valid(assign_content)) {
@@ -228,53 +228,12 @@ void muxraopt_main(const int auto_assign, const char *name, const char *dir, con
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
-
-                char assigned_global[MAX_BUFFER_SIZE];
-                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
-
-                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
-
-                mini_t *global_ini = mini_load(assigned_global);
-
-                static char def_rac[MAX_BUFFER_SIZE];
-                snprintf(def_rac, sizeof(def_rac), "%s", get_ini_string(global_ini, "global", "retroarch", "false"));
-
-                static char def_sys[MAX_BUFFER_SIZE];
-                snprintf(def_sys, sizeof(def_sys), "%s", get_ini_string(global_ini, "global", "default", "false"));
-
-                if (strcmp(def_rac, "false") != 0) {
-                    char default_core[MAX_BUFFER_SIZE];
-                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_sys);
-
-                    static char core_retroarch[MAX_BUFFER_SIZE];
-                    mini_t *local_ini = mini_load(default_core);
-
-                    char *use_local_retroarch = get_ini_string(local_ini, def_sys, "retroarch", "false");
-                    if (strcmp(use_local_retroarch, "false") != 0) {
-                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core RetroArch Config: %s", core_retroarch);
-                    } else {
-                        snprintf(
-                            core_retroarch, sizeof(core_retroarch), "%s",
-                            get_ini_string(global_ini, "global", "retroarch", "false")
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
-                    }
-
-                    mini_free(local_ini);
-
-                    create_rac_assignment(core_retroarch, rom_name, casn_dir_nowipe);
-                    LOG_SUCCESS(mux_module, "\tRetroArch Config Assignment Successful");
-                } else {
-                    LOG_INFO(mux_module, "\tAssigned RetroArch Config To Default: %s", "false");
-                    create_rac_assignment("false", rom_name, casn_dir_nowipe);
-                }
-
-                mini_free(global_ini);
+                create_rac_assignment("false", rom_name, casn_dir_nowipe);
 
                 free(assign_content);
                 return;
             }
+
             LOG_INFO(mux_module, "\tAssigned RetroArch Config To Default: %s", "false");
             create_rac_assignment("false", rom_name, casn_dir_nowipe);
 

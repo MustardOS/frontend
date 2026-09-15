@@ -8,6 +8,7 @@
 #include <common/content/core/retroarch.h>
 #include <common/content/core/external.h>
 #include <json/json.h>
+#include <common/content/core/coredb.h>
 #include <common/ui/common.h>
 #include <common/ui/nav.h>
 #include <common/platform/device.h>
@@ -387,7 +388,7 @@ int automatic_assign_core(char *rom_dir) {
     int auto_assign_good = 0;
 
     char assign_file[MAX_BUFFER_SIZE];
-    snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
+    snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
 
     char *assign_content = read_all_char_from(assign_file);
     if (json_valid(assign_content)) {
@@ -403,111 +404,62 @@ int automatic_assign_core(char *rom_dir) {
 
             LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config);
 
-            char assigned_core_global[MAX_BUFFER_SIZE];
-            snprintf(assigned_core_global, sizeof(assigned_core_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
+            char def_id[COREDB_NAME_MAX];
+            if (!coredb_system_default(ass_config, def_id, sizeof(def_id))) def_id[0] = '\0';
 
-            LOG_INFO(mux_module, "\tObtaining System Global INI: %s", assigned_core_global);
+            LOG_INFO(mux_module, "\tDefault Core: %s", def_id);
 
-            mini_t *global_ini = mini_load(assigned_core_global);
-
-            static char def_core[MAX_BUFFER_SIZE];
-            snprintf(def_core, sizeof(def_core), "%s", get_ini_string(global_ini, "global", "default", "none"));
-
-            LOG_INFO(mux_module, "\tDefault Core: %s", def_core);
-
-            if (strcmp(def_core, "none") != 0) {
-                char default_core[MAX_BUFFER_SIZE];
-                snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_core);
-
-                mini_t *core_ini = mini_load(default_core);
-
-                static char auto_core[MAX_BUFFER_SIZE];
-                snprintf(auto_core, sizeof(auto_core), "%s", get_ini_string(core_ini, def_core, "core", "none"));
-
-                if (strcmp(auto_core, "none") != 0) {
-                    LOG_INFO(mux_module, "\tAssigned Core To: %s", auto_core);
-
-                    static char core_catalogue[MAX_BUFFER_SIZE];
-                    static char core_governor[MAX_BUFFER_SIZE];
-                    static char core_control[MAX_BUFFER_SIZE];
-                    static char core_retroarch[MAX_BUFFER_SIZE];
-
-                    static int core_lookup;
-
-                    char *use_local_catalogue = get_ini_string(core_ini, def_core, "catalogue", "none");
-                    if (strcmp(use_local_catalogue, "none") != 0) {
-                        snprintf(core_catalogue, sizeof(core_catalogue), "%s", use_local_catalogue);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Catalogue: %s", core_catalogue);
-                    } else {
-                        snprintf(
-                            core_catalogue, sizeof(core_catalogue), "%s",
-                            get_ini_string(global_ini, "global", "catalogue", "none")
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue);
-                    }
-
-                    char *use_local_governor = get_ini_string(core_ini, def_core, "governor", "none");
-                    if (strcmp(use_local_governor, "none") != 0) {
-                        snprintf(core_governor, sizeof(core_governor), "%s", use_local_governor);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
-                    } else {
-                        snprintf(
-                            core_governor, sizeof(core_governor), "%s",
-                            get_ini_string(global_ini, "global", "governor", device.cpu.dflt)
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
-                    }
-
-                    char *use_local_control = get_ini_string(core_ini, def_core, "control", "none");
-                    if (strcmp(use_local_control, "none") != 0) {
-                        snprintf(core_control, sizeof(core_control), "%s", use_local_control);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
-                    } else {
-                        snprintf(
-                            core_control, sizeof(core_control), "%s",
-                            get_ini_string(global_ini, "global", "control", "system")
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control);
-                    }
-
-                    char *use_local_retroarch = get_ini_string(core_ini, def_core, "retroarch", "false");
-                    if (strcmp(use_local_retroarch, "false") != 0) {
-                        snprintf(core_retroarch, sizeof(core_retroarch), "%s", use_local_retroarch);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core RetroArch Config: %s", core_retroarch);
-                    } else {
-                        snprintf(
-                            core_retroarch, sizeof(core_retroarch), "%s",
-                            get_ini_string(global_ini, "global", "retroarch", "false")
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core RetroArch Config: %s", core_retroarch);
-                    }
-
-                    const int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
-                    if (use_local_lookup) {
-                        core_lookup = use_local_lookup;
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Lookup: %d", core_lookup);
-                    } else {
-                        core_lookup = get_ini_int(global_ini, "global", "lookup", 0);
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup);
-                    }
-
-                    create_core_assignment(
-                        def_core, rom_dir, auto_core, ass_config, core_catalogue, "", core_governor, core_control,
-                        core_retroarch, core_lookup, casn_dir
-                    );
-
-                    auto_assign_good = 1;
-                    LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful");
-                } else {
-                    LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", auto_core);
-                }
-
-                mini_free(core_ini);
-            } else {
-                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", def_core);
+            // Pickles is the one and true core every system defaults to so we'll try that first
+            // then maybe look at the others... I guess!
+            struct coredb_core core;
+            enum core_runtime runtime = core_runtime_count;
+            for (int r = 0; def_id[0] && r < core_runtime_count; r++) {
+                if (!coredb_core_find(ass_config, (enum core_runtime) r, def_id, &core)) continue;
+                runtime = (enum core_runtime) r;
+                break;
             }
 
-            mini_free(global_ini);
+            if (runtime != core_runtime_count && core.core[0]) {
+                static char def_core[MAX_BUFFER_SIZE];
+                coredb_assign_tag(def_id, runtime, def_core, sizeof(def_core));
+
+                LOG_INFO(mux_module, "\tAssigned Core To: %s", core.core);
+
+                static char core_catalogue[MAX_BUFFER_SIZE];
+                coredb_system_catalogue(ass_config, core_catalogue, sizeof(core_catalogue));
+                LOG_INFO(mux_module, "\tCore Catalogue: %s", core_catalogue);
+
+                static char core_governor[MAX_BUFFER_SIZE];
+                if (core.governor[0])
+                    snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
+                else if (!coredb_system_governor(ass_config, core_governor, sizeof(core_governor))
+                         || !core_governor[0])
+                    snprintf(core_governor, sizeof(core_governor), "%s", device.cpu.dflt);
+                LOG_INFO(mux_module, "\tCore Governor: %s", core_governor);
+
+                static char core_control[MAX_BUFFER_SIZE];
+                if (core.control[0])
+                    snprintf(core_control, sizeof(core_control), "%s", core.control);
+                else if (!coredb_system_control(ass_config, core_control, sizeof(core_control)) || !core_control[0])
+                    snprintf(core_control, sizeof(core_control), "%s", "system");
+                LOG_INFO(mux_module, "\tCore Control: %s", core_control);
+
+                static char core_retroarch[MAX_BUFFER_SIZE];
+                snprintf(core_retroarch, sizeof(core_retroarch), "%s", "false");
+
+                const int core_lookup = coredb_system_lookup(ass_config);
+                LOG_INFO(mux_module, "\tCore Lookup: %d", core_lookup);
+
+                create_core_assignment(
+                    def_core, rom_dir, core.core, ass_config, core_catalogue, "", core_governor, core_control,
+                    core_retroarch, core_lookup, casn_dir
+                );
+
+                auto_assign_good = 1;
+                LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful");
+            } else {
+                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", def_id);
+            }
         } else {
             if (!file_exist(core_file)) {
                 char recursive_core_file[MAX_BUFFER_SIZE];
@@ -547,15 +499,13 @@ int core_external_uses_stage_overlay(const char *core) {
 
     const char *key;
 
-    // There is an enum key for external "cores" that determine if the
-    // stage overlay is to be used or not, much easier that way!
     if (strcmp(core, "external") == 0) {
         key = core;
     } else if (strncmp(core, "ext-", 4) == 0) {
         key = core + 4;
     } else {
-        // muRetro and RetroArch don't bother with stage overlay,
-        // RetroArch has its own system and muRetro has predefined stuff.
+        // Pickles and RetroArch don't bother with stage overlay anymore
+        // Well I mean RetroArch probably should but I'm not too bothered
         return 0;
     }
 
@@ -566,16 +516,8 @@ int core_external_uses_stage_overlay(const char *core) {
     return 0;
 }
 
-int core_uses_muxretro(const char *assign_dir, const char *item_name) {
-    char core_file[FILENAME_MAX];
-    snprintf(core_file, sizeof(core_file), "%s/%s.ini", assign_dir, item_name);
-
-    mini_t *core_config = mini_load(core_file);
-    char exec_path[FILENAME_MAX];
-    snprintf(exec_path, sizeof(exec_path), "%s", get_ini_string(core_config, "launch", "exec", ""));
-    mini_free(core_config);
-
-    return strncmp(get_file_name(exec_path), "mu-", 3) == 0;
+int core_uses_muxretro(const char *item_name) {
+    return item_name && strncasecmp(item_name, "mu-", 3) == 0;
 }
 
 static const char *format_retroarch_core(const char *ra_core) {

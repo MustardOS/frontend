@@ -1089,7 +1089,7 @@ struct mux_lang {
         char overview[MAX_BUFFER_SIZE];
         char installed[MAX_BUFFER_SIZE];
         char available[MAX_BUFFER_SIZE];
-        char unknown[MAX_BUFFER_SIZE];
+        char bundled[MAX_BUFFER_SIZE];
         char reinstall[MAX_BUFFER_SIZE];
         char update[MAX_BUFFER_SIZE];
         char no_cores[MAX_BUFFER_SIZE];

@@ -1,3 +1,4 @@
+#include <common/content/core/coredb.h>
 #include "muxshare.h"
 #include <common/ui/orientation.h>
 
@@ -69,34 +70,19 @@ static void generate_available_governors(const char *default_governor) {
 static void create_gov_items(const char *target) {
     if (strcmp(target, "none") == 0) generate_available_governors(target);
 
-    char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", target);
-
-    char global_assign[FILENAME_MAX];
-    snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
-
-    mini_t *global_config = mini_load(global_assign);
-
-    char *target_default = get_ini_string(global_config, "global", "name", "none");
-    if (strcmp(target_default, "none") == 0) return;
-
-    char local_assign[FILENAME_MAX];
-    snprintf(local_assign, sizeof(local_assign), "%s/%s.ini", assign_dir, target_default);
-    mini_t *local_config = mini_load(local_assign);
-
-    char *use_governor;
-    char *local_governor = get_ini_string(local_config, target_default, "governor", "none");
-    if (strcmp(local_governor, "none") != 0) {
-        use_governor = local_governor;
-    } else {
-        use_governor = get_ini_string(global_config, "global", "governor", device.cpu.dflt);
-    }
+    char target_default[COREDB_NAME_MAX];
+    if (!coredb_system_default(target, target_default, sizeof(target_default)) || !target_default[0]) return;
 
     char default_governor[FILENAME_MAX];
-    snprintf(default_governor, sizeof(default_governor), "%s", use_governor);
+    if (!coredb_system_governor(target, default_governor, sizeof(default_governor)) || !default_governor[0])
+        snprintf(default_governor, sizeof(default_governor), "%s", device.cpu.dflt);
 
-    mini_free(global_config);
-    mini_free(local_config);
+    for (int r = 0; r < core_runtime_count; r++) {
+        struct coredb_core core;
+        if (!coredb_core_find(target, (enum core_runtime) r, target_default, &core)) continue;
+        if (core.governor[0]) snprintf(default_governor, sizeof(default_governor), "%s", core.governor);
+        break;
+    }
 
     generate_available_governors(default_governor);
 }
@@ -256,7 +242,7 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
         if (file_exist(core_file)) return;
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
+        snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
 
         char *assign_content = read_all_char_from(assign_file);
         if (json_valid(assign_content)) {
@@ -274,48 +260,29 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
 
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
 
-                char assigned_global[MAX_BUFFER_SIZE];
-                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
+                static char def_sys[COREDB_NAME_MAX];
+                if (!coredb_system_default(ass_config, def_sys, sizeof(def_sys))) def_sys[0] = '\0';
 
-                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
+                LOG_INFO(mux_module, "\tObtaining Core Definition: %s / %s", ass_config, def_sys);
 
-                mini_t *global_ini = mini_load(assigned_global);
+                static char core_governor[MAX_BUFFER_SIZE];
+                coredb_system_governor(ass_config, core_governor, sizeof(core_governor));
 
-                static char def_gov[MAX_BUFFER_SIZE];
-                snprintf(def_gov, sizeof(def_gov), "%s", get_ini_string(global_ini, "global", "governor", "none"));
+                for (int r = 0; def_sys[0] && r < core_runtime_count; r++) {
+                    struct coredb_core core;
+                    if (!coredb_core_find(ass_config, (enum core_runtime) r, def_sys, &core)) continue;
+                    if (core.governor[0]) snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
+                    break;
+                }
 
-                static char def_sys[MAX_BUFFER_SIZE];
-                snprintf(def_sys, sizeof(def_sys), "%s", get_ini_string(global_ini, "global", "default", "none"));
-
-                if (strcmp(def_gov, "none") != 0) {
-                    char default_core[MAX_BUFFER_SIZE];
-                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_sys);
-
-                    static char core_governor[MAX_BUFFER_SIZE];
-                    mini_t *local_ini = mini_load(default_core);
-
-                    char *use_local_governor = get_ini_string(local_ini, def_sys, "governor", "none");
-                    if (strcmp(use_local_governor, "none") != 0) {
-                        snprintf(core_governor, sizeof(core_governor), "%s", use_local_governor);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor);
-                    } else {
-                        snprintf(
-                            core_governor, sizeof(core_governor), "%s",
-                            get_ini_string(global_ini, "global", "governor", device.cpu.dflt)
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor);
-                    }
-
-                    mini_free(local_ini);
-
+                if (core_governor[0]) {
+                    LOG_INFO(mux_module, "\t(CORE) Core Governor: %s", core_governor);
                     create_gov_assignment(core_governor, rom_name, casn_dir_nowipe);
                     LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful");
                 } else {
                     LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.cpu.dflt);
                     create_gov_assignment(device.cpu.dflt, rom_name, casn_dir_nowipe);
                 }
-
-                mini_free(global_ini);
 
                 free(assign_content);
                 return;
@@ -342,7 +309,7 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
 
     if (strcasecmp(rom_system, "none") == 0 && !is_app) {
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
+        snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
 
         char *assign_content = read_all_char_from(assign_file);
         if (json_valid(assign_content)) {

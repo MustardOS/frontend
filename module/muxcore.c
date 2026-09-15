@@ -89,7 +89,7 @@ static void core_display_name(const char *zip, const char *fallback, char *out, 
 
 static void core_commit(const struct json manifest, const char *zip, char *out, const size_t out_size) {
     manifest_field(manifest, zip, "commit", out, out_size);
-    if (!out[0]) snprintf(out, out_size, "%s", lang.muxcore.unknown);
+    if (!out[0]) snprintf(out, out_size, "%s", lang.muxcore.bundled);
 }
 
 static void core_asset_name(const char *zip, char *out, const size_t out_size) {

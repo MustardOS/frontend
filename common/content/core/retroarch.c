@@ -167,7 +167,6 @@ const struct ra_core_name ra_core_names[] = {
     // entries above already do.
     {"2048", "2048", "2048"},
     {"81", "EightyOne", "EightyOne"},
-    {"amiberry", "Amiberry Libretro", "Amiberry Libretro"},
     {"bennugd", "BennuGD", "BennuGD"},
     {"bk", "BK", "BK"},
     {"bnes", "BNES", "BNES"},

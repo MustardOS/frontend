@@ -19,7 +19,7 @@ int automatic_assign_core(char *rom_dir);
 
 int system_uses_pico8_core(char *rom_dir);
 
-int core_uses_muxretro(const char *assign_dir, const char *item_name);
+int core_uses_muxretro(const char *item_name);
 
 int core_external_uses_stage_overlay(const char *core);
 

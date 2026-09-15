@@ -225,9 +225,7 @@ static void populate_info_values(void) {
         assign_sys = get_content_line(sys_dir, NULL, "cfg", 2);
     }
 
-    char assign_dir[MAX_BUFFER_SIZE];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", assign_sys);
-    core_is_muxretro = *def_core && *assign_sys ? core_uses_muxretro(assign_dir, def_core) : 0;
+    core_is_muxretro = *def_core && *assign_sys ? core_uses_muxretro(def_core) : 0;
     core_on_stage_overlay = core_external_uses_stage_overlay(*core_file ? core_file : core_dir);
 
     add_info_item_type(ui_val_core_option, core_file, core_dir, "core", 0, core_is_muxretro);

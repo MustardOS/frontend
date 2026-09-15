@@ -178,9 +178,9 @@
 #define STORE_LOC_INIT MUOS_BASE_PATH "/init"
 #define STORE_LOC_TRAK MUOS_BASE_PATH "/info/track"
 
-#define STORE_LOC_ASIN OPT_SHARE_PATH "info/assign"
-
-#define CORE_MANIFEST_LOCAL  OPT_SHARE_PATH "info/core/manifest.json"
+#define STORE_LOC_CORE       OPT_SHARE_PATH "info/core"
+#define CORE_ASSIGN_INDEX    STORE_LOC_CORE "/assign.json"
+#define CORE_MANIFEST_LOCAL  STORE_LOC_CORE "/manifest.json"
 #define CORE_MANIFEST_REMOTE "core-manifest.json"
 
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
@@ -190,40 +190,42 @@
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 
 #define MUOS_ACT_LOAD RUN_PATH "action"
+#define MUOS_APP_LOAD RUN_PATH "application"
+#define MUOS_CON_LOAD RUN_PATH "controller"
+#define MUOS_FLT_LOAD RUN_PATH "filter"
+#define MUOS_GOV_LOAD RUN_PATH "governor"
+#define MUOS_OVO_LOAD RUN_PATH "overlay_options"
+#define MUOS_RAC_LOAD RUN_PATH "retroarch"
+#define MUOS_ROM_LOAD RUN_PATH "content"
+#define MUOS_SAA_LOAD RUN_PATH "auto_core"
+#define MUOS_SAG_LOAD RUN_PATH "auto_governor"
+#define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
+#define MUOS_SHD_LOAD RUN_PATH "shader"
+
 #define MUOS_OPT_FROM "/tmp/opt_fm" // Content Options Module Return
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_AIX_LOAD "/tmp/aix_go" // Core/System Assignment Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
-#define MUOS_APP_LOAD RUN_PATH "application"
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_ASS_SYSP "/tmp/ass_sp" // Core/System Assignment Force System Picker
 #define MUOS_BTI_LOAD "/tmp/bti_go" // Bluetooth Paired Last Index
 #define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
 #define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
-#define MUOS_CON_LOAD RUN_PATH "controller"
 #define MUOS_CRS_LOAD "/tmp/crs_go" // Crash Module Information
 #define MUOS_PWR_LOSS "/tmp/pwr_no" // Unexpected Power Loss Alert
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
-#define MUOS_SFI_LOAD "/tmp/sfi_"   // Section Frame Last Index, one per module
-#define MUOS_FLT_LOAD RUN_PATH "filter"
-#define MUOS_GOV_LOAD RUN_PATH "governor"
 #define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
-#define MUOS_OVO_LOAD RUN_PATH "overlay_options"
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
 #define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index
-#define MUOS_RAC_LOAD RUN_PATH "retroarch"
 #define MUOS_RES_LOAD "/tmp/res_go" // Full Path of ROM Content Search
-#define MUOS_ROM_LOAD RUN_PATH "content"
-#define MUOS_SAA_LOAD RUN_PATH "auto_core"
-#define MUOS_SAG_LOAD RUN_PATH "auto_governor"
-#define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
-#define MUOS_SHD_LOAD RUN_PATH "shader"
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
+
+#define MUOS_SFI_LOAD "/tmp/sfi_" // Section Frame Last Index, one per module
 
 #define WR_PATH "\x2f\x72\x75\x6e\x2f\x6d\x75\x6f\x73\x2f\x77\x68\x69\x74\x65\x5f\x72\x61\x62\x62\x69\x74"
 

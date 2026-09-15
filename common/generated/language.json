@@ -560,6 +560,7 @@
   "muxcore": {
     "A newer build of this core has been published.": "A newer build of this core has been published.",
     "Available:": "Available:",
+    "Bundled": "Bundled",
     "Checking for updates": "Checking for updates",
     "Cores": "Cores",
     "Could not check for updates": "Could not check for updates",
@@ -573,8 +574,7 @@
     "This core is not in the latest release": "This core is not in the latest release",
     "This core is published but not installed.": "This core is published but not installed.",
     "This core matches the published build.": "This core matches the published build.",
-    "Update": "Update",
-    "unknown": "unknown"
+    "Update": "Update"
   },
   "muxcustom": {
     "Alternative Theme": "Alternative Theme",

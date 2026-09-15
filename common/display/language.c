@@ -1086,7 +1086,7 @@ static const lang_field lang_fields[] = {
     {"muxcore", LANG_OFF(muxcore.overview), lang_specific, "Every emulator core on the device, what it was built from, and whether a newer build has been published.\n\nPress X to check, then pick a core to bring it up to date."},
     {"muxcore", LANG_OFF(muxcore.installed), lang_specific, "Installed:"},
     {"muxcore", LANG_OFF(muxcore.available), lang_specific, "Available:"},
-    {"muxcore", LANG_OFF(muxcore.unknown), lang_specific, "unknown"},
+    {"muxcore", LANG_OFF(muxcore.bundled), lang_specific, "Bundled"},
     {"muxcore", LANG_OFF(muxcore.reinstall), lang_specific, "Reinstall"},
     {"muxcore", LANG_OFF(muxcore.update), lang_specific, "Update"},
     {"muxcore", LANG_OFF(muxcore.no_cores), lang_specific, "No cores found"},

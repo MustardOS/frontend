@@ -1,3 +1,4 @@
+#include <common/content/core/coredb.h>
 #include "muxshare.h"
 #include <common/ui/orientation.h>
 
@@ -86,34 +87,19 @@ static void generate_available_controls(const char *default_control) {
 static void create_control_items(const char *target) {
     if (strcmp(target, "none") == 0) generate_available_controls(target);
 
-    char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", target);
-
-    char global_assign[FILENAME_MAX];
-    snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
-
-    mini_t *global_config = mini_load(global_assign);
-
-    char *target_default = get_ini_string(global_config, "global", "name", "none");
-    if (strcmp(target_default, "none") == 0) return;
-
-    char local_assign[FILENAME_MAX];
-    snprintf(local_assign, sizeof(local_assign), "%s/%s.ini", assign_dir, target_default);
-    mini_t *local_config = mini_load(local_assign);
-
-    char *use_control;
-    char *local_control = get_ini_string(local_config, target_default, "control", "none");
-    if (strcmp(local_control, "none") != 0) {
-        use_control = local_control;
-    } else {
-        use_control = get_ini_string(global_config, "global", "control", "system");
-    }
+    char target_default[COREDB_NAME_MAX];
+    if (!coredb_system_default(target, target_default, sizeof(target_default)) || !target_default[0]) return;
 
     char default_control[FILENAME_MAX];
-    snprintf(default_control, sizeof(default_control), "%s", use_control);
+    if (!coredb_system_control(target, default_control, sizeof(default_control)) || !default_control[0])
+        snprintf(default_control, sizeof(default_control), "%s", "system");
 
-    mini_free(global_config);
-    mini_free(local_config);
+    for (int r = 0; r < core_runtime_count; r++) {
+        struct coredb_core core;
+        if (!coredb_core_find(target, (enum core_runtime) r, target_default, &core)) continue;
+        if (core.control[0]) snprintf(default_control, sizeof(default_control), "%s", core.control);
+        break;
+    }
 
     generate_available_controls(default_control);
 }
@@ -274,7 +260,7 @@ void muxcontrol_main(const int auto_assign, const char *name, const char *dir, c
         if (file_exist(core_file)) return;
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
+        snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
 
         char *assign_content = read_all_char_from(assign_file);
         if (json_valid(assign_content)) {
@@ -290,50 +276,29 @@ void muxcontrol_main(const int auto_assign, const char *name, const char *dir, c
 
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
 
-                char assigned_global[MAX_BUFFER_SIZE];
-                snprintf(assigned_global, sizeof(assigned_global), STORE_LOC_ASIN "/%s/global.ini", ass_config);
+                static char def_sys[COREDB_NAME_MAX];
+                if (!coredb_system_default(ass_config, def_sys, sizeof(def_sys))) def_sys[0] = '\0';
 
-                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global);
+                LOG_INFO(mux_module, "\tObtaining Core Definition: %s / %s", ass_config, def_sys);
 
-                mini_t *global_ini = mini_load(assigned_global);
+                static char core_control[MAX_BUFFER_SIZE];
+                coredb_system_control(ass_config, core_control, sizeof(core_control));
 
-                static char def_control[MAX_BUFFER_SIZE];
-                snprintf(
-                    def_control, sizeof(def_control), "%s", get_ini_string(global_ini, "global", "control", "none")
-                );
+                for (int r = 0; def_sys[0] && r < core_runtime_count; r++) {
+                    struct coredb_core core;
+                    if (!coredb_core_find(ass_config, (enum core_runtime) r, def_sys, &core)) continue;
+                    if (core.control[0]) snprintf(core_control, sizeof(core_control), "%s", core.control);
+                    break;
+                }
 
-                static char def_sys[MAX_BUFFER_SIZE];
-                snprintf(def_sys, sizeof(def_sys), "%s", get_ini_string(global_ini, "global", "default", "none"));
-
-                if (strcmp(def_control, "none") != 0) {
-                    char default_core[MAX_BUFFER_SIZE];
-                    snprintf(default_core, sizeof(default_core), STORE_LOC_ASIN "/%s/%s.ini", ass_config, def_sys);
-
-                    static char core_control[MAX_BUFFER_SIZE];
-                    mini_t *local_ini = mini_load(default_core);
-
-                    char *use_local_control = get_ini_string(local_ini, def_sys, "control", "none");
-                    if (strcmp(use_local_control, "none") != 0) {
-                        snprintf(core_control, sizeof(core_control), "%s", use_local_control);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control);
-                    } else {
-                        snprintf(
-                            core_control, sizeof(core_control), "%s",
-                            get_ini_string(global_ini, "global", "control", "system")
-                        );
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control);
-                    }
-
-                    mini_free(local_ini);
-
+                if (core_control[0]) {
+                    LOG_INFO(mux_module, "\t(CORE) Core Control: %s", core_control);
                     create_control_assignment(core_control, rom_name, casn_dir_nowipe);
                     LOG_SUCCESS(mux_module, "\tControl Assignment Successful");
                 } else {
                     LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system");
                     create_control_assignment("system", rom_name, casn_dir_nowipe);
                 }
-
-                mini_free(global_ini);
 
                 free(assign_content);
                 return;
@@ -360,7 +325,7 @@ void muxcontrol_main(const int auto_assign, const char *name, const char *dir, c
 
     if (strcasecmp(rom_system, "none") == 0 && !is_app) {
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), STORE_LOC_ASIN "/assign.json");
+        snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
 
         char *assign_content = read_all_char_from(assign_file);
         if (json_valid(assign_content)) {

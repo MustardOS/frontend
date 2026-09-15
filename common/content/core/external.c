@@ -53,7 +53,6 @@ const struct ext_core_name ext_core_names[] = {
     {"scummvm", "ScummVM", stage_overlay_enabled},
     {"flycast", "Flycast", stage_overlay_enabled},
     {"ppsspp", "PPSSPP", stage_overlay_enabled},
-    {"amiberry", "Amiberry", stage_overlay_enabled},
     {"pyxel", "Pyxel", stage_overlay_enabled},
     {"crisp", "Crisp Game Lib", stage_overlay_enabled},
     {"terminal", "Linux Script", stage_overlay_disabled},

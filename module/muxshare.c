@@ -1326,9 +1326,7 @@ static int content_muxretro_core(const char *resolved, char *core_name, const si
 
     if (!lines[core_index][0] || !lines[assign_index][0] || !lines[launch_index][0]) return 0;
 
-    char assign_dir[MAX_BUFFER_SIZE];
-    snprintf(assign_dir, sizeof(assign_dir), STORE_LOC_ASIN "/%s", lines[assign_index]);
-    if (!core_uses_muxretro(assign_dir, lines[launch_index])) return 0;
+    if (!core_uses_muxretro(lines[launch_index])) return 0;
 
     cached_is_muxretro = 1;
     snprintf(cached_core, sizeof(cached_core), "%s", lines[core_index]);
