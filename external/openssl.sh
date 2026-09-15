@@ -61,7 +61,7 @@ printf 'Configuring OpenSSL %s for %s\n' "$VERSION" "$DEVICE"
 cd "$EXT_WORK/openssl" || exit 1
 
 # shellcheck disable=SC2086
-env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS \
+env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS -u AR -u RANLIB -u NM -u LD -u STRIP \
 	"$EXT_SRC/openssl-$VERSION/Configure" \
 	"$TARGET" \
 	$CROSS_ARG \
