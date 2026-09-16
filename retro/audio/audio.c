@@ -31,6 +31,7 @@
 #define DRC_INTEGRAL_DIVISOR 500.0
 #define DRC_FILL_SMOOTHING   0.05
 #define DRC_OUT_FRAMES       1024
+#define DRC_PHASE_ONE        UINT64_C(281474976710656)
 
 #define PICKLES_BURST_RECOVERY_MIN 0.015
 #define PICKLES_BURST_RECOVERY_MAX 0.020
@@ -116,11 +117,17 @@ static double drc_limit = 0.0;
 static int pickles_burst_recovery_active = 0;
 static uint64_t pickles_burst_recovery_count = 0;
 static double pickles_burst_recovery_peak = 0.0;
-static double drc_phase = 0.0;
+static uint64_t drc_phase_q48 = 0;
 static int16_t drc_prev_l = 0;
 static int16_t drc_prev_r = 0;
 static int drc_primed = 0;
+static double audio_speed_multiplier = 1.0;
+static float speed_filter_alpha = 1.0f;
+static float speed_filter_l = 0.0f;
+static float speed_filter_r = 0.0f;
 static int16_t drc_out_buf[DRC_OUT_FRAMES * 2];
+static uint64_t drc_input_frames = 0;
+static uint64_t drc_output_frames = 0;
 
 static const double latency_profile_periods[audio_latency_count][2] = {
     [audio_latency_low] = {2.0, 3.0},
@@ -216,10 +223,12 @@ static void free_resampler(void) {
 }
 
 static void drc_reset_stream(void) {
-    drc_phase = 0.0;
+    drc_phase_q48 = 0;
     drc_prev_l = 0;
     drc_prev_r = 0;
     drc_primed = 0;
+    speed_filter_l = 0.0f;
+    speed_filter_r = 0.0f;
 }
 
 static size_t ring_write_frames(const int16_t *src, const size_t frames) {
@@ -321,14 +330,37 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     ring_read_index = read_idx + to_read;
 }
 
+static int16_t drc_interpolate_q48(const int16_t previous, const int16_t current, const uint64_t phase) {
+    const int64_t fraction = (int64_t) (phase >> 16);
+    const int64_t value =
+        (int64_t) previous * INT64_C(4294967296) + ((int64_t) current - (int64_t) previous) * fraction;
+    const int64_t sample = value >= 0 ? value / INT64_C(4294967296) : -(-value / INT64_C(4294967296));
+    return (int16_t) sample;
+}
+
 static void drc_write_frames(const int16_t *src, const size_t frames) {
     size_t out_count = 0;
 
     if (drc_ratio < 0.5) drc_ratio = 0.5;
+    double effective_ratio = drc_ratio * audio_speed_multiplier;
+    if (effective_ratio < 0.0625) effective_ratio = 0.0625;
+    if (effective_ratio > 16.0) effective_ratio = 16.0;
+    const uint64_t step_q48 = (uint64_t) (effective_ratio * (double) DRC_PHASE_ONE + 0.5);
+    drc_input_frames += frames;
 
     for (size_t i = 0; i < frames; i++) {
-        const int16_t cur_l = src[i * 2 + 0];
-        const int16_t cur_r = src[i * 2 + 1];
+        int16_t cur_l = src[i * 2 + 0];
+        int16_t cur_r = src[i * 2 + 1];
+
+        if (audio_speed_multiplier > 1.0001) {
+            speed_filter_l += speed_filter_alpha * ((float) cur_l - speed_filter_l);
+            speed_filter_r += speed_filter_alpha * ((float) cur_r - speed_filter_r);
+            cur_l = (int16_t) speed_filter_l;
+            cur_r = (int16_t) speed_filter_r;
+        } else {
+            speed_filter_l = (float) cur_l;
+            speed_filter_r = (float) cur_r;
+        }
 
         if (!drc_primed) {
             drc_prev_l = cur_l;
@@ -336,26 +368,28 @@ static void drc_write_frames(const int16_t *src, const size_t frames) {
             drc_primed = 1;
         }
 
-        while (drc_phase < 1.0) {
-            drc_out_buf[out_count * 2 + 0] =
-                (int16_t) ((double) drc_prev_l + ((double) cur_l - (double) drc_prev_l) * drc_phase);
-            drc_out_buf[out_count * 2 + 1] =
-                (int16_t) ((double) drc_prev_r + ((double) cur_r - (double) drc_prev_r) * drc_phase);
+        while (drc_phase_q48 < DRC_PHASE_ONE) {
+            drc_out_buf[out_count * 2 + 0] = drc_interpolate_q48(drc_prev_l, cur_l, drc_phase_q48);
+            drc_out_buf[out_count * 2 + 1] = drc_interpolate_q48(drc_prev_r, cur_r, drc_phase_q48);
 
-            drc_phase += drc_ratio;
+            drc_phase_q48 += step_q48;
 
             if (++out_count == DRC_OUT_FRAMES) {
                 ring_write_frames(drc_out_buf, out_count);
+                drc_output_frames += out_count;
                 out_count = 0;
             }
         }
 
-        drc_phase -= 1.0;
+        drc_phase_q48 -= DRC_PHASE_ONE;
         drc_prev_l = cur_l;
         drc_prev_r = cur_r;
     }
 
-    if (out_count > 0) ring_write_frames(drc_out_buf, out_count);
+    if (out_count > 0) {
+        ring_write_frames(drc_out_buf, out_count);
+        drc_output_frames += out_count;
+    }
 }
 
 static void queue_samples(const int16_t *data, const size_t frames) {
@@ -504,6 +538,8 @@ int audio_bridge_open(const double core_sample_rate) {
     pickles_burst_recovery_count = 0;
     pickles_burst_recovery_peak = 0.0;
     drc_reset_stream();
+    drc_input_frames = 0;
+    drc_output_frames = 0;
 
     submitted_frames = 0;
     content_fps_ema = 0.0;
@@ -832,6 +868,13 @@ double audio_bridge_pickles_burst_recovery_peak_percent(void) {
 
 int audio_bridge_is_muted(void) {
     return audio_muted;
+}
+
+void audio_bridge_set_speed_multiplier(double multiplier) {
+    if (multiplier < 0.125) multiplier = 0.125;
+    if (multiplier > 8.0) multiplier = 8.0;
+    audio_speed_multiplier = multiplier;
+    speed_filter_alpha = multiplier > 1.0 ? (float) (2.0 / (multiplier + 1.0)) : 1.0f;
 }
 
 void audio_bridge_clear_queued(void) {
@@ -1217,4 +1260,12 @@ uint64_t audio_bridge_batch_calls(void) {
 
 size_t audio_bridge_batch_peak_frames(void) {
     return batch_peak_frames;
+}
+
+uint64_t audio_bridge_drc_input_frames(void) {
+    return drc_input_frames;
+}
+
+uint64_t audio_bridge_drc_output_frames(void) {
+    return drc_output_frames;
 }

@@ -29,6 +29,7 @@
 #include "../state/history.h"
 #include "../ui/options.h"
 #include "../video/overlay_bridge.h"
+#include "../video/overlay_library.h"
 #include "../core/paths.h"
 #include "../core/perf.h"
 #include "settings.h"
@@ -54,9 +55,11 @@ static const struct session_settings_t defaults = {
     .slowmo_speed = slowmo_speed_1_2_x,
     .hotkey_ff_enabled = hotkey_activation_press,
     .hotkey_ff_button = mux_input_r1,
+    .hotkey_ff_audio_enabled = 0,
     .hotkey_ff_glyph_enabled = 1,
     .hotkey_slowmo_enabled = hotkey_activation_press,
     .hotkey_slowmo_button = mux_input_l1,
+    .hotkey_slowmo_audio_enabled = 0,
     .hotkey_slowmo_glyph_enabled = 1,
     .hotkey_pause_enabled = 1,
     .hotkey_pause_button = mux_input_b,
@@ -98,7 +101,17 @@ static const struct session_settings_t defaults = {
     .vignette_colour = vignette_colour_black,
     .overlay_source = overlay_source_off,
     .overlay_pattern = 0,
+    .overlay_image = 0,
     .overlay_opacity = 100,
+    .overlay_offset_x = 0,
+    .overlay_offset_y = 0,
+    .overlay_stretch_x = 0,
+    .overlay_stretch_y = 0,
+    .overlay_zoom = 100,
+    .overlay_crop_top = 0,
+    .overlay_crop_bottom = 0,
+    .overlay_crop_left = 0,
+    .overlay_crop_right = 0,
     .viewport_offset_x = 0,
     .viewport_offset_y = 0,
     .viewport_stretch_x = 0,
@@ -193,6 +206,14 @@ static const int default_button_map[16] = {
 #define VIEWPORT_CROP_MAX      512
 #define VIEWPORT_CROP_MIN_KEEP 16
 
+#define OVERLAY_OFFSET_STEP  1
+#define OVERLAY_STRETCH_STEP 1
+#define OVERLAY_ZOOM_MIN     25
+#define OVERLAY_ZOOM_MAX     300
+#define OVERLAY_ZOOM_STEP    5
+#define OVERLAY_CROP_STEP    1
+#define OVERLAY_CROP_MAX     512
+
 #define STICK_DEADZONE_MIN      0
 #define STICK_DEADZONE_MAX      50
 #define STICK_ANTI_DEADZONE_MIN 0
@@ -281,6 +302,7 @@ enum setting_validation {
     setting_choices,
     setting_colour_filter,
     setting_colour_shader,
+    setting_overlay_image,
     setting_overlay_pattern,
     setting_viewport_x,
     setting_viewport_y
@@ -297,12 +319,14 @@ struct setting_descriptor {
 };
 
 #define SETTING_RANGE(FIELD, MINIMUM, MAXIMUM)                                                                         \
-    {#FIELD, offsetof(struct session_settings_t, FIELD), setting_range, MINIMUM, MAXIMUM, NULL, 0}
+    { #FIELD, offsetof(struct session_settings_t, FIELD), setting_range, MINIMUM, MAXIMUM, NULL, 0 }
 #define SETTING_CHOICES(FIELD, CHOICES)                                                                                \
-    {#FIELD,  offsetof(struct session_settings_t, FIELD), setting_choices, 0, 0,                                       \
-     CHOICES, sizeof(CHOICES) / sizeof((CHOICES)[0])}
+    {                                                                                                                  \
+        #FIELD, offsetof(struct session_settings_t, FIELD), setting_choices, 0, 0, CHOICES,                            \
+            sizeof(CHOICES) / sizeof((CHOICES)[0])                                                                     \
+    }
 #define SETTING_SPECIAL(FIELD, VALIDATION)                                                                             \
-    {#FIELD, offsetof(struct session_settings_t, FIELD), VALIDATION, 0, 0, NULL, 0}
+    { #FIELD, offsetof(struct session_settings_t, FIELD), VALIDATION, 0, 0, NULL, 0 }
 
 static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(scaling_mode, 0, video_scale_count - 1),
@@ -325,9 +349,11 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(slowmo_speed, 0, slowmo_speed_count - 1),
     SETTING_RANGE(hotkey_ff_enabled, 0, hotkey_activation_count - 1),
     SETTING_CHOICES(hotkey_ff_button, hotkey_button_choices),
+    SETTING_RANGE(hotkey_ff_audio_enabled, 0, 1),
     SETTING_RANGE(hotkey_ff_glyph_enabled, 0, 1),
     SETTING_RANGE(hotkey_slowmo_enabled, 0, hotkey_activation_count - 1),
     SETTING_CHOICES(hotkey_slowmo_button, hotkey_button_choices),
+    SETTING_RANGE(hotkey_slowmo_audio_enabled, 0, 1),
     SETTING_RANGE(hotkey_slowmo_glyph_enabled, 0, 1),
     SETTING_RANGE(hotkey_pause_enabled, 0, 1),
     SETTING_CHOICES(hotkey_pause_button, hotkey_button_choices),
@@ -369,7 +395,17 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(vignette_colour, 0, vignette_colour_count - 1),
     SETTING_RANGE(overlay_source, 0, overlay_source_count - 1),
     SETTING_SPECIAL(overlay_pattern, setting_overlay_pattern),
+    SETTING_SPECIAL(overlay_image, setting_overlay_image),
     SETTING_RANGE(overlay_opacity, 0, 100),
+    SETTING_SPECIAL(overlay_offset_x, setting_viewport_x),
+    SETTING_SPECIAL(overlay_offset_y, setting_viewport_y),
+    SETTING_SPECIAL(overlay_stretch_x, setting_viewport_x),
+    SETTING_SPECIAL(overlay_stretch_y, setting_viewport_y),
+    SETTING_RANGE(overlay_zoom, OVERLAY_ZOOM_MIN, OVERLAY_ZOOM_MAX),
+    SETTING_RANGE(overlay_crop_top, 0, OVERLAY_CROP_MAX),
+    SETTING_RANGE(overlay_crop_bottom, 0, OVERLAY_CROP_MAX),
+    SETTING_RANGE(overlay_crop_left, 0, OVERLAY_CROP_MAX),
+    SETTING_RANGE(overlay_crop_right, 0, OVERLAY_CROP_MAX),
     SETTING_SPECIAL(viewport_offset_x, setting_viewport_x),
     SETTING_SPECIAL(viewport_offset_y, setting_viewport_y),
     SETTING_SPECIAL(viewport_stretch_x, setting_viewport_x),
@@ -490,7 +526,7 @@ static const double slowmo_speed_values[slowmo_speed_count] = {0.5, 0.25, 0.125}
 
 static const char *overlay_source_names[overlay_source_count] = {
     lang.generic.disabled, lang.muxretro.settings_screen.overlay_pattern_mode,
-    lang.muxretro.settings_screen.overlay_catalogue_mode
+    lang.muxretro.settings_screen.overlay_catalogue_mode, lang.muxretro.settings_screen.overlay_downloaded_mode
 };
 
 static const char *overlay_pattern_names[] = {
@@ -760,6 +796,11 @@ const char *session_settings_overlay_source_name(const int mode) {
     return overlay_source_names[mode];
 }
 
+const char *session_settings_overlay_image_name(const int index) {
+    const char *label = overlay_library_label(index);
+    return label && *label ? label : lang.generic.none;
+}
+
 const char *session_settings_overlay_pattern_name(const int index) {
     if (index >= 0 && index < OVERLAY_PATTERN_NAME_COUNT) return overlay_pattern_names[index];
     return overlay_pattern_name(index);
@@ -867,6 +908,8 @@ static int setting_value_valid(const struct setting_descriptor *descriptor, cons
             return value >= 0 && value < colour_shader_count();
         case setting_overlay_pattern:
             return value >= 0 && value < overlay_pattern_count();
+        case setting_overlay_image:
+            return value >= 0 && (value < overlay_library_count() || value == 0);
         case setting_viewport_x:
             return value >= -(device.mux.width / 2) && value <= device.mux.width / 2;
         case setting_viewport_y:
@@ -1438,15 +1481,35 @@ static void apply_scalar_settings_to(
     }
 }
 
-static void apply_ini(const char *path) {
+static void apply_ini_to(const char *path, struct session_settings_t *settings) {
     mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return;
 
     const struct session_settings_t fallback = default_settings();
-    apply_scalar_settings_to(ini, &session_settings, &fallback, 0, path);
-    apply_input_settings_to(ini, &session_settings, &fallback, path);
+    apply_scalar_settings_to(ini, settings, &fallback, 0, path);
+    apply_input_settings_to(ini, settings, &fallback, path);
+
+    if (mini_value_exists(ini, "settings", "colour_filter_name") == MINI_OK) {
+        const char *key = mini_get_string(ini, "settings", "colour_filter_name", "");
+        const int index = colour_filter_preset_index(key);
+        settings->colour_filter = index >= 0 ? index : defaults.colour_filter;
+    }
+    if (mini_value_exists(ini, "settings", "colour_shader_name") == MINI_OK) {
+        const char *key = mini_get_string(ini, "settings", "colour_shader_name", "");
+        const int index = colour_shader_index(key);
+        settings->colour_shader = index >= 0 ? index : defaults.colour_shader;
+    }
+    if (mini_value_exists(ini, "settings", "overlay_image_name") == MINI_OK) {
+        const char *key = mini_get_string(ini, "settings", "overlay_image_name", "");
+        const int index = overlay_library_index(key);
+        settings->overlay_image = index >= 0 ? index : defaults.overlay_image;
+    }
 
     mini_free(ini);
+}
+
+static void apply_ini(const char *path) {
+    apply_ini_to(path, &session_settings);
 }
 
 static void normalise_hotkey_buttons(void) {
@@ -1485,47 +1548,11 @@ static void normalise_hotkey_buttons(void) {
 }
 
 static struct session_settings_t tier_base(const int with_core, const int with_directory) {
-    const struct session_settings_t live = session_settings;
-
-    session_settings = default_settings();
-    if (with_core) apply_ini(core_ini_path);
-    if (with_directory) apply_ini(directory_ini_path);
-
-    const struct session_settings_t base = session_settings;
-    session_settings = live;
+    struct session_settings_t base = default_settings();
+    if (with_core) apply_ini_to(core_ini_path, &base);
+    if (with_directory) apply_ini_to(directory_ini_path, &base);
 
     return base;
-}
-
-void session_settings_reset_changed_to_inherited(const struct session_settings_t *snapshot) {
-    if (!snapshot) return;
-
-    const struct session_settings_t inherited = tier_base(1, 1);
-    struct session_settings_t next = session_settings;
-    for (int i = 0; i < setting_descriptor_count; i++) {
-        const struct setting_descriptor *descriptor = &setting_descriptors[i];
-        if (*setting_field_const(&session_settings, descriptor) == *setting_field_const(snapshot, descriptor)) continue;
-        *setting_field(&next, descriptor) = *setting_field_const(&inherited, descriptor);
-    }
-
-#define RESET_CHANGED_ARRAY(FIELD)                                                                                     \
-    do {                                                                                                               \
-        if (memcmp(session_settings.FIELD, snapshot->FIELD, sizeof(session_settings.FIELD)) != 0)                      \
-            memcpy(next.FIELD, inherited.FIELD, sizeof(next.FIELD));                                                   \
-    } while (0)
-    RESET_CHANGED_ARRAY(port_assignment);
-    RESET_CHANGED_ARRAY(port_device_key);
-    RESET_CHANGED_ARRAY(port_device_id);
-    RESET_CHANGED_ARRAY(port_role);
-    RESET_CHANGED_ARRAY(port_deck);
-    RESET_CHANGED_ARRAY(port_stick_forced);
-    RESET_CHANGED_ARRAY(port_source_target);
-    RESET_CHANGED_ARRAY(port_source_turbo);
-    RESET_CHANGED_ARRAY(port_source_macro);
-#undef RESET_CHANGED_ARRAY
-
-    session_settings_discard_to(&next);
-    session_settings_save_content();
 }
 
 static int write_ini_delta(const char *path, const struct session_settings_t *base) {
@@ -1546,6 +1573,15 @@ static int write_ini_delta(const char *path, const struct session_settings_t *ba
         const int value = *setting_field_const(&session_settings, descriptor);
         if (value != *setting_field_const(base, descriptor)) mini_set_int(ini, "settings", descriptor->key, value);
     }
+
+    if (session_settings.colour_filter != base->colour_filter)
+        mini_set_string(
+            ini, "settings", "colour_filter_name", colour_filter_preset_key(session_settings.colour_filter)
+        );
+    if (session_settings.colour_shader != base->colour_shader)
+        mini_set_string(ini, "settings", "colour_shader_name", colour_shader_key(session_settings.colour_shader));
+    if (session_settings.overlay_image != base->overlay_image)
+        mini_set_string(ini, "settings", "overlay_image_name", overlay_library_key(session_settings.overlay_image));
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
@@ -2027,6 +2063,11 @@ void session_settings_cycle_hotkey_ff_enabled(const int direction) {
         % hotkey_activation_count;
 }
 
+void session_settings_cycle_hotkey_ff_audio_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_ff_audio_enabled = !session_settings.hotkey_ff_audio_enabled;
+}
+
 void session_settings_cycle_hotkey_ff_glyph_enabled(const int direction) {
     (void) direction;
     session_settings.hotkey_ff_glyph_enabled = !session_settings.hotkey_ff_glyph_enabled;
@@ -2036,6 +2077,11 @@ void session_settings_cycle_hotkey_slowmo_enabled(const int direction) {
     session_settings.hotkey_slowmo_enabled =
         (session_settings.hotkey_slowmo_enabled + (direction < 0 ? -1 : 1) + hotkey_activation_count)
         % hotkey_activation_count;
+}
+
+void session_settings_cycle_hotkey_slowmo_audio_enabled(const int direction) {
+    (void) direction;
+    session_settings.hotkey_slowmo_audio_enabled = !session_settings.hotkey_slowmo_audio_enabled;
 }
 
 void session_settings_cycle_hotkey_slowmo_glyph_enabled(const int direction) {
@@ -2156,10 +2202,39 @@ void session_settings_set_colour_shader(const int index) {
     session_settings.colour_shader = index;
 }
 
+void session_settings_reload_colour_presets(void) {
+    char active_filter[64];
+    char active_shader[64];
+    char baseline_filter[64];
+    char baseline_shader[64];
+    snprintf(active_filter, sizeof(active_filter), "%s", colour_filter_preset_key(session_settings.colour_filter));
+    snprintf(active_shader, sizeof(active_shader), "%s", colour_shader_key(session_settings.colour_shader));
+    snprintf(baseline_filter, sizeof(baseline_filter), "%s", colour_filter_preset_key(baseline_settings.colour_filter));
+    snprintf(baseline_shader, sizeof(baseline_shader), "%s", colour_shader_key(baseline_settings.colour_shader));
+
+    colour_init();
+
+    int index = colour_filter_preset_index(active_filter);
+    session_settings.colour_filter = index >= 0 ? index : defaults.colour_filter;
+    index = colour_shader_index(active_shader);
+    session_settings.colour_shader = index >= 0 ? index : defaults.colour_shader;
+    index = colour_filter_preset_index(baseline_filter);
+    baseline_settings.colour_filter = index >= 0 ? index : defaults.colour_filter;
+    index = colour_shader_index(baseline_shader);
+    baseline_settings.colour_shader = index >= 0 ? index : defaults.colour_shader;
+    colour_refresh();
+}
+
 void session_settings_cycle_overlay_source(const int direction) {
     session_settings.overlay_source =
         (session_settings.overlay_source + direction + overlay_source_count) % overlay_source_count;
     overlay_bridge_apply();
+}
+
+static void step_clamped(int *value, const int direction, const int step, const int low, const int high) {
+    *value += direction * step;
+    if (*value < low) *value = low;
+    if (*value > high) *value = high;
 }
 
 void session_settings_cycle_overlay_pattern(const int direction) {
@@ -2168,10 +2243,73 @@ void session_settings_cycle_overlay_pattern(const int direction) {
     overlay_bridge_apply();
 }
 
-static void step_clamped(int *value, const int direction, const int step, const int low, const int high) {
-    *value += direction * step;
-    if (*value < low) *value = low;
-    if (*value > high) *value = high;
+void session_settings_set_overlay_image(const int index) {
+    if (index < 0 || index >= overlay_library_count()) return;
+
+    session_settings.overlay_image = index;
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_offset_x(const int direction) {
+    const int max = device.mux.width / 2;
+    step_clamped(&session_settings.overlay_offset_x, direction, OVERLAY_OFFSET_STEP, -max, max);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_offset_y(const int direction) {
+    const int max = device.mux.height / 2;
+    step_clamped(&session_settings.overlay_offset_y, direction, OVERLAY_OFFSET_STEP, -max, max);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_stretch_x(const int direction) {
+    const int max = device.mux.width / 2;
+    step_clamped(&session_settings.overlay_stretch_x, direction, OVERLAY_STRETCH_STEP, -max, max);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_stretch_y(const int direction) {
+    const int max = device.mux.height / 2;
+    step_clamped(&session_settings.overlay_stretch_y, direction, OVERLAY_STRETCH_STEP, -max, max);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_zoom(const int direction) {
+    step_clamped(&session_settings.overlay_zoom, direction, OVERLAY_ZOOM_STEP, OVERLAY_ZOOM_MIN, OVERLAY_ZOOM_MAX);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_crop_top(const int direction) {
+    step_clamped(&session_settings.overlay_crop_top, direction, OVERLAY_CROP_STEP, 0, OVERLAY_CROP_MAX);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_crop_bottom(const int direction) {
+    step_clamped(&session_settings.overlay_crop_bottom, direction, OVERLAY_CROP_STEP, 0, OVERLAY_CROP_MAX);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_crop_left(const int direction) {
+    step_clamped(&session_settings.overlay_crop_left, direction, OVERLAY_CROP_STEP, 0, OVERLAY_CROP_MAX);
+    overlay_bridge_apply();
+}
+
+void session_settings_cycle_overlay_crop_right(const int direction) {
+    step_clamped(&session_settings.overlay_crop_right, direction, OVERLAY_CROP_STEP, 0, OVERLAY_CROP_MAX);
+    overlay_bridge_apply();
+}
+
+void session_settings_reset_overlay(void) {
+    session_settings.overlay_offset_x = 0;
+    session_settings.overlay_offset_y = 0;
+    session_settings.overlay_stretch_x = 0;
+    session_settings.overlay_stretch_y = 0;
+    session_settings.overlay_zoom = 100;
+    session_settings.overlay_crop_top = 0;
+    session_settings.overlay_crop_bottom = 0;
+    session_settings.overlay_crop_left = 0;
+    session_settings.overlay_crop_right = 0;
+    overlay_bridge_apply();
 }
 
 const char *session_settings_vignette_shape_name(const int value) {

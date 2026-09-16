@@ -71,14 +71,6 @@ typedef struct {
     float _pad;
 } v_push_smooth_t;
 
-typedef struct {
-    float resolution[2];
-    float native_resolution[2];
-    float time;
-    int frame;
-    int _pad[2];
-} v_push_user_shader_t;
-
 static struct {
     int ready;
     int tried;
@@ -510,7 +502,6 @@ typedef struct {
     VkPipelineLayout layout_overlay;
     VkPipelineLayout layout_content;
     VkPipelineLayout layout_smooth;
-    VkPipelineLayout layout_user;
 
     VkRenderPass rp_offscreen;
 
@@ -528,13 +519,9 @@ typedef struct {
         VkFormat format;
         VkPipeline pipe_overlay;
         VkPipeline pipe_content;
-        VkPipeline pipe_user_shader;
     } pipe_present[V_MAX_SWAPCHAINS];
     int pipe_present_count;
 
-    VkShaderModule fs_user_module;
-    char user_shader_name[128];
-    time_t user_shader_mtime;
 
     VkPhysicalDeviceMemoryProperties mem_props;
 
@@ -1289,26 +1276,6 @@ static VkPipelineLayout v_make_layout(v_device_t *dev, VkDescriptorSetLayout set
     return layout;
 }
 
-static VkPipelineLayout v_make_user_layout(v_device_t *dev, VkDescriptorSetLayout set_layout) {
-    VkPushConstantRange pcr[2] = {0};
-    pcr[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    pcr[0].offset = 0;
-    pcr[0].size = sizeof(v_push_overlay_t);
-    pcr[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    pcr[1].offset = 0;
-    pcr[1].size = sizeof(v_push_user_shader_t);
-
-    VkPipelineLayoutCreateInfo ci = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-    ci.setLayoutCount = 1;
-    ci.pSetLayouts = &set_layout;
-    ci.pushConstantRangeCount = 2;
-    ci.pPushConstantRanges = pcr;
-
-    VkPipelineLayout layout = VK_NULL_HANDLE;
-    if (vk_dl.CreatePipelineLayout(dev->device, &ci, NULL, &layout) != VK_SUCCESS) return VK_NULL_HANDLE;
-    return layout;
-}
-
 static VkPipeline v_get_present_pipeline_overlay(v_device_t *dev, VkFormat fmt) {
     for (int i = 0; i < dev->pipe_present_count; i++) {
         if (dev->pipe_present[i].format == fmt) return dev->pipe_present[i].pipe_overlay;
@@ -1322,7 +1289,6 @@ static VkPipeline v_get_present_pipeline_overlay(v_device_t *dev, VkFormat fmt) 
     dev->pipe_present[dev->pipe_present_count].format = fmt;
     dev->pipe_present[dev->pipe_present_count].pipe_overlay = pipe;
     dev->pipe_present[dev->pipe_present_count].pipe_content = VK_NULL_HANDLE;
-    dev->pipe_present[dev->pipe_present_count].pipe_user_shader = VK_NULL_HANDLE;
     dev->pipe_present_count++;
     return pipe;
 }
@@ -1358,148 +1324,6 @@ static VkPipeline v_get_present_pipeline_content(v_device_t *dev, VkFormat fmt) 
     return VK_NULL_HANDLE;
 }
 
-static VkPipeline v_get_present_pipeline_user(v_device_t *dev, VkFormat fmt) {
-    if (dev->fs_user_module == VK_NULL_HANDLE) return VK_NULL_HANDLE;
-
-    for (int i = 0; i < dev->pipe_present_count; i++) {
-        if (dev->pipe_present[i].format == fmt) {
-            if (dev->pipe_present[i].pipe_user_shader != VK_NULL_HANDLE) return dev->pipe_present[i].pipe_user_shader;
-
-            VkRenderPass rp = v_get_present_renderpass(dev, fmt);
-            if (rp == VK_NULL_HANDLE) return VK_NULL_HANDLE;
-
-            VkPipeline pipe = v_make_pipeline(dev, dev->fs_user_module, dev->layout_user, rp, 0);
-            dev->pipe_present[i].pipe_user_shader = pipe;
-            return pipe;
-        }
-    }
-
-    (void) v_get_present_pipeline_overlay(dev, fmt);
-    for (int i = 0; i < dev->pipe_present_count; i++) {
-        if (dev->pipe_present[i].format == fmt) {
-            VkRenderPass rp = v_get_present_renderpass(dev, fmt);
-            if (rp == VK_NULL_HANDLE) return VK_NULL_HANDLE;
-
-            VkPipeline pipe = v_make_pipeline(dev, dev->fs_user_module, dev->layout_user, rp, 0);
-            dev->pipe_present[i].pipe_user_shader = pipe;
-            return pipe;
-        }
-    }
-
-    return VK_NULL_HANDLE;
-}
-
-static void v_user_shader_clear(v_device_t *dev) {
-    if (!dev || dev->device == VK_NULL_HANDLE) return;
-
-    vk_dl.DeviceWaitIdle(dev->device);
-
-    for (int i = 0; i < dev->pipe_present_count; i++) {
-        if (dev->pipe_present[i].pipe_user_shader) {
-            vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_user_shader, NULL);
-            dev->pipe_present[i].pipe_user_shader = VK_NULL_HANDLE;
-        }
-    }
-
-    if (dev->fs_user_module) {
-        vk_dl.DestroyShaderModule(dev->device, dev->fs_user_module, NULL);
-        dev->fs_user_module = VK_NULL_HANDLE;
-    }
-
-    dev->user_shader_name[0] = '\0';
-    dev->user_shader_mtime = 0;
-}
-
-static int v_read_shader_name(char *out, size_t out_sz) {
-    if (!out || out_sz == 0) return 0;
-    out[0] = '\0';
-
-    if (!read_line_from_file(OVERLAY_RUNNER "shader", 1, out, out_sz)) return 0;
-    if (!out[0] || strcmp(out, "none") == 0) return 0;
-
-    return 1;
-}
-
-static void v_user_shader_sync(v_device_t *dev) {
-    static int reload_tick = 0;
-    if (dev->fs_user_module != VK_NULL_HANDLE) {
-        if (++reload_tick < 60) return;
-        reload_tick = 0;
-    }
-
-    char name[64];
-    if (!v_read_shader_name(name, sizeof(name))) {
-        if (dev->fs_user_module || dev->user_shader_name[0]) v_user_shader_clear(dev);
-        return;
-    }
-
-    char spv_path[PATH_MAX];
-    snprintf(spv_path, sizeof(spv_path), "%s/shader/%s.frag.spv", INTERNAL_SHARE, name);
-
-    struct stat st;
-    if (stat(spv_path, &st) != 0) {
-        static char missing_name[64];
-        if (strcmp(missing_name, name) != 0) {
-            snprintf(missing_name, sizeof(missing_name), "%s", name);
-            LOG_WARN("stage", "[vk] Vulkan shader SPIR-V missing: %s", spv_path);
-        }
-        if (dev->fs_user_module || strcmp(dev->user_shader_name, name) == 0) v_user_shader_clear(dev);
-        return;
-    }
-
-    if (dev->fs_user_module && strcmp(dev->user_shader_name, name) == 0 && dev->user_shader_mtime == st.st_mtime) {
-        return;
-    }
-
-    v_user_shader_clear(dev);
-
-    FILE *f = fopen(spv_path, "rb");
-    if (!f) return;
-
-    if (fseek(f, 0, SEEK_END) != 0) {
-        fclose(f);
-        return;
-    }
-
-    long n = ftell(f);
-    if (n <= 0 || n > 256 * 1024 || (n & 3)) {
-        fclose(f);
-        LOG_WARN("stage", "[vk] bad Vulkan shader SPIR-V size: %s", spv_path);
-        return;
-    }
-
-    if (fseek(f, 0, SEEK_SET) != 0) {
-        fclose(f);
-        return;
-    }
-
-    uint32_t *buf = malloc((size_t) n);
-    if (!buf) {
-        fclose(f);
-        return;
-    }
-
-    size_t got = fread(buf, 1, (size_t) n, f);
-    fclose(f);
-
-    if (got != (size_t) n) {
-        free(buf);
-        return;
-    }
-
-    dev->fs_user_module = v_make_shader(dev, buf, (size_t) n);
-    free(buf);
-
-    if (!dev->fs_user_module) {
-        LOG_WARN("stage", "[vk] failed to create Vulkan shader module: %s", spv_path);
-        return;
-    }
-
-    snprintf(dev->user_shader_name, sizeof(dev->user_shader_name), "%s", name);
-    dev->user_shader_mtime = st.st_mtime;
-    LOG_INFO("stage", "[vk] Vulkan shader loaded: %s", spv_path);
-}
-
 static void v_device_destroy(v_device_t *dev) {
     if (!dev || dev->device == VK_NULL_HANDLE) return;
     vk_dl.DeviceWaitIdle(dev->device);
@@ -1507,15 +1331,12 @@ static void v_device_destroy(v_device_t *dev) {
     for (int i = 0; i < V_MAX_TRACKED_TEX; i++)
         v_tex_destroy(dev, &dev->textures[i]);
 
-    if (dev->fs_user_module) vk_dl.DestroyShaderModule(dev->device, dev->fs_user_module, NULL);
 
     for (int i = 0; i < dev->pipe_present_count; i++) {
         if (dev->pipe_present[i].pipe_overlay)
             vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_overlay, NULL);
         if (dev->pipe_present[i].pipe_content)
             vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_content, NULL);
-        if (dev->pipe_present[i].pipe_user_shader)
-            vk_dl.DestroyPipeline(dev->device, dev->pipe_present[i].pipe_user_shader, NULL);
     }
 
     if (dev->pipe_overlay_offscreen) vk_dl.DestroyPipeline(dev->device, dev->pipe_overlay_offscreen, NULL);
@@ -1525,7 +1346,6 @@ static void v_device_destroy(v_device_t *dev) {
     if (dev->layout_overlay) vk_dl.DestroyPipelineLayout(dev->device, dev->layout_overlay, NULL);
     if (dev->layout_content) vk_dl.DestroyPipelineLayout(dev->device, dev->layout_content, NULL);
     if (dev->layout_smooth) vk_dl.DestroyPipelineLayout(dev->device, dev->layout_smooth, NULL);
-    if (dev->layout_user) vk_dl.DestroyPipelineLayout(dev->device, dev->layout_user, NULL);
 
     if (dev->vs_quad) vk_dl.DestroyShaderModule(dev->device, dev->vs_quad, NULL);
     if (dev->fs_overlay) vk_dl.DestroyShaderModule(dev->device, dev->fs_overlay, NULL);
@@ -1629,7 +1449,6 @@ static int v_device_init(v_device_t *dev) {
     dev->layout_overlay = v_make_layout(dev, dev->set_layout, sizeof(v_push_overlay_t));
     dev->layout_content = v_make_layout(dev, dev->set_layout, sizeof(v_push_content_t));
     dev->layout_smooth = v_make_layout(dev, dev->set_layout, sizeof(v_push_smooth_t));
-    dev->layout_user = v_make_user_layout(dev, dev->set_layout);
 
     dev->rp_offscreen = v_make_renderpass(
         dev, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -2286,78 +2105,6 @@ static void v_draw_content_fullscreen(v_device_t *dev, v_image_state_t *st) {
     v_bind_quad_and_draw(st, offset);
 }
 
-static int v_user_shader_active(v_device_t *dev) {
-    return dev && dev->fs_user_module != VK_NULL_HANDLE;
-}
-
-static void v_get_shader_native_resolution(int pass_w, int pass_h, float *out_w, float *out_h) {
-    int div_w;
-    int div_h;
-    int div;
-    int native_w;
-    int native_h;
-
-    if (pass_w < 1) pass_w = 1;
-    if (pass_h < 1) pass_h = 1;
-
-    div_w = pass_w / 640;
-    div_h = pass_h / 480;
-    div = (div_w < div_h) ? div_w : div_h;
-
-    if (div < 1) div = 1;
-
-    native_w = (pass_w + (div / 2)) / div;
-    native_h = (pass_h + (div / 2)) / div;
-
-    if (native_w < 640) native_w = 640;
-    if (native_h < 480) native_h = 480;
-
-    *out_w = (float) native_w;
-    *out_h = (float) native_h;
-}
-
-static void v_fill_user_push(v_push_user_shader_t *pc, int fb_w, int fb_h, int frame) {
-    memset(pc, 0, sizeof(*pc));
-
-    pc->resolution[0] = (float) fb_w;
-    pc->resolution[1] = (float) fb_h;
-
-    v_get_shader_native_resolution(fb_w, fb_h, &pc->native_resolution[0], &pc->native_resolution[1]);
-
-    pc->time = (float) frame;
-    pc->frame = frame;
-}
-
-static void v_draw_user_shader_fullscreen(v_device_t *dev, v_image_state_t *st, int fb_w, int fb_h, int frame) {
-    static const float content_uv[4][2] = {
-        {0.0f, 1.0f},
-        {0.0f, 0.0f},
-        {1.0f, 1.0f},
-        {1.0f, 0.0f},
-    };
-
-    VkDeviceSize offset = 0;
-    if (!v_write_quad_uv(st, -1.0f, -1.0f, 1.0f, 1.0f, content_uv, &offset)) return;
-
-    v_push_overlay_t vpc;
-    vpc.colour[0] = 1.0f;
-    vpc.colour[1] = 1.0f;
-    vpc.colour[2] = 1.0f;
-    vpc.colour[3] = 1.0f;
-
-    v_push_user_shader_t fpc;
-    v_fill_user_push(&fpc, fb_w, fb_h, frame);
-
-    vk_dl.CmdBindDescriptorSets(
-        st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, dev->layout_user, 0, 1, &st->content_sample_desc, 0, NULL
-    );
-
-    vk_dl.CmdPushConstants(st->cmdbuf, dev->layout_user, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(vpc), &vpc);
-    vk_dl.CmdPushConstants(st->cmdbuf, dev->layout_user, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(fpc), &fpc);
-
-    v_bind_quad_and_draw(st, offset);
-}
-
 static void v_copy_swap_to_content(
     VkCommandBuffer cb, v_image_state_t *st, VkImage swap_image, int fb_w, int fb_h, VkImageLayout swap_src_layout,
     VkAccessFlags swap_src_access, VkPipelineStageFlags swap_src_stage, VkImageLayout content_src_layout,
@@ -2447,10 +2194,8 @@ static int v_record_cmdbuf(
     VkRenderPass present_rp = v_get_present_renderpass(dev, sc->format);
     VkPipeline pipe_overlay_present = v_get_present_pipeline_overlay(dev, sc->format);
     VkPipeline pipe_content_present = VK_NULL_HANDLE;
-    VkPipeline pipe_user_present = VK_NULL_HANDLE;
     int colour_active = v_colour_pass_needed();
-    int shader_active = v_user_shader_active(dev);
-    int post_active = colour_active || shader_active;
+    int post_active = colour_active;
 
     if (post_active && !(sc->usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)) {
         static int logged_no_transfer_src = 0;
@@ -2463,7 +2208,6 @@ static int v_record_cmdbuf(
         }
 
         colour_active = 0;
-        shader_active = 0;
         post_active = 0;
     }
 
@@ -2479,19 +2223,7 @@ static int v_record_cmdbuf(
         }
     }
 
-    if (shader_active) {
-        pipe_user_present = v_get_present_pipeline_user(dev, sc->format);
-        if (pipe_user_present == VK_NULL_HANDLE) {
-            static int logged_no_user_pipe = 0;
-            if (!logged_no_user_pipe) {
-                LOG_WARN("stage", "[vk] present user shader pipeline unavailable - shader pass disabled");
-                logged_no_user_pipe = 1;
-            }
-            shader_active = 0;
-        }
-    }
-
-    post_active = colour_active || shader_active;
+    post_active = colour_active;
 
     if (present_rp == VK_NULL_HANDLE || pipe_overlay_present == VK_NULL_HANDLE) {
         static int logged_no_pipe = 0;
@@ -2535,24 +2267,6 @@ static int v_record_cmdbuf(
     if (colour_active) {
         vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_content_present);
         v_draw_content_fullscreen(dev, st);
-    }
-
-    if (shader_active) {
-        if (colour_active) {
-            vk_dl.CmdEndRenderPass(st->cmdbuf);
-            v_copy_swap_to_content(
-                st->cmdbuf, st, swap_image, fb_w, fb_h, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
-            );
-            vk_dl.CmdBeginRenderPass(st->cmdbuf, &rpb, VK_SUBPASS_CONTENTS_INLINE);
-            vk_dl.CmdSetViewport(st->cmdbuf, 0, 1, &vp);
-            vk_dl.CmdSetScissor(st->cmdbuf, 0, 1, &scissor);
-        }
-
-        vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_user_present);
-        v_draw_user_shader_fullscreen(dev, st, fb_w, fb_h, shader_frame_count);
     }
 
     vk_dl.CmdBindPipeline(st->cmdbuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_overlay_present);
@@ -2743,8 +2457,6 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR *info) {
     pthread_mutex_unlock(&v_devices_lock);
 
     if (!dev) return real_vk_queue_present_khr(queue, info);
-
-    v_user_shader_sync(dev);
 
     VkSemaphore signal_semaphores[V_MAX_SWAPCHAINS];
     int prepared = 1;

@@ -169,6 +169,7 @@ struct mux_lang {
         char cancel[MAX_BUFFER_SIZE];
         char yes[MAX_BUFFER_SIZE];
         char no[MAX_BUFFER_SIZE];
+        char none[MAX_BUFFER_SIZE];
         char section_options[MAX_BUFFER_SIZE];
         char understand[MAX_BUFFER_SIZE];
         char warning[MAX_BUFFER_SIZE];
@@ -2168,7 +2169,6 @@ struct mux_lang {
             char core_save[MAX_BUFFER_SIZE];
             char directory_save[MAX_BUFFER_SIZE];
             char session_save[MAX_BUFFER_SIZE];
-            char reset_inherited[MAX_BUFFER_SIZE];
             char controller_options_title[MAX_BUFFER_SIZE];
             char controller_options_desc[MAX_BUFFER_SIZE];
             char input_port_title[MAX_BUFFER_SIZE];
@@ -2254,6 +2254,7 @@ struct mux_lang {
             char auto_save_idle_quit[MAX_BUFFER_SIZE];
             char overlay_pattern_mode[MAX_BUFFER_SIZE];
             char overlay_catalogue_mode[MAX_BUFFER_SIZE];
+            char overlay_downloaded_mode[MAX_BUFFER_SIZE];
             char frame_delay[MAX_BUFFER_SIZE];
             char stick_deadzone[MAX_BUFFER_SIZE];
             char stick_anti_deadzone[MAX_BUFFER_SIZE];
@@ -2286,6 +2287,7 @@ struct mux_lang {
             char profile_quality[MAX_BUFFER_SIZE];
             char profile_current[MAX_BUFFER_SIZE];
             char profile_apply[MAX_BUFFER_SIZE];
+            char profile_apply_desc[MAX_BUFFER_SIZE];
             char profile_applied[MAX_BUFFER_SIZE];
             char profile_failed[MAX_BUFFER_SIZE];
             char profile_save_current[MAX_BUFFER_SIZE];
@@ -2400,7 +2402,9 @@ struct mux_lang {
             char quick_save[MAX_BUFFER_SIZE];
             char quick_load[MAX_BUFFER_SIZE];
             char ff_speed[MAX_BUFFER_SIZE];
+            char ff_audio[MAX_BUFFER_SIZE];
             char slowmo_speed[MAX_BUFFER_SIZE];
+            char slowmo_audio[MAX_BUFFER_SIZE];
             char no_quicksave[MAX_BUFFER_SIZE];
             char toggle_fps[MAX_BUFFER_SIZE];
             char toggle_header[MAX_BUFFER_SIZE];
@@ -2462,6 +2466,23 @@ struct mux_lang {
             char reset[MAX_BUFFER_SIZE];
         } shader_screen;
         struct {
+            char not_installed[MAX_BUFFER_SIZE];
+            char installed[MAX_BUFFER_SIZE];
+            char update[MAX_BUFFER_SIZE];
+            char reinstall[MAX_BUFFER_SIZE];
+            char downloading[MAX_BUFFER_SIZE];
+            char empty[MAX_BUFFER_SIZE];
+            char manifest_failed[MAX_BUFFER_SIZE];
+            char download_failed[MAX_BUFFER_SIZE];
+            char integrity_failed[MAX_BUFFER_SIZE];
+            char installed_done[MAX_BUFFER_SIZE];
+            char delete_label[MAX_BUFFER_SIZE];
+            char delete_confirm[MAX_BUFFER_SIZE];
+            char delete_done[MAX_BUFFER_SIZE];
+            char delete_failed[MAX_BUFFER_SIZE];
+            char delete_builtin[MAX_BUFFER_SIZE];
+        } catalogue_screen;
+        struct {
             char shape[MAX_BUFFER_SIZE];
             char shape_round[MAX_BUFFER_SIZE];
             char shape_square[MAX_BUFFER_SIZE];
@@ -2497,6 +2518,10 @@ struct mux_lang {
             char reset[MAX_BUFFER_SIZE];
         } viewport_screen;
         struct {
+            char image[MAX_BUFFER_SIZE];
+            char adjustment[MAX_BUFFER_SIZE];
+            char cropping[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
             char checkerboard_1[MAX_BUFFER_SIZE];
             char checkerboard_4[MAX_BUFFER_SIZE];
             char diagonal_1[MAX_BUFFER_SIZE];
@@ -2694,7 +2719,11 @@ struct mux_lang {
             struct {
                 char source[MAX_BUFFER_SIZE];
                 char pattern[MAX_BUFFER_SIZE];
+                char image[MAX_BUFFER_SIZE];
                 char opacity[MAX_BUFFER_SIZE];
+                char adjustment[MAX_BUFFER_SIZE];
+                char cropping[MAX_BUFFER_SIZE];
+                char reset[MAX_BUFFER_SIZE];
             } overlay;
             struct {
                 char hotkeys[MAX_BUFFER_SIZE];
@@ -2710,9 +2739,11 @@ struct mux_lang {
                 char button_assignments[MAX_BUFFER_SIZE];
                 char fast_forward[MAX_BUFFER_SIZE];
                 char ff_speed[MAX_BUFFER_SIZE];
+                char ff_audio[MAX_BUFFER_SIZE];
                 char ff_glyph[MAX_BUFFER_SIZE];
                 char slow_motion[MAX_BUFFER_SIZE];
                 char slowmo_speed[MAX_BUFFER_SIZE];
+                char slowmo_audio[MAX_BUFFER_SIZE];
                 char slowmo_glyph[MAX_BUFFER_SIZE];
                 char pause_content[MAX_BUFFER_SIZE];
                 char pause_glyph[MAX_BUFFER_SIZE];

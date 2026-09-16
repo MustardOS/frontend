@@ -49,6 +49,7 @@ static int profile_user_count;
 static int profile_save_row = -1;
 static mux_dialogue profile_scope_dlg;
 static mux_dialogue profile_delete_dlg;
+static mux_dialogue profile_apply_dlg;
 static mux_dialogue reset_scope_dlg;
 static mux_dialogue reset_confirm_dlg;
 static reset_scope pending_reset_scope;
@@ -57,6 +58,11 @@ static lv_obj_t *profile_entry_panel;
 static lv_obj_t *profile_entry_text;
 static int profile_saving;
 static int profile_delete_index = -1;
+static int profile_apply_index = -1;
+static struct session_settings_t profile_undo_settings;
+static int profile_undo_options[OPTIONS_MAX];
+static unsigned char profile_undo_present[OPTIONS_MAX];
+static uint32_t profile_undo_until;
 static char profile_pending_name[SESSION_USER_PROFILE_NAME_MAX];
 static uint64_t profile_modal_prev_mask;
 static nav_repeat_t profile_osk_up;
@@ -68,6 +74,7 @@ static nav_repeat_t profile_osk_backspace;
 static void build_rows(void);
 static int child_tick(void);
 static int row_for_definition(const submenu_def *definition, int local_index);
+static uint64_t profile_modal_nav_mask(void);
 
 static void build_profile_rows(void) {
     profile_row_count = 0;
@@ -130,12 +137,32 @@ static const char *profile_action_label(const int index) {
 }
 
 static void profile_start_save(int index);
+static void profile_rebuild_at_current(void);
 
-static void profile_action(const int index) {
-    if (index < 0 || index >= profile_row_count) return;
-    if (index == profile_save_row) {
-        profile_start_save(index);
-        return;
+static int profile_undo_available(void) {
+    return profile_undo_until && !SDL_TICKS_PASSED(SDL_GetTicks(), profile_undo_until);
+}
+
+static const char *profile_y_label(const int index) {
+    (void) index;
+    return profile_undo_available() ? lang.generic.restore : NULL;
+}
+
+static void profile_y_action(const int index) {
+    (void) index;
+    if (!profile_undo_available()) return;
+
+    session_settings_discard_to(&profile_undo_settings);
+    options_profile_apply(profile_undo_options, profile_undo_present);
+    profile_undo_until = 0;
+    profile_rebuild_at_current();
+}
+
+static void profile_apply_now(const int index) {
+    profile_undo_settings = session_settings;
+    for (int option = 0; option < options_count; option++) {
+        profile_undo_options[option] = options_list[option].current_index;
+        profile_undo_present[option] = 1;
     }
 
     if (index < play_profile_count) {
@@ -145,7 +172,20 @@ static void profile_action(const int index) {
         return;
     }
 
+    profile_undo_until = SDL_GetTicks() + 10000;
     pause_menu_show_toast(lang.muxretro.settings_screen.profile_applied);
+}
+
+static void profile_action(const int index) {
+    if (index < 0 || index >= profile_row_count) return;
+    if (index == profile_save_row) {
+        profile_start_save(index);
+        return;
+    }
+
+    profile_apply_index = index;
+    dialogue_open(&profile_apply_dlg, &theme);
+    profile_modal_prev_mask = profile_modal_nav_mask();
 }
 
 static uint64_t profile_modal_nav_mask(void) {
@@ -314,7 +354,9 @@ static void profile_rebuild_at_current(void) {
 }
 
 static int profile_modal_tick(void) {
-    if (!profile_saving && !dialogue_active(&profile_scope_dlg) && !dialogue_active(&profile_delete_dlg)) return 0;
+    if (!profile_saving && !dialogue_active(&profile_scope_dlg) && !dialogue_active(&profile_delete_dlg)
+        && !dialogue_active(&profile_apply_dlg))
+        return 0;
 
     const uint64_t mask = profile_modal_nav_mask();
     const uint64_t edge = mask & ~profile_modal_prev_mask;
@@ -322,6 +364,28 @@ static int profile_modal_tick(void) {
 
     if (profile_saving) {
         profile_tick_osk(edge, mask);
+        return 1;
+    }
+
+    if (dialogue_active(&profile_apply_dlg)) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&profile_apply_dlg, &theme, edge & BIT(1) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const mux_confirm_opt option = (mux_confirm_opt) profile_apply_dlg.selected;
+            dialogue_dismiss(&profile_apply_dlg);
+            if (option == mux_confirm_yep && profile_apply_index >= 0) {
+                profile_apply_now(profile_apply_index);
+                profile_rebuild_at_current();
+            } else {
+                self.prev_nav_mask = mask;
+            }
+            profile_apply_index = -1;
+        } else if (edge & BIT(5)) {
+            dialogue_mark_cancelled(&profile_apply_dlg);
+            dialogue_dismiss(&profile_apply_dlg);
+            profile_apply_index = -1;
+            self.prev_nav_mask = mask;
+        }
         return 1;
     }
 
@@ -610,6 +674,7 @@ static int child_tick(void) {
         return 1;
     }
     if (viewport_settings_child_tick()) return 1;
+    if (overlay_settings_child_tick()) return 1;
     if (image_corrections_settings_child_tick()) return 1;
     if (colfilter_menu_is_active()) {
         colfilter_menu_tick();
@@ -685,6 +750,8 @@ static submenu_def profile_def = {
     .action = profile_action,
     .extra_label = profile_extra_label,
     .extra_action = profile_start_delete,
+    .y_label = profile_y_label,
+    .y_action = profile_y_action,
     .child_tick = profile_modal_tick,
     .action_without_save_guard = 1,
     .save_title = lang.muxretro.save.settings_title,
@@ -771,6 +838,12 @@ void settings_menu_init(void) {
         lang.muxretro.settings_screen.profile_delete_desc, lang.muxretro.settings_screen.profile_delete,
         lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
+    dialogue_init_confirm(
+        &profile_apply_dlg, &theme, ui_screen, lang.muxretro.settings_screen.play_profile,
+        lang.muxretro.settings_screen.profile_apply_desc, lang.muxretro.settings_screen.profile_apply,
+        lang.generic.cancel,
+        lang.generic.select, lang.generic.cancel
+    );
     static const char *reset_options[3];
     reset_options[0] = lang.muxretro.settings_screen.reset_core_options;
     reset_options[1] = lang.muxretro.settings_screen.reset_settings;
@@ -840,8 +913,12 @@ void settings_menu_reopen_visuals_at(const int local_index) {
 }
 
 void settings_menu_reopen_overlay(void) {
+    settings_menu_reopen_overlay_at(0);
+}
+
+void settings_menu_reopen_overlay_at(const int local_index) {
     build_rows();
-    submenu_reopen_at(&self, row_for_definition(overlay_menu_definition(), 0));
+    submenu_reopen_at(&self, row_for_definition(overlay_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_viewport_at(const int local_index) {

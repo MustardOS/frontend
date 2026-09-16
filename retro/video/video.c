@@ -649,6 +649,8 @@ void video_bridge_apply_fps_limit(void) {
     SDL_Renderer *renderer = display_get_renderer();
     if (!renderer) return;
 
+    frame_pacer_reset_vsync_probe();
+
     const int software_paced = session_settings.fps_limit == fps_limit_50 || core_content_needs_pacing();
     const int want_vsync = session_settings.fps_limit == fps_limit_auto && !software_paced;
 

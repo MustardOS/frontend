@@ -72,3 +72,5 @@ void submenu_refresh_values(const submenu *m);
 void submenu_refresh_nav(submenu *m);
 
 void submenu_stack_resync(void);
+
+void submenu_stack_reload_colour_presets(void);

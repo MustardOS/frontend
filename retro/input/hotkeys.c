@@ -15,6 +15,7 @@
 #include "../settings/settings.h"
 
 #define TOAST_FOCUS_MS 1200
+#define SPEED_RAMP_MS  350.0
 
 static int menu_held = 0;
 static int menu_combo_consumed = 0;
@@ -28,13 +29,52 @@ static int content_paused = 0;
 static int quit_requested = 0;
 static int manual_requested = 0;
 static int held_speed = 0;
+static double speed_current = 1.0;
+static double speed_start = 1.0;
+static double speed_target = 1.0;
+static uint32_t speed_ramp_started = 0;
+static int speed_ramping = 0;
+
+static void sync_audio_mute(void);
+
+static void update_speed(void) {
+    if (!speed_ramping) return;
+
+    const double elapsed = (double) (SDL_GetTicks() - speed_ramp_started);
+    if (elapsed >= SPEED_RAMP_MS) {
+        speed_current = speed_target;
+        speed_ramping = 0;
+        return;
+    }
+
+    const double progress = elapsed / SPEED_RAMP_MS;
+    const double eased = progress * progress * (3.0 - 2.0 * progress);
+    speed_current = speed_start + (speed_target - speed_start) * eased;
+}
+
+static void set_speed_target(const double target, const int gradual) {
+    update_speed();
+    speed_start = speed_current;
+    speed_target = target;
+    speed_ramp_started = SDL_GetTicks();
+    speed_ramping = gradual && speed_start != speed_target;
+    if (!speed_ramping) speed_current = speed_target;
+}
 
 int hotkeys_is_fast_forward_active(void) {
-    return fast_forward_active;
+    update_speed();
+    return fast_forward_active || speed_current > 1.0001;
 }
 
 int hotkeys_is_slow_motion_active(void) {
-    return slow_motion_active;
+    update_speed();
+    return slow_motion_active || speed_current < 0.9999;
+}
+
+double hotkeys_speed_multiplier(void) {
+    update_speed();
+    sync_audio_mute();
+    return speed_current;
 }
 
 int hotkeys_is_content_paused(void) {
@@ -56,13 +96,29 @@ int hotkeys_is_manual_requested(void) {
 }
 
 static void sync_audio_mute(void) {
-    const int should_mute = content_paused || fast_forward_active || slow_motion_active;
+    int speed_audio_muted = 0;
+    if (fast_forward_active) {
+        speed_audio_muted = !session_settings.hotkey_ff_audio_enabled;
+    } else if (slow_motion_active) {
+        speed_audio_muted = !session_settings.hotkey_slowmo_audio_enabled;
+    } else if (speed_current > 1.0001) {
+        speed_audio_muted = !session_settings.hotkey_ff_audio_enabled;
+    } else if (speed_current < 0.9999) {
+        speed_audio_muted = !session_settings.hotkey_slowmo_audio_enabled;
+    }
+
+    const int should_mute = content_paused || speed_audio_muted;
     const int was_muted = audio_bridge_is_muted();
+
+    if (was_muted == should_mute) return;
 
     audio_bridge_set_muted(should_mute);
     audio_bridge_clear_queued();
 
-    if (was_muted && !should_mute) core_prime_audio();
+    if (was_muted && !should_mute) {
+        audio_bridge_set_speed_multiplier(speed_current);
+        core_prime_audio();
+    }
 }
 
 static void sync_speed_indicator(void) {
@@ -81,6 +137,7 @@ static void set_fast_forward(const int active) {
     if (fast_forward_active == active) return;
     fast_forward_active = active;
     if (fast_forward_active) slow_motion_active = 0;
+    set_speed_target(fast_forward_active ? session_settings_ff_speed_value(session_settings.ff_speed) : 1.0, 1);
     sync_audio_mute();
     sync_speed_indicator();
     LOG_INFO(mux_module, "Fast Forward %s (hotkey)", fast_forward_active ? "enabled" : "disabled");
@@ -90,6 +147,7 @@ static void set_slow_motion(const int active) {
     if (slow_motion_active == active) return;
     slow_motion_active = active;
     if (slow_motion_active) fast_forward_active = 0;
+    set_speed_target(slow_motion_active ? session_settings_slowmo_speed_value(session_settings.slowmo_speed) : 1.0, 1);
     sync_audio_mute();
     sync_speed_indicator();
     LOG_INFO(mux_module, "Slow Motion %s (hotkey)", slow_motion_active ? "enabled" : "disabled");
@@ -111,11 +169,13 @@ static void toggle_content_pause(void) {
 }
 
 void hotkeys_reset(void) {
-    if (!fast_forward_active && !slow_motion_active && !content_paused) return;
+    update_speed();
+    if (!fast_forward_active && !slow_motion_active && !content_paused && speed_current == 1.0) return;
     fast_forward_active = 0;
     slow_motion_active = 0;
     held_speed = 0;
     content_paused = 0;
+    set_speed_target(1.0, 0);
     sync_audio_mute();
     sync_speed_indicator();
 }

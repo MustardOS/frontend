@@ -41,6 +41,14 @@ enum perf_stage {
     perf_stage_runahead_replay,
     perf_stage_colour_pass,
     perf_stage_state_load,
+    perf_stage_service_link,
+    perf_stage_service_idle,
+    perf_stage_service_power,
+    perf_stage_service_saver,
+    perf_stage_service_controls,
+    perf_stage_service_gamestate,
+    perf_stage_service_status,
+    perf_stage_service_persistent,
     perf_stage_count
 };
 

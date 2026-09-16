@@ -425,8 +425,7 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
                     throttle->rate = 0.0f;
                 } else if (hotkeys_is_slow_motion_active()) {
                     throttle->mode = RETRO_THROTTLE_SLOW_MOTION;
-                    throttle->rate =
-                        (float) (run_rate * session_settings_slowmo_speed_value(session_settings.slowmo_speed));
+                    throttle->rate = (float) (run_rate * hotkeys_speed_multiplier());
                 } else if (session_settings.fps_limit == fps_limit_auto) {
                     const double panel_hz = display_panel_refresh_hz();
                     throttle->mode = core_content_needs_pacing() || (panel_hz > 0.0 && run_rate > panel_hz)

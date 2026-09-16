@@ -31,6 +31,9 @@
 #define FRAME_PACER_REFRESH_MAX_HZ    75.0
 #define FRAME_PACER_REFRESH_SMOOTHING 0.10
 
+#define FRAME_PACER_VSYNC_PROBE_FRAMES 8
+#define FRAME_PACER_VSYNC_FAST_RATIO   0.90
+
 static double work_samples_ns[FRAME_PACER_WORK_HISTORY];
 static int work_count = 0;
 static int work_next = 0;
@@ -47,6 +50,15 @@ static int clean_frames = 0;
 static uint64_t measure_start_counter = 0;
 static int measuring = 0;
 static double last_delay_ns = 0.0;
+static double vsync_probe_sum_ns = 0.0;
+static unsigned vsync_probe_count = 0;
+static int vsync_pacing_failed = 0;
+
+void frame_pacer_reset_vsync_probe(void) {
+    vsync_probe_sum_ns = 0.0;
+    vsync_probe_count = 0;
+    vsync_pacing_failed = 0;
+}
 
 static void sleep_ns_coarse(const uint64_t ns) {
     if (ns == 0) return;
@@ -79,6 +91,7 @@ static void frame_pacer_reset_state(void) {
     measure_start_counter = 0;
     measuring = 0;
     last_delay_ns = 0.0;
+    frame_pacer_reset_vsync_probe();
 }
 
 static int frame_pacer_timing_available(void) {
@@ -173,6 +186,10 @@ void frame_pacer_maybe_wait(void) {
 }
 
 void frame_pacer_after_present(void) {
+    if (session_settings.fps_limit != fps_limit_auto || !video_bridge_vsync_active()) {
+        frame_pacer_reset_vsync_probe();
+    }
+
     if (!frame_pacer_timing_available()) {
         last_present_counter = 0;
         measuring = 0;
@@ -203,6 +220,21 @@ void frame_pacer_after_present(void) {
         frame_pacer_reset_state();
         last_present_counter = now;
         return;
+    }
+
+    if (video_bridge_vsync_active() && !vsync_pacing_failed) {
+        const double target_hz = core_get_target_fps();
+        if (target_hz > 0.0) {
+            vsync_probe_sum_ns += interval_ns;
+            vsync_probe_count++;
+            if (vsync_probe_count >= FRAME_PACER_VSYNC_PROBE_FRAMES) {
+                const double observed_ns = vsync_probe_sum_ns / (double) vsync_probe_count;
+                const double target_ns = 1e9 / target_hz;
+                if (observed_ns < target_ns * FRAME_PACER_VSYNC_FAST_RATIO) vsync_pacing_failed = 1;
+                vsync_probe_sum_ns = 0.0;
+                vsync_probe_count = 0;
+            }
+        }
     }
 
     const double period_ns = scheduling_period_ns();
@@ -270,4 +302,8 @@ float frame_pacer_get_observed_hz(void) {
 
 float frame_pacer_get_delay_ms(void) {
     return (float) (last_delay_ns / 1000000.0);
+}
+
+int frame_pacer_vsync_effective(void) {
+    return video_bridge_vsync_active() && !vsync_pacing_failed;
 }

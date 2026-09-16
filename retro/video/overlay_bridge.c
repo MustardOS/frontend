@@ -10,6 +10,7 @@
 #include <common/ui/image.h>
 #include <common/base/util.h>
 #include "overlay_bridge.h"
+#include "overlay_library.h"
 #include "../settings/settings.h"
 
 static char catalogue_overlay_path[MAX_BUFFER_SIZE];
@@ -67,6 +68,12 @@ void overlay_bridge_apply(void) {
         case overlay_source_catalogue:
             if (catalogue_overlay_path[0]) current_overlay_tex = display_load_png_texture(catalogue_overlay_path);
             break;
+        case overlay_source_downloaded: {
+            char path[MAX_BUFFER_SIZE];
+            if (overlay_library_path(session_settings.overlay_image, path, sizeof(path)))
+                current_overlay_tex = display_load_png_texture(path);
+            break;
+        }
         default:
             break;
     }
@@ -88,16 +95,44 @@ int overlay_bridge_active(void) {
     return !overlay_suppressed && current_overlay_tex != NULL;
 }
 
+static int trim(const int requested, const int extent, const int opposite) {
+    const int room = extent - opposite - 1;
+    if (room <= 0) return 0;
+    return requested < 0 ? 0 : requested > room ? room : requested;
+}
+
 void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int canvas_h, const int physical_output) {
     if (overlay_suppressed || !current_overlay_tex) return;
 
+    const int left = trim(session_settings.overlay_crop_left, current_overlay_w, 0);
+    const int right = trim(session_settings.overlay_crop_right, current_overlay_w, left);
+    const int top = trim(session_settings.overlay_crop_top, current_overlay_h, 0);
+    const int bottom = trim(session_settings.overlay_crop_bottom, current_overlay_h, top);
+
+    const SDL_Rect src = {left, top, current_overlay_w - left - right, current_overlay_h - top - bottom};
+    if (src.w <= 0 || src.h <= 0) return;
+
+    int width = src.w;
+    int height = src.h;
+
+    if (session_settings.overlay_zoom != 100) {
+        width = width * session_settings.overlay_zoom / 100;
+        height = height * session_settings.overlay_zoom / 100;
+    }
+
+    width += session_settings.overlay_stretch_x;
+    height += session_settings.overlay_stretch_y;
+    if (width < 1) width = 1;
+    if (height < 1) height = 1;
+
     const SDL_Rect logical_dst = {
-        (canvas_w - current_overlay_w) / 2, (canvas_h - current_overlay_h) / 2, current_overlay_w, current_overlay_h
+        (canvas_w - width) / 2 + session_settings.overlay_offset_x,
+        (canvas_h - height) / 2 + session_settings.overlay_offset_y, width, height
     };
     SDL_Rect output_dst = logical_dst;
     if (physical_output) display_map_logical_rect(&logical_dst, &output_dst);
 
-    SDL_RenderCopy(renderer, current_overlay_tex, NULL, &output_dst);
+    SDL_RenderCopy(renderer, current_overlay_tex, &src, &output_dst);
 }
 
 void overlay_bridge_shutdown(void) {

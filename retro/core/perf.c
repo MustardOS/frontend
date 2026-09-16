@@ -12,6 +12,7 @@
 #include "../video/hw_render.h"
 #include "../video/colour.h"
 #include "../video/interframe_blend.h"
+#include "../input/hotkeys.h"
 #include "../settings/settings.h"
 #include "../ui/options.h"
 
@@ -79,6 +80,8 @@ static uint64_t audio_underrun_missing_frames_baseline;
 static uint64_t audio_burst_recovery_baseline;
 static uint32_t frame_time_clamp_baseline;
 static uint64_t audio_batch_call_baseline;
+static uint64_t audio_drc_input_baseline;
+static uint64_t audio_drc_output_baseline;
 static double observed_audio_rate_correction_percent;
 static double observed_audio_rate_limit_percent;
 static uint32_t audio_queue_min_ms;
@@ -200,6 +203,8 @@ static void reset(void) {
     audio_burst_recovery_baseline = audio_bridge_pickles_burst_recovery_count();
     frame_time_clamp_baseline = environment_frame_time_clamp_count();
     audio_batch_call_baseline = audio_bridge_batch_calls();
+    audio_drc_input_baseline = audio_bridge_drc_input_frames();
+    audio_drc_output_baseline = audio_bridge_drc_output_frames();
     observed_audio_rate_correction_percent = 0.0;
     observed_audio_rate_limit_percent = 0.0;
     audio_queue_min_ms = UINT32_MAX;
@@ -505,12 +510,36 @@ void perf_format_hud(char *buf, const size_t len, const double fps) {
 
 int perf_export_trace(const char *path) {
     static const char *names[perf_stage_count] = {
-        "frame",           "core",         "video",          "video_upload",       "present",
-        "present_draw",    "present_flip", "audio_wait",     "audio_backpressure", "input_present",
-        "present_to_poll", "frame_delay",  "gl_enter",       "gl_leave",           "gl_submit",
-        "gl_rotate",       "pace_sleep",   "netplay_digest", "cheevo_callback",    "screenshot",
-        "state_save",      "services",     "cheevo_tick",    "netplay_tick",       "maintenance",
-        "control",         "ui_logic",     "ui_task",        "audio_queue",        "cheevo_frame",
+        "frame",
+        "core",
+        "video",
+        "video_upload",
+        "present",
+        "present_draw",
+        "present_flip",
+        "audio_wait",
+        "audio_backpressure",
+        "input_present",
+        "present_to_poll",
+        "frame_delay",
+        "gl_enter",
+        "gl_leave",
+        "gl_submit",
+        "gl_rotate",
+        "pace_sleep",
+        "netplay_digest",
+        "cheevo_callback",
+        "screenshot",
+        "state_save",
+        "services",
+        "cheevo_tick",
+        "netplay_tick",
+        "maintenance",
+        "control",
+        "ui_logic",
+        "ui_task",
+        "audio_queue",
+        "cheevo_frame",
         "anti_flicker",
         "texture_filter",
         "runahead_capture",
@@ -518,6 +547,14 @@ int perf_export_trace(const char *path) {
         "runahead_replay",
         "colour_pass",
         "state_load",
+        "service_link",
+        "service_idle",
+        "service_power",
+        "service_saver",
+        "service_controls",
+        "service_gamestate",
+        "service_status",
+        "service_persistent",
     };
 
     static const int parents[perf_stage_count] = {
@@ -558,6 +595,14 @@ int perf_export_trace(const char *path) {
         -1,
         perf_stage_present,
         -1,
+        perf_stage_services,
+        perf_stage_services,
+        perf_stage_maintenance,
+        perf_stage_maintenance,
+        perf_stage_maintenance,
+        perf_stage_maintenance,
+        perf_stage_maintenance,
+        perf_stage_maintenance,
     };
 
     static const char *const scopes[perf_stage_count] = {
@@ -598,6 +643,14 @@ int perf_export_trace(const char *path) {
         "work",
         "work",
         "interaction",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
+        "work",
     };
     _Static_assert(sizeof(parents) / sizeof(parents[0]) == perf_stage_count, "perf stage parents are out of step");
     _Static_assert(sizeof(scopes) / sizeof(scopes[0]) == perf_stage_count, "perf stage scopes are out of step");
@@ -616,9 +669,8 @@ int perf_export_trace(const char *path) {
         if (exclusive < 0.0) exclusive = 0.0;
         fprintf(
             f, "%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%u\n", names[i], parents[i] >= 0 ? names[parents[i]] : "none",
-            scopes[i], mean(&series[i]), exclusive,
-            percentile(&series[i], 50), percentile95(&series[i]), percentile99(&series[i]), peak(&series[i]),
-            series[i].count
+            scopes[i], mean(&series[i]), exclusive, percentile(&series[i], 50), percentile95(&series[i]),
+            percentile99(&series[i]), peak(&series[i]), series[i].count
         );
     }
 
@@ -809,6 +861,14 @@ int perf_export_trace(const char *path) {
         f, "audio_batch_calls,%llu\n", (unsigned long long) (audio_bridge_batch_calls() - audio_batch_call_baseline)
     );
     fprintf(f, "audio_batch_peak_frames,%zu\n", audio_bridge_batch_peak_frames());
+    fprintf(
+        f, "audio_drc_input_frames,%llu\n",
+        (unsigned long long) (audio_bridge_drc_input_frames() - audio_drc_input_baseline)
+    );
+    fprintf(
+        f, "audio_drc_output_frames,%llu\n",
+        (unsigned long long) (audio_bridge_drc_output_frames() - audio_drc_output_baseline)
+    );
     fprintf(f, "content_hz,%.4f\n", audio_bridge_content_fps());
     fprintf(f, "content_locked_hz,%.4f\n", audio_bridge_locked_content_fps());
     fprintf(f, "content_quantum_hz,%.4f\n", audio_bridge_content_quantum_fps());
@@ -819,8 +879,10 @@ int perf_export_trace(const char *path) {
     fprintf(f, "core_pace_divisor,%.4f\n", core_pace_divisor());
     fprintf(f, "panel_hz,%.4f\n", display_panel_refresh_hz());
     fprintf(f, "fps_limit_mode,%d\n", session_settings.fps_limit);
+    fprintf(f, "speed_multiplier,%.4f\n", hotkeys_speed_multiplier());
     fprintf(f, "gpu_hard_sync,%d\n", session_settings.gpu_hard_sync);
     fprintf(f, "swap_interval,%d\n", video_bridge_get_swap_interval());
+    fprintf(f, "vsync_effective,%d\n", frame_pacer_vsync_effective());
     fprintf(f, "frame_time_callback,%d\n", environment_frame_time_callback_active());
     fprintf(f, "frame_time_clamps,%u\n", environment_frame_time_clamp_count() - frame_time_clamp_baseline);
     fprintf(f, "frame_time_clamp_peak_ms,%.4f\n", environment_frame_time_clamp_peak_ms());

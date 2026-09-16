@@ -43,7 +43,9 @@
 #include "startup.h"
 #include "../video/hw_render.h"
 #include "../video/image_writer.h"
+#include "../video/colour.h"
 #include "../video/overlay_bridge.h"
+#include "../video/overlay_library.h"
 #include "paths.h"
 #include "perf.h"
 #include "power.h"
@@ -381,49 +383,45 @@ static double core_reported_emulation_fps(const double core_run_hz) {
     return core_run_hz * core_nominal_emulation_fps() / locked;
 }
 
-static void pace_core_output(const uint64_t frame_start, const unsigned frames) {
+static void pace_core_output(const uint64_t frame_start, const unsigned frames, const double speed_multiplier) {
     static double fps_limit_deadline = 0.0;
     static double fps_limit_target_ms = 0.0;
-
-    if (hotkeys_is_fast_forward_active()) {
-        fps_limit_deadline = 0.0;
-        fps_limit_target_ms = 0.0;
-        return;
-    }
 
     const double budget_ms = target_fps > 0.0 ? 1000.0 / target_fps : 1000.0 / 60.0;
     const double spent_ms =
         (double) (SDL_GetPerformanceCounter() - frame_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
 
     const double slack_ms = budget_ms - spent_ms;
-    const int slowmo_active = hotkeys_is_slow_motion_active();
+    const int faster = speed_multiplier > 1.0001;
+    const int slower = speed_multiplier < 0.9999;
 
-    const int auto_cadence =
-        !slowmo_active && session_settings.fps_limit == fps_limit_auto && !netplay_is_active() && !link_is_engaged();
+    const int auto_cadence = !faster && !slower && session_settings.fps_limit == fps_limit_auto && !netplay_is_active()
+                             && !link_is_engaged();
+    const int free_running = !faster && !slower && session_settings.fps_limit == fps_limit_none && !netplay_is_active()
+                             && !link_is_engaged();
 
-    // video_bridge_apply_fps_limit() turns vsync on for exactly the cores this deadline used to
-    // fight: one running at the panel rate is already paced by the panel, and a software deadline
-    // on top gates the same frame twice against two different periods, the rate the core declares
-    // and the rate the panel actually runs at. The release time then walks against the vblank grid
-    // until it loses or gains a refresh, which is the frame delivery wobbling rather than the rate
-    // being wrong. The deadline stays for a core vsync cannot pace, and as the fallback for when
-    // the driver did not give us vsync at all.
-    const int auto_deadline_paced = auto_cadence && (core_content_needs_pacing() || !video_bridge_vsync_active());
+    const int auto_deadline_paced = auto_cadence && (core_content_needs_pacing() || !frame_pacer_vsync_effective());
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
     perf_record(perf_stage_audio_queue, audio_bridge_queued_ms());
     if (!link_is_engaged()) {
-        if (auto_cadence)
+        if (auto_cadence || free_running || faster)
             audio_bridge_recover_cadence();
         else
             audio_bridge_wait_for_headroom(slack_ms > 0.0 ? (uint32_t) slack_ms : 0);
     }
     perf_end(perf_stage_audio_wait, audio_wait_start);
 
-    const double audio_target_ms = !slowmo_active ? core_auto_pace_target_ms() : 0.0;
+    if (faster) {
+        fps_limit_deadline = 0.0;
+        fps_limit_target_ms = 0.0;
+        return;
+    }
 
-    if (session_settings.fps_limit != fps_limit_50 && !slowmo_active && !auto_deadline_paced) {
+    const double audio_target_ms = !slower ? core_auto_pace_target_ms() : 0.0;
+
+    if (session_settings.fps_limit != fps_limit_50 && !slower && !auto_deadline_paced) {
         fps_limit_deadline = 0.0;
         fps_limit_target_ms = 0.0;
         return;
@@ -432,20 +430,14 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames) 
     double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0
                        : audio_target_ms > 0.0                    ? audio_target_ms
                                                                   : 1000.0 / target_fps;
-    if (slowmo_active) target_ms /= session_settings_slowmo_speed_value(session_settings.slowmo_speed);
+    if (slower) target_ms /= speed_multiplier;
 
     const uint64_t frequency = SDL_GetPerformanceFrequency();
     const uint64_t now_counter = SDL_GetPerformanceCounter();
-    
+
     // Every frame the core advanced costs a frame period, so a batch of N owes N of them...
     const double batch = frames > 0 ? (double) frames : 1.0;
 
-    // A frame that overran its budget used to reset the deadline to now, which threw away the
-    // phase the pacer had built up and made the next frame start from wherever this one happened
-    // to finish. One slow frame then cost two frames of smoothness. Letting the deadline keep
-    // accumulating means a transient overrun is simply absorbed by the following frame sleeping a
-    // little less, and a core that is persistently too slow still resyncs through the check below
-    // once it falls a whole batch behind.
     const double target_ticks = target_ms * (double) frequency / 1000.0;
     const double batch_ticks = target_ticks * batch;
     const double target_change =
@@ -539,6 +531,11 @@ int main(const int argc, char *argv[]) {
 
     create_directories(RETRO_SRM_PATH "/", 1);
     create_directories(RETRO_PRO_PATH "/", 1);
+
+    create_directories(COLOUR_FILTER_USER_DIR, 1);
+    create_directories(COLOUR_SHADER_USER_DIR, 1);
+    char overlay_dir[PATH_MAX];
+    if (overlay_library_dir(overlay_dir, sizeof(overlay_dir))) create_directories(overlay_dir, 1);
     options_init_paths(core_path_arg, content_path);
 
     governor_boost_begin("content startup");
@@ -792,13 +789,16 @@ int main(const int argc, char *argv[]) {
     while (!quit) {
         int core_ran = 0;
         unsigned core_frames = 0;
+        double speed_multiplier = 1.0;
 
         const uint64_t frame_start = SDL_GetPerformanceCounter();
         const uint32_t loop_now = SDL_GetTicks();
         const uint64_t services_start = perf_begin();
 
         mux_input_poll();
+        const uint64_t link_start = perf_begin();
         link_tick(loop_now, pause_menu_is_active());
+        perf_end(perf_stage_service_link, link_start);
         if (cheevo_needs_tick()) {
             const uint64_t cheevo_tick_start = perf_begin();
             cheevo_tick();
@@ -818,28 +818,43 @@ int main(const int argc, char *argv[]) {
                 governor_boost_end();
             netplay_governor_active = netplay_active;
         }
+        const uint64_t idle_start = perf_begin();
         idle_poll();
+        perf_end(perf_stage_service_idle, idle_start);
         perf_end(perf_stage_services, services_start);
 
         const uint64_t maintenance_start = perf_begin();
-        if (power_session_poll()) {
+        const uint64_t power_start = perf_begin();
+        const int power_requested = power_session_poll();
+        perf_end(perf_stage_service_power, power_start);
+        if (power_requested) {
             perf_end(perf_stage_maintenance, maintenance_start);
             quit = 1;
             continue;
         }
+        const uint64_t saver_start = perf_begin();
         display_check_idle_saver();
+        perf_end(perf_stage_service_saver, saver_start);
+        const uint64_t controls_start = perf_begin();
         hotkeys_volume_bright_task();
+        perf_end(perf_stage_service_controls, controls_start);
+        const uint64_t gamestate_start = perf_begin();
         gamestate_publish_task();
+        perf_end(perf_stage_service_gamestate, gamestate_start);
         if (persistent_memory_failure_unreported()) pause_menu_show_toast(lang.generic.save_fail);
 
         if (loop_now >= status_deadline) {
+            const uint64_t status_start = perf_begin();
             status_task(NULL);
             pause_menu_update_header();
+            perf_end(perf_stage_service_status, status_start);
             status_deadline = loop_now + TIMER_STATUS;
         }
 
         if (session_settings.sram_flush_seconds > 0 && loop_now >= sram_flush_deadline) {
+            const uint64_t persistent_start = perf_begin();
             persistent_memory_save();
+            perf_end(perf_stage_service_persistent, persistent_start);
             sram_flush_deadline = loop_now + (uint32_t) session_settings.sram_flush_seconds * 1000;
         }
 
@@ -952,16 +967,21 @@ int main(const int argc, char *argv[]) {
             audio_bridge_apply_pending_min_latency();
             environment_apply_pending_av_info();
 
-            const int ff_active = !netplay_active && hotkeys_is_fast_forward_active();
-            const int slowmo_active = !netplay_active && hotkeys_is_slow_motion_active();
+            static double ff_frame_credit = 0.0;
+            speed_multiplier = !netplay_active ? hotkeys_speed_multiplier() : 1.0;
+            audio_bridge_set_speed_multiplier(speed_multiplier);
+
+            const int ff_active = speed_multiplier > 1.0001;
+            const int slowmo_active = speed_multiplier < 0.9999;
 
             unsigned frames = 1;
             if (ff_active) {
-                const unsigned ff_batch = (unsigned) session_settings_ff_speed_value(session_settings.ff_speed);
-                frames = ff_batch > 0 ? ff_batch : 1;
-            } else if (!netplay_active && audio_bridge_is_prefilling() && session_settings.fps_limit != fps_limit_50
-                       && !slowmo_active && audio_bridge_is_active()
-                       && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
+                ff_frame_credit += speed_multiplier - 1.0;
+                const unsigned extra = (unsigned) ff_frame_credit;
+                frames += extra;
+                ff_frame_credit -= (double) extra;
+            } else if (!netplay_active && audio_bridge_is_prefilling() && session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
+                ff_frame_credit = 0.0;
                 unsigned extra = AUDIO_MAX_CATCHUP;
 
                 if (hw_render_bridge_active()) {
@@ -976,6 +996,8 @@ int main(const int argc, char *argv[]) {
                 }
 
                 frames = 1 + extra;
+            } else {
+                ff_frame_credit = 0.0;
             }
 
             const unsigned ran_frames = run_core_batch(frames);
@@ -1069,7 +1091,7 @@ int main(const int argc, char *argv[]) {
         perf_end(perf_stage_present, present_start);
         if (core_ran) perf_note_present();
 
-        frame_pacer_after_present();
+        if (core_ran) frame_pacer_after_present();
         if (cheevo_needs_present_tick()) cheevo_present_tick();
 
         if (perf_capture_is_automatic() && loop_now >= perf_autodump_deadline) {
@@ -1077,7 +1099,7 @@ int main(const int argc, char *argv[]) {
             perf_autodump_deadline = loop_now + PERF_AUTODUMP_INTERVAL_MS;
         }
 
-        if (core_ran) pace_core_output(frame_start, core_frames);
+        if (core_ran) pace_core_output(frame_start, core_frames, speed_multiplier);
         perf_frame_complete(core_ran);
     }
 

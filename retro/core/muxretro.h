@@ -59,8 +59,7 @@ void video_bridge_get_frame_size(int *w, int *h);
 void video_bridge_get_dest_size(int *w, int *h);
 
 void video_bridge_get_output_geometry(
-    int *source_w, int *source_h, int *logical_w, int *logical_h, int *output_w, int *output_h,
-    int *integer_mapped
+    int *source_w, int *source_h, int *logical_w, int *logical_h, int *output_w, int *output_h, int *integer_mapped
 );
 
 size_t video_bridge_anti_flicker_bytes(void);
@@ -139,6 +138,10 @@ uint64_t audio_bridge_batch_calls(void);
 
 size_t audio_bridge_batch_peak_frames(void);
 
+uint64_t audio_bridge_drc_input_frames(void);
+
+uint64_t audio_bridge_drc_output_frames(void);
+
 double audio_bridge_content_fps(void);
 
 double audio_bridge_locked_content_fps(void);
@@ -172,6 +175,8 @@ void audio_bridge_discard_sample_fifo(void);
 void audio_bridge_set_muted(int mute);
 
 int audio_bridge_is_muted(void);
+
+void audio_bridge_set_speed_multiplier(double multiplier);
 
 void audio_bridge_get_info(int *freq, int *channels);
 
@@ -220,6 +225,10 @@ float frame_pacer_get_refresh_hz(void);
 float frame_pacer_get_observed_hz(void);
 
 float frame_pacer_get_delay_ms(void);
+
+void frame_pacer_reset_vsync_probe(void);
+
+int frame_pacer_vsync_effective(void);
 
 void core_set_target_fps(double new_fps);
 
@@ -381,6 +390,14 @@ void settings_menu_reopen_visuals_at(int local_index);
 
 void settings_menu_reopen_overlay(void);
 
+void settings_menu_reopen_overlay_at(int local_index);
+
+int overlay_menu_row_image(void);
+
+int overlay_menu_row_adjustment(void);
+
+int overlay_menu_row_cropping(void);
+
 void settings_menu_reopen_viewport_at(int local_index);
 
 void settings_menu_reopen_sound(void);
@@ -517,6 +534,8 @@ void colfilter_menu_init(void);
 
 void colfilter_menu_open(void);
 
+void colfilter_menu_reopen(void);
+
 int colfilter_menu_is_active(void);
 
 void colfilter_menu_tick(void);
@@ -566,6 +585,32 @@ void viewport_crop_menu_open(void);
 int viewport_crop_menu_is_active(void);
 
 void viewport_crop_menu_tick(void);
+
+void overlay_image_menu_init(void);
+
+void overlay_image_menu_open(void);
+
+int overlay_image_menu_is_active(void);
+
+void overlay_image_menu_reopen(void);
+
+void overlay_image_menu_tick(void);
+
+void overlay_adjust_menu_init(void);
+
+void overlay_adjust_menu_open(void);
+
+int overlay_adjust_menu_is_active(void);
+
+void overlay_adjust_menu_tick(void);
+
+void overlay_crop_menu_init(void);
+
+void overlay_crop_menu_open(void);
+
+int overlay_crop_menu_is_active(void);
+
+void overlay_crop_menu_tick(void);
 
 void hotkeys_menu_init(void);
 

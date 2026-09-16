@@ -8,6 +8,8 @@ int hotkeys_is_fast_forward_active(void);
 
 int hotkeys_is_slow_motion_active(void);
 
+double hotkeys_speed_multiplier(void);
+
 int hotkeys_is_content_paused(void);
 
 int hotkeys_is_quit_requested(void);

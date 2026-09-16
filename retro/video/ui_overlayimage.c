@@ -4,7 +4,8 @@
 #include <common/ui/common.h>
 #include <common/ui/dialogue.h>
 #include "../../module/muxshare.h"
-#include "colour.h"
+#include "overlay_bridge.h"
+#include "overlay_library.h"
 #include "preset_catalogue.h"
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
@@ -19,35 +20,23 @@ static nav_repeat_t rpt_up = {0};
 static nav_repeat_t rpt_down = {0};
 
 static mux_dialogue save_dlg;
-
-#define NAV_X_BIT BIT(6)
-#define NAV_Y_BIT BIT(7)
-
 static mux_dialogue delete_dlg;
 static int skip_confirm = 0;
 
+#define NAV_X_BIT BIT(6)
+
 static uint64_t current_nav_mask(void) {
-    return nav_mask_standard() | (mux_input_pressed(mux_input_x) ? NAV_X_BIT : 0)
-           | (mux_input_pressed(mux_input_y) ? NAV_Y_BIT : 0);
+    return nav_mask_standard() | (mux_input_pressed(mux_input_x) ? NAV_X_BIT : 0);
 }
 
-static void rebuild_rows(void);
-
-static void focus_item(int index);
-
 static int selected_is_removable(void) {
-    return current_item_index > 1 && colour_shader_is_user(current_item_index - 1);
+    return current_item_index > 0 && overlay_library_is_user(current_item_index - 1);
 }
 
 static void refresh_nav(void) {
     nav_show_lr(0);
 
     if (!selected_is_removable()) {
-        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    }
-
-    if (current_item_index <= 1) {
         lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
         setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
@@ -59,64 +48,39 @@ static void refresh_nav(void) {
         return;
     }
 
-    if (!selected_is_removable()) {
-        setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                      {ui_lbl_nav_a, lang.generic.select, 0},
-                                      {ui_lbl_nav_b_glyph, "", 0},
-                                      {ui_lbl_nav_b, lang.generic.back, 0},
-                                      {ui_lbl_nav_x_glyph, "", 0},
-                                      {ui_lbl_nav_x, lang.muxretro.shader_screen.adjust, 0},
-                                      {NULL, NULL, 0}});
-        pause_menu_fix_nav_order();
-        return;
-    }
-
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
                                   {ui_lbl_nav_a, lang.generic.select, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
-                                  {ui_lbl_nav_x, lang.muxretro.shader_screen.adjust, 0},
-                                  {ui_lbl_nav_y_glyph, "", 0},
-                                  {ui_lbl_nav_y, lang.muxretro.catalogue_screen.delete_label, 0},
+                                  {ui_lbl_nav_x, lang.muxretro.catalogue_screen.delete_label, 0},
                                   {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
 }
 
+static void rebuild_rows(void);
+
+static void focus_item(int index);
+
 static void delete_selected(void) {
     const int index = current_item_index - 1;
+    const int was_selected = session_settings.overlay_image == index;
 
-    if (!colour_shader_delete(index)) {
+    if (!overlay_library_delete(index)) {
         pause_menu_show_toast(lang.muxretro.catalogue_screen.delete_failed);
         return;
     }
 
-    colour_init();
-    submenu_stack_reload_colour_presets();
+    if (session_settings.overlay_image >= overlay_library_count())
+        session_settings_set_overlay_image(overlay_library_count() - 1);
+    if (was_selected) session_settings_set_overlay_image(0);
 
+    overlay_bridge_apply();
     rebuild_rows();
-    focus_item(index < ui_count_static ? index : ui_count_static - 1);
-    if (current_item_index > 0) session_settings_set_colour_shader(current_item_index - 1);
+    focus_item(index < ui_count_static - 1 ? index + 1 : ui_count_static - 1);
     refresh_nav();
 
     pause_menu_show_toast(lang.muxretro.catalogue_screen.delete_done);
-}
-
-static const char *shader_cost_label(const enum colour_shader_cost cost) {
-    switch (cost) {
-        case colour_shader_cost_low: return lang.generic.low;
-        case colour_shader_cost_medium: return lang.generic.medium;
-        case colour_shader_cost_high: return lang.generic.high;
-        default: return NULL;
-    }
-}
-
-static const char *shader_compatibility_label(const enum colour_shader_compatibility compatibility) {
-    switch (compatibility) {
-        case colour_shader_compatibility_software: return lang.muxretro.settings_screen.game_renderer_software;
-        case colour_shader_compatibility_hardware: return lang.muxretro.settings_screen.game_renderer_hardware;
-        default: return NULL;
-    }
 }
 
 static void build_row(const int index) {
@@ -126,22 +90,11 @@ static void build_row(const int index) {
     lv_obj_t *value = lv_label_create(panel);
 
     apply_theme_list_panel(panel);
-    const char *text = index == 0 ? lang.generic.download
-                       : index == 1 ? lang.generic.none
-                                    : colour_shader_label(index - 1);
+
+    const char *text = index == 0 ? lang.generic.download : overlay_library_label(index - 1);
     apply_theme_option_item_label(&theme, label, text, 1);
-    apply_theme_list_glyph(&theme, icon, "muxretro", index == 0 ? "download" : "shader");
-    char metadata[64] = "";
-    if (index > 1) {
-        const char *cost =
-            shader_cost_label(colour_shader_cost_for_output(index - 1, device.mux.width, device.mux.height));
-        const char *compatibility = shader_compatibility_label(colour_shader_compatibility_for_index(index - 1));
-        if (cost && compatibility)
-            snprintf(metadata, sizeof(metadata), "%s · %s", cost, compatibility);
-        else if (cost || compatibility)
-            snprintf(metadata, sizeof(metadata), "%s", cost ? cost : compatibility);
-    }
-    apply_theme_list_value(&theme, value, metadata);
+    apply_theme_list_glyph(&theme, icon, "muxretro", index == 0 ? "download" : "overlay");
+    apply_theme_list_value(&theme, value, "");
     apply_size_to_content(&theme, ui_pnl_content, label, icon, text);
     apply_text_long_dot(&theme, label);
 
@@ -158,7 +111,7 @@ static void rebuild_rows(void) {
     ui_count_static = 0;
     current_item_index = 0;
 
-    const int count = colour_shader_count() + 1;
+    const int count = overlay_library_count() + 1;
     for (int i = 0; i < count; i++)
         build_row(i);
 
@@ -191,12 +144,16 @@ static void focus_item(const int index) {
 
 static void close_screen(void) {
     active = 0;
-    display_menu_reopen_shader();
+    settings_menu_reopen_overlay_at(overlay_menu_row_image());
 }
 
-void shader_menu_init(void) {
+void overlay_image_menu_init(void) {
     preset_catalogue_init();
-    shader_adjust_menu_init();
+
+    dialogue_init_remove(
+        &delete_dlg, &theme, ui_screen, lang.muxretro.catalogue_screen.delete_confirm, lang.generic.select,
+        lang.generic.cancel
+    );
 
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
@@ -206,43 +163,50 @@ void shader_menu_init(void) {
         &save_dlg, &theme, ui_screen, lang.muxretro.save.display_title, lang.muxretro.save.display_desc, save_options,
         5, lang.generic.select, lang.generic.cancel
     );
-    dialogue_init_remove(
-        &delete_dlg, &theme, ui_screen, lang.muxretro.catalogue_screen.delete_confirm, lang.generic.select,
-        lang.generic.cancel
-    );
 }
 
-void shader_menu_reopen(void) {
+void overlay_image_menu_reopen(void) {
     active = 1;
     prev_nav_mask = current_nav_mask();
 
     rebuild_rows();
-    focus_item(session_settings.colour_shader + 1);
+    focus_item(session_settings.overlay_image + 1);
     refresh_nav();
 }
 
-void shader_menu_open(void) {
-    snprintf(entry_key, sizeof(entry_key), "%s", colour_shader_key(session_settings.colour_shader));
-    shader_menu_reopen();
+void overlay_image_menu_open(void) {
+    snprintf(entry_key, sizeof(entry_key), "%s", overlay_library_key(session_settings.overlay_image));
+    overlay_image_menu_reopen();
 }
 
-int shader_menu_is_active(void) {
+int overlay_image_menu_is_active(void) {
     return active;
 }
 
-void shader_menu_tick(void) {
+void overlay_image_menu_tick(void) {
     if (preset_catalogue_tick()) return;
-
-    if (shader_adjust_menu_is_active()) {
-        shader_adjust_menu_tick();
-        return;
-    }
 
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
     if (nav_input_halted()) return;
+
+    if (dialogue_active(&delete_dlg)) {
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&delete_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
+        } else if (edge & BIT(4)) {
+            const mux_remove_opt option = (mux_remove_opt) delete_dlg.selected;
+            dialogue_dismiss(&delete_dlg);
+
+            if (option == mux_remove_skip) skip_confirm = 1;
+            if (option != mux_remove_nah) delete_selected();
+        } else if (edge & BIT(5)) {
+            dialogue_mark_cancelled(&delete_dlg);
+            dialogue_dismiss(&delete_dlg);
+        }
+        return;
+    }
 
     if (dialogue_active(&save_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {
@@ -262,22 +226,6 @@ void shader_menu_tick(void) {
         return;
     }
 
-    if (dialogue_active(&delete_dlg)) {
-        if (edge & (BIT(0) | BIT(1))) {
-            dialogue_handle_dpad(&delete_dlg, &theme, (edge & BIT(1)) ? 1 : -1, 1);
-        } else if (edge & BIT(4)) {
-            const mux_remove_opt option = (mux_remove_opt) delete_dlg.selected;
-            dialogue_dismiss(&delete_dlg);
-
-            if (option == mux_remove_skip) skip_confirm = 1;
-            if (option != mux_remove_nah) delete_selected();
-        } else if (edge & BIT(5)) {
-            dialogue_mark_cancelled(&delete_dlg);
-            dialogue_dismiss(&delete_dlg);
-        }
-        return;
-    }
-
     const uint32_t now = SDL_GetTicks();
 
     const int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
@@ -288,18 +236,18 @@ void shader_menu_tick(void) {
         nav_set_last_dir(nav_dir_up);
         nav_unsuppress_shake();
         gen_step_movement(1, -1, 2, 0, 1);
-        if (current_item_index > 0) session_settings_set_colour_shader(current_item_index - 1);
+        if (current_item_index > 0) session_settings_set_overlay_image(current_item_index - 1);
         refresh_nav();
     } else if (do_down) {
         nav_set_last_dir(nav_dir_down);
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
-        if (current_item_index > 0) session_settings_set_colour_shader(current_item_index - 1);
+        if (current_item_index > 0) session_settings_set_overlay_image(current_item_index - 1);
         refresh_nav();
     } else if (nav_page_tick(edge, mask, 2)) {
-        if (current_item_index > 0) session_settings_set_colour_shader(current_item_index - 1);
+        if (current_item_index > 0) session_settings_set_overlay_image(current_item_index - 1);
         refresh_nav();
-    } else if (edge & NAV_Y_BIT) {
+    } else if (edge & NAV_X_BIT) {
         if (!selected_is_removable()) return;
 
         play_sound(snd_confirm);
@@ -307,24 +255,13 @@ void shader_menu_tick(void) {
             delete_selected();
         else
             dialogue_open(&delete_dlg, &theme);
-    } else if (edge & NAV_X_BIT) {
-        if (current_item_index <= 1) return;
-        session_settings_set_colour_shader(current_item_index - 1);
-
-        if (colour_shader_param_count() > 0) {
-            play_sound(snd_confirm);
-            shader_adjust_menu_open();
-        } else {
-            play_sound(snd_error);
-            pause_menu_show_toast(lang.muxretro.shader_screen.no_adjust);
-        }
     } else if (edge & BIT(4)) {
         play_sound(snd_confirm);
         if (current_item_index == 0) {
-            preset_catalogue_open(preset_catalogue_shader);
+            preset_catalogue_open(preset_catalogue_overlay);
             return;
         }
-        session_settings_set_colour_shader(current_item_index - 1);
+        session_settings_set_overlay_image(current_item_index - 1);
 
         if (session_settings_is_dirty()) {
             dialogue_open(&save_dlg, &theme);
@@ -333,8 +270,8 @@ void shader_menu_tick(void) {
         }
     } else if (edge & BIT(5)) {
         play_sound(snd_back);
-        const int index = colour_shader_index(entry_key);
-        session_settings_set_colour_shader(index >= 0 ? index : 0);
+        const int index = overlay_library_index(entry_key);
+        session_settings_set_overlay_image(index >= 0 ? index : 0);
         close_screen();
     }
 }

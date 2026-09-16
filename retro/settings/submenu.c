@@ -5,6 +5,7 @@
 #include <common/ui/common.h>
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
+#include "../video/colour.h"
 #include "settings.h"
 #include "submenu.h"
 
@@ -279,6 +280,10 @@ static void submenu_show_help(const submenu *m) {
 static void submenu_nav(submenu *m, const int force) {
     const int row = selected_row(m);
     if (row < 0) {
+        m->nav_row_class = -1;
+        m->nav_action_label = NULL;
+        m->nav_extra_label = NULL;
+        m->nav_y_label = NULL;
         nav_show_x(0, NULL);
         nav_show_y(0, NULL);
         nav_show_a(0, NULL);
@@ -365,14 +370,39 @@ void submenu_stack_resync(void) {
         submenu_stack[i]->entry_snapshot = session_settings;
 }
 
+void submenu_stack_reload_colour_presets(void) {
+    char filter_keys[SUBMENU_STACK_MAX][64];
+    char shader_keys[SUBMENU_STACK_MAX][64];
+    const int depth = submenu_stack_depth;
+
+    for (int i = 0; i < depth; i++) {
+        snprintf(
+            filter_keys[i], sizeof(filter_keys[i]), "%s",
+            colour_filter_preset_key(submenu_stack[i]->entry_snapshot.colour_filter)
+        );
+        snprintf(
+            shader_keys[i], sizeof(shader_keys[i]), "%s",
+            colour_shader_key(submenu_stack[i]->entry_snapshot.colour_shader)
+        );
+    }
+
+    session_settings_reload_colour_presets();
+
+    for (int i = 0; i < depth; i++) {
+        int index = colour_filter_preset_index(filter_keys[i]);
+        submenu_stack[i]->entry_snapshot.colour_filter = index >= 0 ? index : 0;
+        index = colour_shader_index(shader_keys[i]);
+        submenu_stack[i]->entry_snapshot.colour_shader = index >= 0 ? index : 0;
+    }
+}
+
 void submenu_init(submenu *m, const submenu_def *def) {
-    static const char *save_options[6];
+    static const char *save_options[5];
     save_options[0] = lang.muxretro.save.content_save;
     save_options[1] = lang.muxretro.save.core_save;
     save_options[2] = lang.muxretro.save.directory_save;
     save_options[3] = lang.muxretro.save.session_save;
-    save_options[4] = lang.muxretro.save.reset_inherited;
-    save_options[5] = lang.generic.discard;
+    save_options[4] = lang.generic.discard;
 
     m->def = def;
     m->active = 0;
@@ -385,7 +415,7 @@ void submenu_init(submenu *m, const submenu_def *def) {
     m->pending_action_row = -1;
 
     dialogue_init(
-        &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 6, lang.generic.select,
+        &m->save_dlg, &theme, ui_screen, def->save_title, def->save_desc, save_options, 5, lang.generic.select,
         lang.generic.cancel
     );
 
@@ -487,11 +517,8 @@ void submenu_tick(submenu *m) {
             const int opt = m->save_dlg.selected;
             dialogue_dismiss(&m->save_dlg);
 
-            if (opt == 5) {
+            if (opt == 4) {
                 session_settings_discard_to(&m->entry_snapshot);
-            } else if (opt == 4) {
-                session_settings_reset_changed_to_inherited(&m->entry_snapshot);
-                submenu_stack_resync();
             } else if (opt == 3) {
                 submenu_stack_resync();
             } else {

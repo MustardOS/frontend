@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <dirent.h>
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +8,7 @@
 #include <sys/stat.h>
 #include <GLES2/gl2.h>
 #include <common/config/config.h>
+#include <common/display/language.h>
 #include <common/storage/fileio.h>
 #include <common/config/ini.h>
 #include <common/runtime/init.h>
@@ -19,22 +21,21 @@
 #include "../core/paths.h"
 #include "../settings/settings.h"
 
-#define FILTER_DIR "/opt/muos/share/filter/"
-#define SHADER_DIR "/opt/muos/share/shader/"
-
-#define SHADER_MAX_FILE_BYTES (64 * 1024)
-
 typedef struct {
     int enabled;
     float matrix[9];
 } colour_filter_matrix_t;
 
-static char filter_names[COLOUR_FILTER_MAX][64];
-static char filter_labels[COLOUR_FILTER_MAX][64];
+static char (*filter_names)[64];
+static char (*filter_labels)[64];
 static int filter_count = 0;
 
-static char shader_names[COLOUR_SHADER_MAX][64];
-static char shader_labels[COLOUR_SHADER_MAX][64];
+static char (*shader_names)[64];
+static char (*shader_labels)[64];
+static enum colour_shader_cost *shader_cost;
+static enum colour_shader_cost *shader_cost_720p;
+static enum colour_shader_cost *shader_cost_1080p;
+static enum colour_shader_compatibility *shader_compatibility;
 static int shader_count = 0;
 
 static int filter_loaded_index = -1;
@@ -285,7 +286,7 @@ static void load_filter_label(const char *stem, char *out, const size_t out_len)
     snprintf(out, out_len, "%s", stem);
 
     char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s%s.ini", FILTER_DIR, stem);
+    colour_filter_path(stem, path, sizeof(path));
 
     FILE *f = fopen(path, "r");
     if (!f) return;
@@ -319,11 +320,33 @@ static void load_filter_label(const char *stem, char *out, const size_t out_len)
     fclose(f);
 }
 
-static void load_shader_label(const char *stem, char *out, const size_t out_len) {
+static enum colour_shader_cost shader_cost_value(const char *value) {
+    if (strcasecmp(value, "low") == 0) return colour_shader_cost_low;
+    if (strcasecmp(value, "medium") == 0) return colour_shader_cost_medium;
+    if (strcasecmp(value, "high") == 0) return colour_shader_cost_high;
+    return colour_shader_cost_unknown;
+}
+
+static enum colour_shader_compatibility shader_compatibility_value(const char *value) {
+    if (strcasecmp(value, "software") == 0) return colour_shader_compatibility_software;
+    if (strcasecmp(value, "hardware") == 0) return colour_shader_compatibility_hardware;
+    return colour_shader_compatibility_all;
+}
+
+static void load_shader_metadata(const int index) {
+    const char *stem = shader_names[index];
+    char *out = shader_labels[index];
+    const size_t out_len = sizeof(shader_labels[index]);
     snprintf(out, out_len, "%s", stem);
+    shader_cost[index] = colour_shader_cost_unknown;
+    shader_cost_720p[index] = colour_shader_cost_unknown;
+    shader_cost_1080p[index] = colour_shader_cost_unknown;
+    shader_compatibility[index] = colour_shader_compatibility_all;
+
+    if (index == 0) return;
 
     char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s%s.frag", SHADER_DIR, stem);
+    colour_shader_path(stem, path, sizeof(path));
 
     FILE *f = fopen(path, "r");
     if (!f) return;
@@ -348,7 +371,14 @@ static void load_shader_label(const char *stem, char *out, const size_t out_len)
 
         if (strcasecmp(key, "name") == 0 && *value) {
             snprintf(out, out_len, "%s", value);
-            break;
+        } else if (strcasecmp(key, "cost") == 0) {
+            shader_cost[index] = shader_cost_value(value);
+        } else if (strcasecmp(key, "cost-720p") == 0) {
+            shader_cost_720p[index] = shader_cost_value(value);
+        } else if (strcasecmp(key, "cost-1080p") == 0) {
+            shader_cost_1080p[index] = shader_cost_value(value);
+        } else if (strcasecmp(key, "compatibility") == 0) {
+            shader_compatibility[index] = shader_compatibility_value(value);
         }
     }
 
@@ -361,9 +391,25 @@ static void load_shader_label(const char *stem, char *out, const size_t out_len)
 // symlink loop or a deeply nested collection cannot stall startup.
 #define PRESET_SCAN_MAX_DEPTH 4
 
-static void scan_presets_dir(
-    const char *root, const char *prefix, const char *ext, char scanned[][64], int *scanned_count,
-    const int max_count, const int depth
+static int append_scanned(char (**scanned)[64], int *count, int *capacity, const char *relative) {
+    if (*count == *capacity) {
+        if (*capacity > INT_MAX / 2) return 0;
+        const int next_capacity = *capacity > 0 ? *capacity * 2 : 32;
+        if (next_capacity <= *capacity || (size_t) next_capacity > SIZE_MAX / sizeof(**scanned)) return 0;
+        void *next = realloc(*scanned, (size_t) next_capacity * sizeof(**scanned));
+        if (!next) return 0;
+        *scanned = next;
+        *capacity = next_capacity;
+    }
+
+    snprintf((*scanned)[*count], sizeof(**scanned), "%s", relative);
+    (*count)++;
+    return 1;
+}
+
+static int scan_presets_dir(
+    const char *root, const char *prefix, const char *ext, char (**scanned)[64], int *scanned_count,
+    int *scanned_capacity, const int depth
 ) {
     char dir_path[PATH_MAX];
     if (prefix && *prefix) {
@@ -374,12 +420,13 @@ static void scan_presets_dir(
     }
 
     DIR *dir = opendir(dir_path);
-    if (!dir) return;
+    if (!dir) return 1;
 
     const size_t ext_len = strlen(ext);
 
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL && *scanned_count < max_count) {
+    int okay = 1;
+    while (okay && (entry = readdir(dir)) != NULL) {
         if (entry->d_name[0] == '.') continue;
 
         char relative[64];
@@ -406,7 +453,7 @@ static void scan_presets_dir(
             char nested[64];
             if ((size_t) snprintf(nested, sizeof(nested), "%s/", relative) >= sizeof(nested)) continue;
 
-            scan_presets_dir(root, nested, ext, scanned, scanned_count, max_count, depth + 1);
+            okay = scan_presets_dir(root, nested, ext, scanned, scanned_count, scanned_capacity, depth + 1);
             continue;
         }
 
@@ -418,39 +465,145 @@ static void scan_presets_dir(
 
         if (stem_len == 4 && strncmp(relative, "none", 4) == 0) continue;
 
-        snprintf(scanned[*scanned_count], 64, "%.*s", (int) stem_len, relative);
-        (*scanned_count)++;
+        char stem[64];
+        snprintf(stem, sizeof(stem), "%.*s", (int) stem_len, relative);
+        okay = append_scanned(scanned, scanned_count, scanned_capacity, stem);
     }
 
     closedir(dir);
+    return okay;
 }
 
-static int scan_presets(const char *dir_path, const char *ext, char names[][64], const int max_count) {
-    int count = 0;
-    snprintf(names[count++], 64, "none");
+static int resolve_preset_path(
+    const char *user_dir, const char *system_dir, const char *stem, const char *ext, char *out, const size_t out_size
+) {
+    if ((size_t) snprintf(out, out_size, "%s%s%s", user_dir, stem, ext) >= out_size) return 0;
+    if (file_exist(out)) return 1;
 
-    char scanned[COLOUR_SHADER_MAX][64];
+    return (size_t) snprintf(out, out_size, "%s%s%s", system_dir, stem, ext) < out_size;
+}
+
+static int user_preset_path(const char *user_dir, const char *stem, const char *ext, char *out, const size_t out_size) {
+    if (!stem || !*stem || strcasecmp(stem, "none") == 0) return 0;
+    if ((size_t) snprintf(out, out_size, "%s%s%s", user_dir, stem, ext) >= out_size) return 0;
+
+    return file_exist(out);
+}
+
+int colour_filter_is_user(const int index) {
+    char path[PATH_MAX];
+    return index > 0 && index < filter_count
+           && user_preset_path(COLOUR_FILTER_USER_DIR, filter_names[index], ".ini", path, sizeof(path));
+}
+
+int colour_shader_is_user(const int index) {
+    char path[PATH_MAX];
+    return index > 0 && index < shader_count
+           && user_preset_path(COLOUR_SHADER_USER_DIR, shader_names[index], ".frag", path, sizeof(path));
+}
+
+int colour_filter_delete(const int index) {
+    char path[PATH_MAX];
+    if (!colour_filter_is_user(index)) return 0;
+    if (!user_preset_path(COLOUR_FILTER_USER_DIR, filter_names[index], ".ini", path, sizeof(path))) return 0;
+
+    return remove(path) == 0;
+}
+
+int colour_shader_delete(const int index) {
+    char path[PATH_MAX];
+    if (!colour_shader_is_user(index)) return 0;
+    if (!user_preset_path(COLOUR_SHADER_USER_DIR, shader_names[index], ".frag", path, sizeof(path))) return 0;
+
+    return remove(path) == 0;
+}
+
+int colour_filter_path(const char *stem, char *out, const size_t out_size) {
+    return resolve_preset_path(COLOUR_FILTER_USER_DIR, COLOUR_FILTER_DIR, stem, ".ini", out, out_size);
+}
+
+int colour_shader_path(const char *stem, char *out, const size_t out_size) {
+    return resolve_preset_path(COLOUR_SHADER_USER_DIR, COLOUR_SHADER_DIR, stem, ".frag", out, out_size);
+}
+
+static int scan_presets(const char *dir_path, const char *user_dir, const char *ext, char (**names)[64]) {
+    char (*scanned)[64] = NULL;
     int scanned_count = 0;
+    int scanned_capacity = 0;
 
-    scan_presets_dir(dir_path, NULL, ext, scanned, &scanned_count, max_count, 0);
+    if (!scan_presets_dir(dir_path, NULL, ext, &scanned, &scanned_count, &scanned_capacity, 0)) {
+        free(scanned);
+        return 0;
+    }
 
-    // Sorting the relative paths keeps each folder's presets together and in order.
-    qsort(scanned, (size_t) scanned_count, sizeof(scanned[0]), name_cmp);
+    char (*downloaded)[64] = NULL;
+    int downloaded_count = 0;
+    int downloaded_capacity = 0;
 
-    for (int i = 0; i < scanned_count && count < max_count; i++)
-        snprintf(names[count++], 64, "%s", scanned[i]);
+    if (scan_presets_dir(user_dir, NULL, ext, &downloaded, &downloaded_count, &downloaded_capacity, 0)) {
+        for (int i = 0; i < downloaded_count; i++) {
+            int seen = 0;
+            for (int j = 0; j < scanned_count && !seen; j++)
+                seen = strcasecmp(scanned[j], downloaded[i]) == 0;
 
-    return count;
+            if (!seen && !append_scanned(&scanned, &scanned_count, &scanned_capacity, downloaded[i])) break;
+        }
+    }
+
+    free(downloaded);
+
+    if (scanned_count > 1) qsort(scanned, (size_t) scanned_count, sizeof(scanned[0]), name_cmp);
+
+    char (*result)[64] = calloc((size_t) scanned_count + 1, sizeof(*result));
+    if (!result) {
+        free(scanned);
+        return 0;
+    }
+
+    snprintf(result[0], sizeof(result[0]), "none");
+    for (int i = 0; i < scanned_count; i++)
+        snprintf(result[i + 1], sizeof(result[i + 1]), "%s", scanned[i]);
+
+    free(scanned);
+    *names = result;
+    return scanned_count + 1;
 }
 
 void colour_init(void) {
-    filter_count = scan_presets(FILTER_DIR, ".ini", filter_names, COLOUR_FILTER_MAX);
+    free(filter_names);
+    free(filter_labels);
+    free(shader_names);
+    free(shader_labels);
+    free(shader_cost);
+    free(shader_cost_720p);
+    free(shader_cost_1080p);
+    free(shader_compatibility);
+    filter_names = NULL;
+    filter_labels = NULL;
+    shader_names = NULL;
+    shader_labels = NULL;
+    shader_cost = NULL;
+    shader_cost_720p = NULL;
+    shader_cost_1080p = NULL;
+    shader_compatibility = NULL;
+    shader_loaded_index = -1;
+
+    filter_count = scan_presets(COLOUR_FILTER_DIR, COLOUR_FILTER_USER_DIR, ".ini", &filter_names);
+    filter_labels = calloc((size_t) filter_count, sizeof(*filter_labels));
+    if (!filter_labels) filter_count = 0;
     for (int i = 0; i < filter_count; i++)
         load_filter_label(filter_names[i], filter_labels[i], sizeof(filter_labels[0]));
 
-    shader_count = scan_presets(SHADER_DIR, ".frag", shader_names, COLOUR_SHADER_MAX);
+    shader_count = scan_presets(COLOUR_SHADER_DIR, COLOUR_SHADER_USER_DIR, ".frag", &shader_names);
+    shader_labels = calloc((size_t) shader_count, sizeof(*shader_labels));
+    shader_cost = calloc((size_t) shader_count, sizeof(*shader_cost));
+    shader_cost_720p = calloc((size_t) shader_count, sizeof(*shader_cost_720p));
+    shader_cost_1080p = calloc((size_t) shader_count, sizeof(*shader_cost_1080p));
+    shader_compatibility = calloc((size_t) shader_count, sizeof(*shader_compatibility));
+    if (!shader_labels || !shader_cost || !shader_cost_720p || !shader_cost_1080p || !shader_compatibility)
+        shader_count = 0;
     for (int i = 0; i < shader_count; i++)
-        load_shader_label(shader_names[i], shader_labels[i], sizeof(shader_labels[0]));
+        load_shader_metadata(i);
 
     LOG_INFO(mux_module, "Colour: found %d filter preset(s), %d shader(s)", filter_count, shader_count);
 }
@@ -460,8 +613,20 @@ int colour_filter_preset_count(void) {
 }
 
 const char *colour_filter_preset_label(const int index) {
-    if (index < 0 || index >= filter_count) return filter_labels[0];
+    if (index < 0 || index >= filter_count) return "none";
     return filter_labels[index];
+}
+
+const char *colour_filter_preset_key(const int index) {
+    if (index < 0 || index >= filter_count) return "none";
+    return filter_names[index];
+}
+
+int colour_filter_preset_index(const char *key) {
+    if (!key || !*key) return -1;
+    for (int index = 0; index < filter_count; index++)
+        if (strcmp(filter_names[index], key) == 0) return index;
+    return -1;
 }
 
 int colour_shader_count(void) {
@@ -469,8 +634,36 @@ int colour_shader_count(void) {
 }
 
 const char *colour_shader_label(const int index) {
-    if (index < 0 || index >= shader_count) return shader_labels[0];
+    if (index <= 0 || index >= shader_count) return lang.generic.none;
     return shader_labels[index];
+}
+
+const char *colour_shader_key(const int index) {
+    if (index < 0 || index >= shader_count) return "none";
+    return shader_names[index];
+}
+
+int colour_shader_index(const char *key) {
+    if (!key || !*key) return -1;
+    for (int index = 0; index < shader_count; index++)
+        if (strcmp(shader_names[index], key) == 0) return index;
+    return -1;
+}
+
+enum colour_shader_cost colour_shader_cost_for_output(const int index, const int width, const int height) {
+    if (index <= 0 || index >= shader_count) return colour_shader_cost_unknown;
+
+    const uint64_t pixels = (uint64_t) (width > 0 ? width : 0) * (uint64_t) (height > 0 ? height : 0);
+    if (pixels >= UINT64_C(1920) * UINT64_C(1080) && shader_cost_1080p[index] != colour_shader_cost_unknown)
+        return shader_cost_1080p[index];
+    if (pixels >= UINT64_C(1280) * UINT64_C(720) && shader_cost_720p[index] != colour_shader_cost_unknown)
+        return shader_cost_720p[index];
+    return shader_cost[index];
+}
+
+enum colour_shader_compatibility colour_shader_compatibility_for_index(const int index) {
+    if (index <= 0 || index >= shader_count) return colour_shader_compatibility_all;
+    return shader_compatibility[index];
 }
 
 static int parse_float3(const char *line, float *a, float *b, float *c) {
@@ -486,13 +679,10 @@ static int parse_float3(const char *line, float *a, float *b, float *c) {
     *c = strtof(p, &end);
     if (end == p) return 0;
 
-    return 1;
+    return isfinite(*a) && isfinite(*b) && isfinite(*c);
 }
 
-static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
-    char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s%s.ini", FILTER_DIR, name);
-
+static int load_filter_path(const char *path, colour_filter_matrix_t *out) {
     FILE *f = fopen(path, "r");
     if (!f) return 0;
 
@@ -530,6 +720,48 @@ static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
 
     fclose(f);
     return seen_matrix && row == 3;
+}
+
+static int load_filter_file(const char *name, colour_filter_matrix_t *out) {
+    char path[PATH_MAX];
+    colour_filter_path(name, path, sizeof(path));
+    return load_filter_path(path, out);
+}
+
+int colour_filter_file_valid(const char *path) {
+    struct stat status;
+    if (!path || lstat(path, &status) != 0 || !S_ISREG(status.st_mode) || status.st_size <= 0
+        || status.st_size > COLOUR_PRESET_FILE_MAX)
+        return 0;
+    colour_filter_matrix_t parsed;
+    return load_filter_path(path, &parsed);
+}
+
+int colour_shader_file_valid(const char *path) {
+    if (!path) return 0;
+
+    struct stat status;
+    if (lstat(path, &status) != 0 || !S_ISREG(status.st_mode) || status.st_size <= 0
+        || status.st_size > COLOUR_PRESET_FILE_MAX)
+        return 0;
+
+    FILE *file = fopen(path, "rb");
+    if (!file) return 0;
+
+    char *body = malloc((size_t) status.st_size + 1);
+    if (!body) {
+        fclose(file);
+        return 0;
+    }
+
+    const size_t length = fread(body, 1, (size_t) status.st_size, file);
+    const int read_ok = length == (size_t) status.st_size && !ferror(file);
+    fclose(file);
+    body[length] = '\0';
+
+    const int valid = read_ok && !memchr(body, '\0', length) && strstr(body, "void main") != NULL;
+    free(body);
+    return valid;
 }
 
 static const colour_filter_matrix_t *current_filter(void) {
@@ -682,7 +914,7 @@ static char *read_shader_file(const char *path) {
     const long sz = ftell(f);
     rewind(f);
 
-    if (sz <= 0 || sz > SHADER_MAX_FILE_BYTES) {
+    if (sz <= 0 || sz > COLOUR_PRESET_FILE_MAX) {
         LOG_ERROR(mux_module, "Colour: bad shader size (%ld bytes): %s", sz, path);
         fclose(f);
         return NULL;
@@ -996,7 +1228,7 @@ static void ensure_shader_program(void) {
     if (index <= 0 || index >= shader_count) return;
 
     char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s%s.frag", SHADER_DIR, shader_names[index]);
+    colour_shader_path(shader_names[index], path, sizeof(path));
 
     char *body = read_shader_file(path);
     if (!body) return;

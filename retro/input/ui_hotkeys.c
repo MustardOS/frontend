@@ -8,9 +8,11 @@ enum {
     row_button_assignments = 0,
     row_ff_enabled,
     row_ff_speed,
+    row_ff_audio_enabled,
     row_ff_glyph_enabled,
     row_slowmo_enabled,
     row_slowmo_speed,
+    row_slowmo_audio_enabled,
     row_slowmo_glyph_enabled,
     row_pause_enabled,
     row_pause_glyph_enabled,
@@ -27,9 +29,11 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.button_assignments,
     lang.muxretro.hotkeys_screen.fast_forward,
     lang.muxretro.hotkeys_screen.ff_speed,
+    lang.muxretro.hotkeys_screen.ff_audio,
     lang.muxretro.hotkeys_screen.ff_glyph,
     lang.muxretro.hotkeys_screen.slow_motion,
     lang.muxretro.hotkeys_screen.slowmo_speed,
+    lang.muxretro.hotkeys_screen.slowmo_audio,
     lang.muxretro.hotkeys_screen.slowmo_glyph,
     lang.muxretro.hotkeys_screen.pause_content,
     lang.muxretro.hotkeys_screen.pause_glyph,
@@ -41,17 +45,20 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.manual
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys",     "fastforward", "ffspeed",      "ffglyph",    "slowmotion",
-                                            "slowmospeed", "slowmoglyph", "pause",        "pauseglyph", "quicksave",
-                                            "quickload",   "togglefps",   "toggleheader", "quit",       "manual"};
+static const char *row_glyphs[row_count] = {"hotkeys",    "fastforward", "ffspeed",   "sound",       "ffglyph",
+                                            "slowmotion", "slowmospeed", "sound",     "slowmoglyph", "pause",
+                                            "pauseglyph", "quicksave",   "quickload", "togglefps",   "toggleheader",
+                                            "quit",       "manual"};
 
 static const char *row_help[row_count] = {
     lang.muxretro.help.hotkeys.button_assignments,
     lang.muxretro.help.hotkeys.fast_forward,
     lang.muxretro.help.hotkeys.ff_speed,
+    lang.muxretro.help.hotkeys.ff_audio,
     lang.muxretro.help.hotkeys.ff_glyph,
     lang.muxretro.help.hotkeys.slow_motion,
     lang.muxretro.help.hotkeys.slowmo_speed,
+    lang.muxretro.help.hotkeys.slowmo_audio,
     lang.muxretro.help.hotkeys.slowmo_glyph,
     lang.muxretro.help.hotkeys.pause_content,
     lang.muxretro.help.hotkeys.pause_glyph,
@@ -93,6 +100,12 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
         case row_ff_speed:
             snprintf(buf, buf_len, "%s", session_settings_ff_speed_name(session_settings.ff_speed));
             break;
+        case row_ff_audio_enabled:
+            snprintf(
+                buf, buf_len, "%s",
+                session_settings.hotkey_ff_audio_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
+            break;
         case row_ff_glyph_enabled:
             snprintf(
                 buf, buf_len, "%s",
@@ -104,6 +117,12 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_slowmo_speed:
             snprintf(buf, buf_len, "%s", session_settings_slowmo_speed_name(session_settings.slowmo_speed));
+            break;
+        case row_slowmo_audio_enabled:
+            snprintf(
+                buf, buf_len, "%s",
+                session_settings.hotkey_slowmo_audio_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
             break;
         case row_slowmo_glyph_enabled:
             snprintf(
@@ -166,6 +185,9 @@ static void cycle_row(const int index, const int direction) {
         case row_ff_speed:
             session_settings_cycle_ff_speed(direction);
             break;
+        case row_ff_audio_enabled:
+            session_settings_cycle_hotkey_ff_audio_enabled(direction);
+            break;
         case row_ff_glyph_enabled:
             session_settings_cycle_hotkey_ff_glyph_enabled(direction);
             break;
@@ -174,6 +196,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_slowmo_speed:
             session_settings_cycle_slowmo_speed(direction);
+            break;
+        case row_slowmo_audio_enabled:
+            session_settings_cycle_hotkey_slowmo_audio_enabled(direction);
             break;
         case row_slowmo_glyph_enabled:
             session_settings_cycle_hotkey_slowmo_glyph_enabled(direction);
@@ -289,10 +314,10 @@ static int row_is_action(const int index) {
 
 static int row_can_cycle(const int index) {
     if (index == row_button_assignments) return 0;
-    if ((index == row_ff_speed || index == row_ff_glyph_enabled)
+    if ((index == row_ff_speed || index == row_ff_audio_enabled || index == row_ff_glyph_enabled)
         && session_settings.hotkey_ff_enabled == hotkey_activation_disabled)
         return 0;
-    if ((index == row_slowmo_speed || index == row_slowmo_glyph_enabled)
+    if ((index == row_slowmo_speed || index == row_slowmo_audio_enabled || index == row_slowmo_glyph_enabled)
         && session_settings.hotkey_slowmo_enabled == hotkey_activation_disabled)
         return 0;
     if (index == row_pause_glyph_enabled && !session_settings.hotkey_pause_enabled) return 0;
@@ -301,9 +326,9 @@ static int row_can_cycle(const int index) {
 
 static int row_depends_on(const int index, const int changed_index) {
     if (changed_index == row_ff_enabled)
-        return index == row_ff_speed || index == row_ff_glyph_enabled;
+        return index == row_ff_speed || index == row_ff_audio_enabled || index == row_ff_glyph_enabled;
     if (changed_index == row_slowmo_enabled)
-        return index == row_slowmo_speed || index == row_slowmo_glyph_enabled;
+        return index == row_slowmo_speed || index == row_slowmo_audio_enabled || index == row_slowmo_glyph_enabled;
     if (changed_index == row_pause_enabled) return index == row_pause_glyph_enabled;
     return 0;
 }

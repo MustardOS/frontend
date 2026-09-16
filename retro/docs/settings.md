@@ -33,7 +33,8 @@ User-made profiles live in `/run/muos/storage/save/pickles/profile/`. Pickles re
 directory and shows a profile only when its optional core and content targets match the game being played. Leave both
 targets out to make a profile available everywhere. Applying a profile changes only the valid settings named in its
 `[settings]` section, then uses the normal save dialogue so the result can be kept for this content, its directory, its
-core, or only the current session.
+core, or only the current session. Application requires confirmation and exposes **Y Restore** for ten seconds. Restore
+returns every session setting and core option to its pre-application value.
 
 When the settings no longer match the current built-in or user-made profile, select **Save Current** in the **Profiles**
 list. Name the profile with the same on-screen keyboard used by save states, then choose whether it is available for the

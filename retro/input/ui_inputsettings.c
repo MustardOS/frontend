@@ -27,8 +27,9 @@ static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.reset_input,
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys",           "port1",     "port2", "port3", "port4", "autoassign",
-                                            "controlleroptions", "inputreset"};
+static const char *row_glyphs[row_count] = {
+    "hotkeys", "port1", "port2", "port3", "port4", "autoassign", "controlleroptions", "inputreset"
+};
 
 static const char *row_help[row_count] = {
     lang.muxretro.help.input.hotkeys,

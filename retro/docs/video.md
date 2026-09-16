@@ -32,7 +32,8 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
 - **Texture Filters**: none (nearest), smooth (linear), scale2x, scale3x, sharp bilinear, scale2x smooth, super eagle.
   Implemented in `filters/`, not `video.c` - see [`architecture.md`](architecture.md#video).
 - **Colour grading**: brightness/contrast/saturation/hue-shift/gamma, plus drop-in filter presets (`.ini`) and shader
-  presets (`.frag`) scanned from `/opt/muos/share/{filter,shader}/`. Works for software and hardware-rendered cores.
+  presets (`.frag`) scanned from the `OPT_SHARE_PATH` filter and shader directories. Works for software and
+  hardware-rendered cores.
 - **Border Colour**: theme / black / dark grey / white, filled outside the game's `dest_rect`.
 - **Overlays**: predefined fullscreen patterns or a per game catalogue overlay, rendered as part of the video content
   layer. Below the pause menu, header, and indicators.
@@ -89,6 +90,35 @@ zFast CRT without exposing another end-user setting. A shader can override that 
 `// Filter: Nearest`, or `#pragma filter linear|nearest|inherit`; `inherit` deliberately follows the selected Texture
 Filter. A RetroArch port should map `OutputSize` to `u_resolution`, `InputSize` to `u_native_resolution`, and
 `TextureSize` to `u_texture_resolution`.
+
+The shader picker accepts explicit, evidence-owned guidance in the leading comment block. `// Cost: Low|Medium|High`
+sets the general class, while `// Cost-720p:` and `// Cost-1080p:` can override it for those output tiers.
+`// Compatibility: All|Software|Hardware` declares the supported source path. Unspecified cost and unrestricted
+compatibility metadata are omitted from the shader list. Pickles never guesses cost from a file name. Ratings should
+be assigned from measurements on the target GPU.
+
+Both preset pickers place Download first. It fetches the configured filter or shader manifest only when a network is
+connected, then reports each entry as Available, Installed or Update by comparing its SHA-256 with the local file. An
+install is downloaded beside the destination, checked for HTTPS provenance, size, digest and content type, then
+published with a final rename. A rejected download cannot replace the installed preset. Preset tables are dynamically
+sized; a preset source may be up to 128 KiB and the separately bounded manifest may contain any number of entries that
+fits its input and available memory.
+
+Each manifest is a JSON array using this contract:
+
+```json
+[
+  {
+    "name": "Example Preset",
+    "url": "https://example.invalid/example.frag",
+    "version": "1.0.0",
+    "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  }
+]
+```
+
+The manifest URL comes from `extra/filter/data` or `extra/shader/data`. Stable preset names are saved alongside legacy
+numeric values so installing a newly sorted file cannot silently change an existing content, directory or core choice.
 
 The performance export records the effective filter and its source, every standard shader uniform, parameter values,
 visible source size, logical destination, physical destination, and whether the physical mapping is an exact integer

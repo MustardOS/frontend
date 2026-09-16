@@ -8,6 +8,9 @@ See [`architecture.md`](architecture.md#audio) for the file-by-file breakdown of
 - Sample rate override (auto or fixed 44100/48000 Hz), volume, underrun fade in, mute during fast forward/slow motion.
   - Cores can also fix their own audio frequency depending on their info file.
 - Dynamic rate control trims the stream by up to +/-0.5% to hold the ring at the midpoint of the active profile.
+    - The controller calculates the correction ratio once per batch. Resampling uses a Q48 phase accumulator and Q32
+      stereo interpolation, avoiding floating-point work per output frame while retaining one-sample agreement with the
+      scalar reference across the validated ratio range.
     - Absorbs the drift between the cores declared frame rate and the panels vsync rate, which the emulator loop is
       actually paced by. Without it a core running above the panel rate (i.e. FCEUmm at 60.0988 fps on a 60.00 Hz panel)
       starves the ring within a minute and clicks on every zero fill.

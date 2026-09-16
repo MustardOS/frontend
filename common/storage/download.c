@@ -36,7 +36,14 @@ typedef struct {
 typedef struct {
     char *url;
     char *save_path;
+    curl_off_t max_bytes;
 } download_args_t;
+
+typedef struct {
+    FILE *stream;
+    curl_off_t max_bytes;
+    curl_off_t written;
+} download_sink;
 
 typedef struct {
     int directory_fd;
@@ -52,8 +59,15 @@ static download_control control = {
     .state = download_idle,
 };
 
-static size_t write_data(const void *ptr, const size_t size, const size_t nmemb, FILE *stream) {
-    return fwrite(ptr, size, nmemb, stream) * size;
+static size_t write_data(const void *ptr, const size_t size, const size_t nmemb, void *userdata) {
+    download_sink *sink = userdata;
+    if (!sink || (size && nmemb > SIZE_MAX / size)) return 0;
+    const size_t bytes = size * nmemb;
+    if ((curl_off_t) bytes > sink->max_bytes - sink->written) return 0;
+
+    const size_t written = fwrite(ptr, 1, bytes, sink->stream);
+    sink->written += (curl_off_t) written;
+    return written;
 }
 
 static int fill_random(void *buffer, const size_t size) {
@@ -196,6 +210,15 @@ static int publish_download(download_target *target) {
     return -1;
 }
 
+static int progress_shown;
+static int progress_span_index;
+static int progress_span_total = 1;
+
+void set_download_progress_span(const int index, const int total) {
+    progress_span_total = total > 0 ? total : 1;
+    progress_span_index = index > 0 ? (index < progress_span_total ? index : progress_span_total - 1) : 0;
+}
+
 void set_download_callbacks(void (*callback)(int)) {
     pthread_mutex_lock(&control.mutex);
     if (control.state == download_idle) control.configured_cb = callback;
@@ -218,15 +241,21 @@ void download_poll(void) {
     atomic_store_explicit(&cancel_download, 0, memory_order_release);
     pthread_mutex_unlock(&control.mutex);
 
-    if (result == 0) atomic_store_explicit(&progress_bar_value, 100, memory_order_relaxed);
-    hide_progress_bar();
+    if (result == 0 && progress_span_index + 1 >= progress_span_total)
+        atomic_store_explicit(&progress_bar_value, 100, memory_order_relaxed);
+
+    if (progress_shown) {
+        progress_shown = 0;
+        hide_progress_bar();
+    }
+
     if (cb) cb(result);
 }
 
 static int progress_callback(
     void *clientp, const curl_off_t dltotal, const curl_off_t dlnow, const curl_off_t ultotal, const curl_off_t ulnow
 ) {
-    (void) clientp;
+    const curl_off_t max_bytes = *(const curl_off_t *) clientp;
     (void) ultotal;
     (void) ulnow;
 
@@ -235,11 +264,12 @@ static int progress_callback(
         return 1;
     }
 
-    if (dlnow > MAX_DOWNLOAD_BYTES || dltotal > MAX_DOWNLOAD_BYTES) return 1;
+    if (dlnow > max_bytes || dltotal > max_bytes) return 1;
 
     if (dltotal > 0) {
         const int percent = (int) ((dlnow * 100) / dltotal);
-        atomic_store_explicit(&progress_bar_value, percent, memory_order_relaxed);
+        const int overall = (progress_span_index * 100 + percent) / progress_span_total;
+        atomic_store_explicit(&progress_bar_value, overall, memory_order_relaxed);
     } else if (dlnow > 0) {
         atomic_store_explicit(&progress_bar_value, PROGRESS_INDETERMINATE, memory_order_relaxed);
     }
@@ -247,7 +277,7 @@ static int progress_callback(
     return 0;
 }
 
-static int perform_download(const char *url, const char *output_path) {
+static int perform_download(const char *url, const char *output_path, const curl_off_t max_bytes) {
     CURL *curl = curl_easy_init();
     if (!curl) return -1;
 
@@ -257,9 +287,11 @@ static int perform_download(const char *url, const char *output_path) {
         return -2;
     }
 
+    download_sink sink = {.stream = target.stream, .max_bytes = max_bytes};
+
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, target.stream);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &sink);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
@@ -279,9 +311,10 @@ static int perform_download(const char *url, const char *output_path) {
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 15L);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
-    curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, MAX_DOWNLOAD_BYTES);
+    curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, max_bytes);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &sink.max_bytes);
 
     const CURLcode result = curl_easy_perform(curl);
     long response_code = 0;
@@ -300,7 +333,7 @@ static int perform_download(const char *url, const char *output_path) {
         close_target(&target, 1);
         return -4;
     }
-    if (size_result != CURLE_OK || downloaded <= 0 || downloaded > MAX_DOWNLOAD_BYTES) {
+    if (size_result != CURLE_OK || downloaded <= 0 || downloaded > max_bytes || sink.written != downloaded) {
         LOG_ERROR(mux_module, "Downloaded file has an invalid size");
         close_target(&target, 1);
         return -5;
@@ -325,7 +358,7 @@ static void complete_download(const int result) {
 
 static void *download_thread(void *arg) {
     download_args_t *args = arg;
-    const int result = perform_download(args->url, args->save_path);
+    const int result = perform_download(args->url, args->save_path, args->max_bytes);
 
     free(args->url);
     free(args->save_path);
@@ -346,14 +379,16 @@ static int schedule_start_failure_locked(const int result) {
     return 0;
 }
 
-int initiate_download(const char *url, const char *output_path, const int show_progress, char *message) {
+int initiate_download_limited(
+    const char *url, const char *output_path, const size_t max_bytes, const int show_progress, char *message
+) {
     pthread_mutex_lock(&control.mutex);
     if (control.state != download_idle) {
         pthread_mutex_unlock(&control.mutex);
         return -1;
     }
 
-    if (!url || !*url || !output_path || !*output_path) {
+    if (!url || !*url || !output_path || !*output_path || max_bytes == 0 || max_bytes > (size_t) MAX_DOWNLOAD_BYTES) {
         const int result = schedule_start_failure_locked(-1);
         pthread_mutex_unlock(&control.mutex);
         return result;
@@ -368,6 +403,7 @@ int initiate_download(const char *url, const char *output_path, const int show_p
 
     args->url = strdup(url);
     args->save_path = strdup(output_path);
+    args->max_bytes = (curl_off_t) max_bytes;
     if (!args->url || !args->save_path) {
         free(args->url);
         free(args->save_path);
@@ -383,7 +419,13 @@ int initiate_download(const char *url, const char *output_path, const int show_p
     control.state = download_running;
     atomic_store_explicit(&cancel_download, 0, memory_order_release);
     atomic_store_explicit(&download_in_progress, 1, memory_order_release);
-    atomic_store_explicit(&progress_bar_value, 0, memory_order_relaxed);
+    if (show_progress) {
+        progress_span_index = 0;
+        progress_span_total = 1;
+    }
+    atomic_store_explicit(
+        &progress_bar_value, (progress_span_index * 100) / progress_span_total, memory_order_relaxed
+    );
 
     pthread_t thread;
     const int thread_result = pthread_create(&thread, NULL, download_thread, args);
@@ -399,6 +441,13 @@ int initiate_download(const char *url, const char *output_path, const int show_p
     pthread_detach(thread);
     pthread_mutex_unlock(&control.mutex);
 
-    if (show_progress) show_progress_bar(message);
+    if (show_progress) {
+        progress_shown = 1;
+        show_progress_bar(message);
+    }
     return 0;
+}
+
+int initiate_download(const char *url, const char *output_path, const int show_progress, char *message) {
+    return initiate_download_limited(url, output_path, (size_t) MAX_DOWNLOAD_BYTES, show_progress, message);
 }

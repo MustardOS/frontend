@@ -114,6 +114,7 @@ enum overlay_source_mode {
     overlay_source_off = 0,
     overlay_source_pattern,
     overlay_source_catalogue,
+    overlay_source_downloaded,
     overlay_source_count
 };
 
@@ -145,9 +146,11 @@ struct session_settings_t {
     int slowmo_speed;
     int hotkey_ff_enabled;
     int hotkey_ff_button;
+    int hotkey_ff_audio_enabled;
     int hotkey_ff_glyph_enabled;
     int hotkey_slowmo_enabled;
     int hotkey_slowmo_button;
+    int hotkey_slowmo_audio_enabled;
     int hotkey_slowmo_glyph_enabled;
     int hotkey_pause_enabled;
     int hotkey_pause_button;
@@ -189,7 +192,17 @@ struct session_settings_t {
     int vignette_colour;
     int overlay_source;
     int overlay_pattern;
+    int overlay_image;
     int overlay_opacity;
+    int overlay_offset_x;
+    int overlay_offset_y;
+    int overlay_stretch_x;
+    int overlay_stretch_y;
+    int overlay_zoom;
+    int overlay_crop_top;
+    int overlay_crop_bottom;
+    int overlay_crop_left;
+    int overlay_crop_right;
     int viewport_offset_x;
     int viewport_offset_y;
     int viewport_stretch_x;
@@ -392,6 +405,8 @@ const char *session_settings_overlay_source_name(int mode);
 
 const char *session_settings_overlay_pattern_name(int index);
 
+const char *session_settings_overlay_image_name(int index);
+
 const char *session_settings_overlay_opacity_name(int value);
 
 const char *session_settings_viewport_offset_x_name(int value);
@@ -498,9 +513,13 @@ void session_settings_reset_hotkey_buttons(void);
 
 void session_settings_cycle_hotkey_ff_enabled(int direction);
 
+void session_settings_cycle_hotkey_ff_audio_enabled(int direction);
+
 void session_settings_cycle_hotkey_ff_glyph_enabled(int direction);
 
 void session_settings_cycle_hotkey_slowmo_enabled(int direction);
+
+void session_settings_cycle_hotkey_slowmo_audio_enabled(int direction);
 
 void session_settings_cycle_hotkey_slowmo_glyph_enabled(int direction);
 
@@ -540,9 +559,31 @@ void session_settings_set_colour_filter(int index);
 
 void session_settings_set_colour_shader(int index);
 
+void session_settings_reload_colour_presets(void);
+
 void session_settings_cycle_overlay_source(int direction);
 
 void session_settings_cycle_overlay_pattern(int direction);
+
+void session_settings_set_overlay_image(int index);
+
+void session_settings_cycle_overlay_offset_x(int direction);
+
+void session_settings_cycle_overlay_offset_y(int direction);
+
+void session_settings_cycle_overlay_stretch_x(int direction);
+
+void session_settings_cycle_overlay_stretch_y(int direction);
+
+void session_settings_cycle_overlay_zoom(int direction);
+
+void session_settings_cycle_overlay_crop_top(int direction);
+
+void session_settings_cycle_overlay_crop_bottom(int direction);
+
+void session_settings_cycle_overlay_crop_left(int direction);
+
+void session_settings_cycle_overlay_crop_right(int direction);
 
 void session_settings_cycle_overlay_opacity(int direction);
 
@@ -686,6 +727,8 @@ void session_settings_auto_assign_controllers(void);
 
 void session_settings_reset_viewport(void);
 
+void session_settings_reset_overlay(void);
+
 int session_settings_is_dirty(void);
 
 void session_settings_apply_save_choice(int choice);
@@ -693,8 +736,6 @@ void session_settings_apply_save_choice(int choice);
 void session_settings_discard(void);
 
 void session_settings_discard_to(const struct session_settings_t *snapshot);
-
-void session_settings_reset_changed_to_inherited(const struct session_settings_t *snapshot);
 
 void session_settings_save_content(void);
 

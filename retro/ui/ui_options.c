@@ -145,6 +145,8 @@ static void focus_category_row(const int index) {
 }
 
 static void set_options_nav(void) {
+    nav_show_a(0, NULL);
+    nav_show_lr(1);
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                   {ui_lbl_nav_lr, lang.generic.change, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
@@ -154,7 +156,12 @@ static void set_options_nav(void) {
 }
 
 static void set_category_nav(void) {
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
+    nav_show_lr(0);
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
 }
 

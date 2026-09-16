@@ -91,6 +91,15 @@ struct mux_config {
         struct {
             char data[MAX_BUFFER_SIZE];
         } core;
+        struct {
+            char data[MAX_BUFFER_SIZE];
+        } filter;
+        struct {
+            char data[MAX_BUFFER_SIZE];
+        } shader;
+        struct {
+            char data[MAX_BUFFER_SIZE];
+        } overlay;
     } extra;
 
     struct {

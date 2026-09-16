@@ -32,4 +32,6 @@ int cheevo_settings_child_tick(void);
 
 int viewport_settings_child_tick(void);
 
+int overlay_settings_child_tick(void);
+
 int image_corrections_settings_child_tick(void);

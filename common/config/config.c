@@ -101,6 +101,9 @@ static const cfg_field cfg_fields[] = {
     // extra/language/
     {CONF_CONFIG_PATH "extra/language", "data", CFG_OFF(extra.language.data), 1, {.s = ""}},
     {CONF_CONFIG_PATH "extra/core", "data", CFG_OFF(extra.core.data), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "extra/filter", "data", CFG_OFF(extra.filter.data), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "extra/shader", "data", CFG_OFF(extra.shader.data), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "extra/overlay", "data", CFG_OFF(extra.overlay.data), 1, {.s = ""}},
 
     // settings/advanced/
     {CONF_CONFIG_PATH "settings/advanced", "accelerate", CFG_OFF(settings.advanced.accelerate), 0, {.i = 96}},
