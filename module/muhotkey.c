@@ -166,8 +166,8 @@ static int raw_power_pressed = 0;
 static int raw_power_long_active = 0;
 static uint32_t raw_power_press_tick = 0;
 
-#define RAW_REPEAT_INITIAL_MS  180
-#define RAW_REPEAT_INTERVAL_MS 70
+#define RAW_REPEAT_INITIAL_MS  300
+#define RAW_REPEAT_INTERVAL_MS 110
 
 static int lid_fd = -1;
 
@@ -473,9 +473,17 @@ static void handle_raw_volume(void) {
             *next_repeat = global_tick + RAW_REPEAT_INITIAL_MS;
             run_raw_volume_action(type, mux_input_press);
         } else if (ev.value == 2) {
+            /*
+             * Kernel auto-repeat. Treat it as nothing more than "still held":
+             * the repeat rate is the driver's (about 40 ms here), which is far
+             * faster than a volume step actually costs, and acting on it as
+             * well as on our own timer fired two hold actions per key.
+             *
+             * Deliberately not touching *next_repeat - pushing the deadline
+             * forward on every auto-repeat would mean it never arrives and a
+             * held key would stop repeating altogether.
+             */
             *pressed = 1;
-            *next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
-            run_raw_volume_action(type, mux_input_hold);
         } else {
             *pressed = 0;
             *next_repeat = 0;
