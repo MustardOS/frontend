@@ -141,7 +141,8 @@ static void download_finished(const int result) {
         }
     } else {
         play_sound(snd_error);
-        toast_message(lang.muxdownload.error_get_data, tst_wait_s);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxdownload.error_get_data, tst_wait_s);
     }
 }
 
@@ -152,7 +153,8 @@ static void refresh_extra_data_finished(const int result) {
         mux_input_stop();
     } else {
         play_sound(snd_error);
-        toast_message(lang.muxdownload.error_get_data, tst_wait_f);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxdownload.error_get_data, tst_wait_f);
     }
 }
 

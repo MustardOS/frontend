@@ -11,7 +11,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <common/runtime/init.h>
+#include <common/display/language.h>
 #include <common/storage/fileio.h>
+#include <common/storage/health.h>
 #include <common/base/util.h>
 #include <common/ui/nav.h>
 #include <common/storage/download.h>
@@ -19,6 +21,7 @@
 
 #define MAX_DOWNLOAD_BYTES ((curl_off_t) (512L * 1024L * 1024L))
 #define TEMP_NAME_ATTEMPTS 64
+#define DOWNLOAD_RESERVE_BYTES (4ULL * 1024ULL * 1024ULL)
 
 _Atomic int cancel_download = 0;
 _Atomic int download_in_progress = 0;
@@ -43,6 +46,9 @@ typedef struct {
     FILE *stream;
     curl_off_t max_bytes;
     curl_off_t written;
+    const char *output_path;
+    int space_checked;
+    int storage_result;
 } download_sink;
 
 typedef struct {
@@ -255,7 +261,9 @@ void download_poll(void) {
 static int progress_callback(
     void *clientp, const curl_off_t dltotal, const curl_off_t dlnow, const curl_off_t ultotal, const curl_off_t ulnow
 ) {
-    const curl_off_t max_bytes = *(const curl_off_t *) clientp;
+    download_sink *sink = clientp;
+    if (!sink) return 1;
+    const curl_off_t max_bytes = sink->max_bytes;
     (void) ultotal;
     (void) ulnow;
 
@@ -265,6 +273,20 @@ static int progress_callback(
     }
 
     if (dlnow > max_bytes || dltotal > max_bytes) return 1;
+
+    if (!sink->space_checked && dltotal > 0) {
+        sink->space_checked = 1;
+        const storage_health_status health = storage_preflight_write(
+            sink->output_path, (uint64_t) dltotal, DOWNLOAD_RESERVE_BYTES, NULL
+        );
+        if (health != storage_health_ok) {
+            sink->storage_result = health == storage_health_missing     ? download_result_storage_missing
+                                   : health == storage_health_read_only ? download_result_storage_read_only
+                                   : health == storage_health_full      ? download_result_storage_full
+                                                                        : download_result_storage_error;
+            return 1;
+        }
+    }
 
     if (dltotal > 0) {
         const int percent = (int) ((dlnow * 100) / dltotal);
@@ -287,7 +309,7 @@ static int perform_download(const char *url, const char *output_path, const curl
         return -2;
     }
 
-    download_sink sink = {.stream = target.stream, .max_bytes = max_bytes};
+    download_sink sink = {.stream = target.stream, .max_bytes = max_bytes, .output_path = output_path};
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
@@ -314,7 +336,7 @@ static int perform_download(const char *url, const char *output_path, const curl
     curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, max_bytes);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
-    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &sink.max_bytes);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &sink);
 
     const CURLcode result = curl_easy_perform(curl);
     long response_code = 0;
@@ -326,7 +348,7 @@ static int perform_download(const char *url, const char *output_path, const curl
     if (result != CURLE_OK) {
         LOG_ERROR(mux_module, "cURL failure: %s", curl_easy_strerror(result));
         close_target(&target, 1);
-        return -3;
+        return sink.storage_result ? sink.storage_result : download_result_transport;
     }
     if (response_code < 200 || response_code >= 300) {
         LOG_ERROR(mux_module, "Unexpected HTTP status: %ld", response_code);
@@ -394,6 +416,18 @@ int initiate_download_limited(
         return result;
     }
 
+    const storage_health_status health =
+        storage_preflight_write(output_path, 1, DOWNLOAD_RESERVE_BYTES, NULL);
+    if (health != storage_health_ok) {
+        const int failure = health == storage_health_missing     ? download_result_storage_missing
+                            : health == storage_health_read_only ? download_result_storage_read_only
+                            : health == storage_health_full      ? download_result_storage_full
+                                                                 : download_result_storage_error;
+        const int result = schedule_start_failure_locked(failure);
+        pthread_mutex_unlock(&control.mutex);
+        return result;
+    }
+
     download_args_t *args = calloc(1, sizeof(*args));
     if (!args) {
         const int result = schedule_start_failure_locked(-2);
@@ -450,4 +484,24 @@ int initiate_download_limited(
 
 int initiate_download(const char *url, const char *output_path, const int show_progress, char *message) {
     return initiate_download_limited(url, output_path, (size_t) MAX_DOWNLOAD_BYTES, show_progress, message);
+}
+
+const char *download_result_message(const int result) {
+    switch (result) {
+        case download_result_storage_missing: return lang.generic.storage_missing;
+        case download_result_storage_read_only: return lang.generic.storage_read_only;
+        case download_result_storage_full: return lang.generic.storage_full;
+        case download_result_storage_error: return lang.generic.storage_error;
+        default: return lang.generic.failed;
+    }
+}
+
+const char *download_storage_message(const int result) {
+    switch (result) {
+        case download_result_storage_missing:
+        case download_result_storage_read_only:
+        case download_result_storage_full:
+        case download_result_storage_error: return download_result_message(result);
+        default: return NULL;
+    }
 }

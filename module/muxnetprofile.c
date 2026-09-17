@@ -192,8 +192,10 @@ static void set_active_connection_value(const int force) {
     if (!force && next_connection_label_tick && (int32_t) (now - next_connection_label_tick) < 0) return;
     next_connection_label_tick = now + 1000;
 
-    const int signal = get_network_signal_percent();
-    const int reachability = get_network_reachability();
+    network_snapshot snapshot;
+    get_network_snapshot(&snapshot, network_snapshot_signal | network_snapshot_reachability);
+    const int signal = snapshot.signal_percent;
+    const int reachability = snapshot.reachability;
     const char *internet;
     switch (reachability) {
         case network_reachability_checking:

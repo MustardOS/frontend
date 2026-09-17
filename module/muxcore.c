@@ -87,11 +87,6 @@ static void core_display_name(const char *zip, const char *fallback, char *out, 
     snprintf(out, out_size, "%s", name[0] ? name : fallback);
 }
 
-static void core_commit(const struct json manifest, const char *zip, char *out, const size_t out_size) {
-    manifest_field(manifest, zip, "commit", out, out_size);
-    if (!out[0]) snprintf(out, out_size, "%s", lang.muxcore.bundled);
-}
-
 static void core_asset_name(const char *zip, char *out, const size_t out_size) {
     snprintf(out, out_size, "%s", zip);
 
@@ -107,12 +102,11 @@ static void resolve_muxzip_path(const char *zip, char *out) {
 }
 
 static void core_value(const char *zip, char *out, const size_t out_size) {
-    if (core_state_of(zip) == core_state_update) {
-        snprintf(out, out_size, "%s", lang.muxcore.update);
-        return;
+    switch (core_state_of(zip)) {
+        case core_state_update: snprintf(out, out_size, "%s", lang.muxcore.update); break;
+        case core_state_absent: snprintf(out, out_size, "%s", lang.muxcore.not_installed); break;
+        default: snprintf(out, out_size, "%s", lang.muxcore.installed); break;
     }
-
-    core_commit(local_manifest, zip, out, out_size);
 }
 
 static void show_help(void) {
@@ -136,33 +130,19 @@ static void create_content_items(void) {
                 char name[MAX_BUFFER_SIZE];
                 core_display_name(zip, zip, name, sizeof(name));
 
-                char commit_local[MAX_BUFFER_SIZE];
-                char commit_remote[MAX_BUFFER_SIZE];
-                core_commit(local_manifest, zip, commit_local, sizeof(commit_local));
-                core_commit(remote_manifest, zip, commit_remote, sizeof(commit_remote));
-
                 char display[MAX_BUFFER_SIZE];
                 snprintf(display, sizeof(display), "%s", name);
 
                 char help[MAX_BUFFER_SIZE];
                 switch (core_state_of(zip)) {
                     case core_state_update:
-                        snprintf(
-                            help, sizeof(help), "%s\n\n%s %s\n%s %s", lang.muxcore.help.update,
-                            lang.muxcore.installed, commit_local, lang.muxcore.available, commit_remote
-                        );
+                        snprintf(help, sizeof(help), "%s", lang.muxcore.help.update);
                         break;
                     case core_state_absent:
-                        snprintf(
-                            help, sizeof(help), "%s\n\n%s %s", lang.muxcore.help.absent, lang.muxcore.available,
-                            commit_remote
-                        );
+                        snprintf(help, sizeof(help), "%s", lang.muxcore.help.absent);
                         break;
                     default:
-                        snprintf(
-                            help, sizeof(help), "%s\n\n%s %s", lang.muxcore.help.current, lang.muxcore.installed,
-                            commit_local
-                        );
+                        snprintf(help, sizeof(help), "%s", lang.muxcore.help.current);
                         break;
                 }
 
@@ -230,7 +210,20 @@ static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph,
 }
 
 static const char *action_label(const int index) {
-    return core_state_of(items[index].name) == core_state_current ? lang.muxcore.reinstall : lang.generic.download;
+    switch (core_state_of(items[index].name)) {
+        case core_state_update: return lang.muxcore.update;
+        case core_state_absent: return lang.generic.download;
+        default: return lang.muxcore.reinstall;
+    }
+}
+
+static void update_action(const int index) {
+    const char *label = action_label(index);
+    const int visible = label[0] != '\0';
+    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, visible}, {ui_lbl_nav_a_glyph, visible}};
+
+    if (visible) lv_label_set_text(ui_lbl_nav_a, label);
+    set_nav_flags(nav_e, A_SIZE(nav_e));
 }
 
 static void list_nav_move(const int steps, const int direction) {
@@ -239,7 +232,7 @@ static void list_nav_move(const int steps, const int direction) {
     lv_obj_t *focused_value = row_value_label(lv_group_get_focused(ui_group));
     if (focused_value) lv_group_focus_obj(focused_value);
 
-    if (ui_count_static > 0) lv_label_set_text(ui_lbl_nav_a, action_label(current_item_index));
+    if (ui_count_static > 0) update_action(current_item_index);
 }
 
 static void list_nav_prev(const int steps) {
@@ -262,7 +255,8 @@ static void finish_extract(void) {
 static void download_finished(const int result) {
     if (result != 0) {
         play_sound(snd_error);
-        toast_message(lang.muxcore.error_get_core, tst_wait_s);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxcore.error_get_core, tst_wait_s);
         return;
     }
 
@@ -285,7 +279,8 @@ static void refresh_manifest_finished(const int result) {
         mux_input_stop();
     } else {
         play_sound(snd_error);
-        toast_message(lang.muxcore.error_get_data, tst_wait_f);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxcore.error_get_data, tst_wait_f);
     }
 }
 
@@ -462,16 +457,15 @@ int muxcore_main(void) {
 
     init_elements();
 
-    const int nav_vis = ui_count_static > 0 ? 1 : 0;
-    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_vis}, {ui_lbl_nav_a_glyph, nav_vis},
-                                     {ui_lbl_nav_y, 0},       {ui_lbl_nav_y_glyph, 0},
-                                     {ui_lbl_nav_menu, 0},    {ui_lbl_nav_menu_glyph, 0}};
+    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, 0},    {ui_lbl_nav_a_glyph, 0},
+                                     {ui_lbl_nav_y, 0},    {ui_lbl_nav_y_glyph, 0},
+                                     {ui_lbl_nav_menu, 0}, {ui_lbl_nav_menu_glyph, 0}};
 
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
     if (ui_count_static > 0) {
-        lv_label_set_text(ui_lbl_nav_a, action_label(0));
+        update_action(0);
     } else {
         lv_label_set_text(ui_lbl_screen_message, lang.muxcore.no_cores);
         lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);

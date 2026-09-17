@@ -59,7 +59,13 @@ static void prettify(const char *key, char *out, const size_t out_size) {
 }
 
 static int entry_compare(const void *a, const void *b) {
-    return strcasecmp(((const struct overlay_entry *) a)->label, ((const struct overlay_entry *) b)->label);
+    const struct overlay_entry *left = a;
+    const struct overlay_entry *right = b;
+    const int folded = strcasecmp(left->label, right->label);
+    if (folded) return folded;
+
+    const int key_folded = strcasecmp(left->key, right->key);
+    return key_folded ? key_folded : strcmp(left->key, right->key);
 }
 
 static void scan_into(const char *root) {
@@ -77,13 +83,16 @@ static void scan_into(const char *root) {
         if (dot) *dot = '\0';
         if (!key[0]) continue;
 
+        char label[OVERLAY_LABEL_MAX];
+        prettify(key, label, sizeof(label));
+
         int seen = 0;
         for (int index = 0; index < entry_count && !seen; index++)
-            seen = strcasecmp(entries[index].key, key) == 0;
+            seen = strcasecmp(entries[index].key, key) == 0 || strcasecmp(entries[index].label, label) == 0;
         if (seen) continue;
 
         snprintf(entries[entry_count].key, OVERLAY_KEY_MAX, "%s", key);
-        prettify(key, entries[entry_count].label, OVERLAY_LABEL_MAX);
+        snprintf(entries[entry_count].label, OVERLAY_LABEL_MAX, "%s", label);
         entry_count++;
     }
 

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <stdint.h>
 #include <common/content/collection/common.h>
 #include <common/config/config.h>
 #include <common/platform/device.h>
@@ -40,26 +41,36 @@ content_item *add_item(
         *content_items = new_items;
     }
 
-    (*content_items)[*count].name = strdup(name);
-    (*content_items)[*count].display_name = strdup(sort_name);
-    (*content_items)[*count].sort_name = strdup(sort_name);
-    (*content_items)[*count].content_type = content_type;
-    (*content_items)[*count].extra_data = strdup(extra_data);
-    (*content_items)[*count].use_module = strdup(mux_module);
-    (*content_items)[*count].help = NULL;
-    (*content_items)[*count].glyph_icon = NULL;
-    (*content_items)[*count].grid_image = NULL;
-    (*content_items)[*count].grid_image_focused = NULL;
-    (*content_items)[*count].sort_bucket = 0;
-    (*content_items)[*count].folder_item_count = 0;
-    (*content_items)[*count].group_tag[0] = '\0';
-    (*content_items)[*count].order = (order_key) {0};
+    const size_t name_size = strlen(name) + 1;
+    const size_t sort_size = strlen(sort_name) + 1;
+    const size_t extra_size = strlen(extra_data) + 1;
+    if (name_size > SIZE_MAX - sort_size || name_size + sort_size > SIZE_MAX - extra_size) return NULL;
 
-    if (config.visual.the_title_format && content_label_module()) {
-        reformat_display_name((*content_items)[*count].display_name);
+    content_item *item = &(*content_items)[*count];
+    memset(item, 0, sizeof(*item));
+    item->string_storage = malloc(name_size + sort_size + extra_size);
+    item->display_name = strdup(sort_name);
+    if (!item->string_storage || !item->display_name) {
+        free(item->string_storage);
+        free(item->display_name);
+        memset(item, 0, sizeof(*item));
+        return NULL;
     }
 
-    adjust_content_label((*content_items)[*count].display_name);
+    item->name = item->string_storage;
+    item->sort_name = item->name + name_size;
+    item->extra_data = item->sort_name + sort_size;
+    memcpy(item->name, name, name_size);
+    memcpy(item->sort_name, sort_name, sort_size);
+    memcpy(item->extra_data, extra_data, extra_size);
+    item->content_type = content_type;
+    item->use_module = mux_module;
+
+    if (config.visual.the_title_format && content_label_module()) {
+        reformat_display_name(item->display_name);
+    }
+
+    adjust_content_label(item->display_name);
 
     (*count)++;
 
@@ -67,11 +78,8 @@ content_item *add_item(
 }
 
 static void free_item_fields(const content_item *item) {
-    free(item->name);
+    free(item->string_storage);
     free(item->display_name);
-    free(item->sort_name);
-    free(item->extra_data);
-    free(item->use_module);
     free(item->help);
     free(item->glyph_icon);
     free(item->grid_image);

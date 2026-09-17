@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 #include <pthread.h>
 #include <sys/stat.h>
 #include <SDL2/SDL_image.h>
@@ -37,9 +38,14 @@ typedef struct {
 } image_job_t;
 
 typedef struct {
-    image_job_t job;
-    uint8_t *pixels;
+    _Atomic unsigned refs;
     size_t bytes;
+    uint8_t pixels[];
+} image_buffer_t;
+
+typedef struct {
+    image_job_t job;
+    image_buffer_t *buffer;
     double work_ms;
 } image_result_t;
 
@@ -53,8 +59,7 @@ typedef struct {
     int tw, th;
     off_t file_size;
     time_t mtime;
-    uint8_t *pixels;
-    size_t bytes;
+    image_buffer_t *buffer;
     uint64_t used;
 } image_cache_t;
 
@@ -72,6 +77,23 @@ static unsigned image_generation_replace;
 static image_cache_t image_cache[IMAGE_CACHE_COUNT];
 static size_t image_cache_bytes;
 static uint64_t image_cache_serial;
+
+static image_buffer_t *image_buffer_alloc(const size_t bytes) {
+    if (bytes > SIZE_MAX - sizeof(image_buffer_t)) return NULL;
+    image_buffer_t *buffer = malloc(sizeof(*buffer) + bytes);
+    if (!buffer) return NULL;
+    atomic_init(&buffer->refs, 1);
+    buffer->bytes = bytes;
+    return buffer;
+}
+
+static void image_buffer_retain(image_buffer_t *buffer) {
+    if (buffer) atomic_fetch_add_explicit(&buffer->refs, 1, memory_order_relaxed);
+}
+
+static void image_buffer_release(image_buffer_t *buffer) {
+    if (buffer && atomic_fetch_sub_explicit(&buffer->refs, 1, memory_order_acq_rel) == 1) free(buffer);
+}
 
 static uint64_t image_next_generation(lv_obj_t *obj) {
     uint64_t generation = 1;
@@ -104,7 +126,9 @@ static int image_generation_current(lv_obj_t *obj, const uint64_t generation) {
     return current;
 }
 
-static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
+static image_buffer_t *image_scale_bgra(const image_job_t *job) {
+    if (!image_generation_current(job->obj, job->generation)) return NULL;
+
     struct stat st;
     if (stat(job->path, &st) != 0 || st.st_size <= 0 || st.st_size > 32 * 1024 * 1024) return NULL;
     if (job->tw <= 0 || job->th <= 0 || job->tw > 1920 || job->th > 1920 || (int64_t) job->tw * job->th > 1920 * 1080)
@@ -112,14 +136,11 @@ static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
 
     for (int i = 0; i < IMAGE_CACHE_COUNT; i++) {
         image_cache_t *cache = &image_cache[i];
-        if (cache->pixels && cache->tw == job->tw && cache->th == job->th && cache->file_size == st.st_size
+        if (cache->buffer && cache->tw == job->tw && cache->th == job->th && cache->file_size == st.st_size
             && cache->mtime == st.st_mtime && strcmp(cache->path, job->path) == 0) {
-            uint8_t *copy = malloc(cache->bytes);
-            if (!copy) return NULL;
-            memcpy(copy, cache->pixels, cache->bytes);
+            image_buffer_retain(cache->buffer);
             cache->used = ++image_cache_serial;
-            *out_bytes = cache->bytes;
-            return copy;
+            return cache->buffer;
         }
     }
 
@@ -129,18 +150,22 @@ static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
         if (loaded) SDL_FreeSurface(loaded);
         return NULL;
     }
+    if (!image_generation_current(job->obj, job->generation)) {
+        SDL_FreeSurface(loaded);
+        return NULL;
+    }
     SDL_Surface *surface = SDL_ConvertSurfaceFormat(loaded, SDL_PIXELFORMAT_BGRA32, 0);
     SDL_FreeSurface(loaded);
     if (!surface) return NULL;
 
     const size_t bytes = (size_t) job->tw * (size_t) job->th * 4u;
-    uint8_t *dst = malloc(bytes);
+    image_buffer_t *buffer = image_buffer_alloc(bytes);
     int *sx0 = malloc(sizeof(*sx0) * (size_t) job->tw);
     int *sx1 = malloc(sizeof(*sx1) * (size_t) job->tw);
     int *sy0 = malloc(sizeof(*sy0) * (size_t) job->th);
     int *sy1 = malloc(sizeof(*sy1) * (size_t) job->th);
-    if (!dst || !sx0 || !sx1 || !sy0 || !sy1) {
-        free(dst);
+    if (!buffer || !sx0 || !sx1 || !sy0 || !sy1) {
+        image_buffer_release(buffer);
         free(sx0);
         free(sx1);
         free(sy0);
@@ -161,7 +186,17 @@ static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
     }
 
     for (int y = 0; y < job->th; y++) {
-        uint8_t *out = dst + (size_t) y * (size_t) job->tw * 4u;
+        if ((y & 15) == 0 && !image_generation_current(job->obj, job->generation)) {
+            image_buffer_release(buffer);
+            free(sx0);
+            free(sx1);
+            free(sy0);
+            free(sy1);
+            SDL_FreeSurface(surface);
+            return NULL;
+        }
+
+        uint8_t *out = buffer->pixels + (size_t) y * (size_t) job->tw * 4u;
         for (int x = 0; x < job->tw; x++) {
             uint32_t sum[4] = {0};
             for (int sy = sy0[y]; sy < sy1[y]; sy++) {
@@ -201,19 +236,19 @@ static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
     if (bytes <= IMAGE_CACHE_BUDGET / 2u) {
         int slot = -1;
         for (int i = 0; i < IMAGE_CACHE_COUNT; i++) {
-            if (!image_cache[i].pixels) {
+            if (!image_cache[i].buffer) {
                 slot = i;
                 break;
             }
             if (slot < 0 || image_cache[i].used < image_cache[slot].used) slot = i;
         }
         while (slot >= 0 && image_cache_bytes + bytes > IMAGE_CACHE_BUDGET) {
-            image_cache_bytes -= image_cache[slot].bytes;
-            free(image_cache[slot].pixels);
+            image_cache_bytes -= image_cache[slot].buffer->bytes;
+            image_buffer_release(image_cache[slot].buffer);
             memset(&image_cache[slot], 0, sizeof(image_cache[slot]));
             slot = -1;
             for (int i = 0; i < IMAGE_CACHE_COUNT; i++) {
-                if (!image_cache[i].pixels) {
+                if (!image_cache[i].buffer) {
                     slot = i;
                     break;
                 }
@@ -221,25 +256,20 @@ static uint8_t *image_scale_bgra(const image_job_t *job, size_t *out_bytes) {
             }
         }
         if (slot >= 0) {
-            uint8_t *copy = malloc(bytes);
-            if (copy) {
-                if (image_cache[slot].pixels) image_cache_bytes -= image_cache[slot].bytes;
-                free(image_cache[slot].pixels);
-                memcpy(copy, dst, bytes);
-                image_cache[slot] = (image_cache_t) {.tw = job->tw,
-                                                     .th = job->th,
-                                                     .file_size = st.st_size,
-                                                     .mtime = st.st_mtime,
-                                                     .pixels = copy,
-                                                     .bytes = bytes,
-                                                     .used = ++image_cache_serial};
-                snprintf(image_cache[slot].path, sizeof(image_cache[slot].path), "%s", job->path);
-                image_cache_bytes += bytes;
-            }
+            if (image_cache[slot].buffer) image_cache_bytes -= image_cache[slot].buffer->bytes;
+            image_buffer_release(image_cache[slot].buffer);
+            image_buffer_retain(buffer);
+            image_cache[slot] = (image_cache_t) {.tw = job->tw,
+                                                 .th = job->th,
+                                                 .file_size = st.st_size,
+                                                 .mtime = st.st_mtime,
+                                                 .buffer = buffer,
+                                                 .used = ++image_cache_serial};
+            snprintf(image_cache[slot].path, sizeof(image_cache[slot].path), "%s", job->path);
+            image_cache_bytes += bytes;
         }
     }
-    *out_bytes = bytes;
-    return dst;
+    return buffer;
 }
 
 static void *image_worker(void *unused) {
@@ -257,21 +287,22 @@ static void *image_worker(void *unused) {
         pthread_mutex_unlock(&image_lock);
 
         const uint64_t start = SDL_GetPerformanceCounter();
-        size_t bytes = 0;
-        uint8_t *pixels = image_scale_bgra(&job, &bytes);
+        image_buffer_t *buffer = image_scale_bgra(&job);
         const double work_ms =
             (double) (SDL_GetPerformanceCounter() - start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+        const int current = buffer && image_generation_current(job.obj, job.generation);
 
         pthread_mutex_lock(&image_lock);
-        if (pixels) {
+        if (current) {
             if (image_result_count == IMAGE_JOB_CAPACITY) {
-                free(image_results[0].pixels);
+                image_buffer_release(image_results[0].buffer);
                 memmove(image_results, image_results + 1, (IMAGE_JOB_CAPACITY - 1u) * sizeof(*image_results));
                 image_result_count--;
             }
             image_results[image_result_count++] =
-                (image_result_t) {.job = job, .pixels = pixels, .bytes = bytes, .work_ms = work_ms};
-        }
+                (image_result_t) {.job = job, .buffer = buffer, .work_ms = work_ms};
+        } else
+            image_buffer_release(buffer);
         pthread_mutex_unlock(&image_lock);
     }
     return NULL;
@@ -315,18 +346,20 @@ void image_async_tick(void) {
 
         fe_perf_record(fe_perf_stage_image, result.work_ms);
         if (!image_generation_current(result.job.obj, result.job.generation) || !lv_obj_is_valid(result.job.obj)) {
-            free(result.pixels);
+            image_buffer_release(result.buffer);
             continue;
         }
 
         lv_img_dsc_t *dsc = lv_img_buf_alloc(result.job.tw, result.job.th, LV_IMG_CF_TRUE_COLOR_ALPHA);
-        if (!dsc || result.bytes != (size_t) result.job.tw * (size_t) result.job.th * LV_IMG_PX_SIZE_ALPHA_BYTE) {
+        if (!dsc
+            || result.buffer->bytes
+                   != (size_t) result.job.tw * (size_t) result.job.th * LV_IMG_PX_SIZE_ALPHA_BYTE) {
             if (dsc) lv_img_buf_free(dsc);
-            free(result.pixels);
+            image_buffer_release(result.buffer);
             continue;
         }
-        memcpy((void *) dsc->data, result.pixels, result.bytes);
-        free(result.pixels);
+        memcpy((void *) dsc->data, result.buffer->pixels, result.buffer->bytes);
+        image_buffer_release(result.buffer);
 
         free_scaled_raster(result.job.obj);
         lv_obj_set_user_data(result.job.obj, dsc);
@@ -353,9 +386,9 @@ void image_async_shutdown(void) {
 
     pthread_mutex_lock(&image_lock);
     for (int i = 0; i < image_result_count; i++)
-        free(image_results[i].pixels);
+        image_buffer_release(image_results[i].buffer);
     for (int i = 0; i < IMAGE_CACHE_COUNT; i++)
-        free(image_cache[i].pixels);
+        image_buffer_release(image_cache[i].buffer);
     memset(image_results, 0, sizeof(image_results));
     memset(image_jobs, 0, sizeof(image_jobs));
     memset(image_cache, 0, sizeof(image_cache));

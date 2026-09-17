@@ -6,6 +6,7 @@
 #include <common/runtime/init.h>
 #include <common/storage/archive.h>
 #include <common/storage/fileio.h>
+#include <common/storage/health.h>
 #include <common/base/util.h>
 #include <common/ui/nav.h>
 #define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
@@ -140,6 +141,13 @@ static int archive_path_is_safe(const char *name) {
     return 1;
 }
 
+static int archive_health_result(const storage_health_status health) {
+    if (health == storage_health_missing) return MUX_EXTRACT_MISSING;
+    if (health == storage_health_read_only) return MUX_EXTRACT_RDONLY;
+    if (health == storage_health_full) return MUX_EXTRACT_FULL;
+    return MUX_EXTRACT_ERR;
+}
+
 int extract_zip_to_dir(const char *filename, const char *output) {
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
@@ -147,6 +155,12 @@ int extract_zip_to_dir(const char *filename, const char *output) {
     if (!mz_zip_reader_init_file(&zip, filename, 0)) {
         LOG_ERROR(mux_module, "Failed to open ZIP archive!");
         return MUX_EXTRACT_ERR;
+    }
+
+    storage_health_status health = storage_preflight_write(output, 1, 4ULL * 1024ULL * 1024ULL, NULL);
+    if (health != storage_health_ok) {
+        mz_zip_reader_end(&zip);
+        return archive_health_result(health);
     }
 
     create_directories(output, 0);
@@ -200,6 +214,25 @@ int extract_zip_to_dir(const char *filename, const char *output) {
         if (strncmp(dest_file, resolved_output, resolved_len) != 0
             || (dest_file[resolved_len] != '/' && dest_file[resolved_len] != '\0')) {
             LOG_ERROR(mux_module, "Blocked path escape in ZIP: '%s'", entry_name);
+            mz_zip_reader_end(&zip);
+            return MUX_EXTRACT_BLOCKED;
+        }
+    }
+
+    health = storage_preflight_write(resolved_output, total_uncompressed, 4ULL * 1024ULL * 1024ULL, NULL);
+    if (health != storage_health_ok) {
+        mz_zip_reader_end(&zip);
+        return archive_health_result(health);
+    }
+
+    for (mz_uint i = 0; i < zip_file_count; i++) {
+        mz_zip_archive_file_stat file_stat;
+        if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
+
+        const char *entry_name = file_stat.m_filename;
+        char dest_file[PATH_MAX];
+        const int path_length = snprintf(dest_file, sizeof(dest_file), "%s/%s", resolved_output, entry_name);
+        if (path_length < 0 || (size_t) path_length >= sizeof(dest_file)) {
             mz_zip_reader_end(&zip);
             return MUX_EXTRACT_BLOCKED;
         }

@@ -59,6 +59,10 @@ int task_exec_respond(const char *prompt_id, const char *value);
 
 int task_exec_cancel(void);
 
+int task_exec_retry(void);
+
+int task_exec_can_retry(void);
+
 int task_exec_active(void);
 
 void task_exec_acknowledge(void);

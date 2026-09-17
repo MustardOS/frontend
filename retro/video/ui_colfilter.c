@@ -160,14 +160,22 @@ void colfilter_menu_init(void) {
     );
 }
 
-void colfilter_menu_reopen(void) {
+static void reopen_at(const int index) {
     active = 1;
     prev_nav_mask = current_nav_mask();
 
     rebuild_rows();
-    focus_item(session_settings.colour_filter + 1);
+    focus_item(index);
 
     refresh_nav();
+}
+
+void colfilter_menu_reopen(void) {
+    reopen_at(session_settings.colour_filter + 1);
+}
+
+void colfilter_menu_reopen_download(void) {
+    reopen_at(0);
 }
 
 void colfilter_menu_open(void) {

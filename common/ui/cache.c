@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <common/ui/cache.h>
@@ -16,17 +17,19 @@ _Static_assert((ASSET_CACHE_SLOTS & (ASSET_CACHE_SLOTS - 1)) == 0, "ASSET_CACHE_
 
 typedef struct {
     uint32_t hash;
-    char key[MAX_BUFFER_SIZE];
-    char path[MAX_BUFFER_SIZE];
+    char *key;
+    char *path;
     uint8_t found;
     uint8_t used;
 } asset_cache_t;
 
-static asset_cache_t asset_cache[ASSET_CACHE_SLOTS];
+static asset_cache_t *asset_cache;
 static int asset_cache_count = 0;
 static uint32_t last_asset_context_hash = 0;
 
 int asset_cache_get(const char *key, char *path_out, const size_t path_out_size) {
+    if (!asset_cache) return -1;
+
     const uint32_t h = fnv_hash_str(key);
     const uint32_t slot = h & (ASSET_CACHE_SLOTS - 1);
 
@@ -45,6 +48,10 @@ int asset_cache_get(const char *key, char *path_out, const size_t path_out_size)
 
 void asset_cache_put(const char *key, const char *path, const int found) {
     if (asset_cache_count >= ASSET_CACHE_MAX) return;
+    if (!asset_cache) {
+        asset_cache = calloc(ASSET_CACHE_SLOTS, sizeof(*asset_cache));
+        if (!asset_cache) return;
+    }
 
     const uint32_t h = fnv_hash_str(key);
     const uint32_t slot = h & (ASSET_CACHE_SLOTS - 1);
@@ -56,9 +63,14 @@ void asset_cache_put(const char *key, const char *path, const int found) {
         e->used = 1;
         e->hash = h;
         e->found = (uint8_t) (found != 0);
-
-        snprintf(e->key, sizeof(e->key), "%s", key);
-        snprintf(e->path, sizeof(e->path), "%s", found ? path : "");
+        e->key = strdup(key);
+        e->path = found ? strdup(path) : NULL;
+        if (!e->key || (found && !e->path)) {
+            free(e->key);
+            free(e->path);
+            memset(e, 0, sizeof(*e));
+            return;
+        }
 
         asset_cache_count++;
         return;
@@ -68,7 +80,14 @@ void asset_cache_put(const char *key, const char *path, const int found) {
 }
 
 void asset_cache_clear(void) {
-    memset(asset_cache, 0, sizeof(asset_cache));
+    if (asset_cache) {
+        for (int i = 0; i < ASSET_CACHE_SLOTS; i++) {
+            free(asset_cache[i].key);
+            free(asset_cache[i].path);
+        }
+        free(asset_cache);
+        asset_cache = NULL;
+    }
     asset_cache_count = 0;
 }
 

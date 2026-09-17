@@ -46,7 +46,7 @@ _Static_assert((FONT_CACHE_SLOTS & (FONT_CACHE_SLOTS - 1)) == 0, "FONT_CACHE_SLO
 
 typedef struct {
     uint32_t hash;
-    char path[MAX_BUFFER_SIZE];
+    char *path;
     int size;
 
     lv_font_t *font;
@@ -55,7 +55,7 @@ typedef struct {
     int is_ttf;
 } font_cache_t;
 
-static font_cache_t font_cache[FONT_CACHE_SLOTS];
+static font_cache_t *font_cache;
 
 static int theme_font_scan(const int ttf_only) {
 
@@ -291,18 +291,23 @@ static lv_font_t *guaranteed_font(const int size) {
 }
 
 void font_cache_clear(void) {
-    for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        if (font_cache[i].path[0] == '\0') continue;
+    if (font_cache) {
+        for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
+            if (!font_cache[i].path) continue;
 
-        if (font_cache[i].is_ttf) {
-            lv_tiny_ttf_destroy(font_cache[i].font);
-            free(font_cache[i].data);
-        } else {
-            lv_font_free(font_cache[i].font);
+            if (font_cache[i].is_ttf) {
+                lv_tiny_ttf_destroy(font_cache[i].font);
+                free(font_cache[i].data);
+            } else {
+                lv_font_free(font_cache[i].font);
+            }
+            free(font_cache[i].path);
         }
+
+        free(font_cache);
+        font_cache = NULL;
     }
 
-    memset(font_cache, 0, sizeof(font_cache));
     font_cache_count = 0;
     cached_has_theme_font = -1;
     cached_user_font_count = -1;
@@ -345,12 +350,14 @@ static uint32_t font_key_hash(const char *path, const int size) {
 }
 
 static lv_font_t *cache_lookup(const char *path, const int size) {
+    if (!font_cache) return NULL;
+
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
+    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        const font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
-        if (e->path[0] == '\0') return NULL;
+        const font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
+        if (!e->path) return NULL;
         if (e->hash == h && e->size == size && strcmp(e->path, path) == 0) return e->font;
     }
 
@@ -369,16 +376,38 @@ static int cache_store(const char *path, const int size, lv_font_t *font, void *
         return 0;
     }
 
+    if (!font_cache) {
+        font_cache = calloc(FONT_CACHE_SLOTS, sizeof(*font_cache));
+        if (!font_cache) {
+            if (is_ttf) {
+                lv_tiny_ttf_destroy(font);
+                free(data);
+            } else {
+                lv_font_free(font);
+            }
+            return 0;
+        }
+    }
+
     const uint32_t h = font_key_hash(path, size);
-    const uint32_t slot = h & FONT_CACHE_SLOTS - 1;
+    const uint32_t slot = h & (FONT_CACHE_SLOTS - 1);
 
     for (int i = 0; i < FONT_CACHE_SLOTS; i++) {
-        font_cache_t *e = &font_cache[slot + i & FONT_CACHE_SLOTS - 1];
+        font_cache_t *e = &font_cache[(slot + i) & (FONT_CACHE_SLOTS - 1)];
 
-        if (e->path[0] != '\0') continue;
+        if (e->path) continue;
         e->hash = h;
-
-        snprintf(e->path, MAX_BUFFER_SIZE, "%s", path);
+        e->path = strdup(path);
+        if (!e->path) {
+            memset(e, 0, sizeof(*e));
+            if (is_ttf) {
+                lv_tiny_ttf_destroy(font);
+                free(data);
+            } else {
+                lv_font_free(font);
+            }
+            return 0;
+        }
 
         e->size = size;
         e->font = font;

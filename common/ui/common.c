@@ -1904,8 +1904,10 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
         const char *status;
     } status_style;
 
-    const int connected = force_glyph == 1 || (force_glyph == 0 && device.board.has_network && is_network_connected());
-    const int signal = connected && force_glyph == 0 ? get_network_signal_percent() : -1;
+    network_snapshot snapshot;
+    get_network_snapshot(&snapshot, network_snapshot_signal);
+    const int connected = force_glyph == 1 || (force_glyph == 0 && device.board.has_network && snapshot.connected);
+    const int signal = connected && force_glyph == 0 ? snapshot.signal_percent : -1;
 
     if (connected) {
         status_style.color = lv_color_hex(theme->status.network.active);

@@ -59,6 +59,10 @@ static int any_custom_modified(void) {
 }
 
 static void list_nav_move(int steps, int direction);
+static int init_custom_menu_schema(
+    lv_obj_t **panels, lv_obj_t **labels, lv_obj_t **glyphs, lv_obj_t **values
+);
+static void apply_custom_menu_nav(void);
 
 static const int16_t glyph_size_values[] = {-2, 0, -1, 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128};
 
@@ -861,46 +865,13 @@ static void init_navigation_group(void) {
 
     reset_ui_groups();
 
-    static const list_frame frames[] = {
-        {lang.muxvisual.section.header_bar, 0, 7},  {lang.muxvisual.section.appearance, 7, 8},
-        {lang.muxvisual.section.labels, 15, 7},     {lang.muxvisual.section.font, 22, 6},
-        {lang.muxvisual.section.folders, 28, 6},   {lang.muxvisual.section.content, 34, 9},
-        {lang.muxvisual.section.box_art, 43, 7},   {lang.muxvisual.section.grid, 50, 2},
-        {lang.muxvisual.section.launching, 52, 4}, {lang.muxcustom.section.packages, 56, 2},
-        {lang.muxcustom.section.theme, 58, 5},     {lang.muxcustom.section.layout, 63, 5},
-        {lang.muxcustom.section.glyphs, 68, 4},    {lang.muxcustom.section.background, 72, 2},
-        {lang.muxcustom.section.audio, 74, 5},
-    };
-
-    list_frame_init(
-        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
-        ui_objects_value, ui_count_dynamic
-    );
+    init_custom_menu_schema(ui_objects_panel, ui_objects, ui_objects_glyph, ui_objects_value);
 
     list_nav_move(list_frame_restore(), +1);
 }
 
 static void check_focus(void) {
-    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused == ui_lbl_catalogue_custom || e_focused == ui_lbl_config_custom || e_focused == ui_lbl_sort_custom
-        || e_focused == ui_lbl_logo_custom || e_focused == ui_lbl_theme_custom) {
-        lv_label_set_text(ui_lbl_nav_a, lang.generic.select);
-        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else if (e_focused == ui_lbl_theme_alternate_custom || e_focused == ui_lbl_music_volume_custom
-               || e_focused == ui_lbl_sound_volume_custom) {
-        lv_label_set_text(ui_lbl_nav_a, lang.generic.set);
-        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    } else {
-        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-    }
-
+    apply_custom_menu_nav();
     footer_nav_check_scroll();
 }
 
@@ -1333,99 +1304,224 @@ typedef enum {
     menu_theme_alternate,
 } menu_action;
 
+typedef enum {
+    menu_section_header = 0,
+    menu_section_appearance,
+    menu_section_labels,
+    menu_section_font,
+    menu_section_folders,
+    menu_section_content,
+    menu_section_box_art,
+    menu_section_grid,
+    menu_section_launching,
+    menu_section_packages,
+    menu_section_theme,
+    menu_section_layout,
+    menu_section_glyphs,
+    menu_section_background,
+    menu_section_audio,
+    menu_section_count
+} menu_section;
+
+typedef enum { menu_nav_change = 0, menu_nav_select, menu_nav_change_set } menu_nav;
+
 typedef int (*visible_fn)(void);
 
 typedef struct {
+    const char *id;
+    menu_section section;
     const char *mux_name;
     const char *launch_path;
     int16_t *kiosk_flag;
     menu_action action;
     visible_fn visible;
+    menu_nav nav;
 } menu_entry;
 
 static int16_t kiosk_pass = 0;
 
-static const menu_entry custom_menu_entries[ui_count_dynamic] = {
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // battery
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // clock
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // network
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // bluetooth
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // sort_order
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // tag_order
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // header_title
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // element_transition
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // selection_animation
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // selection_style
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // list_glyph
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // render_shadows
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // notify_time
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // overlay_image
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // overlay_transparency
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // name_scroll
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // label_scroll_speed
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // name
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // dash
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // friendly_folder
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // the_title_format
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // title_include_root_drive
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // type
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // font_name
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // list_size
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // header_size
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // footer_size
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // panel_size
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // folder_item_count
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // menu_counter_folder
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // menu_counter_file
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // display_empty_folder
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // hidden
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // group_content
-    {"sort", NULL, &kiosk_pass, menu_sort, NULL},
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_collect
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_history
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // mixed_content
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // forward_history
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_width
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // video_preview
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // page_skip
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // shuffle
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_align
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_transition
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_scale
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_padding
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_placeholder
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // save_screenshot
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // grid_mode_content
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // box_art_hide
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launch_swap
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // launchsplash
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // pickles_startup_messages
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // black_fade
-    {"catalogue", "package/catalogue", &kiosk.custom.catalogue, menu_catalogue, NULL},
-    {"config", "package/config", &kiosk.custom.raconfig, menu_config, NULL},
-    {"logo", NULL, &kiosk_pass, menu_logo, NULL},
-    {"theme", "/theme", &kiosk.custom.theme, menu_theme, NULL},
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // theme_resolution
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // theme_scaling
-    {NULL, NULL, &kiosk_pass, menu_theme_alternate, visible_theme_alternate},
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // random_theme
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // header_height
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // footer_height
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // content_item_count
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // label_width
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // glyph_list
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // glyph_header
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // glyph_footer
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // glyph_grid
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // video_wallpaper
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // background_scale
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // music
-    {NULL, NULL, &kiosk_pass, menu_music_volume, NULL},
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // sound
-    {NULL, NULL, &kiosk_pass, menu_sound_volume, NULL},
-    {NULL, NULL, &kiosk_pass, menu_option, NULL}, // chime
-};
+#define CUSTOM_MENU_SCHEMA(ROW)                                                                                       \
+    ROW(visual, battery, "battery", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                       \
+    ROW(visual, clock, "clock", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                           \
+    ROW(visual, network, "network", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                       \
+    ROW(visual, bluetooth, "bluetooth", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
+    ROW(visual, sort_order, "sortorder", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                  \
+    ROW(visual, tag_order, "tagorder", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
+    ROW(visual, header_title, "headertitle", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)              \
+    ROW(visual, element_transition, "elementtransition", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, selection_animation, "selectionanimation", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL,    \
+        change)                                                                                                        \
+    ROW(visual, selection_style, "selectionstyle", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)    \
+    ROW(visual, list_glyph, "listglyph", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)              \
+    ROW(visual, render_shadows, "rendershadows", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)      \
+    ROW(visual, notify_time, "notifytime", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)            \
+    ROW(visual, overlay_image, "overlayimage", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
+    ROW(visual, overlay_transparency, "overlaytransparency", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL,  \
+        change)                                                                                                        \
+    ROW(visual, name_scroll, "namescroll", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
+    ROW(visual, label_scroll_speed, "labelscrollspeed", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)  \
+    ROW(visual, name, "name", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
+    ROW(visual, dash, "dash", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
+    ROW(visual, the_title_format, "thetitleformat", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, friendly_folder, "friendlyfolder", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, title_include_root_drive, "titleincluderootdrive", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, \
+        change)                                                                                                        \
+    ROW(font, type, "type", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                 \
+    ROW(font, font_name, "fontname", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
+    ROW(font, list_size, "listsize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
+    ROW(font, header_size, "headersize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
+    ROW(font, footer_size, "footersize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
+    ROW(font, panel_size, "panelsize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                      \
+    ROW(visual, folder_item_count, "folderitemcount", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)    \
+    ROW(visual, menu_counter_folder, "menucounterfolder", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change) \
+    ROW(visual, menu_counter_file, "menucounterfile", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)    \
+    ROW(visual, display_empty_folder, "displayemptyfolder", folders, menu_option, NULL, NULL, &kiosk_pass, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, hidden, "hidden", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
+    ROW(visual, group_content, "groupcontent", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)           \
+    ROW(custom, sort, "sort", content, menu_sort, "sort", NULL, &kiosk_pass, NULL, select)                           \
+    ROW(visual, content_collect, "contentcollect", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, content_history, "contenthistory", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, mixed_content, "mixedcontent", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)           \
+    ROW(visual, forward_history, "forwardhistory", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, content_width, "width", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                  \
+    ROW(visual, video_preview, "videopreview", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)           \
+    ROW(visual, page_skip, "pageskip", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
+    ROW(visual, shuffle, "shuffle", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                      \
+    ROW(visual, box_art, "boxart", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                       \
+    ROW(visual, box_art_align, "align", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                  \
+    ROW(visual, box_art_transition, "boxarttransition", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)  \
+    ROW(visual, box_art_scale, "boxartscale", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)            \
+    ROW(visual, box_art_padding, "boxartpadding", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
+    ROW(visual, box_art_placeholder, "boxartplaceholder", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change) \
+    ROW(visual, save_screenshot, "savescreenshot", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, grid_mode_content, "gridmodecontent", grid, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
+    ROW(visual, box_art_hide, "boxarthide", grid, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                 \
+    ROW(visual, launch_swap, "launch_swap", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)            \
+    ROW(visual, launchsplash, "splash", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
+    ROW(visual, pickles_startup_messages, "picklesstartupmessages", launching, menu_option, NULL, NULL, &kiosk_pass,  \
+        NULL, change)                                                                                                  \
+    ROW(custom, black_fade, "blackfade", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)              \
+    ROW(custom, catalogue, "catalogue", packages, menu_catalogue, "catalogue", "package/catalogue",               \
+        &kiosk.custom.catalogue, NULL, select)                                                                          \
+    ROW(custom, config, "config", packages, menu_config, "config", "package/config", &kiosk.custom.raconfig, NULL, \
+        select)                                                                                                        \
+    ROW(custom, logo, "logo", theme, menu_logo, "logo", NULL, &kiosk_pass, NULL, select)                             \
+    ROW(custom, theme, "theme", theme, menu_theme, "theme", "/theme", &kiosk.custom.theme, NULL, select)           \
+    ROW(custom, theme_resolution, "resolution", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)           \
+    ROW(custom, theme_scaling, "scaling", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                 \
+    ROW(custom, theme_alternate, "alternate", theme, menu_theme_alternate, NULL, NULL, &kiosk_pass,                   \
+        visible_theme_alternate, change_set)                                                                           \
+    ROW(custom, random_theme, "randomtheme", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
+    ROW(custom, header_height, "headerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)           \
+    ROW(custom, footer_height, "footerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)           \
+    ROW(custom, content_item_count, "count", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
+    ROW(custom, label_width, "labelwidth", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
+    ROW(custom, glyph_list, "glyphlist", glyphs, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                 \
+    ROW(custom, glyph_header, "glyphheader", glyphs, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
+    ROW(custom, glyph_footer, "glyphfooter", glyphs, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
+    ROW(custom, glyph_grid, "glyphgrid", glyphs, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                 \
+    ROW(custom, video_wallpaper, "videowallpaper", background, menu_option, NULL, NULL, &kiosk_pass, NULL, change)   \
+    ROW(custom, background_scale, "backgroundscale", background, menu_option, NULL, NULL, &kiosk_pass, NULL, change) \
+    ROW(custom, music, "music", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                            \
+    ROW(custom, music_volume, "musicvolume", audio, menu_music_volume, NULL, NULL, &kiosk_pass, NULL, change_set)    \
+    ROW(custom, sound, "sound", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                            \
+    ROW(custom, sound_volume, "soundvolume", audio, menu_sound_volume, NULL, NULL, &kiosk_pass, NULL, change_set)    \
+    ROW(custom, chime, "chime", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)
+
+#define MENU_ENTRY(MODULE, NAME, ID, SECTION, ACTION, MUX, PATH, KIOSK, VISIBLE, NAV)                                 \
+    {ID, menu_section_##SECTION, MUX, PATH, KIOSK, ACTION, VISIBLE, menu_nav_##NAV},
+static const menu_entry custom_menu_entries[] = {CUSTOM_MENU_SCHEMA(MENU_ENTRY)};
+#undef MENU_ENTRY
+
+_Static_assert(A_SIZE(custom_menu_entries) == ui_count_dynamic, "custom menu schema must describe every row");
+
+static const char *custom_menu_section_label(const menu_section section) {
+    switch (section) {
+        case menu_section_header: return lang.muxvisual.section.header_bar;
+        case menu_section_appearance: return lang.muxvisual.section.appearance;
+        case menu_section_labels: return lang.muxvisual.section.labels;
+        case menu_section_font: return lang.muxvisual.section.font;
+        case menu_section_folders: return lang.muxvisual.section.folders;
+        case menu_section_content: return lang.muxvisual.section.content;
+        case menu_section_box_art: return lang.muxvisual.section.box_art;
+        case menu_section_grid: return lang.muxvisual.section.grid;
+        case menu_section_launching: return lang.muxvisual.section.launching;
+        case menu_section_packages: return lang.muxcustom.section.packages;
+        case menu_section_theme: return lang.muxcustom.section.theme;
+        case menu_section_layout: return lang.muxcustom.section.layout;
+        case menu_section_glyphs: return lang.muxcustom.section.glyphs;
+        case menu_section_background: return lang.muxcustom.section.background;
+        case menu_section_audio: return lang.muxcustom.section.audio;
+        default: return "";
+    }
+}
+
+static int init_custom_menu_schema(
+    lv_obj_t **panels, lv_obj_t **labels, lv_obj_t **glyphs, lv_obj_t **values
+) {
+#define MENU_LABEL(MODULE, NAME, ID, SECTION, ACTION, MUX, PATH, KIOSK, VISIBLE, NAV) ui_lbl_##NAME##_##MODULE,
+    lv_obj_t *const expected_labels[] = {CUSTOM_MENU_SCHEMA(MENU_LABEL)};
+#undef MENU_LABEL
+
+    list_frame frames[menu_section_count];
+    int frame_count = 0;
+    int first = 0;
+
+    for (int i = 0; i < ui_count_dynamic; i++) {
+        if (labels[i] != expected_labels[i]) {
+            LOG_ERROR(mux_module, "custom menu schema mismatch at row %d (%s)", i, custom_menu_entries[i].id);
+            return 0;
+        }
+
+        lv_obj_set_user_data(labels[i], (void *) custom_menu_entries[i].id);
+
+        const int boundary = i + 1 == ui_count_dynamic
+                             || custom_menu_entries[i + 1].section != custom_menu_entries[i].section;
+        if (!boundary) continue;
+
+        frames[frame_count++] = (list_frame) {
+            custom_menu_section_label(custom_menu_entries[i].section), first, i - first + 1
+        };
+        first = i + 1;
+    }
+
+    if (frame_count != menu_section_count) {
+        LOG_ERROR(mux_module, "custom menu schema has %d sections, expected %d", frame_count, menu_section_count);
+        return 0;
+    }
+
+    return list_frame_init(
+        &theme, ui_pnl_content, frames, frame_count, panels, labels, glyphs, values, ui_count_dynamic
+    );
+}
+
+static void apply_custom_menu_nav(void) {
+    const int row = list_frame_current_row();
+    const menu_nav nav = row >= 0 && row < (int) A_SIZE(custom_menu_entries)
+                             ? custom_menu_entries[row].nav
+                             : menu_nav_change;
+    const int show_a = nav == menu_nav_select || nav == menu_nav_change_set;
+    const int show_lr = nav == menu_nav_change || nav == menu_nav_change_set;
+
+    if (show_a) {
+        lv_label_set_text(ui_lbl_nav_a, nav == menu_nav_select ? lang.generic.select : lang.generic.set);
+        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (show_lr) {
+        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
 
 static void navigate_to_submenu(const menu_entry *entry, const char *target_mux) {
     if (is_ksk(*entry->kiosk_flag)) {

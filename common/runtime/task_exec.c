@@ -31,6 +31,20 @@ static task_parser parser;
 static int turbo_held = 0;
 static unsigned long cancel_requested_ms = 0;
 static int sigterm_sent = 0;
+static int task_failed = 0;
+
+typedef struct {
+    char **argv;
+    size_t argc;
+    task_exec_mode mode;
+    int can_cancel;
+    int turbo;
+    char *title;
+    char *success_message;
+    char *failure_message;
+} retained_task;
+
+static retained_task retry_task;
 
 static unsigned long now_ms(void) {
     struct timespec ts;
@@ -47,6 +61,48 @@ static void close_fd(int *fd) {
 
     close(*fd);
     *fd = -1;
+}
+
+static void clear_retry_task(void) {
+    for (size_t i = 0; i < retry_task.argc; i++)
+        free(retry_task.argv[i]);
+    free(retry_task.argv);
+    free(retry_task.title);
+    free(retry_task.success_message);
+    free(retry_task.failure_message);
+    memset(&retry_task, 0, sizeof(retry_task));
+}
+
+static int retain_task(const task_exec_spec *spec) {
+    clear_retry_task();
+
+    retry_task.argv = calloc(spec->argc + 1, sizeof(*retry_task.argv));
+    if (!retry_task.argv) return -1;
+
+    retry_task.argc = spec->argc;
+    retry_task.mode = spec->mode;
+    retry_task.can_cancel = spec->can_cancel;
+    retry_task.turbo = spec->turbo;
+
+    for (size_t i = 0; i < spec->argc; i++) {
+        retry_task.argv[i] = strdup(spec->argv[i]);
+        if (!retry_task.argv[i]) {
+            clear_retry_task();
+            return -1;
+        }
+    }
+
+    if (spec->title) retry_task.title = strdup(spec->title);
+    if (spec->success_message) retry_task.success_message = strdup(spec->success_message);
+    if (spec->failure_message) retry_task.failure_message = strdup(spec->failure_message);
+
+    if ((spec->title && !retry_task.title) || (spec->success_message && !retry_task.success_message)
+        || (spec->failure_message && !retry_task.failure_message)) {
+        clear_retry_task();
+        return -1;
+    }
+
+    return 0;
 }
 
 static void release_turbo(void) {
@@ -75,7 +131,7 @@ static void handle_event(const task_event *event, void *user_data) {
     (void) user_data;
 
     if (event->malformed) {
-        status.state = task_state_error;
+        task_failed = 1;
         copy_text(status.error_code, sizeof(status.error_code), "protocol_malformed");
         copy_text(status.message, sizeof(status.message), "The task sent malformed progress data.");
         return;
@@ -110,7 +166,7 @@ static void handle_event(const task_event *event, void *user_data) {
         case task_event_error:
             copy_text(status.error_code, sizeof(status.error_code), event->code);
             if (event->text[0]) copy_text(status.message, sizeof(status.message), event->text);
-            status.state = task_state_error;
+            task_failed = 1;
             break;
         default:
             LOG_WARN("task", "ignoring unknown task record");
@@ -182,11 +238,17 @@ static void finish(const int exit_code) {
     // in memory, so without this the change is invisible until the next restart!
     refresh_config = 1;
 
-    if (exit_code != 0 || status.state == task_state_error) {
+    if (status.cancelled || exit_code != 0 || task_failed) {
         status.state = task_state_error;
-        if (!status.message[0]) copy_text(status.message, sizeof(status.message), "The task did not complete.");
+        if (!status.message[0])
+            copy_text(
+                status.message, sizeof(status.message),
+                retry_task.failure_message ? retry_task.failure_message : "The task did not complete."
+            );
     } else {
         status.state = task_state_complete;
+        if (!status.message[0] && retry_task.success_message)
+            copy_text(status.message, sizeof(status.message), retry_task.success_message);
     }
 
     child_pid = -1;
@@ -199,9 +261,11 @@ static void finish(const int exit_code) {
     release_turbo();
 }
 
-int task_exec_start(const task_exec_spec *spec) {
+static int start_task(const task_exec_spec *spec, const int retain) {
     if (!spec || !spec->argv || spec->argc == 0) return -1;
     if (task_exec_active()) return -1;
+
+    if (retain) (void) retain_task(spec);
 
     int pipe_in[2] = {-1, -1};
     int pipe_out[2] = {-1, -1};
@@ -240,6 +304,7 @@ int task_exec_start(const task_exec_spec *spec) {
 
     cancel_requested_ms = 0;
     sigterm_sent = 0;
+    task_failed = 0;
 
     const pid_t pid = fork();
     if (pid < 0) {
@@ -298,6 +363,32 @@ int task_exec_start(const task_exec_spec *spec) {
 
     status.state = task_state_running;
     return 0;
+}
+
+int task_exec_start(const task_exec_spec *spec) {
+    return start_task(spec, 1);
+}
+
+int task_exec_can_retry(void) {
+    return status.state == task_state_error && !status.cancelled && child_pid <= 0 && retry_task.argc > 0;
+}
+
+int task_exec_retry(void) {
+    if (!task_exec_can_retry()) return -1;
+
+    const task_exec_spec spec = {
+        .argv = (const char *const *) retry_task.argv,
+        .argc = retry_task.argc,
+        .mode = retry_task.mode,
+        .can_cancel = retry_task.can_cancel,
+        .turbo = retry_task.turbo,
+        .title = retry_task.title,
+        .success_message = retry_task.success_message,
+        .failure_message = retry_task.failure_message,
+    };
+
+    memset(&status, 0, sizeof(status));
+    return start_task(&spec, 0);
 }
 
 int task_exec_respond(const char *prompt_id, const char *value) {
@@ -383,6 +474,7 @@ void task_exec_acknowledge(void) {
 
     memset(&status, 0, sizeof(status));
     status.state = task_state_idle;
+    clear_retry_task();
 }
 
 void task_exec_shutdown(void) {
@@ -401,6 +493,8 @@ void task_exec_shutdown(void) {
     close_fd(&fd_err);
 
     release_turbo();
+
+    clear_retry_task();
 
     memset(&status, 0, sizeof(status));
 }

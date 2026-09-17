@@ -3,6 +3,9 @@
 #define MUX_EXTRACT_OK      0
 #define MUX_EXTRACT_ERR     1
 #define MUX_EXTRACT_BLOCKED 2
+#define MUX_EXTRACT_MISSING 3
+#define MUX_EXTRACT_RDONLY  4
+#define MUX_EXTRACT_FULL    5
 
 void extraction_poll(void);
 

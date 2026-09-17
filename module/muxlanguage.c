@@ -116,7 +116,8 @@ static void refresh_language_data_finished(const int result) {
             task_progress_show();
         } else {
             play_sound(snd_error);
-            notify_send(notify_warning, lang.generic.failed);
+            const char *storage_message = download_storage_message(result);
+            notify_send(notify_warning, storage_message ? storage_message : lang.generic.failed);
         }
     } else {
         play_sound(snd_error);

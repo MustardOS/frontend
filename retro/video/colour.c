@@ -267,7 +267,77 @@ static int output_h = 0;
 static const gl_dispatch_t *gl;
 
 static int name_cmp(const void *a, const void *b) {
-    return strcmp(a, b);
+    const int folded = strcasecmp(a, b);
+    return folded ? folded : strcmp(a, b);
+}
+
+typedef struct {
+    char name[64];
+    char label[64];
+    enum colour_shader_cost cost;
+    enum colour_shader_cost cost_720p;
+    enum colour_shader_cost cost_1080p;
+    enum colour_shader_compatibility compatibility;
+} preset_sort_entry;
+
+static int preset_cmp(const void *left, const void *right) {
+    const preset_sort_entry *a = left;
+    const preset_sort_entry *b = right;
+    int order = strcasecmp(a->label, b->label);
+    if (!order) order = strcasecmp(a->name, b->name);
+    return order ? order : strcmp(a->name, b->name);
+}
+
+static void sort_filter_presets(void) {
+    if (filter_count <= 2) return;
+
+    const int count = filter_count - 1;
+    preset_sort_entry *entries = calloc((size_t) count, sizeof(*entries));
+    if (!entries) return;
+
+    for (int index = 0; index < count; index++) {
+        memcpy(entries[index].name, filter_names[index + 1], sizeof(entries[index].name));
+        memcpy(entries[index].label, filter_labels[index + 1], sizeof(entries[index].label));
+    }
+
+    qsort(entries, (size_t) count, sizeof(*entries), preset_cmp);
+    for (int index = 0; index < count; index++) {
+        memcpy(filter_names[index + 1], entries[index].name, sizeof(entries[index].name));
+        memcpy(filter_labels[index + 1], entries[index].label, sizeof(entries[index].label));
+    }
+
+    free(entries);
+}
+
+static void sort_shader_presets(void) {
+    if (shader_count <= 2) return;
+
+    const int count = shader_count - 1;
+    preset_sort_entry *entries = calloc((size_t) count, sizeof(*entries));
+    if (!entries) return;
+
+    for (int index = 0; index < count; index++) {
+        const int source = index + 1;
+        memcpy(entries[index].name, shader_names[source], sizeof(entries[index].name));
+        memcpy(entries[index].label, shader_labels[source], sizeof(entries[index].label));
+        entries[index].cost = shader_cost[source];
+        entries[index].cost_720p = shader_cost_720p[source];
+        entries[index].cost_1080p = shader_cost_1080p[source];
+        entries[index].compatibility = shader_compatibility[source];
+    }
+
+    qsort(entries, (size_t) count, sizeof(*entries), preset_cmp);
+    for (int index = 0; index < count; index++) {
+        const int target = index + 1;
+        memcpy(shader_names[target], entries[index].name, sizeof(entries[index].name));
+        memcpy(shader_labels[target], entries[index].label, sizeof(entries[index].label));
+        shader_cost[target] = entries[index].cost;
+        shader_cost_720p[target] = entries[index].cost_720p;
+        shader_cost_1080p[target] = entries[index].cost_1080p;
+        shader_compatibility[target] = entries[index].compatibility;
+    }
+
+    free(entries);
 }
 
 static char *trim(char *s) {
@@ -569,6 +639,33 @@ static int scan_presets(const char *dir_path, const char *user_dir, const char *
     return scanned_count + 1;
 }
 
+static int preset_is_user(const char *user_dir, const char *stem, const char *ext) {
+    char path[PATH_MAX];
+    if ((size_t) snprintf(path, sizeof(path), "%s%s%s", user_dir, stem, ext) >= sizeof(path)) return 0;
+
+    return file_exist(path);
+}
+
+static int dedupe_by_label(char (*names)[64], char (*labels)[64], const int count, const char *user_dir,
+                           const char *ext, int *survivors) {
+    int kept = 0;
+
+    for (int index = 0; index < count; index++) {
+        int duplicate = -1;
+        for (int prior = 0; prior < kept && duplicate < 0; prior++)
+            if (strcasecmp(labels[survivors[prior]], labels[index]) == 0) duplicate = prior;
+
+        if (duplicate < 0) {
+            survivors[kept++] = index;
+            continue;
+        }
+
+        if (preset_is_user(user_dir, names[index], ext)) survivors[duplicate] = index;
+    }
+
+    return kept;
+}
+
 void colour_init(void) {
     free(filter_names);
     free(filter_labels);
@@ -594,6 +691,23 @@ void colour_init(void) {
     for (int i = 0; i < filter_count; i++)
         load_filter_label(filter_names[i], filter_labels[i], sizeof(filter_labels[0]));
 
+    int *filter_keep = filter_count ? calloc((size_t) filter_count, sizeof(*filter_keep)) : NULL;
+    if (filter_keep) {
+        const int kept = dedupe_by_label(
+            filter_names, filter_labels, filter_count, COLOUR_FILTER_USER_DIR, ".ini", filter_keep
+        );
+        for (int i = 0; i < kept; i++) {
+            const int from = filter_keep[i];
+            if (from == i) continue;
+            memcpy(filter_names[i], filter_names[from], sizeof(filter_names[0]));
+            memcpy(filter_labels[i], filter_labels[from], sizeof(filter_labels[0]));
+        }
+        filter_count = kept;
+        free(filter_keep);
+    }
+
+    sort_filter_presets();
+
     shader_count = scan_presets(COLOUR_SHADER_DIR, COLOUR_SHADER_USER_DIR, ".frag", &shader_names);
     shader_labels = calloc((size_t) shader_count, sizeof(*shader_labels));
     shader_cost = calloc((size_t) shader_count, sizeof(*shader_cost));
@@ -605,6 +719,27 @@ void colour_init(void) {
     for (int i = 0; i < shader_count; i++)
         load_shader_metadata(i);
 
+    int *shader_keep = shader_count ? calloc((size_t) shader_count, sizeof(*shader_keep)) : NULL;
+    if (shader_keep) {
+        const int kept = dedupe_by_label(
+            shader_names, shader_labels, shader_count, COLOUR_SHADER_USER_DIR, ".frag", shader_keep
+        );
+        for (int i = 0; i < kept; i++) {
+            const int from = shader_keep[i];
+            if (from == i) continue;
+            memcpy(shader_names[i], shader_names[from], sizeof(shader_names[0]));
+            memcpy(shader_labels[i], shader_labels[from], sizeof(shader_labels[0]));
+            shader_cost[i] = shader_cost[from];
+            shader_cost_720p[i] = shader_cost_720p[from];
+            shader_cost_1080p[i] = shader_cost_1080p[from];
+            shader_compatibility[i] = shader_compatibility[from];
+        }
+        shader_count = kept;
+        free(shader_keep);
+    }
+
+    sort_shader_presets();
+
     LOG_INFO(mux_module, "Colour: found %d filter preset(s), %d shader(s)", filter_count, shader_count);
 }
 
@@ -613,7 +748,7 @@ int colour_filter_preset_count(void) {
 }
 
 const char *colour_filter_preset_label(const int index) {
-    if (index < 0 || index >= filter_count) return "none";
+    if (index <= 0 || index >= filter_count) return lang.generic.none;
     return filter_labels[index];
 }
 

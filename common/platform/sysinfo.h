@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <common/runtime/init.h>
 
 int is_network_connected(void);
@@ -17,6 +18,22 @@ enum network_reachability {
 };
 
 int get_network_reachability(void);
+
+enum network_snapshot_field {
+    network_snapshot_signal = 1u << 0,
+    network_snapshot_reachability = 1u << 1,
+    network_snapshot_ipv4 = 1u << 2,
+};
+
+typedef struct {
+    int connected;
+    int signal_percent;
+    int reachability;
+    char ipv4[16];
+    uint64_t sampled_ms;
+} network_snapshot;
+
+void get_network_snapshot(network_snapshot *snapshot, unsigned fields);
 
 int get_network_ipv4_address(char *output, size_t output_size);
 

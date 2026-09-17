@@ -232,7 +232,8 @@ static void theme_extraction_finished(char *theme_path) {
 static void theme_download_finished(const int result) {
     if (result != 0) {
         play_sound(snd_error);
-        toast_message(lang.muxthemedown.error_get_data, tst_wait_s);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxthemedown.error_get_data, tst_wait_s);
         return;
     }
 
@@ -275,7 +276,8 @@ static void refresh_theme_previews_finished(const int result) {
         }
     } else {
         play_sound(snd_error);
-        toast_message(lang.muxthemedown.error_get_data, tst_wait_f);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxthemedown.error_get_data, tst_wait_f);
     }
 }
 
@@ -285,7 +287,8 @@ static void refresh_theme_data_finished(const int result) {
         initiate_download(config.theme.download.preview, preview_zip_path, 1, lang.muxthemedown.down.preview);
     } else {
         play_sound(snd_error);
-        toast_message(lang.muxthemedown.error_get_data, tst_wait_f);
+        const char *storage_message = download_storage_message(result);
+        toast_message(storage_message ? storage_message : lang.muxthemedown.error_get_data, tst_wait_f);
     }
 }
 

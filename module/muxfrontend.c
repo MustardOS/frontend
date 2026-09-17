@@ -322,12 +322,8 @@ static void module_explore(void) {
     if (muxplore_main(last_index, explore_dir) == 1) safe_quit(0);
 }
 
-void module_content_list(const char *path, const char *max_depth, const int is_collection) {
+static void module_content_list(const int is_collection) {
     last_index_check();
-
-    const char *args[] = {"find", path, "-maxdepth", max_depth, "-type",   "f", "-size",
-                          "0",    "!",  "-name",     ".nogrid", "-delete", NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     load_mux("launcher");
 
@@ -346,13 +342,11 @@ void module_content_list(const char *path, const char *max_depth, const int is_c
 }
 
 static void module_collection(void) {
-    const char *collection_path =
-        is_ksk(kiosk.collect.access) && dir_exist(INFO_CKS_PATH) ? INFO_CKS_PATH : INFO_COL_PATH;
-    module_content_list(collection_path, "2", 1);
+    module_content_list(1);
 }
 
 static void module_history(void) {
-    module_content_list(INFO_HIS_PATH, "1", 0);
+    module_content_list(0);
 }
 
 static void module_search(void) {

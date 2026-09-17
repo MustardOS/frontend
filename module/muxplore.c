@@ -415,12 +415,6 @@ static int tag_name_search(const void *key, const void *elem) {
     return strcasecmp(key, *(const char **) elem);
 }
 
-typedef struct {
-    char *name;
-    char *full_path;
-    char display[MAX_BUFFER_SIZE];
-} temp_item;
-
 static void resolve_content_sub_path(char *sub_path) {
     union_get_relative_path(sys_dir, sub_path, PATH_MAX);
 
@@ -440,25 +434,17 @@ static void ensure_content_meta_dir(const char *sub_path) {
     create_directories(init_meta_dir, 0);
 }
 
-static void strip_pico8_extension(const char *file_path, const char *display) {
+static void strip_pico8_extension(const char *file_path, char *display) {
     if (!ends_with(file_path, ".p8.png") && !ends_with(file_path, ".png.p8")) return;
 
     char *dot = strrchr(display, '.');
     if (dot) *dot = '\0';
 }
 
-static int collect_filtered_items(char **file_names, char **file_paths, const int file_count, temp_item **out_tmp) {
+static int build_content_file_items(char **file_names, char **file_paths, const int file_count) {
     skip_list skiplist;
     init_skiplist(&skiplist);
-
-    temp_item *tmp = malloc((size_t) file_count * sizeof(temp_item));
-    if (!tmp) {
-        free_skiplist(&skiplist);
-        *out_tmp = NULL;
-        return 0;
-    }
-
-    int tmp_count = 0;
+    int added = 0;
     const int show_hidden = config.visual.hidden;
 
     if (!show_hidden) {
@@ -493,33 +479,17 @@ static int collect_filtered_items(char **file_names, char **file_paths, const in
             continue;
         }
 
-        char base[MAX_BUFFER_SIZE];
-        snprintf(base, sizeof(base), "%s", name);
+        char display[MAX_BUFFER_SIZE];
+        resolve_friendly_name(full_path, display);
+        if (content_is_pico8) strip_pico8_extension(full_path, display);
 
-        char *dot = strrchr(base, '.');
-        if (dot) *dot = '\0';
-
-        resolve_friendly_name(full_path, tmp[tmp_count].display);
-        if (content_is_pico8) strip_pico8_extension(full_path, tmp[tmp_count].display);
-
-        tmp[tmp_count].name = name;
-        tmp[tmp_count].full_path = full_path;
-        tmp_count++;
+        if (add_item(&items, &item_count, name, display, full_path, content_type_item)) added++;
+        free(name);
+        free(full_path);
     }
 
     free_skiplist(&skiplist);
-
-    *out_tmp = tmp;
-    return tmp_count;
-}
-
-static void build_items_from_temp(temp_item *tmp, const int tmp_count) {
-    for (int i = 0; i < tmp_count; i++) {
-        add_item(&items, &item_count, tmp[i].name, tmp[i].display, tmp[i].full_path, content_type_item);
-        free(tmp[i].full_path);
-    }
-
-    free(tmp);
+    return added;
 }
 
 static void restore_explorer_index(void) {
@@ -624,14 +594,12 @@ static void assign_content_glyphs(const char *sub_path) {
                 items[i].glyph_icon = strdup("default");
             }
 
-            free(items[i].use_module);
-            items[i].use_module = strdup("muxtag");
+            items[i].use_module = "muxtag";
         } else {
             free(items[i].glyph_icon);
             items[i].glyph_icon = strdup(get_content_explorer_glyph_name(items[i].extra_data));
 
-            free(items[i].use_module);
-            items[i].use_module = strdup(mux_module);
+            items[i].use_module = mux_module;
         }
     }
 
@@ -649,11 +617,7 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
     resolve_content_sub_path(sub_path);
     ensure_content_meta_dir(sub_path);
 
-    temp_item *tmp = NULL;
-    const int tmp_count = collect_filtered_items(file_names, file_paths, file_count, &tmp);
-    if (!tmp) return;
-
-    build_items_from_temp(tmp, tmp_count);
+    build_content_file_items(file_names, file_paths, file_count);
 
     restore_explorer_index();
     merge_history_and_collection();
@@ -774,6 +738,7 @@ static void create_content_items(void) {
         }
 
         free(friendly_folder_name);
+        free(dir_names[i]);
         free(dir_paths[i]);
 
         dir_names[i] = NULL;

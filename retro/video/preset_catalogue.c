@@ -58,6 +58,7 @@ typedef struct {
 } catalogue_item;
 
 static catalogue_item *items;
+static catalogue_item **ordered_items;
 static const char **labels;
 static const char **glyphs;
 static int item_count;
@@ -164,6 +165,17 @@ static int safe_stem(const char *name, char *output, const size_t size) {
     return used > 0;
 }
 
+static int catalogue_item_compare(const void *left, const void *right) {
+    const catalogue_item *a = *(catalogue_item *const *) left;
+    const catalogue_item *b = *(catalogue_item *const *) right;
+    const int folded = strcasecmp(a->name, b->name);
+    return folded ? folded : strcmp(a->name, b->name);
+}
+
+static catalogue_item *catalogue_item_at(const int index) {
+    return index >= 0 && index < item_count ? ordered_items[index] : NULL;
+}
+
 static const char *kind_directory(void) {
     static char overlay_directory[PATH_MAX];
 
@@ -211,6 +223,19 @@ static int kind_file_valid(const char *path) {
     }
 }
 
+static int url_stem(const char *url, char *output, const size_t size) {
+    const char *slash = strrchr(url, '/');
+    const char *base = slash ? slash + 1 : url;
+
+    char trimmed[128];
+    snprintf(trimmed, sizeof(trimmed), "%s", base);
+
+    char *dot = strrchr(trimmed, '.');
+    if (dot) *dot = '\0';
+
+    return safe_stem(trimmed, output, size);
+}
+
 static void device_resolution(char *out, const size_t out_size) {
     snprintf(out, out_size, "%dx%d", device.screen.width, device.screen.height);
 }
@@ -219,7 +244,7 @@ static int variant_target(const char *resolution, const char *stem, char *out, c
     return (size_t) snprintf(out, out_size, OVERLAY_IMAGE_ROOT "%s/%s.png", resolution, stem) < out_size;
 }
 
-static int read_variants(const struct json node, catalogue_item *item, const char *stem) {
+static int read_variants(const struct json node, catalogue_item *item, char *stem, const size_t stem_size) {
     const struct json images = json_object_get(node, "images");
     if (json_type(images) != JSON_ARRAY) return 0;
 
@@ -228,6 +253,7 @@ static int read_variants(const struct json node, catalogue_item *item, const cha
     device_resolution(wanted, sizeof(wanted));
 
     int matched = 0;
+    stem[0] = '\0';
     item->variant_count = 0;
 
     for (size_t index = 0; index < count && item->variant_count < CATALOGUE_VARIANT_MAX; index++) {
@@ -240,6 +266,9 @@ static int read_variants(const struct json node, catalogue_item *item, const cha
             || !copy_json_string(image, "sha256", variant->sha256, sizeof(variant->sha256))
             || !https_url(variant->url) || !sha256_text_valid(variant->sha256))
             return 0;
+
+        // Every image of an overlay is published under one name, taken from the repo
+        if (!stem[0] && (!url_stem(variant->url, stem, stem_size) || strcasecmp(stem, "none") == 0)) return 0;
 
         char target[PATH_MAX];
         if (!variant_target(variant->resolution, stem, target, sizeof(target))) return 0;
@@ -274,10 +303,12 @@ static int parse_manifest(void) {
     }
 
     catalogue_item *next_items = count ? calloc(count, sizeof(*next_items)) : NULL;
+    catalogue_item **next_ordered_items = count ? calloc(count, sizeof(*next_ordered_items)) : NULL;
     const char **next_labels = count ? calloc(count, sizeof(*next_labels)) : NULL;
     const char **next_glyphs = count ? calloc(count, sizeof(*next_glyphs)) : NULL;
-    if (count && (!next_items || !next_labels || !next_glyphs)) {
+    if (count && (!next_items || !next_ordered_items || !next_labels || !next_glyphs)) {
         free(next_items);
+        free(next_ordered_items);
         free(next_labels);
         free(next_glyphs);
         free(raw);
@@ -285,9 +316,11 @@ static int parse_manifest(void) {
     }
 
     free(items);
+    free(ordered_items);
     free(labels);
     free(glyphs);
     items = next_items;
+    ordered_items = next_ordered_items;
     labels = next_labels;
     glyphs = next_glyphs;
 
@@ -298,21 +331,21 @@ static int parse_manifest(void) {
         char stem[56];
 
         if (json_type(node) != JSON_OBJECT || !copy_json_string(node, "name", item->name, sizeof(item->name))
-            || !copy_json_string(node, "version", item->version, sizeof(item->version))
-            || !safe_stem(item->name, stem, sizeof(stem)) || strcasecmp(stem, "none") == 0) {
+            || !copy_json_string(node, "version", item->version, sizeof(item->version))) {
             item_count = 0;
             free(raw);
             return 0;
         }
 
         if (active_kind == preset_catalogue_overlay) {
-            if (!read_variants(node, item, stem)) continue;
+            if (!read_variants(node, item, stem, sizeof(stem))) continue;
         } else {
             item->variant_count = 0;
 
             if (!copy_json_string(node, "url", item->url, sizeof(item->url))
                 || !copy_json_string(node, "sha256", item->sha256, sizeof(item->sha256)) || !https_url(item->url)
-                || !sha256_text_valid(item->sha256)) {
+                || !sha256_text_valid(item->sha256) || !url_stem(item->url, stem, sizeof(stem))
+                || strcasecmp(stem, "none") == 0) {
                 item_count = 0;
                 free(raw);
                 return 0;
@@ -336,23 +369,29 @@ static int parse_manifest(void) {
         }
 
         item->state = item_state(item);
-        labels[item_count] = item->name;
-        glyphs[item_count] = kind_glyph();
+        ordered_items[item_count] = item;
         item_count++;
     }
 
     free(raw);
+    if (item_count > 1)
+        qsort(ordered_items, (size_t) item_count, sizeof(*ordered_items), catalogue_item_compare);
+    for (int index = 0; index < item_count; index++) {
+        labels[index] = ordered_items[index]->name;
+        glyphs[index] = kind_glyph();
+    }
     definition.labels = labels;
     definition.glyphs = glyphs;
     return 1;
 }
 
 static void catalogue_value(const int index, char *buffer, const size_t length) {
-    if (index < 0 || index >= item_count) return;
+    const catalogue_item *item = catalogue_item_at(index);
+    if (!item) return;
 
     const char *status = lang.muxretro.catalogue_screen.not_installed;
-    if (items[index].state == catalogue_item_installed) status = lang.muxretro.catalogue_screen.installed;
-    if (items[index].state == catalogue_item_update) status = lang.muxretro.catalogue_screen.update;
+    if (item->state == catalogue_item_installed) status = lang.muxretro.catalogue_screen.installed;
+    if (item->state == catalogue_item_update) status = lang.muxretro.catalogue_screen.update;
     snprintf(buffer, length, "%s", status);
 }
 
@@ -361,22 +400,23 @@ static int catalogue_action_row(const int index) {
 }
 
 static const char *catalogue_action_label(const int index) {
-    if (index < 0 || index >= item_count) return lang.generic.download;
-    if (items[index].state == catalogue_item_installed) return lang.muxretro.catalogue_screen.reinstall;
-    if (items[index].state == catalogue_item_update) return lang.muxretro.catalogue_screen.update;
+    const catalogue_item *item = catalogue_item_at(index);
+    if (!item) return lang.generic.download;
+    if (item->state == catalogue_item_installed) return lang.muxretro.catalogue_screen.reinstall;
+    if (item->state == catalogue_item_update) return lang.muxretro.catalogue_screen.update;
     return lang.generic.download;
 }
 
 static void catalogue_closed(void) {
     state = catalogue_idle;
     if (active_kind == preset_catalogue_filter) {
-        colfilter_menu_reopen();
+        colfilter_menu_reopen_download();
     } else if (active_kind == preset_catalogue_overlay) {
         overlay_bridge_set_suppressed(0);
         overlay_bridge_apply();
-        overlay_image_menu_reopen();
+        overlay_image_menu_reopen_download();
     } else {
-        shader_menu_reopen();
+        shader_menu_reopen_download();
     }
 }
 
@@ -386,8 +426,8 @@ static void refresh_item_states(void) {
 }
 
 static int publish_package(void) {
-    if (package_index < 0 || package_index >= item_count) return 0;
-    catalogue_item *item = &items[package_index];
+    catalogue_item *item = catalogue_item_at(package_index);
+    if (!item) return 0;
 
     const char *expected = item->sha256;
     if (package_variant >= 0 && package_variant < item->variant_count)
@@ -404,7 +444,7 @@ static int publish_package(void) {
 
     if (package_variant >= 0 && package_variant < item->variant_count) {
         char stem[56];
-        if (!safe_stem(item->name, stem, sizeof(stem))
+        if (!url_stem(item->variants[package_variant].url, stem, sizeof(stem))
             || !variant_target(item->variants[package_variant].resolution, stem, destination, sizeof(destination)))
             return 0;
 
@@ -433,7 +473,8 @@ static void package_complete(const int result) {
     if (!valid) unlink(package_path);
 
     const int run_of_images = package_index >= 0 && package_variant >= 0;
-    const int more_to_fetch = valid && run_of_images && package_variant + 1 < items[package_index].variant_count;
+    const catalogue_item *item = catalogue_item_at(package_index);
+    const int more_to_fetch = valid && run_of_images && item && package_variant + 1 < item->variant_count;
 
     if (run_of_images && !more_to_fetch) hide_progress_bar();
 
@@ -465,9 +506,8 @@ static void package_complete(const int result) {
 }
 
 static int start_download(void) {
-    if (package_index < 0 || package_index >= item_count) return 0;
-
-    const catalogue_item *item = &items[package_index];
+    const catalogue_item *item = catalogue_item_at(package_index);
+    if (!item) return 0;
     const char *url = item->url;
     int own_bar = 1;
 
@@ -492,10 +532,11 @@ static int start_download(void) {
 }
 
 static void catalogue_action(const int index) {
-    if (index < 0 || index >= item_count || atomic_load(&download_in_progress)) return;
+    const catalogue_item *item = catalogue_item_at(index);
+    if (!item || atomic_load(&download_in_progress)) return;
 
     package_index = index;
-    package_variant = items[index].variant_count > 0 ? 0 : -1;
+    package_variant = item->variant_count > 0 ? 0 : -1;
 
     if (package_variant >= 0) show_progress_bar(lang.muxretro.catalogue_screen.downloading);
 

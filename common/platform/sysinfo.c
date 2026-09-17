@@ -113,8 +113,8 @@ static void *network_signal_worker(void *opaque) {
     return NULL;
 }
 
-int get_network_signal_percent(void) {
-    if (!is_network_connected() || !device.network.interface[0]) {
+static int network_signal_percent(const int connected) {
+    if (!connected || !device.network.interface[0]) {
         pthread_mutex_lock(&signal_mutex);
         signal_cached = -1;
         signal_next_poll_ms = 0;
@@ -201,8 +201,8 @@ static void *network_reachability_worker(void *unused) {
     return NULL;
 }
 
-int get_network_reachability(void) {
-    if (!is_network_connected()) {
+static int network_reachability_get(const int connected) {
+    if (!connected) {
         pthread_mutex_lock(&reachability_mutex);
         reachability_state = network_reachability_unknown;
         reachability_next_poll_ms = 0;
@@ -271,10 +271,59 @@ static int saved_ipv4_address(char *output, const size_t output_size) {
 }
 
 int get_network_ipv4_address(char *output, const size_t output_size) {
-    if (!output || output_size == 0 || !device.network.interface[0]) return 0;
-    if (scan_ipv4_address(device.network.interface, output, output_size)) return 1;
+    network_snapshot snapshot;
+    get_network_snapshot(&snapshot, network_snapshot_ipv4);
+    if (!output || output_size == 0 || !snapshot.ipv4[0]) return 0;
+    return str_copy_checked(output, output_size, snapshot.ipv4);
+}
 
-    return saved_ipv4_address(output, output_size);
+static pthread_mutex_t snapshot_mutex = PTHREAD_MUTEX_INITIALIZER;
+static network_snapshot snapshot_cache = {.signal_percent = -1};
+static unsigned snapshot_fields;
+
+void get_network_snapshot(network_snapshot *snapshot, const unsigned fields) {
+    if (!snapshot) return;
+
+    const uint64_t now = monotonic_ms();
+    pthread_mutex_lock(&snapshot_mutex);
+    if (!snapshot_cache.sampled_ms || now - snapshot_cache.sampled_ms >= 500u) {
+        snapshot_cache.connected = is_network_connected();
+        snapshot_cache.signal_percent = -1;
+        snapshot_cache.reachability = network_reachability_unknown;
+        snapshot_cache.ipv4[0] = '\0';
+        snapshot_cache.sampled_ms = now;
+        snapshot_fields = 0;
+    }
+
+    if ((fields & network_snapshot_signal) && !(snapshot_fields & network_snapshot_signal)) {
+        snapshot_cache.signal_percent = network_signal_percent(snapshot_cache.connected);
+        snapshot_fields |= network_snapshot_signal;
+    }
+    if ((fields & network_snapshot_reachability) && !(snapshot_fields & network_snapshot_reachability)) {
+        snapshot_cache.reachability = network_reachability_get(snapshot_cache.connected);
+        snapshot_fields |= network_snapshot_reachability;
+    }
+    if ((fields & network_snapshot_ipv4) && !(snapshot_fields & network_snapshot_ipv4)) {
+        if (snapshot_cache.connected && device.network.interface[0]
+            && !scan_ipv4_address(device.network.interface, snapshot_cache.ipv4, sizeof(snapshot_cache.ipv4)))
+            saved_ipv4_address(snapshot_cache.ipv4, sizeof(snapshot_cache.ipv4));
+        snapshot_fields |= network_snapshot_ipv4;
+    }
+
+    *snapshot = snapshot_cache;
+    pthread_mutex_unlock(&snapshot_mutex);
+}
+
+int get_network_signal_percent(void) {
+    network_snapshot snapshot;
+    get_network_snapshot(&snapshot, network_snapshot_signal);
+    return snapshot.signal_percent;
+}
+
+int get_network_reachability(void) {
+    network_snapshot snapshot;
+    get_network_snapshot(&snapshot, network_snapshot_reachability);
+    return snapshot.reachability;
 }
 
 int get_any_ipv4_address(char *output, const size_t output_size) {

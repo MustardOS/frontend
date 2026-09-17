@@ -64,6 +64,8 @@ static uint64_t alt_keys = 0;
 
 // Suppress any input during screensaver runs
 static volatile uint32_t suppress_until_tick = 0;
+static uint32_t input_repeat_deadline = 0;
+static uint32_t combo_repeat_deadline = 0;
 
 // Latest raw stick positions, cached from SDL_CONTROLLERAXISMOTION events.
 // Range matches AXIS_MAX (int16_t [-32768, 32767])
@@ -1142,7 +1144,10 @@ static void dispatch_combo(const mux_input_options *opts, const int num, const m
 }
 
 static void handle_inputs(const mux_input_options *opts) {
-    if (input_is_suppressed()) return;
+    if (input_is_suppressed()) {
+        input_repeat_deadline = 0;
+        return;
+    }
 
     static uint32_t hold_delay[mux_input_count] = {0};
     static uint32_t hold_tick[mux_input_count] = {0};
@@ -1189,6 +1194,7 @@ static void handle_inputs(const mux_input_options *opts) {
 
     const uint64_t changed = pressed_filtered ^ held_filtered;
     uint64_t active = pressed_filtered | held_filtered;
+    uint32_t earliest = 0;
 
     while (active) {
         const int i = __builtin_ctzll(active);
@@ -1200,22 +1206,30 @@ static void handle_inputs(const mux_input_options *opts) {
             if (changed & bit) {
                 dispatch_input(opts, i, mux_input_press);
 
-                hold_delay[i] = config.settings.advanced.repeat_delay;
+                hold_delay[i] = config.settings.advanced.repeat_delay > 0 ? config.settings.advanced.repeat_delay : 208;
                 hold_tick[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
                 dispatch_input(opts, i, mux_input_hold);
 
-                hold_delay[i] = config.settings.advanced.accelerate;
+                hold_delay[i] = config.settings.advanced.accelerate >= 16 ? config.settings.advanced.accelerate : 96;
                 hold_tick[i] = tick;
             }
+
+            const uint32_t deadline = hold_tick[i] + hold_delay[i];
+            if (!earliest || (int32_t) (deadline - tick) < (int32_t) (earliest - tick)) earliest = deadline;
         } else {
             dispatch_input(opts, i, mux_input_release);
         }
     }
+
+    input_repeat_deadline = earliest;
 }
 
 static void handle_combos(const mux_input_options *opts) {
-    if (input_is_suppressed()) return;
+    if (input_is_suppressed()) {
+        combo_repeat_deadline = 0;
+        return;
+    }
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay = 0;
     // Tick (millis) of last press or hold.
@@ -1230,6 +1244,7 @@ static void handle_combos(const mux_input_options *opts) {
 
     if (!active_pressed) {
         active_combo = MUX_INPUT_COMBO_COUNT;
+        combo_repeat_deadline = 0;
         return;
     }
 
@@ -1243,15 +1258,17 @@ static void handle_combos(const mux_input_options *opts) {
                 dispatch_combo(opts, active_combo, mux_input_hold);
 
                 // Single delay for each subsequent repeat.
-                hold_delay = config.settings.advanced.accelerate;
+                hold_delay = config.settings.advanced.accelerate >= 16 ? config.settings.advanced.accelerate : 96;
                 hold_tick = tick;
             }
+            combo_repeat_deadline = hold_tick + hold_delay;
             return;
         }
 
         // Held & not pressed: Invoke release handler.
         dispatch_combo(opts, active_combo, mux_input_release);
         active_combo = MUX_INPUT_COMBO_COUNT;
+        combo_repeat_deadline = 0;
     }
 
     int best_combo = MUX_INPUT_COMBO_COUNT;
@@ -1278,11 +1295,19 @@ static void handle_combos(const mux_input_options *opts) {
             dispatch_combo(opts, best_combo, mux_input_press);
 
             // Initial repeat delay
-            hold_delay = config.settings.advanced.repeat_delay;
+            hold_delay = config.settings.advanced.repeat_delay > 0 ? config.settings.advanced.repeat_delay : 208;
             hold_tick = tick;
             active_combo = best_combo;
+            combo_repeat_deadline = hold_tick + hold_delay;
         }
     }
+}
+
+static int timeout_to_deadline(const uint32_t now, const uint32_t deadline, const int limit) {
+    if (!deadline) return limit;
+    const int32_t remaining = (int32_t) (deadline - now);
+    if (remaining <= 0) return 0;
+    return remaining < limit ? remaining : limit;
 }
 
 static const mux_nav_type nav_map[] = {
@@ -1527,6 +1552,8 @@ void mux_input_task(const mux_input_options *opts) {
     hold_active = 0;
     alt_keys = 0;
     suppress_until_tick = 0;
+    input_repeat_deadline = 0;
+    combo_repeat_deadline = 0;
     primary_instance = -1;
 
     reset_raw_analog();
@@ -1537,9 +1564,6 @@ void mux_input_task(const mux_input_options *opts) {
     open_all_input_devices();
 
     const int timeout_idle = opts->max_idle_ms > 0 ? (int) opts->max_idle_ms : IDLE_MS;
-    const int accel_ms = config.settings.advanced.accelerate > 0 ? config.settings.advanced.accelerate : 1;
-    const int timeout_hold =
-        opts->max_idle_ms > 0 ? ((int) opts->max_idle_ms < accel_ms ? (int) opts->max_idle_ms : accel_ms) : accel_ms;
 
     uint32_t next_retry_tick = 0;
     int retry_count = 0;
@@ -1550,7 +1574,12 @@ void mux_input_task(const mux_input_options *opts) {
     while (!stop_flag) {
         const uint32_t retry_interval_slow_ms = 5000U;
         const int retry_fast_count = 5;
-        int timeout = held ? timeout_hold : timeout_idle;
+        const uint32_t now = (uint32_t) mux_tick();
+        int timeout = timeout_idle;
+        if (held) {
+            timeout = timeout_to_deadline(now, input_repeat_deadline, timeout);
+            timeout = timeout_to_deadline(now, combo_repeat_deadline, timeout);
+        }
 
         if (device_count == 0) {
             const int no_device_wait_ms = 250;

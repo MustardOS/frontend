@@ -314,16 +314,18 @@ void task_progress_tick(void) {
                                              : lang.generic.failed
             );
             lv_obj_add_flag(bar, MU_OBJ_FLAG_HIDE_FLOAT);
-            set_nav("b", lang.generic.close);
+            set_nav(task_exec_can_retry() ? "a" : "b", task_exec_can_retry() ? lang.generic.retry : lang.generic.close);
             return;
 
         case task_state_cancelling:
             lv_label_set_text(lbl_status, lang.generic.cancelled);
+            lv_obj_clear_flag(bar, MU_OBJ_FLAG_HIDE_FLOAT);
             set_nav("b", "");
             break;
 
         default:
             lv_label_set_text(lbl_status, st->status);
+            lv_obj_clear_flag(bar, MU_OBJ_FLAG_HIDE_FLOAT);
             set_nav("b", st->can_cancel ? lang.generic.cancel : "");
             break;
     }
@@ -358,6 +360,12 @@ int task_progress_handle_a(void) {
         return 1;
     }
 
+    if (task_exec_can_retry()) {
+        play_sound(snd_confirm);
+        if (task_exec_retry() != 0) play_sound(snd_error);
+        return 1;
+    }
+
     return 1;
 }
 
@@ -371,8 +379,6 @@ int task_progress_handle_b(void) {
         return 1;
     }
 
-    if (offered != nav_offers_b) return 1;
-
     const task_exec_status *st = task_exec_get_status();
 
     if (st->state == task_state_complete || st->state == task_state_error) {
@@ -381,6 +387,8 @@ int task_progress_handle_b(void) {
         task_progress_hide();
         return 1;
     }
+
+    if (offered != nav_offers_b) return 1;
 
     play_sound(snd_info_open);
     ask_cancel();

@@ -104,6 +104,11 @@ struct mux_lang {
         char not_connected[MAX_BUFFER_SIZE];
         char completed[MAX_BUFFER_SIZE];
         char failed[MAX_BUFFER_SIZE];
+        char retry[MAX_BUFFER_SIZE];
+        char storage_missing[MAX_BUFFER_SIZE];
+        char storage_read_only[MAX_BUFFER_SIZE];
+        char storage_full[MAX_BUFFER_SIZE];
+        char storage_error[MAX_BUFFER_SIZE];
         char cancelled[MAX_BUFFER_SIZE];
         char cancel_task[MAX_BUFFER_SIZE];
         char finished_in[MAX_BUFFER_SIZE];
@@ -1089,8 +1094,7 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         char installed[MAX_BUFFER_SIZE];
-        char available[MAX_BUFFER_SIZE];
-        char bundled[MAX_BUFFER_SIZE];
+        char not_installed[MAX_BUFFER_SIZE];
         char reinstall[MAX_BUFFER_SIZE];
         char update[MAX_BUFFER_SIZE];
         char no_cores[MAX_BUFFER_SIZE];

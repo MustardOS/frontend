@@ -22,7 +22,7 @@ PLATFORM_SRCS = \
     platform/soundfont.c platform/sysinfo.c platform/timezone.c platform/video.c
 
 STORAGE_SRCS = \
-    storage/archive.c storage/download.c storage/fileio.c storage/fileio_lite.c \
+    storage/archive.c storage/download.c storage/fileio.c storage/fileio_lite.c storage/health.c \
     storage/inotify.c storage/union.c storage/verify.c
 
 CONTENT_SRCS = \
