@@ -1789,6 +1789,25 @@ int mux_input_source_stick_count(const int index) {
     return axes >= 4 ? 2 : axes >= 2 ? 1 : 0;
 }
 
+int mux_input_source_rumble(const int index, const uint16_t low_frequency, const uint16_t high_frequency) {
+    SDL_JoystickID instance = -1;
+
+    if (index == 0) {
+        instance = primary_instance;
+    } else if (index >= 1 && index < mux_input_source_count()) {
+        if (!extra_players_init_done) init_extra_players();
+        instance = extra_players[index - 1].instance;
+    }
+
+    if (instance < 0) return 0;
+
+    const int idx = find_device_by_instance(instance);
+    if (idx < 0 || !devices[idx].joystick) return 0;
+
+    const uint32_t duration = low_frequency || high_frequency ? 1000u : 0u;
+    return SDL_JoystickRumble(devices[idx].joystick, low_frequency, high_frequency, duration) == 0;
+}
+
 void mux_input_stop(void) {
     stop_flag = 1;
     SDL_Event ev = {0};

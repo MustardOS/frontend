@@ -132,9 +132,10 @@ int is_supported_theme_catalogue(const char *catalogue_name, const char *image_t
            || (strcmp(catalogue_name, "Folder") == 0 && strcmp(image_type, "grid") == 0);
 }
 
-int load_image_catalogue(
+static int load_image_catalogue_exts(
     const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
-    const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
+    const char *mux_dim, const char *image_type, const char **extensions, const int ext_count, char *image_path,
+    const size_t path_size
 ) {
     enum catalogue_kind { cat_theme, cat_info };
 
@@ -161,8 +162,6 @@ int load_image_catalogue(
         {cat_info, INFO_CAT_PATH, "", program_default},
     };
 
-    int ext_count;
-    const char **extensions = image_ext_list(&ext_count);
     const int skip_theme = !is_supported_theme_catalogue(catalogue_name, image_type);
 
     if (image_path && path_size > 0) image_path[0] = '\0';
@@ -230,6 +229,30 @@ int load_image_catalogue(
 
     fe_perf_end(fe_perf_stage_catalogue, catalogue_start);
     return 0;
+}
+
+int load_image_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
+    const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
+) {
+    int ext_count;
+    const char **extensions = image_ext_list(&ext_count);
+
+    return load_image_catalogue_exts(
+        catalogue_name, program, program_alt, program_default, mux_dim, image_type, extensions, ext_count, image_path,
+        path_size
+    );
+}
+
+int load_png_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
+    const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
+) {
+    static const char *png_only[] = {"png"};
+
+    return load_image_catalogue_exts(
+        catalogue_name, program, program_alt, program_default, mux_dim, image_type, png_only, 1, image_path, path_size
+    );
 }
 
 int load_manual_catalogue(

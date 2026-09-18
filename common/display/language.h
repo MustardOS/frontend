@@ -2470,6 +2470,7 @@ struct mux_lang {
             char reset[MAX_BUFFER_SIZE];
         } shader_screen;
         struct {
+            char downloads[MAX_BUFFER_SIZE];
             char not_installed[MAX_BUFFER_SIZE];
             char installed[MAX_BUFFER_SIZE];
             char update[MAX_BUFFER_SIZE];
@@ -2485,6 +2486,11 @@ struct mux_lang {
             char delete_done[MAX_BUFFER_SIZE];
             char delete_failed[MAX_BUFFER_SIZE];
             char delete_builtin[MAX_BUFFER_SIZE];
+            char collection[MAX_BUFFER_SIZE];
+            char collection_empty[MAX_BUFFER_SIZE];
+            char collection_added[MAX_BUFFER_SIZE];
+            char collection_removed[MAX_BUFFER_SIZE];
+            char collection_failed[MAX_BUFFER_SIZE];
         } catalogue_screen;
         struct {
             char shape[MAX_BUFFER_SIZE];

@@ -39,7 +39,7 @@ void overlay_bridge_init(const char *core_path_arg, const char *content_path) {
     snprintf(program, sizeof(program), "%s", program_no_ext ? program_no_ext : content_label);
     free(program_no_ext);
 
-    if (load_image_catalogue(
+    if (load_png_catalogue(
             catalogue_name, program, program, "default", mux_dim, "overlay/base", catalogue_overlay_path,
             sizeof(catalogue_overlay_path)
         )) {

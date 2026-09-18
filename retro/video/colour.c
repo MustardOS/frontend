@@ -28,10 +28,12 @@ typedef struct {
 
 static char (*filter_names)[64];
 static char (*filter_labels)[64];
+static char (*filter_keys)[64];
 static int filter_count = 0;
 
 static char (*shader_names)[64];
 static char (*shader_labels)[64];
+static char (*shader_keys)[64];
 static enum colour_shader_cost *shader_cost;
 static enum colour_shader_cost *shader_cost_720p;
 static enum colour_shader_cost *shader_cost_1080p;
@@ -459,7 +461,7 @@ static void load_shader_metadata(const int index) {
 // relative path such as "CRT/scanlines". The name is only ever used to build a file path,
 // so a subpath needs no special handling at the point of use. Depth is bounded so a
 // symlink loop or a deeply nested collection cannot stall startup.
-#define PRESET_SCAN_MAX_DEPTH 4
+#define PRESET_SCAN_MAX_DEPTH 2
 
 static int append_scanned(char (**scanned)[64], int *count, int *capacity, const char *relative) {
     if (*count == *capacity) {
@@ -550,7 +552,12 @@ static int resolve_preset_path(
     if ((size_t) snprintf(out, out_size, "%s%s%s", user_dir, stem, ext) >= out_size) return 0;
     if (file_exist(out)) return 1;
 
-    return (size_t) snprintf(out, out_size, "%s%s%s", system_dir, stem, ext) < out_size;
+    if ((size_t) snprintf(out, out_size, "%s%s%s", system_dir, stem, ext) >= out_size) return 0;
+    if (file_exist(out)) return 1;
+
+    static const char prefix[] = "MustardOS/";
+    if (strncmp(stem, prefix, sizeof(prefix) - 1) != 0) return 1;
+    return (size_t) snprintf(out, out_size, "%s%s%s", system_dir, stem + sizeof(prefix) - 1, ext) < out_size;
 }
 
 static int user_preset_path(const char *user_dir, const char *stem, const char *ext, char *out, const size_t out_size) {
@@ -616,6 +623,16 @@ static int scan_presets(const char *dir_path, const char *user_dir, const char *
             for (int j = 0; j < scanned_count && !seen; j++)
                 seen = strcasecmp(scanned[j], downloaded[i]) == 0;
 
+            static const char prefix[] = "MustardOS/";
+            if (!seen && strncasecmp(downloaded[i], prefix, sizeof(prefix) - 1) == 0) {
+                const char *stem = downloaded[i] + sizeof(prefix) - 1;
+                for (int j = 0; j < scanned_count && !seen; j++) {
+                    if (strchr(scanned[j], '/') || strcasecmp(scanned[j], stem) != 0) continue;
+                    snprintf(scanned[j], sizeof(scanned[j]), "%s", downloaded[i]);
+                    seen = 1;
+                }
+            }
+
             if (!seen && !append_scanned(&scanned, &scanned_count, &scanned_capacity, downloaded[i])) break;
         }
     }
@@ -639,46 +656,51 @@ static int scan_presets(const char *dir_path, const char *user_dir, const char *
     return scanned_count + 1;
 }
 
-static int preset_is_user(const char *user_dir, const char *stem, const char *ext) {
-    char path[PATH_MAX];
-    if ((size_t) snprintf(path, sizeof(path), "%s%s%s", user_dir, stem, ext) >= sizeof(path)) return 0;
-
-    return file_exist(path);
-}
-
-static int dedupe_by_label(char (*names)[64], char (*labels)[64], const int count, const char *user_dir,
-                           const char *ext, int *survivors) {
-    int kept = 0;
+static int
+build_preset_keys(char (*names)[64], const int count, const char *user_dir, const char *ext, char (**keys)[64]) {
+    char (*result)[64] = calloc((size_t) count, sizeof(*result));
+    if (count > 0 && !result) return 0;
 
     for (int index = 0; index < count; index++) {
-        int duplicate = -1;
-        for (int prior = 0; prior < kept && duplicate < 0; prior++)
-            if (strcasecmp(labels[survivors[prior]], labels[index]) == 0) duplicate = prior;
-
-        if (duplicate < 0) {
-            survivors[kept++] = index;
-            continue;
+        char user_path[PATH_MAX];
+        const int user_file =
+            (size_t) snprintf(user_path, sizeof(user_path), "%s%s%s", user_dir, names[index], ext) < sizeof(user_path)
+            && file_exist(user_path);
+        if (index == 0 || strchr(names[index], '/') || user_file)
+            snprintf(result[index], sizeof(result[index]), "%s", names[index]);
+        else {
+            static const char prefix[] = "MustardOS/";
+            const size_t name_length = strlen(names[index]);
+            if (sizeof(prefix) + name_length <= sizeof(result[index])) {
+                memcpy(result[index], prefix, sizeof(prefix) - 1);
+                memcpy(result[index] + sizeof(prefix) - 1, names[index], name_length + 1);
+            } else {
+                snprintf(result[index], sizeof(result[index]), "%s", names[index]);
+            }
         }
-
-        if (preset_is_user(user_dir, names[index], ext)) survivors[duplicate] = index;
     }
 
-    return kept;
+    *keys = result;
+    return 1;
 }
 
 void colour_init(void) {
     free(filter_names);
     free(filter_labels);
+    free(filter_keys);
     free(shader_names);
     free(shader_labels);
+    free(shader_keys);
     free(shader_cost);
     free(shader_cost_720p);
     free(shader_cost_1080p);
     free(shader_compatibility);
     filter_names = NULL;
     filter_labels = NULL;
+    filter_keys = NULL;
     shader_names = NULL;
     shader_labels = NULL;
+    shader_keys = NULL;
     shader_cost = NULL;
     shader_cost_720p = NULL;
     shader_cost_1080p = NULL;
@@ -691,22 +713,8 @@ void colour_init(void) {
     for (int i = 0; i < filter_count; i++)
         load_filter_label(filter_names[i], filter_labels[i], sizeof(filter_labels[0]));
 
-    int *filter_keep = filter_count ? calloc((size_t) filter_count, sizeof(*filter_keep)) : NULL;
-    if (filter_keep) {
-        const int kept = dedupe_by_label(
-            filter_names, filter_labels, filter_count, COLOUR_FILTER_USER_DIR, ".ini", filter_keep
-        );
-        for (int i = 0; i < kept; i++) {
-            const int from = filter_keep[i];
-            if (from == i) continue;
-            memcpy(filter_names[i], filter_names[from], sizeof(filter_names[0]));
-            memcpy(filter_labels[i], filter_labels[from], sizeof(filter_labels[0]));
-        }
-        filter_count = kept;
-        free(filter_keep);
-    }
-
     sort_filter_presets();
+    if (!build_preset_keys(filter_names, filter_count, COLOUR_FILTER_USER_DIR, ".ini", &filter_keys)) filter_count = 0;
 
     shader_count = scan_presets(COLOUR_SHADER_DIR, COLOUR_SHADER_USER_DIR, ".frag", &shader_names);
     shader_labels = calloc((size_t) shader_count, sizeof(*shader_labels));
@@ -719,26 +727,8 @@ void colour_init(void) {
     for (int i = 0; i < shader_count; i++)
         load_shader_metadata(i);
 
-    int *shader_keep = shader_count ? calloc((size_t) shader_count, sizeof(*shader_keep)) : NULL;
-    if (shader_keep) {
-        const int kept = dedupe_by_label(
-            shader_names, shader_labels, shader_count, COLOUR_SHADER_USER_DIR, ".frag", shader_keep
-        );
-        for (int i = 0; i < kept; i++) {
-            const int from = shader_keep[i];
-            if (from == i) continue;
-            memcpy(shader_names[i], shader_names[from], sizeof(shader_names[0]));
-            memcpy(shader_labels[i], shader_labels[from], sizeof(shader_labels[0]));
-            shader_cost[i] = shader_cost[from];
-            shader_cost_720p[i] = shader_cost_720p[from];
-            shader_cost_1080p[i] = shader_cost_1080p[from];
-            shader_compatibility[i] = shader_compatibility[from];
-        }
-        shader_count = kept;
-        free(shader_keep);
-    }
-
     sort_shader_presets();
+    if (!build_preset_keys(shader_names, shader_count, COLOUR_SHADER_USER_DIR, ".frag", &shader_keys)) shader_count = 0;
 
     LOG_INFO(mux_module, "Colour: found %d filter preset(s), %d shader(s)", filter_count, shader_count);
 }
@@ -754,13 +744,13 @@ const char *colour_filter_preset_label(const int index) {
 
 const char *colour_filter_preset_key(const int index) {
     if (index < 0 || index >= filter_count) return "none";
-    return filter_names[index];
+    return filter_keys[index];
 }
 
 int colour_filter_preset_index(const char *key) {
     if (!key || !*key) return -1;
     for (int index = 0; index < filter_count; index++)
-        if (strcmp(filter_names[index], key) == 0) return index;
+        if (strcmp(filter_keys[index], key) == 0 || strcmp(filter_names[index], key) == 0) return index;
     return -1;
 }
 
@@ -775,13 +765,13 @@ const char *colour_shader_label(const int index) {
 
 const char *colour_shader_key(const int index) {
     if (index < 0 || index >= shader_count) return "none";
-    return shader_names[index];
+    return shader_keys[index];
 }
 
 int colour_shader_index(const char *key) {
     if (!key || !*key) return -1;
     for (int index = 0; index < shader_count; index++)
-        if (strcmp(shader_names[index], key) == 0) return index;
+        if (strcmp(shader_keys[index], key) == 0 || strcmp(shader_names[index], key) == 0) return index;
     return -1;
 }
 
@@ -1212,8 +1202,7 @@ static int parse_shader_direct_source(const char *src) {
         const char *p = line;
         while ((size_t) (p - line) < len && (*p == ' ' || *p == '\t'))
             p++;
-        if ((size_t) (p - line) + 29 <= len && strncasecmp(p, "#pragma pickles_direct_source", 29) == 0)
-            return 1;
+        if ((size_t) (p - line) + 29 <= len && strncasecmp(p, "#pragma pickles_direct_source", 29) == 0) return 1;
         if (!end) break;
         line = end + 1;
     }
@@ -1896,9 +1885,7 @@ void colour_shader_export_contract(FILE *stream) {
     fprintf(stream, "shader_u_resolution,%dx%d\n", shader_contract_output_w, shader_contract_output_h);
     fprintf(stream, "shader_u_native_resolution,%dx%d\n", shader_contract_native_w, shader_contract_native_h);
     fprintf(stream, "shader_u_source_resolution,%dx%d\n", shader_contract_source_w, shader_contract_source_h);
-    fprintf(
-        stream, "shader_u_texture_resolution,%.4fx%.4f\n", shader_contract_texture_w, shader_contract_texture_h
-    );
+    fprintf(stream, "shader_u_texture_resolution,%.4fx%.4f\n", shader_contract_texture_w, shader_contract_texture_h);
     fprintf(stream, "shader_u_source_uv_extent,%.6fx%.6f\n", shader_contract_uv_w, shader_contract_uv_h);
     fprintf(stream, "shader_u_frame,%d\n", shader_frame_count);
     fprintf(stream, "shader_u_time,%.1f\n", (double) shader_frame_count);

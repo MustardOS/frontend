@@ -796,6 +796,7 @@ int main(const int argc, char *argv[]) {
         const uint64_t services_start = perf_begin();
 
         mux_input_poll();
+        rumble_bridge_tick(loop_now);
         const uint64_t link_start = perf_begin();
         link_tick(loop_now, pause_menu_is_active());
         perf_end(perf_stage_service_link, link_start);

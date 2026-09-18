@@ -6,21 +6,22 @@
 #include <strings.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <common/display/language.h>
 #include <common/platform/device.h>
 #include <common/storage/fileio.h>
 #include "overlay_library.h"
 
-#define OVERLAY_LIBRARY_MAX 128
-#define OVERLAY_KEY_MAX     64
-#define OVERLAY_LABEL_MAX   64
+#define OVERLAY_KEY_MAX   64
+#define OVERLAY_LABEL_MAX 64
 
 struct overlay_entry {
     char key[OVERLAY_KEY_MAX];
     char label[OVERLAY_LABEL_MAX];
 };
 
-static struct overlay_entry entries[OVERLAY_LIBRARY_MAX];
+static struct overlay_entry *entries;
 static int entry_count = -1;
+static int entry_capacity;
 
 int overlay_library_dir(char *out, const size_t out_size) {
     return (size_t) snprintf(out, out_size, OVERLAY_IMAGE_ROOT "%dx%d/", device.screen.width, device.screen.height)
@@ -38,6 +39,9 @@ static int has_png_extension(const char *name) {
 }
 
 static void prettify(const char *key, char *out, const size_t out_size) {
+    const char *base = strrchr(key, '/');
+    if (base) key = base + 1;
+
     size_t written = 0;
     int start_of_word = 1;
 
@@ -68,45 +72,73 @@ static int entry_compare(const void *a, const void *b) {
     return key_folded ? key_folded : strcmp(left->key, right->key);
 }
 
-static void scan_into(const char *root) {
-    DIR *directory = opendir(root);
-    if (!directory) return;
+static int append_entry(const char *key) {
+    for (int index = 1; index < entry_count; index++)
+        if (strcasecmp(entries[index].key, key) == 0) return 1;
+
+    if (entry_count == entry_capacity) {
+        const int capacity = entry_capacity ? entry_capacity * 2 : 32;
+        void *next = realloc(entries, (size_t) capacity * sizeof(*entries));
+        if (!next) return 0;
+        entries = next;
+        entry_capacity = capacity;
+    }
+
+    snprintf(entries[entry_count].key, sizeof(entries[entry_count].key), "%s", key);
+    prettify(key, entries[entry_count].label, sizeof(entries[entry_count].label));
+    entry_count++;
+    return 1;
+}
+
+static int scan_into(const char *root, const char *prefix, const int depth) {
+    char path[PATH_MAX];
+    if ((size_t) snprintf(path, sizeof(path), "%s%s", root, prefix ? prefix : "") >= sizeof(path)) return 1;
+
+    DIR *directory = opendir(path);
+    if (!directory) return 1;
 
     const struct dirent *item;
-    while ((item = readdir(directory)) && entry_count < OVERLAY_LIBRARY_MAX) {
-        if (item->d_name[0] == '.' || !has_png_extension(item->d_name)) continue;
+    int okay = 1;
+    while (okay && (item = readdir(directory))) {
+        if (item->d_name[0] == '.') continue;
 
         char key[OVERLAY_KEY_MAX];
-        snprintf(key, sizeof(key), "%s", item->d_name);
+        if ((size_t) snprintf(key, sizeof(key), "%s%s", prefix ? prefix : "", item->d_name) >= sizeof(key)) continue;
+
+        char item_path[PATH_MAX];
+        if ((size_t) snprintf(item_path, sizeof(item_path), "%s%s", root, key) >= sizeof(item_path)) continue;
+
+        struct stat status;
+        if (lstat(item_path, &status) != 0) continue;
+        if (S_ISDIR(status.st_mode)) {
+            if (depth >= 1) continue;
+            char nested[OVERLAY_KEY_MAX];
+            if ((size_t) snprintf(nested, sizeof(nested), "%s/", key) >= sizeof(nested)) continue;
+            okay = scan_into(root, nested, depth + 1);
+            continue;
+        }
+        if (!S_ISREG(status.st_mode) || !has_png_extension(item->d_name)) continue;
 
         char *dot = strrchr(key, '.');
         if (dot) *dot = '\0';
-        if (!key[0]) continue;
-
-        char label[OVERLAY_LABEL_MAX];
-        prettify(key, label, sizeof(label));
-
-        int seen = 0;
-        for (int index = 0; index < entry_count && !seen; index++)
-            seen = strcasecmp(entries[index].key, key) == 0 || strcasecmp(entries[index].label, label) == 0;
-        if (seen) continue;
-
-        snprintf(entries[entry_count].key, OVERLAY_KEY_MAX, "%s", key);
-        snprintf(entries[entry_count].label, OVERLAY_LABEL_MAX, "%s", label);
-        entry_count++;
+        if (!key[0] || strcasecmp(key, "none") == 0) continue;
+        okay = append_entry(key);
     }
 
     closedir(directory);
+    return okay;
 }
 
 void overlay_library_refresh(void) {
     entry_count = 0;
+    if (!append_entry("none")) return;
+    snprintf(entries[0].label, sizeof(entries[0].label), "%s", lang.generic.none);
 
     char root[PATH_MAX];
-    if (overlay_library_dir(root, sizeof(root))) scan_into(root);
-    if (overlay_system_dir(root, sizeof(root))) scan_into(root);
+    if (overlay_library_dir(root, sizeof(root))) scan_into(root, NULL, 0);
+    if (overlay_system_dir(root, sizeof(root))) scan_into(root, NULL, 0);
 
-    if (entry_count > 1) qsort(entries, (size_t) entry_count, sizeof(entries[0]), entry_compare);
+    if (entry_count > 2) qsort(entries + 1, (size_t) entry_count - 1, sizeof(entries[0]), entry_compare);
 }
 
 static void ensure_loaded(void) {
@@ -140,7 +172,7 @@ int overlay_library_index(const char *key) {
 
 int overlay_library_path(const int index, char *out, const size_t out_size) {
     ensure_loaded();
-    if (index < 0 || index >= entry_count) return 0;
+    if (index <= 0 || index >= entry_count) return 0;
 
     char root[PATH_MAX];
     if (overlay_library_dir(root, sizeof(root))
@@ -154,7 +186,7 @@ int overlay_library_path(const int index, char *out, const size_t out_size) {
 
 int overlay_library_is_user(const int index) {
     ensure_loaded();
-    if (index < 0 || index >= entry_count) return 0;
+    if (index <= 0 || index >= entry_count) return 0;
 
     char root[PATH_MAX];
     char path[PATH_MAX];

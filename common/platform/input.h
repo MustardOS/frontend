@@ -239,6 +239,8 @@ uint32_t mux_input_source_generation(void);
 
 int mux_input_source_stick_count(int index);
 
+int mux_input_source_rumble(int index, uint16_t low_frequency, uint16_t high_frequency);
+
 void append_combo(mux_input_options *opts, mux_input_combo combo);
 
 mux_nav_type get_sticknav_mask(int sticknav_setting);
