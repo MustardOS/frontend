@@ -203,6 +203,7 @@ struct session_settings_t {
     int overlay_crop_bottom;
     int overlay_crop_left;
     int overlay_crop_right;
+    int overlay_centre_crop;
     int viewport_offset_x;
     int viewport_offset_y;
     int viewport_stretch_x;
@@ -584,6 +585,8 @@ void session_settings_cycle_overlay_crop_bottom(int direction);
 void session_settings_cycle_overlay_crop_left(int direction);
 
 void session_settings_cycle_overlay_crop_right(int direction);
+
+void session_settings_cycle_overlay_centre_crop(int direction);
 
 void session_settings_cycle_overlay_opacity(int direction);
 

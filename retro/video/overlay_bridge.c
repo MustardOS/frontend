@@ -125,9 +125,25 @@ void overlay_bridge_render(SDL_Renderer *renderer, const int canvas_w, const int
     if (width < 1) width = 1;
     if (height < 1) height = 1;
 
+    int x = (canvas_w - width) / 2;
+    int y = (canvas_h - height) / 2;
+    if (!session_settings.overlay_centre_crop) {
+        int full_width = current_overlay_w;
+        int full_height = current_overlay_h;
+        if (session_settings.overlay_zoom != 100) {
+            full_width = full_width * session_settings.overlay_zoom / 100;
+            full_height = full_height * session_settings.overlay_zoom / 100;
+        }
+        full_width += session_settings.overlay_stretch_x;
+        full_height += session_settings.overlay_stretch_y;
+        if (full_width < 1) full_width = 1;
+        if (full_height < 1) full_height = 1;
+        x = (canvas_w - full_width) / 2 + left * session_settings.overlay_zoom / 100;
+        y = (canvas_h - full_height) / 2 + top * session_settings.overlay_zoom / 100;
+    }
+
     const SDL_Rect logical_dst = {
-        (canvas_w - width) / 2 + session_settings.overlay_offset_x,
-        (canvas_h - height) / 2 + session_settings.overlay_offset_y, width, height
+        x + session_settings.overlay_offset_x, y + session_settings.overlay_offset_y, width, height
     };
     SDL_Rect output_dst = logical_dst;
     if (physical_output) display_map_logical_rect(&logical_dst, &output_dst);

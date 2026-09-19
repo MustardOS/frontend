@@ -112,6 +112,7 @@ static const struct session_settings_t defaults = {
     .overlay_crop_bottom = 0,
     .overlay_crop_left = 0,
     .overlay_crop_right = 0,
+    .overlay_centre_crop = 1,
     .viewport_offset_x = 0,
     .viewport_offset_y = 0,
     .viewport_stretch_x = 0,
@@ -319,14 +320,12 @@ struct setting_descriptor {
 };
 
 #define SETTING_RANGE(FIELD, MINIMUM, MAXIMUM)                                                                         \
-    { #FIELD, offsetof(struct session_settings_t, FIELD), setting_range, MINIMUM, MAXIMUM, NULL, 0 }
+    {#FIELD, offsetof(struct session_settings_t, FIELD), setting_range, MINIMUM, MAXIMUM, NULL, 0}
 #define SETTING_CHOICES(FIELD, CHOICES)                                                                                \
-    {                                                                                                                  \
-        #FIELD, offsetof(struct session_settings_t, FIELD), setting_choices, 0, 0, CHOICES,                            \
-            sizeof(CHOICES) / sizeof((CHOICES)[0])                                                                     \
-    }
+    {#FIELD,  offsetof(struct session_settings_t, FIELD), setting_choices, 0, 0,                                       \
+     CHOICES, sizeof(CHOICES) / sizeof((CHOICES)[0])}
 #define SETTING_SPECIAL(FIELD, VALIDATION)                                                                             \
-    { #FIELD, offsetof(struct session_settings_t, FIELD), VALIDATION, 0, 0, NULL, 0 }
+    {#FIELD, offsetof(struct session_settings_t, FIELD), VALIDATION, 0, 0, NULL, 0}
 
 static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(scaling_mode, 0, video_scale_count - 1),
@@ -406,6 +405,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(overlay_crop_bottom, 0, OVERLAY_CROP_MAX),
     SETTING_RANGE(overlay_crop_left, 0, OVERLAY_CROP_MAX),
     SETTING_RANGE(overlay_crop_right, 0, OVERLAY_CROP_MAX),
+    SETTING_RANGE(overlay_centre_crop, 0, 1),
     SETTING_SPECIAL(viewport_offset_x, setting_viewport_x),
     SETTING_SPECIAL(viewport_offset_y, setting_viewport_y),
     SETTING_SPECIAL(viewport_stretch_x, setting_viewport_x),
@@ -2299,6 +2299,12 @@ void session_settings_cycle_overlay_crop_right(const int direction) {
     overlay_bridge_apply();
 }
 
+void session_settings_cycle_overlay_centre_crop(const int direction) {
+    (void) direction;
+    session_settings.overlay_centre_crop = !session_settings.overlay_centre_crop;
+    overlay_bridge_apply();
+}
+
 void session_settings_reset_overlay(void) {
     session_settings.overlay_offset_x = 0;
     session_settings.overlay_offset_y = 0;
@@ -2309,6 +2315,7 @@ void session_settings_reset_overlay(void) {
     session_settings.overlay_crop_bottom = 0;
     session_settings.overlay_crop_left = 0;
     session_settings.overlay_crop_right = 0;
+    session_settings.overlay_centre_crop = 1;
     overlay_bridge_apply();
 }
 
