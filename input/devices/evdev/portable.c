@@ -13,6 +13,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "../device_rumble.h"
@@ -23,6 +24,7 @@
 
 #define PRIVATE_DEVICE_DIR "/dev/muinput"
 #define PIXEL_SWAP_PATH    "/run/muinput/input_dpad_to_joystick"
+#define INPUT_ACTIVITY     "/run/muos/input_activity"
 
 enum portable_layout_id {
     layout_standard,
@@ -461,6 +463,30 @@ static int portable_initialise(
     return 0;
 }
 
+/*
+ * muinput holds an exclusive grab on the source pad, and the synthetic device it
+ * publishes is grabbed in turn by content, so nothing downstream can observe
+ * gameplay input. Publish a counter that moves whenever a key is seen, letting
+ * the idle timer tell active play from genuinely idle.
+ *
+ * Keys only. Analogue axes drift at rest on some boards, and treating that as
+ * activity would stop the device ever going idle.
+ */
+static void note_input_activity(void) {
+    static unsigned long counter = 0;
+    static time_t last = 0;
+
+    const time_t now = time(NULL);
+    if (now == last) return;
+    last = now;
+
+    FILE *file = fopen(INPUT_ACTIVITY, "w");
+    if (!file) return;
+
+    fprintf(file, "%lu\n", ++counter);
+    fclose(file);
+}
+
 static int poll_source(struct portable_state *state) {
     struct input_event events[64];
     int dirty = 0;
@@ -475,6 +501,7 @@ static int poll_source(struct portable_state *state) {
         for (int i = 0; i < result; ++i) {
             const struct input_event *event = &events[i];
             if (event->type == EV_KEY) {
+                note_input_activity();
                 if (map_dpad_key(event->code) < ABS_CNT) {
                     emit_dpad(state, event->code, event->value != 0);
                     dirty = 1;
