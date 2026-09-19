@@ -1,4 +1,9 @@
+#include <fcntl.h>
+#include <linux/input.h>
+#include <stdio.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include <common/platform/board.h>
 #include <common/platform/device.h>
 #include <common/runtime/log.h>
@@ -107,8 +112,75 @@ int board_layout_map_swap(void) {
     return current_board ? current_board->layout_map_swap : 0;
 }
 
+#define VOLUME_KEY_DEVICE_NAME "gpio-keys"
+#define VOLUME_KEY_EVENT_SCAN  32
+
+static int volume_event_probed = 0;
+static int volume_event_cached = nop;
+
+static int board_key_bit_set(const unsigned long *bits, const int bit) {
+    const int word = bit / (int) (8 * sizeof(unsigned long));
+    const int off = bit % (int) (8 * sizeof(unsigned long));
+
+    return (bits[word] >> off) & 1UL;
+}
+
+/*
+ * The volume keys do not live on a stable event node. On the GKD Pixel 2 the
+ * gpio-keys and joypad drivers probe about 20 ms apart, so event0 and event1
+ * swap between boots and a hardcoded index is right only some of the time.
+ *
+ * Find the node by name instead, and confirm it really carries both volume
+ * keys before trusting it. Anything unexpected falls back to the board table.
+ */
+static int board_probe_volume_event_index(void) {
+    for (int idx = 0; idx < VOLUME_KEY_EVENT_SCAN; idx++) {
+        char path[32];
+        snprintf(path, sizeof(path), "/dev/input/event%d", idx);
+
+        const int fd = open(path, O_RDONLY | O_NONBLOCK);
+        if (fd < 0) continue;
+
+        char name[128] = {0};
+        unsigned long keys[(KEY_MAX / (8 * sizeof(unsigned long))) + 1] = {0};
+        int match = 0;
+
+        if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 &&
+            strcmp(name, VOLUME_KEY_DEVICE_NAME) == 0 &&
+            ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys) >= 0 &&
+            board_key_bit_set(keys, KEY_VOLUMEUP) &&
+            board_key_bit_set(keys, KEY_VOLUMEDOWN)) {
+            match = 1;
+        }
+
+        close(fd);
+
+        if (match) return idx;
+    }
+
+    return nop;
+}
+
 int board_volume_event_index(void) {
-    return current_board ? board_adjust_event_index(current_board->vol_event) : nop;
+    const int table_index = current_board ? board_adjust_event_index(current_board->vol_event) : nop;
+
+    /* Boards with no raw volume device stay opted out - do not probe for one. */
+    if (table_index == nop) return nop;
+
+    if (!volume_event_probed) {
+        volume_event_probed = 1;
+        volume_event_cached = board_probe_volume_event_index();
+
+        if (volume_event_cached != nop && volume_event_cached != table_index) {
+            LOG_INFO("board", "Volume keys found on event%d, board table said event%d",
+                     volume_event_cached, table_index);
+        } else if (volume_event_cached == nop) {
+            LOG_WARN("board", "No '%s' device with volume keys, using board table event%d",
+                     VOLUME_KEY_DEVICE_NAME, table_index);
+        }
+    }
+
+    return volume_event_cached != nop ? volume_event_cached : table_index;
 }
 
 int board_power_event_index(void) {
