@@ -32,6 +32,24 @@
 #define KB_ZOOM 0.18f
 #define KB_PAN  0.06f
 
+/* ========================================================================= */
+/* PERSPECTIVE CRAWL TUNING PARAMETERS                                       */
+/* ========================================================================= */
+#define PERSPECTIVE_ENABLE         1       // 1 = Perspective crawl, 0 = Classic 2D
+#define PERSPECTIVE_TOP_SCALE      0.50f   // Scale at top horizon (~50% width)
+#define PERSPECTIVE_BOTTOM_SCALE   1.15f   // Scale at bottom entry (wider than screen)
+#define PERSPECTIVE_SLOPE_EXP      1.0f    // Slope curve power: 1.0 = linear slope, >1.0 = steeper tilt
+#define PERSPECTIVE_SPEED_MULT     1.0f    // Overall scroll speed multiplier
+#define PERSPECTIVE_SLICE_H        2       // Strip slice height (px) for smooth rasterization
+#define PERSPECTIVE_FADE_TOP_FRAC  0.08f   // Fade-out distance fraction at top horizon
+#define PERSPECTIVE_FADE_BOT_FRAC  0.04f   // Fade-in distance fraction at bottom entry
+
+/* QR CODE CONFIGURATION */
+#define QR_KEEP_SQUARE             1       // 1 = Keep QR square & scannable, 0 = perspective warp
+#define QR_EXTRA_PAD_TOP_PX        30      // Extra padding (px @ REF_H) above QR block
+#define QR_EXTRA_PAD_BOT_PX        5       // Extra padding (px @ REF_H) below QR block
+/* ========================================================================= */
+
 #define COL_TITLE_R 247
 #define COL_TITLE_G 227
 #define COL_TITLE_B 24
@@ -233,6 +251,80 @@ static int g_factory_music_fading = 0;
 static int sx(const int v) {
     return (int) lroundf((float) v * g_scale);
 }
+
+/* ========================================================================= */
+/* PERSPECTIVE PROJECTION UTILITIES                                          */
+/* ========================================================================= */
+
+static inline float get_perspective_scale(const float sy) {
+#if !PERSPECTIVE_ENABLE
+    (void) sy;
+    return 1.0f;
+#else
+    const float H = (float) g_screen_h;
+    const float s0 = PERSPECTIVE_TOP_SCALE;
+    const float s1 = PERSPECTIVE_BOTTOM_SCALE;
+    float norm_y = sy / H;
+    if (norm_y < 0.0f) norm_y = 0.0f;
+    if (norm_y > 1.0f) norm_y = 1.0f;
+    if (PERSPECTIVE_SLOPE_EXP != 1.0f) {
+        norm_y = powf(norm_y, PERSPECTIVE_SLOPE_EXP);
+    }
+    return s0 + (s1 - s0) * norm_y;
+#endif
+}
+
+static inline float screen_to_world_y(const float sy) {
+#if !PERSPECTIVE_ENABLE
+    return sy;
+#else
+    if (sy <= 0.0f) return sy / PERSPECTIVE_TOP_SCALE;
+    const float H = (float) g_screen_h;
+    const float s0 = PERSPECTIVE_TOP_SCALE;
+    const float s1 = PERSPECTIVE_BOTTOM_SCALE;
+    const float m = (s1 - s0) / H;
+    if (fabsf(m) < 0.00001f) return sy / s0;
+    return (1.0f / m) * logf(1.0f + (m * sy) / s0);
+#endif
+}
+
+static inline float world_to_screen_y(const float wy) {
+#if !PERSPECTIVE_ENABLE
+    return wy;
+#else
+    const float H = (float) g_screen_h;
+    const float s0 = PERSPECTIVE_TOP_SCALE;
+    const float s1 = PERSPECTIVE_BOTTOM_SCALE;
+    const float m = (s1 - s0) / H;
+    if (fabsf(m) < 0.00001f) return wy * s0;
+    if (wy <= 0.0f) return wy * s0;
+    return (s0 / m) * (expf(m * wy) - 1.0f);
+#endif
+}
+
+static inline float get_perspective_alpha(const float sy) {
+#if !PERSPECTIVE_ENABLE
+    (void) sy;
+    return 1.0f;
+#else
+    const float H = (float) g_screen_h;
+    const float top_fade = H * PERSPECTIVE_FADE_TOP_FRAC;
+    const float bot_fade = H * PERSPECTIVE_FADE_BOT_FRAC;
+    float a = 1.0f;
+    if (sy < top_fade) {
+        if (top_fade <= 0.0001f) return 0.0f;
+        a = sy / top_fade;
+    } else if (sy > H - bot_fade) {
+        if (bot_fade <= 0.0001f) return 0.0f;
+        a = (H - sy) / bot_fade;
+    }
+    if (a < 0.0f) a = 0.0f;
+    if (a > 1.0f) a = 1.0f;
+    return a;
+#endif
+}
+
+/* ========================================================================= */
 
 static SDL_Texture *load_image_scaled(const char *path, const int target_w, int *out_w, int *out_h) {
     SDL_Surface *surf = IMG_Load(path);
@@ -969,9 +1061,9 @@ static void build_reel(void) {
     add_paragraph(LANG_DONATE, c_body, "kofi");
     add_spacer(sec_gap, "kofi");
     add_paragraph(LANG_QRCODE, c_body, "kofi");
-    add_spacer(sml_gap, "kofi");
+    add_spacer(sml_gap + sx(QR_EXTRA_PAD_TOP_PX), "kofi");
     add_kofi_qr();
-    add_spacer(big_gap, "kofi");
+    add_spacer(big_gap + sx(QR_EXTRA_PAD_BOT_PX), "kofi");
 
     add_title(g_font_big, SONG_TITLE, c_title, "music");
     add_spacer(sml_gap, "music");
@@ -1010,29 +1102,105 @@ static void build_reel(void) {
     relayout_reel();
 }
 
-static void render_block(const block_t *b, const float draw_y) {
+/* ========================================================================= */
+/* PERSPECTIVE-AWARE TEXTURE RENDERING                                       */
+/* ========================================================================= */
+
+static void render_texture_perspective(SDL_Texture *tex, const int tex_w, const int tex_h, const float world_y_top, const float scroll_top, const int preserve_square) {
+    if (!tex || tex_w <= 0 || tex_h <= 0) return;
+
+    if (preserve_square) {
+        /* Render un-skewed 1:1 square centered at perspective projection point */
+        const float wy_mid = world_y_top + (float) tex_h * 0.5f;
+        const float sy_mid = world_to_screen_y(wy_mid - scroll_top);
+
+        const float s = get_perspective_scale(sy_mid);
+        const float dw = (float) tex_w * s;
+        const float dh = (float) tex_h * s;
+
+        SDL_FRect dst;
+        dst.x = ((float) g_screen_w - dw) * 0.5f;
+        dst.y = sy_mid - dh * 0.5f;
+        dst.w = dw;
+        dst.h = dh;
+
+        /* Cull if completely off-screen */
+        if (dst.y + dst.h < 0.0f || dst.y > (float) g_screen_h) return;
+
+        /* Calculate alpha based on visible edges entering/exiting the screen */
+        const float H = (float) g_screen_h;
+        const float top_fade = H * PERSPECTIVE_FADE_TOP_FRAC;
+        const float bot_fade = H * PERSPECTIVE_FADE_BOT_FRAC;
+
+        float a = 1.0f;
+        if (dst.y + dst.h < top_fade) {
+            a = (top_fade > 0.0001f) ? ((dst.y + dst.h) / top_fade) : 0.0f;
+        } else if (dst.y > H - bot_fade) {
+            a = (bot_fade > 0.0001f) ? ((H - dst.y) / bot_fade) : 0.0f;
+        }
+
+        if (a < 0.0f) a = 0.0f;
+        if (a > 1.0f) a = 1.0f;
+
+        SDL_SetTextureAlphaMod(tex, (Uint8) lroundf(a * 255.0f));
+        SDL_RenderCopyF(g_renderer, tex, NULL, &dst);
+        return;
+    }
+
+    /* Strip slice perspective rasterization */
+    const int slice_step = PERSPECTIVE_SLICE_H > 0 ? PERSPECTIVE_SLICE_H : 2;
+
+    for (int v = 0; v < tex_h; v += slice_step) {
+        int v_next = v + slice_step;
+        if (v_next > tex_h) v_next = tex_h;
+
+        const float strip_wy0 = world_y_top + (float) v;
+        const float strip_wy1 = world_y_top + (float) v_next;
+
+        const float sy0 = world_to_screen_y(strip_wy0 - scroll_top);
+        const float sy1 = world_to_screen_y(strip_wy1 - scroll_top);
+
+        if (sy1 < -1.0f || sy0 > (float) g_screen_h + 1.0f) continue;
+
+        const float mid_y = (sy0 + sy1) * 0.5f;
+        const float scale = get_perspective_scale(mid_y);
+        const float sw = (float) tex_w * scale;
+        const float sh = (sy1 - sy0) + 0.35f; // Subpixel seam bridge
+
+        SDL_Rect src;
+        src.x = 0;
+        src.y = v;
+        src.w = tex_w;
+        src.h = v_next - v;
+
+        SDL_FRect dst;
+        dst.x = ((float) g_screen_w - sw) * 0.5f;
+        dst.y = sy0;
+        dst.w = sw;
+        dst.h = sh;
+
+        const float a = get_perspective_alpha(mid_y);
+        SDL_SetTextureAlphaMod(tex, (Uint8) lroundf(a * 255.0f));
+        SDL_RenderCopyF(g_renderer, tex, &src, &dst);
+    }
+}
+
+static void render_block_perspective(const block_t *b, const float world_y_top, const float scroll_top) {
     switch (b->kind) {
         case blk_qr: {
-            SDL_FRect dst;
-            dst.x = (float) (g_screen_w - b->img_w) / 2.0f;
-            dst.y = draw_y;
-            dst.w = (float) b->img_w;
-            dst.h = (float) b->img_h;
-            SDL_RenderCopyF(g_renderer, b->image, NULL, &dst);
+            if (b->image) {
+                const int keep_sq = (QR_KEEP_SQUARE && (b->bg_key && strcmp(b->bg_key, "kofi") == 0));
+                render_texture_perspective(b->image, b->img_w, b->img_h, world_y_top, scroll_top, keep_sq);
+            }
             break;
         }
         case blk_spacer:
             break;
         default: {
-            float y = draw_y;
+            float y = world_y_top;
             for (int i = 0; i < b->line_count; ++i) {
                 if (b->lines[i]) {
-                    SDL_FRect dst;
-                    dst.w = (float) b->line_w[i];
-                    dst.h = (float) b->line_h[i];
-                    dst.x = (float) (g_screen_w - b->line_w[i]) / 2.0f;
-                    dst.y = y;
-                    SDL_RenderCopyF(g_renderer, b->lines[i], NULL, &dst);
+                    render_texture_perspective(b->lines[i], b->line_w[i], b->line_h[i], y, scroll_top, 0);
                 }
                 y += (float) b->line_h[i];
             }
@@ -1042,7 +1210,8 @@ static void render_block(const block_t *b, const float draw_y) {
 }
 
 static void render_reel_pass(const float top, const float bottom, const int reel_offset, const char **want_bg) {
-    const float centre = top + (float) g_screen_h * 0.5f;
+    const float centre_world = top + screen_to_world_y((float) g_screen_h * 0.5f);
+
     for (int i = 0; i < g_block_count; ++i) {
         const block_t *b = &g_blocks[i];
         const float by = (float) (b->y_top + reel_offset);
@@ -1050,16 +1219,15 @@ static void render_reel_pass(const float top, const float bottom, const int reel
         if (by + bh < top) continue;
         if (by > bottom) break;
 
-        const float draw_y = by - top;
-        render_block(b, draw_y);
+        render_block_perspective(b, by, top);
 
-        if (!*want_bg && by <= centre && by + bh >= centre) *want_bg = b->bg_key;
+        if (!*want_bg && by <= centre_world && by + bh >= centre_world) *want_bg = b->bg_key;
     }
 }
 
 static void render_reel(void) {
     const float top = g_scroll_y;
-    const float bottom = top + (float) g_screen_h;
+    const float bottom = top + screen_to_world_y((float) g_screen_h);
 
     const char *want_bg = NULL;
 
@@ -1208,7 +1376,7 @@ static void main_loop(void) {
     Uint64 prev = SDL_GetPerformanceCounter();
     const double freq = (double) SDL_GetPerformanceFrequency();
 
-    g_scroll_y = (float) -g_screen_h;
+    g_scroll_y = -screen_to_world_y((float) g_screen_h);
 
     float intro_hold = INTRO_HOLD_S;
 
@@ -1224,7 +1392,7 @@ static void main_loop(void) {
         prev = now;
         if (dt > 0.1f) dt = 0.1f;
 
-        const float scroll_speed = SCROLL_PX_PER_S * g_scale;
+        const float scroll_speed = SCROLL_PX_PER_S * g_scale * PERSPECTIVE_SPEED_MULT;
 
         if (!g_quit_requested) {
             if (intro_hold > 0.0f) {
