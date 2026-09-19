@@ -68,6 +68,10 @@ int netplay_host(uint16_t port);
 
 int netplay_join(const char *address, uint16_t port);
 
+int netplay_direct_host(uint16_t port);
+
+int netplay_direct_join(const char *address, uint16_t port);
+
 int netplay_discover(void);
 
 unsigned netplay_discovered_count(void);
@@ -96,6 +100,8 @@ void netplay_confirm_pairing(void);
 
 void netplay_disconnect(void);
 
+void netplay_request_disconnect(void);
+
 void netplay_tick(void);
 
 int netplay_before_frame(void);
@@ -117,6 +123,8 @@ void netplay_get_info(netplay_info *info);
 const char *netplay_status_name(netplay_status status);
 
 int netplay_get_client_index(unsigned *index);
+
+int netplay_core_managed(void);
 
 void netplay_set_netpacket_interface(const struct retro_netpacket_callback *callback);
 

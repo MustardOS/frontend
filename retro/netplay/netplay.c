@@ -9,6 +9,7 @@
 #include <netinet/tcp.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -145,6 +146,7 @@ typedef struct {
     pthread_mutex_t mutex;
     atomic_int stop;
     atomic_int disconnecting;
+    atomic_int disconnect_requested;
     SSL_CTX *tls;
     X509 *certificate;
     EVP_PKEY *private_key;
@@ -177,6 +179,7 @@ typedef struct {
     struct retro_netpacket_callback netpacket;
     int netpacket_available;
     int netpacket_started;
+    int pairing_trusted;
     netplay_packet outgoing_packets[NETPLAY_PACKET_QUEUE_CAP];
     unsigned outgoing_head;
     unsigned outgoing_count;
@@ -753,7 +756,8 @@ static int derive_pairing_code(netplay_peer *peer) {
     pthread_mutex_lock(&netplay.mutex);
     snprintf(peer->pairing_code, sizeof(peer->pairing_code), "%06u", code);
     snprintf(netplay.public_info.pairing_code, sizeof(netplay.public_info.pairing_code), "%s", peer->pairing_code);
-    netplay.public_info.pairing_local_confirmed = 0;
+    peer->local_confirmed = netplay.pairing_trusted;
+    netplay.public_info.pairing_local_confirmed = peer->local_confirmed;
     netplay.public_info.pairing_peer_confirmed = 0;
     if (netplay.role == netplay_role_host)
         refresh_pairing_info();
@@ -1673,13 +1677,10 @@ static int queue_state_digest(const uint64_t frame) {
     const uint64_t digest_start = perf_begin();
 
     struct core_state_buffer capture = {
-        .data = netplay.digest_state,
-        .capacity = netplay.digest_state_capacity,
-        .size = 0
+        .data = netplay.digest_state, .capacity = netplay.digest_state_capacity, .size = 0
     };
     const uint64_t serialise_start = SDL_GetPerformanceCounter();
-    const int capture_result =
-        core_state_capture(&capture, 0, NETPLAY_STATE_CAP, 1, "Network Play digest capture");
+    const int capture_result = core_state_capture(&capture, 0, NETPLAY_STATE_CAP, 1, "Network Play digest capture");
     const double serialise_ms =
         (double) (SDL_GetPerformanceCounter() - serialise_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
     netplay.digest_state = capture.data;
@@ -1848,10 +1849,14 @@ static void netpacket_stop(void) {
 
 int netplay_init(const char *core_path, const char *content_path) {
     if (!coreinfo_feature_enabled(coreinfo_feature_netplay) || !state_saves_supported()) return -1;
+    struct sigaction pipe_action = {.sa_handler = SIG_IGN};
+    sigemptyset(&pipe_action.sa_mask);
+    if (sigaction(SIGPIPE, &pipe_action, NULL) != 0) return -1;
     memset(&netplay, 0, sizeof(netplay));
     pthread_mutex_init(&netplay.mutex, NULL);
     atomic_init(&netplay.stop, 0);
     atomic_init(&netplay.disconnecting, 0);
+    atomic_init(&netplay.disconnect_requested, 0);
     atomic_init(&netplay.discovery_stop, 0);
     netplay_initialised = 1;
     netplay.listen_fd = -1;
@@ -1897,7 +1902,7 @@ void netplay_shutdown(void) {
     netplay_initialised = 0;
 }
 
-int netplay_host(const uint16_t requested_port) {
+static int netplay_host_begin(const uint16_t requested_port, const int pairing_trusted) {
     if (!netplay_initialised || !state_saves_supported()) return -1;
     if (atomic_load(&netplay_fast_status) == netplay_status_failed) netplay_disconnect();
     if (netplay_is_active()) return -1;
@@ -1911,6 +1916,7 @@ int netplay_host(const uint16_t requested_port) {
         netplay.discovery_running = 0;
     }
     netplay.port = requested_port ? requested_port : NETPLAY_DEFAULT_PORT;
+    netplay.pairing_trusted = pairing_trusted;
     hash_options(netplay.manifest.option_hash);
     netplay.manifest_ready = 0;
     netplay.role = netplay_role_host;
@@ -1962,7 +1968,15 @@ int netplay_host(const uint16_t requested_port) {
     return 0;
 }
 
-int netplay_join(const char *address, const uint16_t requested_port) {
+int netplay_host(const uint16_t requested_port) {
+    return netplay_host_begin(requested_port, 0);
+}
+
+int netplay_direct_host(const uint16_t requested_port) {
+    return netplay_host_begin(requested_port, 1);
+}
+
+static int netplay_join_begin(const char *address, const uint16_t requested_port, const int pairing_trusted) {
     if (!netplay_initialised || !state_saves_supported() || !address || !address[0]) return -1;
     if (atomic_load(&netplay_fast_status) == netplay_status_failed) netplay_disconnect();
     if (netplay_is_active()) return -1;
@@ -1976,6 +1990,7 @@ int netplay_join(const char *address, const uint16_t requested_port) {
         netplay.discovery_running = 0;
     }
     netplay.port = requested_port ? requested_port : NETPLAY_DEFAULT_PORT;
+    netplay.pairing_trusted = pairing_trusted;
     hash_options(netplay.manifest.option_hash);
     netplay.manifest_ready = 0;
     netplay.role = netplay_role_client;
@@ -1998,6 +2013,14 @@ int netplay_join(const char *address, const uint16_t requested_port) {
     cheevo_set_netplay_active(1);
     cheats_set_suppressed(1);
     return 0;
+}
+
+int netplay_join(const char *address, const uint16_t requested_port) {
+    return netplay_join_begin(address, requested_port, 0);
+}
+
+int netplay_direct_join(const char *address, const uint16_t requested_port) {
+    return netplay_join_begin(address, requested_port, 1);
 }
 
 void netplay_confirm_pairing(void) {
@@ -2115,7 +2138,13 @@ void netplay_disconnect(void) {
     cheats_set_suppressed(0);
     atomic_store(&netplay.stop, 0);
     atomic_store(&netplay.discovery_stop, 0);
+    atomic_store(&netplay.disconnect_requested, 0);
     atomic_store(&netplay.disconnecting, 0);
+}
+
+void netplay_request_disconnect(void) {
+    if (!netplay_initialised || atomic_load(&netplay_fast_status) == netplay_status_idle) return;
+    atomic_store(&netplay.disconnect_requested, 1);
 }
 
 int netplay_discover(void) {
@@ -2283,7 +2312,12 @@ static void record_perf_snapshot(void) {
 }
 
 void netplay_tick(void) {
-    if (!netplay_initialised || atomic_load(&netplay_fast_status) == netplay_status_idle) return;
+    if (!netplay_initialised) return;
+    if (atomic_exchange(&netplay.disconnect_requested, 0)) {
+        netplay_disconnect();
+        return;
+    }
+    if (atomic_load(&netplay_fast_status) == netplay_status_idle) return;
     const int local_menu_open = pause_menu_is_active();
     pthread_mutex_lock(&netplay.mutex);
     if (local_menu_open != netplay.local_menu_open) {
@@ -2600,6 +2634,10 @@ int netplay_get_client_index(unsigned *index) {
     if (!index || !netplay_is_active()) return 0;
     *index = netplay.public_info.local_port;
     return 1;
+}
+
+int netplay_core_managed(void) {
+    return netplay_initialised && netplay.netpacket_available;
 }
 
 void netplay_set_netpacket_interface(const struct retro_netpacket_callback *callback) {
