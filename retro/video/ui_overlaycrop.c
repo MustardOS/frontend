@@ -4,18 +4,20 @@
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
-enum { row_crop_top = 0, row_crop_bottom, row_crop_left, row_crop_right, row_count };
+enum { row_crop_top = 0, row_crop_bottom, row_crop_left, row_crop_right, row_centre_crop, row_count };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.viewport_screen.crop_top, lang.muxretro.viewport_screen.crop_bottom,
-    lang.muxretro.viewport_screen.crop_left, lang.muxretro.viewport_screen.crop_right
+    lang.muxretro.viewport_screen.crop_left, lang.muxretro.viewport_screen.crop_right,
+    lang.muxretro.overlay_screen.centre_crop
 };
 
-static const char *row_glyphs[row_count] = {"croptop", "cropbottom", "cropleft", "cropright"};
+static const char *row_glyphs[row_count] = {"croptop", "cropbottom", "cropleft", "cropright", "centrecrop"};
 
 static const char *row_help[row_count] = {
     lang.muxretro.help.viewport.crop_top, lang.muxretro.help.viewport.crop_bottom,
-    lang.muxretro.help.viewport.crop_left, lang.muxretro.help.viewport.crop_right
+    lang.muxretro.help.viewport.crop_left, lang.muxretro.help.viewport.crop_right,
+    lang.muxretro.help.overlay.centre_crop
 };
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
@@ -31,6 +33,11 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_crop_right:
             snprintf(buf, buf_len, "%s", session_settings_viewport_crop_name(session_settings.overlay_crop_right));
+            break;
+        case row_centre_crop:
+            snprintf(
+                buf, buf_len, "%s", session_settings.overlay_centre_crop ? lang.generic.enabled : lang.generic.disabled
+            );
             break;
         default:
             buf[0] = '\0';
@@ -52,14 +59,16 @@ static void cycle_row(const int index, const int direction) {
         case row_crop_right:
             session_settings_cycle_overlay_crop_right(direction);
             break;
+        case row_centre_crop:
+            session_settings_cycle_overlay_centre_crop(direction);
+            break;
         default:
             break;
     }
 }
 
 static int row_coarse_step(const int index) {
-    (void) index;
-    return 16;
+    return index == row_centre_crop ? 0 : 16;
 }
 
 static void closed(void) {

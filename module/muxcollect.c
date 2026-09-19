@@ -513,7 +513,9 @@ static void handle_keyboard_ok_press(void) {
     key_show = 0;
 
     char collection_name[MAX_BUFFER_SIZE];
-    str_safe_filename(lv_textarea_get_text(ui_txt_entry_collect), collection_name, sizeof(collection_name), "Collection");
+    str_safe_filename(
+        lv_textarea_get_text(ui_txt_entry_collect), collection_name, sizeof(collection_name), "Collection"
+    );
 
     snprintf(new_dir, sizeof(new_dir), "%s/%s", sys_dir, collection_name);
     create_directories(new_dir, 0);

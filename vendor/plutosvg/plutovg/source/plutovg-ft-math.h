@@ -25,21 +25,17 @@
 /* The min and max functions missing in C.  As usual, be careful not to  */
 /* write things like PVG_FT_MIN( a++, b++ ) to avoid side effects.           */
 /*                                                                       */
-#define PVG_FT_MIN( a, b )  ( (a) < (b) ? (a) : (b) )
-#define PVG_FT_MAX( a, b )  ( (a) > (b) ? (a) : (b) )
+#define PVG_FT_MIN(a, b) ((a) < (b) ? (a) : (b))
+#define PVG_FT_MAX(a, b) ((a) > (b) ? (a) : (b))
 
-#define PVG_FT_ABS( a )     ( (a) < 0 ? -(a) : (a) )
+#define PVG_FT_ABS(a) ((a) < 0 ? -(a) : (a))
 
 /*
  * Approximate sqrt(x*x+y*y) using the `alpha max plus beta min'
  * algorithm.  We use alpha = 1, beta = 3/8, giving us results with a
  * largest error less than 7% compared to the exact value.
  */
-#define PVG_FT_HYPOT( x, y )                 \
-          ( x = PVG_FT_ABS( x ),             \
-            y = PVG_FT_ABS( y ),             \
-            x > y ? x + ( 3 * y >> 3 )   \
-                  : y + ( 3 * x >> 3 ) )
+#define PVG_FT_HYPOT(x, y) (x = PVG_FT_ABS(x), y = PVG_FT_ABS(y), x > y ? x + (3 * y >> 3) : y + (3 * x >> 3))
 
 /*************************************************************************/
 /*                                                                       */
@@ -70,9 +66,7 @@
 /*    _second_ argument of this function; this can make a great          */
 /*    difference.                                                        */
 /*                                                                       */
-PVG_FT_Long
-PVG_FT_MulFix(PVG_FT_Long a,
-              PVG_FT_Long b);
+PVG_FT_Long PVG_FT_MulFix(PVG_FT_Long a, PVG_FT_Long b);
 
 /*************************************************************************/
 /*                                                                       */
@@ -97,10 +91,7 @@ PVG_FT_MulFix(PVG_FT_Long a,
 /*    divide by zero; it simply returns `MaxInt' or `MinInt' depending   */
 /*    on the signs of `a' and `b'.                                       */
 /*                                                                       */
-PVG_FT_Long
-PVG_FT_MulDiv(PVG_FT_Long a,
-              PVG_FT_Long b,
-              PVG_FT_Long c);
+PVG_FT_Long PVG_FT_MulDiv(PVG_FT_Long a, PVG_FT_Long b, PVG_FT_Long c);
 
 /*************************************************************************/
 /*                                                                       */
@@ -119,10 +110,7 @@ PVG_FT_MulDiv(PVG_FT_Long a,
 /* <Return>                                                              */
 /*    The result of `(a*0x10000)/b'.                                     */
 /*                                                                       */
-PVG_FT_Long
-PVG_FT_DivFix(PVG_FT_Long a,
-              PVG_FT_Long b);
-
+PVG_FT_Long PVG_FT_DivFix(PVG_FT_Long a, PVG_FT_Long b);
 
 /*************************************************************************/
 /*                                                                       */
@@ -130,7 +118,6 @@ PVG_FT_DivFix(PVG_FT_Long a,
 /*   computations                                                        */
 /*                                                                       */
 /*************************************************************************/
-
 
 /*************************************************************************
  *
@@ -144,7 +131,6 @@ PVG_FT_DivFix(PVG_FT_Long a,
  */
 typedef PVG_FT_Fixed PVG_FT_Angle;
 
-
 /*************************************************************************
  *
  * @macro:
@@ -154,8 +140,7 @@ typedef PVG_FT_Fixed PVG_FT_Angle;
  *   The angle pi expressed in @PVG_FT_Angle units.
  *
  */
-#define PVG_FT_ANGLE_PI  ( 180L << 16 )
-
+#define PVG_FT_ANGLE_PI (180L << 16)
 
 /*************************************************************************
  *
@@ -166,8 +151,7 @@ typedef PVG_FT_Fixed PVG_FT_Angle;
  *   The angle 2*pi expressed in @PVG_FT_Angle units.
  *
  */
-#define PVG_FT_ANGLE_2PI  ( PVG_FT_ANGLE_PI * 2 )
-
+#define PVG_FT_ANGLE_2PI (PVG_FT_ANGLE_PI * 2)
 
 /*************************************************************************
  *
@@ -178,8 +162,7 @@ typedef PVG_FT_Fixed PVG_FT_Angle;
  *   The angle pi/2 expressed in @PVG_FT_Angle units.
  *
  */
-#define PVG_FT_ANGLE_PI2  ( PVG_FT_ANGLE_PI / 2 )
-
+#define PVG_FT_ANGLE_PI2 (PVG_FT_ANGLE_PI / 2)
 
 /*************************************************************************
  *
@@ -190,8 +173,7 @@ typedef PVG_FT_Fixed PVG_FT_Angle;
  *   The angle pi/4 expressed in @PVG_FT_Angle units.
  *
  */
-#define PVG_FT_ANGLE_PI4  ( PVG_FT_ANGLE_PI / 4 )
-
+#define PVG_FT_ANGLE_PI4 (PVG_FT_ANGLE_PI / 4)
 
 /*************************************************************************
  *
@@ -213,9 +195,7 @@ typedef PVG_FT_Fixed PVG_FT_Angle;
  *   function @PVG_FT_Vector_Unit.
  *
  */
-PVG_FT_Fixed
-PVG_FT_Sin(PVG_FT_Angle angle);
-
+PVG_FT_Fixed PVG_FT_Sin(PVG_FT_Angle angle);
 
 /*************************************************************************
  *
@@ -237,9 +217,7 @@ PVG_FT_Sin(PVG_FT_Angle angle);
  *   function @PVG_FT_Vector_Unit.
  *
  */
-PVG_FT_Fixed
-PVG_FT_Cos(PVG_FT_Angle angle);
-
+PVG_FT_Fixed PVG_FT_Cos(PVG_FT_Angle angle);
 
 /*************************************************************************
  *
@@ -257,9 +235,7 @@ PVG_FT_Cos(PVG_FT_Angle angle);
  *   The tangent value.
  *
  */
-PVG_FT_Fixed
-PVG_FT_Tan(PVG_FT_Angle angle);
-
+PVG_FT_Fixed PVG_FT_Tan(PVG_FT_Angle angle);
 
 /*************************************************************************
  *
@@ -281,10 +257,7 @@ PVG_FT_Tan(PVG_FT_Angle angle);
  *   The arc-tangent value (i.e. angle).
  *
  */
-PVG_FT_Angle
-PVG_FT_Atan2(PVG_FT_Fixed x,
-             PVG_FT_Fixed y);
-
+PVG_FT_Angle PVG_FT_Atan2(PVG_FT_Fixed x, PVG_FT_Fixed y);
 
 /*************************************************************************
  *
@@ -306,10 +279,7 @@ PVG_FT_Atan2(PVG_FT_Fixed x,
  *   Constrained value of `value2-value1'.
  *
  */
-PVG_FT_Angle
-PVG_FT_Angle_Diff(PVG_FT_Angle angle1,
-                  PVG_FT_Angle angle2);
-
+PVG_FT_Angle PVG_FT_Angle_Diff(PVG_FT_Angle angle1, PVG_FT_Angle angle2);
 
 /*************************************************************************
  *
@@ -333,10 +303,7 @@ PVG_FT_Angle_Diff(PVG_FT_Angle angle1,
  *     The input angle.
  *
  */
-void
-PVG_FT_Vector_Unit(PVG_FT_Vector* vec,
-                   PVG_FT_Angle angle);
-
+void PVG_FT_Vector_Unit(PVG_FT_Vector *vec, PVG_FT_Angle angle);
 
 /*************************************************************************
  *
@@ -355,10 +322,7 @@ PVG_FT_Vector_Unit(PVG_FT_Vector* vec,
  *     The input angle.
  *
  */
-void
-PVG_FT_Vector_Rotate(PVG_FT_Vector* vec,
-                     PVG_FT_Angle angle);
-
+void PVG_FT_Vector_Rotate(PVG_FT_Vector *vec, PVG_FT_Angle angle);
 
 /*************************************************************************
  *
@@ -377,9 +341,7 @@ PVG_FT_Vector_Rotate(PVG_FT_Vector* vec,
  *   vector coordinates.
  *
  */
-PVG_FT_Fixed
-PVG_FT_Vector_Length(PVG_FT_Vector * vec);
-
+PVG_FT_Fixed PVG_FT_Vector_Length(PVG_FT_Vector *vec);
 
 /*************************************************************************
  *
@@ -401,11 +363,7 @@ PVG_FT_Vector_Length(PVG_FT_Vector * vec);
  *     The vector angle.
  *
  */
-void
-PVG_FT_Vector_Polarize(PVG_FT_Vector * vec,
-                       PVG_FT_Fixed * length,
-                       PVG_FT_Angle * angle);
-
+void PVG_FT_Vector_Polarize(PVG_FT_Vector *vec, PVG_FT_Fixed *length, PVG_FT_Angle *angle);
 
 /*************************************************************************
  *
@@ -427,9 +385,6 @@ PVG_FT_Vector_Polarize(PVG_FT_Vector * vec,
  *     The vector angle.
  *
  */
-void
-PVG_FT_Vector_From_Polar(PVG_FT_Vector* vec,
-                         PVG_FT_Fixed length,
-                         PVG_FT_Angle angle);
+void PVG_FT_Vector_From_Polar(PVG_FT_Vector *vec, PVG_FT_Fixed length, PVG_FT_Angle angle);
 
 #endif /* PLUTOVG_FT_MATH_H */

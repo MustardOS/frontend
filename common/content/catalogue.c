@@ -111,8 +111,7 @@ static const char *cat_dir_find_file(cat_dir_entry *e, const char *filename) {
 }
 
 void load_splash_image_fallback(const char *mux_dim, char *image, const size_t image_size) {
-    if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0
-        && file_exist_nocase(image, image, image_size))
+    if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist_nocase(image, image, image_size))
         return;
 
     if (snprintf(image, image_size, "%s/%simage/splash.png", theme_base, mux_dim) >= 0

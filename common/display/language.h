@@ -2531,6 +2531,7 @@ struct mux_lang {
             char image[MAX_BUFFER_SIZE];
             char adjustment[MAX_BUFFER_SIZE];
             char cropping[MAX_BUFFER_SIZE];
+            char centre_crop[MAX_BUFFER_SIZE];
             char reset[MAX_BUFFER_SIZE];
             char checkerboard_1[MAX_BUFFER_SIZE];
             char checkerboard_4[MAX_BUFFER_SIZE];
@@ -2733,6 +2734,7 @@ struct mux_lang {
                 char opacity[MAX_BUFFER_SIZE];
                 char adjustment[MAX_BUFFER_SIZE];
                 char cropping[MAX_BUFFER_SIZE];
+                char centre_crop[MAX_BUFFER_SIZE];
                 char reset[MAX_BUFFER_SIZE];
             } overlay;
             struct {

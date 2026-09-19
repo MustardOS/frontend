@@ -13,10 +13,10 @@
 #include <common/base/options.h>
 #include "cache.h"
 
-#define CHEEVO_CACHE_DIR  STORAGE_NETWORK "/cheevo/cache"
-#define CHEEVO_HTTP_CAP   (2U * 1024U * 1024U)
-#define CHEEVO_CACHE_CAP  (32U * 1024U * 1024U)
-#define CHEEVO_CACHE_AGE  (30 * 24 * 60 * 60)
+#define CHEEVO_CACHE_DIR STORAGE_NETWORK "/cheevo/cache"
+#define CHEEVO_HTTP_CAP  (2U * 1024U * 1024U)
+#define CHEEVO_CACHE_CAP (32U * 1024U * 1024U)
+#define CHEEVO_CACHE_AGE (30 * 24 * 60 * 60)
 
 static int cache_directory_open(const int create) {
     if (create) create_directories(CHEEVO_CACHE_DIR, 0);

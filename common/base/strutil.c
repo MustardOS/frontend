@@ -735,8 +735,8 @@ static int reserved_device_name(const char *name) {
         if (stem == strlen(devices[i]) && strncasecmp(name, devices[i], stem) == 0) return 1;
     }
 
-    if (stem == 4 && (strncasecmp(name, "COM", 3) == 0 || strncasecmp(name, "LPT", 3) == 0)
-        && name[3] >= '0' && name[3] <= '9') {
+    if (stem == 4 && (strncasecmp(name, "COM", 3) == 0 || strncasecmp(name, "LPT", 3) == 0) && name[3] >= '0'
+        && name[3] <= '9') {
         return 1;
     }
 

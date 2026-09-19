@@ -60,9 +60,12 @@ static core_state core_state_of(const char *zip) {
 
 static const char *core_state_glyph(const core_state state) {
     switch (state) {
-        case core_state_update: return "download";
-        case core_state_absent: return "download";
-        default: return "downloaded";
+        case core_state_update:
+            return "download";
+        case core_state_absent:
+            return "download";
+        default:
+            return "downloaded";
     }
 }
 
@@ -103,9 +106,15 @@ static void resolve_muxzip_path(const char *zip, char *out) {
 
 static void core_value(const char *zip, char *out, const size_t out_size) {
     switch (core_state_of(zip)) {
-        case core_state_update: snprintf(out, out_size, "%s", lang.muxcore.update); break;
-        case core_state_absent: snprintf(out, out_size, "%s", lang.muxcore.not_installed); break;
-        default: snprintf(out, out_size, "%s", lang.muxcore.installed); break;
+        case core_state_update:
+            snprintf(out, out_size, "%s", lang.muxcore.update);
+            break;
+        case core_state_absent:
+            snprintf(out, out_size, "%s", lang.muxcore.not_installed);
+            break;
+        default:
+            snprintf(out, out_size, "%s", lang.muxcore.installed);
+            break;
     }
 }
 
@@ -211,9 +220,12 @@ static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph,
 
 static const char *action_label(const int index) {
     switch (core_state_of(items[index].name)) {
-        case core_state_update: return lang.muxcore.update;
-        case core_state_absent: return lang.generic.download;
-        default: return lang.muxcore.reinstall;
+        case core_state_update:
+            return lang.muxcore.update;
+        case core_state_absent:
+            return lang.generic.download;
+        default:
+            return lang.muxcore.reinstall;
     }
 }
 
@@ -327,9 +339,7 @@ static void handle_a(void) {
     core_asset_name(items[current_item_index].name, asset, sizeof(asset));
 
     char url[MAX_BUFFER_SIZE];
-    snprintf(
-        url, sizeof(url), "https://github.com/MustardOS/extra/releases/latest/download/Core.-.%s.muxzip", asset
-    );
+    snprintf(url, sizeof(url), "https://github.com/MustardOS/extra/releases/latest/download/Core.-.%s.muxzip", asset);
 
     set_download_callbacks(download_finished);
     initiate_download(url, file_path, 1, lang.muxcore.down.core);
@@ -457,9 +467,8 @@ int muxcore_main(void) {
 
     init_elements();
 
-    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, 0},    {ui_lbl_nav_a_glyph, 0},
-                                     {ui_lbl_nav_y, 0},    {ui_lbl_nav_y_glyph, 0},
-                                     {ui_lbl_nav_menu, 0}, {ui_lbl_nav_menu_glyph, 0}};
+    const struct nav_flag nav_e[] = {{ui_lbl_nav_a, 0},       {ui_lbl_nav_a_glyph, 0}, {ui_lbl_nav_y, 0},
+                                     {ui_lbl_nav_y_glyph, 0}, {ui_lbl_nav_menu, 0},    {ui_lbl_nav_menu_glyph, 0}};
 
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();

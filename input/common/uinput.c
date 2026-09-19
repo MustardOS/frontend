@@ -168,7 +168,7 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
         const unsigned short *ff_effects = desc->ff_effects ? desc->ff_effects : default_ff;
         const size_t ff_count = desc->ff_effects && desc->ff_effect_count > 0
                                     ? desc->ff_effect_count
-                              : sizeof(default_ff) / sizeof(default_ff[0]);
+                                    : sizeof(default_ff) / sizeof(default_ff[0]);
 
         for (size_t i = 0; i < ff_count; ++i) {
             if (!set_ioctl_bit(fd, UI_SET_FFBIT, ff_effects[i], "UI_SET_FFBIT")) {

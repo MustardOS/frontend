@@ -841,8 +841,7 @@ void settings_menu_init(void) {
     dialogue_init_confirm(
         &profile_apply_dlg, &theme, ui_screen, lang.muxretro.settings_screen.play_profile,
         lang.muxretro.settings_screen.profile_apply_desc, lang.muxretro.settings_screen.profile_apply,
-        lang.generic.cancel,
-        lang.generic.select, lang.generic.cancel
+        lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
     static const char *reset_options[3];
     reset_options[0] = lang.muxretro.settings_screen.reset_core_options;

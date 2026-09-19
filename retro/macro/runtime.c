@@ -26,9 +26,7 @@ static int16_t stick_y[MACRO_PORT_COUNT][2];
 static int stick_active[MACRO_PORT_COUNT][2];
 
 static uint32_t milliseconds_to_frames(const int milliseconds, const double frames_per_second) {
-    return (uint32_t) (
-        frames_per_second > 0.0 ? (double) milliseconds / 1000.0 * frames_per_second + 0.5 : 6
-    );
+    return (uint32_t) (frames_per_second > 0.0 ? (double) milliseconds / 1000.0 * frames_per_second + 0.5 : 6);
 }
 
 static long next_random(void) {
@@ -46,9 +44,7 @@ static int random_milliseconds(const int minimum, const int maximum) {
     return minimum + (int) (next_random() % (maximum - minimum + 1));
 }
 
-static uint32_t segment_frames(
-    const struct macro_step *step, const int holding, const double frames_per_second
-) {
+static uint32_t segment_frames(const struct macro_step *step, const int holding, const double frames_per_second) {
     const int milliseconds = holding ? random_milliseconds(step->hold_ms, step->hold_rand_ms)
                                      : random_milliseconds(step->wait_ms, step->wait_rand_ms);
     const uint32_t frames = milliseconds_to_frames(milliseconds, frames_per_second);
@@ -74,18 +70,15 @@ static int compare_values(const int32_t value, const int operation, const int32_
     }
 }
 
-static int condition_is_true(
-    const struct macro_step *step, const int port, const int source, const uint64_t input_mask
-) {
+static int
+condition_is_true(const struct macro_step *step, const int port, const int source, const uint64_t input_mask) {
     int result = 0;
 
     if (step->if_test == if_test_count_compare) {
-        result = compare_values(
-            loop_progress[port][source][step->if_loop_ref] + 1, step->if_op, step->loop_count
-        );
+        result = compare_values(loop_progress[port][source][step->if_loop_ref] + 1, step->if_op, step->loop_count);
     } else if (step->if_test == if_test_var_compare) {
-        const int32_t expected = step->if_rhs_is_var ? variables[port][source][step->if_rhs_var_index]
-                                                     : step->var_value;
+        const int32_t expected =
+            step->if_rhs_is_var ? variables[port][source][step->if_rhs_var_index] : step->var_value;
         result = compare_values(variables[port][source][step->var_index], step->if_op, expected);
     } else if (step->if_test == if_test_random) {
         result = step->loop_count > 0 && next_random() % 100 < step->loop_count;
@@ -149,10 +142,8 @@ static void angle_components(const int32_t fixed_degrees, int64_t *sine, int64_t
 
 static int32_t component_to_variable(const int64_t component) {
     const int64_t half = 1LL << 29;
-    return (int32_t) (
-        component >= 0 ? (component * MACRO_VALUE_SCALE + half) / (1LL << 30)
-                       : (component * MACRO_VALUE_SCALE - half) / (1LL << 30)
-    );
+    return (int32_t) (component >= 0 ? (component * MACRO_VALUE_SCALE + half) / (1LL << 30)
+                                     : (component * MACRO_VALUE_SCALE - half) / (1LL << 30));
 }
 
 static int apply_variable_step(const struct macro_step *step, const int port, const int source) {
@@ -328,8 +319,7 @@ uint16_t macro_runtime_drive(
     const struct macro_step *step = &macro->steps[step_at[port][source]];
     const int holding = step_holding[port][source];
 
-    if (step_target[port][source] == 0)
-        step_target[port][source] = segment_frames(step, holding, frames_per_second);
+    if (step_target[port][source] == 0) step_target[port][source] = segment_frames(step, holding, frames_per_second);
     const uint32_t current_target = step_target[port][source];
 
     uint16_t output = 0;

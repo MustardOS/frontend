@@ -28,8 +28,8 @@ static void quarantine(const char *operation, const char *reason) {
 }
 
 void core_state_session_init(void) {
-    session_available = coreinfo_feature_enabled(coreinfo_feature_save_states)
-        && current_core.retro_serialize_size && current_core.retro_serialize && current_core.retro_unserialize;
+    session_available = coreinfo_feature_enabled(coreinfo_feature_save_states) && current_core.retro_serialize_size
+                        && current_core.retro_serialize && current_core.retro_unserialize;
     if (coreinfo_feature_enabled(coreinfo_feature_save_states) && !session_available)
         LOG_WARN(mux_module, "Core-state broker unavailable because the core does not provide the complete state API");
 }
@@ -117,8 +117,8 @@ int core_state_capture_prefixed(
 
     if (!okay || (verify_after && settled != size)) {
         LOG_ERROR(
-            mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu result=%s", operation, settled, size,
-            limit, okay ? "changed" : "rejected"
+            mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu result=%s", operation, settled, size, limit,
+            okay ? "changed" : "rejected"
         );
         quarantine(operation, okay ? "state size changed during capture" : "core rejected serialisation");
         return -1;
@@ -126,8 +126,7 @@ int core_state_capture_prefixed(
 
     buffer->size = size;
     LOG_DEBUG(
-        mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu result=captured", operation, settled, size,
-        limit
+        mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu result=captured", operation, settled, size, limit
     );
     return 0;
 }
@@ -152,7 +151,10 @@ int core_state_restore(const void *data, const size_t size, const size_t caller_
     const size_t reported = current_core.retro_serialize_size();
     if (!valid_size(reported, limit)) {
         hw_render_bridge_exit_core_call();
-        LOG_ERROR(mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu result=invalid", operation, reported, size, limit);
+        LOG_ERROR(
+            mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu result=invalid", operation, reported, size,
+            limit
+        );
         quarantine(operation, reported ? "reported state exceeds the safe limit" : "reported an empty state");
         return -1;
     }
@@ -170,8 +172,8 @@ int core_state_restore(const void *data, const size_t size, const size_t caller_
     hw_render_bridge_exit_core_call();
     if (okay) video_bridge_reset_temporal();
     LOG_DEBUG(
-        mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu policy=%s result=%s", operation, reported,
-        size, limit, coreinfo_state_load_policy() == coreinfo_state_load_exact ? "exact" : "core",
+        mux_module, "Core-state %s reported=%zu supplied=%zu limit=%zu policy=%s result=%s", operation, reported, size,
+        limit, coreinfo_state_load_policy() == coreinfo_state_load_exact ? "exact" : "core",
         okay ? "restored" : "rejected"
     );
     return okay ? 0 : -1;

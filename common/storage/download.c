@@ -19,8 +19,8 @@
 #include <common/storage/download.h>
 #include <common/runtime/log.h>
 
-#define MAX_DOWNLOAD_BYTES ((curl_off_t) (512L * 1024L * 1024L))
-#define TEMP_NAME_ATTEMPTS 64
+#define MAX_DOWNLOAD_BYTES     ((curl_off_t) (512L * 1024L * 1024L))
+#define TEMP_NAME_ATTEMPTS     64
 #define DOWNLOAD_RESERVE_BYTES (4ULL * 1024ULL * 1024ULL)
 
 _Atomic int cancel_download = 0;
@@ -276,9 +276,8 @@ static int progress_callback(
 
     if (!sink->space_checked && dltotal > 0) {
         sink->space_checked = 1;
-        const storage_health_status health = storage_preflight_write(
-            sink->output_path, (uint64_t) dltotal, DOWNLOAD_RESERVE_BYTES, NULL
-        );
+        const storage_health_status health =
+            storage_preflight_write(sink->output_path, (uint64_t) dltotal, DOWNLOAD_RESERVE_BYTES, NULL);
         if (health != storage_health_ok) {
             sink->storage_result = health == storage_health_missing     ? download_result_storage_missing
                                    : health == storage_health_read_only ? download_result_storage_read_only
@@ -416,8 +415,7 @@ int initiate_download_limited(
         return result;
     }
 
-    const storage_health_status health =
-        storage_preflight_write(output_path, 1, DOWNLOAD_RESERVE_BYTES, NULL);
+    const storage_health_status health = storage_preflight_write(output_path, 1, DOWNLOAD_RESERVE_BYTES, NULL);
     if (health != storage_health_ok) {
         const int failure = health == storage_health_missing     ? download_result_storage_missing
                             : health == storage_health_read_only ? download_result_storage_read_only
@@ -457,9 +455,7 @@ int initiate_download_limited(
         progress_span_index = 0;
         progress_span_total = 1;
     }
-    atomic_store_explicit(
-        &progress_bar_value, (progress_span_index * 100) / progress_span_total, memory_order_relaxed
-    );
+    atomic_store_explicit(&progress_bar_value, (progress_span_index * 100) / progress_span_total, memory_order_relaxed);
 
     pthread_t thread;
     const int thread_result = pthread_create(&thread, NULL, download_thread, args);
@@ -488,11 +484,16 @@ int initiate_download(const char *url, const char *output_path, const int show_p
 
 const char *download_result_message(const int result) {
     switch (result) {
-        case download_result_storage_missing: return lang.generic.storage_missing;
-        case download_result_storage_read_only: return lang.generic.storage_read_only;
-        case download_result_storage_full: return lang.generic.storage_full;
-        case download_result_storage_error: return lang.generic.storage_error;
-        default: return lang.generic.failed;
+        case download_result_storage_missing:
+            return lang.generic.storage_missing;
+        case download_result_storage_read_only:
+            return lang.generic.storage_read_only;
+        case download_result_storage_full:
+            return lang.generic.storage_full;
+        case download_result_storage_error:
+            return lang.generic.storage_error;
+        default:
+            return lang.generic.failed;
     }
 }
 
@@ -501,7 +502,9 @@ const char *download_storage_message(const int result) {
         case download_result_storage_missing:
         case download_result_storage_read_only:
         case download_result_storage_full:
-        case download_result_storage_error: return download_result_message(result);
-        default: return NULL;
+        case download_result_storage_error:
+            return download_result_message(result);
+        default:
+            return NULL;
     }
 }

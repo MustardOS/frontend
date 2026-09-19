@@ -122,8 +122,7 @@ static void compile_input_routes(const int port, const double fps) {
     input_route_key_t *key = &input_route_keys[port];
 
     if (input_route_valid[port] && memcmp(key->target, target, sizeof(key->target)) == 0
-        && memcmp(key->turbo, turbo, sizeof(key->turbo)) == 0
-        && memcmp(key->macro, macro, sizeof(key->macro)) == 0) {
+        && memcmp(key->turbo, turbo, sizeof(key->turbo)) == 0 && memcmp(key->macro, macro, sizeof(key->macro)) == 0) {
         refresh_route_periods(port, fps);
         return;
     }
@@ -194,8 +193,9 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
         const int source = route->source;
 
         if (route->macro >= 0) {
-            out |=
-                macro_runtime_drive(port, source, route->macro, resolve_raw_held(route->type, mask, apply_suppress), mask, fps);
+            out |= macro_runtime_drive(
+                port, source, route->macro, resolve_raw_held(route->type, mask, apply_suppress), mask, fps
+            );
             continue;
         }
 

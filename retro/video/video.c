@@ -638,7 +638,6 @@ static void recompute_dest_rect(void) {
     dest_rect.y = (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y;
 
     apply_viewport_crop(canvas_w, canvas_h);
-
 }
 
 void video_bridge_apply_scaling(void) {
@@ -723,8 +722,7 @@ void video_bridge_get_dest_size(int *w, int *h) {
 }
 
 void video_bridge_get_output_geometry(
-    int *source_w, int *source_h, int *logical_w, int *logical_h, int *output_w, int *output_h,
-    int *integer_mapped
+    int *source_w, int *source_h, int *logical_w, int *logical_h, int *output_w, int *output_h, int *integer_mapped
 ) {
     const int visible_w = crop_active ? crop_src_rect.w : split_frame_w();
     const int visible_h = crop_active ? crop_src_rect.h : split_frame_h();
@@ -922,8 +920,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 
     const enum retro_pixel_format pixel_format = mux_retro_get_pixel_format();
     raw_frame_bpp = bpp_for_pixel_format();
-    if (pitch > INT_MAX || pitch < (size_t) width * raw_frame_bpp || (pitch > 0 && height > SIZE_MAX / pitch))
-        return;
+    if (pitch > INT_MAX || pitch < (size_t) width * raw_frame_bpp || (pitch > 0 && height > SIZE_MAX / pitch)) return;
     raw_frame_pitch = pitch;
     const int size_changed = (int) width != frame_w || (int) height != frame_h;
     frame_w = (int) width;

@@ -62,9 +62,7 @@ static int existing_parent(const char *path, char *parent, const size_t capacity
 }
 
 static int path_uses_unmounted_storage(const char *path) {
-    const char *const mounts[] = {
-        device.storage.rom.mount, device.storage.sdcard.mount, device.storage.usb.mount
-    };
+    const char *const mounts[] = {device.storage.rom.mount, device.storage.sdcard.mount, device.storage.usb.mount};
 
     for (size_t i = 0; i < sizeof(mounts) / sizeof(mounts[0]); i++) {
         const char *mount = mounts[i];
@@ -92,8 +90,8 @@ storage_health_status storage_preflight_write(
         const int saved = errno;
         errno = saved;
         return fail(
-            snapshot, saved == ENOENT || saved == ENODEV || saved == ENXIO ? storage_health_missing
-                                                                           : storage_health_error
+            snapshot,
+            saved == ENOENT || saved == ENODEV || saved == ENXIO ? storage_health_missing : storage_health_error
         );
     }
 
@@ -102,8 +100,8 @@ storage_health_status storage_preflight_write(
         const int saved = errno;
         errno = saved;
         return fail(
-            snapshot, saved == ENOENT || saved == ENODEV || saved == ENXIO ? storage_health_missing
-                                                                           : storage_health_error
+            snapshot,
+            saved == ENOENT || saved == ENODEV || saved == ENXIO ? storage_health_missing : storage_health_error
         );
     }
 
@@ -112,9 +110,8 @@ storage_health_status storage_preflight_write(
         errno = EIO;
         return fail(snapshot, storage_health_error);
     }
-    const uint64_t free_bytes = (uint64_t) fs.f_bavail > UINT64_MAX / block_size
-                                    ? UINT64_MAX
-                                    : (uint64_t) fs.f_bavail * block_size;
+    const uint64_t free_bytes =
+        (uint64_t) fs.f_bavail > UINT64_MAX / block_size ? UINT64_MAX : (uint64_t) fs.f_bavail * block_size;
     if (snapshot) snapshot->free_bytes = free_bytes;
 
     if ((fs.f_flag & ST_RDONLY) != 0 || access(parent, W_OK) != 0) {

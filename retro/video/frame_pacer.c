@@ -17,9 +17,9 @@
 
 #define FRAME_PACER_FLIP_TARGET_NS 1500000.0
 
-#define FRAME_PACER_MARGIN_MAX_NS    8000000.0
-#define FRAME_PACER_MARGIN_GROW_NS   1000000.0
-#define FRAME_PACER_MARGIN_SHRINK_NS 8000.0
+#define FRAME_PACER_MARGIN_MAX_NS      8000000.0
+#define FRAME_PACER_MARGIN_GROW_NS     1000000.0
+#define FRAME_PACER_MARGIN_SHRINK_NS   8000.0
 #define FRAME_PACER_FLOOR_PROBE_FRAMES 1800
 #define FRAME_PACER_FLOOR_PROBE_NS     250000.0
 
@@ -271,8 +271,8 @@ void frame_pacer_after_present(void) {
         refresh_period_ns = candidate_ns;
         refresh_period_known = 1;
     } else {
-        refresh_period_ns = refresh_period_ns * (1.0 - FRAME_PACER_REFRESH_SMOOTHING)
-                            + candidate_ns * FRAME_PACER_REFRESH_SMOOTHING;
+        refresh_period_ns =
+            refresh_period_ns * (1.0 - FRAME_PACER_REFRESH_SMOOTHING) + candidate_ns * FRAME_PACER_REFRESH_SMOOTHING;
     }
 }
 

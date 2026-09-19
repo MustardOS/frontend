@@ -138,8 +138,8 @@ void fe_perf_note_saver_deadline_miss(const unsigned count) {
 
 int fe_perf_export_trace(const char *path) {
     static const char *names[fe_perf_stage_count] = {
-        "loop", "input", "nav", "list", "catalogue", "image", "glyph", "font", "lv_task", "render", "idle",
-        "saver_update", "saver_render", "saver_present", "saver_scan", "saver_decode",
+        "loop",    "input",  "nav",  "list",         "catalogue",    "image",         "glyph",      "font",
+        "lv_task", "render", "idle", "saver_update", "saver_render", "saver_present", "saver_scan", "saver_decode",
     };
     _Static_assert(sizeof(names) / sizeof(names[0]) == fe_perf_stage_count, "perf stage names are out of step");
 
@@ -162,8 +162,8 @@ int fe_perf_export_trace(const char *path) {
 
         fprintf(
             f, "%s,%s,%s,%.4f,%.4f,%.4f,%.4f,%.4f,%u,%u,%u,%u\n", mux_module, saver_name[0] ? saver_name : "ui",
-            names[i], mean(&series[i]), percentile(&series[i], 50), percentile(&series[i], 95), percentile(&series[i], 99), peak(&series[i]),
-            series[i].count, loop_count, saver_draw_calls,
+            names[i], mean(&series[i]), percentile(&series[i], 50), percentile(&series[i], 95),
+            percentile(&series[i], 99), peak(&series[i]), series[i].count, loop_count, saver_draw_calls,
             saver_deadline_misses
         );
     }

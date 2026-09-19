@@ -10,16 +10,15 @@ This is where all the magic of the user interface of MustardOS comes to life.
 
 You will need `make`, `ccache`, and a C compiler.
 
-Some dependencies are fetched and built from source on first use (see [External
-Dependencies](#external-dependencies)), which additionally needs `curl` or `wget`, `perl`, and `tar`. Optionally,
+Some dependencies are fetched and built from source on first use (see [External Dependencies](#external-dependencies)), which additionally needs `curl` or
+`wget`, `perl`, and `tar`. Optionally,
 `dialog` or `whiptail` gives `build.sh` a guided setup, and `nasm` is needed for ffmpeg's x86 assembly on x86 hosts.
 
 Everything else depends on which target you are building for.
 
 **Cross-compiling for ARM devices (normal workflow)**
 
-A pre-built aarch64 toolchain is expected at `~/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be
-pointed to by setting the `XTOOL`
+A pre-built aarch64 toolchain is expected at `~/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be pointed to by setting the `XTOOL`
 environment variable. The toolchain must include `gcc`, `g++`, `ar`, `ld`, and `strip` for the target host tuple.
 
 **Native builds for x86 / x86-64**
@@ -47,8 +46,8 @@ On Debian/Ubuntu:
 
 All cross-compile builds go through `build.sh`, which sets up the toolchain environment and then calls `make`.
 
-Run it with no arguments for a guided setup that asks for the device, build type and toolchain, then starts the
-build. It uses `dialog` or `whiptail` when either is installed, and falls back to plain numbered prompts otherwise.
+Run it with no arguments for a guided setup that asks for the device, build type and toolchain, then starts the build. It uses `dialog` or `whiptail` when
+either is installed, and falls back to plain numbered prompts otherwise.
 
 ```sh
 # Guided / Spoon Fed
@@ -67,34 +66,32 @@ DEBUG=1 BUILD=release ./build.sh make -j$(nproc)
 
 **DEVICE targets**
 
-| `DEVICE`           | Use for                         |
-|--------------------|---------------------------------|
-| `ARM64_A53`        | H700, A133P - default if unset  |
-| `ARM64_A53_CRYPTO` | A53 with hardware AES/CRC       |
-| `ARM64`            | Generic ARMv8-A                 |
-| `ARM32`            | Original 35x (ARMv7 hard-float) |
-| `ARM32_A9`         | Cortex-A9 with NEON             |
-| `X86_64`           | Generic 64-bit x86              |
-| `RISCV64`          | Generic 64-bit RISC-V           |
-| `GENERIC`          | Anything else, with `ARCH_FLAGS`|
+| `DEVICE`           | Use for                          |
+|--------------------|----------------------------------|
+| `ARM64_A53`        | H700, A133P - default if unset   |
+| `ARM64_A53_CRYPTO` | A53 with hardware AES/CRC        |
+| `ARM64`            | Generic ARMv8-A                  |
+| `ARM32`            | Original 35x (ARMv7 hard-float)  |
+| `ARM32_A9`         | Cortex-A9 with NEON              |
+| `X86_64`           | Generic 64-bit x86               |
+| `RISCV64`          | Generic 64-bit RISC-V            |
+| `GENERIC`          | Anything else, with `ARCH_FLAGS` |
 
-The toolchain is detected automatically from `$HOME/x-tools` (override with `XTOOL`), picking one whose architecture
-matches `DEVICE`. Set `XDIR` to a directory name under it to choose a specific toolchain.
+The toolchain is detected automatically from `$HOME/x-tools` (override with `XTOOL`), picking one whose architecture matches `DEVICE`. Set `XDIR` to a directory
+name under it to choose a specific toolchain.
 
 ```sh
 # Example: build for generic ARM64
 DEVICE=ARM64 BUILD=release ./build.sh make -j$(nproc)
 ```
 
-`BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if
-unset.
+`BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if unset.
 
 ---
 
 ### Native Build (x86 / x86-64)
 
-Use `DEVICE=NATIVE` to build and run directly on the host machine. This is useful for quick iteration and debugging
-without hardware.
+Use `DEVICE=NATIVE` to build and run directly on the host machine. This is useful for quick iteration and debugging without hardware.
 
 ```sh
 DEVICE=NATIVE BUILD=release ./build.sh make -j$(nproc)
@@ -106,22 +103,21 @@ Binaries and shared libraries land in `bin/` just like a cross-compiled build.
 
 ### Incremental Builds
 
-Builds are incremental. Header dependencies are tracked with `-MMD -MP`, and the generated dependency files are kept
-under `.deps/`, one directory per component, so a rebuild only touches what actually changed.
+Builds are incremental. Header dependencies are tracked with `-MMD -MP`, and the generated dependency files are kept under `.deps/`, one directory per
+component, so a rebuild only touches what actually changed.
 
 ```sh
 # Full rebuild from nothing
 ./build.sh make clean
 ```
 
-Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with
-different flags cannot be reused. The current configuration is recorded in `.build-config`.
+Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with different flags cannot be reused. The current
+configuration is recorded in `.build-config`.
 
 ### Generated metadata
 
-Every normal build refreshes the generated language template, third-party version table, and internal script hashes
-after any configuration-driven clean. Output is compared before replacement, so unchanged metadata keeps its timestamp
-and does not cause unnecessary recompilation.
+Every normal build refreshes the generated language template, third-party version table, and internal script hashes after any configuration-driven clean. Output
+is compared before replacement, so unchanged metadata keeps its timestamp and does not cause unnecessary recompilation.
 
 ```sh
 # Refresh generated files without compiling
@@ -129,17 +125,16 @@ and does not cause unnecessary recompilation.
 ```
 
 The standard outputs are `common/generated/language.json`, `common/generated/thirdparty.h`, and
-`common/generated/verify_data.h`. Verification data is refreshed from the sibling `internal/script` tree when it is
-available; otherwise the checked-in data is retained. Set `INTERNAL_SCRIPT_DIR`, `LANGUAGE_OUTPUT`,
+`common/generated/verify_data.h`. Verification data is refreshed from the sibling `internal/script` tree when it is available; otherwise the checked-in data is
+retained. Set `INTERNAL_SCRIPT_DIR`, `LANGUAGE_OUTPUT`,
 `THIRDPARTY_OUTPUT`, or `VERIFY_OUTPUT` to override those paths. Generating verification data requires `xxhsum`.
 
 ---
 
 ### External Dependencies
 
-Some third party libraries are not kept in this repository. They are fetched from upstream, checksum verified, built
-static and installed into `external/prefix/$DEVICE` by `external/build.sh`, which the build calls for you. Each library
-stamps what it built, so repeat runs cost nothing.
+Some third party libraries are not kept in this repository. They are fetched from upstream, checksum verified, built static and installed into
+`external/prefix/$DEVICE` by `external/build.sh`, which the build calls for you. Each library stamps what it built, so repeat runs cost nothing.
 
 ```sh
 # Rebuild one of them after bumping its pinned version
@@ -161,8 +156,8 @@ Linking them statically means the version shipped in a device rootfs never matte
 * `vendor`: Bundled third party source and licence files
 
 The `common` source tree is grouped into `base`, `compat`, `config`, `content`, `display`, `generated`, `platform`,
-`runtime`, `saver`, `storage`, `tooling`, and `ui`. See [`common/README.md`](common/README.md) for ownership and migration
-rules. Its Makefile uses explicit source groups so adding a file does not silently alter `libmuxcom.so`.
+`runtime`, `saver`, `storage`, `tooling`, and `ui`. See [`common/README.md`](common/README.md) for ownership and migration rules. Its Makefile uses explicit
+source groups so adding a file does not silently alter `libmuxcom.so`.
 
 ### Independent
 
@@ -260,8 +255,7 @@ rules. Its Makefile uses explicit source groups so adding a file does not silent
 
 #### [LVGL](https://github.com/lvgl/lvgl)
 
-Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for
-glyph rasterisation.
+Embedded graphics library used as the core UI toolkit for all menus and widgets. Includes the TinyTTF font renderer for glyph rasterisation.
 
 - Version: 8.4.0
 - License: MIT
@@ -269,10 +263,8 @@ glyph rasterisation.
 
 #### [PlutoSVG](https://github.com/sammycage/plutosvg)
 
-Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with
-scaling driven by the LVGL custom image
-decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser
-it is built on.
+Compact SVG rendering library written in C. Used to parse and render SVG icons for list and grid view glyphs, with scaling driven by the LVGL custom image
+decoder pipeline. Bundles [PlutoVG](https://github.com/sammycage/plutovg), the 2D vector graphics canvas and rasteriser it is built on.
 
 - PlutoSVG Version: 0.0.8
 - PlutoVG Version: 1.3.3
@@ -290,8 +282,7 @@ Header-only multicast DNS and DNS-SD implementation used by the `mudns` local di
 
 #### [json.c](https://github.com/tidwall/json.c)
 
-Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration
-data, and API responses.
+Single-file C library for parsing JSON. Used throughout the codebase to read language translation files, configuration data, and API responses.
 
 - Author: Josh Baker
 - License: MIT
@@ -307,8 +298,7 @@ Minimal C INI file parser. Used for reading and writing `.ini` configuration fil
 
 #### [miniz](https://github.com/richgeldreich/miniz)
 
-Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP archive reading and writing. Used to
-extract downloaded ZIP archives.
+Single-file C library for deflate/inflate, zlib-compatible compression, and ZIP archive reading and writing. Used to extract downloaded ZIP archives.
 
 - Version: 11.3.0
 - License: MIT (portions also released as public domain / Unlicense)
@@ -329,8 +319,7 @@ Extremely fast non-cryptographic hash algorithm. Used to compute file checksums 
 
 #### [stb_truetype](https://github.com/nothings/stb)
 
-Single-header C library for TrueType font parsing and glyph rasterisation. Used by the LVGL TinyTTF renderer to load and
-render custom TTF fonts at runtime.
+Single-header C library for TrueType font parsing and glyph rasterisation. Used by the LVGL TinyTTF renderer to load and render custom TTF fonts at runtime.
 
 - Version: 1.26
 - Author: Sean Barrett
@@ -339,8 +328,7 @@ render custom TTF fonts at runtime.
 
 #### [stb_rect_pack](https://github.com/nothings/stb)
 
-Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer to pack glyph bitmaps into atlas
-textures.
+Single-header C library for rectangle packing. Used by the LVGL TinyTTF renderer to pack glyph bitmaps into atlas textures.
 
 - Version: 1.01
 - Author: Sean Barrett
@@ -349,8 +337,7 @@ textures.
 
 #### [stb_image_write](https://github.com/nothings/stb)
 
-Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from
-the framebuffer.
+Single-header C library for writing PNG, BMP, TGA, JPEG, and HDR image files. Used to capture and save screenshots from the framebuffer.
 
 - Version: 1.16
 - Author: Sean Barrett
@@ -361,8 +348,8 @@ the framebuffer.
 
 ### Fetched At Build Time
 
-These are not kept in the repository. `external/build.sh` downloads a pinned release, verifies its SHA-256, and builds
-a trimmed static copy into `external/prefix/$DEVICE`. Versions and checksums are pinned at the top of each
+These are not kept in the repository. `external/build.sh` downloads a pinned release, verifies its SHA-256, and builds a trimmed static copy into
+`external/prefix/$DEVICE`. Versions and checksums are pinned at the top of each
 `external/<name>.sh`.
 
 #### [FFmpeg](https://ffmpeg.org)
@@ -376,8 +363,8 @@ Audio and video decoding for theme wallpapers, the screensaver, the boot logo, a
 
 #### [libarchive](https://libarchive.org)
 
-Multi-format archive reading. Used read-only by muxretro for content stored in archives. Compression codecs are
-detected per sysroot, since they are not present everywhere.
+Multi-format archive reading. Used read-only by muxretro for content stored in archives. Compression codecs are detected per sysroot, since they are not present
+everywhere.
 
 - Version: 3.8.9
 - License: BSD 2-Clause
@@ -385,8 +372,8 @@ detected per sysroot, since they are not present everywhere.
 
 #### [OpenSSL](https://openssl.org)
 
-TLS, hashing and signature verification for Network Play and achievement accounts. Built statically so the 1.1 and 3.x
-split across device rootfs images stops mattering.
+TLS, hashing and signature verification for Network Play and achievement accounts. Built statically so the 1.1 and 3.x split across device rootfs images stops
+mattering.
 
 - Version: 3.5.7 (LTS branch)
 - License: Apache 2.0
@@ -394,8 +381,7 @@ split across device rootfs images stops mattering.
 
 #### [rcheevos](https://github.com/RetroAchievements/rcheevos)
 
-RetroAchievements client, hashing and libretro memory helper. Desktop integration and the RetroAchievements
-integration DLL sources are excluded.
+RetroAchievements client, hashing and libretro memory helper. Desktop integration and the RetroAchievements integration DLL sources are excluded.
 
 - Version: 12.4.0
 - License: MIT
@@ -403,8 +389,8 @@ integration DLL sources are excluded.
 
 #### [Mojibake](https://github.com/zaerl/mojibake)
 
-Unicode text processing library covering normalisation, collation, and case mapping without external dependencies.
-Used for locale-aware, Unicode-correct natural sorting of content and file lists.
+Unicode text processing library covering normalisation, collation, and case mapping without external dependencies. Used for locale-aware, Unicode-correct
+natural sorting of content and file lists.
 
 - Version: 0.3.6
 - Author: Francesco Bigiarini

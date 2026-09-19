@@ -49,9 +49,7 @@ void options_init_paths(const char *core_path_arg, const char *content_path);
 
 void options_capture_baseline(void);
 
-int options_profile_resolved_matches(
-    const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]
-);
+int options_profile_resolved_matches(const int indices[OPTIONS_MAX], const unsigned char present[OPTIONS_MAX]);
 
 int options_profile_baseline_matches(void);
 

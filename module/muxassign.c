@@ -178,11 +178,11 @@ static int runtime_supported(const char *system, const char *id, const enum core
     return coredb_core_find(system, runtime, id, NULL);
 }
 
-static enum core_runtime shift_runtime(const char *system, const char *id, const enum core_runtime from,
-                                       const int direction) {
+static enum core_runtime
+shift_runtime(const char *system, const char *id, const enum core_runtime from, const int direction) {
     for (int step = 1; step <= core_runtime_count; step++) {
         const int offset = direction >= 0 ? step : core_runtime_count - step;
-        const enum core_runtime candidate = (enum core_runtime) ((from + offset) % core_runtime_count);
+        const enum core_runtime candidate = (enum core_runtime)((from + offset) % core_runtime_count);
         if (runtime_supported(system, id, candidate)) return candidate;
     }
 

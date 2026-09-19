@@ -1,10 +1,6 @@
 #pragma once
 
-enum preset_catalogue_kind {
-    preset_catalogue_filter = 0,
-    preset_catalogue_shader,
-    preset_catalogue_overlay
-};
+enum preset_catalogue_kind { preset_catalogue_filter = 0, preset_catalogue_shader, preset_catalogue_overlay };
 
 void preset_catalogue_init(void);
 

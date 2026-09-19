@@ -17,19 +17,18 @@ enum {
 };
 
 static const char *logical_labels[logical_count] = {
-    lang.muxretro.display_screen.overlay,         lang.muxretro.display_screen.overlay_pattern,
-    lang.muxretro.overlay_screen.image,           lang.muxretro.display_screen.overlay_opacity,
-    lang.muxretro.overlay_screen.adjustment,      lang.muxretro.overlay_screen.cropping,
+    lang.muxretro.display_screen.overlay,    lang.muxretro.display_screen.overlay_pattern,
+    lang.muxretro.overlay_screen.image,      lang.muxretro.display_screen.overlay_opacity,
+    lang.muxretro.overlay_screen.adjustment, lang.muxretro.overlay_screen.cropping,
     lang.muxretro.overlay_screen.reset
 };
 
-static const char *logical_glyphs[logical_count] = {"overlay",  "overlaypattern", "overlay",       "overlayopacity",
+static const char *logical_glyphs[logical_count] = {"overlay",  "overlaypattern", "overlay",      "overlayopacity",
                                                     "viewport", "centrecrop",     "viewportreset"};
 
 static const char *logical_help[logical_count] = {
-    lang.muxretro.help.overlay.source,     lang.muxretro.help.overlay.pattern,
-    lang.muxretro.help.overlay.image,      lang.muxretro.help.overlay.opacity,
-    lang.muxretro.help.overlay.adjustment, lang.muxretro.help.overlay.cropping,
+    lang.muxretro.help.overlay.source,  lang.muxretro.help.overlay.pattern,    lang.muxretro.help.overlay.image,
+    lang.muxretro.help.overlay.opacity, lang.muxretro.help.overlay.adjustment, lang.muxretro.help.overlay.cropping,
     lang.muxretro.help.overlay.reset
 };
 
@@ -44,13 +43,17 @@ static int row_is_visible(const int logical) {
     const int showing = session_settings.overlay_source != overlay_source_off;
 
     switch (logical) {
-        case logical_pattern: return session_settings.overlay_source == overlay_source_pattern;
-        case logical_image: return session_settings.overlay_source == overlay_source_downloaded;
+        case logical_pattern:
+            return session_settings.overlay_source == overlay_source_pattern;
+        case logical_image:
+            return session_settings.overlay_source == overlay_source_downloaded;
         case logical_opacity:
         case logical_adjustment:
         case logical_cropping:
-        case logical_reset: return showing;
-        default: return 1;
+        case logical_reset:
+            return showing;
+        default:
+            return 1;
     }
 }
 
@@ -162,8 +165,10 @@ static int row_is_action(const int index) {
         case logical_image:
         case logical_adjustment:
         case logical_cropping:
-        case logical_reset: return 1;
-        default: return 0;
+        case logical_reset:
+            return 1;
+        default:
+            return 0;
     }
 }
 

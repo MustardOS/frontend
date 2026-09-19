@@ -425,15 +425,11 @@ static struct rumble_sysfs_config rumble_config(enum portable_rumble_id rumble) 
 static int initialise_rumble(struct portable_state *state, const struct device_options *options) {
     if (state->profile->layout == layout_g350) {
         const struct rumble_sysfs_config config = {"/sys/class/gpio/gpio15/value", "1", "0"};
-        return device_rumble_initialise(
-            &state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength
-        );
+        return device_rumble_initialise(&state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength);
     }
 
     struct rumble_sysfs_config config = rumble_config(state->profile->rumble);
-    return device_rumble_initialise(
-        &state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength
-    );
+    return device_rumble_initialise(&state->rumble, rumble_sysfs_driver(), &config, options->rumble_strength);
 }
 
 static int portable_initialise(

@@ -51,8 +51,8 @@ int cheevo_account_load(cheevo_account *account) {
     if (account_fd < 0) return 1;
 
     struct stat account_stat;
-    if (fstat(account_fd, &account_stat) != 0 || !S_ISREG(account_stat.st_mode)
-        || account_stat.st_uid != geteuid() || account_stat.st_nlink != 1 || account_stat.st_size > 4096) {
+    if (fstat(account_fd, &account_stat) != 0 || !S_ISREG(account_stat.st_mode) || account_stat.st_uid != geteuid()
+        || account_stat.st_nlink != 1 || account_stat.st_size > 4096) {
         close(account_fd);
         return -2;
     }
@@ -136,15 +136,14 @@ int cheevo_account_save(const cheevo_account *account) {
         return -1;
     }
 
-    int okay =
-        fprintf(
-            file,
-            "enabled=%d\nunofficial=%d\nnotifications=%d\nachievement_sort=%d\nachievement_view=%d\n"
-            "username=%s\ntoken=%s\n",
-            account->enabled, account->unofficial, account->notifications, account->achievement_sort,
-            account->achievement_view, account->username, account->token
-        ) > 0
-        && fflush(file) == 0 && fsync(descriptor) == 0;
+    int okay = fprintf(
+                   file,
+                   "enabled=%d\nunofficial=%d\nnotifications=%d\nachievement_sort=%d\nachievement_view=%d\n"
+                   "username=%s\ntoken=%s\n",
+                   account->enabled, account->unofficial, account->notifications, account->achievement_sort,
+                   account->achievement_view, account->username, account->token
+               ) > 0
+               && fflush(file) == 0 && fsync(descriptor) == 0;
     if (fclose(file) != 0) okay = 0;
 
     if (!okay || renameat(directory, temporary, directory, CHEEVO_ACCOUNT_FILE) != 0) {

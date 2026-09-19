@@ -11,7 +11,7 @@
 #endif
 
 #define COLOUR_DIFFERENCE_THRESHOLD 64
-#define FLICKER_HOLD_FRAMES          3
+#define FLICKER_HOLD_FRAMES         3
 
 static unsigned channel_difference(const unsigned a, const unsigned b) {
     return a > b ? a - b : b - a;
@@ -87,10 +87,8 @@ static uint8x8_t neon_colour_contrast_xrgb8888(const uint8x8x4_t a, const uint8x
 
 static uint16x8_t neon_colour_contrast_rgb565(const uint16x8_t a, const uint16x8_t b) {
     const uint16x8_t rdiff = vabdq_u16(vshrq_n_u16(a, 11), vshrq_n_u16(b, 11));
-    const uint16x8_t gdiff = vabdq_u16(
-        vandq_u16(vshrq_n_u16(a, 5), vdupq_n_u16(0x3f)),
-        vandq_u16(vshrq_n_u16(b, 5), vdupq_n_u16(0x3f))
-    );
+    const uint16x8_t gdiff =
+        vabdq_u16(vandq_u16(vshrq_n_u16(a, 5), vdupq_n_u16(0x3f)), vandq_u16(vshrq_n_u16(b, 5), vdupq_n_u16(0x3f)));
     const uint16x8_t bdiff = vabdq_u16(vandq_u16(a, vdupq_n_u16(0x1f)), vandq_u16(b, vdupq_n_u16(0x1f)));
     return vorrq_u16(
         vcgeq_u16(rdiff, vdupq_n_u16(COLOUR_DIFFERENCE_THRESHOLD / 8)),
@@ -102,19 +100,13 @@ static uint16x8_t neon_colour_contrast_rgb565(const uint16x8_t a, const uint16x8
 }
 
 static uint16x8_t neon_colour_contrast_xrgb1555(const uint16x8_t a, const uint16x8_t b) {
-    const uint16x8_t rdiff = vabdq_u16(
-        vandq_u16(vshrq_n_u16(a, 10), vdupq_n_u16(0x1f)),
-        vandq_u16(vshrq_n_u16(b, 10), vdupq_n_u16(0x1f))
-    );
-    const uint16x8_t gdiff = vabdq_u16(
-        vandq_u16(vshrq_n_u16(a, 5), vdupq_n_u16(0x1f)),
-        vandq_u16(vshrq_n_u16(b, 5), vdupq_n_u16(0x1f))
-    );
+    const uint16x8_t rdiff =
+        vabdq_u16(vandq_u16(vshrq_n_u16(a, 10), vdupq_n_u16(0x1f)), vandq_u16(vshrq_n_u16(b, 10), vdupq_n_u16(0x1f)));
+    const uint16x8_t gdiff =
+        vabdq_u16(vandq_u16(vshrq_n_u16(a, 5), vdupq_n_u16(0x1f)), vandq_u16(vshrq_n_u16(b, 5), vdupq_n_u16(0x1f)));
     const uint16x8_t bdiff = vabdq_u16(vandq_u16(a, vdupq_n_u16(0x1f)), vandq_u16(b, vdupq_n_u16(0x1f)));
     const uint16x8_t threshold = vdupq_n_u16(COLOUR_DIFFERENCE_THRESHOLD / 8);
-    return vorrq_u16(
-        vcgeq_u16(rdiff, threshold), vorrq_u16(vcgeq_u16(gdiff, threshold), vcgeq_u16(bdiff, threshold))
-    );
+    return vorrq_u16(vcgeq_u16(rdiff, threshold), vorrq_u16(vcgeq_u16(gdiff, threshold), vcgeq_u16(bdiff, threshold)));
 }
 #endif
 

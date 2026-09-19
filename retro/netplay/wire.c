@@ -63,9 +63,7 @@ void netplay_wire_input_encode(uint8_t data[12], const netplay_pad_state *input,
         netplay_wire_write_u16(data + 4 + index * 2, (uint16_t) input->axes[index]);
 }
 
-int netplay_wire_input_decode(
-    const uint8_t *data, const size_t size, netplay_pad_state *input, uint8_t *owner
-) {
+int netplay_wire_input_decode(const uint8_t *data, const size_t size, netplay_pad_state *input, uint8_t *owner) {
     if (!data || size != 12 || !input || !owner || data[1] > 1) return -1;
     *owner = data[0];
     input->connected = data[1];

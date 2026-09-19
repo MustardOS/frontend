@@ -1,11 +1,10 @@
 # Extra components
 
-This directory contains extra (optional) components to lvgl.
-It's a good place for contributions as there are less strict expectations about the completeness and flexibility of the
-components here.
+This directory contains extra (optional) components to lvgl. It's a good place for contributions as there are less strict expectations about the completeness
+and flexibility of the components here.
 
-In other words, if you have created a complex widget from other widgets, or modified an existing widget with special
-events, styles or animations, or have a new feature that could work as a plugin to lvgl feel free to the share it here.
+In other words, if you have created a complex widget from other widgets, or modified an existing widget with special events, styles or animations, or have a new
+feature that could work as a plugin to lvgl feel free to the share it here.
 
 ## How to contribute
 
@@ -28,8 +27,7 @@ Here some ideas as inspiration feel free to contribute with ideas too.
 - New [List items types](https://github.com/lvgl/lvgl/tree/master/src/extra/widgets/list)
 - [Preloaders](https://www.google.com/search?q=preloader&sxsrf=ALeKk01ddA4YB0WEgLLN1bZNSm8YER7pkg:1623080551559&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiwoN6d7oXxAhVuw4sKHVedBB4Q_AUoAXoECAEQAw&biw=952&bih=940)
 - Drop-down list with a container to which content can be added
-- 9 patch button: Similar to [lv_imgbtn](https://docs.lvgl.io/8.0/widgets/extra/imgbtn.html) but 9 images for 4 corner,
-  4 sides and the center
+- 9 patch button: Similar to [lv_imgbtn](https://docs.lvgl.io/8.0/widgets/extra/imgbtn.html) but 9 images for 4 corner, 4 sides and the center
 
 ## Contributors
 

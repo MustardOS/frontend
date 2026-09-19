@@ -66,9 +66,7 @@ static int cmd_get(const char *ns_arg, const char *key) {
     return rc == vs_err_inval ? 1 : 0;
 }
 
-static int cmd_set(
-    const char *ns_arg, const char *key, const char *value, const int defer, const int durable
-) {
+static int cmd_set(const char *ns_arg, const char *key, const char *value, const int defer, const int durable) {
     const int ns = parse_ns(ns_arg);
     if (ns < 0 || !key || !value) return 1;
 
@@ -78,8 +76,8 @@ static int cmd_set(
 
     if (vs_open(&vs, vs_cache_path(), 1, VS_DEF_CAP, 1) != vs_ok) {
         if (defer) return 1;
-        const int rc = durable ? vs_write_durable(&dirs, (var_ns_t) ns, key, value)
-                               : vs_write(&dirs, (var_ns_t) ns, key, value);
+        const int rc =
+            durable ? vs_write_durable(&dirs, (var_ns_t) ns, key, value) : vs_write(&dirs, (var_ns_t) ns, key, value);
         return rc != vs_ok;
     }
 

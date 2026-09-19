@@ -1,10 +1,10 @@
 # Pickles
+
 Formally known as _muRetro_ internally.
 
-MustardOS's own Libretro core hosting frontend.  It uses `dlopen()` to open a Libretro core directly and renders through
-the same LVGL/SDL2 stack the rest of the frontend uses, The goal is a "MustardOS Libretro" core kind with its own
-pause menu, core options, save states, cheats, and display settings that look and feel like the rest of the frontend,
-for systems where the full RetroArch is not required.
+MustardOS's own Libretro core hosting frontend. It uses `dlopen()` to open a Libretro core directly and renders through the same LVGL/SDL2 stack the rest of the
+frontend uses, The goal is a "MustardOS Libretro" core kind with its own pause menu, core options, save states, cheats, and display settings that look and feel
+like the rest of the frontend, for systems where the full RetroArch is not required.
 
 ## Invocation
 
@@ -18,8 +18,7 @@ muxretro <core.so> <content> [--fresh]
 
 ## Documentation
 
-Detailed reference material lives in [`docs/`](docs), organised by topic so you can jump straight to what you need
-rather than reading one bloody giant file:
+Detailed reference material lives in [`docs/`](docs), organised by topic so you can jump straight to what you need rather than reading one bloody giant file:
 
 | Doc                                            | Covers                                                                                                                              |
 |------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|

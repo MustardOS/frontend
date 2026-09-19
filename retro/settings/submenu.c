@@ -210,9 +210,7 @@ static void focus_row(const submenu *m, const int index) {
     );
 }
 
-static void refresh_row(
-    const submenu *m, const int index, const enum nav_direction shake_dir, const int play_shake
-) {
+static void refresh_row(const submenu *m, const int index, const enum nav_direction shake_dir, const int play_shake) {
     lv_obj_t *panel = sectioned(m) ? section_panels[index] : lv_obj_get_child(ui_pnl_content, index);
     if (!panel) return;
 
@@ -231,8 +229,7 @@ static void refresh_cycle_result(const submenu *m, const int changed_index, cons
     if (!m->def->row_depends_on) return;
 
     for (int index = 0; index < m->def->row_count; index++) {
-        if (index != changed_index && m->def->row_depends_on(index, changed_index))
-            refresh_row(m, index, shake_dir, 0);
+        if (index != changed_index && m->def->row_depends_on(index, changed_index)) refresh_row(m, index, shake_dir, 0);
     }
 }
 

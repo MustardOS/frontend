@@ -54,18 +54,28 @@ static int namespace_count;
 
 const char *coredb_runtime_label(const enum core_runtime runtime) {
     switch (runtime) {
-        case core_runtime_pickles: return "Pickles";
-        case core_runtime_retroarch: return "RetroArch";
-        case core_runtime_external: return "External";
-        default: return "";
+        case core_runtime_pickles:
+            return "Pickles";
+        case core_runtime_retroarch:
+            return "RetroArch";
+        case core_runtime_external:
+            return "External";
+        default:
+            return "";
     }
 }
 
 void coredb_assign_tag(const char *id, const enum core_runtime runtime, char *out, const size_t out_size) {
     switch (runtime) {
-        case core_runtime_pickles: snprintf(out, out_size, COREDB_TAG_PICKLES "%s", id); break;
-        case core_runtime_external: snprintf(out, out_size, COREDB_TAG_EXTERNAL "%s", id); break;
-        default: snprintf(out, out_size, "%s", id); break;
+        case core_runtime_pickles:
+            snprintf(out, out_size, COREDB_TAG_PICKLES "%s", id);
+            break;
+        case core_runtime_external:
+            snprintf(out, out_size, COREDB_TAG_EXTERNAL "%s", id);
+            break;
+        default:
+            snprintf(out, out_size, "%s", id);
+            break;
     }
 }
 
@@ -94,8 +104,9 @@ static int strip_standalone(const char *id, char *out, const size_t out_size) {
     return 1;
 }
 
-int coredb_assign_resolve(const char *system, const char *stored, char *id_out, const size_t id_size,
-                         enum core_runtime *runtime_out) {
+int coredb_assign_resolve(
+    const char *system, const char *stored, char *id_out, const size_t id_size, enum core_runtime *runtime_out
+) {
     if (!stored || !*stored) return 0;
 
     const char *id = stored;
@@ -126,7 +137,7 @@ static const char *device_fact(const char *key) {
     if (strcmp(key, "device") == 0) return device.board.name;
     if (strcmp(key, "arch") == 0) return COREDB_ARCH;
 
-return NULL;
+    return NULL;
 }
 
 static int value_in_array(const struct json array, const char *wanted) {
@@ -189,20 +200,32 @@ static void collect_namespaces(void) {
     qsort(namespaces, (size_t) namespace_count, COREDB_NAME_MAX, namespace_compare);
 }
 
+static char *read_manifest(const char *path) {
+    char *data = read_all_char_from(path);
+    if (!data || !json_valid(data) || json_type(json_parse(data)) != JSON_OBJECT) {
+        free(data);
+        return NULL;
+    }
+
+    return data;
+}
+
 int coredb_load(void) {
     if (loaded) return 1;
 
     int found = 0;
     for (int f = 0; f < coredb_file_count; f++) {
         char path[COREDB_PATH_MAX];
-        snprintf(path, sizeof(path), "%s/%s.json", STORE_LOC_CORE, db_file[f]);
+        snprintf(path, sizeof(path), "%s/%s.json", INFO_CORE_PATH, db_file[f]);
 
-        raw[f] = read_all_char_from(path);
-        if (!raw[f] || !json_valid(raw[f])) {
-            LOG_WARN(mux_module, "coredb: no usable definitions at %s", path);
-            free(raw[f]);
-            raw[f] = NULL;
-            continue;
+        raw[f] = read_manifest(path);
+        if (!raw[f]) {
+            snprintf(path, sizeof(path), "%s/%s.json", STORE_LOC_CORE, db_file[f]);
+            raw[f] = read_manifest(path);
+            if (!raw[f]) {
+                LOG_WARN(mux_module, "coredb: no usable definitions at %s", path);
+                continue;
+            }
         }
 
         root[f] = json_parse(raw[f]);
@@ -261,8 +284,7 @@ static int gather_systems(const char *name_space, struct coredb_system *out, con
                 if (strcmp(out[i].id, id) == 0) seen = 1;
             if (seen || count >= limit) continue;
 
-            if (coredb_core_count(id, core_runtime_pickles) == 0
-                && coredb_core_count(id, core_runtime_external) == 0) {
+            if (coredb_core_count(id, core_runtime_pickles) == 0 && coredb_core_count(id, core_runtime_external) == 0) {
                 continue;
             }
 
@@ -378,8 +400,8 @@ int coredb_system_control(const char *system, char *out, const size_t out_size) 
     return system_field(system, "control", out, out_size);
 }
 
-static void fill_core(const struct json key, const struct json entry, const enum core_runtime runtime,
-                      struct coredb_core *out) {
+static void
+fill_core(const struct json key, const struct json entry, const enum core_runtime runtime, struct coredb_core *out) {
     memset(out, 0, sizeof(*out));
     out->runtime = runtime;
 
@@ -391,7 +413,8 @@ static void fill_core(const struct json key, const struct json entry, const enum
     json_string_copy(json_object_get(entry, "governor"), out->governor, sizeof(out->governor));
     json_string_copy(json_object_get(entry, "control"), out->control, sizeof(out->control));
 
-    if (!out->launcher[0] && runtime != core_runtime_external) snprintf(out->launcher, sizeof(out->launcher), "general.sh");
+    if (!out->launcher[0] && runtime != core_runtime_external)
+        snprintf(out->launcher, sizeof(out->launcher), "general.sh");
 
     if (out->launcher[0]) {
         char stem[COREDB_NAME_MAX];
@@ -403,8 +426,10 @@ static void fill_core(const struct json key, const struct json entry, const enum
     out->bios_required = json_exists(bios) ? json_int(bios) : 0;
 }
 
-static int walk_cores(const char *system, const enum core_runtime runtime, const int wanted, const char *wanted_id,
-                      struct coredb_core *out) {
+static int walk_cores(
+    const char *system, const enum core_runtime runtime, const int wanted, const char *wanted_id,
+    struct coredb_core *out
+) {
     const struct json node = system_node(system, runtime);
     if (!json_exists(node)) return wanted_id ? 0 : 0;
 

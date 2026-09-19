@@ -84,7 +84,8 @@ cache_write(const enum content_hash_kind kind, const long long size, const long 
     mini_set_int(ini, section, "mtime", mtime);
     mini_set_string(ini, section, "value", value);
 
-    if (mini_save(ini, 0) != MINI_OK) LOG_WARN(mux_module, "Could not safely update content hash cache: %s", cache_path);
+    if (mini_save(ini, 0) != MINI_OK)
+        LOG_WARN(mux_module, "Could not safely update content hash cache: %s", cache_path);
     mini_free(ini);
 }
 

@@ -427,17 +427,13 @@ static const char *get_system_uptime(void) {
 
     if (days > 0) {
         snprintf(
-            buffer, sizeof(buffer), "%llu %s%s %llu %s%s %llu %s%s", days, lang.muxdetail.day, days == 1ULL ? "" : "s",
-            hours, lang.muxdetail.hour, hours == 1ULL ? "" : "s", minutes, lang.muxdetail.minute,
-            minutes == 1ULL ? "" : "s"
+            buffer, sizeof(buffer), "%llu %s %llu %s %llu %s", days, lang.muxdetail.day, hours, lang.muxdetail.hour,
+            minutes, lang.muxdetail.minute
         );
     } else if (hours > 0) {
-        snprintf(
-            buffer, sizeof(buffer), "%llu %s%s %llu %s%s", hours, lang.muxdetail.hour, hours == 1ULL ? "" : "s",
-            minutes, lang.muxdetail.minute, minutes == 1ULL ? "" : "s"
-        );
+        snprintf(buffer, sizeof(buffer), "%llu %s %llu %s", hours, lang.muxdetail.hour, minutes, lang.muxdetail.minute);
     } else {
-        snprintf(buffer, sizeof(buffer), "%llu %s%s", minutes, lang.muxdetail.minute, minutes == 1ULL ? "" : "s");
+        snprintf(buffer, sizeof(buffer), "%llu %s", minutes, lang.muxdetail.minute);
     }
 
     return buffer;

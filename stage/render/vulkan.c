@@ -522,7 +522,6 @@ typedef struct {
     } pipe_present[V_MAX_SWAPCHAINS];
     int pipe_present_count;
 
-
     VkPhysicalDeviceMemoryProperties mem_props;
 
     v_tex_t textures[V_MAX_TRACKED_TEX];
@@ -1330,7 +1329,6 @@ static void v_device_destroy(v_device_t *dev) {
 
     for (int i = 0; i < V_MAX_TRACKED_TEX; i++)
         v_tex_destroy(dev, &dev->textures[i]);
-
 
     for (int i = 0; i < dev->pipe_present_count; i++) {
         if (dev->pipe_present[i].pipe_overlay)

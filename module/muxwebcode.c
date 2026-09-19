@@ -21,12 +21,16 @@ static void dashboard_address(char *out, const size_t out_size) {
     const int standard = strcmp(port, "80") == 0;
 
     if (config.web.mdns) {
-        const char *name = config.web.mdns_name[0] ? config.web.mdns_name : "muos";
-        if (standard)
-            snprintf(out, out_size, "http://%s.local", name);
-        else
-            snprintf(out, out_size, "http://%s.local:%s", name, port);
-        return;
+        char *effective_name = read_line_char_from(RUN_PATH "mdns_name", 1);
+        if (effective_name && *effective_name) {
+            if (standard)
+                snprintf(out, out_size, "http://%s.local", effective_name);
+            else
+                snprintf(out, out_size, "http://%s.local:%s", effective_name, port);
+            free(effective_name);
+            return;
+        }
+        free(effective_name);
     }
 
     char address[64];
@@ -116,7 +120,7 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]){{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
 
     overlay_display();
 }

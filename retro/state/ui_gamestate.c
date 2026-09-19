@@ -375,18 +375,18 @@ static void rebuild_rows(void) {
 
     if (state_row_count > 0) {
         frame_section[frame_total] = section_states;
-        frames[frame_total++] = (list_frame){lang.muxretro.gamestate.section_states, 0, state_row_count};
+        frames[frame_total++] = (list_frame) {lang.muxretro.gamestate.section_states, 0, state_row_count};
     }
 
     if (history_row_count > 0) {
         frame_section[frame_total] = section_history;
-        frames[frame_total++] = (list_frame){lang.muxretro.gamestate.history, state_row_count, history_row_count};
+        frames[frame_total++] = (list_frame) {lang.muxretro.gamestate.history, state_row_count, history_row_count};
     }
 
     if (trash_row_count > 0) {
         frame_section[frame_total] = section_trash;
         frames[frame_total++] =
-            (list_frame){lang.muxretro.gamestate.trash, state_row_count + history_row_count, trash_row_count};
+            (list_frame) {lang.muxretro.gamestate.trash, state_row_count + history_row_count, trash_row_count};
     }
 
     if (frame_total > 0

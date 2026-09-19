@@ -432,8 +432,7 @@ int automatic_assign_core(char *rom_dir) {
                 static char core_governor[MAX_BUFFER_SIZE];
                 if (core.governor[0])
                     snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
-                else if (!coredb_system_governor(ass_config, core_governor, sizeof(core_governor))
-                         || !core_governor[0])
+                else if (!coredb_system_governor(ass_config, core_governor, sizeof(core_governor)) || !core_governor[0])
                     snprintf(core_governor, sizeof(core_governor), "%s", device.cpu.dflt);
                 LOG_INFO(mux_module, "\tCore Governor: %s", core_governor);
 

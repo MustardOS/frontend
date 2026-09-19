@@ -62,6 +62,7 @@
 
 #define PERF_AUTODUMP_INTERVAL_MS 15000
 #define SLOW_CORE_PACE_RATIO      0.98
+#define CHEEVO_STARTUP_WAIT_MS    5000
 
 static inotify_status *idle_ino = NULL;
 static int mux_idle_state_exists = 0;
@@ -618,11 +619,11 @@ int main(const int argc, char *argv[]) {
 
     options_capture_baseline();
     LOG_DEBUG(mux_module, "options_capture_baseline done, options_count=%d", options_count);
-    link_direct_init();
 
     if (device.board.has_network && coreinfo_feature_enabled(coreinfo_feature_netplay)
         && netplay_init(core_path_arg, content_path) != 0)
         LOG_WARN(mux_module, "Network Play secure transport could not be initialised");
+    link_direct_init();
 
     display_set_hard_sync_query(hard_sync_enabled);
     display_set_idle_saver_suppressed_query(netplay_is_active);
@@ -657,7 +658,7 @@ int main(const int argc, char *argv[]) {
     int cheevo_connecting_background = 0;
     if (cheevo_is_starting()) {
         if (show_startup_messages) loading_message_show(lang.muxretro.cheevo.connecting);
-        const uint32_t cheevo_deadline = SDL_GetTicks() + 1200;
+        const uint32_t cheevo_deadline = SDL_GetTicks() + CHEEVO_STARTUP_WAIT_MS;
         while (cheevo_is_starting() && !SDL_TICKS_PASSED(SDL_GetTicks(), cheevo_deadline)) {
             cheevo_tick();
             lv_task_handler();
@@ -981,7 +982,9 @@ int main(const int argc, char *argv[]) {
                 const unsigned extra = (unsigned) ff_frame_credit;
                 frames += extra;
                 ff_frame_credit -= (double) extra;
-            } else if (!netplay_active && audio_bridge_is_prefilling() && session_settings.fps_limit != fps_limit_50 && !slowmo_active && audio_bridge_is_active() && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
+            } else if (!netplay_active && audio_bridge_is_prefilling() && session_settings.fps_limit != fps_limit_50
+                       && !slowmo_active && audio_bridge_is_active()
+                       && audio_bridge_queued_ms() < audio_bridge_low_water_ms()) {
                 ff_frame_credit = 0.0;
                 unsigned extra = AUDIO_MAX_CATCHUP;
 

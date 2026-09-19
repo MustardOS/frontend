@@ -299,8 +299,7 @@ static void *image_worker(void *unused) {
                 memmove(image_results, image_results + 1, (IMAGE_JOB_CAPACITY - 1u) * sizeof(*image_results));
                 image_result_count--;
             }
-            image_results[image_result_count++] =
-                (image_result_t) {.job = job, .buffer = buffer, .work_ms = work_ms};
+            image_results[image_result_count++] = (image_result_t) {.job = job, .buffer = buffer, .work_ms = work_ms};
         } else
             image_buffer_release(buffer);
         pthread_mutex_unlock(&image_lock);
@@ -352,8 +351,7 @@ void image_async_tick(void) {
 
         lv_img_dsc_t *dsc = lv_img_buf_alloc(result.job.tw, result.job.th, LV_IMG_CF_TRUE_COLOR_ALPHA);
         if (!dsc
-            || result.buffer->bytes
-                   != (size_t) result.job.tw * (size_t) result.job.th * LV_IMG_PX_SIZE_ALPHA_BYTE) {
+            || result.buffer->bytes != (size_t) result.job.tw * (size_t) result.job.th * LV_IMG_PX_SIZE_ALPHA_BYTE) {
             if (dsc) lv_img_buf_free(dsc);
             image_buffer_release(result.buffer);
             continue;

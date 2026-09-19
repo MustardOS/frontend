@@ -364,7 +364,8 @@ static void update_footer_glyph(lv_obj_t *glyph, const char *name) {
             config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.mux.item.height * 3 / 4
         );
 
-        const int footer_px = glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
+        const int footer_px =
+            glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
 
         append_glyph_size_hint(image_embed, sizeof(image_embed), footer_target);
         lv_img_set_src(glyph, image_embed);
@@ -803,7 +804,6 @@ static void init_navigation_group(void) {
 
         lv_obj_set_user_data(device_panel, (void *) (intptr_t) REMAP_DEVICE_ITEM);
 
-
         lv_group_add_obj(ui_group, device_label);
         lv_group_add_obj(ui_group_value, device_value);
         lv_group_add_obj(ui_group_glyph, device_glyph);
@@ -831,7 +831,6 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, layout_panel);
 
         lv_obj_set_user_data(layout_panel, (void *) (intptr_t) REMAP_LAYOUT_ITEM);
-
     }
 
     for (int i = 0; i < REMAP_SLOT_COUNT; i++) {
@@ -855,7 +854,6 @@ static void init_navigation_group(void) {
         lv_group_add_obj(ui_group_panel, panel);
 
         lv_obj_set_user_data(panel, (void *) (intptr_t) i);
-
 
         item_panels[i] = panel;
         item_labels[i] = label;

@@ -30,22 +30,22 @@ static const struct coredef_option options[] = {
  * softkeys, and the left stick covers 2, 4, 6 and 8.
  */
 static const int source_target[COREDEF_SOURCE_COUNT] = {
-    1,  // A       -> libretro Y      OK/Fire
-    15, // B       -> libretro R3     CLR
-    9,  // X       -> libretro X      Num 0
-    8,  // Y       -> libretro A      Num 9
-    10, // L1      -> libretro L      Num 1
-    11, // R1      -> libretro R      Num 3
-    12, // L2      -> libretro L2     Num *
-    13, // R2      -> libretro R2     Num #
-    14, // L3      -> libretro L3     Num 5 and pointer press
-    0,  // R3      -> libretro B      Num 7
-    2,  // Select  -> libretro Select Left softkey
-    3,  // Start   -> libretro Start  Right softkey
-    4,  // D-pad up
-    5,  // D-pad down
-    6,  // D-pad left
-    7,  // D-pad right
+    1,              // A       -> libretro Y      OK/Fire
+    15,             // B       -> libretro R3     CLR
+    9,              // X       -> libretro X      Num 0
+    8,              // Y       -> libretro A      Num 9
+    10,             // L1      -> libretro L      Num 1
+    11,             // R1      -> libretro R      Num 3
+    12,             // L2      -> libretro L2     Num *
+    13,             // R2      -> libretro R2     Num #
+    14,             // L3      -> libretro L3     Num 5 and pointer press
+    0,              // R3      -> libretro B      Num 7
+    2,              // Select  -> libretro Select Left softkey
+    3,              // Start   -> libretro Start  Right softkey
+    4,              // D-pad up
+    5,              // D-pad down
+    6,              // D-pad left
+    7,              // D-pad right
     -1, -1, -1, -1, // Left stick, read by the core as its own analog axes for 2, 4, 6 and 8
     -1, -1, -1, -1, // Right stick, read by the core as the pointer
 };

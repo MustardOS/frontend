@@ -33,9 +33,8 @@ static void store_field(const char *key, const char *value) {
         const char *key;
         char *target;
     } fields[] = {
-        {"status", report.status},           {"interface", report.interface},
-        {"address", report.address},         {"mac", report.mac},
-        {"peer_address", report.peer_address}, {"peer_mac", report.peer_mac},
+        {"status", report.status}, {"interface", report.interface},       {"address", report.address},
+        {"mac", report.mac},       {"peer_address", report.peer_address}, {"peer_mac", report.peer_mac},
     };
 
     for (size_t i = 0; i < A_SIZE(fields); i++) {
@@ -136,9 +135,12 @@ static void leave_module(void) {
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
-        {"status", lang.muxlink.help.status},            {"interface", lang.muxlink.help.interface},
-        {"address", lang.muxlink.help.address},          {"mac", lang.muxlink.help.mac},
-        {"peeraddress", lang.muxlink.help.peer_address}, {"peermac", lang.muxlink.help.peer_mac},
+        {"status", lang.muxlink.help.status},
+        {"interface", lang.muxlink.help.interface},
+        {"address", lang.muxlink.help.address},
+        {"mac", lang.muxlink.help.mac},
+        {"peeraddress", lang.muxlink.help.peer_address},
+        {"peermac", lang.muxlink.help.peer_mac},
     };
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
@@ -184,9 +186,8 @@ static void handle_help(void) {
 }
 
 static void adjust_panels(void) {
-    adjust_panel_priority((lv_obj_t *[]
-    ){ui_pnl_footer, ui_pnl_header, ui_pnl_help, ui_pnl_progress_brightness, ui_pnl_progress_volume, ui_pnl_message,
-      NULL});
+    adjust_panel_priority((lv_obj_t *[]) {ui_pnl_footer, ui_pnl_header, ui_pnl_help, ui_pnl_progress_brightness,
+                                          ui_pnl_progress_volume, ui_pnl_message, NULL});
 }
 
 static void init_navigation_group(void) {
@@ -207,9 +208,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {NULL, NULL, 0}});
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
 
     refresh_values();
 
@@ -251,23 +250,24 @@ int muxlink_main(void) {
 
     init_timer(ui_refresh_task, NULL);
 
-    mux_input_options input_opts =
-        {.swap_axis = theme.misc.navigation_type == 1,
-         .press_handler =
-             {
-                 [mux_input_b] = handle_b,
-                 [mux_input_x] = handle_x,
-                 [mux_input_dpad_up] = handle_up,
-                 [mux_input_dpad_down] = handle_down,
-             },
-         .release_handler =
-             {
-                 [mux_input_menu] = handle_help,
-             },
-         .hold_handler = {
-             [mux_input_dpad_up] = handle_up_hold,
-             [mux_input_dpad_down] = handle_down_hold,
-         }};
+    mux_input_options input_opts = {
+        .swap_axis = theme.misc.navigation_type == 1,
+        .press_handler =
+            {
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_up] = handle_up,
+                [mux_input_dpad_down] = handle_down,
+            },
+        .release_handler =
+            {
+                [mux_input_menu] = handle_help,
+            },
+        .hold_handler = {
+            [mux_input_dpad_up] = handle_up_hold,
+            [mux_input_dpad_down] = handle_down_hold,
+        }
+    };
 
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);

@@ -299,8 +299,7 @@ int cheats_toggle(const int index) {
 }
 
 int cheats_create(const char *description, const char *code) {
-    if (!description || !description[0] || !code || !code[0] || cheats_count >= CHEAT_MAX
-        || cheat_code_exists(code))
+    if (!description || !description[0] || !code || !code[0] || cheats_count >= CHEAT_MAX || cheat_code_exists(code))
         return 0;
 
     struct cheat_entry *entry = &cheats_list[cheats_count];
@@ -348,8 +347,7 @@ int cheats_delete(const int index) {
     const struct cheat_entry removed = cheats_list[index];
     if (index + 1 < cheats_count) {
         memmove(
-            &cheats_list[index], &cheats_list[index + 1],
-            (size_t) (cheats_count - index - 1) * sizeof(cheats_list[0])
+            &cheats_list[index], &cheats_list[index + 1], (size_t) (cheats_count - index - 1) * sizeof(cheats_list[0])
         );
     }
     cheats_count--;
@@ -358,8 +356,7 @@ int cheats_delete(const int index) {
     if (!write_cheats()) {
         if (index < cheats_count) {
             memmove(
-                &cheats_list[index + 1], &cheats_list[index],
-                (size_t) (cheats_count - index) * sizeof(cheats_list[0])
+                &cheats_list[index + 1], &cheats_list[index], (size_t) (cheats_count - index) * sizeof(cheats_list[0])
             );
         }
         cheats_list[index] = removed;

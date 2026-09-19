@@ -487,8 +487,7 @@ static void update_storage_details(
     char text[64];
 
     block_layout layout;
-    const int show_device_layout =
-        index == 1 && read_block_layout(entry, &layout) && layout.partition_count > 1;
+    const int show_device_layout = index == 1 && read_block_layout(entry, &layout) && layout.partition_count > 1;
 
     if (show_device_layout) {
         snprintf(text, sizeof(text), "%.2f GB device (%.2f GB mounted)", layout.capacity_gib, total_space);
@@ -527,8 +526,7 @@ static void update_storage_details(
 
 static void update_storage_unreadable(const storage_entry *entry, const int index) {
     block_layout layout;
-    const int show_device_layout =
-        index == 1 && read_block_layout(entry, &layout) && layout.partition_count > 1;
+    const int show_device_layout = index == 1 && read_block_layout(entry, &layout) && layout.partition_count > 1;
 
     if (show_device_layout) {
         char text[64];

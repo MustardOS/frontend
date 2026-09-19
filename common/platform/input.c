@@ -308,7 +308,9 @@ static int is_tracked_as_controller(const SDL_JoystickID id) {
 }
 
 static int is_muinput_source(const char *name) {
-    return name && strcmp(name, MUOS_INPUT_SOURCE_NAME) == 0;
+    if (!name) return 0;
+    if (strcmp(name, MUOS_INPUT_SOURCE_NAME) == 0) return 1;
+    return board_is(board_special_vita_pro) && strcmp(name, "retrogame_joypad") == 0;
 }
 
 // The board sdl_map describes the device muinput publishes, so the GUID it opens with identifies
@@ -955,9 +957,16 @@ static void open_all_input_devices(void) {
 
             release_extra_player_slot(devices[i].instance);
             primary_instance = devices[i].instance;
+            clear_input_state();
             LOG_INFO("input", "Primary input device promoted to controller (instance %d)", primary_instance);
             bump_source_generation();
             break;
+        }
+
+        for (int i = device_count - 1; i >= 0; i--) {
+            if (devices[i].controller) continue;
+            const char *name = SDL_JoystickName(devices[i].joystick);
+            if (is_muinput_source(name)) close_device_by_instance(devices[i].instance);
         }
     }
 

@@ -29,7 +29,6 @@
 /*                                                                       */
 typedef signed long PVG_FT_Fixed;
 
-
 /*************************************************************************/
 /*                                                                       */
 /* <Type>                                                                */
@@ -39,7 +38,6 @@ typedef signed long PVG_FT_Fixed;
 /*    A typedef for the int type.                                        */
 /*                                                                       */
 typedef signed int PVG_FT_Int;
-
 
 /*************************************************************************/
 /*                                                                       */
@@ -51,7 +49,6 @@ typedef signed int PVG_FT_Int;
 /*                                                                       */
 typedef unsigned int PVG_FT_UInt;
 
-
 /*************************************************************************/
 /*                                                                       */
 /* <Type>                                                                */
@@ -61,7 +58,6 @@ typedef unsigned int PVG_FT_UInt;
 /*    A typedef for signed long.                                         */
 /*                                                                       */
 typedef signed long PVG_FT_Long;
-
 
 /*************************************************************************/
 /*                                                                       */
@@ -83,7 +79,6 @@ typedef unsigned long PVG_FT_ULong;
 /*                                                                       */
 typedef signed short PVG_FT_Short;
 
-
 /*************************************************************************/
 /*                                                                       */
 /* <Type>                                                                */
@@ -93,7 +88,6 @@ typedef signed short PVG_FT_Short;
 /*    A simple typedef for the _unsigned_ char type.                     */
 /*                                                                       */
 typedef unsigned char PVG_FT_Byte;
-
 
 /*************************************************************************/
 /*                                                                       */
@@ -106,7 +100,6 @@ typedef unsigned char PVG_FT_Byte;
 /*                                                                       */
 typedef unsigned char PVG_FT_Bool;
 
-
 /*************************************************************************/
 /*                                                                       */
 /* <Type>                                                                */
@@ -117,7 +110,6 @@ typedef unsigned char PVG_FT_Bool;
 /*    as a successful operation.                                         */
 /*                                                                       */
 typedef int PVG_FT_Error;
-
 
 /*************************************************************************/
 /*                                                                       */
@@ -130,7 +122,6 @@ typedef int PVG_FT_Error;
 /*    units, or 16.16, or 26.6 fixed-point pixel coordinates.            */
 /*                                                                       */
 typedef signed long PVG_FT_Pos;
-
 
 /*************************************************************************/
 /*                                                                       */
@@ -145,12 +136,10 @@ typedef signed long PVG_FT_Pos;
 /*    x :: The horizontal coordinate.                                    */
 /*    y :: The vertical coordinate.                                      */
 /*                                                                       */
-typedef struct PVG_FT_Vector_
-{
+typedef struct PVG_FT_Vector_ {
     PVG_FT_Pos x;
     PVG_FT_Pos y;
 } PVG_FT_Vector;
-
 
 typedef long long int PVG_FT_Int64;
 typedef unsigned long long int PVG_FT_UInt64;
@@ -158,17 +147,19 @@ typedef unsigned long long int PVG_FT_UInt64;
 typedef signed int PVG_FT_Int32;
 typedef unsigned int PVG_FT_UInt32;
 
-#define PVG_FT_BOOL( x )  ( (PVG_FT_Bool)( x ) )
+#define PVG_FT_BOOL(x) ((PVG_FT_Bool) (x))
 
 #ifndef TRUE
-#define TRUE  1
+#define TRUE 1
 #endif
 
 #ifndef FALSE
-#define FALSE  0
+#define FALSE 0
 #endif
 
 #define PVG_FT_BEGIN_STMNT do {
-#define PVG_FT_END_STMNT } while (0)
+#define PVG_FT_END_STMNT                                                                                               \
+    }                                                                                                                  \
+    while (0)
 
 #endif // PLUTOVG_FT_TYPES_H

@@ -202,10 +202,10 @@
     CONFIG(custom, "custom")                                                                                           \
     CONFIG(connect, "connect")                                                                                         \
     CONFIG(access, "access")                                                                                           \
+    CONFIG(core, "core")                                                                                               \
     CONFIG(power, "power")                                                                                             \
     CONFIG(storage, "storage")                                                                                         \
-    CONFIG(backup, "backup")                                                                                           \
-    CONFIG(core, "core")
+    CONFIG(backup, "backup")
 
 #define CONNECT_ELEMENTS                                                                                               \
     CONNECT(network, "network")                                                                                        \

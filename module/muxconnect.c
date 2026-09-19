@@ -28,6 +28,10 @@ static int visible_bluetooth_opt(void) {
     return device.board.has_bluetooth;
 }
 
+static int visible_webcode_opt(void) {
+    return device.board.has_network && config.web.landing;
+}
+
 static void init_dropdown_settings(void) {
 #define CONNECT(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_connect);
     CONNECT_ELEMENTS
@@ -59,6 +63,8 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(connect, services);
         HIDE_OPTION_ITEM(connect, webcode);
     }
+
+    if (!visible_webcode_opt()) HIDE_OPTION_ITEM(connect, webcode);
 
     if (!device.board.has_bluetooth) {
         HIDE_OPTION_ITEM(connect, bluetooth);
@@ -104,7 +110,7 @@ static void handle_a(void) {
         {"net_proxy", &kiosk.config.proxy, menu_general, visible_network_opt},
         {"link", &kiosk.config.network, menu_general, visible_network_opt},
         {"webserv", &kiosk.config.web_services, menu_general, visible_network_opt},
-        {"webcode", &kiosk.config.web_services, menu_general, visible_network_opt},
+        {"webcode", &kiosk.config.web_services, menu_general, visible_webcode_opt},
         {"btall", &kiosk_pass, menu_general, visible_bluetooth_opt}
     };
 

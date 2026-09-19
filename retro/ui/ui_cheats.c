@@ -69,8 +69,8 @@ static uint64_t current_nav_mask(void) {
     const int select_btn = mux_input_pressed(mux_input_select);
     const int start_btn = mux_input_pressed(mux_input_start);
 
-    return nav_dir_bits() | (confirm ? BIT(4) : 0) | (back ? BIT(5) : 0) | (manage ? BIT(6) : 0)
-           | (add ? BIT(7) : 0) | (select_btn ? BIT(8) : 0) | (start_btn ? BIT(9) : 0) | nav_mask_page();
+    return nav_dir_bits() | (confirm ? BIT(4) : 0) | (back ? BIT(5) : 0) | (manage ? BIT(6) : 0) | (add ? BIT(7) : 0)
+           | (select_btn ? BIT(8) : 0) | (start_btn ? BIT(9) : 0) | nav_mask_page();
 }
 
 static const char *row_value_text(const int row) {
@@ -114,9 +114,7 @@ static void apply_list_nav(void) {
     nav_show_lr(cheats_count > 0);
     if (cheats_count > 0) lv_label_set_text(ui_lbl_nav_lr, lang.generic.change);
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
-                                  {ui_lbl_nav_b, lang.generic.back, 0},
-                                  {NULL, NULL, 0}});
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
 }
 
@@ -207,10 +205,7 @@ static void open_editor_stage(const editor_stage stage, const char *seed) {
     lv_label_set_text(
         entry_heading, stage == editor_name ? lang.muxretro.cheats_screen.name : lang.muxretro.cheats_screen.code
     );
-    init_osk(
-        entry_panel, entry_text, 0, 0,
-        (uint16_t) ((stage == editor_name ? CHEAT_DESC_MAX : CHEAT_CODE_MAX) - 1)
-    );
+    init_osk(entry_panel, entry_text, 0, 0, (uint16_t) ((stage == editor_name ? CHEAT_DESC_MAX : CHEAT_CODE_MAX) - 1));
     key_show = 1;
     osk_show(entry_panel);
     lv_textarea_set_text(entry_text, seed ? seed : "");

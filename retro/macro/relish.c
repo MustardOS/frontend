@@ -218,8 +218,8 @@ static int load_source(
 
     if (!source_name_is_valid(file_name, depth)) {
         snprintf(
-            error, RELISH_ERROR_LENGTH, "%s: %s must be a plain %s file name", from,
-            depth == 0 ? "script" : "INCLUDE", depth == 0 ? ".rls" : ".rli"
+            error, RELISH_ERROR_LENGTH, "%s: %s must be a plain %s file name", from, depth == 0 ? "script" : "INCLUDE",
+            depth == 0 ? ".rls" : ".rli"
         );
         return -1;
     }
@@ -247,17 +247,13 @@ static int load_source(
     struct stat st;
     if (fstat(fd, &st) != 0 || !S_ISREG(st.st_mode) || st.st_nlink != 1) {
         close(fd);
-        snprintf(
-            error, RELISH_ERROR_LENGTH, "%s: '%s' must be a regular, non-linked file", from, file_name
-        );
+        snprintf(error, RELISH_ERROR_LENGTH, "%s: '%s' must be a regular, non-linked file", from, file_name);
         return -1;
     }
 
     if (st.st_size < 0 || (size_t) st.st_size > RELISH_SOURCE_BYTES - prog->source_bytes) {
         close(fd);
-        snprintf(
-            error, RELISH_ERROR_LENGTH, "%s: script sources exceed %d KiB", from, RELISH_SOURCE_BYTES / 1024
-        );
+        snprintf(error, RELISH_ERROR_LENGTH, "%s: script sources exceed %d KiB", from, RELISH_SOURCE_BYTES / 1024);
         return -1;
     }
     prog->source_bytes += (size_t) st.st_size;
@@ -277,9 +273,7 @@ static int load_source(
     while (fgets(raw, sizeof(raw), f)) {
         const size_t bytes = strlen(raw);
         if (bytes > RELISH_SOURCE_BYTES - prog->bytes_read) {
-            snprintf(
-                error, RELISH_ERROR_LENGTH, "%s: script sources exceed %d KiB", from, RELISH_SOURCE_BYTES / 1024
-            );
+            snprintf(error, RELISH_ERROR_LENGTH, "%s: script sources exceed %d KiB", from, RELISH_SOURCE_BYTES / 1024);
             result = -1;
             break;
         }
@@ -329,8 +323,7 @@ static int load_source(
             }
             if (*include_rest != '\0') {
                 snprintf(
-                    error, RELISH_ERROR_LENGTH, "%s: INCLUDE takes one file name",
-                    load_label(depth, file_name, line_no)
+                    error, RELISH_ERROR_LENGTH, "%s: INCLUDE takes one file name", load_label(depth, file_name, line_no)
                 );
                 result = -1;
                 break;
@@ -513,9 +506,7 @@ static void scan_if_line(const char *cursor, int *has_else, int *has_break) {
     }
 }
 
-static int set_define(
-    struct relish_compile *ctx, char *cursor, const int index, const int redefine, char *error
-) {
+static int set_define(struct relish_compile *ctx, char *cursor, const int index, const int redefine, char *error) {
     const char *directive = redefine ? "REDEFINE" : "DEFINE";
     char name[RELISH_LABEL_NAME_MAX];
     cursor = read_token(cursor, name, sizeof(name));
@@ -635,9 +626,8 @@ static int first_pass(struct relish_compile *ctx, char *error) {
                    || strcasecmp(keyword, "DIV") == 0 || strcasecmp(keyword, "MOD") == 0
                    || strcasecmp(keyword, "SIN") == 0 || strcasecmp(keyword, "COS") == 0
                    || strcasecmp(keyword, "TAN") == 0 || strcasecmp(keyword, "FLR") == 0
-                   || strcasecmp(keyword, "TOP") == 0
-                   || strcasecmp(keyword, "CALL") == 0 || strcasecmp(keyword, "RETURN") == 0
-                   || strcasecmp(keyword, "STOP") == 0) {
+                   || strcasecmp(keyword, "TOP") == 0 || strcasecmp(keyword, "CALL") == 0
+                   || strcasecmp(keyword, "RETURN") == 0 || strcasecmp(keyword, "STOP") == 0) {
             step_index++;
         } else if (strcasecmp(keyword, "IF") == 0) {
             int has_else = 0;
@@ -820,8 +810,8 @@ static int parse_if_action(
 
     if (strcasecmp(action, "GOTO") != 0) {
         snprintf(
-            error, RELISH_ERROR_LENGTH, "%s: %s must be followed by GOTO, BREAK or STOP",
-            line_label(&ctx->prog, index), clause
+            error, RELISH_ERROR_LENGTH, "%s: %s must be followed by GOTO, BREAK or STOP", line_label(&ctx->prog, index),
+            clause
         );
         return -1;
     }
@@ -910,8 +900,8 @@ static int emit_steps(
         cursor = read_token(cursor, keyword, sizeof(keyword));
         skip_ws(&cursor);
 
-        if (strcasecmp(keyword, "REM") == 0 || strcasecmp(keyword, "LABEL") == 0
-            || strcasecmp(keyword, "DEFINE") == 0 || strcasecmp(keyword, "REDEFINE") == 0)
+        if (strcasecmp(keyword, "REM") == 0 || strcasecmp(keyword, "LABEL") == 0 || strcasecmp(keyword, "DEFINE") == 0
+            || strcasecmp(keyword, "REDEFINE") == 0)
             continue;
 
         if (strcasecmp(keyword, "NAME") == 0) {
@@ -1043,13 +1033,12 @@ static int emit_steps(
 
             ctx->step_line[*step_count] = index;
             (*step_count)++;
-        } else if (strcasecmp(keyword, "SET") == 0 || strcasecmp(keyword, "INC") == 0
-                   || strcasecmp(keyword, "DEC") == 0 || strcasecmp(keyword, "ADD") == 0
-                   || strcasecmp(keyword, "SUB") == 0 || strcasecmp(keyword, "MUL") == 0
-                   || strcasecmp(keyword, "DIV") == 0 || strcasecmp(keyword, "MOD") == 0
-                   || strcasecmp(keyword, "SIN") == 0 || strcasecmp(keyword, "COS") == 0
-                   || strcasecmp(keyword, "TAN") == 0 || strcasecmp(keyword, "FLR") == 0
-                   || strcasecmp(keyword, "TOP") == 0) {
+        } else if (strcasecmp(keyword, "SET") == 0 || strcasecmp(keyword, "INC") == 0 || strcasecmp(keyword, "DEC") == 0
+                   || strcasecmp(keyword, "ADD") == 0 || strcasecmp(keyword, "SUB") == 0
+                   || strcasecmp(keyword, "MUL") == 0 || strcasecmp(keyword, "DIV") == 0
+                   || strcasecmp(keyword, "MOD") == 0 || strcasecmp(keyword, "SIN") == 0
+                   || strcasecmp(keyword, "COS") == 0 || strcasecmp(keyword, "TAN") == 0
+                   || strcasecmp(keyword, "FLR") == 0 || strcasecmp(keyword, "TOP") == 0) {
             if (*step_count >= MACRO_STEP_MAX) {
                 snprintf(
                     error, RELISH_ERROR_LENGTH, "%s: macro exceeds %d steps", line_label(&ctx->prog, index),
@@ -1082,7 +1071,8 @@ static int emit_steps(
             step->kind = macro_step_setvar;
             step->var_index = slot;
 
-            if (strcasecmp(keyword, "SET") == 0) step->var_op = var_op_set;
+            if (strcasecmp(keyword, "SET") == 0)
+                step->var_op = var_op_set;
             else if (strcasecmp(keyword, "INC") == 0 || strcasecmp(keyword, "ADD") == 0)
                 step->var_op = var_op_add;
             else if (strcasecmp(keyword, "DEC") == 0 || strcasecmp(keyword, "SUB") == 0)
@@ -1105,8 +1095,7 @@ static int emit_steps(
                 step->var_op = var_op_ceiling;
 
             const int unary = step->var_op >= var_op_sine;
-            const int optional = strcasecmp(keyword, "INC") == 0 || strcasecmp(keyword, "DEC") == 0 ? 1
-                                                                                                      : unary ? 2 : 0;
+            const int optional = strcasecmp(keyword, "INC") == 0 || strcasecmp(keyword, "DEC") == 0 ? 1 : unary ? 2 : 0;
             if (unary) step->var_rhs_index = slot;
             if (parse_variable_operand(
                     ctx, &saveptr, index, keyword, optional, &step->var_rhs_is_var, &step->var_rhs_index,
@@ -1225,9 +1214,7 @@ static int emit_steps(
             char *saveptr = NULL;
             char *label_token = strtok_r(cursor, " \t", &saveptr);
             if (!label_token) {
-                snprintf(
-                    error, RELISH_ERROR_LENGTH, "%s: %s requires a label", line_label(&ctx->prog, index), keyword
-                );
+                snprintf(error, RELISH_ERROR_LENGTH, "%s: %s requires a label", line_label(&ctx->prog, index), keyword);
                 return -1;
             }
 
@@ -1679,8 +1666,10 @@ int relish_compile_file(const char *path, struct macro_entry *out_entry) {
 
     char *slash = strrchr(dir, '/');
     if (slash) {
-        if (slash == dir) slash[1] = '\0';
-        else *slash = '\0';
+        if (slash == dir)
+            slash[1] = '\0';
+        else
+            *slash = '\0';
     } else {
         snprintf(dir, sizeof(dir), ".");
     }
@@ -1692,8 +1681,7 @@ int relish_compile_file(const char *path, struct macro_entry *out_entry) {
         return -1;
     }
 
-    const int load_result =
-        load_source(&ctx->prog, dir_fd, basename_of(path), 0, "Script", out_entry->compile_error);
+    const int load_result = load_source(&ctx->prog, dir_fd, basename_of(path), 0, "Script", out_entry->compile_error);
     close(dir_fd);
     if (load_result != 0) {
         free(ctx);
@@ -1716,10 +1704,7 @@ int relish_compile_file(const char *path, struct macro_entry *out_entry) {
     }
 
     if (out_entry->step_count <= 0) {
-        snprintf(
-            out_entry->compile_error, sizeof(out_entry->compile_error),
-            "Script has no executable instructions"
-        );
+        snprintf(out_entry->compile_error, sizeof(out_entry->compile_error), "Script has no executable instructions");
         free(ctx);
         return -1;
     }

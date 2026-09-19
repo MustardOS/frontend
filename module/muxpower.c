@@ -313,7 +313,8 @@ static int save_power_options(void) {
     if (lv_dropdown_get_option_cnt(ui_dro_idle_sleep_power) > 1
         && lv_dropdown_get_selected(ui_dro_idle_sleep_power) != idle_sleep_original) {
         is_modified++;
-        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/power/idle_sleep", INT, idx_idle_sleep)) save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/power/idle_sleep", INT, idx_idle_sleep))
+            save_failed++;
     }
 
     if (lv_dropdown_get_option_cnt(ui_dro_idle_mute_power) > 1

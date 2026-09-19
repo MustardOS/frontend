@@ -375,9 +375,8 @@ static int slot_path(const var_dirs_t *dirs, const var_ns_t ns, const char *key,
     return n < 0 || (size_t) n >= MAX_LEN_SZ ? -1 : 0;
 }
 
-static int vs_write_mode(
-    const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value, const int durable
-) {
+static int
+vs_write_mode(const var_dirs_t *dirs, const var_ns_t ns, const char *key, const char *value, const int durable) {
     if (dirs == NULL || value == NULL) return vs_err_inval;
     if (strlen(value) >= VS_VAL_MAX) return vs_err_inval;
 

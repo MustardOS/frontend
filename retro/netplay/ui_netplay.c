@@ -399,7 +399,7 @@ static void entry_tick(void) {
 
 static void disconnect_session(void) {
     if (!netplay_is_active()) return;
-    netplay_disconnect();
+    netplay_request_disconnect();
     pause_menu_show_toast(lang.muxretro.netplay.disconnected);
 }
 

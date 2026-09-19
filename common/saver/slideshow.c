@@ -15,7 +15,7 @@
 #include <common/display/language.h>
 #include <common/saver/slideshow.h>
 
-#define CROSSFADE_MS 1500u
+#define CROSSFADE_MS       1500u
 #define SLIDESHOW_PATH_MAX 4096
 
 #define SLIDESHOW_FONT_FILE OPT_PATH "share/font/mucredits.ttf"

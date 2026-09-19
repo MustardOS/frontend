@@ -34,8 +34,9 @@ void coredb_assign_tag(const char *id, enum core_runtime runtime, char *out, siz
 
 enum core_runtime coredb_assign_runtime(const char *stored, const char **id_out);
 
-int coredb_assign_resolve(const char *system, const char *stored, char *id_out, size_t id_size,
-                          enum core_runtime *runtime_out);
+int coredb_assign_resolve(
+    const char *system, const char *stored, char *id_out, size_t id_size, enum core_runtime *runtime_out
+);
 
 int coredb_namespace_count(void);
 

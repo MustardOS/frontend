@@ -13,6 +13,8 @@
 #include <common/base/options.h>
 #include "../core/runahead.h"
 #include "../core/subsystem.h"
+#include "../netplay/address.h"
+#include "../netplay/netplay.h"
 #include "../ui/options.h"
 #include "link.h"
 
@@ -40,19 +42,19 @@ static const link_provider providers[] = {
     },
 };
 
-#define PROVIDER_COUNT ((int) (sizeof(providers) / sizeof(providers[0])))
-#define DIRECT_LINK_STATE RUN_PATH "network/link"
-#define DIRECT_LINK_POLL_MS 500
-#define LINK_CONTROL_MAGIC "PKGL"
-#define LINK_CONTROL_VERSION 1
-#define LINK_CONTROL_PACKET_SIZE 8
-#define LINK_CONTROL_SEND_MS 100
-#define LINK_CONTROL_TIMEOUT_MS 1500
-#define LINK_ELECTION_MAGIC "PKGE"
-#define LINK_ELECTION_VERSION 1
-#define LINK_ELECTION_PACKET_SIZE 12
-#define LINK_ELECTION_SEND_MS 100
-#define LINK_ELECTION_HOST_DELAY_MS 500
+#define PROVIDER_COUNT                   ((int) (sizeof(providers) / sizeof(providers[0])))
+#define DIRECT_LINK_STATE                RUN_PATH "network/link"
+#define DIRECT_LINK_POLL_MS              500
+#define LINK_CONTROL_MAGIC               "PKGL"
+#define LINK_CONTROL_VERSION             1
+#define LINK_CONTROL_PACKET_SIZE         8
+#define LINK_CONTROL_SEND_MS             100
+#define LINK_CONTROL_TIMEOUT_MS          1500
+#define LINK_ELECTION_MAGIC              "PKGE"
+#define LINK_ELECTION_VERSION            1
+#define LINK_ELECTION_PACKET_SIZE        12
+#define LINK_ELECTION_SEND_MS            100
+#define LINK_ELECTION_HOST_DELAY_MS      500
 #define LINK_ELECTION_START_TOLERANCE_MS 250
 
 static int local_pending = 0;
@@ -61,6 +63,7 @@ static int direct_suppressed = 0;
 static int direct_connected = 0;
 static int direct_paired = 0;
 static int direct_role = link_mode_off;
+static int direct_netplay_owned = 0;
 static uint32_t direct_poll_at = 0;
 static uint32_t direct_started_at = 0;
 static char direct_address[LINK_HOST_LEN] = "";
@@ -143,10 +146,9 @@ static int direct_parse_mac(const char *text, uint8_t out[6]) {
     int consumed = 0;
     if (!text
         || sscanf(
-               text, "%2x:%2x:%2x:%2x:%2x:%2x%n", &octet[0], &octet[1], &octet[2], &octet[3], &octet[4],
-               &octet[5], &consumed
-           )
-               != 6
+               text, "%2x:%2x:%2x:%2x:%2x:%2x%n", &octet[0], &octet[1], &octet[2], &octet[3], &octet[4], &octet[5],
+               &consumed
+           ) != 6
         || text[consumed] != '\0')
         return 0;
 
@@ -226,7 +228,31 @@ static const link_provider *active_provider(void) {
 
 static int direct_set_core_mode(const enum link_mode mode, const char *host) {
     const link_provider *p = active_provider();
-    if (!p) return 0;
+    if (!p) {
+        if (!netplay_core_managed()) return 0;
+        if (mode == link_mode_off) {
+            if (direct_netplay_owned && netplay_is_active()) netplay_disconnect();
+            direct_netplay_owned = 0;
+            direct_role = mode;
+            direct_host[0] = '\0';
+            return 1;
+        }
+        if (direct_netplay_owned) {
+            if (netplay_is_active()) netplay_disconnect();
+            direct_netplay_owned = 0;
+        }
+        if (netplay_is_active()) return 0;
+
+        const int result = mode == link_mode_host   ? netplay_direct_host(NETPLAY_DEFAULT_PORT)
+                           : mode == link_mode_join ? netplay_direct_join(host, NETPLAY_DEFAULT_PORT)
+                                                    : -1;
+        if (result != 0) return 0;
+
+        direct_netplay_owned = 1;
+        direct_role = mode;
+        snprintf(direct_host, sizeof(direct_host), "%s", host ? host : "");
+        return 1;
+    }
 
     if (mode == link_mode_join && (!host || !link_set_host(host))) return 0;
     if (!options_set(p->mode_key, mode_value(p, mode))) return 0;
@@ -308,6 +334,7 @@ void link_direct_init(void) {
     direct_connected = 0;
     direct_paired = 0;
     direct_role = link_mode_off;
+    direct_netplay_owned = 0;
     direct_poll_at = 0;
     direct_started_at = SDL_GetTicks();
     direct_address[0] = '\0';
@@ -333,7 +360,7 @@ void link_direct_get_host(char *out, const int len) {
 
 static uint16_t election_wanted_port(void) {
     const int game_port = link_get_port();
-    if (game_port <= 0 || game_port > 65535) return 0;
+    if (game_port <= 0 || game_port > 65535) return netplay_core_managed() ? (uint16_t) (NETPLAY_DEFAULT_PORT + 2) : 0;
     return (uint16_t) (game_port <= 65533 ? game_port + 2 : game_port - 2);
 }
 
@@ -352,8 +379,7 @@ static int election_open(const uint16_t port) {
 
     struct sockaddr_in local = {.sin_family = AF_INET, .sin_port = htons(port)};
     struct sockaddr_in peer = {.sin_family = AF_INET, .sin_port = htons(port)};
-    if (inet_pton(AF_INET, direct_address, &local.sin_addr) != 1
-        || inet_pton(AF_INET, direct_peer, &peer.sin_addr) != 1
+    if (inet_pton(AF_INET, direct_address, &local.sin_addr) != 1 || inet_pton(AF_INET, direct_peer, &peer.sin_addr) != 1
         || bind(fd, (const struct sockaddr *) &local, sizeof(local)) != 0) {
         close(fd);
         return 0;
@@ -396,7 +422,13 @@ static enum link_mode election_role(const uint32_t now, const uint32_t peer_age)
 
 static void election_apply_role(enum link_mode role) {
     const char *host = role == link_mode_host ? direct_address : direct_peer;
-    if (direct_paired && direct_role == role && strcmp(direct_host, host) == 0) return;
+    if (direct_paired && direct_role == role && strcmp(direct_host, host) == 0) {
+        if (!direct_netplay_owned) return;
+
+        netplay_info info;
+        netplay_get_info(&info);
+        if (info.status != netplay_status_failed) return;
+    }
 
     if (!direct_set_core_mode(role, host)) {
         direct_paired = 0;
@@ -416,9 +448,8 @@ static void election_receive(const uint32_t now) {
         uint8_t packet[LINK_ELECTION_PACKET_SIZE];
         struct sockaddr_in source;
         socklen_t source_len = sizeof(source);
-        const ssize_t received = recvfrom(
-            election_fd, packet, sizeof(packet), MSG_DONTWAIT, (struct sockaddr *) &source, &source_len
-        );
+        const ssize_t received =
+            recvfrom(election_fd, packet, sizeof(packet), MSG_DONTWAIT, (struct sockaddr *) &source, &source_len);
         if (received < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
                 LOG_WARN(mux_module, "Direct Link Pickles election receive failed: %s", strerror(errno));
@@ -443,7 +474,7 @@ static void election_receive(const uint32_t now) {
                 role = (enum link_mode) direct_role;
             else
                 role = memcmp(direct_self_mac, direct_peer_mac, sizeof(direct_self_mac)) < 0 ? link_mode_host
-                                                                                            : link_mode_join;
+                                                                                             : link_mode_join;
         }
 
         election_apply_role(role);
@@ -453,9 +484,8 @@ static void election_receive(const uint32_t now) {
 static void election_send(const uint32_t now) {
     if (!SDL_TICKS_PASSED(now, election_next_tx)) return;
 
-    uint8_t packet[LINK_ELECTION_PACKET_SIZE] = {
-        'P', 'K', 'G', 'E', LINK_ELECTION_VERSION, (uint8_t) direct_role, 0, 0, 0, 0, 0, 0
-    };
+    uint8_t packet[LINK_ELECTION_PACKET_SIZE] = {'P', 'K', 'G', 'E', LINK_ELECTION_VERSION, (uint8_t) direct_role, 0, 0,
+                                                 0,   0,   0,   0};
     const uint32_t encoded_age = htonl(now - direct_started_at);
     memcpy(packet + 8, &encoded_age, sizeof(encoded_age));
 
@@ -545,7 +575,9 @@ static int control_open(const enum link_mode role, const uint16_t port, const ch
     control_peer = peer;
     control_peer_known = role == link_mode_join;
     control_next_tx = 0;
-    LOG_INFO(mux_module, "Game Link pause channel opened as %s on UDP %u", role == link_mode_host ? "host" : "client", port);
+    LOG_INFO(
+        mux_module, "Game Link pause channel opened as %s on UDP %u", role == link_mode_host ? "host" : "client", port
+    );
     return 1;
 }
 
@@ -585,9 +617,8 @@ static void control_receive(const uint32_t now) {
         uint8_t packet[LINK_CONTROL_PACKET_SIZE];
         struct sockaddr_in source;
         socklen_t source_len = sizeof(source);
-        const ssize_t received = recvfrom(
-            control_fd, packet, sizeof(packet), MSG_DONTWAIT, (struct sockaddr *) &source, &source_len
-        );
+        const ssize_t received =
+            recvfrom(control_fd, packet, sizeof(packet), MSG_DONTWAIT, (struct sockaddr *) &source, &source_len);
         if (received < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
                 LOG_WARN(mux_module, "Game Link pause channel receive failed: %s", strerror(errno));
@@ -673,7 +704,7 @@ static void digit_key(const link_provider *p, char *out, const int digit) {
 }
 
 int link_is_supported(void) {
-    return active_provider() != NULL || link_local_supported();
+    return active_provider() != NULL || netplay_core_managed() || link_local_supported();
 }
 
 int link_is_engaged(void) {
@@ -710,7 +741,7 @@ int link_mode_available(const enum link_mode mode) {
         case link_mode_join:
             return active_provider() != NULL;
         case link_mode_direct:
-            return active_provider() != NULL;
+            return active_provider() != NULL || netplay_core_managed();
         case link_mode_local:
             return link_local_supported();
         default:
@@ -724,6 +755,7 @@ int link_set_mode(const enum link_mode mode) {
     if (mode != link_mode_off) runahead_invalidate();
 
     if (mode == link_mode_direct) {
+        if (direct_netplay_owned) direct_set_core_mode(link_mode_off, NULL);
         election_close();
         local_pending = 0;
         direct_pending = 1;
@@ -738,7 +770,8 @@ int link_set_mode(const enum link_mode mode) {
         memset(direct_peer_mac, 0, sizeof(direct_peer_mac));
 
         const link_provider *p = active_provider();
-        if (!p || !options_set(p->mode_key, p->mode_off)) return 0;
+        if (p && !options_set(p->mode_key, p->mode_off)) return 0;
+        if (!p && !netplay_core_managed()) return 0;
 
         direct_refresh();
         direct_poll_at = SDL_GetTicks() + DIRECT_LINK_POLL_MS;
@@ -746,6 +779,7 @@ int link_set_mode(const enum link_mode mode) {
         return 1;
     }
 
+    if (direct_netplay_owned) direct_set_core_mode(link_mode_off, NULL);
     election_close();
     direct_pending = 0;
     direct_suppressed = 1;

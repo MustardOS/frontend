@@ -156,8 +156,8 @@ static int checksum_text(const char *path, const void *data, const size_t size, 
     if (stat(path, &status) != 0) return 0;
 
     const int length = snprintf(
-        output, 128, "%08X %zu %lld %ld %llu", compute_checksum(data, size), size,
-        (long long) status.st_mtim.tv_sec, status.st_mtim.tv_nsec, (unsigned long long) status.st_ino
+        output, 128, "%08X %zu %lld %ld %llu", compute_checksum(data, size), size, (long long) status.st_mtim.tv_sec,
+        status.st_mtim.tv_nsec, (unsigned long long) status.st_ino
     );
     if (length <= 0 || length >= 128) return 0;
     *output_size = (size_t) length;
@@ -209,7 +209,8 @@ static int checksum_matches(const char *path, const void *data, const size_t siz
 
     if (fields == 5) {
         if (stored_size != size || stored_seconds != (long long) data_status.st_mtim.tv_sec
-            || stored_nanoseconds != data_status.st_mtim.tv_nsec || stored_inode != (unsigned long long) data_status.st_ino)
+            || stored_nanoseconds != data_status.st_mtim.tv_nsec
+            || stored_inode != (unsigned long long) data_status.st_ino)
             return checksum_external_update;
     } else if (data_status.st_mtim.tv_sec > sum_status.st_mtim.tv_sec
                || (data_status.st_mtim.tv_sec == sum_status.st_mtim.tv_sec
@@ -356,7 +357,8 @@ static int publish_snapshot(const persistent_region *region, const persistent_sn
 }
 
 static int load_candidate(
-    persistent_region *region, const char *path, void *core_data, const size_t core_size, const int allow_external_update
+    persistent_region *region, const char *path, void *core_data, const size_t core_size,
+    const int allow_external_update
 ) {
     uint8_t *file_data = NULL;
     size_t file_size = 0;
@@ -415,7 +417,8 @@ static int load_region(persistent_region *region, void *core_data, const size_t 
         return 1;
     }
 
-    if (file_exist(region->path)) LOG_ERROR(mux_module, "No valid %s or backup was found: %s", region->name, region->path);
+    if (file_exist(region->path))
+        LOG_ERROR(mux_module, "No valid %s or backup was found: %s", region->name, region->path);
     return 0;
 }
 
@@ -454,7 +457,9 @@ static void *persistence_worker(void *argument) {
             if (!source->pending) continue;
 
             if (!resize_buffer(&destination->data, &destination->capacity, source->size)) {
-                LOG_ERROR(mux_module, "Could not allocate the %s writer buffer (%zu bytes)", regions[index].name, source->size);
+                LOG_ERROR(
+                    mux_module, "Could not allocate the %s writer buffer (%zu bytes)", regions[index].name, source->size
+                );
                 source->pending = 0;
                 write_failed = 1;
                 continue;

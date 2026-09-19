@@ -1657,9 +1657,9 @@ static int content_folder_json(struct buffer *out, const char *relative) {
              && (!sub_friendly || (json_field(out, "friendly", sub_friendly) && buffer_puts(out, ",")))
              && json_field(out, "path", within) && buffer_puts(out, ",")
              && json_field(out, "catalogue", CATALOGUE_FOLDER) && buffer_puts(out, ",\"folder\":true,")
-             && catalogue_files_json(out, &folders, directories.items[i].name, &bytes, &modified) && buffer_puts(out, ",")
-             && json_number(out, "bytes", bytes) && buffer_puts(out, ",") && json_number(out, "modified", modified)
-             && buffer_puts(out, "}");
+             && catalogue_files_json(out, &folders, directories.items[i].name, &bytes, &modified)
+             && buffer_puts(out, ",") && json_number(out, "bytes", bytes) && buffer_puts(out, ",")
+             && json_number(out, "modified", modified) && buffer_puts(out, "}");
     }
 
     const int names_catalogue = catalogue && assign_lookup(leaf) != NULL;
