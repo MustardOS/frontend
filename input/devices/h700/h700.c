@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -26,11 +27,22 @@
 #define H700_PRIVATE_DEVICE_DIR "/dev/muinput"
 #define H700_PRIVATE_SOURCE     H700_PRIVATE_DEVICE_DIR "/h700-source"
 #define H700_PRIVATE_JOYSTICK   H700_PRIVATE_DEVICE_DIR "/h700-joystick"
+#define H700_STICK_DEADZONE     0
+
+struct h700_stick_state {
+    int x;
+    int y;
+    int emitted_x;
+    int emitted_y;
+    int dirty;
+};
 
 struct h700_state {
     struct gamepad *gamepad;
     const struct gamepad_desc *desc;
     int has_sticks;
+    struct h700_stick_state left_stick;
+    struct h700_stick_state right_stick;
     struct evdev_source source;
     struct device_rumble_state rumble;
 };
@@ -75,6 +87,63 @@ static int normalise_stick_axis(const struct evdev_source *source, unsigned shor
     if (normalised < -32767) return -32767;
     if (normalised > 32767) return 32767;
     return (int) normalised;
+}
+
+static void apply_radial_deadzone(int x, int y, int *output_x, int *output_y) {
+    const int64_t squared_magnitude = (int64_t) x * x + (int64_t) y * y;
+    const int64_t squared_deadzone = (int64_t) H700_STICK_DEADZONE * H700_STICK_DEADZONE;
+    if (squared_magnitude <= squared_deadzone) {
+        *output_x = 0;
+        *output_y = 0;
+        return;
+    }
+
+    const int maximum_axis = abs(x) > abs(y) ? abs(x) : abs(y);
+    const double magnitude = sqrt((double) squared_magnitude);
+    const double maximum_magnitude = 32767.0 * magnitude / maximum_axis;
+    const double adjusted_magnitude =
+        (magnitude - H700_STICK_DEADZONE) * maximum_magnitude / (maximum_magnitude - H700_STICK_DEADZONE);
+    const double scale = adjusted_magnitude / magnitude;
+    *output_x = (int) lround(x * scale);
+    *output_y = (int) lround(y * scale);
+}
+
+static void store_stick_axis(struct h700_state *state, unsigned short code, int value) {
+    struct h700_stick_state *stick = code == ABS_X || code == ABS_Y ? &state->left_stick : &state->right_stick;
+    if (code == ABS_X || code == ABS_RX) {
+        stick->x = value;
+    } else {
+        stick->y = value;
+    }
+    stick->dirty = 1;
+}
+
+static int emit_stick(struct gamepad *gamepad, struct h700_stick_state *stick, unsigned short x_code,
+                      unsigned short y_code) {
+    if (!stick->dirty) return 0;
+    stick->dirty = 0;
+
+    int x;
+    int y;
+    apply_radial_deadzone(stick->x, stick->y, &x, &y);
+    int emitted = 0;
+    if (x != stick->emitted_x) {
+        gamepad_emit_abs(gamepad, x_code, x);
+        stick->emitted_x = x;
+        emitted = 1;
+    }
+    if (y != stick->emitted_y) {
+        gamepad_emit_abs(gamepad, y_code, y);
+        stick->emitted_y = y;
+        emitted = 1;
+    }
+    return emitted;
+}
+
+static int emit_sticks(struct h700_state *state) {
+    int emitted = emit_stick(state->gamepad, &state->left_stick, ABS_X, ABS_Y);
+    emitted |= emit_stick(state->gamepad, &state->right_stick, ABS_RX, ABS_RY);
+    return emitted;
 }
 
 static const char *h700_source_path(void) {
@@ -295,21 +364,30 @@ static int h700_poll(void *context) {
             } else if (event->type == EV_ABS) {
                 unsigned short mapped_code = h700_map_abs(event->code, state->has_sticks);
                 if (mapped_code < ABS_CNT) {
-                    int value = mapped_code != ABS_HAT0X && mapped_code != ABS_HAT0Y
-                                    ? normalise_stick_axis(&state->source, event->code, event->value)
-                                : event->value < 0 ? -1
-                                : event->value > 0 ? 1
-                                                   : 0;
-                    gamepad_emit_abs(state->gamepad, mapped_code, value);
-                    dirty = 1;
+                    if (mapped_code == ABS_HAT0X || mapped_code == ABS_HAT0Y) {
+                        int value = event->value < 0 ? -1 : event->value > 0 ? 1 : 0;
+                        gamepad_emit_abs(state->gamepad, mapped_code, value);
+                        dirty = 1;
+                    } else if (state->has_sticks) {
+                        int value = normalise_stick_axis(&state->source, event->code, event->value);
+                        store_stick_axis(state, mapped_code, value);
+                    } else {
+                        int value = normalise_stick_axis(&state->source, event->code, event->value);
+                        gamepad_emit_abs(state->gamepad, mapped_code, value);
+                        dirty = 1;
+                    }
                 }
-            } else if (event->type == EV_SYN && event->code == SYN_REPORT && dirty) {
-                gamepad_sync(state->gamepad);
-                dirty = 0;
+            } else if (event->type == EV_SYN && event->code == SYN_REPORT) {
+                dirty |= emit_sticks(state);
+                if (dirty) {
+                    gamepad_sync(state->gamepad);
+                    dirty = 0;
+                }
             }
         }
         if ((size_t) result < capacity) break;
     }
+    dirty |= emit_sticks(state);
     if (dirty) gamepad_sync(state->gamepad);
     return 1;
 }
