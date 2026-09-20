@@ -1476,6 +1476,12 @@ static void show_brightness_progress(void) {
     progress_show(ui_pnl_progress_brightness, ui_pnl_progress_volume);
 }
 
+static void show_volume_progress(void) {
+    if (!ui_common_check(0) || !progress_onscreen) return;
+
+    progress_show(ui_pnl_progress_volume, ui_pnl_progress_brightness);
+}
+
 static void adjust_volume(const int direction) {
     if (!ui_common_check(0) || !progress_onscreen) return;
 
@@ -1502,7 +1508,7 @@ static void adjust_volume(const int direction) {
 
     update_glyph(ui_ico_progress_volume, "bar", glyph);
 
-    progress_show(ui_pnl_progress_volume, ui_pnl_progress_brightness);
+    show_volume_progress();
 
     volume_changed = 1;
 }
@@ -1526,7 +1532,7 @@ void ui_common_handle_volume_down(void) {
 int ui_common_progress_tick(void) {
     int need_update = 0;
 
-    static unsigned brightness_changes_seen = 0;
+    static unsigned brightness_changes_seen = 1;
     if (brightness_config_changes != brightness_changes_seen) {
         brightness_changes_seen = brightness_config_changes;
 
@@ -1534,6 +1540,19 @@ int ui_common_progress_tick(void) {
         if (saved_brightness >= 0 && saved_brightness <= device.screen.bright) {
             current_brightness = saved_brightness;
             brightness_changed = 1;
+            show_brightness_progress();
+        }
+    }
+
+    static unsigned volume_changes_seen = 1;
+    if (volume_config_changes != volume_changes_seen) {
+        volume_changes_seen = volume_config_changes;
+
+        const int saved_volume = read_line_int_from(CONF_CONFIG_PATH "settings/general/volume", 1);
+        if (saved_volume >= 0 && saved_volume <= device.audio.max) {
+            current_volume = saved_volume;
+            volume_changed = 1;
+            show_volume_progress();
         }
     }
 

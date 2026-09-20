@@ -29,6 +29,7 @@ enum portable_layout_id {
     layout_g350,
     layout_pixel2,
     layout_zero28,
+    layout_vita,
 };
 
 enum portable_rumble_id {
@@ -40,10 +41,12 @@ enum portable_rumble_id {
 struct portable_profile {
     const char *id;
     const char *source_name;
+    const char *auxiliary_name;
     const struct gamepad_desc *gamepad;
     enum portable_layout_id layout;
     enum portable_rumble_id rumble;
     int has_sticks;
+    int calibrate_sticks;
     int dpad_switch;
 };
 
@@ -51,6 +54,8 @@ struct portable_state {
     struct gamepad *gamepad;
     const struct portable_profile *profile;
     struct evdev_source source;
+    struct evdev_source auxiliary;
+    unsigned int auxiliary_retry;
     struct device_rumble_state rumble;
     struct axis_state *axes[4];
     int axis_values[4];
@@ -68,6 +73,12 @@ static const unsigned short portable_keys[] = {
     BTN_TL2,        BTN_TR2,      BTN_SELECT, BTN_START, BTN_MODE,  BTN_THUMBL, BTN_THUMBR,
 };
 
+static const unsigned short vita_keys[] = {
+    BTN_SOUTH,  BTN_EAST,  BTN_NORTH, BTN_WEST,   BTN_TL,             BTN_TR,
+    BTN_TL2,    BTN_TR2,   BTN_SELECT, BTN_START, BTN_MODE,           BTN_THUMBL,
+    BTN_THUMBR, BTN_TRIGGER_HAPPY3,    BTN_TRIGGER_HAPPY4,            BTN_TRIGGER_HAPPY5,
+};
+
 static const struct gamepad_abs_desc portable_axes_stickless[] = {
     {.code = ABS_X, .min = -32767, .max = 32767},
     {.code = ABS_Y, .min = -32767, .max = 32767},
@@ -81,32 +92,33 @@ static const struct gamepad_abs_desc portable_axes_sticks[] = {
     {.code = ABS_HAT0X, .min = -1, .max = 1},      {.code = ABS_HAT0Y, .min = -1, .max = 1},
 };
 
-#define PORTABLE_DESC(_product, _axes)                                                                                 \
+#define PORTABLE_DESC(_product, _axes, _keys)                                                                          \
     {                                                                                                                  \
-        .name = MUOS_GAMEPAD_NAME,                                                                                     \
-        .id = {BUS_VIRTUAL, muos_input_vendor, (_product), muos_input_version},                                        \
-        .keys = portable_keys,                                                                                         \
-        .key_count = sizeof(portable_keys) / sizeof(portable_keys[0]),                                                 \
-        .axes = (_axes),                                                                                               \
-        .axis_count = sizeof(_axes) / sizeof((_axes)[0]),                                                              \
-        .ff_effects_max = device_rumble_effect_slots,                                                                  \
+        .name = MUOS_GAMEPAD_NAME, .id = {BUS_VIRTUAL, muos_input_vendor, (_product), muos_input_version},             \
+        .keys = (_keys), .key_count = sizeof(_keys) / sizeof((_keys)[0]), .axes = (_axes),                             \
+        .axis_count = sizeof(_axes) / sizeof((_axes)[0]), .ff_effects_max = device_rumble_effect_slots,                \
         .enable_ff_rumble = 1,                                                                                         \
     }
 
-static const struct gamepad_desc gcs_h36s_gamepad = PORTABLE_DESC(muos_product_gcs_h36s, portable_axes_sticks);
-static const struct gamepad_desc mgx_zero28_gamepad = PORTABLE_DESC(muos_product_mgx_zero28, portable_axes_sticks);
-static const struct gamepad_desc rk_g350_v_gamepad = PORTABLE_DESC(muos_product_rk_g350_v, portable_axes_sticks);
-static const struct gamepad_desc rk_pixel_2_gamepad = PORTABLE_DESC(muos_product_rk_pixel_2, portable_axes_stickless);
-static const struct gamepad_desc rg_vita_pro_gamepad = PORTABLE_DESC(muos_product_rg_vita_pro, portable_axes_sticks);
+static const struct gamepad_desc gcs_h36s_gamepad =
+    PORTABLE_DESC(muos_product_gcs_h36s, portable_axes_sticks, portable_keys);
+static const struct gamepad_desc mgx_zero28_gamepad =
+    PORTABLE_DESC(muos_product_mgx_zero28, portable_axes_sticks, portable_keys);
+static const struct gamepad_desc rk_g350_v_gamepad =
+    PORTABLE_DESC(muos_product_rk_g350_v, portable_axes_sticks, portable_keys);
+static const struct gamepad_desc rk_pixel_2_gamepad =
+    PORTABLE_DESC(muos_product_rk_pixel_2, portable_axes_stickless, portable_keys);
+static const struct gamepad_desc rg_vita_pro_gamepad =
+    PORTABLE_DESC(muos_product_rg_vita_pro, portable_axes_sticks, vita_keys);
 
 #undef PORTABLE_DESC
 
 static const struct portable_profile portable_profiles[] = {
-    {"gcs-h36s", "adc_gamepad", &gcs_h36s_gamepad, layout_standard, rumble_axp, 1, 0},
-    {"mgx-zero28", "magicx-input", &mgx_zero28_gamepad, layout_zero28, rumble_axp, 1, 0},
-    {"rk-g350-v", "g350_joypad", &rk_g350_v_gamepad, layout_g350, rumble_rk_pwm, 1, 0},
-    {"rk-pixel-2", "pixel2_joypad", &rk_pixel_2_gamepad, layout_pixel2, rumble_rk_pwm, 0, 1},
-    {"rg-vita-pro", "retrogame_joypad", &rg_vita_pro_gamepad, layout_standard, rumble_vita_pwm, 1, 0},
+    {"gcs-h36s", "adc_gamepad", NULL, &gcs_h36s_gamepad, layout_standard, rumble_axp, 1, 1, 0},
+    {"mgx-zero28", "magicx-input", NULL, &mgx_zero28_gamepad, layout_zero28, rumble_axp, 1, 1, 0},
+    {"rk-g350-v", "g350_joypad", NULL, &rk_g350_v_gamepad, layout_g350, rumble_rk_pwm, 1, 1, 0},
+    {"rk-pixel-2", "pixel2_joypad", NULL, &rk_pixel_2_gamepad, layout_pixel2, rumble_rk_pwm, 0, 0, 1},
+    {"rg-vita-pro", "retrogame_joypad", "adc-keys", &rg_vita_pro_gamepad, layout_vita, rumble_vita_pwm, 1, 0, 0},
 };
 
 static const struct portable_profile *find_profile(const char *id) {
@@ -265,6 +277,11 @@ static unsigned short map_dpad_key(unsigned short code) {
 }
 
 static unsigned short map_key(const struct portable_profile *profile, unsigned short code) {
+    if (profile->layout == layout_vita) {
+        if (code == KEY_F10) return BTN_MODE;
+        if (code == KEY_VOLUMEDOWN || code == BTN_TRIGGER_HAPPY1) return BTN_TRIGGER_HAPPY4;
+        if (code == KEY_VOLUMEUP || code == BTN_TRIGGER_HAPPY2) return BTN_TRIGGER_HAPPY5;
+    }
     if (profile->layout == layout_g350) {
         switch (code) {
             case BTN_SOUTH:
@@ -361,7 +378,20 @@ static int scale_axis_raw(const struct evdev_source *source, unsigned short code
     return (int) scaled;
 }
 
+static int normalise_axis(const struct evdev_source *source, unsigned short code, int value) {
+    if (code >= ABS_CNT || !source->has_abs[code]) return value < 0 ? -32767 : value > 0 ? 32767 : 0;
+    const struct input_absinfo *info = &source->abs_info[code];
+    if (info->maximum <= info->minimum) return 0;
+    int64_t position = (int64_t) value - info->minimum;
+    int64_t range = (int64_t) info->maximum - info->minimum;
+    int64_t normalised = position * 65534 / range - 32767;
+    if (normalised < -32767) return -32767;
+    if (normalised > 32767) return 32767;
+    return (int) normalised;
+}
+
 static void seed_axis_calibration(struct portable_state *state) {
+    if (!state->profile->calibrate_sticks) return;
     static const unsigned short codes[] = {ABS_X, ABS_Y, ABS_RX, ABS_RY};
     for (size_t i = 0; i < sizeof(codes) / sizeof(codes[0]); ++i) {
         unsigned short code = codes[i];
@@ -379,9 +409,14 @@ static void emit_axis(struct portable_state *state, unsigned short source_code, 
     int invert = 0;
     int index = source_axis_index(state->profile, source_code, &invert);
     if (index < 0 || (!state->profile->has_sticks && index > 1)) return;
-    int raw = scale_axis_raw(&state->source, source_code, raw_value);
-    cal_update(state->axes[index], raw);
-    int value = cal_apply(state->axes[index], raw);
+    int value;
+    if (state->profile->calibrate_sticks) {
+        int raw = scale_axis_raw(&state->source, source_code, raw_value);
+        cal_update(state->axes[index], raw);
+        value = cal_apply(state->axes[index], raw);
+    } else {
+        value = normalise_axis(&state->source, source_code, raw_value);
+    }
     if (invert) value = -value;
     if (value != state->axis_values[index]) {
         state->axis_values[index] = value;
@@ -414,11 +449,11 @@ static void emit_dpad(struct portable_state *state, unsigned short code, int pre
 static struct rumble_sysfs_config rumble_config(enum portable_rumble_id rumble) {
     switch (rumble) {
         case rumble_rk_pwm:
-            return (struct rumble_sysfs_config) {"/sys/class/pwm/pwmchip0/pwm0/duty_cycle", "1", "1000000"};
+            return (struct rumble_sysfs_config){"/sys/class/pwm/pwmchip0/pwm0/duty_cycle", "1", "1000000"};
         case rumble_vita_pwm:
-            return (struct rumble_sysfs_config) {"/sys/class/pwm/pwmchip1/pwm0/enable", "0", "1"};
+            return (struct rumble_sysfs_config){"/sys/class/pwm/pwmchip1/pwm0/enable", "0", "1"};
         default:
-            return (struct rumble_sysfs_config) {"/sys/class/power_supply/axp2202-battery/moto", "1", "0"};
+            return (struct rumble_sysfs_config){"/sys/class/power_supply/axp2202-battery/moto", "1", "0"};
     }
 }
 
@@ -443,6 +478,7 @@ static int portable_initialise(
     state->profile = profile;
     state->gamepad = gamepad;
     state->source.fd = -1;
+    state->auxiliary.fd = -1;
     state->axes[0] = lx;
     state->axes[1] = ly;
     state->axes[2] = rx;
@@ -451,6 +487,11 @@ static int portable_initialise(
         evdev_source_close(&state->source);
         free(state);
         return -1;
+    }
+    if (profile->auxiliary_name
+        && evdev_source_open(&state->auxiliary, NULL, profile->auxiliary_name, 0, options->verbose) < 0
+        && options->verbose) {
+        fprintf(stderr, "Auxiliary input is unavailable for %s\n", profile->id);
     }
     seed_axis_calibration(state);
     if (initialise_rumble(state, options) < 0 && options->verbose) {
@@ -509,10 +550,42 @@ static int poll_source(struct portable_state *state) {
     return 1;
 }
 
+static void poll_auxiliary(struct portable_state *state) {
+    if (!state->profile->auxiliary_name) return;
+    if (state->auxiliary.fd < 0) {
+        if (++state->auxiliary_retry < 1000) return;
+        state->auxiliary_retry = 0;
+        evdev_source_open(&state->auxiliary, NULL, state->profile->auxiliary_name, 0, 0);
+        return;
+    }
+
+    struct input_event events[16];
+    int dirty = 0;
+    int result = evdev_source_read(&state->auxiliary, events, sizeof(events) / sizeof(events[0]));
+    if (result < 0) {
+        evdev_source_close(&state->auxiliary);
+        return;
+    }
+
+    for (int i = 0; i < result; ++i) {
+        const struct input_event *event = &events[i];
+        if (event->type == EV_KEY && event->code == KEY_BACK) {
+            gamepad_emit_key(state->gamepad, BTN_TRIGGER_HAPPY3, event->value);
+            dirty = 1;
+        } else if (event->type == EV_SYN && event->code == SYN_REPORT && dirty) {
+            gamepad_sync(state->gamepad);
+            dirty = 0;
+        }
+    }
+    if (dirty) gamepad_sync(state->gamepad);
+}
+
 static int portable_poll(void *context) {
     struct portable_state *state = context;
     if (!device_rumble_poll(&state->rumble, state->gamepad)) return 0;
-    return poll_source(state);
+    if (!poll_source(state)) return 0;
+    poll_auxiliary(state);
+    return 1;
 }
 
 static void portable_refresh(void *context) {
@@ -537,6 +610,7 @@ static void portable_close(void *context) {
     struct portable_state *state = context;
     if (!state) return;
     device_rumble_close(&state->rumble);
+    evdev_source_close(&state->auxiliary);
     evdev_source_close(&state->source);
     free(state);
 }
@@ -563,6 +637,6 @@ PORTABLE_BACKEND(gcs_h36s_profile, "gcs-h36s", "GCS H36S", gcs_h36s_gamepad, 1);
 PORTABLE_BACKEND(mgx_zero28_profile, "mgx-zero28", "MAGICX ZERO 28", mgx_zero28_gamepad, 1);
 PORTABLE_BACKEND(rk_g350_v_profile, "rk-g350-v", "G350 V", rk_g350_v_gamepad, 1);
 PORTABLE_BACKEND(rk_pixel_2_profile, "rk-pixel-2", "GKD PIXEL 2", rk_pixel_2_gamepad, 0);
-PORTABLE_BACKEND(rg_vita_pro_profile, "rg-vita-pro", "ANBERNIC RG VITA PRO", rg_vita_pro_gamepad, 1);
+PORTABLE_BACKEND(rg_vita_pro_profile, "rg-vita-pro", "ANBERNIC RG VITA PRO", rg_vita_pro_gamepad, 0);
 
 #undef PORTABLE_BACKEND

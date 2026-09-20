@@ -64,6 +64,7 @@ unsigned idle_state_changes = 0;
 unsigned saver_type_changes = 0;
 unsigned charging_changes = 0;
 unsigned brightness_config_changes = 0;
+unsigned volume_config_changes = 0;
 int hdmi_mode = 0;
 int g350_menu_pressed = 0;
 
@@ -102,6 +103,11 @@ void inotify_init(void) {
     inotify_track(
         ino_proc, CONF_CONFIG_PATH "settings/general", "brightness", &brightness_config_exists,
         &brightness_config_changes
+    );
+
+    static int volume_config_exists;
+    inotify_track(
+        ino_proc, CONF_CONFIG_PATH "settings/general", "volume", &volume_config_exists, &volume_config_changes
     );
 }
 
@@ -173,6 +179,17 @@ void init_module(const char *module) {
     fe_perf_init();
     snprintf(mux_module, sizeof(mux_module), "%s", module_from_func(module));
     set_process_name(mux_module);
+
+    if (strcmp(mux_module, "muxtester") == 0) {
+        remove(INPUT_TEST_VOL_UP);
+        remove(INPUT_TEST_VOL_DOWN);
+        write_text_to_file(INPUT_TEST_ACTIVE, "w", CHAR, "");
+    } else if (file_exist(INPUT_TEST_ACTIVE)) {
+        remove(INPUT_TEST_ACTIVE);
+        remove(INPUT_TEST_VOL_UP);
+        remove(INPUT_TEST_VOL_DOWN);
+    }
+
     load_lang(&lang);
     crash_init(mux_module);
     common_var_init();

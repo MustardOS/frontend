@@ -314,8 +314,8 @@ static int is_muinput_source(const char *name) {
 }
 
 // The board sdl_map describes the device muinput publishes, so the GUID it opens with identifies
-// the handheld controls. joy_button_map only ever carries the volume keys, which belong to no
-// other device, and firing them from a stray joystick is what makes A and B change the volume.
+// the handheld controls. joy_button_map only carries board-specific keys, which belong to no other
+// device, and firing them from a stray joystick can trigger unrelated system actions.
 static int is_board_device(const SDL_JoystickID id) {
     static SDL_JoystickGUID board_guid;
     static int board_guid_state = 0;
@@ -366,19 +366,20 @@ static void map_vol_buttons(mux_input_type *map, const int down_idx, const int u
     map[up_idx] = mux_input_vol_up;
 }
 
-static int map_sdl_volume_buttons(void) {
-    const char *down = strstr(device.board.sdl_map, ",volumedown:b");
-    const char *up = strstr(device.board.sdl_map, ",volumeup:b");
-    int down_idx = -1;
-    int up_idx = -1;
+static int map_sdl_button(const char *name, const mux_input_type type) {
+    char field[48];
+    snprintf(field, sizeof(field), ",%s:b", name);
 
-    if (!down || !up || sscanf(down, ",volumedown:b%d", &down_idx) != 1 || sscanf(up, ",volumeup:b%d", &up_idx) != 1
-        || down_idx < 0 || down_idx >= 32 || up_idx < 0 || up_idx >= 32 || down_idx == up_idx) {
-        return 0;
-    }
+    const char *value = strstr(device.board.sdl_map, field);
+    int index = -1;
+    if (!value || sscanf(value + strlen(field), "%d", &index) != 1 || index < 0 || index >= 32) return 0;
 
-    map_vol_buttons(joy_button_map, down_idx, up_idx);
+    joy_button_map[index] = type;
     return 1;
+}
+
+static int map_sdl_volume_buttons(void) {
+    return map_sdl_button("volumedown", mux_input_vol_down) && map_sdl_button("volumeup", mux_input_vol_up);
 }
 
 static void apply_face_button_layout(void) {
@@ -493,6 +494,7 @@ static void init_input_maps(void) {
                 break;
         }
     }
+    map_sdl_button("special", mux_input_switch);
 
     input_map[SDL_SCANCODE_PAGEUP] = mux_input_vol_up;
     input_map[SDL_SCANCODE_VOLUMEUP] = mux_input_vol_up;
@@ -894,7 +896,7 @@ static void open_all_input_devices(void) {
             SDL_free(mapping);
         }
 
-        devices[device_count++] = (tracked_device) {.controller = gc, .joystick = joy, .instance = inst, .guid = guid};
+        devices[device_count++] = (tracked_device){.controller = gc, .joystick = joy, .instance = inst, .guid = guid};
     }
 
     // Two passes, so the muinput transport is only ever opened when nothing else turned up and the
@@ -937,7 +939,7 @@ static void open_all_input_devices(void) {
             if (SDL_JoystickNumAxes(joy) < 2) LOG_WARN("input", "Raw joystick fallback has no usable stick axes");
 
             devices[device_count++] =
-                (tracked_device) {.controller = NULL, .joystick = joy, .instance = inst, .guid = guid};
+                (tracked_device){.controller = NULL, .joystick = joy, .instance = inst, .guid = guid};
         }
     }
 

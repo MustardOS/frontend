@@ -283,6 +283,9 @@ static void record_sequence(const mux_input_type type) {
 static void run_command(combo_config *c) {
     if (!c || !c->exec_argv || c->exec_argc == 0) return;
 
+    const uint64_t volume_mask = SAFE_BIT(mux_input_vol_up) | SAFE_BIT(mux_input_vol_down);
+    if (file_exist(INPUT_TEST_ACTIVE) && (c->type_mask & volume_mask)) return;
+
     if (c->is_handheld_mode && config.boot.device_mode != 0) {
         if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
         return;
@@ -369,6 +372,18 @@ static void run_raw_power_long_action(void) {
 static void run_raw_volume_action(const mux_input_type type, const mux_input_action action) {
     handle_input(type, action);
 
+    if (file_exist(INPUT_TEST_ACTIVE)) {
+        const char *state_path = type == mux_input_vol_up ? INPUT_TEST_VOL_UP : INPUT_TEST_VOL_DOWN;
+
+        if (action == mux_input_press) {
+            write_text_to_file(state_path, "w", CHAR, "");
+        } else if (action == mux_input_release) {
+            remove(state_path);
+        }
+
+        return;
+    }
+
     const uint64_t vol_bit = SAFE_BIT(type);
     int brightness_triggered = 0;
 
@@ -454,11 +469,12 @@ static void handle_raw_volume(void) {
         int *pressed;
         uint32_t *next_repeat;
 
-        if (ev.code == KEY_VOLUMEUP) {
+        if (ev.code == KEY_VOLUMEUP || (board_is(board_special_vita_pro) && ev.code == BTN_TRIGGER_HAPPY5)) {
             type = mux_input_vol_up;
             pressed = &raw_vol_up_pressed;
             next_repeat = &raw_vol_up_next_repeat;
-        } else if (ev.code == KEY_VOLUMEDOWN) {
+        } else if (ev.code == KEY_VOLUMEDOWN
+                   || (board_is(board_special_vita_pro) && ev.code == BTN_TRIGGER_HAPPY4)) {
             type = mux_input_vol_down;
             pressed = &raw_vol_down_pressed;
             next_repeat = &raw_vol_down_next_repeat;

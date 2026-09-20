@@ -64,6 +64,8 @@ static stick_state_t stick_l = {0};
 static stick_state_t stick_r = {0};
 
 static int menu_icon_active = 0;
+static int volume_up_active = 0;
+static int volume_down_active = 0;
 
 static const char *glyph[mux_input_count] = {
     // Gamepad buttons:
@@ -256,6 +258,24 @@ static void clear_icon(void) {
     lv_img_set_src(ui_img_button, &ui_img_blank);
 
     if (ui_pnl_input_preview) lv_obj_add_flag(ui_pnl_input_preview, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void handle_volume_input(void) {
+    const int up = file_exist(INPUT_TEST_VOL_UP);
+    const int down = file_exist(INPUT_TEST_VOL_DOWN);
+
+    if (up && !volume_up_active) {
+        lv_obj_add_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);
+        show_icon("vol_up");
+    } else if (down && !volume_down_active) {
+        lv_obj_add_flag(ui_lbl_screen_message, LV_OBJ_FLAG_HIDDEN);
+        show_icon("vol_down");
+    } else if (!up && !down && (volume_up_active || volume_down_active)) {
+        clear_icon();
+    }
+
+    volume_up_active = up;
+    volume_down_active = down;
 }
 
 static void draw_outer_guides(lv_obj_t *canvas, const int target, const lv_color_t ring_col) {
@@ -531,6 +551,7 @@ static void handle_analog(const int16_t ls_x, const int16_t ls_y, const int16_t 
 
 static void handle_idle(void) {
     ui_common_handle_idle();
+    handle_volume_input();
 
     if (board_is(board_special_g350) && g350_menu_pressed) {
         if (!menu_icon_active) {
@@ -767,6 +788,10 @@ int muxtester_main(void) {
     input_opts.analog_handler = device.board.has_stick ? handle_analog : NULL;
 
     mux_input_task(&input_opts);
+
+    remove(INPUT_TEST_ACTIVE);
+    remove(INPUT_TEST_VOL_UP);
+    remove(INPUT_TEST_VOL_DOWN);
 
     free_stick_buffers(&stick_l);
     free_stick_buffers(&stick_r);

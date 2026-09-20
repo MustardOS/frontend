@@ -71,9 +71,12 @@
 #define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
 #define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"
 
-#define IDLE_STATE   RUN_PATH "idle_state"
-#define NOTIFY_DROP  RUN_PATH "notify"
-#define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
+#define IDLE_STATE        RUN_PATH "idle_state"
+#define NOTIFY_DROP       RUN_PATH "notify"
+#define WAKE_CPU_GOV      RUN_PATH "wake_cpu_gov"
+#define INPUT_TEST_ACTIVE   RUN_PATH "input_test"
+#define INPUT_TEST_VOL_UP   RUN_PATH "input_test_vol_up"
+#define INPUT_TEST_VOL_DOWN RUN_PATH "input_test_vol_down"
 
 #define RGBLED_BIN OPT_PATH "frontend/murgb"
 #define DEV_SCRIPT OPT_PATH "script/device/"
