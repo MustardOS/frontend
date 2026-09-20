@@ -159,7 +159,7 @@
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
-#define INFO_CORE_PATH RUN_STORAGE_PATH "info/core"
+#define INFO_MANIFEST_PATH RUN_STORAGE_PATH "info/manifest"
 
 #define MUOS_ARCH_PATH   "ARCHIVE"
 #define MUOS_BACKUP_PATH "BACKUP"
@@ -179,9 +179,9 @@
 #define STORE_LOC_INIT MUOS_BASE_PATH "/init"
 #define STORE_LOC_TRAK MUOS_BASE_PATH "/info/track"
 
-#define STORE_LOC_CORE       OPT_SHARE_PATH "info/core"
-#define CORE_ASSIGN_INDEX    INFO_CORE_PATH "/assign.json"
-#define CORE_MANIFEST_LOCAL  STORE_LOC_CORE "/manifest.json"
+#define STORE_LOC_MANIFEST   OPT_SHARE_PATH "info/manifest"
+#define CORE_ASSIGN_INDEX    INFO_MANIFEST_PATH "/assign.json"
+#define CORE_MANIFEST_LOCAL  STORE_LOC_MANIFEST "/manifest.json"
 #define CORE_MANIFEST_REMOTE "core-manifest.json"
 
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"

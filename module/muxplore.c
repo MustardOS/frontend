@@ -1807,8 +1807,6 @@ int muxplore_main(const int index, char *dir) {
 
     init_fonts();
 
-    load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
-
     reset_ui_groups();
 
     char *saved_dir = file_exist(MUOS_PDI_LOAD) ? read_all_char_from(MUOS_PDI_LOAD) : NULL;
@@ -1843,6 +1841,8 @@ int muxplore_main(const int index, char *dir) {
 
         clear_box_image();
     }
+
+    load_wallpaper(ui_screen, ui_group, ui_img_wall, wall_general);
 
     const struct nav_flag nav_e[] = {{ui_lbl_nav_a, nav_vis},     {ui_lbl_nav_a_glyph, nav_vis},
                                      {ui_lbl_nav_x, nav_vis},     {ui_lbl_nav_x_glyph, nav_vis},

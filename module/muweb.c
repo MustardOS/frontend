@@ -627,7 +627,7 @@ static void assign_load(void) {
     if (!info_root[0]) return;
 
     char path[PATH_MAX];
-    if ((size_t) snprintf(path, sizeof(path), "%s/core/assign.json", info_root) >= sizeof(path)) return;
+    if ((size_t) snprintf(path, sizeof(path), "%s/manifest/assign.json", info_root) >= sizeof(path)) return;
 
     struct buffer text = {0};
     if (!read_whole_file(path, &text) || !text.data) {
