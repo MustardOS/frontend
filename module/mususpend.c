@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/prctl.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -62,10 +63,16 @@ struct optimisation_snapshot {
 };
 
 static volatile sig_atomic_t stop_requested = 0;
+static volatile sig_atomic_t wakeup_read_timed_out = 0;
 
 static void handle_signal(const int signal_number) {
     (void) signal_number;
     stop_requested = 1;
+}
+
+static void handle_wakeup_read_timeout(const int signal_number) {
+    (void) signal_number;
+    wakeup_read_timed_out = 1;
 }
 
 static int read_text(const char *path, char *value, const size_t value_size) {
@@ -470,11 +477,49 @@ static int arm_wakeup_count(void) {
 
     for (int attempt = 0; attempt < 3; ++attempt) {
         char wakeup_count[64];
-        if (read_text("/sys/power/wakeup_count", wakeup_count, sizeof(wakeup_count)) < 0) return -1;
-        if (write_text("/sys/power/wakeup_count", wakeup_count) == 0) return 0;
-        if (errno != EAGAIN && errno != EBUSY) return -1;
+        const int descriptor = open("/sys/power/wakeup_count", O_RDONLY | O_CLOEXEC);
+        if (descriptor < 0) return -1;
+
+        const struct itimerval read_timer = {
+            .it_value.tv_usec = 100000,
+        };
+        const struct itimerval clear_timer = {0};
+        wakeup_read_timed_out = 0;
+        if (setitimer(ITIMER_REAL, &read_timer, NULL) < 0) {
+            close(descriptor);
+            return -1;
+        }
+
+        ssize_t length = read(descriptor, wakeup_count, sizeof(wakeup_count) - 1);
+        const int read_errno = errno;
+        setitimer(ITIMER_REAL, &clear_timer, NULL);
+        close(descriptor);
+
+        if (length < 0) {
+            errno = wakeup_read_timed_out ? EBUSY : read_errno;
+            if (errno != EAGAIN && errno != EBUSY) return -1;
+        } else {
+            wakeup_count[length] = '\0';
+            while (length > 0 && isspace((unsigned char) wakeup_count[length - 1]))
+                wakeup_count[--length] = '\0';
+
+            if (write_text("/sys/power/wakeup_count", wakeup_count) == 0) return 0;
+            if (errno != EAGAIN && errno != EBUSY) return -1;
+        }
+
+        if (stop_requested) {
+            errno = EINTR;
+            return -1;
+        }
+
+        const struct timespec retry_delay = {
+            .tv_sec = 0,
+            .tv_nsec = 50000000L,
+        };
+        nanosleep(&retry_delay, NULL);
     }
 
+    errno = EBUSY;
     return -1;
 }
 
@@ -576,6 +621,11 @@ int main(const int argc, char **argv) {
     sigaction(SIGINT, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
     sigaction(SIGHUP, &action, NULL);
+
+    struct sigaction timeout_action = {0};
+    timeout_action.sa_handler = handle_wakeup_read_timeout;
+    sigemptyset(&timeout_action.sa_mask);
+    sigaction(SIGALRM, &timeout_action, NULL);
 
     if (strcmp(options.state, "userspace") == 0) return wait_in_userspace(&options);
     return enter_kernel_suspend(&options);
