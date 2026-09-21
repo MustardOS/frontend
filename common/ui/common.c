@@ -1538,9 +1538,12 @@ int ui_common_progress_tick(void) {
 
         const int saved_brightness = read_line_int_from(CONF_CONFIG_PATH "settings/general/brightness", 1);
         if (saved_brightness >= 0 && saved_brightness <= device.screen.bright) {
+            const int value_changed = saved_brightness != current_brightness;
             current_brightness = saved_brightness;
-            brightness_changed = 1;
-            show_brightness_progress();
+            if (value_changed) {
+                brightness_changed = 1;
+                show_brightness_progress();
+            }
         }
     }
 
@@ -1550,9 +1553,12 @@ int ui_common_progress_tick(void) {
 
         const int saved_volume = read_line_int_from(CONF_CONFIG_PATH "settings/general/volume", 1);
         if (saved_volume >= 0 && saved_volume <= device.audio.max) {
+            const int value_changed = saved_volume != current_volume;
             current_volume = saved_volume;
-            volume_changed = 1;
-            show_volume_progress();
+            if (value_changed) {
+                volume_changed = 1;
+                show_volume_progress();
+            }
         }
     }
 

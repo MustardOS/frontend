@@ -229,10 +229,10 @@ void bright_overlay_update(void) {
         return;
     }
 
-    if (sb.st_mtime == bright_stat_last.st_mtime && bright_pct == bright_last_pct) return;
+    bright_stat_last = sb;
+    if (bright_pct == bright_last_pct) return;
 
     bright_last_pct = bright_pct;
-    bright_stat_last = sb;
 
     int step = bright_pct / 10;
     if (step < 0) step = 0;

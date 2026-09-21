@@ -227,10 +227,10 @@ void volume_overlay_update(void) {
         return;
     }
 
-    if (sv.st_mtime == volume_stat_last.st_mtime && volume_pct == volume_last_pct) return;
+    volume_stat_last = sv;
+    if (volume_pct == volume_last_pct) return;
 
     volume_last_pct = volume_pct;
-    volume_stat_last = sv;
 
     int step = volume_pct / 10;
     if (step < 0) step = 0;
