@@ -39,19 +39,45 @@ const int *coredef_source_target(const char *core_name);
 #define COREDEF_LIST                                                                                                   \
     COREDEF(dosbox_pure)                                                                                               \
     COREDEF(duckstation)                                                                                               \
+    COREDEF(fbalpha2012_cps3)                                                                                          \
+    COREDEF(fbneo)                                                                                                     \
     COREDEF(flycast)                                                                                                   \
     COREDEF(flycastvl)                                                                                                 \
     COREDEF(freej2me)                                                                                                  \
     COREDEF(gambatte)                                                                                                  \
+    COREDEF(km_fbneo_xtreme_amped)                                                                                     \
+    COREDEF(km_ludicrousn64_2k22_xtreme_amped)                                                                         \
+    COREDEF(km_mame2003_xtreme_amped)                                                                                  \
+    COREDEF(mame0139)                                                                                                  \
+    COREDEF(mame078plus)                                                                                               \
+    COREDEF(mame2003)                                                                                                  \
+    COREDEF(mame2003_midway)                                                                                           \
+    COREDEF(mame2003_plus)                                                                                             \
+    COREDEF(mame2010)                                                                                                  \
     COREDEF(mednafen_pce)                                                                                              \
     COREDEF(mednafen_pce_fast)                                                                                         \
+    COREDEF(mednafen_psx)                                                                                              \
     COREDEF(mednafen_supergrafx)                                                                                       \
+    COREDEF(mesen)                                                                                                     \
     COREDEF(mgba)                                                                                                      \
     COREDEF(mgba_rumble)                                                                                               \
+    COREDEF(mupen64plus)                                                                                               \
     COREDEF(mupen64plus_next)                                                                                          \
+    COREDEF(np2kai)                                                                                                    \
     COREDEF(parallel_n64)                                                                                              \
     COREDEF(pcsx_rearmed)                                                                                              \
     COREDEF(ppsspp)                                                                                                    \
     COREDEF(sameboy)                                                                                                   \
+    COREDEF(scummvm)                                                                                                   \
     COREDEF(swanstation)                                                                                               \
+    COREDEF(vice_x128)                                                                                                 \
+    COREDEF(vice_x64)                                                                                                  \
+    COREDEF(vice_x64dtv)                                                                                               \
+    COREDEF(vice_x64sc)                                                                                                \
+    COREDEF(vice_xcbm2)                                                                                                \
+    COREDEF(vice_xcbm5x0)                                                                                              \
+    COREDEF(vice_xpet)                                                                                                 \
+    COREDEF(vice_xplus4)                                                                                               \
+    COREDEF(vice_xscpu64)                                                                                              \
+    COREDEF(vice_xvic)                                                                                                 \
     COREDEF(vbam)

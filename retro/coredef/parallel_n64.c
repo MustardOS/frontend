@@ -5,6 +5,7 @@
 // picks this core instead.
 static const struct coredef_option options[] = {
     {.key = "parallel-n64-cpucore", .value = "dynamic_recompiler"},
+    {.key = "parallel-n64-screensize", .value = "320x240"},
 };
 
 COREDEF_CORE(parallel_n64, "parallel_n64", options);
