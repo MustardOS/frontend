@@ -473,8 +473,7 @@ static void handle_raw_volume(void) {
             type = mux_input_vol_up;
             pressed = &raw_vol_up_pressed;
             next_repeat = &raw_vol_up_next_repeat;
-        } else if (ev.code == KEY_VOLUMEDOWN
-                   || (board_is(board_special_vita_pro) && ev.code == BTN_TRIGGER_HAPPY4)) {
+        } else if (ev.code == KEY_VOLUMEDOWN || (board_is(board_special_vita_pro) && ev.code == BTN_TRIGGER_HAPPY4)) {
             type = mux_input_vol_down;
             pressed = &raw_vol_down_pressed;
             next_repeat = &raw_vol_down_next_repeat;

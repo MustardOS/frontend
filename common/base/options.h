@@ -71,9 +71,10 @@
 #define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
 #define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"
 
-#define IDLE_STATE        RUN_PATH "idle_state"
-#define NOTIFY_DROP       RUN_PATH "notify"
-#define WAKE_CPU_GOV      RUN_PATH "wake_cpu_gov"
+#define IDLE_STATE   RUN_PATH "idle_state"
+#define NOTIFY_DROP  RUN_PATH "notify"
+#define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
+
 #define INPUT_TEST_ACTIVE   RUN_PATH "input_test"
 #define INPUT_TEST_VOL_UP   RUN_PATH "input_test_vol_up"
 #define INPUT_TEST_VOL_DOWN RUN_PATH "input_test_vol_down"
@@ -162,7 +163,7 @@
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
-#define INFO_MANIFEST_PATH RUN_STORAGE_PATH "info/manifest"
+#define INFO_MNF_PATH RUN_STORAGE_PATH "info/manifest"
 
 #define MUOS_ARCH_PATH   "ARCHIVE"
 #define MUOS_BACKUP_PATH "BACKUP"
@@ -183,7 +184,7 @@
 #define STORE_LOC_TRAK MUOS_BASE_PATH "/info/track"
 
 #define STORE_LOC_MANIFEST   OPT_SHARE_PATH "info/manifest"
-#define CORE_ASSIGN_INDEX    INFO_MANIFEST_PATH "/assign.json"
+#define CORE_ASSIGN_INDEX    INFO_MNF_PATH "/assign.json"
 #define CORE_MANIFEST_LOCAL  STORE_LOC_MANIFEST "/manifest.json"
 #define CORE_MANIFEST_REMOTE "core-manifest.json"
 

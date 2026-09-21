@@ -216,7 +216,7 @@ int coredb_load(void) {
     int found = 0;
     for (int f = 0; f < coredb_file_count; f++) {
         char path[COREDB_PATH_MAX];
-        snprintf(path, sizeof(path), "%s/%s.json", INFO_MANIFEST_PATH, db_file[f]);
+        snprintf(path, sizeof(path), "%s/%s.json", INFO_MNF_PATH, db_file[f]);
 
         raw[f] = read_manifest(path);
         if (!raw[f]) {

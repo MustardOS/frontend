@@ -896,7 +896,7 @@ static void open_all_input_devices(void) {
             SDL_free(mapping);
         }
 
-        devices[device_count++] = (tracked_device){.controller = gc, .joystick = joy, .instance = inst, .guid = guid};
+        devices[device_count++] = (tracked_device) {.controller = gc, .joystick = joy, .instance = inst, .guid = guid};
     }
 
     // Two passes, so the muinput transport is only ever opened when nothing else turned up and the
@@ -939,7 +939,7 @@ static void open_all_input_devices(void) {
             if (SDL_JoystickNumAxes(joy) < 2) LOG_WARN("input", "Raw joystick fallback has no usable stick axes");
 
             devices[device_count++] =
-                (tracked_device){.controller = NULL, .joystick = joy, .instance = inst, .guid = guid};
+                (tracked_device) {.controller = NULL, .joystick = joy, .instance = inst, .guid = guid};
         }
     }
 

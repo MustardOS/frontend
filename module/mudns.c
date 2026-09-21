@@ -418,8 +418,7 @@ static void observe_record(
     char name[MUDNS_NAME_SIZE];
     if (!dns_copy(parsed_name, name, sizeof(name))) return;
 
-    if ((entry == MDNS_ENTRYTYPE_ANSWER || entry == MDNS_ENTRYTYPE_AUTHORITY
-         || entry == MDNS_ENTRYTYPE_ADDITIONAL)
+    if ((entry == MDNS_ENTRYTYPE_ANSWER || entry == MDNS_ENTRYTYPE_AUTHORITY || entry == MDNS_ENTRYTYPE_ADDITIONAL)
         && !strcasecmp(name, server->host_name)) {
         int foreign = 0;
         int foreign_wins = 0;
@@ -717,7 +716,9 @@ static void refresh_service_instances(struct server *server) {
     for (size_t i = 0; i < server->service_count; ++i) {
         struct service *service = &server->services[i];
         if (service->dashboard)
-            snprintf(service->instance, sizeof(service->instance), "MustardOS on %.49s.%s", server->host_label, service->type);
+            snprintf(
+                service->instance, sizeof(service->instance), "MustardOS on %.49s.%s", server->host_label, service->type
+            );
         else
             snprintf(service->instance, sizeof(service->instance), "%s.%s", service->label, service->type);
     }
@@ -839,9 +840,10 @@ static int write_discovery_file(struct server *server) {
         if (emitted) ok = fputc(',', file) != EOF;
         if (ok)
             ok = fprintf(
-                     file, "{\"name\":\"%s\",\"host\":\"%s\",\"address\":\"%s\",\"port\":%u}", name,
-                     host, device->address, device->port
-                 ) > 0;
+                     file, "{\"name\":\"%s\",\"host\":\"%s\",\"address\":\"%s\",\"port\":%u}", name, host,
+                     device->address, device->port
+                 )
+                 > 0;
         emitted = 1;
     }
     if (ok) ok = fputs("]}\n", file) >= 0;
@@ -908,11 +910,16 @@ int main(const int argc, char **argv) {
     const char *service_specifications[MUDNS_MAX_SERVICES];
     size_t service_specification_count = 0;
     const struct option options[] = {
-        {"hostname", required_argument, NULL, 'n'}, {"interface", required_argument, NULL, 'i'},
-        {"service", required_argument, NULL, 's'},  {"name-file", required_argument, NULL, 'N'},
-        {"discovery-file", required_argument, NULL, 'D'}, {"check", no_argument, NULL, 'c'},
-        {"verbose", no_argument, NULL, 'v'}, {"version", no_argument, NULL, 'V'},
-        {"help", no_argument, NULL, 'h'}, {NULL, 0, NULL, 0}
+        {"hostname", required_argument, NULL, 'n'},
+        {"interface", required_argument, NULL, 'i'},
+        {"service", required_argument, NULL, 's'},
+        {"name-file", required_argument, NULL, 'N'},
+        {"discovery-file", required_argument, NULL, 'D'},
+        {"check", no_argument, NULL, 'c'},
+        {"verbose", no_argument, NULL, 'v'},
+        {"version", no_argument, NULL, 'V'},
+        {"help", no_argument, NULL, 'h'},
+        {NULL, 0, NULL, 0}
     };
 
     int option;

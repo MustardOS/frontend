@@ -118,8 +118,8 @@ static void store_stick_axis(struct h700_state *state, unsigned short code, int 
     stick->dirty = 1;
 }
 
-static int emit_stick(struct gamepad *gamepad, struct h700_stick_state *stick, unsigned short x_code,
-                      unsigned short y_code) {
+static int
+emit_stick(struct gamepad *gamepad, struct h700_stick_state *stick, unsigned short x_code, unsigned short y_code) {
     if (!stick->dirty) return 0;
     stick->dirty = 0;
 
