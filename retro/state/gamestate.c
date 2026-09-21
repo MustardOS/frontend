@@ -777,8 +777,12 @@ int gamestate_autosave_save(void) {
         return -1;
     }
 
-    image_writer_flush();
-    copy_file(pending_path, autosave_thumb_path);
+    if (pause_menu_store_clean_screenshot(autosave_thumb_path, 1) != 0) {
+        image_writer_flush();
+        copy_file(pending_path, autosave_thumb_path);
+    } else {
+        image_writer_flush();
+    }
 
     gamestate_autosave.created = (long long) time(NULL);
 

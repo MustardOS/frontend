@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include <common/base/totp.h>
+#include <common/content/core/state_preview.h>
 #include <common/content/lookup.h>
 
 #define MUWEB_VERSION "0.1.0"
@@ -1737,7 +1738,6 @@ static int is_state_directory(const char *path, size_t *slot_count, char *previe
     if (!directory) return 0;
 
     size_t slots = 0;
-    size_t shots = 0;
     if (preview && preview_size) preview[0] = '\0';
 
     const struct dirent *entry;
@@ -1748,18 +1748,10 @@ static int is_state_directory(const char *path, size_t *slot_count, char *previe
             slots += 1;
             continue;
         }
-        if (!preview || !preview_size || strcasecmp(file_extension(entry->d_name), "png") != 0) continue;
-
-        char shot[PATH_MAX];
-        struct stat info;
-        if (!join_path(shot, sizeof(shot), path, entry->d_name)) continue;
-        if (stat(shot, &info) < 0 || !S_ISREG(info.st_mode) || info.st_size == 0) continue;
-
-        // Just ignore the use of rand here, srand might be better but it's just for previews...
-        shots += 1;
-        if ((size_t) rand() % shots == 0) snprintf(preview, preview_size, "%s", entry->d_name);
     }
     closedir(directory);
+
+    if (preview && preview_size) state_preview_latest(path, preview, preview_size);
 
     if (slot_count) *slot_count = slots;
     return slots > 0;

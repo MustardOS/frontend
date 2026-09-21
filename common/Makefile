@@ -28,6 +28,7 @@ STORAGE_SRCS = \
 CONTENT_SRCS = \
     content/catalogue.c content/content.c content/lookup.c \
     content/core/common.c content/core/coredb.c content/core/external.c content/core/retroarch.c \
+    content/core/state_preview.c \
     content/collection/common.c content/collection/order.c \
     content/collection/tag.c content/collection/theme.c
 

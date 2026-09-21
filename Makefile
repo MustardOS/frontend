@@ -12,7 +12,7 @@ DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
 TOOLS = muvarctl murgb mususpend muverify
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
-muweb_SRC = common/base/totp.c common/content/lookup.c
+muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c
 
 muvarctl_SRC = common/config/var_store.c
 

@@ -9,6 +9,7 @@
 #include <common/content/core/external.h>
 #include <json/json.h>
 #include <common/content/core/coredb.h>
+#include <common/content/core/state_preview.h>
 #include <common/ui/common.h>
 #include <common/ui/nav.h>
 #include <common/platform/device.h>
@@ -675,36 +676,8 @@ int muxretro_latest_state_image(const char *content_path, const char *core, char
     char state_dir[MAX_BUFFER_SIZE];
     if (!muxretro_content_state_dir(content_path, core, state_dir, sizeof(state_dir))) return 0;
 
-    DIR *directory = opendir(state_dir);
-    if (!directory) return 0;
-
     char newest_name[NAME_MAX + 1] = "";
-    struct timespec newest_time = {0};
-
-    const struct dirent *entry;
-    while ((entry = readdir(directory))) {
-        const char *name = entry->d_name;
-        const size_t length = strlen(name);
-
-        if (length <= 4 || strcasecmp(name + length - 4, ".png") != 0) continue;
-        if (strncmp(name, "slot_", 5) != 0 && strncmp(name, "timeline_", 9) != 0 && strcmp(name, "autosave.png") != 0
-            && strcmp(name, "quicksave.png") != 0)
-            continue;
-
-        struct stat info;
-        if (fstatat(dirfd(directory), name, &info, AT_SYMLINK_NOFOLLOW) != 0 || !S_ISREG(info.st_mode)
-            || info.st_size <= 0)
-            continue;
-
-        if (!newest_name[0] || info.st_mtim.tv_sec > newest_time.tv_sec
-            || (info.st_mtim.tv_sec == newest_time.tv_sec && info.st_mtim.tv_nsec > newest_time.tv_nsec)) {
-            newest_time = info.st_mtim;
-            snprintf(newest_name, sizeof(newest_name), "%s", name);
-        }
-    }
-
-    closedir(directory);
-    if (!newest_name[0]) return 0;
+    if (!state_preview_latest(state_dir, newest_name, sizeof(newest_name))) return 0;
 
     const int written = snprintf(out, out_size, "%s/%s", state_dir, newest_name);
     return written > 0 && (size_t) written < out_size;
