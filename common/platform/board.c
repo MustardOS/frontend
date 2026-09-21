@@ -112,8 +112,7 @@ int board_layout_map_swap(void) {
     return current_board ? current_board->layout_map_swap : 0;
 }
 
-#define VOLUME_KEY_DEVICE_NAME "gpio-keys"
-#define VOLUME_KEY_EVENT_SCAN  32
+#define VOLUME_KEY_EVENT_SCAN 32
 
 static int volume_event_probed = 0;
 static int volume_event_cached = nop;
@@ -130,8 +129,9 @@ static int board_key_bit_set(const unsigned long *bits, const int bit) {
  * gpio-keys and joypad drivers probe about 20 ms apart, so event0 and event1
  * swap between boots and a hardcoded index is right only some of the time.
  *
- * Find the node by name instead, and confirm it really carries both volume
- * keys before trusting it. Anything unexpected falls back to the board table.
+ * A device that needs this names its volume input in board/vol_name. Find the
+ * node by that name instead, and confirm it really carries both volume keys
+ * before trusting it. Anything unexpected falls back to the board table.
  */
 static int board_probe_volume_event_index(void) {
     for (int idx = 0; idx < VOLUME_KEY_EVENT_SCAN; idx++) {
@@ -146,7 +146,7 @@ static int board_probe_volume_event_index(void) {
         int match = 0;
 
         if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 &&
-            strcmp(name, VOLUME_KEY_DEVICE_NAME) == 0 &&
+            strcmp(name, device.board.vol_name) == 0 &&
             ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys) >= 0 &&
             board_key_bit_set(keys, KEY_VOLUMEUP) &&
             board_key_bit_set(keys, KEY_VOLUMEDOWN)) {
@@ -164,8 +164,8 @@ static int board_probe_volume_event_index(void) {
 int board_volume_event_index(void) {
     const int table_index = current_board ? board_adjust_event_index(current_board->vol_event) : nop;
 
-    /* Boards with no raw volume device stay opted out - do not probe for one. */
-    if (table_index == nop) return nop;
+    /* Only probe when the device names its volume input - everyone else keeps the table. */
+    if (table_index == nop || !device.board.vol_name[0]) return table_index;
 
     if (!volume_event_probed) {
         volume_event_probed = 1;
@@ -176,7 +176,7 @@ int board_volume_event_index(void) {
                      volume_event_cached, table_index);
         } else if (volume_event_cached == nop) {
             LOG_WARN("board", "No '%s' device with volume keys, using board table event%d",
-                     VOLUME_KEY_DEVICE_NAME, table_index);
+                     device.board.vol_name, table_index);
         }
     }
 

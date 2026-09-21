@@ -24,6 +24,7 @@ struct mux_device {
         char rtc_clock[MAX_BUFFER_SIZE];
         char rtc_wake[MAX_BUFFER_SIZE];
         char rumble[MAX_BUFFER_SIZE];
+        char vol_name[MAX_BUFFER_SIZE];
     } board;
 
     struct {
