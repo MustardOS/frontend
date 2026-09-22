@@ -1812,6 +1812,9 @@ static void hide_nav(void) {
     lv_obj_add_flag(ui_lbl_counter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    lv_obj_add_flag(ui_lbl_nav_menu_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_menu, MU_OBJ_FLAG_HIDE_FLOAT);
 }
 
 static void show_nav_x(const char *label) {
@@ -1827,6 +1830,8 @@ static void show_nav(void) {
     lv_obj_clear_flag(ui_lbl_counter_activity, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lbl_nav_menu_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_clear_flag(ui_lbl_nav_menu, MU_OBJ_FLAG_HIDE_FLOAT);
 
     lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -2063,28 +2068,25 @@ static void handle_dpad_down_hold(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
-    if (dialogue_active(&remove_dlg) || more_active(&more_menu)) return;
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_cancel(&more_menu);
+        return;
+    }
 
-    const int in_list = !in_detail_view && !in_global_view;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (dialogue_active(&remove_dlg) || dialogue_active(&export_dlg)) return;
+    if (in_detail_view || in_global_view) return;
 
     more_entry entries[5];
     int count = 0;
 
-    if (in_list) {
-        entries[count++] = (more_entry) {more_overview, 1};
-        entries[count++] = (more_entry) {more_launch_count, activity_display_mode != 1};
-        entries[count++] = (more_entry) {more_duration, activity_display_mode != 0};
-    }
+    entries[count++] = (more_entry) {more_overview, 1};
+    entries[count++] = (more_entry) {more_launch_count, activity_display_mode != 1};
+    entries[count++] = (more_entry) {more_duration, activity_display_mode != 0};
+    entries[count++] = (more_entry) {more_help, 1};
 
     play_sound(snd_info_open);
-
-    if (count == 0) {
-        show_help();
-        return;
-    }
-
-    entries[count++] = (more_entry) {more_help, 1};
 
     more_open(&more_menu, &theme, ui_screen, entries, count);
 }

@@ -94,6 +94,8 @@ static void closed(void) {
 static submenu_def bm_def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
+    .help_title = lang.muxretro.settings_screen.button_mapping,
+    .help_all = lang.muxretro.help.screen.button_mapping,
     .row_count = PORT_SOURCE_COUNT,
     .value_text = row_value_text,
     .row_is_action = row_is_action,

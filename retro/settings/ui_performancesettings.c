@@ -94,6 +94,15 @@ static const char *diagnostic_labels[diagnostic_count] = {
     lang.muxretro.settings_screen.diagnostic_run_ahead,       lang.muxretro.settings_screen.diagnostic_stage,
 };
 
+static const char *diagnostic_help[diagnostic_count] = {
+    lang.muxretro.help.diagnostic.refresh,   lang.muxretro.help.diagnostic.cadence,
+    lang.muxretro.help.diagnostic.source,    lang.muxretro.help.diagnostic.output,
+    lang.muxretro.help.diagnostic.integer,   lang.muxretro.help.diagnostic.filter,
+    lang.muxretro.help.diagnostic.shader,    lang.muxretro.help.diagnostic.shader_work,
+    lang.muxretro.help.diagnostic.audio,     lang.muxretro.help.diagnostic.corrections,
+    lang.muxretro.help.diagnostic.run_ahead, lang.muxretro.help.diagnostic.stage
+};
+
 static const char *diagnostic_glyphs[diagnostic_count] = {
     "fpslimit", "framedelay", "scaling",      "scaling",    "integerscale", "texturefilter",
     "shader",   "shader",     "audiolatency", "shimmerfix", "runahead",     "info",
@@ -205,6 +214,7 @@ static void diagnostics_closed(void) {
 static const submenu_def diagnostics_def = {
     .labels = diagnostic_labels,
     .glyphs = diagnostic_glyphs,
+    .help = diagnostic_help,
     .row_count = diagnostic_count,
     .value_text = diagnostic_value_text,
     .closed = diagnostics_closed,

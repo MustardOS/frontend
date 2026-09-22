@@ -158,6 +158,8 @@ extern lv_obj_t *ui_lbl_nav_z_glyph;
 extern lv_obj_t *ui_lbl_nav_z;
 extern lv_obj_t *ui_lbl_nav_menu_glyph;
 extern lv_obj_t *ui_lbl_nav_menu;
+extern lv_obj_t *ui_lbl_nav_start_glyph;
+extern lv_obj_t *ui_lbl_nav_start;
 extern lv_obj_t *ui_lbl_screen_message;
 extern lv_obj_t *ui_pnl_help;
 extern lv_obj_t *ui_pnl_help_message;

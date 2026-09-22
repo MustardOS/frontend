@@ -661,6 +661,12 @@ static void tick_osk(const uint64_t edge, const uint64_t mask) {
         key_backspace(ui_txt_entry_gamestate);
 }
 
+// Every one of these owns the screen while it is up, so MENU must not open the help window over it
+static int gamestate_modal_open(void) {
+    return key_show || dialogue_active(&load_dlg) || dialogue_active(&delete_dlg) || dialogue_active(&mismatch_dlg)
+           || dialogue_active(&purge_dlg) || dialogue_active(&empty_dlg) || dialogue_active(&notice_dlg);
+}
+
 void gamestate_menu_tick(void) {
     if (pending_action != pending_none) {
         const pending_action_t action = pending_action;
@@ -752,6 +758,15 @@ void gamestate_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
+
+    const int menu_tap = pause_menu_take_menu_tap();
+    if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(4) | BIT(5)))) return;
+
+    if (menu_tap && !gamestate_modal_open()) {
+        play_sound(snd_info_open);
+        show_info_box(lang.muxretro.game_state, lang.muxretro.help.screen.game_state, 0);
+        return;
+    }
 
     if (nav_input_halted()) return;
 

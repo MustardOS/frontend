@@ -1077,6 +1077,13 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
 
+    // Whatever MENU opened, MENU closes again! This sits ahead of the gate because a
+    // message box never lets MENU through, so it would otherwise never be seen here
+    if (mux_type == mux_input_menu && action == mux_input_release && msgbox_active && msgbox_dismiss_cb) {
+        msgbox_dismiss_cb();
+        return;
+    }
+
     // A dialogue that owns the screen decides what reaches the module underneath.
     // We typically want to gate straight to the dialogue box instead of anything else.
     if (input_gate && !input_gate(mux_type)) return;
@@ -1117,12 +1124,6 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
         case mux_input_release:
             handler = release[mux_type];
             break;
-    }
-
-    // Whatever MENU opened, MENU closes again!
-    if (mux_type == mux_input_menu && action == mux_input_release && msgbox_active && msgbox_dismiss_cb) {
-        msgbox_dismiss_cb();
-        return;
     }
 
     // First invoke specific handler (if one was registered for this input mux_type and action).

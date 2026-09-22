@@ -82,6 +82,8 @@ lv_obj_t *ui_lbl_nav_z_glyph;
 lv_obj_t *ui_lbl_nav_z;
 lv_obj_t *ui_lbl_nav_menu_glyph;
 lv_obj_t *ui_lbl_nav_menu;
+lv_obj_t *ui_lbl_nav_start_glyph;
+lv_obj_t *ui_lbl_nav_start;
 lv_obj_t *ui_lbl_screen_message;
 lv_obj_t *ui_pnl_message;
 lv_obj_t *ui_lbl_message;
@@ -993,6 +995,9 @@ void init_ui_common_screen(
 
     ui_lbl_nav_menu_glyph = create_footer_glyph(ui_pnl_footer, theme, "menu", theme->nav.menu, 1);
     ui_lbl_nav_menu = create_footer_text(ui_pnl_footer, theme, theme->nav.menu.text, theme->nav.menu.text_alpha, 1);
+
+    ui_lbl_nav_start_glyph = create_footer_glyph(ui_pnl_footer, theme, "start", theme->nav.menu, 1);
+    ui_lbl_nav_start = create_footer_text(ui_pnl_footer, theme, theme->nav.menu.text, theme->nav.menu.text_alpha, 1);
 
     ui_lbl_screen_message = lv_label_create(ui_screen);
     lv_label_set_text(ui_lbl_screen_message, "");

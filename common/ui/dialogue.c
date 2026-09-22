@@ -569,7 +569,7 @@ void dialogue_show(mux_dialogue *dlg) {
     dlg->silent = 0;
 
     if (!dlg->claimed) {
-        modal_claim(MODAL_MASK_DIALOGUE);
+        modal_claim(dlg->menu_closes ? MODAL_MASK_MENU_CLOSES : MODAL_MASK_DIALOGUE);
         dlg->claimed = 1;
     }
 

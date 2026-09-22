@@ -555,7 +555,7 @@
     TWEAKADV(repeat_delay, "repeat")                                                                                   \
     TWEAKADV(stick_nav, "sticknav")                                                                                    \
     TWEAKADV(dpad_swap, "dpadswap")                                                                                    \
-    TWEAKADV(rumble_strength, "rumble")
+    TWEAKADV(rumble_strength, "rumble_strength")
 
 #define TWEAKADV_DISPLAY_ELEMENTS                                                                                      \
     TWEAKADV(brightness, "brightness")                                                                                 \

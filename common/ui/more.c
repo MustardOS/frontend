@@ -102,6 +102,7 @@ void more_open(mux_more *m, struct theme_config *t, lv_obj_t *parent, const more
 
     m->dlg.active = 1;
     m->dlg.selected = 0;
+    m->dlg.menu_closes = 1;
 
     dialogue_show(&m->dlg);
     dialogue_refresh(&m->dlg, t);

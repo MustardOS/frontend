@@ -11,6 +11,7 @@ struct core_option_entry {
     char key[64];
     char label[128];
     char category_key[64];
+    char *info;
     char (*values)[OPTIONS_VALUE_LEN];
     int value_count;
     int current_index;

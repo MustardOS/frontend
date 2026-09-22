@@ -40,6 +40,10 @@ static const char *root_labels[root_row_count];
 static const char *host_labels[host_row_count];
 static const char *join_labels[join_row_count];
 
+static const char *root_help[root_row_count];
+static const char *host_help[host_row_count];
+static const char *join_help[join_row_count];
+
 static const char *root_glyphs[root_row_count] = {"network", "search", "network", "exit"};
 static const char *host_glyphs[host_row_count] = {"network", "user",    "controller", "controller",
                                                   "network", "network", "valid",      "performance"};
@@ -524,6 +528,7 @@ static int child_tick(void) {
 static submenu_def root_definition = {
     .labels = root_labels,
     .glyphs = root_glyphs,
+    .help = root_help,
     .row_count = root_row_count,
     .value_text = root_value_text,
     .row_is_action = root_is_action,
@@ -538,6 +543,7 @@ static submenu_def root_definition = {
 static submenu_def host_definition = {
     .labels = host_labels,
     .glyphs = host_glyphs,
+    .help = host_help,
     .row_count = host_row_count,
     .value_text = host_value_text,
     .cycle = host_cycle,
@@ -553,6 +559,7 @@ static submenu_def host_definition = {
 static submenu_def join_definition = {
     .labels = join_labels,
     .glyphs = join_glyphs,
+    .help = join_help,
     .row_count = join_row_count,
     .value_text = join_value_text,
     .cycle = join_cycle,
@@ -597,6 +604,28 @@ void netplay_menu_init(void) {
     join_labels[join_row_direct] = lang.muxretro.netplay.join_address;
     join_labels[join_row_pair] = lang.muxretro.netplay.confirm_pairing;
     join_labels[join_row_connection] = lang.muxretro.netplay.connection;
+
+    root_help[root_row_host] = lang.muxretro.help.netplay.host_network;
+    root_help[root_row_join] = lang.muxretro.help.netplay.join_network;
+    root_help[root_row_status] = lang.muxretro.help.netplay.status;
+    root_help[root_row_disconnect] = lang.muxretro.help.netplay.disconnect;
+
+    host_help[host_row_status] = lang.muxretro.help.netplay.status;
+    host_help[host_row_name] = lang.muxretro.help.netplay.host_name;
+    host_help[host_row_mode] = lang.muxretro.help.netplay.play_mode;
+    host_help[host_row_slots] = lang.muxretro.help.netplay.client_slots;
+    host_help[host_row_port] = lang.muxretro.help.netplay.host_port;
+    host_help[host_row_session] = lang.muxretro.help.netplay.host_session;
+    host_help[host_row_pair] = lang.muxretro.help.netplay.pairing_code;
+    host_help[host_row_connection] = lang.muxretro.help.netplay.connection;
+
+    join_help[join_row_status] = lang.muxretro.help.netplay.status;
+    join_help[join_row_mode] = lang.muxretro.help.netplay.play_mode;
+    join_help[join_row_find] = lang.muxretro.help.netplay.find_lan;
+    join_help[join_row_session] = lang.muxretro.help.netplay.join_found;
+    join_help[join_row_direct] = lang.muxretro.help.netplay.join_address;
+    join_help[join_row_pair] = lang.muxretro.help.netplay.confirm_pairing;
+    join_help[join_row_connection] = lang.muxretro.help.netplay.connection;
 
     root_definition.save_title = lang.muxretro.network_play;
     root_definition.save_desc = lang.muxretro.netplay.menu_desc;

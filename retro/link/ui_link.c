@@ -21,8 +21,11 @@ enum { link_row_mode = 0, link_row_address, link_row_single, link_row_count };
 static const char *base_labels[link_row_count];
 static const char *base_glyphs[link_row_count] = {"network", "network", "controller"};
 
+static const char *base_help[link_row_count];
+
 static const char *link_labels[link_row_count];
 static const char *link_glyphs[link_row_count];
+static const char *link_help[link_row_count];
 static int row_map[link_row_count];
 static int visible_rows = 1;
 
@@ -274,6 +277,7 @@ static void link_closed(void) {
 static submenu_def link_definition = {
     .labels = link_labels,
     .glyphs = link_glyphs,
+    .help = link_help,
     .row_count = link_row_count,
     .value_text = link_value_text,
     .cycle = link_cycle,
@@ -300,6 +304,7 @@ static void apply_row_count(void) {
     for (int i = 0; i < n; i++) {
         link_labels[i] = base_labels[row_map[i]];
         link_glyphs[i] = base_glyphs[row_map[i]];
+        link_help[i] = base_help[row_map[i]];
     }
 
     visible_rows = n;
@@ -312,6 +317,10 @@ void link_menu_init(void) {
     base_labels[link_row_mode] = lang.muxretro.link.mode;
     base_labels[link_row_address] = lang.muxretro.link.address;
     base_labels[link_row_single] = lang.muxretro.link.single_screen;
+
+    base_help[link_row_mode] = lang.muxretro.help.link.mode;
+    base_help[link_row_address] = lang.muxretro.help.link.address;
+    base_help[link_row_single] = lang.muxretro.help.link.single_screen;
 
     link_reveal_settings();
     link_align_port();

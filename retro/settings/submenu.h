@@ -12,6 +12,10 @@ typedef struct {
     const char *const *glyphs;
     const char *const *help;
 
+    // One message for the whole screen, for lists whose rows are content rather than settings
+    const char *help_title;
+    const char *help_all;
+
     int row_count;
     const list_frame *frames;
     int frame_count;

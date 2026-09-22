@@ -183,6 +183,15 @@ static uint64_t current_nav_mask(void) {
     return nav_mask_standard();
 }
 
+static void show_option_help(void) {
+    if (screen_state != screen_options || !ui_count_static) return;
+
+    const struct core_option_entry *e = &options_list[visible_indices[current_item_index]];
+
+    play_sound(snd_info_open);
+    show_info_box(e->label, e->info ? e->info : lang.generic.no_help, 0);
+}
+
 static void close_options(void) {
     active = 0;
 
@@ -317,6 +326,16 @@ void options_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
+
+    if (!dialogue_active(&save_dlg)) {
+        const int menu_tap = pause_menu_take_menu_tap();
+        if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(4) | BIT(5)))) return;
+
+        if (menu_tap) {
+            show_option_help();
+            return;
+        }
+    }
 
     if (nav_input_halted()) return;
 

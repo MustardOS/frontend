@@ -2788,7 +2788,64 @@ struct mux_lang {
                 char account[MAX_BUFFER_SIZE];
                 char notifications[MAX_BUFFER_SIZE];
                 char refresh[MAX_BUFFER_SIZE];
+                char username[MAX_BUFFER_SIZE];
+                char password[MAX_BUFFER_SIZE];
+                char sign_in[MAX_BUFFER_SIZE];
+                char sign_out[MAX_BUFFER_SIZE];
+                char achievement_list[MAX_BUFFER_SIZE];
+                char leaderboard_list[MAX_BUFFER_SIZE];
             } cheevo;
+            struct {
+                char host_network[MAX_BUFFER_SIZE];
+                char join_network[MAX_BUFFER_SIZE];
+                char status[MAX_BUFFER_SIZE];
+                char disconnect[MAX_BUFFER_SIZE];
+                char host_name[MAX_BUFFER_SIZE];
+                char play_mode[MAX_BUFFER_SIZE];
+                char client_slots[MAX_BUFFER_SIZE];
+                char host_port[MAX_BUFFER_SIZE];
+                char host_session[MAX_BUFFER_SIZE];
+                char pairing_code[MAX_BUFFER_SIZE];
+                char confirm_pairing[MAX_BUFFER_SIZE];
+                char connection[MAX_BUFFER_SIZE];
+                char find_lan[MAX_BUFFER_SIZE];
+                char join_found[MAX_BUFFER_SIZE];
+                char join_address[MAX_BUFFER_SIZE];
+            } netplay;
+            struct {
+                char mode[MAX_BUFFER_SIZE];
+                char address[MAX_BUFFER_SIZE];
+                char single_screen[MAX_BUFFER_SIZE];
+            } link;
+            struct {
+                char refresh[MAX_BUFFER_SIZE];
+                char cadence[MAX_BUFFER_SIZE];
+                char source[MAX_BUFFER_SIZE];
+                char output[MAX_BUFFER_SIZE];
+                char integer[MAX_BUFFER_SIZE];
+                char filter[MAX_BUFFER_SIZE];
+                char shader[MAX_BUFFER_SIZE];
+                char shader_work[MAX_BUFFER_SIZE];
+                char audio[MAX_BUFFER_SIZE];
+                char corrections[MAX_BUFFER_SIZE];
+                char run_ahead[MAX_BUFFER_SIZE];
+                char stage[MAX_BUFFER_SIZE];
+            } diagnostic;
+            struct {
+                char button_mapping[MAX_BUFFER_SIZE];
+                char catalogue_author[MAX_BUFFER_SIZE];
+                char catalogue_item[MAX_BUFFER_SIZE];
+                char game_state[MAX_BUFFER_SIZE];
+                char cheats[MAX_BUFFER_SIZE];
+                char disc_control[MAX_BUFFER_SIZE];
+                char information[MAX_BUFFER_SIZE];
+                char patches[MAX_BUFFER_SIZE];
+                char manual[MAX_BUFFER_SIZE];
+                char macros[MAX_BUFFER_SIZE];
+                char colour_filter[MAX_BUFFER_SIZE];
+                char overlay_image[MAX_BUFFER_SIZE];
+                char shader[MAX_BUFFER_SIZE];
+            } screen;
         } help;
     } muxretro;
 

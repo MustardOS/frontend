@@ -356,6 +356,16 @@ void shader_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
+
+    const int menu_tap = pause_menu_take_menu_tap();
+    if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(4) | BIT(5)))) return;
+
+    if (menu_tap && !(dialogue_active(&save_dlg) || dialogue_active(&delete_dlg) || dialogue_active(&actions_dlg))) {
+        play_sound(snd_info_open);
+        show_info_box(lang.muxretro.display_screen.shaders, lang.muxretro.help.screen.shader, 0);
+        return;
+    }
+
     if (nav_input_halted()) return;
 
     if (dialogue_active(&save_dlg)) {

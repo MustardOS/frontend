@@ -249,6 +249,11 @@ void submenu_refresh_values(const submenu *m) {
 }
 
 static void submenu_show_help(const submenu *m) {
+    if (m->def->help_all) {
+        show_info_box(m->def->help_title ? m->def->help_title : lang.generic.help, m->def->help_all, 0);
+        return;
+    }
+
     if (!m->def->help) return;
 
     if (sectioned(m)) {

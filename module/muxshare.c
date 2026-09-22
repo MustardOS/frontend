@@ -173,6 +173,19 @@ void setup_nav(const struct nav_bar *nav_items) {
     footer_nav_check_scroll();
 }
 
+void nav_hide_all(void) {
+    lv_obj_t *items[] = {
+        ui_lbl_nav_lr_glyph, ui_lbl_nav_lr,          ui_lbl_nav_a_glyph, ui_lbl_nav_a,       ui_lbl_nav_b_glyph,
+        ui_lbl_nav_b,        ui_lbl_nav_c_glyph,     ui_lbl_nav_c,       ui_lbl_nav_x_glyph, ui_lbl_nav_x,
+        ui_lbl_nav_y_glyph,  ui_lbl_nav_y,           ui_lbl_nav_z_glyph, ui_lbl_nav_z,       ui_lbl_nav_menu_glyph,
+        ui_lbl_nav_menu,     ui_lbl_nav_start_glyph, ui_lbl_nav_start,
+    };
+
+    for (size_t i = 0; i < A_SIZE(items); i++)
+        lv_obj_add_flag(items[i], MU_OBJ_FLAG_HIDE_FLOAT);
+    footer_nav_reset_scroll();
+}
+
 void nav_show_a(const int show, const char *text) {
     if (show) {
         lv_label_set_text(ui_lbl_nav_a, text);

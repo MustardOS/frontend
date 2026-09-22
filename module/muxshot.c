@@ -8,7 +8,6 @@ static int is_fullscreen = 0;
 
 static int skip_confirm = 0;
 static mux_dialogue remove_dlg;
-static mux_more more_menu;
 
 static void start_remove(void);
 
@@ -138,8 +137,6 @@ static void do_remove(void) {
 }
 
 static void handle_dpad_up(void) {
-    if (more_dpad(&more_menu, &theme, -1, !swap_axis)) return;
-
     if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, -1);
@@ -152,8 +149,6 @@ static void handle_dpad_up(void) {
 }
 
 static void handle_dpad_down(void) {
-    if (more_dpad(&more_menu, &theme, +1, !swap_axis)) return;
-
     if (dialogue_active(&remove_dlg)) {
         if (!swap_axis) {
             dialogue_navigate(&remove_dlg, &theme, +1);
@@ -166,8 +161,6 @@ static void handle_dpad_down(void) {
 }
 
 static void handle_dpad_up_hold(void) {
-    if (more_dpad_hold(&more_menu, &theme, -1, !swap_axis)) return;
-
     if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, -1, !swap_axis);
         return;
@@ -177,8 +170,6 @@ static void handle_dpad_up_hold(void) {
 }
 
 static void handle_dpad_down_hold(void) {
-    if (more_dpad_hold(&more_menu, &theme, +1, !swap_axis)) return;
-
     if (dialogue_active(&remove_dlg)) {
         dialogue_handle_dpad_hold(&remove_dlg, &theme, +1, !swap_axis);
         return;
@@ -189,18 +180,6 @@ static void handle_dpad_down_hold(void) {
 
 static void handle_a(void) {
     if (msgbox_active || !ui_count_static || hold_call) return;
-
-    if (more_active(&more_menu)) {
-        const more_id opt = more_take(&more_menu, 0);
-
-        if (opt == more_remove) {
-            start_remove();
-        } else if (opt == more_help) {
-            play_sound(snd_info_open);
-            show_help();
-        }
-        return;
-    }
 
     if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
@@ -236,11 +215,6 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (hold_call) return;
 
-    if (more_active(&more_menu)) {
-        more_cancel(&more_menu);
-        return;
-    }
-
     if (dialogue_active(&remove_dlg)) {
         dialogue_mark_cancelled(&remove_dlg);
         dialogue_dismiss(&remove_dlg);
@@ -272,30 +246,17 @@ static void start_remove(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (msgbox_active || is_fullscreen || !ui_count_static || dialogue_active(&remove_dlg) || more_active(&more_menu))
-        return;
+    if (msgbox_active || is_fullscreen || !ui_count_static || dialogue_active(&remove_dlg)) return;
 
     start_remove();
 }
 
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || is_fullscreen || hold_call) return;
-    if (dialogue_active(&remove_dlg) || more_active(&more_menu)) return;
-
-    more_entry entries[2];
-    int count = 0;
-
-    if (ui_count_static) entries[count++] = (more_entry) {more_remove, 1};
+    if (dialogue_active(&remove_dlg)) return;
 
     play_sound(snd_info_open);
-
-    if (count == 0) {
-        show_help();
-        return;
-    }
-
-    entries[count++] = (more_entry) {more_help, 1};
-    more_open(&more_menu, &theme, ui_screen, entries, count);
+    show_help();
 }
 
 static void init_elements(void) {

@@ -616,6 +616,15 @@ void manual_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    const int menu_tap = pause_menu_take_menu_tap();
+    if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(4) | BIT(5)))) return;
+
+    if (menu_tap) {
+        play_sound(snd_info_open);
+        show_info_box(lang.muxretro.hotkeys_screen.manual, lang.muxretro.help.screen.manual, 0);
+        return;
+    }
+
     if (edge & BIT(5)) {
         play_sound(snd_back);
         close_manual();

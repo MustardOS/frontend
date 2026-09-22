@@ -965,8 +965,14 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_cancel(&more_menu);
+        return;
+    }
+
     if (msgbox_active || progress_onscreen != -1 || hold_call || video_preview_active()) return;
-    if (key_show || add_mode || more_active(&more_menu) || dialogue_active(&remove_dlg)) return;
+    if (key_show || add_mode || dialogue_active(&remove_dlg)) return;
 
     if (!ui_count_static && !tag_filtered) return;
 

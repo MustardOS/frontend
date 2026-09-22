@@ -44,6 +44,11 @@ static char (*alloc_values(const int count)) [OPTIONS_VALUE_LEN] {
     return calloc((size_t) count, sizeof(char[OPTIONS_VALUE_LEN]));
 }
 
+// Cores hand out their own blurb for each option, which is what the help window shows
+static void store_info(struct core_option_entry *e, const char *info) {
+    e->info = (info && *info) ? strdup(info) : NULL;
+}
+
 static void store_values(
     struct core_option_entry *e, const struct retro_core_option_value *values, const char *default_value
 ) {
@@ -117,8 +122,10 @@ static void apply_override(struct core_option_entry *e) {
 }
 
 void options_reset(void) {
-    for (int i = 0; i < options_count; i++)
+    for (int i = 0; i < options_count; i++) {
         free(options_list[i].values);
+        free(options_list[i].info);
+    }
 
     options_count = 0;
     memset(options_list, 0, sizeof(options_list));
@@ -136,6 +143,7 @@ void options_store_v1(const struct retro_core_option_definition *defs) {
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
         snprintf(e->label, sizeof(e->label), "%s", defs[i].desc ? defs[i].desc : defs[i].key);
 
+        store_info(e, defs[i].info);
         store_values(e, defs[i].values, defs[i].default_value);
         apply_override(e);
         options_count++;
@@ -187,6 +195,11 @@ void options_store_v2(const struct retro_core_options_v2 *opts) {
                                 ? defs[i].desc_categorized
                                 : defs[i].desc;
         snprintf(e->label, sizeof(e->label), "%s", label ? label : defs[i].key);
+
+        const char *info = categorised && defs[i].info_categorized && *defs[i].info_categorized
+                               ? defs[i].info_categorized
+                               : defs[i].info;
+        store_info(e, info);
 
         store_values(e, defs[i].values, defs[i].default_value);
         apply_override(e);

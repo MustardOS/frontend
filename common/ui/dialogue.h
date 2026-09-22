@@ -23,6 +23,7 @@ typedef struct {
     int silent;
     int cancel_index;
     int active;
+    int menu_closes;
 } mux_dialogue;
 
 typedef enum { mux_unsaved_save = 0, mux_unsaved_discard, mux_unsaved_nope } mux_unsaved_opt;

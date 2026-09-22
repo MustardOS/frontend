@@ -1466,8 +1466,13 @@ static void show_sort_order(void) {
 }
 
 static void handle_help(void) {
+    if (more_active(&more_menu)) {
+        play_sound(snd_back);
+        more_cancel(&more_menu);
+        return;
+    }
+
     if (msgbox_active || progress_onscreen != -1 || hold_call || video_preview_active()) return;
-    if (more_active(&more_menu)) return;
 
     play_sound(snd_info_open);
     show_actions_dialog();

@@ -13,6 +13,8 @@
 
 #define MODAL_MASK_DIALOGUE (MODAL_MASK_MESSAGE | MODAL_INPUT(mux_input_dpad_left) | MODAL_INPUT(mux_input_dpad_right))
 
+#define MODAL_MASK_MENU_CLOSES (MODAL_MASK_DIALOGUE | MODAL_INPUT(mux_input_menu))
+
 void modal_claim(uint64_t allowed);
 
 void modal_release(void);

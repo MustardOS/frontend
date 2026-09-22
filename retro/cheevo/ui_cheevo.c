@@ -78,6 +78,11 @@ static const char *detail_sort_name(void);
 static const char *login_labels[login_row_count];
 static const char *login_glyphs[login_row_count] = {"user", "lock", "network", "exit"};
 
+static const char *login_help[login_row_count] = {
+    lang.muxretro.help.cheevo.username, lang.muxretro.help.cheevo.password, lang.muxretro.help.cheevo.sign_in,
+    lang.muxretro.help.cheevo.sign_out
+};
+
 static const char *row_labels[row_count];
 
 static const char *row_glyphs[row_count] = {"user", "message", "refresh"};
@@ -505,6 +510,10 @@ static int detail_load(const cheevo_achievement_view mode) {
         detail_labels[entry] = detail_entries[entry].title;
         detail_glyphs[entry] = mode == cheevo_view_achievements ? "trophy" : "leaderboard";
     }
+
+    // The same list shows achievements or leaderboards, so the help follows whichever is on screen
+    detail_definition.help_title =
+        mode == cheevo_view_achievements ? lang.muxretro.cheevo.achievements : lang.muxretro.cheevo.leaderboards;
     return detail_definition.row_count;
 }
 
@@ -959,6 +968,7 @@ void cheevo_menu_init(void) {
     login_definition = (submenu_def) {
         .labels = login_labels,
         .glyphs = login_glyphs,
+        .help = login_help,
         .row_count = login_row_count,
         .value_text = login_value_text,
         .row_is_action = login_is_action,
@@ -973,6 +983,8 @@ void cheevo_menu_init(void) {
     detail_definition = (submenu_def) {
         .labels = detail_labels,
         .glyphs = detail_glyphs,
+        .help_title = lang.muxretro.cheevo.achievements,
+        .help_all = lang.muxretro.help.cheevo.achievement_list,
         .row_count = 0,
         .value_text = detail_value_text,
         .row_is_action = detail_is_action,
@@ -985,6 +997,8 @@ void cheevo_menu_init(void) {
     ranking_definition = (submenu_def) {
         .labels = ranking_labels,
         .glyphs = ranking_glyphs,
+        .help_title = lang.muxretro.cheevo.leaderboards,
+        .help_all = lang.muxretro.help.cheevo.leaderboard_list,
         .row_count = 0,
         .value_text = ranking_value_text,
         .row_is_action = ranking_is_action,
