@@ -194,6 +194,10 @@ void mux_input_close(void);
 
 void mux_input_poll(void);
 
+void mux_input_poll_raw(mux_raw_event_handler raw_handler);
+
+void mux_input_poll_raw_unmapped(mux_raw_event_handler raw_handler);
+
 void mux_input_stop(void);
 
 void mux_input_set_msgbox_dismiss(void (*cb)(void));

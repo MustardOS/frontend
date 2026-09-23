@@ -28,7 +28,8 @@ int muxsplash_main(char *splash_image, const int apply_recolour) {
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);
 
-    refresh_screen(ui_screen, 1);
+    // Fill every display buffer, the panel keeps whichever one we exit on
+    refresh_screen(ui_screen, 3);
 
     return 0;
 }

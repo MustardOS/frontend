@@ -303,7 +303,7 @@ static void init_navigation_group(void) {
     if (!device.board.rumble[0]) HIDE_OPTION_ITEM(tweakadv, rumble_strength);
     if (!device.board.has_bluetooth) HIDE_OPTION_ITEM(tweakadv, bt_scan_timeout);
 
-    // Removal of verbose messages due to changes to muterm not playing ball
+    // Removal of verbose messages due to changes to muxterm not playing ball
     HIDE_OPTION_ITEM(tweakadv, verbose);
 
     // Hide specific items for the TrimUI devices

@@ -22,7 +22,7 @@ murgb_SRC = common/tooling/rgb_args.c common/config/config.c common/config/confi
 
 muverify_LDLIBS = $(EXTERNAL_LIB)/libcrypto.a -ldl -lpthread $(EXTERNAL_HIDE)
 
-DEPENDENCIES = plutosvg common lvgl module
+DEPENDENCIES = plutosvg common lvgl module terminal
 
 CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS)
 
@@ -40,7 +40,7 @@ CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
 .PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard clean notify info \
-        dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro
+        dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal
 
 .DEFAULT_GOAL := all
 
@@ -77,6 +77,7 @@ dep-stage dep-plutosvg dep-lvgl: | generated
 dep-common: dep-plutosvg
 dep-module: dep-common dep-lvgl
 dep-retro: dep-module
+dep-terminal: dep-module
 
 dep-stage:
 	@echo "Building Stage Overlay: libmustage.so"
@@ -98,7 +99,11 @@ dep-retro:
 	@echo "Building Libretro Host: muxretro"
 	$(VERBOSE)$(MAKE) -C retro DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
-prebuild: dep-stage dep-retro
+dep-terminal:
+	@echo "Building Mustard Terminal: muxterm"
+	$(VERBOSE)$(MAKE) -C terminal DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
+
+prebuild: dep-stage dep-retro dep-terminal
 
 clean:
 	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build \

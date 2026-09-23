@@ -1550,9 +1550,24 @@ void mux_input_close(void) {
 }
 
 void mux_input_poll(void) {
+    mux_input_poll_raw(NULL);
+}
+
+void mux_input_poll_raw(const mux_raw_event_handler raw_handler) {
     SDL_Event ev;
-    while (SDL_PollEvent(&ev))
+    while (SDL_PollEvent(&ev)) {
         dispatch_input_event(&ev, NULL, NULL);
+        if (raw_handler) raw_handler(&ev);
+    }
+}
+
+void mux_input_poll_raw_unmapped(const mux_raw_event_handler raw_handler) {
+    SDL_Event ev;
+    while (SDL_PollEvent(&ev)) {
+        if (ev.type != SDL_KEYDOWN && ev.type != SDL_KEYUP && ev.type != SDL_TEXTINPUT)
+            dispatch_input_event(&ev, NULL, NULL);
+        if (raw_handler) raw_handler(&ev);
+    }
 }
 
 void mux_input_task(const mux_input_options *opts) {

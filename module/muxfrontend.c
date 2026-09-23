@@ -17,6 +17,7 @@ static int screen_clean = 1;
 static int last_index = 0;
 static int forced_flag = 0;
 static int is_app = 0;
+static int preserve_exit_frame = 0;
 
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
@@ -83,6 +84,7 @@ static void install_signal_handlers(void) {
 }
 
 static void cleanup_screen(void) {
+    if (preserve_exit_frame) return;
     if (screen_clean) return;
     screen_clean = 1;
 
@@ -261,6 +263,7 @@ static void module_reset(void) {
 static void module_exit(char *module, const int apply_recolour) {
     if (set_splash_image_path(module)) {
         muxsplash_main(splash_image_path, apply_recolour);
+        preserve_exit_frame = 1;
     }
 
     if (strcmp(module, "shutdown") == 0) {
@@ -462,6 +465,10 @@ static void module_app(void) {
             if (strcmp(app, "Archive Manager") == 0) {
                 remove(MUOS_APP_LOAD);
                 load_mux("archive");
+            } else if (strcmp(app, "Mustard Terminal") == 0) {
+                remove(MUOS_APP_LOAD);
+                load_mux("terminal");
+                safe_quit(0);
             } else if (strcmp(app, "Task Toolkit") == 0) {
                 remove(MUOS_APP_LOAD);
                 load_mux("task");

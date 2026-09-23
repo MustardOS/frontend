@@ -10,6 +10,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <time.h>
@@ -20,6 +21,7 @@
 #define LOG_DIR "/opt/muos/log"
 #define LOG_SCK "/run/muos/arborist.sock"
 #define LOG_PID "/run/muos/arborist.pid"
+#define LOG_LOCK "/run/muos/arborist.lock"
 #define MSG_BIN "/opt/muos/frontend/muxmessage"
 
 #define SYS_DEBUG_FILE "/opt/muos/config/system/debug_mode"
@@ -629,6 +631,13 @@ static int run_daemon(void) {
     if (ensure_dir("/run/muos") < 0) return 1;
     if (ensure_dir(LOG_DIR) < 0) return 1;
 
+    const int lock = open(LOG_LOCK, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+    if (lock < 0) return 1;
+    if (flock(lock, LOCK_EX | LOCK_NB) != 0) {
+        close(lock);
+        return 0;
+    }
+
     memset(cache, 0, sizeof(cache));
     for (int i = 0; i < LOG_CACHE_MAX; i++)
         cache[i].fd = -1;
@@ -642,7 +651,10 @@ static int run_daemon(void) {
     sigaction(SIGCHLD, &sa, NULL);
 
     const int sock = daemon_socket_open();
-    if (sock < 0) return 1;
+    if (sock < 0) {
+        close(lock);
+        return 1;
+    }
 
     write_pid_file();
 
@@ -708,6 +720,7 @@ static int run_daemon(void) {
     close_all_cache(cache);
     close(sock);
     cleanup_daemon();
+    close(lock);
 
     return 0;
 }

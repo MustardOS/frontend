@@ -1,0 +1,88 @@
+# muxterm.conf - example configuration file
+#
+# Use this file with muxterm --config <path>.
+
+# Terminal window width and height in pixels
+# On MustardOS devices these are taken from [SCREEN] WIDTH/HEIGHT automatically
+#width  = 640
+#height = 480
+
+# Display zoom factor (1.0 = no zoom)
+# On MustardOS devices this is taken from [SCREEN] ZOOM automatically
+#zoom = 1.0
+
+# Screen rotation: 0=none  1=90°  2=180°  3=270°
+# On MustardOS devices this is taken from [SCREEN] ROTATE automatically
+#rotate = 0
+
+# Apply HDMI underscan (16 px inset on each side)
+# On MustardOS devices this is set when [SETTINGS] HDMI_SCAN=1
+#underscan = 0
+
+# Path to a monospace TrueType font
+# On MustardOS devices this defaults to: /opt/muos/share/font/muterm.ttf
+#term_font_path = /usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf
+
+# Font size in points (pt)
+#term_font_size = 16
+
+# Solid background colour (RRGGBB hex). Used when no background image is active.
+# Leave blank (or comment out) to use default black.
+#bg_colour = 000000
+
+# Solid foreground colour (RRGGBB hex).  When set, ALL glyphs are drawn in
+# this colour, ignoring ANSI colour codes.  Leave blank to use ANSI colours.
+#fg_colour = FFFFFF
+
+# Path to a PNG file to use as the terminal background
+# The image takes priority over bg_colour when both are set.
+#bg_image =
+
+# Number of scrollback lines to keep (minimum 1)
+#scrollback = 512
+
+# Read-only mode: display PTY output but send no input.
+# Useful for attaching to an existing session as a viewer.
+#readonly = 0
+
+# Override the shell / command to launch.
+# Empty = use $SHELL environment variable, or /bin/sh if unset.
+# This is overridden by a command given on the CLI after --
+#shell =
+
+# Italic and bold font variant paths (optional).
+# If omitted, SDL_ttf grabs the style from the base font automatically.
+#term_font_path_bold        =
+#term_font_path_italic      =
+#term_font_path_bold_italic =
+
+# Scrollback persistence cache file.
+# Scrollback is saved on exit and restored on the next launch.
+# Set to empty to disable persistence, or use --no-sb-persist on the CLI.
+#scrollback_path = /tmp/mustardos/muxterm.cache
+
+# Additional OSK layer file (see README for format).
+#osk_layout_path = /path/to/osk.conf
+
+# OSK key hold-repeat timing (milliseconds).
+# key_repeat_delay: how long a button must be held before it starts repeating.
+# key_repeat_rate:  interval between repeated presses while held.
+#key_repeat_delay = 350
+#key_repeat_rate  = 70
+
+# D-Pad repeat timing when navigating the OSK (milliseconds).
+#dpad_repeat_delay = 300
+#dpad_repeat_rate  = 80
+
+# Force a full screen redraw every frame, bypassing dirty-row tracking.
+# Enable this when running programs that refresh the whole screen continuously
+# (e.g. btop, htop, vim, tmux) and you notice stale glyphs or partial redraws.
+# Slightly higher CPU usage than the default incremental mode.
+#force_redraw = 0
+
+# Font hinting mode.  Controls how the font renderer hints glyphs to the pixel grid.
+#   normal  – default FreeType hinting (good for most smooth fonts)
+#   light   – lighter hinting, preserves stroke shape (recommended for smooth fonts)
+#   mono    – monochrome hinting, crisp edges (best for bitmap-style fonts)
+#   none    – no hinting (useful at very high DPI or for pixel-perfect bitmap fonts)
+#font_hinting = normal

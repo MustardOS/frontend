@@ -80,7 +80,8 @@
 #define INPUT_TEST_VOL_DOWN RUN_PATH "input_test_vol_down"
 
 #define RGBLED_BIN OPT_PATH "frontend/murgb"
-#define DEV_SCRIPT OPT_PATH "script/device/"
+#define DEV_SCRIPT  OPT_PATH "script/device/"
+#define FUNC_SCRIPT OPT_PATH "script/var/func.sh"
 
 #define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"

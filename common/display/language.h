@@ -303,10 +303,12 @@ struct mux_lang {
         char none_hint[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
         char archive[MAX_BUFFER_SIZE];
+        char terminal[MAX_BUFFER_SIZE];
         char task[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         struct {
             char archive[MAX_BUFFER_SIZE];
+            char terminal[MAX_BUFFER_SIZE];
             char task[MAX_BUFFER_SIZE];
         } help;
         struct {
@@ -3100,6 +3102,48 @@ struct mux_lang {
         char none[MAX_BUFFER_SIZE];
         char none_hint[MAX_BUFFER_SIZE];
     } muxtask;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char terminal_font_size[MAX_BUFFER_SIZE];
+        char font_hinting[MAX_BUFFER_SIZE];
+        char foreground_colour[MAX_BUFFER_SIZE];
+        char background_colour[MAX_BUFFER_SIZE];
+        char reset_terminal[MAX_BUFFER_SIZE];
+        char quit[MAX_BUFFER_SIZE];
+        char saved[MAX_BUFFER_SIZE];
+        char reset[MAX_BUFFER_SIZE];
+        char enter[MAX_BUFFER_SIZE];
+        char layer[MAX_BUFFER_SIZE];
+        char hint_light[MAX_BUFFER_SIZE];
+        char hint_mono[MAX_BUFFER_SIZE];
+        struct {
+            char white[MAX_BUFFER_SIZE];
+            char amber[MAX_BUFFER_SIZE];
+            char yellow[MAX_BUFFER_SIZE];
+            char green[MAX_BUFFER_SIZE];
+            char lime[MAX_BUFFER_SIZE];
+            char cyan[MAX_BUFFER_SIZE];
+            char light_blue[MAX_BUFFER_SIZE];
+            char blue[MAX_BUFFER_SIZE];
+            char pink[MAX_BUFFER_SIZE];
+            char magenta[MAX_BUFFER_SIZE];
+            char orange[MAX_BUFFER_SIZE];
+            char light_grey[MAX_BUFFER_SIZE];
+            char black[MAX_BUFFER_SIZE];
+            char dark_grey[MAX_BUFFER_SIZE];
+            char charcoal[MAX_BUFFER_SIZE];
+            char dark_blue[MAX_BUFFER_SIZE];
+            char navy[MAX_BUFFER_SIZE];
+            char dark_green[MAX_BUFFER_SIZE];
+            char forest[MAX_BUFFER_SIZE];
+            char dark_purple[MAX_BUFFER_SIZE];
+            char plum[MAX_BUFFER_SIZE];
+            char dark_red[MAX_BUFFER_SIZE];
+            char dark_teal[MAX_BUFFER_SIZE];
+            char dark_brown[MAX_BUFFER_SIZE];
+        } colour;
+    } muxterm;
 
     struct {
         char title[MAX_BUFFER_SIZE];

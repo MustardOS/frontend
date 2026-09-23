@@ -128,6 +128,28 @@ struct mux_config {
     } theme;
 
     struct {
+        int16_t font_size;
+        int16_t font_hinting;
+        int16_t scrollback;
+        int16_t readonly;
+        int16_t key_repeat_delay;
+        int16_t key_repeat_rate;
+        int16_t dpad_repeat_delay;
+        int16_t dpad_repeat_rate;
+        int16_t force_redraw;
+        char font_path[MAX_BUFFER_SIZE];
+        char font_path_bold[MAX_BUFFER_SIZE];
+        char font_path_italic[MAX_BUFFER_SIZE];
+        char font_path_bold_italic[MAX_BUFFER_SIZE];
+        char foreground[MAX_BUFFER_SIZE];
+        char background[MAX_BUFFER_SIZE];
+        char background_image[MAX_BUFFER_SIZE];
+        char shell[MAX_BUFFER_SIZE];
+        char osk_layout[MAX_BUFFER_SIZE];
+        char scrollback_path[MAX_BUFFER_SIZE];
+    } terminal;
+
+    struct {
         struct {
             int16_t accelerate;
             int16_t repeat_delay;

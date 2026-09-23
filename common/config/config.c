@@ -95,6 +95,26 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "theme/download", "data", CFG_OFF(theme.download.data), 1, {.s = ""}},
     {CONF_CONFIG_PATH "theme/download", "preview", CFG_OFF(theme.download.preview), 1, {.s = ""}},
 
+    {CONF_CONFIG_PATH "terminal", "font_size", CFG_OFF(terminal.font_size), 0, {.i = 0}, 1, 0, 72},
+    {CONF_CONFIG_PATH "terminal", "font_hinting", CFG_OFF(terminal.font_hinting), 0, {.i = -1}, 1, -1, 3},
+    {CONF_CONFIG_PATH "terminal", "scrollback", CFG_OFF(terminal.scrollback), 0, {.i = 512}, 1, 1, INT16_MAX},
+    {CONF_CONFIG_PATH "terminal", "readonly", CFG_OFF(terminal.readonly), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "terminal", "key_repeat_delay", CFG_OFF(terminal.key_repeat_delay), 0, {.i = 350}, 1, 1, INT16_MAX},
+    {CONF_CONFIG_PATH "terminal", "key_repeat_rate", CFG_OFF(terminal.key_repeat_rate), 0, {.i = 70}, 1, 1, INT16_MAX},
+    {CONF_CONFIG_PATH "terminal", "dpad_repeat_delay", CFG_OFF(terminal.dpad_repeat_delay), 0, {.i = 300}, 1, 1, INT16_MAX},
+    {CONF_CONFIG_PATH "terminal", "dpad_repeat_rate", CFG_OFF(terminal.dpad_repeat_rate), 0, {.i = 80}, 1, 1, INT16_MAX},
+    {CONF_CONFIG_PATH "terminal", "force_redraw", CFG_OFF(terminal.force_redraw), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "terminal", "font_path", CFG_OFF(terminal.font_path), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "font_path_bold", CFG_OFF(terminal.font_path_bold), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "font_path_italic", CFG_OFF(terminal.font_path_italic), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "font_path_bold_italic", CFG_OFF(terminal.font_path_bold_italic), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "foreground", CFG_OFF(terminal.foreground), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "background", CFG_OFF(terminal.background), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "background_image", CFG_OFF(terminal.background_image), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "shell", CFG_OFF(terminal.shell), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "osk_layout", CFG_OFF(terminal.osk_layout), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "terminal", "scrollback_path", CFG_OFF(terminal.scrollback_path), 1, {.s = "/run/muos/muxterm.sb"}},
+
     // extra/download/
     {CONF_CONFIG_PATH "extra/download", "data", CFG_OFF(extra.download.data), 1, {.s = ""}},
 

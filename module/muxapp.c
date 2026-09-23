@@ -23,11 +23,12 @@ static int16_t *flag_task(void) {
 
 static mux_apps app[] = {
     {.name = "Archive Manager", .icon = "archive", .grid = "Archive", .help = NULL, .kiosk_flag = flag_archive},
+    {.name = "Mustard Terminal", .icon = "terminal", .grid = "Terminal", .help = NULL, .kiosk_flag = NULL},
     {.name = "Task Toolkit", .icon = "task", .grid = "Toolkit", .help = NULL, .kiosk_flag = flag_task},
 };
 
 static const char *app_paths[3];
-static const char *pinned[] = {"Archive Manager", "Task Toolkit", "vTree Gold"};
+static const char *pinned[] = {"Archive Manager", "Mustard Terminal", "Task Toolkit", "vTree Gold"};
 
 static size_t pinned_shown = 0;
 
@@ -90,6 +91,7 @@ static const char *builtin_help_text(const char *name) {
     if (!name) return NULL;
 
     if (strcasecmp(name, "Archive Manager") == 0) return lang.muxapp.help.archive;
+    if (strcasecmp(name, "Mustard Terminal") == 0) return lang.muxapp.help.terminal;
     if (strcasecmp(name, "Task Toolkit") == 0) return lang.muxapp.help.task;
 
     return NULL;

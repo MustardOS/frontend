@@ -153,6 +153,7 @@ Linking them statically means the version shipped in a device rootfs never matte
 * `module`: Frontend menu system modules
 * `retro`: LibRetro core host
 * `stage`: Hardware overlay staging system
+* `terminal`: Mustard Terminal emulator, settings menu and on-screen keyboard
 * `vendor`: Bundled third party source and licence files
 
 The `common` source tree is grouped into `base`, `compat`, `config`, `content`, `display`, `generated`, `platform`,
@@ -173,6 +174,7 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `muwarn`: First Install Disclaimer Message
 * `muweb`: Landing page web server, catalogue and save management API
 * `muxcharge`: Charging Information Screen
+* `muxterm`: Mustard Terminal
 * `muxfrontend`: Main Frontend Specific Runner
 * `muxmessage`: Information and Progress Screen
 

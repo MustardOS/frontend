@@ -3,13 +3,19 @@
 #include <linux/fb.h>
 #include <png.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
+
+// Where the display engine says it is reading pixels from
+#define SCANOUT_PATH "/sys/class/disp/disp/attr/sys"
 
 typedef enum { scale_original = 0, scale_keep = 1, scale_stretch = 2, scale_fill = 3 } scale_mode_t;
 
@@ -33,6 +39,8 @@ typedef struct {
     uint8_t *mem;
     uint8_t *base;
     size_t mem_size;
+    size_t page_size;
+    int page_count;
     int buffered;
 
     struct fb_fix_screeninfo fix;
@@ -59,6 +67,8 @@ typedef struct {
 typedef struct {
     const char *image_path;
     const char *fb_path;
+    const char *ready_path;
+    const char *log_path;
 
     int rotate;
     scale_mode_t scale;
@@ -78,6 +88,63 @@ typedef struct {
 } options_t;
 
 static volatile sig_atomic_t keep_running = 1;
+
+static FILE *trace_file = NULL;
+
+// Keep the file small, a shutdown only ever adds a handful of lines
+static void trace_open(const options_t *opts) {
+    if (!opts->log_path || !*opts->log_path) return;
+
+    const char *mode = "a";
+    struct stat info;
+
+    if (stat(opts->log_path, &info) == 0 && info.st_size > 262144) mode = "w";
+
+    trace_file = fopen(opts->log_path, mode);
+    if (trace_file) setvbuf(trace_file, NULL, _IOLBF, 0);
+}
+
+static void trace_close(void) {
+    if (!trace_file) return;
+
+    fclose(trace_file);
+    trace_file = NULL;
+}
+
+__attribute__((format(printf, 1, 2))) static void trace(const char *fmt, ...) {
+    if (!trace_file) return;
+
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    fprintf(trace_file, "[%ld.%03ld] ", (long) now.tv_sec, now.tv_nsec / 1000000L);
+
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(trace_file, fmt, args);
+    va_end(args);
+
+    fputc('\n', trace_file);
+}
+
+// Ask the display engine which address it is actually scanning out
+static unsigned long read_scanout_addr(void) {
+    char buffer[8192];
+
+    const int fd = open(SCANOUT_PATH, O_RDONLY);
+    if (fd < 0) return 0;
+
+    const ssize_t got = read(fd, buffer, sizeof(buffer) - 1);
+    close(fd);
+
+    if (got <= 0) return 0;
+    buffer[got] = '\0';
+
+    const char *found = strstr(buffer, "addr[");
+    if (!found) return 0;
+
+    return strtoul(found + 5, NULL, 16);
+}
 
 static void log_msg(const options_t *opts, const char *msg) {
     if (opts->verbose) fprintf(stderr, "%s\n", msg);
@@ -120,6 +187,8 @@ static void print_usage(const char *name) {
         "  -t, --tint <RRGGBB>         PNG recolour (tint), e.g. FFFFFF or #FFFFFF\n"
         "  -a, --alpha <0-100>         Recolour strength as a percentage, default: 0 (off)\n"
         "  -c, --clear                 Clear the framebuffer to black and exit\n"
+        "  -n, --notify <path>         Create a file after the frame is presented\n"
+        "  -l, --log <path>            Append what was drawn, and where, to a file\n"
         "  -w, --wait                  Keep running until killed\n"
         "  -v, --verbose               Enable log output\n"
         "  -h, --help                  Show this help\n\n"
@@ -277,13 +346,17 @@ static int option_takes_value(const char *arg) {
            || strcmp(arg, "-r") == 0 || strcmp(arg, "--rotate") == 0 || strcmp(arg, "-s") == 0
            || strcmp(arg, "--scale") == 0 || strcmp(arg, "-g") == 0 || strcmp(arg, "--gradient") == 0
            || strcmp(arg, "-t") == 0 || strcmp(arg, "--tint") == 0 || strcmp(arg, "--recolour") == 0
-           || strcmp(arg, "--recolor") == 0 || strcmp(arg, "-a") == 0 || strcmp(arg, "--alpha") == 0;
+           || strcmp(arg, "--recolor") == 0 || strcmp(arg, "-a") == 0 || strcmp(arg, "--alpha") == 0
+           || strcmp(arg, "-n") == 0 || strcmp(arg, "--notify") == 0 || strcmp(arg, "-l") == 0
+           || strcmp(arg, "--log") == 0;
 }
 
 static int parse_args(const int argc, char *argv[], options_t *opts) {
 
     opts->image_path = NULL;
     opts->fb_path = "/dev/fb0";
+    opts->ready_path = NULL;
+    opts->log_path = NULL;
     opts->rotate = 0;
     opts->scale = scale_keep;
     opts->wait = 0;
@@ -341,6 +414,16 @@ static int parse_args(const int argc, char *argv[], options_t *opts) {
 
         if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--fb") == 0) {
             opts->fb_path = argv[++i];
+            continue;
+        }
+
+        if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--notify") == 0) {
+            opts->ready_path = argv[++i];
+            continue;
+        }
+
+        if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--log") == 0) {
+            opts->log_path = argv[++i];
             continue;
         }
 
@@ -548,6 +631,43 @@ static int load_png_to_rgba(const char *path, image_t *img) {
     return 0;
 }
 
+// Most displays here are double buffered, so a few pages is plenty to cover
+#define MAX_PAGES 4
+
+static void count_pages(fb_t *fb) {
+    fb->page_size = (size_t) fb->stride * (size_t) fb->height;
+    fb->page_count = 1;
+
+    if (fb->page_size == 0) return;
+
+    size_t pages = fb->mem_size / fb->page_size;
+
+    if (fb->var.yres > 0 && fb->var.yres_virtual >= fb->var.yres) {
+        const size_t virtual_pages = fb->var.yres_virtual / fb->var.yres;
+        if (virtual_pages < pages) pages = virtual_pages;
+    }
+
+    if (pages > MAX_PAGES) pages = MAX_PAGES;
+    if (pages < 1) pages = 1;
+
+    fb->page_count = (int) pages;
+}
+
+// The panel can be parked on any page, so give every page the same picture
+static void mirror_pages(const fb_t *fb) {
+    if (fb->page_count < 2 || fb->page_size == 0) return;
+
+    for (int page = 0; page < fb->page_count; page++) {
+        const size_t offset = (size_t) page * fb->page_size;
+        if (offset + fb->page_size > fb->mem_size) break;
+
+        uint8_t *target = fb->mem + offset;
+        if (target == fb->base) continue;
+
+        memmove(target, fb->base, fb->page_size);
+    }
+}
+
 static int open_fb(const char *path, fb_t *fb) {
     memset(fb, 0, sizeof(*fb));
     fb->fd = -1;
@@ -580,6 +700,8 @@ static int open_fb(const char *path, fb_t *fb) {
     }
 
     fb->bytes_per_pixel = fb->bpp / 8;
+
+    count_pages(fb);
 
     const size_t visible_offset =
         (size_t) fb->var.yoffset * (size_t) fb->stride + (size_t) fb->var.xoffset * (size_t) fb->bytes_per_pixel;
@@ -674,6 +796,44 @@ static int unblank_fb(const char *fbdev) {
 
     close(fd);
     return 0;
+}
+
+static int refresh_fb_view(fb_t *fb) {
+    struct fb_var_screeninfo current;
+
+    if (ioctl(fb->fd, FBIOGET_VSCREENINFO, &current) < 0) return -1;
+    if ((int) current.bits_per_pixel != fb->bpp) return -1;
+
+    const size_t visible_offset =
+        (size_t) current.yoffset * (size_t) fb->stride + (size_t) current.xoffset * (size_t) fb->bytes_per_pixel;
+    const size_t visible_size = (size_t) fb->stride * (size_t) current.yres;
+    if (visible_offset >= fb->mem_size || visible_size > fb->mem_size - visible_offset) return -1;
+
+    const int changed = current.xoffset != fb->var.xoffset || current.yoffset != fb->var.yoffset
+                        || current.xres != fb->var.xres || current.yres != fb->var.yres;
+
+    fb->var = current;
+    fb->width = (int) current.xres;
+    fb->height = (int) current.yres;
+    fb->base = fb->mem + visible_offset;
+
+    count_pages(fb);
+
+    return changed;
+}
+
+static int notify_ready(const char *path) {
+    if (!path || !*path) return 0;
+
+    const int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (fd < 0) return -1;
+
+    const ssize_t written = write(fd, "1\n", 2);
+    const int saved_errno = errno;
+    close(fd);
+    errno = saved_errno;
+
+    return written == 2 ? 0 : -1;
 }
 
 static uint32_t pack_pixel(const fb_t *fb, const uint8_t r, const uint8_t g, const uint8_t b) {
@@ -1201,6 +1361,36 @@ static void free_image(image_t *img) {
     img->height = 0;
 }
 
+// Hand the panel back to the framebuffer, whatever was driving it before
+static int claim_display(fb_t *fb) {
+    struct fb_var_screeninfo pan = fb->var;
+
+    pan.xoffset = 0;
+    pan.yoffset = 0;
+    pan.activate = FB_ACTIVATE_NOW;
+
+    if (ioctl(fb->fd, FBIOPAN_DISPLAY, &pan) < 0) return -1;
+
+    fb->var.xoffset = 0;
+    fb->var.yoffset = 0;
+    fb->base = fb->mem;
+
+    return 0;
+}
+
+static int present_image(fb_t *fb, const image_t *img, const options_t *opts) {
+    draw_image(fb, img, opts);
+    mirror_pages(fb);
+    if (flush_fb(fb) != 0) return -1;
+
+    const int claimed = claim_display(fb);
+    unblank_fb(opts->fb_path);
+
+    trace("present claimed=%d scanout=%lx", claimed, read_scanout_addr());
+
+    return 0;
+}
+
 static int run_clear(const options_t *opts) {
     fb_t fb = {0};
     fb.fd = -1;
@@ -1218,6 +1408,8 @@ static int run_clear(const options_t *opts) {
     log_msg(opts, "Clearing framebuffer");
 
     clear_fb(&fb, 0, 0, 0);
+    mirror_pages(&fb);
+
     if (flush_fb(&fb) != 0) {
         log_msg(opts, "Failed to flush framebuffer");
         close_fb(&fb);
@@ -1240,10 +1432,15 @@ static int run_draw(const options_t *opts) {
     memset(&fb, 0, sizeof(fb));
     fb.fd = -1;
 
+    trace_open(opts);
+    trace("start image=%s wait=%d", opts->image_path ? opts->image_path : "(none)", opts->wait);
+
     log_fmt(opts, "Loading image: %s\n", opts->image_path);
 
     if (load_png_to_rgba(opts->image_path, &img) != 0) {
         log_fmt(opts, "Failed to load PNG: %s\n", opts->image_path);
+        trace("failed to load png");
+        trace_close();
 
         return 1;
     }
@@ -1252,17 +1449,26 @@ static int run_draw(const options_t *opts) {
 
     if (open_fb(opts->fb_path, &fb) != 0) {
         log_fmt(opts, "Failed to open framebuffer: %s\n", opts->fb_path);
+        trace("failed to open %s", opts->fb_path);
+        trace_close();
         free_image(&img);
 
         return 1;
     }
 
+    trace(
+        "opened %dx%d bpp=%d stride=%d smem=%lx len=%zu pages=%d offset=%u,%u scanout=%lx", fb.width, fb.height, fb.bpp,
+        fb.stride, (unsigned long) fb.fix.smem_start, fb.mem_size, fb.page_count, fb.var.xoffset, fb.var.yoffset,
+        read_scanout_addr()
+    );
+
     unblank_fb(opts->fb_path);
 
     if (opts->verbose) {
         fprintf(
-            stderr, "Drawing image=%s fb=%s screen=%dx%d bpp=%d rotate=%d scale=%s\n", opts->image_path, opts->fb_path,
-            fb.width, fb.height, fb.bpp, opts->rotate, scale_name(opts->scale)
+            stderr, "Drawing image=%s fb=%s screen=%dx%d bpp=%d rotate=%d scale=%s pages=%d offset=%u,%u\n",
+            opts->image_path, opts->fb_path, fb.width, fb.height, fb.bpp, opts->rotate, scale_name(opts->scale),
+            fb.page_count, fb.var.xoffset, fb.var.yoffset
         );
 
         if (opts->gradient.enabled) {
@@ -1280,22 +1486,83 @@ static int run_draw(const options_t *opts) {
         }
     }
 
-    draw_image(&fb, &img, opts);
-
-    if (flush_fb(&fb) != 0) {
+    if (present_image(&fb, &img, opts) != 0) {
         log_msg(opts, "Failed to flush framebuffer");
+        trace("failed to flush framebuffer");
+        trace_close();
         close_fb(&fb);
         free_image(&img);
         return 1;
     }
 
-    unblank_fb(opts->fb_path);
+    trace(
+        "drew into offset=%u,%u mirrored=%d scanout=%lx", fb.var.xoffset, fb.var.yoffset, fb.page_count,
+        read_scanout_addr()
+    );
+
+    if (notify_ready(opts->ready_path) != 0) {
+        log_fmt(opts, "Failed to create ready file: %s\n", opts->ready_path);
+        trace("failed to create ready file %s", opts->ready_path);
+        trace_close();
+        close_fb(&fb);
+        free_image(&img);
+        return 1;
+    }
 
     if (opts->wait) {
         log_msg(opts, "Waiting until killed");
-        while (keep_running)
-            pause();
+
+        // Redraw a few times early on in case something else was still letting go of the screen
+        static const unsigned int settle_ticks[] = {2, 5, 10, 20};
+        const unsigned int settle_total = sizeof(settle_ticks) / sizeof(settle_ticks[0]);
+
+        unsigned int settle_next = 0;
+        unsigned int tick = 0;
+
+        unsigned long last_scanout = read_scanout_addr();
+
+        while (keep_running) {
+            struct timespec delay = {.tv_sec = 0, .tv_nsec = 100000000L};
+            while (nanosleep(&delay, &delay) < 0 && errno == EINTR && keep_running) {
+            }
+            if (!keep_running) break;
+
+            const int view_changed = refresh_fb_view(&fb);
+
+            tick++;
+
+            const unsigned long scanout = read_scanout_addr();
+            if (scanout != last_scanout) {
+                trace("scanout moved to %lx (offset now %u,%u)", scanout, fb.var.xoffset, fb.var.yoffset);
+                last_scanout = scanout;
+            }
+
+            int redraw = view_changed > 0;
+
+            if (settle_next < settle_total && tick >= settle_ticks[settle_next]) {
+                settle_next++;
+                redraw = 1;
+            }
+
+            if (!redraw) continue;
+
+            trace(
+                "redraw tick=%u moved=%d offset=%u,%u scanout=%lx", tick, view_changed > 0, fb.var.xoffset,
+                fb.var.yoffset, scanout
+            );
+
+            if (view_changed > 0) {
+                if (opts->verbose) {
+                    fprintf(stderr, "Screen page moved to %u,%u, redrawing\n", fb.var.xoffset, fb.var.yoffset);
+                }
+            }
+
+            if (present_image(&fb, &img, opts) != 0) log_msg(opts, "Failed to refresh framebuffer");
+        }
     }
+
+    trace("exiting scanout=%lx", read_scanout_addr());
+    trace_close();
 
     close_fb(&fb);
     free_image(&img);
