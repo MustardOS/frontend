@@ -1487,35 +1487,20 @@ static void show_volume_progress(void) {
     progress_show(ui_pnl_progress_volume, ui_pnl_progress_brightness);
 }
 
-static void adjust_volume(const int direction) {
-    if (!ui_common_check(0) || !progress_onscreen) return;
+static const char *progress_glyph(const char *prefix, const int percent) {
+    static char glyph[32];
 
-    const int inc_volume = config.settings.advanced.inc_volume;
-
-    if (direction > 0) {
-        current_volume += inc_volume;
-        if (current_volume > device.audio.max) current_volume = device.audio.max;
-    } else {
-        current_volume -= inc_volume;
-        if (current_volume < 0) current_volume = 0;
-    }
-
-    const int percent = volume_to_percent(current_volume);
-
-    const char *glyph = "volume_0";
+    int level = 0;
     if (percent > 70) {
-        glyph = "volume_3";
+        level = 3;
     } else if (percent > 35) {
-        glyph = "volume_2";
+        level = 2;
     } else if (percent > 0) {
-        glyph = "volume_1";
+        level = 1;
     }
 
-    update_glyph(ui_ico_progress_volume, "bar", glyph);
-
-    show_volume_progress();
-
-    volume_changed = 1;
+    snprintf(glyph, sizeof(glyph), "%s_%d", prefix, level);
+    return glyph;
 }
 
 void ui_common_handle_bright_up(void) {
@@ -1527,11 +1512,11 @@ void ui_common_handle_bright_down(void) {
 }
 
 void ui_common_handle_volume_up(void) {
-    adjust_volume(+1);
+    show_volume_progress();
 }
 
 void ui_common_handle_volume_down(void) {
-    adjust_volume(-1);
+    show_volume_progress();
 }
 
 int ui_common_progress_tick(void) {
@@ -1570,16 +1555,7 @@ int ui_common_progress_tick(void) {
     if (brightness_changed || last_brightness != current_brightness) {
         const int percent = brightness_to_percent(current_brightness);
         lv_bar_set_value(ui_bar_progress_brightness, percent, LV_ANIM_OFF);
-
-        const char *glyph = "bright_0";
-        if (percent > 70) {
-            glyph = "bright_3";
-        } else if (percent > 35) {
-            glyph = "bright_2";
-        } else if (percent > 0) {
-            glyph = "bright_1";
-        }
-        update_glyph(ui_ico_progress_brightness, "bar", glyph);
+        update_glyph(ui_ico_progress_brightness, "bar", progress_glyph("bright", percent));
 
         last_brightness = current_brightness;
         brightness_changed = 0;
@@ -1589,7 +1565,7 @@ int ui_common_progress_tick(void) {
         if (initial_brightness_pending) {
             initial_brightness_pending = 0;
 
-            if (strcmp(mux_module, "muxcharge") != 0) {
+            if (strcmp(mux_module, "muxcharge") != 0 && strcmp(mux_module, "muxretro") != 0) {
                 char bright_value[8];
                 snprintf(bright_value, sizeof(bright_value), "%d", current_brightness);
 
@@ -1603,15 +1579,14 @@ int ui_common_progress_tick(void) {
     }
 
     if (volume_changed || last_volume != current_volume) {
-        lv_bar_set_value(ui_bar_progress_volume, volume_to_percent(current_volume), LV_ANIM_OFF);
+        const int percent = volume_to_percent(current_volume);
+        lv_bar_set_value(ui_bar_progress_volume, percent, LV_ANIM_OFF);
+        update_glyph(ui_ico_progress_volume, "bar", progress_glyph("volume", percent));
 
         last_volume = current_volume;
         volume_changed = 0;
 
-        char buffer[MAX_BUFFER_SIZE];
-        CFG_INT_FIELD(config.settings.general.volume, CONF_CONFIG_PATH "settings/general/volume", 75);
-        audio_sink_volume_store(audio_sink_active_index(), current_volume);
-
+        config.settings.general.volume = current_volume;
         need_update = 1;
     }
 

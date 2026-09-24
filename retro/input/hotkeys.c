@@ -3,6 +3,8 @@
 #include <common/platform/input.h>
 #include <common/display/language.h>
 #include <common/runtime/log.h>
+#include <common/storage/inotify.h>
+#include <common/base/options.h>
 #include <common/ui/common.h>
 #include <common/ui/nav.h>
 #include "../state/gamestate.h"
@@ -369,7 +371,29 @@ static nav_repeat_t rpt_vol_down = {0};
 static int prev_vol_up = 0;
 static int prev_vol_down = 0;
 
+static inotify_status *level_ino = NULL;
+
+static void level_watch_task(void) {
+    if (!level_ino) {
+        level_ino = inotify_create();
+        if (!level_ino) return;
+
+        static int bright_exists;
+        static int volume_exists;
+
+        inotify_track(
+            level_ino, CONF_CONFIG_PATH "settings/general", "brightness", &bright_exists, &brightness_config_changes
+        );
+        inotify_track(level_ino, CONF_CONFIG_PATH "settings/general", "volume", &volume_exists, &volume_config_changes);
+    }
+
+    inotify_check(level_ino);
+    if (ui_pnl_progress_volume && ui_pnl_progress_brightness) ui_common_progress_tick();
+}
+
 void hotkeys_volume_bright_task(void) {
+    level_watch_task();
+
     const int bright_mod = mux_input_pressed(mux_input_menu) || mux_input_pressed(mux_input_switch);
 
     const int vol_up_now = mux_input_pressed(mux_input_vol_up);
@@ -383,7 +407,6 @@ void hotkeys_volume_bright_task(void) {
         } else {
             ui_common_handle_volume_up();
         }
-        ui_common_progress_tick();
         if (menu_held) menu_combo_consumed = 1;
     }
 
@@ -393,7 +416,6 @@ void hotkeys_volume_bright_task(void) {
         } else {
             ui_common_handle_volume_down();
         }
-        ui_common_progress_tick();
         if (menu_held) menu_combo_consumed = 1;
     }
 

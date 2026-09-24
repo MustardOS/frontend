@@ -72,6 +72,9 @@ typedef struct {
     char *exec_cmd;
     char **exec_argv;
     size_t exec_argc;
+
+    pid_t exec_pid;
+    int exec_pending;
 } combo_config;
 
 static struct {
@@ -280,26 +283,90 @@ static void record_sequence(const mux_input_type type) {
     }
 }
 
-static void run_command(combo_config *c) {
-    if (!c || !c->exec_argv || c->exec_argc == 0) return;
+static int combo_allowed(const combo_config *c) {
+    if (!c || !c->exec_argv || c->exec_argc == 0) return 0;
 
     const uint64_t volume_mask = SAFE_BIT(mux_input_vol_up) | SAFE_BIT(mux_input_vol_down);
-    if (file_exist(INPUT_TEST_ACTIVE) && (c->type_mask & volume_mask)) return;
+    if (file_exist(INPUT_TEST_ACTIVE) && (c->type_mask & volume_mask)) return 0;
 
     if (c->is_handheld_mode && config.boot.device_mode != 0) {
         if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
-        return;
+        return 0;
     }
 
     if (c->is_normal_mode && config.boot.factory_reset != 0) {
         if (verbose) LOG_INFO("input", "Skipped %s (restricted by mode)", c->name);
-        return;
+        return 0;
     }
+
+    return 1;
+}
+
+static void run_command(combo_config *c) {
+    if (!combo_allowed(c)) return;
 
     const char *argv[c->exec_argc + 1];
     for (size_t i = 0; i <= c->exec_argc; i++)
         argv[i] = c->exec_argv[i];
     run_exec(argv, c->exec_argc + 1, 1, 0, NULL, NULL);
+}
+
+static void spawn_command(combo_config *c) {
+    const pid_t pid = fork();
+
+    if (pid == 0) {
+        const int fd = open("/dev/null", O_RDWR);
+
+        if (fd >= 0) {
+            dup2(fd, STDIN_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            dup2(fd, STDERR_FILENO);
+            if (fd > 2) close(fd);
+        }
+
+        execvp(c->exec_argv[0], c->exec_argv);
+        _exit(EXIT_FAILURE);
+    }
+
+    c->exec_pid = pid > 0 ? pid : 0;
+}
+
+static int command_running(combo_config *c) {
+    if (c->exec_pid <= 0) return 0;
+    if (kill(c->exec_pid, 0) == 0) return 1;
+
+    c->exec_pid = 0;
+    return 0;
+}
+
+static void run_combo_action(combo_config *c, const mux_input_action action) {
+    if (!c->handle_hold) {
+        run_command(c);
+        return;
+    }
+
+    if (!combo_allowed(c)) return;
+
+    if (command_running(c)) {
+        if (action == mux_input_press) {
+            c->exec_pending++;
+        } else if (!c->exec_pending) {
+            c->exec_pending = 1;
+        }
+        return;
+    }
+
+    spawn_command(c);
+}
+
+static void pending_command_task(void) {
+    for (int i = 0; i < combo_count; ++i) {
+        combo_config *c = &combo[i];
+        if (!c->exec_pending || command_running(c)) continue;
+
+        c->exec_pending--;
+        if (combo_allowed(c)) spawn_command(c);
+    }
 }
 
 // Finds the first non-sequence combo matching `type_bit` whose negate_mask isn't currently held.
@@ -398,7 +465,7 @@ static void run_raw_volume_action(const mux_input_type type, const mux_input_act
 
             if (action == mux_input_press || (action == mux_input_hold && c->handle_hold)) {
                 printf("%s\n", c->name);
-                run_command(c);
+                run_combo_action(c, action);
                 brightness_triggered = 1;
                 break;
             }
@@ -416,7 +483,7 @@ static void run_raw_volume_action(const mux_input_type type, const mux_input_act
 
         if (action == mux_input_press || (action == mux_input_hold && c->handle_hold)) {
             printf("%s\n", c->name);
-            run_command(c);
+            run_combo_action(c, action);
             break;
         }
     }
@@ -619,6 +686,8 @@ static void handle_idle(void) {
 
     if (vol_fd >= 0) handle_raw_volume();
     if (pwr_fd >= 0) handle_raw_power();
+
+    pending_command_task();
     if (lid_fd >= 0) handle_raw_lid();
 
     if (raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat) {
@@ -687,7 +756,7 @@ static void handle_combo(const int num, const mux_input_action action) {
 
     if (action == mux_input_press || (action == mux_input_hold && c->handle_hold)) {
         printf("%s\n", c->name);
-        run_command(c);
+        run_combo_action(c, action);
     }
 }
 
