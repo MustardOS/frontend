@@ -191,6 +191,21 @@ static int idle_saver_suppressed(void) {
     return !session_settings.idle_in_game && !pause_menu_is_active();
 }
 
+static void idle_inhibit_publish(void) {
+    static int published = 0;
+
+    const int inhibit = !session_settings.idle_in_game && !pause_menu_is_active();
+    if (inhibit == published) return;
+
+    published = inhibit;
+
+    if (inhibit) {
+        write_text_to_file(IDLE_GAME_INHIBIT, "w", INT, (int) getpid());
+    } else {
+        remove(IDLE_GAME_INHIBIT);
+    }
+}
+
 static void idle_poll(void) {
     if (!config.settings.power.idle.display) return;
 
@@ -832,6 +847,7 @@ int main(const int argc, char *argv[]) {
         }
         const uint64_t idle_start = perf_begin();
         idle_poll();
+        idle_inhibit_publish();
         perf_end(perf_stage_service_idle, idle_start);
         perf_end(perf_stage_services, services_start);
 
@@ -1152,6 +1168,8 @@ int main(const int argc, char *argv[]) {
 
     mux_input_close();
     sdl_cleanup();
+
+    remove(IDLE_GAME_INHIBIT);
 
     if (core_restart_requested) {
         char subsystem_arg[80] = "";

@@ -587,20 +587,29 @@ static int open_raw_event_index(const int idx, struct pollfd *pfd, const char *l
     return fd;
 }
 
-static void check_idle(idle_timer *timer, const uint32_t timeout_ms) {
+static int game_idle_inhibited(void) {
+    if (!file_exist(IDLE_GAME_INHIBIT)) return 0;
+
+    const int pid = read_line_int_from(IDLE_GAME_INHIBIT, 1);
+    return pid > 0 && kill(pid, 0) == 0;
+}
+
+static void check_idle(idle_timer *timer, const uint32_t timeout_ms, const int idle_governor) {
     const uint32_t idle_ms = global_tick - timer->tick;
 
     if (idle_ms >= timeout_ms && !timer->idle) {
         if (verbose) LOG_INFO("input", "Device is now IDLE");
         if (timer->idle_name) printf("%s\n", timer->idle_name);
 
-        if (!running_governor) {
-            running_governor = read_all_char_from(device.cpu.governor);
-            if (running_governor) write_text_to_file(WAKE_CPU_GOV, "w", CHAR, running_governor);
-        }
+        if (idle_governor) {
+            if (!running_governor) {
+                running_governor = read_all_char_from(device.cpu.governor);
+                if (running_governor) write_text_to_file(WAKE_CPU_GOV, "w", CHAR, running_governor);
+            }
 
-        if (!previous_governor) previous_governor = read_all_char_from(device.cpu.governor);
-        set_scaling_governor(config.settings.power.gov.idle, 0);
+            if (!previous_governor) previous_governor = read_all_char_from(device.cpu.governor);
+            set_scaling_governor(config.settings.power.gov.idle, 0);
+        }
 
         write_text_to_file(IDLE_STATE, "w", INT, 1);
         timer->idle = 1;
@@ -708,6 +717,9 @@ static void handle_idle(void) {
         }
     }
 
+    const int game_inhibit = game_idle_inhibited();
+    if (game_inhibit) idle_display.tick = global_tick;
+
     if (idle_display.tick != global_tick) {
         // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
         // conditions here, but it's more flexible to leave that externally controllable.)
@@ -726,8 +738,8 @@ static void handle_idle(void) {
     const uint32_t disp_timeout = config.settings.power.idle.display * 1000;
     const uint32_t sleep_timeout = config.settings.power.idle.sleep * 1000;
 
-    if (disp_timeout) check_idle(&idle_display, disp_timeout);
-    if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout);
+    if (disp_timeout) check_idle(&idle_display, disp_timeout, 1);
+    if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout, !game_inhibit);
 }
 
 static void handle_combo(const int num, const mux_input_action action) {
