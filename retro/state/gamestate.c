@@ -777,7 +777,7 @@ int gamestate_autosave_save(void) {
         return -1;
     }
 
-    if (pause_menu_store_clean_screenshot(autosave_thumb_path, 1) != 0) {
+    if (pause_menu_is_active() || pause_menu_store_clean_screenshot(autosave_thumb_path, 1) != 0) {
         image_writer_flush();
         copy_file(pending_path, autosave_thumb_path);
     } else {

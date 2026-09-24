@@ -46,7 +46,7 @@ static void prepare_power_save(const char *reason) {
         if (!gamestate_autosave_is_armed()) {
             LOG_INFO(mux_module, "Preserving the previous autosave because gameplay has not begun");
         } else {
-            gamestate_capture_pending(1);
+            if (!pause_menu_is_active()) gamestate_capture_pending(1);
             if (gamestate_autosave_save() == 0 && state_flush() == 0) {
                 LOG_SUCCESS(mux_module, "Auto save completed before %s", reason);
             } else {
