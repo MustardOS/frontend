@@ -94,37 +94,37 @@ static const char *enforcers[] = {
 };
 
 static const char *wizards[] = {
-    "aeverdyn", "ajmandourah", "arkun_", "bcat24", ".cebion", "ee1000", "habbening",
-    "irilivibi", "johnnyonflame", "joyrider3774", "kitfox618", "kloptops", "mikhailzrick", "retrogfx_",
-    "shauninman", "shengy.", "siliconexarch", "skorpy", "snowram", "spycat88", "stanley_00",
-    "sundownersport", "thegammasqueeze", ".tokyovigilante", "trngaje", "vagueparade", "xanxic", "xquader"
+    "aeverdyn", "ajmandourah", "arkun_", "bcat24", ".cebion", "ee1000", "habbening", "irilivibi", "johnnyonflame",
+    "joyrider3774", "kitfox618", "kloptops", "mikhailzrick", "retrogfx_", "shauninman", "shengy.",
+    "siliconexarch", "skorpy", "snowram", "spycat88", "stanley_00", "sundownersport", "thegammasqueeze",
+    ".tokyovigilante", "trngaje", "vagueparade", "xanxic", "xquader"
 };
 
 static const char *heroes[] = {
-    "amildinconvenience.", "amos_06286", "asiaclonk", "bazkart", "benjaminbercy", "bigbossman0816",
-    "bigolpeewee", "brohsnbluffs", "btreecat", "chiefwally_73445", "cjiiio", ".dririan", "exe0237",
-    "foamygames", "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "izzythefool",
-    "jimmycrackedcorn_4711", "jmtn070", "kaeltis", "kentonftw", "kernelkritic", "lmarcomiranda",
-    "losermatic", "luckyphil", "luzfcb", "mach5682", "meanagar", "meowman_", "milkworlds", "misfitsorbet",
-    "mrwhistles", "msx6011", "mxdamp", "nahck", "ownedmumbles", "paletochen", "pr0j3kt2501", "qpla",
-    "rabite890", "robbiet480", "romus85", "rosemelody254", "roundpi", "scy0n", "snesfan1", "sol6_vi",
-    "spivvmeister", "superzu", "suribii", "techagent", "teggydave", "timecarp", "turner74.",
-    "verctexius", "warlordwossman", "x_tremis", "xraygoggles", "zazouboy", ".zerohalo"
+    "amildinconvenience.", "amos_06286", "asiaclonk", "bazkart", "brohsnbluffs", "btreecat",
+    "chiefwally_73445", "djwyman", "dorkidiot", ".dririan", "eddie51a15", "foamygames",
+    "fragilesilver133", "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "jimmycrackedcorn_4711",
+    "jmtn070", "julas8799", "kaeltis", "kalamer.", "kentonftw", "kernelkritic", "lip.kim",
+    "lmarcomiranda", "losermatic", "luckyphil", "mach5682", "meanagar", "meowman_", "mfsimba",
+    "milkworlds", "misfitsorbet", "mrwhistles", "msx6011", ".natsgames", ".nikonic", "paletochen",
+    "pastapizzamancer", "phafas_", "pr0j3kt2501", "qpla", "rabite890", "regicyde93", "robbiet480",
+    "romus85", "rosemelody254", "roundpi", "scy0n", "sheeshfr", "snesfan1", "spivvmeister",
+    "sshinyrayquaza", "superzu", "suribii", "techagent", "techyysean", "teggydave", "timecarp",
+    "turner74.", "urgul", "verctexius", "warlordwossman", "x_tremis", "xakontrack", "xraygoggles",
+    ".zerohalo"
 };
 
 static const char *knights[] = {
-    "admiralthrawn_1", "aj15", "allepac", "arkholt", "bburbank",
-    "billynaing", "clempurp9868", "crownlessk", "crusader4hope3222", "drisc",
-    "galloc", "hai6266", "jdanteq_18123", "johnunsc", "julas8799",
-    "jupyter.", "kiko_lake", "_maxwellsdemon", "mrcee1503", "notflacko",
-    "nuke_67641", "penpen2crayon", "rbndr_", "retrogamecorps", "sanelessone",
-    "skyarcher", "stin87", "surge_84306", "thewalruzz", "wizardfights",
-    "_wizdude", "zauberpony"
+    "admiralthrawn_1", "allepac", "arkholt", "azlekayn", "billynaing", "clempurp9868", "crownlessk",
+    "crusader4hope3222", "doanchibinhidol", "drisc", "freacky8", "galloc", "hai6266", "jdanteq_18123",
+    "jupyter.", "kevdoy", "kiko_lake", "madyak69", "mrcee1503", "notflacko", "nuke_67641", "rbndr_",
+    "retrogamecorps", "sanelessone", "skyarcher", "smittywerbenjaegermanjensen9250", "stin87",
+    "surge_84306", "thewalruzz", "_wizdude", "zauberpony"
 };
 
 static const char *contributors[] = {
-    "0xada.3", "antikk", "artur_ditu", "bgelmini", "bitter_bizarro", "corey", "imcokeman",
-    "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xikteny", "xonglebongle"
+    "0xada.3", "antikk", "artur_ditu", "bgelmini", "bitter_bizarro", "corey", "imcokeman", "jeodc",
+    "habbening", "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xikteny", "xonglebongle"
 };
 // clang-format on
 
