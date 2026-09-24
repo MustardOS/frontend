@@ -186,6 +186,11 @@ static int build_macro_dir(const char *core_path_arg, const char *content_path) 
     return 1;
 }
 
+static int idle_saver_suppressed(void) {
+    if (netplay_is_active()) return 1;
+    return !session_settings.idle_in_game && !pause_menu_is_active();
+}
+
 static void idle_poll(void) {
     if (!config.settings.power.idle.display) return;
 
@@ -206,6 +211,11 @@ static void idle_poll(void) {
     check_countdown = 15;
 
     inotify_check(idle_ino);
+
+    if (!session_settings.idle_in_game) {
+        last_seen_changes = mux_idle_state_changes;
+        return;
+    }
 
     static int was_paused = 0;
     static uint32_t resume_cooldown_until = 0;
@@ -626,7 +636,7 @@ int main(const int argc, char *argv[]) {
     link_direct_init();
 
     display_set_hard_sync_query(hard_sync_enabled);
-    display_set_idle_saver_suppressed_query(netplay_is_active);
+    display_set_idle_saver_suppressed_query(idle_saver_suppressed);
 
     struct retro_system_av_info av_info = {0};
     hw_render_bridge_enter_core_call();

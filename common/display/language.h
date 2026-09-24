@@ -2209,6 +2209,7 @@ struct mux_lang {
             char volume[MAX_BUFFER_SIZE];
             char show_fps[MAX_BUFFER_SIZE];
             char show_playtime[MAX_BUFFER_SIZE];
+            char idle_in_game[MAX_BUFFER_SIZE];
             char show_fps_simple[MAX_BUFFER_SIZE];
             char show_fps_detailed[MAX_BUFFER_SIZE];
             char border_colour[MAX_BUFFER_SIZE];
@@ -2654,6 +2655,7 @@ struct mux_lang {
                 char show_fps[MAX_BUFFER_SIZE];
                 char show_playtime[MAX_BUFFER_SIZE];
                 char header_visibility[MAX_BUFFER_SIZE];
+                char idle_in_game[MAX_BUFFER_SIZE];
             } hud;
             struct {
                 char auto_save[MAX_BUFFER_SIZE];

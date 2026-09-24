@@ -46,6 +46,7 @@ static const struct session_settings_t defaults = {
     .volume = 100,
     .show_fps = 0,
     .show_playtime = 0,
+    .idle_in_game = 1,
     .content_precache = content_precache_off,
     .border_colour = border_colour_theme,
     .sample_rate = 0,
@@ -339,6 +340,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(volume, 0, SESSION_VOLUME_MAX),
     SETTING_RANGE(show_fps, 0, show_fps_count - 1),
     SETTING_RANGE(show_playtime, 0, 1),
+    SETTING_RANGE(idle_in_game, 0, 1),
     SETTING_RANGE(content_precache, 0, content_precache_count - 1),
     SETTING_RANGE(border_colour, 0, border_colour_count - 1),
     SETTING_CHOICES(sample_rate, sample_rate_choices),
@@ -1870,6 +1872,11 @@ void session_settings_cycle_fps(const int direction) {
 void session_settings_cycle_show_playtime(const int direction) {
     (void) direction;
     session_settings.show_playtime = !session_settings.show_playtime;
+}
+
+void session_settings_cycle_idle_in_game(const int direction) {
+    (void) direction;
+    session_settings.idle_in_game = !session_settings.idle_in_game;
 }
 
 void session_settings_cycle_content_precache(const int direction) {

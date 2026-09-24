@@ -5,17 +5,18 @@
 #include "pages.h"
 #include "submenu.h"
 
-enum { row_fps = 0, row_playtime, row_header_visibility, row_count };
+enum { row_fps = 0, row_playtime, row_header_visibility, row_idle_in_game, row_count };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.show_fps, lang.muxretro.settings_screen.show_playtime,
-    lang.muxretro.settings_screen.header_visibility
+    lang.muxretro.settings_screen.header_visibility, lang.muxretro.settings_screen.idle_in_game
 };
 
-static const char *row_glyphs[row_count] = {"fpscounter", "playtime", "header"};
+static const char *row_glyphs[row_count] = {"fpscounter", "playtime", "header", "pause"};
 
 static const char *row_help[row_count] = {
-    lang.muxretro.help.hud.show_fps, lang.muxretro.help.hud.show_playtime, lang.muxretro.help.hud.header_visibility
+    lang.muxretro.help.hud.show_fps, lang.muxretro.help.hud.show_playtime, lang.muxretro.help.hud.header_visibility,
+    lang.muxretro.help.hud.idle_in_game
 };
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
@@ -28,6 +29,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_header_visibility:
             snprintf(buf, buf_len, "%s", session_settings_header_visibility_name(session_settings.header_visibility));
+            break;
+        case row_idle_in_game:
+            snprintf(buf, buf_len, "%s", session_settings.idle_in_game ? lang.generic.enabled : lang.generic.disabled);
             break;
         default:
             buf[0] = '\0';
@@ -45,6 +49,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_header_visibility:
             session_settings_cycle_header_visibility(direction);
+            break;
+        case row_idle_in_game:
+            session_settings_cycle_idle_in_game(direction);
             break;
         default:
             break;

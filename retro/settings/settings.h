@@ -137,6 +137,7 @@ struct session_settings_t {
     int volume;
     int show_fps;
     int show_playtime;
+    int idle_in_game;
     int content_precache;
     int border_colour;
     int sample_rate;
@@ -291,6 +292,8 @@ const char *session_settings_fps_limit_name(int mode);
 const char *session_settings_show_fps_name(int mode);
 
 void session_settings_cycle_show_playtime(int direction);
+
+void session_settings_cycle_idle_in_game(int direction);
 
 const char *session_settings_content_precache_name(int mode);
 
