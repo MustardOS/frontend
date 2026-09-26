@@ -4,6 +4,7 @@
 #include <common/runtime/log.h>
 #include "../input/hotkeys.h"
 #include "../input/rumble.h"
+#include "../cheevo/cheevo.h"
 #include "../coreinfo/coreinfo.h"
 #include "../settings/settings.h"
 #include "../state/core_state.h"
@@ -20,6 +21,20 @@ static uint64_t anchor_sig = 0;
 
 static int failed = 0;
 static int failure_announced = 0;
+
+// Set while the last frame could still be replayed with newer input
+static int cheevo_pending = 0;
+
+void runahead_settle_cheevo(void) {
+    if (!cheevo_pending) return;
+    cheevo_pending = 0;
+
+    if (cheevo_needs_frame()) cheevo_do_frame();
+}
+
+int runahead_cheevo_deferred(void) {
+    return cheevo_pending;
+}
 
 static void runahead_fail(const char *reason) {
     failed = 1;
@@ -61,21 +76,30 @@ static int ensure_anchor_buf(void) {
 
 void runahead_before_frame(const int allow_replay) {
     if (!state_saves_allowed()) {
+        runahead_settle_cheevo();
         runahead_invalidate();
         return;
     }
 
-    if (!session_settings.run_ahead || failed) return;
+    if (!session_settings.run_ahead || failed) {
+        runahead_settle_cheevo();
+        return;
+    }
 
-    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead) || hw_render_bridge_active()) return;
-    if (!current_core.retro_serialize || !current_core.retro_unserialize || !current_core.retro_serialize_size) return;
+    if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead) || hw_render_bridge_active()
+        || !current_core.retro_serialize || !current_core.retro_unserialize || !current_core.retro_serialize_size) {
+        runahead_settle_cheevo();
+        return;
+    }
 
     if (hotkeys_is_fast_forward_active() || hotkeys_is_slow_motion_active()) {
+        runahead_settle_cheevo();
         anchor_valid = 0;
         return;
     }
 
     if (!ensure_anchor_buf()) {
+        runahead_settle_cheevo();
         runahead_fail("core reports no usable serialize size");
         return;
     }
@@ -100,10 +124,15 @@ void runahead_before_frame(const int allow_replay) {
             rumble_bridge_set_suppressed(0);
         } else {
             perf_end(perf_stage_runahead_restore, restore_start);
+            // The core may be anywhere now, so that frame cannot be judged
+            cheevo_pending = 0;
             runahead_fail("retro_unserialize failed");
             return;
         }
     }
+
+    // Achievements see the previous frame only now it is final, which a replay just made it
+    runahead_settle_cheevo();
 
     const uint64_t capture_start = perf_begin();
     if (core_state_capture(&anchor, anchor_size, 0, 0, "run-ahead capture") != 0) {
@@ -117,14 +146,18 @@ void runahead_before_frame(const int allow_replay) {
     anchor_size = anchor.size;
     anchor_valid = 1;
     anchor_sig = sig;
+    cheevo_pending = 1;
 }
 
 void runahead_invalidate(void) {
+    // The core state just changed under the pending frame, so it is no longer worth judging
+    cheevo_pending = 0;
     anchor_valid = 0;
     size_refresh_countdown = 0;
 }
 
 void runahead_shutdown(void) {
+    cheevo_pending = 0;
     core_state_buffer_release(&anchor);
     anchor_size = 0;
     anchor_valid = 0;

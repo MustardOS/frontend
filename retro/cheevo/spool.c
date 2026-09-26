@@ -19,6 +19,7 @@
 #define CHEEVO_SPOOL_AGE        (90 * 24 * 60 * 60)
 #define CHEEVO_SPOOL_SIZE       512
 #define CHEEVO_SPOOL_TRIM_EVERY 16
+#define CHEEVO_SPOOL_REJECT_MAX 5
 
 typedef struct {
     int leaderboard;
@@ -26,6 +27,7 @@ typedef struct {
     int32_t score;
     char hash[33];
     long earned;
+    int rejected;
 } spool_record;
 
 static int spool_name_valid(const char *name) {
@@ -141,8 +143,9 @@ static int record_write(const int directory, const char *name, const spool_recor
     }
 
     int okay = fprintf(
-                   file, "kind=%s\nid=%u\nscore=%d\nhash=%s\nearned=%ld\n", record->leaderboard ? "lbentry" : "award",
-                   record->id, record->score, record->hash, record->earned
+                   file, "kind=%s\nid=%u\nscore=%d\nhash=%s\nearned=%ld\nrejected=%d\n",
+                   record->leaderboard ? "lbentry" : "award", record->id, record->score, record->hash, record->earned,
+                   record->rejected
                ) > 0
                && fflush(file) == 0 && fsync(descriptor) == 0;
 
@@ -197,6 +200,8 @@ static int record_read(const int directory, const char *name, spool_record *reco
             if (strlen(equals) == 32 && hex_value(equals)) snprintf(record->hash, sizeof(record->hash), "%s", equals);
         } else if (strcmp(line, "earned") == 0) {
             record->earned = strtol(equals, NULL, 10);
+        } else if (strcmp(line, "rejected") == 0) {
+            record->rejected = (int) strtol(equals, NULL, 10);
         }
     }
 
@@ -301,6 +306,27 @@ void cheevo_spool_clear(const char *name) {
     unlinkat(directory, name, 0);
     fsync(directory);
     close(directory);
+}
+
+int cheevo_spool_reject(const char *name) {
+    if (!spool_name_valid(name)) return -1;
+
+    const int directory = directory_open(0);
+    if (directory < 0) return -1;
+
+    // Rewriting the record moves it to the back so one refusal cannot hold up the rest
+    spool_record record;
+    int dropped = 0;
+    if (record_read(directory, name, &record) != 0 || ++record.rejected >= CHEEVO_SPOOL_REJECT_MAX) {
+        unlinkat(directory, name, 0);
+        fsync(directory);
+        dropped = 1;
+    } else {
+        record_write(directory, name, &record);
+    }
+
+    close(directory);
+    return dropped;
 }
 
 unsigned cheevo_spool_count(void) {

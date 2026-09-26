@@ -1780,6 +1780,7 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.link.no_address), lang_specific, "Not on a network"},
     {"muxretro", LANG_OFF(muxretro.link.direct_waiting), lang_specific, "Waiting for peer"},
     {"muxretro", LANG_OFF(muxretro.link.pause_menu_open), lang_specific, "The other Game Link player has the pause menu open"},
+    {"muxretro", LANG_OFF(muxretro.link.protocol_error), lang_specific, "The Direct Link connection received invalid data"},
     {"muxretro", LANG_OFF(muxretro.netplay.status), lang_specific, "Status"},
     {"muxretro", LANG_OFF(muxretro.netplay.find_lan), lang_specific, "Find LAN Sessions"},
     {"muxretro", LANG_OFF(muxretro.netplay.join_found), lang_specific, "Join Found Session"},

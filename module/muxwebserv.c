@@ -475,6 +475,16 @@ static void cycle_auth(void) {
     fields_modified = service_changed();
 }
 
+static void cycle_current_toggle(void) {
+    if (selected_service == web_service_none) return;
+
+    if (current_item_index == 0) {
+        cycle_enabled();
+    } else if (auth_row_index >= 0 && current_item_index == auth_row_index) {
+        cycle_auth();
+    }
+}
+
 static void handle_keyboard_ok_press(void) {
     const char *text = lv_textarea_get_text(ui_txt_entry_webserv);
 
@@ -722,7 +732,7 @@ static void handle_left(void) {
         key_left();
         return;
     }
-    if (selected_service != web_service_none && current_item_index == 0) cycle_enabled();
+    cycle_current_toggle();
 }
 
 static void handle_right(void) {
@@ -734,7 +744,7 @@ static void handle_right(void) {
         key_right();
         return;
     }
-    if (selected_service != web_service_none && current_item_index == 0) cycle_enabled();
+    cycle_current_toggle();
 }
 
 static void handle_l1(void) {

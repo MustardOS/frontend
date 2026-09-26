@@ -1898,6 +1898,7 @@ struct mux_lang {
             char no_address[MAX_BUFFER_SIZE];
             char direct_waiting[MAX_BUFFER_SIZE];
             char pause_menu_open[MAX_BUFFER_SIZE];
+            char protocol_error[MAX_BUFFER_SIZE];
         } link;
         struct {
             char status[MAX_BUFFER_SIZE];

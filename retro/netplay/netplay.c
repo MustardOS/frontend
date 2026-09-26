@@ -63,7 +63,9 @@
 #define NETPLAY_MODE_FILE              NETPLAY_SETTINGS_DIR "/play-mode"
 #define NETPLAY_SLOTS_FILE             NETPLAY_SETTINGS_DIR "/client-slots"
 #define NETPLAY_PACKET_CAP             (64U * 1024U)
-#define NETPLAY_PACKET_QUEUE_CAP       32U
+#define NETPLAY_PACKET_QUEUE_CAP       256U
+#define NETPLAY_PACKET_QUEUE_BYTES_CAP (2U * 1024U * 1024U)
+#define NETPLAY_PACKET_SEND_BUDGET     64U
 #define NETPLAY_MENU_PAUSE_LEAD_FRAMES 12U
 #define NETPLAY_INPUT_HISTORY_CAPACITY 256U
 #define NETPLAY_INPUT_SEND_BUDGET      8U
@@ -183,9 +185,11 @@ typedef struct {
     netplay_packet outgoing_packets[NETPLAY_PACKET_QUEUE_CAP];
     unsigned outgoing_head;
     unsigned outgoing_count;
+    size_t outgoing_bytes;
     netplay_packet incoming_packets[NETPLAY_PACKET_QUEUE_CAP];
     unsigned incoming_head;
     unsigned incoming_count;
+    size_t incoming_bytes;
     int sync_state_sent;
     uint8_t *sync_state;
     size_t sync_state_size;
@@ -979,13 +983,16 @@ static int receive_message(netplay_peer *peer) {
         pthread_mutex_unlock(&netplay.mutex);
     } else if (type == netplay_message_netpacket && netplay.netpacket_available && size > 0) {
         pthread_mutex_lock(&netplay.mutex);
-        if (netplay.incoming_count >= NETPLAY_PACKET_QUEUE_CAP) {
+        if (netplay.incoming_count >= NETPLAY_PACKET_QUEUE_CAP
+            || size > NETPLAY_PACKET_QUEUE_BYTES_CAP - netplay.incoming_bytes) {
             netplay.packet_queue_overflows++;
             result = -1;
+            errno = EOVERFLOW;
         } else {
             const unsigned tail = (netplay.incoming_head + netplay.incoming_count) % NETPLAY_PACKET_QUEUE_CAP;
             netplay.incoming_packets[tail] = (netplay_packet) {owned, size};
             netplay.incoming_count++;
+            netplay.incoming_bytes += size;
             owned = NULL;
         }
         pthread_mutex_unlock(&netplay.mutex);
@@ -1120,17 +1127,21 @@ static int peer_send_pending(netplay_peer *peer) {
         netplay.role == netplay_role_host && menu_pause_generation != peer->sent_menu_pause_generation;
     const uint8_t menu_pause = (uint8_t) (netplay.menu_pause_value != 0);
     const uint64_t menu_pause_frame = netplay.menu_pause_frame;
-    netplay_packet outgoing = {0};
-    if (netplay.outgoing_count) {
-        outgoing = netplay.outgoing_packets[netplay.outgoing_head];
-        memset(&netplay.outgoing_packets[netplay.outgoing_head], 0, sizeof(outgoing));
+    netplay_packet outgoing[NETPLAY_PACKET_SEND_BUDGET] = {0};
+    unsigned outgoing_count = 0;
+    while (netplay.outgoing_count && outgoing_count < NETPLAY_PACKET_SEND_BUDGET) {
+        outgoing[outgoing_count] = netplay.outgoing_packets[netplay.outgoing_head];
+        memset(&netplay.outgoing_packets[netplay.outgoing_head], 0, sizeof(netplay.outgoing_packets[0]));
         netplay.outgoing_head = (netplay.outgoing_head + 1) % NETPLAY_PACKET_QUEUE_CAP;
         netplay.outgoing_count--;
+        netplay.outgoing_bytes -= outgoing[outgoing_count].size;
+        outgoing_count++;
     }
     pthread_mutex_unlock(&netplay.mutex);
 
     if (input_history_exhausted) {
-        free(outgoing.data);
+        for (unsigned index = 0; index < outgoing_count; index++)
+            free(outgoing[index].data);
         errno = ENOBUFS;
         return -1;
     }
@@ -1146,16 +1157,22 @@ static int peer_send_pending(netplay_peer *peer) {
         }
         pthread_mutex_unlock(&netplay.mutex);
         if (sent != 0) {
-            free(outgoing.data);
+            for (unsigned index = 0; index < outgoing_count; index++)
+                free(outgoing[index].data);
             return -1;
         }
     }
 
-    if (outgoing.data) {
-        const int sent =
-            send_message(peer, netplay_message_netpacket, current_frame, outgoing.data, (uint32_t) outgoing.size);
-        free(outgoing.data);
-        if (sent != 0) return -1;
+    for (unsigned index = 0; index < outgoing_count; index++) {
+        const int sent = send_message(
+            peer, netplay_message_netpacket, current_frame, outgoing[index].data, (uint32_t) outgoing[index].size
+        );
+        free(outgoing[index].data);
+        if (sent != 0) {
+            for (index++; index < outgoing_count; index++)
+                free(outgoing[index].data);
+            return -1;
+        }
     }
 
     if (ready_sent && !ready_received && netplay.role == netplay_role_client) {
@@ -1230,7 +1247,10 @@ static int peer_send_pending(netplay_peer *peer) {
         if (send_message(peer, netplay_message_ping, current_frame, payload, sizeof(payload)) != 0) return -1;
     }
 
-    return 0;
+    pthread_mutex_lock(&netplay.mutex);
+    const int send_backlog = netplay.outgoing_count != 0;
+    pthread_mutex_unlock(&netplay.mutex);
+    return send_backlog;
 }
 
 static void *peer_thread(void *userdata) {
@@ -1267,10 +1287,12 @@ static void *peer_thread(void *userdata) {
         if (receive_failed) break;
 
         errno = 0;
-        if (peer_send_pending(peer) != 0) {
+        const int send_result = peer_send_pending(peer);
+        if (send_result < 0) {
             transport_error = errno ? errno : EPROTO;
             break;
         }
+        if (send_result > 0) continue;
 
         errno = 0;
         const int readable = peer_read_ready(peer, 4);
@@ -1289,8 +1311,12 @@ static void *peer_thread(void *userdata) {
             set_failure(lang.muxretro.netplay.peer_timed_out);
         else if (transport_error == ENOBUFS)
             set_failure(lang.muxretro.netplay.input_backlog);
+        else if (transport_error == EOVERFLOW)
+            set_failure(lang.muxretro.netplay.packet_queue_failed);
         else if (transport_error == EPROTO)
-            set_failure(lang.muxretro.netplay.protocol_error);
+            set_failure(
+                netplay.pairing_trusted ? lang.muxretro.link.protocol_error : lang.muxretro.netplay.protocol_error
+            );
         else
             set_failure(lang.muxretro.netplay.peer_disconnected);
     }
@@ -1765,8 +1791,11 @@ static int apply_client_state(void) {
 
 static void RETRO_CALLCONV
 netpacket_send(const int flags, const void *data, const size_t size, const uint16_t client_id) {
-    (void) flags;
-    if (!netplay.netpacket_started || !data || !size || size > NETPLAY_PACKET_CAP) return;
+    if (!netplay.netpacket_started || size > NETPLAY_PACKET_CAP) return;
+    if (!data || !size) {
+        if (flags & RETRO_NETPACKET_FLUSH_HINT) wake_peers();
+        return;
+    }
     const uint16_t peer_id = netplay.role == netplay_role_host ? 1U : 0U;
     if (client_id != RETRO_NETPACKET_BROADCAST && client_id != peer_id) return;
 
@@ -1778,17 +1807,21 @@ netpacket_send(const int flags, const void *data, const size_t size, const uint1
     memcpy(copy, data, size);
 
     pthread_mutex_lock(&netplay.mutex);
-    if (netplay.outgoing_count >= NETPLAY_PACKET_QUEUE_CAP) {
+    if (netplay.outgoing_count >= NETPLAY_PACKET_QUEUE_CAP
+        || size > NETPLAY_PACKET_QUEUE_BYTES_CAP - netplay.outgoing_bytes) {
         netplay.packet_queue_overflows++;
         pthread_mutex_unlock(&netplay.mutex);
         free(copy);
         set_failure(lang.muxretro.netplay.packet_queue_failed);
         return;
     }
+    const int wake = flags & RETRO_NETPACKET_FLUSH_HINT;
     const unsigned tail = (netplay.outgoing_head + netplay.outgoing_count) % NETPLAY_PACKET_QUEUE_CAP;
     netplay.outgoing_packets[tail] = (netplay_packet) {copy, size};
     netplay.outgoing_count++;
+    netplay.outgoing_bytes += size;
     pthread_mutex_unlock(&netplay.mutex);
+    if (wake) wake_peers();
 }
 
 static void netpacket_receive_drain(void) {
@@ -1803,6 +1836,7 @@ static void netpacket_receive_drain(void) {
         memset(&netplay.incoming_packets[netplay.incoming_head], 0, sizeof(packet));
         netplay.incoming_head = (netplay.incoming_head + 1) % NETPLAY_PACKET_QUEUE_CAP;
         netplay.incoming_count--;
+        netplay.incoming_bytes -= packet.size;
         pthread_mutex_unlock(&netplay.mutex);
 
         netplay.netpacket.receive(packet.data, packet.size, netplay.role == netplay_role_host ? 1U : 0U);
@@ -2120,8 +2154,10 @@ void netplay_disconnect(void) {
     netplay.failure_announced = 0;
     netplay.outgoing_head = 0;
     netplay.outgoing_count = 0;
+    netplay.outgoing_bytes = 0;
     netplay.incoming_head = 0;
     netplay.incoming_count = 0;
+    netplay.incoming_bytes = 0;
     netplay.digest_state = NULL;
     netplay.digest_state_capacity = 0;
     netplay.digest_hash_state = NULL;

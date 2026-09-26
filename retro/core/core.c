@@ -7,6 +7,7 @@
 #include <common/storage/fileio.h>
 #include <common/base/function_pointer.h>
 #include <common/runtime/init.h>
+#include <common/platform/device.h>
 #include <common/display/language.h>
 #include <libarchive/archive.h>
 #include <libarchive/archive_entry.h>
@@ -20,6 +21,7 @@
 #include "../input/core_input_meta.h"
 #include "../state/patch.h"
 #include "../state/vfs.h"
+#include "../cheevo/cheevo.h"
 #include "../video/hw_render.h"
 
 struct core_cbs current_core = {0};
@@ -650,6 +652,12 @@ int core_load_content(const char *content_path) {
     }
 
     const int ok = current_core.retro_load_game(&game_info);
+
+    // Achievements identify what is actually running, and a patched ROM only exists in memory
+    if (ok && has_patch && heap_data && device.board.has_network) {
+        cheevo_set_content_data(heap_data, heap_size);
+        heap_data = NULL;
+    }
     free(heap_data);
 
     if (!ok) {

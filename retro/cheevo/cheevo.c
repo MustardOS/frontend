@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -25,7 +26,6 @@
 #include "../core/runahead.h"
 #include "../ui/ui_loading.h"
 #include "../ui/cheats.h"
-#include "../state/patch.h"
 #include "../core/muxretro.h"
 #include "../video/hw_render.h"
 #include "../video/image_writer.h"
@@ -124,6 +124,8 @@ static unsigned memory_descriptor_count;
 static cheevo_http http_worker;
 static cheevo_status status = cheevo_status_disabled;
 static char content_file[PATH_MAX];
+static uint8_t *content_data;
+static size_t content_data_size;
 static char username[128];
 static char token[256];
 static char failure[256];
@@ -295,6 +297,12 @@ static int response_success(const char *body, const size_t body_size) {
     char error[64] = "";
     json_string_copy(json_object_get(root, "Error"), error, sizeof(error));
     return strncmp(error, "User already has", sizeof("User already has") - 1) == 0;
+}
+
+static void response_error(const char *body, const size_t body_size, char *error, const size_t error_size) {
+    error[0] = '\0';
+    if (!body || !body_size || !json_validn(body, body_size)) return;
+    json_string_copy(json_object_get(json_parsen(body, body_size), "Error"), error, error_size);
 }
 
 static size_t http_write(void *data, const size_t size, const size_t count, void *userdata) {
@@ -632,6 +640,12 @@ static int transient_response_failure(const cheevo_http_completion *completion) 
     return completion->status == 408 || completion->status == 429 || completion->status >= 500;
 }
 
+// A real answer that turned the submission down, sign in failures excluded as signing in again fixes those
+static int server_refused(const cheevo_http_completion *completion, const int api_success) {
+    if (api_success || completion->cache_hit || transient_response_failure(completion)) return 0;
+    return completion->status != 401 && completion->status != 403;
+}
+
 static int http_drain_limited(const unsigned budget) {
     int drained = 0;
     unsigned taken = 0;
@@ -686,6 +700,16 @@ static int http_drain_limited(const unsigned budget) {
             cheevo_spool_clear(completion.spool_name);
             spool_pending_valid = 0;
             spool_retry_count = 0;
+        } else if (completion.spool_name[0] && server_refused(&completion, api_success)) {
+            // The service answered and refused it, which retrying straight away will not change
+            char error[128];
+            response_error(completion.body, completion.body_size, error, sizeof(error));
+            const int dropped = cheevo_spool_reject(completion.spool_name) == 1;
+            spool_pending_valid = 0;
+            LOG_WARN(
+                mux_module, "cheevo: RetroAchievements refused a submission (%s)%s",
+                error[0] ? error : "no reason given", dropped ? ", giving up on it" : ", trying the others first"
+            );
         } else if (completion.spool_name[0] && spool_retry_count < 3) {
             spool_retry_count++;
         }
@@ -700,7 +724,7 @@ static int http_drain_limited(const unsigned budget) {
             if (api_success)
                 LOG_SUCCESS(mux_module, "cheevo: a held submission was accepted");
             else
-                LOG_WARN(mux_module, "cheevo: a held submission was not accepted and remains queued");
+                LOG_WARN(mux_module, "cheevo: a held submission was not accepted");
         }
 
         completion_free(&completion);
@@ -732,9 +756,10 @@ static void http_stop(void) {
     pthread_cond_destroy(&http_worker.wake);
 }
 
+// Only warnings and errors arrive here, such as achievements disabled for unreadable memory
 static void log_message(const char *message, const rc_client_t *unused) {
     (void) unused;
-    LOG_DEBUG(mux_module, "cheevo: %s", message);
+    LOG_WARN(mux_module, "cheevo: %s", message);
 }
 
 static void memory_log_message(const char *message) {
@@ -840,9 +865,9 @@ static void game_loaded(const int result, const char *error, rc_client_t *unused
     const rc_client_game_t *game = rc_client_get_game_info(client);
     rc_client_get_user_game_summary(client, &summary);
     LOG_SUCCESS(
-        mux_module, "cheevo: active for %s (%u of %u achievements already unlocked)",
+        mux_module, "cheevo: active for %s (%u of %u achievements already unlocked, %u unsupported)",
         game && game->title ? game->title : "unknown content", summary.num_unlocked_achievements,
-        summary.num_core_achievements
+        summary.num_core_achievements, summary.num_unsupported_achievements
     );
 
     if (pending_progress) {
@@ -863,6 +888,13 @@ static int core_memory_ready(void) {
     return current_core.retro_get_memory_data && current_core.retro_get_memory_data(RETRO_MEMORY_SYSTEM_RAM) != NULL;
 }
 
+// Playlists and cue sheets name other files, so those are always hashed from disk
+static int content_data_usable(void) {
+    const char *extension = strrchr(content_file, '.');
+    if (!content_data || !extension) return content_data != NULL;
+    return strcasecmp(extension, ".m3u") != 0 && strcasecmp(extension, ".cue") != 0;
+}
+
 static void begin_game_now(void) {
     has_entries_cache = -1;
     leaderboard_reset();
@@ -871,7 +903,10 @@ static void begin_game_now(void) {
     memory_initialisation_deferred = 0;
     memory_wait_frames = 0;
     status = cheevo_status_identifying;
-    rc_client_begin_identify_and_load_game(client, RC_CONSOLE_UNKNOWN, content_file, NULL, 0, game_loaded, NULL);
+    rc_client_begin_identify_and_load_game(
+        client, RC_CONSOLE_UNKNOWN, content_file, content_data_usable() ? content_data : NULL,
+        content_data_usable() ? content_data_size : 0, game_loaded, NULL
+    );
 }
 
 static void begin_game(void) {
@@ -1190,6 +1225,13 @@ static void runtime_stop(void) {
     reset_pending = 0;
 }
 
+// Takes ownership of the patched content so the hash matches what the core is running
+void cheevo_set_content_data(void *data, const size_t size) {
+    free(content_data);
+    content_data = data;
+    content_data_size = data ? size : 0;
+}
+
 int cheevo_init(const char *content_path) {
     account_load();
     network_ok = 1;
@@ -1202,7 +1244,10 @@ int cheevo_init(const char *content_path) {
     failure[0] = '\0';
     snprintf(content_file, sizeof(content_file), "%s", content_path ? content_path : "");
     status = enabled ? cheevo_status_signed_out : cheevo_status_disabled;
-    if (!enabled) return 0;
+    if (!enabled) {
+        cheevo_set_content_data(NULL, 0);
+        return 0;
+    }
     if (runtime_start() != 0) return -1;
 
     if (enabled && username[0] && token[0]) {
@@ -1224,6 +1269,9 @@ void cheevo_shutdown(void) {
     free(pending_progress);
     pending_progress = NULL;
     pending_progress_size = 0;
+    free(content_data);
+    content_data = NULL;
+    content_data_size = 0;
     preview_game_id = 0;
     preview_achievement_count = 0;
     free(achievement_display_ids);
@@ -1348,6 +1396,8 @@ void cheevo_tick(void) {
         hw_render_bridge_enter_core_call();
         if (current_core.retro_reset) current_core.retro_reset();
         hw_render_bridge_exit_core_call();
+        // Some cores reallocate their memory on reset, so the old pointers cannot be trusted
+        cheevo_refresh_memory();
         video_bridge_reset_temporal();
         audio_bridge_clear_queued();
         runahead_invalidate();
@@ -1386,8 +1436,16 @@ void cheevo_do_frame(void) {
     memory_wait_tick();
     recovery_tick();
 
-    if ((status == cheevo_status_active || status == cheevo_status_offline) && rc_client_is_game_loaded(client))
-        rc_client_do_frame(client);
+    if ((status != cheevo_status_active && status != cheevo_status_offline) || !rc_client_is_game_loaded(client))
+        return;
+
+    // Reading unmapped memory disables achievements for good, so wait it out like RetroArch does
+    if (!memory_available && !memory_init(client)) {
+        rc_client_idle(client);
+        return;
+    }
+
+    rc_client_do_frame(client);
 }
 
 int cheevo_needs_frame(void) {
@@ -1731,13 +1789,20 @@ int cheevo_refresh_data(void) {
     return 0;
 }
 
+// Progress restored before the game finished loading is still owed to it, so keep it in new states
 size_t cheevo_progress_size(void) {
-    if (!client || !rc_client_is_game_loaded(client)) return 0;
+    if (!client) return 0;
+    if (!rc_client_is_game_loaded(client)) return pending_progress_size;
     return rc_client_progress_size(client);
 }
 
 int cheevo_progress_save(void *data, const size_t size) {
     if (!client || !data) return -1;
+    if (!rc_client_is_game_loaded(client)) {
+        if (!pending_progress || size < pending_progress_size) return -1;
+        memcpy(data, pending_progress, pending_progress_size);
+        return 0;
+    }
     return rc_client_serialize_progress_sized(client, data, size) == RC_OK ? 0 : -1;
 }
 

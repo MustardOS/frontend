@@ -284,7 +284,11 @@ static unsigned run_core_batch(const unsigned frames) {
         const int network_frame = network_active && netplay_is_playing();
         if (network_frame && !netplay_before_frame()) break;
         environment_notify_frame_time();
-        if (is_last && !network_active) runahead_before_frame(frames == 1);
+        if (is_last && !network_active) {
+            runahead_before_frame(frames == 1);
+        } else {
+            runahead_settle_cheevo();
+        }
 
         const uint64_t run_start = SDL_GetPerformanceCounter();
         current_core.retro_run();
@@ -292,7 +296,7 @@ static unsigned run_core_batch(const unsigned frames) {
             (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
         ran++;
 
-        if (cheevo_needs_frame()) {
+        if (cheevo_needs_frame() && !runahead_cheevo_deferred()) {
             const uint64_t cheevo_frame_start = perf_begin();
             cheevo_do_frame();
             perf_end(perf_stage_cheevo_frame, cheevo_frame_start);
@@ -482,6 +486,7 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames, 
 
 void core_prime_audio(void) {
     if (!audio_bridge_is_active()) return;
+    runahead_settle_cheevo();
     runahead_invalidate();
 
     const unsigned max_frames = AUDIO_MAX_CATCHUP * 8;
@@ -494,6 +499,10 @@ void core_prime_audio(void) {
         input_bridge_begin_run();
         audio_bridge_notify_buffer_status();
         current_core.retro_run();
+
+        // These are real gameplay frames, so achievements have to see them too
+        if (cheevo_needs_frame()) cheevo_do_frame();
+
         audio_bridge_flush_sample_fifo();
         primed++;
     }
@@ -983,6 +992,7 @@ int main(const int argc, char *argv[]) {
             control_start = 0;
             SDL_Delay(10);
         } else if (hotkeys_is_content_paused()) {
+            if (!netplay_is_playing()) cheevo_idle();
             perf_end(perf_stage_control, control_start);
             control_start = 0;
             SDL_Delay(10);

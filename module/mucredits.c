@@ -13,6 +13,7 @@
 #define MEDIA_DIR SHARE_DIR "media/credits"
 #define RMSG_FILE SHARE_DIR "message.txt"
 #define FONT_FILE SHARE_DIR "font/mucredits.ttf"
+#define FACTORY_COMPLETE_FILE "/tmp/mustardos/mucredits.complete"
 
 #define REF_H 480
 
@@ -1282,6 +1283,8 @@ static void quit_credits(void) {
 
     g_quit_requested = 1;
     g_quit_fade = 0.0f;
+
+    if (config.boot.factory_reset) write_text_to_file(FACTORY_COMPLETE_FILE, "w", CHAR, "1");
 
     if (g_music && Mix_PlayingMusic()) Mix_FadeOutMusic((int) (QUIT_FADE_S * 1000.0f));
 }
