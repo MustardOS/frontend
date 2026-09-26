@@ -2862,6 +2862,7 @@ struct mux_lang {
         char bright[MAX_BUFFER_SIZE];
         char backend[MAX_BUFFER_SIZE];
         char zone_l[MAX_BUFFER_SIZE];
+        char zone_sticks[MAX_BUFFER_SIZE];
         char zone_l_arc1[MAX_BUFFER_SIZE];
         char zone_l_arc2[MAX_BUFFER_SIZE];
         char zone_r[MAX_BUFFER_SIZE];

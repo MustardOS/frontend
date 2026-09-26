@@ -2658,6 +2658,7 @@ static const lang_field lang_fields[] = {
     {"muxrgb", LANG_OFF(muxrgb.bright), lang_specific, "Brightness"},
     {"muxrgb", LANG_OFF(muxrgb.backend), lang_specific, "Backend"},
     {"muxrgb", LANG_OFF(muxrgb.zone_l), lang_specific, "Left Stick"},
+    {"muxrgb", LANG_OFF(muxrgb.zone_sticks), lang_specific, "Stick Lights"},
     {"muxrgb", LANG_OFF(muxrgb.zone_l_arc1), lang_specific, "Left Stick (Arc Left)"},
     {"muxrgb", LANG_OFF(muxrgb.zone_l_arc2), lang_specific, "Left Stick (Arc Right)"},
     {"muxrgb", LANG_OFF(muxrgb.zone_r), lang_specific, "Right Stick"},

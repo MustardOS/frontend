@@ -34,11 +34,13 @@ static void resolve_current_zone(void) {
 
     const char *board = device.board.name;
     const int dual_right = board && strcmp(board, "tui-brick-pro") == 0;
+    const int shared_sticks = board && strcmp(board, "rg-vita-pro") == 0;
 
     if (strcmp(code, "l") == 0) {
         current_zone = (rgb_zone_field_t) {
             "l",
-            dual_right ? lang.muxrgb.zone_l_arc1 : lang.muxrgb.zone_l,
+            shared_sticks ? lang.muxrgb.zone_sticks
+                          : dual_right ? lang.muxrgb.zone_l_arc1 : lang.muxrgb.zone_l,
             &config.settings.rgb.colour_l,
             &config.settings.rgb.bright_l,
             "settings/rgb/colour_l",

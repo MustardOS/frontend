@@ -168,7 +168,7 @@ static backend_t detect_backend(const backend_t requested) {
 
     const backend_t from_device = detect_device_backend();
 
-    if (from_device == be_joypad && dir_exists(JOY_SYS)) return be_joypad;
+    if (from_device == be_joypad && dir_exists(JOY_SYS) && joypad_writable()) return be_joypad;
     if (from_device == be_sysfs && dir_exists(LED_SYS)) return be_sysfs;
     if (from_device == be_serial && char_dev_exists(SER_DEV)) return be_serial;
 
@@ -907,6 +907,10 @@ static int apply_joypad(const int mode, const int brightness, const int argc, ch
     joypad_write_int("led_switch", 1);
     joypad_write_int("led_level", level);
     joypad_write_int("led_sync_colour", 0);
+
+    joypad_write_int("custum_rgb_r", lr);
+    joypad_write_int("custum_rgb_g", lg);
+    joypad_write_int("custum_rgb_b", lb);
 
     joypad_write_int("Led_rgb_r1", lr);
     joypad_write_int("Led_rgb_g1", lg);

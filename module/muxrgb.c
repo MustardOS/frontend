@@ -125,6 +125,7 @@ static int zone_visible(const zone_entry_t *z) {
 
 static void build_zone_table(void) {
     const int dual_right = rgb_caps && rgb_caps->zones & RGB_ZONE_RS1;
+    const int shared_sticks = strcmp(device.board.name, "rg-vita-pro") == 0;
 
     zones[zone_l] = (zone_entry_t) {
         .cap_bit = RGB_ZONE_L,
@@ -132,7 +133,8 @@ static void build_zone_table(void) {
         .zone_pnl = ui_pnl_zone_l_rgb,
         .zone_lbl = ui_lbl_zone_l_rgb,
         .zone_ico = ui_ico_zone_l_rgb,
-        .label = dual_right ? lang.muxrgb.zone_l_arc1 : lang.muxrgb.zone_l,
+        .label = shared_sticks ? lang.muxrgb.zone_sticks
+                               : dual_right ? lang.muxrgb.zone_l_arc1 : lang.muxrgb.zone_l,
     };
 
     zones[zone_r] = (zone_entry_t) {
