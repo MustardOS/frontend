@@ -76,8 +76,6 @@ typedef struct {
     int wait;
     int verbose;
     int clear;
-    int direct;
-
     gradient_t gradient;
 
     int recolour_enabled;
@@ -190,7 +188,6 @@ static void print_usage(const char *name) {
         "  -c, --clear                 Clear the framebuffer to black and exit\n"
         "  -n, --notify <path>         Create a file after the frame is presented\n"
         "  -l, --log <path>            Append what was drawn, and where, to a file\n"
-        "      --direct                Write through the mapped framebuffer\n"
         "  -w, --wait                  Keep running until killed\n"
         "  -v, --verbose               Enable log output\n"
         "  -h, --help                  Show this help\n\n"
@@ -364,8 +361,6 @@ static int parse_args(const int argc, char *argv[], options_t *opts) {
     opts->wait = 0;
     opts->verbose = 0;
     opts->clear = 0;
-    opts->direct = 0;
-
     memset(&opts->gradient, 0, sizeof(opts->gradient));
 
     opts->recolour_enabled = 0;
@@ -405,11 +400,6 @@ static int parse_args(const int argc, char *argv[], options_t *opts) {
 
         if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--clear") == 0) {
             opts->clear = 1;
-            continue;
-        }
-
-        if (strcmp(argv[i], "--direct") == 0) {
-            opts->direct = 1;
             continue;
         }
 
@@ -676,7 +666,7 @@ static void mirror_pages(const fb_t *fb) {
     }
 }
 
-static int open_fb(const char *path, fb_t *fb, const int direct) {
+static int open_fb(const char *path, fb_t *fb) {
     memset(fb, 0, sizeof(*fb));
     fb->fd = -1;
 
@@ -720,7 +710,7 @@ static int open_fb(const char *path, fb_t *fb, const int direct) {
         return -1;
     }
 
-    fb->buffered = !direct && strncmp(fb->fix.id, "rockchip", 8) == 0;
+    fb->buffered = strncmp(fb->fix.id, "rockchip", 8) == 0;
     if (fb->buffered) {
         fb->mem = calloc(1, fb->mem_size);
         if (!fb->mem) {
@@ -1405,7 +1395,7 @@ static int run_clear(const options_t *opts) {
 
     log_fmt(opts, "Opening framebuffer: %s\n", opts->fb_path);
 
-    if (open_fb(opts->fb_path, &fb, opts->direct) != 0) {
+    if (open_fb(opts->fb_path, &fb) != 0) {
         log_fmt(opts, "Failed to open framebuffer: %s\n", opts->fb_path);
 
         return 1;
@@ -1455,7 +1445,7 @@ static int run_draw(const options_t *opts) {
 
     log_fmt(opts, "Opening framebuffer: %s\n", opts->fb_path);
 
-    if (open_fb(opts->fb_path, &fb, opts->direct) != 0) {
+    if (open_fb(opts->fb_path, &fb) != 0) {
         log_fmt(opts, "Failed to open framebuffer: %s\n", opts->fb_path);
         trace("failed to open %s", opts->fb_path);
         trace_close();
@@ -1551,8 +1541,6 @@ static int run_draw(const options_t *opts) {
                 settle_next++;
                 redraw = 1;
             }
-
-            if (opts->direct && tick % 5 == 0) redraw = 1;
 
             if (!redraw) continue;
 
