@@ -20,6 +20,7 @@ typedef enum {
 typedef struct {
     lv_obj_t *panel;
     lv_obj_t *label;
+    lv_obj_t *glyph;
     lv_obj_t *value;
 } MenuRow;
 
@@ -99,11 +100,13 @@ static void refresh_focus(void) {
     for (int i = 0; i < ITEM_COUNT; i++) {
         lv_obj_clear_state(rows[i].panel, LV_STATE_FOCUSED);
         lv_obj_clear_state(rows[i].label, LV_STATE_FOCUSED);
+        lv_obj_clear_state(rows[i].glyph, LV_STATE_FOCUSED);
         lv_obj_clear_state(rows[i].value, LV_STATE_FOCUSED);
     }
 
     lv_obj_add_state(rows[selected].panel, LV_STATE_FOCUSED);
     lv_obj_add_state(rows[selected].label, LV_STATE_FOCUSED);
+    lv_obj_add_state(rows[selected].glyph, LV_STATE_FOCUSED);
     lv_obj_add_state(rows[selected].value, LV_STATE_FOCUSED);
     lv_obj_scroll_to_view(rows[selected].panel, LV_ANIM_OFF);
 
@@ -112,13 +115,16 @@ static void refresh_focus(void) {
     nav_show_a(!adjustable, lang.generic.select);
 }
 
-static void create_row(const int index, const char *label, const int has_value) {
+static void create_row(const int index, const char *label, const char *glyph, const int has_value) {
     rows[index].panel = lv_obj_create(ui_pnl_content);
     lv_obj_set_width(rows[index].panel, theme.misc.content.width);
     apply_theme_list_panel(rows[index].panel);
 
     rows[index].label = lv_label_create(rows[index].panel);
     apply_theme_option_item_label(&theme, rows[index].label, label, has_value);
+
+    rows[index].glyph = lv_img_create(rows[index].panel);
+    apply_theme_list_glyph(&theme, rows[index].glyph, mux_module, glyph);
 
     rows[index].value = lv_label_create(rows[index].panel);
     apply_theme_list_value(&theme, rows[index].value, "");
@@ -156,12 +162,12 @@ void menu_init(MuxtermConfig *cfg) {
     lv_obj_add_flag(dim, LV_OBJ_FLAG_HIDDEN);
     lv_obj_move_background(dim);
 
-    create_row(ITEM_TERM_FONT_SIZE, lang.muxterm.terminal_font_size, 1);
-    create_row(ITEM_FONT_HINTING, lang.muxterm.font_hinting, 1);
-    create_row(ITEM_FG_COLOUR, lang.muxterm.foreground_colour, 1);
-    create_row(ITEM_BG_COLOUR, lang.muxterm.background_colour, 1);
-    create_row(ITEM_RESET_TERMINAL, lang.muxterm.reset_terminal, 0);
-    create_row(ITEM_QUIT, lang.muxterm.quit, 0);
+    create_row(ITEM_TERM_FONT_SIZE, lang.muxterm.terminal_font_size, "fontsize", 1);
+    create_row(ITEM_FONT_HINTING, lang.muxterm.font_hinting, "fonthinting", 1);
+    create_row(ITEM_FG_COLOUR, lang.muxterm.foreground_colour, "foreground", 1);
+    create_row(ITEM_BG_COLOUR, lang.muxterm.background_colour, "background", 1);
+    create_row(ITEM_RESET_TERMINAL, lang.muxterm.reset_terminal, "reset", 0);
+    create_row(ITEM_QUIT, lang.muxterm.quit, "quit", 0);
 
     refresh_values();
     refresh_focus();
