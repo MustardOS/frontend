@@ -124,6 +124,9 @@ static void cleanup_all(void) {
     timer_destroy_all();
     cleanup_screen();
     fade_reset();
+
+    if (preserve_exit_frame) display_mirror_to_fb();
+
     sdl_cleanup();
 }
 

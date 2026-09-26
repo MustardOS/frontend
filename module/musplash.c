@@ -666,20 +666,27 @@ static void mirror_pages(const fb_t *fb) {
     }
 }
 
+static char fb_error[128];
+
 static int open_fb(const char *path, fb_t *fb) {
     memset(fb, 0, sizeof(*fb));
     fb->fd = -1;
 
     fb->fd = open(path, O_RDWR);
-    if (fb->fd < 0) return -1;
+    if (fb->fd < 0) {
+        snprintf(fb_error, sizeof(fb_error), "open: %s", strerror(errno));
+        return -1;
+    }
 
     if (ioctl(fb->fd, FBIOGET_FSCREENINFO, &fb->fix) < 0) {
+        snprintf(fb_error, sizeof(fb_error), "%s: %s", "FBIOGET_FSCREENINFO", strerror(errno));
         close(fb->fd);
         fb->fd = -1;
         return -1;
     }
 
     if (ioctl(fb->fd, FBIOGET_VSCREENINFO, &fb->var) < 0) {
+        snprintf(fb_error, sizeof(fb_error), "%s: %s", "FBIOGET_VSCREENINFO", strerror(errno));
         close(fb->fd);
         fb->fd = -1;
         return -1;
@@ -692,6 +699,7 @@ static int open_fb(const char *path, fb_t *fb) {
     fb->mem_size = fb->fix.smem_len;
 
     if (fb->bpp != 16 && fb->bpp != 24 && fb->bpp != 32) {
+        snprintf(fb_error, sizeof(fb_error), "unsupported depth of %d bpp", fb->bpp);
         close(fb->fd);
         fb->fd = -1;
         return -1;
@@ -705,6 +713,10 @@ static int open_fb(const char *path, fb_t *fb) {
         (size_t) fb->var.yoffset * (size_t) fb->stride + (size_t) fb->var.xoffset * (size_t) fb->bytes_per_pixel;
     const size_t visible_size = (size_t) fb->stride * (size_t) fb->height;
     if (visible_offset >= fb->mem_size || visible_size > fb->mem_size - visible_offset) {
+        snprintf(
+            fb_error, sizeof(fb_error), "visible page %zu+%zu outside %zu bytes", visible_offset, visible_size,
+            fb->mem_size
+        );
         close(fb->fd);
         fb->fd = -1;
         return -1;
@@ -714,6 +726,7 @@ static int open_fb(const char *path, fb_t *fb) {
     if (fb->buffered) {
         fb->mem = calloc(1, fb->mem_size);
         if (!fb->mem) {
+            snprintf(fb_error, sizeof(fb_error), "no memory for %zu bytes", fb->mem_size);
             close(fb->fd);
             fb->fd = -1;
             return -1;
@@ -732,6 +745,7 @@ static int open_fb(const char *path, fb_t *fb) {
     } else {
         fb->mem = mmap(NULL, fb->mem_size, PROT_READ | PROT_WRITE, MAP_SHARED, fb->fd, 0);
         if (fb->mem == MAP_FAILED) {
+            snprintf(fb_error, sizeof(fb_error), "mmap: %s", strerror(errno));
             close(fb->fd);
             fb->fd = -1;
             return -1;
@@ -1447,7 +1461,7 @@ static int run_draw(const options_t *opts) {
 
     if (open_fb(opts->fb_path, &fb) != 0) {
         log_fmt(opts, "Failed to open framebuffer: %s\n", opts->fb_path);
-        trace("failed to open %s", opts->fb_path);
+        trace("failed to open %s: %s", opts->fb_path, fb_error[0] ? fb_error : "unknown");
         trace_close();
         free_image(&img);
 

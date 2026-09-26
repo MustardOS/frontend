@@ -1,6 +1,10 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <linux/fb.h>
+#include <sys/ioctl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <lvgl/src/draw/sdl/lv_draw_sdl.h>
@@ -1253,6 +1257,65 @@ int display_capture_clean_pixels(uint8_t *rgb, const int width, const int height
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 
     return ret == 0 ? 0 : -1;
+}
+
+int display_mirror_to_fb(void) {
+    if (!monitor.renderer || !monitor.texture) return -1;
+
+    const int width = device.screen.width;
+    const int height = device.screen.height;
+    if (width <= 0 || height <= 0) return -1;
+
+    const int fd = open("/dev/fb0", O_RDWR | O_CLOEXEC);
+    if (fd < 0) return -1;
+
+    struct fb_var_screeninfo var;
+    struct fb_fix_screeninfo fix;
+    if (ioctl(fd, FBIOGET_VSCREENINFO, &var) < 0 || ioctl(fd, FBIOGET_FSCREENINFO, &fix) < 0) {
+        close(fd);
+        return -1;
+    }
+
+    if ((int) var.xres != width || (int) var.yres != height || var.bits_per_pixel != 32
+        || fix.line_length < (uint32_t) width * 4) {
+        LOG_INFO(
+            "video", "Exit frame not mirrored, framebuffer is %ux%u at %u bpp", var.xres, var.yres, var.bits_per_pixel
+        );
+        close(fd);
+        return -1;
+    }
+
+    uint32_t *pixels = malloc((size_t) width * (size_t) height * 4);
+    if (!pixels) {
+        close(fd);
+        return -1;
+    }
+
+    int ret = -1;
+    if (capture_target()
+        && SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_ARGB8888, pixels, width * 4) == 0) {
+        ret = 0;
+
+        for (int y = 0; y < height && ret == 0; y++) {
+            uint32_t *row = pixels + (size_t) y * (size_t) width;
+
+            for (int x = 0; x < width; x++) {
+                const uint32_t p = row[x];
+                row[x] = (((p >> 16) & 0xFF) << var.red.offset) | (((p >> 8) & 0xFF) << var.green.offset)
+                         | ((p & 0xFF) << var.blue.offset) | (var.transp.length ? 0xFFu << var.transp.offset : 0);
+            }
+
+            const off_t offset = (off_t) (var.yoffset + (uint32_t) y) * fix.line_length + (off_t) var.xoffset * 4;
+            if (pwrite(fd, row, (size_t) width * 4, offset) != (ssize_t) width * 4) ret = -1;
+        }
+    }
+
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+    free(pixels);
+    close(fd);
+
+    LOG_INFO("video", "Exit frame %s the framebuffer", ret == 0 ? "mirrored to" : "could not be mirrored to");
+    return ret;
 }
 
 void display_check_idle_saver(void) {
