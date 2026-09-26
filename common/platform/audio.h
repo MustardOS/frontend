@@ -63,6 +63,12 @@ int audio_sink_active_index(void);
 
 char *audio_sink_name(int sink_index);
 
+int audio_headphones_active(void);
+
+int audio_sink_is_builtin(const char *name);
+
+int audio_sink_on_headphones(const char *name);
+
 int audio_sink_volume_load(int sink_index, int fallback);
 
 void audio_sink_volume_store(int sink_index, int value);

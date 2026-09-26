@@ -3380,6 +3380,8 @@ struct mux_lang {
         char hkdpad[MAX_BUFFER_SIZE];
         char hkshot[MAX_BUFFER_SIZE];
         char audiosink[MAX_BUFFER_SIZE];
+        char headphones[MAX_BUFFER_SIZE];
+        char speakers[MAX_BUFFER_SIZE];
         char soundfont[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];

@@ -3139,6 +3139,8 @@ static const lang_field lang_fields[] = {
     {"muxtweakgen", LANG_OFF(muxtweakgen.hkdpad), lang_specific, "DPAD Swap Hotkey"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.hkshot), lang_specific, "Screenshot Hotkey"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.audiosink), lang_specific, "Audio Output"},
+    {"muxtweakgen", LANG_OFF(muxtweakgen.headphones), lang_specific, "Headphones"},
+    {"muxtweakgen", LANG_OFF(muxtweakgen.speakers), lang_specific, "Device Speakers"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.soundfont), lang_specific, "Soundfont"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.startup.title), lang_specific, "Device Startup"},
     {"muxtweakgen", LANG_OFF(muxtweakgen.startup.menu), lang_specific, "Main Menu"},

@@ -43,6 +43,7 @@ static int audio_sink_refresh_ticks = 0;
 static long audio_sink_stamp = 0;
 static char audio_sink_name_last[MAX_BUFFER_SIZE] = {0};
 static char audio_sink_name_seen[MAX_BUFFER_SIZE] = {0};
+static int audio_headphones_seen = 0;
 
 static void list_nav_move(int steps, int direction);
 
@@ -121,6 +122,20 @@ static void show_audio_sink_row(void) {
     check_focus();
 }
 
+static void label_headphone_sinks(void) {
+    audio_headphones_seen = audio_headphones_active();
+
+    for (int i = 0; i < audio_sink_count; i++) {
+        if (!audio_sink_is_builtin(audio_sinks[i])) continue;
+
+        char *swapped = strdup(audio_headphones_seen ? lang.muxtweakgen.headphones : lang.muxtweakgen.speakers);
+        if (!swapped) continue;
+
+        free(audio_sinks[i]);
+        audio_sinks[i] = swapped;
+    }
+}
+
 static void reload_audio_sinks(void) {
     if (audio_sinks) {
         for (int i = 0; i < audio_sink_count; i++)
@@ -134,6 +149,7 @@ static void reload_audio_sinks(void) {
     audio_sinks = str_parse_file(AUDIO_SINK_LIST, &audio_sink_count, parse_lines);
     if (audio_sink_count <= 0) return;
 
+    label_headphone_sinks();
     add_drop_down_options(ui_dro_audio_sink_tweakgen, audio_sinks, audio_sink_count);
 
     const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", 0);
@@ -157,6 +173,16 @@ static void tweakgen_refresh_task(lv_timer_t *timer) {
         audio_sink_stamp = stamp;
         reload_audio_sinks();
         rebuilt = 1;
+    }
+
+    if (!rebuilt && audio_headphones_active() != audio_headphones_seen) {
+        reload_audio_sinks();
+
+        const int headphone_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
+        if (headphone_sink >= 0 && headphone_sink < audio_sink_count) restore_sink_volume(headphone_sink, 0);
+
+        audio_sink_original = lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen);
+        return;
     }
 
     if (!rebuilt && lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen) != audio_sink_original) return;
@@ -398,6 +424,7 @@ static void init_navigation_group(void) {
     const char *sink_args[] = {OPT_PATH "script/mux/audio_sink.sh", "list", NULL};
     run_exec(sink_args, A_SIZE(sink_args), 0, 1, NULL, NULL);
     audio_sinks = str_parse_file("/run/muos/audio_sinks", &audio_sink_count, parse_lines);
+    label_headphone_sinks();
 
     INIT_OPTION_ITEM(-1, tweakgen, brightness, lang.muxtweakgen.brightness, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, volume, lang.muxtweakgen.volume, "volume", NULL, 0);

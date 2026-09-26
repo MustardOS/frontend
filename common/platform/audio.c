@@ -306,10 +306,37 @@ char *audio_sink_name(const int sink_index) {
     return name;
 }
 
+#define AUDIO_SINK_BUILTIN RUN_PATH "audio_builtin"
+#define AUDIO_HEADPHONES   RUN_PATH "headphones"
+
+int audio_headphones_active(void) {
+    return file_exist(AUDIO_HEADPHONES);
+}
+
+int audio_sink_is_builtin(const char *name) {
+    if (!name || !name[0]) return 0;
+
+    char *builtin = read_line_char_from(AUDIO_SINK_BUILTIN, 1);
+    if (!builtin) return 0;
+
+    str_trim(builtin);
+    const int match = strcmp(builtin, name) == 0;
+    free(builtin);
+
+    return match;
+}
+
+int audio_sink_on_headphones(const char *name) {
+    return audio_headphones_active() && audio_sink_is_builtin(name);
+}
+
 static int audio_sink_volume_path_name(char *out, const char *name) {
     if (!name || !name[0]) return 0;
 
-    snprintf(out, MAX_BUFFER_SIZE, STORAGE_VOLUME "/%08x", fnv_hash_str(name));
+    char key[MAX_BUFFER_SIZE];
+    snprintf(key, sizeof(key), audio_sink_on_headphones(name) ? "%s (Headphones)" : "%s", name);
+
+    snprintf(out, MAX_BUFFER_SIZE, STORAGE_VOLUME "/%08x", fnv_hash_str(key));
 
     return 1;
 }
