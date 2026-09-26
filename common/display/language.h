@@ -1003,6 +1003,10 @@ struct mux_lang {
             char last_charged[MAX_BUFFER_SIZE];
             char time_on_battery[MAX_BUFFER_SIZE];
             char battery_used[MAX_BUFFER_SIZE];
+            char shutdown_capacity[MAX_BUFFER_SIZE];
+            char boot_capacity[MAX_BUFFER_SIZE];
+            char time_powered_off[MAX_BUFFER_SIZE];
+            char off_battery_change[MAX_BUFFER_SIZE];
             char hostname[MAX_BUFFER_SIZE];
             char mac[MAX_BUFFER_SIZE];
             char ip[MAX_BUFFER_SIZE];
@@ -1058,6 +1062,10 @@ struct mux_lang {
             char last_charged[MAX_BUFFER_SIZE];
             char time_on_battery[MAX_BUFFER_SIZE];
             char battery_used[MAX_BUFFER_SIZE];
+            char shutdown_capacity[MAX_BUFFER_SIZE];
+            char boot_capacity[MAX_BUFFER_SIZE];
+            char time_powered_off[MAX_BUFFER_SIZE];
+            char off_battery_change[MAX_BUFFER_SIZE];
             char hostname[MAX_BUFFER_SIZE];
             char mac[MAX_BUFFER_SIZE];
             char ip[MAX_BUFFER_SIZE];

@@ -151,7 +151,11 @@
 #define DETAIL_POWER_ELEMENTS                                                                                          \
     DETAIL(last_charged, "lastcharged")                                                                                \
     DETAIL(time_on_battery, "timeonbattery")                                                                           \
-    DETAIL(battery_used, "batteryused")
+    DETAIL(battery_used, "batteryused")                                                                                \
+    DETAIL(shutdown_capacity, "shutdowncapacity")                                                                      \
+    DETAIL(boot_capacity, "bootcapacity")                                                                              \
+    DETAIL(time_powered_off, "timepoweredoff")                                                                          \
+    DETAIL(off_battery_change, "offbatterychange")
 
 #define DETAIL_NETWORK_ELEMENTS                                                                                        \
     DETAIL(hostname, "hostname")                                                                                       \

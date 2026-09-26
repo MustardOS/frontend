@@ -592,6 +592,22 @@ static const char *get_last_charged(void) {
     return buffer;
 }
 
+static void format_duration(const long secs, char *buffer, const size_t size) {
+    const long days = secs / 86400;
+    const long hours = secs % 86400 / 3600;
+    const long mins = secs % 3600 / 60;
+
+    if (days > 0) {
+        snprintf(buffer, size, "%ldd %ldh", days, hours);
+    } else if (hours > 0) {
+        snprintf(buffer, size, "%ldh %ldm", hours, mins);
+    } else if (mins > 0) {
+        snprintf(buffer, size, "%ldm", mins);
+    } else {
+        snprintf(buffer, size, "< 1m");
+    }
+}
+
 static const char *get_time_on_battery(void) {
     static char buffer[UI_BUFFER];
     char secs_str[32];
@@ -602,16 +618,7 @@ static const char *get_time_on_battery(void) {
     const long secs = strtol(secs_str, NULL, 10);
     if (secs <= 0) return "-";
 
-    const long hours = secs / 3600;
-    const long mins = secs % 3600 / 60;
-
-    if (hours > 0) {
-        snprintf(buffer, sizeof(buffer), "%ldh %ldm", hours, mins);
-    } else if (mins > 0) {
-        snprintf(buffer, sizeof(buffer), "%ldm", mins);
-    } else {
-        snprintf(buffer, sizeof(buffer), "< 1m");
-    }
+    format_duration(secs, buffer, sizeof(buffer));
 
     return buffer;
 }
@@ -645,6 +652,76 @@ static const char *get_bat_charger(void) {
 static int battery_used_available(void) {
     char buf[32];
     return read_bat_file_trim(RUN_BATT "_usage/unplug_capacity", buf, sizeof(buf)) == 0 && buf[0] != '\0';
+}
+
+static int read_power_history_value(const char *name, long *value) {
+    char path[MAX_BUFFER_SIZE];
+    char buffer[32];
+
+    snprintf(path, sizeof(path), RUN_BATT "_usage/%s", name);
+    if (read_bat_file_trim(path, buffer, sizeof(buffer)) != 0 || !*buffer) return -1;
+
+    errno = 0;
+    char *end;
+    const long parsed = strtol(buffer, &end, 10);
+    if (errno != 0 || end == buffer || *end) return -1;
+
+    *value = parsed;
+    return 0;
+}
+
+static const char *get_shutdown_capacity(void) {
+    static char buffer[UI_BUFFER];
+    long value;
+
+    if (read_power_history_value("last_shutdown_capacity", &value) != 0 || value < 0 || value > 100) return "-";
+
+    snprintf(buffer, sizeof(buffer), "%ld%%", value);
+    return buffer;
+}
+
+static const char *get_boot_capacity(void) {
+    static char buffer[UI_BUFFER];
+    long value;
+
+    if (read_power_history_value("last_boot_capacity", &value) != 0 || value < 0 || value > 100) return "-";
+
+    snprintf(buffer, sizeof(buffer), "%ld%%", value);
+    return buffer;
+}
+
+static const char *get_time_powered_off(void) {
+    static char buffer[UI_BUFFER];
+    long value;
+
+    if (read_power_history_value("last_off_duration", &value) != 0 || value < 0) return "-";
+
+    format_duration(value, buffer, sizeof(buffer));
+    return buffer;
+}
+
+static const char *get_off_battery_change(void) {
+    static char buffer[UI_BUFFER];
+    long value;
+
+    if (read_power_history_value("last_off_capacity_delta", &value) != 0 || value < -100 || value > 100)
+        return "-";
+
+    if (value == 0)
+        snprintf(buffer, sizeof(buffer), "0%%");
+    else
+        snprintf(buffer, sizeof(buffer), "%+ld%%", -value);
+    return buffer;
+}
+
+static int power_off_history_available(void) {
+    long shutdown_capacity, boot_capacity, duration, delta;
+
+    return read_power_history_value("last_shutdown_capacity", &shutdown_capacity) == 0 && shutdown_capacity >= 0
+           && shutdown_capacity <= 100 && read_power_history_value("last_boot_capacity", &boot_capacity) == 0
+           && boot_capacity >= 0 && boot_capacity <= 100
+           && read_power_history_value("last_off_duration", &duration) == 0 && duration >= 0
+           && read_power_history_value("last_off_capacity_delta", &delta) == 0 && delta >= -100 && delta <= 100;
 }
 
 static int is_valid_interface(const char *iface) {
@@ -1202,6 +1279,10 @@ static void update_detail_info(void) {
 
     set_detail_value(ui_val_time_on_battery_detail, get_time_on_battery());
     set_detail_value(ui_val_battery_used_detail, get_battery_used());
+    set_detail_value(ui_val_shutdown_capacity_detail, get_shutdown_capacity());
+    set_detail_value(ui_val_boot_capacity_detail, get_boot_capacity());
+    set_detail_value(ui_val_time_powered_off_detail, get_time_powered_off());
+    set_detail_value(ui_val_off_battery_change_detail, get_off_battery_change());
 
     set_detail_value(ui_val_hostname_detail, get_hostname());
     set_detail_value(ui_val_mac_detail, get_mac_address());
@@ -1271,6 +1352,10 @@ static void export_diagnostics(void) {
     fprintf(f, "%s: %s\n", lang.muxdetail.label.last_charged, get_last_charged());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.time_on_battery, get_time_on_battery());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.battery_used, get_battery_used());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.shutdown_capacity, get_shutdown_capacity());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.boot_capacity, get_boot_capacity());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.time_powered_off, get_time_powered_off());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.off_battery_change, get_off_battery_change());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.hostname, get_hostname());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.mac, get_mac_address());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.ip, get_ip_address());
@@ -1324,6 +1409,12 @@ static void init_navigation_group(void) {
 #undef DETAIL
 
     if (!battery_used_available()) HIDE_VALUE_ITEM(detail, battery_used);
+    if (!power_off_history_available()) {
+        HIDE_VALUE_ITEM(detail, shutdown_capacity);
+        HIDE_VALUE_ITEM(detail, boot_capacity);
+        HIDE_VALUE_ITEM(detail, time_powered_off);
+        HIDE_VALUE_ITEM(detail, off_battery_change);
+    }
 
     list_frame frames[8];
     int frame_count = 0;

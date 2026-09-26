@@ -312,6 +312,27 @@ static int read_voltage_mv(void) {
     return (int) raw;
 }
 
+static int read_capacity_percent(int *percent) {
+    if (!percent || !capacity_path || !*capacity_path) return 0;
+
+    char *text = read_all_char_from(capacity_path);
+    if (!text || !*text) {
+        free(text);
+        return 0;
+    }
+
+    char *end;
+    const long value = strtol(text, &end, 10);
+    while (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')
+        end++;
+
+    const int valid = end != text && !*end && value >= 0 && value <= 100;
+    if (valid) *percent = (int) value;
+
+    free(text);
+    return valid;
+}
+
 static void swap_int(int *a, int *b) {
     const int t = *a;
     *a = *b;
@@ -418,17 +439,23 @@ void battery_update(void) {
 
     int mv = read_voltage_mv();
 
+    if (mv > 0) {
+        write_voltage_file(mv);
+        mv = median_voltage(mv);
+        filtered_voltage_mv = mv;
+        set_voltage_string(filtered_voltage_mv);
+    }
+
+    int reported_percent;
+    if (read_capacity_percent(&reported_percent)) {
+        set_battery_state(mv > 0 ? filtered_voltage_mv : 0, reported_percent);
+        return;
+    }
+
     if (mv <= 0) {
         set_battery_state_unknown();
         return;
     }
-
-    write_voltage_file(mv);
-
-    mv = median_voltage(mv);
-    filtered_voltage_mv = mv;
-
-    set_voltage_string(filtered_voltage_mv);
 
     if (battery_warmup > 0) {
         battery_warmup--;
