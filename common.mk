@@ -79,6 +79,8 @@ DEP_NAME = $(DEP_ROOT)/$(1)/$(subst /,_,$(subst ../,up_,$(patsubst ./%,%,$(2))))
 
 include $(dir $(lastword $(MAKEFILE_LIST)))external/external.mk
 
+FREETYPE_CFLAGS = -I$(shell $(CC) -print-sysroot)/usr/include/freetype2
+
 BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto -MMD -MP \
               -ffunction-sections -fdata-sections \
               -Wall -Wpedantic -Wno-format-zero-length \
@@ -86,14 +88,14 @@ BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto -MMD -MP \
               -fstack-protector-strong -fstack-clash-protection \
               -D_FORTIFY_SOURCE=3 -D_GNU_SOURCE -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
-              $(BUILD_FLAGS) $(EXTERNAL_CFLAGS)
+              $(BUILD_FLAGS) $(EXTERNAL_CFLAGS) $(FREETYPE_CFLAGS)
 
 STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Werror=incompatible-pointer-types -Werror=return-type \
                 -Wformat-truncation=2 -Werror=format-truncation \
                 -Werror=unused-function
 
-COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lpthread -lpng -lm
+COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lharfbuzz -lfreetype -lpthread -lpng -lm
 
 BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
                -Wl,--enable-new-dtags,-rpath,'$$ORIGIN/lib' \

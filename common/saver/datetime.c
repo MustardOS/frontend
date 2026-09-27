@@ -9,6 +9,7 @@
 #include <common/saver/saver.h>
 #include <common/config/config.h>
 #include <common/saver/datetime.h>
+#include <common/ui/font.h>
 
 #define DT_FADE_IN_MS   1200
 #define DT_FADE_HOLD_MS 6000
@@ -59,8 +60,44 @@ typedef struct {
 
 static datetime_module_t mod = {0};
 
-static int dt_load_fonts(int screen_h) {
+static int dt_font_extension(const char *name) {
+    const size_t length = name ? strlen(name) : 0;
+    if (length < 4) return 0;
+    const char *extension = name + length - 4;
+    return strcasecmp(extension, ".ttf") == 0 || strcasecmp(extension, ".otf") == 0
+           || strcasecmp(extension, ".ttc") == 0;
+}
+
+static void dt_internal_font_path(char *path, const size_t path_size, const char *name) {
+    const char *leaf = strrchr(name, '/');
+    leaf = leaf ? leaf + 1 : name;
+    if (config.settings.font.directory[0])
+        snprintf(
+            path, path_size, INTERNAL_FONTS "/%s/%s%s", config.settings.font.directory, leaf,
+            dt_font_extension(leaf) ? "" : ".ttf"
+        );
+    else
+        snprintf(path, path_size, INTERNAL_FONTS "/%s%s", leaf, dt_font_extension(leaf) ? "" : ".ttf");
+}
+
+static TTF_Font *dt_open_font(const char *name, const int size) {
     char path[512];
+    if (config.settings.advanced.font == 3) {
+        char reference[MAX_BUFFER_SIZE];
+        if (config.settings.font.directory[0])
+            snprintf(reference, sizeof(reference), "%s/%s", config.settings.font.directory, name);
+        else
+            snprintf(reference, sizeof(reference), "%s", name);
+        if (!user_font_path(reference, path, sizeof(path))) dt_internal_font_path(path, sizeof(path), name);
+    } else {
+        dt_internal_font_path(path, sizeof(path), name);
+    }
+
+    const long face = config.settings.font.face >= 0 ? config.settings.font.face : 0;
+    return TTF_OpenFontIndex(path, size, face);
+}
+
+static int dt_load_fonts(int screen_h) {
     const char *name = config.settings.font.name[0] ? config.settings.font.name : "Noto Sans";
 
     int sz_time = screen_h / 7;
@@ -69,11 +106,9 @@ static int dt_load_fonts(int screen_h) {
     int sz_date = screen_h / 18;
     if (sz_date < 12) sz_date = 12;
 
-    snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
-    mod.font_time = TTF_OpenFont(path, sz_time);
+    mod.font_time = dt_open_font(name, sz_time);
     if (!mod.font_time && strcmp(name, "Noto Sans") != 0) {
-        snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
-        mod.font_time = TTF_OpenFont(path, sz_time);
+        mod.font_time = TTF_OpenFont(INTERNAL_FONTS "/Noto Sans.ttf", sz_time);
     }
 
     if (!mod.font_time) {
@@ -81,11 +116,9 @@ static int dt_load_fonts(int screen_h) {
         return 0;
     }
 
-    snprintf(path, sizeof(path), INTERNAL_FONTS "/%s.ttf", name);
-    mod.font_date = TTF_OpenFont(path, sz_date);
+    mod.font_date = dt_open_font(name, sz_date);
     if (!mod.font_date && strcmp(name, "Noto Sans") != 0) {
-        snprintf(path, sizeof(path), INTERNAL_FONTS "/Noto Sans.ttf");
-        mod.font_date = TTF_OpenFont(path, sz_date);
+        mod.font_date = TTF_OpenFont(INTERNAL_FONTS "/Noto Sans.ttf", sz_date);
     }
 
     if (!mod.font_date) {

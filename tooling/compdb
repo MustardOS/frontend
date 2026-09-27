@@ -1,0 +1,112 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Cwd qw(getcwd);
+use File::Basename qw(basename);
+use File::Spec;
+use JSON::PP;
+
+if (@ARGV && $ARGV[0] eq '--merge') {
+	shift @ARGV;
+	my ($output, $capture_dir) = @ARGV;
+	die "Usage: compdb --merge OUTPUT CAPTURE_DIR\n" unless defined $capture_dir;
+
+	my @entries;
+	my %seen;
+	for my $path (sort glob(File::Spec->catfile($capture_dir, '*.json'))) {
+		open my $input, '<', $path or die "Cannot read $path: $!\n";
+		local $/;
+		my $entry = decode_json(<$input>);
+		close $input;
+
+		my $key = join("\0", $entry->{directory}, $entry->{file}, @{$entry->{arguments}});
+		push @entries, $entry unless $seen{$key}++;
+	}
+
+	die "No compiler commands were captured\n" unless @entries;
+
+	open my $database, '>', "$output.tmp" or die "Cannot write $output.tmp: $!\n";
+	print {$database} JSON::PP->new->canonical->pretty->encode(\@entries);
+	close $database or die "Cannot close $output.tmp: $!\n";
+	rename "$output.tmp", $output or die "Cannot replace $output: $!\n";
+	exit 0;
+}
+
+my $capture_dir = $ENV{MUOS_COMPDB_DIR} // die "MUOS_COMPDB_DIR is not set\n";
+my $project_root = $ENV{MUOS_COMPDB_ROOT} // die "MUOS_COMPDB_ROOT is not set\n";
+my @execute = @ARGV;
+die "No compiler command supplied\n" unless @execute;
+
+my @arguments = @execute;
+shift @arguments if basename($arguments[0]) eq 'ccache';
+
+my $directory = getcwd();
+
+sub compile_arguments {
+	my ($source, @original) = @_;
+	my @compiled = shift @original;
+	my @probe_includes;
+
+	for (my $index = 0; $index < @original; ++$index) {
+		my $argument = $original[$index];
+		if ($argument eq '-I' && $index + 1 < @original) {
+			push @compiled, $argument, $original[$index + 1];
+			push @probe_includes, File::Spec->rel2abs($original[$index + 1], $directory);
+			++$index;
+			next;
+		}
+		if ($argument =~ /^-I(.+)/) {
+			push @compiled, $argument;
+			push @probe_includes, File::Spec->rel2abs($1, $directory);
+			next;
+		}
+
+		if ($argument =~ /\.(?:c|cc|cpp|cxx|m|mm|s|S)$/ ||
+			$argument =~ /\.(?:o|a|so)(?:\.[0-9]+)*$/) {
+			next;
+		}
+
+		if ($argument =~ /^(?:-o|-MF|-MT|-MQ|-L|-l)$/) {
+			++$index;
+			next;
+		}
+
+		next if $argument =~ /^(?:-o|-MF|-MT|-MQ|-L|-l).+/;
+		next if $argument =~ /^-Wl,/;
+		next if $argument =~ /^-fuse-ld=/;
+		next if $argument =~ /^(?:-c|-MMD|-MP|-shared|-pie|-s)$/;
+
+		push @compiled, $argument;
+	}
+
+	my %probe_seen;
+	for my $include ($project_root, @probe_includes) {
+		next if $probe_seen{$include}++;
+		push @compiled, '-isystem', $include;
+	}
+	push @compiled, '-c', $source;
+	return @compiled;
+}
+
+my $sequence = 0;
+for my $source (@arguments) {
+	next if $source =~ /^-/;
+	next unless $source =~ /\.(?:c|cc|cpp|cxx|m|mm|s|S)$/;
+	my @compiled = compile_arguments($source, @arguments);
+
+	my $entry = {
+		directory => $directory,
+		file => File::Spec->rel2abs($source, $directory),
+		arguments => \@compiled,
+	};
+
+	my $path = File::Spec->catfile($capture_dir, "$$-$sequence.json");
+	open my $fragment, '>', $path or die "Cannot write $path: $!\n";
+	print {$fragment} JSON::PP->new->canonical->encode($entry);
+	close $fragment or die "Cannot close $path: $!\n";
+	++$sequence;
+}
+
+exec {$execute[0]} @execute;
+die "Cannot execute $execute[0]: $!\n";

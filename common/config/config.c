@@ -280,7 +280,11 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/font", "header_size", CFG_OFF(settings.font.header_size), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/font", "footer_size", CFG_OFF(settings.font.footer_size), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/font", "panel_size", CFG_OFF(settings.font.panel_size), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "directory", CFG_OFF(settings.font.directory), 1, {.s = ""}},
     {CONF_CONFIG_PATH "settings/font", "name", CFG_OFF(settings.font.name), 1, {.s = ""}},
+    {CONF_CONFIG_PATH "settings/font", "face", CFG_OFF(settings.font.face), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "width", CFG_OFF(settings.font.width), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/font", "italic", CFG_OFF(settings.font.italic), 0, {.i = 0}, 1, 0, 1},
 
     // settings/theme/ (theme option overrides - distinct from theme/filter/)
     {CONF_CONFIG_PATH "settings/theme", "header_height", CFG_OFF(settings.themeopt.header_height), 0, {.i = -1}},

@@ -301,7 +301,11 @@ struct mux_config {
             int16_t backend;
         } rgb;
         struct {
+            char directory[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
+            int16_t face;
+            int16_t width;
+            int16_t italic;
             int16_t list_size;
             int16_t header_size;
             int16_t footer_size;

@@ -1,6 +1,9 @@
 #include "muxshare.h"
 #include <common/ui/list_frame.h>
 #include <common/ui/orientation.h>
+#include <common/ui/font_info.h>
+#include <harfbuzz/hb.h>
+#include <math.h>
 #include "ui/ui_muxcustom.h"
 
 static mux_dialogue save_dlg;
@@ -33,11 +36,48 @@ FONT_ELEMENTS
 #undef FONT
 
 static char font_name_saved[MAX_BUFFER_SIZE];
-static int has_language_type;
+static char font_directory_saved[MAX_BUFFER_SIZE];
+static int16_t font_face_saved;
+static int16_t font_width_saved;
+static int16_t font_italic_saved;
+static int16_t font_list_size_saved;
+static int16_t font_header_size_saved;
+static int16_t font_footer_size_saved;
+static int16_t font_panel_size_saved;
 static int has_theme_type;
 static int dropdown_to_canonical[4];
 static int has_custom_type;
 static int num_type_options;
+static int font_directory_visible;
+static int font_directory_has_root;
+
+typedef struct {
+    char *name;
+    char *label;
+    char *path;
+    unsigned int face_index;
+} font_option;
+
+static font_option *font_options;
+static size_t font_option_count;
+
+#define FONT_SIZE_OPTION_MAX 128
+static int active_font_size_values[FONT_SIZE_OPTION_MAX];
+static int active_font_size_count;
+static int font_size_options_visible = 1;
+
+enum font_axis_id { FONT_AXIS_WIDTH, FONT_AXIS_ITALIC, FONT_AXIS_COUNT };
+
+typedef struct {
+    uint32_t tag;
+    int values[128];
+    int value_count;
+    int visible;
+} font_axis_option;
+
+static font_axis_option font_axes[FONT_AXIS_COUNT] = {
+    [FONT_AXIS_WIDTH] = {.tag = HB_TAG('w', 'd', 't', 'h')}, [FONT_AXIS_ITALIC] = {.tag = HB_TAG('i', 't', 'a', 'l')}
+};
 
 static int overlay_count;
 static int has_theme_overlay;
@@ -145,26 +185,6 @@ static int overlay_dropdown_to_config(const int dropdown_idx) {
     return dropdown_idx;
 }
 
-static int detect_language_type(void) {
-    char dir[MAX_BUFFER_SIZE];
-    snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", config.settings.general.language);
-
-    struct dirent **entries;
-    const int n = scandir(dir, &entries, NULL, alphasort);
-    if (n < 0) return 0;
-
-    int found = 0;
-    for (int i = 0; i < n; i++) {
-        const char *name = entries[i]->d_name;
-        const size_t len = strlen(name);
-        if (!found && len > 4 && strcasecmp(name + len - 4, ".ttf") == 0) found = 1;
-        free(entries[i]);
-    }
-
-    free(entries);
-    return found;
-}
-
 static int type_to_canonical(const uint32_t dropdown_idx) {
     if (dropdown_idx < (uint32_t) num_type_options) return dropdown_to_canonical[dropdown_idx];
 
@@ -179,10 +199,72 @@ static uint32_t type_to_dropdown(const int canonical) {
     return (uint32_t) (num_type_options - 1);
 }
 
-// Lists every TTF the user has placed under MUOS/font, by filename alone
-// A font shipped as a family lives in its own folder, with one file per weight or style.
-// Those are offered as "Family/Variant", which the existing path resolution already
-// understands because it only ever appends .ttf to whatever name is stored.
+static int font_file_extension(const char *name) {
+    const size_t length = name ? strlen(name) : 0;
+    if (length < 4) return 0;
+
+    const char *extension = name + length - 4;
+    return strcasecmp(extension, ".ttf") == 0 || strcasecmp(extension, ".otf") == 0
+           || strcasecmp(extension, ".ttc") == 0 || strcasecmp(extension, ".pcf") == 0
+           || strcasecmp(extension, ".bdf") == 0;
+}
+
+static int bitmap_font_extension(const char *name) {
+    const size_t length = name ? strlen(name) : 0;
+    if (length < 4) return 0;
+
+    const char *extension = name + length - 4;
+    return strcasecmp(extension, ".pcf") == 0 || strcasecmp(extension, ".bdf") == 0;
+}
+
+static void stored_font_name(char *out, const size_t out_size, const char *filename) {
+    const size_t length = strlen(filename);
+    if (length > 4 && strcasecmp(filename + length - 4, ".ttf") == 0)
+        snprintf(out, out_size, "%.*s", (int) (length - 4), filename);
+    else
+        snprintf(out, out_size, "%s", filename);
+}
+
+static void displayed_font_name(char *out, const size_t out_size, const char *filename) {
+    const size_t length = strlen(filename);
+    if (length > 4 && font_file_extension(filename))
+        snprintf(out, out_size, "%.*s", (int) (length - 4), filename);
+    else
+        snprintf(out, out_size, "%s", filename);
+}
+
+static int font_option_exists(const char *name, const unsigned int face_index) {
+    for (size_t i = 0; i < font_option_count; i++)
+        if (font_options[i].face_index == face_index && strcasecmp(font_options[i].name, name) == 0) return 1;
+
+    return 0;
+}
+
+static int add_font_option(
+    const char *name, const char *label, const char *path, const unsigned int face_index, const int dedupe
+) {
+    if (dedupe && font_option_exists(name, face_index)) return 0;
+
+    font_option *options = realloc(font_options, (font_option_count + 1) * sizeof(*options));
+    if (!options) return 0;
+
+    font_options = options;
+    font_option *option = &font_options[font_option_count];
+    option->name = strdup(name);
+    option->label = strdup(label);
+    option->path = strdup(path);
+    option->face_index = face_index;
+    if (option->name && option->label && option->path) {
+        font_option_count++;
+        return 1;
+    }
+
+    free(option->name);
+    free(option->label);
+    free(option->path);
+    return 0;
+}
+
 static int add_font_options_from(const char *dir, const int dedupe) {
     struct dirent **entries;
     const int n = scandir(dir, &entries, NULL, alphasort);
@@ -197,46 +279,26 @@ static int add_font_options_from(const char *dir, const int dedupe) {
             continue;
         }
 
-        const size_t len = strlen(name);
-        if (len > 4 && strcasecmp(name + len - 4, ".ttf") == 0) {
-            char stem[MAX_BUFFER_SIZE];
-            snprintf(stem, sizeof(stem), "%.*s", (int) (len - 4), name);
+        if (font_file_extension(name)) {
+            char stored[MAX_BUFFER_SIZE];
+            stored_font_name(stored, sizeof(stored), name);
+            char displayed[MAX_BUFFER_SIZE];
+            displayed_font_name(displayed, sizeof(displayed), name);
 
-            if (!dedupe || lv_dropdown_get_option_index(ui_dro_font_name_font, stem) < 0) {
-                lv_dropdown_add_option(ui_dro_font_name_font, stem, LV_DROPDOWN_POS_LAST);
-                added++;
+            char path[MAX_BUFFER_SIZE];
+            snprintf(path, sizeof(path), "%s/%s", dir, name);
+
+            font_info_t info;
+            const int valid = font_info_read(path, 0, &info);
+            const unsigned int face_count = valid && info.face_count ? info.face_count : 1;
+            for (unsigned int face = 0; face < face_count && face <= INT16_MAX; face++) {
+                if (face > 0 && !font_info_read(path, face, &info)) continue;
+                const char *label = valid || face > 0 ? info.display : displayed;
+                added += add_font_option(stored, label, path, face, dedupe);
             }
 
             free(entries[i]);
             continue;
-        }
-
-        char nested[MAX_BUFFER_SIZE];
-        snprintf(nested, sizeof(nested), "%s/%s", dir, name);
-
-        struct stat st;
-        if (stat(nested, &st) == 0 && S_ISDIR(st.st_mode)) {
-            struct dirent **variants;
-            const int vn = scandir(nested, &variants, NULL, alphasort);
-
-            for (int v = 0; v < vn; v++) {
-                const char *variant = variants[v]->d_name;
-                const size_t vlen = strlen(variant);
-
-                if (variant[0] != '.' && vlen > 4 && strcasecmp(variant + vlen - 4, ".ttf") == 0) {
-                    char label[MAX_BUFFER_SIZE];
-                    snprintf(label, sizeof(label), "%s/%.*s", name, (int) (vlen - 4), variant);
-
-                    if (!dedupe || lv_dropdown_get_option_index(ui_dro_font_name_font, label) < 0) {
-                        lv_dropdown_add_option(ui_dro_font_name_font, label, LV_DROPDOWN_POS_LAST);
-                        added++;
-                    }
-                }
-
-                free(variants[v]);
-            }
-
-            if (vn >= 0) free(variants);
         }
 
         free(entries[i]);
@@ -247,7 +309,130 @@ static int add_font_options_from(const char *dir, const int dedupe) {
     return added;
 }
 
-static int populate_user_font_names(void) {
+static int directory_has_font(const char *dir) {
+    struct dirent **entries;
+    const int n = scandir(dir, &entries, NULL, alphasort);
+    if (n < 0) return 0;
+
+    int found = 0;
+    for (int i = 0; i < n; i++) {
+        const char *name = entries[i]->d_name;
+        if (!found && name[0] != '.' && font_file_extension(name)) found = 1;
+        free(entries[i]);
+    }
+    free(entries);
+
+    return found;
+}
+
+typedef struct {
+    char **names;
+    size_t count;
+} font_directory_list;
+
+static int font_directory_compare(const void *left, const void *right) {
+    const char *const *a = left;
+    const char *const *b = right;
+    return strcasecmp(*a, *b);
+}
+
+static void font_directory_list_add(font_directory_list *list, const char *name) {
+    for (size_t i = 0; i < list->count; i++)
+        if (strcasecmp(list->names[i], name) == 0) return;
+
+    char **names = realloc(list->names, (list->count + 1) * sizeof(*names));
+    if (!names) return;
+
+    list->names = names;
+    list->names[list->count] = strdup(name);
+    if (list->names[list->count]) list->count++;
+}
+
+static void font_directory_list_scan(font_directory_list *list, const char *base) {
+    struct dirent **entries;
+    const int n = scandir(base, &entries, NULL, alphasort);
+    if (n < 0) return;
+
+    for (int i = 0; i < n; i++) {
+        const char *name = entries[i]->d_name;
+        if (name[0] != '.') {
+            char path[MAX_BUFFER_SIZE];
+            snprintf(path, sizeof(path), "%s/%s", base, name);
+
+            struct stat st;
+            if (stat(path, &st) == 0 && S_ISDIR(st.st_mode) && directory_has_font(path))
+                font_directory_list_add(list, name);
+        }
+        free(entries[i]);
+    }
+    free(entries);
+}
+
+static void font_directory_list_free(font_directory_list *list) {
+    for (size_t i = 0; i < list->count; i++)
+        free(list->names[i]);
+    free(list->names);
+    list->names = NULL;
+    list->count = 0;
+}
+
+static void selected_font_directory(char *out, const size_t out_size) {
+    out[0] = '\0';
+    if (!font_directory_visible) return;
+
+    if (font_directory_has_root && lv_dropdown_get_selected(ui_dro_font_directory_font) == 0) return;
+    lv_dropdown_get_selected_str(ui_dro_font_directory_font, out, out_size);
+}
+
+static void populate_font_directories(const char *preferred) {
+    lv_dropdown_clear_options(ui_dro_font_directory_font);
+    font_directory_visible = 0;
+    font_directory_has_root = 0;
+
+    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+    if (canonical_type != 0 && canonical_type != 3) return;
+
+    font_directory_list directories = {0};
+    if (canonical_type == 0) {
+        font_directory_list_scan(&directories, INTERNAL_FONTS);
+    } else {
+        const char *mounts[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
+        for (size_t m = 0; m < A_SIZE(mounts); m++) {
+            if (!mounts[m] || !*mounts[m]) continue;
+
+            char base[MAX_BUFFER_SIZE];
+            snprintf(base, sizeof(base), "%s/%s", mounts[m], USER_FONTS);
+            remove_double_slashes(base);
+
+            if (directory_has_font(base)) font_directory_has_root = 1;
+            font_directory_list_scan(&directories, base);
+        }
+    }
+
+    font_directory_visible = directories.count > 0;
+    if (!font_directory_visible) {
+        font_directory_list_free(&directories);
+        return;
+    }
+
+    if (font_directory_has_root)
+        lv_dropdown_add_option(ui_dro_font_directory_font, lang.muxfont.directory_root, LV_DROPDOWN_POS_LAST);
+
+    qsort(directories.names, directories.count, sizeof(*directories.names), font_directory_compare);
+    for (size_t i = 0; i < directories.count; i++)
+        lv_dropdown_add_option(ui_dro_font_directory_font, directories.names[i], LV_DROPDOWN_POS_LAST);
+
+    const char *wanted = preferred;
+    if ((!wanted || !*wanted) && canonical_type == 0) wanted = config.settings.general.language;
+
+    int32_t selected = wanted && *wanted ? lv_dropdown_get_option_index(ui_dro_font_directory_font, wanted) : -1;
+    if (selected < 0 && font_directory_has_root && (!preferred || !*preferred)) selected = 0;
+    lv_dropdown_set_selected(ui_dro_font_directory_font, selected >= 0 ? (uint32_t) selected : 0);
+
+    font_directory_list_free(&directories);
+}
+
+static int populate_user_font_names(const char *directory) {
     const char *mounts[] = {device.storage.usb.mount, device.storage.sdcard.mount, device.storage.rom.mount};
 
     int added = 0;
@@ -255,7 +440,10 @@ static int populate_user_font_names(void) {
         if (!mounts[m] || !*mounts[m]) continue;
 
         char dir[MAX_BUFFER_SIZE];
-        snprintf(dir, sizeof(dir), "%s/%s", mounts[m], USER_FONTS);
+        if (directory && *directory)
+            snprintf(dir, sizeof(dir), "%s/%s/%s", mounts[m], USER_FONTS, directory);
+        else
+            snprintf(dir, sizeof(dir), "%s/%s", mounts[m], USER_FONTS);
         remove_double_slashes(dir);
 
         // The same font on two storages should only be offered once
@@ -265,58 +453,326 @@ static int populate_user_font_names(void) {
     return added;
 }
 
-static void select_font_name(const char *wanted) {
-    int32_t idx = wanted && *wanted ? lv_dropdown_get_option_index(ui_dro_font_name_font, wanted) : -1;
-    if (idx < 0) idx = lv_dropdown_get_option_index(ui_dro_font_name_font, DEFAULT_FONT_NAME);
+static void clear_font_options(void) {
+    for (size_t i = 0; i < font_option_count; i++) {
+        free(font_options[i].name);
+        free(font_options[i].label);
+        free(font_options[i].path);
+    }
+    free(font_options);
+    font_options = NULL;
+    font_option_count = 0;
+}
+
+static int font_option_compare(const void *left, const void *right) {
+    const font_option *a = left;
+    const font_option *b = right;
+    const int label = strcasecmp(a->label, b->label);
+    if (label) return label;
+    const int name = strcasecmp(a->name, b->name);
+    if (name) return name;
+    return (a->face_index > b->face_index) - (a->face_index < b->face_index);
+}
+
+static void render_font_options(void) {
+    qsort(font_options, font_option_count, sizeof(*font_options), font_option_compare);
+
+    for (size_t i = 0; i < font_option_count; i++) {
+        char label[MAX_BUFFER_SIZE];
+        const int duplicate =
+            (i > 0 && strcasecmp(font_options[i - 1].label, font_options[i].label) == 0)
+            || (i + 1 < font_option_count && strcasecmp(font_options[i + 1].label, font_options[i].label) == 0);
+        if (duplicate) {
+            char displayed[MAX_BUFFER_SIZE];
+            displayed_font_name(displayed, sizeof(displayed), font_options[i].name);
+            snprintf(
+                label, sizeof(label), "%.*s - %.*s", (int) ((sizeof(label) - 4) / 2), font_options[i].label,
+                (int) ((sizeof(label) - 4) / 2), displayed
+            );
+        } else
+            snprintf(label, sizeof(label), "%s", font_options[i].label);
+
+        lv_dropdown_add_option(ui_dro_font_name_font, label, LV_DROPDOWN_POS_LAST);
+    }
+}
+
+static int font_option_index(const char *name, const unsigned int face_index) {
+    const char *leaf = name ? strrchr(name, '/') : NULL;
+    name = leaf ? leaf + 1 : name;
+
+    for (size_t i = 0; i < font_option_count; i++)
+        if (name && font_options[i].face_index == face_index && strcasecmp(font_options[i].name, name) == 0)
+            return (int) i;
+
+    return -1;
+}
+
+static void select_font_name(const char *wanted, const unsigned int face_index) {
+    int idx = font_option_index(wanted, face_index);
+    if (idx < 0) idx = font_option_index(DEFAULT_FONT_NAME, 0);
     lv_dropdown_set_selected(ui_dro_font_name_font, idx >= 0 ? (uint32_t) idx : 0);
 }
 
-static void populate_font_names(void) {
-    char previous[MAX_BUFFER_SIZE];
-    lv_dropdown_get_selected_str(ui_dro_font_name_font, previous, sizeof(previous));
+static lv_obj_t *font_axis_dropdown(const enum font_axis_id axis) {
+    switch (axis) {
+        case FONT_AXIS_WIDTH:
+            return ui_dro_width_font;
+        case FONT_AXIS_ITALIC:
+            return ui_dro_italic_font;
+        default:
+            return NULL;
+    }
+}
 
-    lv_dropdown_clear_options(ui_dro_font_name_font);
+static lv_obj_t *font_axis_label(const enum font_axis_id axis) {
+    switch (axis) {
+        case FONT_AXIS_WIDTH:
+            return ui_lbl_width_font;
+        case FONT_AXIS_ITALIC:
+            return ui_lbl_italic_font;
+        default:
+            return NULL;
+    }
+}
 
-    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+static int16_t font_axis_config(const enum font_axis_id axis) {
+    switch (axis) {
+        case FONT_AXIS_WIDTH:
+            return config.settings.font.width;
+        case FONT_AXIS_ITALIC:
+            return config.settings.font.italic;
+        default:
+            return 0;
+    }
+}
 
-    if (canonical_type == 3) {
-        if (!populate_user_font_names())
-            lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
+static void font_axis_set_config(const enum font_axis_id axis, const int16_t value) {
+    switch (axis) {
+        case FONT_AXIS_WIDTH:
+            config.settings.font.width = value;
+            break;
+        case FONT_AXIS_ITALIC:
+            config.settings.font.italic = value;
+            break;
+        default:
+            break;
+    }
+}
 
-        select_font_name(previous);
+static void font_axis_add_value(font_axis_option *axis, const int value) {
+    if (axis->value_count >= A_SIZE(axis->values)) return;
+    for (int i = 0; i < axis->value_count; i++)
+        if (axis->values[i] == value) return;
+    axis->values[axis->value_count++] = value;
+}
+
+static int font_axis_step(const enum font_axis_id axis, const int minimum, const int maximum) {
+    const int range = maximum - minimum;
+    if (axis == FONT_AXIS_WIDTH) return range > 40 ? 5 : 1;
+    return 1;
+}
+
+static void populate_font_axis(const enum font_axis_id axis_id, const font_option *font) {
+    font_axis_option *axis = &font_axes[axis_id];
+    lv_obj_t *dropdown = font_axis_dropdown(axis_id);
+    lv_dropdown_clear_options(dropdown);
+    lv_dropdown_add_option(dropdown, lang.muxfont.size_default, LV_DROPDOWN_POS_LAST);
+    axis->values[0] = 0;
+    axis->value_count = 1;
+    axis->visible = 0;
+
+    if (!font) {
+        lv_dropdown_set_selected(dropdown, 0);
         return;
     }
 
-    char dir[MAX_BUFFER_SIZE];
-    if (canonical_type == 0) {
-        snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", config.settings.general.language);
-    } else {
-        snprintf(dir, sizeof(dir), "%s", INTERNAL_FONTS);
+    font_axis_info_t info;
+    if (!font_info_axis(font->path, font->face_index, axis->tag, &info)) {
+        lv_dropdown_set_selected(dropdown, 0);
+        return;
     }
 
-    const int added = add_font_options_from(dir, 0);
+    axis->visible = 1;
+    if (axis_id == FONT_AXIS_ITALIC) {
+        font_axis_add_value(axis, 1);
+    } else {
+        int minimum = (int) ceilf(info.minimum);
+        int maximum = (int) floorf(info.maximum);
+        if (minimum < INT16_MIN + 1) minimum = INT16_MIN + 1;
+        if (maximum > INT16_MAX) maximum = INT16_MAX;
+        const int step = font_axis_step(axis_id, minimum, maximum);
+        font_axis_add_value(axis, minimum);
+        int value = minimum;
+        if (step > 1) value = (int) ceil((double) minimum / step) * step;
+        for (; value <= maximum && axis->value_count < A_SIZE(axis->values) - 1; value += step)
+            font_axis_add_value(axis, value);
+        font_axis_add_value(axis, maximum);
+    }
 
-    if (!added) lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
+    for (int i = 1; i < axis->value_count; i++) {
+        char value[32];
+        if (axis_id == FONT_AXIS_ITALIC)
+            snprintf(value, sizeof(value), "%s", lang.generic.enabled);
+        else
+            snprintf(value, sizeof(value), "%d", axis->values[i]);
+        lv_dropdown_add_option(dropdown, value, LV_DROPDOWN_POS_LAST);
+    }
 
-    select_font_name(previous);
+    int selected = 0;
+    const int configured = font_axis_config(axis_id);
+    for (int i = 1; i < axis->value_count; i++)
+        if (axis->values[i] == configured) selected = i;
+    if (configured && !selected) font_axis_set_config(axis_id, 0);
+    lv_dropdown_set_selected(dropdown, (uint32_t) selected);
+}
+
+static void populate_font_axes(void) {
+    const uint32_t selected = lv_dropdown_get_selected(ui_dro_font_name_font);
+    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+    const font_option *font = canonical_type != 1 && selected < font_option_count ? &font_options[selected] : NULL;
+    for (int axis = 0; axis < FONT_AXIS_COUNT; axis++)
+        populate_font_axis((enum font_axis_id) axis, font);
+}
+
+static void apply_font_axis_visibility(void) {
+    for (int axis = 0; axis < FONT_AXIS_COUNT; axis++)
+        list_frame_set_suppressed(
+            list_frame_row_of(font_axis_label((enum font_axis_id) axis)), !font_axes[axis].visible
+        );
+}
+
+static void apply_font_axis_settings(void) {
+    for (int axis = 0; axis < FONT_AXIS_COUNT; axis++) {
+        const uint32_t selected = lv_dropdown_get_selected(font_axis_dropdown((enum font_axis_id) axis));
+        const int value = selected < (uint32_t) font_axes[axis].value_count ? font_axes[axis].values[selected] : 0;
+        font_axis_set_config((enum font_axis_id) axis, (int16_t) value);
+    }
+}
+
+static void populate_font_names(const char *preferred, const unsigned int preferred_face) {
+    lv_dropdown_clear_options(ui_dro_font_name_font);
+    clear_font_options();
+
+    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+    char directory[MAX_BUFFER_SIZE];
+    selected_font_directory(directory, sizeof(directory));
+
+    if (canonical_type == 3) {
+        populate_user_font_names(directory);
+    } else {
+        char dir[MAX_BUFFER_SIZE];
+        if (canonical_type == 0 && directory[0])
+            snprintf(dir, sizeof(dir), INTERNAL_FONTS "/%s", directory);
+        else
+            snprintf(dir, sizeof(dir), "%s", INTERNAL_FONTS);
+
+        add_font_options_from(dir, 0);
+    }
+
+    render_font_options();
+    if (!font_option_count) lv_dropdown_add_option(ui_dro_font_name_font, lang.muxfont.none, LV_DROPDOWN_POS_LAST);
+    select_font_name(preferred, preferred_face);
+    populate_font_axes();
+}
+
+static int selected_font_size_value(lv_obj_t *dropdown, const int fallback) {
+    if (active_font_size_count <= 0) return fallback;
+    const uint32_t selected = lv_dropdown_get_selected(dropdown);
+    return selected < (uint32_t) active_font_size_count ? active_font_size_values[selected] : 0;
+}
+
+static void select_font_size_value(lv_obj_t *dropdown, const int value) {
+    int selected = 0;
+    for (int i = 0; i < active_font_size_count; i++)
+        if (active_font_size_values[i] == value) selected = i;
+    lv_dropdown_set_selected(dropdown, (uint32_t) selected);
+}
+
+static void populate_font_size_options(void) {
+    const int selected_values[] = {
+        selected_font_size_value(ui_dro_list_size_font, config.settings.font.list_size),
+        selected_font_size_value(ui_dro_header_size_font, config.settings.font.header_size),
+        selected_font_size_value(ui_dro_footer_size_font, config.settings.font.footer_size),
+        selected_font_size_value(ui_dro_panel_size_font, config.settings.font.panel_size)
+    };
+
+    active_font_size_values[0] = 0;
+    active_font_size_count = 1;
+
+    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+    const uint32_t selected_font = lv_dropdown_get_selected(ui_dro_font_name_font);
+    const int fixed_theme = canonical_type == 1 && !theme_font_is_scalable();
+    if (!fixed_theme && selected_font < font_option_count && bitmap_font_extension(font_options[selected_font].path)) {
+        int sizes[FONT_SIZE_OPTION_MAX - 1];
+        const int count = font_info_fixed_sizes(
+            font_options[selected_font].path, font_options[selected_font].face_index, sizes, A_SIZE(sizes)
+        );
+        for (int i = 0; i < count && active_font_size_count < FONT_SIZE_OPTION_MAX; i++) {
+            if (sizes[i] > 0 && sizes[i] <= INT16_MAX) active_font_size_values[active_font_size_count++] = sizes[i];
+        }
+    } else if (!fixed_theme) {
+        for (int i = 1; i < font_size_count && active_font_size_count < FONT_SIZE_OPTION_MAX; i++)
+            active_font_size_values[active_font_size_count++] = font_size_values[i];
+    }
+
+    font_size_options_visible = active_font_size_count > 2;
+
+    lv_obj_t *const dropdowns[] = {
+        ui_dro_list_size_font, ui_dro_header_size_font, ui_dro_footer_size_font, ui_dro_panel_size_font
+    };
+    for (size_t d = 0; d < A_SIZE(dropdowns); d++) {
+        lv_dropdown_clear_options(dropdowns[d]);
+        lv_dropdown_add_option(dropdowns[d], lang.muxfont.size_default, LV_DROPDOWN_POS_LAST);
+        for (int i = 1; i < active_font_size_count; i++) {
+            char value[16];
+            snprintf(value, sizeof(value), "%d", active_font_size_values[i]);
+            lv_dropdown_add_option(dropdowns[d], value, LV_DROPDOWN_POS_LAST);
+        }
+        select_font_size_value(dropdowns[d], selected_values[d]);
+    }
+}
+
+static void apply_font_size_visibility(void) {
+    lv_obj_t *const labels[] = {
+        ui_lbl_list_size_font, ui_lbl_header_size_font, ui_lbl_footer_size_font, ui_lbl_panel_size_font
+    };
+    for (size_t i = 0; i < A_SIZE(labels); i++)
+        list_frame_set_suppressed(list_frame_row_of(labels[i]), !font_size_options_visible);
 }
 
 static void apply_current_font_settings(void) {
     config.settings.advanced.font = (int16_t) type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
 
+    if (config.settings.advanced.font == 0 || config.settings.advanced.font == 3)
+        selected_font_directory(config.settings.font.directory, sizeof(config.settings.font.directory));
+    else
+        config.settings.font.directory[0] = '\0';
+
     uint32_t idx = lv_dropdown_get_selected(ui_dro_list_size_font);
-    config.settings.font.list_size = (int16_t) (idx < (uint32_t) font_size_count ? font_size_values[idx] : 0);
+    config.settings.font.list_size =
+        (int16_t) (idx < (uint32_t) active_font_size_count ? active_font_size_values[idx] : 0);
 
     idx = lv_dropdown_get_selected(ui_dro_header_size_font);
-    config.settings.font.header_size = (int16_t) (idx < (uint32_t) font_size_count ? font_size_values[idx] : 0);
+    config.settings.font.header_size =
+        (int16_t) (idx < (uint32_t) active_font_size_count ? active_font_size_values[idx] : 0);
 
     idx = lv_dropdown_get_selected(ui_dro_footer_size_font);
-    config.settings.font.footer_size = (int16_t) (idx < (uint32_t) font_size_count ? font_size_values[idx] : 0);
+    config.settings.font.footer_size =
+        (int16_t) (idx < (uint32_t) active_font_size_count ? active_font_size_values[idx] : 0);
 
     idx = lv_dropdown_get_selected(ui_dro_panel_size_font);
-    config.settings.font.panel_size = (int16_t) (idx < (uint32_t) font_size_count ? font_size_values[idx] : 0);
+    config.settings.font.panel_size =
+        (int16_t) (idx < (uint32_t) active_font_size_count ? active_font_size_values[idx] : 0);
 
-    lv_dropdown_get_selected_str(ui_dro_font_name_font, config.settings.font.name, sizeof(config.settings.font.name));
+    const uint32_t selected_font = lv_dropdown_get_selected(ui_dro_font_name_font);
+    if (selected_font < font_option_count) {
+        snprintf(config.settings.font.name, sizeof(config.settings.font.name), "%s", font_options[selected_font].name);
+        config.settings.font.face = (int16_t) font_options[selected_font].face_index;
+    } else {
+        config.settings.font.name[0] = '\0';
+        config.settings.font.face = 0;
+    }
+    apply_font_axis_settings();
 
     lv_obj_remove_local_style_prop(ui_screen, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_remove_local_style_prop(ui_pnl_content, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
@@ -324,30 +780,21 @@ static void apply_current_font_settings(void) {
     lv_obj_remove_local_style_prop(ui_pnl_footer, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
 
     init_fonts_preview();
+    list_frame_refresh_text_geometry();
     lv_obj_invalidate(ui_screen);
-
-#define FONT(NAME, UDATA)                                                                                              \
-    do {                                                                                                               \
-        const lv_font_t *_f = lv_obj_get_style_text_font(ui_dro_##NAME##_font, LV_PART_MAIN);                          \
-        lv_coord_t _h = lv_font_get_line_height(_f);                                                                   \
-        lv_obj_set_height(ui_dro_##NAME##_font, _h);                                                                   \
-        if (theme.list_default.label_long_mode != LV_LABEL_LONG_WRAP) lv_obj_set_height(ui_lbl_##NAME##_font, _h);     \
-    } while (0);
-    FONT_ELEMENTS
-#undef FONT
 }
 
 static void revert_font_settings(void) {
     config.settings.advanced.font = (int16_t) type_to_canonical((uint32_t) type_original);
-    config.settings.font.list_size =
-        (int16_t) (list_size_original < font_size_count ? font_size_values[list_size_original] : 0);
-    config.settings.font.header_size =
-        (int16_t) (header_size_original < font_size_count ? font_size_values[header_size_original] : 0);
-    config.settings.font.footer_size =
-        (int16_t) (footer_size_original < font_size_count ? font_size_values[footer_size_original] : 0);
-    config.settings.font.panel_size =
-        (int16_t) (panel_size_original < font_size_count ? font_size_values[panel_size_original] : 0);
+    config.settings.font.list_size = font_list_size_saved;
+    config.settings.font.header_size = font_header_size_saved;
+    config.settings.font.footer_size = font_footer_size_saved;
+    config.settings.font.panel_size = font_panel_size_saved;
+    snprintf(config.settings.font.directory, sizeof(config.settings.font.directory), "%s", font_directory_saved);
     snprintf(config.settings.font.name, sizeof(config.settings.font.name), "%s", font_name_saved);
+    config.settings.font.face = font_face_saved;
+    config.settings.font.width = font_width_saved;
+    config.settings.font.italic = font_italic_saved;
 
     lv_obj_remove_local_style_prop(ui_screen, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
     lv_obj_remove_local_style_prop(ui_pnl_content, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
@@ -355,6 +802,7 @@ static void revert_font_settings(void) {
     lv_obj_remove_local_style_prop(ui_pnl_footer, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
 
     init_fonts_preview();
+    list_frame_refresh_text_geometry();
     lv_obj_invalidate(ui_screen);
 }
 
@@ -396,6 +844,7 @@ static void font_apply_lock(void) {
         lv_obj_set_style_img_opa(ui_ico_##NAME##_font, opa, MU_OBJ_MAIN_DEFAULT);                                      \
     } while (0)
 
+    LOCK_ROW(font_directory);
     LOCK_ROW(font_name);
     LOCK_ROW(list_size);
     LOCK_ROW(header_size);
@@ -404,10 +853,8 @@ static void font_apply_lock(void) {
 #undef LOCK_ROW
 
     // A dimmed row stays on screen but drops out of navigation
-    lv_obj_t *const rows[] = {
-        ui_lbl_font_name_font, ui_lbl_list_size_font, ui_lbl_header_size_font, ui_lbl_footer_size_font,
-        ui_lbl_panel_size_font
-    };
+    lv_obj_t *const rows[] = {ui_lbl_font_directory_font, ui_lbl_font_name_font,   ui_lbl_list_size_font,
+                              ui_lbl_header_size_font,    ui_lbl_footer_size_font, ui_lbl_panel_size_font};
     for (size_t i = 0; i < A_SIZE(rows); i++)
         list_frame_set_inert(list_frame_row_of(rows[i]), font_locked);
 }
@@ -416,14 +863,12 @@ static void font_apply_lock(void) {
 static int font_row_locked(const lv_obj_t *focused) {
     if (!font_locked) return 0;
 
-    return focused == ui_dro_font_name_font || focused == ui_dro_list_size_font || focused == ui_dro_header_size_font
-           || focused == ui_dro_footer_size_font || focused == ui_dro_panel_size_font;
+    return focused == ui_dro_font_directory_font || focused == ui_dro_font_name_font || focused == ui_dro_list_size_font
+           || focused == ui_dro_header_size_font || focused == ui_dro_footer_size_font
+           || focused == ui_dro_panel_size_font;
 }
 
-// Any font row drives the live preview
-static int font_row_focused(void) {
-    const lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-
+static int font_row(const lv_obj_t *focused) {
 #define FONT(NAME, UDATA)                                                                                              \
     if (focused == ui_dro_##NAME##_font) return 1;
     FONT_ELEMENTS
@@ -537,7 +982,15 @@ static void init_dropdown_settings(void) {
     FONT_ELEMENTS
 #undef FONT
 
-    lv_dropdown_get_selected_str(ui_dro_font_name_font, font_name_saved, sizeof(font_name_saved));
+    snprintf(font_directory_saved, sizeof(font_directory_saved), "%s", config.settings.font.directory);
+    snprintf(font_name_saved, sizeof(font_name_saved), "%s", config.settings.font.name);
+    font_face_saved = config.settings.font.face;
+    font_width_saved = config.settings.font.width;
+    font_italic_saved = config.settings.font.italic;
+    font_list_size_saved = config.settings.font.list_size;
+    font_header_size_saved = config.settings.font.header_size;
+    font_footer_size_saved = config.settings.font.footer_size;
+    font_panel_size_saved = config.settings.font.panel_size;
 
     font_apply_lock();
 
@@ -630,7 +1083,6 @@ static void init_navigation_group(void) {
         lang.muxcontent.video_preview.delay_10
     };
 
-    has_language_type = detect_language_type();
     has_theme_type = theme_has_font();
     has_custom_type = user_font_count() > 0;
 
@@ -640,7 +1092,7 @@ static void init_navigation_group(void) {
     };
 
     num_type_options = 0;
-    if (has_language_type) dropdown_to_canonical[num_type_options++] = 0;
+    dropdown_to_canonical[num_type_options++] = 0;
     if (has_theme_type) dropdown_to_canonical[num_type_options++] = 1;
     dropdown_to_canonical[num_type_options++] = 2;
     if (has_custom_type) dropdown_to_canonical[num_type_options++] = 3;
@@ -688,7 +1140,10 @@ static void init_navigation_group(void) {
         disabled_enabled, 2
     );
     INIT_OPTION_ITEM(-1, font, type, lang.muxfont.type, "type", type_options, num_type_options);
+    INIT_OPTION_ITEM(-1, font, font_directory, lang.muxfont.font_directory, "fontdirectory", NULL, 0);
     INIT_OPTION_ITEM(-1, font, font_name, lang.muxfont.font_name, "fontname", NULL, 0);
+    INIT_OPTION_ITEM(-1, font, width, lang.muxfont.width, "fontname", NULL, 0);
+    INIT_OPTION_ITEM(-1, font, italic, lang.muxfont.italic, "fontname", NULL, 0);
     INIT_OPTION_ITEM(-1, font, list_size, lang.muxfont.list_size, "listsize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, header_size, lang.muxfont.header_size, "headersize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, footer_size, lang.muxfont.footer_size, "footersize", NULL, 0);
@@ -771,12 +1226,15 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, sound_volume, lang.muxcustom.sound.volume, "soundvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, chime, lang.muxcustom.chime, "chime", disabled_enabled, 2);
 
-    populate_font_names();
-
+    populate_font_directories(config.settings.font.directory);
+    populate_font_names(
+        config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
+    );
     apply_theme_list_drop_down(&theme, ui_lbl_list_size_font, ui_dro_list_size_font, size_options);
     apply_theme_list_drop_down(&theme, ui_lbl_header_size_font, ui_dro_header_size_font, size_options);
     apply_theme_list_drop_down(&theme, ui_lbl_footer_size_font, ui_dro_footer_size_font, size_options);
     apply_theme_list_drop_down(&theme, ui_lbl_panel_size_font, ui_dro_panel_size_font, size_options);
+    populate_font_size_options();
 
     free(size_options);
 
@@ -865,10 +1323,15 @@ static void init_navigation_group(void) {
 
     init_custom_menu_schema(ui_objects_panel, ui_objects, ui_objects_glyph, ui_objects_value);
 
+    list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
+    apply_font_axis_visibility();
+    apply_font_size_visibility();
+
     list_nav_move(list_frame_restore(), +1);
 }
 
 static void check_focus(void) {
+    list_frame_reposition();
     apply_custom_menu_nav();
     footer_nav_check_scroll();
 }
@@ -925,18 +1388,37 @@ static void handle_option_prev(void) {
 
     lv_obj_t *focused = lv_group_get_focused(ui_group_value);
     if (font_row_locked(focused)) return;
+    const int focused_row = list_frame_current_row();
 
     move_option(focused, -1);
 
     if (focused == ui_dro_type_font) {
-        populate_font_names();
+        populate_font_directories(NULL);
+        populate_font_names(
+            config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
+        );
+        list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
         font_apply_lock();
-        list_frame_apply();
-        gen_step_movement(1, +1, 2, 0, 0);
+    } else if (focused == ui_dro_font_directory_font) {
+        char previous[MAX_BUFFER_SIZE];
+        const uint32_t selected = lv_dropdown_get_selected(ui_dro_font_name_font);
+        const unsigned int previous_face = selected < font_option_count ? font_options[selected].face_index : 0;
+        snprintf(previous, sizeof(previous), "%s", selected < font_option_count ? font_options[selected].name : "");
+        populate_font_names(previous, previous_face);
     }
 
-    if (font_row_focused()) apply_current_font_settings();
+    if (focused == ui_dro_type_font || focused == ui_dro_font_directory_font || focused == ui_dro_font_name_font) {
+        if (focused == ui_dro_font_name_font) populate_font_axes();
+        populate_font_size_options();
+        apply_font_axis_visibility();
+        apply_font_size_visibility();
+        list_frame_apply();
+        const int steps = list_frame_steps_to_row(focused_row);
+        if (steps > 0) gen_step_movement(steps, +1, 2, 0, 0);
+        check_focus();
+    }
 
+    if (font_row(focused)) apply_current_font_settings();
     refresh_overlay_preview();
 }
 
@@ -961,41 +1443,82 @@ static void handle_option_next(void) {
 
     lv_obj_t *focused = lv_group_get_focused(ui_group_value);
     if (font_row_locked(focused)) return;
+    const int focused_row = list_frame_current_row();
 
     move_option(focused, +1);
 
     if (focused == ui_dro_type_font) {
-        populate_font_names();
+        populate_font_directories(NULL);
+        populate_font_names(
+            config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
+        );
+        list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
         font_apply_lock();
-        list_frame_apply();
-        gen_step_movement(1, +1, 2, 0, 0);
+    } else if (focused == ui_dro_font_directory_font) {
+        char previous[MAX_BUFFER_SIZE];
+        const uint32_t selected = lv_dropdown_get_selected(ui_dro_font_name_font);
+        const unsigned int previous_face = selected < font_option_count ? font_options[selected].face_index : 0;
+        snprintf(previous, sizeof(previous), "%s", selected < font_option_count ? font_options[selected].name : "");
+        populate_font_names(previous, previous_face);
     }
 
-    if (font_row_focused()) apply_current_font_settings();
+    if (focused == ui_dro_type_font || focused == ui_dro_font_directory_font || focused == ui_dro_font_name_font) {
+        if (focused == ui_dro_font_name_font) populate_font_axes();
+        populate_font_size_options();
+        apply_font_axis_visibility();
+        apply_font_size_visibility();
+        list_frame_apply();
+        const int steps = list_frame_steps_to_row(focused_row);
+        if (steps > 0) gen_step_movement(steps, +1, 2, 0, 0);
+        check_focus();
+    }
 
+    if (font_row(focused)) apply_current_font_settings();
     refresh_overlay_preview();
 }
 
 static void restore_custom_options(void) {
     int canonical = config.settings.advanced.font;
     if (!has_theme_type && canonical == 1) canonical = 2;
-    if (!has_language_type && canonical == 0) canonical = has_theme_type ? 1 : 2;
 
     config.settings.advanced.font = (int16_t) canonical;
     lv_dropdown_set_selected(ui_dro_type_font, type_to_dropdown(canonical));
 
-    populate_font_names();
-    select_font_name(config.settings.font.name);
+    char directory[MAX_BUFFER_SIZE];
+    snprintf(directory, sizeof(directory), "%s", config.settings.font.directory);
+    if (!directory[0]) {
+        const char *slash = strrchr(config.settings.font.name, '/');
+        if (slash)
+            snprintf(
+                directory, sizeof(directory), "%.*s", (int) (slash - config.settings.font.name),
+                config.settings.font.name
+            );
+    }
 
-    map_drop_down_to_index(ui_dro_list_size_font, config.settings.font.list_size, font_size_values, font_size_count, 0);
+    populate_font_directories(directory);
+    populate_font_names(
+        config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
+    );
+    select_font_name(
+        config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
+    );
+    populate_font_size_options();
+    list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
+    apply_font_axis_visibility();
+    apply_font_size_visibility();
+    list_frame_apply();
+
     map_drop_down_to_index(
-        ui_dro_header_size_font, config.settings.font.header_size, font_size_values, font_size_count, 0
+        ui_dro_list_size_font, config.settings.font.list_size, active_font_size_values, active_font_size_count, 0
     );
     map_drop_down_to_index(
-        ui_dro_footer_size_font, config.settings.font.footer_size, font_size_values, font_size_count, 0
+        ui_dro_header_size_font, config.settings.font.header_size, active_font_size_values, active_font_size_count, 0
     );
     map_drop_down_to_index(
-        ui_dro_panel_size_font, config.settings.font.panel_size, font_size_values, font_size_count, 0
+        ui_dro_footer_size_font, config.settings.font.footer_size, active_font_size_values, active_font_size_count, 0
+    );
+    map_drop_down_to_index(
+        ui_dro_panel_size_font, config.settings.font.panel_size, active_font_size_values, active_font_size_count, 0
     );
 
 #define VISUAL(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_visual, config.visual.NAME);
@@ -1146,18 +1669,52 @@ static int save_custom_options(void) {
         if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, config.settings.advanced.font))
             save_failed++;
     }
-    CHECK_AND_SAVE_VAL(font, list_size, "settings/font/list_size", INT, font_size_values);
-    CHECK_AND_SAVE_VAL(font, header_size, "settings/font/header_size", INT, font_size_values);
-    CHECK_AND_SAVE_VAL(font, footer_size, "settings/font/footer_size", INT, font_size_values);
-    CHECK_AND_SAVE_VAL(font, panel_size, "settings/font/panel_size", INT, font_size_values);
+#define SAVE_FONT_SIZE(NAME, FILE)                                                                                     \
+    do {                                                                                                               \
+        if (config.settings.font.NAME != font_##NAME##_saved) {                                                        \
+            is_modified++;                                                                                             \
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/" FILE, INT, config.settings.font.NAME))    \
+                save_failed++;                                                                                         \
+        }                                                                                                              \
+    } while (0)
+    SAVE_FONT_SIZE(list_size, "list_size");
+    SAVE_FONT_SIZE(header_size, "header_size");
+    SAVE_FONT_SIZE(footer_size, "footer_size");
+    SAVE_FONT_SIZE(panel_size, "panel_size");
+#undef SAVE_FONT_SIZE
 
     if (config.settings.advanced.font != 1) {
-        char name_current[MAX_BUFFER_SIZE];
-        lv_dropdown_get_selected_str(ui_dro_font_name_font, name_current, sizeof(name_current));
-        if (strcasecmp(name_current, font_name_saved) != 0) {
+        if (strcasecmp(config.settings.font.directory, font_directory_saved) != 0) {
             is_modified++;
-            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, name_current)) save_failed++;
+            if (!write_text_to_file_atomic(
+                    CONF_CONFIG_PATH "settings/font/directory", CHAR, config.settings.font.directory
+                ))
+                save_failed++;
         }
+
+        if (strcasecmp(config.settings.font.name, font_name_saved) != 0) {
+            is_modified++;
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, config.settings.font.name))
+                save_failed++;
+        }
+
+        if (config.settings.font.face != font_face_saved) {
+            is_modified++;
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/face", INT, config.settings.font.face))
+                save_failed++;
+        }
+
+#define SAVE_FONT_AXIS(NAME, FILE)                                                                                     \
+    do {                                                                                                               \
+        if (config.settings.font.NAME != font_##NAME##_saved) {                                                        \
+            is_modified++;                                                                                             \
+            if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/" FILE, INT, config.settings.font.NAME))    \
+                save_failed++;                                                                                         \
+        }                                                                                                              \
+    } while (0)
+        SAVE_FONT_AXIS(width, "width");
+        SAVE_FONT_AXIS(italic, "italic");
+#undef SAVE_FONT_AXIS
     }
 
     if (is_modified != modified_before_font) refresh_resolution = 1;
@@ -1365,7 +1922,10 @@ static int16_t kiosk_pass = 0;
     ROW(visual, title_include_root_drive, "titleincluderootdrive", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, \
         change)                                                                                                        \
     ROW(font, type, "type", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                  \
+    ROW(font, font_directory, "fontdirectory", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
     ROW(font, font_name, "fontname", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                         \
+    ROW(font, width, "width", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                \
+    ROW(font, italic, "italic", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
     ROW(font, list_size, "listsize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                         \
     ROW(font, header_size, "headersize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                     \
     ROW(font, footer_size, "footersize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                     \
@@ -1852,6 +2412,7 @@ int muxcustom_main(void) {
     orientation_introduce(mux_module, lang.muxcustom.title, lang.muxcustom.overview);
 
     mux_input_task(&input_opts);
+    clear_font_options();
 
     return 0;
 }

@@ -19,8 +19,16 @@ static void update_font_for_language(const char *new_language) {
         for (int i = 0; i < n; i++) {
             const char *fname = entries[i]->d_name;
             const size_t len = strlen(fname);
-            if (!first_name[0] && len > 4 && strcasecmp(fname + len - 4, ".ttf") == 0) {
-                snprintf(first_name, sizeof(first_name), "%.*s", (int) (len - 4), fname);
+            const int supported =
+                len > 4
+                && (strcasecmp(fname + len - 4, ".ttf") == 0 || strcasecmp(fname + len - 4, ".otf") == 0
+                    || strcasecmp(fname + len - 4, ".ttc") == 0 || strcasecmp(fname + len - 4, ".pcf") == 0
+                    || strcasecmp(fname + len - 4, ".bdf") == 0);
+            if (!first_name[0] && supported) {
+                if (strcasecmp(fname + len - 4, ".ttf") == 0)
+                    snprintf(first_name, sizeof(first_name), "%.*s", (int) (len - 4), fname);
+                else
+                    snprintf(first_name, sizeof(first_name), "%s", fname);
             }
             free(entries[i]);
         }
@@ -28,13 +36,21 @@ static void update_font_for_language(const char *new_language) {
 
         if (first_name[0]) {
             write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, 0);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/directory", CHAR, new_language);
             write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, first_name);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/face", INT, 0);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/width", INT, 0);
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/italic", INT, 0);
             return;
         }
     }
 
     write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, 2);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/directory", CHAR, "");
     write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/name", CHAR, DEFAULT_FONT_NAME);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/face", INT, 0);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/width", INT, 0);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/italic", INT, 0);
 }
 
 static void show_help(void) {
@@ -100,6 +116,13 @@ static void create_language_items(void) {
         apply_size_to_content(&theme, ui_pnl_content, ui_lbl_language_item, ui_lbl_language_glyph, items[i].name);
         apply_text_long_dot(&theme, ui_lbl_language_item);
     }
+}
+
+static int current_language_index(void) {
+    for (size_t i = 0; i < item_count; i++)
+        if (strcasecmp(items[i].name, config.settings.general.language) == 0) return (int) i;
+
+    return 0;
 }
 
 static void finish_extract(void) {
@@ -239,7 +262,7 @@ int muxlanguage_main(void) {
     init_elements();
 
     if (ui_count_static > 0) {
-        list_nav_next(0);
+        list_nav_next(current_language_index());
         lv_obj_update_layout(ui_pnl_content);
     } else if (!ui_count_static) {
         lv_label_set_text(ui_lbl_screen_message, lang.muxlanguage.none);

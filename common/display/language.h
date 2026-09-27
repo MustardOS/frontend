@@ -854,7 +854,11 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         char type[MAX_BUFFER_SIZE];
+        char font_directory[MAX_BUFFER_SIZE];
+        char directory_root[MAX_BUFFER_SIZE];
         char font_name[MAX_BUFFER_SIZE];
+        char width[MAX_BUFFER_SIZE];
+        char italic[MAX_BUFFER_SIZE];
         char list_size[MAX_BUFFER_SIZE];
         char header_size[MAX_BUFFER_SIZE];
         char footer_size[MAX_BUFFER_SIZE];
@@ -869,7 +873,10 @@ struct mux_lang {
         } type_options;
         struct {
             char type[MAX_BUFFER_SIZE];
+            char font_directory[MAX_BUFFER_SIZE];
             char font_name[MAX_BUFFER_SIZE];
+            char width[MAX_BUFFER_SIZE];
+            char italic[MAX_BUFFER_SIZE];
             char list_size[MAX_BUFFER_SIZE];
             char header_size[MAX_BUFFER_SIZE];
             char footer_size[MAX_BUFFER_SIZE];

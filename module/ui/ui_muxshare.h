@@ -287,7 +287,10 @@
 
 #define FONT_ELEMENTS                                                                                                  \
     FONT(type, "type")                                                                                                 \
+    FONT(font_directory, "fontdirectory")                                                                              \
     FONT(font_name, "fontname")                                                                                        \
+    FONT(width, "width")                                                                                               \
+    FONT(italic, "italic")                                                                                             \
     FONT(list_size, "listsize")                                                                                        \
     FONT(header_size, "headersize")                                                                                    \
     FONT(footer_size, "footersize")                                                                                    \

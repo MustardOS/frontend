@@ -13,6 +13,9 @@
 #include "../core/lv_refr.h"
 #include "../misc/lv_bidi.h"
 #include "../misc/lv_assert.h"
+#if LV_USE_TINY_TTF
+#include "../extra/libs/tiny_ttf/lv_tiny_ttf.h"
+#endif
 
 /*********************
  *      DEFINES
@@ -262,6 +265,24 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
         const char *bidi_txt = txt + line_start;
 #endif
 
+#if LV_USE_TINY_TTF
+        lv_tiny_ttf_shape_t shaped_line = {0};
+        uint32_t shaped_length = line_end - line_start;
+        bool has_recolor_cmd = false;
+        while (shaped_length > 0 && (bidi_txt[shaped_length - 1] == '\n' || bidi_txt[shaped_length - 1] == '\r')) {
+            shaped_length--;
+        }
+        if ((dsc->flag & LV_TEXT_FLAG_RECOLOR) != 0) {
+            for (uint32_t byte = 0; byte < shaped_length; byte++) {
+                if (bidi_txt[byte] == LV_TXT_COLOR_CMD[0]) {
+                    has_recolor_cmd = true;
+                    break;
+                }
+            }
+        }
+        if (!has_recolor_cmd && shaped_length > 0) lv_tiny_ttf_shape_text(font, bidi_txt, shaped_length, &shaped_line);
+#endif
+
         while (i < line_end - line_start) {
             uint32_t logical_char_pos = 0;
             if (sel_start != 0xFFFF && sel_end != 0xFFFF) {
@@ -274,9 +295,18 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
 #endif
             }
 
+            const uint32_t letter_start = i;
             uint32_t letter;
             uint32_t letter_next;
             _lv_txt_encoded_letter_next_2(bidi_txt, &letter, &letter_next, &i);
+#if LV_USE_TINY_TTF
+            const uint32_t shaped_letter = lv_tiny_ttf_shape_glyph_at(&shaped_line, letter_start);
+            if (shaped_letter != 0) {
+                letter = shaped_letter;
+                const uint32_t shaped_next = lv_tiny_ttf_shape_glyph_at(&shaped_line, i);
+                if (shaped_next != 0) letter_next = shaped_next;
+            }
+#endif
             /*Handle the re-color command*/
             if ((dsc->flag & LV_TEXT_FLAG_RECOLOR) != 0) {
                 if (letter == (uint32_t) LV_TXT_COLOR_CMD[0]) {
@@ -318,7 +348,12 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
 
             if (cmd_state == CMD_STATE_IN) color = recolor;
 
+#if LV_USE_TINY_TTF
+            letter_w = shaped_letter != 0 ? lv_tiny_ttf_shape_advance_at(&shaped_line, letter_start)
+                                          : lv_font_get_glyph_width(font, letter, letter_next);
+#else
             letter_w = lv_font_get_glyph_width(font, letter, letter_next);
+#endif
 
             if (sel_start != 0xFFFF && sel_end != 0xFFFF) {
                 if (logical_char_pos >= sel_start && logical_char_pos < sel_end) {
@@ -373,6 +408,9 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
 #if LV_USE_BIDI
         lv_mem_buf_release(bidi_txt);
         bidi_txt = NULL;
+#endif
+#if LV_USE_TINY_TTF
+        lv_tiny_ttf_shape_destroy(&shaped_line);
 #endif
         /*Go to next line*/
         line_start = line_end;

@@ -114,6 +114,22 @@ component, so a rebuild only touches what actually changed.
 Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with different flags cannot be reused. The current
 configuration is recorded in `.build-config`.
 
+### Compilation database
+
+Generate `compile_commands.json` from a clean build when using CLion, clangd or another editor that supports compilation databases:
+
+```sh
+BUILD=release ./build.sh database -j$(nproc)
+```
+
+The command uses the selected cross-toolchain and records the real compiler arguments from the root project and its nested components. Temporary capture files
+are written beneath `/tmp/mustardos`. The resulting `compile_commands.json` is local development metadata and remains excluded from Git.
+
+To use it as the CLion project model, enable CLion's bundled **Compilation Database** plugin and restart the IDE. Close any existing Makefile project for this
+directory, then select **Open** from the welcome screen, choose `compile_commands.json`, press **OK**, and open it as a project. An existing `.idea` directory
+created by the Makefile importer must be moved aside before the one-time import. Afterwards, select the appropriate compiler under **Build, Execution,
+Deployment → Compilation Database**.
+
 ### Generated metadata
 
 Every normal build refreshes the generated language template, third-party version table, and internal script hashes after any configuration-driven clean. Output

@@ -48,6 +48,8 @@ void list_frame_apply(void);
 
 void list_frame_reposition(void);
 
+void list_frame_refresh_text_geometry(void);
+
 int list_frame_move(int direction);
 
 int list_frame_go(int index);

@@ -13,6 +13,9 @@
 #include "lv_log.h"
 #include "lv_mem.h"
 #include "lv_assert.h"
+#if LV_USE_TINY_TTF
+#include "../extra/libs/tiny_ttf/lv_tiny_ttf.h"
+#endif
 
 /*********************
  *      DEFINES
@@ -190,6 +193,10 @@ void lv_txt_get_size(
 static uint32_t lv_txt_get_next_word(
     const char *txt, const lv_font_t *font, lv_coord_t letter_space, lv_coord_t max_width, lv_text_flag_t flag,
     uint32_t *word_w_ptr, lv_text_cmd_state_t *cmd_state, int force
+#if LV_USE_TINY_TTF
+    ,
+    const lv_tiny_ttf_shape_t *shape, uint32_t shape_offset
+#endif
 ) {
     if (txt == NULL || txt[0] == '\0') return 0;
     if (font == NULL) return 0;
@@ -223,7 +230,13 @@ static uint32_t lv_txt_get_next_word(
             }
         }
 
+#if LV_USE_TINY_TTF
+        const uint32_t shaped_letter = lv_tiny_ttf_shape_glyph_at(shape, shape_offset + i);
+        letter_w = shaped_letter != 0 ? lv_tiny_ttf_shape_advance_at(shape, shape_offset + i)
+                                      : lv_font_get_glyph_width(font, letter, letter_next);
+#else
         letter_w = lv_font_get_glyph_width(font, letter, letter_next);
+#endif
         cur_w += letter_w;
 
         if (letter_w > 0) {
@@ -323,10 +336,29 @@ uint32_t _lv_txt_get_next_line(
     lv_text_cmd_state_t cmd_state = LV_TEXT_CMD_STATE_WAIT;
     uint32_t i = 0; /*Iterating index into txt*/
 
+#if LV_USE_TINY_TTF
+    uint32_t shape_length = 0;
+    bool has_recolor_cmd = false;
+    while (txt[shape_length] != '\0' && txt[shape_length] != '\n' && txt[shape_length] != '\r') {
+        if (txt[shape_length] == LV_TXT_COLOR_CMD[0]) has_recolor_cmd = true;
+        shape_length++;
+    }
+
+    lv_tiny_ttf_shape_t shape = {0};
+    if (shape_length > 0 && (((flag & LV_TEXT_FLAG_RECOLOR) == 0) || !has_recolor_cmd))
+        lv_tiny_ttf_shape_text(font, txt, shape_length, &shape);
+#endif
+
     while (txt[i] != '\0' && max_width > 0) {
         uint32_t word_w = 0;
         uint32_t advance =
-            lv_txt_get_next_word(&txt[i], font, letter_space, max_width, flag, &word_w, &cmd_state, i == 0);
+            lv_txt_get_next_word(
+            &txt[i], font, letter_space, max_width, flag, &word_w, &cmd_state, i == 0
+#if LV_USE_TINY_TTF
+            ,
+            &shape, i
+#endif
+        );
         max_width -= word_w;
         line_w += word_w;
 
@@ -356,6 +388,9 @@ uint32_t _lv_txt_get_next_line(
         *used_width = line_w;
     }
 
+#if LV_USE_TINY_TTF
+    lv_tiny_ttf_shape_destroy(&shape);
+#endif
     return i;
 }
 
@@ -369,6 +404,35 @@ lv_coord_t lv_txt_get_width(
     uint32_t i = 0;
     lv_coord_t width = 0;
     lv_text_cmd_state_t cmd_state = LV_TEXT_CMD_STATE_WAIT;
+
+#if LV_USE_TINY_TTF
+    bool has_recolor_cmd = false;
+    if ((flag & LV_TEXT_FLAG_RECOLOR) != 0) {
+        for (uint32_t byte = 0; byte < length; byte++) {
+            if (txt[byte] == LV_TXT_COLOR_CMD[0]) {
+                has_recolor_cmd = true;
+                break;
+            }
+        }
+    }
+
+    if (length != 0 && !has_recolor_cmd) {
+        uint32_t shape_length = length;
+        while (shape_length > 0 && (txt[shape_length - 1] == '\n' || txt[shape_length - 1] == '\r'))
+            shape_length--;
+
+        lv_tiny_ttf_shape_t shape = {0};
+        if (shape_length > 0 && lv_tiny_ttf_shape_text(font, txt, shape_length, &shape)) {
+            for (uint32_t glyph = 0; glyph < shape.count; glyph++) {
+                const lv_coord_t advance = shape.glyphs[glyph].advance;
+                if (advance > 0) width += advance + letter_space;
+            }
+            if (width > 0) width -= letter_space;
+            lv_tiny_ttf_shape_destroy(&shape);
+            return width;
+        }
+    }
+#endif
 
     if (length != 0) {
         while (i < length) {

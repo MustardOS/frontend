@@ -15,11 +15,12 @@ USAGE() {
 	printf "\n"
 	printf "%s\n" "Usage:"
 	printf "  %s                     guided setup so no flags to remember\n" "$0"
-	printf "  %s [print|generate|make [args...]]\n" "$0"
+	printf "  %s [print|generate|database|make [args...]]\n" "$0"
 	printf "\n"
 	printf "%s\n" "Examples:"
 	printf "  %s print\n" "$0"
 	printf "  %s generate\n" "$0"
+	printf "  %s database -j4\n" "$0"
 	printf "  %s make -j4\n" "$0"
 	printf "  DEVICE=ARM32 BUILD=release %s make -j4\n" "$0"
 	printf "\n"
@@ -581,6 +582,27 @@ GENERATE() {
 	GEN_VERIFY
 }
 
+COMPILE_DATABASE() {
+	DB_CC=$1
+	shift
+
+	FRONTEND_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+	DB_CAPTURE_DIR=/tmp/mustardos/compile-database
+	DB_OUTPUT="$FRONTEND_DIR/compile_commands.json"
+	DB_CAPTURE="$FRONTEND_DIR/tooling/compdb"
+
+	rm -rf "$DB_CAPTURE_DIR"
+	mkdir -p "$DB_CAPTURE_DIR"
+	export MUOS_COMPDB_DIR="$DB_CAPTURE_DIR"
+	export MUOS_COMPDB_ROOT="$FRONTEND_DIR"
+
+	make BUILD="$BUILD" clean
+	make BUILD="$BUILD" CC="$DB_CAPTURE ccache $DB_CC" "$@"
+	"$DB_CAPTURE" --merge "$DB_OUTPUT" "$DB_CAPTURE_DIR"
+
+	printf 'Wrote %s\n' "$DB_OUTPUT"
+}
+
 if [ "${1-}" = "generate" ]; then
 	shift
 	[ $# -eq 0 ] || USAGE
@@ -604,6 +626,10 @@ if [ "$DEVICE" = "NATIVE" ]; then
 
 	CMD=${1-}
 	case "$CMD" in
+		database)
+			shift
+			COMPILE_DATABASE gcc "$@"
+			;;
 		make)
 			shift
 			if command -v make >/dev/null 2>&1; then
@@ -729,6 +755,7 @@ RUN_MAKE() {
 
 CMD=${1-}
 case "$CMD" in
+	database) shift && COMPILE_DATABASE "$CC" "$@" ;;
 	make) shift && RUN_MAKE "$@" ;;
 	print) PRINT_ENV ;;
 	*) USAGE ;;

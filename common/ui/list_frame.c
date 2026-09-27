@@ -2,7 +2,6 @@
 #include <common/ui/list_frame.h>
 #include <module/muxshare.h>
 #include <common/base/options.h>
-#include <common/ui/common.h>
 #include <common/ui/nav.h>
 
 // Room for every row a paged screen might hold
@@ -241,6 +240,27 @@ void list_frame_reposition(void) {
     nav_refresh_list_overflow(content);
 
     nav_moved = 1;
+}
+
+static void refresh_text_geometry(lv_obj_t *obj) {
+    if (!obj || !lv_obj_is_valid(obj)) return;
+    if (!lv_obj_check_type(obj, &lv_label_class) && !lv_obj_check_type(obj, &lv_dropdown_class)) return;
+
+    const lv_font_t *font = lv_obj_get_style_text_font(obj, MU_OBJ_MAIN_DEFAULT);
+    if (font) lv_obj_set_height(obj, lv_font_get_line_height(font));
+}
+
+void list_frame_refresh_text_geometry(void) {
+    if (!list_frame_active()) return;
+
+    refresh_text_geometry(bar_label);
+    for (int i = 0; i < row_total; i++) {
+        if (row_labels) refresh_text_geometry(row_labels[i]);
+        if (row_values) refresh_text_geometry(row_values[i]);
+    }
+
+    lv_obj_update_layout(content);
+    list_frame_reposition();
 }
 
 int list_frame_focused(void) {

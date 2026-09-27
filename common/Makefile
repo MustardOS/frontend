@@ -38,9 +38,9 @@ DISPLAY_SRCS = \
     display/text.c display/theme.c display/theme_base.c
 
 UI_SRCS = \
-    ui/cache.c ui/common.c ui/dialogue.c ui/empty_state.c ui/font.c \
+    ui/cache.c ui/common.c ui/dialogue.c ui/empty_state.c ui/font.c ui/font_info.c \
     ui/fs_choice.c ui/glyph.c ui/grid.c ui/image.c ui/list_frame.c \
-    ui/modal.c ui/more.c ui/nav.c ui/notify.c ui/orientation.c ui/osk.c \
+    ui/modal.c ui/more.c ui/nav.c ui/notify.c ui/orientation.c ui/osk.c ui/rich_text.c \
     ui/task_progress.c ui/task_prompt.c ui/transition.c \
     ui/navigation/grid_nav.c ui/navigation/list_nav.c
 
