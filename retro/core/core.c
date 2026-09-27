@@ -16,6 +16,7 @@
 #include <common/storage/union.h>
 #include "muxretro.h"
 #include "core.h"
+#include "perf_interface.h"
 #include "subsystem.h"
 #include "paths.h"
 #include "../input/core_input_meta.h"
@@ -77,6 +78,7 @@ static int open_core(const char *corefile) {
         if (current_core.retro_deinit) current_core.retro_deinit();
     }
 
+    perf_interface_reset();
     if (current_core.handle) dlclose(current_core.handle);
 
     void (*set_environment)(retro_environment_t) = NULL;
@@ -779,6 +781,7 @@ void core_unload(void) {
     if (!current_core.initialised) return;
 
     if (current_core.retro_deinit) current_core.retro_deinit();
+    perf_interface_reset();
     if (current_core.handle) dlclose(current_core.handle);
 
     memset(&current_core, 0, sizeof(current_core));

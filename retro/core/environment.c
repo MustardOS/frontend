@@ -15,6 +15,7 @@
 #include "subsystem.h"
 #include "../ui/options.h"
 #include "paths.h"
+#include "perf_interface.h"
 #include "../input/rumble.h"
 #include "../settings/settings.h"
 #include "../state/vfs.h"
@@ -23,6 +24,7 @@
 static enum retro_pixel_format pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
 
 #define MUX_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB 0x800003
+#define MUX_ENVIRONMENT_SET_HW_SHARED_CONTEXT_LEGACY  44
 
 static bool clear_all_thread_waits(const unsigned clear, void *data) {
     (void) clear;
@@ -183,11 +185,21 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
+        case RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY: {
+            static const char *dir = STORAGE_BIOS;
+            if (data) *(const char **) data = dir;
+            return data != NULL;
+        }
+
         case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: {
             static struct retro_log_callback log_cb;
             log_cb.log = mux_retro_log_printf;
             *(struct retro_log_callback *) data = log_cb;
             return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_PERF_INTERFACE: {
+            return perf_interface_get(data);
         }
 
         case RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO: {
@@ -342,6 +354,20 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             if (data) *(unsigned *) data = 1 + MUX_INPUT_MAX_EXTRA_PLAYERS;
             return true;
         }
+
+        case RETRO_ENVIRONMENT_GET_LANGUAGE: {
+            if (data) *(unsigned *) data = RETRO_LANGUAGE_ENGLISH;
+            return data != NULL;
+        }
+
+        case RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION: {
+            if (data) *(unsigned *) data = 1;
+            return data != NULL;
+        }
+
+        case MUX_ENVIRONMENT_SET_HW_SHARED_CONTEXT_LEGACY:
+        case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
+            return true;
 
         case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK: {
             const struct retro_audio_buffer_status_callback *cb = data;
@@ -502,8 +528,9 @@ void environment_notify_frame_time(void) {
     if (!throttled) {
         const uint64_t now = SDL_GetPerformanceCounter();
         if (frame_time_last_valid) {
-            const double ns = (double) (now - frame_time_last_counter) * 1e9 / (double) SDL_GetPerformanceFrequency();
-            usec = (retro_usec_t) (ns / 1000.0);
+            static double usec_per_tick = 0.0;
+            if (usec_per_tick == 0.0) usec_per_tick = 1000000.0 / (double) SDL_GetPerformanceFrequency();
+            usec = (retro_usec_t) ((double) (now - frame_time_last_counter) * usec_per_tick);
 
             if (frame_time_reference > 0 && usec > frame_time_reference * FRAME_TIME_MAX_REFERENCE_MULTIPLIER) {
                 if (usec > frame_time_clamp_peak) frame_time_clamp_peak = usec;

@@ -14,35 +14,37 @@ static unsigned char code_secret[TOTP_SECRET_SIZE];
 static int64_t shown_window = -1;
 static int shown_remaining = -1;
 
-/* The address someone would type into a browser. Prefers the memorable .local name when
-   the resolver is advertising it, and falls back to whatever address the device holds. */
-static void dashboard_address(char *out, const size_t out_size) {
+static void dashboard_local_address(char *out, const size_t out_size) {
+    out[0] = '\0';
+    if (!config.web.mdns) return;
+
+    const char *port = config.web.landing_port[0] ? config.web.landing_port : "80";
+    const int standard = strcmp(port, "80") == 0;
+    char *effective_name = read_line_char_from(RUN_PATH "mdns_name", 1);
+    if (effective_name && *effective_name) {
+        if (standard)
+            snprintf(out, out_size, "http://%s.local", effective_name);
+        else
+            snprintf(out, out_size, "http://%s.local:%s", effective_name, port);
+    }
+    free(effective_name);
+}
+
+static int dashboard_ip_address(char *out, const size_t out_size) {
     const char *port = config.web.landing_port[0] ? config.web.landing_port : "80";
     const int standard = strcmp(port, "80") == 0;
 
-    if (config.web.mdns) {
-        char *effective_name = read_line_char_from(RUN_PATH "mdns_name", 1);
-        if (effective_name && *effective_name) {
-            if (standard)
-                snprintf(out, out_size, "http://%s.local", effective_name);
-            else
-                snprintf(out, out_size, "http://%s.local:%s", effective_name, port);
-            free(effective_name);
-            return;
-        }
-        free(effective_name);
-    }
-
     char address[64];
     if (!get_any_ipv4_address(address, sizeof(address)) || !address[0]) {
-        snprintf(out, out_size, "%s", lang.muxwebcode.no_address);
-        return;
+        out[0] = '\0';
+        return 0;
     }
 
     if (standard)
         snprintf(out, out_size, "http://%s", address);
     else
         snprintf(out, out_size, "http://%s:%s", address, port);
+    return 1;
 }
 
 /* Spaces the digits apart so the code stays readable from across a room. */
@@ -140,39 +142,66 @@ static void resolve_state(void) {
 }
 
 static void apply_state(void) {
-    const int showing = screen_state == state_code;
+    const int showing_code = screen_state == state_code;
+    const int showing_service = screen_state != state_no_service;
 
     lv_obj_t *const code_parts[] = {
-        ui_lbl_code_webcode, ui_pnl_expiry_webcode, ui_lbl_expiry_webcode, ui_lbl_address_webcode
+        ui_lbl_code_webcode, ui_pnl_expiry_webcode, ui_lbl_expiry_webcode
     };
 
     for (size_t i = 0; i < A_SIZE(code_parts); ++i) {
-        if (showing)
+        if (showing_code)
             lv_obj_clear_flag(code_parts[i], MU_OBJ_FLAG_HIDE_FLOAT);
         else
             lv_obj_add_flag(code_parts[i], MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
-    if (showing)
+    if (showing_code)
         lv_obj_add_flag(ui_lbl_notice_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
     else
         lv_obj_clear_flag(ui_lbl_notice_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
 
-    if (showing) {
-        char address[MAX_BUFFER_SIZE];
-        dashboard_address(address, sizeof(address));
-        lv_label_set_text(ui_lbl_address_webcode, address);
-
+    if (showing_code) {
         lv_bar_set_range(ui_bar_expiry_webcode, 0, TOTP_STEP);
         refresh_code();
-        return;
     }
 
-    lv_label_set_text(
-        ui_lbl_notice_webcode, screen_state == state_no_service ? lang.muxwebcode.no_service
-                               : screen_state == state_no_auth  ? lang.muxwebcode.no_auth
-                                                                : lang.muxwebcode.unavailable
-    );
+    if (!showing_code) {
+        lv_label_set_text(
+            ui_lbl_notice_webcode, screen_state == state_no_service ? lang.muxwebcode.no_service
+                                   : screen_state == state_no_auth  ? lang.muxwebcode.no_auth
+                                                                    : lang.muxwebcode.unavailable
+        );
+    }
+
+    char local_address[MAX_BUFFER_SIZE];
+    char ip_address[MAX_BUFFER_SIZE];
+    dashboard_local_address(local_address, sizeof(local_address));
+    const int has_ip_address = showing_service && dashboard_ip_address(ip_address, sizeof(ip_address));
+
+    if (showing_service && local_address[0]) {
+        lv_label_set_text_fmt(ui_lbl_local_address_webcode, "%s: %s", lang.muxwebcode.local_address, local_address);
+        lv_obj_clear_flag(ui_lbl_local_address_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_local_address_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (has_ip_address) {
+        lv_label_set_text_fmt(ui_lbl_ip_address_webcode, "%s: %s", lang.muxwebcode.ip_address, ip_address);
+        lv_obj_clear_flag(ui_lbl_ip_address_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+
+        if (lv_qrcode_update(ui_qr_address_webcode, ip_address, strlen(ip_address)) == LV_RES_OK)
+            lv_obj_clear_flag(ui_pnl_qr_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+        else
+            lv_obj_add_flag(ui_pnl_qr_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_ip_address_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnl_qr_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+        if (showing_service && showing_code) {
+            lv_label_set_text(ui_lbl_notice_webcode, lang.muxwebcode.no_address);
+            lv_obj_clear_flag(ui_lbl_notice_webcode, MU_OBJ_FLAG_HIDE_FLOAT);
+        }
+    }
 }
 
 int muxwebcode_main(void) {

@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <linux/fb.h>
@@ -99,6 +100,7 @@ void show_current_mode(void) {
 }
 
 int set_framebuffer(int width, int height, int depth, int hsync_len, int vsync_len, int ignore_dh, int rotation) {
+    struct fb_fix_screeninfo f_info;
     struct fb_var_screeninfo v_info, verify;
     int fb_fd;
 
@@ -110,6 +112,12 @@ int set_framebuffer(int width, int height, int depth, int hsync_len, int vsync_l
 
     if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &v_info) < 0) {
         LOG_ERROR(module, "Error retrieving variable screen info");
+        close(fb_fd);
+        return -1;
+    }
+
+    if (ioctl(fb_fd, FBIOGET_FSCREENINFO, &f_info) < 0) {
+        LOG_ERROR(module, "Error retrieving fixed screen info");
         close(fb_fd);
         return -1;
     }
@@ -135,16 +143,48 @@ int set_framebuffer(int width, int height, int depth, int hsync_len, int vsync_l
 
     if (rotation >= 0) v_info.rotate = rotation;
 
+    const size_t bytes_per_pixel = ((size_t) v_info.bits_per_pixel + 7u) / 8u;
+    if (!bytes_per_pixel || !v_info.xres_virtual || !v_info.yres_virtual
+        || v_info.xres_virtual > SIZE_MAX / bytes_per_pixel
+        || (size_t) v_info.xres_virtual * bytes_per_pixel > SIZE_MAX / v_info.yres_virtual) {
+        LOG_ERROR(module, "Requested framebuffer dimensions overflow");
+        close(fb_fd);
+        return -1;
+    }
+
+    const size_t requested_size = (size_t) v_info.xres_virtual * (size_t) v_info.yres_virtual * bytes_per_pixel;
+    if (requested_size > f_info.smem_len) {
+        LOG_ERROR(
+            module, "Framebuffer allocation too small: need %zu bytes for %ux%u@%u, have %u bytes", requested_size,
+            v_info.xres_virtual, v_info.yres_virtual, v_info.bits_per_pixel, f_info.smem_len
+        );
+        close(fb_fd);
+        return -1;
+    }
+
     if (ioctl(fb_fd, FBIOPUT_VSCREENINFO, &v_info) < 0) {
         LOG_ERROR(module, "Error setting variable screen info");
         close(fb_fd);
         return -1;
     }
 
-    if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &verify) == 0) {
-        if (verify.xres != v_info.xres || verify.yres != v_info.yres) {
-            LOG_WARN(module, "Hardware adjusted the mode: got %dx%d instead", verify.xres, verify.yres);
-        }
+    if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &verify) < 0) {
+        LOG_ERROR(module, "Error verifying variable screen info");
+        close(fb_fd);
+        return -1;
+    }
+
+    if (verify.xres != v_info.xres || verify.yres != v_info.yres || verify.xres_virtual != v_info.xres_virtual
+        || verify.yres_virtual != v_info.yres_virtual || verify.bits_per_pixel != v_info.bits_per_pixel) {
+        LOG_ERROR(
+            module,
+            "Hardware rejected framebuffer mode: requested %ux%u (%ux%u virtual) @ %u, got %ux%u "
+            "(%ux%u virtual) @ %u",
+            v_info.xres, v_info.yres, v_info.xres_virtual, v_info.yres_virtual, v_info.bits_per_pixel, verify.xres,
+            verify.yres, verify.xres_virtual, verify.yres_virtual, verify.bits_per_pixel
+        );
+        close(fb_fd);
+        return -1;
     }
 
     if (verbose) {

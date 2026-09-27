@@ -105,6 +105,7 @@ static void handle_play_event(struct device_rumble_state *st, int effect_id, int
     const struct ff_effect *eff = &st->slots[effect_id].effect;
     unsigned int mag = effect_magnitude(eff);
     mag = (mag * st->strength_percent + 50u) / 100u;
+    const int continuing = st->active_id == effect_id;
     st->active_id = effect_id;
     st->has_stop_time = 0;
     st->stop_time = (struct timespec) {0, 0};
@@ -117,7 +118,7 @@ static void handle_play_event(struct device_rumble_state *st, int effect_id, int
         }
     }
     st->target_magnitude = mag;
-    st->pulse_accumulator = 0;
+    if (!continuing) st->pulse_accumulator = 0;
     update_motor_level(st);
 }
 

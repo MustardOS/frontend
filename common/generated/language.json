@@ -483,7 +483,7 @@
     "Pair, connect and manage Bluetooth devices such as controllers and headphones.": "Pair, connect and manage Bluetooth devices such as controllers and headphones.",
     "Proxy Settings": "Proxy Settings",
     "Sends outbound traffic through a proxy.\n\nOnly needed on networks that require one, such as some school or workplace connections.": "Sends outbound traffic through a proxy.\n\nOnly needed on networks that require one, such as some school or workplace connections.",
-    "Shows the code a browser needs before it can change anything through the Web Dashboard.\n\nThe code is only ever shown here, so whoever is managing the device has to be holding it.": "Shows the code a browser needs before it can change anything through the Web Dashboard.\n\nThe code is only ever shown here, so whoever is managing the device has to be holding it.",
+    "Shows the addresses used to open the Web Dashboard and the code required before it can change anything.": "Shows the addresses used to open the Web Dashboard and the code required before it can change anything.",
     "The finer network settings, covering DNS, hostname and what happens at boot.": "The finer network settings, covering DNS, hostname and what happens at boot.",
     "Web Dashboard Code": "Web Dashboard Code",
     "Web Services": "Web Services",
@@ -3087,8 +3087,10 @@
   "muxwebcode": {
     "Authentication is turned off, so the Web Dashboard cannot change anything and needs no code.": "Authentication is turned off, so the Web Dashboard cannot change anything and needs no code.",
     "Changes in %d seconds": "Changes in %d seconds",
+    "IP Address": "IP Address",
+    "Local Address": "Local Address",
     "No network address yet": "No network address yet",
-    "The code the Web Dashboard asks for before it will upload or delete anything. It changes every thirty seconds, and is only ever shown on this screen.": "The code the Web Dashboard asks for before it will upload or delete anything. It changes every thirty seconds, and is only ever shown on this screen.",
+    "Scan the QR code or enter either address in a browser. The device code changes every thirty seconds and is required before the Web Dashboard can upload or delete anything.": "Scan the QR code or enter either address in a browser. The device code changes every thirty seconds and is required before the Web Dashboard can upload or delete anything.",
     "The device code could not be read.": "The device code could not be read.",
     "Turn the Web Dashboard on to use a code.": "Turn the Web Dashboard on to use a code.",
     "Web Dashboard Code": "Web Dashboard Code"

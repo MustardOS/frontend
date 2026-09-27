@@ -3665,6 +3665,8 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         char expires[MAX_BUFFER_SIZE];
+        char local_address[MAX_BUFFER_SIZE];
+        char ip_address[MAX_BUFFER_SIZE];
         char no_auth[MAX_BUFFER_SIZE];
         char no_service[MAX_BUFFER_SIZE];
         char no_address[MAX_BUFFER_SIZE];

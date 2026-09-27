@@ -73,6 +73,14 @@ static char macro_dir[MAX_BUFFER_SIZE];
 static int instance_lock_fd = -1;
 
 static double target_fps = 60.0;
+static double counter_ticks_to_ms = 0.0;
+static int active_core_is_flycast = 0;
+static int active_core_is_ppsspp = 0;
+
+static double counter_elapsed_ms(const uint64_t start) {
+    if (counter_ticks_to_ms == 0.0) counter_ticks_to_ms = 1000.0 / (double) SDL_GetPerformanceFrequency();
+    return (double) (SDL_GetPerformanceCounter() - start) * counter_ticks_to_ms;
+}
 
 static int instance_lock_acquire(void) {
     const int fd = open(RETRO_INSTANCE_LOCK, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600);
@@ -107,7 +115,7 @@ static void instance_lock_release(void) {
 }
 
 static double startup_elapsed_ms(const uint64_t start) {
-    return (double) (SDL_GetPerformanceCounter() - start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+    return counter_elapsed_ms(start);
 }
 
 static void startup_log_stage(const char *stage, uint64_t *stage_start) {
@@ -292,8 +300,7 @@ static unsigned run_core_batch(const unsigned frames) {
 
         const uint64_t run_start = SDL_GetPerformanceCounter();
         current_core.retro_run();
-        const double run_ms =
-            (double) (SDL_GetPerformanceCounter() - run_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+        const double run_ms = counter_elapsed_ms(run_start);
         ran++;
 
         if (cheevo_needs_frame() && !runahead_cheevo_deferred()) {
@@ -326,17 +333,12 @@ static double core_panel_rate(void) {
 static int ppsspp_adaptive_frameskip_active(void);
 
 double core_pace_divisor(void) {
-    char core_name[64];
-    if (!core_get_name(core_file_path, core_name, sizeof(core_name))) return 1.0;
-
-    const int adaptive_half_rate =
-        strcmp(core_name, "flycast") == 0 || strcmp(core_name, "flycastvl") == 0 || ppsspp_adaptive_frameskip_active();
+    const int adaptive_half_rate = active_core_is_flycast || ppsspp_adaptive_frameskip_active();
     return adaptive_half_rate ? audio_bridge_core_pace_divisor() : 1.0;
 }
 
 static int ppsspp_adaptive_frameskip_active(void) {
-    char core_name[64];
-    if (!core_get_name(core_file_path, core_name, sizeof(core_name)) || strcmp(core_name, "ppsspp") != 0) return 0;
+    if (!active_core_is_ppsspp) return 0;
 
     const char *auto_frameskip = options_get_value("ppsspp_auto_frameskip");
     const char *frameskip = options_get_value("ppsspp_frameskip");
@@ -418,19 +420,22 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames, 
     static double fps_limit_target_ms = 0.0;
 
     const double budget_ms = target_fps > 0.0 ? 1000.0 / target_fps : 1000.0 / 60.0;
-    const double spent_ms =
-        (double) (SDL_GetPerformanceCounter() - frame_start) * 1000.0 / (double) SDL_GetPerformanceFrequency();
+    const double spent_ms = counter_elapsed_ms(frame_start);
 
     const double slack_ms = budget_ms - spent_ms;
     const int faster = speed_multiplier > 1.0001;
     const int slower = speed_multiplier < 0.9999;
+    const int core_managed_network = netplay_is_active() && netplay_core_managed();
+    const int externally_paced_network = (netplay_is_active() || link_is_engaged()) && !core_managed_network;
 
-    const int auto_cadence = !faster && !slower && session_settings.fps_limit == fps_limit_auto && !netplay_is_active()
-                             && !link_is_engaged();
+    const int auto_cadence =
+        !faster && !slower
+        && (core_managed_network || (session_settings.fps_limit == fps_limit_auto && !externally_paced_network));
     const int free_running = !faster && !slower && session_settings.fps_limit == fps_limit_none && !netplay_is_active()
                              && !link_is_engaged();
 
-    const int auto_deadline_paced = auto_cadence && (core_content_needs_pacing() || !frame_pacer_vsync_effective());
+    const int auto_deadline_paced =
+        core_managed_network || (auto_cadence && (core_content_needs_pacing() || !frame_pacer_vsync_effective()));
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
@@ -457,18 +462,18 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames, 
         return;
     }
 
-    double target_ms = session_settings.fps_limit == fps_limit_50 ? 20.0
-                       : audio_target_ms > 0.0                    ? audio_target_ms
-                                                                  : 1000.0 / target_fps;
+    double target_ms = core_managed_network                         ? 1000.0 / target_fps
+                       : session_settings.fps_limit == fps_limit_50 ? 20.0
+                       : audio_target_ms > 0.0                      ? audio_target_ms
+                                                                    : 1000.0 / target_fps;
     if (slower) target_ms /= speed_multiplier;
 
-    const uint64_t frequency = SDL_GetPerformanceFrequency();
     const uint64_t now_counter = SDL_GetPerformanceCounter();
 
     // Every frame the core advanced costs a frame period, so a batch of N owes N of them...
     const double batch = frames > 0 ? (double) frames : 1.0;
 
-    const double target_ticks = target_ms * (double) frequency / 1000.0;
+    const double target_ticks = target_ms / counter_ticks_to_ms;
     const double batch_ticks = target_ticks * batch;
     const double target_change =
         target_ms > fps_limit_target_ms ? target_ms - fps_limit_target_ms : fps_limit_target_ms - target_ms;
@@ -678,10 +683,12 @@ int main(const int argc, char *argv[]) {
     core_set_target_fps(av_info.timing.fps > 0 ? av_info.timing.fps : 60.0);
 
     char loaded_core_name[64];
-    const int ppsspp_core = core_get_name(core_path_arg, loaded_core_name, sizeof(loaded_core_name))
-                            && strcmp(loaded_core_name, "ppsspp") == 0;
+    const int core_name_available = core_get_name(core_path_arg, loaded_core_name, sizeof(loaded_core_name));
+    active_core_is_flycast =
+        core_name_available && (strcmp(loaded_core_name, "flycast") == 0 || strcmp(loaded_core_name, "flycastvl") == 0);
+    active_core_is_ppsspp = core_name_available && strcmp(loaded_core_name, "ppsspp") == 0;
 
-    audio_bridge_set_latency_floor(ppsspp_core ? PPSSPP_AUDIO_LATENCY_FLOOR_MS : 0);
+    audio_bridge_set_latency_floor(active_core_is_ppsspp ? PPSSPP_AUDIO_LATENCY_FLOOR_MS : 0);
     audio_bridge_open(av_info.timing.sample_rate > 0 ? av_info.timing.sample_rate : 48000.0);
     LOG_DEBUG(mux_module, "audio_bridge_open done");
 

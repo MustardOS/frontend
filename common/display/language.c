@@ -601,12 +601,14 @@ static const lang_field lang_fields[] = {
     {"muxconnect", LANG_OFF(muxconnect.help.net_adv), lang_specific, "The finer network settings, covering DNS, hostname and what happens at boot."},
     {"muxconnect", LANG_OFF(muxconnect.help.proxy), lang_specific, "Sends outbound traffic through a proxy.\n\nOnly needed on networks that require one, such as some school or workplace connections."},
     {"muxconnect", LANG_OFF(muxconnect.help.bluetooth), lang_specific, "Pair, connect and manage Bluetooth devices such as controllers and headphones."},
-    {"muxconnect", LANG_OFF(muxconnect.help.webcode), lang_specific, "Shows the code a browser needs before it can change anything through the Web Dashboard.\n\nThe code is only ever shown here, so whoever is managing the device has to be holding it."},
+    {"muxconnect", LANG_OFF(muxconnect.help.webcode), lang_specific, "Shows the addresses used to open the Web Dashboard and the code required before it can change anything."},
 
     // muxwebcode
     {"muxwebcode", LANG_OFF(muxwebcode.title), lang_specific, "Web Dashboard Code"},
-    {"muxwebcode", LANG_OFF(muxwebcode.overview), lang_specific, "The code the Web Dashboard asks for before it will upload or delete anything. It changes every thirty seconds, and is only ever shown on this screen."},
+    {"muxwebcode", LANG_OFF(muxwebcode.overview), lang_specific, "Scan the QR code or enter either address in a browser. The device code changes every thirty seconds and is required before the Web Dashboard can upload or delete anything."},
     {"muxwebcode", LANG_OFF(muxwebcode.expires), lang_specific, "Changes in %d seconds"},
+    {"muxwebcode", LANG_OFF(muxwebcode.local_address), lang_specific, "Local Address"},
+    {"muxwebcode", LANG_OFF(muxwebcode.ip_address), lang_specific, "IP Address"},
     {"muxwebcode", LANG_OFF(muxwebcode.no_auth), lang_specific, "Authentication is turned off, so the Web Dashboard cannot change anything and needs no code."},
     {"muxwebcode", LANG_OFF(muxwebcode.no_service), lang_specific, "Turn the Web Dashboard on to use a code."},
     {"muxwebcode", LANG_OFF(muxwebcode.no_address), lang_specific, "No network address yet"},
