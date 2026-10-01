@@ -87,7 +87,8 @@ static char pending_text[MAX_BUFFER_SIZE];
 static int pending = 0;
 
 static int intro_blocked(void) {
-    return msgbox_active || modal_active() || task_progress_active() || progress_onscreen != -1;
+    return msgbox_active || modal_active() || task_progress_active() || progress_onscreen != -1
+           || mux_input_pressed_mask() != 0;
 }
 
 static void intro_present(const char *module, const char *title, const char *text) {
