@@ -1920,7 +1920,8 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
         status_style.status = "active";
     } else {
         status_style.color = lv_color_hex(theme->status.network.normal);
-        status_style.alpha = theme->status.network.normal_alpha;
+        status_style.alpha = theme->status.network.normal_alpha < LV_OPA_60 ? LV_OPA_60
+                                                                            : theme->status.network.normal_alpha;
         status_style.status = "normal";
     }
 

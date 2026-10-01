@@ -17,13 +17,18 @@
 #include <common/storage/fileio.h>
 #include <common/base/strutil.h>
 
+static int scan_ipv4_address(const char *wanted, char *output, size_t output_size);
+
 int is_network_connected(void) {
     if (file_exist(device.network.state)) {
         char *state = read_all_char_from(device.network.state);
         const int up = strcasecmp("up", state) == 0;
         free(state);
 
-        if (up) return 1;
+        if (up) {
+            char address[INET_ADDRSTRLEN];
+            return scan_ipv4_address(device.network.interface, address, sizeof(address));
+        }
     }
 
     return 0;
@@ -304,9 +309,8 @@ void get_network_snapshot(network_snapshot *snapshot, const unsigned fields) {
         snapshot_fields |= network_snapshot_reachability;
     }
     if ((fields & network_snapshot_ipv4) && !(snapshot_fields & network_snapshot_ipv4)) {
-        if (snapshot_cache.connected && device.network.interface[0]
-            && !scan_ipv4_address(device.network.interface, snapshot_cache.ipv4, sizeof(snapshot_cache.ipv4)))
-            saved_ipv4_address(snapshot_cache.ipv4, sizeof(snapshot_cache.ipv4));
+        if (snapshot_cache.connected && device.network.interface[0])
+            scan_ipv4_address(device.network.interface, snapshot_cache.ipv4, sizeof(snapshot_cache.ipv4));
         snapshot_fields |= network_snapshot_ipv4;
     }
 
