@@ -215,6 +215,13 @@ static int board_is_tui_brick(void) {
     return match;
 }
 
+static int board_is_rg40xx_v(void) {
+    char *board = read_line_char_from(CONF_DEVICE_PATH "board/name", 1);
+    const int match = board && strcmp(board, "rg40xx-v") == 0;
+    free(board);
+    return match;
+}
+
 static void swap_rg(int *r, int *g) {
     const int t = *r;
     *r = *g;
@@ -614,6 +621,11 @@ static int dispatch_restore(void) {
     }
 
     backend_t use = detect_backend(restore_backend_from_config(st.backend));
+
+    if (use == be_serial && board_is_rg40xx_v()) {
+        st.col_r = st.col_l;
+        st.bright_r = st.bright_l;
+    }
 
     flags_t fl;
     fl.dur_all = fl.dur_l = fl.dur_r = fl.dur_m = fl.dur_f1 = fl.dur_f2 = -1;
