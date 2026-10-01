@@ -1146,7 +1146,7 @@ static void init_navigation_group(void) {
         disabled_enabled, 2
     );
     INIT_OPTION_ITEM(-1, font, type, lang.muxfont.type, "type", type_options, num_type_options);
-    INIT_OPTION_ITEM(-1, font, font_directory, lang.muxfont.font_directory, "fontdirectory", NULL, 0);
+    INIT_OPTION_ITEM(-1, font, font_directory, lang.muxfont.font_directory, "font", NULL, 0);
     INIT_OPTION_ITEM(-1, font, font_name, lang.muxfont.font_name, "fontname", NULL, 0);
     INIT_OPTION_ITEM(-1, font, width, lang.muxfont.width, "fontname", NULL, 0);
     INIT_OPTION_ITEM(-1, font, italic, lang.muxfont.italic, "fontname", NULL, 0);
@@ -1934,7 +1934,7 @@ static int16_t kiosk_pass = 0;
     ROW(visual, title_include_root_drive, "titleincluderootdrive", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, \
         change)                                                                                                        \
     ROW(font, type, "type", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                  \
-    ROW(font, font_directory, "fontdirectory", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
+    ROW(font, font_directory, "font", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
     ROW(font, font_name, "fontname", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                         \
     ROW(font, width, "width", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                \
     ROW(font, italic, "italic", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
