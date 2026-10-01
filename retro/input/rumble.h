@@ -11,6 +11,8 @@ void rumble_bridge_set_suppressed(int suppressed);
 
 void rumble_bridge_refresh(void);
 
+void rumble_bridge_commit(void);
+
 void rumble_bridge_tick(uint32_t now);
 
 bool rumble_bridge_test_start(void);

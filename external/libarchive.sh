@@ -74,7 +74,7 @@ env -u CPPFLAGS -u CXXFLAGS -u LDFLAGS \
 printf 'Building libarchive %s for %s\n' "$VERSION" "$DEVICE"
 
 make -j"$EXT_JOBS"
-make install
+make DESTDIR= install
 
 printf 'LIBARCHIVE_SYSLIBS :=%s\n' "$CODEC_LIBS" >"$EXT_PREFIX/libarchive.mk"
 

@@ -25,6 +25,95 @@ const char *cfg_dir_get(const cfg_dir_t *d, const char *name);
 
 int cfg_dir_int(const cfg_dir_t *d, const char *name, int fallback);
 
+typedef struct {
+    int16_t hardware_decode;
+    int16_t resume;
+    int16_t deinterlace;
+    int16_t keep_history;
+    int16_t scaling_mode;
+    int16_t rotation;
+    int16_t mirrored;
+    int16_t aspect_ratio;
+    int16_t scale_multiplier;
+    int16_t texture_filter;
+    int16_t border_colour;
+    int16_t vignette_shape;
+    int16_t vignette_scaling;
+    int16_t vignette_width;
+    int16_t vignette_height;
+    int16_t vignette_offset_x;
+    int16_t vignette_offset_y;
+    int16_t vignette_softness;
+    int16_t vignette_strength;
+    int16_t vignette_colour;
+    char colour_filter[MAX_BUFFER_SIZE];
+    char shader[MAX_BUFFER_SIZE];
+    int16_t brightness;
+    int16_t contrast;
+    int16_t saturation;
+    int16_t hue_shift;
+    int16_t gamma;
+    int16_t visualiser;
+    int16_t overlay_mode;
+    int16_t overlay_pattern;
+    char overlay_image[MAX_BUFFER_SIZE];
+    int16_t overlay_opacity;
+    int16_t overlay_x;
+    int16_t overlay_y;
+    int16_t overlay_stretch_x;
+    int16_t overlay_stretch_y;
+    int16_t overlay_zoom;
+    int16_t overlay_crop_left;
+    int16_t overlay_crop_right;
+    int16_t overlay_crop_top;
+    int16_t overlay_crop_bottom;
+    int16_t overlay_centre_crop;
+    int16_t viewport_x;
+    int16_t viewport_y;
+    int16_t viewport_stretch_x;
+    int16_t viewport_stretch_y;
+    int16_t viewport_zoom;
+    int16_t crop_left;
+    int16_t crop_right;
+    int16_t crop_top;
+    int16_t crop_bottom;
+    int16_t viewport_centre_crop;
+    int16_t show_playtime;
+    int16_t header_visibility;
+    int16_t progress_bar;
+    int16_t artwork_position;
+    int16_t repeat_mode;
+    int16_t shuffle;
+    int16_t volume;
+    int16_t sample_rate;
+    int16_t audio_latency;
+    int16_t audio_period;
+    int16_t audio_filter;
+    int16_t rate_control;
+    int16_t gapless;
+    int16_t crossfade;
+    int16_t tracker_loop;
+    int16_t fast_forward_mode;
+    int16_t fast_forward_speed;
+    int16_t slow_motion_mode;
+    int16_t slow_motion_speed;
+    int16_t thumbnail_size;
+    int16_t sleep;
+    int16_t idle_screensaver;
+    int16_t hotkey_pause;
+    int16_t hotkey_save_bookmark;
+    int16_t hotkey_load_bookmark;
+    int16_t hotkey_seek_back;
+    int16_t hotkey_seek_forward;
+    int16_t hotkey_seek_back_long;
+    int16_t hotkey_seek_forward_long;
+    int16_t hotkey_header;
+    int16_t hotkey_repeat;
+    int16_t hotkey_shuffle;
+    int16_t hotkey_fast_forward;
+    int16_t hotkey_slow_motion;
+} wasabi_video_config;
+
 struct mux_config {
     struct {
         char build[MAX_BUFFER_SIZE];
@@ -148,6 +237,8 @@ struct mux_config {
         char osk_layout[MAX_BUFFER_SIZE];
         char scrollback_path[MAX_BUFFER_SIZE];
     } terminal;
+
+    wasabi_video_config video;
 
     struct {
         struct {
@@ -436,6 +527,13 @@ struct mux_config {
         char overclock[MAX_BUFFER_SIZE];
         char gpu_overclock[MAX_BUFFER_SIZE];
     } danger;
+
+    struct {
+        int16_t live_quality;
+        int16_t live_buffer;
+    } wasabi;
 };
 
 void load_config(struct mux_config *config);
+
+void load_wasabi_defaults(struct mux_config *config);

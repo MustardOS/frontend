@@ -506,6 +506,11 @@ int muxlaunch_main(void) {
     init_fonts();
     init_navigation_group();
 
+    if (file_exist(CONTENT_SWITCH_FAILED)) {
+        remove(CONTENT_SWITCH_FAILED);
+        toast_message(lang.muxmedia.playback_failed, tst_wait_m);
+    }
+
     dialogue_init_confirm(
         &confirm_dlg, &theme, ui_screen, lang.muxlaunch.confirm_reboot, NULL, lang.generic.confirm, lang.generic.cancel,
         lang.generic.select, lang.generic.cancel

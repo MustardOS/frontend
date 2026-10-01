@@ -88,6 +88,7 @@ static int mix_freq = 0;
 static int mix_ch = 0;
 static float *ring_buf = NULL;
 static int ring_frames = 0;
+static char audio_hook_owner;
 static volatile int ring_r = 0;
 static volatile int ring_w = 0;
 static float audio_tmp[AUDIO_TMP_FRAMES * 2];
@@ -732,7 +733,7 @@ static void cleanup(void) {
         present_timer = NULL;
     }
 
-    Mix_HookMusic(NULL, NULL);
+    if (Mix_GetMusicHookData() == &audio_hook_owner) Mix_HookMusic(NULL, NULL);
 
     if (swr) {
         swr_free(&swr);
@@ -888,7 +889,7 @@ static void preview_open(void) {
             if (ring_buf) {
                 ring_r = ring_w = 0;
                 Mix_HaltMusic();
-                Mix_HookMusic(audio_hook_cb, NULL);
+                Mix_HookMusic(audio_hook_cb, &audio_hook_owner);
             }
         }
     }

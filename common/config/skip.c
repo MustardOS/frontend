@@ -14,6 +14,22 @@ static size_t skip_hash(const char *key, const size_t cap) {
     return (size_t) h & (cap - 1);
 }
 
+static int resize_buckets(skip_list *sl, const size_t capacity) {
+    char **buckets = calloc(capacity, sizeof(char *));
+    if (!buckets) return 0;
+
+    for (size_t item = 0; item < sl->count; item++) {
+        size_t bucket = skip_hash(sl->items[item], capacity);
+        while (buckets[bucket]) bucket = (bucket + 1) & (capacity - 1);
+        buckets[bucket] = sl->items[item];
+    }
+
+    free(sl->buckets);
+    sl->buckets = buckets;
+    sl->bucket_cap = capacity;
+    return 1;
+}
+
 void init_skiplist(skip_list *sl) {
     if (!sl) return;
 
@@ -47,6 +63,10 @@ void add_to_skiplist(skip_list *sl, const char *dir, const char *name) {
 
     char full_path[MAX_BUFFER_SIZE];
     snprintf(full_path, sizeof(full_path), "%s/%s", dir, name);
+
+    if ((sl->count + 1) * 4 >= sl->bucket_cap * 3
+        && (sl->bucket_cap > SIZE_MAX / 2 || !resize_buckets(sl, sl->bucket_cap * 2)))
+        return;
 
     size_t i = skip_hash(full_path, sl->bucket_cap);
 

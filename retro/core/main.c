@@ -319,6 +319,7 @@ static unsigned run_core_batch(const unsigned frames) {
         if (is_last) break;
     }
 
+    rumble_bridge_commit();
     hw_render_bridge_flush_core_commands();
     hw_render_bridge_context_restore();
     video_bridge_set_frame_skip(0);
@@ -511,6 +512,7 @@ void core_prime_audio(void) {
         audio_bridge_flush_sample_fifo();
         primed++;
     }
+    rumble_bridge_commit();
     hw_render_bridge_context_restore();
 
     video_bridge_set_frame_skip(0);
@@ -1155,6 +1157,9 @@ int main(const int argc, char *argv[]) {
             LOG_INFO(mux_module, "Performance capture written to " RETRO_SHARE_PATH "performance.csv");
     }
 
+    display_mirror_to_fb();
+    display_set_composite_suppressed(1);
+
     if (peer_wait_visible) loading_message_hide();
     if (netplay_governor_active) governor_boost_end();
 
@@ -1214,5 +1219,6 @@ int main(const int argc, char *argv[]) {
     }
 
     instance_lock_release();
+    if (pause_menu_content_switch_requested()) return CONTENT_SWITCH_EXIT_STATUS;
     return EXIT_SUCCESS;
 }

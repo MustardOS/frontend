@@ -24,6 +24,8 @@
 
 #define SEQ_BUF_SIZE 32
 #define MAX_SEQUENCE 16
+#define HOTKEY_IDLE_MS 50
+#define INHIBIT_CHECK_MS 250
 
 #define SAFE_BIT(i)  ((uint64_t) 1 << ((i) & 63))
 #define SEQUENCE_WIN (400 + 150 * seq_buf.count)
@@ -142,7 +144,7 @@ static const char *action_name[] = {
 };
 
 static mux_input_options input_opts = {
-    .max_idle_ms = IDLE_MS,
+    .max_idle_ms = HOTKEY_IDLE_MS,
     .input_handler = handle_input,
     .combo_handler = handle_combo,
     .idle_handler = handle_idle,
@@ -182,6 +184,10 @@ static char *running_governor = NULL;
 static char *previous_governor = NULL;
 
 static volatile sig_atomic_t pending_signal = 0;
+static uint32_t inhibit_check_tick = 0;
+static int game_inhibit_cached = 0;
+static int sleep_inhibit_cached = 0;
+static int idle_inhibit_cached = idle_inhibit_none;
 
 static int in_idle_state(void) {
     return idle_state_exists;
@@ -594,6 +600,13 @@ static int game_idle_inhibited(void) {
     return pid > 0 && kill(pid, 0) == 0;
 }
 
+static int sleep_idle_inhibited(void) {
+    if (!file_exist(IDLE_SLEEP_INHIBIT)) return 0;
+
+    const int pid = read_line_int_from(IDLE_SLEEP_INHIBIT, 1);
+    return pid > 0 && kill(pid, 0) == 0;
+}
+
 static void check_idle(idle_timer *timer, const uint32_t timeout_ms, const int idle_governor) {
     const uint32_t idle_ms = global_tick - timer->tick;
 
@@ -717,13 +730,21 @@ static void handle_idle(void) {
         }
     }
 
-    const int game_inhibit = game_idle_inhibited();
+    if (!inhibit_check_tick || global_tick >= inhibit_check_tick) {
+        game_inhibit_cached = game_idle_inhibited();
+        sleep_inhibit_cached = sleep_idle_inhibited();
+        idle_inhibit_cached = read_line_int_from(CONF_CONFIG_PATH "system/idle_inhibit", 1);
+        inhibit_check_tick = global_tick + INHIBIT_CHECK_MS;
+    }
+    const int game_inhibit = game_inhibit_cached;
+    const int sleep_inhibit = sleep_inhibit_cached;
     if (game_inhibit) idle_display.tick = global_tick;
+    if (sleep_inhibit) idle_sleep.tick = global_tick;
 
     if (idle_display.tick != global_tick) {
         // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
         // conditions here, but it's more flexible to leave that externally controllable.)
-        switch (read_line_int_from(CONF_CONFIG_PATH "system/idle_inhibit", 1)) {
+        switch (idle_inhibit_cached) {
             case idle_inhibit_both:
                 idle_display.tick = global_tick;
                 // fallthrough
@@ -739,7 +760,7 @@ static void handle_idle(void) {
     const uint32_t sleep_timeout = config.settings.power.idle.sleep * 1000;
 
     if (disp_timeout) check_idle(&idle_display, disp_timeout, 1);
-    if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout, !game_inhibit);
+    if (sleep_timeout) check_idle(&idle_sleep, sleep_timeout, !game_inhibit && !sleep_inhibit);
 }
 
 static void handle_combo(const int num, const mux_input_action action) {

@@ -55,6 +55,8 @@ void play_silence_bgm(void);
 
 int init_audio_backend(void);
 
+int init_audio_backend_spec(int frequency, int samples);
+
 void init_fe_snd(int *fe_snd, int snd_type, int re_init);
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init);

@@ -22,6 +22,10 @@ int theme_has_font(void);
 
 int theme_font_is_scalable(void);
 
+int theme_font_is_compiled(void);
+
+int theme_path_has_font(const char *path);
+
 int user_font_path(const char *name, char *out, size_t out_size);
 
 int user_font_count(void);

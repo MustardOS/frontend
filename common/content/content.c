@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <stdint.h>
@@ -37,6 +38,38 @@ static uint32_t path_hash(const char *s) {
     }
 
     return h;
+}
+
+int content_path_is_audio(const char *path) {
+    static const char *const extensions[] = {
+        ".667", ".669", ".3ga", ".aa3", ".aac", ".ac3", ".adx", ".aea", ".aif", ".aifc", ".aiff", ".aix", ".alac", ".amf", ".amr",
+        ".ams", ".ape", ".apc", ".ast", ".at3", ".at9", ".au", ".awb", ".ay", ".bcstm", ".bfstm", ".brstm", ".c67", ".caf", ".cba", ".dbm", ".digi", ".dmf",
+        ".dsm", ".dsf", ".dsym", ".dts", ".dtshd", ".dtm", ".eac3", ".etx", ".far", ".fc",
+        ".fc13", ".fc14", ".flac", ".fmt", ".fsb", ".fst", ".ftm", ".g726", ".gbs", ".gdm", ".gmc", ".gt2", ".gtk",
+        ".gym", ".hca", ".hes", ".ice", ".imf", ".ims", ".ircam", ".it", ".j2b", ".kss", ".m15", ".m4a", ".m4b", ".m4r", ".mdl", ".med", ".mid",
+        ".midi", ".mka", ".mmcmp", ".mms", ".mod", ".mp+", ".mp1", ".mp2", ".mp3", ".mpa",
+        ".mpc", ".mpp", ".mptm", ".mt2", ".mtm", ".mus", ".nsf", ".nsfe", ".nsp", ".nst", ".oga", ".ogg", ".okt", ".oma",
+        ".opus", ".plm", ".ppm", ".psm", ".pt36", ".ptm", ".puma", ".qcp", ".qoa", ".ra", ".rtm", ".s3m", ".s337m", ".sap", ".sds", ".sf", ".sfx", ".sfx2", ".shn", ".sln", ".smod", ".snd", ".sox", ".spc", ".spx", ".st26", ".stk", ".stm",
+        ".stp", ".stx", ".symmod", ".tak", ".tcb", ".tta", ".ult", ".umx", ".unic", ".vag", ".vgm", ".vgz", ".voc", ".w64", ".wav", ".weba", ".wma", ".wow", ".wv", ".xmf", ".xm", ".xmd", ".xpk", ".xwma", NULL,
+    };
+    if (!path) return 0;
+    const char *end = strpbrk(path, "?#");
+    if (!end) end = path + strlen(path);
+    const char *dot = NULL;
+    for (const char *cursor = end; cursor > path;) {
+        cursor--;
+        if (*cursor == '/' || *cursor == '\\') break;
+        if (*cursor == '.') {
+            dot = cursor;
+            break;
+        }
+    }
+    if (!dot) return 0;
+    const size_t length = (size_t) (end - dot);
+    for (size_t index = 0; extensions[index]; index++)
+        if (strlen(extensions[index]) == length && strncasecmp(dot, extensions[index], length) == 0)
+            return 1;
+    return 0;
 }
 
 static void path_set_build(path_set_t *s, char **items, const int count) {
@@ -523,6 +556,23 @@ int load_content(int add_collection, char *file_path) {
     free(item_dir);
     free(assigned_core);
     return 1;
+}
+
+int content_launch_is_integrated(void) {
+    char *core = read_line_char_from(MUOS_ROM_LOAD, content_core);
+    char *launch = read_line_char_from(MUOS_ROM_LOAD, content_assign);
+    if (!core || !launch) {
+        free(core);
+        free(launch);
+        return 0;
+    }
+
+    const int integrated = core_uses_muxretro(launch) || strcasecmp(core, "ext-video") == 0
+                           || strcasecmp(launch, "ext-video") == 0
+                           || strcasecmp(launch, "ext-video.sh") == 0;
+    free(core);
+    free(launch);
+    return integrated;
 }
 
 char *load_content_core(const int force, const int run_quit, char *file_path) {

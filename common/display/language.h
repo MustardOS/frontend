@@ -304,11 +304,13 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char archive[MAX_BUFFER_SIZE];
         char terminal[MAX_BUFFER_SIZE];
+        char video[MAX_BUFFER_SIZE];
         char task[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         struct {
             char archive[MAX_BUFFER_SIZE];
             char terminal[MAX_BUFFER_SIZE];
+            char video[MAX_BUFFER_SIZE];
             char task[MAX_BUFFER_SIZE];
         } help;
         struct {
@@ -3166,6 +3168,101 @@ struct mux_lang {
 
     struct {
         char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char continue_watching[MAX_BUFFER_SIZE];
+        char bookmarks[MAX_BUFFER_SIZE];
+        char videos[MAX_BUFFER_SIZE];
+        char live_tv[MAX_BUFFER_SIZE];
+        char buffering_live_tv[MAX_BUFFER_SIZE];
+        char live_tv_unavailable[MAX_BUFFER_SIZE];
+        char resume[MAX_BUFFER_SIZE];
+        char deinterlace[MAX_BUFFER_SIZE];
+        char history[MAX_BUFFER_SIZE];
+        char play[MAX_BUFFER_SIZE];
+        char bookmark_name[MAX_BUFFER_SIZE];
+        char bookmark_remove[MAX_BUFFER_SIZE];
+        char bookmark_remove_desc[MAX_BUFFER_SIZE];
+        char bookmark_thumbnail_size[MAX_BUFFER_SIZE];
+        char sleep[MAX_BUFFER_SIZE];
+        char idle_screensaver[MAX_BUFFER_SIZE];
+        char continue_playback[MAX_BUFFER_SIZE];
+        char stop_playback[MAX_BUFFER_SIZE];
+        char screen_information[MAX_BUFFER_SIZE];
+        char play_time[MAX_BUFFER_SIZE];
+        char overlay_scanlines[MAX_BUFFER_SIZE];
+        char overlay_grid[MAX_BUFFER_SIZE];
+        char resolution[MAX_BUFFER_SIZE];
+        char queued_frames[MAX_BUFFER_SIZE];
+        char audio_output[MAX_BUFFER_SIZE];
+        char channels[MAX_BUFFER_SIZE];
+        char episodes[MAX_BUFFER_SIZE];
+        char tracks[MAX_BUFFER_SIZE];
+        char queued_samples[MAX_BUFFER_SIZE];
+        char pause_playback[MAX_BUFFER_SIZE];
+        char save_bookmark[MAX_BUFFER_SIZE];
+        char load_bookmark[MAX_BUFFER_SIZE];
+        char seek_back[MAX_BUFFER_SIZE];
+        char seek_forward[MAX_BUFFER_SIZE];
+        char seek_back_long[MAX_BUFFER_SIZE];
+        char seek_forward_long[MAX_BUFFER_SIZE];
+        char empty_history[MAX_BUFFER_SIZE];
+        char empty_bookmarks[MAX_BUFFER_SIZE];
+        char empty_collection[MAX_BUFFER_SIZE];
+        char empty_videos[MAX_BUFFER_SIZE];
+        char empty_audio[MAX_BUFFER_SIZE];
+        char empty_live_tv[MAX_BUFFER_SIZE];
+        char codec_unsupported[MAX_BUFFER_SIZE];
+        char playback_failed[MAX_BUFFER_SIZE];
+        char progress_bar[MAX_BUFFER_SIZE];
+        char progress_classic[MAX_BUFFER_SIZE];
+        char progress_centre_out[MAX_BUFFER_SIZE];
+        char progress_waveform[MAX_BUFFER_SIZE];
+        char progress_segmented[MAX_BUFFER_SIZE];
+        char progress_reverse[MAX_BUFFER_SIZE];
+        char progress_dot_trail[MAX_BUFFER_SIZE];
+        char progress_curve[MAX_BUFFER_SIZE];
+        char progress_position_marker[MAX_BUFFER_SIZE];
+        char progress_comet[MAX_BUFFER_SIZE];
+        char progress_pulse[MAX_BUFFER_SIZE];
+        char visualisers[MAX_BUFFER_SIZE];
+        char visualiser_spectrum[MAX_BUFFER_SIZE];
+        char visualiser_waveform[MAX_BUFFER_SIZE];
+        char visualiser_pulse[MAX_BUFFER_SIZE];
+        char visualiser_orbit[MAX_BUFFER_SIZE];
+        char visualiser_meter[MAX_BUFFER_SIZE];
+        char visualiser_phase[MAX_BUFFER_SIZE];
+        char visualiser_radial[MAX_BUFFER_SIZE];
+        char visualiser_starfield[MAX_BUFFER_SIZE];
+        char cover_art[MAX_BUFFER_SIZE];
+        char repeat[MAX_BUFFER_SIZE];
+        char repeat_one[MAX_BUFFER_SIZE];
+        char repeat_all[MAX_BUFFER_SIZE];
+        char shuffle[MAX_BUFFER_SIZE];
+        char change_repeat[MAX_BUFFER_SIZE];
+        char toggle_shuffle[MAX_BUFFER_SIZE];
+        char gapless[MAX_BUFFER_SIZE];
+        char crossfade[MAX_BUFFER_SIZE];
+        char tracker_loop[MAX_BUFFER_SIZE];
+        char unknown_artist[MAX_BUFFER_SIZE];
+        char audio[MAX_BUFFER_SIZE];
+        char audio_title[MAX_BUFFER_SIZE];
+        char artist[MAX_BUFFER_SIZE];
+        char album[MAX_BUFFER_SIZE];
+        char album_artist[MAX_BUFFER_SIZE];
+        char composer[MAX_BUFFER_SIZE];
+        char genre[MAX_BUFFER_SIZE];
+        char year[MAX_BUFFER_SIZE];
+        char track[MAX_BUFFER_SIZE];
+        char disc[MAX_BUFFER_SIZE];
+        char bitrate[MAX_BUFFER_SIZE];
+        char format[MAX_BUFFER_SIZE];
+        char encoder[MAX_BUFFER_SIZE];
+        char comment[MAX_BUFFER_SIZE];
+        char copyright[MAX_BUFFER_SIZE];
+    } muxmedia;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
         char quit[MAX_BUFFER_SIZE];
         char quit_alt[MAX_BUFFER_SIZE];
     } muxtester;
@@ -3679,6 +3776,16 @@ struct mux_lang {
         char no_address[MAX_BUFFER_SIZE];
         char unavailable[MAX_BUFFER_SIZE];
     } muxwebcode;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char empty[MAX_BUFFER_SIZE];
+        char help[MAX_BUFFER_SIZE];
+    } content_switch;
+
+    char wasabi_live_tv_quality[MAX_BUFFER_SIZE];
+    char wasabi_live_tv_buffer[MAX_BUFFER_SIZE];
+    char wasabi_automatic[MAX_BUFFER_SIZE];
 };
 
 void load_lang(struct mux_lang *lang);

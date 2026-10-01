@@ -830,7 +830,9 @@ int main(void) {
 
         if (first_boot) {
             first_boot = 0;
+            display_set_composite_suppressed(1);
             lv_task_handler();
+            display_set_composite_suppressed(0);
         }
 
         // Process application option loader

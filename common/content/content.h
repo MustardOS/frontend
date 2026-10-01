@@ -55,6 +55,10 @@ uint32_t fnv_hash_file(FILE *fp);
 
 int load_content(int add_collection, char *file_path);
 
+int content_launch_is_integrated(void);
+
+int content_path_is_audio(const char *path);
+
 char *load_content_core(int force, int run_quit, char *file_path);
 
 char *build_core(

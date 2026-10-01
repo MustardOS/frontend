@@ -7,17 +7,26 @@ SHA256="a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8"
 TARBALL="openssl-$VERSION.tar.gz"
 URL="https://github.com/openssl/openssl/releases/download/openssl-$VERSION/$TARBALL"
 
-if ! command -v perl >/dev/null 2>&1; then
+PERL_BIN=""
+for PERL_CANDIDATE in /usr/bin/perl /usr/local/bin/perl "$(command -v perl 2>/dev/null || true)"; do
+	[ -n "$PERL_CANDIDATE" ] || continue
+	if "$PERL_CANDIDATE" -e '' >/dev/null 2>&1; then
+		PERL_BIN=$PERL_CANDIDATE
+		break
+	fi
+done
+
+if [ -z "$PERL_BIN" ]; then
 	printf 'Error: OpenSSL is built by perl, which was not found on the build host\n' 1>&2
 	exit 1
 fi
 
 # Time::Piece is core perl but often a separate package so fall back to our shim
-if ! perl -MTime::Piece -e '' >/dev/null 2>&1; then
+if ! "$PERL_BIN" -MTime::Piece -e '' >/dev/null 2>&1; then
 	PERL5LIB="$EXT_ROOT/perl${PERL5LIB:+:$PERL5LIB}"
 	export PERL5LIB
 
-	if ! perl -MTime::Piece -e '' >/dev/null 2>&1; then
+	if ! "$PERL_BIN" -MTime::Piece -e '' >/dev/null 2>&1; then
 		printf 'Error: neither the real Time::Piece nor the local shim would load\n' 1>&2
 		exit 1
 	fi
@@ -62,7 +71,7 @@ cd "$EXT_WORK/openssl" || exit 1
 
 # shellcheck disable=SC2086
 env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS -u AR -u RANLIB -u NM -u LD -u STRIP \
-	"$EXT_SRC/openssl-$VERSION/Configure" \
+	"$PERL_BIN" "$EXT_SRC/openssl-$VERSION/Configure" \
 	"$TARGET" \
 	$CROSS_ARG \
 	--prefix="$EXT_PREFIX" \

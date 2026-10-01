@@ -76,6 +76,7 @@
 #define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
 
 #define IDLE_GAME_INHIBIT RUN_PATH "idle_game_inhibit"
+#define IDLE_SLEEP_INHIBIT RUN_PATH "idle_sleep_inhibit"
 
 #define INPUT_TEST_ACTIVE   RUN_PATH "input_test"
 #define INPUT_TEST_VOL_UP   RUN_PATH "input_test_vol_up"
@@ -167,6 +168,7 @@
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
 #define INFO_MNF_PATH RUN_STORAGE_PATH "info/manifest"
+#define INFO_VID_PATH RUN_STORAGE_PATH "info/video"
 
 #define MUOS_ARCH_PATH   "ARCHIVE"
 #define MUOS_BACKUP_PATH "BACKUP"
@@ -205,6 +207,9 @@
 #define MUOS_OVO_LOAD RUN_PATH "overlay_options"
 #define MUOS_RAC_LOAD RUN_PATH "retroarch"
 #define MUOS_ROM_LOAD RUN_PATH "content"
+#define CONTENT_SWITCH_REQUEST RUN_PATH "content_switch"
+#define CONTENT_SWITCH_FAILED  RUN_PATH "content_switch_failed"
+#define CONTENT_SWITCH_EXIT_STATUS 64
 #define MUOS_SAA_LOAD RUN_PATH "auto_core"
 #define MUOS_SAG_LOAD RUN_PATH "auto_governor"
 #define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
@@ -215,6 +220,7 @@
 #define MUOS_AIX_LOAD "/tmp/aix_go" // Core/System Assignment Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
+#define WASABI_HISTORY_LAUNCH "/tmp/muos/wasabi_history_launch"
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_ASS_SYSP "/tmp/ass_sp" // Core/System Assignment Force System Picker
 #define MUOS_BTI_LOAD "/tmp/bti_go" // Bluetooth Paired Last Index

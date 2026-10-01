@@ -4,7 +4,7 @@ set -euf
 
 HERE=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
-LIBS="ffmpeg libarchive mojibake openssl rcheevos"
+LIBS="ffmpeg libarchive mojibake openssl libopenmpt libgme ffmpeg-video rcheevos"
 
 [ $# -gt 0 ] && LIBS="$*"
 

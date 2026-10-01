@@ -16,7 +16,10 @@ SRC := hook.c common/common.c ../common/runtime/debug.c ../common/storage/inotif
 	overlay/base.c overlay/battery.c overlay/bright.c overlay/volume.c \
 	render/sdl.c render/gles.c render/kms.c render/vulkan.c
 
-OBJ := $(SRC:.c=.o)
+DEPDIR := $(DEP_ROOT)/stage
+OBJDIR := $(DEPDIR)/obj
+stage_obj = $(OBJDIR)/$(subst /,_,$(subst ../,up_/,$(1:.c=.o)))
+OBJ := $(foreach S,$(SRC),$(call stage_obj,$(S)))
 
 .PHONY: all clean
 
@@ -35,16 +38,19 @@ $(TARGET): $(OBJ)
 		exit 1; \
 	fi
 
-DEPDIR := $(DEP_ROOT)/stage
-DEPS   := $(foreach O,$(OBJ),$(call DEP_NAME,stage,$(basename $(O))))
+DEPS := $(foreach S,$(SRC),$(call DEP_NAME,stage,$(basename $(S))))
 $(shell mkdir -p $(DEPDIR))
 
 -include $(DEPS)
 
-%.o: %.c
-	@echo "Compiling $<"
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -MF $(call DEP_NAME,stage,$*)
+define compile_source
+$(call stage_obj,$(1)): $(1)
+	@echo "Compiling $$<"
+	@mkdir -p $$(dir $$@)
+	$$(CC) $$(CFLAGS) $$(INCLUDES) -c $$< -o $$@ -MF $$(call DEP_NAME,stage,$$(basename $(1)))
+endef
+
+$(foreach S,$(SRC),$(eval $(call compile_source,$(S))))
 
 clean:
-	rm -f $(OBJ)
 	rm -rf $(DEPDIR)

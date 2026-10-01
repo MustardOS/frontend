@@ -38,6 +38,7 @@
 static int font_cache_count = 0;
 static uint32_t last_font_key_hash = 0;
 static int cached_theme_font_scalable = -1;
+static int cached_theme_font_compiled = -1;
 static int cached_has_theme_font = -1;
 static int cached_user_font_count = -1;
 
@@ -115,13 +116,13 @@ static void font_path_join(char *out, const size_t out_size, const char *directo
         snprintf(out, out_size, "%s/%s.ttf", directory, name);
 }
 
-static int theme_font_scan(const int ttf_only) {
+static int theme_font_scan_at(const char *base, const int mode) {
 
     const char *dims[] = {mux_dim, "", NULL};
 
     for (int d = 0; dims[d] != NULL; d++) {
         char dir[MAX_BUFFER_SIZE];
-        snprintf(dir, sizeof(dir), "%s/%sfont", theme_base, dims[d]);
+        snprintf(dir, sizeof(dir), "%s/%sfont", base, dims[d]);
 
         struct dirent **entries;
         const int n = scandir(dir, &entries, NULL, NULL);
@@ -131,11 +132,12 @@ static int theme_font_scan(const int ttf_only) {
         for (int i = 0; i < n; i++) {
             if (!found) {
                 const char *exts[] = {".ttf", ".otf", ".ttc", ".pcf", ".bdf", ".bin"};
-                const int ext_count = ttf_only ? 3 : 6;
+                const int ext_first = mode == 2 ? 5 : 0;
+                const int ext_count = mode == 1 ? 3 : 6;
                 const char *name = entries[i]->d_name;
                 const size_t len = strlen(name);
 
-                for (int e = 0; e < ext_count; e++) {
+                for (int e = ext_first; e < ext_count; e++) {
                     if (len > 4 && strcasecmp(name + len - 4, exts[e]) == 0) {
                         found = 1;
                         break;
@@ -154,7 +156,7 @@ static int theme_font_scan(const int ttf_only) {
                             if (!found) {
                                 const char *s_name = sub_entries[j]->d_name;
                                 const size_t s_len = strlen(s_name);
-                                for (int e = 0; e < ext_count; e++) {
+                                for (int e = ext_first; e < ext_count; e++) {
                                     if (s_len > 4 && strcasecmp(s_name + s_len - 4, exts[e]) == 0) {
                                         found = 1;
                                         break;
@@ -251,15 +253,25 @@ int user_font_count(void) {
 }
 
 int theme_has_font(void) {
-    if (cached_has_theme_font < 0) cached_has_theme_font = theme_font_scan(0);
+    if (cached_has_theme_font < 0) cached_has_theme_font = theme_font_scan_at(theme_base, 0);
 
     return cached_has_theme_font;
 }
 
 int theme_font_is_scalable(void) {
-    if (cached_theme_font_scalable < 0) cached_theme_font_scalable = theme_font_scan(1);
+    if (cached_theme_font_scalable < 0) cached_theme_font_scalable = theme_font_scan_at(theme_base, 1);
 
     return cached_theme_font_scalable;
+}
+
+int theme_font_is_compiled(void) {
+    if (cached_theme_font_compiled < 0) cached_theme_font_compiled = theme_font_scan_at(theme_base, 2);
+
+    return cached_theme_font_compiled;
+}
+
+int theme_path_has_font(const char *path) {
+    return path && *path && theme_font_scan_at(path, 0);
 }
 
 static int effective_type(void) {
@@ -510,6 +522,7 @@ void font_cache_clear(void) {
 
     font_cache_count = 0;
     cached_theme_font_scalable = -1;
+    cached_theme_font_compiled = -1;
     cached_has_theme_font = -1;
     cached_user_font_count = -1;
     LOG_SUCCESS(mux_module, "Font cache has been cleared");

@@ -2,6 +2,7 @@
 #include <common/platform/audio.h>
 #include <common/platform/battery.h>
 #include <common/config/config.h>
+#include <common/content/switcher.h>
 #include <common/display/datetime.h>
 #include <common/platform/display.h>
 #include <common/runtime/init.h>
@@ -40,7 +41,7 @@
 #define TOAST_DURATION_MS 2048
 #define HEADER_FADE_MS    256
 #define MENU_TAP_MS       400
-#define PAUSE_ROW_MAX     16
+#define PAUSE_ROW_MAX     20
 
 static uint32_t toast_expire_tick = 0;
 static int toast_active = 0;
@@ -75,12 +76,16 @@ static int row_cheevo;
 static int row_disc_control;
 static int row_cheats;
 static int row_patches;
+static int row_content_switch;
 static int row_settings;
 static int row_information;
 static int row_restart;
 static int row_quit;
 static int row_count;
 static mux_dialogue destructive_dlg;
+static int content_switch_active;
+static int content_switch_requested;
+static content_switch_list content_switch_items;
 
 typedef enum { destructive_none = 0, destructive_restart, destructive_quit } destructive_action;
 static destructive_action pending_destructive_action = destructive_none;
@@ -99,6 +104,7 @@ static void compute_row_indices(void) {
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
     row_cheats = cheats_supported() && !netplay_is_active() ? i++ : -1;
     row_patches = patch_manual_count > 0 && !netplay_is_active() ? i++ : -1;
+    row_content_switch = !netplay_is_active() && !link_is_engaged() && content_switch_items.count > 1 ? i++ : -1;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -731,6 +737,10 @@ static void pause_menu_show_help(void) {
 }
 
 void pause_menu_rebuild(void) {
+    content_switch_active = 0;
+    content_switch_free(&content_switch_items);
+    if (!netplay_is_active() && !link_is_engaged())
+        content_switch_load(&content_switch_items, core_content_path);
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();
 
@@ -745,9 +755,11 @@ void pause_menu_rebuild(void) {
     if (row_netplay >= 0) add_label("network", lang.muxretro.network_play, lang.muxretro.help.pause.network_play);
     if (row_cheevo >= 0) add_label("trophy", lang.muxretro.cheevo.achievements, lang.muxretro.help.pause.cheevo);
     if (row_game_link >= 0) add_label("network", lang.muxretro.link.game_link, lang.muxretro.help.pause.game_link);
-    if (has_disc_control) add_label("disc", lang.muxretro.disc_control, lang.muxretro.help.pause.disc_control);
+    if (row_disc_control >= 0) add_label("disc", lang.muxretro.disc_control, lang.muxretro.help.pause.disc_control);
     if (row_cheats >= 0) add_label("cheat", lang.muxretro.cheats, lang.muxretro.help.pause.cheats);
     if (row_patches >= 0) add_label("patch", lang.muxretro.patches, lang.muxretro.help.pause.patches);
+    if (row_content_switch >= 0)
+        add_label("history", lang.content_switch.title, lang.content_switch.help);
     add_label("settings", lang.muxretro.settings, lang.muxretro.help.pause.settings);
     add_label("info", lang.muxretro.information, lang.muxretro.help.pause.information);
     add_label("restart", lang.muxretro.restart, lang.muxretro.help.pause.restart);
@@ -755,6 +767,49 @@ void pause_menu_rebuild(void) {
 
     ui_count_static = row_count;
     first_open = 0;
+    lv_label_set_text(ui_lbl_title, lang.muxretro.title);
+    lv_label_set_text(ui_lbl_screen_message, "");
+}
+
+static void content_switch_open(void) {
+    content_switch_active = 1;
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+    ui_count_static = 0;
+    current_item_index = 0;
+    first_open = 0;
+
+    for (size_t index = 0; index < content_switch_items.count; index++) {
+        const content_switch_entry *entry = &content_switch_items.entries[index];
+        gen_label("muxretro", entry->source == content_switch_source_collection ? "collection" : "history", entry->title);
+        ui_count_static++;
+    }
+
+    lv_label_set_text(ui_lbl_title, lang.content_switch.title);
+    lv_label_set_text(
+        ui_lbl_screen_message, content_switch_items.count ? "" : lang.content_switch.empty
+    );
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
+    pause_menu_fix_nav_order();
+    if (content_switch_items.count)
+        gen_step_movement((int) content_switch_items.selected, 1, 1, 0, 0);
+}
+
+static int content_switch_select(void) {
+    if (current_item_index < 0 || (size_t) current_item_index >= content_switch_items.count) return 0;
+    const content_switch_entry *entry = &content_switch_items.entries[current_item_index];
+    if (!content_switch_write_request(entry->path, entry->native)) {
+        play_sound(snd_error);
+        return 0;
+    }
+    if (state_saves_allowed() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
+    content_switch_requested = 1;
+    loading_message_show(lang.generic.loading);
+    return 1;
 }
 
 static void set_chrome_visible(const int visible) {
@@ -864,6 +919,7 @@ void pause_menu_show_nav_hints(void) {
 }
 
 void pause_menu_init(void) {
+    content_switch_requested = 0;
     init_ui_common_screen(&theme, &device, &lang, lang.muxretro.title);
     // Background transparency levels are handled by SDL so ui_screen must be set to transparent
     lv_obj_set_style_bg_opa(ui_screen, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
@@ -911,6 +967,7 @@ void pause_menu_init(void) {
 }
 
 void pause_menu_shutdown(void) {
+    content_switch_free(&content_switch_items);
     ui_lbl_gb_slot = NULL;
     ui_img_gb_slot_glyph = NULL;
     link_menu_teardown();
@@ -922,6 +979,10 @@ void pause_menu_shutdown(void) {
 
 int pause_menu_is_active(void) {
     return active;
+}
+
+int pause_menu_content_switch_requested(void) {
+    return content_switch_requested;
 }
 
 static int capture_clean_frame(const char *path, uint8_t *pixels, const int restore_visibility) {
@@ -1096,7 +1157,7 @@ int pause_menu_tick(void) {
     const int menu_tap = pause_menu_take_menu_tap();
     if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(2) | BIT(3)))) return 0;
 
-    if (menu_tap) {
+    if (menu_tap && !content_switch_active) {
         pause_menu_show_help();
         return 0;
     }
@@ -1126,8 +1187,18 @@ int pause_menu_tick(void) {
         // do nothing!
     } else if (edge & BIT(3)) {
         play_sound(snd_back);
-        pause_menu_toggle();
+        if (content_switch_active) {
+            pause_menu_rebuild();
+            pause_menu_show_nav_hints();
+            focus_item(row_content_switch);
+        } else {
+            pause_menu_toggle();
+        }
     } else if (edge & BIT(2)) {
+        if (content_switch_active) {
+            play_sound(snd_confirm);
+            return content_switch_select();
+        }
         if (current_item_index == row_resume) {
             pause_menu_toggle();
         } else if (current_item_index == row_game_state) {
@@ -1151,6 +1222,9 @@ int pause_menu_tick(void) {
         } else if (row_patches >= 0 && current_item_index == row_patches) {
             play_sound(snd_confirm);
             patch_menu_open();
+        } else if (row_content_switch >= 0 && current_item_index == row_content_switch) {
+            play_sound(snd_confirm);
+            content_switch_open();
         } else if (current_item_index == row_settings) {
             play_sound(snd_confirm);
             settings_menu_open();

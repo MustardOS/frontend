@@ -740,6 +740,12 @@ static void apply_font_size_visibility(void) {
         list_frame_set_suppressed(list_frame_row_of(labels[i]), !font_size_options_visible);
 }
 
+static void apply_font_name_visibility(void) {
+    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+    const int compiled_theme = canonical_type == 1 && !theme_font_is_scalable() && theme_font_is_compiled();
+    list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_name_font), compiled_theme);
+}
+
 static void apply_current_font_settings(void) {
     config.settings.advanced.font = (int16_t) type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
 
@@ -1324,6 +1330,7 @@ static void init_navigation_group(void) {
     init_custom_menu_schema(ui_objects_panel, ui_objects, ui_objects_glyph, ui_objects_value);
 
     list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
+    apply_font_name_visibility();
     apply_font_axis_visibility();
     apply_font_size_visibility();
 
@@ -1398,6 +1405,7 @@ static void handle_option_prev(void) {
             config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
         );
         list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
+        apply_font_name_visibility();
         font_apply_lock();
     } else if (focused == ui_dro_font_directory_font) {
         char previous[MAX_BUFFER_SIZE];
@@ -1411,6 +1419,7 @@ static void handle_option_prev(void) {
         if (focused == ui_dro_font_name_font) populate_font_axes();
         populate_font_size_options();
         apply_font_axis_visibility();
+        apply_font_name_visibility();
         apply_font_size_visibility();
         list_frame_apply();
         const int steps = list_frame_steps_to_row(focused_row);
@@ -1453,6 +1462,7 @@ static void handle_option_next(void) {
             config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
         );
         list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
+        apply_font_name_visibility();
         font_apply_lock();
     } else if (focused == ui_dro_font_directory_font) {
         char previous[MAX_BUFFER_SIZE];
@@ -1466,6 +1476,7 @@ static void handle_option_next(void) {
         if (focused == ui_dro_font_name_font) populate_font_axes();
         populate_font_size_options();
         apply_font_axis_visibility();
+        apply_font_name_visibility();
         apply_font_size_visibility();
         list_frame_apply();
         const int steps = list_frame_steps_to_row(focused_row);
@@ -1504,6 +1515,7 @@ static void restore_custom_options(void) {
     );
     populate_font_size_options();
     list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
+    apply_font_name_visibility();
     apply_font_axis_visibility();
     apply_font_size_visibility();
     list_frame_apply();

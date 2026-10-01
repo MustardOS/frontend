@@ -1202,8 +1202,10 @@ static void process_load(const int from_start) {
 
                 switch (result) {
                     case 1:
-                        show_splash();
-                        fade_out_screen();
+                        if (!content_launch_is_integrated()) {
+                            show_splash();
+                            fade_out_screen();
+                        }
                         exit_status = 1;
                         break;
                     case 2:
@@ -1224,8 +1226,10 @@ static void process_load(const int from_start) {
             }
         } else {
             write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);
-            show_splash();
-            fade_out_screen();
+            if (!content_launch_is_integrated()) {
+                show_splash();
+                fade_out_screen();
+            }
             exit_status = 1;
         }
     } else {

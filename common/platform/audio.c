@@ -153,7 +153,7 @@ void play_silence_bgm(void) {
     LOG_INFO("audio", "BGM idle (silent playback)");
 }
 
-int init_audio_backend(void) {
+int init_audio_backend_spec(const int frequency, const int samples) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         LOG_ERROR("audio", "SDL Init Failed");
         return 0;
@@ -164,7 +164,7 @@ int init_audio_backend(void) {
     if (!(inited & MIX_INIT_OGG)) LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
     if (!(inited & MIX_INIT_MID)) LOG_WARN("audio", "Missing SDL_mixer support for MIDI");
 
-    if (Mix_OpenAudio(44100, AUDIO_F32LSB, 2, 2048) < 0) {
+    if (Mix_OpenAudio(frequency, AUDIO_F32LSB, 2, samples) < 0) {
         LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());
         return 0;
     }
@@ -180,6 +180,10 @@ int init_audio_backend(void) {
     */
 
     return 1;
+}
+
+int init_audio_backend(void) {
+    return init_audio_backend_spec(44100, 2048);
 }
 
 void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {

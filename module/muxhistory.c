@@ -401,8 +401,11 @@ static void process_load(const int from_start) {
                 result = muxpass_main(pct_launch);
 
                 if (result == 1) {
-                    show_splash();
-                    fade_out_screen();
+                    write_text_to_file(WASABI_HISTORY_LAUNCH, "w", CHAR, "1");
+                    if (!content_launch_is_integrated()) {
+                        show_splash();
+                        fade_out_screen();
+                    }
                     exit_status = 1;
                 } else {
                     if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
@@ -415,8 +418,11 @@ static void process_load(const int from_start) {
                 }
             }
         } else {
-            show_splash();
-            fade_out_screen();
+            write_text_to_file(WASABI_HISTORY_LAUNCH, "w", CHAR, "1");
+            if (!content_launch_is_integrated()) {
+                show_splash();
+                fade_out_screen();
+            }
             exit_status = 1;
         }
     } else {

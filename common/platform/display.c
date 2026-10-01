@@ -1285,24 +1285,26 @@ int display_mirror_to_fb(void) {
         return -1;
     }
 
-    uint32_t *pixels = malloc((size_t) width * (size_t) height * 4);
-    if (!pixels) {
+    uint8_t *rgb = malloc((size_t) width * (size_t) height * 3);
+    uint32_t *row = malloc((size_t) width * 4);
+    if (!rgb || !row) {
+        free(rgb);
+        free(row);
         close(fd);
         return -1;
     }
 
     int ret = -1;
     if (capture_target()
-        && SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_ARGB8888, pixels, width * 4) == 0) {
+        && SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_RGB24, rgb, width * 3) == 0) {
         ret = 0;
 
         for (int y = 0; y < height && ret == 0; y++) {
-            uint32_t *row = pixels + (size_t) y * (size_t) width;
-
             for (int x = 0; x < width; x++) {
-                const uint32_t p = row[x];
-                row[x] = (((p >> 16) & 0xFF) << var.red.offset) | (((p >> 8) & 0xFF) << var.green.offset)
-                         | ((p & 0xFF) << var.blue.offset) | (var.transp.length ? 0xFFu << var.transp.offset : 0);
+                const uint8_t *pixel = rgb + ((size_t) y * (size_t) width + (size_t) x) * 3;
+                row[x] = ((uint32_t) pixel[0] << var.red.offset) | ((uint32_t) pixel[1] << var.green.offset)
+                         | ((uint32_t) pixel[2] << var.blue.offset)
+                         | (var.transp.length ? 0xFFu << var.transp.offset : 0);
             }
 
             const off_t offset = (off_t) (var.yoffset + (uint32_t) y) * fix.line_length + (off_t) var.xoffset * 4;
@@ -1311,7 +1313,8 @@ int display_mirror_to_fb(void) {
     }
 
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
-    free(pixels);
+    free(rgb);
+    free(row);
     close(fd);
 
     LOG_INFO("video", "Exit frame %s the framebuffer", ret == 0 ? "mirrored to" : "could not be mirrored to");

@@ -115,6 +115,95 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "terminal", "osk_layout", CFG_OFF(terminal.osk_layout), 1, {.s = ""}},
     {CONF_CONFIG_PATH "terminal", "scrollback_path", CFG_OFF(terminal.scrollback_path), 1, {.s = "/run/muos/muxterm.sb"}},
 
+    {CONF_CONFIG_PATH "video", "hardware_decode", CFG_OFF(video.hardware_decode), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "resume", CFG_OFF(video.resume), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "deinterlace", CFG_OFF(video.deinterlace), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "keep_history", CFG_OFF(video.keep_history), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "scaling_mode", CFG_OFF(video.scaling_mode), 0, {.i = 5}, 1, 0, 5},
+    {CONF_CONFIG_PATH "video", "rotation", CFG_OFF(video.rotation), 0, {.i = 0}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "mirrored", CFG_OFF(video.mirrored), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "aspect_ratio", CFG_OFF(video.aspect_ratio), 0, {.i = 0}, 1, 0, 5},
+    {CONF_CONFIG_PATH "video", "scale_multiplier", CFG_OFF(video.scale_multiplier), 0, {.i = 0}, 1, 0, 8},
+    {CONF_CONFIG_PATH "video", "texture_filter", CFG_OFF(video.texture_filter), 0, {.i = 1}, 1, 0, 6},
+    {CONF_CONFIG_PATH "video", "border_colour", CFG_OFF(video.border_colour), 0, {.i = 0}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "vignette_shape", CFG_OFF(video.vignette_shape), 0, {.i = 0}, 1, 0, 5},
+    {CONF_CONFIG_PATH "video", "vignette_scaling", CFG_OFF(video.vignette_scaling), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "vignette_width", CFG_OFF(video.vignette_width), 0, {.i = 100}, 1, 25, 200},
+    {CONF_CONFIG_PATH "video", "vignette_height", CFG_OFF(video.vignette_height), 0, {.i = 100}, 1, 25, 200},
+    {CONF_CONFIG_PATH "video", "vignette_offset_x", CFG_OFF(video.vignette_offset_x), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "vignette_offset_y", CFG_OFF(video.vignette_offset_y), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "vignette_softness", CFG_OFF(video.vignette_softness), 0, {.i = 50}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "vignette_strength", CFG_OFF(video.vignette_strength), 0, {.i = 70}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "vignette_colour", CFG_OFF(video.vignette_colour), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "colour_filter", CFG_OFF(video.colour_filter), 1, {.s = "none"}},
+    {CONF_CONFIG_PATH "video", "shader", CFG_OFF(video.shader), 1, {.s = "none"}},
+    {CONF_CONFIG_PATH "video", "brightness", CFG_OFF(video.brightness), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "contrast", CFG_OFF(video.contrast), 0, {.i = 100}, 1, 0, 200},
+    {CONF_CONFIG_PATH "video", "saturation", CFG_OFF(video.saturation), 0, {.i = 100}, 1, 0, 200},
+    {CONF_CONFIG_PATH "video", "hue_shift", CFG_OFF(video.hue_shift), 0, {.i = 0}, 1, -180, 180},
+    {CONF_CONFIG_PATH "video", "gamma", CFG_OFF(video.gamma), 0, {.i = 100}, 1, 50, 200},
+    {CONF_CONFIG_PATH "video", "visualiser", CFG_OFF(video.visualiser), 0, {.i = 0}, 1, 0, 8},
+    {CONF_CONFIG_PATH "video", "overlay_mode", CFG_OFF(video.overlay_mode), 0, {.i = 0}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "overlay_pattern", CFG_OFF(video.overlay_pattern), 0, {.i = 0}, 1, 0, 15},
+    {CONF_CONFIG_PATH "video", "overlay_image", CFG_OFF(video.overlay_image), 1, {.s = "none"}},
+    {CONF_CONFIG_PATH "video", "overlay_opacity", CFG_OFF(video.overlay_opacity), 0, {.i = 50}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "overlay_x", CFG_OFF(video.overlay_x), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "overlay_y", CFG_OFF(video.overlay_y), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "overlay_stretch_x", CFG_OFF(video.overlay_stretch_x), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "overlay_stretch_y", CFG_OFF(video.overlay_stretch_y), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "overlay_zoom", CFG_OFF(video.overlay_zoom), 0, {.i = 100}, 1, 25, 200},
+    {CONF_CONFIG_PATH "video", "overlay_crop_left", CFG_OFF(video.overlay_crop_left), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "overlay_crop_right", CFG_OFF(video.overlay_crop_right), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "overlay_crop_top", CFG_OFF(video.overlay_crop_top), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "overlay_crop_bottom", CFG_OFF(video.overlay_crop_bottom), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "overlay_centre_crop", CFG_OFF(video.overlay_centre_crop), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "viewport_x", CFG_OFF(video.viewport_x), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "viewport_y", CFG_OFF(video.viewport_y), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "viewport_stretch_x", CFG_OFF(video.viewport_stretch_x), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "viewport_stretch_y", CFG_OFF(video.viewport_stretch_y), 0, {.i = 0}, 1, -100, 100},
+    {CONF_CONFIG_PATH "video", "viewport_zoom", CFG_OFF(video.viewport_zoom), 0, {.i = 100}, 1, 25, 200},
+    {CONF_CONFIG_PATH "video", "crop_left", CFG_OFF(video.crop_left), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "crop_right", CFG_OFF(video.crop_right), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "crop_top", CFG_OFF(video.crop_top), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "crop_bottom", CFG_OFF(video.crop_bottom), 0, {.i = 0}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "viewport_centre_crop", CFG_OFF(video.viewport_centre_crop), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "show_playtime", CFG_OFF(video.show_playtime), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "header_visibility", CFG_OFF(video.header_visibility), 0, {.i = 0}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "progress_bar", CFG_OFF(video.progress_bar), 0, {.i = 3}, 1, 0, 9},
+    {CONF_CONFIG_PATH "video", "artwork_position", CFG_OFF(video.artwork_position), 0, {.i = 0}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "repeat_mode", CFG_OFF(video.repeat_mode), 0, {.i = 0}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "shuffle", CFG_OFF(video.shuffle), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "volume", CFG_OFF(video.volume), 0, {.i = 100}, 1, 0, 100},
+    {CONF_CONFIG_PATH "video", "sample_rate", CFG_OFF(video.sample_rate), 0, {.i = 1}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "audio_latency", CFG_OFF(video.audio_latency), 0, {.i = 1}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "audio_period", CFG_OFF(video.audio_period), 0, {.i = 1}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "audio_filter", CFG_OFF(video.audio_filter), 0, {.i = 0}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "rate_control", CFG_OFF(video.rate_control), 0, {.i = 2}, 1, 0, 4},
+    {CONF_CONFIG_PATH "video", "gapless", CFG_OFF(video.gapless), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "crossfade", CFG_OFF(video.crossfade), 0, {.i = 0}, 1, 0, 10},
+    {CONF_CONFIG_PATH "video", "tracker_loop", CFG_OFF(video.tracker_loop), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "fast_forward_mode", CFG_OFF(video.fast_forward_mode), 0, {.i = 2}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "fast_forward_speed", CFG_OFF(video.fast_forward_speed), 0, {.i = 0}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "slow_motion_mode", CFG_OFF(video.slow_motion_mode), 0, {.i = 2}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "slow_motion_speed", CFG_OFF(video.slow_motion_speed), 0, {.i = 0}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "thumbnail_size", CFG_OFF(video.thumbnail_size), 0, {.i = 1}, 1, 0, 2},
+    {CONF_CONFIG_PATH "video", "sleep", CFG_OFF(video.sleep), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "idle_screensaver", CFG_OFF(video.idle_screensaver), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "live_quality", CFG_OFF(wasabi.live_quality), 0, {.i = 0}, 1, 0, 3},
+    {CONF_CONFIG_PATH "video", "live_buffer", CFG_OFF(wasabi.live_buffer), 0, {.i = 16}, 1, 4, 32},
+    {CONF_CONFIG_PATH "video", "hotkey_pause", CFG_OFF(video.hotkey_pause), 0, {.i = 0}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_save_bookmark", CFG_OFF(video.hotkey_save_bookmark), 0, {.i = 10}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_load_bookmark", CFG_OFF(video.hotkey_load_bookmark), 0, {.i = 7}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_back", CFG_OFF(video.hotkey_seek_back), 0, {.i = 17}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_forward", CFG_OFF(video.hotkey_seek_forward), 0, {.i = 18}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_back_long", CFG_OFF(video.hotkey_seek_back_long), 0, {.i = 6}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_forward_long", CFG_OFF(video.hotkey_seek_forward_long), 0, {.i = 9}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_header", CFG_OFF(video.hotkey_header), 0, {.i = 3}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_repeat", CFG_OFF(video.hotkey_repeat), 0, {.i = 13}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_shuffle", CFG_OFF(video.hotkey_shuffle), 0, {.i = 12}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_fast_forward", CFG_OFF(video.hotkey_fast_forward), 0, {.i = 11}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_slow_motion", CFG_OFF(video.hotkey_slow_motion), 0, {.i = 8}, 1, 0, 18},
+
     // extra/download/
     {CONF_CONFIG_PATH "extra/download", "data", CFG_OFF(extra.download.data), 1, {.s = ""}},
 
@@ -413,6 +502,28 @@ static int16_t cfg_dir_i16(
 ) {
     const char *value = cfg_dir_get(d, name);
     return config_i16_value(value, fallback, has_range, minimum, maximum);
+}
+
+void load_wasabi_defaults(struct mux_config *config) {
+    if (!config) return;
+
+    wasabi_video_config *video = &config->video;
+    memset(video, 0, sizeof(*video));
+    const size_t base = offsetof(struct mux_config, video);
+    const size_t limit = base + sizeof(*video);
+
+    for (size_t i = 0; i < sizeof(cfg_fields) / sizeof(cfg_fields[0]); i++) {
+        const cfg_field *field = &cfg_fields[i];
+        if (field->offset < base || field->offset >= limit) continue;
+
+        void *target = (char *) video + field->offset - base;
+        if (field->kind == cfg_i16)
+            *(int16_t *) target = field->fallback.i;
+        else
+            snprintf(target, MAX_BUFFER_SIZE, "%s", field->fallback.s);
+    }
+    config->wasabi.live_quality = 0;
+    config->wasabi.live_buffer = 16;
 }
 
 void load_config(struct mux_config *config) {

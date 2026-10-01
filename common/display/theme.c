@@ -1352,6 +1352,7 @@ static void apply_label_scroll_speed(lv_obj_t *ui_lbl_item, const int is_bounce)
 }
 
 void set_label_long_mode(const struct theme_config *theme, lv_obj_t *ui_lbl_item, const int scroll_mode) {
+    if (!ui_lbl_item || !lv_obj_is_valid(ui_lbl_item)) return;
     if (theme->list_default.label_long_mode == LV_LABEL_LONG_WRAP) return;
     if (scroll_mode == 0 || config.visual.label_scroll_speed == 0) return;
 
@@ -1366,6 +1367,7 @@ void set_label_long_mode(const struct theme_config *theme, lv_obj_t *ui_lbl_item
 }
 
 void apply_text_long_dot(const struct theme_config *theme, lv_obj_t *ui_lbl_item) {
+    if (!ui_lbl_item || !lv_obj_is_valid(ui_lbl_item)) return;
     if (theme->list_default.label_long_mode == LV_LABEL_LONG_WRAP) return;
 
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);

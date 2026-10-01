@@ -179,9 +179,24 @@ static void build_row(const int index) {
     }
 
     apply_theme_list_panel(panel);
-    apply_theme_option_item_label(&theme, label, text, 1);
+    int show_metadata = metadata[0] != '\0';
+    apply_theme_option_item_label(&theme, label, text, show_metadata);
+    if (show_metadata) {
+        lv_obj_update_layout(label);
+        const lv_font_t *font = lv_obj_get_style_text_font(label, LV_PART_MAIN);
+        const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(label, LV_PART_MAIN);
+        const lv_coord_t available = lv_obj_get_width(label)
+                                     - lv_obj_get_style_pad_left(label, LV_PART_MAIN)
+                                     - lv_obj_get_style_pad_right(label, LV_PART_MAIN);
+        if (lv_txt_get_width(text, strlen(text), font, letter_space, LV_TEXT_FLAG_EXPAND) > available) {
+            show_metadata = 0;
+            const lv_coord_t full_width = theme.misc.content.width * OPTION_LABEL_ONLY_PCT / 100;
+            lv_obj_set_style_max_width(label, full_width, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_set_width(label, full_width);
+        }
+    }
     apply_theme_list_glyph(&theme, icon, row_glyph_module(row), row_glyph(row));
-    apply_theme_list_value(&theme, value, metadata);
+    apply_theme_list_value(&theme, value, show_metadata ? metadata : "");
     apply_size_to_content(&theme, ui_pnl_content, label, icon, text);
     apply_text_long_dot(&theme, label);
     lv_group_add_obj(ui_group, label);

@@ -8,6 +8,7 @@ static int rumble_suppressed = 0;
 static uint16_t rumble_strength[MUX_INPUT_PORT_COUNT][2];
 static uint16_t rumble_applied[MUX_INPUT_PORT_COUNT][2];
 static int rumble_applied_source[MUX_INPUT_PORT_COUNT] = {-1, -1, -1, -1};
+static int rumble_dirty = 0;
 static uint32_t rumble_refresh_deadline = 0;
 static const uint8_t test_pattern[] = {3, 1, 3, 3, 1, 1, 1, 1, 3, 3, 3, 1, 3, 1, 3, 3, 1, 1, 1, 1, 1};
 static size_t test_pattern_index = 0;
@@ -53,13 +54,26 @@ static int rumble_apply(const int force) {
 }
 
 void rumble_bridge_refresh(void) {
-    if (!test_active) rumble_apply(0);
+    if (test_active) return;
+    rumble_dirty = 0;
+    rumble_apply(0);
+}
+
+void rumble_bridge_commit(void) {
+    if (test_active || !rumble_dirty) return;
+    rumble_dirty = 0;
+    rumble_apply(0);
 }
 
 void rumble_bridge_tick(const uint32_t now) {
-    if (!test_active && !rumble_suppressed && session_settings.rumble_enabled && rumble_requested()
-        && SDL_TICKS_PASSED(now, rumble_refresh_deadline))
+    if (test_active) return;
+
+    if (rumble_dirty) {
+        rumble_bridge_commit();
+    } else if (!rumble_suppressed && session_settings.rumble_enabled && rumble_requested()
+               && SDL_TICKS_PASSED(now, rumble_refresh_deadline)) {
         rumble_apply(1);
+    }
 }
 
 bool rumble_bridge_test_start(void) {
@@ -111,7 +125,7 @@ static bool rumble_set_state(const unsigned port, const enum retro_rumble_effect
 
     if (rumble_strength[port][effect] == strength) return true;
     rumble_strength[port][effect] = strength;
-    rumble_bridge_refresh();
+    rumble_dirty = 1;
     return true;
 }
 
@@ -131,6 +145,7 @@ void rumble_bridge_shutdown(void) {
     test_active = 0;
     memset(rumble_strength, 0, sizeof(rumble_strength));
     rumble_suppressed = 0;
+    rumble_dirty = 0;
     rumble_apply(1);
     memset(rumble_applied, 0, sizeof(rumble_applied));
     for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++)

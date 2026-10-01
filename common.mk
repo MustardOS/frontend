@@ -65,7 +65,7 @@ endif
 
 DEBUG  ?= 0
 VERBOSE = $(if $(filter 2,$(DEBUG)),, @)
-QUIET   = $(if $(filter 1,$(DEBUG)),,>/dev/null 2>&1)
+QUIET   = $(if $(filter 0,$(DEBUG)),>/dev/null 2>&1,)
 
 OPT_LEVEL ?= 2
 

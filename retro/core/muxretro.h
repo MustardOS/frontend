@@ -268,6 +268,8 @@ void pause_menu_shutdown(void);
 
 int pause_menu_is_active(void);
 
+int pause_menu_content_switch_requested(void);
+
 void advisory_init(const char *content_path);
 
 void advisory_tick(uint32_t now);

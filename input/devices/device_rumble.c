@@ -118,7 +118,7 @@ static void handle_play_event(struct device_rumble_state *st, int effect_id, int
         }
     }
     st->target_magnitude = mag;
-    if (!continuing) st->pulse_accumulator = 0;
+    if (!continuing) st->pulse_accumulator = mag ? UINT16_MAX - mag : 0;
     update_motor_level(st);
 }
 

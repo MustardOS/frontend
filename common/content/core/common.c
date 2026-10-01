@@ -560,6 +560,8 @@ static const char *format_external_core(const char *ext_core) {
 const char *format_core_name(const char *core, const int use_lang, const int is_muxretro) {
     static char buf[CORE_BUFFER];
 
+    if (core && strcmp(core, "ext-video") == 0) return "Wasabi";
+
     const char *ext = format_external_core(core);
     if (ext) {
         snprintf(buf, sizeof(buf), "%s (External)", ext);

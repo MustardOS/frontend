@@ -79,7 +79,7 @@ env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS \
 printf 'Building ffmpeg %s for %s\n' "$VERSION" "$DEVICE"
 
 make -j"$EXT_JOBS"
-make install
+make DESTDIR= install-libs install-headers
 
 EXT_STAMP ffmpeg "$ID"
 

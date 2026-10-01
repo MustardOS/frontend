@@ -1347,6 +1347,55 @@ static int content_muxretro_core(const char *resolved, char *core_name, const si
     return 1;
 }
 
+static int content_uses_muxmedia(const char *resolved) {
+    static char cached_path[PATH_MAX];
+    static int cached_is_muxmedia;
+    static int cached_valid;
+
+    if (cached_valid && strcmp(cached_path, resolved) == 0) return cached_is_muxmedia;
+
+    cached_valid = 1;
+    cached_is_muxmedia = 0;
+    snprintf(cached_path, sizeof(cached_path), "%s", resolved);
+
+    char *sys_dir = get_content_path(resolved);
+    if (!sys_dir) return 0;
+
+    char lines[6][MAX_BUFFER_SIZE];
+    int count = content_cfg_lines(sys_dir, get_file_name(resolved), lines, 6);
+    int core_index = 1, launch_index = 5;
+
+    if (count < 6 || !lines[launch_index][0]) {
+        count = content_cfg_lines(sys_dir, NULL, lines, 5);
+        core_index = 0;
+        launch_index = 4;
+    }
+    free(sys_dir);
+
+    if (count <= launch_index || !lines[core_index][0] || !lines[launch_index][0]) return 0;
+    cached_is_muxmedia = strcasecmp(lines[core_index], "ext-video") == 0
+                         || strcasecmp(lines[launch_index], "ext-video.sh") == 0;
+    return cached_is_muxmedia;
+}
+
+static uint64_t muxmedia_uri_key(const char *uri) {
+    uint64_t hash = UINT64_C(1469598103934665603);
+    for (const unsigned char *cursor = (const unsigned char *) uri; cursor && *cursor; cursor++) {
+        hash ^= *cursor;
+        hash *= UINT64_C(1099511628211);
+    }
+    return hash;
+}
+
+static int muxmedia_latest_image(const char *content_path, char *out, const size_t out_size) {
+    if (content_path_is_audio(content_path)) return 0;
+    const int written = snprintf(
+        out, out_size, RUN_STORAGE_PATH "save/wasabi/state/%016llx/exit.png",
+        (unsigned long long) muxmedia_uri_key(content_path)
+    );
+    return written > 0 && (size_t) written < out_size && file_exist(out);
+}
+
 int resolve_save_screenshot(const char *content_path, const int scope, char *out, const size_t out_size) {
     if (!content_path || !*content_path || !out) return 0;
     if (!(config.visual.save_screenshot & scope)) return 0;
@@ -1355,6 +1404,8 @@ int resolve_save_screenshot(const char *content_path, const int scope, char *out
     char resolved[PATH_MAX];
     if (!union_resolve_to_real(content_path, resolved, sizeof(resolved)))
         snprintf(resolved, sizeof(resolved), "%s", content_path);
+
+    if (content_uses_muxmedia(resolved)) return muxmedia_latest_image(resolved, out, out_size);
 
     char core_name[MAX_BUFFER_SIZE];
     if (!content_muxretro_core(resolved, core_name, sizeof(core_name))) return 0;
