@@ -3174,6 +3174,7 @@ struct mux_lang {
         char videos[MAX_BUFFER_SIZE];
         char live_tv[MAX_BUFFER_SIZE];
         char buffering_live_tv[MAX_BUFFER_SIZE];
+        char loading_more[MAX_BUFFER_SIZE];
         char live_tv_unavailable[MAX_BUFFER_SIZE];
         char resume[MAX_BUFFER_SIZE];
         char deinterlace[MAX_BUFFER_SIZE];
