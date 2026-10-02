@@ -70,6 +70,8 @@ static const video_library_entry *playback_playlist;
 static size_t playback_playlist_count;
 static size_t playback_playlist_index;
 static size_t selected_playlist_index;
+static size_t playlist_window_start;
+static size_t playlist_focus_index;
 static int playback_playlist_channels;
 static int playback_playlist_audio;
 static int naming_active;
@@ -91,6 +93,8 @@ static lv_obj_t *timeline_current;
 static lv_obj_t *timeline_total;
 static wasabi_progress timeline_progress;
 static int timeline_width;
+static int timeline_padding_x;
+static int timeline_padding_y;
 static lv_obj_t *setting_panels[wasabi_setting_count];
 static lv_obj_t *setting_labels[wasabi_setting_count];
 static lv_obj_t *setting_glyphs[wasabi_setting_count];
@@ -369,7 +373,7 @@ static void rebuild_timeline_progress(void) {
     wasabi_progress_reset(&timeline_progress);
     timeline_track = lv_obj_create(timeline_panel);
     lv_obj_remove_style_all(timeline_track);
-    lv_obj_set_pos(timeline_track, 0, 0);
+    lv_obj_set_pos(timeline_track, timeline_padding_x, timeline_padding_y);
     lv_obj_set_size(timeline_track, timeline_width, 28);
     lv_obj_clear_flag(timeline_track, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     wasabi_progress_init(&timeline_progress, timeline_track, timeline_width);
@@ -381,7 +385,7 @@ static void show_timeline(void) {
     if (menu_active || wasabi_settings_audio_active() || playback_duration <= 0.0 || !timeline_panel) return;
     update_timeline();
     lv_obj_clear_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
-    timeline_deadline = SDL_GetTicks() + 2000;
+    timeline_deadline = playback_paused ? 0 : SDL_GetTicks() + 2000;
 }
 
 static void update_header_playback_time(void) {
@@ -485,6 +489,7 @@ static void apply_visibility(void) {
 
 static void apply_playback_chrome(void) {
     hide_bookmark_preview();
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(dim_overlay, LV_OBJ_FLAG_HIDDEN);
@@ -659,6 +664,7 @@ static void build_pause_at(const int focus_row) {
     content_switch_active = 0;
     content_switch_free(&content_switch_items);
     content_switch_load(&content_switch_items, playback_content_uri);
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     hide_bookmark_preview();
     list_frame_reset();
     lv_obj_clean(ui_pnl_content);
@@ -710,6 +716,7 @@ static void build_content_switch(void) {
     playlist_active = 0;
     information_active = 0;
     content_switch_active = 1;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     hide_bookmark_preview();
     list_frame_reset();
     lv_obj_clean(ui_pnl_content);
@@ -751,6 +758,7 @@ static void build_settings_at(const int focus_row) {
     bookmarks_active = 0;
     playlist_active = 0;
     information_active = 0;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     hide_bookmark_preview();
     list_frame_reset();
     lv_obj_clean(ui_pnl_content);
@@ -806,6 +814,7 @@ static void build_settings_page(const wasabi_settings_page page) {
     bookmarks_active = 0;
     playlist_active = 0;
     information_active = 0;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     settings_page = page;
     hide_bookmark_preview();
     list_frame_reset();
@@ -908,6 +917,7 @@ static void build_information(void) {
     bookmarks_active = 0;
     playlist_active = 0;
     information_active = 1;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     hide_bookmark_preview();
     list_frame_reset();
     lv_obj_clean(ui_pnl_content);
@@ -1092,6 +1102,7 @@ static void build_bookmarks(void) {
     bookmarks_active = 1;
     playlist_active = 0;
     information_active = 0;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
     video_state_free(bookmark_entries, bookmark_entry_count);
     bookmark_entries = NULL;
     bookmark_entry_count = 0;
@@ -1147,9 +1158,21 @@ static void build_playlist(void) {
     reset_ui_groups();
     ui_count_static = 0;
     current_item_index = 0;
-    first_open = 0;
+    first_open = 1;
 
-    for (size_t index = 0; index < playback_playlist_count; index++)
+    size_t capacity = theme.mux.item.count > 0
+                          ? (size_t) theme.mux.item.count * LIST_WINDOW_SCALE
+                          : LIST_WINDOW_MIN;
+    if (capacity < LIST_WINDOW_MIN) capacity = LIST_WINDOW_MIN;
+    if (capacity > LIST_WINDOW_MAX) capacity = LIST_WINDOW_MAX;
+    if (capacity > playback_playlist_count) capacity = playback_playlist_count;
+    if (playlist_focus_index >= playback_playlist_count) playlist_focus_index = playback_playlist_index;
+    playlist_window_start = playlist_focus_index > capacity / 2U ? playlist_focus_index - capacity / 2U : 0;
+    if (playlist_window_start + capacity > playback_playlist_count)
+        playlist_window_start = playback_playlist_count - capacity;
+
+    const size_t end = playlist_window_start + capacity;
+    for (size_t index = playlist_window_start; index < end; index++)
         add_row(
             playback_playlist_channels ? "network"
             : playback_playlist_audio  ? "audio"
@@ -1164,7 +1187,51 @@ static void build_playlist(void) {
     );
     lv_label_set_text(ui_lbl_screen_message, "");
     show_nav();
-    if (playback_playlist_count) gen_step_movement((int) playback_playlist_index, 1, 1, 0, 0);
+    if (capacity)
+        gen_step_movement((int) (playlist_focus_index - playlist_window_start), 1, 1, 0, 0);
+    update_item_counter(
+        ui_lbl_counter_explore, playlist_focus_index, playback_playlist_count,
+        config.visual.menu_counter_file
+    );
+}
+
+static void playlist_focus(const size_t target) {
+    if (target >= playback_playlist_count || target == playlist_focus_index) return;
+
+    const size_t previous = playlist_focus_index;
+    playlist_focus_index = target;
+    if (target >= playlist_window_start && target < playlist_window_start + (size_t) ui_count_static) {
+        const int direction = target < previous ? -1 : 1;
+        const size_t distance = target < previous ? previous - target : target - previous;
+        gen_step_movement((int) distance, direction, 1, 0, 1);
+        update_item_counter(
+            ui_lbl_counter_explore, playlist_focus_index, playback_playlist_count,
+            config.visual.menu_counter_file
+        );
+        return;
+    }
+
+    gen_step_movement(0, target < previous ? -1 : 1, 1, 0, 1);
+    toast_message(lang.muxmedia.loading_more, tst_wait_s);
+    build_playlist();
+}
+
+static void playlist_move(const int steps, const int direction, const int wrap) {
+    playlist_focus(
+        video_playlist_step(
+            playback_playlist, playback_playlist_count, playlist_focus_index, direction,
+            steps > 0 ? (size_t) steps : 1U, wrap
+        )
+    );
+}
+
+static void playlist_skip(const int direction) {
+    playlist_focus(
+        video_playlist_skip(
+            playback_playlist, playback_playlist_count, playlist_focus_index, direction,
+            theme.mux.item.count > 0 ? (size_t) theme.mux.item.count : 1U, config.visual.page_skip != 0
+        )
+    );
 }
 
 int video_playback_ui_init(
@@ -1185,6 +1252,8 @@ int video_playback_ui_init(
     playback_playlist_count = playlist_count;
     playback_playlist_index = playlist_index < playlist_count ? playlist_index : 0;
     selected_playlist_index = playback_playlist_index;
+    playlist_window_start = 0;
+    playlist_focus_index = playback_playlist_index;
     playback_playlist_channels = playlist_channels;
     playback_playlist_audio = !playlist_channels && playlist_count > 0 && video_path_is_audio(playlist[0].uri);
     bookmark_entries = NULL;
@@ -1242,13 +1311,18 @@ int video_playback_ui_init(
     lv_obj_add_flag(mode_panel, LV_OBJ_FLAG_HIDDEN);
     video_playback_ui_modes_changed();
 
-    const int timeline_padding = device.mux.width / 32 > 8 ? device.mux.width / 32 : 8;
-    const int timeline_height = 58;
-    const int timeline_y = device.mux.height - theme.footer.height - timeline_height - 14;
-    timeline_width = device.mux.width - timeline_padding * 2;
+    const int timeline_edge = 4;
+    timeline_padding_x = device.mux.width / 80;
+    if (timeline_padding_x < 8) timeline_padding_x = 8;
+    if (timeline_padding_x > 16) timeline_padding_x = 16;
+    timeline_padding_y = device.mux.height / 96;
+    if (timeline_padding_y < 5) timeline_padding_y = 5;
+    if (timeline_padding_y > 10) timeline_padding_y = 10;
+    const int timeline_height = 58 + timeline_padding_y * 2;
+    const int timeline_panel_width = device.mux.width - timeline_edge * 2;
+    timeline_width = timeline_panel_width - timeline_padding_x * 2;
     timeline_panel = lv_obj_create(ui_screen);
-    lv_obj_set_pos(timeline_panel, timeline_padding, timeline_y);
-    lv_obj_set_size(timeline_panel, timeline_width, timeline_height);
+    lv_obj_set_size(timeline_panel, timeline_panel_width, timeline_height);
     lv_obj_set_style_bg_color(timeline_panel, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(timeline_panel, 140, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(timeline_panel, 0, MU_OBJ_MAIN_DEFAULT);
@@ -1256,6 +1330,8 @@ int video_playback_ui_init(
     lv_obj_set_style_radius(timeline_panel, 4, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(timeline_panel, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
     load_font_section(FONT_FOOTER_DIR, timeline_panel);
+    lv_obj_update_layout(playtime_panel);
+    lv_obj_align_to(timeline_panel, playtime_panel, LV_ALIGN_OUT_TOP_RIGHT, 0, -timeline_edge);
 
     rebuild_timeline_progress();
 
@@ -1267,8 +1343,8 @@ int video_playback_ui_init(
     lv_obj_set_style_text_opa(timeline_total, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_label_set_text(timeline_current, "00:00");
     lv_label_set_text(timeline_total, "00:00");
-    lv_obj_align(timeline_current, LV_ALIGN_TOP_LEFT, 0, 34);
-    lv_obj_align(timeline_total, LV_ALIGN_TOP_RIGHT, 0, 34);
+    lv_obj_align(timeline_current, LV_ALIGN_TOP_LEFT, timeline_padding_x, timeline_padding_y + 29);
+    lv_obj_align(timeline_total, LV_ALIGN_TOP_RIGHT, -timeline_padding_x, timeline_padding_y + 29);
     lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_move_foreground(timeline_panel);
 
@@ -1362,6 +1438,8 @@ void video_playback_ui_shutdown(void) {
     timeline_current = NULL;
     timeline_total = NULL;
     timeline_width = 0;
+    timeline_padding_x = 0;
+    timeline_padding_y = 0;
     wasabi_progress_reset(&timeline_progress);
 
     lv_obj_clear_flag(ui_pnl_wall, LV_OBJ_FLAG_HIDDEN);
@@ -1564,9 +1642,9 @@ video_ui_action video_playback_ui_confirm(void) {
     }
     if (playlist_active) {
         if (!playback_playlist_count || current_item_index < 0
-            || (size_t) current_item_index >= playback_playlist_count)
+            || (size_t) current_item_index >= (size_t) ui_count_static)
             return video_ui_action_none;
-        selected_playlist_index = (size_t) current_item_index;
+        selected_playlist_index = playlist_window_start + (size_t) current_item_index;
         return video_ui_action_load_playlist;
     }
     if (current_item_index == 0) {
@@ -1581,6 +1659,7 @@ video_ui_action video_playback_ui_confirm(void) {
         return video_ui_action_none;
     }
     if (current_item_index == playlist_row) {
+        playlist_focus_index = playback_playlist_index;
         build_playlist();
         display_composite_frame();
         return video_ui_action_none;
@@ -1665,6 +1744,10 @@ video_ui_action video_playback_ui_back(void) {
 
 void video_playback_ui_move(const int steps, const int direction) {
     if (!menu_active || ui_count_static < 2) return;
+    if (playlist_active) {
+        playlist_move(steps, direction, 1);
+        return;
+    }
     gen_step_movement(steps, direction, settings_active || information_active ? 2 : 1, 0, 1);
     if (bookmarks_active) update_bookmark_preview();
     if (settings_active) {
@@ -1675,6 +1758,10 @@ void video_playback_ui_move(const int steps, const int direction) {
 
 void video_playback_ui_move_held(const int steps, const int direction) {
     if (!menu_active || ui_count_static < 2) return;
+    if (playlist_active) {
+        playlist_move(steps, direction, 0);
+        return;
+    }
     int bounded = steps;
     if (direction < 0 && bounded > current_item_index) bounded = current_item_index;
     if (direction > 0 && bounded > ui_count_static - current_item_index - 1)
@@ -1691,7 +1778,7 @@ void video_playback_ui_move_held(const int steps, const int direction) {
 void video_playback_ui_section(const int direction) {
     if (!menu_active) return;
     if (playlist_active) {
-        video_playback_ui_move_held(theme.mux.item.count, direction);
+        playlist_skip(direction);
         return;
     }
     if ((!settings_active && !information_active) || !list_frame_active()) return;
@@ -2007,7 +2094,7 @@ void video_playback_ui_tick(void) {
     }
     if (timeline_deadline && SDL_TICKS_PASSED(now, timeline_deadline)) {
         timeline_deadline = 0;
-        lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
+        if (!playback_paused) lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
         redraw = 1;
     }
     if (status_deadline && SDL_TICKS_PASSED(now, status_deadline)) {
@@ -2036,6 +2123,8 @@ void video_playback_ui_set_paused(const int paused) {
         align_status_panel();
         lv_obj_clear_flag(status_panel, LV_OBJ_FLAG_HIDDEN);
         status_deadline = SDL_GetTicks() + 1500;
+        if (timeline_panel && !lv_obj_has_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN))
+            timeline_deadline = SDL_GetTicks() + 2000;
     }
     apply_visibility();
     display_composite_frame();
