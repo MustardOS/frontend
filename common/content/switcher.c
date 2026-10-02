@@ -9,6 +9,7 @@
 
 #include <common/base/options.h>
 #include <common/base/strutil.h>
+#include <common/config/config.h>
 #include <common/config/skip.h>
 #include <common/content/content.h>
 #include <common/content/core/common.h>
@@ -30,6 +31,7 @@ static int append_entry(
     memset(entry, 0, sizeof(*entry));
     entry->path = strdup(path);
     entry->title = strdup(title && *title ? title : get_file_name(path));
+    if (entry->title) adjust_visual_label(entry->title, config.visual.name, config.visual.dash);
     if (!entry->path || !entry->title) {
         free(entry->path);
         free(entry->title);

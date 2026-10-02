@@ -40,6 +40,7 @@ void video_playback_ui_tick(void);
 void video_playback_ui_set_paused(int paused);
 void video_playback_ui_header_changed(void);
 void video_playback_ui_modes_changed(void);
+void video_playback_ui_update_position(double position, double duration);
 void video_playback_ui_show_position(double position, double duration);
 void video_playback_ui_show_speed(const char *value, const char *glyph);
 void video_playback_ui_show_channel(size_t index);

@@ -110,7 +110,7 @@ static void cancel_scan(void) {
     }
 
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "stop", NULL};
-    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     hide_progress_bar();
 }

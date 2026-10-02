@@ -37,7 +37,10 @@
 #include <common/runtime/exec.h>
 #include <common/storage/fileio.h>
 
-#define VIDEO_QUEUE_SIZE                   16
+#define VIDEO_QUEUE_SIZE                   120
+#define LOCAL_VIDEO_QUEUE_SIZE             16
+#define LIVE_VIDEO_QUEUE_SECONDS            4.0
+#define LIVE_VIDEO_QUEUE_MEMORY            (96U * 1024U * 1024U)
 #define LIVE_VIDEO_TARGET                  8
 #define LIVE_AUDIO_BUFFER_HEADROOM_SECONDS 3
 #define LIVE_AUDIO_UNDERRUN_GRACE          5
@@ -45,15 +48,14 @@
 #define AUDIO_SPEED_BATCH_FRAMES           1024
 #define AUDIO_SPEED_PHASE_ONE              UINT64_C(4294967296)
 #define SPEED_RAMP_MS                      350.0
-#define PRESENT_INTERVAL_FAST_MS           8
-#define PRESENT_INTERVAL_MEDIUM_MS         12
+#define PRESENT_INTERVAL_MIN_MS            4
+#define PRESENT_INTERVAL_MAX_MS            12
 #define PRESENT_INTERVAL_NORMAL_MS         16
 #define PRESENT_INTERVAL_IDLE_MS           33
+#define PRESENT_INTERVAL_BLEND_MS           2
+#define PRESENT_EARLY_SECONDS               0.002
+#define PLAYBACK_UI_INTERVAL_MS             33
 #define CHANNEL_SWITCH_DELAY_MS            1000
-#define AUDIO_CLOCK_HARD_CORRECTION_SECONDS 0.100
-#define AUDIO_CLOCK_SOFT_CORRECTION_SECONDS 0.012
-#define AUDIO_CLOCK_SOFT_CORRECTION_LIMIT   0.002
-#define AUDIO_CLOCK_SOFT_CORRECTION_FACTOR  0.125
 #define HLS_MANIFEST_LIMIT                 (512U * 1024U)
 #define LIVE_BUFFER_FAILURE_MS             15000U
 #define LIVE_AUTOMATIC_BITRATE_LIMIT       4000000LL
@@ -80,11 +82,13 @@ typedef struct {
     AVPacket *demux_packet;
     AVFrame *decode_frame;
     AVFrame *present_frame;
+    AVFrame *blend_frame;
     AVFrame *filter_frame;
     AVFrame *video_queue[VIDEO_QUEUE_SIZE];
     int video_head;
     int video_tail;
     int video_count;
+    int video_queue_limit;
     int video_stream;
     int audio_stream;
     AVRational video_time_base;
@@ -116,6 +120,10 @@ typedef struct {
     double audio_frames_played;
     double audio_origin;
     int audio_clock_valid;
+    double audio_callback_position;
+    double audio_callback_duration;
+    double audio_callback_rate;
+    uint32_t audio_callback_ticks;
     SDL_atomic_t stop;
     SDL_atomic_t paused;
     SDL_atomic_t eof;
@@ -152,8 +160,16 @@ typedef struct {
     double last_history_position;
     lv_timer_t *present_timer;
     uint32_t present_interval;
+    double presented_timestamp;
+    double blend_timestamp;
+    int frame_blend;
+    uint64_t blend_present_deadline;
+    uint64_t blend_present_interval;
+    int present_dirty;
+    uint32_t ui_tick_deadline;
     int ui_ready;
     int ui_input_consumed;
+    int menu_resume_playback;
     SDL_atomic_t filter_revision;
     int filter_applied_revision;
     uint32_t image_preview_deadline;
@@ -203,6 +219,24 @@ static int live_audio_target_seconds(void) {
     if (config.wasabi.live_buffer >= 16) return 6;
     if (config.wasabi.live_buffer >= 8) return 4;
     return 2;
+}
+
+static int live_video_queue_limit(void) {
+    if (!player.live || !player.format || player.video_stream < 0) return LOCAL_VIDEO_QUEUE_SIZE;
+    AVStream *stream = player.format->streams[player.video_stream];
+    const AVRational rate = av_guess_frame_rate(player.format, stream, NULL);
+    const double frames_per_second = rate.num > 0 && rate.den > 0 ? av_q2d(rate) : 30.0;
+    const int width = player.video_decoder ? player.video_decoder->width : stream->codecpar->width;
+    const int height = player.video_decoder ? player.video_decoder->height : stream->codecpar->height;
+    int limit = (int) ceil(frames_per_second * LIVE_VIDEO_QUEUE_SECONDS);
+    if (width > 0 && height > 0) {
+        const size_t frame_bytes = (size_t) width * (size_t) height * 3U / 2U;
+        const int memory_limit = frame_bytes ? (int) (LIVE_VIDEO_QUEUE_MEMORY / frame_bytes) : VIDEO_QUEUE_SIZE;
+        if (limit > memory_limit) limit = memory_limit;
+    }
+    if (limit < LIVE_VIDEO_TARGET) limit = LIVE_VIDEO_TARGET;
+    if (limit > VIDEO_QUEUE_SIZE) limit = VIDEO_QUEUE_SIZE;
+    return limit;
 }
 
 static int live_performance_begin(char *previous, const size_t size) {
@@ -356,9 +390,39 @@ static uint32_t preferred_present_interval(void) {
     if (!player.format || player.video_stream < 0) return PRESENT_INTERVAL_NORMAL_MS;
     const AVRational rate = av_guess_frame_rate(player.format, player.format->streams[player.video_stream], NULL);
     const double frames = rate.num > 0 && rate.den > 0 ? av_q2d(rate) : 0.0;
-    if (frames > 45.0) return PRESENT_INTERVAL_FAST_MS;
-    if (frames > 28.0) return PRESENT_INTERVAL_MEDIUM_MS;
-    return PRESENT_INTERVAL_NORMAL_MS;
+    if (frames <= 0.0) return PRESENT_INTERVAL_MAX_MS;
+    uint32_t interval = (uint32_t) lround(1000.0 / frames / 4.0);
+    if (interval < PRESENT_INTERVAL_MIN_MS) interval = PRESENT_INTERVAL_MIN_MS;
+    if (interval > PRESENT_INTERVAL_MAX_MS) interval = PRESENT_INTERVAL_MAX_MS;
+    return interval;
+}
+
+static int should_blend_frames(void) {
+    player.blend_present_interval = 0;
+    if (!player.format || player.video_stream < 0) return 0;
+    const double panel = display_panel_refresh_hz();
+    const AVRational rate = av_guess_frame_rate(player.format, player.format->streams[player.video_stream], NULL);
+    const double frames = rate.num > 0 && rate.den > 0 ? av_q2d(rate) : 0.0;
+    if (panel <= 0.0 || frames <= 0.0 || frames >= panel * 0.95) return 0;
+    const double cadence = panel / frames;
+    if (fabs(cadence - round(cadence)) <= 0.02) return 0;
+    const uint64_t frequency = SDL_GetPerformanceFrequency();
+    if (frequency) player.blend_present_interval = (uint64_t) llround((double) frequency / panel);
+    return 1;
+}
+
+static int blend_present_due(void) {
+    if (!player.frame_blend || !player.blend_present_interval) return 1;
+    const uint64_t now = SDL_GetPerformanceCounter();
+    if (!player.blend_present_deadline) {
+        player.blend_present_deadline = now + player.blend_present_interval;
+        return 1;
+    }
+    if (now < player.blend_present_deadline) return 0;
+    do
+        player.blend_present_deadline += player.blend_present_interval;
+    while (player.blend_present_deadline <= now);
+    return 1;
 }
 
 static void set_present_timer_idle(const int idle) {
@@ -458,6 +522,10 @@ static void audio_reset(void) {
     player.audio_write = 0;
     player.audio_frames_played = 0;
     player.audio_clock_valid = 0;
+    player.audio_callback_position = 0.0;
+    player.audio_callback_duration = 0.0;
+    player.audio_callback_rate = 1.0;
+    player.audio_callback_ticks = 0;
     player.live_audio_underruns = 0;
     memset(player.audio_filter_state, 0, sizeof(player.audio_filter_state));
     memset(player.audio_filter_input, 0, sizeof(player.audio_filter_input));
@@ -599,6 +667,14 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
     }
     player.live_audio_underruns = 0;
     if (available > requested) available = requested;
+    const double speed = audio_callback_speed();
+    if (player.audio_clock_valid && player.audio_rate > 0) {
+        player.audio_callback_position =
+            player.audio_origin + player.audio_frames_played / (double) player.audio_rate;
+        player.audio_callback_duration = (double) available / player.audio_rate;
+        player.audio_callback_rate = speed;
+        player.audio_callback_ticks = SDL_GetTicks();
+    }
     if (available > 0) {
         const int first = available < player.audio_capacity - player.audio_read
                               ? available
@@ -631,7 +707,7 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
         if (SDL_AtomicGet(&player.eof)) output_frames = requested;
     }
 
-    if (player.audio_clock_valid) player.audio_frames_played += (double) available * audio_callback_speed();
+    if (player.audio_clock_valid) player.audio_frames_played += (double) available * speed;
 
     const int channels = player.audio_channels < 8 ? player.audio_channels : 8;
     const float volume = (float) config.video.volume / 100.0f;
@@ -682,10 +758,11 @@ static void queue_clear_locked(void) {
 
 static int queue_push(AVFrame *frame) {
     SDL_LockMutex(player.lock);
-    while (!SDL_AtomicGet(&player.stop) && !player.seek_pending && player.video_count >= VIDEO_QUEUE_SIZE) {
+    while (!SDL_AtomicGet(&player.stop) && !player.seek_pending
+           && player.video_count >= player.video_queue_limit) {
         if (player.live && (SDL_AtomicGet(&player.buffering) || SDL_AtomicGet(&player.paused))) {
             av_frame_unref(player.video_queue[player.video_head]);
-            player.video_head = (player.video_head + 1) % VIDEO_QUEUE_SIZE;
+            player.video_head = (player.video_head + 1) % player.video_queue_limit;
             player.video_count--;
             break;
         }
@@ -697,7 +774,7 @@ static int queue_push(AVFrame *frame) {
         return 0;
     }
     av_frame_move_ref(player.video_queue[player.video_tail], frame);
-    player.video_tail = (player.video_tail + 1) % VIDEO_QUEUE_SIZE;
+    player.video_tail = (player.video_tail + 1) % player.video_queue_limit;
     player.video_count++;
     SDL_UnlockMutex(player.lock);
     return 1;
@@ -707,7 +784,7 @@ static int queue_pop_locked(AVFrame *destination) {
     if (player.video_count <= 0) return 0;
     av_frame_unref(destination);
     av_frame_move_ref(destination, player.video_queue[player.video_head]);
-    player.video_head = (player.video_head + 1) % VIDEO_QUEUE_SIZE;
+    player.video_head = (player.video_head + 1) % player.video_queue_limit;
     player.video_count--;
     SDL_CondSignal(player.condition);
     return 1;
@@ -1329,7 +1406,7 @@ static void decode_audio(const AVPacket *packet) {
         if (setup_resampler(player.decode_frame)) {
             static const int rate_control[] = {0, 25, 50, 100, 200};
             const int deviation = rate_control[config.video.rate_control];
-            if (!player.audio_only && deviation > 0 && player.audio_capacity > 0) {
+            if (player.live && deviation > 0 && player.audio_capacity > 0) {
                 SDL_LockAudio();
                 const int fill = audio_available();
                 SDL_UnlockAudio();
@@ -1353,22 +1430,6 @@ static void decode_audio(const AVPacket *packet) {
                         player.audio_origin = timestamp;
                         player.audio_frames_played = 0;
                         player.audio_clock_valid = 1;
-                    } else if (!player.audio_only && player.audio_rate > 0) {
-                        const double expected =
-                            player.audio_origin
-                            + (double) (player.audio_frames_played + audio_available()) / player.audio_rate;
-                        const double difference = timestamp - expected;
-                        if (player.live) {
-                            if (fabs(difference) >= AUDIO_CLOCK_HARD_CORRECTION_SECONDS)
-                                player.audio_origin += difference;
-                        } else if (fabs(difference) >= AUDIO_CLOCK_SOFT_CORRECTION_SECONDS) {
-                            double correction = difference * AUDIO_CLOCK_SOFT_CORRECTION_FACTOR;
-                            if (correction > AUDIO_CLOCK_SOFT_CORRECTION_LIMIT)
-                                correction = AUDIO_CLOCK_SOFT_CORRECTION_LIMIT;
-                            else if (correction < -AUDIO_CLOCK_SOFT_CORRECTION_LIMIT)
-                                correction = -AUDIO_CLOCK_SOFT_CORRECTION_LIMIT;
-                            player.audio_origin += correction;
-                        }
                     }
                 }
                 SDL_UnlockAudio();
@@ -1630,6 +1691,11 @@ static void perform_seek(const double target) {
     SDL_CondSignal(player.condition);
     SDL_UnlockMutex(player.lock);
     audio_reset();
+    player.presented_timestamp = -1.0;
+    player.blend_timestamp = -1.0;
+    player.blend_present_deadline = 0;
+    player.present_dirty = 0;
+    video_render_set_blend(0.0);
 }
 
 static void flush_decoders(void) {
@@ -1707,8 +1773,13 @@ static double playback_clock(void) {
     }
     SDL_LockAudio();
     const int audio_valid = player.audio_clock_valid && player.audio_rate > 0;
-    const double audio_position =
+    double audio_position =
         audio_valid ? player.audio_origin + (double) player.audio_frames_played / player.audio_rate : 0.0;
+    if (audio_valid && player.audio_callback_ticks && player.audio_callback_duration > 0.0) {
+        double elapsed = (double) (SDL_GetTicks() - player.audio_callback_ticks) / 1000.0;
+        if (elapsed > player.audio_callback_duration) elapsed = player.audio_callback_duration;
+        audio_position = player.audio_callback_position + elapsed * player.audio_callback_rate;
+    }
     SDL_UnlockAudio();
     if (audio_valid && player.audio_rate > 0) return audio_position;
     return player.clock_origin + (double) (SDL_GetTicks() - player.clock_ticks) / 1000.0;
@@ -1845,6 +1916,10 @@ static void finish_transition_handoff(void) {
     player.audio_origin = latest;
     player.audio_frames_played = 0.0;
     player.audio_clock_valid = 1;
+    player.audio_callback_position = latest;
+    player.audio_callback_duration = 0.0;
+    player.audio_callback_rate = 1.0;
+    player.audio_callback_ticks = 0;
     SDL_UnlockAudio();
     player.position = latest;
     player.clock_origin = latest;
@@ -1852,6 +1927,44 @@ static void finish_transition_handoff(void) {
     player.transition_resume_origin = 0.0;
     audio_transition_release();
     start_audio_transition();
+}
+
+static void playback_ui_tick(const uint32_t now) {
+    if (!player.ui_ready || (player.ui_tick_deadline && !SDL_TICKS_PASSED(now, player.ui_tick_deadline))) return;
+    player.ui_tick_deadline = now + PLAYBACK_UI_INTERVAL_MS;
+    video_playback_ui_update_position(player.position, player.duration);
+    video_playback_ui_tick();
+}
+
+static int prepare_blend_frame(double *timestamp) {
+    if (!player.frame_blend || !player.blend_frame || !timestamp) return 0;
+    int ready = 0;
+    SDL_LockMutex(player.lock);
+    if (player.video_count > 0) {
+        AVFrame *next = player.video_queue[player.video_head];
+        const double next_timestamp = normalise_position(frame_seconds(next, player.video_time_base));
+        if (next_timestamp >= 0.0) {
+            if (fabs(next_timestamp - player.blend_timestamp) > 0.000001) {
+                av_frame_unref(player.blend_frame);
+                if (av_frame_ref(player.blend_frame, next) == 0) {
+                    player.blend_timestamp = next_timestamp;
+                    ready = 2;
+                }
+            } else {
+                ready = 1;
+            }
+            *timestamp = next_timestamp;
+        }
+    }
+    SDL_UnlockMutex(player.lock);
+    if (ready == 2) {
+        if (!video_render_upload_next(player.blend_frame)) {
+            player.blend_timestamp = -1.0;
+            ready = 0;
+        }
+        av_frame_unref(player.blend_frame);
+    }
+    return ready != 0;
 }
 
 static void present_tick(lv_timer_t *timer __attribute__((unused))) {
@@ -1899,7 +2012,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
                     || (at_end && queued_video == 0 && queued_audio == 0)))
                 show_live_failure();
             if (video_render_static_tick()) display_composite_frame();
-            if (player.ui_ready) video_playback_ui_tick();
+            playback_ui_tick(now);
             return;
         }
 
@@ -1910,6 +2023,22 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             if (timestamp >= 0.0) player.position = timestamp;
         }
         SDL_UnlockMutex(player.lock);
+        SDL_LockAudio();
+        if (player.audio_clock_valid && player.audio_rate > 0) {
+            const double audio_position =
+                player.audio_origin + player.audio_frames_played / (double) player.audio_rate;
+            const double difference = player.position - audio_position;
+            if (difference > 0.0) {
+                int discard = (int) llround(difference * player.audio_rate);
+                const int available = audio_available();
+                if (discard > available) discard = available;
+                if (discard > 0) {
+                    player.audio_read = (player.audio_read + discard) % player.audio_capacity;
+                    player.audio_origin += (double) discard / player.audio_rate;
+                }
+            }
+        }
+        SDL_UnlockAudio();
         player.clock_origin = player.position;
         player.clock_ticks = now;
         SDL_AtomicSet(&player.buffering, 0);
@@ -1932,7 +2061,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     if (player.live_preview_pending && player.video_count > 0) {
         while (player.video_count > 1) {
             av_frame_unref(player.video_queue[player.video_head]);
-            player.video_head = (player.video_head + 1) % VIDEO_QUEUE_SIZE;
+            player.video_head = (player.video_head + 1) % player.video_queue_limit;
             player.video_count--;
         }
         moved = queue_pop_locked(player.present_frame);
@@ -1946,13 +2075,13 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
         AVFrame *head = player.video_queue[player.video_head];
         double timestamp = normalise_position(frame_seconds(head, player.video_time_base));
         if (timestamp < 0.0) timestamp = clock;
-        if (timestamp > clock + 0.025) break;
+        if (timestamp > clock + PRESENT_EARLY_SECONDS) break;
         if (player.video_count > 1) {
-            AVFrame *next = player.video_queue[(player.video_head + 1) % VIDEO_QUEUE_SIZE];
+            AVFrame *next = player.video_queue[(player.video_head + 1) % player.video_queue_limit];
             const double next_timestamp = normalise_position(frame_seconds(next, player.video_time_base));
-            if (next_timestamp <= clock + 0.025) {
+            if (next_timestamp <= clock + PRESENT_EARLY_SECONDS) {
                 av_frame_unref(head);
-                player.video_head = (player.video_head + 1) % VIDEO_QUEUE_SIZE;
+                player.video_head = (player.video_head + 1) % player.video_queue_limit;
                 player.video_count--;
                 SDL_CondSignal(player.condition);
                 continue;
@@ -1965,7 +2094,29 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     const int queue_empty = player.video_count == 0;
     SDL_UnlockMutex(player.lock);
 
-    if (moved && video_render_upload(player.present_frame)) display_composite_frame();
+    const int present_due = blend_present_due();
+    if (moved) {
+        int uploaded = 0;
+        if (player.frame_blend && fabs(player.blend_timestamp - player.position) <= 0.000001)
+            uploaded = video_render_promote_next();
+        if (!uploaded) uploaded = video_render_upload(player.present_frame);
+        if (uploaded) {
+            player.presented_timestamp = player.position;
+            player.present_dirty = 1;
+        }
+        player.blend_timestamp = -1.0;
+    }
+    if (present_due && player.frame_blend && player.presented_timestamp >= 0.0) {
+        double next_timestamp = -1.0;
+        if (prepare_blend_frame(&next_timestamp) && next_timestamp > player.presented_timestamp) {
+            video_render_set_blend((clock - player.presented_timestamp) / (next_timestamp - player.presented_timestamp));
+            player.present_dirty = 1;
+        }
+    }
+    if (present_due && player.present_dirty) {
+        display_composite_frame();
+        player.present_dirty = 0;
+    }
     if (player.live && player.video_decoder && queue_empty && !SDL_AtomicGet(&player.eof)) {
         player.clock_origin = player.position;
         player.clock_ticks = SDL_GetTicks();
@@ -1974,7 +2125,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     if (!SDL_AtomicGet(&player.paused) && clock > player.position) player.position = clock;
     if (player.duration > 0.0 && player.position > player.duration) player.position = player.duration;
 
-    if (player.ui_ready) video_playback_ui_tick();
+    playback_ui_tick(now);
     if (player.audio_only) {
         const int progress_changed =
             wasabi_audio_ui_update(player.position, player.duration, SDL_AtomicGet(&player.paused));
@@ -2088,7 +2239,7 @@ static void resume_playback(void) {
         SDL_LockMutex(player.lock);
         while (player.video_count > LIVE_VIDEO_TARGET) {
             av_frame_unref(player.video_queue[player.video_head]);
-            player.video_head = (player.video_head + 1) % VIDEO_QUEUE_SIZE;
+            player.video_head = (player.video_head + 1) % player.video_queue_limit;
             player.video_count--;
         }
         SDL_CondSignal(player.condition);
@@ -2185,7 +2336,7 @@ static void load_quick_bookmark(void) {
 }
 
 static void toggle_header(void) {
-    config.video.header_visibility = (config.video.header_visibility + 1) % 4;
+    config.video.header_visibility = (config.video.header_visibility + 1) % 5;
     video_playback_ui_header_changed();
 }
 
@@ -2285,7 +2436,8 @@ static void apply_ui_action(const video_ui_action action) {
                 video_loading_hide();
                 player.buffering_visible = 0;
             }
-            if (!SDL_AtomicGet(&player.paused)) {
+            player.menu_resume_playback = !SDL_AtomicGet(&player.paused);
+            if (player.menu_resume_playback) {
                 player.clock_origin = playback_clock();
                 SDL_AtomicSet(&player.paused, 1);
                 if (player.sequenced_audio) Mix_PauseMusic();
@@ -2293,7 +2445,10 @@ static void apply_ui_action(const video_ui_action action) {
             set_present_timer_idle(1);
             break;
         case video_ui_action_closed:
-            resume_playback();
+            if (player.menu_resume_playback)
+                resume_playback();
+            else
+                video_playback_ui_set_paused(1);
             break;
         case video_ui_action_load_bookmark: {
             const double position = video_playback_ui_selected_position();
@@ -2420,7 +2575,6 @@ static void handle_start(void) {
         }
         return;
     }
-    if (video_playback_ui_menu_active()) return;
 }
 
 static void handle_up(void) {
@@ -2504,43 +2658,47 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         player.ui_input_consumed = 0;
         return;
     }
-    if (player.audio_only && !player.live && !player.sequenced_audio && !video_playback_ui_menu_active()
-        && !video_playback_ui_naming_active()) {
+    if (video_playback_ui_menu_active() || video_playback_ui_naming_active()) return;
+    const int menu_combo = mux_input_pressed(mux_input_menu);
+    if (player.audio_only && !player.live && !player.sequenced_audio) {
         if (input == config.video.hotkey_fast_forward && config.video.fast_forward_mode) {
-            if (action == mux_input_press) {
+            if (action == mux_input_release && config.video.fast_forward_mode == 1) {
+                set_fast_forward(0);
+            } else if (action == mux_input_press && menu_combo) {
+                video_playback_ui_menu_consume();
                 if (config.video.fast_forward_mode == 1)
                     set_fast_forward(1);
                 else
                     set_fast_forward(!player.fast_forward_active);
-            } else if (action == mux_input_release && config.video.fast_forward_mode == 1) {
-                set_fast_forward(0);
             }
             return;
         }
         if (input == config.video.hotkey_slow_motion && config.video.slow_motion_mode) {
-            if (action == mux_input_press) {
+            if (action == mux_input_release && config.video.slow_motion_mode == 1) {
+                set_slow_motion(0);
+            } else if (action == mux_input_press && menu_combo) {
+                video_playback_ui_menu_consume();
                 if (config.video.slow_motion_mode == 1)
                     set_slow_motion(1);
                 else
                     set_slow_motion(!player.slow_motion_active);
-            } else if (action == mux_input_release && config.video.slow_motion_mode == 1) {
-                set_slow_motion(0);
             }
             return;
         }
     }
-    if (action != mux_input_press || video_playback_ui_menu_active() || video_playback_ui_naming_active()) return;
-    if (mux_input_pressed(mux_input_menu)) {
-        if (input == config.video.hotkey_save_bookmark) {
-            video_playback_ui_menu_consume();
+    if (action != mux_input_press) return;
+    if (menu_combo) {
+        if (input == config.video.hotkey_save_bookmark)
             save_quick_bookmark();
-        } else if (input == config.video.hotkey_load_bookmark) {
-            video_playback_ui_menu_consume();
+        else if (input == config.video.hotkey_load_bookmark)
             load_quick_bookmark();
-        } else if (input == config.video.hotkey_header) {
-            video_playback_ui_menu_consume();
+        else if (input == config.video.hotkey_header)
             toggle_header();
-        }
+        else if (input == config.video.hotkey_quit)
+            stop_playback();
+        else
+            return;
+        video_playback_ui_menu_consume();
         return;
     }
     if (input == config.video.hotkey_pause)
@@ -2599,6 +2757,7 @@ static void player_cleanup(void) {
         av_frame_free(&player.video_queue[i]);
     av_frame_free(&player.decode_frame);
     av_frame_free(&player.present_frame);
+    av_frame_free(&player.blend_frame);
     av_frame_free(&player.filter_frame);
     av_packet_free(&player.packet);
     av_packet_free(&player.demux_packet);
@@ -2635,6 +2794,7 @@ static int player_open_sequenced(const char *uri, const char *title, const video
     SDL_AtomicSet(&player.speed_q16, 65536);
     player.video_stream = -1;
     player.audio_stream = -1;
+    player.video_queue_limit = LOCAL_VIDEO_QUEUE_SIZE;
     player.audio_only = 1;
     player.history_enabled = options->keep_history;
     player.playlist = options->playlist;
@@ -2781,7 +2941,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
         av_dict_set(&open_options, "reconnect_streamed", "1", 0);
         av_dict_set(&open_options, "reconnect_delay_max", "5", 0);
         av_dict_set(&open_options, "buffer_size", buffer_size, 0);
-        av_dict_set(&open_options, "http_persistent", "0", 0);
+        av_dict_set(&open_options, "http_persistent", "1", 0);
         av_dict_set(&open_options, "http_multiple", "0", 0);
         av_dict_set(&open_options, "user_agent", "MustardOS-Wasabi/1.0", 0);
     }
@@ -2852,20 +3012,22 @@ static int player_open(const char *uri, const char *title, const video_player_op
         player.audio_time_base = player.format->streams[player.audio_stream]->time_base;
         player.audio_decoder = open_decoder(player.audio_stream, 0);
     }
+    player.video_queue_limit = live_video_queue_limit();
 
     player.packet = av_packet_alloc();
     if (player.live) player.demux_packet = av_packet_alloc();
     player.decode_frame = av_frame_alloc();
     if (player.video_decoder) {
         player.present_frame = av_frame_alloc();
+        player.blend_frame = av_frame_alloc();
         player.filter_frame = av_frame_alloc();
     }
     if (!player.packet || (player.live && !player.demux_packet) || !player.decode_frame
-        || (player.video_decoder && (!player.present_frame || !player.filter_frame)) || !player.lock
+        || (player.video_decoder && (!player.present_frame || !player.blend_frame || !player.filter_frame)) || !player.lock
         || !player.condition)
         return player_open_failed("playback buffers", AVERROR(ENOMEM));
     if (player.video_decoder) {
-        for (int i = 0; i < VIDEO_QUEUE_SIZE; ++i) {
+        for (int i = 0; i < player.video_queue_limit; ++i) {
             player.video_queue[i] = av_frame_alloc();
             if (!player.video_queue[i]) return player_open_failed("video queue", AVERROR(ENOMEM));
         }
@@ -2882,6 +3044,9 @@ static int player_open(const char *uri, const char *title, const video_player_op
             static const int latency_periods[] = {3, 5, 8};
             player.audio_capacity =
                 period_frames[config.video.audio_period] * latency_periods[config.video.audio_latency] + 1;
+            const int local_video_audio_capacity = player.audio_rate / 2 + 1;
+            if (!player.live && !player.audio_only && player.audio_capacity < local_video_audio_capacity)
+                player.audio_capacity = local_video_audio_capacity;
             const int live_audio_capacity =
                 player.audio_rate * (live_audio_target_seconds() + LIVE_AUDIO_BUFFER_HEADROOM_SECONDS) + 1;
             if (player.live && player.audio_capacity < live_audio_capacity) player.audio_capacity = live_audio_capacity;
@@ -2942,7 +3107,10 @@ static int player_open(const char *uri, const char *title, const video_player_op
     player.clock_ticks = SDL_GetTicks();
     player.last_history_position = player.position;
     player.history_save_deadline = SDL_GetTicks() + 30000;
-    player.present_interval = preferred_present_interval();
+    player.frame_blend = should_blend_frames();
+    player.present_interval = player.frame_blend ? PRESENT_INTERVAL_BLEND_MS : preferred_present_interval();
+    player.presented_timestamp = -1.0;
+    player.blend_timestamp = -1.0;
     player.present_timer = lv_timer_create(present_tick, player.present_interval, NULL);
     if (player.live) player.demux_thread = SDL_CreateThread(demux_thread, "muxmedia-demux", NULL);
     player.decode_thread = SDL_CreateThread(decode_thread, "muxmedia-decode", NULL);

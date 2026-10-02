@@ -7,8 +7,10 @@
 #include "player.h"
 #include "video.h"
 #include "effects.h"
+#include "ui_progress.h"
 
 #include <SDL2/SDL.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,6 +53,10 @@ static uint32_t playtime_started;
 static uint32_t playtime_shown = UINT32_MAX;
 static uint32_t header_deadline;
 static uint32_t status_deadline;
+static uint32_t mode_deadline;
+static uint32_t timeline_deadline;
+static double playback_position;
+static double playback_duration;
 static char playback_title[PATH_MAX];
 static char playback_uri[PATH_MAX];
 static char playback_content_uri[PATH_MAX];
@@ -79,6 +85,12 @@ static lv_obj_t *mode_panel;
 static lv_obj_t *shuffle_glyph;
 static lv_obj_t *repeat_glyph;
 static lv_obj_t *repeat_badge;
+static lv_obj_t *timeline_panel;
+static lv_obj_t *timeline_track;
+static lv_obj_t *timeline_current;
+static lv_obj_t *timeline_total;
+static wasabi_progress timeline_progress;
+static int timeline_width;
 static lv_obj_t *setting_panels[wasabi_setting_count];
 static lv_obj_t *setting_labels[wasabi_setting_count];
 static lv_obj_t *setting_glyphs[wasabi_setting_count];
@@ -339,6 +351,50 @@ static void format_time(const uint32_t seconds, char *buffer, const size_t size)
         snprintf(buffer, size, "%02u:%02u", minutes, seconds % 60);
 }
 
+static void update_timeline(void) {
+    if (!timeline_panel || playback_duration <= 0.0) return;
+    char current[24];
+    char total[24];
+    format_time(playback_position > 0.0 ? (uint32_t) playback_position : 0, current, sizeof(current));
+    format_time((uint32_t) playback_duration, total, sizeof(total));
+    lv_label_set_text(timeline_current, current);
+    lv_label_set_text(timeline_total, total);
+    const int value = (int) lround(playback_position * 1000.0 / playback_duration);
+    wasabi_progress_update(&timeline_progress, value);
+}
+
+static void rebuild_timeline_progress(void) {
+    if (!timeline_panel || timeline_width < 1) return;
+    if (timeline_track && lv_obj_is_valid(timeline_track)) lv_obj_del(timeline_track);
+    wasabi_progress_reset(&timeline_progress);
+    timeline_track = lv_obj_create(timeline_panel);
+    lv_obj_remove_style_all(timeline_track);
+    lv_obj_set_pos(timeline_track, 0, 0);
+    lv_obj_set_size(timeline_track, timeline_width, 28);
+    lv_obj_clear_flag(timeline_track, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    wasabi_progress_init(&timeline_progress, timeline_track, timeline_width);
+    lv_obj_move_background(timeline_track);
+    update_timeline();
+}
+
+static void show_timeline(void) {
+    if (menu_active || wasabi_settings_audio_active() || playback_duration <= 0.0 || !timeline_panel) return;
+    update_timeline();
+    lv_obj_clear_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
+    timeline_deadline = SDL_GetTicks() + 2000;
+}
+
+static void update_header_playback_time(void) {
+    if (config.video.header_visibility != 4) return;
+    char current[24];
+    char total[24];
+    char value[56];
+    format_time(playback_position > 0.0 ? (uint32_t) playback_position : 0, current, sizeof(current));
+    format_time(playback_duration > 0.0 ? (uint32_t) playback_duration : 0, total, sizeof(total));
+    snprintf(value, sizeof(value), "%s / %s", current, total);
+    lv_label_set_text(ui_lbl_title, value);
+}
+
 static void restore_header(void) {
     lv_obj_set_style_opa(ui_pnl_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnl_header, theme.header.background_alpha, MU_OBJ_MAIN_DEFAULT);
@@ -380,7 +436,12 @@ static void apply_gameplay_header(void) {
     else
         lv_obj_add_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
 
-    if (config.video.header_visibility >= 2) {
+    if (config.video.header_visibility == 4)
+        lv_obj_clear_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
+    else
+        lv_obj_add_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
+
+    if (config.video.header_visibility == 2 || config.video.header_visibility == 3) {
         if (config.visual.battery != 1)
             lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
         else
@@ -394,14 +455,18 @@ static void apply_gameplay_header(void) {
         lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
     }
 
-    datetime_task(NULL);
-    battery_capacity_task(NULL);
+    if (config.video.header_visibility == 4)
+        update_header_playback_time();
+    else
+        datetime_task(NULL);
+    if (config.video.header_visibility == 2 || config.video.header_visibility == 3) battery_capacity_task(NULL);
     lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
 }
 
 static int transient_visible(void) {
     if (mode_panel && !lv_obj_has_flag(mode_panel, LV_OBJ_FLAG_HIDDEN)) return 1;
     if (status_panel && !lv_obj_has_flag(status_panel, LV_OBJ_FLAG_HIDDEN)) return 1;
+    if (timeline_panel && !lv_obj_has_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN)) return 1;
     if (ui_pnl_progress_volume && !lv_obj_has_flag(ui_pnl_progress_volume, LV_OBJ_FLAG_HIDDEN)) return 1;
     if (ui_pnl_progress_brightness && !lv_obj_has_flag(ui_pnl_progress_brightness, LV_OBJ_FLAG_HIDDEN)) return 1;
     if (ui_pnl_message && !lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) return 1;
@@ -440,6 +505,7 @@ static void apply_menu_chrome(void) {
     lv_obj_add_flag(playtime_panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(status_panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(mode_panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
     restore_header();
     display_set_ui_hidden(0);
 }
@@ -506,7 +572,7 @@ static void apply_overlay_row_visibility(void) {
     list_frame_set_suppressed(wasabi_setting_live_quality, !live_content || !video_player_live_quality_available());
     list_frame_set_suppressed(wasabi_setting_live_buffer, !live_content);
     list_frame_set_suppressed(wasabi_setting_visualiser, !wasabi_settings_audio_active());
-    list_frame_set_suppressed(wasabi_setting_progress_bar, !wasabi_settings_audio_active());
+    list_frame_set_suppressed(wasabi_setting_progress_bar, 0);
     list_frame_set_suppressed(wasabi_setting_artwork_position, !wasabi_settings_audio_active());
     list_frame_set_suppressed(wasabi_setting_thumbnail, wasabi_settings_audio_active());
     for (int row = wasabi_setting_gapless; row <= wasabi_setting_slow_motion_speed; row++)
@@ -856,7 +922,7 @@ static void build_information(void) {
     memset(information_values, 0, sizeof(information_values));
 
     const int media_first = information_count;
-    add_information_row("content", lang.generic.content, playback_title);
+    add_information_row("content", lang.generic.content, get_file_name(playback_uri));
     char location[PATH_MAX];
     snprintf(location, sizeof(location), "%s", playback_uri);
     char *separator = strrchr(location, '/');
@@ -1009,7 +1075,14 @@ static void change_setting(const int direction) {
     } else if ((row >= wasabi_setting_scaling && row <= wasabi_setting_border) || (row >= wasabi_setting_overlay_pattern && row <= wasabi_setting_overlay_opacity))
         video_render_settings_changed();
     if (row >= wasabi_setting_volume && row <= wasabi_setting_slow_motion_speed) video_player_audio_settings_changed();
-    if (row == wasabi_setting_artwork_position || row == wasabi_setting_progress_bar) video_player_audio_ui_changed();
+    if (row == wasabi_setting_artwork_position)
+        video_player_audio_ui_changed();
+    else if (row == wasabi_setting_progress_bar) {
+        if (wasabi_settings_audio_active())
+            video_player_audio_ui_changed();
+        else
+            rebuild_timeline_progress();
+    }
     if (row == wasabi_setting_repeat || row == wasabi_setting_shuffle) video_player_modes_changed();
     if (row == wasabi_setting_gapless || row == wasabi_setting_crossfade) video_player_transition_settings_changed();
 }
@@ -1124,6 +1197,10 @@ int video_playback_ui_init(
     playtime_shown = UINT32_MAX;
     header_deadline = 0;
     status_deadline = 0;
+    mode_deadline = 0;
+    timeline_deadline = 0;
+    playback_position = 0.0;
+    playback_duration = 0.0;
     playback_paused = 0;
     settings_parent_row = -1;
     menu_peeking = 0;
@@ -1164,6 +1241,36 @@ int video_playback_ui_init(
     lv_obj_set_style_text_opa(repeat_badge, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_flag(mode_panel, LV_OBJ_FLAG_HIDDEN);
     video_playback_ui_modes_changed();
+
+    const int timeline_padding = device.mux.width / 32 > 8 ? device.mux.width / 32 : 8;
+    const int timeline_height = 58;
+    const int timeline_y = device.mux.height - theme.footer.height - timeline_height - 14;
+    timeline_width = device.mux.width - timeline_padding * 2;
+    timeline_panel = lv_obj_create(ui_screen);
+    lv_obj_set_pos(timeline_panel, timeline_padding, timeline_y);
+    lv_obj_set_size(timeline_panel, timeline_width, timeline_height);
+    lv_obj_set_style_bg_color(timeline_panel, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(timeline_panel, 140, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(timeline_panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(timeline_panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(timeline_panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(timeline_panel, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    load_font_section(FONT_FOOTER_DIR, timeline_panel);
+
+    rebuild_timeline_progress();
+
+    timeline_current = lv_label_create(timeline_panel);
+    timeline_total = lv_label_create(timeline_panel);
+    lv_obj_set_style_text_color(timeline_current, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(timeline_current, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(timeline_total, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(timeline_total, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_label_set_text(timeline_current, "00:00");
+    lv_label_set_text(timeline_total, "00:00");
+    lv_obj_align(timeline_current, LV_ALIGN_TOP_LEFT, 0, 34);
+    lv_obj_align(timeline_total, LV_ALIGN_TOP_RIGHT, 0, 34);
+    lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(timeline_panel);
 
     static const char *asset_actions[] = {NULL, NULL, NULL};
     asset_actions[asset_action_collect] = lang.generic.collect;
@@ -1220,6 +1327,7 @@ void video_playback_ui_shutdown(void) {
     if (playtime_panel && lv_obj_is_valid(playtime_panel)) lv_obj_del(playtime_panel);
     if (status_panel && lv_obj_is_valid(status_panel)) lv_obj_del(status_panel);
     if (mode_panel && lv_obj_is_valid(mode_panel)) lv_obj_del(mode_panel);
+    if (timeline_panel && lv_obj_is_valid(timeline_panel)) lv_obj_del(timeline_panel);
     if (asset_actions_dialogue.panel && lv_obj_is_valid(asset_actions_dialogue.panel))
         lv_obj_del(asset_actions_dialogue.panel);
     if (asset_actions_dialogue.dim && lv_obj_is_valid(asset_actions_dialogue.dim))
@@ -1249,6 +1357,12 @@ void video_playback_ui_shutdown(void) {
     shuffle_glyph = NULL;
     repeat_glyph = NULL;
     repeat_badge = NULL;
+    timeline_panel = NULL;
+    timeline_track = NULL;
+    timeline_current = NULL;
+    timeline_total = NULL;
+    timeline_width = 0;
+    wasabi_progress_reset(&timeline_progress);
 
     lv_obj_clear_flag(ui_pnl_wall, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
@@ -1872,9 +1986,23 @@ void video_playback_ui_tick(void) {
         }
     }
     if (!menu_active && config.video.header_visibility && SDL_TICKS_PASSED(now, header_deadline)) {
-        datetime_task(NULL);
-        battery_capacity_task(NULL);
+        if (config.video.header_visibility == 4)
+            update_header_playback_time();
+        else
+            datetime_task(NULL);
+        if (config.video.header_visibility == 2 || config.video.header_visibility == 3) battery_capacity_task(NULL);
         header_deadline = now + 1000;
+        redraw = 1;
+    }
+    if (mode_deadline && SDL_TICKS_PASSED(now, mode_deadline)) {
+        mode_deadline = 0;
+        lv_obj_add_flag(mode_panel, LV_OBJ_FLAG_HIDDEN);
+        align_status_panel();
+        redraw = 1;
+    }
+    if (timeline_deadline && SDL_TICKS_PASSED(now, timeline_deadline)) {
+        timeline_deadline = 0;
+        lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
         redraw = 1;
     }
     if (status_deadline && SDL_TICKS_PASSED(now, status_deadline)) {
@@ -1894,6 +2022,7 @@ void video_playback_ui_set_paused(const int paused) {
     if (menu_active) return;
     if (paused) {
         show_paused_status();
+        show_timeline();
     } else {
         set_glyph(status_glyph, "resume");
         lv_obj_set_width(status_label, LV_SIZE_CONTENT);
@@ -1905,6 +2034,12 @@ void video_playback_ui_set_paused(const int paused) {
     }
     apply_visibility();
     display_composite_frame();
+}
+
+void video_playback_ui_update_position(const double position, const double duration) {
+    playback_position = position;
+    playback_duration = duration;
+    if (timeline_panel && !lv_obj_has_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN)) update_timeline();
 }
 
 void video_playback_ui_header_changed(void) {
@@ -1920,6 +2055,7 @@ void video_playback_ui_modes_changed(void) {
     const int show_repeat = !live_content && !wasabi_settings_audio_active() && config.video.repeat_mode;
     if (menu_active || (!show_shuffle && !show_repeat)) {
         lv_obj_add_flag(mode_panel, LV_OBJ_FLAG_HIDDEN);
+        mode_deadline = 0;
         align_status_panel();
         apply_visibility();
         return;
@@ -1941,6 +2077,7 @@ void video_playback_ui_modes_changed(void) {
         lv_obj_add_flag(repeat_badge, LV_OBJ_FLAG_HIDDEN);
     }
     lv_obj_clear_flag(mode_panel, LV_OBJ_FLAG_HIDDEN);
+    mode_deadline = SDL_GetTicks() + 1500;
     lv_obj_align(mode_panel, LV_ALIGN_BOTTOM_LEFT, 4, -4);
     align_status_panel();
     apply_visibility();
@@ -1948,19 +2085,8 @@ void video_playback_ui_modes_changed(void) {
 
 void video_playback_ui_show_position(const double position, const double duration) {
     if (menu_active) return;
-    char current[24];
-    char total[24];
-    char value[56];
-    format_time(position > 0.0 ? (uint32_t) position : 0, current, sizeof(current));
-    format_time(duration > 0.0 ? (uint32_t) duration : 0, total, sizeof(total));
-    snprintf(value, sizeof(value), "%s / %s", current, total);
-    set_glyph(status_glyph, "playtime");
-    lv_obj_set_width(status_label, LV_SIZE_CONTENT);
-    lv_label_set_long_mode(status_label, LV_LABEL_LONG_WRAP);
-    lv_label_set_text(status_label, value);
-    align_status_panel();
-    lv_obj_clear_flag(status_panel, LV_OBJ_FLAG_HIDDEN);
-    status_deadline = SDL_GetTicks() + 2000;
+    video_playback_ui_update_position(position, duration);
+    show_timeline();
     apply_visibility();
     display_composite_frame();
 }

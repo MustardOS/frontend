@@ -644,8 +644,8 @@ static int draw_colour(SDL_Texture *source, const int width, const int height, c
 }
 
 int video_effects_render(
-    SDL_Renderer *renderer, SDL_Texture *source, const SDL_Rect *source_rect, const SDL_Rect *destination,
-    const double rotation, const SDL_RendererFlip flip
+    SDL_Renderer *renderer, SDL_Texture *source, SDL_Texture *next, const Uint8 next_alpha,
+    const SDL_Rect *source_rect, const SDL_Rect *destination, const double rotation, const SDL_RendererFlip flip
 ) {
     if (!renderer || !source || !source_rect || !destination || destination->w <= 0 || destination->h <= 0)
         return 0;
@@ -663,6 +663,10 @@ int video_effects_render(
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, source, source_rect, NULL);
+    if (next && next_alpha > 0) {
+        SDL_SetTextureAlphaMod(next, next_alpha);
+        SDL_RenderCopy(renderer, next, source_rect, NULL);
+    }
     GLint previous_program = 0;
     GLint previous_viewport[4] = {0};
     glGetIntegerv(GL_CURRENT_PROGRAM, &previous_program);

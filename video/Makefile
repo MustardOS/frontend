@@ -10,7 +10,7 @@ LDFLAGS := $(COMMON_LIBS) $(VIDEO_FFMPEG_LIBS) $(EXTERNAL_HIDE) $(BIN_LDFLAGS)
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
 SRC := core/audio.c core/audio_transition.c core/main.c core/player.c content/library.c settings/assets.c settings/catalogue.c \
-       settings/session.c settings/settings.c state/state.c ui/ui_audio.c ui/ui_loading.c ui/ui_pause.c \
+       settings/session.c settings/settings.c state/state.c ui/ui_audio.c ui/ui_loading.c ui/ui_pause.c ui/ui_progress.c \
        video/effects.c video/video.c visualiser/visualiser.c visualiser/spectrum.c visualiser/waveform.c \
        visualiser/pulse.c visualiser/orbit.c visualiser/meter.c visualiser/phase.c visualiser/radial.c \
        visualiser/starfield.c

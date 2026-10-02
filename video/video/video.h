@@ -8,6 +8,9 @@ void video_render_set_audio(int active);
 void video_render_audio_samples(const float *samples, int frames, int channels);
 int video_render_audio_tick(void);
 int video_render_upload(const AVFrame *frame);
+int video_render_upload_next(const AVFrame *frame);
+int video_render_promote_next(void);
+void video_render_set_blend(double amount);
 
 void video_render_settings_changed(void);
 void video_render_effects_changed(void);

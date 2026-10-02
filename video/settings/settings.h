@@ -58,6 +58,7 @@ typedef enum {
     wasabi_setting_hotkey_header,
     wasabi_setting_hotkey_repeat,
     wasabi_setting_hotkey_shuffle,
+    wasabi_setting_hotkey_quit,
     wasabi_setting_hotkey_fast_forward,
     wasabi_setting_hotkey_slow_motion,
     wasabi_setting_thumbnail,
@@ -108,5 +109,7 @@ const char *wasabi_page_glyph(wasabi_settings_page page, int row);
 void wasabi_page_value(wasabi_settings_page page, int row, char *value, size_t size);
 int wasabi_page_cycle(wasabi_settings_page page, int row, int direction);
 void wasabi_hotkey_reset(void);
+int wasabi_hotkey_button_valid(int input);
+int wasabi_hotkey_uses_menu(wasabi_setting setting);
 const char *wasabi_button_name(int input);
 int wasabi_vignette_secret(int shape);

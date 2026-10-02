@@ -12,6 +12,7 @@
 #include <common/config/config.h>
 #include "../core/paths.h"
 #include "assets.h"
+#include "settings.h"
 
 typedef enum { session_i16, session_text } session_kind;
 
@@ -107,6 +108,7 @@ static const session_field fields[] = {
     SESSION_I16(hotkey_header),
     SESSION_I16(hotkey_repeat),
     SESSION_I16(hotkey_shuffle),
+    SESSION_I16(hotkey_quit),
     SESSION_I16(hotkey_fast_forward),
     SESSION_I16(hotkey_slow_motion),
 };
@@ -230,7 +232,7 @@ static void validate_settings(void) {
     VALIDATE(crop_bottom, 0, 100);
     VALIDATE(viewport_centre_crop, 0, 1);
     VALIDATE(show_playtime, 0, 1);
-    VALIDATE(header_visibility, 0, 3);
+    VALIDATE(header_visibility, 0, 4);
     VALIDATE(progress_bar, 0, 9);
     VALIDATE(artwork_position, 0, 2);
     VALIDATE(repeat_mode, 0, 2);
@@ -268,14 +270,18 @@ static void validate_settings(void) {
         &config.video.hotkey_header,
         &config.video.hotkey_repeat,
         &config.video.hotkey_shuffle,
+        &config.video.hotkey_quit,
         &config.video.hotkey_fast_forward,
         &config.video.hotkey_slow_motion
     };
     int hotkeys_valid = 1;
     for (size_t index = 0; index < sizeof(hotkeys) / sizeof(hotkeys[0]); index++) {
-        if (*hotkeys[index] < 0 || *hotkeys[index] > 18) hotkeys_valid = 0;
+        if (!wasabi_hotkey_button_valid(*hotkeys[index])) hotkeys_valid = 0;
         for (size_t earlier = 0; earlier < index; earlier++)
-            if (*hotkeys[index] == *hotkeys[earlier]) hotkeys_valid = 0;
+            if (wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + index))
+                    == wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + earlier))
+                && *hotkeys[index] == *hotkeys[earlier])
+                hotkeys_valid = 0;
     }
     if (!hotkeys_valid) {
         config.video.hotkey_pause = 0;
@@ -283,13 +289,14 @@ static void validate_settings(void) {
         config.video.hotkey_load_bookmark = 7;
         config.video.hotkey_seek_back = 17;
         config.video.hotkey_seek_forward = 18;
-        config.video.hotkey_seek_back_long = 6;
-        config.video.hotkey_seek_forward_long = 9;
+        config.video.hotkey_seek_back_long = 8;
+        config.video.hotkey_seek_forward_long = 11;
         config.video.hotkey_header = 3;
-        config.video.hotkey_repeat = 13;
-        config.video.hotkey_shuffle = 12;
-        config.video.hotkey_fast_forward = 11;
-        config.video.hotkey_slow_motion = 8;
+        config.video.hotkey_repeat = 4;
+        config.video.hotkey_shuffle = 3;
+        config.video.hotkey_quit = 13;
+        config.video.hotkey_fast_forward = 9;
+        config.video.hotkey_slow_motion = 6;
     }
 
     char *asset_values[] = {config.video.colour_filter, config.video.shader, config.video.overlay_image};

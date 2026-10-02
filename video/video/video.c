@@ -24,6 +24,7 @@
 
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
+static SDL_Texture *next_texture;
 static SDL_Texture *vignette_texture;
 static SDL_Texture *overlay_texture;
 static SDL_Rect destination;
@@ -52,14 +53,36 @@ static char overlay_key[MAX_BUFFER_SIZE];
 static char catalogue_overlay_path[PATH_MAX];
 static int clean_capture;
 static SDL_Texture *static_texture;
+static SDL_Texture *audio_background_texture;
 static int static_active;
 static int static_width;
 static int static_height;
 static uint32_t static_deadline;
 static uint32_t static_random = 0x6D2B79F5u;
 static int audio_active;
+static int next_texture_ready;
+static Uint8 next_texture_alpha;
 
 #define STATIC_PERIOD 33
+
+static void create_audio_background_texture(void) {
+    if (!renderer || audio_background_texture || theme.system.background_gradient_direction == LV_GRAD_DIR_NONE)
+        return;
+    void *pixels = NULL;
+    int width = 0;
+    int height = 0;
+    ui_common_get_gradient_buffer(&pixels, &width, &height);
+    if (!pixels || width < 1 || height < 1) return;
+    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
+        pixels, width, height, 32, width * (int) sizeof(lv_color_t), 0x00FF0000, 0x0000FF00, 0x000000FF, 0
+    );
+    if (!surface) return;
+    audio_background_texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    if (!audio_background_texture) return;
+    SDL_SetTextureBlendMode(audio_background_texture, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureAlphaMod(audio_background_texture, (Uint8) theme.system.background_alpha);
+}
 
 static uint32_t static_next_random(void) {
     uint32_t value = static_random;
@@ -174,7 +197,9 @@ static void update_geometry(void) {
     const int quarter_turn = config.video.rotation & 1;
     const int canvas_width = quarter_turn ? screen_height : screen_width;
     const int canvas_height = quarter_turn ? screen_width : screen_height;
-    const double aspect = selected_aspect(source_width, source_height);
+    const int viewport_width = source.w;
+    const int viewport_height = source.h;
+    const double aspect = selected_aspect(viewport_width, viewport_height);
 
     int width = canvas_width;
     int height = canvas_height;
@@ -182,13 +207,13 @@ static void update_geometry(void) {
         case 1: {
             int multiplier = config.video.scale_multiplier;
             if (multiplier <= 0) {
-                const int horizontal = canvas_width / source_width;
-                const int vertical = canvas_height / source_height;
+                const int horizontal = canvas_width / viewport_width;
+                const int vertical = canvas_height / viewport_height;
                 multiplier = horizontal < vertical ? horizontal : vertical;
                 if (multiplier < 1) multiplier = 1;
             }
-            width = source_width * multiplier;
-            height = source_height * multiplier;
+            width = viewport_width * multiplier;
+            height = viewport_height * multiplier;
             break;
         }
         case 2:
@@ -215,12 +240,12 @@ static void update_geometry(void) {
         default: {
             int multiplier = config.video.scale_multiplier;
             if (multiplier <= 0) {
-                multiplier = canvas_height / source_height;
+                multiplier = canvas_height / viewport_height;
                 if (multiplier < 1) multiplier = 1;
-                while (multiplier > 1 && (double) source_height * multiplier * aspect > canvas_width)
+                while (multiplier > 1 && (double) viewport_height * multiplier * aspect > canvas_width)
                     multiplier--;
             }
-            height = source_height * multiplier;
+            height = viewport_height * multiplier;
             width = (int) lround((double) height * aspect);
             break;
         }
@@ -230,22 +255,15 @@ static void update_geometry(void) {
     height = height * config.video.viewport_zoom / 100;
     width += canvas_width * config.video.viewport_stretch_x / 100;
     height += canvas_height * config.video.viewport_stretch_y / 100;
-    const double crop_scale_x = (double) width / (double) source_width;
-    const double crop_scale_y = (double) height / (double) source_height;
-    const int left_px = (int) lround((double) crop_left * crop_scale_x);
-    const int right_px = (int) lround((double) crop_right * crop_scale_x);
-    const int top_px = (int) lround((double) crop_top * crop_scale_y);
-    const int bottom_px = (int) lround((double) crop_bottom * crop_scale_y);
-
-    destination.w = width - left_px - right_px;
-    destination.h = height - top_px - bottom_px;
+    destination.w = width;
+    destination.h = height;
     if (destination.w < 1) destination.w = 1;
     if (destination.h < 1) destination.h = 1;
-    destination.x = (screen_width - width) / 2 + left_px + screen_width * config.video.viewport_x / 100;
-    destination.y = (screen_height - height) / 2 + top_px + screen_height * config.video.viewport_y / 100;
-    if (config.video.viewport_centre_crop) {
-        destination.x = (screen_width - destination.w) / 2 + screen_width * config.video.viewport_x / 100;
-        destination.y = (screen_height - destination.h) / 2 + screen_height * config.video.viewport_y / 100;
+    destination.x = (screen_width - width) / 2 + screen_width * config.video.viewport_x / 100;
+    destination.y = (screen_height - height) / 2 + screen_height * config.video.viewport_y / 100;
+    if (!config.video.viewport_centre_crop) {
+        destination.x += (int) lround((double) (crop_left - crop_right) * width / (2.0 * viewport_width));
+        destination.y += (int) lround((double) (crop_top - crop_bottom) * height / (2.0 * viewport_height));
     }
 }
 
@@ -424,6 +442,8 @@ static void render_frame(SDL_Renderer *target) {
         return;
     }
     if (audio_active) {
+        create_audio_background_texture();
+        if (audio_background_texture) SDL_RenderCopy(target, audio_background_texture, NULL, NULL);
         wasabi_visualiser_render(target);
         return;
     }
@@ -440,11 +460,20 @@ static void render_frame(SDL_Renderer *target) {
             texture_source.w *= filter_scale;
             texture_source.h *= filter_scale;
         }
-        if (clean_capture
-            || !video_effects_render(
-                target, texture, &texture_source, &destination, config.video.rotation * 90.0, flip
-            ))
+        const int effects_rendered = !clean_capture
+                                     && video_effects_render(
+                target, texture, next_texture_ready ? next_texture : NULL, next_texture_alpha, &texture_source,
+                &destination, config.video.rotation * 90.0, flip
+            );
+        if (clean_capture || !effects_rendered) {
             SDL_RenderCopyEx(target, texture, &texture_source, &destination, config.video.rotation * 90.0, NULL, flip);
+            if (!clean_capture && next_texture_ready && next_texture_alpha > 0) {
+                SDL_SetTextureAlphaMod(next_texture, next_texture_alpha);
+                SDL_RenderCopyEx(
+                    target, next_texture, &texture_source, &destination, config.video.rotation * 90.0, NULL, flip
+                );
+            }
+        }
     }
     if (clean_capture) return;
     update_vignette();
@@ -486,6 +515,10 @@ static void render_frame(SDL_Renderer *target) {
 static void release_frame_resources(void) {
     if (texture) SDL_DestroyTexture(texture);
     texture = NULL;
+    if (next_texture) SDL_DestroyTexture(next_texture);
+    next_texture = NULL;
+    next_texture_ready = 0;
+    next_texture_alpha = 0;
     if (scale) sws_freeContext(scale);
     scale = NULL;
     if (planes[0]) av_freep(&planes[0]);
@@ -516,11 +549,27 @@ static int requested_filter_scale(const int width, const int height) {
 
 static void update_texture_scale_mode(void) {
     if (!texture) return;
-    SDL_SetTextureScaleMode(texture,
-                            config.video.texture_filter == 1 || config.video.texture_filter == 4
-                                    || config.video.texture_filter == 5
-                                ? SDL_ScaleModeLinear
-                                : SDL_ScaleModeNearest);
+    const SDL_ScaleMode mode = config.video.texture_filter == 1 || config.video.texture_filter == 4
+                                       || config.video.texture_filter == 5
+                                   ? SDL_ScaleModeLinear
+                                   : SDL_ScaleModeNearest;
+    SDL_SetTextureScaleMode(texture, mode);
+    if (next_texture) SDL_SetTextureScaleMode(next_texture, mode);
+}
+
+static SDL_Texture *create_frame_texture(void) {
+    SDL_Texture *created = SDL_CreateTexture(
+        renderer, filter_scale > 1 ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_IYUV,
+        SDL_TEXTUREACCESS_STREAMING, source_width * filter_scale, source_height * filter_scale
+    );
+    if (!created) return NULL;
+    SDL_SetTextureScaleMode(
+        created, config.video.texture_filter == 1 || config.video.texture_filter == 4
+                         || config.video.texture_filter == 5
+                     ? SDL_ScaleModeLinear
+                     : SDL_ScaleModeNearest
+    );
+    return created;
 }
 
 static int configure_frame(const AVFrame *frame) {
@@ -532,11 +581,12 @@ static int configure_frame(const AVFrame *frame) {
     source_format = (enum AVPixelFormat) frame->format;
     filter_scale = requested_filter_scale(source_width, source_height);
     const int cpu_filter = filter_scale > 1;
-    texture = SDL_CreateTexture(renderer, cpu_filter ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_IYUV,
-                                SDL_TEXTUREACCESS_STREAMING, source_width * filter_scale,
-                                source_height * filter_scale);
-    if (!texture) return 0;
-    update_texture_scale_mode();
+    texture = create_frame_texture();
+    if (!texture) {
+        release_frame_resources();
+        return 0;
+    }
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
 
     source = (SDL_Rect) {0, 0, source_width, source_height};
     update_geometry();
@@ -575,6 +625,7 @@ static int configure_frame(const AVFrame *frame) {
 int video_render_open(void) {
     renderer = display_get_renderer();
     if (!renderer) return 0;
+    if (audio_active) create_audio_background_texture();
     display_set_video_background(render_frame);
     display_set_video_background_opaque(!audio_active);
     return 1;
@@ -594,13 +645,8 @@ int video_render_audio_tick(void) {
     return audio_active && wasabi_visualiser_tick();
 }
 
-int video_render_upload(const AVFrame *frame) {
-    if (!frame) return 0;
-    const int wanted_scale = requested_filter_scale(frame->width, frame->height);
-    if (!texture || source_width != frame->width || source_height != frame->height
-        || source_format != (enum AVPixelFormat) frame->format || filter_scale != wanted_scale) {
-        if (!configure_frame(frame)) return 0;
-    }
+static int upload_frame(SDL_Texture *target, const AVFrame *frame) {
+    if (!target || !frame) return 0;
 
     const uint8_t *const *data = (const uint8_t *const *) frame->data;
     const int *line = frame->linesize;
@@ -620,9 +666,57 @@ int video_render_upload(const AVFrame *frame) {
         else
             scale2_x_32((const uint32_t *) filter_source, (uint32_t *) filter_output, source_width, source_height,
                         filter_source_pitch / 4, filter_output_pitch / 4);
-        return SDL_UpdateTexture(texture, NULL, filter_output, filter_output_pitch) == 0;
+        return SDL_UpdateTexture(target, NULL, filter_output, filter_output_pitch) == 0;
     }
-    return SDL_UpdateYUVTexture(texture, NULL, data[0], line[0], data[1], line[1], data[2], line[2]) == 0;
+    return SDL_UpdateYUVTexture(target, NULL, data[0], line[0], data[1], line[1], data[2], line[2]) == 0;
+}
+
+int video_render_upload(const AVFrame *frame) {
+    if (!frame) return 0;
+    const int wanted_scale = requested_filter_scale(frame->width, frame->height);
+    if (!texture || source_width != frame->width || source_height != frame->height
+        || source_format != (enum AVPixelFormat) frame->format || filter_scale != wanted_scale) {
+        if (!configure_frame(frame)) return 0;
+    }
+    next_texture_ready = 0;
+    next_texture_alpha = 0;
+    return upload_frame(texture, frame);
+}
+
+int video_render_upload_next(const AVFrame *frame) {
+    if (!frame || !texture || source_width != frame->width || source_height != frame->height
+        || source_format != (enum AVPixelFormat) frame->format)
+        return 0;
+    if (!next_texture) {
+        next_texture = create_frame_texture();
+        if (!next_texture) return 0;
+        SDL_SetTextureBlendMode(next_texture, SDL_BLENDMODE_BLEND);
+    }
+    next_texture_ready = upload_frame(next_texture, frame);
+    return next_texture_ready;
+}
+
+int video_render_promote_next(void) {
+    if (!texture || !next_texture || !next_texture_ready) return 0;
+    SDL_Texture *previous = texture;
+    texture = next_texture;
+    next_texture = previous;
+    SDL_SetTextureAlphaMod(texture, 255);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
+    SDL_SetTextureAlphaMod(next_texture, 255);
+    SDL_SetTextureBlendMode(next_texture, SDL_BLENDMODE_BLEND);
+    next_texture_ready = 0;
+    next_texture_alpha = 0;
+    return 1;
+}
+
+void video_render_set_blend(const double amount) {
+    if (!next_texture_ready || amount <= 0.0) {
+        next_texture_alpha = 0;
+        return;
+    }
+    const double clamped = amount < 1.0 ? amount : 1.0;
+    next_texture_alpha = (Uint8) lround(clamped * 255.0);
 }
 
 void video_render_settings_changed(void) {
@@ -659,6 +753,8 @@ int video_render_static_tick(void) {
 
 void video_render_close(void) {
     display_clear_video_background();
+    if (audio_background_texture) SDL_DestroyTexture(audio_background_texture);
+    audio_background_texture = NULL;
     if (static_texture) SDL_DestroyTexture(static_texture);
     static_texture = NULL;
     static_width = 0;

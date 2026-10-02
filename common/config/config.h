@@ -110,6 +110,7 @@ typedef struct {
     int16_t hotkey_header;
     int16_t hotkey_repeat;
     int16_t hotkey_shuffle;
+    int16_t hotkey_quit;
     int16_t hotkey_fast_forward;
     int16_t hotkey_slow_motion;
 } wasabi_video_config;
