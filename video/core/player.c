@@ -56,6 +56,10 @@
 #define PRESENT_EARLY_SECONDS               0.002
 #define PLAYBACK_UI_INTERVAL_MS             33
 #define CHANNEL_SWITCH_DELAY_MS            1000
+#define LIVE_AUDIO_CLOCK_HARD_SECONDS        0.250
+#define LIVE_AUDIO_CLOCK_SOFT_SECONDS        0.020
+#define LIVE_AUDIO_CLOCK_STEP_SECONDS        0.001
+#define LIVE_AUDIO_CLOCK_CORRECTION_FACTOR   0.125
 #define HLS_MANIFEST_LIMIT                 (512U * 1024U)
 #define LIVE_BUFFER_FAILURE_MS             15000U
 #define LIVE_AUTOMATIC_BITRATE_LIMIT       4000000LL
@@ -1410,7 +1414,8 @@ static void decode_audio(const AVPacket *packet) {
                 SDL_LockAudio();
                 const int fill = audio_available();
                 SDL_UnlockAudio();
-                const int target = player.audio_capacity / 2;
+                int target = player.audio_rate * live_audio_target_seconds();
+                if (target >= player.audio_capacity) target = player.audio_capacity - 1;
                 int correction = target - fill;
                 const int maximum = player.audio_rate * deviation / 10000;
                 if (correction > maximum) correction = maximum;
@@ -1430,6 +1435,21 @@ static void decode_audio(const AVPacket *packet) {
                         player.audio_origin = timestamp;
                         player.audio_frames_played = 0;
                         player.audio_clock_valid = 1;
+                    } else if (player.live && player.audio_rate > 0) {
+                        const double expected =
+                            player.audio_origin
+                            + (double) (player.audio_frames_played + audio_available()) / player.audio_rate;
+                        const double difference = timestamp - expected;
+                        if (fabs(difference) >= LIVE_AUDIO_CLOCK_HARD_SECONDS) {
+                            player.audio_origin += difference;
+                        } else if (fabs(difference) >= LIVE_AUDIO_CLOCK_SOFT_SECONDS) {
+                            double correction = difference * LIVE_AUDIO_CLOCK_CORRECTION_FACTOR;
+                            if (correction > LIVE_AUDIO_CLOCK_STEP_SECONDS)
+                                correction = LIVE_AUDIO_CLOCK_STEP_SECONDS;
+                            else if (correction < -LIVE_AUDIO_CLOCK_STEP_SECONDS)
+                                correction = -LIVE_AUDIO_CLOCK_STEP_SECONDS;
+                            player.audio_origin += correction;
+                        }
                     }
                 }
                 SDL_UnlockAudio();
