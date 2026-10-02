@@ -9,6 +9,7 @@
 #include <common/config/config.h>
 #include <common/config/config_value.h>
 #include <common/base/options.h>
+#include <common/platform/input.h>
 
 typedef struct {
     const char *dir;
@@ -191,19 +192,19 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "video", "idle_screensaver", CFG_OFF(video.idle_screensaver), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "video", "live_quality", CFG_OFF(wasabi.live_quality), 0, {.i = 0}, 1, 0, 3},
     {CONF_CONFIG_PATH "video", "live_buffer", CFG_OFF(wasabi.live_buffer), 0, {.i = 16}, 1, 4, 32},
-    {CONF_CONFIG_PATH "video", "hotkey_pause", CFG_OFF(video.hotkey_pause), 0, {.i = 0}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_save_bookmark", CFG_OFF(video.hotkey_save_bookmark), 0, {.i = 10}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_load_bookmark", CFG_OFF(video.hotkey_load_bookmark), 0, {.i = 7}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_seek_back", CFG_OFF(video.hotkey_seek_back), 0, {.i = 17}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_seek_forward", CFG_OFF(video.hotkey_seek_forward), 0, {.i = 18}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_seek_back_long", CFG_OFF(video.hotkey_seek_back_long), 0, {.i = 8}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_seek_forward_long", CFG_OFF(video.hotkey_seek_forward_long), 0, {.i = 11}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_header", CFG_OFF(video.hotkey_header), 0, {.i = 3}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_repeat", CFG_OFF(video.hotkey_repeat), 0, {.i = 4}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_shuffle", CFG_OFF(video.hotkey_shuffle), 0, {.i = 3}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_quit", CFG_OFF(video.hotkey_quit), 0, {.i = 13}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_fast_forward", CFG_OFF(video.hotkey_fast_forward), 0, {.i = 9}, 1, 0, 18},
-    {CONF_CONFIG_PATH "video", "hotkey_slow_motion", CFG_OFF(video.hotkey_slow_motion), 0, {.i = 6}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_pause", CFG_OFF(video.hotkey_pause), 0, {.i = mux_input_a}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_save_bookmark", CFG_OFF(video.hotkey_save_bookmark), 0, {.i = mux_input_r2}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_load_bookmark", CFG_OFF(video.hotkey_load_bookmark), 0, {.i = mux_input_l2}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_back", CFG_OFF(video.hotkey_seek_back), 0, {.i = mux_input_dpad_left}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_forward", CFG_OFF(video.hotkey_seek_forward), 0, {.i = mux_input_dpad_right}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_back_long", CFG_OFF(video.hotkey_seek_back_long), 0, {.i = mux_input_l1}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_seek_forward_long", CFG_OFF(video.hotkey_seek_forward_long), 0, {.i = mux_input_r1}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_header", CFG_OFF(video.hotkey_header), 0, {.i = mux_input_x}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_repeat", CFG_OFF(video.hotkey_repeat), 0, {.i = mux_input_y}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_shuffle", CFG_OFF(video.hotkey_shuffle), 0, {.i = mux_input_x}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_quit", CFG_OFF(video.hotkey_quit), 0, {.i = mux_input_start}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_fast_forward", CFG_OFF(video.hotkey_fast_forward), 0, {.i = mux_input_r1}, 1, 0, 18},
+    {CONF_CONFIG_PATH "video", "hotkey_slow_motion", CFG_OFF(video.hotkey_slow_motion), 0, {.i = mux_input_l1}, 1, 0, 18},
 
     // extra/download/
     {CONF_CONFIG_PATH "extra/download", "data", CFG_OFF(extra.download.data), 1, {.s = ""}},

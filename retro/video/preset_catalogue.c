@@ -13,6 +13,7 @@
 #include <openssl/sha.h>
 #include <json/json.h>
 #include <common/config/config.h>
+#include <common/content/manifest.h>
 #include <common/display/language.h>
 #include <common/platform/audio.h>
 #include <common/platform/device.h>
@@ -96,17 +97,6 @@ static int regular_file_bounded(const char *path, const off_t limit) {
            && status.st_size <= limit;
 }
 
-static int https_url(const char *url) {
-    return url && strncasecmp(url, "https://", 8) == 0 && url[8] != '\0';
-}
-
-static int sha256_text_valid(const char *text) {
-    if (!text || strlen(text) != SHA256_DIGEST_LENGTH * 2) return 0;
-    for (size_t i = 0; i < SHA256_DIGEST_LENGTH * 2; i++)
-        if (!isxdigit((unsigned char) text[i])) return 0;
-    return 1;
-}
-
 static int file_sha256(const char *path, const off_t size_limit, char output[SHA256_DIGEST_LENGTH * 2 + 1]) {
     const int fd = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
     if (fd < 0) return 0;
@@ -164,43 +154,6 @@ static enum catalogue_item_state item_state(const catalogue_item *item) {
     char digest[SHA256_DIGEST_LENGTH * 2 + 1];
     if (!file_sha256(installed, (off_t) kind_size_limit(), digest)) return catalogue_item_available;
     return strcasecmp(digest, item->sha256) == 0 ? catalogue_item_installed : catalogue_item_update;
-}
-
-static int copy_json_string(const struct json object, const char *key, char *output, const size_t size) {
-    const struct json value = json_object_get(object, key);
-    if (json_type(value) != JSON_STRING) return 0;
-    const size_t length = json_string_copy(value, output, size);
-    return length > 0 && length < size;
-}
-
-static int catalogue_label_valid(const char *text) {
-    if (!text || !text[0] || isspace((unsigned char) text[0])) return 0;
-
-    size_t length = 0;
-    for (const unsigned char *p = (const unsigned char *) text; *p; p++, length++)
-        if (*p < 0x20 || *p == 0x7f) return 0;
-
-    return length > 0 && !isspace((unsigned char) text[length - 1]);
-}
-
-static int safe_stem(const char *name, char *output, const size_t size) {
-    size_t used = 0;
-    int separator = 0;
-
-    for (const unsigned char *p = (const unsigned char *) name; *p && used + 1 < size; p++) {
-        if (isalnum(*p) || *p == '-' || *p == '_') {
-            output[used++] = (char) *p;
-            separator = 0;
-        } else if (isspace(*p) || *p >= 0x80) {
-            if (used && !separator) output[used++] = ' ';
-            separator = 1;
-        }
-    }
-
-    while (used && output[used - 1] == ' ')
-        used--;
-    output[used] = '\0';
-    return used > 0;
 }
 
 static int catalogue_item_compare(const void *left, const void *right) {
@@ -287,19 +240,6 @@ static int kind_file_valid(const char *path) {
     }
 }
 
-static int url_stem(const char *url, char *output, const size_t size) {
-    const char *slash = strrchr(url, '/');
-    const char *base = slash ? slash + 1 : url;
-
-    char trimmed[128];
-    snprintf(trimmed, sizeof(trimmed), "%s", base);
-
-    char *dot = strrchr(trimmed, '.');
-    if (dot) *dot = '\0';
-
-    return safe_stem(trimmed, output, size);
-}
-
 static void device_resolution(char *out, const size_t out_size) {
     snprintf(out, out_size, "%dx%d", device.screen.width, device.screen.height);
 }
@@ -326,14 +266,15 @@ static int read_variants(const struct json node, catalogue_item *item, char *ste
         catalogue_variant *variant = &item->variants[item->variant_count];
 
         if (json_type(image) != JSON_OBJECT
-            || !copy_json_string(image, "resolution", variant->resolution, sizeof(variant->resolution))
-            || !copy_json_string(image, "url", variant->url, sizeof(variant->url))
-            || !copy_json_string(image, "sha256", variant->sha256, sizeof(variant->sha256)) || !https_url(variant->url)
-            || !sha256_text_valid(variant->sha256))
+            || !manifest_json_string(image, "resolution", variant->resolution, sizeof(variant->resolution))
+            || !manifest_json_string(image, "url", variant->url, sizeof(variant->url))
+            || !manifest_json_string(image, "sha256", variant->sha256, sizeof(variant->sha256))
+            || !manifest_https_url(variant->url) || !manifest_sha256_valid(variant->sha256))
             return 0;
 
         // Every image of an overlay is published under one name, taken from the repo
-        if (!stem[0] && (!url_stem(variant->url, stem, stem_size) || strcasecmp(stem, "none") == 0)) return 0;
+        if (!stem[0] && (!manifest_url_stem(variant->url, stem, stem_size) || strcasecmp(stem, "none") == 0))
+            return 0;
 
         if ((size_t) snprintf(item->key, sizeof(item->key), "%s/%s", item->author_directory, stem) >= sizeof(item->key))
             return 0;
@@ -414,11 +355,11 @@ static int parse_manifest(void) {
         catalogue_item *item = &items[item_count];
         char stem[56];
 
-        if (json_type(node) != JSON_OBJECT || !copy_json_string(node, "name", item->name, sizeof(item->name))
-            || !copy_json_string(node, "author", item->author, sizeof(item->author))
-            || !catalogue_label_valid(item->name) || !catalogue_label_valid(item->author)
-            || !safe_stem(item->author, item->author_directory, sizeof(item->author_directory))
-            || !copy_json_string(node, "version", item->version, sizeof(item->version))) {
+        if (json_type(node) != JSON_OBJECT || !manifest_json_string(node, "name", item->name, sizeof(item->name))
+            || !manifest_json_string(node, "author", item->author, sizeof(item->author))
+            || !manifest_label_valid(item->name) || !manifest_label_valid(item->author)
+            || !manifest_safe_stem(item->author, item->author_directory, sizeof(item->author_directory))
+            || !manifest_json_string(node, "version", item->version, sizeof(item->version))) {
             item_count = 0;
             free(raw);
             return 0;
@@ -429,9 +370,10 @@ static int parse_manifest(void) {
         } else {
             item->variant_count = 0;
 
-            if (!copy_json_string(node, "url", item->url, sizeof(item->url))
-                || !copy_json_string(node, "sha256", item->sha256, sizeof(item->sha256)) || !https_url(item->url)
-                || !sha256_text_valid(item->sha256) || !url_stem(item->url, stem, sizeof(stem))
+            if (!manifest_json_string(node, "url", item->url, sizeof(item->url))
+                || !manifest_json_string(node, "sha256", item->sha256, sizeof(item->sha256))
+                || !manifest_https_url(item->url) || !manifest_sha256_valid(item->sha256)
+                || !manifest_url_stem(item->url, stem, sizeof(stem))
                 || strcasecmp(stem, "none") == 0) {
                 item_count = 0;
                 free(raw);
@@ -547,7 +489,7 @@ static int publish_package(void) {
 
     if (package_variant >= 0 && package_variant < item->variant_count) {
         char stem[56];
-        if (!url_stem(item->variants[package_variant].url, stem, sizeof(stem))
+        if (!manifest_url_stem(item->variants[package_variant].url, stem, sizeof(stem))
             || !variant_target(
                 item->variants[package_variant].resolution, item->author_directory, stem, destination,
                 sizeof(destination)
@@ -757,7 +699,7 @@ void preset_catalogue_open(const enum preset_catalogue_kind kind) {
         filename = "overlays.json";
     }
 
-    if (!https_url(url)
+    if (!manifest_https_url(url)
         || (size_t) snprintf(manifest_path, sizeof(manifest_path), "%s/%s", RETRO_CAT_PATH, filename)
                >= sizeof(manifest_path)) {
         pause_menu_show_toast(lang.muxretro.catalogue_screen.manifest_failed);

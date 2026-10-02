@@ -158,7 +158,7 @@ static void describe_assignment(const int position, char *buf) {
 
     for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
         if (session_settings_source_macro(active_port)[s] == macro_index) {
-            snprintf(buf, ROW_VALUE_MAX, "%s", session_settings_button_type_label(session_settings_source_types[s]));
+            snprintf(buf, ROW_VALUE_MAX, "%s", mux_input_label((mux_input_type) session_settings_source_types[s]));
             return;
         }
     }

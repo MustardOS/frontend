@@ -13,6 +13,7 @@
 
 #include <curl/curl.h>
 #include <json/json.h>
+#include <common/content/manifest.h>
 #include <common/runtime/log.h>
 #include <common/storage/fileio.h>
 
@@ -523,13 +524,6 @@ static int load_pls_playlist(
     return result;
 }
 
-static int copy_json_string(const struct json object, const char *key, char *value, const size_t size) {
-    const struct json item = json_object_get(object, key);
-    if (json_type(item) != JSON_STRING) return 0;
-    const size_t length = json_string_copy(item, value, size);
-    return length > 0 && length < size;
-}
-
 static int append_json_entry(
     const char *path, const int live, const struct json node, const struct json key, video_library_entry **entries,
     size_t *count, size_t *capacity
@@ -537,14 +531,14 @@ static int append_json_entry(
     if (json_type(node) != JSON_OBJECT) return 0;
 
     char uri[PATH_MAX];
-    if (!copy_json_string(node, "mjh_master", uri, sizeof(uri)) &&
-        !copy_json_string(node, "url", uri, sizeof(uri)) &&
-        !copy_json_string(node, "stream", uri, sizeof(uri)) &&
-        !copy_json_string(node, "stream_url", uri, sizeof(uri)))
+    if (!manifest_json_string(node, "mjh_master", uri, sizeof(uri)) &&
+        !manifest_json_string(node, "url", uri, sizeof(uri)) &&
+        !manifest_json_string(node, "stream", uri, sizeof(uri)) &&
+        !manifest_json_string(node, "stream_url", uri, sizeof(uri)))
         return 0;
 
     char title[PATH_MAX];
-    if (!copy_json_string(node, "name", title, sizeof(title))) {
+    if (!manifest_json_string(node, "name", title, sizeof(title))) {
         if (json_type(key) == JSON_STRING) {
             const size_t length = json_string_copy(key, title, sizeof(title));
             if (!length || length >= sizeof(title)) title[0] = '\0';
@@ -554,7 +548,7 @@ static int append_json_entry(
     }
 
     char logo[PATH_MAX] = "";
-    copy_json_string(node, "logo", logo, sizeof(logo));
+    manifest_json_string(node, "logo", logo, sizeof(logo));
 
     return append_playlist_entry(entries, count, capacity, path, uri, title, logo, live);
 }

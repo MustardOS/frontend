@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/content/manifest.h>
 #include <common/ui/notify.h>
 #include <common/ui/orientation.h>
 #include <common/storage/download.h>
@@ -60,16 +61,16 @@ static void create_content_items(void) {
         const struct json item = json_array_get(fn_json, i);
 
         char raw_name[MAX_BUFFER_SIZE];
-        json_string_copy(json_object_get(item, "name"), raw_name, sizeof(raw_name));
+        char url[MAX_BUFFER_SIZE];
+        if (!manifest_json_string(item, "name", raw_name, sizeof(raw_name))
+            || !manifest_json_string(item, "url", url, sizeof(url)))
+            continue;
 
         char name[MAX_BUFFER_SIZE];
         sanitise_download_name(name, raw_name);
 
-        char url[MAX_BUFFER_SIZE];
-        json_string_copy(json_object_get(item, "url"), url, sizeof(url));
-
-        char help[MAX_BUFFER_SIZE];
-        json_string_copy(json_object_get(item, "help"), help, sizeof(help));
+        char help[MAX_BUFFER_SIZE] = "";
+        manifest_json_string(item, "help", help, sizeof(help));
 
         content_item *new_item = add_item(&items, &item_count, name, name, url, content_type_item);
         new_item->help = strdup(help);

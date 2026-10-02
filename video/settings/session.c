@@ -284,19 +284,7 @@ static void validate_settings(void) {
                 hotkeys_valid = 0;
     }
     if (!hotkeys_valid) {
-        config.video.hotkey_pause = 0;
-        config.video.hotkey_save_bookmark = 10;
-        config.video.hotkey_load_bookmark = 7;
-        config.video.hotkey_seek_back = 17;
-        config.video.hotkey_seek_forward = 18;
-        config.video.hotkey_seek_back_long = 8;
-        config.video.hotkey_seek_forward_long = 11;
-        config.video.hotkey_header = 3;
-        config.video.hotkey_repeat = 4;
-        config.video.hotkey_shuffle = 3;
-        config.video.hotkey_quit = 13;
-        config.video.hotkey_fast_forward = 9;
-        config.video.hotkey_slow_motion = 6;
+        wasabi_hotkey_set_defaults();
     }
 
     char *asset_values[] = {config.video.colour_filter, config.video.shader, config.video.overlay_image};

@@ -17,6 +17,7 @@
 
 #include <json/json.h>
 #include <module/muxshare.h>
+#include <common/content/manifest.h>
 #include <common/platform/sysinfo.h>
 #include <common/storage/download.h>
 #include <common/storage/fileio.h>
@@ -72,59 +73,6 @@ static unsigned revision;
 
 static size_t package_limit(void) {
     return active_kind == wasabi_asset_overlay ? CATALOGUE_OVERLAY_MAX : CATALOGUE_PRESET_MAX;
-}
-
-static int https_url(const char *url) {
-    return url && strncasecmp(url, "https://", 8) == 0 && url[8];
-}
-
-static int copy_json_string(const struct json object, const char *key, char *output, const size_t size) {
-    const struct json value = json_object_get(object, key);
-    if (json_type(value) != JSON_STRING) return 0;
-    const size_t length = json_string_copy(value, output, size);
-    return length > 0 && length < size;
-}
-
-static int valid_label(const char *text) {
-    if (!text || !text[0] || isspace((unsigned char) text[0])) return 0;
-    size_t length = 0;
-    for (const unsigned char *cursor = (const unsigned char *) text; *cursor; cursor++, length++)
-        if (*cursor < 0x20 || *cursor == 0x7f) return 0;
-    return length && !isspace((unsigned char) text[length - 1]);
-}
-
-static int safe_stem(const char *text, char *output, const size_t size) {
-    size_t used = 0;
-    int separated = 0;
-    for (const unsigned char *cursor = (const unsigned char *) text; *cursor && used + 1 < size; cursor++) {
-        if (isalnum(*cursor) || *cursor == '-' || *cursor == '_') {
-            output[used++] = (char) *cursor;
-            separated = 0;
-        } else if (isspace(*cursor) || *cursor >= 0x80) {
-            if (used && !separated && used + 1 < size) output[used++] = ' ';
-            separated = 1;
-        }
-    }
-    while (used && output[used - 1] == ' ') used--;
-    output[used] = '\0';
-    return used > 0;
-}
-
-static int url_stem(const char *url, char *output, const size_t size) {
-    const char *base = strrchr(url, '/');
-    base = base ? base + 1 : url;
-    char name[128];
-    snprintf(name, sizeof(name), "%s", base);
-    char *extension = strrchr(name, '.');
-    if (extension) *extension = '\0';
-    return safe_stem(name, output, size);
-}
-
-static int valid_sha256(const char *text) {
-    if (!text || strlen(text) != SHA256_DIGEST_LENGTH * 2) return 0;
-    for (size_t index = 0; index < SHA256_DIGEST_LENGTH * 2; index++)
-        if (!isxdigit((unsigned char) text[index])) return 0;
-    return 1;
 }
 
 static int file_sha256(const char *path, char output[SHA256_DIGEST_LENGTH * 2 + 1]) {
@@ -285,11 +233,11 @@ static int parse_manifest(void) {
         catalogue_item *item = &entries[entry_count];
         char version[32];
         char stem[64];
-        if (json_type(node) != JSON_OBJECT || !copy_json_string(node, "name", item->name, sizeof(item->name))
-            || !copy_json_string(node, "author", item->author, sizeof(item->author))
-            || !copy_json_string(node, "version", version, sizeof(version))
-            || !valid_label(item->name) || !valid_label(item->author)
-            || !safe_stem(item->author, item->author_directory, sizeof(item->author_directory)))
+        if (json_type(node) != JSON_OBJECT || !manifest_json_string(node, "name", item->name, sizeof(item->name))
+            || !manifest_json_string(node, "author", item->author, sizeof(item->author))
+            || !manifest_json_string(node, "version", version, sizeof(version))
+            || !manifest_label_valid(item->name) || !manifest_label_valid(item->author)
+            || !manifest_safe_stem(item->author, item->author_directory, sizeof(item->author_directory)))
             goto failed;
         if (active_kind == wasabi_asset_overlay) {
             const struct json images = json_object_get(node, "images");
@@ -301,10 +249,10 @@ static int parse_manifest(void) {
                 const struct json candidate = json_array_get(images, image);
                 catalogue_variant *variant = &item->variants[item->variant_count];
                 if (json_type(candidate) == JSON_OBJECT
-                    && copy_json_string(candidate, "resolution", variant->resolution, sizeof(variant->resolution))
-                    && copy_json_string(candidate, "url", variant->url, sizeof(variant->url))
-                    && copy_json_string(candidate, "sha256", variant->sha256, sizeof(variant->sha256))
-                    && https_url(variant->url) && valid_sha256(variant->sha256)) {
+                    && manifest_json_string(candidate, "resolution", variant->resolution, sizeof(variant->resolution))
+                    && manifest_json_string(candidate, "url", variant->url, sizeof(variant->url))
+                    && manifest_json_string(candidate, "sha256", variant->sha256, sizeof(variant->sha256))
+                    && manifest_https_url(variant->url) && manifest_sha256_valid(variant->sha256)) {
                     item->variant_count++;
                     if (strcmp(variant->resolution, wanted) == 0) {
                         snprintf(item->url, sizeof(item->url), "%s", variant->url);
@@ -316,12 +264,12 @@ static int parse_manifest(void) {
                 }
             }
             if (!found) continue;
-        } else if (!copy_json_string(node, "url", item->url, sizeof(item->url))
-                   || !copy_json_string(node, "sha256", item->sha256, sizeof(item->sha256))) {
+        } else if (!manifest_json_string(node, "url", item->url, sizeof(item->url))
+                   || !manifest_json_string(node, "sha256", item->sha256, sizeof(item->sha256))) {
             goto failed;
         }
-        if (!url_stem(item->url, stem, sizeof(stem)) || !https_url(item->url)
-            || !valid_sha256(item->sha256) || strcasecmp(stem, "none") == 0)
+        if (!manifest_url_stem(item->url, stem, sizeof(stem)) || !manifest_https_url(item->url)
+            || !manifest_sha256_valid(item->sha256) || strcasecmp(stem, "none") == 0)
             goto failed;
         if (active_kind == wasabi_asset_overlay) {
             for (int variant = 0; variant < item->variant_count; variant++) {
@@ -497,7 +445,7 @@ int wasabi_catalogue_open(const wasabi_asset_kind kind) {
     const char *filename = kind == wasabi_asset_filter ? "filters.json"
                            : kind == wasabi_asset_shader ? "shaders.json"
                                                          : "overlays.json";
-    if (!https_url(url)
+    if (!manifest_https_url(url)
         || (size_t) snprintf(manifest_path, sizeof(manifest_path), WASABI_SHARE_PATH "catalogue/%s", filename)
                >= sizeof(manifest_path)) {
         toast_message(lang.muxretro.catalogue_screen.manifest_failed, tst_wait_m);

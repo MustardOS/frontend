@@ -37,7 +37,45 @@ static int step(int value, const int direction, const int amount, const int low,
     return value;
 }
 
-static const int hotkey_choices[] = {0, 1, 3, 4, 6, 9, 7, 10, 8, 11, 12, 13, 17, 18};
+static const int hotkey_choices[] = {
+    mux_input_a,  mux_input_b,      mux_input_x,  mux_input_y,     mux_input_l1,        mux_input_r1,
+    mux_input_l2, mux_input_r2,     mux_input_l3, mux_input_r3,    mux_input_select,    mux_input_start,
+    mux_input_dpad_left,            mux_input_dpad_right
+};
+
+static const int hotkey_defaults[] = {
+    mux_input_a,          mux_input_r2, mux_input_l2, mux_input_dpad_left, mux_input_dpad_right,
+    mux_input_l1,         mux_input_r1, mux_input_x,  mux_input_y,         mux_input_x,
+    mux_input_start,      mux_input_r1, mux_input_l1
+};
+
+static int16_t *const hotkey_fields[] = {
+    &config.video.hotkey_pause,
+    &config.video.hotkey_save_bookmark,
+    &config.video.hotkey_load_bookmark,
+    &config.video.hotkey_seek_back,
+    &config.video.hotkey_seek_forward,
+    &config.video.hotkey_seek_back_long,
+    &config.video.hotkey_seek_forward_long,
+    &config.video.hotkey_header,
+    &config.video.hotkey_repeat,
+    &config.video.hotkey_shuffle,
+    &config.video.hotkey_quit,
+    &config.video.hotkey_fast_forward,
+    &config.video.hotkey_slow_motion
+};
+
+static const char *const hotkey_keys[] = {
+    "hotkey_pause",        "hotkey_save_bookmark",  "hotkey_load_bookmark",     "hotkey_seek_back",
+    "hotkey_seek_forward", "hotkey_seek_back_long", "hotkey_seek_forward_long", "hotkey_header",
+    "hotkey_repeat",       "hotkey_shuffle",        "hotkey_quit",              "hotkey_fast_forward",
+    "hotkey_slow_motion"
+};
+
+#define WASABI_HOTKEY_COUNT ((int) A_SIZE(hotkey_defaults))
+
+_Static_assert(A_SIZE(hotkey_fields) == A_SIZE(hotkey_defaults), "Wasabi hotkey fields and defaults must match");
+_Static_assert(A_SIZE(hotkey_keys) == A_SIZE(hotkey_defaults), "Wasabi hotkey keys and defaults must match");
 
 int wasabi_hotkey_button_valid(const int input) {
     for (size_t index = 0; index < sizeof(hotkey_choices) / sizeof(hotkey_choices[0]); index++)
@@ -454,24 +492,10 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
         case wasabi_setting_hotkey_quit:
         case wasabi_setting_hotkey_fast_forward:
         case wasabi_setting_hotkey_slow_motion: {
-            const int values[] = {
-                config.video.hotkey_pause,
-                config.video.hotkey_save_bookmark,
-                config.video.hotkey_load_bookmark,
-                config.video.hotkey_seek_back,
-                config.video.hotkey_seek_forward,
-                config.video.hotkey_seek_back_long,
-                config.video.hotkey_seek_forward_long,
-                config.video.hotkey_header,
-                config.video.hotkey_repeat,
-                config.video.hotkey_shuffle,
-                config.video.hotkey_quit,
-                config.video.hotkey_fast_forward,
-                config.video.hotkey_slow_motion
-            };
             const int index = setting - wasabi_setting_hotkey_pause;
             snprintf(
-                value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s", wasabi_button_name(values[index])
+                value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s",
+                mux_input_label((mux_input_type) *hotkey_fields[index])
             );
             break;
         }
@@ -523,42 +547,21 @@ int wasabi_setting_is_action(const wasabi_setting setting) {
 }
 
 static int cycle_root_hotkey(const wasabi_setting setting, const int direction) {
-    int16_t *fields[] = {
-        &config.video.hotkey_pause,
-        &config.video.hotkey_save_bookmark,
-        &config.video.hotkey_load_bookmark,
-        &config.video.hotkey_seek_back,
-        &config.video.hotkey_seek_forward,
-        &config.video.hotkey_seek_back_long,
-        &config.video.hotkey_seek_forward_long,
-        &config.video.hotkey_header,
-        &config.video.hotkey_repeat,
-        &config.video.hotkey_shuffle,
-        &config.video.hotkey_quit,
-        &config.video.hotkey_fast_forward,
-        &config.video.hotkey_slow_motion
-    };
-    const char *keys[] = {
-        "hotkey_pause",        "hotkey_save_bookmark",  "hotkey_load_bookmark",     "hotkey_seek_back",
-        "hotkey_seek_forward", "hotkey_seek_back_long", "hotkey_seek_forward_long", "hotkey_header",
-        "hotkey_repeat",       "hotkey_shuffle",        "hotkey_quit",              "hotkey_fast_forward",
-        "hotkey_slow_motion"
-    };
     const int index = setting - wasabi_setting_hotkey_pause;
-    const int previous = *fields[index];
+    const int previous = *hotkey_fields[index];
     const int next = cycle_hotkey(previous, direction);
-    for (int other = 0; other < 13; other++) {
+    for (int other = 0; other < WASABI_HOTKEY_COUNT; other++) {
         if (other == index
             || wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + other))
                    != wasabi_hotkey_uses_menu(setting)
-            || *fields[other] != next)
+            || *hotkey_fields[other] != next)
             continue;
-        *fields[other] = (int16_t) previous;
-        save_value(keys[other], previous);
+        *hotkey_fields[other] = (int16_t) previous;
+        save_value(hotkey_keys[other], previous);
         break;
     }
-    *fields[index] = (int16_t) next;
-    return save_value(keys[index], next);
+    *hotkey_fields[index] = (int16_t) next;
+    return save_value(hotkey_keys[index], next);
 }
 
 int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
@@ -892,45 +895,6 @@ const char *wasabi_page_glyph(const wasabi_settings_page page, const int row) {
     return "settings";
 }
 
-const char *wasabi_button_name(const int input) {
-    switch (input) {
-        case mux_input_a:
-            return lang.muxretro.settings_screen.target_a;
-        case mux_input_b:
-            return lang.muxretro.settings_screen.target_b;
-        case mux_input_x:
-            return lang.muxretro.settings_screen.target_x;
-        case mux_input_y:
-            return lang.muxretro.settings_screen.target_y;
-        case mux_input_l1:
-            return lang.muxretro.settings_screen.target_l1;
-        case mux_input_l2:
-            return lang.muxretro.settings_screen.target_l2;
-        case mux_input_l3:
-            return lang.muxretro.settings_screen.target_l3;
-        case mux_input_r1:
-            return lang.muxretro.settings_screen.target_r1;
-        case mux_input_r2:
-            return lang.muxretro.settings_screen.target_r2;
-        case mux_input_r3:
-            return lang.muxretro.settings_screen.target_r3;
-        case mux_input_select:
-            return lang.muxretro.settings_screen.target_select;
-        case mux_input_start:
-            return lang.muxretro.settings_screen.target_start;
-        case mux_input_dpad_up:
-            return lang.muxretro.settings_screen.target_dpad_up;
-        case mux_input_dpad_down:
-            return lang.muxretro.settings_screen.target_dpad_down;
-        case mux_input_dpad_left:
-            return lang.muxretro.settings_screen.target_dpad_left;
-        case mux_input_dpad_right:
-            return lang.muxretro.settings_screen.target_dpad_right;
-        default:
-            return lang.muxretro.settings_screen.unbound;
-    }
-}
-
 int wasabi_vignette_secret(const int shape) {
     if (shape < 4 || shape > 5) return 0;
     config.video.vignette_shape = (int16_t) shape;
@@ -977,24 +941,10 @@ void wasabi_page_value(const wasabi_settings_page page, const int row, char *val
     }
 
     if (page == wasabi_page_hotkeys) {
-        const int values[] = {
-            config.video.hotkey_pause,
-            config.video.hotkey_save_bookmark,
-            config.video.hotkey_load_bookmark,
-            config.video.hotkey_seek_back,
-            config.video.hotkey_seek_forward,
-            config.video.hotkey_seek_back_long,
-            config.video.hotkey_seek_forward_long,
-            config.video.hotkey_header,
-            config.video.hotkey_repeat,
-            config.video.hotkey_shuffle,
-            config.video.hotkey_quit,
-            config.video.hotkey_fast_forward,
-            config.video.hotkey_slow_motion
-        };
         const wasabi_setting setting = (wasabi_setting) (wasabi_setting_hotkey_pause + row);
         snprintf(
-            value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s", wasabi_button_name(values[row])
+            value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s",
+            mux_input_label((mux_input_type) *hotkey_fields[row])
         );
         return;
     }
@@ -1090,30 +1040,9 @@ static int page_field(
     }
 
     if (page == wasabi_page_hotkeys) {
-        int16_t *fields[] = {
-            &config.video.hotkey_pause,
-            &config.video.hotkey_save_bookmark,
-            &config.video.hotkey_load_bookmark,
-            &config.video.hotkey_seek_back,
-            &config.video.hotkey_seek_forward,
-            &config.video.hotkey_seek_back_long,
-            &config.video.hotkey_seek_forward_long,
-            &config.video.hotkey_header,
-            &config.video.hotkey_repeat,
-            &config.video.hotkey_shuffle,
-            &config.video.hotkey_quit,
-            &config.video.hotkey_fast_forward,
-            &config.video.hotkey_slow_motion
-        };
-        const char *keys[] = {
-            "hotkey_pause",        "hotkey_save_bookmark",  "hotkey_load_bookmark",     "hotkey_seek_back",
-            "hotkey_seek_forward", "hotkey_seek_back_long", "hotkey_seek_forward_long", "hotkey_header",
-            "hotkey_repeat",       "hotkey_shuffle",        "hotkey_quit",              "hotkey_fast_forward",
-            "hotkey_slow_motion"
-        };
-        *field = fields[row];
-        *key = keys[row];
-        *next = cycle_hotkey(*fields[row], direction);
+        *field = hotkey_fields[row];
+        *key = hotkey_keys[row];
+        *next = cycle_hotkey(*hotkey_fields[row], direction);
         return 1;
     }
 
@@ -1234,37 +1163,16 @@ int wasabi_page_cycle(const wasabi_settings_page page, const int row, const int 
     if (!page_field(page, row, &field, &key, &next, direction) || !field || !key) return 0;
 
     if (page == wasabi_page_hotkeys) {
-        int16_t *fields[] = {
-            &config.video.hotkey_pause,
-            &config.video.hotkey_save_bookmark,
-            &config.video.hotkey_load_bookmark,
-            &config.video.hotkey_seek_back,
-            &config.video.hotkey_seek_forward,
-            &config.video.hotkey_seek_back_long,
-            &config.video.hotkey_seek_forward_long,
-            &config.video.hotkey_header,
-            &config.video.hotkey_repeat,
-            &config.video.hotkey_shuffle,
-            &config.video.hotkey_quit,
-            &config.video.hotkey_fast_forward,
-            &config.video.hotkey_slow_motion
-        };
-        const char *keys[] = {
-            "hotkey_pause",        "hotkey_save_bookmark",  "hotkey_load_bookmark",     "hotkey_seek_back",
-            "hotkey_seek_forward", "hotkey_seek_back_long", "hotkey_seek_forward_long", "hotkey_header",
-            "hotkey_repeat",       "hotkey_shuffle",        "hotkey_quit",              "hotkey_fast_forward",
-            "hotkey_slow_motion"
-        };
         const int previous = *field;
         const wasabi_setting setting = (wasabi_setting) (wasabi_setting_hotkey_pause + row);
-        for (int index = 0; index < 13; index++) {
-            if (fields[index] == field
+        for (int index = 0; index < WASABI_HOTKEY_COUNT; index++) {
+            if (hotkey_fields[index] == field
                 || wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + index))
                        != wasabi_hotkey_uses_menu(setting)
-                || *fields[index] != next)
+                || *hotkey_fields[index] != next)
                 continue;
-            *fields[index] = (int16_t) previous;
-            save_value(keys[index], previous);
+            *hotkey_fields[index] = (int16_t) previous;
+            save_value(hotkey_keys[index], previous);
             break;
         }
     }
@@ -1278,26 +1186,12 @@ int wasabi_page_cycle(const wasabi_settings_page page, const int row, const int 
     return saved;
 }
 
+void wasabi_hotkey_set_defaults(void) {
+    for (int index = 0; index < WASABI_HOTKEY_COUNT; index++)
+        *hotkey_fields[index] = (int16_t) hotkey_defaults[index];
+}
+
 void wasabi_hotkey_reset(void) {
-    config.video.hotkey_pause = 0;
-    config.video.hotkey_save_bookmark = 10;
-    config.video.hotkey_load_bookmark = 7;
-    config.video.hotkey_seek_back = 17;
-    config.video.hotkey_seek_forward = 18;
-    config.video.hotkey_seek_back_long = 8;
-    config.video.hotkey_seek_forward_long = 11;
-    config.video.hotkey_header = 3;
-    config.video.hotkey_repeat = 4;
-    config.video.hotkey_shuffle = 3;
-    config.video.hotkey_quit = 13;
-    config.video.hotkey_fast_forward = 9;
-    config.video.hotkey_slow_motion = 6;
-    const char *keys[] = {
-        "hotkey_pause",        "hotkey_save_bookmark",  "hotkey_load_bookmark",     "hotkey_seek_back",
-        "hotkey_seek_forward", "hotkey_seek_back_long", "hotkey_seek_forward_long", "hotkey_header",
-        "hotkey_repeat",       "hotkey_shuffle",        "hotkey_quit",              "hotkey_fast_forward",
-        "hotkey_slow_motion"
-    };
-    const int values[] = {0, 10, 7, 17, 18, 8, 11, 3, 4, 3, 13, 9, 6};
-    save_many(keys, values, 13);
+    wasabi_hotkey_set_defaults();
+    save_many(hotkey_keys, hotkey_defaults, WASABI_HOTKEY_COUNT);
 }

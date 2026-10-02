@@ -214,6 +214,8 @@ int mux_input_pressed_any(uint64_t mask);
 
 int mux_input_pressed(mux_input_type mux_type);
 
+const char *mux_input_label(mux_input_type mux_type);
+
 uint64_t mux_input_pressed_mask(void);
 
 int mux_input_extra_player_connected(int index);

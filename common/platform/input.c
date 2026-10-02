@@ -15,6 +15,7 @@
 #include <common/runtime/log.h>
 #include <common/platform/display.h>
 #include <common/display/anim.h>
+#include <common/display/language.h>
 
 #define INPUT_COOLDOWN 256
 
@@ -66,6 +67,61 @@ static uint64_t alt_keys = 0;
 static volatile uint32_t suppress_until_tick = 0;
 static uint32_t input_repeat_deadline = 0;
 static uint32_t combo_repeat_deadline = 0;
+
+const char *mux_input_label(const mux_input_type mux_type) {
+    switch (mux_type) {
+        case mux_input_a:
+            return lang.muxretro.settings_screen.target_a;
+        case mux_input_b:
+            return lang.muxretro.settings_screen.target_b;
+        case mux_input_x:
+            return lang.muxretro.settings_screen.target_x;
+        case mux_input_y:
+            return lang.muxretro.settings_screen.target_y;
+        case mux_input_l1:
+            return lang.muxretro.settings_screen.target_l1;
+        case mux_input_l2:
+            return lang.muxretro.settings_screen.target_l2;
+        case mux_input_l3:
+            return lang.muxretro.settings_screen.target_l3;
+        case mux_input_r1:
+            return lang.muxretro.settings_screen.target_r1;
+        case mux_input_r2:
+            return lang.muxretro.settings_screen.target_r2;
+        case mux_input_r3:
+            return lang.muxretro.settings_screen.target_r3;
+        case mux_input_select:
+            return lang.muxretro.settings_screen.target_select;
+        case mux_input_start:
+            return lang.muxretro.settings_screen.target_start;
+        case mux_input_dpad_up:
+            return lang.muxretro.settings_screen.target_dpad_up;
+        case mux_input_dpad_down:
+            return lang.muxretro.settings_screen.target_dpad_down;
+        case mux_input_dpad_left:
+            return lang.muxretro.settings_screen.target_dpad_left;
+        case mux_input_dpad_right:
+            return lang.muxretro.settings_screen.target_dpad_right;
+        case mux_input_ls_up:
+            return lang.muxretro.settings_screen.stick_ls_up;
+        case mux_input_ls_down:
+            return lang.muxretro.settings_screen.stick_ls_down;
+        case mux_input_ls_left:
+            return lang.muxretro.settings_screen.stick_ls_left;
+        case mux_input_ls_right:
+            return lang.muxretro.settings_screen.stick_ls_right;
+        case mux_input_rs_up:
+            return lang.muxretro.settings_screen.stick_rs_up;
+        case mux_input_rs_down:
+            return lang.muxretro.settings_screen.stick_rs_down;
+        case mux_input_rs_left:
+            return lang.muxretro.settings_screen.stick_rs_left;
+        case mux_input_rs_right:
+            return lang.muxretro.settings_screen.stick_rs_right;
+        default:
+            return lang.muxretro.settings_screen.unbound;
+    }
+}
 
 // Latest raw stick positions, cached from SDL_CONTROLLERAXISMOTION events.
 // Range matches AXIS_MAX (int16_t [-32768, 32767])

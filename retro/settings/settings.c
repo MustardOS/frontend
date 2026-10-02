@@ -2017,7 +2017,7 @@ int session_settings_hotkey_button(const enum hotkey_binding binding) {
 }
 
 const char *session_settings_hotkey_button_name(const enum hotkey_binding binding) {
-    return session_settings_button_type_label(session_settings_hotkey_button(binding));
+    return mux_input_label((mux_input_type) session_settings_hotkey_button(binding));
 }
 
 void session_settings_hotkey_combo_name(const enum hotkey_binding binding, char *buf, const size_t len) {
@@ -3055,61 +3055,6 @@ int session_settings_resolve_port_source(const int port) {
     return resolved[port];
 }
 
-const char *session_settings_button_type_label(const int type) {
-    switch (type) {
-        case mux_input_b:
-            return lang.muxretro.settings_screen.target_b;
-        case mux_input_y:
-            return lang.muxretro.settings_screen.target_y;
-        case mux_input_select:
-            return lang.muxretro.settings_screen.target_select;
-        case mux_input_start:
-            return lang.muxretro.settings_screen.target_start;
-        case mux_input_dpad_up:
-            return lang.muxretro.settings_screen.target_dpad_up;
-        case mux_input_dpad_down:
-            return lang.muxretro.settings_screen.target_dpad_down;
-        case mux_input_dpad_left:
-            return lang.muxretro.settings_screen.target_dpad_left;
-        case mux_input_dpad_right:
-            return lang.muxretro.settings_screen.target_dpad_right;
-        case mux_input_a:
-            return lang.muxretro.settings_screen.target_a;
-        case mux_input_x:
-            return lang.muxretro.settings_screen.target_x;
-        case mux_input_l1:
-            return lang.muxretro.settings_screen.target_l1;
-        case mux_input_r1:
-            return lang.muxretro.settings_screen.target_r1;
-        case mux_input_l2:
-            return lang.muxretro.settings_screen.target_l2;
-        case mux_input_r2:
-            return lang.muxretro.settings_screen.target_r2;
-        case mux_input_l3:
-            return lang.muxretro.settings_screen.target_l3;
-        case mux_input_r3:
-            return lang.muxretro.settings_screen.target_r3;
-        case mux_input_ls_up:
-            return lang.muxretro.settings_screen.stick_ls_up;
-        case mux_input_ls_down:
-            return lang.muxretro.settings_screen.stick_ls_down;
-        case mux_input_ls_left:
-            return lang.muxretro.settings_screen.stick_ls_left;
-        case mux_input_ls_right:
-            return lang.muxretro.settings_screen.stick_ls_right;
-        case mux_input_rs_up:
-            return lang.muxretro.settings_screen.stick_rs_up;
-        case mux_input_rs_down:
-            return lang.muxretro.settings_screen.stick_rs_down;
-        case mux_input_rs_left:
-            return lang.muxretro.settings_screen.stick_rs_left;
-        case mux_input_rs_right:
-            return lang.muxretro.settings_screen.stick_rs_right;
-        default:
-            return lang.muxretro.settings_screen.unbound;
-    }
-}
-
 static const int target_display_order[PORT_TARGET_COUNT] = {8, 0, 9, 1, 10, 11, 12, 13, 14, 15, 2,  3,
                                                             4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23};
 
@@ -3137,7 +3082,7 @@ const char *session_settings_target_label(const int target_id) {
     if (target_id < 0 || target_id >= PORT_TARGET_COUNT) return lang.muxretro.settings_screen.unbound;
     if (target_id >= PORT_DIGITAL_COUNT) return stick_target_labels[target_id - PORT_DIGITAL_COUNT];
 
-    return session_settings_button_type_label(default_button_map[target_id]);
+    return mux_input_label((mux_input_type) default_button_map[target_id]);
 }
 
 int session_settings_mux_type_for_target(const int target_id) {

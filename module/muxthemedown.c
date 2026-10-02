@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/content/manifest.h>
 #include <common/ui/notify.h>
 #include <common/ui/orientation.h>
 #include <common/content/collection/theme.h>
@@ -114,15 +115,15 @@ static void create_content_items(void) {
         const int resolution1920_x1080 = json_bool(json_object_get(theme_item, "resolution1920x1080"));
 
         char theme_name[MAX_BUFFER_SIZE];
-        json_string_copy(json_object_get(theme_item, "name"), theme_name, sizeof(theme_name));
+        char theme_url[MAX_BUFFER_SIZE];
+        if (!manifest_json_string(theme_item, "name", theme_name, sizeof(theme_name))
+            || !manifest_json_string(theme_item, "url", theme_url, sizeof(theme_url)))
+            continue;
 
         if (strchr(theme_name, '/') || strstr(theme_name, "..")) {
             LOG_WARN(mux_module, "Skipping theme with unsafe name: %s", theme_name);
             continue;
         }
-
-        char theme_url[MAX_BUFFER_SIZE];
-        json_string_copy(json_object_get(theme_item, "url"), theme_url, sizeof(theme_url));
 
         if (!skip_theme_item(
                 theme_name, grid_enabled, hdmi, language, resolution640_x480, resolution720_x480, resolution720_x720,

@@ -1689,7 +1689,12 @@ void video_playback_ui_move_held(const int steps, const int direction) {
 }
 
 void video_playback_ui_section(const int direction) {
-    if (!menu_active || (!settings_active && !information_active) || !list_frame_active()) return;
+    if (!menu_active) return;
+    if (playlist_active) {
+        video_playback_ui_move_held(theme.mux.item.count, direction);
+        return;
+    }
+    if ((!settings_active && !information_active) || !list_frame_active()) return;
     if (!list_frame_move(direction)) return;
     play_sound(snd_navigate);
     gen_step_movement(0, 1, 2, 0, 0);

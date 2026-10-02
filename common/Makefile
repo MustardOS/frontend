@@ -26,7 +26,7 @@ STORAGE_SRCS = \
     storage/inotify.c storage/union.c storage/verify.c
 
 CONTENT_SRCS = \
-    content/catalogue.c content/content.c content/lookup.c content/switcher.c \
+    content/catalogue.c content/content.c content/lookup.c content/manifest.c content/switcher.c \
     content/core/common.c content/core/coredb.c content/core/external.c content/core/retroarch.c \
     content/core/state_preview.c \
     content/collection/common.c content/collection/order.c \
