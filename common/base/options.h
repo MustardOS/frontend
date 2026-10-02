@@ -10,6 +10,10 @@
 
 #define MAX_BUFFER_SIZE 1024
 
+#define LIST_WINDOW_MIN   512U
+#define LIST_WINDOW_MAX   1024U
+#define LIST_WINDOW_SCALE 64U
+
 #define A_SIZE(arr)  (sizeof(arr) / sizeof((arr)[0]))
 #define E_SIZE(LIST) A_SIZE(((int[]) {LIST}))
 

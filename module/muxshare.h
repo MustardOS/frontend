@@ -164,6 +164,7 @@ char *load_content_overlay(char *sys_dir, const char *pointer, int force, int ru
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
 void update_file_counter(lv_obj_t *counter, int file_count);
+void update_item_counter(lv_obj_t *counter, size_t current, size_t total, int visible);
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json);
 

@@ -38,6 +38,8 @@ static double selected_start;
 static int launch_requested;
 static video_library_entry *playlist_entries;
 static size_t playlist_entry_count;
+static size_t playlist_window_start;
+static size_t playlist_selected_index;
 static int playlist_channels;
 static int playlist_audio;
 static char playlist_name[PATH_MAX];
@@ -160,6 +162,28 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
+static size_t playlist_window_capacity(void) {
+    size_t capacity = theme.mux.item.count > 0
+                          ? (size_t) theme.mux.item.count * LIST_WINDOW_SCALE
+                          : LIST_WINDOW_MIN;
+    if (capacity < LIST_WINDOW_MIN) capacity = LIST_WINDOW_MIN;
+    if (capacity > LIST_WINDOW_MAX) capacity = LIST_WINDOW_MAX;
+    return capacity < playlist_entry_count ? capacity : playlist_entry_count;
+}
+
+static void playlist_position_window(void) {
+    const size_t capacity = playlist_window_capacity();
+    if (!capacity || playlist_selected_index >= playlist_entry_count) {
+        playlist_window_start = 0;
+        playlist_selected_index = 0;
+        return;
+    }
+
+    size_t start = playlist_selected_index > capacity / 2U ? playlist_selected_index - capacity / 2U : 0;
+    if (start + capacity > playlist_entry_count) start = playlist_entry_count - capacity;
+    playlist_window_start = start;
+}
+
 static void add_menu_item(const char *key, const char *label, const char *glyph) {
     content_item *item = add_item(&items, &item_count, key, label, "", content_type_menu);
     if (!item) return;
@@ -270,7 +294,9 @@ static void populate_live(void) {
 }
 
 static void populate_playlist(void) {
-    for (size_t index = 0; index < playlist_entry_count; index++)
+    playlist_position_window();
+    const size_t end = playlist_window_start + playlist_window_capacity();
+    for (size_t index = playlist_window_start; index < end; index++)
         add_media_item(
             playlist_entries[index].uri, playlist_entries[index].title, playlist_entries[index].logo,
             playlist_entries[index].live
@@ -344,6 +370,13 @@ static void update_nav(void) {
         lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
+}
+
+static void update_playlist_counter(void) {
+    update_item_counter(
+        ui_lbl_counter_explore, playlist_selected_index, playlist_entry_count,
+        active_screen == screen_playlist && config.visual.menu_counter_file
+    );
 }
 
 static void update_preview(void) {
@@ -429,10 +462,88 @@ static void rebuild_screen(void) {
     update_nav();
 
     if (ui_count_static) {
-        list_nav_next(0);
+        if (active_screen == screen_playlist) {
+            const int focus = (int) (playlist_selected_index - playlist_window_start);
+            if (focus > 0) gen_step_movement(focus, 1, 1, 0, 0);
+            else list_nav_next(0);
+        } else {
+            list_nav_next(0);
+        }
         lv_obj_update_layout(ui_pnl_content);
     }
     update_preview();
+    update_playlist_counter();
+}
+
+static void playlist_select(const size_t target) {
+    if (target >= playlist_entry_count || target == playlist_selected_index) return;
+
+    const size_t previous = playlist_selected_index;
+    playlist_selected_index = target;
+    if (target >= playlist_window_start && target < playlist_window_start + item_count) {
+        const int direction = target < previous ? -1 : 1;
+        const size_t distance = target < previous ? previous - target : target - previous;
+        gen_step_movement((int) distance, direction, 1, 0, 1);
+        update_playlist_counter();
+        return;
+    }
+
+    gen_step_movement(0, target < previous ? -1 : 1, 1, 0, 1);
+    toast_message(lang.muxmedia.loading_more, tst_wait_s);
+    rebuild_screen();
+}
+
+static void playlist_step(const int direction, const int wrap) {
+    if (msgbox_active) {
+        if (direction < 0) handle_list_nav_up();
+        else handle_list_nav_down();
+        return;
+    }
+    if (block_input || playlist_entry_count < 2) return;
+    playlist_select(
+        video_playlist_step(
+            playlist_entries, playlist_entry_count, playlist_selected_index, direction, 1, wrap
+        )
+    );
+}
+
+static void playlist_skip(const int direction) {
+    if (msgbox_active) {
+        if (direction < 0) handle_list_nav_page_up();
+        else handle_list_nav_page_down();
+        return;
+    }
+    if (block_input || page_nav_blocked || playlist_entry_count < 2) return;
+    playlist_select(
+        video_playlist_skip(
+            playlist_entries, playlist_entry_count, playlist_selected_index, direction,
+            theme.mux.item.count > 0 ? (size_t) theme.mux.item.count : 1U, config.visual.page_skip != 0
+        )
+    );
+}
+
+static void handle_playlist_up(void) {
+    playlist_step(-1, 1);
+}
+
+static void handle_playlist_down(void) {
+    playlist_step(1, 1);
+}
+
+static void handle_playlist_up_hold(void) {
+    playlist_step(-1, 0);
+}
+
+static void handle_playlist_down_hold(void) {
+    playlist_step(1, 0);
+}
+
+static void handle_playlist_page_up(void) {
+    playlist_skip(-1);
+}
+
+static void handle_playlist_page_down(void) {
+    playlist_skip(1);
 }
 
 static void enter_screen(const char *key) {
@@ -542,7 +653,7 @@ static int play_selected(void) {
     init_timer(NULL, NULL);
     int result = 0;
     if (active_screen == screen_playlist && playlist_entry_count > 0) {
-        size_t selected = (size_t) current_item_index;
+        size_t selected = playlist_selected_index;
         do {
             const video_library_entry *entry = &playlist_entries[selected];
             video_player_options options = {
@@ -561,6 +672,7 @@ static int play_selected(void) {
             };
             result = video_player_run(entry->uri, entry->title, &options);
         } while (result == 1 && selected < playlist_entry_count);
+        if (selected < playlist_entry_count) playlist_selected_index = selected;
     } else {
         const video_player_options options = {
             .hardware_decode = config.video.hardware_decode,
@@ -593,6 +705,7 @@ static void initialise_ui(void) {
     init_theme(1, 0);
     init_display();
     init_ui_common_screen(&theme, &device, &lang, lang.muxmedia.title);
+    init_ui_item_counter(&theme);
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lbl_datetime, get_datetime());
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
@@ -639,18 +752,19 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
     for (size_t index = 0; playlist_audio && index < playlist_entry_count; index++)
         playlist_audio = video_path_is_audio(playlist_entries[index].uri);
     video_title_from_uri(path, playlist_name, sizeof(playlist_name));
+    playlist_window_start = 0;
+    playlist_selected_index = 0;
+    if (resume_history && playlist_entry_count) {
+        size_t selected = 0;
+        if (playlist_history_selection(path, &selected)) {
+            playlist_selected_index = selected;
+            history_launch = 1;
+        }
+    }
     active_screen = screen_playlist;
     initialise_ui();
     rebuild_screen();
     init_timer(ui_refresh_task, NULL);
-
-    if (resume_history && playlist_entry_count) {
-        size_t selected = 0;
-        if (playlist_history_selection(path, &selected)) {
-            current_item_index = (int) selected;
-            history_launch = 1;
-        }
-    }
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,
@@ -658,17 +772,17 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
             [mux_input_a] = handle_a,
             [mux_input_b] = handle_b,
             [mux_input_x] = handle_x,
-            [mux_input_dpad_up] = handle_list_nav_up,
-            [mux_input_dpad_down] = handle_list_nav_down,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_playlist_up,
+            [mux_input_dpad_down] = handle_playlist_down,
+            [mux_input_l1] = handle_playlist_page_up,
+            [mux_input_r1] = handle_playlist_page_down,
         },
         .release_handler = {[mux_input_menu] = handle_help},
         .hold_handler = {
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_playlist_up_hold,
+            [mux_input_dpad_down] = handle_playlist_down_hold,
+            [mux_input_l1] = handle_playlist_page_up,
+            [mux_input_r1] = handle_playlist_page_down,
         },
     };
 
@@ -684,7 +798,6 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
             mux_input_task(&input_opts);
         }
         if (launch_requested) {
-            const int attempted_index = current_item_index;
             const int result = play_selected();
             if (result == video_player_content_switch) {
                 content_switch_requested = 1;
@@ -693,10 +806,6 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
                 launch_requested = 0;
             } else {
                 rebuild_screen();
-                if (attempted_index > 0 && attempted_index < ui_count_static) {
-                    gen_step_movement(attempted_index, 1, 1, 0, 0);
-                    update_preview();
-                }
             }
             if (result == video_player_failed) {
                 play_sound(snd_error);

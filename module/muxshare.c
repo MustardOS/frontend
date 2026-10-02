@@ -461,6 +461,20 @@ void update_file_counter(lv_obj_t *counter, const int file_count) {
     }
 }
 
+void update_item_counter(
+    lv_obj_t *counter, const size_t current, const size_t total, const int visible
+) {
+    if (counter && visible && current < total) {
+        char counter_text[MAX_BUFFER_SIZE];
+        snprintf(
+            counter_text, sizeof(counter_text), "%zu%s%zu", current + 1, theme.counter.text_separator, total
+        );
+        counter_message(counter, counter_text, theme.counter.text_fade_time * 60);
+    } else if (counter) {
+        lv_obj_add_flag(counter, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
 char *get_friendly_folder_name(char *folder_name, const int fn_valid, const struct json fn_json) {
     char *friendly_folder_name = mux_malloc(MAX_BUFFER_SIZE);
     snprintf(friendly_folder_name, MAX_BUFFER_SIZE, "%s", folder_name);

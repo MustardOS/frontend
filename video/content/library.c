@@ -22,6 +22,60 @@
 
 static char *trim(char *text);
 
+static char playlist_lead(const char *title) {
+    if (!title || !title[0]) return '#';
+    const unsigned char lead = (unsigned char) title[0];
+    return isalpha(lead) ? (char) toupper(lead) : '#';
+}
+
+size_t video_playlist_step(
+    const video_library_entry *entries, const size_t count, size_t current, const int direction, size_t steps,
+    const int wrap
+) {
+    if (!entries || !count) return 0;
+    if (current >= count) current = count - 1;
+    if (!steps || !direction) return current;
+
+    if (!wrap) {
+        if (direction < 0) return steps > current ? 0 : current - steps;
+        const size_t remaining = count - current - 1;
+        return current + (steps > remaining ? remaining : steps);
+    }
+
+    steps %= count;
+    if (direction < 0) return current >= steps ? current - steps : count - (steps - current);
+    return current + steps < count ? current + steps : current + steps - count;
+}
+
+size_t video_playlist_skip(
+    const video_library_entry *entries, const size_t count, size_t current, const int direction,
+    const size_t page_size, const int letter_skip
+) {
+    if (!entries || !count) return 0;
+    if (current >= count) current = count - 1;
+
+    if (letter_skip) {
+        const char here = playlist_lead(entries[current].title);
+        if (direction > 0) {
+            for (size_t index = current + 1; index < count; index++)
+                if (playlist_lead(entries[index].title) != here) return index;
+        } else if (direction < 0 && current > 0) {
+            size_t index = current;
+            while (index > 0 && playlist_lead(entries[index - 1].title) == here)
+                index--;
+            if (index > 0) {
+                const char previous = playlist_lead(entries[index - 1].title);
+                index--;
+                while (index > 0 && playlist_lead(entries[index - 1].title) == previous)
+                    index--;
+                return index;
+            }
+        }
+    }
+
+    return video_playlist_step(entries, count, current, direction, page_size ? page_size : 1, 0);
+}
+
 typedef struct {
     unsigned long number;
     char *uri;
