@@ -57,6 +57,7 @@ static void save_hdmi_options(void) {
     CHECK_AND_SAVE_STD(hdmi, depth, "settings/hdmi/depth", INT, 0);
     CHECK_AND_SAVE_STD(hdmi, range, "settings/hdmi/range", INT, 0);
     CHECK_AND_SAVE_STD(hdmi, scan, "settings/hdmi/scan", INT, 0);
+    CHECK_AND_SAVE_STD(hdmi, mirror, "settings/hdmi/mirror", INT, 0);
 
     if (is_modified > 0) {
         toast_message(lang.generic.saving, tst_wait_f);
@@ -84,13 +85,14 @@ static void init_navigation_group(void) {
         -1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, hdmi_resolution_count
     );
     INIT_OPTION_ITEM(-1, hdmi, space, lang.muxhdmi.colour.space, "space", hdmi_space, 4);
-    INIT_OPTION_ITEM(-1, hdmi, depth, lang.muxhdmi.colour.depth, "depth", NULL, 0);
+    char *hdmi_depth[] = {"8", "10", "12", "16"};
+
+    INIT_OPTION_ITEM(-1, hdmi, depth, lang.muxhdmi.colour.depth, "depth", hdmi_depth, 4);
     INIT_OPTION_ITEM(-1, hdmi, range, lang.muxhdmi.colour.range.title, "range", hdmi_range, 2);
     INIT_OPTION_ITEM(-1, hdmi, scan, lang.muxhdmi.scan_scale.title, "scan", hdmi_scan, 2);
 
-    char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_lbl_depth_hdmi, ui_dro_depth_hdmi, depth_string);
-    free(depth_string);
+    char *hdmi_mirror[] = {lang.generic.disabled, lang.generic.enabled};
+    INIT_OPTION_ITEM(-1, hdmi, mirror, lang.muxhdmi.mirror, "mirror", hdmi_mirror, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

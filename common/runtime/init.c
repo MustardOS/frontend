@@ -225,6 +225,20 @@ void init_display(void) {
         } else {
             LOG_WARN("video", "Failed to read HDMI external resolution, using default MUX size");
         }
+
+        const char *ext_refresh_path = "/opt/muos/device/config/screen/external/refresh";
+        device.screen.refresh = 0.0f;
+
+        if (file_exist(ext_refresh_path)) {
+            char *ext_refresh = read_line_char_from(ext_refresh_path, 1);
+            const float rate = ext_refresh ? strtof(ext_refresh, NULL) : 0.0f;
+            free(ext_refresh);
+
+            if (rate >= 20.0f && rate <= 240.0f) {
+                device.screen.refresh = rate;
+                LOG_INFO("video", "HDMI output rate: %.2fHz", (double) rate);
+            }
+        }
     }
 
     lv_init();

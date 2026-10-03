@@ -75,6 +75,7 @@ void print_available_modes(void) {
 }
 
 void show_current_mode(void) {
+    struct fb_fix_screeninfo f_info;
     struct fb_var_screeninfo v_info;
     int fb_fd = open(device.screen.device, O_RDONLY);
 
@@ -95,6 +96,10 @@ void show_current_mode(void) {
     );
 
     LOG_INFO(module, "Timing: hsync=%d, vsync=%d, rotate=%d", v_info.hsync_len, v_info.vsync_len, v_info.rotate);
+
+    if (ioctl(fb_fd, FBIOGET_FSCREENINFO, &f_info) == 0) {
+        LOG_INFO(module, "Memory: %u bytes, line length %u", f_info.smem_len, f_info.line_length);
+    }
 
     close(fb_fd);
 }
@@ -206,6 +211,7 @@ void print_help(const char *prog) {
     printf("  -y, --vsync   <VSYNC_LEN>  Set vertical sync length\n");
     printf("  -r, --rotate  <0-3>        Set rotation (if supported)\n");
     printf("  -i, --ignore               Ignore double-height logic\n");
+    printf("  -b, --buffers <1-4>        Number of screen buffers, default 2\n");
     printf("  -m, --modes                Show available framebuffer modes\n");
     printf("  -s, --show                 Show current framebuffer mode\n");
     printf("  -c, --clear                Clear framebuffer\n");

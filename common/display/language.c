@@ -1136,11 +1136,13 @@ static const lang_field lang_fields[] = {
     {"muxhdmi", LANG_OFF(muxhdmi.scan_scale.title), lang_specific, "Scan Scaling"},
     {"muxhdmi", LANG_OFF(muxhdmi.scan_scale.over), lang_specific, "Over"},
     {"muxhdmi", LANG_OFF(muxhdmi.scan_scale.under), lang_specific, "Under"},
+    {"muxhdmi", LANG_OFF(muxhdmi.mirror), lang_specific, "Mirror Output"},
     {"muxhdmi", LANG_OFF(muxhdmi.help.resolution), lang_specific, "The resolution sent to the TV.\n\nIf no picture appears at all, try a lower one."},
     {"muxhdmi", LANG_OFF(muxhdmi.help.scan), lang_specific, "Whether the picture is pushed out past the edges of the screen or pulled in from them.\n\nReach for this if the image is cut off or does not quite fill the screen."},
     {"muxhdmi", LANG_OFF(muxhdmi.help.depth), lang_specific, "How many shades of each colour are sent.\n\nHigher is smoother, though not every TV and cable will accept it."},
     {"muxhdmi", LANG_OFF(muxhdmi.help.range), lang_specific, "The range of brightness values sent.\n\nIf blacks look washed out or crushed, this is usually the setting at fault."},
     {"muxhdmi", LANG_OFF(muxhdmi.help.space), lang_specific, "How colour is encoded on the way out.\n\nRGB suits most TVs. Try the others only if the colours look plainly wrong."},
+    {"muxhdmi", LANG_OFF(muxhdmi.help.mirror), lang_specific, "Mirrors the HDMI output onto the device display, handy for live streaming.\n\nExpect bars on the device display depending on the HDMI resolution selected."},
 
     // muxhistory
     {"muxhistory", LANG_OFF(muxhistory.title), lang_specific, "History"},

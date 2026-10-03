@@ -656,11 +656,7 @@ void sdl_init(void) {
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
 
-    if (hdmi_mode) {
-        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
-    } else {
-        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    }
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         LOG_ERROR("video", "SDL Init Failed: %s", SDL_GetError());
@@ -699,14 +695,12 @@ void sdl_init(void) {
         LOG_INFO("video", "Display reports %dx%d @ %dHz", display_mode.w, display_mode.h, display_mode.refresh_rate);
     }
 
-    if (!hdmi_mode && device.screen.refresh > 0.0f) {
+    if (device.screen.refresh > 0.0f) {
         panel_refresh_hz = (double) device.screen.refresh;
-        LOG_INFO("video", "Panel rate %.3fHz from device configuration", panel_refresh_hz);
+        LOG_INFO("video", "Output rate %.3fHz from device configuration", panel_refresh_hz);
     }
 
-    monitor.renderer = SDL_CreateRenderer(
-        monitor.window, -1, hdmi_mode ? SDL_RENDERER_ACCELERATED : SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-    );
+    monitor.renderer = SDL_CreateRenderer(monitor.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!monitor.renderer) {
         LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -1067,6 +1061,32 @@ void display_render_logical_texture(SDL_Renderer *renderer, SDL_Texture *texture
     }
 }
 
+static void finish_present(const uint64_t timing_start, const uint64_t draw_done) {
+    SDL_RenderPresent(monitor.renderer);
+    present_serial++;
+
+    mark_first_paint();
+
+    if (hard_sync_query_fn && hard_sync_query_fn()) {
+        static void (*p_gl_finish)(void) = NULL;
+        if (!p_gl_finish) MUOS_FUNCTION_ASSIGN(p_gl_finish, SDL_GL_GetProcAddress("glFinish"));
+        if (p_gl_finish) p_gl_finish();
+    }
+
+    if (timing_start) {
+        static double to_ms = 0.0;
+        if (to_ms == 0.0) to_ms = 1000.0 / (double) SDL_GetPerformanceFrequency();
+
+        last_draw_ms = (double) (draw_done - timing_start) * to_ms;
+        last_flip_ms = (double) (SDL_GetPerformanceCounter() - draw_done) * to_ms;
+        flip_pending = 1;
+
+        if (present_timing_fn) present_timing_fn(last_draw_ms, last_flip_ms);
+    }
+
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+}
+
 static void composite_to(SDL_Texture *target, const int present) {
     if (!monitor.renderer || !monitor.texture) return;
 
@@ -1163,29 +1183,7 @@ static void composite_to(SDL_Texture *target, const int present) {
 
     const uint64_t draw_done = timing_start ? SDL_GetPerformanceCounter() : 0;
 
-    SDL_RenderPresent(monitor.renderer);
-    present_serial++;
-
-    mark_first_paint();
-
-    if (hard_sync_query_fn && hard_sync_query_fn()) {
-        static void (*p_gl_finish)(void) = NULL;
-        if (!p_gl_finish) MUOS_FUNCTION_ASSIGN(p_gl_finish, SDL_GL_GetProcAddress("glFinish"));
-        if (p_gl_finish) p_gl_finish();
-    }
-
-    if (timing_start) {
-        static double to_ms = 0.0;
-        if (to_ms == 0.0) to_ms = 1000.0 / (double) SDL_GetPerformanceFrequency();
-
-        last_draw_ms = (double) (draw_done - timing_start) * to_ms;
-        last_flip_ms = (double) (SDL_GetPerformanceCounter() - draw_done) * to_ms;
-        flip_pending = 1;
-
-        if (present_timing_fn) present_timing_fn(last_draw_ms, last_flip_ms);
-    }
-
-    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+    finish_present(timing_start, draw_done);
 }
 
 void display_composite_frame(void) {

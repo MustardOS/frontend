@@ -24,27 +24,20 @@ int mufbset_args_parse(const int argc, char *argv[], mufbset_args *args) {
     if (!argv || argc < 1) return -1;
 
     static const struct option options[] = {
-        {"width", required_argument, NULL, 'w'},
-        {"height", required_argument, NULL, 'h'},
-        {"depth", required_argument, NULL, 'd'},
-        {"hsync", required_argument, NULL, 'x'},
-        {"vsync", required_argument, NULL, 'y'},
-        {"rotate", required_argument, NULL, 'r'},
-        {"ignore", no_argument, NULL, 'i'},
-        {"modes", no_argument, NULL, 'm'},
-        {"show", no_argument, NULL, 's'},
-        {"clear", no_argument, NULL, 'c'},
-        {"grab", required_argument, NULL, 'g'},
-        {"method", required_argument, NULL, 'M'},
-        {"verbose", no_argument, NULL, 'v'},
-        {"help", no_argument, NULL, 'H'},
-        {NULL, 0, NULL, 0}
+        {"width", required_argument, NULL, 'w'},  {"height", required_argument, NULL, 'h'},
+        {"depth", required_argument, NULL, 'd'},  {"hsync", required_argument, NULL, 'x'},
+        {"vsync", required_argument, NULL, 'y'},  {"rotate", required_argument, NULL, 'r'},
+        {"ignore", no_argument, NULL, 'i'},       {"buffers", required_argument, NULL, 'b'},
+        {"modes", no_argument, NULL, 'm'},        {"show", no_argument, NULL, 's'},
+        {"clear", no_argument, NULL, 'c'},        {"grab", required_argument, NULL, 'g'},
+        {"method", required_argument, NULL, 'M'}, {"verbose", no_argument, NULL, 'v'},
+        {"help", no_argument, NULL, 'H'},         {NULL, 0, NULL, 0}
     };
 
     optind = 1;
     opterr = 0;
     int option;
-    while ((option = getopt_long(argc, argv, "w:h:d:x:y:r:imscg:M:vH", options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "w:h:d:x:y:r:ib:mscg:M:vH", options, NULL)) != -1) {
         int *target = NULL;
         switch (option) {
             case 'w':
@@ -67,6 +60,9 @@ int mufbset_args_parse(const int argc, char *argv[], mufbset_args *args) {
                 break;
             case 'i':
                 args->ignore_double_height = 1;
+                break;
+            case 'b':
+                target = &args->ignore_double_height;
                 break;
             case 'm':
                 args->show_modes = 1;
@@ -110,6 +106,10 @@ int mufbset_args_parse(const int argc, char *argv[], mufbset_args *args) {
 
     if (optind != argc) {
         args->invalid_argument = argv[optind];
+        return -1;
+    }
+    if (args->ignore_double_height < 1 || args->ignore_double_height > 4) {
+        args->invalid_argument = "buffers";
         return -1;
     }
     if (args->rotation < -1 || args->rotation > 3) {

@@ -1329,6 +1329,8 @@
     "How colour is encoded on the way out.\n\nRGB suits most TVs. Try the others only if the colours look plainly wrong.": "How colour is encoded on the way out.\n\nRGB suits most TVs. Try the others only if the colours look plainly wrong.",
     "How many shades of each colour are sent.\n\nHigher is smoother, though not every TV and cable will accept it.": "How many shades of each colour are sent.\n\nHigher is smoother, though not every TV and cable will accept it.",
     "Limited": "Limited",
+    "Mirror Output": "Mirror Output",
+    "Mirrors the HDMI output onto the device display, handy for live streaming.\n\nExpect bars on the device display depending on the HDMI resolution selected.": "Mirrors the HDMI output onto the device display, handy for live streaming.\n\nExpect bars on the device display depending on the HDMI resolution selected.",
     "Over": "Over",
     "Resolution": "Resolution",
     "Scan Scaling": "Scan Scaling",

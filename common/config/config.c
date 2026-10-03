@@ -293,9 +293,10 @@ static const cfg_field cfg_fields[] = {
     // settings/hdmi/
     {CONF_CONFIG_PATH "settings/hdmi", "resolution", CFG_OFF(settings.hdmi.resolution), 0, {.i = 2}, 1, 0, 5},
     {CONF_CONFIG_PATH "settings/hdmi", "space", CFG_OFF(settings.hdmi.space), 0, {.i = 0}},
-    {CONF_CONFIG_PATH "settings/hdmi", "depth", CFG_OFF(settings.hdmi.depth), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "depth", CFG_OFF(settings.hdmi.depth), 0, {.i = 0}, 1, 0, 3},
     {CONF_CONFIG_PATH "settings/hdmi", "range", CFG_OFF(settings.hdmi.range), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/hdmi", "scan", CFG_OFF(settings.hdmi.scan), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "mirror", CFG_OFF(settings.hdmi.mirror), 0, {.i = 0}, 1, 0, 1},
 
     // settings/network/
     {CONF_CONFIG_PATH "settings/network", "monitor", CFG_OFF(settings.network.monitor), 0, {.i = 0}, 1, 0, 1},

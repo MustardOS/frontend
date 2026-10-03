@@ -1164,12 +1164,14 @@ struct mux_lang {
             char over[MAX_BUFFER_SIZE];
             char under[MAX_BUFFER_SIZE];
         } scan_scale;
+        char mirror[MAX_BUFFER_SIZE];
         struct {
             char resolution[MAX_BUFFER_SIZE];
             char space[MAX_BUFFER_SIZE];
             char depth[MAX_BUFFER_SIZE];
             char range[MAX_BUFFER_SIZE];
             char scan[MAX_BUFFER_SIZE];
+            char mirror[MAX_BUFFER_SIZE];
         } help;
     } muxhdmi;
 

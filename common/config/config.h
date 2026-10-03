@@ -320,6 +320,7 @@ struct mux_config {
             int16_t depth;
             int16_t range;
             int16_t scan;
+            int16_t mirror;
         } hdmi;
         struct {
             int16_t monitor;
