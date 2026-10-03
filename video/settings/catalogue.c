@@ -28,7 +28,13 @@
 #define CATALOGUE_OVERLAY_MAX (8 * 1024 * 1024)
 #define CATALOGUE_VARIANT_MAX 16
 
-typedef enum { catalogue_idle, catalogue_manifest, catalogue_authors, catalogue_items, catalogue_package } catalogue_state;
+typedef enum {
+    catalogue_idle,
+    catalogue_manifest,
+    catalogue_authors,
+    catalogue_items,
+    catalogue_package
+} catalogue_state;
 typedef enum { catalogue_available, catalogue_installed, catalogue_update } catalogue_item_state;
 
 typedef struct {
@@ -219,12 +225,13 @@ static int parse_manifest(void) {
         return 0;
     }
     char overlay_root[PATH_MAX];
-    snprintf(overlay_root, sizeof(overlay_root), WASABI_OVERLAY_PATH "%dx%d/", device.screen.width,
-             device.screen.height);
-    const char *root_path = active_kind == wasabi_asset_filter ? WASABI_FILTER_PATH
+    snprintf(
+        overlay_root, sizeof(overlay_root), WASABI_OVERLAY_PATH "%dx%d/", device.screen.width, device.screen.height
+    );
+    const char *root_path = active_kind == wasabi_asset_filter   ? WASABI_FILTER_PATH
                             : active_kind == wasabi_asset_shader ? WASABI_SHADER_PATH
                                                                  : overlay_root;
-    const char *suffix = active_kind == wasabi_asset_filter ? ".ini"
+    const char *suffix = active_kind == wasabi_asset_filter   ? ".ini"
                          : active_kind == wasabi_asset_shader ? ".frag"
                                                               : ".png";
     wasabi_assets_refresh(active_kind);
@@ -235,8 +242,8 @@ static int parse_manifest(void) {
         char stem[64];
         if (json_type(node) != JSON_OBJECT || !manifest_json_string(node, "name", item->name, sizeof(item->name))
             || !manifest_json_string(node, "author", item->author, sizeof(item->author))
-            || !manifest_json_string(node, "version", version, sizeof(version))
-            || !manifest_label_valid(item->name) || !manifest_label_valid(item->author)
+            || !manifest_json_string(node, "version", version, sizeof(version)) || !manifest_label_valid(item->name)
+            || !manifest_label_valid(item->author)
             || !manifest_safe_stem(item->author, item->author_directory, sizeof(item->author_directory)))
             goto failed;
         if (active_kind == wasabi_asset_overlay) {
@@ -273,15 +280,16 @@ static int parse_manifest(void) {
             goto failed;
         if (active_kind == wasabi_asset_overlay) {
             for (int variant = 0; variant < item->variant_count; variant++) {
-                if ((size_t) snprintf(item->variants[variant].target, sizeof(item->variants[variant].target),
-                                      WASABI_OVERLAY_PATH "%s/%s/%s.png", item->variants[variant].resolution,
-                                      item->author_directory, stem)
+                if ((size_t) snprintf(
+                        item->variants[variant].target, sizeof(item->variants[variant].target),
+                        WASABI_OVERLAY_PATH "%s/%s/%s.png", item->variants[variant].resolution, item->author_directory,
+                        stem
+                    )
                     >= sizeof(item->variants[variant].target))
                     goto failed;
             }
         }
-        if ((size_t) snprintf(item->key, sizeof(item->key), "%s/%s", item->author_directory, stem)
-                >= sizeof(item->key)
+        if ((size_t) snprintf(item->key, sizeof(item->key), "%s/%s", item->author_directory, stem) >= sizeof(item->key)
             || (size_t) snprintf(item->target, sizeof(item->target), "%s%s%s", root_path, item->key, suffix)
                    >= sizeof(item->target))
             goto failed;
@@ -345,7 +353,7 @@ static void package_complete(const int result) {
     if (valid) {
         char digest[SHA256_DIGEST_LENGTH * 2 + 1];
         valid = file_sha256(package_path, digest) && strcasecmp(digest, expected) == 0
-                && (active_kind == wasabi_asset_filter ? filter_valid(package_path)
+                && (active_kind == wasabi_asset_filter   ? filter_valid(package_path)
                     : active_kind == wasabi_asset_shader ? shader_valid(package_path)
                                                          : overlay_valid(package_path));
     }
@@ -376,7 +384,8 @@ static void package_complete(const int result) {
         set_download_callbacks(package_complete);
         if (initiate_download_limited(
                 variant->url, package_path, package_limit(), 0, lang.muxretro.catalogue_screen.downloading
-            ) == 0)
+            )
+            == 0)
             return;
         valid = 0;
     }
@@ -391,7 +400,8 @@ static void package_complete(const int result) {
     else
         toast_message(lang.muxretro.catalogue_screen.installed_done, tst_wait_m);
     wasabi_assets_refresh(active_kind);
-    for (int index = 0; index < entry_count; index++) ordered[index]->state = installed_state(ordered[index]);
+    for (int index = 0; index < entry_count; index++)
+        ordered[index]->state = installed_state(ordered[index]);
     package_index = -1;
     package_variant = -1;
     state = catalogue_items;
@@ -403,10 +413,12 @@ static int start_package(const int row) {
     if (!item || atomic_load(&download_in_progress)) return 0;
     package_index = selected_item_index(row);
     package_variant = item->variant_count > 0 ? 0 : -1;
-    snprintf(package_path, sizeof(package_path), "%s.download",
-             active_kind == wasabi_asset_filter ? WASABI_FILTER_PATH
-             : active_kind == wasabi_asset_shader ? WASABI_SHADER_PATH
-             : WASABI_OVERLAY_PATH);
+    snprintf(
+        package_path, sizeof(package_path), "%s.download",
+        active_kind == wasabi_asset_filter   ? WASABI_FILTER_PATH
+        : active_kind == wasabi_asset_shader ? WASABI_SHADER_PATH
+                                             : WASABI_OVERLAY_PATH
+    );
     create_directories(package_path, 1);
     set_download_callbacks(package_complete);
     const char *url = package_variant >= 0 ? item->variants[package_variant].url : item->url;
@@ -417,7 +429,8 @@ static int start_package(const int row) {
     }
     if (initiate_download_limited(
             url, package_path, package_limit(), own_progress, lang.muxretro.catalogue_screen.downloading
-        ) != 0) {
+        )
+        != 0) {
         if (!own_progress) {
             hide_progress_bar();
             set_download_progress_span(0, 1);
@@ -439,10 +452,10 @@ int wasabi_catalogue_open(const wasabi_asset_kind kind) {
         toast_message(lang.generic.need_connect, tst_wait_m);
         return 0;
     }
-    const char *url = kind == wasabi_asset_filter ? config.extra.filter.data
+    const char *url = kind == wasabi_asset_filter   ? config.extra.filter.data
                       : kind == wasabi_asset_shader ? config.extra.shader.data
                                                     : config.extra.overlay.data;
-    const char *filename = kind == wasabi_asset_filter ? "filters.json"
+    const char *filename = kind == wasabi_asset_filter   ? "filters.json"
                            : kind == wasabi_asset_shader ? "shaders.json"
                                                          : "overlays.json";
     if (!manifest_https_url(url)
@@ -454,9 +467,8 @@ int wasabi_catalogue_open(const wasabi_asset_kind kind) {
     create_directories(manifest_path, 1);
     active_kind = kind;
     set_download_callbacks(manifest_complete);
-    if (initiate_download_limited(
-            url, manifest_path, MAX_MANIFEST_BYTES, 1, lang.muxretro.catalogue_screen.downloading
-        ) != 0) {
+    if (initiate_download_limited(url, manifest_path, MAX_MANIFEST_BYTES, 1, lang.muxretro.catalogue_screen.downloading)
+        != 0) {
         toast_message(lang.muxretro.catalogue_screen.manifest_failed, tst_wait_m);
         return 0;
     }
@@ -491,9 +503,7 @@ const char *wasabi_catalogue_value(const int row) {
 
 const char *wasabi_catalogue_glyph(const int row __attribute__((unused))) {
     if (state == catalogue_authors) return "folder";
-    return active_kind == wasabi_asset_filter ? "filter"
-           : active_kind == wasabi_asset_shader ? "shader"
-                                                 : "overlay";
+    return active_kind == wasabi_asset_filter ? "filter" : active_kind == wasabi_asset_shader ? "shader" : "overlay";
 }
 
 const char *wasabi_catalogue_action(const int row) {

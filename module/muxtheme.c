@@ -178,8 +178,7 @@ static void save_active_theme(char *path, const char *theme_path) {
             font_type = 1;
         else if (config.settings.advanced.font == 1)
             font_type = 2;
-        if (font_type >= 0)
-            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, font_type);
+        if (font_type >= 0) write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, font_type);
         run_tweak_script(lang.generic.loading);
     }
 }

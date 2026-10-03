@@ -1295,8 +1295,7 @@ int display_mirror_to_fb(const int swap_red_blue) {
     }
 
     int ret = -1;
-    if (capture_target()
-        && SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_RGB24, rgb, width * 3) == 0) {
+    if (capture_target() && SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_RGB24, rgb, width * 3) == 0) {
         ret = 0;
 
         for (int y = 0; y < height && ret == 0; y++) {

@@ -134,7 +134,8 @@ static void build_zone_table(void) {
         .zone_lbl = ui_lbl_zone_l_rgb,
         .zone_ico = ui_ico_zone_l_rgb,
         .label = shared_sticks ? lang.muxrgb.zone_sticks
-                               : dual_right ? lang.muxrgb.zone_l_arc1 : lang.muxrgb.zone_l,
+                 : dual_right  ? lang.muxrgb.zone_l_arc1
+                               : lang.muxrgb.zone_l,
     };
 
     zones[zone_r] = (zone_entry_t) {

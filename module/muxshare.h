@@ -286,7 +286,6 @@ int muxdevice_main(void);
 
 int muxdistemp_main(void);
 
-
 void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxhdmi_main(void);

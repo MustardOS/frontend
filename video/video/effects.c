@@ -13,7 +13,7 @@
 #include "../settings/assets.h"
 #include "../core/paths.h"
 
-#define SHADER_FILE_MAX (128 * 1024)
+#define SHADER_FILE_MAX  (128 * 1024)
 #define SHADER_PARAM_MAX 16
 
 typedef struct {
@@ -111,7 +111,7 @@ static int load_gl(void) {
     gl_context = current;
 #define LOAD_GL(name)                                                                                                  \
     do {                                                                                                               \
-        MUOS_FUNCTION_ASSIGN(gl_api.name, SDL_GL_GetProcAddress("gl" #name));                                         \
+        MUOS_FUNCTION_ASSIGN(gl_api.name, SDL_GL_GetProcAddress("gl" #name));                                          \
         if (!gl_api.name) return 0;                                                                                    \
     } while (0)
     LOAD_GL(CreateShader);
@@ -148,58 +148,56 @@ static int load_gl(void) {
     return 1;
 }
 
-#define glCreateShader gl_api.CreateShader
-#define glShaderSource gl_api.ShaderSource
-#define glCompileShader gl_api.CompileShader
-#define glGetShaderiv gl_api.GetShaderiv
-#define glGetShaderInfoLog gl_api.GetShaderInfoLog
-#define glDeleteShader gl_api.DeleteShader
-#define glCreateProgram gl_api.CreateProgram
-#define glAttachShader gl_api.AttachShader
-#define glBindAttribLocation gl_api.BindAttribLocation
-#define glLinkProgram gl_api.LinkProgram
-#define glDeleteProgram gl_api.DeleteProgram
-#define glGetProgramiv gl_api.GetProgramiv
-#define glGetProgramInfoLog gl_api.GetProgramInfoLog
-#define glGetAttribLocation gl_api.GetAttribLocation
-#define glGetUniformLocation gl_api.GetUniformLocation
-#define glActiveTexture gl_api.ActiveTexture
-#define glViewport gl_api.Viewport
-#define glUseProgram gl_api.UseProgram
-#define glUniform1i gl_api.Uniform1i
-#define glUniform1f gl_api.Uniform1f
-#define glUniform2f gl_api.Uniform2f
-#define glBindBuffer gl_api.BindBuffer
-#define glVertexAttribPointer gl_api.VertexAttribPointer
-#define glEnableVertexAttribArray gl_api.EnableVertexAttribArray
+#define glCreateShader             gl_api.CreateShader
+#define glShaderSource             gl_api.ShaderSource
+#define glCompileShader            gl_api.CompileShader
+#define glGetShaderiv              gl_api.GetShaderiv
+#define glGetShaderInfoLog         gl_api.GetShaderInfoLog
+#define glDeleteShader             gl_api.DeleteShader
+#define glCreateProgram            gl_api.CreateProgram
+#define glAttachShader             gl_api.AttachShader
+#define glBindAttribLocation       gl_api.BindAttribLocation
+#define glLinkProgram              gl_api.LinkProgram
+#define glDeleteProgram            gl_api.DeleteProgram
+#define glGetProgramiv             gl_api.GetProgramiv
+#define glGetProgramInfoLog        gl_api.GetProgramInfoLog
+#define glGetAttribLocation        gl_api.GetAttribLocation
+#define glGetUniformLocation       gl_api.GetUniformLocation
+#define glActiveTexture            gl_api.ActiveTexture
+#define glViewport                 gl_api.Viewport
+#define glUseProgram               gl_api.UseProgram
+#define glUniform1i                gl_api.Uniform1i
+#define glUniform1f                gl_api.Uniform1f
+#define glUniform2f                gl_api.Uniform2f
+#define glBindBuffer               gl_api.BindBuffer
+#define glVertexAttribPointer      gl_api.VertexAttribPointer
+#define glEnableVertexAttribArray  gl_api.EnableVertexAttribArray
 #define glDisableVertexAttribArray gl_api.DisableVertexAttribArray
-#define glDrawArrays gl_api.DrawArrays
-#define glGetIntegerv gl_api.GetIntegerv
-#define glIsEnabled gl_api.IsEnabled
-#define glEnable gl_api.Enable
-#define glDisable gl_api.Disable
+#define glDrawArrays               gl_api.DrawArrays
+#define glGetIntegerv              gl_api.GetIntegerv
+#define glIsEnabled                gl_api.IsEnabled
+#define glEnable                   gl_api.Enable
+#define glDisable                  gl_api.Disable
 
-static const char vertex_source[] =
-    "attribute vec2 a_pos;\n"
-    "attribute vec2 a_uv;\n"
-    "varying highp vec2 v_uv;\n"
-    "void main(){ gl_Position=vec4(a_pos,0.0,1.0); v_uv=a_uv; }\n";
+static const char vertex_source[] = "attribute vec2 a_pos;\n"
+                                    "attribute vec2 a_uv;\n"
+                                    "varying highp vec2 v_uv;\n"
+                                    "void main(){ gl_Position=vec4(a_pos,0.0,1.0); v_uv=a_uv; }\n";
 
-static const char fragment_preamble[] =
-    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
-    "precision highp float;\n"
-    "#else\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "uniform sampler2D u_tex;\n"
-    "uniform vec2 u_resolution;\n"
-    "uniform vec2 u_native_resolution;\n"
-    "uniform vec2 u_source_resolution;\n"
-    "uniform vec2 u_texture_resolution;\n"
-    "uniform vec2 u_source_uv_extent;\n"
-    "uniform float u_time;\n"
-    "uniform int u_frame;\n"
-    "varying vec2 v_uv;\n";
+static const char fragment_preamble[] = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+                                        "precision highp float;\n"
+                                        "#else\n"
+                                        "precision mediump float;\n"
+                                        "#endif\n"
+                                        "uniform sampler2D u_tex;\n"
+                                        "uniform vec2 u_resolution;\n"
+                                        "uniform vec2 u_native_resolution;\n"
+                                        "uniform vec2 u_source_resolution;\n"
+                                        "uniform vec2 u_texture_resolution;\n"
+                                        "uniform vec2 u_source_uv_extent;\n"
+                                        "uniform float u_time;\n"
+                                        "uniform int u_frame;\n"
+                                        "varying vec2 v_uv;\n";
 
 static const char colour_fragment[] =
     "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
@@ -240,7 +238,8 @@ static void destroy_program(void) {
 }
 
 static int read_colour_matrix(float matrix[9]) {
-    for (int index = 0; index < 9; index++) matrix[index] = index % 4 == 0 ? 1.0f : 0.0f;
+    for (int index = 0; index < 9; index++)
+        matrix[index] = index % 4 == 0 ? 1.0f : 0.0f;
     wasabi_assets_refresh(wasabi_asset_filter);
     const int selected = wasabi_asset_selected(wasabi_asset_filter);
     const char *path = wasabi_asset_path(wasabi_asset_filter, selected);
@@ -363,20 +362,23 @@ static void parse_parameters(char *source) {
     while (parameter_count < SHADER_PARAM_MAX && (cursor = strstr(cursor, "#pragma parameter"))) {
         char *line_end = strchr(cursor, '\n');
         char *read = cursor + strlen("#pragma parameter");
-        while (*read == ' ' || *read == '\t') read++;
+        while (*read == ' ' || *read == '\t')
+            read++;
         shader_parameter parameter = {.location = -1};
         size_t length = 0;
         while (*read && !isspace((unsigned char) *read) && length + 1 < sizeof(parameter.name))
             parameter.name[length++] = *read++;
         parameter.name[length] = '\0';
-        while (*read == ' ' || *read == '\t') read++;
+        while (*read == ' ' || *read == '\t')
+            read++;
         if (*read == '"') {
             read++;
             size_t label_length = 0;
             while (*read && *read != '"' && label_length + 1 < sizeof(parameter.label))
                 parameter.label[label_length++] = *read++;
             parameter.label[label_length] = '\0';
-            while (*read && *read != '"') read++;
+            while (*read && *read != '"')
+                read++;
             if (*read == '"') read++;
         }
         char *end = NULL;
@@ -396,7 +398,8 @@ static void parse_parameters(char *source) {
             parameters[parameter_count++] = parameter;
         }
         char *blank_end = line_end ? line_end : cursor + strlen(cursor);
-        while (cursor < blank_end) *cursor++ = ' ';
+        while (cursor < blank_end)
+            *cursor++ = ' ';
         if (!line_end) break;
         cursor = line_end + 1;
     }
@@ -435,8 +438,9 @@ static void save_parameter_values(void) {
     char output[2048];
     size_t used = 0;
     for (int index = 0; index < parameter_count && used < sizeof(output); index++)
-        used += (size_t) snprintf(output + used, sizeof(output) - used, "%s=%g\n", parameters[index].name,
-                                  (double) parameters[index].value);
+        used += (size_t) snprintf(
+            output + used, sizeof(output) - used, "%s=%g\n", parameters[index].name, (double) parameters[index].value
+        );
     write_text_to_file_atomic(path, CHAR, output);
 }
 
@@ -445,10 +449,11 @@ static void blank_filter_pragmas(char *source) {
     while (*line) {
         char *end = strchr(line, '\n');
         char *cursor = line;
-        while (*cursor == ' ' || *cursor == '\t') cursor++;
-        if (strncasecmp(cursor, "#pragma filter", 14) == 0
-            || strncasecmp(cursor, "#pragma direct-source", 21) == 0)
-            while (*cursor && *cursor != '\n') *cursor++ = ' ';
+        while (*cursor == ' ' || *cursor == '\t')
+            cursor++;
+        if (strncasecmp(cursor, "#pragma filter", 14) == 0 || strncasecmp(cursor, "#pragma direct-source", 21) == 0)
+            while (*cursor && *cursor != '\n')
+                *cursor++ = ' ';
         if (!end) break;
         line = end + 1;
     }
@@ -470,7 +475,8 @@ static int load_program(void) {
     if (!body) return 0;
 
     char *start = body;
-    while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n') start++;
+    while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
+        start++;
     if (strncmp(start, "#version", 8) == 0) {
         char *end = strchr(start, '\n');
         if (end)
@@ -533,8 +539,10 @@ static int load_program(void) {
     return 1;
 }
 
-static int ensure_texture(SDL_Renderer *renderer, SDL_Texture **texture, int *current_width, int *current_height,
-                          const int width, const int height) {
+static int ensure_texture(
+    SDL_Renderer *renderer, SDL_Texture **texture, int *current_width, int *current_height, const int width,
+    const int height
+) {
     if (*texture && *current_width == width && *current_height == height) return 1;
     if (*texture) SDL_DestroyTexture(*texture);
     *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_TARGET, width, height);
@@ -547,16 +555,15 @@ static int ensure_texture(SDL_Renderer *renderer, SDL_Texture **texture, int *cu
     return 1;
 }
 
-static int draw_shader(
-    SDL_Texture *source, const int source_width, const int source_height, const int width, const int height
-) {
+static int
+draw_shader(SDL_Texture *source, const int source_width, const int source_height, const int width, const int height) {
     float texture_width = 1.0f;
     float texture_height = 1.0f;
     glActiveTexture(GL_TEXTURE0);
     if (SDL_GL_BindTexture(source, &texture_width, &texture_height) != 0) return 0;
     const GLfloat vertices[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, texture_width, 0.0f,
-        -1.0f, 1.0f, 0.0f, texture_height, 1.0f, 1.0f, texture_width, texture_height,
+        -1.0f, -1.0f, 0.0f, 0.0f,           1.0f, -1.0f, texture_width, 0.0f,
+        -1.0f, 1.0f,  0.0f, texture_height, 1.0f, 1.0f,  texture_width, texture_height,
     };
     glViewport(0, 0, width, height);
     glUseProgram(program);
@@ -568,8 +575,7 @@ static int draw_shader(
         glUniform2f(uniform_source_resolution, (float) source_width, (float) source_height);
     if (uniform_texture_resolution >= 0)
         glUniform2f(
-            uniform_texture_resolution, (float) source_width / texture_width,
-            (float) source_height / texture_height
+            uniform_texture_resolution, (float) source_width / texture_width, (float) source_height / texture_height
         );
     if (uniform_source_extent >= 0) glUniform2f(uniform_source_extent, texture_width, texture_height);
     if (uniform_time >= 0) glUniform1f(uniform_time, (float) shader_frame);
@@ -609,8 +615,8 @@ static int draw_colour(SDL_Texture *source, const int width, const int height, c
     glActiveTexture(GL_TEXTURE0);
     if (SDL_GL_BindTexture(source, &texture_width, &texture_height) != 0) return 0;
     const GLfloat vertices[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, texture_width, 0.0f,
-        -1.0f, 1.0f, 0.0f, texture_height, 1.0f, 1.0f, texture_width, texture_height,
+        -1.0f, -1.0f, 0.0f, 0.0f,           1.0f, -1.0f, texture_width, 0.0f,
+        -1.0f, 1.0f,  0.0f, texture_height, 1.0f, 1.0f,  texture_width, texture_height,
     };
     glViewport(0, 0, width, height);
     glUseProgram(colour_program);
@@ -619,14 +625,12 @@ static int draw_colour(SDL_Texture *source, const int width, const int height, c
         if (colour_uniform_matrix[index] >= 0) glUniform1f(colour_uniform_matrix[index], matrix[index]);
     if (colour_uniform_brightness >= 0)
         glUniform1f(colour_uniform_brightness, (float) config.video.brightness / 100.0f);
-    if (colour_uniform_contrast >= 0)
-        glUniform1f(colour_uniform_contrast, (float) config.video.contrast / 100.0f);
+    if (colour_uniform_contrast >= 0) glUniform1f(colour_uniform_contrast, (float) config.video.contrast / 100.0f);
     if (colour_uniform_saturation >= 0)
         glUniform1f(colour_uniform_saturation, (float) config.video.saturation / 100.0f);
     if (colour_uniform_hue >= 0)
         glUniform1f(colour_uniform_hue, (float) config.video.hue_shift * 0.01745329251994329577f);
-    if (colour_uniform_gamma >= 0)
-        glUniform1f(colour_uniform_gamma, 100.0f / (float) config.video.gamma);
+    if (colour_uniform_gamma >= 0) glUniform1f(colour_uniform_gamma, 100.0f / (float) config.video.gamma);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     if (colour_attribute_position >= 0) {
         glVertexAttribPointer(colour_attribute_position, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), vertices);
@@ -644,11 +648,10 @@ static int draw_colour(SDL_Texture *source, const int width, const int height, c
 }
 
 int video_effects_render(
-    SDL_Renderer *renderer, SDL_Texture *source, SDL_Texture *next, const Uint8 next_alpha,
-    const SDL_Rect *source_rect, const SDL_Rect *destination, const double rotation, const SDL_RendererFlip flip
+    SDL_Renderer *renderer, SDL_Texture *source, SDL_Texture *next, const Uint8 next_alpha, const SDL_Rect *source_rect,
+    const SDL_Rect *destination, const double rotation, const SDL_RendererFlip flip
 ) {
-    if (!renderer || !source || !source_rect || !destination || destination->w <= 0 || destination->h <= 0)
-        return 0;
+    if (!renderer || !source || !source_rect || !destination || destination->w <= 0 || destination->h <= 0) return 0;
     float matrix[9];
     const int colour = colour_effects_active(matrix);
     const int shader = load_program();
@@ -708,7 +711,9 @@ restore:
     return 1;
 }
 
-void video_effects_changed(void) { revision++; }
+void video_effects_changed(void) {
+    revision++;
+}
 
 int video_effects_parameter_count(void) {
     return load_program() ? parameter_count : 0;
@@ -738,7 +743,8 @@ int video_effects_parameter_cycle(const int index, const int direction) {
 }
 
 void video_effects_parameters_reset(void) {
-    for (int index = 0; index < parameter_count; index++) parameters[index].value = parameters[index].def;
+    for (int index = 0; index < parameter_count; index++)
+        parameters[index].value = parameters[index].def;
     save_parameter_values();
 }
 

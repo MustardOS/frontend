@@ -1,7 +1,9 @@
 #include "waveform.h"
 
-static void draw_channel(SDL_Renderer *renderer, const float *samples, const int centre, const int amplitude,
-                         const wasabi_visualiser_frame *frame, const SDL_Color colour) {
+static void draw_channel(
+    SDL_Renderer *renderer, const float *samples, const int centre, const int amplitude,
+    const wasabi_visualiser_frame *frame, const SDL_Color colour
+) {
     SDL_Point points[WASABI_VISUALISER_SAMPLES];
     for (int index = 0; index < WASABI_VISUALISER_SAMPLES; index++) {
         float value = samples[index];

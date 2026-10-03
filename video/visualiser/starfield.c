@@ -49,5 +49,6 @@ void wasabi_starfield_render(SDL_Renderer *renderer, const wasabi_visualiser_fra
 
 void wasabi_starfield_reset(void) {
     random_state = 0x5a17c9e3U;
-    for (int index = 0; index < STAR_COUNT; index++) reset_star(&stars[index], 0);
+    for (int index = 0; index < STAR_COUNT; index++)
+        reset_star(&stars[index], 0);
 }

@@ -4,8 +4,8 @@
 #include <stddef.h>
 
 int video_effects_render(
-    SDL_Renderer *renderer, SDL_Texture *source, SDL_Texture *next, Uint8 next_alpha,
-    const SDL_Rect *source_rect, const SDL_Rect *destination, double rotation, SDL_RendererFlip flip
+    SDL_Renderer *renderer, SDL_Texture *source, SDL_Texture *next, Uint8 next_alpha, const SDL_Rect *source_rect,
+    const SDL_Rect *destination, double rotation, SDL_RendererFlip flip
 );
 
 void video_effects_changed(void);

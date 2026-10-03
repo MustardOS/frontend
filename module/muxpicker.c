@@ -9,7 +9,6 @@ static char base_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
 
-
 static int remove_allowed(void);
 static void start_remove(void);
 static int skip_confirm = 0;

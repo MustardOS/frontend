@@ -9,13 +9,16 @@ static float peak_right;
 
 static float channel_level(const float *samples) {
     float total = 0.0f;
-    for (int index = 0; index < WASABI_VISUALISER_SAMPLES; index++) total += samples[index] * samples[index];
+    for (int index = 0; index < WASABI_VISUALISER_SAMPLES; index++)
+        total += samples[index] * samples[index];
     const float value = sqrtf(total / WASABI_VISUALISER_SAMPLES) * 3.5f;
     return value > 1.0f ? 1.0f : value;
 }
 
-static void draw_meter(SDL_Renderer *renderer, const wasabi_visualiser_frame *frame, const int x,
-                       const float level, const float peak, const SDL_Color colour) {
+static void draw_meter(
+    SDL_Renderer *renderer, const wasabi_visualiser_frame *frame, const int x, const float level, const float peak,
+    const SDL_Color colour
+) {
     const int segments = 24;
     const int width = frame->width / 12;
     const int height = frame->height * 3 / 5;

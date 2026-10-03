@@ -596,7 +596,7 @@ static void apply_overlay_row_visibility(void) {
 
 static void show_nav(void) {
     nav_hide_all();
-    setup_nav((struct nav_bar[]){
+    setup_nav((struct nav_bar[]) {
         {ui_lbl_nav_b_glyph, "", 0},
         {ui_lbl_nav_b,
          settings_active || bookmarks_active || playlist_active || information_active || content_switch_active
@@ -792,7 +792,7 @@ static void build_settings_at(const int focus_row) {
     size_t section_count = 0;
     const wasabi_setting_section *sections = wasabi_setting_sections(&section_count);
     for (size_t i = 0; i < section_count; i++)
-        setting_frames[i] = (list_frame){sections[i].label, sections[i].first, sections[i].count};
+        setting_frames[i] = (list_frame) {sections[i].label, sections[i].first, sections[i].count};
     if (list_frame_init(
             &theme, ui_pnl_content, setting_frames, (int) section_count, setting_panels, setting_labels, setting_glyphs,
             setting_values, wasabi_setting_count
@@ -969,7 +969,7 @@ static void build_information(void) {
         format_time(information.duration > 0.0 ? (uint32_t) information.duration : 0, value, sizeof(value));
     add_information_row("playtime", lang.generic.duration, value);
     information_frames[0] =
-        (list_frame){lang.muxretro.information_screen.section_content, media_first, information_count - media_first};
+        (list_frame) {lang.muxretro.information_screen.section_content, media_first, information_count - media_first};
 
     int frame = 1;
     if (!information.audio_only) {
@@ -990,7 +990,7 @@ static void build_information(void) {
         snprintf(value, sizeof(value), "%d", information.queued_video);
         add_information_row("video", lang.muxmedia.queued_frames, value);
         information_frames[frame++] =
-            (list_frame){lang.muxretro.information_screen.section_video, video_first, information_count - video_first};
+            (list_frame) {lang.muxretro.information_screen.section_video, video_first, information_count - video_first};
     } else {
         const int audio_first = information_count;
 #define ADD_AUDIO_INFO(GLYPH, LABEL, FIELD)                                                                            \
@@ -1015,7 +1015,7 @@ static void build_information(void) {
             snprintf(value, sizeof(value), "%d kbps", information.bitrate / 1000);
             add_information_row("information", lang.muxmedia.bitrate, value);
         }
-        information_frames[frame++] = (list_frame){lang.muxmedia.audio, audio_first, information_count - audio_first};
+        information_frames[frame++] = (list_frame) {lang.muxmedia.audio, audio_first, information_count - audio_first};
     }
 
     const int audio_first = information_count;
@@ -1027,7 +1027,7 @@ static void build_information(void) {
     snprintf(value, sizeof(value), "%d", information.queued_audio);
     add_information_row("audio", lang.muxmedia.queued_samples, value);
     information_frames[frame++] =
-        (list_frame){lang.muxretro.information_screen.section_audio, audio_first, information_count - audio_first};
+        (list_frame) {lang.muxretro.information_screen.section_audio, audio_first, information_count - audio_first};
 
     if (list_frame_init(
             &theme, ui_pnl_content, information_frames, frame, information_panels, information_labels,
@@ -1088,7 +1088,8 @@ static void change_setting(const int direction) {
     else if (row == wasabi_setting_overlay_source) {
         build_settings_at(row);
         video_render_settings_changed();
-    } else if ((row >= wasabi_setting_scaling && row <= wasabi_setting_border) || (row >= wasabi_setting_overlay_pattern && row <= wasabi_setting_overlay_opacity))
+    } else if ((row >= wasabi_setting_scaling && row <= wasabi_setting_border)
+               || (row >= wasabi_setting_overlay_pattern && row <= wasabi_setting_overlay_opacity))
         video_render_settings_changed();
     if (row >= wasabi_setting_volume && row <= wasabi_setting_slow_motion_speed) video_player_audio_settings_changed();
     if (row == wasabi_setting_artwork_position)
@@ -1167,9 +1168,7 @@ static void build_playlist(void) {
     current_item_index = 0;
     first_open = 1;
 
-    size_t capacity = theme.mux.item.count > 0
-                          ? (size_t) theme.mux.item.count * LIST_WINDOW_SCALE
-                          : LIST_WINDOW_MIN;
+    size_t capacity = theme.mux.item.count > 0 ? (size_t) theme.mux.item.count * LIST_WINDOW_SCALE : LIST_WINDOW_MIN;
     if (capacity < LIST_WINDOW_MIN) capacity = LIST_WINDOW_MIN;
     if (capacity > LIST_WINDOW_MAX) capacity = LIST_WINDOW_MAX;
     if (capacity > playback_playlist_count) capacity = playback_playlist_count;
@@ -1194,11 +1193,9 @@ static void build_playlist(void) {
     );
     lv_label_set_text(ui_lbl_screen_message, "");
     show_nav();
-    if (capacity)
-        gen_step_movement((int) (playlist_focus_index - playlist_window_start), 1, 1, 0, 0);
+    if (capacity) gen_step_movement((int) (playlist_focus_index - playlist_window_start), 1, 1, 0, 0);
     update_item_counter(
-        ui_lbl_counter_explore, playlist_focus_index, playback_playlist_count,
-        config.visual.menu_counter_file
+        ui_lbl_counter_explore, playlist_focus_index, playback_playlist_count, config.visual.menu_counter_file
     );
 }
 
@@ -1212,8 +1209,7 @@ static void playlist_focus(const size_t target) {
         const size_t distance = target < previous ? previous - target : target - previous;
         gen_step_movement((int) distance, direction, 1, 0, 1);
         update_item_counter(
-            ui_lbl_counter_explore, playlist_focus_index, playback_playlist_count,
-            config.visual.menu_counter_file
+            ui_lbl_counter_explore, playlist_focus_index, playback_playlist_count, config.visual.menu_counter_file
         );
         return;
     }
@@ -1224,21 +1220,17 @@ static void playlist_focus(const size_t target) {
 }
 
 static void playlist_move(const int steps, const int direction, const int wrap) {
-    playlist_focus(
-        video_playlist_step(
-            playback_playlist, playback_playlist_count, playlist_focus_index, direction,
-            steps > 0 ? (size_t) steps : 1U, wrap
-        )
-    );
+    playlist_focus(video_playlist_step(
+        playback_playlist, playback_playlist_count, playlist_focus_index, direction, steps > 0 ? (size_t) steps : 1U,
+        wrap
+    ));
 }
 
 static void playlist_skip(const int direction) {
-    playlist_focus(
-        video_playlist_skip(
-            playback_playlist, playback_playlist_count, playlist_focus_index, direction,
-            theme.mux.item.count > 0 ? (size_t) theme.mux.item.count : 1U, config.visual.page_skip != 0
-        )
-    );
+    playlist_focus(video_playlist_skip(
+        playback_playlist, playback_playlist_count, playlist_focus_index, direction,
+        theme.mux.item.count > 0 ? (size_t) theme.mux.item.count : 1U, config.visual.page_skip != 0
+    ));
 }
 
 int video_playback_ui_init(
@@ -1824,7 +1816,8 @@ void video_playback_ui_change(const int direction) {
     if (settings_page == wasabi_page_root) {
         const int row = list_frame_current_row();
         if (!list_frame_focused() && (row < 0 || !wasabi_setting_can_change((wasabi_setting) row))) return;
-    } else if (settings_page == wasabi_page_shader_parameters && current_item_index >= video_effects_parameter_count()) {
+    } else if (settings_page == wasabi_page_shader_parameters
+               && current_item_index >= video_effects_parameter_count()) {
         return;
     }
     play_sound(snd_option);

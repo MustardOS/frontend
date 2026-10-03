@@ -17,7 +17,7 @@
 #include <common/runtime/log.h>
 #include <common/storage/fileio.h>
 
-#define VIDEO_SCAN_DEPTH 12
+#define VIDEO_SCAN_DEPTH    12
 #define PLAYLIST_TEXT_LIMIT (8U * 1024U * 1024U)
 
 static char *trim(char *text);
@@ -48,8 +48,8 @@ size_t video_playlist_step(
 }
 
 size_t video_playlist_skip(
-    const video_library_entry *entries, const size_t count, size_t current, const int direction,
-    const size_t page_size, const int letter_skip
+    const video_library_entry *entries, const size_t count, size_t current, const int direction, const size_t page_size,
+    const int letter_skip
 ) {
     if (!entries || !count) return 0;
     if (current >= count) current = count - 1;
@@ -98,9 +98,7 @@ static size_t playlist_write(const void *data, const size_t size, const size_t c
         size_t capacity = text->capacity ? text->capacity : 64U * 1024U;
         while (capacity < required && capacity < PLAYLIST_TEXT_LIMIT + 1U) {
             const size_t next = capacity * 2U;
-            capacity = next > capacity && next <= PLAYLIST_TEXT_LIMIT + 1U
-                           ? next
-                           : PLAYLIST_TEXT_LIMIT + 1U;
+            capacity = next > capacity && next <= PLAYLIST_TEXT_LIMIT + 1U ? next : PLAYLIST_TEXT_LIMIT + 1U;
         }
         char *grown = realloc(text->data, capacity);
         if (!grown) return 0;
@@ -195,10 +193,9 @@ int video_path_extension_is(const char *path, const char *extension) {
 
 static int is_video(const char *name) {
     static const char *const extensions[] = {
-        ".3g2", ".3gp", ".apng", ".asf", ".avi", ".bik", ".divx", ".flc", ".fli", ".flv",
-        ".gif", ".h263", ".m2ts", ".m2v", ".m4v", ".mjpeg", ".mjpg", ".mkv", ".mov", ".mp4",
-        ".mpe", ".mpeg", ".mpg", ".mts", ".mve", ".nut", ".ogm", ".ogv", ".qt",
-        ".rm", ".rmvb", ".roq", ".smk", ".ts", ".vob", ".webm", ".wmv", NULL,
+        ".3g2", ".3gp", ".apng",  ".asf",  ".avi",  ".bik", ".divx", ".flc", ".fli",  ".flv",  ".gif", ".h263", ".m2ts",
+        ".m2v", ".m4v", ".mjpeg", ".mjpg", ".mkv",  ".mov", ".mp4",  ".mpe", ".mpeg", ".mpg",  ".mts", ".mve",  ".nut",
+        ".ogm", ".ogv", ".qt",    ".rm",   ".rmvb", ".roq", ".smk",  ".ts",  ".vob",  ".webm", ".wmv", NULL,
     };
     return has_extension(name, extensions);
 }
@@ -262,8 +259,7 @@ void video_library_free(video_library_entry *entries, const size_t count) {
 }
 
 static int scan_media_dir(
-    const char *path, const int depth, const int audio, video_library_entry **entries, size_t *count,
-    size_t *capacity
+    const char *path, const int depth, const int audio, video_library_entry **entries, size_t *count, size_t *capacity
 ) {
     if (depth > VIDEO_SCAN_DEPTH) return 0;
 
@@ -445,7 +441,8 @@ video_playlist_type video_playlist_probe(const char *path) {
 }
 
 static char *trim(char *text) {
-    while (*text == ' ' || *text == '\t') text++;
+    while (*text == ' ' || *text == '\t')
+        text++;
     char *end = text + strlen(text);
     while (end > text && (end[-1] == ' ' || end[-1] == '\t' || end[-1] == '\r' || end[-1] == '\n'))
         *--end = '\0';
@@ -488,13 +485,11 @@ static int resolve_playlist_path(const char *path, const char *value, char *reso
         resolved[0] = '\0';
         return 1;
     }
-    if (strstr(value, "://") || value[0] == '/')
-        return snprintf(resolved, size, "%s", value) < (int) size;
+    if (strstr(value, "://") || value[0] == '/') return snprintf(resolved, size, "%s", value) < (int) size;
     const char *slash = strrchr(path, '/');
     const int directory_length = slash ? (int) (slash - path) : 0;
-    const int written = directory_length > 0
-                            ? snprintf(resolved, size, "%.*s/%s", directory_length, path, value)
-                            : snprintf(resolved, size, "%s", value);
+    const int written = directory_length > 0 ? snprintf(resolved, size, "%.*s/%s", directory_length, path, value)
+                                             : snprintf(resolved, size, "%s", value);
     return written >= 0 && written < (int) size;
 }
 
@@ -504,12 +499,14 @@ static int tvheadend_uri(const char *value, char *uri, const size_t size) {
     const char *input = strstr(value + 7, " -i ");
     if (!input) return 0;
     input += 4;
-    while (isspace((unsigned char) *input)) input++;
+    while (isspace((unsigned char) *input))
+        input++;
 
     char quote = '\0';
     if (*input == '\'' || *input == '"') quote = *input++;
     const char *end = input;
-    while (*end && (quote ? *end != quote : !isspace((unsigned char) *end))) end++;
+    while (*end && (quote ? *end != quote : !isspace((unsigned char) *end)))
+        end++;
 
     const size_t length = (size_t) (end - input);
     if (!length || length >= size) return 0;
@@ -544,9 +541,7 @@ static int append_playlist_entry(
     return append_entry(entries, count, capacity, uri, title, logo, live);
 }
 
-static int load_m3u_playlist(
-    const char *path, const int live, video_library_entry **entries, size_t *count
-) {
+static int load_m3u_playlist(const char *path, const int live, video_library_entry **entries, size_t *count) {
     char *owned = NULL;
     FILE *file = playlist_open(path, &owned);
     if (!file) return -1;
@@ -567,9 +562,8 @@ static int load_m3u_playlist(
         }
         if (value[0] == '#') continue;
 
-        if (append_playlist_entry(
-                entries, count, &entry_capacity, path, value, pending_title, pending_logo, live
-            ) < 0) {
+        if (append_playlist_entry(entries, count, &entry_capacity, path, value, pending_title, pending_logo, live)
+            < 0) {
             result = -1;
             break;
         }
@@ -622,9 +616,7 @@ static int replace_text(char **target, const char *value) {
     return 0;
 }
 
-static int load_pls_playlist(
-    const char *path, const int live, video_library_entry **entries, size_t *count
-) {
+static int load_pls_playlist(const char *path, const int live, video_library_entry **entries, size_t *count) {
     FILE *file = fopen(path, "r");
     if (!file) return -1;
 
@@ -673,7 +665,8 @@ static int load_pls_playlist(
             if (!items[index].uri || !items[index].uri[0]) continue;
             if (append_playlist_entry(
                     entries, count, &entry_capacity, path, items[index].uri, items[index].title, NULL, live
-                ) < 0) {
+                )
+                < 0) {
                 result = -1;
                 break;
             }
@@ -695,10 +688,10 @@ static int append_json_entry(
     if (json_type(node) != JSON_OBJECT) return 0;
 
     char uri[PATH_MAX];
-    if (!manifest_json_string(node, "mjh_master", uri, sizeof(uri)) &&
-        !manifest_json_string(node, "url", uri, sizeof(uri)) &&
-        !manifest_json_string(node, "stream", uri, sizeof(uri)) &&
-        !manifest_json_string(node, "stream_url", uri, sizeof(uri)))
+    if (!manifest_json_string(node, "mjh_master", uri, sizeof(uri))
+        && !manifest_json_string(node, "url", uri, sizeof(uri))
+        && !manifest_json_string(node, "stream", uri, sizeof(uri))
+        && !manifest_json_string(node, "stream_url", uri, sizeof(uri)))
         return 0;
 
     char title[PATH_MAX];
@@ -717,9 +710,7 @@ static int append_json_entry(
     return append_playlist_entry(entries, count, capacity, path, uri, title, logo, live);
 }
 
-static int load_json_playlist(
-    const char *path, const int live, video_library_entry **entries, size_t *count
-) {
+static int load_json_playlist(const char *path, const int live, video_library_entry **entries, size_t *count) {
     char *content = read_all_char_from(path);
     if (!content) return -1;
     if (!json_valid(content)) {
@@ -754,9 +745,7 @@ static int load_json_playlist(
     return result;
 }
 
-int video_playlist_load(
-    const char *path, const int live, video_library_entry **entries, size_t *count
-) {
+int video_playlist_load(const char *path, const int live, video_library_entry **entries, size_t *count) {
     if (!entries || !count) return -1;
     *entries = NULL;
     *count = 0;
@@ -803,9 +792,9 @@ int video_live_scan(const char *root, video_library_entry **entries, size_t *cou
         }
         for (size_t index = 0; index < playlist_count; index++) {
             if (append_entry(
-                    entries, count, &capacity, playlist[index].uri, playlist[index].title,
-                    playlist[index].logo, 1
-                ) < 0) {
+                    entries, count, &capacity, playlist[index].uri, playlist[index].title, playlist[index].logo, 1
+                )
+                < 0) {
                 result = -1;
                 break;
             }

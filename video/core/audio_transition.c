@@ -63,9 +63,10 @@ static int decode_transition(void *unused __attribute__((unused))) {
             if (!resample) {
                 AVChannelLayout output_layout;
                 av_channel_layout_default(&output_layout, transition.channels);
-                if (swr_alloc_set_opts2(&resample, &output_layout, AV_SAMPLE_FMT_FLT, transition.rate,
-                                        &frame->ch_layout, (enum AVSampleFormat) frame->format,
-                                        frame->sample_rate, 0, NULL) < 0
+                if (swr_alloc_set_opts2(
+                        &resample, &output_layout, AV_SAMPLE_FMT_FLT, transition.rate, &frame->ch_layout,
+                        (enum AVSampleFormat) frame->format, frame->sample_rate, 0, NULL
+                    ) < 0
                     || !resample || swr_init(resample) < 0) {
                     av_channel_layout_uninit(&output_layout);
                     goto done;
@@ -73,10 +74,9 @@ static int decode_transition(void *unused __attribute__((unused))) {
                 av_channel_layout_uninit(&output_layout);
             }
             const int available = transition.capacity - transition.frames;
-            uint8_t *output = (uint8_t *) (transition.samples
-                                            + (size_t) transition.frames * transition.channels);
-            const int converted = swr_convert(resample, &output, available,
-                                              (const uint8_t **) frame->data, frame->nb_samples);
+            uint8_t *output = (uint8_t *) (transition.samples + (size_t) transition.frames * transition.channels);
+            const int converted =
+                swr_convert(resample, &output, available, (const uint8_t **) frame->data, frame->nb_samples);
             if (converted > 0) transition.frames += converted;
             av_frame_unref(frame);
         }
@@ -86,12 +86,10 @@ static int decode_transition(void *unused __attribute__((unused))) {
         && avcodec_send_packet(decoder, NULL) >= 0) {
         while (transition.frames < transition.capacity && avcodec_receive_frame(decoder, frame) >= 0) {
             const int available = transition.capacity - transition.frames;
-            uint8_t *output = (uint8_t *) (transition.samples
-                                            + (size_t) transition.frames * transition.channels);
-            const int converted = resample
-                                      ? swr_convert(resample, &output, available,
-                                                    (const uint8_t **) frame->data, frame->nb_samples)
-                                      : 0;
+            uint8_t *output = (uint8_t *) (transition.samples + (size_t) transition.frames * transition.channels);
+            const int converted =
+                resample ? swr_convert(resample, &output, available, (const uint8_t **) frame->data, frame->nb_samples)
+                         : 0;
             if (converted > 0) transition.frames += converted;
             av_frame_unref(frame);
         }
@@ -103,8 +101,7 @@ done:
     swr_free(&resample);
     avcodec_free_context(&decoder);
     avformat_close_input(&format);
-    if (!SDL_AtomicGet(&transition.stop) && transition.frames > 0)
-        SDL_AtomicSet(&transition.ready, 1);
+    if (!SDL_AtomicGet(&transition.stop) && transition.frames > 0) SDL_AtomicSet(&transition.ready, 1);
     return 0;
 }
 
@@ -118,8 +115,9 @@ void audio_transition_cancel(void) {
     SDL_UnlockAudio();
 }
 
-int audio_transition_start(const char *uri, const size_t playlist_index, const int rate,
-                           const int channels, int seconds) {
+int audio_transition_start(
+    const char *uri, const size_t playlist_index, const int rate, const int channels, int seconds
+) {
     audio_transition_cancel();
     if (!uri || !uri[0] || rate <= 0 || channels <= 0) return 0;
     if (seconds < 3) seconds = 3;
@@ -171,8 +169,10 @@ void audio_transition_release(void) {
     audio_transition_cancel();
 }
 
-void audio_transition_mix(float *output, const int current_frames, const int requested_frames,
-                          const int eof, const double remaining, const int crossfade_seconds) {
+void audio_transition_mix(
+    float *output, const int current_frames, const int requested_frames, const int eof, const double remaining,
+    const int crossfade_seconds
+) {
     if (!output || requested_frames <= 0 || !audio_transition_ready()) return;
     const int channels = transition.channels;
     int mixed = 0;
@@ -182,16 +182,13 @@ void audio_transition_mix(float *output, const int current_frames, const int req
         const int fade_frames = transition.rate * crossfade_seconds;
         const double fade_progress = (double) crossfade_seconds - remaining;
         for (int frame = 0; frame < count; frame++) {
-            float gain = fade_frames > 0
-                             ? (float) ((fade_progress * transition.rate + frame) / fade_frames)
-                             : 1.0f;
+            float gain = fade_frames > 0 ? (float) ((fade_progress * transition.rate + frame) / fade_frames) : 1.0f;
             if (gain < 0.0f) gain = 0.0f;
             if (gain > 1.0f) gain = 1.0f;
             for (int channel = 0; channel < channels; channel++) {
                 const size_t destination = (size_t) frame * channels + channel;
                 const size_t source = (size_t) transition.read * channels + channel;
-                output[destination] = output[destination] * (1.0f - gain)
-                                      + transition.samples[source] * gain;
+                output[destination] = output[destination] * (1.0f - gain) + transition.samples[source] * gain;
             }
             transition.read++;
         }
@@ -201,9 +198,10 @@ void audio_transition_mix(float *output, const int current_frames, const int req
         int count = requested_frames - current_frames;
         if (count > transition.frames - transition.read) count = transition.frames - transition.read;
         if (count > 0) {
-            memcpy(output + (size_t) current_frames * channels,
-                   transition.samples + (size_t) transition.read * channels,
-                   (size_t) count * channels * sizeof(*output));
+            memcpy(
+                output + (size_t) current_frames * channels, transition.samples + (size_t) transition.read * channels,
+                (size_t) count * channels * sizeof(*output)
+            );
             transition.read += count;
             mixed += count;
         }
@@ -218,17 +216,22 @@ int audio_transition_fill_handoff(void *stream, const int length, const int volu
     int count = transition.frames - transition.read;
     if (count > requested) count = requested;
     if (count > 0) {
-        memcpy(stream, transition.samples + (size_t) transition.read * transition.channels,
-               (size_t) count * bytes_per_frame);
+        memcpy(
+            stream, transition.samples + (size_t) transition.read * transition.channels,
+            (size_t) count * bytes_per_frame
+        );
         transition.read += count;
         if (volume != 100) {
             float *samples = stream;
             const float gain = (float) volume / 100.0f;
-            for (int sample = 0; sample < count * transition.channels; sample++) samples[sample] *= gain;
+            for (int sample = 0; sample < count * transition.channels; sample++)
+                samples[sample] *= gain;
         }
     }
     if (count < requested)
-        memset((unsigned char *) stream + (size_t) count * bytes_per_frame, 0,
-               (size_t) (requested - count) * bytes_per_frame);
+        memset(
+            (unsigned char *) stream + (size_t) count * bytes_per_frame, 0,
+            (size_t) (requested - count) * bytes_per_frame
+        );
     return 1;
 }

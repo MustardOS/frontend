@@ -22,9 +22,9 @@
 #include <common/base/util.h>
 #include <json/json.h>
 
-#define SEQ_BUF_SIZE 32
-#define MAX_SEQUENCE 16
-#define HOTKEY_IDLE_MS 50
+#define SEQ_BUF_SIZE     32
+#define MAX_SEQUENCE     16
+#define HOTKEY_IDLE_MS   50
 #define INHIBIT_CHECK_MS 250
 
 #define SAFE_BIT(i)  ((uint64_t) 1 << ((i) & 63))

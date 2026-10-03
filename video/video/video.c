@@ -66,8 +66,7 @@ static Uint8 next_texture_alpha;
 #define STATIC_PERIOD 33
 
 static void create_audio_background_texture(void) {
-    if (!renderer || audio_background_texture || theme.system.background_gradient_direction == LV_GRAD_DIR_NONE)
-        return;
+    if (!renderer || audio_background_texture || theme.system.background_gradient_direction == LV_GRAD_DIR_NONE) return;
     void *pixels = NULL;
     int width = 0;
     int height = 0;
@@ -100,8 +99,8 @@ static int update_static_texture(const int force) {
 
     int output_width = 0;
     int output_height = 0;
-    if (SDL_GetRendererOutputSize(renderer, &output_width, &output_height) != 0
-        || output_width <= 0 || output_height <= 0)
+    if (SDL_GetRendererOutputSize(renderer, &output_width, &output_height) != 0 || output_width <= 0
+        || output_height <= 0)
         return 0;
     const int wanted_width = output_width / 4 > 0 ? output_width / 4 : 1;
     const int wanted_height = output_height / 4 > 0 ? output_height / 4 : 1;
@@ -132,8 +131,7 @@ static int update_static_texture(const int force) {
             const uint32_t noise = static_next_random();
             uint8_t level = (uint8_t) (24 + (noise & 95) + scanline);
             if ((noise & 0x3FFu) == 0) level = (uint8_t) (170 + ((noise >> 12) & 63));
-            row[x] =
-                0xFF000000u | (uint32_t) level << 16 | (uint32_t) level << 8 | level;
+            row[x] = 0xFF000000u | (uint32_t) level << 16 | (uint32_t) level << 8 | level;
         }
     }
     SDL_UnlockTexture(static_texture);
@@ -183,14 +181,11 @@ static void update_geometry(void) {
     if (source_width <= 0 || source_height <= 0) return;
 
     const int crop_left = clamp_int(source_width * config.video.crop_left / 100, 0, source_width - 1);
-    const int crop_right =
-        clamp_int(source_width * config.video.crop_right / 100, 0, source_width - crop_left - 1);
+    const int crop_right = clamp_int(source_width * config.video.crop_right / 100, 0, source_width - crop_left - 1);
     const int crop_top = clamp_int(source_height * config.video.crop_top / 100, 0, source_height - 1);
-    const int crop_bottom =
-        clamp_int(source_height * config.video.crop_bottom / 100, 0, source_height - crop_top - 1);
-    source = (SDL_Rect) {
-        crop_left, crop_top, source_width - crop_left - crop_right, source_height - crop_top - crop_bottom
-    };
+    const int crop_bottom = clamp_int(source_height * config.video.crop_bottom / 100, 0, source_height - crop_top - 1);
+    source =
+        (SDL_Rect) {crop_left, crop_top, source_width - crop_left - crop_right, source_height - crop_top - crop_bottom};
 
     const int screen_width = lv_disp_get_hor_res(NULL);
     const int screen_height = lv_disp_get_ver_res(NULL);
@@ -344,7 +339,7 @@ static void update_vignette(void) {
 static void update_overlay(void) {
     const int width = lv_disp_get_hor_res(NULL);
     const int height = lv_disp_get_ver_res(NULL);
-    const int mode = config.video.overlay_mode == 1 ? config.video.overlay_pattern + 1
+    const int mode = config.video.overlay_mode == 1   ? config.video.overlay_pattern + 1
                      : config.video.overlay_mode == 2 ? 100
                      : config.video.overlay_mode == 3 ? 101
                                                       : 0;
@@ -357,9 +352,7 @@ static void update_overlay(void) {
         overlay_key[0] = '\0';
         return;
     }
-    const char *selected_key = mode == 100 ? catalogue_overlay_path
-                               : mode == 101 ? config.video.overlay_image
-                                             : "";
+    const char *selected_key = mode == 100 ? catalogue_overlay_path : mode == 101 ? config.video.overlay_image : "";
     if (overlay_texture && overlay_mode == mode && overlay_opacity == opacity && overlay_canvas_width == width
         && overlay_canvas_height == height && strcmp(overlay_key, selected_key) == 0)
         return;
@@ -400,19 +393,45 @@ static void update_overlay(void) {
         for (int x = 0; x < width; x++) {
             int line = 0;
             switch (mode - 1) {
-                case 0: line = ((x ^ y) & 1); break;
-                case 1: line = (((x >> 2) ^ (y >> 2)) & 1); break;
-                case 2: line = ((x + y) & 1) == 0; break;
-                case 3: line = ((x + y) & 3) == 0; break;
-                case 4: line = ((x + y) & 7) == 0; break;
-                case 5: line = (x & 1) || (y & 1); break;
-                case 6: line = (x & 3) == 3 || (y & 3) == 3; break;
-                case 7: line = (y & 1); break;
-                case 8: line = (y & 3) == 3; break;
-                case 9: line = (y & 7) == 7; break;
-                case 10: line = (x & 1); break;
-                case 11: line = (x & 3) == 3; break;
-                default: line = (x & 7) == 7; break;
+                case 0:
+                    line = ((x ^ y) & 1);
+                    break;
+                case 1:
+                    line = (((x >> 2) ^ (y >> 2)) & 1);
+                    break;
+                case 2:
+                    line = ((x + y) & 1) == 0;
+                    break;
+                case 3:
+                    line = ((x + y) & 3) == 0;
+                    break;
+                case 4:
+                    line = ((x + y) & 7) == 0;
+                    break;
+                case 5:
+                    line = (x & 1) || (y & 1);
+                    break;
+                case 6:
+                    line = (x & 3) == 3 || (y & 3) == 3;
+                    break;
+                case 7:
+                    line = (y & 1);
+                    break;
+                case 8:
+                    line = (y & 3) == 3;
+                    break;
+                case 9:
+                    line = (y & 7) == 7;
+                    break;
+                case 10:
+                    line = (x & 1);
+                    break;
+                case 11:
+                    line = (x & 3) == 3;
+                    break;
+                default:
+                    line = (x & 7) == 7;
+                    break;
             }
             if (line) pixels[(size_t) y * width + x] = (uint32_t) alpha << 24;
         }
@@ -462,9 +481,9 @@ static void render_frame(SDL_Renderer *target) {
         }
         const int effects_rendered = !clean_capture
                                      && video_effects_render(
-                target, texture, next_texture_ready ? next_texture : NULL, next_texture_alpha, &texture_source,
-                &destination, config.video.rotation * 90.0, flip
-            );
+                                         target, texture, next_texture_ready ? next_texture : NULL, next_texture_alpha,
+                                         &texture_source, &destination, config.video.rotation * 90.0, flip
+                                     );
         if (clean_capture || !effects_rendered) {
             SDL_RenderCopyEx(target, texture, &texture_source, &destination, config.video.rotation * 90.0, NULL, flip);
             if (!clean_capture && next_texture_ready && next_texture_alpha > 0) {
@@ -485,8 +504,8 @@ static void render_frame(SDL_Renderer *target) {
         int top = config.video.overlay_crop_top;
         int bottom = config.video.overlay_crop_bottom;
         SDL_Rect overlay_source = {
-            overlay_width * left / 100, overlay_height * top / 100,
-            overlay_width * (100 - left - right) / 100, overlay_height * (100 - top - bottom) / 100
+            overlay_width * left / 100, overlay_height * top / 100, overlay_width * (100 - left - right) / 100,
+            overlay_height * (100 - top - bottom) / 100
         };
         int full_width = device.mux.width * config.video.overlay_zoom / 100
                          + device.mux.width * config.video.overlay_stretch_x / 100;
@@ -502,10 +521,10 @@ static void render_frame(SDL_Renderer *target) {
             full_width - left_px - right_px, full_height - top_px - bottom_px
         };
         if (config.video.overlay_centre_crop) {
-            overlay_destination.x = (device.mux.width - overlay_destination.w) / 2
-                                    + device.mux.width * config.video.overlay_x / 100;
-            overlay_destination.y = (device.mux.height - overlay_destination.h) / 2
-                                    + device.mux.height * config.video.overlay_y / 100;
+            overlay_destination.x =
+                (device.mux.width - overlay_destination.w) / 2 + device.mux.width * config.video.overlay_x / 100;
+            overlay_destination.y =
+                (device.mux.height - overlay_destination.h) / 2 + device.mux.height * config.video.overlay_y / 100;
         }
         if (overlay_source.w > 0 && overlay_source.h > 0 && overlay_destination.w > 0 && overlay_destination.h > 0)
             SDL_RenderCopy(target, overlay_texture, &overlay_source, &overlay_destination);
@@ -524,8 +543,10 @@ static void release_frame_resources(void) {
     if (planes[0]) av_freep(&planes[0]);
     filter_source = NULL;
     av_freep(&filter_output);
-    for (size_t i = 0; i < 4; ++i) planes[i] = NULL;
-    for (size_t i = 0; i < 4; ++i) strides[i] = 0;
+    for (size_t i = 0; i < 4; ++i)
+        planes[i] = NULL;
+    for (size_t i = 0; i < 4; ++i)
+        strides[i] = 0;
     source_width = 0;
     source_height = 0;
     source_format = AV_PIX_FMT_NONE;
@@ -535,8 +556,7 @@ static void release_frame_resources(void) {
 
 static int requested_filter_scale(const int width, const int height) {
     int factor = 1;
-    if (config.video.texture_filter == 2 || config.video.texture_filter == 5
-        || config.video.texture_filter == 6)
+    if (config.video.texture_filter == 2 || config.video.texture_filter == 5 || config.video.texture_filter == 6)
         factor = 2;
     else if (config.video.texture_filter == 3)
         factor = 3;
@@ -549,25 +569,25 @@ static int requested_filter_scale(const int width, const int height) {
 
 static void update_texture_scale_mode(void) {
     if (!texture) return;
-    const SDL_ScaleMode mode = config.video.texture_filter == 1 || config.video.texture_filter == 4
-                                       || config.video.texture_filter == 5
-                                   ? SDL_ScaleModeLinear
-                                   : SDL_ScaleModeNearest;
+    const SDL_ScaleMode mode =
+        config.video.texture_filter == 1 || config.video.texture_filter == 4 || config.video.texture_filter == 5
+            ? SDL_ScaleModeLinear
+            : SDL_ScaleModeNearest;
     SDL_SetTextureScaleMode(texture, mode);
     if (next_texture) SDL_SetTextureScaleMode(next_texture, mode);
 }
 
 static SDL_Texture *create_frame_texture(void) {
     SDL_Texture *created = SDL_CreateTexture(
-        renderer, filter_scale > 1 ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_IYUV,
-        SDL_TEXTUREACCESS_STREAMING, source_width * filter_scale, source_height * filter_scale
+        renderer, filter_scale > 1 ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING,
+        source_width * filter_scale, source_height * filter_scale
     );
     if (!created) return NULL;
     SDL_SetTextureScaleMode(
-        created, config.video.texture_filter == 1 || config.video.texture_filter == 4
-                         || config.video.texture_filter == 5
-                     ? SDL_ScaleModeLinear
-                     : SDL_ScaleModeNearest
+        created,
+        config.video.texture_filter == 1 || config.video.texture_filter == 4 || config.video.texture_filter == 5
+            ? SDL_ScaleModeLinear
+            : SDL_ScaleModeNearest
     );
     return created;
 }
@@ -602,8 +622,10 @@ static int configure_frame(const AVFrame *frame) {
         }
         planes[0] = filter_source;
         strides[0] = filter_source_pitch;
-        scale = sws_getContext(source_width, source_height, source_format, source_width, source_height,
-                               AV_PIX_FMT_BGRA, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        scale = sws_getContext(
+            source_width, source_height, source_format, source_width, source_height, AV_PIX_FMT_BGRA, SWS_FAST_BILINEAR,
+            NULL, NULL, NULL
+        );
         if (!scale) release_frame_resources();
         return scale != NULL;
     }
@@ -658,14 +680,20 @@ static int upload_frame(SDL_Texture *target, const AVFrame *frame) {
 
     if (filter_scale > 1) {
         if (config.video.texture_filter == 6)
-            super_eagle_32((const uint32_t *) filter_source, (uint32_t *) filter_output, source_width,
-                           source_height, filter_source_pitch / 4, filter_output_pitch / 4);
+            super_eagle_32(
+                (const uint32_t *) filter_source, (uint32_t *) filter_output, source_width, source_height,
+                filter_source_pitch / 4, filter_output_pitch / 4
+            );
         else if (filter_scale == 3)
-            scale3_x_32((const uint32_t *) filter_source, (uint32_t *) filter_output, source_width, source_height,
-                        filter_source_pitch / 4, filter_output_pitch / 4);
+            scale3_x_32(
+                (const uint32_t *) filter_source, (uint32_t *) filter_output, source_width, source_height,
+                filter_source_pitch / 4, filter_output_pitch / 4
+            );
         else
-            scale2_x_32((const uint32_t *) filter_source, (uint32_t *) filter_output, source_width, source_height,
-                        filter_source_pitch / 4, filter_output_pitch / 4);
+            scale2_x_32(
+                (const uint32_t *) filter_source, (uint32_t *) filter_output, source_width, source_height,
+                filter_source_pitch / 4, filter_output_pitch / 4
+            );
         return SDL_UpdateTexture(target, NULL, filter_output, filter_output_pitch) == 0;
     }
     return SDL_UpdateYUVTexture(target, NULL, data[0], line[0], data[1], line[1], data[2], line[2]) == 0;

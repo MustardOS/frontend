@@ -10,7 +10,17 @@ enum { ui_count_dynamic = E_SIZE(HDMI_ELEMENTS) };
 HDMI_ELEMENTS
 #undef HDMI
 
-int hdmi_index[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+enum hdmi_resolution {
+    hdmi_480i,
+    hdmi_576i,
+    hdmi_480p,
+    hdmi_576p,
+    hdmi_720p_50,
+    hdmi_720p_60,
+    hdmi_resolution_count,
+};
+
+static const int hdmi_index[] = {hdmi_480i, hdmi_576i, hdmi_480p, hdmi_576p, hdmi_720p_50, hdmi_720p_60};
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
@@ -33,14 +43,16 @@ static void restore_hdmi_options(void) {
     HDMI_ELEMENTS
 #undef HDMI
 
-    map_drop_down_to_index(ui_dro_resolution_hdmi, config.settings.hdmi.resolution, hdmi_index, 11, 0);
+    map_drop_down_to_index(
+        ui_dro_resolution_hdmi, config.settings.hdmi.resolution, hdmi_index, hdmi_resolution_count, hdmi_480p
+    );
 }
 
 static void save_hdmi_options(void) {
     int is_modified = 0;
     int save_failed = 0;
 
-    CHECK_AND_SAVE_MAP(hdmi, resolution, "settings/hdmi/resolution", hdmi_index, 11, 0);
+    CHECK_AND_SAVE_MAP(hdmi, resolution, "settings/hdmi/resolution", hdmi_index, hdmi_resolution_count, hdmi_480p);
     CHECK_AND_SAVE_STD(hdmi, space, "settings/hdmi/space", INT, 0);
     CHECK_AND_SAVE_STD(hdmi, depth, "settings/hdmi/depth", INT, 0);
     CHECK_AND_SAVE_STD(hdmi, range, "settings/hdmi/range", INT, 0);
@@ -60,10 +72,7 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    char *hdmi_resolution[] = {
-        "480i",         "576i",         "480p",         "576p",         "720p + 50hz",  "720p + 60hz",
-        "1080i + 50hz", "1080i + 60hz", "1080p + 24hz", "1080p + 50hz", "1080p + 60hz",
-    };
+    char *hdmi_resolution[] = {"480i", "576i", "480p", "576p", "720p + 50hz", "720p + 60hz"};
 
     char *hdmi_space[] = {"RGB", "YUV444", "YUV422", "YUV420"};
 
@@ -71,7 +80,9 @@ static void init_navigation_group(void) {
 
     char *hdmi_scan[] = {lang.muxhdmi.scan_scale.over, lang.muxhdmi.scan_scale.under};
 
-    INIT_OPTION_ITEM(-1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, 11);
+    INIT_OPTION_ITEM(
+        -1, hdmi, resolution, lang.muxhdmi.resolution, "resolution", hdmi_resolution, hdmi_resolution_count
+    );
     INIT_OPTION_ITEM(-1, hdmi, space, lang.muxhdmi.colour.space, "space", hdmi_space, 4);
     INIT_OPTION_ITEM(-1, hdmi, depth, lang.muxhdmi.colour.depth, "depth", NULL, 0);
     INIT_OPTION_ITEM(-1, hdmi, range, lang.muxhdmi.colour.range.title, "range", hdmi_range, 2);

@@ -1130,7 +1130,6 @@ struct mux_lang {
         } help;
     } muxcore;
 
-
     struct {
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];

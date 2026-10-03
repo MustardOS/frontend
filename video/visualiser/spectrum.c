@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define SPECTRUM_BANDS 24
-#define VIS_TAU 6.28318530717958647692f
+#define VIS_TAU        6.28318530717958647692f
 
 static float smoothed[SPECTRUM_BANDS];
 static float window[WASABI_VISUALISER_SAMPLES];
@@ -22,13 +22,12 @@ void wasabi_spectrum_render(SDL_Renderer *renderer, const wasabi_visualiser_fram
         float previous = 0.0f;
         float before_previous = 0.0f;
         for (int index = 0; index < WASABI_VISUALISER_SAMPLES; index++) {
-            const float current = frame->mono[index] * window[index]
-                                  + coefficient[band] * previous - before_previous;
+            const float current = frame->mono[index] * window[index] + coefficient[band] * previous - before_previous;
             before_previous = previous;
             previous = current;
         }
-        float power = previous * previous + before_previous * before_previous
-                      - coefficient[band] * previous * before_previous;
+        float power =
+            previous * previous + before_previous * before_previous - coefficient[band] * previous * before_previous;
         if (power < 0.0f) power = 0.0f;
         float value = sqrtf(power) / 18.0f;
         if (value > 1.0f) value = 1.0f;

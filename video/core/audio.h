@@ -22,6 +22,7 @@ typedef struct {
     int artwork_temporary;
 } wasabi_audio_info;
 
-void wasabi_audio_metadata(AVFormatContext *format, const char *uri, const char *fallback_title,
-                           wasabi_audio_info *information);
+void wasabi_audio_metadata(
+    AVFormatContext *format, const char *uri, const char *fallback_title, wasabi_audio_info *information
+);
 void wasabi_audio_cleanup(wasabi_audio_info *information);

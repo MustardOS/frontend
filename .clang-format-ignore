@@ -1,0 +1,5 @@
+# Third party and generated sources keep their upstream layout
+vendor/**
+external/**
+**/generated/*
+retro/core/libretro.h

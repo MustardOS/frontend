@@ -21,7 +21,7 @@
 #define MANUAL_FONT_MAX 32
 #define MANUAL_FONT_DEF 18
 
-#define MANUAL_PAGE_CHARS_MIN 200
+#define MANUAL_WRAP_WINDOW 1024
 
 #define MANUAL_SCROLLBAR_WIDTH 4
 #define MANUAL_SCROLLBAR_GAP   4
@@ -66,9 +66,6 @@ static int line_count = 0;
 static int line_cap = 0;
 static int current_line = 0;
 static int current_col_px = 0;
-
-static size_t current_offset = 0;
-static size_t current_page_end = 0;
 
 static uint64_t current_nav_mask(void) {
     uint64_t mask = nav_mask_standard();
@@ -143,76 +140,112 @@ static int add_line(const size_t offset, const size_t length) {
     return 1;
 }
 
+static size_t utf8_bytes_for_chars(const char *text, const size_t len, const int chars) {
+    size_t pos = 0;
+
+    for (int i = 0; i < chars && pos < len; i++) {
+        pos++;
+        while (pos < len && ((unsigned char) text[pos] & 0xC0) == 0x80)
+            pos++;
+    }
+
+    return pos;
+}
+
+static int add_wrapped_line(const size_t start, const size_t length, const int wrap_w) {
+    if (length == 0) return add_line(start, 0);
+
+    char window[MANUAL_WRAP_WINDOW + 1];
+    const size_t end = start + length;
+    size_t pos = start;
+
+    while (pos < end) {
+        size_t win = end - pos;
+        if (win > MANUAL_WRAP_WINDOW) win = MANUAL_WRAP_WINDOW;
+
+        memcpy(window, manual_text + pos, win);
+        window[win] = '\0';
+
+        int extent = 0;
+        int count = 0;
+        if (TTF_MeasureUTF8(manual_font, window, wrap_w, &extent, &count) != 0) count = (int) win;
+
+        size_t fit = utf8_bytes_for_chars(window, win, count);
+        if (fit >= end - pos) return add_line(pos, end - pos);
+
+        // Always take at least one character so a narrow panel cannot stall
+        if (fit == 0) fit = utf8_bytes_for_chars(window, win, 1);
+
+        size_t split = fit;
+        while (split > 0 && window[split] != ' ' && window[split] != '\t')
+            split--;
+
+        if (split > 0) {
+            if (!add_line(pos, split)) return 0;
+            pos += split + 1;
+        } else {
+            if (!add_line(pos, fit)) return 0;
+            pos += fit;
+        }
+    }
+
+    return 1;
+}
+
 static void build_lines(void) {
     free_lines();
     if (!manual_text || manual_text_len == 0) return;
 
+    const int wrap_w = wrap_enabled && manual_font ? content_wrap_width() : 0;
+
     size_t start = 0;
-    for (size_t i = 0; i < manual_text_len; i++) {
-        if (manual_text[i] == '\n') {
-            if (!add_line(start, i - start)) return;
-            start = i + 1;
-        }
+    for (size_t i = 0; i <= manual_text_len; i++) {
+        if (i < manual_text_len && manual_text[i] != '\n') continue;
+
+        const int added = wrap_w > 0 ? add_wrapped_line(start, i - start, wrap_w) : add_line(start, i - start);
+        if (!added) return;
+
+        start = i + 1;
     }
-    add_line(start, manual_text_len - start);
 }
 
 static int line_for_offset(const size_t offset) {
-    for (int i = line_count - 1; i >= 0; i--) {
-        if (line_offset[i] <= offset) return i;
+    int lo = 0;
+    int hi = line_count - 1;
+    int found = 0;
+
+    while (lo <= hi) {
+        const int mid = lo + (hi - lo) / 2;
+        if (line_offset[mid] <= offset) {
+            found = mid;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
     }
 
-    return 0;
+    return found;
 }
 
-static void estimate_metrics(int *out_chars_per_line, int *out_page_chars) {
-    const int content_w = content_wrap_width();
-    const int content_h = lv_obj_get_height(ui_pnl_content);
+static size_t current_text_offset(void) {
+    return line_count > 0 ? line_offset[current_line] : 0;
+}
 
-    int char_w = 0;
-    TTF_SizeUTF8(manual_font, "M", &char_w, NULL);
-    if (char_w <= 0) char_w = manual_font_size / 2;
-
-    const int line_h = TTF_FontLineSkip(manual_font);
-    int cols = char_w > 0 ? content_w / char_w : 40;
-    int rows = line_h > 0 ? content_h / line_h : 20;
-    if (cols < 1) cols = 1;
+static int visible_rows(void) {
+    const int line_h = manual_font ? TTF_FontLineSkip(manual_font) : 0;
+    int rows = line_h > 0 ? lv_obj_get_height(ui_pnl_content) / line_h : 1;
     if (rows < 1) rows = 1;
+    if (rows > MANUAL_MAX_VISIBLE_ROWS) rows = MANUAL_MAX_VISIBLE_ROWS;
 
-    if (out_chars_per_line) *out_chars_per_line = cols;
-
-    if (out_page_chars) {
-        int page_chars = cols * rows;
-        if (page_chars < MANUAL_PAGE_CHARS_MIN) page_chars = MANUAL_PAGE_CHARS_MIN;
-        *out_page_chars = page_chars;
-    }
+    return rows;
 }
 
-static size_t advance_offset(const size_t from, const int budget) {
-    if (from >= manual_text_len) return manual_text_len;
+// Stop on a full last page so the text never shrinks or shifts at the end
+static void clamp_current_line(void) {
+    const int max_line = line_count - visible_rows();
 
-    const size_t end = from + (size_t) budget;
-    if (end >= manual_text_len) return manual_text_len;
-
-    size_t split = end;
-    while (split > from && manual_text[split] != '\n' && manual_text[split] != ' ')
-        split--;
-    if (split == from) split = end;
-
-    return split + 1;
-}
-
-static size_t retreat_offset(const size_t from, const int budget) {
-    if (from == 0) return 0;
-
-    const size_t target = (size_t) budget < from ? from - (size_t) budget : 0;
-    if (target == 0) return 0;
-
-    size_t split = target;
-    while (split > 0 && manual_text[split] != '\n' && manual_text[split] != ' ')
-        split--;
-
-    return split > 0 ? split + 1 : 0;
+    if (current_line > max_line) current_line = max_line;
+    if (current_line < 0) current_line = 0;
 }
 
 static void blit_surface_swap_rb(
@@ -233,28 +266,11 @@ static void blit_surface_swap_rb(
 }
 
 static void update_scrollbar(void) {
-    if (!ui_bar_thumb) return;
+    if (!ui_bar_thumb || line_count == 0) return;
 
     const int content_h = lv_obj_get_height(ui_pnl_content);
-    double frac_start = 0.0;
-    double frac_span = 1.0;
-
-    if (wrap_enabled) {
-        if (manual_text_len == 0) return;
-
-        const double doc_len = (double) manual_text_len;
-        frac_start = (double) current_offset / doc_len;
-        frac_span = (double) (current_page_end > current_offset ? current_page_end - current_offset : 1) / doc_len;
-    } else {
-        if (line_count == 0) return;
-
-        const int line_h = manual_font ? TTF_FontLineSkip(manual_font) : 0;
-        int rows = line_h > 0 ? content_h / line_h : 1;
-        if (rows < 1) rows = 1;
-
-        frac_start = (double) current_line / (double) line_count;
-        frac_span = (double) rows / (double) line_count;
-    }
+    const double frac_start = (double) current_line / (double) line_count;
+    const double frac_span = (double) visible_rows() / (double) line_count;
 
     lv_coord_t thumb_h = (lv_coord_t) (frac_span * content_h);
     if (thumb_h < MANUAL_SCROLLBAR_MIN_H) thumb_h = MANUAL_SCROLLBAR_MIN_H;
@@ -268,69 +284,15 @@ static void update_scrollbar(void) {
     lv_obj_align(ui_bar_thumb, LV_ALIGN_TOP_RIGHT, 0, thumb_y);
 }
 
-static void render_wrap_view(void) {
-    if (!ui_canvas_manual || !manual_font || !manual_text || manual_text_len == 0) return;
-
-    int page_chars = 0;
-    estimate_metrics(NULL, &page_chars);
-
-    const int wrap_w = content_wrap_width();
-    const SDL_Color col = theme_text_colour();
-
-    const size_t end = advance_offset(current_offset, page_chars);
-    const size_t len = end > current_offset ? end - current_offset : 0;
-
-    char *page_text = malloc(len + 1);
-    if (!page_text) return;
-
-    memcpy(page_text, manual_text + current_offset, len);
-    page_text[len] = '\0';
-
-    SDL_Surface *surf = sdl_render_text_wrapped_surface(manual_font, page_text, col, wrap_w, 0);
-    free(page_text);
-    if (!surf) return;
-
-    current_page_end = end;
-
-    const int w = surf->w > 0 ? surf->w : 1;
-    const int h = surf->h > 0 ? surf->h : 1;
-    const size_t needed = (size_t) w * (size_t) h * 4;
-
-    if (needed > canvas_buf_cap) {
-        free(canvas_buf);
-        canvas_buf = malloc(needed);
-        canvas_buf_cap = canvas_buf ? needed : 0;
-    }
-
-    if (!canvas_buf) {
-        SDL_FreeSurface(surf);
-        return;
-    }
-
-    blit_surface_swap_rb(surf, canvas_buf, w * 4, 0, 0, 0, w, h);
-    SDL_FreeSurface(surf);
-
-    lv_canvas_set_buffer(ui_canvas_manual, canvas_buf, w, h, LV_IMG_CF_TRUE_COLOR_ALPHA);
-    lv_obj_set_size(ui_canvas_manual, w, h);
-    canvas_invalidate_gpu_texture(ui_canvas_manual);
-
-    update_scrollbar();
-}
-
-static void render_nowrap_view(void) {
+static void render_view(void) {
     if (!ui_canvas_manual || !manual_font || line_count == 0) return;
 
     const int content_w = content_wrap_width();
-    const int content_h = lv_obj_get_height(ui_pnl_content);
     const int line_h = TTF_FontLineSkip(manual_font);
     if (line_h <= 0 || content_w <= 0) return;
 
-    int rows = content_h / line_h;
-    if (rows < 1) rows = 1;
-    if (rows > MANUAL_MAX_VISIBLE_ROWS) rows = MANUAL_MAX_VISIBLE_ROWS;
-
-    if (current_line >= line_count) current_line = line_count - 1;
-    if (current_line < 0) current_line = 0;
+    const int rows = visible_rows();
+    clamp_current_line();
 
     const SDL_Color col = theme_text_colour();
 
@@ -402,48 +364,16 @@ static void render_nowrap_view(void) {
     update_scrollbar();
 }
 
-static void render_view(void) {
-    if (wrap_enabled) {
-        render_wrap_view();
-    } else {
-        render_nowrap_view();
-    }
-}
-
 static void move_line(const int delta) {
-    if (wrap_enabled) {
-        int chars_per_line = 0;
-        estimate_metrics(&chars_per_line, NULL);
-        if (chars_per_line < 1) chars_per_line = 1;
-
-        current_offset =
-            delta > 0 ? advance_offset(current_offset, chars_per_line) : retreat_offset(current_offset, chars_per_line);
-    } else {
-        current_line += delta;
-        if (current_line < 0) current_line = 0;
-        if (current_line >= line_count) current_line = line_count > 0 ? line_count - 1 : 0;
-    }
+    current_line += delta;
+    clamp_current_line();
 
     render_view();
 }
 
 static void move_page(const int delta) {
-    if (wrap_enabled) {
-        int page_chars = 0;
-        estimate_metrics(NULL, &page_chars);
-
-        current_offset =
-            delta > 0 ? advance_offset(current_offset, page_chars) : retreat_offset(current_offset, page_chars);
-    } else {
-        const int line_h = manual_font ? TTF_FontLineSkip(manual_font) : 0;
-        const int content_h = lv_obj_get_height(ui_pnl_content);
-        int rows = line_h > 0 ? content_h / line_h : 1;
-        if (rows < 1) rows = 1;
-
-        current_line += delta * rows;
-        if (current_line < 0) current_line = 0;
-        if (current_line >= line_count) current_line = line_count > 0 ? line_count - 1 : 0;
-    }
+    current_line += delta * visible_rows();
+    clamp_current_line();
 
     render_view();
 }
@@ -463,34 +393,34 @@ static void move_col(const int delta) {
 }
 
 static void jump_top(void) {
-    if (wrap_enabled) {
-        current_offset = 0;
-    } else {
-        current_line = 0;
-        current_col_px = 0;
-    }
+    current_line = 0;
+    current_col_px = 0;
 
     render_view();
 }
 
+// Rebuild the line table and land on whichever line now holds the same text
+static void relayout_lines(void) {
+    const size_t offset = current_text_offset();
+
+    build_lines();
+
+    current_line = line_for_offset(offset);
+    clamp_current_line();
+}
+
 static void toggle_wrap(void) {
-    const size_t canonical_offset = wrap_enabled ? current_offset : line_count > 0 ? line_offset[current_line] : 0;
-
     wrap_enabled = !wrap_enabled;
+    current_col_px = 0;
 
-    if (wrap_enabled) {
-        current_offset = canonical_offset;
-    } else {
-        current_line = line_for_offset(canonical_offset);
-        current_col_px = 0;
-    }
-
+    relayout_lines();
     render_view();
 }
 
 static void change_font_size(const int delta) {
     if (!ensure_font(manual_font_size + delta)) return;
 
+    relayout_lines();
     render_view();
 }
 
@@ -539,19 +469,15 @@ static void build_txt_view(void) {
     size_t start_offset = (size_t) manual_load_position();
     if (start_offset >= manual_text_len) start_offset = 0;
 
-    if (wrap_enabled) {
-        current_offset = start_offset;
-    } else {
-        current_line = line_for_offset(start_offset);
-        current_col_px = 0;
-    }
+    current_line = line_for_offset(start_offset);
+    current_col_px = 0;
+    clamp_current_line();
 
     render_view();
 }
 
 static void close_manual(void) {
-    const size_t canonical_offset = wrap_enabled ? current_offset : line_count > 0 ? line_offset[current_line] : 0;
-    manual_save_position((int) canonical_offset);
+    manual_save_position((int) current_text_offset());
     manual_save_font_size(manual_font_size);
     manual_save_wrap_enabled(wrap_enabled);
 
@@ -566,8 +492,6 @@ static void close_manual(void) {
 
     free_lines();
 
-    current_offset = 0;
-    current_page_end = 0;
     current_line = 0;
     current_col_px = 0;
 

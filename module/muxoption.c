@@ -19,7 +19,6 @@ static int is_dir = 0;
 static char curr_dir[PATH_MAX] = "";
 static const char *core_file = "";
 
-
 static lv_obj_t *ui_objects[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];

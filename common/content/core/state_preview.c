@@ -17,7 +17,8 @@ struct preview_candidate {
 
 static int state_priority(const char *stem) {
     if (strcmp(stem, "quicksave") == 0) return 4;
-    if (strncmp(stem, "slot_", 5) == 0) stem += 5;
+    if (strncmp(stem, "slot_", 5) == 0)
+        stem += 5;
     else if (strncmp(stem, "timeline_", 9) == 0) {
         stem += 9;
         if (!*stem) return 0;
@@ -45,16 +46,14 @@ static int candidate_is_newer(const struct preview_candidate *candidate, const s
     if (!best->valid) return 1;
     if (candidate->created != best->created) return candidate->created > best->created;
     if (candidate->priority != best->priority) return candidate->priority > best->priority;
-    if (candidate->modified.tv_sec != best->modified.tv_sec)
-        return candidate->modified.tv_sec > best->modified.tv_sec;
+    if (candidate->modified.tv_sec != best->modified.tv_sec) return candidate->modified.tv_sec > best->modified.tv_sec;
     if (candidate->modified.tv_nsec != best->modified.tv_nsec)
         return candidate->modified.tv_nsec > best->modified.tv_nsec;
     return strcmp(candidate->name, best->name) < 0;
 }
 
-static void consider_candidate(
-    const char *directory, const char *stem, const long long created, struct preview_candidate *best
-) {
+static void
+consider_candidate(const char *directory, const char *stem, const long long created, struct preview_candidate *best) {
     const int priority = state_priority(stem);
     if (!priority) return;
 

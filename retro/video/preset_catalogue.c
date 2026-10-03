@@ -273,8 +273,7 @@ static int read_variants(const struct json node, catalogue_item *item, char *ste
             return 0;
 
         // Every image of an overlay is published under one name, taken from the repo
-        if (!stem[0] && (!manifest_url_stem(variant->url, stem, stem_size) || strcasecmp(stem, "none") == 0))
-            return 0;
+        if (!stem[0] && (!manifest_url_stem(variant->url, stem, stem_size) || strcasecmp(stem, "none") == 0)) return 0;
 
         if ((size_t) snprintf(item->key, sizeof(item->key), "%s/%s", item->author_directory, stem) >= sizeof(item->key))
             return 0;
@@ -373,8 +372,7 @@ static int parse_manifest(void) {
             if (!manifest_json_string(node, "url", item->url, sizeof(item->url))
                 || !manifest_json_string(node, "sha256", item->sha256, sizeof(item->sha256))
                 || !manifest_https_url(item->url) || !manifest_sha256_valid(item->sha256)
-                || !manifest_url_stem(item->url, stem, sizeof(stem))
-                || strcasecmp(stem, "none") == 0) {
+                || !manifest_url_stem(item->url, stem, sizeof(stem)) || strcasecmp(stem, "none") == 0) {
                 item_count = 0;
                 free(raw);
                 return 0;

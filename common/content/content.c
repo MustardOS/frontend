@@ -422,7 +422,7 @@ int activity_summary_read(const uint32_t hash, activity_summary *summary) {
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), INFO_ACT_PATH "/%08X.json", hash);
 
-    *summary = (activity_summary){0};
+    *summary = (activity_summary) {0};
 
     char *data = read_all_char_from(path);
     if (!data) return 0;
@@ -656,8 +656,7 @@ int content_launch_is_integrated(void) {
     }
 
     const int integrated = core_uses_muxretro(launch) || strcasecmp(core, "ext-video") == 0
-                           || strcasecmp(launch, "ext-video") == 0
-                           || strcasecmp(launch, "ext-video.sh") == 0;
+                           || strcasecmp(launch, "ext-video") == 0 || strcasecmp(launch, "ext-video.sh") == 0;
     free(core);
     free(launch);
     return integrated;

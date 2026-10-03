@@ -685,7 +685,6 @@ void session_settings_resolve_port_sources(int *resolved);
 
 int session_settings_resolve_port_source(int port);
 
-
 const char *session_settings_target_label(int target_id);
 
 int session_settings_mux_type_for_target(int target_id);

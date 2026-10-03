@@ -145,9 +145,7 @@ static void apply_state(void) {
     const int showing_code = screen_state == state_code;
     const int showing_service = screen_state != state_no_service;
 
-    lv_obj_t *const code_parts[] = {
-        ui_lbl_code_webcode, ui_pnl_expiry_webcode, ui_lbl_expiry_webcode
-    };
+    lv_obj_t *const code_parts[] = {ui_lbl_code_webcode, ui_pnl_expiry_webcode, ui_lbl_expiry_webcode};
 
     for (size_t i = 0; i < A_SIZE(code_parts); ++i) {
         if (showing_code)

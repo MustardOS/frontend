@@ -101,17 +101,20 @@ static void preset_label(const char *path, const char *key, char *output, const 
         for (int index = 0; index < 32 && fgets(line, sizeof(line), file); index++) {
             char *name = NULL;
             char *cursor = line;
-            while (*cursor && isspace((unsigned char) *cursor)) cursor++;
+            while (*cursor && isspace((unsigned char) *cursor))
+                cursor++;
             if (*cursor == '[') {
                 profile = strncasecmp(cursor, "[profile]", 9) == 0;
                 continue;
             }
             if (strncasecmp(cursor, "//", 2) == 0) {
                 cursor += 2;
-                while (*cursor && isspace((unsigned char) *cursor)) cursor++;
+                while (*cursor && isspace((unsigned char) *cursor))
+                    cursor++;
             } else if (*cursor == '#') {
                 cursor++;
-                while (*cursor && isspace((unsigned char) *cursor)) cursor++;
+                while (*cursor && isspace((unsigned char) *cursor))
+                    cursor++;
             }
             if (strncasecmp(cursor, "Name:", 5) == 0)
                 name = cursor + 5;
@@ -120,7 +123,8 @@ static void preset_label(const char *path, const char *key, char *output, const 
                 if (equals) name = equals + 1;
             }
             if (!name) continue;
-            while (*name && isspace((unsigned char) *name)) name++;
+            while (*name && isspace((unsigned char) *name))
+                name++;
             snprintf(output, size, "%s", name);
             output[strcspn(output, "\r\n")] = '\0';
             if (output[0]) {
@@ -151,10 +155,8 @@ static int append(asset_store *store, const char *key, const char *path) {
     return 1;
 }
 
-static void scan(
-    asset_store *store, const char *root, const char *prefix, const char *suffix, const int depth,
-    const int bundled
-) {
+static void
+scan(asset_store *store, const char *root, const char *prefix, const char *suffix, const int depth, const int bundled) {
     char directory_path[PATH_MAX];
     snprintf(directory_path, sizeof(directory_path), "%s%s", root, prefix ? prefix : "");
     DIR *directory = opendir(directory_path);
@@ -206,14 +208,16 @@ void wasabi_assets_refresh(const wasabi_asset_kind kind) {
         snprintf(system_root, sizeof(system_root), OPT_SHARE_PATH "shader/");
         snprintf(user_root, sizeof(user_root), WASABI_SHADER_PATH);
     } else {
-        snprintf(system_root, sizeof(system_root), OPT_SHARE_PATH "overlay/image/%dx%d/", device.screen.width,
-                 device.screen.height);
-        snprintf(user_root, sizeof(user_root), WASABI_OVERLAY_PATH "%dx%d/", device.screen.width,
-                 device.screen.height);
+        snprintf(
+            system_root, sizeof(system_root), OPT_SHARE_PATH "overlay/image/%dx%d/", device.screen.width,
+            device.screen.height
+        );
+        snprintf(user_root, sizeof(user_root), WASABI_OVERLAY_PATH "%dx%d/", device.screen.width, device.screen.height);
     }
     scan(store, user_root, NULL, extension(kind), 0, 0);
     scan(store, system_root, NULL, extension(kind), 0, 1);
-    if (store->count > 2) qsort(store->entries + 1, (size_t) store->count - 1, sizeof(*store->entries), compare_entries);
+    if (store->count > 2)
+        qsort(store->entries + 1, (size_t) store->count - 1, sizeof(*store->entries), compare_entries);
 }
 
 static asset_entry *entry_at(const wasabi_asset_kind kind, const int index) {
@@ -357,7 +361,8 @@ static int collection_toggle(const wasabi_asset_kind kind, const char *key) {
     }
 
     size_t size = 1;
-    for (int index = 0; index < count; index++) size += strlen(keys[index]) + 1;
+    for (int index = 0; index < count; index++)
+        size += strlen(keys[index]) + 1;
     char *text = malloc(size);
     if (!text) {
         free(keys);
@@ -473,13 +478,14 @@ void wasabi_asset_browser_open(const wasabi_asset_kind kind) {
     const char *selected = selected_key(kind);
     if (selected && strcasecmp(selected, "none") != 0) {
         const char *slash = strrchr(selected, '/');
-        if (slash)
-            snprintf(browser.directory, sizeof(browser.directory), "%.*s", (int) (slash - selected), selected);
+        if (slash) snprintf(browser.directory, sizeof(browser.directory), "%.*s", (int) (slash - selected), selected);
     }
     browser_build();
 }
 
-int wasabi_asset_browser_count(void) { return browser.count; }
+int wasabi_asset_browser_count(void) {
+    return browser.count;
+}
 
 wasabi_asset_row_type wasabi_asset_browser_type(const int row) {
     return row >= 0 && row < browser.count ? browser.rows[row].type : wasabi_asset_row_empty;
@@ -489,11 +495,16 @@ const char *wasabi_asset_browser_label(const int row) {
     if (row < 0 || row >= browser.count) return "";
     const browser_row *entry = &browser.rows[row];
     switch (entry->type) {
-        case wasabi_asset_row_download: return lang.muxretro.catalogue_screen.downloads;
-        case wasabi_asset_row_collection: return lang.muxretro.catalogue_screen.collection;
-        case wasabi_asset_row_none: return lang.generic.none;
-        case wasabi_asset_row_empty: return lang.muxretro.catalogue_screen.collection_empty;
-        default: return entry->label;
+        case wasabi_asset_row_download:
+            return lang.muxretro.catalogue_screen.downloads;
+        case wasabi_asset_row_collection:
+            return lang.muxretro.catalogue_screen.collection;
+        case wasabi_asset_row_none:
+            return lang.generic.none;
+        case wasabi_asset_row_empty:
+            return lang.muxretro.catalogue_screen.collection_empty;
+        default:
+            return entry->label;
     }
 }
 
@@ -521,8 +532,7 @@ int wasabi_asset_browser_focus(void) {
         if (separator) {
             const size_t length = (size_t) (separator - key);
             for (int row = 0; row < browser.count; row++)
-                if (browser.rows[row].type == wasabi_asset_row_directory
-                    && strlen(browser.rows[row].key) == length
+                if (browser.rows[row].type == wasabi_asset_row_directory && strlen(browser.rows[row].key) == length
                     && strncasecmp(browser.rows[row].key, key, length) == 0)
                     return row;
         }
@@ -577,12 +587,11 @@ int wasabi_asset_browser_toggle_collection(const int row) {
 }
 
 int wasabi_asset_browser_removable(const int row) {
-    if (browser.collection || row < 0 || row >= browser.count
-        || browser.rows[row].type != wasabi_asset_row_item)
+    if (browser.collection || row < 0 || row >= browser.count || browser.rows[row].type != wasabi_asset_row_item)
         return 0;
     const asset_entry *entry = entry_at(browser.kind, browser.rows[row].item);
     if (!entry || !entry->path[0]) return 0;
-    const char *root = browser.kind == wasabi_asset_filter ? WASABI_FILTER_PATH
+    const char *root = browser.kind == wasabi_asset_filter   ? WASABI_FILTER_PATH
                        : browser.kind == wasabi_asset_shader ? WASABI_SHADER_PATH
                                                              : WASABI_OVERLAY_PATH;
     return strncmp(entry->path, root, strlen(root)) == 0;

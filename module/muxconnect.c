@@ -101,7 +101,6 @@ static void handle_option_next(void) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-
     typedef enum {
         menu_general = 0,
         menu_option,

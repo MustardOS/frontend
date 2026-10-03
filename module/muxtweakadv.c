@@ -245,9 +245,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, debug_log, lang.muxtweakadv.debuglog, "debuglog", debug_log_mode, 3);
     INIT_OPTION_ITEM(-1, tweakadv, user_init, lang.muxtweakadv.userinit, "userinit", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, bt_scan_timeout, lang.muxtweakadv.btscantimeout, "btscan", NULL, 0);
-    INIT_OPTION_ITEM(
-        -1, tweakadv, raw_bluetooth, lang.muxtweakadv.rawbluetooth, "bluetooth", disabled_enabled, 2
-    );
+    INIT_OPTION_ITEM(-1, tweakadv, raw_bluetooth, lang.muxtweakadv.rawbluetooth, "bluetooth", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, tweakadv, remember_section, lang.muxtweakadv.remembersection, "remembersection", disabled_enabled, 2
     );

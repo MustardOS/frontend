@@ -234,14 +234,13 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]
-    ){{ui_lbl_nav_a_glyph, "", 0},
-      {ui_lbl_nav_a, lang.generic.select, 0},
-      {ui_lbl_nav_b_glyph, "", 0},
-      {ui_lbl_nav_b, lang.generic.back, 0},
-      {ui_lbl_nav_x_glyph, "", 0},
-      {ui_lbl_nav_x, lang.generic.scan, 0},
-      {NULL, NULL, 0}});
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {ui_lbl_nav_x_glyph, "", 0},
+                                  {ui_lbl_nav_x, lang.generic.scan, 0},
+                                  {NULL, NULL, 0}});
 
     check_focus();
     overlay_display();

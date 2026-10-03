@@ -99,9 +99,7 @@ void wasabi_progress_init(wasabi_progress *progress, lv_obj_t *parent, const int
         lv_obj_set_style_bg_color(progress->bar, lv_color_hex(theme.bar.progress_main_background), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(progress->bar, theme.bar.progress_main_background_alpha, LV_PART_MAIN);
         lv_obj_set_style_radius(progress->bar, theme.bar.progress_radius, LV_PART_MAIN);
-        lv_obj_set_style_bg_color(
-            progress->bar, lv_color_hex(theme.bar.progress_active_background), LV_PART_INDICATOR
-        );
+        lv_obj_set_style_bg_color(progress->bar, lv_color_hex(theme.bar.progress_active_background), LV_PART_INDICATOR);
         lv_obj_set_style_bg_opa(progress->bar, theme.bar.progress_active_background_alpha, LV_PART_INDICATOR);
         lv_obj_set_style_radius(progress->bar, theme.bar.progress_radius, LV_PART_INDICATOR);
         return;

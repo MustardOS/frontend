@@ -40,7 +40,7 @@
 
 #define VIDEO_QUEUE_SIZE                   120
 #define LOCAL_VIDEO_QUEUE_SIZE             16
-#define LIVE_VIDEO_QUEUE_SECONDS            4.0
+#define LIVE_VIDEO_QUEUE_SECONDS           4.0
 #define LIVE_VIDEO_QUEUE_MEMORY            (96U * 1024U * 1024U)
 #define LIVE_VIDEO_TARGET                  8
 #define LIVE_AUDIO_BUFFER_HEADROOM_SECONDS 3
@@ -53,14 +53,14 @@
 #define PRESENT_INTERVAL_MAX_MS            12
 #define PRESENT_INTERVAL_NORMAL_MS         16
 #define PRESENT_INTERVAL_IDLE_MS           33
-#define PRESENT_INTERVAL_BLEND_MS           2
-#define PRESENT_EARLY_SECONDS               0.002
-#define PLAYBACK_UI_INTERVAL_MS             33
+#define PRESENT_INTERVAL_BLEND_MS          2
+#define PRESENT_EARLY_SECONDS              0.002
+#define PLAYBACK_UI_INTERVAL_MS            33
 #define CHANNEL_SWITCH_DELAY_MS            1000
-#define LIVE_AUDIO_CLOCK_HARD_SECONDS        0.250
-#define LIVE_AUDIO_CLOCK_SOFT_SECONDS        0.020
-#define LIVE_AUDIO_CLOCK_STEP_SECONDS        0.001
-#define LIVE_AUDIO_CLOCK_CORRECTION_FACTOR   0.125
+#define LIVE_AUDIO_CLOCK_HARD_SECONDS      0.250
+#define LIVE_AUDIO_CLOCK_SOFT_SECONDS      0.020
+#define LIVE_AUDIO_CLOCK_STEP_SECONDS      0.001
+#define LIVE_AUDIO_CLOCK_CORRECTION_FACTOR 0.125
 #define HLS_MANIFEST_LIMIT                 (512U * 1024U)
 #define LIVE_BUFFER_FAILURE_MS             15000U
 #define LIVE_AUTOMATIC_BITRATE_LIMIT       4000000LL
@@ -699,8 +699,7 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
     if (available > requested) available = requested;
     const double speed = audio_callback_speed();
     if (player.audio_clock_valid && player.audio_rate > 0) {
-        player.audio_callback_position =
-            player.audio_origin + player.audio_frames_played / (double) player.audio_rate;
+        player.audio_callback_position = player.audio_origin + player.audio_frames_played / (double) player.audio_rate;
         player.audio_callback_duration = (double) available / player.audio_rate;
         player.audio_callback_rate = speed;
         player.audio_callback_ticks = SDL_GetTicks();
@@ -788,8 +787,7 @@ static void queue_clear_locked(void) {
 
 static int queue_push(AVFrame *frame) {
     SDL_LockMutex(player.lock);
-    while (!SDL_AtomicGet(&player.stop) && !player.seek_pending
-           && player.video_count >= player.video_queue_limit) {
+    while (!SDL_AtomicGet(&player.stop) && !player.seek_pending && player.video_count >= player.video_queue_limit) {
         if (player.live && (SDL_AtomicGet(&player.buffering) || SDL_AtomicGet(&player.paused))) {
             av_frame_unref(player.video_queue[player.video_head]);
             player.video_head = (player.video_head + 1) % player.video_queue_limit;
@@ -869,8 +867,8 @@ static int packet_queue_push(AVPacket *source) {
     av_packet_move_ref(node->packet, source);
 
     SDL_LockMutex(player.lock);
-    while (!SDL_AtomicGet(&player.stop) && player.packet_head && player.packet_bytes + node->bytes > player.packet_limit
-    )
+    while (!SDL_AtomicGet(&player.stop) && player.packet_head
+           && player.packet_bytes + node->bytes > player.packet_limit)
         SDL_CondWait(player.condition, player.lock);
     if (SDL_AtomicGet(&player.stop)) {
         SDL_UnlockMutex(player.lock);
@@ -1245,7 +1243,7 @@ static int select_live_video_stream(const int automatic) {
     if (!player.live_variants) return automatic;
     for (unsigned int index = 0; index < player.format->nb_streams; index++) {
         if (player.format->streams[index]->codecpar->codec_type != AVMEDIA_TYPE_VIDEO) continue;
-        player.live_variants[player.live_variant_count++] = (live_variant){
+        player.live_variants[player.live_variant_count++] = (live_variant) {
             .stream = (int) index,
             .bitrate = live_stream_bitrate(index),
             .width = player.format->streams[index]->codecpar->width,
@@ -1758,8 +1756,8 @@ static void flush_decoders(void) {
     if (player.filter_source && player.filter_sink) {
         const int flush_result = av_buffersrc_add_frame_flags(player.filter_source, NULL, 0);
         if (flush_result >= 0)
-            while (!SDL_AtomicGet(&player.stop) && av_buffersink_get_frame(player.filter_sink, player.filter_frame) >= 0
-            )
+            while (!SDL_AtomicGet(&player.stop)
+                   && av_buffersink_get_frame(player.filter_sink, player.filter_frame) >= 0)
                 if (!queue_push(player.filter_frame)) break;
     }
     SDL_AtomicSet(&player.eof, 1);
@@ -2115,8 +2113,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
         SDL_UnlockMutex(player.lock);
         SDL_LockAudio();
         if (player.audio_clock_valid && player.audio_rate > 0) {
-            const double audio_position =
-                player.audio_origin + player.audio_frames_played / (double) player.audio_rate;
+            const double audio_position = player.audio_origin + player.audio_frames_played / (double) player.audio_rate;
             const double difference = player.position - audio_position;
             if (difference > 0.0) {
                 int discard = (int) llround(difference * player.audio_rate);
@@ -2199,7 +2196,9 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     if (present_due && player.frame_blend && player.presented_timestamp >= 0.0) {
         double next_timestamp = -1.0;
         if (prepare_blend_frame(&next_timestamp) && next_timestamp > player.presented_timestamp) {
-            video_render_set_blend((clock - player.presented_timestamp) / (next_timestamp - player.presented_timestamp));
+            video_render_set_blend(
+                (clock - player.presented_timestamp) / (next_timestamp - player.presented_timestamp)
+            );
             player.present_dirty = 1;
         }
     }
@@ -2380,17 +2379,17 @@ static int save_bookmark(const char *name, const int quick) {
     }
 
     const int result = quick ? video_bookmark_set_quick(
-                           player.uri, player.title, player.position, player.duration,
-                           player.audio_only ? ""
-                           : thumbnail[0]    ? thumbnail
-                                             : NULL
-                       )
+                                   player.uri, player.title, player.position, player.duration,
+                                   player.audio_only ? ""
+                                   : thumbnail[0]    ? thumbnail
+                                                     : NULL
+                               )
                              : video_bookmark_add(
-                                 player.uri, player.title, name, player.position, player.duration,
-                                 player.audio_only ? ""
-                                 : thumbnail[0]    ? thumbnail
-                                                   : NULL
-                             );
+                                   player.uri, player.title, name, player.position, player.duration,
+                                   player.audio_only ? ""
+                                   : thumbnail[0]    ? thumbnail
+                                                     : NULL
+                               );
     if (result < 0) {
         if (thumbnail[0] && !thumbnail_existed) remove(thumbnail);
         return 0;
@@ -3175,9 +3174,9 @@ static int player_open(const char *uri, const char *title, const video_player_op
     }
     player.audio_stream = live_audio >= 0 ? live_audio
                                           : av_find_best_stream(
-                                              player.format, AVMEDIA_TYPE_AUDIO, -1,
-                                              player.video_stream >= 0 ? player.video_stream : -1, NULL, 0
-                                          );
+                                                player.format, AVMEDIA_TYPE_AUDIO, -1,
+                                                player.video_stream >= 0 ? player.video_stream : -1, NULL, 0
+                                            );
     if (player.video_stream < 0 && player.audio_stream < 0)
         return player_open_failed("stream selection", AVERROR_STREAM_NOT_FOUND);
     if (player.live) {
@@ -3223,8 +3222,8 @@ static int player_open(const char *uri, const char *title, const video_player_op
         player.filter_frame = av_frame_alloc();
     }
     if (!player.packet || (player.live && !player.demux_packet) || !player.decode_frame
-        || (player.video_decoder && (!player.present_frame || !player.blend_frame || !player.filter_frame)) || !player.lock
-        || !player.condition)
+        || (player.video_decoder && (!player.present_frame || !player.blend_frame || !player.filter_frame))
+        || !player.lock || !player.condition)
         return player_open_failed("playback buffers", AVERROR(ENOMEM));
     if (player.video_decoder) {
         for (int i = 0; i < player.video_queue_limit; ++i) {

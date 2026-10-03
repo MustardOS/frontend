@@ -22,10 +22,8 @@ typedef struct {
     session_kind kind;
 } session_field;
 
-#define SESSION_I16(member)                                                                                            \
-    { #member, offsetof(wasabi_video_config, member), session_i16 }
-#define SESSION_TEXT(member)                                                                                           \
-    { #member, offsetof(wasabi_video_config, member), session_text }
+#define SESSION_I16(member)  {#member, offsetof(wasabi_video_config, member), session_i16}
+#define SESSION_TEXT(member) {#member, offsetof(wasabi_video_config, member), session_text}
 
 static const session_field fields[] = {
     SESSION_I16(scaling_mode),

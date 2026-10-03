@@ -461,14 +461,10 @@ void update_file_counter(lv_obj_t *counter, const int file_count) {
     }
 }
 
-void update_item_counter(
-    lv_obj_t *counter, const size_t current, const size_t total, const int visible
-) {
+void update_item_counter(lv_obj_t *counter, const size_t current, const size_t total, const int visible) {
     if (counter && visible && current < total) {
         char counter_text[MAX_BUFFER_SIZE];
-        snprintf(
-            counter_text, sizeof(counter_text), "%zu%s%zu", current + 1, theme.counter.text_separator, total
-        );
+        snprintf(counter_text, sizeof(counter_text), "%zu%s%zu", current + 1, theme.counter.text_separator, total);
         counter_message(counter, counter_text, theme.counter.text_fade_time * 60);
     } else if (counter) {
         lv_obj_add_flag(counter, LV_OBJ_FLAG_HIDDEN);
@@ -1387,8 +1383,8 @@ static int content_uses_muxmedia(const char *resolved) {
     free(sys_dir);
 
     if (count <= launch_index || !lines[core_index][0] || !lines[launch_index][0]) return 0;
-    cached_is_muxmedia = strcasecmp(lines[core_index], "ext-video") == 0
-                         || strcasecmp(lines[launch_index], "ext-video.sh") == 0;
+    cached_is_muxmedia =
+        strcasecmp(lines[core_index], "ext-video") == 0 || strcasecmp(lines[launch_index], "ext-video.sh") == 0;
     return cached_is_muxmedia;
 }
 

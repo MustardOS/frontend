@@ -65,8 +65,7 @@ static const char *logo_extension(const char *source) {
     const char *dot = strrchr(source, '.');
     if (!dot || (query && dot > query)) return ".png";
     const size_t length = query ? (size_t) (query - dot) : strlen(dot);
-    if ((length == 4 && (!strncasecmp(dot, ".png", 4) || !strncasecmp(dot, ".jpg", 4)
-                         || !strncasecmp(dot, ".svg", 4)))
+    if ((length == 4 && (!strncasecmp(dot, ".png", 4) || !strncasecmp(dot, ".jpg", 4) || !strncasecmp(dot, ".svg", 4)))
         || (length == 5 && (!strncasecmp(dot, ".jpeg", 5) || !strncasecmp(dot, ".webp", 5))))
         return dot;
     return ".png";
@@ -77,8 +76,8 @@ static int logo_cache_path(const char *source, char *path, const size_t size) {
     const char *query = strchr(suffix, '?');
     const size_t suffix_length = query ? (size_t) (query - suffix) : strlen(suffix);
     const int written = snprintf(
-        path, size, WASABI_SHARE_PATH "logo/%016llx%.*s", (unsigned long long) logo_key(source),
-        (int) suffix_length, suffix
+        path, size, WASABI_SHARE_PATH "logo/%016llx%.*s", (unsigned long long) logo_key(source), (int) suffix_length,
+        suffix
     );
     return written > 0 && (size_t) written < size;
 }
@@ -95,10 +94,8 @@ static void logo_download_complete(const int result) {
 }
 
 static void logo_download_start(void) {
-    if (!logo_desired[0] || logo_downloading[0]
-        || atomic_load_explicit(&download_in_progress, memory_order_acquire)
-        || strcmp(logo_desired, logo_failed) == 0
-        || !SDL_TICKS_PASSED(SDL_GetTicks(), logo_ready_at))
+    if (!logo_desired[0] || logo_downloading[0] || atomic_load_explicit(&download_in_progress, memory_order_acquire)
+        || strcmp(logo_desired, logo_failed) == 0 || !SDL_TICKS_PASSED(SDL_GetTicks(), logo_ready_at))
         return;
 
     char path[PATH_MAX];
@@ -163,9 +160,7 @@ static void list_nav_next(const int steps) {
 }
 
 static size_t playlist_window_capacity(void) {
-    size_t capacity = theme.mux.item.count > 0
-                          ? (size_t) theme.mux.item.count * LIST_WINDOW_SCALE
-                          : LIST_WINDOW_MIN;
+    size_t capacity = theme.mux.item.count > 0 ? (size_t) theme.mux.item.count * LIST_WINDOW_SCALE : LIST_WINDOW_MIN;
     if (capacity < LIST_WINDOW_MIN) capacity = LIST_WINDOW_MIN;
     if (capacity > LIST_WINDOW_MAX) capacity = LIST_WINDOW_MAX;
     return capacity < playlist_entry_count ? capacity : playlist_entry_count;
@@ -221,8 +216,7 @@ static void format_position(const double seconds, char *buffer, const size_t siz
 static void populate_bookmarks(void) {
     video_state_entry *state = NULL;
     size_t count = 0;
-    if (video_bookmark_load(&state, &count) < 0)
-        LOG_ERROR(mux_module, "Unable to read video bookmarks");
+    if (video_bookmark_load(&state, &count) < 0) LOG_ERROR(mux_module, "Unable to read video bookmarks");
 
     for (size_t i = 0; i < count; ++i) {
         char position[32];
@@ -251,12 +245,10 @@ static void populate_state(const int collection) {
     if (result < 0) LOG_ERROR(mux_module, "Unable to read video %s", collection ? "collection" : "history");
 
     for (size_t i = 0; i < count; ++i) {
-        const char *target = !collection && state[i].live && state[i].name && state[i].name[0]
-                                 ? state[i].name
-                                 : state[i].uri;
+        const char *target =
+            !collection && state[i].live && state[i].name && state[i].name[0] ? state[i].name : state[i].uri;
         add_media_item(target, state[i].title, NULL, state[i].live);
-        if (!collection && item_count && !video_path_is_audio(target)
-            && state[i].thumbnail && state[i].thumbnail[0])
+        if (!collection && item_count && !video_path_is_audio(target) && state[i].thumbnail && state[i].thumbnail[0])
             items[item_count - 1].grid_image = strdup(state[i].thumbnail);
     }
 
@@ -340,7 +332,8 @@ static const char *empty_message(void) {
             return lang.muxmedia.empty_live_tv;
         case screen_playlist:
             return playlist_channels ? lang.muxmedia.empty_live_tv
-                                     : playlist_audio ? lang.muxmedia.empty_audio : lang.muxmedia.empty_videos;
+                   : playlist_audio  ? lang.muxmedia.empty_audio
+                                     : lang.muxmedia.empty_videos;
         default:
             return "";
     }
@@ -355,8 +348,8 @@ static void update_nav(void) {
     const int media = active_screen != screen_home && ui_count_static > 0;
     const int bookmark = active_screen == screen_bookmarks;
     const int collection_action = media && active_screen != screen_playlist;
-    const int collected = collection_action && !bookmark
-                          && video_collection_contains(items[current_item_index].extra_data);
+    const int collected =
+        collection_action && !bookmark && video_collection_contains(items[current_item_index].extra_data);
 
     nav_hide_all();
     setup_nav((struct nav_bar[]) {
@@ -400,10 +393,10 @@ static void update_preview(void) {
     static const int divisors[] = {3, 2, 3};
     const int divisor = channel ? 4 : divisors[config.video.thumbnail_size];
     const int multiplier = !channel && config.video.thumbnail_size == 2 ? 2 : 1;
-    const int16_t max_height = channel
-                                   ? (int16_t) ((device.mux.height - theme.header.height - theme.footer.height) / 4)
-                                   : (int16_t) ((device.mux.height - theme.header.height - theme.footer.height - 8)
-                                               * multiplier / divisor);
+    const int16_t max_height =
+        channel
+            ? (int16_t) ((device.mux.height - theme.header.height - theme.footer.height) / 4)
+            : (int16_t) ((device.mux.height - theme.header.height - theme.footer.height - 8) * multiplier / divisor);
     const struct image_settings settings = {
         .image_path = (char *) thumbnail,
         .align = LV_ALIGN_BOTTOM_RIGHT,
@@ -464,8 +457,10 @@ static void rebuild_screen(void) {
     if (ui_count_static) {
         if (active_screen == screen_playlist) {
             const int focus = (int) (playlist_selected_index - playlist_window_start);
-            if (focus > 0) gen_step_movement(focus, 1, 1, 0, 0);
-            else list_nav_next(0);
+            if (focus > 0)
+                gen_step_movement(focus, 1, 1, 0, 0);
+            else
+                list_nav_next(0);
         } else {
             list_nav_next(0);
         }
@@ -495,31 +490,31 @@ static void playlist_select(const size_t target) {
 
 static void playlist_step(const int direction, const int wrap) {
     if (msgbox_active) {
-        if (direction < 0) handle_list_nav_up();
-        else handle_list_nav_down();
+        if (direction < 0)
+            handle_list_nav_up();
+        else
+            handle_list_nav_down();
         return;
     }
     if (block_input || playlist_entry_count < 2) return;
     playlist_select(
-        video_playlist_step(
-            playlist_entries, playlist_entry_count, playlist_selected_index, direction, 1, wrap
-        )
+        video_playlist_step(playlist_entries, playlist_entry_count, playlist_selected_index, direction, 1, wrap)
     );
 }
 
 static void playlist_skip(const int direction) {
     if (msgbox_active) {
-        if (direction < 0) handle_list_nav_page_up();
-        else handle_list_nav_page_down();
+        if (direction < 0)
+            handle_list_nav_page_up();
+        else
+            handle_list_nav_page_down();
         return;
     }
     if (block_input || page_nav_blocked || playlist_entry_count < 2) return;
-    playlist_select(
-        video_playlist_skip(
-            playlist_entries, playlist_entry_count, playlist_selected_index, direction,
-            theme.mux.item.count > 0 ? (size_t) theme.mux.item.count : 1U, config.visual.page_skip != 0
-        )
-    );
+    playlist_select(video_playlist_skip(
+        playlist_entries, playlist_entry_count, playlist_selected_index, direction,
+        theme.mux.item.count > 0 ? (size_t) theme.mux.item.count : 1U, config.visual.page_skip != 0
+    ));
 }
 
 static void handle_playlist_up(void) {
@@ -547,20 +542,25 @@ static void handle_playlist_page_down(void) {
 }
 
 static void enter_screen(const char *key) {
-    if (strcmp(key, "history") == 0) active_screen = screen_history;
-    else if (strcmp(key, "bookmarks") == 0) active_screen = screen_bookmarks;
-    else if (strcmp(key, "collection") == 0) active_screen = screen_collection;
-    else if (strcmp(key, "videos") == 0) active_screen = screen_videos;
-    else if (strcmp(key, "audio") == 0) active_screen = screen_audio;
-    else if (strcmp(key, "live") == 0) active_screen = screen_live;
+    if (strcmp(key, "history") == 0)
+        active_screen = screen_history;
+    else if (strcmp(key, "bookmarks") == 0)
+        active_screen = screen_bookmarks;
+    else if (strcmp(key, "collection") == 0)
+        active_screen = screen_collection;
+    else if (strcmp(key, "videos") == 0)
+        active_screen = screen_videos;
+    else if (strcmp(key, "audio") == 0)
+        active_screen = screen_audio;
+    else if (strcmp(key, "live") == 0)
+        active_screen = screen_live;
     rebuild_screen();
 }
 
 static void request_playback(const content_item *item) {
     snprintf(selected_uri, sizeof(selected_uri), "%s", item->extra_data);
     snprintf(
-        selected_title, sizeof(selected_title), "%s",
-        item->help && item->help[0] ? item->help : item->display_name
+        selected_title, sizeof(selected_title), "%s", item->help && item->help[0] ? item->help : item->display_name
     );
     selected_live = item->folder_item_count;
     selected_start = active_screen == screen_bookmarks ? (double) item->order.play_time / 1000.0 : 0.0;
@@ -612,9 +612,7 @@ static void handle_x(void) {
         rebuild_screen();
         return;
     }
-    if (video_collection_toggle(
-            item->extra_data, item->display_name, item->folder_item_count, &collected
-        ) < 0) {
+    if (video_collection_toggle(item->extra_data, item->display_name, item->folder_item_count, &collected) < 0) {
         play_sound(snd_error);
         return;
     }
@@ -771,15 +769,16 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,
-        .press_handler = {
-            [mux_input_a] = handle_a,
-            [mux_input_b] = handle_b,
-            [mux_input_x] = handle_x,
-            [mux_input_dpad_up] = handle_playlist_up,
-            [mux_input_dpad_down] = handle_playlist_down,
-            [mux_input_l1] = handle_playlist_page_up,
-            [mux_input_r1] = handle_playlist_page_down,
-        },
+        .press_handler =
+            {
+                [mux_input_a] = handle_a,
+                [mux_input_b] = handle_b,
+                [mux_input_x] = handle_x,
+                [mux_input_dpad_up] = handle_playlist_up,
+                [mux_input_dpad_down] = handle_playlist_down,
+                [mux_input_l1] = handle_playlist_page_up,
+                [mux_input_r1] = handle_playlist_page_down,
+            },
         .release_handler = {[mux_input_menu] = handle_help},
         .hold_handler = {
             [mux_input_dpad_up] = handle_playlist_up_hold,

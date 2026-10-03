@@ -46,9 +46,8 @@ void init_muxwebcode(lv_obj_t *ui_pnl_content, const lv_font_t *code_font) {
     lv_obj_set_style_radius(ui_pnl_qr_webcode, device.mux.height <= 480 ? 8 : 12, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_all(ui_pnl_qr_webcode, 8, MU_OBJ_MAIN_DEFAULT);
 
-    ui_qr_address_webcode = lv_qrcode_create(
-        ui_pnl_qr_webcode, qr_size, lv_color_hex(0x000000), lv_color_hex(0xffffff)
-    );
+    ui_qr_address_webcode =
+        lv_qrcode_create(ui_pnl_qr_webcode, qr_size, lv_color_hex(0x000000), lv_color_hex(0xffffff));
     lv_obj_center(ui_qr_address_webcode);
 
     lv_obj_t *ui_pnl_details_webcode = lv_obj_create(ui_pnl_content);
@@ -56,9 +55,7 @@ void init_muxwebcode(lv_obj_t *ui_pnl_content, const lv_font_t *code_font) {
     lv_obj_set_height(ui_pnl_details_webcode, LV_SIZE_CONTENT);
     lv_obj_set_flex_grow(ui_pnl_details_webcode, 1);
     lv_obj_set_flex_flow(ui_pnl_details_webcode, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(
-        ui_pnl_details_webcode, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER
-    );
+    lv_obj_set_flex_align(ui_pnl_details_webcode, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnl_details_webcode, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(ui_pnl_details_webcode, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(ui_pnl_details_webcode, 0, MU_OBJ_MAIN_DEFAULT);

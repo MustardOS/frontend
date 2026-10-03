@@ -291,7 +291,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/hotkey", "screenshot", CFG_OFF(settings.general.hkshot), 0, {.i = 0}},
 
     // settings/hdmi/
-    {CONF_CONFIG_PATH "settings/hdmi", "resolution", CFG_OFF(settings.hdmi.resolution), 0, {.i = 0}},
+    {CONF_CONFIG_PATH "settings/hdmi", "resolution", CFG_OFF(settings.hdmi.resolution), 0, {.i = 2}, 1, 0, 5},
     {CONF_CONFIG_PATH "settings/hdmi", "space", CFG_OFF(settings.hdmi.space), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/hdmi", "depth", CFG_OFF(settings.hdmi.depth), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/hdmi", "range", CFG_OFF(settings.hdmi.range), 0, {.i = 0}},

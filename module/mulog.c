@@ -18,11 +18,11 @@
 #include <common/base/options.h>
 #include <common/runtime/log.h>
 
-#define LOG_DIR "/opt/muos/log"
-#define LOG_SCK "/run/muos/arborist.sock"
-#define LOG_PID "/run/muos/arborist.pid"
+#define LOG_DIR  "/opt/muos/log"
+#define LOG_SCK  "/run/muos/arborist.sock"
+#define LOG_PID  "/run/muos/arborist.pid"
 #define LOG_LOCK "/run/muos/arborist.lock"
-#define MSG_BIN "/opt/muos/frontend/muxmessage"
+#define MSG_BIN  "/opt/muos/frontend/muxmessage"
 
 #define SYS_DEBUG_FILE "/opt/muos/config/system/debug_mode"
 #define VERBOSE_FILE   "/opt/muos/config/settings/advanced/verbose"

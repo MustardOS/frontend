@@ -3,7 +3,7 @@
 #include <math.h>
 
 #define RADIAL_POINTS 128
-#define VIS_TAU 6.28318530717958647692f
+#define VIS_TAU       6.28318530717958647692f
 
 static float phase;
 

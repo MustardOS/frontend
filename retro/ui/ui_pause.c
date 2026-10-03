@@ -740,8 +740,7 @@ static void pause_menu_show_help(void) {
 void pause_menu_rebuild(void) {
     content_switch_active = 0;
     content_switch_free(&content_switch_items);
-    if (!netplay_is_active() && !link_is_engaged())
-        content_switch_load(&content_switch_items, core_content_path);
+    if (!netplay_is_active() && !link_is_engaged()) content_switch_load(&content_switch_items, core_content_path);
     lv_obj_clean(ui_pnl_content);
     reset_ui_groups();
 
@@ -786,17 +785,14 @@ static void content_switch_open(void) {
     }
 
     lv_label_set_text(ui_lbl_title, lang.content_switch.title);
-    lv_label_set_text(
-        ui_lbl_screen_message, content_switch_items.count ? "" : lang.content_switch.empty
-    );
+    lv_label_set_text(ui_lbl_screen_message, content_switch_items.count ? "" : lang.content_switch.empty);
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
                                   {ui_lbl_nav_a, lang.generic.select, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
     pause_menu_fix_nav_order();
-    if (content_switch_items.count)
-        gen_step_movement((int) content_switch_items.selected, 1, 1, 0, 0);
+    if (content_switch_items.count) gen_step_movement((int) content_switch_items.selected, 1, 1, 0, 0);
 }
 
 static int content_switch_select(void) {

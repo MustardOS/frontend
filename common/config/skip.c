@@ -20,7 +20,8 @@ static int resize_buckets(skip_list *sl, const size_t capacity) {
 
     for (size_t item = 0; item < sl->count; item++) {
         size_t bucket = skip_hash(sl->items[item], capacity);
-        while (buckets[bucket]) bucket = (bucket + 1) & (capacity - 1);
+        while (buckets[bucket])
+            bucket = (bucket + 1) & (capacity - 1);
         buckets[bucket] = sl->items[item];
     }
 

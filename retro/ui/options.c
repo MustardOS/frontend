@@ -49,9 +49,8 @@ static void store_info(struct core_option_entry *e, const char *info) {
     e->info = (info && *info) ? strdup(info) : NULL;
 }
 
-static void store_values(
-    struct core_option_entry *e, const struct retro_core_option_value *values, const char *default_value
-) {
+static void
+store_values(struct core_option_entry *e, const struct retro_core_option_value *values, const char *default_value) {
     e->values = NULL;
     e->value_count = 0;
     e->current_index = 0;

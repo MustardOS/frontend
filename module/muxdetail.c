@@ -704,8 +704,7 @@ static const char *get_off_battery_change(void) {
     static char buffer[UI_BUFFER];
     long value;
 
-    if (read_power_history_value("last_off_capacity_delta", &value) != 0 || value < -100 || value > 100)
-        return "-";
+    if (read_power_history_value("last_off_capacity_delta", &value) != 0 || value < -100 || value > 100) return "-";
 
     if (value == 0)
         snprintf(buffer, sizeof(buffer), "0%%");

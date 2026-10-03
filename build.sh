@@ -10,16 +10,24 @@ BUILD=${BUILD:-test}
 XTOOL=${XTOOL:-"$HOME/x-tools"}
 XDIR=${XDIR:-${XHOST:-}}
 
+# Pinned because clang format output changes between releases and
+# this is the one we currently use... royal we! Meaning me!
+FORMAT_VERSION=21.1.8
+
 USAGE() {
 	printf "MustardOS Frontend Builder + Cross Compile Tool\n"
 	printf "\n"
 	printf "%s\n" "Usage:"
 	printf "  %s guided setup so no flags to remember\n" "$0"
 	printf "  %s [print|generate|database|make [args...]]\n" "$0"
+	printf "  %s format [--check] [files...]\n" "$0"
 	printf "\n"
 	printf "%s\n" "Examples:"
 	printf "  %s print\n" "$0"
 	printf "  %s generate\n" "$0"
+	printf "  %s format\n" "$0"
+	printf "  %s format --check\n" "$0"
+	printf "  %s format retro/ui/ui_manual.c\n" "$0"
 	printf "  %s database -j4\n" "$0"
 	printf "  %s make -j4\n" "$0"
 	printf "  DEVICE=ARM32 BUILD=release %s make -j4\n" "$0"
@@ -30,6 +38,7 @@ USAGE() {
 	printf "  DEBUG    0 quiet, 1 normal, 2 verbose\n"
 	printf "  XTOOL    toolchain root, default %s/x-tools\n" "$HOME"
 	printf "  XDIR     toolchain directory under XTOOL, detected when unset\n\n"
+	printf "  CLANG_FORMAT         clang-format %s binary, installed into .cache when unset\n" "$FORMAT_VERSION"
 	printf "  INTERNAL_SCRIPT_DIR  internal scripts used to generate verification data\n"
 	printf "  INTERNAL_WEB_DIR     dashboard sources checked against the dashboard language list\n"
 	printf "  LANGUAGE_OUTPUT      generated language template output path\n"
@@ -632,10 +641,131 @@ COMPILE_DATABASE() {
 	printf 'Wrote %s\n' "$DB_OUTPUT"
 }
 
+FORMAT_IS_PINNED() {
+	[ -n "$1" ] || return 1
+	"$1" --version 2>/dev/null | grep -q "clang-format version $FORMAT_VERSION\( \|$\)"
+}
+
+# Use CLANG_FORMAT or a matching one on PATH, otherwise install the pinned release into .cache
+FIND_CLANG_FORMAT() {
+	FORMAT_ENV="$FRONTEND_DIR/.cache/clang-format-$FORMAT_VERSION"
+	FORMAT_BIN="$FORMAT_ENV/bin/clang-format"
+
+	if [ -n "${CLANG_FORMAT-}" ]; then
+		if FORMAT_IS_PINNED "$CLANG_FORMAT"; then
+			FORMAT_BIN=$CLANG_FORMAT
+			return 0
+		fi
+
+		printf "Error: CLANG_FORMAT=%s is not clang-format %s\n" "$CLANG_FORMAT" "$FORMAT_VERSION" 1>&2
+		exit 1
+	fi
+
+	FORMAT_IS_PINNED "$FORMAT_BIN" && return 0
+
+	for FORMAT_TRY in clang-format-21 clang-format; do
+		FORMAT_PATH=$(command -v "$FORMAT_TRY" 2>/dev/null || true)
+		if FORMAT_IS_PINNED "$FORMAT_PATH"; then
+			FORMAT_BIN=$FORMAT_PATH
+			return 0
+		fi
+	done
+
+	if ! command -v python3 >/dev/null 2>&1; then
+		printf "Error: clang-format %s not found and python3 is needed to install it\n" "$FORMAT_VERSION" 1>&2
+		printf "  Set CLANG_FORMAT to a clang-format %s binary instead\n" "$FORMAT_VERSION" 1>&2
+		exit 1
+	fi
+
+	printf "Installing clang-format %s into %s\n" "$FORMAT_VERSION" "$FORMAT_ENV"
+	rm -rf "$FORMAT_ENV"
+
+	if ! python3 -m venv "$FORMAT_ENV" ||
+		! "$FORMAT_ENV/bin/python3" -m pip install -q --disable-pip-version-check "clang-format==$FORMAT_VERSION"; then
+		rm -rf "$FORMAT_ENV"
+		printf "Error: could not install clang-format %s with python3 venv and pip\n" "$FORMAT_VERSION" 1>&2
+		exit 1
+	fi
+
+	if ! FORMAT_IS_PINNED "$FORMAT_BIN"; then
+		printf "Error: installed clang-format does not report version %s\n" "$FORMAT_VERSION" 1>&2
+		exit 1
+	fi
+}
+
+# Tracked sources only, clang-format skips anything listed in .clang-format-ignore
+FORMAT_SOURCES() {
+	git -C "$FRONTEND_DIR" ls-files -- '*.c' '*.h'
+}
+
+FORMAT() {
+	FRONTEND_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+
+	FORMAT_CHECK=0
+	if [ "${1-}" = "--check" ]; then
+		FORMAT_CHECK=1
+		shift
+	fi
+
+	FIND_CLANG_FORMAT
+
+	FORMAT_LIST=$(mktemp)
+	trap 'rm -f "$FORMAT_LIST"' EXIT
+
+	if [ $# -gt 0 ]; then
+		printf "%s\n" "$@" >"$FORMAT_LIST"
+	else
+		cd "$FRONTEND_DIR"
+		FORMAT_SOURCES >"$FORMAT_LIST"
+	fi
+
+	FORMAT_BAD=0
+	FORMAT_DONE=0
+
+	while IFS= read -r FORMAT_FILE; do
+		[ -n "$FORMAT_FILE" ] || continue
+
+		if [ ! -f "$FORMAT_FILE" ]; then
+			printf "Error: %s not found\n" "$FORMAT_FILE" 1>&2
+			exit 1
+		fi
+
+		if [ "$FORMAT_CHECK" -eq 1 ]; then
+			if ! "$FORMAT_BIN" --dry-run -Werror "$FORMAT_FILE" >/dev/null 2>&1; then
+				printf "Needs formatting: %s\n" "$FORMAT_FILE"
+				FORMAT_BAD=$((FORMAT_BAD + 1))
+			fi
+		else
+			# Rewriting in place drops the executable bit the sources are tracked with
+			FORMAT_EXEC=0
+			[ ! -x "$FORMAT_FILE" ] || FORMAT_EXEC=1
+
+			"$FORMAT_BIN" -i "$FORMAT_FILE"
+
+			[ "$FORMAT_EXEC" -eq 0 ] || chmod +x "$FORMAT_FILE"
+		fi
+
+		FORMAT_DONE=$((FORMAT_DONE + 1))
+	done <"$FORMAT_LIST"
+
+	if [ "$FORMAT_CHECK" -eq 1 ]; then
+		printf "Checked %d files with clang-format %s, %d need formatting\n" "$FORMAT_DONE" "$FORMAT_VERSION" "$FORMAT_BAD"
+		[ "$FORMAT_BAD" -eq 0 ] || exit 1
+	else
+		printf "Formatted %d files with clang-format %s\n" "$FORMAT_DONE" "$FORMAT_VERSION"
+	fi
+}
+
 if [ "${1-}" = "generate" ]; then
 	shift
 	[ $# -eq 0 ] || USAGE
 	GENERATE
+	exit 0
+fi
+
+if [ "${1-}" = "format" ]; then
+	shift
+	FORMAT "$@"
 	exit 0
 fi
 

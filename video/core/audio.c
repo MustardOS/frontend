@@ -28,8 +28,7 @@ static void tag_copy(char *output, const size_t size, const AVDictionary *metada
     snprintf(output, size, "%s", entry && entry->value ? entry->value : "");
 }
 
-static void tag_copy_fallback(char *output, const size_t size, const AVDictionary *metadata,
-                              const char *key) {
+static void tag_copy_fallback(char *output, const size_t size, const AVDictionary *metadata, const char *key) {
     if (!output[0]) tag_copy(output, size, metadata, key);
 }
 
@@ -39,10 +38,9 @@ static int neighbouring_artwork(const char *uri, char *output, const size_t size
     char *separator = strrchr(directory, '/');
     if (!separator) return 0;
     *separator = '\0';
-    static const char *const names[] = {
-        "cover.jpg", "cover.jpeg", "cover.png", "cover.webp", "folder.jpg", "folder.jpeg", "folder.png",
-        "folder.webp", "front.jpg", "front.jpeg", "front.png", "album.jpg", "album.png"
-    };
+    static const char *const names[] = {"cover.jpg",   "cover.jpeg", "cover.png",   "cover.webp", "folder.jpg",
+                                        "folder.jpeg", "folder.png", "folder.webp", "front.jpg",  "front.jpeg",
+                                        "front.png",   "album.jpg",  "album.png"};
     for (size_t index = 0; index < sizeof(names) / sizeof(names[0]); index++) {
         if (snprintf(output, size, "%s/%s", directory, names[index]) >= (int) size) continue;
         if (file_exist(output)) return 1;
@@ -51,18 +49,17 @@ static int neighbouring_artwork(const char *uri, char *output, const size_t size
     return 0;
 }
 
-static int catalogue_artwork(
-    const char *uri, const char *fallback_title, char *output, const size_t size
-) {
+static int catalogue_artwork(const char *uri, const char *fallback_title, char *output, const size_t size) {
     char catalogue[MAX_BUFFER_SIZE];
     get_catalogue_name_for_content(uri, catalogue, sizeof(catalogue));
     if (!catalogue[0]) return 0;
 
     char *program = strip_ext(get_file_name(uri));
     char *alternate = strip_ext(get_file_name(fallback_title ? fallback_title : ""));
-    const int found = program && load_image_catalogue(
-        catalogue, program, alternate ? alternate : "", "default", mux_dim, "box", output, size
-    );
+    const int found = program
+                      && load_image_catalogue(
+                          catalogue, program, alternate ? alternate : "", "default", mux_dim, "box", output, size
+                      );
     free(program);
     free(alternate);
     return found;
@@ -72,8 +69,7 @@ static int attached_artwork(AVFormatContext *format, char *output, const size_t 
     if (!format) return 0;
     for (unsigned int index = 0; index < format->nb_streams; index++) {
         AVStream *stream = format->streams[index];
-        if (stream->codecpar->codec_type != AVMEDIA_TYPE_VIDEO
-            || !(stream->disposition & AV_DISPOSITION_ATTACHED_PIC)
+        if (stream->codecpar->codec_type != AVMEDIA_TYPE_VIDEO || !(stream->disposition & AV_DISPOSITION_ATTACHED_PIC)
             || stream->attached_pic.size <= 0)
             continue;
 
@@ -84,8 +80,7 @@ static int attached_artwork(AVFormatContext *format, char *output, const size_t 
         uint8_t *rgb = NULL;
         int okay = 0;
         if (!context || !frame || avcodec_parameters_to_context(context, stream->codecpar) < 0
-            || avcodec_open2(context, codec, NULL) < 0
-            || avcodec_send_packet(context, &stream->attached_pic) < 0
+            || avcodec_open2(context, codec, NULL) < 0 || avcodec_send_packet(context, &stream->attached_pic) < 0
             || avcodec_receive_frame(context, frame) < 0 || frame->width <= 0 || frame->height <= 0)
             goto done;
 
@@ -106,18 +101,18 @@ static int attached_artwork(AVFormatContext *format, char *output, const size_t 
         const size_t bytes = (size_t) output_width * (size_t) output_height * 3U;
         rgb = av_malloc(bytes);
         if (!rgb) goto done;
-        scale = sws_getContext(frame->width, frame->height, (enum AVPixelFormat) frame->format,
-                               output_width, output_height, AV_PIX_FMT_RGB24, SWS_FAST_BILINEAR,
-                               NULL, NULL, NULL);
+        scale = sws_getContext(
+            frame->width, frame->height, (enum AVPixelFormat) frame->format, output_width, output_height,
+            AV_PIX_FMT_RGB24, SWS_FAST_BILINEAR, NULL, NULL, NULL
+        );
         if (!scale) goto done;
         uint8_t *planes[] = {rgb, NULL, NULL, NULL};
         const int strides[] = {output_width * 3, 0, 0, 0};
-        if (sws_scale(scale, (const uint8_t *const *) frame->data, frame->linesize, 0, frame->height,
-                      planes, strides) <= 0)
+        if (sws_scale(scale, (const uint8_t *const *) frame->data, frame->linesize, 0, frame->height, planes, strides)
+            <= 0)
             goto done;
         mkdir("/tmp/mustardos", 0755);
-        if (snprintf(output, size, "/tmp/mustardos/wasabi-art-%ld.png", (long) getpid()) >= (int) size)
-            goto done;
+        if (snprintf(output, size, "/tmp/mustardos/wasabi-art-%ld.png", (long) getpid()) >= (int) size) goto done;
         okay = screenshot_write_rgb(output, rgb, (uint32_t) output_width, (uint32_t) output_height) == 0;
         if (!okay) output[0] = '\0';
 
@@ -131,8 +126,9 @@ static int attached_artwork(AVFormatContext *format, char *output, const size_t 
     return 0;
 }
 
-void wasabi_audio_metadata(AVFormatContext *format, const char *uri, const char *fallback_title,
-                           wasabi_audio_info *information) {
+void wasabi_audio_metadata(
+    AVFormatContext *format, const char *uri, const char *fallback_title, wasabi_audio_info *information
+) {
     if (!information) return;
     memset(information, 0, sizeof(*information));
     if (!format) {

@@ -145,11 +145,9 @@ static int board_probe_volume_event_index(void) {
         unsigned long keys[(KEY_MAX / (8 * sizeof(unsigned long))) + 1] = {0};
         int match = 0;
 
-        if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 &&
-            strcmp(name, device.board.vol_name) == 0 &&
-            ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys) >= 0 &&
-            board_key_bit_set(keys, KEY_VOLUMEUP) &&
-            board_key_bit_set(keys, KEY_VOLUMEDOWN)) {
+        if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 && strcmp(name, device.board.vol_name) == 0
+            && ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys) >= 0 && board_key_bit_set(keys, KEY_VOLUMEUP)
+            && board_key_bit_set(keys, KEY_VOLUMEDOWN)) {
             match = 1;
         }
 
@@ -172,11 +170,14 @@ int board_volume_event_index(void) {
         volume_event_cached = board_probe_volume_event_index();
 
         if (volume_event_cached != nop && volume_event_cached != table_index) {
-            LOG_INFO("board", "Volume keys found on event%d, board table said event%d",
-                     volume_event_cached, table_index);
+            LOG_INFO(
+                "board", "Volume keys found on event%d, board table said event%d", volume_event_cached, table_index
+            );
         } else if (volume_event_cached == nop) {
-            LOG_WARN("board", "No '%s' device with volume keys, using board table event%d",
-                     device.board.vol_name, table_index);
+            LOG_WARN(
+                "board", "No '%s' device with volume keys, using board table event%d", device.board.vol_name,
+                table_index
+            );
         }
     }
 

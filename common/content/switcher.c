@@ -61,7 +61,8 @@ static content_switch_native native_type(const char *path) {
     union_get_relative_path(directory, relative, sizeof(relative));
     if (strncasecmp(relative, MAIN_ROM_DIR, strlen(MAIN_ROM_DIR)) == 0) {
         char *cursor = relative + strlen(MAIN_ROM_DIR);
-        while (*cursor == '/') cursor++;
+        while (*cursor == '/')
+            cursor++;
         memmove(relative, cursor, strlen(cursor) + 1);
     }
 
@@ -87,9 +88,8 @@ static content_switch_native native_type(const char *path) {
     content_switch_native native = content_switch_native_none;
     if (core_uses_muxretro(launch) && core && *core) {
         char core_path[PATH_MAX];
-        const int written = core[0] == '/'
-                                ? snprintf(core_path, sizeof(core_path), "%s", core)
-                                : snprintf(core_path, sizeof(core_path), OPT_SHARE_PATH "core/%s", core);
+        const int written = core[0] == '/' ? snprintf(core_path, sizeof(core_path), "%s", core)
+                                           : snprintf(core_path, sizeof(core_path), OPT_SHARE_PATH "core/%s", core);
         if (written > 0 && (size_t) written < sizeof(core_path) && file_exist(core_path))
             native = content_switch_native_pickles;
     } else if ((core && strcasecmp(core, "ext-video") == 0)
@@ -169,8 +169,10 @@ int content_switch_load(content_switch_list *list, const char *current_path) {
                 free(list->entries[index].path);
                 free(list->entries[index].title);
                 if (index + 1 < list->count)
-                    memmove(&list->entries[index], &list->entries[index + 1],
-                            (list->count - index - 1) * sizeof(*list->entries));
+                    memmove(
+                        &list->entries[index], &list->entries[index + 1],
+                        (list->count - index - 1) * sizeof(*list->entries)
+                    );
                 list->count--;
                 continue;
             }
@@ -193,8 +195,7 @@ void content_switch_free(content_switch_list *list) {
 int content_switch_write_request(const char *path, const content_switch_native native) {
     if (!path || !*path) return 0;
     if (!write_text_to_file_atomic(CONTENT_SWITCH_REQUEST, CHAR, path)) return 0;
-    if (native == content_switch_native_wasabi)
-        return write_text_to_file_atomic(WASABI_HISTORY_LAUNCH, CHAR, "1");
+    if (native == content_switch_native_wasabi) return write_text_to_file_atomic(WASABI_HISTORY_LAUNCH, CHAR, "1");
     remove(WASABI_HISTORY_LAUNCH);
     return 1;
 }

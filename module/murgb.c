@@ -452,6 +452,8 @@ static void dispatch_off(void) {
         close(serial_fd);
         serial_fd = -1;
     }
+
+    if (access(MCU_DEV, W_OK) == 0) write_string(MCU_DEV, "0\n");
 }
 
 static backend_t restore_backend_from_config(const int saved) {

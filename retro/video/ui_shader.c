@@ -185,8 +185,7 @@ static void build_row(const int index) {
         lv_obj_update_layout(label);
         const lv_font_t *font = lv_obj_get_style_text_font(label, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(label, LV_PART_MAIN);
-        const lv_coord_t available = lv_obj_get_width(label)
-                                     - lv_obj_get_style_pad_left(label, LV_PART_MAIN)
+        const lv_coord_t available = lv_obj_get_width(label) - lv_obj_get_style_pad_left(label, LV_PART_MAIN)
                                      - lv_obj_get_style_pad_right(label, LV_PART_MAIN);
         if (lv_txt_get_width(text, strlen(text), font, letter_space, LV_TEXT_FLAG_EXPAND) > available) {
             show_metadata = 0;

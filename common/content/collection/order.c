@@ -34,7 +34,6 @@ static const struct {
     {order_file_size, "file_size"},     {order_feeling_lucky, "feeling_lucky"},
 };
 
-
 const char *order_method_name(const order_method method) {
     switch (method) {
         case order_play_time:

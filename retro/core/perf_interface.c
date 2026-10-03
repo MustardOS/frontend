@@ -102,7 +102,7 @@ static void perf_log(void) {
 bool perf_interface_get(struct retro_perf_callback *callback) {
     if (!callback) return false;
 
-    *callback = (struct retro_perf_callback){
+    *callback = (struct retro_perf_callback) {
         .get_time_usec = perf_time_usec,
         .get_cpu_features = cpu_features,
         .get_perf_counter = perf_counter,

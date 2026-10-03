@@ -37,17 +37,15 @@ static int step(int value, const int direction, const int amount, const int low,
     return value;
 }
 
-static const int hotkey_choices[] = {
-    mux_input_a,  mux_input_b,      mux_input_x,  mux_input_y,     mux_input_l1,        mux_input_r1,
-    mux_input_l2, mux_input_r2,     mux_input_l3, mux_input_r3,    mux_input_select,    mux_input_start,
-    mux_input_dpad_left,            mux_input_dpad_right
-};
+static const int hotkey_choices[] = {mux_input_a,         mux_input_b,         mux_input_x,      mux_input_y,
+                                     mux_input_l1,        mux_input_r1,        mux_input_l2,     mux_input_r2,
+                                     mux_input_l3,        mux_input_r3,        mux_input_select, mux_input_start,
+                                     mux_input_dpad_left, mux_input_dpad_right};
 
-static const int hotkey_defaults[] = {
-    mux_input_a,          mux_input_r2, mux_input_l2, mux_input_dpad_left, mux_input_dpad_right,
-    mux_input_l1,         mux_input_r1, mux_input_x,  mux_input_y,         mux_input_x,
-    mux_input_start,      mux_input_r1, mux_input_l1
-};
+static const int hotkey_defaults[] = {mux_input_a,          mux_input_r2, mux_input_l2,    mux_input_dpad_left,
+                                      mux_input_dpad_right, mux_input_l1, mux_input_r1,    mux_input_x,
+                                      mux_input_y,          mux_input_x,  mux_input_start, mux_input_r1,
+                                      mux_input_l1};
 
 static int16_t *const hotkey_fields[] = {
     &config.video.hotkey_pause,
@@ -65,12 +63,19 @@ static int16_t *const hotkey_fields[] = {
     &config.video.hotkey_slow_motion
 };
 
-static const char *const hotkey_keys[] = {
-    "hotkey_pause",        "hotkey_save_bookmark",  "hotkey_load_bookmark",     "hotkey_seek_back",
-    "hotkey_seek_forward", "hotkey_seek_back_long", "hotkey_seek_forward_long", "hotkey_header",
-    "hotkey_repeat",       "hotkey_shuffle",        "hotkey_quit",              "hotkey_fast_forward",
-    "hotkey_slow_motion"
-};
+static const char *const hotkey_keys[] = {"hotkey_pause",
+                                          "hotkey_save_bookmark",
+                                          "hotkey_load_bookmark",
+                                          "hotkey_seek_back",
+                                          "hotkey_seek_forward",
+                                          "hotkey_seek_back_long",
+                                          "hotkey_seek_forward_long",
+                                          "hotkey_header",
+                                          "hotkey_repeat",
+                                          "hotkey_shuffle",
+                                          "hotkey_quit",
+                                          "hotkey_fast_forward",
+                                          "hotkey_slow_motion"};
 
 #define WASABI_HOTKEY_COUNT ((int) A_SIZE(hotkey_defaults))
 
@@ -765,41 +770,33 @@ int wasabi_setting_reset_overlay(void) {
 const wasabi_setting_section *wasabi_setting_sections(size_t *count) {
     static wasabi_setting_section sections[7];
     if (audio_content) {
-        sections[0] = (wasabi_setting_section
-        ){lang.muxretro.settings_screen.category_display, wasabi_setting_playtime,
-          wasabi_setting_volume - wasabi_setting_playtime};
-        sections[1] = (wasabi_setting_section
-        ){lang.muxretro.settings_screen.category_sound, wasabi_setting_volume,
-          wasabi_setting_hotkey_pause - wasabi_setting_volume};
-        sections[2] = (wasabi_setting_section
-        ){lang.muxretro.settings_screen.category_input, wasabi_setting_hotkey_pause,
-          wasabi_setting_thumbnail - wasabi_setting_hotkey_pause};
-        sections[3] = (wasabi_setting_section
-        ){lang.muxretro.settings_screen.category_advanced, wasabi_setting_sleep,
-          wasabi_setting_count - wasabi_setting_sleep};
+        sections[0] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_display, wasabi_setting_playtime,
+                                                wasabi_setting_volume - wasabi_setting_playtime};
+        sections[1] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_sound, wasabi_setting_volume,
+                                                wasabi_setting_hotkey_pause - wasabi_setting_volume};
+        sections[2] =
+            (wasabi_setting_section) {lang.muxretro.settings_screen.category_input, wasabi_setting_hotkey_pause,
+                                      wasabi_setting_thumbnail - wasabi_setting_hotkey_pause};
+        sections[3] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_advanced, wasabi_setting_sleep,
+                                                wasabi_setting_count - wasabi_setting_sleep};
         if (count) *count = 4;
         return sections;
     }
-    sections[0] = (wasabi_setting_section
-    ){lang.muxretro.settings_screen.category_video, wasabi_setting_scaling,
-      wasabi_setting_vignette - wasabi_setting_scaling};
-    sections[1] = (wasabi_setting_section
-    ){lang.muxretro.display, wasabi_setting_vignette, wasabi_setting_overlay_source - wasabi_setting_vignette};
-    sections[2] = (wasabi_setting_section
-    ){lang.muxretro.display_screen.overlay, wasabi_setting_overlay_source,
-      wasabi_setting_viewport_adjustment - wasabi_setting_overlay_source};
-    sections[3] = (wasabi_setting_section
-    ){lang.muxretro.settings_screen.category_display, wasabi_setting_viewport_adjustment,
-      wasabi_setting_volume - wasabi_setting_viewport_adjustment};
-    sections[4] = (wasabi_setting_section
-    ){lang.muxretro.settings_screen.category_sound, wasabi_setting_volume,
-      wasabi_setting_hotkey_pause - wasabi_setting_volume};
-    sections[5] = (wasabi_setting_section
-    ){lang.muxretro.settings_screen.category_input, wasabi_setting_hotkey_pause,
-      wasabi_setting_thumbnail - wasabi_setting_hotkey_pause};
-    sections[6] = (wasabi_setting_section
-    ){lang.muxretro.settings_screen.category_advanced, wasabi_setting_thumbnail,
-      wasabi_setting_count - wasabi_setting_thumbnail};
+    sections[0] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_video, wasabi_setting_scaling,
+                                            wasabi_setting_vignette - wasabi_setting_scaling};
+    sections[1] = (wasabi_setting_section) {lang.muxretro.display, wasabi_setting_vignette,
+                                            wasabi_setting_overlay_source - wasabi_setting_vignette};
+    sections[2] = (wasabi_setting_section) {lang.muxretro.display_screen.overlay, wasabi_setting_overlay_source,
+                                            wasabi_setting_viewport_adjustment - wasabi_setting_overlay_source};
+    sections[3] =
+        (wasabi_setting_section) {lang.muxretro.settings_screen.category_display, wasabi_setting_viewport_adjustment,
+                                  wasabi_setting_volume - wasabi_setting_viewport_adjustment};
+    sections[4] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_sound, wasabi_setting_volume,
+                                            wasabi_setting_hotkey_pause - wasabi_setting_volume};
+    sections[5] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_input, wasabi_setting_hotkey_pause,
+                                            wasabi_setting_thumbnail - wasabi_setting_hotkey_pause};
+    sections[6] = (wasabi_setting_section) {lang.muxretro.settings_screen.category_advanced, wasabi_setting_thumbnail,
+                                            wasabi_setting_count - wasabi_setting_thumbnail};
     if (count) *count = 7;
     return sections;
 }
@@ -897,9 +894,9 @@ const char *wasabi_page_glyph(const wasabi_settings_page page, const int row) {
                                            "viewporty", "texturefilter", "contrast",  "saturation"};
     static const char *const adjustment[] = {"viewportx", "viewporty", "viewportx", "viewporty", "viewportzoom"};
     static const char *const cropping[] = {"croptop", "cropbottom", "cropleft", "cropright", "centrecrop"};
-    static const char *const hotkeys[] = {"pause",  "quicksave",    "quickload",   "seek",    "seek",
-                                          "seek",   "seek",         "toggleheader", "repeat",  "shuffle",
-                                          "quit",   "fastforward",  "slowmotion"};
+    static const char *const hotkeys[] = {"pause", "quicksave",   "quickload",    "seek",   "seek",
+                                          "seek",  "seek",        "toggleheader", "repeat", "shuffle",
+                                          "quit",  "fastforward", "slowmotion"};
     if (page == wasabi_page_vignette) return vignette[row];
     if (page == wasabi_page_overlay_adjustment || page == wasabi_page_viewport_adjustment) return adjustment[row];
     if (page == wasabi_page_overlay_cropping || page == wasabi_page_viewport_cropping) return cropping[row];

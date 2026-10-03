@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <common/platform/battery.h>
 #include <common/storage/fileio.h>
 #include <common/ui/common.h>
@@ -35,6 +36,8 @@
 #define BATTERY_PERCENT_JUMP      4
 #define BATTERY_PERCENT_STEP_UP   2
 #define BATTERY_PERCENT_STEP_DOWN 1
+#define BATTERY_REPORTED_STEP     2
+#define BATTERY_REVERSE_SAMPLES   4
 
 #define BATTERY_VOLTAGE_SAMPLES 5
 #define BATTERY_WARMUP_CYCLES   3
@@ -48,6 +51,9 @@ static int battery_daemon_mode = 0;
 static char daemon_voltage_path[256];
 static char daemon_capacity_path[256];
 static char daemon_charger_path[256];
+static char daemon_charge_counter_path[256];
+static char daemon_charge_full_path[256];
+static char daemon_status_path[256];
 
 static int battery_volt_min = 0;
 static int battery_volt_max = 0;
@@ -70,6 +76,8 @@ static int last_written_charging = -1;
 static int filtered_voltage_mv = 0;
 static int last_percent_source_mv = -1;
 static int battery_warmup = BATTERY_WARMUP_CYCLES;
+static int reported_reverse_percent = -1;
+static int reported_reverse_count = 0;
 
 static int voltage_samples[BATTERY_VOLTAGE_SAMPLES];
 static int voltage_sample_index = 0;
@@ -123,6 +131,9 @@ static void load_daemon_battery_config(void) {
     daemon_charger_path[0] = '\0';
     daemon_capacity_path[0] = '\0';
     daemon_voltage_path[0] = '\0';
+    daemon_charge_counter_path[0] = '\0';
+    daemon_charge_full_path[0] = '\0';
+    daemon_status_path[0] = '\0';
 
     char *battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/charger", 1);
     if (*battery_file) snprintf(daemon_charger_path, sizeof(daemon_charger_path), "%s", battery_file);
@@ -135,6 +146,22 @@ static void load_daemon_battery_config(void) {
     battery_file = read_line_char_from(BATTERY_DEVICE_CONFIG "/voltage", 1);
     if (*battery_file) snprintf(daemon_voltage_path, sizeof(daemon_voltage_path), "%s", battery_file);
     if (*battery_file) free(battery_file);
+
+    char *separator = strrchr(daemon_capacity_path, '/');
+    if (separator) {
+        const int directory_length = (int) (separator - daemon_capacity_path);
+        snprintf(
+            daemon_charge_counter_path, sizeof(daemon_charge_counter_path), "%.*s/charge_counter", directory_length,
+            daemon_capacity_path
+        );
+        snprintf(
+            daemon_charge_full_path, sizeof(daemon_charge_full_path), "%.*s/charge_full", directory_length,
+            daemon_capacity_path
+        );
+        snprintf(
+            daemon_status_path, sizeof(daemon_status_path), "%.*s/status", directory_length, daemon_capacity_path
+        );
+    }
 }
 
 static void write_capacity_file(const int percent) {
@@ -173,6 +200,17 @@ static int abs_int(const int v) {
 }
 
 static int is_charging(void) {
+    if (battery_daemon_mode && *daemon_status_path) {
+        char *status = read_all_char_from(daemon_status_path);
+        if (status) {
+            const int charging = strncmp(status, "Charging", 8) == 0 || strncmp(status, "Full", 4) == 0;
+            const int known = charging || strncmp(status, "Discharging", 11) == 0
+                              || strncmp(status, "Not charging", 12) == 0;
+            free(status);
+            if (known) return charging;
+        }
+    }
+
     const char *path = battery_daemon_mode ? daemon_charger_path : device.battery.charger;
     return path && *path && read_all_long_from(path) ? 1 : 0;
 }
@@ -333,6 +371,18 @@ static int read_capacity_percent(int *percent) {
     return valid;
 }
 
+static int read_charge_percent(int *percent) {
+    if (!battery_daemon_mode || !percent || !*daemon_charge_counter_path || !*daemon_charge_full_path) return 0;
+
+    const unsigned long long charge = read_all_long_from(daemon_charge_counter_path);
+    const unsigned long long full = read_all_long_from(daemon_charge_full_path);
+    if (!full) return 0;
+
+    const unsigned long long value = (charge * 100ULL + full / 2ULL) / full;
+    *percent = clamp_percent((int) value);
+    return 1;
+}
+
 static void swap_int(int *a, int *b) {
     const int t = *a;
     *a = *b;
@@ -400,6 +450,32 @@ static int stabilise_percent(int raw_percent, const int charging) {
     return raw_percent;
 }
 
+static int stabilise_reported_percent(int raw_percent, const int charging) {
+    raw_percent = clamp_percent(raw_percent);
+    if (!battery_percent_valid) return raw_percent;
+
+    const int reverse = (!charging && raw_percent > battery_percent) || (charging && raw_percent < battery_percent);
+    if (reverse) {
+        if (raw_percent == reported_reverse_percent) {
+            reported_reverse_count++;
+        } else {
+            reported_reverse_percent = raw_percent;
+            reported_reverse_count = 1;
+        }
+
+        if (reported_reverse_count < BATTERY_REVERSE_SAMPLES) return battery_percent;
+        reported_reverse_count = 0;
+    } else {
+        reported_reverse_percent = -1;
+        reported_reverse_count = 0;
+    }
+
+    if (raw_percent > battery_percent + BATTERY_REPORTED_STEP) return battery_percent + BATTERY_REPORTED_STEP;
+    if (raw_percent < battery_percent - BATTERY_REPORTED_STEP) return battery_percent - BATTERY_REPORTED_STEP;
+
+    return raw_percent;
+}
+
 void battery_reset(void) {
     battery_percent = 0;
     battery_percent_valid = 0;
@@ -414,6 +490,8 @@ void battery_reset(void) {
     filtered_voltage_mv = 0;
     last_percent_source_mv = -1;
     battery_warmup = BATTERY_WARMUP_CYCLES;
+    reported_reverse_percent = -1;
+    reported_reverse_count = 0;
 
     voltage_sample_index = 0;
     voltage_sample_count = 0;
@@ -448,7 +526,12 @@ void battery_update(void) {
 
     int reported_percent;
     if (read_capacity_percent(&reported_percent)) {
-        set_battery_state(mv > 0 ? filtered_voltage_mv : 0, reported_percent);
+        set_battery_state(mv > 0 ? filtered_voltage_mv : 0, stabilise_reported_percent(reported_percent, charging));
+        return;
+    }
+
+    if (read_charge_percent(&reported_percent)) {
+        set_battery_state(mv > 0 ? filtered_voltage_mv : 0, stabilise_reported_percent(reported_percent, charging));
         return;
     }
 

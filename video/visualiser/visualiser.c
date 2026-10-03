@@ -14,7 +14,7 @@
 #include "starfield.h"
 #include "waveform.h"
 
-#define VISUALISER_PERIOD 33
+#define VISUALISER_PERIOD         33
 #define VISUALISER_CAPTURE_PERIOD 16
 
 static SDL_SpinLock sample_lock;
@@ -26,9 +26,7 @@ static uint32_t next_frame;
 static uint32_t next_capture;
 
 static SDL_Color visualiser_colour(const uint32_t colour, const uint8_t alpha) {
-    return (SDL_Color) {
-        (uint8_t) (colour >> 16), (uint8_t) (colour >> 8), (uint8_t) colour, alpha
-    };
+    return (SDL_Color) {(uint8_t) (colour >> 16), (uint8_t) (colour >> 8), (uint8_t) colour, alpha};
 }
 
 void wasabi_visualiser_capture(const float *samples, const int frames, const int channels) {
@@ -69,8 +67,7 @@ void wasabi_visualiser_render(SDL_Renderer *renderer) {
         return;
 
     wasabi_visualiser_frame frame = {0};
-    if (SDL_GetRendererOutputSize(renderer, &frame.width, &frame.height) != 0
-        || frame.width <= 0 || frame.height <= 0)
+    if (SDL_GetRendererOutputSize(renderer, &frame.width, &frame.height) != 0 || frame.width <= 0 || frame.height <= 0)
         return;
 
     SDL_AtomicLock(&sample_lock);
@@ -81,7 +78,8 @@ void wasabi_visualiser_render(SDL_Renderer *renderer) {
     SDL_AtomicUnlock(&sample_lock);
 
     float total = 0.0f;
-    for (int index = 0; index < WASABI_VISUALISER_SAMPLES; index++) total += frame.mono[index] * frame.mono[index];
+    for (int index = 0; index < WASABI_VISUALISER_SAMPLES; index++)
+        total += frame.mono[index] * frame.mono[index];
     frame.level = sqrtf(total / WASABI_VISUALISER_SAMPLES) * 4.0f;
     if (frame.level > 1.0f) frame.level = 1.0f;
     frame.ticks = SDL_GetTicks();
@@ -91,15 +89,32 @@ void wasabi_visualiser_render(SDL_Renderer *renderer) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     switch ((wasabi_visualiser_mode) config.video.visualiser) {
-        case wasabi_visualiser_spectrum: wasabi_spectrum_render(renderer, &frame); break;
-        case wasabi_visualiser_waveform: wasabi_waveform_render(renderer, &frame); break;
-        case wasabi_visualiser_pulse: wasabi_pulse_render(renderer, &frame); break;
-        case wasabi_visualiser_orbit: wasabi_orbit_render(renderer, &frame); break;
-        case wasabi_visualiser_meter: wasabi_meter_render(renderer, &frame); break;
-        case wasabi_visualiser_phase: wasabi_phase_render(renderer, &frame); break;
-        case wasabi_visualiser_radial: wasabi_radial_render(renderer, &frame); break;
-        case wasabi_visualiser_starfield: wasabi_starfield_render(renderer, &frame); break;
-        default: break;
+        case wasabi_visualiser_spectrum:
+            wasabi_spectrum_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_waveform:
+            wasabi_waveform_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_pulse:
+            wasabi_pulse_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_orbit:
+            wasabi_orbit_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_meter:
+            wasabi_meter_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_phase:
+            wasabi_phase_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_radial:
+            wasabi_radial_render(renderer, &frame);
+            break;
+        case wasabi_visualiser_starfield:
+            wasabi_starfield_render(renderer, &frame);
+            break;
+        default:
+            break;
     }
 }
 

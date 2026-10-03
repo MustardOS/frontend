@@ -29,9 +29,7 @@ void video_loading_prepare_content(void) {
     display_set_ui_hidden(0);
 }
 
-static void video_loading_show_detail_alpha(
-    const char *message, const char *detail, const lv_opa_t background_alpha
-) {
+static void video_loading_show_detail_alpha(const char *message, const char *detail, const lv_opa_t background_alpha) {
     if (!message || !message[0] || !ui_screen || !lv_obj_is_valid(ui_screen)) return;
     if (loading_label && lv_obj_is_valid(loading_label)) {
         lv_label_set_text(loading_label, message);
@@ -73,9 +71,7 @@ static void video_loading_show_detail_alpha(
     lv_obj_set_style_pad_all(loading_panel, 18, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_row(loading_panel, 8, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_flex_flow(loading_panel, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(
-        loading_panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER
-    );
+    lv_obj_set_flex_align(loading_panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     loading_label = lv_label_create(loading_panel);
     lv_label_set_text(loading_label, message);
@@ -87,12 +83,8 @@ static void video_loading_show_detail_alpha(
     loading_separator = lv_obj_create(loading_panel);
     style_plain(loading_separator);
     lv_obj_set_size(loading_separator, lv_pct(45), 1);
-    lv_obj_set_style_bg_color(
-        loading_separator, lv_color_hex(theme.dialogue.border), MU_OBJ_MAIN_DEFAULT
-    );
-    lv_obj_set_style_bg_opa(
-        loading_separator, theme.dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT
-    );
+    lv_obj_set_style_bg_color(loading_separator, lv_color_hex(theme.dialogue.border), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(loading_separator, theme.dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
 
     loading_detail = lv_label_create(loading_panel);
     lv_label_set_long_mode(loading_detail, LV_LABEL_LONG_WRAP);
@@ -115,9 +107,7 @@ static void video_loading_show_detail_alpha(
 }
 
 void video_loading_show_detail(const char *message, const char *detail, const int opaque) {
-    video_loading_show_detail_alpha(
-        message, detail, opaque ? LV_OPA_COVER : theme.dialogue.dim_alpha
-    );
+    video_loading_show_detail_alpha(message, detail, opaque ? LV_OPA_COVER : theme.dialogue.dim_alpha);
 }
 
 void video_loading_show_transparent(const char *message, const char *detail) {

@@ -126,7 +126,7 @@ static activity_item_t *activity_items = NULL;
 static size_t activity_count = 0;
 static size_t activity_capacity = 0;
 
-#define ACT_ROW  1024
+#define ACT_ROW 1024
 
 #define CORE_MAP_MAX   256
 #define DEVICE_MAP_MAX 256

@@ -11,6 +11,7 @@ double audio_transition_consumed(void);
 int audio_transition_handoff(void);
 void audio_transition_mark_handoff(void);
 void audio_transition_release(void);
-void audio_transition_mix(float *output, int current_frames, int requested_frames, int eof, double remaining,
-                          int crossfade_seconds);
+void audio_transition_mix(
+    float *output, int current_frames, int requested_frames, int eof, double remaining, int crossfade_seconds
+);
 int audio_transition_fill_handoff(void *stream, int length, int volume);

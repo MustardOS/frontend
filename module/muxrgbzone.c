@@ -40,7 +40,8 @@ static void resolve_current_zone(void) {
         current_zone = (rgb_zone_field_t) {
             "l",
             shared_sticks ? lang.muxrgb.zone_sticks
-                          : dual_right ? lang.muxrgb.zone_l_arc1 : lang.muxrgb.zone_l,
+            : dual_right  ? lang.muxrgb.zone_l_arc1
+                          : lang.muxrgb.zone_l,
             &config.settings.rgb.colour_l,
             &config.settings.rgb.bright_l,
             "settings/rgb/colour_l",

@@ -15,10 +15,10 @@
 #include <common/storage/fileio.h>
 #include "paths.h"
 
-#define HISTORY_FILE     WASABI_HISTORY_FILE
-#define BOOKMARK_FILE    WASABI_BOOKMARK_FILE
-#define COLLECTION_FILE  INFO_VID_PATH "/collection.tsv"
-#define HISTORY_LIMIT   256
+#define HISTORY_FILE        WASABI_HISTORY_FILE
+#define BOOKMARK_FILE       WASABI_BOOKMARK_FILE
+#define COLLECTION_FILE     INFO_VID_PATH "/collection.tsv"
+#define HISTORY_LIMIT       256
 #define QUICK_BOOKMARK_NAME "\x1fwasabi-quick"
 
 static int entry_compare_updated(const void *left, const void *right) {
@@ -141,10 +141,8 @@ int video_state_thumbnail_path(
     if (!uri || !*uri || !path || !path_size) return -1;
 
     char directory[PATH_MAX];
-    if (snprintf(
-            directory, sizeof(directory), "%s/%016llx", WASABI_STATE_PATH,
-            (unsigned long long) uri_key(uri)
-        ) >= (int) sizeof(directory))
+    if (snprintf(directory, sizeof(directory), "%s/%016llx", WASABI_STATE_PATH, (unsigned long long) uri_key(uri))
+        >= (int) sizeof(directory))
         return -1;
     create_directories(directory, 0);
     if (!dir_exist(directory)) return -1;
@@ -275,9 +273,11 @@ static int write_entries(const char *path, const video_state_entry *entries, con
         }
 
         if (history) {
-            if (fprintf(file, "%s\t%s\t%.3f\t%.3f\t%lld\t%s\t%s\t%d\n", uri, title,
-                        entries[i].position, entries[i].duration, (long long) entries[i].updated,
-                        thumbnail, name, entries[i].live) < 0)
+            if (fprintf(
+                    file, "%s\t%s\t%.3f\t%.3f\t%lld\t%s\t%s\t%d\n", uri, title, entries[i].position,
+                    entries[i].duration, (long long) entries[i].updated, thumbnail, name, entries[i].live
+                )
+                < 0)
                 result = -1;
         } else if (fprintf(file, "%s\t%s\t%d\n", uri, title, entries[i].live) < 0) {
             result = -1;
@@ -498,9 +498,7 @@ int video_bookmark_find_quick(const char *uri, double *position) {
     if (video_bookmark_load(&entries, &count) < 0) return 0;
     int found = 0;
     for (size_t index = 0; index < count; index++) {
-        if (strcmp(entries[index].uri, uri) != 0
-            || strcmp(entries[index].name, QUICK_BOOKMARK_NAME) != 0)
-            continue;
+        if (strcmp(entries[index].uri, uri) != 0 || strcmp(entries[index].name, QUICK_BOOKMARK_NAME) != 0) continue;
         if (position) *position = entries[index].position;
         found = 1;
         break;

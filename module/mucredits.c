@@ -9,10 +9,10 @@
 #include "muxshare.h"
 #include <common/display/text.h>
 
-#define SHARE_DIR "/opt/muos/share/"
-#define MEDIA_DIR SHARE_DIR "media/credits"
-#define RMSG_FILE SHARE_DIR "message.txt"
-#define FONT_FILE SHARE_DIR "font/mucredits.ttf"
+#define SHARE_DIR             "/opt/muos/share/"
+#define MEDIA_DIR             SHARE_DIR "media/credits"
+#define RMSG_FILE             SHARE_DIR "message.txt"
+#define FONT_FILE             SHARE_DIR "font/mucredits.ttf"
 #define FACTORY_COMPLETE_FILE "/tmp/mustardos/mucredits.complete"
 
 #define REF_H 480
@@ -36,19 +36,19 @@
 /* ========================================================================= */
 /* PERSPECTIVE CRAWL TUNING PARAMETERS                                       */
 /* ========================================================================= */
-#define PERSPECTIVE_ENABLE         1       // 1 = Perspective crawl, 0 = Classic 2D
-#define PERSPECTIVE_TOP_SCALE      0.50f   // Scale at top horizon (~50% width)
-#define PERSPECTIVE_BOTTOM_SCALE   1.15f   // Scale at bottom entry (wider than screen)
-#define PERSPECTIVE_SLOPE_EXP      1.0f    // Slope curve power: 1.0 = linear slope, >1.0 = steeper tilt
-#define PERSPECTIVE_SPEED_MULT     1.0f    // Overall scroll speed multiplier
-#define PERSPECTIVE_SLICE_H        2       // Strip slice height (px) for smooth rasterization
-#define PERSPECTIVE_FADE_TOP_FRAC  0.08f   // Fade-out distance fraction at top horizon
-#define PERSPECTIVE_FADE_BOT_FRAC  0.04f   // Fade-in distance fraction at bottom entry
+#define PERSPECTIVE_ENABLE        1     // 1 = Perspective crawl, 0 = Classic 2D
+#define PERSPECTIVE_TOP_SCALE     0.50f // Scale at top horizon (~50% width)
+#define PERSPECTIVE_BOTTOM_SCALE  1.15f // Scale at bottom entry (wider than screen)
+#define PERSPECTIVE_SLOPE_EXP     1.0f  // Slope curve power: 1.0 = linear slope, >1.0 = steeper tilt
+#define PERSPECTIVE_SPEED_MULT    1.0f  // Overall scroll speed multiplier
+#define PERSPECTIVE_SLICE_H       2     // Strip slice height (px) for smooth rasterization
+#define PERSPECTIVE_FADE_TOP_FRAC 0.08f // Fade-out distance fraction at top horizon
+#define PERSPECTIVE_FADE_BOT_FRAC 0.04f // Fade-in distance fraction at bottom entry
 
 /* QR CODE CONFIGURATION */
-#define QR_KEEP_SQUARE             1       // 1 = Keep QR square & scannable, 0 = perspective warp
-#define QR_EXTRA_PAD_TOP_PX        30      // Extra padding (px @ REF_H) above QR block
-#define QR_EXTRA_PAD_BOT_PX        5       // Extra padding (px @ REF_H) below QR block
+#define QR_KEEP_SQUARE      1  // 1 = Keep QR square & scannable, 0 = perspective warp
+#define QR_EXTRA_PAD_TOP_PX 30 // Extra padding (px @ REF_H) above QR block
+#define QR_EXTRA_PAD_BOT_PX 5  // Extra padding (px @ REF_H) below QR block
 /* ========================================================================= */
 
 #define COL_TITLE_R 247
@@ -1106,7 +1106,10 @@ static void build_reel(void) {
 /* PERSPECTIVE-AWARE TEXTURE RENDERING                                       */
 /* ========================================================================= */
 
-static void render_texture_perspective(SDL_Texture *tex, const int tex_w, const int tex_h, const float world_y_top, const float scroll_top, const int preserve_square) {
+static void render_texture_perspective(
+    SDL_Texture *tex, const int tex_w, const int tex_h, const float world_y_top, const float scroll_top,
+    const int preserve_square
+) {
     if (!tex || tex_w <= 0 || tex_h <= 0) return;
 
     if (preserve_square) {
