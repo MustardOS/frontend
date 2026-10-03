@@ -103,22 +103,21 @@ static const char *wizards[] = {
 
 static const char *heroes[] = {
     "amildinconvenience.", "amos_06286", "asiaclonk", "bazkart", "brohsnbluffs", "btreecat",
-    "chiefwally_73445", "djwyman", "dorkidiot", ".dririan", "eddie51a15", "foamygames",
-    "fragilesilver133", "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "jimmycrackedcorn_4711",
-    "jmtn070", "julas8799", "kaeltis", "kalamer.", "kentonftw", "kernelkritic", "lip.kim",
-    "lmarcomiranda", "losermatic", "luckyphil", "mach5682", "meanagar", "meowman_", "mfsimba",
-    "milkworlds", "misfitsorbet", "mrwhistles", "msx6011", ".natsgames", ".nikonic", "paletochen",
-    "pastapizzamancer", "phafas_", "pr0j3kt2501", "qpla", "rabite890", "regicyde93", "robbiet480",
-    "romus85", "rosemelody254", "roundpi", "scy0n", "sheeshfr", "snesfan1", "spivvmeister",
-    "sshinyrayquaza", "superzu", "suribii", "techagent", "techyysean", "teggydave", "timecarp",
-    "turner74.", "urgul", "verctexius", "warlordwossman", "x_tremis", "xakontrack", "xraygoggles",
-    ".zerohalo"
+    "chiefwally_73445", "djwyman", ".dririan", "eddie51a15", "foamygames", "fragilesilver133",
+    "hueykablooey", "hybrid_sith", "intelliaim", "ivar2028", "jimmycrackedcorn_4711", "jmtn070",
+    "julas8799", "kaeltis", "kalamer.", "kentonftw", "kernelkritic", "lip.kim", "lmarcomiranda",
+    "losermatic", "luckyphil", "mach5682", "meanagar", "meowman_", "mfsimba", "milkworlds",
+    "misfitsorbet", "mrwhistles", "msx6011", ".natsgames", ".nikonic", "paletochen", "pastapizzamancer",
+    "pr0j3kt2501", "qpla", "rabite890", "regicyde93", "robbiet480", "romus85", "rosemelody254",
+    "roundpi", "scy0n", "sheeshfr", "snesfan1", "spivvmeister", "sshinyrayquaza", "superzu", "suribii",
+    "techagent", "techyysean", "teggydave", "timecarp", "turner74.", "urgul", "verctexius",
+    "warlordwossman", "western_oni", "x_tremis", "xakontrack", "xraygoggles", ".zerohalo"
 };
 
 static const char *knights[] = {
     "admiralthrawn_1", "allepac", "arkholt", "azlekayn", "billynaing", "clempurp9868", "crownlessk",
-    "crusader4hope3222", "doanchibinhidol", "drisc", "freacky8", "galloc", "hai6266", "jdanteq_18123",
-    "jupyter.", "kevdoy", "kiko_lake", "madyak69", "mrcee1503", "notflacko", "nuke_67641", "rbndr_",
+    "crusader4hope3222", "digdugnate", "doanchibinhidol", "drisc", "freacky8", "galloc", "hai6266",
+    "jdanteq_18123", "jupyter.", "kevdoy", "kiko_lake", "madyak69", "nuke_67641", "oolongnoon", "rbndr_",
     "retrogamecorps", "sanelessone", "skyarcher", "smittywerbenjaegermanjensen9250", "stin87",
     "surge_84306", "thewalruzz", "_wizdude", "zauberpony"
 };
