@@ -1,5 +1,9 @@
+#include <fcntl.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <drm/drm.h>
 #include <SDL2/SDL.h>
 #include <common/platform/display.h>
 #include "../input/hotkeys.h"
@@ -34,6 +38,8 @@
 #define FRAME_PACER_VSYNC_PROBE_FRAMES 8
 #define FRAME_PACER_VSYNC_FAST_RATIO   0.90
 
+#define FRAME_PACER_DRM_NODE "/dev/dri/card0"
+
 static double work_samples_ns[FRAME_PACER_WORK_HISTORY];
 static int work_count = 0;
 static int work_next = 0;
@@ -53,6 +59,8 @@ static double last_delay_ns = 0.0;
 static double vsync_probe_sum_ns = 0.0;
 static unsigned vsync_probe_count = 0;
 static int vsync_pacing_failed = 0;
+static int vblank_fd = -2;
+static int64_t last_vblank_ns = 0;
 
 void frame_pacer_reset_vsync_probe(void) {
     vsync_probe_sum_ns = 0.0;
@@ -65,6 +73,31 @@ static void sleep_ns_coarse(const uint64_t ns) {
 
     const struct timespec ts = {.tv_sec = (time_t) (ns / 1000000000ULL), .tv_nsec = (long) (ns % 1000000000ULL)};
     nanosleep(&ts, NULL);
+}
+
+static int64_t mono_ns(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (int64_t) ts.tv_sec * 1000000000LL + ts.tv_nsec;
+}
+
+// Timestamp of the most recent vblank on CLOCK_MONOTONIC, or 0 when the DRM node cannot report one.
+// A relative wait of zero returns at once with the current count and the time it was reached.
+static int64_t query_last_vblank_ns(void) {
+    if (vblank_fd == -2) vblank_fd = open(FRAME_PACER_DRM_NODE, O_RDWR | O_CLOEXEC);
+    if (vblank_fd < 0) return 0;
+
+    union drm_wait_vblank vbl;
+    memset(&vbl, 0, sizeof(vbl));
+    vbl.request.type = _DRM_VBLANK_RELATIVE;
+
+    if (ioctl(vblank_fd, DRM_IOCTL_WAIT_VBLANK, &vbl) != 0) {
+        close(vblank_fd);
+        vblank_fd = -1;
+        return 0;
+    }
+
+    return (int64_t) vbl.reply.tval_sec * 1000000000LL + (int64_t) vbl.reply.tval_usec * 1000LL;
 }
 
 static double perf_ns(const uint64_t counter_delta) {
@@ -83,6 +116,7 @@ static void frame_pacer_reset_state(void) {
     refresh_window_sum_ns = 0.0;
     refresh_window_count = 0;
     last_present_counter = 0;
+    last_vblank_ns = 0;
     last_tick_missed = 0;
 
     extra_margin_ns = 0.0;
@@ -150,7 +184,13 @@ static void frame_pacer_wait(void) {
         const double budget_ns = period_ns - work_ns - FRAME_PACER_FLIP_TARGET_NS - extra_margin_ns;
         if (budget_ns <= 0.0) return;
 
-        const double spent_ns = perf_ns(SDL_GetPerformanceCounter() - last_present_counter);
+        // Present can return well after the vblank it waited for (about 3 ms on KMSDRM with Mali), and
+        // counting from the return would schedule the next present past its vblank. Count from the
+        // vblank itself when the display reports one for this refresh.
+        const int64_t since_vblank_ns = last_vblank_ns > 0 ? mono_ns() - last_vblank_ns : -1;
+        const double spent_ns = since_vblank_ns >= 0 && (double) since_vblank_ns < period_ns
+                                    ? (double) since_vblank_ns
+                                    : perf_ns(SDL_GetPerformanceCounter() - last_present_counter);
         if (spent_ns >= budget_ns) return;
 
         sleep_ns = (uint64_t) (budget_ns - spent_ns);
@@ -192,6 +232,7 @@ void frame_pacer_after_present(void) {
 
     if (!frame_pacer_timing_available()) {
         last_present_counter = 0;
+        last_vblank_ns = 0;
         measuring = 0;
         refresh_window_sum_ns = 0.0;
         refresh_window_count = 0;
@@ -199,6 +240,7 @@ void frame_pacer_after_present(void) {
     }
 
     const uint64_t now = SDL_GetPerformanceCounter();
+    if (session_settings.frame_delay_ms == FRAME_DELAY_AUTO) last_vblank_ns = query_last_vblank_ns();
 
     if (measuring) {
         measuring = 0;
