@@ -48,6 +48,7 @@ typedef struct {
     int16_t vignette_colour;
     char colour_filter[MAX_BUFFER_SIZE];
     char shader[MAX_BUFFER_SIZE];
+    char shader_params[MAX_BUFFER_SIZE];
     int16_t brightness;
     int16_t contrast;
     int16_t saturation;
@@ -464,6 +465,7 @@ struct mux_config {
         int16_t background_scale;
         int16_t launchsplash;
         int16_t pickles_startup_messages;
+        int16_t wasabi_seek_effect;
         int16_t blackfade;
         int16_t notify_time;
         int16_t reduce_motion;

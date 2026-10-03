@@ -210,6 +210,12 @@ void environment_notify_frame_time(void);
 
 int environment_frame_time_callback_active(void);
 
+void environment_pump_audio_callback(void);
+
+void environment_disable_audio_callback(void);
+
+void environment_clear_audio_callback(void);
+
 uint32_t environment_frame_time_clamp_count(void);
 
 double environment_frame_time_clamp_peak_ms(void);
@@ -565,6 +571,8 @@ void shader_menu_reopen_download(void);
 void shader_adjust_menu_init(void);
 
 void shader_adjust_menu_open(void);
+
+void shader_adjust_menu_open_direct(void);
 
 int shader_adjust_menu_is_active(void);
 

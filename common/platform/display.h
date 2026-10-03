@@ -44,9 +44,11 @@ void display_set_composite_suppressed(int suppressed);
 
 int display_capture_clean_frame(const char *path);
 
+void display_process_screenshot_request(void);
+
 int display_capture_clean_pixels(uint8_t *rgb, int width, int height);
 
-int display_mirror_to_fb(int swap_red_blue);
+int display_mirror_to_fb(void);
 
 int display_blank_fb(void);
 

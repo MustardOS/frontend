@@ -325,17 +325,19 @@ static void convert_32_b(uint8_t *dst, const uint8_t *src, const uint32_t width)
 }
 
 static void convert_fbdev(
-    uint8_t *dst, const uint8_t *src, const uint32_t width, const uint32_t height, const uint32_t pitch,
-    const struct fb_var_screeninfo *var
+    uint8_t *dst, const uint8_t *src, const uint32_t width, const uint32_t source_width, const uint32_t height,
+    const uint32_t pitch, const struct fb_var_screeninfo *var
 ) {
     const uint32_t bytes_pp = (var->bits_per_pixel + 7U) / 8U;
 
     for (uint32_t y = 0; y < height; y++) {
         const uint8_t *src_row = src + (size_t) y * pitch;
         uint8_t *dst_row = dst + (size_t) y * width * 3U;
+        uint32_t source_x = 0;
+        uint32_t source_remainder = 0;
 
         for (uint32_t x = 0; x < width; x++) {
-            const uint8_t *p = src_row + (size_t) x * bytes_pp;
+            const uint8_t *p = src_row + (size_t) source_x * bytes_pp;
             uint32_t pix = 0;
 
             if (bytes_pp == 2) {
@@ -351,6 +353,12 @@ static void convert_fbdev(
                 scale_bits(pix >> var->green.offset & ((1U << var->green.length) - 1U), var->green.length);
             dst_row[x * 3 + 2] =
                 scale_bits(pix >> var->blue.offset & ((1U << var->blue.length) - 1U), var->blue.length);
+
+            source_remainder += source_width;
+            if (source_remainder >= width) {
+                source_remainder -= width;
+                source_x++;
+            }
         }
     }
 }
@@ -396,14 +404,55 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
         return -1;
     }
 
-    const size_t map_size = (size_t) fix.line_length * var.yres;
+    const uint32_t bytes_pp = (var.bits_per_pixel + 7U) / 8U;
+    const size_t xoffset = (size_t) var.xoffset * bytes_pp;
+    if (!bytes_pp || xoffset >= fix.line_length) {
+        close(fd);
+        return -1;
+    }
+
+    uint32_t source_width = (uint32_t) ((fix.line_length - xoffset) / bytes_pp);
+    if (source_width > var.xres) source_width = var.xres;
+    if (!source_width) {
+        close(fd);
+        return -1;
+    }
+
+    size_t map_size = fix.smem_len;
+    if (!map_size) {
+        const size_t required_rows = (size_t) var.yoffset + var.yres;
+        const size_t rows = var.yres_virtual > required_rows ? var.yres_virtual : required_rows;
+        if (rows == 0 || fix.line_length > SIZE_MAX / rows) {
+            close(fd);
+            return -1;
+        }
+        map_size = (size_t) fix.line_length * rows;
+    }
+
+    if (var.yoffset > SIZE_MAX / fix.line_length) {
+        close(fd);
+        return -1;
+    }
+
+    const size_t active_offset = (size_t) var.yoffset * fix.line_length + xoffset;
+    const size_t source_row_size = (size_t) source_width * bytes_pp;
+    const size_t final_row = (size_t) var.yres - 1;
+    if (active_offset >= map_size || source_row_size > map_size - active_offset
+        || final_row > SIZE_MAX / fix.line_length
+        || final_row * fix.line_length > map_size - active_offset - source_row_size) {
+        close(fd);
+        return -1;
+    }
+
     uint8_t *fb = mmap(NULL, map_size, PROT_READ, MAP_SHARED, fd, 0);
     if (fb == MAP_FAILED) {
         close(fd);
         return -1;
     }
 
-    if (buffer_is_blank(fb, map_size)) {
+    const uint8_t *active = fb + active_offset;
+    const size_t active_size = final_row * fix.line_length + source_row_size;
+    if (buffer_is_blank(active, active_size)) {
         munmap(fb, map_size);
         close(fd);
         return -1;
@@ -417,7 +466,7 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
         return -1;
     }
 
-    convert_fbdev(rgb, fb, var.xres, var.yres, fix.line_length, &var);
+    convert_fbdev(rgb, active, var.xres, source_width, var.yres, fix.line_length, &var);
     const int ret = png_write(path, rgb, var.xres, var.yres);
 
     free(rgb);

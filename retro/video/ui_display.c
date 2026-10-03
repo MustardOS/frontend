@@ -5,6 +5,7 @@
 #include "../settings/pages.h"
 #include "../settings/submenu.h"
 #include "hw_render.h"
+#include "colour.h"
 
 enum {
     row_vignette = 0,
@@ -98,7 +99,21 @@ static void row_action(const int index) {
     }
 }
 
+static const char *extra_label(const int index) {
+    if (index != row_shader || colour_shader_param_count() <= 0) return NULL;
+    return lang.muxretro.shader_screen.adjust;
+}
+
+static void extra_action(const int index) {
+    if (index == row_shader && colour_shader_param_count() > 0) shader_adjust_menu_open_direct();
+}
+
 static int child_tick(void) {
+    if (shader_adjust_menu_is_active()) {
+        shader_adjust_menu_tick();
+        return 1;
+    }
+
     if (colfilter_menu_is_active()) {
         colfilter_menu_tick();
         return 1;
@@ -132,6 +147,8 @@ static submenu_def def = {
     .cycle = cycle_row,
     .row_is_action = row_is_action,
     .action = row_action,
+    .extra_label = extra_label,
+    .extra_action = extra_action,
     .child_tick = child_tick,
     .closed = closed,
     .save_title = lang.muxretro.save.display_title,

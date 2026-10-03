@@ -44,6 +44,7 @@ static const session_field fields[] = {
     SESSION_I16(vignette_colour),
     SESSION_TEXT(colour_filter),
     SESSION_TEXT(shader),
+    SESSION_TEXT(shader_params),
     SESSION_I16(brightness),
     SESSION_I16(contrast),
     SESSION_I16(saturation),
@@ -231,7 +232,7 @@ static void validate_settings(void) {
     VALIDATE(crop_bottom, 0, 100);
     VALIDATE(viewport_centre_crop, 0, 1);
     VALIDATE(show_playtime, 0, 1);
-    VALIDATE(header_visibility, 0, 4);
+    VALIDATE(header_visibility, 0, 5);
     VALIDATE(progress_bar, 0, 9);
     VALIDATE(artwork_position, 0, 2);
     VALIDATE(repeat_mode, 0, 2);

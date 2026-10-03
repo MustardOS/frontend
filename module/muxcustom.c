@@ -1205,6 +1205,9 @@ static void init_navigation_group(void) {
         -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
         disabled_enabled, 2
     );
+    INIT_OPTION_ITEM(
+        -1, visual, wasabi_seek_effect, lang.muxcustom.wasabi_seek_effect, "wasabiseekeffect", disabled_enabled, 2
+    );
     INIT_OPTION_ITEM(-1, custom, black_fade, lang.muxcustom.blackfade, "blackfade", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, catalogue, lang.muxcustom.catalogue, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, config, lang.muxcustom.config, "config", NULL, 0);
@@ -1657,6 +1660,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, group_content, "visual/groupcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(visual, pickles_startup_messages, "visual/pickles_startup_messages", INT, 0);
+    CHECK_AND_SAVE_STD(visual, wasabi_seek_effect, "visual/wasabi_seek_effect", INT, 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
 
     // Stored the other way round to how it reads on screen
@@ -1990,6 +1994,8 @@ static int16_t kiosk_pass = 0;
     ROW(visual, launchsplash, "splash", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)       \
     ROW(visual, pickles_startup_messages, "picklesstartupmessages", launching, menu_option, NULL, NULL,                \
         &kiosk.setting.visual, NULL, change)                                                                           \
+    ROW(visual, wasabi_seek_effect, "wasabiseekeffect", launching, menu_option, NULL, NULL, &kiosk.setting.visual,     \
+        NULL, change)                                                                                                  \
     ROW(custom, black_fade, "blackfade", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
     ROW(custom, catalogue, "catalogue", packages, menu_catalogue, "catalogue", "package/catalogue",                    \
         &kiosk.custom.catalogue, NULL, select)                                                                         \

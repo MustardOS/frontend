@@ -303,6 +303,8 @@ static unsigned run_core_batch(const unsigned frames) {
         const double run_ms = counter_elapsed_ms(run_start);
         ran++;
 
+        environment_pump_audio_callback();
+
         if (cheevo_needs_frame() && !runahead_cheevo_deferred()) {
             const uint64_t cheevo_frame_start = perf_begin();
             cheevo_do_frame();
@@ -1157,7 +1159,7 @@ int main(const int argc, char *argv[]) {
             LOG_INFO(mux_module, "Performance capture written to " RETRO_SHARE_PATH "performance.csv");
     }
 
-    display_mirror_to_fb(0);
+    display_mirror_to_fb();
     display_set_composite_suppressed(1);
 
     if (peer_wait_visible) loading_message_hide();

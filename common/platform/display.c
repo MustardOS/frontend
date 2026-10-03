@@ -649,6 +649,11 @@ static void update_render_state(void) {
 }
 
 void sdl_init(void) {
+    if (hdmi_mode
+        && (strcmp(mux_module, "muxfrontend") == 0 || strcmp(mux_module, "muxretro") == 0
+            || strcmp(mux_module, "muxmedia") == 0))
+        SDL_SetHintWithPriority("SDL_BLITTER_DISABLED", "1", SDL_HINT_OVERRIDE);
+
     SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
     SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE, "1");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
@@ -1190,6 +1195,7 @@ void display_composite_frame(void) {
     const uint64_t render_start = fe_perf_begin();
     composite_to(NULL, 1);
     fe_perf_end(fe_perf_stage_render, render_start);
+    display_process_screenshot_request();
 }
 
 uint64_t display_present_serial(void) {
@@ -1209,7 +1215,7 @@ static SDL_Texture *capture_target(void) {
         if (capture_tex) SDL_DestroyTexture(capture_tex);
 
         capture_tex = SDL_CreateTexture(
-            monitor.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.screen.width,
+            monitor.renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_TARGET, device.screen.width,
             device.screen.height
         );
 
@@ -1246,6 +1252,40 @@ int display_capture_clean_frame(const char *path) {
     return ret;
 }
 
+void display_process_screenshot_request(void) {
+    static uint32_t last_poll = 0;
+
+    if (!hdmi_mode) return;
+
+    const uint32_t now = SDL_GetTicks();
+    if (now - last_poll < 32) return;
+    last_poll = now;
+
+    if (!file_exist(SCREENSHOT_REQUEST)) return;
+
+    char *path = read_line_char_from(SCREENSHOT_REQUEST, 1);
+    remove(SCREENSHOT_REQUEST);
+
+    if (path && path[0]) {
+        const size_t temp_size = strlen(path) + 6;
+        char *temp_path = malloc(temp_size);
+
+        if (temp_path) {
+            snprintf(temp_path, temp_size, "%s.part", path);
+            unlink(temp_path);
+
+            if (display_capture_clean_frame(temp_path) == 0) {
+                if (rename(temp_path, path) != 0) unlink(temp_path);
+            } else {
+                unlink(temp_path);
+            }
+
+            free(temp_path);
+        }
+    }
+    free(path);
+}
+
 int display_capture_clean_pixels(uint8_t *rgb, const int width, const int height) {
     if (!monitor.renderer || !monitor.texture || !rgb) return -1;
     if (width != device.screen.width || height != device.screen.height) return -1;
@@ -1257,7 +1297,7 @@ int display_capture_clean_pixels(uint8_t *rgb, const int width, const int height
     return ret == 0 ? 0 : -1;
 }
 
-int display_mirror_to_fb(const int swap_red_blue) {
+int display_mirror_to_fb(void) {
     if (!monitor.renderer || !monitor.texture) return -1;
 
     const int width = device.screen.width;
@@ -1299,10 +1339,9 @@ int display_mirror_to_fb(const int swap_red_blue) {
         for (int y = 0; y < height && ret == 0; y++) {
             for (int x = 0; x < width; x++) {
                 const uint8_t *pixel = rgb + ((size_t) y * (size_t) width + (size_t) x) * 3;
-                const uint8_t red = swap_red_blue ? pixel[2] : pixel[0];
-                const uint8_t blue = swap_red_blue ? pixel[0] : pixel[2];
-                row[x] = ((uint32_t) red << var.red.offset) | ((uint32_t) pixel[1] << var.green.offset)
-                         | ((uint32_t) blue << var.blue.offset) | (var.transp.length ? 0xFFu << var.transp.offset : 0);
+                row[x] = ((uint32_t) pixel[0] << var.red.offset) | ((uint32_t) pixel[1] << var.green.offset)
+                         | ((uint32_t) pixel[2] << var.blue.offset)
+                         | (var.transp.length ? 0xFFu << var.transp.offset : 0);
             }
 
             const off_t offset = (off_t) (var.yoffset + (uint32_t) y) * fix.line_length + (off_t) var.xoffset * 4;

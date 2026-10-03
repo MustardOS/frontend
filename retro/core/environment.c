@@ -54,6 +54,9 @@ static struct retro_system_av_info pending_av_info;
 static int av_info_pending = 0;
 
 static retro_frame_time_callback_t frame_time_cb = NULL;
+static retro_audio_callback_t audio_cb = NULL;
+static retro_audio_set_state_callback_t audio_state_cb = NULL;
+static int audio_cb_enabled = 0;
 static retro_usec_t frame_time_reference = 0;
 static uint64_t frame_time_last_counter = 0;
 static int frame_time_last_valid = 0;
@@ -406,6 +409,14 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
+        case RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK: {
+            const struct retro_audio_callback *cb = data;
+            audio_cb = cb ? cb->callback : NULL;
+            audio_state_cb = audio_cb && cb ? cb->set_state : NULL;
+            audio_cb_enabled = 0;
+            return true;
+        }
+
         case RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK: {
             const struct retro_frame_time_callback *cb = data;
             frame_time_cb = cb ? cb->callback : NULL;
@@ -545,6 +556,32 @@ void environment_notify_frame_time(void) {
     }
 
     frame_time_cb(usec);
+}
+
+#define AUDIO_CALLBACK_MAX_CALLS 6
+
+void environment_pump_audio_callback(void) {
+    if (!audio_cb) return;
+
+    if (!audio_cb_enabled) {
+        if (audio_state_cb) audio_state_cb(true);
+        audio_cb_enabled = 1;
+    }
+
+    const uint32_t target = audio_bridge_prefill_target_ms();
+    for (int call = 0; call < AUDIO_CALLBACK_MAX_CALLS && audio_bridge_queued_ms() < target; call++)
+        audio_cb();
+}
+
+void environment_disable_audio_callback(void) {
+    if (audio_cb_enabled && audio_state_cb) audio_state_cb(false);
+    audio_cb_enabled = 0;
+}
+
+void environment_clear_audio_callback(void) {
+    audio_cb = NULL;
+    audio_state_cb = NULL;
+    audio_cb_enabled = 0;
 }
 
 int environment_frame_time_callback_active(void) {

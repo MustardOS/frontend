@@ -17,5 +17,7 @@ void video_render_effects_changed(void);
 void video_render_set_clean_capture(int active);
 void video_render_set_static(int active);
 int video_render_static_tick(void);
+void video_render_seek_effect(int direction);
+int video_render_seek_tick(void);
 
 void video_render_close(void);

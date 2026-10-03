@@ -389,8 +389,22 @@ static void show_timeline(void) {
     timeline_deadline = playback_paused ? 0 : SDL_GetTicks() + 2000;
 }
 
+static int header_shows_clock(void) {
+    return config.video.header_visibility == 1 || config.video.header_visibility == 3
+           || config.video.header_visibility == 5;
+}
+
+static int header_shows_battery(void) {
+    return config.video.header_visibility == 2 || config.video.header_visibility == 3
+           || config.video.header_visibility == 5;
+}
+
+static int header_shows_duration(void) {
+    return config.video.header_visibility == 4 || config.video.header_visibility == 5;
+}
+
 static void update_header_playback_time(void) {
-    if (config.video.header_visibility != 4) return;
+    if (!header_shows_duration()) return;
     char current[24];
     char total[24];
     char value[56];
@@ -436,17 +450,17 @@ static void apply_gameplay_header(void) {
     lv_obj_add_flag(ui_sta_bluetooth, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_sta_network, LV_OBJ_FLAG_HIDDEN);
 
-    if (config.video.header_visibility == 1 || config.video.header_visibility == 3)
+    if (header_shows_clock())
         lv_obj_clear_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
     else
         lv_obj_add_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
 
-    if (config.video.header_visibility == 4)
+    if (header_shows_duration())
         lv_obj_clear_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
     else
         lv_obj_add_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
 
-    if (config.video.header_visibility == 2 || config.video.header_visibility == 3) {
+    if (header_shows_battery()) {
         if (config.visual.battery != 1)
             lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
         else
@@ -460,11 +474,9 @@ static void apply_gameplay_header(void) {
         lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (config.video.header_visibility == 4)
-        update_header_playback_time();
-    else
-        datetime_task(NULL);
-    if (config.video.header_visibility == 2 || config.video.header_visibility == 3) battery_capacity_task(NULL);
+    update_header_playback_time();
+    if (header_shows_clock()) datetime_task(NULL);
+    if (header_shows_battery()) battery_capacity_task(NULL);
     lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
 }
 
@@ -2090,11 +2102,9 @@ void video_playback_ui_tick(void) {
         }
     }
     if (!menu_active && config.video.header_visibility && SDL_TICKS_PASSED(now, header_deadline)) {
-        if (config.video.header_visibility == 4)
-            update_header_playback_time();
-        else
-            datetime_task(NULL);
-        if (config.video.header_visibility == 2 || config.video.header_visibility == 3) battery_capacity_task(NULL);
+        update_header_playback_time();
+        if (header_shows_clock()) datetime_task(NULL);
+        if (header_shows_battery()) battery_capacity_task(NULL);
         header_deadline = now + 1000;
         redraw = 1;
     }

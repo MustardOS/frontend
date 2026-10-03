@@ -442,6 +442,7 @@ static void ui_refresh_tick(lv_timer_t *timer) {
     image_async_tick();
     notify_tick();
     orientation_tick();
+    display_process_screenshot_request();
 
     if (ui_refresh_cb) ui_refresh_cb(timer);
 }

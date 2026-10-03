@@ -285,12 +285,13 @@ const char *wasabi_setting_glyph(const wasabi_setting setting) {
 }
 
 static const char *header_name(void) {
-    static const char *names[5];
+    static const char *names[6];
     names[0] = lang.muxretro.settings_screen.header_none;
     names[1] = lang.muxretro.settings_screen.header_clock;
     names[2] = lang.muxretro.settings_screen.header_battery;
     names[3] = lang.muxretro.settings_screen.header_both;
     names[4] = lang.muxretro.settings_screen.show_playtime;
+    names[5] = lang.muxretro.settings_screen.header_all;
     return names[config.video.header_visibility];
 }
 
@@ -667,7 +668,7 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             SETTING(show_playtime, "show_playtime", !config.video.show_playtime);
             break;
         case wasabi_setting_header:
-            SETTING(header_visibility, "header_visibility", cycle(config.video.header_visibility, direction, 5));
+            SETTING(header_visibility, "header_visibility", cycle(config.video.header_visibility, direction, 6));
             break;
         case wasabi_setting_progress_bar:
             SETTING(progress_bar, "progress_bar", cycle(config.video.progress_bar, direction, 10));

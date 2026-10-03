@@ -10,6 +10,7 @@ static const char *row_glyphs[COLOUR_SHADER_PARAM_MAX + 1];
 static const char *row_help[COLOUR_SHADER_PARAM_MAX + 1];
 
 static int param_count = 0;
+static int return_to_list = 1;
 
 static submenu self;
 
@@ -52,8 +53,10 @@ static int row_coarse_step(const int index) {
 }
 
 static void closed(void) {
-    colour_shader_params_save();
-    shader_menu_reopen();
+    if (return_to_list)
+        shader_menu_reopen();
+    else
+        display_menu_reopen_shader();
 }
 
 static submenu_def def = {
@@ -76,7 +79,7 @@ void shader_adjust_menu_init(void) {
     submenu_init(&self, &def);
 }
 
-void shader_adjust_menu_open(void) {
+static void open_menu(void) {
     param_count = colour_shader_param_count();
     if (param_count <= 0) return;
 
@@ -93,6 +96,16 @@ void shader_adjust_menu_open(void) {
     def.row_count = param_count + 1;
 
     submenu_open(&self);
+}
+
+void shader_adjust_menu_open(void) {
+    return_to_list = 1;
+    open_menu();
+}
+
+void shader_adjust_menu_open_direct(void) {
+    return_to_list = 0;
+    open_menu();
 }
 
 int shader_adjust_menu_is_active(void) {

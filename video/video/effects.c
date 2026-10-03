@@ -431,17 +431,50 @@ static void load_parameter_values(void) {
     fclose(file);
 }
 
-static void save_parameter_values(void) {
-    char path[PATH_MAX];
-    parameter_path(path, sizeof(path));
-    create_directories(path, 1);
-    char output[2048];
-    size_t used = 0;
-    for (int index = 0; index < parameter_count && used < sizeof(output); index++)
-        used += (size_t) snprintf(
-            output + used, sizeof(output) - used, "%s=%g\n", parameters[index].name, (double) parameters[index].value
+static void apply_session_parameter_values(void) {
+    const char *stored = config.video.shader_params;
+    const char *bar = strchr(stored, '|');
+    if (!bar) return;
+
+    const size_t key_length = (size_t) (bar - stored);
+    if (key_length != strlen(config.video.shader) || strncmp(stored, config.video.shader, key_length) != 0) return;
+
+    char pairs[MAX_BUFFER_SIZE];
+    snprintf(pairs, sizeof(pairs), "%s", bar + 1);
+
+    char *save = NULL;
+    for (char *pair = strtok_r(pairs, ";", &save); pair; pair = strtok_r(NULL, ";", &save)) {
+        char *separator = strchr(pair, '=');
+        if (!separator) continue;
+        *separator++ = '\0';
+
+        char *end = NULL;
+        const float value = strtof(separator, &end);
+        if (end == separator) continue;
+
+        for (int index = 0; index < parameter_count; index++) {
+            if (strcmp(parameters[index].name, pair) != 0) continue;
+            parameters[index].value = fminf(parameters[index].max, fmaxf(parameters[index].min, value));
+            break;
+        }
+    }
+}
+
+static void store_parameter_values(void) {
+    char output[MAX_BUFFER_SIZE];
+    int used = snprintf(output, sizeof(output), "%s|", config.video.shader);
+    if (used < 0 || (size_t) used >= sizeof(output)) return;
+
+    for (int index = 0; index < parameter_count; index++) {
+        const int written = snprintf(
+            output + used, sizeof(output) - (size_t) used, "%s%s=%g", index ? ";" : "", parameters[index].name,
+            (double) parameters[index].value
         );
-    write_text_to_file_atomic(path, CHAR, output);
+        if (written < 0 || (size_t) written >= sizeof(output) - (size_t) used) return;
+        used += written;
+    }
+
+    snprintf(config.video.shader_params, sizeof(config.video.shader_params), "%s", output);
 }
 
 static void blank_filter_pragmas(char *source) {
@@ -486,6 +519,7 @@ static int load_program(void) {
     }
     parse_parameters(body);
     load_parameter_values();
+    apply_session_parameter_values();
     blank_filter_pragmas(body);
 
     const size_t source_length = strlen(fragment_preamble) + strlen(body) + 1;
@@ -762,14 +796,14 @@ int video_effects_parameter_cycle(const int index, const int direction) {
     parameter->value += (direction < 0 ? -1.0f : 1.0f) * parameter->step;
     if (parameter->value < parameter->min) parameter->value = parameter->min;
     if (parameter->value > parameter->max) parameter->value = parameter->max;
-    save_parameter_values();
+    store_parameter_values();
     return 1;
 }
 
 void video_effects_parameters_reset(void) {
     for (int index = 0; index < parameter_count; index++)
         parameters[index].value = parameters[index].def;
-    save_parameter_values();
+    store_parameter_values();
 }
 
 void video_effects_close(void) {

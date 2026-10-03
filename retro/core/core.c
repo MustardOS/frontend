@@ -769,11 +769,13 @@ void core_prepare_content_unload(void) {
 }
 
 void core_unload_content(void) {
+    environment_disable_audio_callback();
     if (current_core.retro_unload_game) {
         hw_render_bridge_enter_core_call();
         current_core.retro_unload_game();
         hw_render_bridge_exit_core_call();
     }
+    environment_clear_audio_callback();
     core_input_meta_clear();
 }
 

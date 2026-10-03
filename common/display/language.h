@@ -757,6 +757,7 @@ struct mux_lang {
         char blackfade[MAX_BUFFER_SIZE];
         char launchsplash[MAX_BUFFER_SIZE];
         char pickles_startup_messages[MAX_BUFFER_SIZE];
+        char wasabi_seek_effect[MAX_BUFFER_SIZE];
         char shuffle[MAX_BUFFER_SIZE];
         char chime[MAX_BUFFER_SIZE];
         char contentwidth[MAX_BUFFER_SIZE];
@@ -2269,6 +2270,7 @@ struct mux_lang {
             char header_clock[MAX_BUFFER_SIZE];
             char header_battery[MAX_BUFFER_SIZE];
             char header_both[MAX_BUFFER_SIZE];
+            char header_all[MAX_BUFFER_SIZE];
             char sram_flush[MAX_BUFFER_SIZE];
             char content_precache[MAX_BUFFER_SIZE];
             char timeline_saves[MAX_BUFFER_SIZE];
@@ -3731,6 +3733,7 @@ struct mux_lang {
             char group_content[MAX_BUFFER_SIZE];
             char launchsplash[MAX_BUFFER_SIZE];
             char pickles_startup_messages[MAX_BUFFER_SIZE];
+            char wasabi_seek_effect[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];
             char box_art_hide[MAX_BUFFER_SIZE];
             char font[MAX_BUFFER_SIZE];

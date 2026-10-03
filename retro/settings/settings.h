@@ -122,6 +122,15 @@ enum auto_save_mode { auto_save_off = 0, auto_save_idle, auto_save_quit, auto_sa
 
 #define MUX_INPUT_PORT_COUNT 4
 
+#define SESSION_SHADER_PARAM_MAX  16
+#define SESSION_SHADER_PARAM_NAME 32
+#define SESSION_SHADER_KEY_MAX    64
+
+struct session_shader_param {
+    char name[SESSION_SHADER_PARAM_NAME];
+    float value;
+};
+
 enum port_assignment_mode { port_assignment_auto = 0, port_assignment_none, port_assignment_remembered };
 
 enum port_role_mode { port_role_player = 0, port_role_ketchup };
@@ -182,6 +191,9 @@ struct session_settings_t {
     int colour_gamma;
     int colour_filter;
     int colour_shader;
+    char shader_params_for[SESSION_SHADER_KEY_MAX];
+    int shader_param_count;
+    struct session_shader_param shader_params[SESSION_SHADER_PARAM_MAX];
     int vignette_shape;
     int vignette_scaling;
     int vignette_width;

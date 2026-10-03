@@ -127,7 +127,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/mux/purge.sh", "56b1b3cc0463d236" },
     { "/opt/muos/script/mux/quit.sh", "ad24ecee01c28a68" },
     { "/opt/muos/script/mux/resume.sh", "cf12cdb74179e29f" },
-    { "/opt/muos/script/mux/screenshot.sh", "681d03f6c913b546" },
+    { "/opt/muos/script/mux/screenshot.sh", "39d8c383bdb47a12" },
     { "/opt/muos/script/mux/sdl_map.sh", "89b57db0be95413d" },
     { "/opt/muos/script/mux/sdl_remap.sh", "d72cec9e90ec9e94" },
     { "/opt/muos/script/mux/swap_abxy.sh", "310c894c5ecd9903" },

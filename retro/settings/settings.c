@@ -1483,6 +1483,63 @@ static void apply_scalar_settings_to(
     }
 }
 
+#define SHADER_PARAMS_GROUP "shader_params"
+#define SHADER_PARAMS_KEY   "shader_key"
+
+static int shader_params_differ(const struct session_settings_t *a, const struct session_settings_t *b) {
+    return strcmp(a->shader_params_for, b->shader_params_for) != 0 || a->shader_param_count != b->shader_param_count
+           || memcmp(a->shader_params, b->shader_params, sizeof(a->shader_params)) != 0;
+}
+
+static void apply_shader_params_to(mini_t *ini, struct session_settings_t *settings) {
+    const mini_group_t *group = ini->head;
+    while (group && (!group->id || strcmp(group->id, SHADER_PARAMS_GROUP) != 0))
+        group = group->next;
+    if (!group) return;
+
+    char shader[SESSION_SHADER_KEY_MAX] = "";
+    int count = 0;
+    struct session_shader_param params[SESSION_SHADER_PARAM_MAX];
+    memset(params, 0, sizeof(params));
+
+    for (const mini_value_t *value = group->head; value; value = value->next) {
+        if (!value->id || !value->val) continue;
+
+        if (strcmp(value->id, SHADER_PARAMS_KEY) == 0) {
+            snprintf(shader, sizeof(shader), "%s", value->val);
+            continue;
+        }
+
+        if (count >= SESSION_SHADER_PARAM_MAX || strlen(value->id) >= SESSION_SHADER_PARAM_NAME) continue;
+
+        char *end = NULL;
+        const float parsed = strtof(value->val, &end);
+        if (end == value->val) continue;
+
+        snprintf(params[count].name, sizeof(params[count].name), "%s", value->id);
+        params[count].value = parsed;
+        count++;
+    }
+
+    if (!shader[0]) return;
+
+    memset(settings->shader_params_for, 0, sizeof(settings->shader_params_for));
+    snprintf(settings->shader_params_for, sizeof(settings->shader_params_for), "%s", shader);
+    settings->shader_param_count = count;
+    memcpy(settings->shader_params, params, sizeof(params));
+}
+
+static void write_shader_params(mini_t *ini, const struct session_settings_t *settings) {
+    if (!settings->shader_params_for[0]) return;
+
+    mini_set_string(ini, SHADER_PARAMS_GROUP, SHADER_PARAMS_KEY, settings->shader_params_for);
+    for (int i = 0; i < settings->shader_param_count && i < SESSION_SHADER_PARAM_MAX; i++) {
+        char value[32];
+        snprintf(value, sizeof(value), "%g", (double) settings->shader_params[i].value);
+        mini_set_string(ini, SHADER_PARAMS_GROUP, settings->shader_params[i].name, value);
+    }
+}
+
 static void apply_ini_to(const char *path, struct session_settings_t *settings) {
     mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return;
@@ -1506,6 +1563,8 @@ static void apply_ini_to(const char *path, struct session_settings_t *settings) 
         const int index = overlay_library_index(key);
         settings->overlay_image = index >= 0 ? index : defaults.overlay_image;
     }
+
+    apply_shader_params_to(ini, settings);
 
     mini_free(ini);
 }
@@ -1584,6 +1643,7 @@ static int write_ini_delta(const char *path, const struct session_settings_t *ba
         mini_set_string(ini, "settings", "colour_shader_name", colour_shader_key(session_settings.colour_shader));
     if (session_settings.overlay_image != base->overlay_image)
         mini_set_string(ini, "settings", "overlay_image_name", overlay_library_key(session_settings.overlay_image));
+    if (shader_params_differ(&session_settings, base)) write_shader_params(ini, &session_settings);
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
@@ -2206,6 +2266,11 @@ void session_settings_set_colour_filter(const int index) {
 
 void session_settings_set_colour_shader(const int index) {
     if (index < 0 || index >= colour_shader_count()) return;
+    if (index != session_settings.colour_shader) {
+        memset(session_settings.shader_params_for, 0, sizeof(session_settings.shader_params_for));
+        memset(session_settings.shader_params, 0, sizeof(session_settings.shader_params));
+        session_settings.shader_param_count = 0;
+    }
     session_settings.colour_shader = index;
 }
 
@@ -3439,6 +3504,7 @@ void session_settings_discard_to(const struct session_settings_t *snapshot) {
     audio_bridge_apply_filter();
     video_bridge_apply_fps_limit();
     colour_refresh();
+    colour_shader_params_resync();
     overlay_bridge_apply();
     rumble_bridge_refresh();
     input_bridge_apply_controller_ports();

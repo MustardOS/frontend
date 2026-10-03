@@ -1884,14 +1884,8 @@ static int store_clean_frame(const char *path, const int skip_blank) {
 
     if (result == 0 && skip_blank && frame_is_blank(pixels, pixel_count)) result = -1;
 
-    if (result == 0) {
-        for (size_t i = 0; i < pixel_count; i++) {
-            const uint8_t red = pixels[i * 3U];
-            pixels[i * 3U] = pixels[i * 3U + 2U];
-            pixels[i * 3U + 2U] = red;
-        }
+    if (result == 0)
         result = screenshot_write_rgb(path, pixels, (uint32_t) device.screen.width, (uint32_t) device.screen.height);
-    }
     free(pixels);
     return result;
 }
@@ -2202,6 +2196,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             player.present_dirty = 1;
         }
     }
+    if (video_render_seek_tick()) player.present_dirty = 1;
     if (present_due && player.present_dirty) {
         display_composite_frame();
         player.present_dirty = 0;
@@ -2241,6 +2236,8 @@ static void request_seek_to_mode(double target, const int show_position) {
     if (player.live || player.duration <= 0.0) return;
     if (target < 0.0) target = 0.0;
     if (target > player.duration) target = player.duration;
+    if (show_position && !player.audio_only && !player.sequenced_audio && fabs(target - player.position) > 0.001)
+        video_render_seek_effect(target > player.position ? 1 : -1);
     player.position = target;
     player.clock_origin = target;
     player.clock_ticks = SDL_GetTicks();
@@ -2425,7 +2422,7 @@ static void load_quick_bookmark(void) {
 }
 
 static void toggle_header(void) {
-    config.video.header_visibility = (config.video.header_visibility + 1) % 5;
+    config.video.header_visibility = (config.video.header_visibility + 1) % 6;
     video_playback_ui_header_changed();
 }
 
@@ -2545,6 +2542,10 @@ static void apply_ui_action(const video_ui_action action) {
                 video_loading_hide();
                 player.buffering_visible = 0;
             }
+            if (player.live) {
+                player.menu_resume_playback = 0;
+                break;
+            }
             player.menu_resume_playback = !SDL_AtomicGet(&player.paused);
             if (player.menu_resume_playback) {
                 player.clock_origin = playback_clock();
@@ -2554,6 +2555,7 @@ static void apply_ui_action(const video_ui_action action) {
             set_present_timer_idle(1);
             break;
         case video_ui_action_closed:
+            if (player.live) break;
             if (player.menu_resume_playback)
                 resume_playback();
             else
@@ -3444,12 +3446,12 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
             display_set_fade_alpha(0);
             display_set_ui_hidden(ui_was_hidden);
         } else if (player.audio_only) {
-            display_mirror_to_fb(0);
+            display_mirror_to_fb();
         } else {
             const int ui_was_hidden = display_ui_is_hidden();
             video_render_set_clean_capture(1);
             display_set_ui_hidden(1);
-            display_mirror_to_fb(1);
+            display_mirror_to_fb();
             display_set_ui_hidden(ui_was_hidden);
             video_render_set_clean_capture(0);
         }

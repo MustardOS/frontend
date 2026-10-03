@@ -231,7 +231,6 @@ typedef struct {
 
 static shader_param_t shader_params[COLOUR_SHADER_PARAM_MAX];
 static int shader_params_count = 0;
-static int shader_params_dirty = 0;
 static int shader_params_upload_dirty = 1;
 
 typedef struct {
@@ -1246,30 +1245,64 @@ static void shader_params_load(const char *stem) {
     mini_free(ini);
 }
 
-void colour_shader_params_save(void) {
-    if (!shader_params_dirty || shader_params_count <= 0) return;
-    if (shader_loaded_index <= 0 || shader_loaded_index >= shader_count) return;
+static int shader_loaded_valid(void) {
+    return shader_loaded_index > 0 && shader_loaded_index < shader_count;
+}
 
-    char path[PATH_MAX];
-    shader_params_ini_path(path, sizeof(path), shader_names[shader_loaded_index]);
-    create_directories(path, 1);
+static void shader_params_apply_session(void) {
+    if (!shader_loaded_valid()) return;
+    if (strcmp(session_settings.shader_params_for, shader_keys[shader_loaded_index]) != 0) return;
 
-    mini_t *ini = mini_try_load(path);
-    if (!ini) ini = mini_create(path);
-    if (!ini) return;
+    for (int i = 0; i < session_settings.shader_param_count && i < SESSION_SHADER_PARAM_MAX; i++) {
+        const struct session_shader_param *saved = &session_settings.shader_params[i];
 
-    for (int i = 0; i < shader_params_count; i++) {
-        char value[32];
-        snprintf(value, sizeof(value), "%g", (double) shader_params[i].value);
-        mini_set_string(ini, "parameters", shader_params[i].name, value);
+        for (int p = 0; p < shader_params_count; p++) {
+            shader_param_t *sp = &shader_params[p];
+            if (strcmp(sp->name, saved->name) != 0) continue;
+
+            float v = saved->value;
+            if (v < sp->min) v = sp->min;
+            if (v > sp->max) v = sp->max;
+            sp->value = v;
+            break;
+        }
     }
 
-    const int saved = mini_save(ini, 0) == MINI_OK;
-    mini_free(ini);
-    if (saved)
-        shader_params_dirty = 0;
-    else
-        LOG_ERROR(mux_module, "Could not safely write shader parameters: %s", path);
+    shader_params_upload_dirty = 1;
+}
+
+static void shader_params_store_session(void) {
+    if (!shader_loaded_valid()) return;
+
+    memset(session_settings.shader_params_for, 0, sizeof(session_settings.shader_params_for));
+    memset(session_settings.shader_params, 0, sizeof(session_settings.shader_params));
+    snprintf(
+        session_settings.shader_params_for, sizeof(session_settings.shader_params_for), "%s",
+        shader_keys[shader_loaded_index]
+    );
+
+    int count = 0;
+    for (int i = 0; i < shader_params_count && count < SESSION_SHADER_PARAM_MAX; i++) {
+        if (strlen(shader_params[i].name) >= SESSION_SHADER_PARAM_NAME) continue;
+
+        snprintf(
+            session_settings.shader_params[count].name, sizeof(session_settings.shader_params[count].name), "%s",
+            shader_params[i].name
+        );
+        session_settings.shader_params[count].value = shader_params[i].value;
+        count++;
+    }
+    session_settings.shader_param_count = count;
+}
+
+void colour_shader_params_resync(void) {
+    if (!shader_loaded_valid()) return;
+
+    for (int i = 0; i < shader_params_count; i++)
+        shader_params[i].value = shader_params[i].def;
+
+    shader_params_load(shader_names[shader_loaded_index]);
+    shader_params_apply_session();
 }
 
 int colour_shader_param_count(void) {
@@ -1312,16 +1345,16 @@ void colour_shader_param_cycle(const int index, const int direction) {
     if (v == sp->value) return;
 
     sp->value = v;
-    shader_params_dirty = 1;
     shader_params_upload_dirty = 1;
+    shader_params_store_session();
 }
 
 void colour_shader_params_reset(void) {
     for (int i = 0; i < shader_params_count; i++)
         shader_params[i].value = shader_params[i].def;
 
-    shader_params_dirty = 1;
     shader_params_upload_dirty = 1;
+    shader_params_store_session();
 }
 
 static void ensure_shader_program(void) {
@@ -1345,7 +1378,6 @@ static void ensure_shader_program(void) {
     shader_contract_texture_w = shader_contract_texture_h = 0.0f;
     shader_contract_uv_w = shader_contract_uv_h = 0.0f;
     shader_params_count = 0;
-    shader_params_dirty = 0;
     shader_params_upload_dirty = 1;
     shader_uniform_key_valid = 0;
 
@@ -1430,6 +1462,7 @@ static void ensure_shader_program(void) {
         shader_params[i].loc = gl->GetUniformLocation(shader_prog, shader_params[i].name);
 
     shader_params_load(shader_names[index]);
+    shader_params_apply_session();
 
     LOG_INFO(
         mux_module, "Colour: user shader ready: %s (%d parameter%s, %s filtering, %s)", shader_names[index],
