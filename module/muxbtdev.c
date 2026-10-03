@@ -19,6 +19,8 @@ enum { btdev_info_count = E_SIZE(BTDEV_INFO_ELEMENTS) };
 static char selected_mac[18];
 static int is_connected;
 static int type_original;
+static int status_pending;
+static int status_target_connected;
 
 static void resolve_bt_type_override_path(const char *mac, char *out) {
     char mac_clean[18];
@@ -157,32 +159,29 @@ static void save_btdev_options(void) {
 
 static void read_device_info_field(const char *key, char *dest);
 
-static void status_change(const char *method) {
-    lv_refr_now(NULL);
-
-    const char *args[] = {OPT_PATH "script/mux/bt_device.sh", method, selected_mac, NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-    const char *info_args[] = {OPT_PATH "script/mux/bt_device.sh", "info", selected_mac, NULL};
-    run_exec(info_args, A_SIZE(info_args), 0, 1, NULL, NULL);
-
-    char val_conn[MAX_BUFFER_SIZE];
-    read_device_info_field("Connected", val_conn);
-
-    const int expected_connected = strcmp(method, "connect") == 0;
-    const int now_connected = strcmp(val_conn, "yes") == 0;
-
-    if (now_connected != expected_connected) {
-        toast_message(expected_connected ? lang.muxbtdev.connect_failed : lang.muxbtdev.disconnect_failed, tst_wait_l);
-
-        is_connected = now_connected;
-        lv_dropdown_set_selected(ui_dro_status_btdev, is_connected ? 1 : 0);
-        check_focus();
+static void status_change_complete(const int exit_code) {
+    status_pending = 0;
+    if (exit_code != 0) {
+        toast_message(
+            status_target_connected ? lang.muxbtdev.connect_failed : lang.muxbtdev.disconnect_failed, tst_wait_l
+        );
         return;
     }
 
     load_mux("btall");
     mux_input_stop();
+}
+
+static void bt_exec_poll_task(lv_timer_t *timer __attribute__((unused))) {
+    if (status_pending) exec_watch_task();
+}
+
+static void status_change(const char *method) {
+    status_target_connected = strcmp(method, "connect") == 0;
+    status_pending = 1;
+
+    const char *args[] = {OPT_PATH "script/mux/bt_device.sh", method, selected_mac, NULL};
+    run_exec(args, A_SIZE(args), 1, 0, NULL, status_change_complete);
 }
 
 static void handle_a(void) {
@@ -195,7 +194,7 @@ static void handle_a(void) {
         return;
     }
 
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || status_pending) return;
 
     if (key_show) {
         handle_keyboard_press();
@@ -231,7 +230,7 @@ static void handle_a(void) {
 }
 
 static void handle_b(void) {
-    if (hold_call) return;
+    if (hold_call || status_pending) return;
 
     if (dialogue_active(&forget_dlg)) {
         dialogue_mark_cancelled(&forget_dlg);
@@ -278,7 +277,7 @@ static void handle_x(void) {
         return;
     }
 
-    if (msgbox_active || current_item_index != BTDEV_FRGT_IDX || dialogue_active(&forget_dlg)) return;
+    if (msgbox_active || status_pending || current_item_index != BTDEV_FRGT_IDX || dialogue_active(&forget_dlg)) return;
 
     if (config.settings.advanced.trust_remove) {
         do_forget();
@@ -413,7 +412,7 @@ static void on_key_event(const struct input_event ev) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || status_pending) return;
     play_sound(snd_info_open);
     show_help();
 }
@@ -544,6 +543,8 @@ static void init_elements(void) {
 
 int muxbtdev_main(void) {
     selected_mac[0] = '\0';
+    status_pending = 0;
+    status_target_connected = 0;
 
     FILE *f = fopen(CONF_CONFIG_PATH "bluetooth/selected", "r");
     if (f) {
@@ -578,6 +579,7 @@ int muxbtdev_main(void) {
         lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
     init_timer(ui_gen_refresh_task, NULL);
+    lv_timer_create(bt_exec_poll_task, 100, NULL);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,

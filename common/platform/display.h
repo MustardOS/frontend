@@ -46,7 +46,9 @@ int display_capture_clean_frame(const char *path);
 
 int display_capture_clean_pixels(uint8_t *rgb, int width, int height);
 
-int display_mirror_to_fb(void);
+int display_mirror_to_fb(int swap_red_blue);
+
+int display_blank_fb(void);
 
 SDL_Renderer *display_get_renderer(void);
 

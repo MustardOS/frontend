@@ -1,0 +1,106 @@
+--- a/configure
++++ b/configure
+@@ -274,6 +274,7 @@
+   --enable-librubberband   enable rubberband needed for rubberband filter [no]
+   --enable-librtmp         enable RTMP[E] support via librtmp [no]
+   --enable-libshine        enable fixed-point MP3 encoding via libshine [no]
++  --enable-libsidplayfp    enable Commodore 64 SID music via libsidplayfp [no]
+   --enable-libsmbclient    enable Samba protocol via libsmbclient [no]
+   --enable-libsnappy       enable Snappy compression, needed for hap encoding [no]
+   --enable-libsoxr         enable Include libsoxr resampling [no]
+@@ -292,6 +293,7 @@
+   --enable-libtwolame      enable MP2 encoding via libtwolame [no]
+   --enable-libuavs3d       enable AVS3 decoding via libuavs3d [no]
+   --enable-libv4l2         enable libv4l2/v4l-utils [no]
++  --enable-libvgmstream    enable video game audio streams via libvgmstream [no]
+   --enable-libvidstab      enable video stabilization using vid.stab [no]
+   --enable-libvmaf         enable vmaf filter via libvmaf [no]
+   --enable-libvo-amrwbenc  enable AMR-WB encoding via libvo-amrwbenc [no]
+@@ -2034,6 +2036,7 @@
+     libdvdnav
+     libdvdread
+     librubberband
++    libsidplayfp
+     libvidstab
+     libx264
+     libx265
+@@ -2137,6 +2140,7 @@
+     libtwolame
+     libuavs3d
+     libv4l2
++    libvgmstream
+     libvmaf
+     libvorbis
+     libvpx
+@@ -3858,6 +3862,8 @@
+ libopenh264_encoder_deps="libopenh264"
+ libopenjpeg_encoder_deps="libopenjpeg"
+ libopenmpt_demuxer_deps="libopenmpt"
++libsidplayfp_demuxer_deps="libsidplayfp"
++libvgmstream_demuxer_deps="libvgmstream"
+ libopus_decoder_deps="libopus"
+ libopus_encoder_deps="libopus"
+ libopus_encoder_select="audio_frame_queue"
+@@ -7411,6 +7417,8 @@
+ enabled libopenjpeg       && { check_pkg_config libopenjpeg "libopenjp2 >= 2.1.0" openjpeg.h opj_version ||
+                                { require_pkg_config libopenjpeg "libopenjp2 >= 2.1.0" openjpeg.h opj_version -DOPJ_STATIC && add_cppflags -DOPJ_STATIC; } }
+ enabled libopenmpt        && require_pkg_config libopenmpt "libopenmpt >= 0.2.6557" libopenmpt/libopenmpt.h openmpt_module_create -lstdc++ && append libopenmpt_extralibs "-lstdc++"
++enabled libsidplayfp      && check_cxxflags -std=c++20 && require_cxx libsidplayfp sidplayfp/sidplayfp.h sidplayfp -lsidplayfp -lstdc++ -lpthread
++enabled libvgmstream      && require libvgmstream libvgmstream/libvgmstream.h libvgmstream_init -lvgmstream -lm
+ enabled libopenvino       && { { check_pkg_config libopenvino openvino openvino/c/openvino.h ov_core_create && enable openvino2; } ||
+                                 { check_pkg_config libopenvino openvino c_api/ie_c_api.h ie_c_api_version ||
+                                   require libopenvino c_api/ie_c_api.h ie_c_api_version -linference_engine_c_api; } }
+--- a/libavformat/allformats.c
++++ b/libavformat/allformats.c
+@@ -584,6 +584,8 @@
+ extern const FFInputFormat  ff_libgme_demuxer;
+ extern const FFInputFormat  ff_libmodplug_demuxer;
+ extern const FFInputFormat  ff_libopenmpt_demuxer;
++extern const FFInputFormat  ff_libsidplayfp_demuxer;
++extern const FFInputFormat  ff_libvgmstream_demuxer;
+ extern const FFInputFormat  ff_vapoursynth_demuxer;
+ 
+ #include "libavformat/muxer_list.c"
+--- a/libavformat/Makefile
++++ b/libavformat/Makefile
+@@ -678,6 +678,8 @@
+ OBJS-$(CONFIG_LIBGME_DEMUXER)            += libgme.o
+ OBJS-$(CONFIG_LIBMODPLUG_DEMUXER)        += libmodplug.o
+ OBJS-$(CONFIG_LIBOPENMPT_DEMUXER)        += libopenmpt.o
++OBJS-$(CONFIG_LIBSIDPLAYFP_DEMUXER)      += libsidplayfp.o libsidplayfp_glue.o
++OBJS-$(CONFIG_LIBVGMSTREAM_DEMUXER)      += libvgmstream.o
+ OBJS-$(CONFIG_VAPOURSYNTH_DEMUXER)       += vapoursynth.o
+ 
+ # protocols I/O
+--- a/libavformat/libgme.c
++++ b/libavformat/libgme.c
+@@ -80,6 +80,7 @@
+ }
+ 
+ #define AUDIO_PKT_SIZE 512
++#define GME_FADE_MSECS 8000
+ 
+ static int read_close_gme(AVFormatContext *s)
+ {
+@@ -96,6 +97,7 @@
+     GMEContext *gme = s->priv_data;
+     int64_t sz = avio_size(pb);
+     int64_t duration;
++    gme_info_t *info = NULL;
+     char *buf;
+     char dummy;
+     int ret;
+@@ -133,6 +135,13 @@
+         return ret;
+     if (gme_start_track(gme->music_emu, gme->track_index))
+         return AVERROR_UNKNOWN;
++    if (duration <= 0 && gme_track_info(gme->music_emu, &info, gme->track_index) == NULL) {
++        if (info->play_length > 0) {
++            gme_set_fade_msecs(gme->music_emu, info->play_length, GME_FADE_MSECS);
++            duration = info->play_length + GME_FADE_MSECS;
++        }
++        gme_free_info(info);
++    }
+ 
+     st = avformat_new_stream(s, NULL);
+     if (!st)

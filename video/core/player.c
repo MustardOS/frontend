@@ -1,6 +1,7 @@
 #include "player.h"
 #include "audio.h"
 #include "audio_transition.h"
+#include "audio_source.h"
 #include "../ui/ui_loading.h"
 #include "../ui/ui_audio.h"
 #include "ui_pause.h"
@@ -137,6 +138,7 @@ typedef struct {
     double position;
     double duration;
     double clock_origin;
+    double clock_speed;
     uint32_t clock_ticks;
     SDL_atomic_t interrupt_ticks;
     int history_enabled;
@@ -184,6 +186,12 @@ typedef struct {
     int playlist_channels;
     size_t *playlist_selection;
     int playlist_switch_requested;
+    int folder_playlist;
+    const video_library_entry *folder;
+    size_t folder_count;
+    size_t folder_index;
+    size_t *folder_selection;
+    int folder_switch_requested;
     size_t channel_pending_index;
     uint32_t channel_switch_deadline;
     int channel_switch_pending;
@@ -211,6 +219,14 @@ typedef struct {
 
 static video_player player;
 static int network_ready;
+typedef struct {
+    video_library_entry *entries;
+    size_t count;
+    size_t selected;
+    char source[PATH_MAX];
+} subsong_playlist;
+
+static subsong_playlist subsongs;
 static char audio_hook_owner;
 static int video_codec_unsupported;
 static unsigned char *shuffle_seen;
@@ -269,13 +285,14 @@ static void request_seek_to_mode(double target, int show_position);
 static void resume_playback(void);
 static void stop_playback(void);
 static void switch_playlist(size_t index);
+static void switch_folder(size_t index);
 static int audio_available(void);
 static void set_fast_forward(int active);
 static void set_slow_motion(int active);
 static void start_audio_transition(void);
 
 static double playback_speed_locked(const uint32_t now) {
-    if (!player.audio_only || player.live || player.sequenced_audio) return 1.0;
+    if (player.live || player.sequenced_audio) return 1.0;
     if (!player.speed_ramping) {
         const double speed = player.speed_current > 0.0 ? player.speed_current : 1.0;
         SDL_AtomicSet(&player.speed_q16, (int) llround(speed * 65536.0));
@@ -371,8 +388,17 @@ static size_t shuffle_next(void) {
 
 static size_t next_playlist_index(void) {
     if (!player.playlist || player.playlist_count < 2 || config.video.repeat_mode == 1) return SIZE_MAX;
+    if (!config.video.auto_play && config.video.repeat_mode != 2) return SIZE_MAX;
+    if (player.folder) return player.playlist_index + 1 < player.playlist_count ? player.playlist_index + 1 : SIZE_MAX;
     if (config.video.shuffle) return shuffle_next();
     if (player.playlist_index + 1 < player.playlist_count) return player.playlist_index + 1;
+    return config.video.repeat_mode == 2 ? 0 : SIZE_MAX;
+}
+
+static size_t next_folder_index(void) {
+    if (!player.folder || player.folder_count < 2) return SIZE_MAX;
+    if (!config.video.auto_play && config.video.repeat_mode != 2) return SIZE_MAX;
+    if (player.folder_index + 1 < player.folder_count) return player.folder_index + 1;
     return config.video.repeat_mode == 2 ? 0 : SIZE_MAX;
 }
 
@@ -381,7 +407,7 @@ static void start_audio_transition(void) {
         || (!config.video.gapless && !config.video.crossfade))
         return;
     const size_t next = next_playlist_index();
-    if (next == SIZE_MAX || next >= player.playlist_count) {
+    if (next == SIZE_MAX || next >= player.playlist_count || video_path_is_sequenced(player.playlist[next].uri)) {
         audio_transition_cancel();
         return;
     }
@@ -584,7 +610,7 @@ static void audio_write(const float *source, int frames) {
 
 static void audio_speed_write(const float *source, const int frames) {
     if (!source || frames <= 0) return;
-    if (!player.audio_only || !player.audio_speed_convert || !player.audio_speed_previous || !player.audio_speed_filter
+    if (player.live || !player.audio_speed_convert || !player.audio_speed_previous || !player.audio_speed_filter
         || player.audio_channels <= 0) {
         audio_write(source, frames);
         return;
@@ -1279,6 +1305,14 @@ int video_player_tracker_loop_available(void) {
     return player.audio_only && player.tracker_audio;
 }
 
+int video_player_seek_available(void) {
+    return !player.live && player.duration > 0.0;
+}
+
+int video_player_speed_available(void) {
+    return !player.live && !player.sequenced_audio && (player.video_decoder || player.audio_decoder);
+}
+
 static void format_live_bitrate(char *buffer, const size_t size, const int64_t bitrate) {
     if (bitrate >= 1000000)
         snprintf(buffer, size, "%.1f Mbps", (double) bitrate / 1000000.0);
@@ -1453,7 +1487,7 @@ static void decode_audio(const AVPacket *packet) {
                     }
                 }
                 SDL_UnlockAudio();
-                if (player.audio_only)
+                if (!player.live)
                     audio_speed_write(player.audio_convert, frames);
                 else
                     audio_write(player.audio_convert, frames);
@@ -1802,10 +1836,38 @@ static double playback_clock(void) {
     }
     SDL_UnlockAudio();
     if (audio_valid && player.audio_rate > 0) return audio_position;
-    return player.clock_origin + (double) (SDL_GetTicks() - player.clock_ticks) / 1000.0;
+    const uint32_t now = SDL_GetTicks();
+    const double speed = playback_speed();
+    const double elapsed = (double) (now - player.clock_ticks) / 1000.0;
+    player.clock_origin += elapsed * (player.clock_speed + speed) * 0.5;
+    player.clock_speed = speed;
+    player.clock_ticks = now;
+    return player.clock_origin;
 }
 
-static int store_clean_frame(const char *path) {
+static int frame_is_blank(const uint8_t *pixels, const size_t pixel_count) {
+    size_t samples = 0;
+    size_t bright = 0;
+    uint64_t total = 0;
+
+    for (size_t i = 0; i < pixel_count; i += 7) {
+        const uint8_t *pixel = pixels + i * 3U;
+        const unsigned int luma = (77U * pixel[0] + 150U * pixel[1] + 29U * pixel[2]) >> 8;
+        total += luma;
+        bright += luma > 48;
+        samples++;
+    }
+
+    return samples && total / samples < 16 && bright * 100 < samples;
+}
+
+static int playback_near_end(void) {
+    if (player.live || player.duration <= 0.0) return 0;
+    const double tail = player.duration * 0.1 < 60.0 ? player.duration * 0.1 : 60.0;
+    return player.position >= player.duration - tail;
+}
+
+static int store_clean_frame(const char *path, const int skip_blank) {
     if (!path || !path[0]) return -1;
 
     const size_t pixel_count = (size_t) device.screen.width * (size_t) device.screen.height;
@@ -1822,6 +1884,8 @@ static int store_clean_frame(const char *path) {
     display_set_composite_suppressed(0);
     display_composite_frame();
 
+    if (result == 0 && skip_blank && frame_is_blank(pixels, pixel_count)) result = -1;
+
     if (result == 0) {
         for (size_t i = 0; i < pixel_count; i++) {
             const uint8_t red = pixels[i * 3U];
@@ -1837,12 +1901,12 @@ static int store_clean_frame(const char *path) {
 static void save_history(const int complete, const int store_thumbnail) {
     char thumbnail[PATH_MAX] = "";
     const int has_container = player.container_uri[0] && strcmp(player.container_uri, player.uri) != 0;
-    const int needs_thumbnail = !player.audio_only && store_thumbnail
+    const int needs_thumbnail = !player.audio_only && store_thumbnail && !playback_near_end()
                                 && ((player.history_enabled && (player.live || (player.position >= 1.0 && !complete)))
                                     || video_collection_contains(player.uri)
                                     || (has_container && video_collection_contains(player.container_uri)));
     if (needs_thumbnail && video_state_thumbnail_path(player.uri, player.position, 0, thumbnail, sizeof(thumbnail)) == 0
-        && store_clean_frame(thumbnail) != 0)
+        && store_clean_frame(thumbnail, 1) != 0)
         thumbnail[0] = '\0';
 
     if (thumbnail[0] && has_container) {
@@ -1904,6 +1968,12 @@ static void complete_playback(void) {
     } else if (config.video.repeat_mode == 2) {
         player.restart_requested = 1;
         stop_playback();
+        return;
+    }
+
+    const size_t folder_next = next_folder_index();
+    if (folder_next != SIZE_MAX) {
+        switch_folder(folder_next);
         return;
     }
 
@@ -2306,7 +2376,7 @@ static int save_bookmark(const char *name, const int quick) {
     if (!player.audio_only) {
         if (video_state_thumbnail_path(player.uri, player.position, 1, thumbnail, sizeof(thumbnail)) != 0) return 0;
         thumbnail_existed = file_exist(thumbnail);
-        if (store_clean_frame(thumbnail) != 0) return 0;
+        if (store_clean_frame(thumbnail, 0) != 0) return 0;
     }
 
     const int result = quick ? video_bookmark_set_quick(
@@ -2387,7 +2457,7 @@ static void update_speed_indicator(void) {
 }
 
 static void set_fast_forward(const int active) {
-    if (!player.audio_only || player.live || player.sequenced_audio) return;
+    if (player.live || player.sequenced_audio) return;
     if (player.fast_forward_active == active && (!active || !player.slow_motion_active)) return;
     player.fast_forward_active = active;
     if (active) player.slow_motion_active = 0;
@@ -2396,7 +2466,7 @@ static void set_fast_forward(const int active) {
 }
 
 static void set_slow_motion(const int active) {
-    if (!player.audio_only || player.live || player.sequenced_audio) return;
+    if (player.live || player.sequenced_audio) return;
     if (player.slow_motion_active == active && (!active || !player.fast_forward_active)) return;
     player.slow_motion_active = active;
     if (active) player.fast_forward_active = 0;
@@ -2414,6 +2484,13 @@ static void stop_playback(void) {
     mux_input_stop();
 }
 
+static void switch_folder(const size_t index) {
+    if (player.folder_selection) *player.folder_selection = index;
+    player.folder_switch_requested = 1;
+    player.playlist_switch_requested = 1;
+    stop_playback();
+}
+
 static void switch_playlist(const size_t index) {
     if (!player.playlist || player.playlist_count < 2 || index >= player.playlist_count) return;
     if (player.playlist_selection) *player.playlist_selection = index;
@@ -2427,6 +2504,19 @@ static void switch_playlist(const size_t index) {
     }
     player.playlist_switch_requested = 1;
     stop_playback();
+}
+
+static void step_track(const int direction) {
+    if (!player.audio_only || player.live || !player.playlist || player.playlist_count < 2) return;
+
+    size_t index;
+    if (direction > 0)
+        index = player.playlist_index + 1 < player.playlist_count ? player.playlist_index + 1 : 0;
+    else
+        index = player.playlist_index > 0 ? player.playlist_index - 1 : player.playlist_count - 1;
+
+    play_sound(snd_navigate);
+    switch_playlist(index);
 }
 
 static void step_channel(const int direction) {
@@ -2680,8 +2770,9 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
     }
     if (video_playback_ui_menu_active() || video_playback_ui_naming_active()) return;
     const int menu_combo = mux_input_pressed(mux_input_menu);
-    if (player.audio_only && !player.live && !player.sequenced_audio) {
-        if (input == config.video.hotkey_fast_forward && config.video.fast_forward_mode) {
+    if (!player.live && !player.sequenced_audio) {
+        if (input == config.video.hotkey_fast_forward && config.video.fast_forward_mode
+            && (menu_combo || player.fast_forward_active)) {
             if (action == mux_input_release && config.video.fast_forward_mode == 1) {
                 set_fast_forward(0);
             } else if (action == mux_input_press && menu_combo) {
@@ -2693,7 +2784,8 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
             }
             return;
         }
-        if (input == config.video.hotkey_slow_motion && config.video.slow_motion_mode) {
+        if (input == config.video.hotkey_slow_motion && config.video.slow_motion_mode
+            && (menu_combo || player.slow_motion_active)) {
             if (action == mux_input_release && config.video.slow_motion_mode == 1) {
                 set_slow_motion(0);
             } else if (action == mux_input_press && menu_combo) {
@@ -2735,6 +2827,10 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         toggle_repeat();
     else if (input == config.video.hotkey_shuffle)
         toggle_shuffle();
+    else if (input == mux_input_l2)
+        step_track(-1);
+    else if (input == mux_input_r2)
+        step_track(1);
 }
 
 static void player_cleanup(void) {
@@ -2808,9 +2904,29 @@ static int player_open_failed(const char *stage, const int error) {
     return 0;
 }
 
+static Mix_Music *load_sequenced(const char *uri) {
+    SDL_RWops *source = SDL_RWFromFile(uri, "rb");
+    if (!source) return NULL;
+    Uint8 header[12];
+    if (SDL_RWread(source, header, 1, sizeof(header)) != sizeof(header) || memcmp(header, "RIFF", 4) != 0
+        || memcmp(header + 8, "RMID", 4) != 0) {
+        SDL_RWclose(source);
+        return Mix_LoadMUS(uri);
+    }
+    Uint8 chunk[4];
+    while (SDL_RWread(source, chunk, 1, sizeof(chunk)) == sizeof(chunk)) {
+        const Sint64 size = SDL_ReadLE32(source);
+        if (memcmp(chunk, "data", 4) == 0) return Mix_LoadMUSType_RW(source, MUS_MID, 1);
+        if (SDL_RWseek(source, size + (size & 1), RW_SEEK_CUR) < 0) break;
+    }
+    SDL_RWclose(source);
+    return NULL;
+}
+
 static int player_open_sequenced(const char *uri, const char *title, const video_player_options *options) {
     memset(&player, 0, sizeof(player));
     player.speed_current = player.speed_start = player.speed_target = 1.0;
+    player.clock_speed = 1.0;
     SDL_AtomicSet(&player.speed_q16, 65536);
     player.video_stream = -1;
     player.audio_stream = -1;
@@ -2822,6 +2938,7 @@ static int player_open_sequenced(const char *uri, const char *title, const video
     player.playlist_index = options->playlist_index;
     player.playlist_channels = options->playlist_channels;
     player.playlist_selection = options->playlist_selection;
+    player.folder_playlist = options->folder_playlist;
     player.clock_ticks = SDL_GetTicks();
     snprintf(player.uri, sizeof(player.uri), "%s", uri);
     snprintf(player.title, sizeof(player.title), "%s", title && title[0] ? title : uri);
@@ -2841,7 +2958,7 @@ static int player_open_sequenced(const char *uri, const char *title, const video
     char soundfont[PATH_MAX];
     if (soundfont_resolve(config.settings.general.soundfont, soundfont, sizeof(soundfont)))
         Mix_SetSoundFonts(soundfont);
-    player.sequenced_audio = Mix_LoadMUS(uri);
+    player.sequenced_audio = load_sequenced(uri);
     if (!player.sequenced_audio) return player_open_failed("MIDI decoder", 0);
     player.duration = Mix_MusicDuration(player.sequenced_audio);
     if (player.duration < 0.0) player.duration = 0.0;
@@ -2888,6 +3005,65 @@ static int player_open_sequenced(const char *uri, const char *title, const video
     return player.present_timer != NULL;
 }
 
+static void subsong_playlist_free(void) {
+    video_library_free(subsongs.entries, subsongs.count);
+    memset(&subsongs, 0, sizeof(subsongs));
+}
+
+static int subsong_playlist_build(const char *path, const int count) {
+    if (subsongs.entries && subsongs.count == (size_t) count && strcmp(subsongs.source, path) == 0) return 1;
+
+    subsong_playlist_free();
+    subsongs.entries = calloc((size_t) count, sizeof(*subsongs.entries));
+    if (!subsongs.entries) return 0;
+    subsongs.count = (size_t) count;
+    snprintf(subsongs.source, sizeof(subsongs.source), "%s", path);
+
+    char name[PATH_MAX];
+    video_title_from_uri(path, name, sizeof(name));
+    for (int index = 0; index < count; index++) {
+        char text[PATH_MAX + 32];
+        snprintf(text, sizeof(text), "%s#%d", path, index + 1);
+        subsongs.entries[index].uri = strdup(text);
+        snprintf(text, sizeof(text), "%s %d/%d", name, index + 1, count);
+        subsongs.entries[index].title = strdup(text);
+        if (!subsongs.entries[index].uri || !subsongs.entries[index].title) {
+            subsong_playlist_free();
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void subsong_playlist_attach(void) {
+    if ((player.playlist && !player.folder_playlist) || player.live || !player.audio_only) return;
+
+    wasabi_audio_source source;
+    audio_source_resolve(player.uri, &source);
+    int current = 1;
+    const int count = audio_source_subsongs(player.format, &source, &current);
+    if (count < 2 || !subsong_playlist_build(source.path, count)) return;
+
+    subsongs.selected = (size_t) current - 1;
+    if (player.playlist) {
+        player.folder = player.playlist;
+        player.folder_count = player.playlist_count;
+        player.folder_index = player.playlist_index;
+        player.folder_selection = player.playlist_selection;
+    }
+    player.playlist = subsongs.entries;
+    player.playlist_count = subsongs.count;
+    player.playlist_index = subsongs.selected;
+    player.playlist_selection = &subsongs.selected;
+}
+
+static int output_sample_rate(void) {
+    int rate = 0;
+    int channels = 0;
+    Uint16 format = 0;
+    return Mix_QuerySpec(&rate, &format, &channels) ? rate : 0;
+}
+
 static int best_video_stream(const AVFormatContext *format) {
     if (!format) return -1;
     int best = -1;
@@ -2907,8 +3083,7 @@ static int best_video_stream(const AVFormatContext *format) {
 }
 
 static int player_open(const char *uri, const char *title, const video_player_options *options) {
-    if (video_path_extension_is(uri, ".mid") || video_path_extension_is(uri, ".midi"))
-        return player_open_sequenced(uri, title, options);
+    if (video_path_is_sequenced(uri)) return player_open_sequenced(uri, title, options);
     if (!network_ready) {
         const int result = avformat_network_init();
         if (result < 0) return player_open_failed("network", result);
@@ -2920,6 +3095,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
     if (!transition_resume) audio_transition_cancel();
     memset(&player, 0, sizeof(player));
     player.speed_current = player.speed_start = player.speed_target = 1.0;
+    player.clock_speed = 1.0;
     SDL_AtomicSet(&player.speed_q16, 65536);
     player.transition_resume_origin = transition_position;
     video_codec_unsupported = 0;
@@ -2939,6 +3115,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
     player.playlist_index = options->playlist_index;
     player.playlist_channels = options->playlist_channels;
     player.playlist_selection = options->playlist_selection;
+    player.folder_playlist = options->folder_playlist;
     player.clock_ticks = SDL_GetTicks();
     snprintf(player.uri, sizeof(player.uri), "%s", uri);
     snprintf(player.title, sizeof(player.title), "%s", title && title[0] ? title : uri);
@@ -2967,7 +3144,9 @@ static int player_open(const char *uri, const char *title, const video_player_op
     }
     char *resolved_uri = player.live ? resolve_live_manifest(uri) : NULL;
     SDL_AtomicSet(&player.interrupt_ticks, (int) SDL_GetTicks());
-    const int open_result = avformat_open_input(&player.format, resolved_uri ? resolved_uri : uri, NULL, &open_options);
+    const int open_result =
+        player.live ? avformat_open_input(&player.format, resolved_uri ? resolved_uri : uri, NULL, &open_options)
+                    : audio_source_open(&player.format, uri, output_sample_rate(), &open_options);
     SDL_AtomicSet(&player.interrupt_ticks, 0);
     free(resolved_uri);
     av_dict_free(&open_options);
@@ -3013,6 +3192,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
                            && strstr(player.format->iformat->name, "openmpt") != NULL;
     wasabi_settings_set_audio(player.audio_only);
     if (player.audio_only) wasabi_audio_metadata(player.format, player.uri, player.title, &player.audio_information);
+    subsong_playlist_attach();
 
     player.lock = SDL_CreateMutex();
     player.condition = SDL_CreateCond();
@@ -3074,7 +3254,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
                 calloc((size_t) player.audio_capacity * player.audio_channels, sizeof(*player.audio_ring));
             player.audio_convert =
                 malloc((size_t) AUDIO_CONVERT_FRAMES * player.audio_channels * sizeof(*player.audio_convert));
-            if (player.audio_only) {
+            if (!player.live) {
                 player.audio_speed_convert = malloc(
                     (size_t) (AUDIO_SPEED_BATCH_FRAMES + 2) * player.audio_channels
                     * sizeof(*player.audio_speed_convert)
@@ -3086,7 +3266,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
                     audio_speed_reset();
                 }
             }
-            if (!player.audio_ring || !player.audio_convert || (player.audio_only && !player.audio_speed_convert))
+            if (!player.audio_ring || !player.audio_convert || (!player.live && !player.audio_speed_convert))
                 return player_open_failed("audio buffers", AVERROR(ENOMEM));
             Mix_HaltMusic();
             Mix_HookMusic(audio_callback, &audio_hook_owner);
@@ -3096,8 +3276,9 @@ static int player_open(const char *uri, const char *title, const video_player_op
     video_state_entry saved = {0};
     double initial_position = options->start_position;
     if (transition_position > initial_position) initial_position = transition_position;
-    if (initial_position <= 0.0 && !player.live && options->resume && video_history_find(uri, &saved)
-        && saved.position > 1.0 && (saved.duration <= 0.0 || saved.position < saved.duration * 0.95))
+    if (initial_position <= 0.0 && !player.live && options->resume && audio_source_resumable(uri)
+        && video_history_find(uri, &saved) && saved.position > 1.0
+        && (saved.duration <= 0.0 || saved.position < saved.duration * 0.95))
         initial_position = saved.position;
     if (!player.live && initial_position > 0.0 && (player.duration <= 0.0 || initial_position < player.duration)) {
         player.position = initial_position;
@@ -3143,6 +3324,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
 static int player_open_live_failure(const char *uri, const char *title, const video_player_options *options) {
     memset(&player, 0, sizeof(player));
     player.speed_current = player.speed_start = player.speed_target = 1.0;
+    player.clock_speed = 1.0;
     SDL_AtomicSet(&player.speed_q16, 65536);
     player.video_stream = -1;
     player.audio_stream = -1;
@@ -3155,6 +3337,7 @@ static int player_open_live_failure(const char *uri, const char *title, const vi
     player.playlist_index = options->playlist_index;
     player.playlist_channels = options->playlist_channels;
     player.playlist_selection = options->playlist_selection;
+    player.folder_playlist = options->folder_playlist;
     player.clock_ticks = SDL_GetTicks();
     snprintf(player.uri, sizeof(player.uri), "%s", uri);
     snprintf(player.title, sizeof(player.title), "%s", title && title[0] ? title : uri);
@@ -3192,6 +3375,8 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
         options->live ? live_performance_begin(previous_governor, sizeof(previous_governor)) : 0;
     wasabi_session_begin(uri);
     int result = video_player_stopped;
+    const char *current_uri = uri;
+    const char *current_title = title;
     for (;;) {
         display_set_composite_suppressed(0);
         display_set_idle_saver_suppressed_query(idle_saver_suppressed);
@@ -3200,8 +3385,8 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
             video_render_open();
             show_live_loading(title);
         }
-        if (!player_open(uri, title, options)) {
-            LOG_ERROR("muxmedia", "Unable to open '%s'", uri);
+        if (!player_open(current_uri, current_title, options)) {
+            LOG_ERROR("muxmedia", "Unable to open '%s'", current_uri);
             player_cleanup();
             if (!options->live || !player_open_live_failure(uri, title, options)) {
                 player_cleanup();
@@ -3248,16 +3433,42 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
         const int switched = player.playlist_switch_requested;
         const int content_switched = player.content_switch_requested;
         const int restart = player.restart_requested;
-        display_mirror_to_fb();
+        const int subsong_switch = switched && !player.folder_switch_requested && subsongs.entries
+                                   && player.playlist == subsongs.entries && subsongs.selected < subsongs.count;
+        const int quitting = !restart && !subsong_switch && !switched && !content_switched;
+        if (quitting) {
+            const int ui_was_hidden = display_ui_is_hidden();
+            display_set_ui_hidden(1);
+            fade_out_screen_forced();
+            display_blank_fb();
+            display_set_composite_suppressed(1);
+            display_set_fade_alpha(0);
+            display_set_ui_hidden(ui_was_hidden);
+        } else if (player.audio_only) {
+            display_mirror_to_fb(0);
+        } else {
+            const int ui_was_hidden = display_ui_is_hidden();
+            video_render_set_clean_capture(1);
+            display_set_ui_hidden(1);
+            display_mirror_to_fb(1);
+            display_set_ui_hidden(ui_was_hidden);
+            video_render_set_clean_capture(0);
+        }
         display_set_composite_suppressed(1);
         player_cleanup();
         if (restart) continue;
+        if (subsong_switch) {
+            current_uri = subsongs.entries[subsongs.selected].uri;
+            current_title = subsongs.entries[subsongs.selected].title;
+            continue;
+        }
         result = content_switched ? video_player_content_switch
                  : switched       ? video_player_playlist_switch
                                   : video_player_stopped;
         break;
     }
     wasabi_session_end();
+    subsong_playlist_free();
     if (result != video_player_playlist_switch) shuffle_reset();
     live_performance_end(governor_changed, previous_governor);
     return result;

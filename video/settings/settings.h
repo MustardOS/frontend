@@ -66,6 +66,7 @@ typedef enum {
     wasabi_setting_live_buffer,
     wasabi_setting_sleep,
     wasabi_setting_idle_screensaver,
+    wasabi_setting_auto_play,
     wasabi_setting_reset,
     wasabi_setting_count
 } wasabi_setting;

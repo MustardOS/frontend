@@ -207,6 +207,10 @@ int video_path_is_audio(const char *name) {
     return content_path_is_audio(name);
 }
 
+int video_path_is_sequenced(const char *name) {
+    return content_path_is_sequenced(name);
+}
+
 const char *video_title_from_uri(const char *uri, char *buffer, const size_t size) {
     if (!buffer || size == 0) return "";
     const char *base = strrchr(uri ? uri : "", '/');
@@ -311,6 +315,112 @@ int video_library_scan(const char *root, const int audio, video_library_entry **
     size_t capacity = 0;
     const int result = scan_media_dir(root, 0, audio, entries, count, &capacity);
     return result;
+}
+
+static int natural_compare(const char *left, const char *right) {
+    while (*left && *right) {
+        if (isdigit((unsigned char) *left) && isdigit((unsigned char) *right)) {
+            while (*left == '0')
+                left++;
+            while (*right == '0')
+                right++;
+
+            size_t left_digits = 0;
+            size_t right_digits = 0;
+            while (isdigit((unsigned char) left[left_digits]))
+                left_digits++;
+            while (isdigit((unsigned char) right[right_digits]))
+                right_digits++;
+
+            if (left_digits != right_digits) return left_digits < right_digits ? -1 : 1;
+
+            const int order = strncmp(left, right, left_digits);
+            if (order) return order;
+
+            left += left_digits;
+            right += right_digits;
+            continue;
+        }
+
+        const int a = tolower((unsigned char) *left);
+        const int b = tolower((unsigned char) *right);
+        if (a != b) return a < b ? -1 : 1;
+
+        left++;
+        right++;
+    }
+
+    return *left ? 1 : *right ? -1 : 0;
+}
+
+static int folder_entry_compare(const void *left, const void *right) {
+    const video_library_entry *a = left;
+    const video_library_entry *b = right;
+    const int order = natural_compare(a->title, b->title);
+    return order ? order : strcmp(a->uri, b->uri);
+}
+
+int video_folder_playlist(const char *path, video_library_entry **entries, size_t *count, size_t *index) {
+    *entries = NULL;
+    *count = 0;
+    *index = 0;
+
+    if (!path || !path[0] || strstr(path, "://") || strchr(path, '#')) return 0;
+
+    const int audio = video_path_is_audio(path);
+    if (!audio && !is_video(path)) return 0;
+
+    const char *slash = strrchr(path, '/');
+    if (!slash) return 0;
+
+    char folder[PATH_MAX];
+    if (snprintf(folder, sizeof(folder), "%.*s", (int) (slash - path), path) >= (int) sizeof(folder)) return 0;
+    if (!folder[0]) snprintf(folder, sizeof(folder), "/");
+
+    DIR *directory = opendir(folder);
+    if (!directory) return 0;
+
+    size_t capacity = 0;
+    int result = 0;
+    const struct dirent *item;
+    while ((item = readdir(directory))) {
+        if (item->d_name[0] == '.') continue;
+        if (audio ? !video_path_is_audio(item->d_name) : !is_video(item->d_name)) continue;
+
+        char full[PATH_MAX];
+        if (snprintf(full, sizeof(full), "%s/%s", folder, item->d_name) >= (int) sizeof(full)) continue;
+
+        struct stat info;
+        if (stat(full, &info) != 0 || !S_ISREG(info.st_mode)) continue;
+
+        char title[PATH_MAX];
+        video_title_from_uri(item->d_name, title, sizeof(title));
+        if (append_entry(entries, count, &capacity, full, title, NULL, 0) < 0) {
+            result = -1;
+            break;
+        }
+    }
+    closedir(directory);
+
+    if (result < 0 || *count < 2) {
+        video_library_free(*entries, *count);
+        *entries = NULL;
+        *count = 0;
+        return result;
+    }
+
+    qsort(*entries, *count, sizeof(**entries), folder_entry_compare);
+
+    for (size_t position = 0; position < *count; position++) {
+        if (strcmp(strrchr((*entries)[position].uri, '/') + 1, slash + 1) != 0) continue;
+        *index = position;
+        return 1;
+    }
+
+    video_library_free(*entries, *count);
+    *entries = NULL;
+    *count = 0;
+    return 0;
 }
 
 video_playlist_type video_playlist_probe(const char *path) {

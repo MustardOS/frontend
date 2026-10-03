@@ -46,6 +46,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "backup", "content", CFG_OFF(backup.content), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "history", CFG_OFF(backup.history), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "init", CFG_OFF(backup.init), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "manifest", CFG_OFF(backup.manifest), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "merge", CFG_OFF(backup.merge), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "music", CFG_OFF(backup.music), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "name", CFG_OFF(backup.name), 0, {.i = 1}},
@@ -190,6 +191,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "video", "thumbnail_size", CFG_OFF(video.thumbnail_size), 0, {.i = 1}, 1, 0, 2},
     {CONF_CONFIG_PATH "video", "sleep", CFG_OFF(video.sleep), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "video", "idle_screensaver", CFG_OFF(video.idle_screensaver), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "video", "auto_play", CFG_OFF(video.auto_play), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "video", "live_quality", CFG_OFF(wasabi.live_quality), 0, {.i = 0}, 1, 0, 3},
     {CONF_CONFIG_PATH "video", "live_buffer", CFG_OFF(wasabi.live_buffer), 0, {.i = 16}, 1, 4, 32},
     {CONF_CONFIG_PATH "video", "hotkey_pause", CFG_OFF(video.hotkey_pause), 0, {.i = mux_input_a}, 1, 0, 18},
@@ -205,9 +207,6 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "video", "hotkey_quit", CFG_OFF(video.hotkey_quit), 0, {.i = mux_input_start}, 1, 0, 18},
     {CONF_CONFIG_PATH "video", "hotkey_fast_forward", CFG_OFF(video.hotkey_fast_forward), 0, {.i = mux_input_r1}, 1, 0, 18},
     {CONF_CONFIG_PATH "video", "hotkey_slow_motion", CFG_OFF(video.hotkey_slow_motion), 0, {.i = mux_input_l1}, 1, 0, 18},
-
-    // extra/download/
-    {CONF_CONFIG_PATH "extra/download", "data", CFG_OFF(extra.download.data), 1, {.s = ""}},
 
     // extra/language/
     {CONF_CONFIG_PATH "extra/language", "data", CFG_OFF(extra.language.data), 1, {.s = ""}},
@@ -252,6 +251,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/advanced", "audio_swap", CFG_OFF(settings.advanced.audio_swap), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "audio_suspend", CFG_OFF(settings.advanced.audio_suspend), 0, {.i = 1}},
     {CONF_CONFIG_PATH "settings/advanced", "bt_scan_timeout", CFG_OFF(settings.advanced.bt_scan_timeout), 0, {.i = 20}},
+    {CONF_CONFIG_PATH "settings/advanced", "bt_raw", CFG_OFF(settings.advanced.raw_bluetooth), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "part_external", CFG_OFF(settings.advanced.usb_part), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "part_secondary", CFG_OFF(settings.advanced.second_part), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/advanced", "remember_section", CFG_OFF(settings.advanced.remember_section), 0, {.i = 1}},
@@ -452,7 +452,6 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "visual", "shadow", CFG_OFF(visual.render_shadows), 0, {.i = 1}},
 
     // bluetooth/
-    {CONF_CONFIG_PATH "bluetooth", "autoconnect", CFG_OFF(bluetooth.auto_connect), 0, {.i = 0}},
 
     // web/
     {CONF_CONFIG_PATH "web", "mdns", CFG_OFF(web.mdns), 0, {.i = 1}, 1, 0, 1},
@@ -463,6 +462,8 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "web", "syncthing", CFG_OFF(web.syncthing), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "tailscaled", CFG_OFF(web.tailscaled), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "landing_auth", CFG_OFF(web.landing_auth), 0, {.i = 1}, 1, 0, 1},
+    {CONF_CONFIG_PATH "web", "remote_view", CFG_OFF(web.remote_view), 0, {.i = 2}, 1, 0, 5},
+    {CONF_CONFIG_PATH "web", "remote_privacy", CFG_OFF(web.remote_privacy), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "mdns_name", CFG_OFF(web.mdns_name), 2, {.s = "muos"}},
     {CONF_CONFIG_PATH "web", "landing_port", CFG_OFF(web.landing_port), 2, {.s = "80"}},
     {CONF_CONFIG_PATH "web", "sshd_port", CFG_OFF(web.sshd_port), 2, {.s = "22"}},

@@ -21,9 +21,13 @@ static int16_t *flag_task(void) {
     return &kiosk.application.task;
 }
 
+static int16_t *flag_terminal(void) {
+    return &kiosk.application.terminal;
+}
+
 static mux_apps app[] = {
     {.name = "Archive Manager", .icon = "archive", .grid = "Archive", .help = NULL, .kiosk_flag = flag_archive},
-    {.name = "Mustard Terminal", .icon = "terminal", .grid = "Terminal", .help = NULL, .kiosk_flag = NULL},
+    {.name = "Mustard Terminal", .icon = "terminal", .grid = "Terminal", .help = NULL, .kiosk_flag = flag_terminal},
     {.name = "Task Toolkit", .icon = "task", .grid = "Toolkit", .help = NULL, .kiosk_flag = flag_task},
 };
 

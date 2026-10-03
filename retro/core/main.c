@@ -1157,7 +1157,7 @@ int main(const int argc, char *argv[]) {
             LOG_INFO(mux_module, "Performance capture written to " RETRO_SHARE_PATH "performance.csv");
     }
 
-    display_mirror_to_fb();
+    display_mirror_to_fb(0);
     display_set_composite_suppressed(1);
 
     if (peer_wait_visible) loading_message_hide();

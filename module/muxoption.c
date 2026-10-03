@@ -19,9 +19,6 @@ static int is_dir = 0;
 static char curr_dir[PATH_MAX] = "";
 static const char *core_file = "";
 
-static char *playtime_json_str = NULL;
-static struct json playtime_json_root = {0};
-static int playtime_json_loaded = 0;
 
 static lv_obj_t *ui_objects[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
@@ -150,47 +147,30 @@ static void add_info_item_type(
     apply_theme_list_value(&theme, ui_lbl_item_value, cap_label ? str_capital_all(cap_value) : cap_value);
 }
 
-static struct json get_playtime_json(void) {
-    if (!playtime_json_loaded) {
-        char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), INFO_ACT_PATH "/" PLAYTIME_DATA);
-
-        if (!file_exist(path)) return (struct json) {0};
-
-        playtime_json_str = read_all_char_from(path);
-        if (!playtime_json_str || !json_valid(playtime_json_str)) {
-            free(playtime_json_str);
-            playtime_json_str = NULL;
-            return (struct json) {0};
-        }
-
-        playtime_json_root = json_parse(playtime_json_str);
-        playtime_json_loaded = 1;
-    }
-
+static int get_activity(activity_summary *summary) {
     char fullpath[PATH_MAX];
     snprintf(fullpath, sizeof(fullpath), "%s/%s", rom_dir, rom_name);
 
-    return json_object_get(playtime_json_root, fullpath);
+    return activity_summary_read(activity_key_hash(fullpath), summary);
 }
 
 static char *get_time_played(void) {
-    const struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return "0";
+    activity_summary summary;
+    if (!get_activity(&summary)) return "0";
 
     static char time_buffer[MAX_BUFFER_SIZE] = "0m";
-    const int total_time = json_int(json_object_get(playtime_json, "total_time"));
+    const size_t total_time = summary.total_time;
 
-    const int days = total_time / 86400;
-    const int hours = total_time % 86400 / 3600;
-    const int minutes = total_time % 3600 / 60;
+    const size_t days = total_time / 86400;
+    const size_t hours = total_time % 86400 / 3600;
+    const size_t minutes = total_time % 3600 / 60;
 
     if (days > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm", days, hours, minutes);
+        snprintf(time_buffer, sizeof(time_buffer), "%zud %zuh %zum", days, hours, minutes);
     } else if (hours > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dh %dm", hours, minutes);
+        snprintf(time_buffer, sizeof(time_buffer), "%zuh %zum", hours, minutes);
     } else if (minutes > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dm", minutes);
+        snprintf(time_buffer, sizeof(time_buffer), "%zum", minutes);
     } else {
         snprintf(time_buffer, sizeof(time_buffer), "0m");
     }
@@ -199,11 +179,11 @@ static char *get_time_played(void) {
 }
 
 static char *get_launch_count(void) {
-    const struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return "0";
+    activity_summary summary;
+    if (!get_activity(&summary)) return "0";
 
     static char launch_count[MAX_BUFFER_SIZE];
-    snprintf(launch_count, sizeof(launch_count), "%d", json_int(json_object_get(playtime_json, "launches")));
+    snprintf(launch_count, sizeof(launch_count), "%zu", summary.launches);
 
     return launch_count;
 }
@@ -838,11 +818,6 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
 
     options_item_index = 0;
     info_item_index = 0;
-
-    playtime_json_loaded = 0;
-    free(playtime_json_str);
-    playtime_json_str = NULL;
-    playtime_json_root = (struct json) {0};
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !folder_is_content(dir, name);

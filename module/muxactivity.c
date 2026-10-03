@@ -44,6 +44,7 @@ typedef enum {
 
 typedef struct {
     char path[PATH_MAX];
+    char record[16];
 
     char name[256];
     char file_name[256];
@@ -60,11 +61,16 @@ typedef struct {
     char mode[16];
     int mode_count;
 
+    int first_played;
     int last_played;
 
     size_t average_time;
     size_t total_time;
     size_t last_session;
+    size_t longest_session;
+
+    size_t hour_time[24];
+    size_t day_time[7];
 } activity_item_t;
 
 typedef struct {
@@ -120,11 +126,6 @@ static activity_item_t *activity_items = NULL;
 static size_t activity_count = 0;
 static size_t activity_capacity = 0;
 
-static char *playtime_json_str = NULL;
-static struct json playtime_json_root = {0};
-static int playtime_json_loaded = 0;
-
-#define TIME_BUF 64
 #define ACT_ROW  1024
 
 #define CORE_MAP_MAX   256
@@ -250,12 +251,6 @@ static void free_activity_items(void) {
     activity_items = NULL;
     activity_count = 0;
     activity_capacity = 0;
-
-    free(playtime_json_str);
-
-    playtime_json_str = NULL;
-    playtime_json_root = (struct json) {0};
-    playtime_json_loaded = 0;
 }
 
 static void hour_label(char *dst, const size_t dst_sz, const int hour) {
@@ -283,65 +278,65 @@ static void weekday_label(char *dst, const size_t dst_sz, const int day) {
     snprintf(dst, dst_sz, "%s", days[day]);
 }
 
-static const char *local_playstyle_name(const local_playstyle_t ps, const int use_en) {
+static const char *local_playstyle_name(const local_playstyle_t ps) {
     switch (ps) {
         case local_playstyle_one_and_done:
-            return use_en ? "One and Done" : lang.muxactivity.style.local.one;
+            return lang.muxactivity.style.local.one;
         case local_playstyle_sampler:
-            return use_en ? "Sampler" : lang.muxactivity.style.local.sampler;
+            return lang.muxactivity.style.local.sampler;
         case local_playstyle_short_bursts:
-            return use_en ? "Short Bursts" : lang.muxactivity.style.local.burst;
+            return lang.muxactivity.style.local.burst;
         case local_playstyle_long_sessions:
-            return use_en ? "Long Sessions" : lang.muxactivity.style.local.lng;
+            return lang.muxactivity.style.local.lng;
         case local_playstyle_completionist:
-            return use_en ? "Completionist" : lang.muxactivity.style.local.completionist;
+            return lang.muxactivity.style.local.completionist;
         case local_playstyle_abandoned:
-            return use_en ? "Abandoned" : lang.muxactivity.style.local.abandoned;
+            return lang.muxactivity.style.local.abandoned;
         case local_playstyle_marathoner:
-            return use_en ? "Marathoner" : lang.muxactivity.style.local.marathoner;
+            return lang.muxactivity.style.local.marathoner;
         case local_playstyle_returner:
-            return use_en ? "Returner" : lang.muxactivity.style.local.returner;
+            return lang.muxactivity.style.local.returner;
         case local_playstyle_on_off:
-            return use_en ? "On and Off" : lang.muxactivity.style.local.on_off;
+            return lang.muxactivity.style.local.on_off;
         case local_playstyle_weekend_warrior:
-            return use_en ? "Weekend Warrior" : lang.muxactivity.style.local.weekend;
+            return lang.muxactivity.style.local.weekend;
         case local_playstyle_comfort:
-            return use_en ? "Comfort Game" : lang.muxactivity.style.local.comfort;
+            return lang.muxactivity.style.local.comfort;
         case local_playstyle_regular:
-            return use_en ? "Regular Play" : lang.muxactivity.style.local.regular;
+            return lang.muxactivity.style.local.regular;
         default:
-            return use_en ? "Unique" : lang.muxactivity.unique;
+            return lang.muxactivity.unique;
     }
 }
 
-static const char *global_playstyle_name(const global_playstyle_t ps, const int use_en) {
+static const char *global_playstyle_name(const global_playstyle_t ps) {
     switch (ps) {
         case global_playstyle_casual:
-            return use_en ? "Casual" : lang.muxactivity.style.global.casual;
+            return lang.muxactivity.style.global.casual;
         case global_playstyle_core_gamer:
-            return use_en ? "Core Gamer" : lang.muxactivity.style.global.core;
+            return lang.muxactivity.style.global.core;
         case global_playstyle_explorer:
-            return use_en ? "Explorer" : lang.muxactivity.style.global.explorer;
+            return lang.muxactivity.style.global.explorer;
         case global_playstyle_binger:
-            return use_en ? "Binger" : lang.muxactivity.style.global.binger;
+            return lang.muxactivity.style.global.binger;
         case global_playstyle_completionist:
-            return use_en ? "Completionist" : lang.muxactivity.style.global.completionist;
+            return lang.muxactivity.style.global.completionist;
         case global_playstyle_power_user:
-            return use_en ? "Power Player" : lang.muxactivity.style.global.power;
+            return lang.muxactivity.style.global.power;
         case global_playstyle_collector:
-            return use_en ? "Content Collector" : lang.muxactivity.style.global.collector;
+            return lang.muxactivity.style.global.collector;
         case global_playstyle_specialist:
-            return use_en ? "Specialist" : lang.muxactivity.style.global.specialist;
+            return lang.muxactivity.style.global.specialist;
         case global_playstyle_nomad:
-            return use_en ? "Device Nomad" : lang.muxactivity.style.global.nomad;
+            return lang.muxactivity.style.global.nomad;
         case global_playstyle_routine:
-            return use_en ? "Routine Player" : lang.muxactivity.style.global.routine;
+            return lang.muxactivity.style.global.routine;
         case global_playstyle_habitual:
-            return use_en ? "Habitual Player" : lang.muxactivity.style.global.habitual;
+            return lang.muxactivity.style.global.habitual;
         case global_playstyle_window:
-            return use_en ? "Window Shopper" : lang.muxactivity.style.global.window;
+            return lang.muxactivity.style.global.window;
         default:
-            return use_en ? "Unique" : lang.muxactivity.unique;
+            return lang.muxactivity.unique;
     }
 }
 
@@ -471,19 +466,6 @@ static int cmp_activity_launch(const void *a, const void *b) {
     return 0;
 }
 
-static void export_timestamp(char *dst) {
-    const time_t now = time(NULL);
-    struct tm tm_buf;
-    struct tm *tm = localtime_r(&now, &tm_buf);
-
-    if (!tm) {
-        snprintf(dst, TIME_BUF, "%s", lang.generic.unknown);
-        return;
-    }
-
-    strftime(dst, TIME_BUF, TIME_STRING, tm);
-}
-
 static void format_timestamp(char *dst, const size_t dst_sz, const int epoch) {
     if (epoch <= 0) {
         snprintf(dst, dst_sz, "%s", lang.generic.unknown);
@@ -502,137 +484,37 @@ static void format_timestamp(char *dst, const size_t dst_sz, const int epoch) {
     strftime(dst, dst_sz, TIME_STRING, tm);
 }
 
-static void load_playtime_json_once(void) {
-    if (playtime_json_loaded) return;
+static void migrate_legacy_activity(void) {
+    if (!file_exist(INFO_ACT_PATH "/" PLAYTIME_DATA)) return;
 
-    char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), INFO_ACT_PATH "/" PLAYTIME_DATA);
+    LOG_INFO(mux_module, "Migrating legacy activity data");
 
-    if (!file_exist(path)) {
-        playtime_json_loaded = 1;
-        return;
-    }
-
-    playtime_json_str = read_all_char_from(path);
-    if (!playtime_json_str) {
-        playtime_json_loaded = 1;
-        return;
-    }
-
-    if (!json_valid(playtime_json_str)) {
-        free(playtime_json_str);
-        playtime_json_str = NULL;
-        playtime_json_loaded = 1;
-        return;
-    }
-
-    playtime_json_root = json_parse(playtime_json_str);
-    playtime_json_loaded = 1;
+    const char *args[] = {OPT_PATH "script/mux/track.sh", "migrate", NULL};
+    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 }
 
-static struct json get_playtime_json(void) {
-    load_playtime_json_once();
-    return playtime_json_root;
-}
+static int is_activity_record(const char *name) {
+    if (strlen(name) != 13 || strcmp(name + 8, ".json") != 0) return 0;
 
-static int ensure_capacity(char **buf, size_t *cap, const size_t len, const size_t need) {
-    if (len + need < *cap) return 1;
-
-    size_t new_cap = *cap ? *cap * 2 : 4096;
-    while (len + need >= new_cap)
-        new_cap *= 2;
-
-    char *tmp = realloc(*buf, new_cap);
-    if (!tmp) return 0;
-
-    *buf = tmp;
-    *cap = new_cap;
+    for (int i = 0; i < 8; i++) {
+        if (!isxdigit((unsigned char) name[i])) return 0;
+    }
 
     return 1;
 }
 
-static int delete_activity_entry(const char *target_path) {
-    if (!target_path || !*target_path) return 0;
+static int delete_activity_entry(const activity_item_t *it) {
+    if (!it || !it->record[0]) return 0;
 
-    const struct json root = get_playtime_json();
-    if (!json_exists(root)) return 0;
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), "%s/%s", INFO_ACT_PATH, it->record);
 
-    size_t cap = 4096;
-    size_t len = 0;
-
-    char *output = malloc(cap);
-    if (!output) return 0;
-
-    output[len++] = '{';
-
-    int first = 1;
-
-    struct json child = json_first(root);
-    while (json_exists(child)) {
-        const struct json key = child;
-        const struct json val = json_next(key);
-
-        if (!json_exists(val)) break;
-
-        char key_buf[PATH_MAX];
-        json_string_copy(key, key_buf, sizeof(key_buf));
-
-        if (strcasecmp(key_buf, target_path) != 0) {
-            if (!first) {
-                if (!ensure_capacity(&output, &cap, len, 1)) {
-                    LOG_ERROR(mux_module, "Capacity overflow...");
-                    free(output);
-                    return 0;
-                }
-                output[len++] = ',';
-            }
-            first = 0;
-
-            const int needed = snprintf(NULL, 0, "\"%s\":", key_buf);
-            if (needed < 0 || !ensure_capacity(&output, &cap, len, (size_t) needed + 1)) {
-                free(output);
-                return 0;
-            }
-
-            len += snprintf(output + len, cap - len, "\"%s\":", key_buf);
-
-            const char *raw = json_raw(val);
-            const size_t raw_len = json_raw_length(val);
-
-            if (!raw || raw_len == 0) {
-                LOG_ERROR(mux_module, "Invalid JSON raw value...");
-                free(output);
-                return 0;
-            }
-
-            if (!ensure_capacity(&output, &cap, len, raw_len)) {
-                LOG_ERROR(mux_module, "Capacity overflow...");
-                free(output);
-                return 0;
-            }
-
-            memcpy(output + len, raw, raw_len);
-            len += raw_len;
-        }
-
-        child = json_next(val);
-    }
-
-    if (!ensure_capacity(&output, &cap, len, 2)) {
-        free(output);
+    if (remove(path) != 0) {
+        LOG_ERROR(mux_module, "Unable to remove activity record: %s", path);
         return 0;
     }
 
-    output[len++] = '}';
-    output[len] = '\0';
-
-    char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), "%s/%s", INFO_ACT_PATH, PLAYTIME_DATA);
-
-    write_text_to_file(path, "w", CHAR, output);
     track_delete = 1;
-
-    free(output);
     return 1;
 }
 
@@ -719,24 +601,20 @@ static void compute_global_stats(global_stats_t *gs) {
             snprintf(gs->top_launch, sizeof(gs->top_launch), "%s", it->name);
         }
 
-        if (it->last_played > 0 && it->last_played < gs->oldest_content_time) {
-            gs->oldest_content_time = it->last_played;
+        const int first_played = it->first_played > 0 ? it->first_played : it->last_played;
+        if (first_played > 0 && first_played < gs->oldest_content_time) {
+            gs->oldest_content_time = first_played;
             snprintf(gs->oldest_content, sizeof(gs->oldest_content), "%s", it->name);
         }
 
-        if (it->last_played > 0) {
-            time_t t = it->last_played;
-            struct tm tm_buf;
-            const struct tm *tm = localtime_r(&t, &tm_buf);
+        for (int h = 0; h < 24; h++)
+            hour_buckets[h] += it->hour_time[h];
 
-            if (tm) {
-                hour_buckets[tm->tm_hour] += it->total_time;
-                day_buckets[tm->tm_wday] += it->total_time;
-            }
-        }
+        for (int d = 0; d < 7; d++)
+            day_buckets[d] += it->day_time[d];
 
-        if (it->last_session >= gs->longest_session_duration) {
-            gs->longest_session_duration = it->last_session;
+        if (it->longest_session >= gs->longest_session_duration) {
+            gs->longest_session_duration = it->longest_session;
             snprintf(gs->longest_session, sizeof(gs->longest_session), "%s", it->name);
         }
 
@@ -884,122 +762,120 @@ static void compute_global_stats(global_stats_t *gs) {
     gs->global_playstyle = resolve_global_playstyle(gs);
 }
 
-static void load_activity_items(void) {
-    const struct json playtime_json = get_playtime_json();
-    if (!json_exists(playtime_json)) return;
+static void bucket_activity_time(activity_item_t *it, const int epoch, const size_t seconds) {
+    if (epoch <= 0 || seconds == 0) return;
 
-    activity_count = 0;
+    const time_t t = epoch;
+    struct tm tm_buf;
+    const struct tm *tm = localtime_r(&t, &tm_buf);
+    if (!tm) return;
 
-    struct json child = json_first(playtime_json);
-    while (json_exists(child)) {
-        const struct json key = child;
-        const struct json val = json_next(key);
+    it->hour_time[tm->tm_hour] += seconds;
+    it->day_time[tm->tm_wday] += seconds;
+}
 
-        if (!json_exists(val)) break;
+static int read_launch_count(const struct json map, const char *key) {
+    if (!key[0] || json_type(map) != JSON_OBJECT) return 0;
+    return (int) json_size_positive(json_object_get(json_object_get(map, key), "launches"));
+}
 
-        if (json_type(val) == JSON_OBJECT) {
-            const struct json name_json = json_object_get(val, "name");
-            const struct json time_json = json_object_get(val, "total_time");
-            const struct json launches_json = json_object_get(val, "launches");
+static void load_session_buckets(activity_item_t *it, const struct json sessions) {
+    int bucketed = 0;
 
-            if (json_exists(name_json) && json_exists(time_json) && json_exists(launches_json)) {
-                if (!ensure_activity_capacity()) break;
-                if (activity_count >= activity_capacity) break;
+    if (json_type(sessions) == JSON_ARRAY) {
+        for (struct json session = json_first(sessions); json_exists(session); session = json_next(session)) {
+            const int start = json_epoch_or_zero(json_object_get(session, "start"));
+            const size_t length = json_size_positive(json_object_get(session, "length"));
 
-                activity_item_t *it = &activity_items[activity_count];
-                memset(it, 0, sizeof(*it));
-
-                json_string_copy(key, it->path, sizeof(it->path));
-
-                char full_path[512];
-                snprintf(full_path, sizeof(full_path), "%s", it->path);
-
-                char *item_file_name = get_file_name(strdup(full_path));
-                snprintf(it->file_name, sizeof(it->file_name), "%s", item_file_name);
-
-                it->dir[0] = '\0';
-
-                const char *last_slash = strrchr(full_path, '/');
-                if (last_slash) {
-                    size_t n = (size_t) (last_slash - full_path + 1);
-                    if (n >= sizeof(it->dir)) n = sizeof(it->dir) - 1;
-
-                    memcpy(it->dir, full_path, n);
-                    it->dir[n] = '\0';
-                }
-
-                char raw_name[MAX_BUFFER_SIZE];
-                json_string_copy(name_json, raw_name, sizeof(raw_name));
-                resolve_friendly_name(full_path, it->name);
-                adjust_content_label(it->name);
-
-                it->total_time = json_size_positive(time_json);
-                it->launch_count = json_size_positive(launches_json);
-
-                const struct json last_core_json = json_object_get(val, "last_core");
-                const struct json core_launch_json = json_object_get(val, "core_launches");
-
-                if (json_exists(last_core_json)) {
-                    json_string_copy(last_core_json, it->core, sizeof(it->core));
-                } else {
-                    it->core[0] = '\0';
-                }
-
-                it->core_count = 0;
-                if (json_exists(core_launch_json) && json_exists(last_core_json)) {
-                    char core_key[64];
-                    json_string_copy(last_core_json, core_key, sizeof(core_key));
-
-                    const struct json core_count_json = json_object_get(core_launch_json, core_key);
-                    it->core_count = (int) json_size_positive(core_count_json);
-                }
-
-                const struct json last_device_json = json_object_get(val, "last_device");
-                const struct json device_launch_json = json_object_get(val, "device_launches");
-
-                if (json_exists(last_device_json)) {
-                    json_string_copy(last_device_json, it->device, sizeof(it->device));
-                } else {
-                    it->device[0] = '\0';
-                }
-
-                it->device_count = 0;
-                if (json_exists(device_launch_json) && json_exists(last_device_json)) {
-                    char dev_key[64];
-                    json_string_copy(last_device_json, dev_key, sizeof(dev_key));
-
-                    const struct json dev_count_json = json_object_get(device_launch_json, dev_key);
-                    it->device_count = (int) json_size_positive(dev_count_json);
-                }
-
-                const struct json last_mode_json = json_object_get(val, "last_mode");
-                const struct json mode_launch_json = json_object_get(val, "mode_launches");
-
-                if (json_exists(last_mode_json)) {
-                    json_string_copy(last_mode_json, it->mode, sizeof(it->mode));
-                } else {
-                    it->mode[0] = '\0';
-                }
-
-                it->mode_count = 0;
-                if (json_exists(mode_launch_json) && json_exists(last_mode_json)) {
-                    char mode_key[16];
-                    json_string_copy(last_mode_json, mode_key, sizeof(mode_key));
-
-                    const struct json mode_count_json = json_object_get(mode_launch_json, mode_key);
-                    it->mode_count = (int) json_size_positive(mode_count_json);
-                }
-
-                it->last_played = json_epoch_or_zero(json_object_get(val, "start_time"));
-                it->average_time = json_size_positive(json_object_get(val, "avg_time"));
-                it->last_session = json_size_positive(json_object_get(val, "last_session"));
-
-                activity_count++;
+            if (start > 0 && length > 0) {
+                bucket_activity_time(it, start, length);
+                bucketed = 1;
             }
         }
-
-        child = json_next(val);
     }
+
+    if (!bucketed) bucket_activity_time(it, it->last_played, it->total_time);
+}
+
+static int load_activity_record(activity_item_t *it, const char *record) {
+    char record_path[MAX_BUFFER_SIZE];
+    snprintf(record_path, sizeof(record_path), "%s/%s", INFO_ACT_PATH, record);
+
+    char *data = read_all_char_from(record_path);
+    if (!data) return 0;
+
+    if (!json_valid(data)) {
+        LOG_WARN(mux_module, "Skipping invalid activity record: %s", record_path);
+        free(data);
+        return 0;
+    }
+
+    const struct json val = json_parse(data);
+    const struct json path_json = json_object_get(val, "path");
+
+    if (json_type(val) != JSON_OBJECT || json_type(path_json) != JSON_STRING) {
+        free(data);
+        return 0;
+    }
+
+    memset(it, 0, sizeof(*it));
+    snprintf(it->record, sizeof(it->record), "%s", record);
+    json_string_copy(path_json, it->path, sizeof(it->path));
+
+    snprintf(it->file_name, sizeof(it->file_name), "%s", get_file_name(it->path));
+
+    const char *last_slash = strrchr(it->path, '/');
+    if (last_slash) {
+        size_t n = (size_t) (last_slash - it->path + 1);
+        if (n >= sizeof(it->dir)) n = sizeof(it->dir) - 1;
+
+        memcpy(it->dir, it->path, n);
+        it->dir[n] = '\0';
+    }
+
+    resolve_friendly_name(it->path, it->name);
+    adjust_content_label(it->name);
+
+    it->total_time = json_size_positive(json_object_get(val, "total_time"));
+    it->launch_count = json_size_positive(json_object_get(val, "launches"));
+    it->average_time = it->launch_count ? it->total_time / it->launch_count : 0;
+    it->last_session = json_size_positive(json_object_get(val, "last_session"));
+    it->longest_session = json_size_positive(json_object_get(val, "longest_session"));
+    if (it->longest_session < it->last_session) it->longest_session = it->last_session;
+
+    it->first_played = json_epoch_or_zero(json_object_get(val, "first_played"));
+    it->last_played = json_epoch_or_zero(json_object_get(val, "last_played"));
+
+    json_string_copy(json_object_get(val, "last_core"), it->core, sizeof(it->core));
+    json_string_copy(json_object_get(val, "last_device"), it->device, sizeof(it->device));
+    json_string_copy(json_object_get(val, "last_mode"), it->mode, sizeof(it->mode));
+
+    it->core_count = read_launch_count(json_object_get(val, "cores"), it->core);
+    it->device_count = read_launch_count(json_object_get(val, "devices"), it->device);
+    it->mode_count = read_launch_count(json_object_get(val, "modes"), it->mode);
+
+    load_session_buckets(it, json_object_get(val, "sessions"));
+
+    free(data);
+    return it->launch_count > 0;
+}
+
+static void load_activity_items(void) {
+    activity_count = 0;
+    migrate_legacy_activity();
+
+    DIR *dir = opendir(INFO_ACT_PATH);
+    if (!dir) return;
+
+    const struct dirent *entry;
+    while ((entry = readdir(dir))) {
+        if (!is_activity_record(entry->d_name)) continue;
+        if (!ensure_activity_capacity()) break;
+
+        if (load_activity_record(&activity_items[activity_count], entry->d_name)) activity_count++;
+    }
+
+    closedir(dir);
 }
 
 static void format_total_time(char *dst, const size_t dst_sz, const size_t total_time) {
@@ -1095,10 +971,12 @@ static void show_detail_view(const activity_item_t *it) {
         detail_launch,
         detail_device,
         detail_mode,
+        detail_first,
         detail_start,
         detail_average,
         detail_total,
         detail_last,
+        detail_longest,
         detail_playstyle,
         detail_count
     };
@@ -1151,6 +1029,11 @@ static void show_detail_view(const activity_item_t *it) {
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_mode");
                 break;
+            case detail_first:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.detail.first);
+                format_timestamp(detail_value, sizeof(detail_value), it->first_played);
+                snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_start");
+                break;
             case detail_start:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.detail.played);
                 format_timestamp(detail_value, sizeof(detail_value), it->last_played);
@@ -1171,11 +1054,16 @@ static void show_detail_view(const activity_item_t *it) {
                 format_total_time(detail_value, sizeof(detail_value), it->last_session);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_last");
                 break;
+            case detail_longest:
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.detail.longest);
+                format_total_time(detail_value, sizeof(detail_value), it->longest_session);
+                snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_last");
+                break;
             case detail_playstyle:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.style.local.label);
 
                 const local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
-                snprintf(detail_value, sizeof(detail_value), "%s", local_playstyle_name(ps, 0));
+                snprintf(detail_value, sizeof(detail_value), "%s", local_playstyle_name(ps));
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_play");
                 break;
@@ -1316,7 +1204,7 @@ static void show_global_view(void) {
                 break;
             case global_playstyle:
                 snprintf(global_label, sizeof(global_label), "%s", lang.muxactivity.global.overall);
-                snprintf(global_value, sizeof(global_value), "%s", global_playstyle_name(gs.global_playstyle, 0));
+                snprintf(global_value, sizeof(global_value), "%s", global_playstyle_name(gs.global_playstyle));
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_play");
                 break;
             case global_unique_titles:
@@ -1368,272 +1256,6 @@ static void show_global_view(void) {
 
     lv_obj_update_layout(ui_pnl_content);
     update_label_scroll();
-}
-
-static void html_escape(FILE *f, const char *s) {
-    for (; *s; s++) {
-        switch (*s) {
-            case '&':
-                fputs("&amp;", f);
-                break;
-            case '<':
-                fputs("&lt;", f);
-                break;
-            case '>':
-                fputs("&gt;", f);
-                break;
-            case '"':
-                fputs("&quot;", f);
-                break;
-            default:
-                fputc(*s, f);
-                break;
-        }
-    }
-}
-
-static mux_dialogue export_dlg;
-
-static void export_activity_html(void) {
-    char html_export[MAX_BUFFER_SIZE];
-    snprintf(html_export, sizeof(html_export), "%s/activity_report.html", device.storage.rom.mount);
-
-    FILE *f = fopen(html_export, "w");
-    if (!f) {
-        toast_message(lang.muxactivity.export_error, tst_wait_m);
-        refresh_screen(ui_screen, 1);
-        return;
-    }
-
-    global_stats_t gs;
-    compute_global_stats(&gs);
-
-    fprintf(
-        f, "<!DOCTYPE html>"
-           "<html>"
-           "<head>"
-           "<meta http-equiv='Content-type' content='text/html; charset=utf-8'>"
-           "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-           "<title>MustardOS - Activity Tracker</title>"
-
-           "<link rel='preconnect' href='https://fonts.bunny.net'>"
-           "<link rel='preconnect' href='https://cdn.datatables.net'>"
-
-           "<link rel='stylesheet' href='https://fonts.bunny.net/css?family=noto-sans:400,600,700&display=swap'>"
-           "<link rel='stylesheet' href='https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css'>"
-
-           "<script src='https://code.jquery.com/jquery-3.7.1.slim.min.js' "
-           "integrity='sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=' crossorigin='anonymous'></script>"
-           "<script src='https://cdn.datatables.net/2.3.5/js/dataTables.min.js'></script>"
-
-           "<style>"
-           "body { font-family:'Noto Sans', sans-serif; background:#1f1f1f; color:#ffffff; padding:20px }"
-           "h1, h2 { color:#f7d12e }"
-           "th, td { padding:8px }"
-           "th { background:#222222 }"
-           "tr:nth-child(even) { background:#1a1a1a }"
-           ".dt-container { color: #ffffff }"
-           ".dt-search input, .dt-length select { background:#111111; color:#ffffff; border:1px solid #444444 }"
-           "table.dataTable tbody tr:nth-child(even) { background-color: #1a1a1a }"
-           "table.dataTable tbody tr:nth-child(odd) { background-color: #1f1f1f }"
-           "table.dataTable tbody tr:hover { background-color: #2c2c2c }"
-           "</style>"
-
-           "</head>"
-           "<body>"
-    );
-
-    char exported[TIME_BUF];
-    export_timestamp(exported);
-
-    fprintf(f, "<h1>MustardOS - Activity Tracker</h1>");
-    fprintf(f, "<p><strong>Exported:</strong> ");
-    html_escape(f, exported);
-    fprintf(f, "</p>");
-
-    char global_total[64];
-    char global_avg[64];
-    char global_top_time_val[64];
-
-    format_total_time(global_total, sizeof(global_total), gs.total_time);
-    format_total_time(global_avg, sizeof(global_avg), gs.average_time);
-    format_total_time(global_top_time_val, sizeof(global_top_time_val), gs.top_time_value);
-
-    char active_time[32];
-    char fav_day[32];
-
-    hour_label(active_time, sizeof(active_time), gs.active_hour);
-    weekday_label(fav_day, sizeof(fav_day), gs.favourite_day);
-
-    char global_core_value[MAX_BUFFER_SIZE];
-    char global_device_value[MAX_BUFFER_SIZE];
-    char global_mode_value[MAX_BUFFER_SIZE];
-
-    char tmp_core[64];
-    char tmp_device[64];
-    char tmp_mode[16];
-
-    snprintf(tmp_core, sizeof(tmp_core), "%s", gs.core);
-    snprintf(tmp_device, sizeof(tmp_device), "%s", gs.device);
-    snprintf(tmp_mode, sizeof(tmp_mode), "%s", gs.mode);
-
-    snprintf(global_core_value, sizeof(global_core_value), "%s", format_core_name(tmp_core, 0, gs.core_is_muxretro));
-    snprintf(global_device_value, sizeof(global_device_value), "%s", str_toupper(tmp_device));
-    snprintf(global_mode_value, sizeof(global_mode_value), "%s", str_capital(tmp_mode));
-
-    fprintf(f, "<h2>Global Summary</h2>");
-    fprintf(f, "<table id='global'><tr><th id='g_metric'>Metric</th><th id='g_value'>Value</th></tr>");
-
-    fprintf(f, "<tr><td>Top Content by Time</td><td>");
-    html_escape(f, gs.top_time);
-    fprintf(f, " (");
-    html_escape(f, global_top_time_val);
-    fprintf(f, ")</td></tr>");
-
-    fprintf(f, "<tr><td>Top Content by Launch</td><td>");
-    html_escape(f, gs.top_launch);
-    fprintf(f, " (%zu)</td></tr>", gs.top_launch_value);
-
-    fprintf(f, "<tr><td>Most Frequent Core</td><td>");
-    html_escape(f, global_core_value);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Most Used Device</td><td>");
-    html_escape(f, global_device_value);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Most Used Mode</td><td>");
-    html_escape(f, global_mode_value);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Total Launch Count</td><td>%zu</td></tr>", gs.total_launches);
-
-    fprintf(f, "<tr><td>Total Play Time</td><td>");
-    html_escape(f, global_total);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Average Play Time</td><td>");
-    html_escape(f, global_avg);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Oldest Content</td><td>");
-    html_escape(f, gs.oldest_content);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Longest Session</td><td>");
-    html_escape(f, gs.longest_session);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Overall Play Style</td><td>");
-    html_escape(f, global_playstyle_name(gs.global_playstyle, 1));
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Unique Content Played</td><td>%zu</td></tr>", gs.unique_titles);
-    fprintf(f, "<tr><td>Unique Cores Used</td><td>%d</td></tr>", gs.unique_cores);
-
-    fprintf(f, "<tr><td>Most Active Time</td><td>");
-    html_escape(f, active_time);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "<tr><td>Favourite Day</td><td>");
-    html_escape(f, fav_day);
-    fprintf(f, "</td></tr>");
-
-    fprintf(f, "</table>");
-
-    fprintf(
-        f, "<h2>Content Statistics</h2>"
-           "<table id='detail' class='display' data-page-length='25'>"
-           "<thead><tr>"
-           "<th data-orderable='1'>Content Name</th>"
-           "<th data-orderable='1'>Core Used</th>"
-           "<th data-orderable='1'>Last Device</th>"
-           "<th data-orderable='1'>Launch Count</th>"
-           "<th data-orderable='1'>Start Time</th>"
-           "<th data-orderable='1'>Average Time</th>"
-           "<th data-orderable='1'>Total Time</th>"
-           "<th data-orderable='1'>Last Session</th>"
-           "<th data-orderable='1'>Play Style</th>"
-           "</tr></thead><tbody>"
-    );
-
-    char core_value[MAX_BUFFER_SIZE];
-    char device_value[MAX_BUFFER_SIZE];
-
-    char tt_avg[64];
-    char tt_total[64];
-    char tt_last[64];
-    char ts_start[64];
-
-    for (size_t i = 0; i < activity_count; i++) {
-        const activity_item_t *it = &activity_items[i];
-        const local_playstyle_t ps = resolve_local_playstyle(it->launch_count, it->total_time);
-
-        snprintf(tmp_core, sizeof(tmp_core), "%s", it->core);
-        snprintf(core_value, sizeof(core_value), "%s", format_core_name(tmp_core, 0, activity_item_uses_muxretro(it)));
-
-        snprintf(tmp_device, sizeof(tmp_device), "%s", it->device);
-        snprintf(device_value, sizeof(device_value), "%s", str_toupper(tmp_device));
-
-        format_timestamp(ts_start, sizeof(ts_start), it->last_played);
-        format_total_time(tt_avg, sizeof(tt_avg), it->average_time);
-        format_total_time(tt_total, sizeof(tt_total), it->total_time);
-        format_total_time(tt_last, sizeof(tt_last), it->last_session);
-
-        fprintf(f, "<tr><td>");
-        html_escape(f, it->name);
-
-        fprintf(f, "</td><td>");
-        html_escape(f, core_value);
-
-        fprintf(f, "</td><td>");
-        html_escape(f, device_value);
-
-        fprintf(f, "</td><td>%zu</td><td>", it->launch_count);
-        html_escape(f, ts_start);
-
-        fprintf(f, "</td><td>");
-        html_escape(f, tt_avg);
-
-        fprintf(f, "</td><td>");
-        html_escape(f, tt_total);
-
-        fprintf(f, "</td><td>");
-        html_escape(f, tt_last);
-
-        fprintf(f, "</td><td>");
-        html_escape(f, local_playstyle_name(ps, 1));
-
-        fprintf(f, "</td></tr>");
-    }
-
-    fprintf(f, "</tbody></table>");
-
-    fprintf(
-        f, "<script>"
-           "document.addEventListener('DOMContentLoaded', function(){"
-           "  new DataTable('#detail', {"
-           "    order: [[0, 'asc']],"
-           "    columnDefs: ["
-           "      { targets: 0, type: 'string-utf8', orderDataType: 'string-insensitive' },"
-           "      { targets: [1, 8], type: 'string', orderDataType: 'string-insensitive' },"
-           "      { targets: 4, type: 'date' },"
-           "      { targets: 3, type: 'num' }"
-           "    ]"
-           "  });"
-           "});"
-           "</script></body></html>"
-    );
-
-    fclose(f);
-
-    char saved[MAX_BUFFER_SIZE];
-    snprintf(saved, sizeof(saved), lang.muxactivity.export_saved, html_export);
-
-    dialogue_set_description(&export_dlg, saved);
-    dialogue_open(&export_dlg, &theme);
-
-    refresh_screen(ui_screen, 1);
 }
 
 static void generate_activity_items(void) {
@@ -1790,7 +1412,7 @@ static void do_remove(void) {
 
     LOG_INFO(mux_module, "Purging Playtime Entry: %s", activity_items[overview_item_index].path);
 
-    if (delete_activity_entry(activity_items[overview_item_index].path)) {
+    if (delete_activity_entry(&activity_items[overview_item_index])) {
         play_sound(snd_muos);
         free_activity_items();
         load_activity_items();
@@ -1856,11 +1478,6 @@ static void handle_a(void) {
         return;
     }
 
-    if (dialogue_active(&export_dlg)) {
-        dialogue_dismiss(&export_dlg);
-        return;
-    }
-
     if (dialogue_active(&remove_dlg)) {
         const mux_remove_opt opt = (mux_remove_opt) remove_dlg.selected;
         dialogue_dismiss(&remove_dlg);
@@ -1892,12 +1509,6 @@ static void handle_a(void) {
 static void handle_b(void) {
     if (more_active(&more_menu)) {
         more_cancel(&more_menu);
-        return;
-    }
-
-    if (dialogue_active(&export_dlg)) {
-        dialogue_mark_cancelled(&export_dlg);
-        dialogue_dismiss(&export_dlg);
         return;
     }
 
@@ -1980,7 +1591,6 @@ static void show_overview(void) {
 
     video_preview_cancel();
     hide_nav();
-    show_nav_x(lang.muxactivity.html);
 
     overview_item_index = current_item_index;
 
@@ -2006,15 +1616,7 @@ static void handle_x(void) {
 
     if (msgbox_active || !ui_count_static || more_active(&more_menu)) return;
 
-    if (in_detail_view) {
-        if (remove_allowed()) start_remove();
-        return;
-    }
-
-    if (!in_global_view) return;
-
-    play_sound(snd_confirm);
-    export_activity_html();
+    if (in_detail_view && remove_allowed()) start_remove();
 }
 
 static void handle_dpad_up(void) {
@@ -2075,7 +1677,7 @@ static void handle_help(void) {
     }
 
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
-    if (dialogue_active(&remove_dlg) || dialogue_active(&export_dlg)) return;
+    if (dialogue_active(&remove_dlg)) return;
     if (in_detail_view || in_global_view) return;
 
     more_entry entries[5];
@@ -2175,7 +1777,6 @@ int muxactivity_main(void) {
     }
 
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
-    dialogue_init_message(&export_dlg, &theme, ui_screen, lang.muxactivity.title, NULL, "", lang.generic.close);
 
     init_timer(ui_refresh_task, NULL);
 

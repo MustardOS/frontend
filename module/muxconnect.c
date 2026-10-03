@@ -24,12 +24,25 @@ static int visible_network_opt(void) {
     return device.board.has_network;
 }
 
+static int bluetooth_ready(void) {
+    char *state = read_line_char_from(RUN_PATH "bluetooth_state", 1);
+    const int ready = state && strcmp(state, "ready") == 0;
+    const int unavailable = state && strcmp(state, "unavailable") == 0;
+    free(state);
+
+    if (ready) return 1;
+
+    play_sound(snd_error);
+    toast_message(unavailable ? lang.muxbtall.unavailable : lang.muxbtall.starting, tst_wait_m);
+    return 0;
+}
+
 static int visible_bluetooth_opt(void) {
     return device.board.has_bluetooth;
 }
 
 static int visible_webcode_opt(void) {
-    return device.board.has_network && config.web.landing;
+    return device.board.has_network && config.web.landing && config.web.landing_auth;
 }
 
 static void init_dropdown_settings(void) {
@@ -88,7 +101,6 @@ static void handle_option_next(void) {
 static void handle_a(void) {
     if (msgbox_active || hold_call) return;
 
-    static int16_t kiosk_pass = 0;
 
     typedef enum {
         menu_general = 0,
@@ -111,10 +123,12 @@ static void handle_a(void) {
         {"link", &kiosk.config.network, menu_general, visible_network_opt},
         {"webserv", &kiosk.config.web_services, menu_general, visible_network_opt},
         {"webcode", &kiosk.config.web_services, menu_general, visible_webcode_opt},
-        {"btall", &kiosk_pass, menu_general, visible_bluetooth_opt}
+        {"btall", &kiosk.config.bluetooth, menu_general, visible_bluetooth_opt}
     };
 
     SELECT_VISIBLE_ENTRY(entries, entry);
+
+    if (strcmp(entry->mux_name, "btall") == 0 && !bluetooth_ready()) return;
 
     switch (entry->action) {
         case menu_general:

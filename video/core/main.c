@@ -649,6 +649,8 @@ static void ui_refresh_task(lv_timer_t *timer) {
     }
 }
 
+static int play_folder(const char *uri, const char *title, const video_player_options *base);
+
 static int play_selected(void) {
     init_timer(NULL, NULL);
     int result = 0;
@@ -682,7 +684,8 @@ static int play_selected(void) {
             .live = selected_live,
             .start_position = selected_start,
         };
-        result = video_player_run(selected_uri, selected_title, &options);
+        result = selected_live || strstr(selected_uri, "://") ? video_player_run(selected_uri, selected_title, &options)
+                                                              : play_folder(selected_uri, selected_title, &options);
     }
     init_timer(ui_refresh_task, NULL);
     return result;
@@ -822,6 +825,35 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
     return content_switch_requested ? video_player_content_switch : video_player_stopped;
 }
 
+static int play_folder(const char *uri, const char *title, const video_player_options *base) {
+    video_library_entry *entries = NULL;
+    size_t count = 0;
+    size_t selected = 0;
+    if (video_folder_playlist(uri, &entries, &count, &selected) <= 0) return video_player_run(uri, title, base);
+
+    video_player_options options = *base;
+    options.playlist = entries;
+    options.playlist_count = count;
+    options.playlist_selection = &selected;
+    options.folder_playlist = 1;
+
+    int result;
+    const char *current_uri = uri;
+    const char *current_title = title;
+    do {
+        options.playlist_index = selected;
+        result = video_player_run(current_uri, current_title, &options);
+        options.start_position = 0.0;
+        if (selected < count) {
+            current_uri = entries[selected].uri;
+            current_title = entries[selected].title;
+        }
+    } while (result == video_player_playlist_switch && selected < count);
+
+    video_library_free(entries, count);
+    return result;
+}
+
 static void print_help(const char *program) {
     printf("Usage: %s [--live] [--history] [--title TITLE] [--link-file FILE] [URI]\n", program);
 }
@@ -904,7 +936,7 @@ int main(const int argc, char **argv) {
             .start_position = 0.0,
         };
         initialise_ui();
-        const int result = video_player_run(uri, title, &options);
+        const int result = live || remote ? video_player_run(uri, title, &options) : play_folder(uri, title, &options);
         sdl_cleanup();
         free(link_value);
         if (result == video_player_content_switch) return CONTENT_SWITCH_EXIT_STATUS;

@@ -202,6 +202,8 @@
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
+#define STORE_LOC_MANI MUOS_INFO_PATH "/manifest"
+#define STORE_LOC_OVER MUOS_INFO_PATH "/override"
 
 #define MUOS_ACT_LOAD RUN_PATH "action"
 #define MUOS_APP_LOAD RUN_PATH "application"

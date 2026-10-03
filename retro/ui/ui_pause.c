@@ -82,6 +82,7 @@ static int row_information;
 static int row_restart;
 static int row_quit;
 static int row_count;
+static int *remembered_row = NULL;
 static mux_dialogue destructive_dlg;
 static int content_switch_active;
 static int content_switch_requested;
@@ -758,8 +759,7 @@ void pause_menu_rebuild(void) {
     if (row_disc_control >= 0) add_label("disc", lang.muxretro.disc_control, lang.muxretro.help.pause.disc_control);
     if (row_cheats >= 0) add_label("cheat", lang.muxretro.cheats, lang.muxretro.help.pause.cheats);
     if (row_patches >= 0) add_label("patch", lang.muxretro.patches, lang.muxretro.help.pause.patches);
-    if (row_content_switch >= 0)
-        add_label("history", lang.content_switch.title, lang.content_switch.help);
+    if (row_content_switch >= 0) add_label("switch", lang.content_switch.title, lang.content_switch.help);
     add_label("settings", lang.muxretro.settings, lang.muxretro.help.pause.settings);
     add_label("info", lang.muxretro.information, lang.muxretro.help.pause.information);
     add_label("restart", lang.muxretro.restart, lang.muxretro.help.pause.restart);
@@ -781,7 +781,7 @@ static void content_switch_open(void) {
 
     for (size_t index = 0; index < content_switch_items.count; index++) {
         const content_switch_entry *entry = &content_switch_items.entries[index];
-        gen_label("muxretro", entry->source == content_switch_source_collection ? "collection" : "history", entry->title);
+        gen_label("muxretro", entry->native == content_switch_native_wasabi ? "wasabi" : "pickles", entry->title);
         ui_count_static++;
     }
 
@@ -1068,6 +1068,7 @@ void pause_menu_toggle(void) {
 
     if (active) {
         pause_menu_rebuild();
+        if (remembered_row && *remembered_row > 0) focus_item(*remembered_row);
         lv_label_set_text(ui_lbl_datetime, get_datetime());
     }
 }
@@ -1203,33 +1204,43 @@ int pause_menu_tick(void) {
             pause_menu_toggle();
         } else if (current_item_index == row_game_state) {
             play_sound(snd_confirm);
+            remembered_row = &row_game_state;
             gamestate_menu_open();
         } else if (row_netplay >= 0 && current_item_index == row_netplay) {
             play_sound(snd_confirm);
+            remembered_row = &row_netplay;
             netplay_menu_open();
         } else if (row_cheevo >= 0 && current_item_index == row_cheevo) {
             play_sound(snd_confirm);
+            remembered_row = &row_cheevo;
             cheevo_menu_open();
         } else if (row_game_link >= 0 && current_item_index == row_game_link) {
             play_sound(snd_confirm);
+            remembered_row = &row_game_link;
             link_menu_open();
         } else if (has_disc_control && current_item_index == row_disc_control) {
             play_sound(snd_confirm);
+            remembered_row = &row_disc_control;
             diskcontrol_menu_open();
         } else if (row_cheats >= 0 && current_item_index == row_cheats) {
             play_sound(snd_confirm);
+            remembered_row = &row_cheats;
             cheats_menu_open();
         } else if (row_patches >= 0 && current_item_index == row_patches) {
             play_sound(snd_confirm);
+            remembered_row = &row_patches;
             patch_menu_open();
         } else if (row_content_switch >= 0 && current_item_index == row_content_switch) {
             play_sound(snd_confirm);
+            remembered_row = &row_content_switch;
             content_switch_open();
         } else if (current_item_index == row_settings) {
             play_sound(snd_confirm);
+            remembered_row = &row_settings;
             settings_menu_open();
         } else if (current_item_index == row_information) {
             play_sound(snd_confirm);
+            remembered_row = &row_information;
             information_menu_open();
         } else if (current_item_index == row_restart) {
             play_sound(snd_confirm);

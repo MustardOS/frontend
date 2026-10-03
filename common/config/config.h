@@ -100,6 +100,7 @@ typedef struct {
     int16_t thumbnail_size;
     int16_t sleep;
     int16_t idle_screensaver;
+    int16_t auto_play;
     int16_t hotkey_pause;
     int16_t hotkey_save_bookmark;
     int16_t hotkey_load_bookmark;
@@ -136,6 +137,7 @@ struct mux_config {
         int16_t content;
         int16_t history;
         int16_t init;
+        int16_t manifest;
         int16_t merge;
         int16_t music;
         int16_t name;
@@ -172,9 +174,6 @@ struct mux_config {
     } network;
 
     struct {
-        struct {
-            char data[MAX_BUFFER_SIZE];
-        } download;
         struct {
             char data[MAX_BUFFER_SIZE];
         } language;
@@ -278,6 +277,7 @@ struct mux_config {
             int16_t audio_swap;
             int16_t audio_suspend;
             int16_t bt_scan_timeout;
+            int16_t raw_bluetooth;
             int16_t second_part;
             int16_t usb_part;
             int16_t remember_section;
@@ -484,10 +484,6 @@ struct mux_config {
     } visual;
 
     struct {
-        int16_t auto_connect;
-    } bluetooth;
-
-    struct {
         int16_t mdns;
         int16_t landing;
         int16_t sshd;
@@ -496,6 +492,8 @@ struct mux_config {
         int16_t syncthing;
         int16_t tailscaled;
         int16_t landing_auth;
+        int16_t remote_view;
+        int16_t remote_privacy;
         char mdns_name[MAX_BUFFER_SIZE];
         char landing_port[MAX_BUFFER_SIZE];
         char sshd_port[MAX_BUFFER_SIZE];

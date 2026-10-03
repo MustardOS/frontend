@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
@@ -58,6 +59,13 @@ static char web_root[PATH_MAX];
 static char catalogue_root[PATH_MAX];
 static char pickles_root[PATH_MAX];
 static char info_root[PATH_MAX];
+static char history_root[PATH_MAX];
+static char screen_script[PATH_MAX];
+static char screen_image[PATH_MAX];
+static long screen_interval = 0;
+static int screen_public = 0;
+static struct timespec screen_requested;
+static char collection_root[PATH_MAX];
 static char content_roots[MUWEB_CONTENT_ROOTS][PATH_MAX];
 static size_t content_root_count = 0;
 static int read_only = 0;
@@ -2878,6 +2886,787 @@ static void handle_content_api(struct connection *connection, const char *method
     buffer_free(&out);
 }
 
+typedef struct {
+    char path[PATH_MAX];
+    char system[PATH_MAX];
+    char name[PATH_MAX];
+} pointer_entry;
+
+typedef struct {
+    char id[PATH_MAX];
+    char sort[PATH_MAX];
+    time_t modified;
+    pointer_entry entry;
+} pointer_item;
+
+static uint32_t pointer_hash(const char *text) {
+    uint32_t hash = 2166136261U;
+    for (const unsigned char *p = (const unsigned char *) text; *p; ++p) {
+        hash ^= *p;
+        hash *= 16777619U;
+    }
+    return hash;
+}
+
+static int is_cfg_name(const char *name) {
+    const size_t length = strlen(name);
+    return name[0] != '.' && length > 4 && strcasecmp(name + length - 4, ".cfg") == 0;
+}
+
+static void trim_line(char *line) {
+    size_t length = strlen(line);
+    while (length && (line[length - 1] == '\n' || line[length - 1] == '\r'))
+        line[--length] = '\0';
+}
+
+static int pointer_read(const char *file, pointer_entry *entry) {
+    memset(entry, 0, sizeof(*entry));
+
+    FILE *stream = fopen(file, "r");
+    if (!stream) return 0;
+
+    const int read = fgets(entry->path, sizeof(entry->path), stream) != NULL;
+    if (read && fgets(entry->system, sizeof(entry->system), stream) && !fgets(entry->name, sizeof(entry->name), stream))
+        entry->name[0] = '\0';
+    fclose(stream);
+
+    trim_line(entry->path);
+    trim_line(entry->system);
+    trim_line(entry->name);
+    return read && entry->path[0];
+}
+
+static int pointer_write(const char *file, const pointer_entry *entry) {
+    struct buffer text = {0};
+    const int built = buffer_printf(&text, "%s\n%s\n%s", entry->path, entry->system, entry->name);
+    const int written = built && write_file_atomic(file, text.data, text.length);
+    buffer_free(&text);
+    return written;
+}
+
+static void path_stem(const char *path, char *out, const size_t size) {
+    const char *base = strrchr(path, '/');
+    snprintf(out, size, "%s", base ? base + 1 : path);
+
+    char *dot = strrchr(out, '.');
+    if (dot && dot != out) *dot = '\0';
+}
+
+static int pointer_file_name(const char *path, char *out, const size_t size) {
+    char stem[PATH_MAX];
+    path_stem(path, stem, sizeof(stem));
+
+    const int written = snprintf(out, size, "%s-%08X.cfg", stem, pointer_hash(path));
+    return written > 0 && (size_t) written < size;
+}
+
+static void pointer_json(struct buffer *out, const pointer_item *item) {
+    struct stat info;
+    const int exists = stat(item->entry.path, &info) == 0 && S_ISREG(info.st_mode);
+
+    buffer_puts(out, "{");
+    json_field(out, "id", item->id);
+    buffer_puts(out, ",");
+    json_field(out, "path", item->entry.path);
+    buffer_puts(out, ",");
+    json_field(out, "system", item->entry.system);
+    buffer_puts(out, ",");
+    json_field(out, "name", item->entry.name);
+    buffer_puts(out, ",");
+    json_number(out, "modified", (long long) item->modified);
+    buffer_puts(out, ",");
+    json_number(out, "exists", exists);
+    buffer_puts(out, "}");
+}
+
+static int pointer_newest_first(const void *left, const void *right) {
+    const pointer_item *a = left;
+    const pointer_item *b = right;
+    if (a->modified != b->modified) return a->modified < b->modified ? 1 : -1;
+    return strcasecmp(a->sort, b->sort);
+}
+
+static int pointer_by_name(const void *left, const void *right) {
+    const pointer_item *a = left;
+    const pointer_item *b = right;
+    const int order = strcasecmp(a->sort, b->sort);
+    return order ? order : strcmp(a->id, b->id);
+}
+
+static int pointer_scan(const char *root, const char *folder, pointer_item **items, size_t *count) {
+    *items = NULL;
+    *count = 0;
+
+    char directory_path[PATH_MAX];
+    if (!join_path(directory_path, sizeof(directory_path), root, folder)) return 0;
+
+    DIR *directory = opendir(directory_path);
+    if (!directory) return 0;
+
+    size_t capacity = 0;
+    const struct dirent *entry;
+    while ((entry = readdir(directory))) {
+        if (!is_cfg_name(entry->d_name)) continue;
+
+        char file[PATH_MAX];
+        if ((size_t) snprintf(file, sizeof(file), "%s/%s", directory_path, entry->d_name) >= sizeof(file)) continue;
+
+        struct stat info;
+        if (lstat(file, &info) < 0 || !S_ISREG(info.st_mode)) continue;
+
+        if (*count == capacity) {
+            const size_t grown_capacity = capacity ? capacity * 2 : 32;
+            pointer_item *grown = realloc(*items, grown_capacity * sizeof(*grown));
+            if (!grown) break;
+            *items = grown;
+            capacity = grown_capacity;
+        }
+
+        pointer_item *item = &(*items)[*count];
+        if (!pointer_read(file, &item->entry)) continue;
+
+        if (folder && *folder)
+            snprintf(item->id, sizeof(item->id), "%s/%s", folder, entry->d_name);
+        else
+            snprintf(item->id, sizeof(item->id), "%s", entry->d_name);
+
+        snprintf(item->sort, sizeof(item->sort), "%s", item->entry.name[0] ? item->entry.name : entry->d_name);
+        item->modified = info.st_mtime;
+        *count += 1;
+    }
+
+    closedir(directory);
+    return 1;
+}
+
+static void pointer_list_json(struct buffer *out, const pointer_item *items, const size_t count) {
+    buffer_puts(out, "[");
+    for (size_t i = 0; i < count; ++i) {
+        if (i) buffer_puts(out, ",");
+        pointer_json(out, &items[i]);
+    }
+    buffer_puts(out, "]");
+}
+
+static int module_open(const char *name) {
+    DIR *proc = opendir("/proc");
+    if (!proc) return 0;
+
+    int found = 0;
+    const struct dirent *entry;
+    while (!found && (entry = readdir(proc))) {
+        if (!isdigit((unsigned char) entry->d_name[0])) continue;
+
+        char path[64];
+        if ((size_t) snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name) >= sizeof(path)) continue;
+
+        FILE *file = fopen(path, "r");
+        if (!file) continue;
+
+        char comm[32] = "";
+        if (fgets(comm, sizeof(comm), file)) {
+            comm[strcspn(comm, "\n")] = '\0';
+            found = strcmp(comm, name) == 0;
+        }
+        fclose(file);
+    }
+
+    closedir(proc);
+    return found;
+}
+
+static int history_json(struct buffer *out) {
+    pointer_item *items = NULL;
+    size_t count = 0;
+    pointer_scan(history_root, NULL, &items, &count);
+    if (count) qsort(items, count, sizeof(*items), pointer_newest_first);
+
+    buffer_puts(out, "{");
+    json_number(out, "busy", module_open("muxhistory"));
+    buffer_puts(out, ",\"items\":");
+    pointer_list_json(out, items, count);
+    buffer_puts(out, "}");
+
+    free(items);
+    return 1;
+}
+
+static int folder_name_compare(const void *left, const void *right) {
+    return strcasecmp(*(char *const *) left, *(char *const *) right);
+}
+
+static int collection_json(struct buffer *out) {
+    pointer_item *items = NULL;
+    size_t count = 0;
+    pointer_scan(collection_root, NULL, &items, &count);
+    if (count) qsort(items, count, sizeof(*items), pointer_by_name);
+
+    buffer_puts(out, "{");
+    json_number(out, "busy", module_open("muxcollect"));
+    buffer_puts(out, ",\"items\":");
+    pointer_list_json(out, items, count);
+    free(items);
+
+    char **folders = NULL;
+    size_t folder_count = 0;
+    size_t folder_capacity = 0;
+
+    DIR *directory = opendir(collection_root);
+    if (directory) {
+        const struct dirent *entry;
+        while ((entry = readdir(directory))) {
+            if (entry->d_name[0] == '.' || strcmp(entry->d_name, "kiosk") == 0) continue;
+
+            char full[PATH_MAX];
+            if ((size_t) snprintf(full, sizeof(full), "%s/%s", collection_root, entry->d_name) >= sizeof(full))
+                continue;
+
+            struct stat info;
+            if (lstat(full, &info) < 0 || !S_ISDIR(info.st_mode)) continue;
+
+            if (folder_count == folder_capacity) {
+                const size_t grown_capacity = folder_capacity ? folder_capacity * 2 : 16;
+                char **grown = realloc(folders, grown_capacity * sizeof(*grown));
+                if (!grown) break;
+                folders = grown;
+                folder_capacity = grown_capacity;
+            }
+
+            folders[folder_count] = strdup(entry->d_name);
+            if (folders[folder_count]) folder_count += 1;
+        }
+        closedir(directory);
+    }
+
+    if (folder_count) qsort(folders, folder_count, sizeof(*folders), folder_name_compare);
+
+    buffer_puts(out, ",\"collections\":[");
+    for (size_t i = 0; i < folder_count; ++i) {
+        pointer_scan(collection_root, folders[i], &items, &count);
+        if (count) qsort(items, count, sizeof(*items), pointer_by_name);
+
+        if (i) buffer_puts(out, ",");
+        buffer_puts(out, "{");
+        json_field(out, "name", folders[i]);
+        buffer_puts(out, ",\"items\":");
+        pointer_list_json(out, items, count);
+        buffer_puts(out, "}");
+
+        free(items);
+        free(folders[i]);
+    }
+    buffer_puts(out, "]}");
+
+    free(folders);
+    return 1;
+}
+
+static int body_text(const char *body, const size_t length, char *out, const size_t size) {
+    if (length >= size) return 0;
+
+    memcpy(out, body, length);
+    out[length] = '\0';
+
+    size_t used = length;
+    while (used && isspace((unsigned char) out[used - 1]))
+        out[--used] = '\0';
+
+    for (size_t i = 0; i < used; ++i)
+        if ((unsigned char) out[i] < 0x20) return 0;
+    return 1;
+}
+
+static int single_name(const char *name) {
+    return safe_relative_path(name) && !strchr(name, '/');
+}
+
+static int split_action(char *path, const char **action) {
+    *action = NULL;
+
+    char *slash = strrchr(path, '/');
+    if (!slash) return 1;
+
+    const char *last = slash + 1;
+    if (strcmp(last, "path") == 0 || strcmp(last, "move") == 0 || strcmp(last, "rename") == 0
+        || strcmp(last, "collect") == 0) {
+        *slash = '\0';
+        *action = last;
+    }
+    return *path != '\0';
+}
+
+static void derive_system(const char *path, char *out, const size_t size) {
+    const char *roms = strstr(path, "/ROMS/");
+    if (!roms) return;
+
+    roms += 6;
+    const char *slash = strrchr(roms, '/');
+    if (!slash || slash == roms) return;
+    snprintf(out, size, "%.*s", (int) (slash - roms), roms);
+}
+
+static int folder_holds_path(const char *folder, const char *path, const char *except) {
+    DIR *directory = opendir(folder);
+    if (!directory) return 0;
+
+    int found = 0;
+    const struct dirent *entry;
+    while (!found && (entry = readdir(directory))) {
+        if (!is_cfg_name(entry->d_name)) continue;
+
+        char file[PATH_MAX];
+        if ((size_t) snprintf(file, sizeof(file), "%s/%s", folder, entry->d_name) >= sizeof(file)) continue;
+        if (except && strcmp(file, except) == 0) continue;
+
+        pointer_entry existing;
+        found = pointer_read(file, &existing) && strcmp(existing.path, path) == 0;
+    }
+
+    closedir(directory);
+    return found;
+}
+
+static void pointer_update_path(
+    struct connection *connection, const char *root, const char *id, const char *body, const size_t body_length
+) {
+    char file[PATH_MAX];
+    if (!is_cfg_name(strrchr(id, '/') ? strrchr(id, '/') + 1 : id) || !resolve_within(root, id, file, sizeof(file))) {
+        send_error(connection, 404, "That entry no longer exists");
+        return;
+    }
+
+    char new_path[PATH_MAX];
+    if (!body_text(body, body_length, new_path, sizeof(new_path)) || new_path[0] != '/') {
+        send_error(connection, 400, "Enter the full path to the content, starting with /");
+        return;
+    }
+
+    struct stat info;
+    if (stat(new_path, &info) < 0 || !S_ISREG(info.st_mode)) {
+        send_error(connection, 400, "There is no file at that path");
+        return;
+    }
+
+    pointer_entry entry;
+    if (!pointer_read(file, &entry)) {
+        send_error(connection, 500, "Could not read that entry");
+        return;
+    }
+
+    struct stat previous;
+    const int had_time = stat(file, &previous) == 0;
+
+    char old_stem[PATH_MAX];
+    char new_stem[PATH_MAX];
+    path_stem(entry.path, old_stem, sizeof(old_stem));
+    path_stem(new_path, new_stem, sizeof(new_stem));
+
+    if (!entry.name[0] || strcmp(entry.name, old_stem) == 0) snprintf(entry.name, sizeof(entry.name), "%s", new_stem);
+    derive_system(new_path, entry.system, sizeof(entry.system));
+    snprintf(entry.path, sizeof(entry.path), "%s", new_path);
+
+    char leaf[PATH_MAX];
+    char target[PATH_MAX];
+    const char *slash = strrchr(file, '/');
+    if (!pointer_file_name(new_path, leaf, sizeof(leaf))
+        || (size_t) snprintf(target, sizeof(target), "%.*s/%s", (int) (slash - file), file, leaf) >= sizeof(target)) {
+        send_error(connection, 400, "That path is too long");
+        return;
+    }
+
+    char folder[PATH_MAX];
+    snprintf(folder, sizeof(folder), "%.*s", (int) (slash - file), file);
+    if ((strcmp(target, file) != 0 && access(target, F_OK) == 0) || folder_holds_path(folder, new_path, file)) {
+        send_error(connection, 409, "An entry for that content already exists");
+        return;
+    }
+
+    if (!pointer_write(target, &entry)) {
+        send_error(connection, 500, "Could not save that entry");
+        return;
+    }
+    if (strcmp(target, file) != 0) unlink(file);
+
+    if (had_time) {
+        const struct timespec times[2] = {previous.st_atim, previous.st_mtim};
+        utimensat(AT_FDCWD, target, times, 0);
+    }
+
+    log_verbose("repointed %s to %s", id, new_path);
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+}
+
+static int collection_folder(const char *name, char *out, const size_t size) {
+    if (!*name) {
+        const int written = snprintf(out, size, "%s", collection_root);
+        return written > 0 && (size_t) written < size;
+    }
+    if (!single_name(name)) return 0;
+
+    struct stat info;
+    return resolve_within(collection_root, name, out, size) && stat(out, &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+static int lists_open(void) {
+    return read_only && !code_required;
+}
+
+static int lists_write_allowed(struct connection *connection) {
+    return lists_open() || write_allowed(connection);
+}
+
+static void handle_history_api(
+    struct connection *connection, const char *method, char *path, const char *body, const size_t body_length
+) {
+    if (!history_root[0]) {
+        send_error(connection, 404, "History is not available");
+        return;
+    }
+
+    if (!*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        struct buffer out = {0};
+        history_json(&out);
+        send_json(connection, &out);
+        buffer_free(&out);
+        return;
+    }
+
+    const char *action = NULL;
+    if (!split_action(path, &action) || !single_name(path) || !is_cfg_name(path)) {
+        send_error(connection, 400, "Invalid entry");
+        return;
+    }
+
+    if (!lists_write_allowed(connection)) return;
+    if (module_open("muxhistory")) {
+        send_error(connection, 409, "History is open on the device, close it there to make changes");
+        return;
+    }
+
+    if (!action && strcmp(method, "DELETE") == 0) {
+        char file[PATH_MAX];
+        if (!resolve_within(history_root, path, file, sizeof(file)) || unlink(file) < 0) {
+            send_error(connection, 404, "That entry no longer exists");
+            return;
+        }
+        log_verbose("removed history %s", path);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (action && strcmp(action, "path") == 0 && strcmp(method, "PUT") == 0) {
+        pointer_update_path(connection, history_root, path, body, body_length);
+        return;
+    }
+
+    if (action && strcmp(action, "collect") == 0 && strcmp(method, "POST") == 0) {
+        if (module_open("muxcollect")) {
+            send_error(connection, 409, "Collections is open on the device, close it there to make changes");
+            return;
+        }
+        if (!collection_root[0]) {
+            send_error(connection, 404, "Collections are not available");
+            return;
+        }
+
+        char file[PATH_MAX];
+        pointer_entry entry;
+        if (!resolve_within(history_root, path, file, sizeof(file)) || !pointer_read(file, &entry)) {
+            send_error(connection, 404, "That entry no longer exists");
+            return;
+        }
+
+        char name[PATH_MAX];
+        char folder[PATH_MAX];
+        if (!body_text(body, body_length, name, sizeof(name)) || !collection_folder(name, folder, sizeof(folder))) {
+            send_error(connection, 400, "Choose an existing collection");
+            return;
+        }
+
+        char leaf[PATH_MAX];
+        char target[PATH_MAX];
+        if (!pointer_file_name(entry.path, leaf, sizeof(leaf))
+            || (size_t) snprintf(target, sizeof(target), "%s/%s", folder, leaf) >= sizeof(target)) {
+            send_error(connection, 400, "That path is too long");
+            return;
+        }
+        if (access(target, F_OK) == 0 || folder_holds_path(folder, entry.path, NULL)) {
+            send_error(connection, 409, "That collection already holds this content");
+            return;
+        }
+
+        path_stem(entry.path, entry.name, sizeof(entry.name));
+        if (!pointer_write(target, &entry)) {
+            send_error(connection, 500, "Could not add it to the collection");
+            return;
+        }
+
+        log_verbose("collected %s into '%s'", path, name);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    send_error(connection, 405, "Method not allowed");
+}
+
+static void handle_collection_api(
+    struct connection *connection, const char *method, char *path, const char *body, const size_t body_length
+) {
+    if (!collection_root[0]) {
+        send_error(connection, 404, "Collections are not available");
+        return;
+    }
+
+    if (!*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        struct buffer out = {0};
+        collection_json(&out);
+        send_json(connection, &out);
+        buffer_free(&out);
+        return;
+    }
+
+    const char *action = NULL;
+    if (!split_action(path, &action) || !safe_relative_path(path)) {
+        send_error(connection, 400, "Invalid entry");
+        return;
+    }
+
+    const char *slash = strchr(path, '/');
+    const char *leaf = slash ? slash + 1 : path;
+    const int is_item = is_cfg_name(leaf) && (!slash || !strchr(leaf, '/'));
+    const int is_folder = !is_item && single_name(path);
+    if (!is_item && !is_folder) {
+        send_error(connection, 400, "Invalid entry");
+        return;
+    }
+
+    if (!lists_write_allowed(connection)) return;
+    if (module_open("muxcollect")) {
+        send_error(connection, 409, "Collections is open on the device, close it there to make changes");
+        return;
+    }
+
+    char name[PATH_MAX];
+    if (body_length && !body_text(body, body_length, name, sizeof(name))) {
+        send_error(connection, 400, "Invalid name");
+        return;
+    }
+    if (!body_length) name[0] = '\0';
+
+    if (is_folder && !action && strcmp(method, "PUT") == 0) {
+        char folder[PATH_MAX];
+        if (!join_path(folder, sizeof(folder), collection_root, path) || mkdir(folder, 0755) < 0) {
+            send_error(
+                connection, errno == EEXIST ? 409 : 500,
+                errno == EEXIST ? "That collection already exists" : "Could not create the collection"
+            );
+            return;
+        }
+        log_verbose("created collection %s", path);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (strcmp(method, "DELETE") == 0 && !action) {
+        char target[PATH_MAX];
+        if (!resolve_within(collection_root, path, target, sizeof(target))) {
+            send_error(connection, 404, "That entry no longer exists");
+            return;
+        }
+        if ((is_folder ? rmdir(target) : unlink(target)) < 0) {
+            send_error(
+                connection, errno == ENOTEMPTY || errno == EEXIST ? 409 : 500,
+                errno == ENOTEMPTY || errno == EEXIST ? "Empty the collection before removing it"
+                                                      : "Could not remove that entry"
+            );
+            return;
+        }
+        log_verbose("removed collection %s", path);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (is_item && action && strcmp(action, "path") == 0 && strcmp(method, "PUT") == 0) {
+        pointer_update_path(connection, collection_root, path, body, body_length);
+        return;
+    }
+
+    if (action && strcmp(method, "POST") == 0
+        && ((is_item && strcmp(action, "move") == 0) || (is_folder && strcmp(action, "rename") == 0))) {
+        char source[PATH_MAX];
+        if (!resolve_within(collection_root, path, source, sizeof(source))) {
+            send_error(connection, 404, "That entry no longer exists");
+            return;
+        }
+
+        char target[PATH_MAX];
+        if (is_item) {
+            char folder[PATH_MAX];
+            if (!collection_folder(name, folder, sizeof(folder))
+                || (size_t) snprintf(target, sizeof(target), "%s/%s", folder, strrchr(source, '/') + 1)
+                       >= sizeof(target)) {
+                send_error(connection, 400, "Choose an existing collection");
+                return;
+            }
+
+            pointer_entry moving;
+            if (strcmp(source, target) != 0 && pointer_read(source, &moving)
+                && folder_holds_path(folder, moving.path, source)) {
+                send_error(connection, 409, "That collection already holds this content");
+                return;
+            }
+        } else if (!single_name(name) || !join_path(target, sizeof(target), collection_root, name)) {
+            send_error(connection, 400, "Enter a name for the collection");
+            return;
+        }
+
+        if (strcmp(source, target) == 0) {
+            send_text(connection, 200, "application/json", "{\"ok\":true}");
+            return;
+        }
+        if (access(target, F_OK) == 0) {
+            send_error(
+                connection, 409,
+                is_item ? "That collection already holds this content" : "A collection with that name already exists"
+            );
+            return;
+        }
+        if (rename(source, target) < 0) {
+            send_error(connection, 500, "Could not move that entry");
+            return;
+        }
+
+        log_verbose("%s %s to '%s'", is_item ? "moved" : "renamed", path, name);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    send_error(connection, 405, "Method not allowed");
+}
+
+static int screen_allowed(struct connection *connection) {
+    if (!screen_interval || !screen_script[0] || !screen_image[0]) {
+        send_error(connection, 404, "Remote View is not available");
+        return 0;
+    }
+    if (screen_public) return 1;
+    if (read_only || !code_required) {
+        send_error(connection, 403, "Remote View needs Authentication enabled on the device");
+        return 0;
+    }
+    if (session_valid(connection->auth_session)
+        || (connection->auth_code[0] && totp_matches(code_secret, connection->auth_code)))
+        return 1;
+
+    send_error(connection, 401, "Unlock the dashboard with the code shown on the device");
+    return 0;
+}
+
+static double seconds_since(const struct timespec *then) {
+    if (!then->tv_sec && !then->tv_nsec) return 1e9;
+
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (double) (now.tv_sec - then->tv_sec) + (double) (now.tv_nsec - then->tv_nsec) / 1e9;
+}
+
+static void screen_capture(const double minimum_gap) {
+    if (seconds_since(&screen_requested) < minimum_gap) return;
+    clock_gettime(CLOCK_MONOTONIC, &screen_requested);
+
+    const pid_t pid = fork();
+    if (pid != 0) return;
+
+    setsid();
+    for (int descriptor = 3; descriptor < 1024; ++descriptor)
+        close(descriptor);
+    execl("/bin/sh", "sh", screen_script, screen_image, screen_public ? "all" : "private", (char *) NULL);
+    _exit(127);
+}
+
+static void screen_state(char *state, const size_t state_size, int *rotate) {
+    snprintf(state, state_size, "ok");
+    *rotate = 0;
+
+    char path[PATH_MAX];
+    if ((size_t) snprintf(path, sizeof(path), "%s.state", screen_image) >= sizeof(path)) return;
+
+    FILE *file = fopen(path, "r");
+    if (!file) return;
+
+    char word[16] = "";
+    int degrees = 0;
+    if (fscanf(file, "%15s %d", word, &degrees) >= 1) {
+        snprintf(state, state_size, "%s", word);
+        if (degrees == 90 || degrees == 180 || degrees == 270) *rotate = degrees;
+    }
+    fclose(file);
+}
+
+static void handle_screen_api(struct connection *connection, const char *method, const char *path) {
+    if (!screen_allowed(connection)) return;
+
+    if (strcmp(path, "image") == 0) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        if (access(screen_image, R_OK) != 0) {
+            send_error(connection, 404, "No capture yet");
+            return;
+        }
+        connection->revalidate = 1;
+        send_file(connection, screen_image, NULL);
+        return;
+    }
+
+    if (*path) {
+        send_error(connection, 404, "Not found");
+        return;
+    }
+
+    struct stat info;
+    const int captured = stat(screen_image, &info) == 0 && S_ISREG(info.st_mode);
+    const time_t now = time(NULL);
+    const long age = captured ? (long) (now - info.st_mtime) : -1;
+
+    if (strcmp(method, "POST") == 0) {
+        screen_capture(10.0);
+    } else if (strcmp(method, "GET") == 0) {
+        if (!captured || age < 0 || age >= screen_interval) screen_capture(5.0);
+    } else {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+
+    char state[16];
+    int rotate = 0;
+    screen_state(state, sizeof(state), &rotate);
+
+    struct buffer out = {0};
+    buffer_puts(&out, "{");
+    json_number(&out, "captured", captured ? (long long) info.st_mtime : 0);
+    buffer_puts(&out, ",");
+    json_number(&out, "age", captured && age >= 0 ? age : -1);
+    buffer_puts(&out, ",");
+    json_number(&out, "interval", screen_interval);
+    buffer_puts(&out, ",");
+    json_number(&out, "rotate", rotate);
+    buffer_puts(&out, ",");
+    json_field(&out, "state", state);
+    buffer_puts(&out, "}");
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
 static void handle_media(struct connection *connection, const char *path, const char *range_header) {
     char *rest = strchr(path, '/');
     if (!rest) {
@@ -2975,6 +3764,8 @@ static void handle_request(struct connection *connection) {
         buffer_puts(&out, ",");
         json_number(&out, "readonly", read_only);
         buffer_puts(&out, ",");
+        json_number(&out, "lists_open", lists_open());
+        buffer_puts(&out, ",");
         json_number(&out, "unlocked", !code_required || session_valid(connection->auth_session));
         buffer_puts(&out, ",");
         json_number(&out, "step", TOTP_STEP);
@@ -3044,6 +3835,18 @@ static void handle_request(struct connection *connection) {
     }
     if (strncmp(target, "/api/pickles", 12) == 0 && (target[12] == '\0' || target[12] == '/')) {
         handle_pickles_api(connection, method, target + (target[12] == '/' ? 13 : 12), body, body_length);
+        return;
+    }
+    if (strncmp(target, "/api/screen", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
+        handle_screen_api(connection, method, target + (target[11] == '/' ? 12 : 11));
+        return;
+    }
+    if (strncmp(target, "/api/history", 12) == 0 && (target[12] == '\0' || target[12] == '/')) {
+        handle_history_api(connection, method, target + (target[12] == '/' ? 13 : 12), body, body_length);
+        return;
+    }
+    if (strncmp(target, "/api/collection", 15) == 0 && (target[15] == '\0' || target[15] == '/')) {
+        handle_collection_api(connection, method, target + (target[15] == '/' ? 16 : 15), body, body_length);
         return;
     }
     if (strncmp(target, "/media/", 7) == 0) {
@@ -3188,6 +3991,12 @@ static void print_usage(FILE *stream) {
                 "  -c, --catalogue DIR    catalogue root to browse and manage\n"
                 "  -s, --pickles DIR      the Pickles save root to browse and manage\n"
                 "  -i, --info DIR         the 'MUOS' info directory, for assign.json and skip.ini\n"
+                "  -H, --history DIR      the History directory to browse and manage\n"
+                "  -L, --collection DIR   the Collection directory to browse and manage\n"
+                "  -S, --screen-script F  script that captures the screen for Remote View\n"
+                "  -I, --screen-image F   image the screen script writes for Remote View\n"
+                "  -T, --screen-interval N  seconds before Remote View captures again\n"
+                "  -P, --screen-public    let anyone view Remote View and capture every screen\n"
                 "  -m, --content DIR      the ROMS directory to take the content roster from,\n"
                 "                         repeat once per storage root (max 4)\n"
                 "  -k, --secret FILE      device secret for the rolling code, minted if absent\n"
@@ -3221,6 +4030,8 @@ int main(const int argc, char **argv) {
     const char *catalogue_argument = NULL;
     const char *pickles_argument = NULL;
     const char *info_argument = NULL;
+    const char *history_argument = NULL;
+    const char *collection_argument = NULL;
     const char *secret_argument = NULL;
     int show_code = 0;
     long port = 80;
@@ -3231,6 +4042,12 @@ int main(const int argc, char **argv) {
         {"catalogue", required_argument, NULL, 'c'},
         {"pickles", required_argument, NULL, 's'},
         {"info", required_argument, NULL, 'i'},
+        {"history", required_argument, NULL, 'H'},
+        {"collection", required_argument, NULL, 'L'},
+        {"screen-script", required_argument, NULL, 'S'},
+        {"screen-image", required_argument, NULL, 'I'},
+        {"screen-interval", required_argument, NULL, 'T'},
+        {"screen-public", no_argument, NULL, 'P'},
         {"content", required_argument, NULL, 'm'},
         {"secret", required_argument, NULL, 'k'},
         {"readonly", no_argument, NULL, 'o'},
@@ -3242,7 +4059,7 @@ int main(const int argc, char **argv) {
     };
 
     int option;
-    while ((option = getopt_long(argc, argv, "r:p:c:s:i:m:k:oCvVh", options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:Pm:k:oCvVh", options, NULL)) != -1) {
         switch (option) {
             case 'r':
                 root_argument = optarg;
@@ -3256,6 +4073,31 @@ int main(const int argc, char **argv) {
             case 'i':
                 info_argument = optarg;
                 break;
+            case 'H':
+                history_argument = optarg;
+                break;
+            case 'L':
+                collection_argument = optarg;
+                break;
+            case 'S':
+                snprintf(screen_script, sizeof(screen_script), "%s", optarg);
+                break;
+            case 'I':
+                snprintf(screen_image, sizeof(screen_image), "%s", optarg);
+                break;
+            case 'P':
+                screen_public = 1;
+                break;
+            case 'T': {
+                char *end = NULL;
+                errno = 0;
+                screen_interval = strtol(optarg, &end, 10);
+                if (errno || !end || *end || screen_interval < 10 || screen_interval > 3600) {
+                    fprintf(stderr, "muweb: invalid screen interval '%s'\n", optarg);
+                    return 2;
+                }
+                break;
+            }
             case 'm':
                 if (content_root_count >= MUWEB_CONTENT_ROOTS) {
                     fprintf(stderr, "muweb: at most %d content roots\n", MUWEB_CONTENT_ROOTS);
@@ -3328,12 +4170,15 @@ int main(const int argc, char **argv) {
     if (pickles_argument && !set_root(pickles_root, pickles_argument, "pickles root")) return 2;
 
     if (info_argument && !set_root(info_root, info_argument, "info directory")) return 2;
+    if (history_argument && !set_root(history_root, history_argument, "history directory")) return 2;
+    if (collection_argument && !set_root(collection_root, collection_argument, "collection directory")) return 2;
 
     srand((unsigned) (time(NULL) ^ (unsigned) getpid()));
 
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGCHLD, SIG_IGN);
 
     const int listener = listen_socket((uint16_t) port);
     if (listener < 0) {

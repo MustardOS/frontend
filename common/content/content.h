@@ -53,11 +53,34 @@ uint32_t fnv_hash_str(const char *str);
 
 uint32_t fnv_hash_file(FILE *fp);
 
+typedef struct {
+    size_t total_time;
+    size_t launches;
+    long last_played;
+} activity_summary;
+
+uint32_t activity_key_hash(const char *content_path);
+
+int activity_summary_read(uint32_t hash, activity_summary *summary);
+
 int load_content(int add_collection, char *file_path);
 
 int content_launch_is_integrated(void);
 
+typedef enum {
+    content_audio_none = 0,
+    content_audio_stream,
+    content_audio_sequenced,
+    content_audio_chiptune,
+    content_audio_sid,
+    content_audio_game,
+} content_audio_backend;
+
+content_audio_backend content_path_audio_backend(const char *path);
+
 int content_path_is_audio(const char *path);
+
+int content_path_is_sequenced(const char *path);
 
 char *load_content_core(int force, int run_quit, char *file_path);
 

@@ -1259,7 +1259,7 @@ int display_capture_clean_pixels(uint8_t *rgb, const int width, const int height
     return ret == 0 ? 0 : -1;
 }
 
-int display_mirror_to_fb(void) {
+int display_mirror_to_fb(const int swap_red_blue) {
     if (!monitor.renderer || !monitor.texture) return -1;
 
     const int width = device.screen.width;
@@ -1302,9 +1302,10 @@ int display_mirror_to_fb(void) {
         for (int y = 0; y < height && ret == 0; y++) {
             for (int x = 0; x < width; x++) {
                 const uint8_t *pixel = rgb + ((size_t) y * (size_t) width + (size_t) x) * 3;
-                row[x] = ((uint32_t) pixel[0] << var.red.offset) | ((uint32_t) pixel[1] << var.green.offset)
-                         | ((uint32_t) pixel[2] << var.blue.offset)
-                         | (var.transp.length ? 0xFFu << var.transp.offset : 0);
+                const uint8_t red = swap_red_blue ? pixel[2] : pixel[0];
+                const uint8_t blue = swap_red_blue ? pixel[0] : pixel[2];
+                row[x] = ((uint32_t) red << var.red.offset) | ((uint32_t) pixel[1] << var.green.offset)
+                         | ((uint32_t) blue << var.blue.offset) | (var.transp.length ? 0xFFu << var.transp.offset : 0);
             }
 
             const off_t offset = (off_t) (var.yoffset + (uint32_t) y) * fix.line_length + (off_t) var.xoffset * 4;
@@ -1318,6 +1319,40 @@ int display_mirror_to_fb(void) {
     close(fd);
 
     LOG_INFO("video", "Exit frame %s the framebuffer", ret == 0 ? "mirrored to" : "could not be mirrored to");
+    return ret;
+}
+
+int display_blank_fb(void) {
+    const int fd = open("/dev/fb0", O_RDWR | O_CLOEXEC);
+    if (fd < 0) return -1;
+
+    struct fb_var_screeninfo var;
+    struct fb_fix_screeninfo fix;
+    if (ioctl(fd, FBIOGET_VSCREENINFO, &var) < 0 || ioctl(fd, FBIOGET_FSCREENINFO, &fix) < 0
+        || var.bits_per_pixel != 32) {
+        close(fd);
+        return -1;
+    }
+
+    const size_t row_bytes = (size_t) var.xres * 4;
+    uint32_t *row = malloc(row_bytes);
+    if (!row) {
+        close(fd);
+        return -1;
+    }
+
+    const uint32_t black = var.transp.length ? 0xFFu << var.transp.offset : 0;
+    for (uint32_t x = 0; x < var.xres; x++)
+        row[x] = black;
+
+    int ret = 0;
+    for (uint32_t y = 0; y < var.yres && ret == 0; y++) {
+        const off_t offset = (off_t) (var.yoffset + y) * fix.line_length + (off_t) var.xoffset * 4;
+        if (pwrite(fd, row, row_bytes, offset) != (ssize_t) row_bytes) ret = -1;
+    }
+
+    free(row);
+    close(fd);
     return ret;
 }
 

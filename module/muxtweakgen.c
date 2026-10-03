@@ -661,12 +661,12 @@ static const menu_entry tweakgen_menu_entries[ui_count_dynamic] = {
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Startup Mode
     {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
     {"language", &kiosk.config.language, menu_clock, NULL},
-    {"soundfont", &kiosk_pass, menu_clock, NULL},
+    {"soundfont", &kiosk.setting.soundfont, menu_clock, NULL},
     {"hdmi", &kiosk.setting.hdmi, menu_hdmi, visible_hdmi},
     {"rgb", &kiosk.setting.rgb, menu_rgb, visible_rgb},
-    {"remap", &kiosk_pass, menu_remap, NULL},
-    {"passcfg", &kiosk_pass, menu_passcode, NULL},
-    {"distemp", &kiosk_pass, menu_display, visible_distemp}, // Colour Temperature
+    {"remap", &kiosk.setting.remap, menu_remap, NULL},
+    {"passcfg", &kiosk.setting.passcode, menu_passcode, NULL},
+    {"distemp", &kiosk.setting.temperature, menu_display, visible_distemp}, // Colour Temperature
 };
 
 static void handle_save_mode(void) {

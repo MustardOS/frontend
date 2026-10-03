@@ -5,6 +5,7 @@ static void cancel_scan(void);
 
 static time_t scan_start = 0;
 static lv_timer_t *scan_poll_timer = NULL;
+static int connect_pending = 0;
 
 static void show_help(void) {
     show_info_box(lang.muxbtcon.title, lang.muxbtcon.help, 0);
@@ -115,28 +116,23 @@ static void cancel_scan(void) {
     hide_progress_bar();
 }
 
-static int device_is_connected(const char *mac) {
-    const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "info", mac, NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-    FILE *file = fopen("/run/muos/bt_info", "r");
-    if (!file) return 0;
-
-    int connected = 0;
-    char line[64];
-    while (fgets(line, sizeof(line), file)) {
-        if (strcmp(line, "Connected: yes\n") == 0 || strcmp(line, "Connected: yes") == 0) {
-            connected = 1;
-            break;
-        }
+static void connect_complete(const int exit_code) {
+    connect_pending = 0;
+    if (exit_code != 0) {
+        toast_message(lang.muxbtdev.connect_failed, tst_wait_l);
+        return;
     }
 
-    fclose(file);
-    return connected;
+    load_mux("btall");
+    mux_input_stop();
+}
+
+static void bt_exec_poll_task(lv_timer_t *timer __attribute__((unused))) {
+    if (connect_pending) exec_watch_task();
 }
 
 static void handle_a(void) {
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || connect_pending) return;
 
     lv_obj_t *panel = lv_group_get_focused(ui_group_panel);
     if (!panel) return;
@@ -153,19 +149,12 @@ static void handle_a(void) {
     toast_message(lang.muxbtcon.connect, tst_wait_f);
 
     const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "connect", mac_copy, NULL};
-    run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
-
-    if (!device_is_connected(mac_copy)) {
-        toast_message(lang.muxbtdev.connect_failed, tst_wait_l);
-        return;
-    }
-
-    load_mux("btall");
-    mux_input_stop();
+    connect_pending = 1;
+    run_exec(args, A_SIZE(args), 1, 0, NULL, connect_complete);
 }
 
 static void handle_b(void) {
-    if (hold_call) return;
+    if (hold_call || connect_pending) return;
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -181,7 +170,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     orientation_handle_skip();
 
-    if (msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call || connect_pending) return;
 
     play_sound(snd_confirm);
     cancel_scan();
@@ -191,7 +180,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || hold_call || !ui_count_static) return;
+    if (msgbox_active || hold_call || connect_pending || !ui_count_static) return;
 
     lv_obj_t *panel = lv_group_get_focused(ui_group_panel);
     if (!panel) return;
@@ -225,7 +214,7 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call || connect_pending) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -249,6 +238,7 @@ static void init_elements(void) {
 
 int muxbtcon_main(void) {
     scan_start = 0;
+    connect_pending = 0;
 
     init_module(__func__);
     init_theme(1, 1);
@@ -267,6 +257,7 @@ int muxbtcon_main(void) {
 
     init_timer(ui_gen_refresh_task, NULL);
     scan_poll_timer = lv_timer_create(bt_scan_poll_task, 300, NULL);
+    lv_timer_create(bt_exec_poll_task, 100, NULL);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,

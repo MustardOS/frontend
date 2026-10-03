@@ -14,7 +14,7 @@ USAGE() {
 	printf "MustardOS Frontend Builder + Cross Compile Tool\n"
 	printf "\n"
 	printf "%s\n" "Usage:"
-	printf "  %s                     guided setup so no flags to remember\n" "$0"
+	printf "  %s guided setup so no flags to remember\n" "$0"
 	printf "  %s [print|generate|database|make [args...]]\n" "$0"
 	printf "\n"
 	printf "%s\n" "Examples:"
@@ -25,12 +25,13 @@ USAGE() {
 	printf "  DEVICE=ARM32 BUILD=release %s make -j4\n" "$0"
 	printf "\n"
 	printf "%s\n" "Environment:"
-	printf "  DEVICE   ARM64 ARM64_A53 ARM64_A53_CRYPTO ARM32 ARM32_A9 X86_64 RISCV64 NATIVE GENERIC\n"
+	printf "  DEVICE   ARM64 ARM64_A53 ARM64_A53_CRYPTO ARM32 ARM32_A9 X86_64 RISCV64 NATIVE GENERIC\n\n"
 	printf "  BUILD    test or release\n"
 	printf "  DEBUG    0 quiet, 1 normal, 2 verbose\n"
 	printf "  XTOOL    toolchain root, default %s/x-tools\n" "$HOME"
-	printf "  XDIR     toolchain directory under XTOOL, detected when unset\n"
+	printf "  XDIR     toolchain directory under XTOOL, detected when unset\n\n"
 	printf "  INTERNAL_SCRIPT_DIR  internal scripts used to generate verification data\n"
+	printf "  INTERNAL_WEB_DIR     dashboard sources checked against the dashboard language list\n"
 	printf "  LANGUAGE_OUTPUT      generated language template output path\n"
 	printf "  THIRDPARTY_OUTPUT    generated third party header output path\n"
 	printf "  VERIFY_OUTPUT        generated script verification data output path\n"
@@ -367,6 +368,7 @@ GEN_INSTALL() {
 
 GEN_LANGUAGE() {
 	GEN_SRC="$FRONTEND_DIR/common/display/language.c"
+	GEN_WEB="$FRONTEND_DIR/common/display/language_web.txt"
 	GEN_OUT=${LANGUAGE_OUTPUT:-"$FRONTEND_DIR/common/generated/language.json"}
 	mkdir -p "$(dirname "$GEN_OUT")"
 	GEN_TMP="$GEN_OUT.tmp"
@@ -376,7 +378,23 @@ GEN_LANGUAGE() {
 		exit 1
 	}
 
-	awk '
+	[ -f "$GEN_WEB" ] || {
+		printf 'Error: dashboard language list not found: %s\n' "$GEN_WEB" 1>&2
+		exit 1
+	}
+
+	awk -v web="$GEN_WEB" '
+        FILENAME == web {
+            str = $0
+            sub(/\r$/, "", str)
+            if (str == "") next
+            gsub(/\\/, "\\\\", str)
+            gsub(/"/, "\\\"", str)
+            if (seen["muweb" SUBSEP str]++) next
+            keys["muweb"] = keys["muweb"] str "\n"
+            if (!("muweb" in modseen)) { modorder[++nmod] = "muweb"; modseen["muweb"] = 1 }
+            next
+        }
         /^static const lang_field lang_fields\[\] = \{/ { intable = 1; next }
         intable && /^\/\/ clang-format on/ { intable = 0 }
         !intable { next }
@@ -445,9 +463,20 @@ GEN_LANGUAGE() {
             }
             printf "}\n"
         }
-    ' "$GEN_SRC" >"$GEN_TMP"
+    ' "$GEN_WEB" "$GEN_SRC" >"$GEN_TMP"
 
 	GEN_INSTALL "$GEN_TMP" "$GEN_OUT"
+	GEN_CHECK_WEB
+}
+
+GEN_CHECK_WEB() {
+	GEN_WEB_DIR=${INTERNAL_WEB_DIR:-"$FRONTEND_DIR/../internal/share/web"}
+	[ -d "$GEN_WEB_DIR/js" ] || return 0
+
+	find "$GEN_WEB_DIR/js" -name '*.js' -exec grep -ohE '(^|[^A-Za-z0-9_$.])t\("[^"]*"' {} + | sed 's/^.*t("//; s/"$//' | sort -u | while IFS= read -r GEN_STRING; do
+		grep -qxF -- "$GEN_STRING" "$GEN_WEB" ||
+			printf 'Warning: dashboard string missing from %s: %s\n' "$GEN_WEB" "$GEN_STRING" 1>&2
+	done
 }
 
 GEN_EXTERNAL_VERSION() {

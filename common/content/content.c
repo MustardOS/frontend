@@ -40,36 +40,82 @@ static uint32_t path_hash(const char *s) {
     return h;
 }
 
-int content_path_is_audio(const char *path) {
-    static const char *const extensions[] = {
-        ".667", ".669", ".3ga", ".aa3", ".aac", ".ac3", ".adx", ".aea", ".aif", ".aifc", ".aiff", ".aix", ".alac", ".amf", ".amr",
-        ".ams", ".ape", ".apc", ".ast", ".at3", ".at9", ".au", ".awb", ".ay", ".bcstm", ".bfstm", ".brstm", ".c67", ".caf", ".cba", ".dbm", ".digi", ".dmf",
-        ".dsm", ".dsf", ".dsym", ".dts", ".dtshd", ".dtm", ".eac3", ".etx", ".far", ".fc",
-        ".fc13", ".fc14", ".flac", ".fmt", ".fsb", ".fst", ".ftm", ".g726", ".gbs", ".gdm", ".gmc", ".gt2", ".gtk",
-        ".gym", ".hca", ".hes", ".ice", ".imf", ".ims", ".ircam", ".it", ".j2b", ".kss", ".m15", ".m4a", ".m4b", ".m4r", ".mdl", ".med", ".mid",
-        ".midi", ".mka", ".mmcmp", ".mms", ".mod", ".mp+", ".mp1", ".mp2", ".mp3", ".mpa",
-        ".mpc", ".mpp", ".mptm", ".mt2", ".mtm", ".mus", ".nsf", ".nsfe", ".nsp", ".nst", ".oga", ".ogg", ".okt", ".oma",
-        ".opus", ".plm", ".ppm", ".psm", ".pt36", ".ptm", ".puma", ".qcp", ".qoa", ".ra", ".rtm", ".s3m", ".s337m", ".sap", ".sds", ".sf", ".sfx", ".sfx2", ".shn", ".sln", ".smod", ".snd", ".sox", ".spc", ".spx", ".st26", ".stk", ".stm",
-        ".stp", ".stx", ".symmod", ".tak", ".tcb", ".tta", ".ult", ".umx", ".unic", ".vag", ".vgm", ".vgz", ".voc", ".w64", ".wav", ".weba", ".wma", ".wow", ".wv", ".xmf", ".xm", ".xmd", ".xpk", ".xwma", NULL,
-    };
-    if (!path) return 0;
+static const char *path_extension(const char *path, size_t *length) {
+    if (!path) return NULL;
     const char *end = strpbrk(path, "?#");
     if (!end) end = path + strlen(path);
-    const char *dot = NULL;
     for (const char *cursor = end; cursor > path;) {
         cursor--;
-        if (*cursor == '/' || *cursor == '\\') break;
+        if (*cursor == '/' || *cursor == '\\') return NULL;
         if (*cursor == '.') {
-            dot = cursor;
-            break;
+            *length = (size_t) (end - cursor);
+            return cursor;
         }
     }
+    return NULL;
+}
+
+static int path_extension_in(const char *path, const char *const extensions[]) {
+    size_t length = 0;
+    const char *dot = path_extension(path, &length);
     if (!dot) return 0;
-    const size_t length = (size_t) (end - dot);
     for (size_t index = 0; extensions[index]; index++)
-        if (strlen(extensions[index]) == length && strncasecmp(dot, extensions[index], length) == 0)
-            return 1;
+        if (strlen(extensions[index]) == length && strncasecmp(dot, extensions[index], length) == 0) return 1;
     return 0;
+}
+
+static const char *const sequenced_extensions[] = {".kar", ".mid", ".midi", ".rmi", NULL};
+
+static const char *const chiptune_extensions[] = {".ay",   ".gbs", ".gym", ".hes", ".kss", ".nsf",
+                                                  ".nsfe", ".sap", ".spc", ".vgm", ".vgz", NULL};
+
+static const char *const sid_extensions[] = {".sid", NULL};
+
+static const char *const game_extensions[] = {
+    ".acb", ".acm",  ".aud", ".bcwav", ".bfwav", ".bg00", ".binka", ".bns",  ".bnsf", ".brwav", ".bwav",
+    ".dsp", ".genh", ".hps", ".idsp",  ".mca",   ".mic",  ".musc",  ".npsf", ".rwav", ".spsd",  ".swav",
+    ".sxd", ".vas",  ".vgs", ".vig",   ".wavm",  ".wsi",  ".xa",    ".xmu",  ".xwb",  NULL,
+};
+
+static const char *const stream_extensions[] = {
+    ".667",   ".669",  ".amf",  ".ams",  ".c67",  ".cba",    ".dbm",   ".digi",  ".dmf",   ".dsm",    ".dsym", ".dtm",
+    ".etx",   ".far",  ".fc",   ".fc13", ".fc14", ".fmt",    ".fst",   ".ftm",   ".gdm",   ".gmc",    ".gt2",  ".gtk",
+    ".ice",   ".imf",  ".ims",  ".it",   ".j2b",  ".m15",    ".mdl",   ".med",   ".mmcmp", ".mms",    ".mod",  ".mptm",
+    ".mt2",   ".mtm",  ".mus",  ".nst",  ".okt",  ".plm",    ".ppm",   ".psm",   ".pt36",  ".ptm",    ".puma", ".rtm",
+    ".s3m",   ".sfx",  ".sfx2", ".smod", ".st26", ".stk",    ".stm",   ".stp",   ".stx",   ".symmod", ".tcb",  ".ult",
+    ".umx",   ".unic", ".wow",  ".xm",   ".xmf",  ".xpk",    ".3ga",   ".aa3",   ".aac",   ".ac3",    ".adp",  ".ads",
+    ".adts",  ".adx",  ".aea",  ".afc",  ".aif",  ".aifc",   ".aiff",  ".aix",   ".alac",  ".amr",    ".apc",  ".ape",
+    ".ast",   ".at3",  ".at9",  ".au",   ".awb",  ".bcstm",  ".bfstm", ".brstm", ".caf",   ".dsf",    ".dtk",  ".dts",
+    ".dtshd", ".eac3", ".ec3",  ".flac", ".fsb",  ".g723_1", ".g729",  ".hca",   ".ircam", ".latm",   ".loas", ".m2a",
+    ".m4a",   ".m4b",  ".m4r",  ".mka",  ".mlp",  ".mp+",    ".mp1",   ".mp2",   ".mp3",   ".mpa",    ".mpc",  ".mpp",
+    ".msf",   ".nist", ".nsp",  ".oga",  ".ogg",  ".oma",    ".omg",   ".opus",  ".pvf",   ".qcp",    ".qoa",  ".ra",
+    ".rsd",   ".sds",  ".sdx",  ".sf",   ".shn",  ".sln",    ".snd",   ".sox",   ".sph",   ".spx",    ".ss2",  ".svag",
+    ".svs",   ".tak",  ".thd",  ".tta",  ".vag",  ".voc",    ".vpk",   ".w64",   ".wav",   ".wave",   ".weba", ".wma",
+    ".wsd",   ".wv",   ".xmd",  ".xvag", ".xwma", NULL,
+};
+
+content_audio_backend content_path_audio_backend(const char *path) {
+    static const struct {
+        content_audio_backend backend;
+        const char *const *extensions;
+    } backends[] = {
+        {content_audio_sequenced, sequenced_extensions},
+        {content_audio_chiptune, chiptune_extensions},
+        {content_audio_sid, sid_extensions},
+        {content_audio_game, game_extensions},
+        {content_audio_stream, stream_extensions},
+    };
+    for (size_t index = 0; index < A_SIZE(backends); index++)
+        if (path_extension_in(path, backends[index].extensions)) return backends[index].backend;
+    return content_audio_none;
+}
+
+int content_path_is_sequenced(const char *path) {
+    return content_path_audio_backend(path) == content_audio_sequenced;
+}
+
+int content_path_is_audio(const char *path) {
+    return content_path_audio_backend(path) != content_audio_none;
 }
 
 static void path_set_build(path_set_t *s, char **items, const int count) {
@@ -351,6 +397,48 @@ uint32_t fnv_hash_str(const char *str) {
     }
 
     return hash;
+}
+
+uint32_t activity_key_hash(const char *content_path) {
+    const char *key = strstr(content_path, "/ROMS/");
+    key = key ? key + 6 : content_path;
+
+    uint32_t hash = 2166136261U;
+
+    for (const char *p = key; *p; p++) {
+        hash ^= (uint8_t) tolower((unsigned char) *p);
+        hash *= 16777619;
+    }
+
+    return hash;
+}
+
+static size_t activity_number(const struct json value) {
+    const int number = json_int(value);
+    return number > 0 ? (size_t) number : 0;
+}
+
+int activity_summary_read(const uint32_t hash, activity_summary *summary) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), INFO_ACT_PATH "/%08X.json", hash);
+
+    *summary = (activity_summary){0};
+
+    char *data = read_all_char_from(path);
+    if (!data) return 0;
+
+    if (!json_valid(data)) {
+        free(data);
+        return 0;
+    }
+
+    const struct json root = json_parse(data);
+    summary->total_time = activity_number(json_object_get(root, "total_time"));
+    summary->launches = activity_number(json_object_get(root, "launches"));
+    summary->last_played = (long) activity_number(json_object_get(root, "last_played"));
+
+    free(data);
+    return summary->launches > 0;
 }
 
 uint32_t fnv_hash_file(FILE *fp) {

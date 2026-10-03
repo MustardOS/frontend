@@ -37,8 +37,9 @@ int play_sound_wait(const int sound) {
     if (!cs->chunk) return 0;
 
     if (Mix_PlayingMusic()) {
-        Mix_HaltMusic();
-        current_bgm = NULL;
+        fe_bgm = 0;
+        Mix_HookMusicFinished(NULL);
+        free_bgm();
     }
 
     const int channel = Mix_PlayChannel(-1, cs->chunk, 0);
@@ -101,6 +102,15 @@ void free_bgm(void) {
     current_bgm = NULL;
 }
 
+static void free_bgm_files(void) {
+    for (size_t i = 0; i < bgm_file_count; ++i)
+        free(bgm_files[i]);
+
+    free(bgm_files);
+    bgm_files = NULL;
+    bgm_file_count = 0;
+}
+
 void set_bgm_volume(int volume) {
     if (current_bgm) {
         if (volume < 0) volume = 0;
@@ -113,7 +123,7 @@ void set_bgm_volume(int volume) {
 }
 
 void play_random_bgm(void) {
-    if (bgm_file_count == 0) return;
+    if (!fe_bgm || bgm_file_count == 0) return;
 
     static int seeded = 0;
     if (!seeded) {
@@ -147,8 +157,11 @@ void play_random_bgm(void) {
 }
 
 void play_silence_bgm(void) {
+    fe_bgm = 0;
+    Mix_HookMusicFinished(NULL);
     free_bgm();
-    is_silence_playing = 0;
+    free_bgm_files();
+    is_silence_playing = 1;
 
     LOG_INFO("audio", "BGM idle (silent playback)");
 }
@@ -217,14 +230,18 @@ void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {
 }
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
-    free_bgm();
     *fe_bgm = 0;
+    Mix_HookMusicFinished(NULL);
+    free_bgm();
+    free_bgm_files();
 
-    if (!bgm_type && !re_init) {
-        is_silence_playing = 0;
+    if (!bgm_type) {
+        is_silence_playing = 1;
         LOG_INFO("audio", "BGM disabled");
         return;
     }
+
+    (void) re_init;
 
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
@@ -281,9 +298,9 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     closedir(dir);
 
     if (bgm_file_count > 0) {
+        *fe_bgm = 1;
         Mix_HookMusicFinished(play_random_bgm);
         play_random_bgm();
-        *fe_bgm = 1;
         LOG_SUCCESS("audio", "FE Music playback started");
     } else {
         is_silence_playing = 0;

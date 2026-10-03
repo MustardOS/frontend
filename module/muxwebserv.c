@@ -39,6 +39,10 @@ static int fields_modified;
 static int editing_enabled;
 static int editing_auth;
 static int auth_row_index = -1;
+static int editing_remote_view;
+static int remote_row_index = -1;
+static int editing_remote_privacy;
+static int privacy_row_index = -1;
 static char editing_port[6];
 static char editing_secondary_port[6];
 static char editing_username[33];
@@ -229,6 +233,8 @@ static void load_service_values(void) {
 
     editing_enabled = enabled ? *enabled : 0;
     editing_auth = config.web.landing_auth != 0;
+    editing_remote_view = config.web.remote_view;
+    editing_remote_privacy = config.web.remote_privacy != 0;
     snprintf(editing_port, sizeof(editing_port), "%s", port && *port ? port : service_default_port(selected_service));
     snprintf(
         editing_secondary_port, sizeof(editing_secondary_port), "%s",
@@ -246,6 +252,8 @@ static int service_changed(void) {
     if (enabled && editing_enabled != (*enabled != 0)) return 1;
 
     if (service_has_auth(selected_service) && editing_auth != (config.web.landing_auth != 0)) return 1;
+    if (service_has_auth(selected_service) && editing_remote_view != config.web.remote_view) return 1;
+    if (service_has_auth(selected_service) && editing_remote_privacy != (config.web.remote_privacy != 0)) return 1;
 
     const char *port = service_port(selected_service);
     if (port && strcmp(editing_port, *port ? port : service_default_port(selected_service)) != 0) return 1;
@@ -262,6 +270,11 @@ static int service_changed(void) {
         return 1;
 
     return 0;
+}
+
+static const char *remote_view_name(const int value) {
+    static const char *const intervals[] = {"30s", "1m", "3m", "5m", "10m"};
+    return value >= 1 && value <= 5 ? intervals[value - 1] : lang.generic.disabled;
 }
 
 static void show_detail_view(const enum web_service service) {
@@ -310,6 +323,21 @@ static void show_detail_view(const enum web_service service) {
         set_row(
             count++, lang.muxwebserv.authentication, "authentication",
             editing_auth ? lang.generic.enabled : lang.generic.disabled, "authentication"
+        );
+    }
+
+    remote_row_index = -1;
+    if (service_has_auth(service)) {
+        remote_row_index = count;
+        set_row(count++, lang.muxwebserv.remote_view, "landing", remote_view_name(editing_remote_view), "remote_view");
+    }
+
+    privacy_row_index = -1;
+    if (service_has_auth(service)) {
+        privacy_row_index = count;
+        set_row(
+            count++, lang.muxwebserv.remote_privacy, "authentication",
+            editing_remote_privacy ? lang.generic.enabled : lang.generic.disabled, "remote_privacy"
         );
     }
 
@@ -396,6 +424,10 @@ static int save_service(void) {
     if (service_has_auth(selected_service)) {
         write_text_to_file_atomic(CONF_CONFIG_PATH "web/landing_auth", INT, editing_auth);
         config.web.landing_auth = editing_auth;
+        write_text_to_file_atomic(CONF_CONFIG_PATH "web/remote_view", INT, editing_remote_view);
+        config.web.remote_view = (int16_t) editing_remote_view;
+        write_text_to_file_atomic(CONF_CONFIG_PATH "web/remote_privacy", INT, editing_remote_privacy);
+        config.web.remote_privacy = (int16_t) editing_remote_privacy;
     }
 
     char *port = service_port(selected_service);
@@ -453,10 +485,11 @@ static void show_help(void) {
     }
 
     const struct help_msg help_messages[] = {
-        {"enabled", lang.muxwebserv.help.service},       {"port", lang.muxwebserv.help.port},
-        {"web_port", lang.muxwebserv.help.web_port},     {"sftp_port", lang.muxwebserv.help.sftp_port},
-        {"username", lang.muxwebserv.help.username},     {"password", lang.muxwebserv.help.password},
-        {"local_name", lang.muxwebserv.help.local_name}, {"authentication", lang.muxwebserv.help.authentication}
+        {"enabled", lang.muxwebserv.help.service},         {"port", lang.muxwebserv.help.port},
+        {"web_port", lang.muxwebserv.help.web_port},       {"sftp_port", lang.muxwebserv.help.sftp_port},
+        {"username", lang.muxwebserv.help.username},       {"password", lang.muxwebserv.help.password},
+        {"local_name", lang.muxwebserv.help.local_name},   {"authentication", lang.muxwebserv.help.authentication},
+        {"remote_view", lang.muxwebserv.help.remote_view}, {"remote_privacy", lang.muxwebserv.help.remote_privacy}
     };
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
@@ -475,13 +508,33 @@ static void cycle_auth(void) {
     fields_modified = service_changed();
 }
 
-static void cycle_current_toggle(void) {
+static void cycle_remote_view(const int direction) {
+    editing_remote_view = (editing_remote_view + direction + 6) % 6;
+    lv_label_set_text(ui_objects_value[remote_row_index], remote_view_name(editing_remote_view));
+    play_sound(snd_option);
+    fields_modified = service_changed();
+}
+
+static void cycle_remote_privacy(void) {
+    editing_remote_privacy = !editing_remote_privacy;
+    lv_label_set_text(
+        ui_objects_value[privacy_row_index], editing_remote_privacy ? lang.generic.enabled : lang.generic.disabled
+    );
+    play_sound(snd_option);
+    fields_modified = service_changed();
+}
+
+static void cycle_current_toggle(const int direction) {
     if (selected_service == web_service_none) return;
 
     if (current_item_index == 0) {
         cycle_enabled();
     } else if (auth_row_index >= 0 && current_item_index == auth_row_index) {
         cycle_auth();
+    } else if (remote_row_index >= 0 && current_item_index == remote_row_index) {
+        cycle_remote_view(direction);
+    } else if (privacy_row_index >= 0 && current_item_index == privacy_row_index) {
+        cycle_remote_privacy();
     }
 }
 
@@ -592,6 +645,16 @@ static void handle_confirm(void) {
 
     if (auth_row_index >= 0 && current_item_index == auth_row_index) {
         cycle_auth();
+        return;
+    }
+
+    if (remote_row_index >= 0 && current_item_index == remote_row_index) {
+        cycle_remote_view(+1);
+        return;
+    }
+
+    if (privacy_row_index >= 0 && current_item_index == privacy_row_index) {
+        cycle_remote_privacy();
         return;
     }
 
@@ -732,7 +795,7 @@ static void handle_left(void) {
         key_left();
         return;
     }
-    cycle_current_toggle();
+    cycle_current_toggle(-1);
 }
 
 static void handle_right(void) {
@@ -744,7 +807,7 @@ static void handle_right(void) {
         key_right();
         return;
     }
-    cycle_current_toggle();
+    cycle_current_toggle(+1);
 }
 
 static void handle_l1(void) {

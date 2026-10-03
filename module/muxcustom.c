@@ -1148,7 +1148,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, font, type, lang.muxfont.type, "type", type_options, num_type_options);
     INIT_OPTION_ITEM(-1, font, font_directory, lang.muxfont.font_directory, "font", NULL, 0);
     INIT_OPTION_ITEM(-1, font, font_name, lang.muxfont.font_name, "fontname", NULL, 0);
-    INIT_OPTION_ITEM(-1, font, width, lang.muxfont.width, "fontname", NULL, 0);
+    INIT_OPTION_ITEM(-1, font, width, lang.muxfont.width, "width", NULL, 0);
     INIT_OPTION_ITEM(-1, font, italic, lang.muxfont.italic, "fontname", NULL, 0);
     INIT_OPTION_ITEM(-1, font, list_size, lang.muxfont.list_size, "listsize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, header_size, lang.muxfont.header_size, "headersize", NULL, 0);
@@ -1374,6 +1374,8 @@ static void handle_frame_next(void) {
     }
 }
 
+static int option_kiosk_locked(void);
+
 static void handle_option_prev(void) {
     if (msgbox_active) return;
     if (dialogue_active(&save_dlg)) {
@@ -1394,7 +1396,7 @@ static void handle_option_prev(void) {
     }
 
     lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-    if (font_row_locked(focused)) return;
+    if (font_row_locked(focused) || option_kiosk_locked()) return;
     const int focused_row = list_frame_current_row();
 
     move_option(focused, -1);
@@ -1451,7 +1453,7 @@ static void handle_option_next(void) {
     }
 
     lv_obj_t *focused = lv_group_get_focused(ui_group_value);
-    if (font_row_locked(focused)) return;
+    if (font_row_locked(focused) || option_kiosk_locked()) return;
     const int focused_row = list_frame_current_row();
 
     move_option(focused, +1);
@@ -1907,70 +1909,87 @@ typedef struct {
 static int16_t kiosk_pass = 0;
 
 #define CUSTOM_MENU_SCHEMA(ROW)                                                                                        \
-    ROW(visual, battery, "battery", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
-    ROW(visual, clock, "clock", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                            \
-    ROW(visual, network, "network", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
-    ROW(visual, bluetooth, "bluetooth", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
-    ROW(visual, sort_order, "sortorder", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
-    ROW(visual, tag_order, "tagorder", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                     \
-    ROW(visual, header_title, "headertitle", header, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
-    ROW(visual, element_transition, "elementtransition", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL,       \
-        change)                                                                                                        \
-    ROW(visual, selection_animation, "selectionanimation", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL,     \
-        change)                                                                                                        \
-    ROW(visual, selection_style, "selectionstyle", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)     \
-    ROW(visual, list_glyph, "listglyph", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
-    ROW(visual, render_shadows, "rendershadows", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)       \
-    ROW(visual, notify_time, "notifytime", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
-    ROW(visual, overlay_image, "overlayimage", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL, change)         \
-    ROW(visual, overlay_transparency, "overlaytransparency", appearance, menu_option, NULL, NULL, &kiosk_pass, NULL,   \
-        change)                                                                                                        \
-    ROW(visual, name_scroll, "namescroll", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                 \
-    ROW(visual, label_scroll_speed, "labelscrollspeed", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)    \
-    ROW(visual, name, "name", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
-    ROW(visual, dash, "dash", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
-    ROW(visual, the_title_format, "thetitleformat", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
-    ROW(visual, friendly_folder, "friendlyfolder", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, change)         \
-    ROW(visual, title_include_root_drive, "titleincluderootdrive", labels, menu_option, NULL, NULL, &kiosk_pass, NULL, \
-        change)                                                                                                        \
-    ROW(font, type, "type", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                  \
-    ROW(font, font_directory, "font", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
-    ROW(font, font_name, "fontname", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                         \
-    ROW(font, width, "width", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                                \
-    ROW(font, italic, "italic", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                              \
-    ROW(font, list_size, "listsize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                         \
-    ROW(font, header_size, "headersize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                     \
-    ROW(font, footer_size, "footersize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                     \
-    ROW(font, panel_size, "panelsize", font, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                       \
-    ROW(visual, folder_item_count, "folderitemcount", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)     \
-    ROW(visual, menu_counter_folder, "menucounterfolder", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change) \
-    ROW(visual, menu_counter_file, "menucounterfile", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)     \
-    ROW(visual, display_empty_folder, "displayemptyfolder", folders, menu_option, NULL, NULL, &kiosk_pass, NULL,       \
-        change)                                                                                                        \
-    ROW(visual, hidden, "hidden", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                         \
-    ROW(visual, group_content, "groupcontent", folders, menu_option, NULL, NULL, &kiosk_pass, NULL, change)            \
-    ROW(custom, sort, "sort", content, menu_sort, "sort", NULL, &kiosk_pass, NULL, select)                             \
-    ROW(visual, content_collect, "contentcollect", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
-    ROW(visual, content_history, "contenthistory", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
-    ROW(visual, mixed_content, "mixedcontent", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)            \
-    ROW(visual, forward_history, "forwardhistory", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
-    ROW(visual, content_width, "width", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
-    ROW(visual, video_preview, "videopreview", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)            \
-    ROW(visual, page_skip, "pageskip", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
-    ROW(visual, shuffle, "shuffle", content, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                       \
-    ROW(visual, box_art, "boxart", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                        \
-    ROW(visual, box_art_align, "align", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
-    ROW(visual, box_art_transition, "boxarttransition", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)   \
-    ROW(visual, box_art_scale, "boxartscale", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
-    ROW(visual, box_art_padding, "boxartpadding", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)         \
-    ROW(visual, box_art_placeholder, "boxartplaceholder", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change) \
-    ROW(visual, save_screenshot, "savescreenshot", box_art, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
-    ROW(visual, grid_mode_content, "gridmodecontent", grid, menu_option, NULL, NULL, &kiosk_pass, NULL, change)        \
-    ROW(visual, box_art_hide, "boxarthide", grid, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                  \
-    ROW(visual, launch_swap, "launch_swap", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
-    ROW(visual, launchsplash, "splash", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                 \
-    ROW(visual, pickles_startup_messages, "picklesstartupmessages", launching, menu_option, NULL, NULL, &kiosk_pass,   \
+    ROW(visual, battery, "battery", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)              \
+    ROW(visual, clock, "clock", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)                  \
+    ROW(visual, network, "network", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)              \
+    ROW(visual, bluetooth, "bluetooth", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)          \
+    ROW(visual, sort_order, "sortorder", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)         \
+    ROW(visual, tag_order, "tagorder", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)           \
+    ROW(visual, header_title, "headertitle", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)     \
+    ROW(visual, element_transition, "elementtransition", appearance, menu_option, NULL, NULL, &kiosk.setting.visual,   \
         NULL, change)                                                                                                  \
+    ROW(visual, selection_animation, "selectionanimation", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, \
+        NULL, change)                                                                                                  \
+    ROW(visual, selection_style, "selectionstyle", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,   \
+        change)                                                                                                        \
+    ROW(visual, list_glyph, "listglyph", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)     \
+    ROW(visual, render_shadows, "rendershadows", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,     \
+        change)                                                                                                        \
+    ROW(visual, notify_time, "notifytime", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)   \
+    ROW(visual, overlay_image, "overlayimage", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,       \
+        change)                                                                                                        \
+    ROW(visual, overlay_transparency, "overlaytransparency", appearance, menu_option, NULL, NULL,                      \
+        &kiosk.setting.visual, NULL, change)                                                                           \
+    ROW(visual, name_scroll, "namescroll", labels, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)       \
+    ROW(visual, label_scroll_speed, "labelscrollspeed", labels, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,  \
+        change)                                                                                                        \
+    ROW(visual, name, "name", labels, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)                    \
+    ROW(visual, dash, "dash", labels, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)                    \
+    ROW(visual, the_title_format, "thetitleformat", labels, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, friendly_folder, "friendlyfolder", labels, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,       \
+        change)                                                                                                        \
+    ROW(visual, title_include_root_drive, "titleincluderootdrive", labels, menu_option, NULL, NULL,                    \
+        &kiosk.setting.visual, NULL, change)                                                                           \
+    ROW(font, type, "type", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)                        \
+    ROW(font, font_directory, "font", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)              \
+    ROW(font, font_name, "fontname", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)               \
+    ROW(font, width, "width", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)                      \
+    ROW(font, italic, "italic", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)                    \
+    ROW(font, list_size, "listsize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)               \
+    ROW(font, header_size, "headersize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)           \
+    ROW(font, footer_size, "footersize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)           \
+    ROW(font, panel_size, "panelsize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)             \
+    ROW(visual, folder_item_count, "folderitemcount", folders, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,   \
+        change)                                                                                                        \
+    ROW(visual, menu_counter_folder, "menucounterfolder", folders, menu_option, NULL, NULL, &kiosk.setting.visual,     \
+        NULL, change)                                                                                                  \
+    ROW(visual, menu_counter_file, "menucounterfile", folders, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,   \
+        change)                                                                                                        \
+    ROW(visual, display_empty_folder, "displayemptyfolder", folders, menu_option, NULL, NULL, &kiosk.setting.visual,   \
+        NULL, change)                                                                                                  \
+    ROW(visual, hidden, "hidden", folders, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)               \
+    ROW(visual, group_content, "groupcontent", folders, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)  \
+    ROW(custom, sort, "sort", content, menu_sort, "sort", NULL, &kiosk_pass, NULL, select)                             \
+    ROW(visual, content_collect, "contentcollect", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, content_history, "contenthistory", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, mixed_content, "mixedcontent", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)  \
+    ROW(visual, forward_history, "forwardhistory", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, content_width, "width", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)         \
+    ROW(visual, video_preview, "videopreview", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)  \
+    ROW(visual, page_skip, "pageskip", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)          \
+    ROW(visual, shuffle, "shuffle", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)             \
+    ROW(visual, box_art, "boxart", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)              \
+    ROW(visual, box_art_align, "align", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)         \
+    ROW(visual, box_art_transition, "boxarttransition", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, \
+        change)                                                                                                        \
+    ROW(visual, box_art_scale, "boxartscale", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)   \
+    ROW(visual, box_art_padding, "boxartpadding", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,       \
+        change)                                                                                                        \
+    ROW(visual, box_art_placeholder, "boxartplaceholder", box_art, menu_option, NULL, NULL, &kiosk.setting.visual,     \
+        NULL, change)                                                                                                  \
+    ROW(visual, save_screenshot, "savescreenshot", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, grid_mode_content, "gridmodecontent", grid, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
+        change)                                                                                                        \
+    ROW(visual, box_art_hide, "boxarthide", grid, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)        \
+    ROW(visual, launch_swap, "launch_swap", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)   \
+    ROW(visual, launchsplash, "splash", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)       \
+    ROW(visual, pickles_startup_messages, "picklesstartupmessages", launching, menu_option, NULL, NULL,                \
+        &kiosk.setting.visual, NULL, change)                                                                           \
     ROW(custom, black_fade, "blackfade", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
     ROW(custom, catalogue, "catalogue", packages, menu_catalogue, "catalogue", "package/catalogue",                    \
         &kiosk.custom.catalogue, NULL, select)                                                                         \
@@ -2005,6 +2024,15 @@ static const menu_entry custom_menu_entries[] = {CUSTOM_MENU_SCHEMA(MENU_ENTRY)}
 #undef MENU_ENTRY
 
 _Static_assert(A_SIZE(custom_menu_entries) == ui_count_dynamic, "custom menu schema must describe every row");
+
+static int option_kiosk_locked(void) {
+    const int row = list_frame_current_row();
+    if (row < 0 || row >= (int) A_SIZE(custom_menu_entries)) return 0;
+    if (!is_ksk(*custom_menu_entries[row].kiosk_flag)) return 0;
+
+    kiosk_denied();
+    return 1;
+}
 
 static const char *custom_menu_section_label(const menu_section section) {
     switch (section) {

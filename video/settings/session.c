@@ -98,6 +98,7 @@ static const session_field fields[] = {
     SESSION_I16(thumbnail_size),
     SESSION_I16(sleep),
     SESSION_I16(idle_screensaver),
+    SESSION_I16(auto_play),
     SESSION_I16(hotkey_pause),
     SESSION_I16(hotkey_save_bookmark),
     SESSION_I16(hotkey_load_bookmark),
@@ -253,12 +254,17 @@ static void validate_settings(void) {
     VALIDATE(thumbnail_size, 0, 2);
     VALIDATE(sleep, 0, 1);
     VALIDATE(idle_screensaver, 0, 1);
+    VALIDATE(auto_play, 0, 1);
     if (config.wasabi.live_quality < 0 || config.wasabi.live_quality > 3)
         config.wasabi.live_quality = base_live_quality;
     if (config.wasabi.live_buffer != 4 && config.wasabi.live_buffer != 8 && config.wasabi.live_buffer != 16
         && config.wasabi.live_buffer != 32)
         config.wasabi.live_buffer = base_live_buffer;
 #undef VALIDATE
+    if (config.video.hotkey_fast_forward == mux_input_r3 && config.video.hotkey_slow_motion == mux_input_l3) {
+        config.video.hotkey_fast_forward = mux_input_r1;
+        config.video.hotkey_slow_motion = mux_input_l1;
+    }
     int16_t *hotkeys[] = {
         &config.video.hotkey_pause,
         &config.video.hotkey_save_bookmark,

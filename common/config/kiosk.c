@@ -60,6 +60,15 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->setting.hdmi, CONF_KIOSK_PATH "setting/hdmi", 0);
     CFG_INT_FIELD(kiosk->setting.power, CONF_KIOSK_PATH "setting/power", 0);
     CFG_INT_FIELD(kiosk->setting.visual, CONF_KIOSK_PATH "setting/visual", 0);
+    CFG_INT_FIELD(kiosk->config.connectivity, CONF_KIOSK_PATH "config/connect", 0);
+    CFG_INT_FIELD(kiosk->config.bluetooth, CONF_KIOSK_PATH "config/bluetooth", 0);
+    CFG_INT_FIELD(kiosk->config.accessibility, CONF_KIOSK_PATH "config/access", 0);
+    CFG_INT_FIELD(kiosk->config.cores, CONF_KIOSK_PATH "config/cores", 0);
+    CFG_INT_FIELD(kiosk->setting.soundfont, CONF_KIOSK_PATH "setting/soundfont", 0);
+    CFG_INT_FIELD(kiosk->setting.remap, CONF_KIOSK_PATH "setting/remap", 0);
+    CFG_INT_FIELD(kiosk->setting.passcode, CONF_KIOSK_PATH "setting/passcode", 0);
+    CFG_INT_FIELD(kiosk->setting.temperature, CONF_KIOSK_PATH "setting/temperature", 0);
+    CFG_INT_FIELD(kiosk->application.terminal, CONF_KIOSK_PATH "application/terminal", 0);
 }
 
 void kiosk_denied(void) {

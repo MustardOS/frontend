@@ -236,8 +236,10 @@ static void soundfont_restore_bgm(void) {
 
     sf_bgm_yielded = 0;
 
-    Mix_HookMusicFinished(play_random_bgm);
-    if (fe_bgm) play_random_bgm();
+    if (fe_bgm) {
+        Mix_HookMusicFinished(play_random_bgm);
+        play_random_bgm();
+    }
 }
 
 void soundfont_preview_start(const char *name) {

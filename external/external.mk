@@ -27,9 +27,12 @@ VIDEO_FFMPEG_LIBS := -Wl,--start-group \
                      $(VIDEO_FFMPEG_LIB)/libavutil.a \
                      $(EXTERNAL_LIB)/libopenmpt.a \
                      $(EXTERNAL_LIB)/libgme.a \
+                     $(EXTERNAL_LIB)/libsidplayfp.a \
+                     $(EXTERNAL_LIB)/libvgmstream.a \
                      $(EXTERNAL_LIB)/libssl.a \
                      $(EXTERNAL_LIB)/libcrypto.a \
                      -Wl,--end-group -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic -lz -ldl -lm -lpthread -latomic
+VIDEO_FFMPEG_ARCHIVES := $(filter %.a,$(VIDEO_FFMPEG_LIBS))
 
 MOJIBAKE_LIBS := $(EXTERNAL_LIB)/libmojibake.a
 LIBARCHIVE_LIBS := $(EXTERNAL_LIB)/libarchive.a $(LIBARCHIVE_SYSLIBS)

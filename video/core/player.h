@@ -16,6 +16,7 @@ typedef struct {
     int playlist_channels;
     size_t *playlist_selection;
     const char *container_uri;
+    int folder_playlist;
 } video_player_options;
 
 typedef struct {
@@ -73,4 +74,6 @@ void video_player_get_information(video_player_info *information);
 
 int video_player_live_quality_available(void);
 int video_player_tracker_loop_available(void);
+int video_player_speed_available(void);
+int video_player_seek_available(void);
 void video_player_live_quality_value(char *buffer, size_t size);

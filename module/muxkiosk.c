@@ -72,6 +72,16 @@ static void restore_kiosk_options(void) {
     lv_dropdown_set_selected(ui_dro_hdmi_kiosk, kiosk.setting.hdmi);
     lv_dropdown_set_selected(ui_dro_power_kiosk, kiosk.setting.power);
     lv_dropdown_set_selected(ui_dro_visual_kiosk, kiosk.setting.visual);
+    lv_dropdown_set_selected(ui_dro_connect_kiosk, kiosk.config.connectivity);
+    lv_dropdown_set_selected(ui_dro_proxy_kiosk, kiosk.config.proxy);
+    lv_dropdown_set_selected(ui_dro_bluetooth_kiosk, kiosk.config.bluetooth);
+    lv_dropdown_set_selected(ui_dro_access_kiosk, kiosk.config.accessibility);
+    lv_dropdown_set_selected(ui_dro_cores_kiosk, kiosk.config.cores);
+    lv_dropdown_set_selected(ui_dro_soundfont_kiosk, kiosk.setting.soundfont);
+    lv_dropdown_set_selected(ui_dro_remap_kiosk, kiosk.setting.remap);
+    lv_dropdown_set_selected(ui_dro_passcode_kiosk, kiosk.setting.passcode);
+    lv_dropdown_set_selected(ui_dro_temperature_kiosk, kiosk.setting.temperature);
+    lv_dropdown_set_selected(ui_dro_terminal_kiosk, kiosk.application.terminal);
 }
 
 static void save_kiosk_options(void) {
@@ -123,6 +133,16 @@ static void save_kiosk_options(void) {
     CHECK_AND_SAVE_KSK(kiosk, hdmi, "setting/hdmi", INT);
     CHECK_AND_SAVE_KSK(kiosk, power, "setting/power", INT);
     CHECK_AND_SAVE_KSK(kiosk, visual, "setting/visual", INT);
+    CHECK_AND_SAVE_KSK(kiosk, connect, "config/connect", INT);
+    CHECK_AND_SAVE_KSK(kiosk, proxy, "config/net_proxy", INT);
+    CHECK_AND_SAVE_KSK(kiosk, bluetooth, "config/bluetooth", INT);
+    CHECK_AND_SAVE_KSK(kiosk, access, "config/access", INT);
+    CHECK_AND_SAVE_KSK(kiosk, cores, "config/cores", INT);
+    CHECK_AND_SAVE_KSK(kiosk, soundfont, "setting/soundfont", INT);
+    CHECK_AND_SAVE_KSK(kiosk, remap, "setting/remap", INT);
+    CHECK_AND_SAVE_KSK(kiosk, passcode, "setting/passcode", INT);
+    CHECK_AND_SAVE_KSK(kiosk, temperature, "setting/temperature", INT);
+    CHECK_AND_SAVE_KSK(kiosk, terminal, "application/terminal", INT);
 
     if (is_modified > 0) {
         toast_message(lang.generic.saving, tst_wait_f);
@@ -187,6 +207,16 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, kiosk, hdmi, lang.muxkiosk.hdmi, "hdmi", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, power, lang.muxkiosk.power, "power", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, visual, lang.muxkiosk.visual, "visual", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, connect, lang.muxkiosk.connect, "connect", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, proxy, lang.muxkiosk.proxy, "proxy", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, bluetooth, lang.muxkiosk.bluetooth, "bluetooth", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, access, lang.muxkiosk.access, "access", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, cores, lang.muxkiosk.cores, "cores", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, soundfont, lang.muxkiosk.soundfont, "soundfont", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, remap, lang.muxkiosk.remap, "remap", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, passcode, lang.muxkiosk.passcode, "passcode", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, temperature, lang.muxkiosk.temperature, "temperature", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, terminal, lang.muxkiosk.terminal, "terminal", allowed_restricted, 2);
 
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);

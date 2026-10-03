@@ -1,0 +1,379 @@
+MustardOS website
+Toggle menu
+Main
+Dashboard
+Activity Tracker
+System Information
+History
+Collections
+Catalogue
+Saves
+Documentation
+Grand Tour
+Hotkeys
+Systems
+Themes
+Community
+Forum
+Merch
+Device Dashboard
+Website
+Download
+Support
+No data from the device.
+Summary
+Time
+Battery
+Uptime
+Playtime
+Other MustardOS devices
+Now running
+Device
+Storage
+Nothing mounted.
+Most played
+No activity recorded.
+Services
+Files
+Terminal
+Secure Shell
+None enabled.
+Activity groups
+Activity summary
+Play time
+Launches
+Titles
+Play style
+Content statistics
+Content
+Search
+No content matches that search.
+Recent sessions
+Recently played
+Breadcrumb
+Trim and resize
+Largest edge
+Reset
+Cancel
+Use this
+Device code
+Open Web Dashboard Code on the device.
+Confirm
+Sort by
+Layout
+Try again
+Name
+Newest
+Largest
+Compact list
+Comfortable list
+Grid
+A new code now
+Changes in %ss
+Lock
+Unlock to manage
+Unlocked
+Locked
+Copied
+Charging
+On battery
+Booted %s
+%s launches
+%s titles
+%s free of %s
+playing
+Program
+System
+Core
+For
+Model
+Version
+Build
+Screen
+Kernel
+Address
+MustardOS frontend
+External application
+%s average
+%s of %s
+Nothing played with %s yet.
+Day(s)
+Hour(s)
+Minute(s)
+Channel %s
+%s free of %s (%s used)
+%s Cores
+Online
+Offline
+Unknown
+Not Connected
+Release Signature
+Release Metadata
+System Scripts
+Frontend
+Device Package
+Kernel Modules
+Device Tree
+Initial Ramdisk
+Bootloader
+Boot Resources
+Architecture
+Theme
+Language
+Serial Number
+Display
+Hostname
+MAC Address
+Boot Time
+Time Zone
+Load Average
+Tasks
+Temperature
+Memory
+Swap
+Processor
+Speed
+Speed Range
+Governor
+Graphics
+Graphics Speed
+Graphics Speed Range
+Graphics Governor
+Capacity
+Voltage
+Status
+Health
+Design Capacity
+Charger
+Last Charged
+Time on Battery
+Battery Used
+Battery at Shutdown
+Battery at Boot
+Time Powered Off
+Battery Change While Off
+IP Address
+Network Name
+Signal
+Gateway
+DNS
+Channel
+Active Traffic
+Total Traffic
+Software
+Runtime
+Memory and Storage
+Powered Off
+Network
+Traffic
+System Modifications
+Boot Modifications
+%s (missing)
+Update path
+Where %s lives now. The file must already exist on the device.
+this content
+Save
+Top level
+Add to collection
+Choose where %s should go.
+Add
+Remove from history
+%s will be removed from History. The content itself is not touched.
+Remove
+New collection
+Create
+Collection name
+Rename collection
+Rename
+Remove collection
+%s will be removed.
+Move to collection
+Move
+Remove from collection
+%s will be removed from the collection. The content itself is not touched.
+Unlock to manage with the Web Dashboard Code shown on the device.
+Move or remove everything in this collection first
+Create another collection to move this into
+Reading the history…
+Reading the collections…
+Saving…
+Adding…
+Removing…
+Creating…
+Renaming…
+Moving…
+Path updated
+Removed from history
+Collection created
+Collection renamed
+Collection removed
+Moved
+Removed from collection
+%s (External)
+%s per hour
+Sunday
+Most Frequent Core
+Top Content by Time
+Top Content by Launch
+Most Used Device
+Most Used Mode
+Total Launch Count
+Total Play Time
+Average Play Time
+Oldest Session
+Longest Session
+Overall Play Style
+Unique Content Played
+Unique Cores Used
+Most Active Time
+Favourite Day
+Sessions Recorded
+Unexpected Endings
+Battery Drain
+Average Temperature
+External
+Content Name
+Started
+Length
+Core Used
+Suspends
+Ending
+Last Device
+Launch Count
+First Played
+Last Played
+Average Time
+Total Time
+Last Session
+Play Style
+Unique
+One and Done
+Abandoned
+Sampler
+Marathoner
+Completionist
+Weekend Warrior
+Short Bursts
+Returner
+On and Off
+Comfort Game
+Regular Play
+Long Sessions
+Device Nomad
+Power Player
+Specialist
+Binger
+Content Collector
+Window Shopper
+Explorer
+Routine Player
+Core Gamer
+Habitual Player
+Casual
+Normal
+Switched
+Crashed
+Interrupted
+Lost
+Power Off
+Monday
+Tuesday
+Wednesday
+Thursday
+Friday
+Saturday
+Handheld
+Console
+Discharging
+Full
+Not charging
+Good
+Not found
+Cannot read that file
+Cannot seek that file
+The dashboard is running read only
+Unlock the dashboard with the code shown on the device
+No catalogue is configured
+Method not allowed
+Could not read the catalogue
+Invalid system name
+No such system
+Unknown catalogue type or name
+Path too long
+That file type is not accepted here
+Invalid destination
+Could not write that file
+Could not remove that file
+No save tree is configured
+Could not read the save tree
+Invalid path
+No saves for that content
+Expected a slot to remove
+No such slot
+Only .srm files can be restored
+Expected a save to restore
+Invalid backup
+No such save
+No such backup
+Could not write that save
+No content is configured
+Could not read the content
+Invalid folder name
+No such folder
+That entry no longer exists
+Enter the full path to the content, starting with /
+There is no file at that path
+Could not read that entry
+That path is too long
+An entry for that content already exists
+Could not save that entry
+History is not available
+Invalid entry
+Collections are not available
+Choose an existing collection
+That collection already holds this content
+Could not add it to the collection
+Invalid name
+Enter a name for the collection
+Could not move that entry
+Malformed request
+Malformed target
+Authentication is turned off
+That code is wrong or has expired
+Could not start a session
+That upload is too large
+Request headers are too large
+That collection already exists
+Could not create the collection
+Empty the collection before removing it
+Could not remove that entry
+A collection with that name already exists
+Request failed (%s)
+That code was not accepted
+Reading the card…
+Save as image
+Image saved
+Could not create the image
+Made with the MustardOS Web Dashboard
+Remote View
+Refresh now
+Save image
+Updates every %s while this page is open.
+Captured at %s.
+A private screen is open on the device, so it was not captured.
+The last capture failed.
+Waiting for the first capture…
+Unlock with the Web Dashboard Code to see the screen.
+Could not reach the device.
+Remote View is not available
+Remote View needs Authentication enabled on the device
+No capture yet
+Next refresh in about %s
+Refreshing…
+Not in a collection
+No collections match that search.
+Everything is in a collection.
+History is open on the device, so changes are paused until it is closed there.
+Collections is open on the device, so changes are paused until it is closed there.
+History is open on the device, close it there to make changes
+Collections is open on the device, close it there to make changes

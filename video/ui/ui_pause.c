@@ -45,6 +45,7 @@ static int restart_row;
 static int settings_row;
 static int stop_row;
 static int settings_parent_row;
+static int *remembered_row = NULL;
 static int shader_parameters_from_browser;
 static int menu_peeking;
 static int menu_combo_consumed;
@@ -580,10 +581,14 @@ static void apply_overlay_row_visibility(void) {
     list_frame_set_suppressed(wasabi_setting_progress_bar, 0);
     list_frame_set_suppressed(wasabi_setting_artwork_position, !wasabi_settings_audio_active());
     list_frame_set_suppressed(wasabi_setting_thumbnail, wasabi_settings_audio_active());
-    for (int row = wasabi_setting_gapless; row <= wasabi_setting_slow_motion_speed; row++)
+    for (int row = wasabi_setting_gapless; row <= wasabi_setting_tracker_loop; row++)
         list_frame_set_suppressed(row, !wasabi_settings_audio_active());
-    list_frame_set_suppressed(wasabi_setting_hotkey_fast_forward, !wasabi_settings_audio_active());
-    list_frame_set_suppressed(wasabi_setting_hotkey_slow_motion, !wasabi_settings_audio_active());
+    for (int row = wasabi_setting_fast_forward_mode; row <= wasabi_setting_slow_motion_speed; row++)
+        list_frame_set_suppressed(row, !video_player_speed_available());
+    list_frame_set_suppressed(wasabi_setting_hotkey_fast_forward, !video_player_speed_available());
+    list_frame_set_suppressed(wasabi_setting_hotkey_slow_motion, !video_player_speed_available());
+    for (int row = wasabi_setting_hotkey_seek_back; row <= wasabi_setting_hotkey_seek_forward_long; row++)
+        list_frame_set_suppressed(row, !video_player_seek_available());
     list_frame_set_suppressed(
         wasabi_setting_tracker_loop, !wasabi_settings_audio_active() || !video_player_tracker_loop_available()
     );
@@ -694,7 +699,7 @@ static void build_pause_at(const int focus_row) {
     content_switch_row = -1;
     if (content_switch_items.count > 1) {
         content_switch_row = ui_count_static;
-        add_row("history", lang.content_switch.title);
+        add_row("switch", lang.content_switch.title);
     }
     settings_row = ui_count_static;
     add_row("settings", lang.muxretro.settings);
@@ -727,7 +732,7 @@ static void build_content_switch(void) {
 
     for (size_t index = 0; index < content_switch_items.count; index++) {
         const content_switch_entry *entry = &content_switch_items.entries[index];
-        add_row(entry->source == content_switch_source_collection ? "collection" : "history", entry->title);
+        add_row(entry->native == content_switch_native_wasabi ? "wasabi" : "pickles", entry->title);
     }
     lv_label_set_text(ui_lbl_title, lang.content_switch.title);
     lv_label_set_text(ui_lbl_screen_message, content_switch_items.count ? "" : lang.content_switch.empty);
@@ -737,6 +742,7 @@ static void build_content_switch(void) {
 
 static void build_pause(void) {
     build_pause_at(0);
+    if (remembered_row && *remembered_row > 0) focus_pause_row(*remembered_row);
 }
 
 static void focus_root_setting(const int row) {
@@ -1094,7 +1100,8 @@ static void change_setting(const int direction) {
             rebuild_timeline_progress();
     }
     if (row == wasabi_setting_repeat || row == wasabi_setting_shuffle) video_player_modes_changed();
-    if (row == wasabi_setting_gapless || row == wasabi_setting_crossfade) video_player_transition_settings_changed();
+    if (row == wasabi_setting_gapless || row == wasabi_setting_crossfade || row == wasabi_setting_auto_play)
+        video_player_transition_settings_changed();
 }
 
 static void build_bookmarks(void) {
@@ -1654,22 +1661,26 @@ video_ui_action video_playback_ui_confirm(void) {
         return video_ui_action_closed;
     }
     if (current_item_index == bookmark_row) {
+        remembered_row = &bookmark_row;
         build_bookmarks();
         display_composite_frame();
         return video_ui_action_none;
     }
     if (current_item_index == playlist_row) {
+        remembered_row = &playlist_row;
         playlist_focus_index = playback_playlist_index;
         build_playlist();
         display_composite_frame();
         return video_ui_action_none;
     }
     if (current_item_index == content_switch_row) {
+        remembered_row = &content_switch_row;
         build_content_switch();
         display_composite_frame();
         return video_ui_action_none;
     }
     if (current_item_index == information_row) {
+        remembered_row = &information_row;
         build_information();
         display_composite_frame();
         return video_ui_action_none;
@@ -1682,6 +1693,7 @@ video_ui_action video_playback_ui_confirm(void) {
         return video_ui_action_restart;
     }
     if (current_item_index == settings_row) {
+        remembered_row = &settings_row;
         settings_parent_row = -1;
         build_settings();
         display_composite_frame();
@@ -1781,7 +1793,14 @@ void video_playback_ui_section(const int direction) {
         playlist_skip(direction);
         return;
     }
-    if ((!settings_active && !information_active) || !list_frame_active()) return;
+    if (!settings_active && !information_active) {
+        const int page = theme.mux.item.count > 0 ? theme.mux.item.count : 1;
+        const int index = current_item_index;
+        video_playback_ui_move_held(page, direction);
+        if (current_item_index != index) play_sound(snd_navigate);
+        return;
+    }
+    if (!list_frame_active()) return;
     if (!list_frame_move(direction)) return;
     play_sound(snd_navigate);
     gen_step_movement(0, 1, 2, 0, 0);

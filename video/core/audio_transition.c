@@ -1,4 +1,5 @@
 #include "audio_transition.h"
+#include "audio_source.h"
 
 #include <SDL2/SDL.h>
 #include <libavcodec/avcodec.h>
@@ -34,9 +35,10 @@ static int decode_transition(void *unused __attribute__((unused))) {
     AVFrame *frame = NULL;
     int stream = -1;
 
-    if (avformat_open_input(&format, transition.uri, NULL, NULL) < 0
-        || avformat_find_stream_info(format, NULL) < 0)
-        goto done;
+    AVDictionary *options = NULL;
+    const int opened = audio_source_open(&format, transition.uri, transition.rate, &options);
+    av_dict_free(&options);
+    if (opened < 0 || avformat_find_stream_info(format, NULL) < 0) goto done;
     stream = av_find_best_stream(format, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
     if (stream < 0) goto done;
     const AVCodec *codec = avcodec_find_decoder(format->streams[stream]->codecpar->codec_id);

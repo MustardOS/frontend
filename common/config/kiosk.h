@@ -11,6 +11,7 @@ struct mux_kiosk {
     struct {
         int16_t archive;
         int16_t task;
+        int16_t terminal;
     } application;
 
     struct {
@@ -23,6 +24,9 @@ struct mux_kiosk {
         int16_t net_settings;
         int16_t proxy;
         int16_t backup;
+        int16_t bluetooth;
+        int16_t accessibility;
+        int16_t cores;
     } config;
 
     struct {
@@ -75,6 +79,10 @@ struct mux_kiosk {
         int16_t hdmi;
         int16_t power;
         int16_t visual;
+        int16_t soundfont;
+        int16_t remap;
+        int16_t passcode;
+        int16_t temperature;
     } setting;
 };
 

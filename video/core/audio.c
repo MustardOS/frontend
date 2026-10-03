@@ -159,7 +159,8 @@ void wasabi_audio_metadata(AVFormatContext *format, const char *uri, const char 
     tag_copy_fallback(information->genre, sizeof(information->genre), format->metadata, "system");
     if (!information->title[0])
         snprintf(information->title, sizeof(information->title), "%s", fallback_title ? fallback_title : "");
-    if (format->iformat && format->iformat->long_name)
+    tag_copy(information->format, sizeof(information->format), format->metadata, "format");
+    if (!information->format[0] && format->iformat && format->iformat->long_name)
         snprintf(information->format, sizeof(information->format), "%s", format->iformat->long_name);
     information->bitrate = format->bit_rate > 0 && format->bit_rate <= INT_MAX ? (int) format->bit_rate : 0;
     information->artwork_temporary = attached_artwork(format, information->artwork, sizeof(information->artwork));

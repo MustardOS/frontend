@@ -107,6 +107,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, network, lang.muxbackup.network, "network", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, syncthing, lang.muxbackup.syncthing, "syncthing", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, manifest, lang.muxbackup.manifest, "manifest", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, music, lang.muxbackup.music, "music", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, overlays, lang.muxbackup.overlays, "overlays", excluded_included, 2);

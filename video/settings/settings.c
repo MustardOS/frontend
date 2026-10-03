@@ -78,6 +78,8 @@ _Static_assert(A_SIZE(hotkey_fields) == A_SIZE(hotkey_defaults), "Wasabi hotkey 
 _Static_assert(A_SIZE(hotkey_keys) == A_SIZE(hotkey_defaults), "Wasabi hotkey keys and defaults must match");
 
 int wasabi_hotkey_button_valid(const int input) {
+    if (input == mux_input_l3 && device.board.has_stick < 1) return 0;
+    if (input == mux_input_r3 && device.board.has_stick < 2) return 0;
     for (size_t index = 0; index < sizeof(hotkey_choices) / sizeof(hotkey_choices[0]); index++)
         if (hotkey_choices[index] == input) return 1;
     return 0;
@@ -95,7 +97,11 @@ static int cycle_hotkey(const int value, const int direction) {
     while (position < count && hotkey_choices[position] != value)
         position++;
     if (position >= count) position = 0;
-    return hotkey_choices[cycle(position, direction, count)];
+    for (int step = 0; step < count; step++) {
+        position = cycle(position, direction, count);
+        if (wasabi_hotkey_button_valid(hotkey_choices[position])) break;
+    }
+    return hotkey_choices[position];
 }
 
 const char *wasabi_setting_label(const wasabi_setting setting) {
@@ -226,6 +232,8 @@ const char *wasabi_setting_label(const wasabi_setting setting) {
             return lang.muxmedia.sleep;
         case wasabi_setting_idle_screensaver:
             return lang.muxmedia.idle_screensaver;
+        case wasabi_setting_auto_play:
+            return lang.muxmedia.auto_play;
         case wasabi_setting_reset:
             return lang.muxretro.settings_screen.reset;
         default:
@@ -262,10 +270,10 @@ const char *wasabi_setting_glyph(const wasabi_setting setting) {
                                          "seek",           "seek",
                                          "toggleheader",   "repeat",
                                          "shuffle",        "quit",
-                                         "fastforward",
-                                         "slowmotion",     "state",
-                                         "quality",        "memory",
-                                         "idle_sleep",     "idle_display",
+                                         "fastforward",    "slowmotion",
+                                         "state",          "quality",
+                                         "memory",         "idle_sleep",
+                                         "idle_display",   "repeat",
                                          "reset"};
     _Static_assert(sizeof(glyphs) / sizeof(glyphs[0]) == wasabi_setting_count, "Wasabi setting glyph mismatch");
     return setting >= 0 && setting < wasabi_setting_count ? glyphs[setting] : "settings";
@@ -519,6 +527,9 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
         case wasabi_setting_idle_screensaver:
             snprintf(value, size, "%s", config.video.idle_screensaver ? lang.generic.enabled : lang.generic.disabled);
             break;
+        case wasabi_setting_auto_play:
+            snprintf(value, size, "%s", config.video.auto_play ? lang.generic.enabled : lang.generic.disabled);
+            break;
         default:
             value[0] = '\0';
             break;
@@ -534,7 +545,7 @@ int wasabi_setting_can_change(const wasabi_setting setting) {
     if (setting >= wasabi_setting_playtime && setting <= wasabi_setting_shuffle) return 1;
     if (setting >= wasabi_setting_volume && setting <= wasabi_setting_slow_motion_speed) return 1;
     if (setting >= wasabi_setting_hotkey_pause && setting <= wasabi_setting_hotkey_slow_motion) return 1;
-    return setting >= wasabi_setting_thumbnail && setting <= wasabi_setting_idle_screensaver;
+    return setting >= wasabi_setting_thumbnail && setting <= wasabi_setting_auto_play;
 }
 
 int wasabi_setting_is_action(const wasabi_setting setting) {
@@ -703,6 +714,9 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             break;
         case wasabi_setting_idle_screensaver:
             SETTING(idle_screensaver, "idle_screensaver", !config.video.idle_screensaver);
+            break;
+        case wasabi_setting_auto_play:
+            SETTING(auto_play, "auto_play", !config.video.auto_play);
             break;
         default:
             return 0;

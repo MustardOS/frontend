@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <dirent.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +13,6 @@
 #include <common/config/config.h>
 #include <common/content/content.h>
 #include <common/display/language.h>
-#include <json/json.h>
 
 #define ORDER_SEED "/tmp/order_seed"
 
@@ -34,28 +34,6 @@ static const struct {
     {order_file_size, "file_size"},     {order_feeling_lucky, "feeling_lucky"},
 };
 
-typedef struct {
-    uint32_t hash;
-    size_t item;
-} order_index_slot;
-
-typedef struct {
-    order_index_slot *slots;
-    size_t mask;
-    char *paths;
-    size_t *offsets;
-} order_index;
-
-static void order_index_free(order_index *index) {
-    free(index->slots);
-    free(index->paths);
-    free(index->offsets);
-
-    index->slots = NULL;
-    index->paths = NULL;
-    index->offsets = NULL;
-    index->mask = 0;
-}
 
 const char *order_method_name(const order_method method) {
     switch (method) {
@@ -281,166 +259,56 @@ static void title_curiosities(order_key *key, const char *title) {
     }
 }
 
-static const char *order_index_path(const order_index *index, const size_t item) {
-    return index->offsets[item] == ORDER_INDEX_EMPTY ? NULL : index->paths + index->offsets[item];
+static int compare_hash(const void *a, const void *b) {
+    const uint32_t left = *(const uint32_t *) a;
+    const uint32_t right = *(const uint32_t *) b;
+    return left < right ? -1 : left > right;
 }
 
-static int
-order_index_build(order_index *index, const content_item *content_items, const size_t count, const char *base_dir) {
-    memset(index, 0, sizeof(*index));
+static uint32_t *order_activity_hashes(size_t *count) {
+    *count = 0;
 
-    size_t bits = 1;
-    while ((size_t) 1 << bits < count * 2)
-        bits++;
+    DIR *dir = opendir(INFO_ACT_PATH);
+    if (!dir) return NULL;
 
-    const size_t size = (size_t) 1 << bits;
+    uint32_t *hashes = NULL;
+    size_t capacity = 0;
 
-    index->slots = malloc(size * sizeof(order_index_slot));
-    index->offsets = malloc(count * sizeof(size_t));
+    const struct dirent *entry;
+    while ((entry = readdir(dir))) {
+        const char *name = entry->d_name;
+        if (strlen(name) != 13 || strcmp(name + 8, ".json") != 0) continue;
 
-    size_t capacity = count * 64;
-    index->paths = malloc(capacity);
+        char *end = NULL;
+        const unsigned long hash = strtoul(name, &end, 16);
+        if (end != name + 8) continue;
 
-    if (!index->slots || !index->offsets || !index->paths) {
-        order_index_free(index);
-        return 0;
-    }
-
-    index->mask = size - 1;
-    for (size_t i = 0; i < size; i++)
-        index->slots[i].item = ORDER_INDEX_EMPTY;
-
-    char path[PATH_MAX];
-    size_t used = 0;
-
-    for (size_t i = 0; i < count; i++) {
-        const content_item *it = &content_items[i];
-
-        index->offsets[i] = ORDER_INDEX_EMPTY;
-
-        if (it->extra_data && *it->extra_data == '/') {
-            snprintf(path, sizeof(path), "%s", it->extra_data);
-        } else if (base_dir) {
-            snprintf(path, sizeof(path), "%s/%s", base_dir, it->name ? it->name : "");
-        } else {
-            continue;
+        if (*count == capacity) {
+            capacity = capacity ? capacity * 2 : 64;
+            uint32_t *grown = realloc(hashes, capacity * sizeof(*hashes));
+            if (!grown) break;
+            hashes = grown;
         }
 
-        if (!path[0]) continue;
-
-        const size_t length = strlen(path) + 1;
-
-        if (used + length > capacity) {
-            size_t wanted = capacity * 2;
-            while (wanted < used + length)
-                wanted *= 2;
-
-            char *grown = realloc(index->paths, wanted);
-            if (!grown) {
-                order_index_free(index);
-                return 0;
-            }
-
-            index->paths = grown;
-            capacity = wanted;
-        }
-
-        memcpy(index->paths + used, path, length);
-        index->offsets[i] = used;
-        used += length;
-
-        const uint32_t hash = fnv_hash_str(path);
-
-        size_t slot = hash & index->mask;
-        while (index->slots[slot].item != ORDER_INDEX_EMPTY)
-            slot = (slot + 1) & index->mask;
-
-        index->slots[slot].hash = hash;
-        index->slots[slot].item = i;
+        hashes[(*count)++] = (uint32_t) hash;
     }
 
-    return 1;
+    closedir(dir);
+
+    if (*count) qsort(hashes, *count, sizeof(*hashes), compare_hash);
+    return hashes;
 }
 
-static int order_index_find(const order_index *index, const char *key, size_t *from, size_t *item) {
-    const uint32_t hash = fnv_hash_str(key);
+static void order_read_activity(order_key *key, const char *path, const uint32_t *hashes, const size_t count) {
+    const uint32_t hash = activity_key_hash(path);
+    if (!bsearch(&hash, hashes, count, sizeof(*hashes), compare_hash)) return;
 
-    size_t slot = *from;
-    while (index->slots[slot].item != ORDER_INDEX_EMPTY) {
-        const size_t candidate = index->slots[slot].item;
+    activity_summary summary;
+    if (!activity_summary_read(hash, &summary)) return;
 
-        if (index->slots[slot].hash == hash && strcmp(order_index_path(index, candidate), key) == 0) {
-            *item = candidate;
-            *from = (slot + 1) & index->mask;
-
-            return 1;
-        }
-
-        slot = (slot + 1) & index->mask;
-    }
-
-    return 0;
-}
-
-static void
-order_read_playtime(const struct json root, const order_index *index, content_item *content_items, const size_t count) {
-    unsigned char *filled = calloc(count, sizeof(unsigned char));
-    if (!filled) return;
-
-    char key[PATH_MAX];
-
-    for (struct json entry = json_first(root); json_exists(entry); entry = json_next(json_next(entry))) {
-        json_string_copy(entry, key, sizeof(key));
-
-        size_t slot = fnv_hash_str(key) & index->mask;
-        size_t item;
-
-        if (!order_index_find(index, key, &slot, &item)) continue;
-
-        const struct json value = json_next(entry);
-        const size_t play_time = (size_t) json_int(json_object_get(value, "total_time"));
-        const size_t times_played = (size_t) json_int(json_object_get(value, "launches"));
-        const long last_played = json_int(json_object_get(value, "start_time"));
-
-        do {
-            if (filled[item]) continue;
-
-            order_key *order = &content_items[item].order;
-
-            order->play_time = play_time;
-            order->times_played = times_played;
-            order->last_played = last_played;
-
-            filled[item] = 1;
-        } while (order_index_find(index, key, &slot, &item));
-    }
-
-    free(filled);
-}
-
-static void order_read_playtime_slow(
-    const struct json root, content_item *content_items, const size_t count, const char *base_dir
-) {
-    for (size_t i = 0; i < count; i++) {
-        content_item *it = &content_items[i];
-
-        const char *path = it->extra_data;
-        char full_path[PATH_MAX];
-
-        if ((!path || *path != '/') && base_dir) {
-            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, it->name ? it->name : "");
-            path = full_path;
-        }
-
-        if (!path || !*path) continue;
-
-        const struct json entry = json_object_get(root, path);
-        if (!json_exists(entry)) continue;
-
-        it->order.play_time = (size_t) json_int(json_object_get(entry, "total_time"));
-        it->order.times_played = (size_t) json_int(json_object_get(entry, "launches"));
-        it->order.last_played = (long) json_int(json_object_get(entry, "start_time"));
-    }
+    key->play_time = summary.total_time;
+    key->times_played = summary.launches;
+    key->last_played = summary.last_played;
 }
 
 void order_prepare(content_item *content_items, const size_t count, const char *base_dir) {
@@ -458,24 +326,8 @@ void order_prepare(content_item *content_items, const size_t count, const char *
 
     const unsigned int seed = wants_shuffle ? session_seed() : 0;
 
-    char playtime_path[MAX_BUFFER_SIZE];
-    snprintf(playtime_path, sizeof(playtime_path), INFO_ACT_PATH "/" PLAYTIME_DATA);
-
-    char *playtime_raw = NULL;
-    struct json playtime_root = {0};
-    int playtime_valid = 0;
-
-    if (wants_playtime && file_exist(playtime_path)) {
-        playtime_raw = read_all_char_from(playtime_path);
-        if (playtime_raw && json_valid(playtime_raw)) {
-            playtime_root = json_parse(playtime_raw);
-            playtime_valid = 1;
-        }
-    }
-
-    order_index index = {0};
-    const int wants_paths = wants_file_meta || playtime_valid;
-    const int indexed = wants_paths && order_index_build(&index, content_items, count, base_dir);
+    size_t activity_count = 0;
+    uint32_t *activity_hashes = wants_playtime ? order_activity_hashes(&activity_count) : NULL;
 
     for (size_t i = 0; i < count; i++) {
         content_item *it = &content_items[i];
@@ -488,23 +340,20 @@ void order_prepare(content_item *content_items, const size_t count, const char *
 
         if (wants_curiosities && it->display_name) title_curiosities(key, it->display_name);
 
-        if (!wants_file_meta) continue;
+        if (!wants_file_meta && !activity_count) continue;
 
-        const char *path = NULL;
+        const char *path = it->extra_data;
         char full_path[PATH_MAX];
 
-        if (indexed) {
-            path = order_index_path(&index, i);
-        } else {
-            path = it->extra_data;
-
-            if ((!path || *path != '/') && base_dir) {
-                snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, it->name ? it->name : "");
-                path = full_path;
-            }
+        if ((!path || *path != '/') && base_dir) {
+            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, it->name ? it->name : "");
+            path = full_path;
         }
 
         if (!path || !*path) continue;
+
+        if (activity_count) order_read_activity(key, path, activity_hashes, activity_count);
+        if (!wants_file_meta) continue;
 
         struct stat st;
 
@@ -514,16 +363,7 @@ void order_prepare(content_item *content_items, const size_t count, const char *
         }
     }
 
-    if (playtime_valid) {
-        if (indexed) {
-            order_read_playtime(playtime_root, &index, content_items, count);
-        } else {
-            order_read_playtime_slow(playtime_root, content_items, count, base_dir);
-        }
-    }
-
-    order_index_free(&index);
-    free(playtime_raw);
+    free(activity_hashes);
 }
 
 static int compare_size(const size_t a, const size_t b, const int variant) {

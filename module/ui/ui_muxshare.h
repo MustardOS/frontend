@@ -81,7 +81,8 @@
     BACKUP(init, "init")                                                                                               \
     BACKUP(network, "network")                                                                                         \
     BACKUP(syncthing, "syncthing")                                                                                     \
-    BACKUP(package, "package")
+    BACKUP(package, "package")                                                                                         \
+    BACKUP(manifest, "manifest")
 
 #define BACKUP_CUSTOM_ELEMENTS                                                                                         \
     BACKUP(theme, "theme")                                                                                             \
@@ -181,7 +182,6 @@
     DETAIL_TRAFFIC_ELEMENTS                                                                                            \
     DETAIL_MODIFICATION_ELEMENTS
 
-#define BTALL_ELEMENTS BTALL(auto_connect, "autoconnect")
 
 #define BTDEV_INFO_ELEMENTS                                                                                            \
     BTDEV_INFO(friendly_name, "friendlyname")                                                                          \
@@ -367,7 +367,17 @@
     KIOSK(general, "general")                                                                                          \
     KIOSK(hdmi, "hdmi")                                                                                                \
     KIOSK(power, "power")                                                                                              \
-    KIOSK(visual, "visual")
+    KIOSK(visual, "visual")                                                                                            \
+    KIOSK(connect, "connect")                                                                                          \
+    KIOSK(proxy, "proxy")                                                                                              \
+    KIOSK(bluetooth, "bluetooth")                                                                                      \
+    KIOSK(access, "access")                                                                                            \
+    KIOSK(cores, "cores")                                                                                              \
+    KIOSK(soundfont, "soundfont")                                                                                      \
+    KIOSK(remap, "remap")                                                                                              \
+    KIOSK(passcode, "passcode")                                                                                        \
+    KIOSK(temperature, "temperature")                                                                                  \
+    KIOSK(terminal, "terminal")
 
 #define LAUNCH_ELEMENTS                                                                                                \
     LAUNCH(explore, "explore")                                                                                         \
@@ -532,7 +542,9 @@
     STORAGE(bios, "bios")                                                                                              \
     STORAGE(init, "init")                                                                                              \
     STORAGE(network, "network")                                                                                        \
-    STORAGE(syncthing, "syncthing")
+    STORAGE(syncthing, "syncthing")                                                                                    \
+    STORAGE(manifest, "manifest")                                                                                      \
+    STORAGE(override, "override")
 
 #define STORAGE_CUSTOM_ELEMENTS                                                                                        \
     STORAGE(apps, "apps")                                                                                              \
@@ -606,6 +618,7 @@
     TWEAKADV(debug_log, "debuglog")                                                                                    \
     TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
+    TWEAKADV(raw_bluetooth, "bluetooth")                                                                               \
     TWEAKADV(remember_section, "remembersection")
 
 #define TWEAKADV_CONFIRMATIONS_ELEMENTS                                                                                \
