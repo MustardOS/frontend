@@ -1612,8 +1612,9 @@ static void set_shader_uniforms(
 }
 
 static int draw_gl_pass(
-    SDL_Texture *src, const int user_prog, const float l, const float r, const float t, const float b, const int vp_w,
-    const int vp_h, const int res_w, const int res_h, const int area_scale, const enum shader_filter_mode sample_filter
+    SDL_Texture *src, const int user_prog, const float l, const float r, const float t, const float b, const int vp_x,
+    const int vp_y, const int vp_w, const int vp_h, const int res_w, const int res_h, const int area_scale,
+    const enum shader_filter_mode sample_filter
 ) {
     int src_w = 0, src_h = 0;
     if (SDL_QueryTexture(src, NULL, NULL, &src_w, &src_h) != 0 || src_w <= 0 || src_h <= 0) return 0;
@@ -1641,7 +1642,7 @@ static int draw_gl_pass(
         r, b, texw, v_at_bottom, // bottom right
     };
 
-    gl->Viewport(0, 0, vp_w, vp_h);
+    gl->Viewport(vp_x, vp_y, vp_w, vp_h);
 
     const GLint pass_a_pos = user_prog ? sh_a_pos : a_pos;
     const GLint pass_a_uv = user_prog ? sh_a_uv : a_uv;
@@ -1793,7 +1794,7 @@ static void colour_render_pass_internal(
         if (SDL_SetRenderTarget(renderer, output_tex) == 0) {
             shader_frame_count++;
             drew = draw_gl_pass(
-                gl_src, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, 0,
+                gl_src, 1, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, 0,
                 shader_filter
             );
             shader_contract_render_operations++;
@@ -1812,7 +1813,7 @@ static void colour_render_pass_internal(
             if (SDL_SetRenderTarget(renderer, work_tex) == 0) {
                 // Prepare colour and channel order without changing the shader's source-pixel grid.
                 const int colour_ok = draw_gl_pass(
-                    gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, source_w, source_h, source_w, source_h, 0,
+                    gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, source_w, source_h, source_w, source_h, 0,
                     shader_filter_inherit
                 );
                 shader_contract_render_operations++;
@@ -1822,8 +1823,8 @@ static void colour_render_pass_internal(
                 if (colour_ok && SDL_SetRenderTarget(renderer, output_tex) == 0) {
                     shader_frame_count++;
                     drew = draw_gl_pass(
-                        work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h,
-                        0, shader_filter
+                        work_tex, 1, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, dest_rect->w, dest_rect->h, dest_rect->w,
+                        dest_rect->h, 0, shader_filter
                     );
                     shader_contract_render_operations++;
                     shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
@@ -1832,10 +1833,25 @@ static void colour_render_pass_internal(
         }
     }
 
-    if (!drew && SDL_SetRenderTarget(renderer, output_tex) == 0) {
+    int drew_direct = 0;
+    if (!drew && !use_shader && !prev_target) {
+        int out_w = 0;
+        int out_h = 0;
+
+        if (SDL_GetRendererOutputSize(renderer, &out_w, &out_h) == 0 && out_h > 0) {
+            drew_direct = draw_gl_pass(
+                gl_src, 0, -1.0f, 1.0f, 1.0f, -1.0f, dest_rect->x, out_h - dest_rect->y - dest_rect->h, dest_rect->w,
+                dest_rect->h, dest_rect->w, dest_rect->h, area_scale, shader_filter_inherit
+            );
+            shader_contract_render_operations++;
+            shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
+        }
+    }
+
+    if (!drew && !drew_direct && SDL_SetRenderTarget(renderer, output_tex) == 0) {
         drew = draw_gl_pass(
-            gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h, area_scale,
-            shader_filter_inherit
+            gl_src, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0, 0, dest_rect->w, dest_rect->h, dest_rect->w, dest_rect->h,
+            area_scale, shader_filter_inherit
         );
         shader_contract_render_operations++;
         shader_contract_pixels += (uint64_t) dest_rect->w * (uint64_t) dest_rect->h;
@@ -1847,6 +1863,11 @@ static void colour_render_pass_internal(
     if (prev_scissor_enabled) gl->Enable(GL_SCISSOR_TEST);
 
     SDL_SetRenderTarget(renderer, prev_target);
+
+    if (drew_direct) {
+        perf_end(perf_stage_colour_pass, pass_start);
+        return;
+    }
 
     if (drew)
         SDL_RenderCopy(renderer, output_tex, NULL, dest_rect);

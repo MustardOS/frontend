@@ -555,17 +555,28 @@ static int ensure_texture(
     return 1;
 }
 
-static int
-draw_shader(SDL_Texture *source, const int source_width, const int source_height, const int width, const int height) {
+static void
+pass_vertices(GLfloat vertices[16], const float texture_width, const float texture_height, const int window) {
+    const GLfloat v_low = window ? texture_height : 0.0f;
+    const GLfloat v_high = window ? 0.0f : texture_height;
+    const GLfloat quad[16] = {
+        -1.0f, -1.0f, 0.0f, v_low,  1.0f, -1.0f, texture_width, v_low,
+        -1.0f, 1.0f,  0.0f, v_high, 1.0f, 1.0f,  texture_width, v_high,
+    };
+    memcpy(vertices, quad, sizeof(quad));
+}
+
+static int draw_shader(
+    SDL_Texture *source, const int source_width, const int source_height, const int x, const int y, const int width,
+    const int height, const int window
+) {
     float texture_width = 1.0f;
     float texture_height = 1.0f;
     glActiveTexture(GL_TEXTURE0);
     if (SDL_GL_BindTexture(source, &texture_width, &texture_height) != 0) return 0;
-    const GLfloat vertices[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f,           1.0f, -1.0f, texture_width, 0.0f,
-        -1.0f, 1.0f,  0.0f, texture_height, 1.0f, 1.0f,  texture_width, texture_height,
-    };
-    glViewport(0, 0, width, height);
+    GLfloat vertices[16];
+    pass_vertices(vertices, texture_width, texture_height, window);
+    glViewport(x, y, width, height);
     glUseProgram(program);
     if (uniform_texture >= 0) glUniform1i(uniform_texture, 0);
     if (uniform_resolution >= 0) glUniform2f(uniform_resolution, (float) width, (float) height);
@@ -609,16 +620,17 @@ static int colour_effects_active(float matrix[9]) {
            || config.video.saturation != 100 || config.video.hue_shift != 0 || config.video.gamma != 100;
 }
 
-static int draw_colour(SDL_Texture *source, const int width, const int height, const float matrix[9]) {
+static int draw_colour(
+    SDL_Texture *source, const int x, const int y, const int width, const int height, const float matrix[9],
+    const int window
+) {
     float texture_width = 1.0f;
     float texture_height = 1.0f;
     glActiveTexture(GL_TEXTURE0);
     if (SDL_GL_BindTexture(source, &texture_width, &texture_height) != 0) return 0;
-    const GLfloat vertices[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f,           1.0f, -1.0f, texture_width, 0.0f,
-        -1.0f, 1.0f,  0.0f, texture_height, 1.0f, 1.0f,  texture_width, texture_height,
-    };
-    glViewport(0, 0, width, height);
+    GLfloat vertices[16];
+    pass_vertices(vertices, texture_width, texture_height, window);
+    glViewport(x, y, width, height);
     glUseProgram(colour_program);
     if (colour_uniform_texture >= 0) glUniform1i(colour_uniform_texture, 0);
     for (int index = 0; index < 9; index++)
@@ -678,27 +690,39 @@ int video_effects_render(
     const GLboolean scissor = glIsEnabled(GL_SCISSOR_TEST);
     glDisable(GL_BLEND);
     glDisable(GL_SCISSOR_TEST);
+    int direct = !previous_target && rotation == 0.0 && flip == SDL_FLIP_NONE;
+    int window_h = 0;
+    if (direct && (SDL_GetRendererOutputSize(renderer, NULL, &window_h) != 0 || window_h <= 0)) direct = 0;
+
+    const int final_x = direct ? destination->x : 0;
+    const int final_y = direct ? window_h - destination->y - destination->h : 0;
+
     SDL_Texture *result = output_texture;
     int drawn = 0;
     if (shader) {
-        if (SDL_SetRenderTarget(renderer, output_texture) != 0) goto restore;
+        const int shader_last = !colour;
+        if (SDL_SetRenderTarget(renderer, shader_last && direct ? NULL : output_texture) != 0) goto restore;
         SDL_RenderFlush(renderer);
-        drawn = draw_shader(input_texture, input_width, input_height, destination->w, destination->h);
+        drawn = draw_shader(
+            input_texture, input_width, input_height, shader_last ? final_x : 0, shader_last ? final_y : 0,
+            destination->w, destination->h, shader_last && direct
+        );
         if (!drawn) goto restore;
         if (colour) {
-            if (!ensure_texture(
+            if (!direct
+                && !ensure_texture(
                     renderer, &colour_texture, &colour_width, &colour_height, destination->w, destination->h
                 ))
                 goto restore;
-            if (SDL_SetRenderTarget(renderer, colour_texture) != 0) goto restore;
+            if (SDL_SetRenderTarget(renderer, direct ? NULL : colour_texture) != 0) goto restore;
             SDL_RenderFlush(renderer);
-            drawn = draw_colour(output_texture, destination->w, destination->h, matrix);
+            drawn = draw_colour(output_texture, final_x, final_y, destination->w, destination->h, matrix, direct);
             result = colour_texture;
         }
     } else {
-        if (SDL_SetRenderTarget(renderer, output_texture) != 0) goto restore;
+        if (SDL_SetRenderTarget(renderer, direct ? NULL : output_texture) != 0) goto restore;
         SDL_RenderFlush(renderer);
-        drawn = draw_colour(input_texture, destination->w, destination->h, matrix);
+        drawn = draw_colour(input_texture, final_x, final_y, destination->w, destination->h, matrix, direct);
     }
 restore:
     glUseProgram((GLuint) previous_program);
@@ -707,7 +731,7 @@ restore:
     if (scissor) glEnable(GL_SCISSOR_TEST);
     SDL_SetRenderTarget(renderer, previous_target);
     if (!drawn) return 0;
-    SDL_RenderCopyEx(renderer, result, NULL, destination, rotation, NULL, flip);
+    if (!direct) SDL_RenderCopyEx(renderer, result, NULL, destination, rotation, NULL, flip);
     return 1;
 }
 
