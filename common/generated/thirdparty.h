@@ -11,6 +11,7 @@ static const struct third_party_lib third_party_libs[] = {
     {"FFmpeg", "9.0.1"},
     {"json.c", "-"},
     {"libarchive", "3.8.9"},
+    {"libretro", "1"},
     {"LVGL", "8.4.0"},
     {"mdns", "a569c475"},
     {"minic", "-"},

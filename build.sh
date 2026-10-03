@@ -519,6 +519,7 @@ GEN_THIRDPARTY() {
 		printf '%s\t%s\n' "FFmpeg" "$(GEN_EXTERNAL_VERSION ffmpeg)"
 		printf '%s\t%s\n' "json.c" ""
 		printf '%s\t%s\n' "libarchive" "$(GEN_EXTERNAL_VERSION libarchive)"
+		printf '%s\t%s\n' "libretro" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/retro/core/libretro.h" RETRO_API_VERSION)"
 		printf '%s\t%s\n' "LVGL" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/lvgl/lvgl.h" LVGL_VERSION_MAJOR LVGL_VERSION_MINOR LVGL_VERSION_PATCH)"
 		printf '%s\t%s\n' "mdns" "a569c475"
 		printf '%s\t%s\n' "minic" ""
