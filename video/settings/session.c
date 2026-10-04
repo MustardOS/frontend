@@ -45,6 +45,8 @@ static const session_field fields[] = {
     SESSION_TEXT(colour_filter),
     SESSION_TEXT(shader),
     SESSION_TEXT(shader_params),
+    SESSION_TEXT(equaliser),
+    SESSION_TEXT(equaliser_profile),
     SESSION_I16(brightness),
     SESSION_I16(contrast),
     SESSION_I16(saturation),
@@ -77,6 +79,8 @@ static const session_field fields[] = {
     SESSION_I16(viewport_centre_crop),
     SESSION_I16(show_playtime),
     SESSION_I16(header_visibility),
+    SESSION_I16(time_display),
+    SESSION_I16(crt_television),
     SESSION_I16(progress_bar),
     SESSION_I16(artwork_position),
     SESSION_I16(repeat_mode),
@@ -192,7 +196,7 @@ static void validate_settings(void) {
     VALIDATE(aspect_ratio, 0, 5);
     VALIDATE(scale_multiplier, 0, 8);
     VALIDATE(texture_filter, 0, 6);
-    VALIDATE(border_colour, 0, 3);
+    VALIDATE(border_colour, 0, 4);
     VALIDATE(vignette_shape, 0, 5);
     VALIDATE(vignette_scaling, 0, 1);
     VALIDATE(vignette_width, 25, 200);
@@ -207,7 +211,7 @@ static void validate_settings(void) {
     VALIDATE(saturation, 0, 200);
     VALIDATE(hue_shift, -180, 180);
     VALIDATE(gamma, 50, 200);
-    VALIDATE(visualiser, 0, 8);
+    VALIDATE(visualiser, 0, 9);
     VALIDATE(overlay_mode, 0, 3);
     VALIDATE(overlay_pattern, 0, 12);
     VALIDATE(overlay_opacity, 0, 100);
@@ -233,6 +237,8 @@ static void validate_settings(void) {
     VALIDATE(viewport_centre_crop, 0, 1);
     VALIDATE(show_playtime, 0, 1);
     VALIDATE(header_visibility, 0, 5);
+    VALIDATE(time_display, 0, 1);
+    VALIDATE(crt_television, 0, 1);
     VALIDATE(progress_bar, 0, 9);
     VALIDATE(artwork_position, 0, 2);
     VALIDATE(repeat_mode, 0, 2);

@@ -3667,6 +3667,75 @@ static void handle_screen_api(struct connection *connection, const char *method,
     buffer_free(&out);
 }
 
+#define PLAYER_STATE   "/run/muos/wasabi/now.json"
+#define PLAYER_CONTROL "/run/muos/wasabi/control"
+
+static int player_command_valid(const char *command) {
+    static const char *const commands[] = {"toggle", "play",     "pause",  "seek", "skip",
+                                           "next",   "previous", "volume", "stop"};
+    for (size_t index = 0; index < sizeof(commands) / sizeof(commands[0]); index++) {
+        if (strcmp(command, commands[index]) == 0) return 1;
+    }
+    return 0;
+}
+
+static void handle_player_api(
+    struct connection *connection, const char *method, const char *path, const char *body, const size_t body_length
+) {
+    if (!*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        connection->revalidate = 1;
+        struct stat info;
+        if (stat(PLAYER_STATE, &info) != 0 || time(NULL) - info.st_mtime > 10) {
+            send_text(connection, 200, "application/json", "{\"active\":false}");
+            return;
+        }
+        send_file(connection, PLAYER_STATE, NULL);
+        return;
+    }
+
+    if (strcmp(method, "POST") != 0) {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!player_command_valid(path)) {
+        send_error(connection, 404, "Not found");
+        return;
+    }
+    if (!write_allowed(connection)) return;
+
+    double value = 0.0;
+    if (body && body_length > 0 && body_length < 32) {
+        char number[32];
+        memcpy(number, body, body_length);
+        number[body_length] = '\0';
+        char *end = NULL;
+        value = strtod(number, &end);
+        if (end == number || value != value || value > 1e7 || value < -1e7) {
+            send_error(connection, 400, "Invalid value");
+            return;
+        }
+    }
+
+    const int control = open(PLAYER_CONTROL, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (control < 0) {
+        send_error(connection, 409, "Wasabi is not playing anything");
+        return;
+    }
+    char line[64];
+    const int length = snprintf(line, sizeof(line), "%s %.3f\n", path, value);
+    const ssize_t written = length > 0 ? write(control, line, (size_t) length) : -1;
+    close(control);
+    if (written != length) {
+        send_error(connection, 503, "Wasabi did not accept that command");
+        return;
+    }
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+}
+
 static void handle_media(struct connection *connection, const char *path, const char *range_header) {
     char *rest = strchr(path, '/');
     if (!rest) {
@@ -3839,6 +3908,10 @@ static void handle_request(struct connection *connection) {
     }
     if (strncmp(target, "/api/screen", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
         handle_screen_api(connection, method, target + (target[11] == '/' ? 12 : 11));
+        return;
+    }
+    if (strncmp(target, "/api/player", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
+        handle_player_api(connection, method, target + (target[11] == '/' ? 12 : 11), body, body_length);
         return;
     }
     if (strncmp(target, "/api/history", 12) == 0 && (target[12] == '\0' || target[12] == '/')) {

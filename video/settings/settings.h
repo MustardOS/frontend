@@ -30,6 +30,7 @@ typedef enum {
     wasabi_setting_viewport_reset,
     wasabi_setting_playtime,
     wasabi_setting_header,
+    wasabi_setting_time_display,
     wasabi_setting_progress_bar,
     wasabi_setting_visualiser,
     wasabi_setting_artwork_position,
@@ -64,6 +65,7 @@ typedef enum {
     wasabi_setting_thumbnail,
     wasabi_setting_live_quality,
     wasabi_setting_live_buffer,
+    wasabi_setting_crt_television,
     wasabi_setting_sleep,
     wasabi_setting_idle_screensaver,
     wasabi_setting_auto_play,
@@ -82,7 +84,8 @@ typedef enum {
     wasabi_page_shader_parameters,
     wasabi_page_colour_filter,
     wasabi_page_shader,
-    wasabi_page_overlay_image
+    wasabi_page_overlay_image,
+    wasabi_page_equaliser
 } wasabi_settings_page;
 
 typedef struct {

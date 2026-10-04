@@ -19,7 +19,7 @@ int menu_is_active(void);
 
 void menu_move(int direction);
 
-void menu_adjust(int direction);
+int menu_adjust(int direction);
 
 void menu_select(void);
 

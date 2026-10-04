@@ -49,6 +49,8 @@ typedef struct {
     char colour_filter[MAX_BUFFER_SIZE];
     char shader[MAX_BUFFER_SIZE];
     char shader_params[MAX_BUFFER_SIZE];
+    char equaliser[MAX_BUFFER_SIZE];
+    char equaliser_profile[MAX_BUFFER_SIZE];
     int16_t brightness;
     int16_t contrast;
     int16_t saturation;
@@ -81,6 +83,8 @@ typedef struct {
     int16_t viewport_centre_crop;
     int16_t show_playtime;
     int16_t header_visibility;
+    int16_t time_display;
+    int16_t crt_television;
     int16_t progress_bar;
     int16_t artwork_position;
     int16_t repeat_mode;

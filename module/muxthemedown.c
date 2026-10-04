@@ -499,6 +499,7 @@ int muxthemedown_main(void) {
         MUOS_INFO_PATH "/" THEME_DATA
     );
     create_directories(theme_data_local_path, 1);
+    const int initial_refresh = !file_exist(theme_data_local_path);
 
     init_module(__func__);
     init_theme(1, 1);
@@ -540,7 +541,7 @@ int muxthemedown_main(void) {
     task_progress_init(&theme, ui_screen);
     init_timer(ui_refresh_task, NULL);
 
-    if (!file_exist(theme_data_local_path)) {
+    if (initial_refresh) {
         nav_moved = 1;
         schedule_theme_update = 1;
     }
@@ -578,7 +579,7 @@ int muxthemedown_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
-    orientation_introduce(mux_module, lang.muxthemedown.title, lang.muxthemedown.overview);
+    if (!initial_refresh) orientation_introduce(mux_module, lang.muxthemedown.title, lang.muxthemedown.overview);
 
     mux_input_task(&input_opts);
 

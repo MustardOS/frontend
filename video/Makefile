@@ -9,11 +9,12 @@ CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) $(VIDEO_FFMPEG_CFLAGS) -I. -I.. -I../
 LDFLAGS := $(COMMON_LIBS) $(VIDEO_FFMPEG_LIBS) $(EXTERNAL_HIDE) $(BIN_LDFLAGS)
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
-SRC := core/audio.c core/audio_source.c core/audio_transition.c core/main.c core/player.c content/library.c settings/assets.c settings/catalogue.c \
+SRC := core/audio.c core/audio_source.c core/audio_transition.c core/main.c core/player.c core/remote.c core/equaliser.c content/library.c settings/assets.c settings/catalogue.c \
        settings/session.c settings/settings.c state/state.c ui/ui_audio.c ui/ui_loading.c ui/ui_pause.c ui/ui_progress.c \
-       video/effects.c video/video.c visualiser/visualiser.c visualiser/spectrum.c visualiser/waveform.c \
+       video/effects.c video/pixfont.c video/video.c visualiser/visualiser.c visualiser/spectrum.c visualiser/waveform.c \
        visualiser/pulse.c visualiser/orbit.c visualiser/meter.c visualiser/phase.c visualiser/radial.c \
-       visualiser/starfield.c
+       visualiser/starfield.c visualiser/shape.c visualiser/scope.c \
+       visualiser/voices.c
 OBJ := $(SRC:.c=.o)
 OBJ += video/scale2x.o video/super_eagle.o
 
@@ -33,6 +34,8 @@ $(shell mkdir -p $(DEPDIR))
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,video,$*)
+
+visualiser/voices.o: CFLAGS += -isystem $(EXTERNAL_PREFIX)/include
 
 video/scale2x.o: ../retro/video/filters/scale2x.c
 	$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,video,video/scale2x)

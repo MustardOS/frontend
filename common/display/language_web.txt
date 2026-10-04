@@ -377,3 +377,27 @@ History is open on the device, so changes are paused until it is closed there.
 Collections is open on the device, so changes are paused until it is closed there.
 History is open on the device, close it there to make changes
 Collections is open on the device, close it there to make changes
+Now playing in Wasabi
+Watching live TV in Wasabi
+Listening in Wasabi
+Watching in Wasabi
+Channel %s of %s
+Item %s of %s
+Previous channel
+Next channel
+Previous
+Next
+Play
+Pause
+Back 10 seconds
+Forward 10 seconds
+Volume down
+Volume up
+Stop playback
+Unlock to control playback
+Position
+Wasabi volume
+Wasabi
+Wasabi is not playing anything
+Wasabi did not accept that command
+Invalid value

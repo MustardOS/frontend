@@ -415,12 +415,12 @@ void datetime_shutdown(void) {
     mod.cached_second = 0;
 
     if (mod.font_time) {
-        TTF_CloseFont(mod.font_time);
+        if (TTF_WasInit()) TTF_CloseFont(mod.font_time);
         mod.font_time = NULL;
     }
 
     if (mod.font_date) {
-        TTF_CloseFont(mod.font_date);
+        if (TTF_WasInit()) TTF_CloseFont(mod.font_date);
         mod.font_date = NULL;
     }
 

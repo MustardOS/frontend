@@ -74,7 +74,27 @@
  # protocols I/O
 --- a/libavformat/libgme.c
 +++ b/libavformat/libgme.c
-@@ -80,6 +80,7 @@
+@@ -36,15 +36,19 @@
+     int track_index;
+     int sample_rate;
+     int64_t max_size;
++    int mute_mask;
++    int applied_mute_mask;
+ } GMEContext;
+ 
+ #define OFFSET(x) offsetof(GMEContext, x)
+ #define A AV_OPT_FLAG_AUDIO_PARAM
+ #define D AV_OPT_FLAG_DECODING_PARAM
++#define R AV_OPT_FLAG_RUNTIME_PARAM
+ static const AVOption options[] = {
+     {"track_index", "set track that should be played",        OFFSET(track_index), AV_OPT_TYPE_INT,   {.i64 = 0},                0,    INT_MAX,  A|D},
+     {"sample_rate", "set sample rate",                        OFFSET(sample_rate), AV_OPT_TYPE_INT,   {.i64 = 44100},            1000, 999999,   A|D},
+     {"max_size",    "set max file size supported (in bytes)", OFFSET(max_size),    AV_OPT_TYPE_INT64, {.i64 = 50 * 1024 * 1024}, 0,    SIZE_MAX, A|D},
++    {"mute_mask",   "set the voices to mute",                 OFFSET(mute_mask),   AV_OPT_TYPE_INT,   {.i64 = 0},                0,    INT_MAX,  A|D|R},
+     {NULL}
+ };
+ 
+@@ -80,6 +84,7 @@
  }
  
  #define AUDIO_PKT_SIZE 512
@@ -82,7 +102,7 @@
  
  static int read_close_gme(AVFormatContext *s)
  {
-@@ -96,6 +97,7 @@
+@@ -96,6 +101,7 @@
      GMEContext *gme = s->priv_data;
      int64_t sz = avio_size(pb);
      int64_t duration;
@@ -90,7 +110,7 @@
      char *buf;
      char dummy;
      int ret;
-@@ -133,6 +135,13 @@
+@@ -133,6 +139,13 @@
          return ret;
      if (gme_start_track(gme->music_emu, gme->track_index))
          return AVERROR_UNKNOWN;
@@ -104,3 +124,15 @@
  
      st = avformat_new_stream(s, NULL);
      if (!st)
+@@ -160,6 +173,11 @@
+     if ((ret = av_new_packet(pkt, AUDIO_PKT_SIZE)) < 0)
+         return ret;
+ 
++    if (gme->mute_mask != gme->applied_mute_mask) {
++        gme_mute_voices(gme->music_emu, gme->mute_mask);
++        gme->applied_mute_mask = gme->mute_mask;
++    }
++
+     if (gme_play(gme->music_emu, n_samples, (short *)pkt->data))
+         return AVERROR_EXTERNAL;
+ 

@@ -18,6 +18,7 @@
 #include <common/base/options.h>
 #include <common/config/config.h>
 #include <common/display/datetime.h>
+#include <common/platform/audio.h>
 #include <common/platform/board.h>
 #include <common/platform/device.h>
 #include <common/platform/display.h>
@@ -48,6 +49,17 @@ static int terminal_rows = 1;
 static int visible_rows = 1;
 static int pty_fd = -1;
 static pid_t child_pid = -1;
+
+static void init_navigation_sound(void) {
+    const useconds_t backoff[] = {10000, 25000, 50000, 100000, 200000};
+    for (size_t attempt = 0; attempt < A_SIZE(backoff); attempt++) {
+        if (init_audio_backend()) {
+            init_fe_snd(&fe_snd, config.settings.general.sound, 0);
+            return;
+        }
+        usleep(backoff[attempt]);
+    }
+}
 
 static void sigchld_handler(const int signal_number) {
     (void) signal_number;
@@ -415,11 +427,14 @@ static void send_arrow(const int direction) {
 
 static void handle_direction(const int direction) {
     if (menu_is_active()) {
-        if (direction < 2)
+        if (direction < 2) {
             menu_move(direction == 0 ? -1 : 1);
-        else
-            menu_adjust(direction == 2 ? -1 : 1);
+            play_sound(snd_navigate);
+        } else if (menu_adjust(direction == 2 ? -1 : 1)) {
+            play_sound(snd_option);
+        }
     } else if (osk_is_visible()) {
+        play_sound(snd_navigate);
         if (direction == 0) osk_move(-1, 0);
         if (direction == 1) osk_move(1, 0);
         if (direction == 2) osk_move(0, -1);
@@ -441,19 +456,37 @@ static void handle_controller(int *running) {
     const uint32_t now = SDL_GetTicks();
 
     if (edge & BIT(mux_input_menu)) {
-        if (menu_is_active())
+        if (menu_is_active()) {
+            play_sound(snd_info_close);
             menu_close();
-        else {
+        } else {
+            play_sound(snd_info_open);
             osk_close();
             menu_open();
         }
     }
 
     if (menu_is_active()) {
-        if (edge & BIT(mux_input_a)) menu_select();
-        if (edge & BIT(mux_input_b)) menu_close();
-        if (edge & BIT(mux_input_x)) menu_reset();
+        if (edge & BIT(mux_input_a)) {
+            play_sound(snd_confirm);
+            menu_select();
+        }
+        if (edge & BIT(mux_input_b)) {
+            play_sound(snd_info_close);
+            menu_close();
+        }
+        if (edge & BIT(mux_input_x)) {
+            play_sound(snd_confirm);
+            menu_reset();
+        }
     } else {
+        const int keyboard = osk_is_visible();
+        if (edge & BIT(mux_input_select)) play_sound(keyboard ? snd_info_close : snd_info_open);
+        if (keyboard
+            && (edge
+                & (BIT(mux_input_a) | BIT(mux_input_l3) | BIT(mux_input_b) | BIT(mux_input_y) | BIT(mux_input_start))))
+            play_sound(snd_keypress);
+        if (keyboard && (edge & (BIT(mux_input_l1) | BIT(mux_input_r1)))) play_sound(snd_navigate);
         if (edge & BIT(mux_input_select))
             osk_apply_action(
                 INPUT_ACT_OSK_TOGGLE, running, &visible_rows, term_config.height, term_config.readonly, pty_fd
@@ -557,6 +590,7 @@ int main(const int argc, char **argv) {
     init_theme(1, 0);
     apply_theme_defaults();
     init_display();
+    init_navigation_sound();
     if (!TTF_WasInit() && TTF_Init() != 0) {
         fprintf(stderr, "Cannot initialise terminal fonts: %s\n", TTF_GetError());
         return EXIT_FAILURE;
@@ -779,7 +813,7 @@ int main(const int argc, char **argv) {
 
     osk_free();
     vt_free();
-    TTF_Quit();
     sdl_cleanup();
+    TTF_Quit();
     return EXIT_SUCCESS;
 }

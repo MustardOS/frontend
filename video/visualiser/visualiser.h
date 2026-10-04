@@ -14,6 +14,7 @@ typedef enum {
     wasabi_visualiser_phase,
     wasabi_visualiser_radial,
     wasabi_visualiser_starfield,
+    wasabi_visualiser_scope,
     wasabi_visualiser_count
 } wasabi_visualiser_mode;
 

@@ -8,6 +8,8 @@
 #include "video.h"
 #include "effects.h"
 #include "ui_progress.h"
+#include "../core/equaliser.h"
+#include "ui_audio.h"
 
 #include <SDL2/SDL.h>
 #include <math.h>
@@ -43,6 +45,7 @@ static int content_switch_row;
 static int information_row;
 static int restart_row;
 static int settings_row;
+static int equaliser_row;
 static int stop_row;
 static int settings_parent_row;
 static int *remembered_row = NULL;
@@ -118,11 +121,30 @@ static mux_dialogue asset_delete_dialogue;
 static mux_dialogue settings_save_dialogue;
 static mux_dialogue settings_reset_dialogue;
 static mux_dialogue bookmark_delete_dialogue;
+static mux_dialogue equaliser_delete_dialogue;
 static int asset_delete_skip_confirm;
 static char asset_entry_key[MAX_BUFFER_SIZE];
 static int asset_entry_overlay_mode;
 static int suppress_asset_preview_once;
 static int save_return_to_settings;
+static int save_return_to_equaliser;
+static int naming_equaliser;
+static int equaliser_selected;
+static lv_timer_t *equaliser_hold_timer;
+static int equaliser_hold_direction;
+static uint32_t equaliser_hold_seen;
+static uint32_t equaliser_hold_started;
+static uint32_t equaliser_hold_stepped;
+static int equaliser_hold_count;
+
+static void equaliser_hold_stop(void);
+static lv_obj_t *equaliser_bar_label;
+static lv_obj_t *equaliser_info;
+static lv_obj_t *equaliser_fill[WASABI_EQ_GAINS];
+static lv_obj_t *equaliser_knob[WASABI_EQ_GAINS];
+static lv_obj_t *equaliser_name[WASABI_EQ_GAINS];
+static int equaliser_track_top;
+static int equaliser_track_height;
 
 enum { asset_action_collect, asset_action_delete, asset_action_cancel };
 
@@ -164,6 +186,7 @@ static void apply_session_preview(void) {
 static int guard_settings_exit(void) {
     if (!wasabi_session_dirty()) return 0;
     save_return_to_settings = 0;
+    save_return_to_equaliser = 0;
     dialogue_open(&settings_save_dialogue, &theme);
     display_composite_frame();
     return 1;
@@ -356,12 +379,19 @@ static void format_time(const uint32_t seconds, char *buffer, const size_t size)
         snprintf(buffer, size, "%02u:%02u", minutes, seconds % 60);
 }
 
+static void format_playback_time(const uint32_t seconds, char *buffer, const size_t size) {
+    if (config.video.time_display && !wasabi_settings_audio_active())
+        snprintf(buffer, size, "%04u", seconds % 10000);
+    else
+        format_time(seconds, buffer, size);
+}
+
 static void update_timeline(void) {
     if (!timeline_panel || playback_duration <= 0.0) return;
     char current[24];
     char total[24];
-    format_time(playback_position > 0.0 ? (uint32_t) playback_position : 0, current, sizeof(current));
-    format_time((uint32_t) playback_duration, total, sizeof(total));
+    format_playback_time(playback_position > 0.0 ? (uint32_t) playback_position : 0, current, sizeof(current));
+    format_playback_time((uint32_t) playback_duration, total, sizeof(total));
     lv_label_set_text(timeline_current, current);
     lv_label_set_text(timeline_total, total);
     const int value = (int) lround(playback_position * 1000.0 / playback_duration);
@@ -408,8 +438,8 @@ static void update_header_playback_time(void) {
     char current[24];
     char total[24];
     char value[56];
-    format_time(playback_position > 0.0 ? (uint32_t) playback_position : 0, current, sizeof(current));
-    format_time(playback_duration > 0.0 ? (uint32_t) playback_duration : 0, total, sizeof(total));
+    format_playback_time(playback_position > 0.0 ? (uint32_t) playback_position : 0, current, sizeof(current));
+    format_playback_time(playback_duration > 0.0 ? (uint32_t) playback_duration : 0, total, sizeof(total));
     snprintf(value, sizeof(value), "%s / %s", current, total);
     lv_label_set_text(ui_lbl_title, value);
 }
@@ -589,6 +619,8 @@ static void apply_overlay_row_visibility(void) {
     list_frame_set_suppressed(wasabi_setting_overlay_reset, !enabled);
     list_frame_set_suppressed(wasabi_setting_live_quality, !live_content || !video_player_live_quality_available());
     list_frame_set_suppressed(wasabi_setting_live_buffer, !live_content);
+    list_frame_set_suppressed(wasabi_setting_crt_television, !live_content);
+    list_frame_set_suppressed(wasabi_setting_time_display, wasabi_settings_audio_active() || live_content);
     list_frame_set_suppressed(wasabi_setting_visualiser, !wasabi_settings_audio_active());
     list_frame_set_suppressed(wasabi_setting_progress_bar, 0);
     list_frame_set_suppressed(wasabi_setting_artwork_position, !wasabi_settings_audio_active());
@@ -606,7 +638,23 @@ static void apply_overlay_row_visibility(void) {
     );
 }
 
+static void show_equaliser_nav(void) {
+    nav_hide_all();
+    setup_nav((struct nav_bar[]) {
+        {ui_lbl_nav_b_glyph, "", 0},
+        {ui_lbl_nav_b, lang.generic.back, 0},
+        {NULL, NULL, 0},
+    });
+    nav_show_a(!live_content, video_player_paused() ? lang.muxmedia.play : lang.muxmedia.pause);
+    nav_show_x(wasabi_eq_profile_deletable(), lang.generic.remove);
+    nav_show_y(1, lang.generic.save);
+}
+
 static void show_nav(void) {
+    if (settings_active && settings_page == wasabi_page_equaliser) {
+        show_equaliser_nav();
+        return;
+    }
     nav_hide_all();
     setup_nav((struct nav_bar[]) {
         {ui_lbl_nav_b_glyph, "", 0},
@@ -674,6 +722,10 @@ static void show_nav(void) {
 
 static void build_pause_at(const int focus_row) {
     shader_parameters_from_browser = 0;
+    equaliser_hold_stop();
+    wasabi_audio_ui_set_hidden(0);
+    equaliser_bar_label = NULL;
+    equaliser_info = NULL;
     settings_active = 0;
     bookmarks_active = 0;
     playlist_active = 0;
@@ -715,6 +767,8 @@ static void build_pause_at(const int focus_row) {
     }
     settings_row = ui_count_static;
     add_row("settings", lang.muxretro.settings);
+    equaliser_row = ui_count_static;
+    add_row("audiofilter", lang.muxmedia.equaliser);
     information_row = ui_count_static;
     add_row("info", lang.muxretro.information);
     restart_row = ui_count_static;
@@ -860,6 +914,300 @@ static void build_settings_page(const wasabi_settings_page page) {
     lv_label_set_text(ui_lbl_title, wasabi_page_title(page));
     show_nav();
     if (rows) gen_step_movement(0, 1, 1, 0, 0);
+}
+
+static lv_obj_t *equaliser_rect(
+    lv_obj_t *parent, const int x, const int y, const int width, const int height, const uint32_t colour,
+    const lv_opa_t opacity
+) {
+    lv_obj_t *rect = lv_obj_create(parent);
+    lv_obj_remove_style_all(rect);
+    lv_obj_clear_flag(rect, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_pos(rect, x, y);
+    lv_obj_set_size(rect, width > 0 ? width : 1, height > 0 ? height : 1);
+    lv_obj_set_style_bg_color(rect, lv_color_hex(colour), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(rect, opacity, MU_OBJ_MAIN_DEFAULT);
+    return rect;
+}
+
+static lv_obj_t *equaliser_text(lv_obj_t *parent, const char *text, const uint32_t colour) {
+    lv_obj_t *label = lv_label_create(parent);
+    lv_label_set_text(label, text);
+    lv_obj_set_style_text_color(label, lv_color_hex(colour), MU_OBJ_MAIN_DEFAULT);
+    return label;
+}
+
+static int equaliser_gain_y(const int gain) {
+    const int limit = WASABI_EQ_LIMIT * WASABI_EQ_STEPS;
+    return equaliser_track_top + (limit - gain) * equaliser_track_height / (limit * 2);
+}
+
+static void update_equaliser_view(void) {
+    if (!equaliser_bar_label || !lv_obj_is_valid(equaliser_bar_label)) return;
+    char text[128];
+    wasabi_eq_profile_label(text, sizeof(text));
+    lv_label_set_text(equaliser_bar_label, text);
+
+    const int zero = equaliser_gain_y(0);
+    const int knob_height = equaliser_track_height / 24 > 6 ? equaliser_track_height / 24 : 6;
+    for (int index = 0; index < WASABI_EQ_GAINS; index++) {
+        if (!equaliser_fill[index]) continue;
+        const int selected = index == equaliser_selected;
+        const uint32_t colour = selected ? theme.list_focus.background : theme.list_default.text;
+        const int y = equaliser_gain_y(wasabi_eq_gain(index));
+        const int top = y < zero ? y : zero;
+        const int height = y < zero ? zero - y : y - zero;
+        lv_obj_set_y(equaliser_fill[index], top);
+        lv_obj_set_height(equaliser_fill[index], height > 0 ? height : 1);
+        lv_obj_set_style_bg_color(equaliser_fill[index], lv_color_hex(colour), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_bg_opa(equaliser_fill[index], selected ? LV_OPA_COVER : LV_OPA_60, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_y(equaliser_knob[index], y - knob_height / 2);
+        lv_obj_set_style_bg_color(equaliser_knob[index], lv_color_hex(colour), MU_OBJ_MAIN_DEFAULT);
+        const lv_color_t label_colour = lv_color_hex(selected ? theme.list_focus.background : theme.list_default.text);
+        if (index) {
+            lv_obj_set_style_text_color(equaliser_name[index], label_colour, MU_OBJ_MAIN_DEFAULT);
+        } else {
+            lv_obj_set_style_img_recolor(equaliser_name[index], label_colour, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_set_style_img_recolor_opa(equaliser_name[index], LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+        }
+    }
+
+    char gain[16];
+    wasabi_eq_format(wasabi_eq_gain(equaliser_selected), gain, sizeof(gain));
+    snprintf(
+        text, sizeof(text), "%s  %s dB",
+        equaliser_selected ? wasabi_eq_band_label(equaliser_selected - 1) : lang.muxmedia.equaliser_preamp, gain
+    );
+    lv_label_set_text(equaliser_info, text);
+}
+
+static void build_equaliser(void) {
+    wasabi_eq_profiles_refresh();
+    wasabi_audio_ui_set_hidden(1);
+    settings_active = 1;
+    bookmarks_active = 0;
+    playlist_active = 0;
+    information_active = 0;
+    content_switch_active = 0;
+    settings_page = wasabi_page_equaliser;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
+    hide_bookmark_preview();
+    list_frame_reset();
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+    ui_count_static = 0;
+    current_item_index = 0;
+    first_open = 0;
+    if (equaliser_selected < 0 || equaliser_selected >= WASABI_EQ_GAINS) equaliser_selected = 0;
+
+    lv_obj_update_layout(ui_pnl_content);
+    const int width = lv_obj_get_content_width(ui_pnl_content);
+    const int height = lv_obj_get_content_height(ui_pnl_content);
+    const int bar_height = theme.mux.item.height > 0 ? theme.mux.item.height : height / 8;
+
+    lv_obj_t *root = lv_obj_create(ui_pnl_content);
+    lv_obj_remove_style_all(root);
+    lv_obj_clear_flag(root, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_size(root, width, height);
+
+    lv_obj_t *bar = lv_obj_create(root);
+    apply_theme_list_panel(bar);
+    lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_size(bar, width, bar_height);
+    lv_obj_set_pos(bar, 0, 0);
+    lv_obj_t *left = lv_img_create(bar);
+    apply_theme_list_glyph(&theme, left, "section", "left");
+    equaliser_bar_label = lv_label_create(bar);
+    apply_theme_list_item(&theme, equaliser_bar_label, "");
+    lv_obj_set_width(equaliser_bar_label, lv_pct(100));
+    lv_obj_set_align(equaliser_bar_label, LV_ALIGN_CENTER);
+    lv_label_set_long_mode(equaliser_bar_label, LV_LABEL_LONG_DOT);
+    lv_obj_set_style_text_align(equaliser_bar_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    const lv_coord_t inset = theme.list_default.glyph_padding_left + bar_height;
+    lv_obj_set_style_pad_left(equaliser_bar_label, inset, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(equaliser_bar_label, inset, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_t *right = lv_img_create(bar);
+    apply_theme_list_glyph(&theme, right, "section", "right");
+    lv_obj_set_style_align(right, LV_ALIGN_RIGHT_MID, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_x(right, -theme.list_default.glyph_padding_left, MU_OBJ_MAIN_DEFAULT);
+
+    const int line = lv_font_get_line_height(lv_obj_get_style_text_font(equaliser_bar_label, LV_PART_MAIN));
+    const int scale_width = line * 2;
+    const int top = bar_height + line;
+    const int bottom = height - line * 3;
+    equaliser_track_top = top;
+    equaliser_track_height = bottom - top > 24 ? bottom - top : 24;
+
+    const uint32_t ink = theme.list_default.text;
+    static const int marks[] = {12, 6, 0, -6, -12};
+    for (size_t mark = 0; mark < sizeof(marks) / sizeof(marks[0]); mark++) {
+        char value[8];
+        snprintf(value, sizeof(value), marks[mark] > 0 ? "+%d" : "%d", marks[mark]);
+        lv_obj_t *label = equaliser_text(root, value, ink);
+        lv_obj_set_width(label, scale_width);
+        lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_RIGHT, MU_OBJ_MAIN_DEFAULT);
+        const int mark_y = equaliser_gain_y(marks[mark] * WASABI_EQ_STEPS);
+        lv_obj_set_pos(label, 0, mark_y - line / 2);
+        equaliser_rect(
+            root, scale_width + line / 2, mark_y, width - scale_width - line / 2, 1, ink,
+            marks[mark] ? LV_OPA_20 : LV_OPA_40
+        );
+    }
+
+    const int area = width - scale_width - line;
+    const int column = area / WASABI_EQ_GAINS;
+    const int knob_width = column * 3 / 5;
+    const int knob_height = equaliser_track_height / 24 > 6 ? equaliser_track_height / 24 : 6;
+    const int fill_width = column / 6 > 3 ? column / 6 : 3;
+    for (int index = 0; index < WASABI_EQ_GAINS; index++) {
+        const int centre = scale_width + line + column * index + column / 2;
+        equaliser_rect(root, centre - 1, equaliser_track_top, 2, equaliser_track_height, ink, LV_OPA_40);
+        equaliser_fill[index] = equaliser_rect(root, centre - fill_width / 2, 0, fill_width, 1, ink, LV_OPA_60);
+        equaliser_knob[index] =
+            equaliser_rect(root, centre - knob_width / 2, 0, knob_width, knob_height, ink, LV_OPA_COVER);
+        lv_obj_set_style_radius(equaliser_knob[index], knob_height / 2, MU_OBJ_MAIN_DEFAULT);
+        const int label_y = equaliser_track_top + equaliser_track_height + line / 2;
+        if (!index) {
+            equaliser_name[index] = lv_img_create(root);
+            apply_theme_list_glyph(&theme, equaliser_name[index], mux_module, "volume");
+            lv_obj_set_style_align(equaliser_name[index], LV_ALIGN_TOP_LEFT, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_update_layout(equaliser_name[index]);
+            const int glyph_width = lv_obj_get_width(equaliser_name[index]);
+            const int glyph_height = lv_obj_get_height(equaliser_name[index]);
+            lv_obj_set_pos(equaliser_name[index], centre - glyph_width / 2, label_y + (line - glyph_height) / 2);
+            continue;
+        }
+        char short_name[16];
+        snprintf(short_name, sizeof(short_name), "%s", wasabi_eq_band_label(index - 1));
+        char *space = strchr(short_name, ' ');
+        if (space) *space = '\0';
+        if (space && space[1] == 'k') strcat(short_name, "K");
+        equaliser_name[index] = equaliser_text(root, short_name, ink);
+        lv_obj_set_size(equaliser_name[index], column, line);
+        lv_label_set_long_mode(equaliser_name[index], LV_LABEL_LONG_CLIP);
+        lv_obj_set_style_text_align(equaliser_name[index], LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_pos(equaliser_name[index], centre - column / 2, label_y);
+    }
+
+    equaliser_info = equaliser_text(root, "", theme.list_focus.background);
+    lv_obj_set_width(equaliser_info, width);
+    lv_obj_set_style_text_align(equaliser_info, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_pos(equaliser_info, 0, height - line - line / 4);
+
+    lv_label_set_text(ui_lbl_title, lang.muxmedia.equaliser);
+    lv_label_set_text(ui_lbl_screen_message, "");
+    update_equaliser_view();
+    show_nav();
+}
+
+static void clear_equaliser_view(void) {
+    equaliser_bar_label = NULL;
+    equaliser_info = NULL;
+    memset(equaliser_fill, 0, sizeof(equaliser_fill));
+    memset(equaliser_knob, 0, sizeof(equaliser_knob));
+    memset(equaliser_name, 0, sizeof(equaliser_name));
+}
+
+static void leave_equaliser(void) {
+    if (wasabi_session_dirty()) {
+        save_return_to_settings = 0;
+        save_return_to_equaliser = 1;
+        dialogue_open(&settings_save_dialogue, &theme);
+        return;
+    }
+    clear_equaliser_view();
+    build_pause_at(equaliser_row);
+}
+
+static int equaliser_active(void) {
+    return menu_active && settings_active && settings_page == wasabi_page_equaliser;
+}
+
+static int equaliser_step(const int direction) {
+    if (!wasabi_eq_set_gain(equaliser_selected, wasabi_eq_gain(equaliser_selected) + direction)) return 0;
+    update_equaliser_view();
+    display_composite_frame();
+    return 1;
+}
+
+static void equaliser_adjust(const int direction) {
+    if (!equaliser_step(direction)) return;
+    play_sound(snd_option);
+    show_nav();
+}
+
+static void equaliser_hold_stop(void) {
+    if (equaliser_hold_timer) lv_timer_del(equaliser_hold_timer);
+    equaliser_hold_timer = NULL;
+    equaliser_hold_count = 0;
+}
+
+static void equaliser_hold_tick(lv_timer_t *timer __attribute__((unused))) {
+    const uint32_t now = SDL_GetTicks();
+    if (!equaliser_active() || now - equaliser_hold_seen > 180) {
+        equaliser_hold_stop();
+        show_nav();
+        return;
+    }
+    const uint32_t interval = now - equaliser_hold_started < 400 ? 60 : now - equaliser_hold_started < 1000 ? 35 : 20;
+    if (now - equaliser_hold_stepped < interval) return;
+    equaliser_hold_stepped = now;
+    if (!equaliser_step(equaliser_hold_direction)) {
+        equaliser_hold_stop();
+        show_nav();
+        return;
+    }
+    if (++equaliser_hold_count % WASABI_EQ_STEPS == 0) play_sound(snd_option);
+}
+
+static void equaliser_hold(const int direction) {
+    const uint32_t now = SDL_GetTicks();
+    equaliser_hold_seen = now;
+    if (equaliser_hold_timer && equaliser_hold_direction == direction) return;
+    equaliser_hold_stop();
+    equaliser_hold_direction = direction;
+    equaliser_hold_started = now;
+    equaliser_hold_stepped = 0;
+    equaliser_hold_timer = lv_timer_create(equaliser_hold_tick, 10, NULL);
+}
+
+static void equaliser_select(const int direction) {
+    const int next = equaliser_selected + direction;
+    if (next < 0 || next >= WASABI_EQ_GAINS) return;
+    equaliser_selected = next;
+    play_sound(snd_navigate);
+    update_equaliser_view();
+    display_composite_frame();
+}
+
+static void equaliser_profile(const int direction) {
+    if (!wasabi_eq_profile_cycle(direction)) {
+        play_sound(snd_error);
+        return;
+    }
+    play_sound(snd_navigate);
+    update_equaliser_view();
+    show_nav();
+    display_composite_frame();
+}
+
+static void begin_equaliser_name(void) {
+    create_name_entry();
+    lv_textarea_set_placeholder_text(name_entry, lang.muxmedia.equaliser_name);
+    lv_textarea_set_text(name_entry, "");
+    init_osk(name_panel, name_entry, 0, 0, 63);
+    key_show = 1;
+    osk_show(name_panel);
+    char default_name[RANDNAME_MAX_LEN];
+    if (wasabi_eq_profile_deletable()) {
+        wasabi_eq_profile_label(default_name, sizeof(default_name));
+        lv_textarea_set_text(name_entry, default_name);
+    } else if (randname_generate_with_separator(default_name, sizeof(default_name), " ") == 0) {
+        lv_textarea_set_text(name_entry, default_name);
+    }
+    naming_equaliser = 1;
+    naming_active = 1;
+    display_composite_frame();
 }
 
 static void populate_asset_page(const int focus) {
@@ -1388,6 +1736,11 @@ int video_playback_ui_init(
         &bookmark_delete_dialogue, &theme, ui_screen, lang.muxmedia.bookmark_remove, lang.muxmedia.bookmark_remove_desc,
         lang.generic.remove, lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
+    dialogue_init_confirm(
+        &equaliser_delete_dialogue, &theme, ui_screen, lang.muxmedia.equaliser_delete, NULL,
+        lang.muxretro.catalogue_screen.delete_label, lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
+    equaliser_delete_dialogue.safe_default = mux_confirm_nah;
     settings_reset_dialogue.safe_default = mux_confirm_nah;
     asset_delete_skip_confirm = 0;
 
@@ -1397,6 +1750,7 @@ int video_playback_ui_init(
 }
 
 void video_playback_ui_shutdown(void) {
+    equaliser_hold_stop();
     content_switch_free(&content_switch_items);
     video_state_free(bookmark_entries, bookmark_entry_count);
     bookmark_entries = NULL;
@@ -1433,7 +1787,12 @@ void video_playback_ui_shutdown(void) {
     memset(&asset_actions_dialogue, 0, sizeof(asset_actions_dialogue));
     memset(&asset_delete_dialogue, 0, sizeof(asset_delete_dialogue));
     memset(&settings_save_dialogue, 0, sizeof(settings_save_dialogue));
+    if (equaliser_delete_dialogue.panel && lv_obj_is_valid(equaliser_delete_dialogue.panel))
+        lv_obj_del(equaliser_delete_dialogue.panel);
+    if (equaliser_delete_dialogue.dim && lv_obj_is_valid(equaliser_delete_dialogue.dim))
+        lv_obj_del(equaliser_delete_dialogue.dim);
     memset(&bookmark_delete_dialogue, 0, sizeof(bookmark_delete_dialogue));
+    memset(&equaliser_delete_dialogue, 0, sizeof(equaliser_delete_dialogue));
     dim_overlay = NULL;
     playtime_panel = NULL;
     playtime_label = NULL;
@@ -1471,6 +1830,7 @@ int video_playback_ui_menu_active(void) {
 
 int video_playback_ui_confirmable(void) {
     if (!menu_active || information_active) return 0;
+    if (equaliser_active()) return !live_content;
     if (bookmarks_active) return bookmark_count > 0;
     if (content_switch_active) return content_switch_items.count > 0;
     if (!settings_active) return 1;
@@ -1486,6 +1846,7 @@ int video_playback_ui_confirmable(void) {
 
 int video_playback_ui_y_actionable(void) {
     if (!menu_active) return 0;
+    if (equaliser_active()) return 1;
     if (bookmarks_active) return !live_content;
     return settings_active && asset_page() && !wasabi_catalogue_active()
            && wasabi_asset_browser_type(current_item_index) == wasabi_asset_row_item;
@@ -1518,6 +1879,11 @@ video_ui_action video_playback_ui_toggle_menu(void) {
         display_composite_frame();
         return video_ui_action_opened;
     }
+    if (settings_active && settings_page == wasabi_page_equaliser) {
+        leave_equaliser();
+        display_composite_frame();
+        return video_ui_action_none;
+    }
     if (settings_active || bookmarks_active || playlist_active || information_active || content_switch_active) {
         if (settings_active && settings_page == wasabi_page_root && guard_settings_exit()) return video_ui_action_none;
         if (settings_active && settings_page == wasabi_page_root)
@@ -1541,6 +1907,13 @@ video_ui_action video_playback_ui_toggle_menu(void) {
 
 video_ui_action video_playback_ui_confirm(void) {
     if (!menu_active) return video_ui_action_none;
+    if (equaliser_active()) {
+        if (live_content) return video_ui_action_none;
+        video_player_toggle_menu_playback();
+        show_nav();
+        display_composite_frame();
+        return video_ui_action_none;
+    }
     if (content_switch_active) {
         if (current_item_index < 0 || (size_t) current_item_index >= content_switch_items.count)
             return video_ui_action_none;
@@ -1584,6 +1957,7 @@ video_ui_action video_playback_ui_confirm(void) {
                 }
                 if (wasabi_session_dirty()) {
                     save_return_to_settings = 1;
+                    save_return_to_equaliser = 0;
                     dialogue_open(&settings_save_dialogue, &theme);
                 } else {
                     build_settings_at(settings_parent_row);
@@ -1696,6 +2070,12 @@ video_ui_action video_playback_ui_confirm(void) {
         display_composite_frame();
         return video_ui_action_restart;
     }
+    if (current_item_index == equaliser_row) {
+        remembered_row = &equaliser_row;
+        build_equaliser();
+        display_composite_frame();
+        return video_ui_action_none;
+    }
     if (current_item_index == settings_row) {
         remembered_row = &settings_row;
         settings_parent_row = -1;
@@ -1710,6 +2090,11 @@ video_ui_action video_playback_ui_confirm(void) {
 video_ui_action video_playback_ui_back(void) {
     if (!menu_active) return video_ui_action_none;
     if (settings_active || bookmarks_active || playlist_active || information_active || content_switch_active) {
+        if (settings_active && settings_page == wasabi_page_equaliser) {
+            leave_equaliser();
+            display_composite_frame();
+            return video_ui_action_none;
+        }
         if (settings_active && settings_page != wasabi_page_root) {
             if (wasabi_catalogue_active()) {
                 if (wasabi_catalogue_back())
@@ -1759,6 +2144,10 @@ video_ui_action video_playback_ui_back(void) {
 }
 
 void video_playback_ui_move(const int steps, const int direction) {
+    if (equaliser_active()) {
+        equaliser_adjust(direction < 0 ? steps : -steps);
+        return;
+    }
     if (!menu_active || ui_count_static < 2) return;
     if (playlist_active) {
         playlist_move(steps, direction, 1);
@@ -1773,6 +2162,10 @@ void video_playback_ui_move(const int steps, const int direction) {
 }
 
 void video_playback_ui_move_held(const int steps, const int direction) {
+    if (equaliser_active()) {
+        equaliser_hold(direction < 0 ? 1 : -1);
+        return;
+    }
     if (!menu_active || ui_count_static < 2) return;
     if (playlist_active) {
         playlist_move(steps, direction, 0);
@@ -1793,6 +2186,10 @@ void video_playback_ui_move_held(const int steps, const int direction) {
 
 void video_playback_ui_section(const int direction) {
     if (!menu_active) return;
+    if (equaliser_active()) {
+        equaliser_profile(direction);
+        return;
+    }
     if (playlist_active) {
         playlist_skip(direction);
         return;
@@ -1814,6 +2211,10 @@ void video_playback_ui_section(const int direction) {
 
 void video_playback_ui_change(const int direction) {
     if (!menu_active) return;
+    if (equaliser_active()) {
+        equaliser_select(direction);
+        return;
+    }
     if (information_active) {
         if (!list_frame_focused()) return;
         if (list_frame_move(direction)) {
@@ -1839,6 +2240,13 @@ void video_playback_ui_change(const int direction) {
 
 void video_playback_ui_extra(void) {
     if (!menu_active || !settings_active) return;
+    if (settings_page == wasabi_page_equaliser) {
+        if (!wasabi_eq_profile_deletable()) return;
+        play_sound(snd_confirm);
+        dialogue_open(&equaliser_delete_dialogue, &theme);
+        display_composite_frame();
+        return;
+    }
     if (settings_page == wasabi_page_root) {
         const int row = list_frame_current_row();
         if (row == wasabi_setting_shader && video_effects_parameter_count() > 0) {
@@ -1896,6 +2304,10 @@ void video_playback_ui_extra(void) {
 
 int video_playback_ui_collect(void) {
     if (!video_playback_ui_y_actionable()) return 0;
+    if (equaliser_active()) {
+        begin_equaliser_name();
+        return 1;
+    }
     if (settings_page == wasabi_page_shader && wasabi_asset_browser_removable(current_item_index)) {
         if (wasabi_asset_browser_collected(current_item_index)) {
             if (asset_delete_skip_confirm)
@@ -1937,20 +2349,36 @@ static void delete_selected_asset(void) {
 int video_playback_ui_modal_active(void) {
     return dialogue_active(&asset_actions_dialogue) || dialogue_active(&asset_delete_dialogue)
            || dialogue_active(&settings_save_dialogue) || dialogue_active(&settings_reset_dialogue)
-           || dialogue_active(&bookmark_delete_dialogue);
+           || dialogue_active(&bookmark_delete_dialogue) || dialogue_active(&equaliser_delete_dialogue);
 }
 
 void video_playback_ui_modal_move(const int direction) {
-    mux_dialogue *dialogue = dialogue_active(&asset_actions_dialogue)     ? &asset_actions_dialogue
-                             : dialogue_active(&asset_delete_dialogue)    ? &asset_delete_dialogue
-                             : dialogue_active(&settings_save_dialogue)   ? &settings_save_dialogue
-                             : dialogue_active(&settings_reset_dialogue)  ? &settings_reset_dialogue
-                             : dialogue_active(&bookmark_delete_dialogue) ? &bookmark_delete_dialogue
-                                                                          : NULL;
+    mux_dialogue *dialogue = dialogue_active(&asset_actions_dialogue)      ? &asset_actions_dialogue
+                             : dialogue_active(&asset_delete_dialogue)     ? &asset_delete_dialogue
+                             : dialogue_active(&settings_save_dialogue)    ? &settings_save_dialogue
+                             : dialogue_active(&settings_reset_dialogue)   ? &settings_reset_dialogue
+                             : dialogue_active(&bookmark_delete_dialogue)  ? &bookmark_delete_dialogue
+                             : dialogue_active(&equaliser_delete_dialogue) ? &equaliser_delete_dialogue
+                                                                           : NULL;
     if (dialogue) dialogue_handle_dpad(dialogue, &theme, direction, 1);
 }
 
 void video_playback_ui_modal_confirm(void) {
+    if (dialogue_active(&equaliser_delete_dialogue)) {
+        const mux_confirm_opt action = (mux_confirm_opt) equaliser_delete_dialogue.selected;
+        dialogue_dismiss(&equaliser_delete_dialogue);
+        if (action == mux_confirm_yep) {
+            if (wasabi_eq_profile_delete()) {
+                toast_message(lang.muxmedia.equaliser_deleted, tst_wait_m);
+                update_equaliser_view();
+                show_nav();
+            } else {
+                play_sound(snd_error);
+            }
+        }
+        display_composite_frame();
+        return;
+    }
     if (dialogue_active(&bookmark_delete_dialogue)) {
         const mux_confirm_opt action = (mux_confirm_opt) bookmark_delete_dialogue.selected;
         dialogue_dismiss(&bookmark_delete_dialogue);
@@ -1977,12 +2405,18 @@ void video_playback_ui_modal_confirm(void) {
         }
         dialogue_dismiss(&settings_save_dialogue);
         if (choice == 3) apply_session_preview();
-        list_frame_remember_section_key("muxmedia_settings");
-        if (save_return_to_settings)
-            build_settings_at(settings_parent_row);
-        else
-            build_pause_at(settings_row);
+        if (save_return_to_equaliser) {
+            clear_equaliser_view();
+            build_pause_at(equaliser_row);
+        } else {
+            list_frame_remember_section_key("muxmedia_settings");
+            if (save_return_to_settings)
+                build_settings_at(settings_parent_row);
+            else
+                build_pause_at(settings_row);
+        }
         save_return_to_settings = 0;
+        save_return_to_equaliser = 0;
         display_composite_frame();
         return;
     }
@@ -2038,6 +2472,9 @@ void video_playback_ui_modal_cancel(void) {
     } else if (dialogue_active(&bookmark_delete_dialogue)) {
         dialogue_mark_cancelled(&bookmark_delete_dialogue);
         dialogue_dismiss(&bookmark_delete_dialogue);
+    } else if (dialogue_active(&equaliser_delete_dialogue)) {
+        dialogue_mark_cancelled(&equaliser_delete_dialogue);
+        dialogue_dismiss(&equaliser_delete_dialogue);
     }
     display_composite_frame();
 }
@@ -2279,8 +2716,10 @@ video_ui_action video_playback_ui_begin_bookmark_name(void) {
     if (!bookmarks_active) build_bookmarks();
 
     create_name_entry();
+    lv_textarea_set_placeholder_text(name_entry, lang.muxmedia.bookmark_name);
     lv_textarea_set_text(name_entry, "");
     init_osk(name_panel, name_entry, 0, 0, 127);
+    naming_equaliser = 0;
     key_show = 1;
     osk_show(name_panel);
     char default_name[RANDNAME_MAX_LEN];
@@ -2315,6 +2754,19 @@ int video_playback_ui_name_finish(char *name, const size_t name_size) {
     }
 
     close_name_entry(0);
+    if (naming_equaliser) {
+        naming_equaliser = 0;
+        if (wasabi_eq_profile_save(name)) {
+            toast_message(lang.muxmedia.equaliser_saved, tst_wait_m);
+            update_equaliser_view();
+            show_nav();
+        } else {
+            play_sound(snd_error);
+            toast_message(lang.muxmedia.equaliser_save_failed, tst_wait_m);
+        }
+        display_composite_frame();
+        return 0;
+    }
     return 1;
 }
 
@@ -2328,6 +2780,7 @@ int video_playback_ui_name_press(char *name, const size_t name_size) {
 }
 
 void video_playback_ui_name_cancel(void) {
+    naming_equaliser = 0;
     close_name_entry(1);
 }
 

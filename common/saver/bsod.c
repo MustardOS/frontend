@@ -455,7 +455,7 @@ void bsod_shutdown(void) {
     }
 
     if (mod.font) {
-        TTF_CloseFont(mod.font);
+        if (TTF_WasInit()) TTF_CloseFont(mod.font);
         mod.font = NULL;
     }
 

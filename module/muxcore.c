@@ -122,6 +122,32 @@ static void show_help(void) {
     show_info_box(items[current_item_index].display_name, items[current_item_index].help, 0);
 }
 
+static void add_core_row(const int index, const int grouped) {
+    char value[MAX_BUFFER_SIZE];
+    core_value(items[index].name, value, sizeof(value));
+
+    lv_obj_t *ui_pnl_item = lv_obj_create(ui_pnl_content);
+    apply_theme_list_panel(ui_pnl_item);
+
+    lv_obj_t *ui_lbl_item = lv_label_create(ui_pnl_item);
+    apply_theme_option_item_label(&theme, ui_lbl_item, items[index].display_name, 1);
+
+    lv_obj_t *ui_lbl_item_glyph = lv_img_create(ui_pnl_item);
+    apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, core_state_glyph(core_state_of(items[index].name)));
+
+    lv_obj_t *ui_lbl_item_value = lv_label_create(ui_pnl_item);
+    apply_theme_list_value(&theme, ui_lbl_item_value, value);
+
+    if (grouped) {
+        lv_group_add_obj(ui_group, ui_lbl_item);
+        lv_group_add_obj(ui_group_value, ui_lbl_item_value);
+        lv_group_add_obj(ui_group_glyph, ui_lbl_item_glyph);
+        lv_group_add_obj(ui_group_panel, ui_pnl_item);
+    }
+
+    apply_text_long_dot(&theme, ui_lbl_item);
+}
+
 static void create_content_items(void) {
     local_manifest = manifest_load(CORE_MANIFEST_LOCAL, &local_manifest_raw);
     remote_manifest = manifest_load(remote_manifest_path, &remote_manifest_raw);
@@ -163,31 +189,11 @@ static void create_content_items(void) {
 
     sort_items(items, item_count);
 
-    for (int i = 0; i < item_count; i++) {
-        if (lv_obj_get_child_cnt(ui_pnl_content) >= theme.mux.item.count) break;
+    const int limit = theme.mux.item.count;
+    for (int i = 0; i < item_count && i < limit; i++)
+        add_core_row(i, 1);
 
-        char value[MAX_BUFFER_SIZE];
-        core_value(items[i].name, value, sizeof(value));
-
-        lv_obj_t *ui_pnl_item = lv_obj_create(ui_pnl_content);
-        apply_theme_list_panel(ui_pnl_item);
-
-        lv_obj_t *ui_lbl_item = lv_label_create(ui_pnl_item);
-        apply_theme_option_item_label(&theme, ui_lbl_item, items[i].display_name, 1);
-
-        lv_obj_t *ui_lbl_item_glyph = lv_img_create(ui_pnl_item);
-        apply_theme_list_glyph(&theme, ui_lbl_item_glyph, mux_module, core_state_glyph(core_state_of(items[i].name)));
-
-        lv_obj_t *ui_lbl_item_value = lv_label_create(ui_pnl_item);
-        apply_theme_list_value(&theme, ui_lbl_item_value, value);
-
-        lv_group_add_obj(ui_group, ui_lbl_item);
-        lv_group_add_obj(ui_group_value, ui_lbl_item_value);
-        lv_group_add_obj(ui_group_glyph, ui_lbl_item_glyph);
-        lv_group_add_obj(ui_group_panel, ui_pnl_item);
-
-        apply_text_long_dot(&theme, ui_lbl_item);
-    }
+    if (item_count > limit && limit % 2 == 0) add_core_row(0, 0);
 }
 
 #define CORE_VALUE_CHILD 2
@@ -240,6 +246,7 @@ static void update_action(const int index) {
 
 static void list_nav_move(const int steps, const int direction) {
     list_win_nav_move(steps, direction, update_list_item);
+    list_win_update_peek(update_list_item);
 
     lv_obj_t *focused_value = row_value_label(lv_group_get_focused(ui_group));
     if (focused_value) lv_group_focus_obj(focused_value);
@@ -474,6 +481,7 @@ int muxcore_main(void) {
     adjust_panels();
 
     if (ui_count_static > 0) {
+        list_win_update_peek(update_list_item);
         update_action(0);
     } else {
         lv_label_set_text(ui_lbl_screen_message, lang.muxcore.no_cores);

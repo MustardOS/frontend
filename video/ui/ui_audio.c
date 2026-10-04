@@ -251,3 +251,11 @@ void wasabi_audio_ui_shutdown(void) {
     audio_repeat_badge = NULL;
     shown_second = -1;
 }
+
+void wasabi_audio_ui_set_hidden(const int hidden) {
+    if (!audio_panel || !lv_obj_is_valid(audio_panel)) return;
+    if (hidden)
+        lv_obj_add_flag(audio_panel, LV_OBJ_FLAG_HIDDEN);
+    else
+        lv_obj_clear_flag(audio_panel, LV_OBJ_FLAG_HIDDEN);
+}

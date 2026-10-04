@@ -175,6 +175,8 @@ const char *wasabi_setting_label(const wasabi_setting setting) {
             return lang.muxretro.settings_screen.show_playtime;
         case wasabi_setting_header:
             return lang.muxretro.settings_screen.header_visibility;
+        case wasabi_setting_time_display:
+            return lang.muxmedia.time_display;
         case wasabi_setting_volume:
             return lang.muxretro.settings_screen.volume;
         case wasabi_setting_sample_rate:
@@ -233,6 +235,8 @@ const char *wasabi_setting_label(const wasabi_setting setting) {
             return lang.wasabi_live_tv_quality;
         case wasabi_setting_live_buffer:
             return lang.wasabi_live_tv_buffer;
+        case wasabi_setting_crt_television:
+            return lang.muxmedia.crt_television;
         case wasabi_setting_sleep:
             return lang.muxmedia.sleep;
         case wasabi_setting_idle_screensaver:
@@ -247,39 +251,75 @@ const char *wasabi_setting_label(const wasabi_setting setting) {
 }
 
 const char *wasabi_setting_glyph(const wasabi_setting setting) {
-    static const char *const glyphs[] = {"scaling",        "rotate",
-                                         "mirrored",       "aspectratio",
-                                         "integerscale",   "texturefilter",
-                                         "border",         "border",
-                                         "filter",         "shader",
-                                         "brightness",     "contrast",
-                                         "saturation",     "hue",
-                                         "gamma",          "overlay",
-                                         "overlaypattern", "overlay",
-                                         "overlayopacity", "viewport",
-                                         "centrecrop",     "viewportreset",
-                                         "viewport",       "centrecrop",
-                                         "viewportreset",  "playtime",
-                                         "header",         "playtime",
-                                         "display",        "artwork",
-                                         "repeat",         "shuffle",
-                                         "volume",         "samplerate",
-                                         "audiolatency",   "audioperiod",
-                                         "audiofilter",    "audioratecontrol",
-                                         "audio",          "playtime",
-                                         "repeat",         "fastforward",
-                                         "fastforward",    "slowmotion",
-                                         "slowmotion",     "pause",
-                                         "quicksave",      "quickload",
-                                         "seek",           "seek",
-                                         "seek",           "seek",
-                                         "toggleheader",   "repeat",
-                                         "shuffle",        "quit",
-                                         "fastforward",    "slowmotion",
-                                         "state",          "quality",
-                                         "memory",         "idle_sleep",
-                                         "idle_display",   "repeat",
-                                         "reset"};
+    static const char *const glyphs[] = {
+        "scaling",
+        "rotate",
+        "mirrored",
+        "aspectratio",
+        "integerscale",
+        "texturefilter",
+        "border",
+        "border",
+        "filter",
+        "shader",
+        "brightness",
+        "contrast",
+        "saturation",
+        "hue",
+        "gamma",
+        "overlay",
+        "overlaypattern",
+        "overlay",
+        "overlayopacity",
+        "viewport",
+        "centrecrop",
+        "viewportreset",
+        "viewport",
+        "centrecrop",
+        "viewportreset",
+        "playtime",
+        "header",
+        "playtime",
+        "playtime",
+        "display",
+        "artwork",
+        "repeat",
+        "shuffle",
+        "volume",
+        "samplerate",
+        "audiolatency",
+        "audioperiod",
+        "audiofilter",
+        "audioratecontrol",
+        "audio",
+        "playtime",
+        "repeat",
+        "fastforward",
+        "fastforward",
+        "slowmotion",
+        "slowmotion",
+        "pause",
+        "quicksave",
+        "quickload",
+        "seek",
+        "seek",
+        "seek",
+        "seek",
+        "toggleheader",
+        "repeat",
+        "shuffle",
+        "quit",
+        "fastforward",
+        "slowmotion",
+        "state",
+        "quality",
+        "memory",
+        "video",
+        "idle_sleep",
+        "idle_display",
+        "repeat",
+        "reset"
+    };
     _Static_assert(sizeof(glyphs) / sizeof(glyphs[0]) == wasabi_setting_count, "Wasabi setting glyph mismatch");
     return setting >= 0 && setting < wasabi_setting_count ? glyphs[setting] : "settings";
 }
@@ -341,7 +381,7 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
         case wasabi_setting_border: {
             const char *names[] = {
                 lang.muxretro.settings_screen.theme, lang.muxretro.settings_screen.black,
-                lang.muxretro.settings_screen.dark_grey, lang.muxretro.settings_screen.white
+                lang.muxretro.settings_screen.dark_grey, lang.muxretro.settings_screen.white, lang.muxmedia.ambient
             };
             snprintf(value, size, "%s", names[config.video.border_colour]);
             break;
@@ -380,7 +420,8 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
             const char *names[] = {
                 lang.generic.disabled,          lang.muxmedia.visualiser_spectrum, lang.muxmedia.visualiser_waveform,
                 lang.muxmedia.visualiser_pulse, lang.muxmedia.visualiser_orbit,    lang.muxmedia.visualiser_meter,
-                lang.muxmedia.visualiser_phase, lang.muxmedia.visualiser_radial,   lang.muxmedia.visualiser_starfield
+                lang.muxmedia.visualiser_phase, lang.muxmedia.visualiser_radial,   lang.muxmedia.visualiser_starfield,
+                lang.muxmedia.visualiser_scope
             };
             snprintf(value, size, "%s", names[config.video.visualiser]);
             break;
@@ -527,6 +568,14 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
         case wasabi_setting_live_buffer:
             snprintf(value, size, "%d MB", config.wasabi.live_buffer);
             break;
+        case wasabi_setting_time_display:
+            snprintf(
+                value, size, "%s", config.video.time_display ? lang.muxmedia.tape_counter : lang.muxmedia.time_standard
+            );
+            break;
+        case wasabi_setting_crt_television:
+            snprintf(value, size, "%s", config.video.crt_television ? lang.generic.enabled : lang.generic.disabled);
+            break;
         case wasabi_setting_sleep:
             snprintf(value, size, "%s", config.video.sleep ? lang.generic.enabled : lang.generic.disabled);
             break;
@@ -626,7 +675,7 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             SETTING(texture_filter, "texture_filter", cycle(config.video.texture_filter, direction, 7));
             break;
         case wasabi_setting_border:
-            SETTING(border_colour, "border_colour", cycle(config.video.border_colour, direction, 4));
+            SETTING(border_colour, "border_colour", cycle(config.video.border_colour, direction, 5));
             break;
         case wasabi_setting_brightness:
             SETTING(brightness, "brightness", step(config.video.brightness, direction, 5, -100, 100));
@@ -644,7 +693,7 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             SETTING(gamma, "gamma", step(config.video.gamma, direction, 5, 50, 200));
             break;
         case wasabi_setting_visualiser:
-            SETTING(visualiser, "visualiser", cycle(config.video.visualiser, direction, 9));
+            SETTING(visualiser, "visualiser", cycle(config.video.visualiser, direction, 10));
             break;
         case wasabi_setting_artwork_position:
             SETTING(artwork_position, "artwork_position", cycle(config.video.artwork_position, direction, 3));
@@ -669,6 +718,12 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             break;
         case wasabi_setting_header:
             SETTING(header_visibility, "header_visibility", cycle(config.video.header_visibility, direction, 6));
+            break;
+        case wasabi_setting_time_display:
+            SETTING(time_display, "time_display", !config.video.time_display);
+            break;
+        case wasabi_setting_crt_television:
+            SETTING(crt_television, "crt_television", !config.video.crt_television);
             break;
         case wasabi_setting_progress_bar:
             SETTING(progress_bar, "progress_bar", cycle(config.video.progress_bar, direction, 10));
@@ -818,6 +873,8 @@ const char *wasabi_page_title(const wasabi_settings_page page) {
             return lang.muxretro.hotkeys;
         case wasabi_page_shader_parameters:
             return lang.muxretro.display_screen.shaders;
+        case wasabi_page_equaliser:
+            return lang.muxmedia.equaliser;
         default:
             return lang.muxretro.settings;
     }

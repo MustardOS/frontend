@@ -10,6 +10,7 @@
 #include "phase.h"
 #include "pulse.h"
 #include "radial.h"
+#include "scope.h"
 #include "spectrum.h"
 #include "starfield.h"
 #include "waveform.h"
@@ -113,6 +114,9 @@ void wasabi_visualiser_render(SDL_Renderer *renderer) {
         case wasabi_visualiser_starfield:
             wasabi_starfield_render(renderer, &frame);
             break;
+        case wasabi_visualiser_scope:
+            wasabi_scope_render(renderer, &frame);
+            break;
         default:
             break;
     }
@@ -138,6 +142,7 @@ void wasabi_visualiser_reset(void) {
     wasabi_meter_reset();
     wasabi_radial_reset();
     wasabi_starfield_reset();
+    wasabi_scope_reset();
     next_frame = 0;
     next_capture = 0;
 }

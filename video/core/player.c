@@ -2,6 +2,8 @@
 #include "audio.h"
 #include "audio_transition.h"
 #include "audio_source.h"
+#include "remote.h"
+#include "equaliser.h"
 #include "../ui/ui_loading.h"
 #include "../ui/ui_audio.h"
 #include "ui_pause.h"
@@ -10,6 +12,8 @@
 #include "../settings/assets.h"
 #include "../settings/session.h"
 #include "../settings/settings.h"
+#include "../visualiser/visualiser.h"
+#include "../visualiser/voices.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -21,6 +25,7 @@
 #include <libavfilter/buffersrc.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/error.h>
+#include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
 #include <libswresample/swresample.h>
 #include <math.h>
@@ -195,6 +200,8 @@ typedef struct {
     size_t channel_pending_index;
     uint32_t channel_switch_deadline;
     int channel_switch_pending;
+    uint32_t quit_deadline;
+    int voice_mute_mask;
     int content_switch_requested;
     int buffering_visible;
     int live_failed;
@@ -283,6 +290,8 @@ static int idle_saver_suppressed(void) {
 
 static void request_seek_to_mode(double target, int show_position);
 static void resume_playback(void);
+static double playback_clock(void);
+static void remote_tick(void);
 static void stop_playback(void);
 static void switch_playlist(size_t index);
 static void switch_folder(size_t index);
@@ -675,7 +684,14 @@ static void audio_speed_write(const float *source, const int frames) {
 }
 
 static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, const int length) {
-    if (audio_transition_fill_handoff(stream, length, config.video.volume)) return;
+    if (audio_transition_fill_handoff(stream, length, config.video.volume)) {
+        if (player.audio_channels > 0)
+            wasabi_eq_process(
+                (float *) stream, length / (player.audio_channels * (int) sizeof(float)), player.audio_channels,
+                player.audio_rate
+            );
+        return;
+    }
     const int bytes_per_frame = player.audio_channels * (int) sizeof(float);
     if (bytes_per_frame <= 0) {
         SDL_memset(stream, 0, (size_t) length);
@@ -743,12 +759,14 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
     const int filter = config.video.audio_filter;
     if (filter == 0) {
         if (config.video.volume == 100) {
+            wasabi_eq_process(output, output_frames, player.audio_channels, player.audio_rate);
             video_render_audio_samples(output, output_frames, player.audio_channels);
             return;
         }
         const size_t samples = (size_t) output_frames * (size_t) player.audio_channels;
         for (size_t sample = 0; sample < samples; sample++)
             output[sample] *= volume;
+        wasabi_eq_process(output, output_frames, player.audio_channels, player.audio_rate);
         video_render_audio_samples(output, output_frames, player.audio_channels);
         return;
     }
@@ -768,12 +786,14 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
             output[(size_t) frame * player.audio_channels + channel] = sample;
         }
     }
+    wasabi_eq_process(output, output_frames, player.audio_channels, player.audio_rate);
     video_render_audio_samples(output, output_frames, player.audio_channels);
 }
 
 static void audio_postmix(void *unused __attribute__((unused)), Uint8 *stream, const int length) {
     const int bytes_per_frame = player.audio_channels * (int) sizeof(float);
     if (!stream || bytes_per_frame <= 0 || length < bytes_per_frame) return;
+    wasabi_eq_process((float *) stream, length / bytes_per_frame, player.audio_channels, player.audio_rate);
     video_render_audio_samples((const float *) stream, length / bytes_per_frame, player.audio_channels);
 }
 
@@ -1586,7 +1606,27 @@ void video_player_effect_settings_changed(void) {
     video_render_effects_changed();
 }
 
+int video_player_paused(void) {
+    return SDL_AtomicGet(&player.paused);
+}
+
+void video_player_toggle_menu_playback(void) {
+    if (player.live) return;
+    if (SDL_AtomicGet(&player.paused)) {
+        resume_playback();
+        player.menu_resume_playback = 1;
+        return;
+    }
+    player.clock_origin = playback_clock();
+    SDL_AtomicSet(&player.paused, 1);
+    if (player.sequenced_audio) Mix_PauseMusic();
+    set_present_timer_idle(1);
+    player.menu_resume_playback = 0;
+    video_playback_ui_set_paused(1);
+}
+
 void video_player_audio_settings_changed(void) {
+    wasabi_eq_changed();
     if (player.sequenced_audio) Mix_VolumeMusic(config.video.volume * MIX_MAX_VOLUME / 100);
     SDL_LockAudio();
     memset(player.audio_filter_state, 0, sizeof(player.audio_filter_state));
@@ -2049,9 +2089,31 @@ static int prepare_blend_frame(double *timestamp) {
     return ready != 0;
 }
 
+static int voice_scope_active(void) {
+    return player.audio_only && config.video.visualiser == wasabi_visualiser_scope;
+}
+
+static void update_audio_transport(void) {
+    const int scope = voice_scope_active();
+    wasabi_voices_sync(player.position, scope && !player.sequenced_audio);
+    const int mask = scope ? wasabi_voices_mute_mask() : 0;
+    if (mask == player.voice_mute_mask || !player.format) return;
+    if (av_opt_set_int(player.format, "mute_mask", mask, AV_OPT_SEARCH_CHILDREN) >= 0) player.voice_mute_mask = mask;
+}
+
 static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     if (SDL_AtomicGet(&player.stop)) return;
     const uint32_t now = SDL_GetTicks();
+    if (player.quit_deadline) {
+        if (SDL_TICKS_PASSED(now, player.quit_deadline)) {
+            player.quit_deadline = 0;
+            stop_playback();
+            return;
+        }
+        display_composite_frame();
+        return;
+    }
+    remote_tick();
     finish_transition_handoff();
     if (player.channel_switch_pending && SDL_TICKS_PASSED(now, player.channel_switch_deadline)) {
         const size_t index = player.channel_pending_index;
@@ -2197,6 +2259,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
         }
     }
     if (video_render_seek_tick()) player.present_dirty = 1;
+    if (video_render_crt_tick()) player.present_dirty = 1;
     if (present_due && player.present_dirty) {
         display_composite_frame();
         player.present_dirty = 0;
@@ -2211,6 +2274,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
 
     playback_ui_tick(now);
     if (player.audio_only) {
+        update_audio_transport();
         const int progress_changed =
             wasabi_audio_ui_update(player.position, player.duration, SDL_AtomicGet(&player.paused));
         if (video_render_audio_tick() || progress_changed) display_composite_frame();
@@ -2470,6 +2534,29 @@ static void set_slow_motion(const int active) {
     update_speed_indicator();
 }
 
+static void quit_playback(void) {
+    if (player.quit_deadline) return;
+    const int duration = player.live ? video_render_crt_power_off() : 0;
+    if (duration <= 0) {
+        stop_playback();
+        return;
+    }
+    if (player.channel_switch_pending) {
+        player.channel_switch_pending = 0;
+        video_playback_ui_hide_channel();
+    }
+    if (player.buffering_visible) {
+        video_loading_hide();
+        player.buffering_visible = 0;
+    }
+    player.clock_origin = playback_clock();
+    SDL_AtomicSet(&player.paused, 1);
+    player.quit_deadline = SDL_GetTicks() + (uint32_t) duration;
+    if (!player.quit_deadline) player.quit_deadline = 1;
+    set_present_timer_idle(0);
+    display_composite_frame();
+}
+
 static void stop_playback(void) {
     SDL_AtomicSet(&player.stop, 1);
     if (player.lock) {
@@ -2515,6 +2602,24 @@ static void step_track(const int direction) {
     switch_playlist(index);
 }
 
+static int voice_solo_available(void) {
+    return voice_scope_active() && wasabi_voices_count() > 1;
+}
+
+static void step_voice(const int direction) {
+    wasabi_voices_select(wasabi_voices_selected() + direction);
+    const int selected = wasabi_voices_selected();
+    static wasabi_voice_snapshot snapshot;
+    wasabi_voices_snapshot(&snapshot);
+    toast_message(
+        selected > 0 && selected <= snapshot.count ? snapshot.names[selected - 1] : lang.muxmedia.scope_all_voices,
+        tst_wait_s
+    );
+    play_sound(snd_navigate);
+    update_audio_transport();
+    display_composite_frame();
+}
+
 static void step_channel(const int direction) {
     if (!player.playlist_channels || player.playlist_count < 2) return;
     const size_t count = player.playlist_count;
@@ -2556,7 +2661,9 @@ static void apply_ui_action(const video_ui_action action) {
             break;
         case video_ui_action_closed:
             if (player.live) break;
-            if (player.menu_resume_playback)
+            if (!SDL_AtomicGet(&player.paused))
+                video_playback_ui_set_paused(0);
+            else if (player.menu_resume_playback)
                 resume_playback();
             else
                 video_playback_ui_set_paused(1);
@@ -2586,7 +2693,7 @@ static void apply_ui_action(const video_ui_action action) {
             }
             break;
         case video_ui_action_stop:
-            stop_playback();
+            quit_playback();
             break;
         default:
             break;
@@ -2693,7 +2800,10 @@ static void handle_up(void) {
         video_playback_ui_modal_move(-1);
     else if (video_playback_ui_naming_active())
         video_playback_ui_name_move(1, -1);
-    else if (!video_playback_ui_menu_active() && player.playlist_channels) {
+    else if (!video_playback_ui_menu_active() && voice_solo_available()) {
+        player.ui_input_consumed = 1;
+        step_voice(-1);
+    } else if (!video_playback_ui_menu_active() && player.playlist_channels) {
         player.ui_input_consumed = 1;
         step_channel(-1);
     } else
@@ -2705,7 +2815,10 @@ static void handle_down(void) {
         video_playback_ui_modal_move(1);
     else if (video_playback_ui_naming_active())
         video_playback_ui_name_move(1, 1);
-    else if (!video_playback_ui_menu_active() && player.playlist_channels) {
+    else if (!video_playback_ui_menu_active() && voice_solo_available()) {
+        player.ui_input_consumed = 1;
+        step_voice(1);
+    } else if (!video_playback_ui_menu_active() && player.playlist_channels) {
         player.ui_input_consumed = 1;
         step_channel(1);
     } else
@@ -2784,6 +2897,97 @@ static int handle_seek_hotkey(const mux_input_type input) {
     return 1;
 }
 
+static void remote_step(const int direction) {
+    if (player.live && player.playlist_channels) {
+        step_channel(direction);
+    } else if (player.audio_only) {
+        step_track(direction);
+    } else if (player.playlist && player.playlist_count > 1) {
+        const size_t count = player.playlist_count;
+        switch_playlist(
+            direction < 0 ? (player.playlist_index + count - 1) % count : (player.playlist_index + 1) % count
+        );
+    }
+}
+
+static void apply_remote_command(const wasabi_remote_command *command) {
+    const int paused = SDL_AtomicGet(&player.paused);
+    switch (command->type) {
+        case wasabi_remote_toggle:
+            toggle_pause();
+            break;
+        case wasabi_remote_play:
+            if (paused) toggle_pause();
+            break;
+        case wasabi_remote_pause:
+            if (!paused) toggle_pause();
+            break;
+        case wasabi_remote_seek:
+            if (video_player_seek_available()) request_seek_to(command->value);
+            break;
+        case wasabi_remote_skip:
+            if (video_player_seek_available()) request_seek(command->value);
+            break;
+        case wasabi_remote_next:
+            remote_step(1);
+            break;
+        case wasabi_remote_previous:
+            remote_step(-1);
+            break;
+        case wasabi_remote_volume: {
+            int volume = config.video.volume + (int) command->value;
+            if (volume < 0) volume = 0;
+            if (volume > 100) volume = 100;
+            config.video.volume = (int16_t) volume;
+            video_player_audio_settings_changed();
+            break;
+        }
+        case wasabi_remote_stop:
+            quit_playback();
+            break;
+        default:
+            break;
+    }
+}
+
+static void remote_tick(void) {
+    wasabi_remote_command command;
+    int changed = 0;
+    while (wasabi_remote_poll(&command)) {
+        apply_remote_command(&command);
+        changed = 1;
+    }
+
+    const char *title = player.title;
+    const char *artist = "";
+    const char *album = "";
+    if (player.audio_only) {
+        if (player.audio_information.title[0]) title = player.audio_information.title;
+        artist = player.audio_information.artist;
+        album = player.audio_information.album;
+    }
+    if (player.live && player.playlist_channels && player.playlist && player.playlist_index < player.playlist_count
+        && player.playlist[player.playlist_index].title && player.playlist[player.playlist_index].title[0])
+        title = player.playlist[player.playlist_index].title;
+
+    const wasabi_remote_state state = {
+        .title = title,
+        .artist = artist,
+        .album = album,
+        .live = player.live,
+        .audio = player.audio_only,
+        .paused = SDL_AtomicGet(&player.paused),
+        .can_seek = video_player_seek_available(),
+        .index = (int) player.playlist_index,
+        .count = player.playlist ? (int) player.playlist_count : 0,
+        .channels = player.playlist_channels,
+        .volume = config.video.volume,
+        .position = player.position,
+        .duration = player.duration,
+    };
+    wasabi_remote_publish(&state, changed);
+}
+
 static void handle_configured_hotkey(const mux_input_type input, const mux_input_action action) {
     if (action == mux_input_release && seek_hotkey_direction(input)) video_render_seek_release();
     if (player.ui_input_consumed) {
@@ -2837,7 +3041,7 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         else if (input == config.video.hotkey_header)
             toggle_header();
         else if (input == config.video.hotkey_quit)
-            stop_playback();
+            quit_playback();
         else
             return;
         video_playback_ui_menu_consume();
@@ -2881,6 +3085,8 @@ static void player_cleanup(void) {
         player.sequenced_audio = NULL;
     }
     if (player.audio_only) wasabi_audio_ui_shutdown();
+    wasabi_voices_close();
+    player.voice_mute_mask = 0;
     if (player.ui_ready) video_playback_ui_shutdown();
     player.ui_ready = 0;
     video_render_close();
@@ -3324,6 +3530,7 @@ static int player_open(const char *uri, const char *title, const video_player_op
         return player_open_failed("playback interface", 0);
     player.ui_ready = 1;
     if (player.audio_only) {
+        wasabi_voices_open(player.uri);
         if (!wasabi_audio_ui_init(&player.audio_information)) return player_open_failed("audio interface", 0);
         wasabi_audio_ui_update(player.position, player.duration, 0);
         display_composite_frame();
@@ -3398,6 +3605,8 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
     const int governor_changed =
         options->live ? live_performance_begin(previous_governor, sizeof(previous_governor)) : 0;
     wasabi_session_begin(uri);
+    wasabi_eq_changed();
+    wasabi_remote_open();
     int result = video_player_stopped;
     const char *current_uri = uri;
     const char *current_title = title;
@@ -3492,6 +3701,7 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
         break;
     }
     wasabi_session_end();
+    wasabi_remote_close();
     subsong_playlist_free();
     if (result != video_player_playlist_switch) shuffle_reset();
     live_performance_end(governor_changed, previous_governor);

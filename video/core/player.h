@@ -62,6 +62,8 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
 
 void video_player_image_settings_changed(void);
 void video_player_effect_settings_changed(void);
+void video_player_toggle_menu_playback(void);
+int video_player_paused(void);
 
 void video_player_audio_settings_changed(void);
 void video_player_audio_ui_changed(void);

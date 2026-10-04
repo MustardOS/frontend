@@ -64,8 +64,33 @@ static uint32_t seek_effect_start;
 static int seek_effect_direction;
 static int next_texture_ready;
 static Uint8 next_texture_alpha;
+static int crt_enabled;
+static int crt_powered;
+static uint32_t crt_warm_start;
+static uint32_t crt_off_start;
 
-#define STATIC_PERIOD 33
+#define AMBIENT_SEGMENTS 8
+
+typedef struct {
+    float r;
+    float g;
+    float b;
+} ambient_colour;
+
+static ambient_colour ambient_target[4][AMBIENT_SEGMENTS];
+static ambient_colour ambient_current[4][AMBIENT_SEGMENTS];
+static int ambient_ready;
+static uint32_t ambient_tick;
+
+#define STATIC_PERIOD      33
+#define CRT_WARM_MS        420
+#define CRT_OFF_SQUASH_MS  220
+#define CRT_OFF_SHRINK_MS  160
+#define CRT_OFF_FADE_MS    280
+#define CRT_OFF_MS         (CRT_OFF_SQUASH_MS + CRT_OFF_SHRINK_MS + CRT_OFF_FADE_MS)
+#define AMBIENT_SMOOTH_MS  180.0f
+#define AMBIENT_OUTER_GAIN 0.25f
+#define AMBIENT_INNER_GAIN 0.85f
 
 static void create_audio_background_texture(void) {
     if (!renderer || audio_background_texture || theme.system.background_gradient_direction == LV_GRAD_DIR_NONE) return;
@@ -142,6 +167,8 @@ static int update_static_texture(const int force) {
 }
 
 void video_render_set_content(const char *content_path, const int live) {
+    crt_enabled = live && config.video.crt_television && !config.visual.reduce_motion;
+    crt_off_start = 0;
     catalogue_overlay_path[0] = '\0';
     if (live || !content_path || !content_path[0]) return;
 
@@ -682,8 +709,299 @@ int video_render_seek_tick(void) {
     return running;
 }
 
+static SDL_Rect scaled_source(void) {
+    SDL_Rect texture_source = source;
+    if (filter_scale > 1) {
+        texture_source.x *= filter_scale;
+        texture_source.y *= filter_scale;
+        texture_source.w *= filter_scale;
+        texture_source.h *= filter_scale;
+    }
+    return texture_source;
+}
+
+static float ease_out(const float value) {
+    const float clamped = value < 0.0f ? 0.0f : value > 1.0f ? 1.0f : value;
+    const float inverse = 1.0f - clamped;
+    return 1.0f - inverse * inverse * inverse;
+}
+
+static float ease_in(const float value) {
+    const float clamped = value < 0.0f ? 0.0f : value > 1.0f ? 1.0f : value;
+    return clamped * clamped;
+}
+
+static void render_plain_texture(SDL_Renderer *target, const SDL_Rect *rect) {
+    if (!texture || rect->w <= 0 || rect->h <= 0) return;
+    const SDL_Rect texture_source = scaled_source();
+    const SDL_RendererFlip flip = config.video.mirrored ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+    SDL_RenderCopyEx(target, texture, &texture_source, rect, config.video.rotation * 90.0, NULL, flip);
+}
+
+static void fill_rect_alpha(SDL_Renderer *target, const SDL_Rect *rect, const Uint8 level, const float alpha) {
+    if (alpha <= 0.0f) return;
+    SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(target, level, level, level, (Uint8) (alpha > 1.0f ? 255.0f : alpha * 255.0f));
+    SDL_RenderFillRect(target, rect);
+    SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
+}
+
+static void render_crt_power_off(SDL_Renderer *target, const uint32_t now) {
+    int width = 0;
+    int height = 0;
+    if (SDL_GetRendererOutputSize(target, &width, &height) != 0 || width <= 0 || height <= 0) return;
+
+    SDL_SetRenderDrawColor(target, 0, 0, 0, 255);
+    SDL_RenderClear(target);
+
+    const uint32_t elapsed = now - crt_off_start;
+    const int centre_x = destination.w > 0 ? destination.x + destination.w / 2 : width / 2;
+    const int centre_y = destination.h > 0 ? destination.y + destination.h / 2 : height / 2;
+    const int line = height / 180 > 2 ? height / 180 : 2;
+
+    if (elapsed < CRT_OFF_SQUASH_MS) {
+        const float progress = (float) elapsed / CRT_OFF_SQUASH_MS;
+        const SDL_Rect frame = destination.w > 0 ? destination : (SDL_Rect) {0, 0, width, height};
+        int squashed = (int) ((float) frame.h * (1.0f - ease_in(progress)));
+        if (squashed < line) squashed = line;
+        const SDL_Rect rect = {frame.x, centre_y - squashed / 2, frame.w, squashed};
+        if (static_active && static_texture)
+            SDL_RenderCopy(target, static_texture, NULL, &rect);
+        else
+            render_plain_texture(target, &rect);
+        fill_rect_alpha(target, &rect, 255, progress * 0.9f);
+        return;
+    }
+
+    if (elapsed < CRT_OFF_SQUASH_MS + CRT_OFF_SHRINK_MS) {
+        const float progress = (float) (elapsed - CRT_OFF_SQUASH_MS) / CRT_OFF_SHRINK_MS;
+        const int full = destination.w > 0 ? destination.w : width;
+        int span = (int) ((float) full * (1.0f - ease_in(progress)));
+        if (span < line * 2) span = line * 2;
+        const SDL_Rect rect = {centre_x - span / 2, centre_y - line / 2, span, line};
+        fill_rect_alpha(target, &rect, 255, 1.0f);
+        return;
+    }
+
+    if (elapsed < CRT_OFF_MS) {
+        const float progress = (float) (elapsed - CRT_OFF_SQUASH_MS - CRT_OFF_SHRINK_MS) / CRT_OFF_FADE_MS;
+        const int dot = line * 2;
+        const int glow = dot * 3;
+        const SDL_Rect halo = {centre_x - glow / 2, centre_y - glow / 2, glow, glow};
+        const SDL_Rect core = {centre_x - dot / 2, centre_y - dot / 2, dot, dot};
+        fill_rect_alpha(target, &halo, 255, (1.0f - progress) * 0.25f);
+        fill_rect_alpha(target, &core, 255, 1.0f - ease_out(progress));
+    }
+}
+
+static int render_crt_warm_up(SDL_Renderer *target, const uint32_t now) {
+    if (!crt_enabled || !crt_warm_start || !texture) return 0;
+    const uint32_t elapsed = now - crt_warm_start;
+    if (elapsed >= CRT_WARM_MS) {
+        crt_warm_start = 0;
+        return 0;
+    }
+
+    SDL_SetRenderDrawColor(target, 0, 0, 0, 255);
+    SDL_RenderClear(target);
+    const float progress = ease_out((float) elapsed / CRT_WARM_MS);
+    const int line = destination.h / 180 > 2 ? destination.h / 180 : 2;
+    int grown = (int) ((float) destination.h * progress);
+    if (grown < line) grown = line;
+    const SDL_Rect rect = {destination.x, destination.y + (destination.h - grown) / 2, destination.w, grown};
+    render_plain_texture(target, &rect);
+    fill_rect_alpha(target, &rect, 255, (1.0f - progress) * 0.8f);
+    return 1;
+}
+
+static ambient_colour ambient_scale(const ambient_colour colour, const float gain) {
+    return (ambient_colour) {colour.r * gain, colour.g * gain, colour.b * gain};
+}
+
+static SDL_Color ambient_sdl(const ambient_colour colour) {
+    const float r = colour.r < 0.0f ? 0.0f : colour.r > 255.0f ? 255.0f : colour.r;
+    const float g = colour.g < 0.0f ? 0.0f : colour.g > 255.0f ? 255.0f : colour.g;
+    const float b = colour.b < 0.0f ? 0.0f : colour.b > 255.0f ? 255.0f : colour.b;
+    return (SDL_Color) {(Uint8) r, (Uint8) g, (Uint8) b, 255};
+}
+
+static void ambient_vertex(SDL_Vertex *vertex, const float x, const float y, const ambient_colour colour) {
+    vertex->position.x = x;
+    vertex->position.y = y;
+    vertex->color = ambient_sdl(colour);
+    vertex->tex_coord.x = 0.0f;
+    vertex->tex_coord.y = 0.0f;
+}
+
+static void render_ambient_side(
+    SDL_Renderer *target, const ambient_colour *colours, const float inner_start_x, const float inner_start_y,
+    const float inner_end_x, const float inner_end_y, const float outer_dx, const float outer_dy
+) {
+    SDL_Vertex vertices[(AMBIENT_SEGMENTS + 1) * 2];
+    int indices[AMBIENT_SEGMENTS * 6];
+    for (int point = 0; point <= AMBIENT_SEGMENTS; point++) {
+        ambient_colour colour;
+        if (point == 0)
+            colour = colours[0];
+        else if (point == AMBIENT_SEGMENTS)
+            colour = colours[AMBIENT_SEGMENTS - 1];
+        else
+            colour = (ambient_colour) {(colours[point - 1].r + colours[point].r) * 0.5f,
+                                       (colours[point - 1].g + colours[point].g) * 0.5f,
+                                       (colours[point - 1].b + colours[point].b) * 0.5f};
+        const float share = (float) point / AMBIENT_SEGMENTS;
+        const float x = inner_start_x + (inner_end_x - inner_start_x) * share;
+        const float y = inner_start_y + (inner_end_y - inner_start_y) * share;
+        ambient_vertex(&vertices[point * 2], x, y, ambient_scale(colour, AMBIENT_INNER_GAIN));
+        ambient_vertex(&vertices[point * 2 + 1], x + outer_dx, y + outer_dy, ambient_scale(colour, AMBIENT_OUTER_GAIN));
+    }
+    for (int segment = 0; segment < AMBIENT_SEGMENTS; segment++) {
+        const int base = segment * 2;
+        int *index = &indices[segment * 6];
+        index[0] = base;
+        index[1] = base + 1;
+        index[2] = base + 2;
+        index[3] = base + 1;
+        index[4] = base + 3;
+        index[5] = base + 2;
+    }
+    SDL_RenderGeometry(target, NULL, vertices, (AMBIENT_SEGMENTS + 1) * 2, indices, AMBIENT_SEGMENTS * 6);
+}
+
+static int ambient_active(void) {
+    return config.video.border_colour == 4 && !audio_active && !static_active;
+}
+
+static void render_ambient_borders(SDL_Renderer *target) {
+    if (!ambient_ready || destination.w <= 0 || destination.h <= 0) return;
+    int width = 0;
+    int height = 0;
+    if (SDL_GetRendererOutputSize(target, &width, &height) != 0 || width <= 0 || height <= 0) return;
+
+    const uint32_t now = SDL_GetTicks();
+    float blend = ambient_tick ? (float) (now - ambient_tick) / AMBIENT_SMOOTH_MS : 1.0f;
+    if (blend > 1.0f) blend = 1.0f;
+    ambient_tick = now;
+    for (int side = 0; side < 4; side++) {
+        for (int segment = 0; segment < AMBIENT_SEGMENTS; segment++) {
+            ambient_colour *current = &ambient_current[side][segment];
+            const ambient_colour *wanted = &ambient_target[side][segment];
+            current->r += (wanted->r - current->r) * blend;
+            current->g += (wanted->g - current->g) * blend;
+            current->b += (wanted->b - current->b) * blend;
+        }
+    }
+
+    const float left = (float) destination.x;
+    const float top = (float) destination.y;
+    const float right = (float) (destination.x + destination.w);
+    const float bottom = (float) (destination.y + destination.h);
+    if (left > 0.0f) render_ambient_side(target, ambient_current[0], left, top, left, bottom, -left, 0.0f);
+    if (right < (float) width)
+        render_ambient_side(target, ambient_current[1], right, top, right, bottom, (float) width - right, 0.0f);
+    if (top > 0.0f) render_ambient_side(target, ambient_current[2], left, top, right, top, 0.0f, -top);
+    if (bottom < (float) height)
+        render_ambient_side(target, ambient_current[3], left, bottom, right, bottom, 0.0f, (float) height - bottom);
+}
+
+static ambient_colour ambient_from_yuv(const int y, const int u, const int v) {
+    const float luma = 1.164f * (float) (y - 16);
+    const float blue_difference = (float) (u - 128);
+    const float red_difference = (float) (v - 128);
+    return (ambient_colour) {luma + 1.596f * red_difference, luma - 0.392f * blue_difference - 0.813f * red_difference,
+                             luma + 2.017f * blue_difference};
+}
+
+static ambient_colour
+ambient_sample(const uint8_t *const *data, const int *line, const int bgra, const int x, const int y) {
+    if (bgra) {
+        const uint8_t *pixel = data[0] + (size_t) y * (size_t) line[0] + (size_t) x * 4;
+        return (ambient_colour) {pixel[2], pixel[1], pixel[0]};
+    }
+    return ambient_from_yuv(
+        data[0][(size_t) y * (size_t) line[0] + (size_t) x],
+        data[1][(size_t) (y / 2) * (size_t) line[1] + (size_t) (x / 2)],
+        data[2][(size_t) (y / 2) * (size_t) line[2] + (size_t) (x / 2)]
+    );
+}
+
+static ambient_colour ambient_cell(
+    const uint8_t *const *data, const int *line, const int bgra, const int x0, const int y0, const int x1, const int y1
+) {
+    ambient_colour total = {0.0f, 0.0f, 0.0f};
+    int count = 0;
+    for (int step_y = 0; step_y < 3; step_y++) {
+        for (int step_x = 0; step_x < 3; step_x++) {
+            int x = x0 + (x1 - x0) * (2 * step_x + 1) / 6;
+            int y = y0 + (y1 - y0) * (2 * step_y + 1) / 6;
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            if (x >= source_width) x = source_width - 1;
+            if (y >= source_height) y = source_height - 1;
+            const ambient_colour sample = ambient_sample(data, line, bgra, x, y);
+            total.r += sample.r;
+            total.g += sample.g;
+            total.b += sample.b;
+            count++;
+        }
+    }
+    return ambient_scale(total, 1.0f / (float) count);
+}
+
+static void update_ambient(const uint8_t *const *data, const int *line, const int bgra) {
+    if (!ambient_active() || !data || !data[0] || source.w <= 0 || source.h <= 0) return;
+    if (!bgra && (!data[1] || !data[2])) return;
+
+    const int depth_x = source.w / 20 > 1 ? source.w / 20 : 1;
+    const int depth_y = source.h / 20 > 1 ? source.h / 20 : 1;
+    ambient_colour sides[4][AMBIENT_SEGMENTS];
+    for (int segment = 0; segment < AMBIENT_SEGMENTS; segment++) {
+        const int y0 = source.y + source.h * segment / AMBIENT_SEGMENTS;
+        const int y1 = source.y + source.h * (segment + 1) / AMBIENT_SEGMENTS;
+        const int x0 = source.x + source.w * segment / AMBIENT_SEGMENTS;
+        const int x1 = source.x + source.w * (segment + 1) / AMBIENT_SEGMENTS;
+        sides[0][segment] = ambient_cell(data, line, bgra, source.x, y0, source.x + depth_x, y1);
+        sides[1][segment] = ambient_cell(data, line, bgra, source.x + source.w - depth_x, y0, source.x + source.w, y1);
+        sides[2][segment] = ambient_cell(data, line, bgra, x0, source.y, x1, source.y + depth_y);
+        sides[3][segment] = ambient_cell(data, line, bgra, x0, source.y + source.h - depth_y, x1, source.y + source.h);
+    }
+
+    if (config.video.rotation != 0) {
+        ambient_colour average = {0.0f, 0.0f, 0.0f};
+        for (int side = 0; side < 4; side++) {
+            for (int segment = 0; segment < AMBIENT_SEGMENTS; segment++) {
+                average.r += sides[side][segment].r;
+                average.g += sides[side][segment].g;
+                average.b += sides[side][segment].b;
+            }
+        }
+        average = ambient_scale(average, 1.0f / (4.0f * AMBIENT_SEGMENTS));
+        for (int side = 0; side < 4; side++) {
+            for (int segment = 0; segment < AMBIENT_SEGMENTS; segment++)
+                ambient_target[side][segment] = average;
+        }
+    } else {
+        const int mirrored = config.video.mirrored != 0;
+        for (int segment = 0; segment < AMBIENT_SEGMENTS; segment++) {
+            const int across = mirrored ? AMBIENT_SEGMENTS - 1 - segment : segment;
+            ambient_target[0][segment] = sides[mirrored ? 1 : 0][segment];
+            ambient_target[1][segment] = sides[mirrored ? 0 : 1][segment];
+            ambient_target[2][segment] = sides[2][across];
+            ambient_target[3][segment] = sides[3][across];
+        }
+    }
+
+    if (!ambient_ready) memcpy(ambient_current, ambient_target, sizeof(ambient_current));
+    ambient_ready = 1;
+}
+
 static void render_frame(SDL_Renderer *target) {
     SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
+    const uint32_t now = SDL_GetTicks();
+    if (crt_off_start) {
+        render_crt_power_off(target, now);
+        return;
+    }
     if (static_active) {
         SDL_SetRenderDrawColor(target, 20, 20, 20, 255);
         SDL_RenderClear(target);
@@ -697,19 +1015,17 @@ static void render_frame(SDL_Renderer *target) {
         wasabi_visualiser_render(target);
         return;
     }
-    const SDL_Color borders[] = {{0, 0, 0, 255}, {0, 0, 0, 255}, {32, 32, 32, 255}, {255, 255, 255, 255}};
-    const SDL_Color border = borders[clamp_int(config.video.border_colour, 0, 3)];
+    if (render_crt_warm_up(target, now)) return;
+    const SDL_Color borders[] = {
+        {0, 0, 0, 255}, {0, 0, 0, 255}, {32, 32, 32, 255}, {255, 255, 255, 255}, {0, 0, 0, 255}
+    };
+    const SDL_Color border = borders[clamp_int(config.video.border_colour, 0, 4)];
     SDL_SetRenderDrawColor(target, border.r, border.g, border.b, border.a);
     SDL_RenderClear(target);
+    if (texture && !clean_capture && ambient_active()) render_ambient_borders(target);
     if (texture) {
         const SDL_RendererFlip flip = config.video.mirrored ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-        SDL_Rect texture_source = source;
-        if (filter_scale > 1) {
-            texture_source.x *= filter_scale;
-            texture_source.y *= filter_scale;
-            texture_source.w *= filter_scale;
-            texture_source.h *= filter_scale;
-        }
+        const SDL_Rect texture_source = scaled_source();
         const int effects_rendered = !clean_capture
                                      && video_effects_render(
                                          target, texture, next_texture_ready ? next_texture : NULL, next_texture_alpha,
@@ -729,13 +1045,7 @@ static void render_frame(SDL_Renderer *target) {
     update_vignette();
     if (vignette_texture) SDL_RenderCopy(target, vignette_texture, NULL, &destination);
     if (texture) {
-        SDL_Rect texture_source = source;
-        if (filter_scale > 1) {
-            texture_source.x *= filter_scale;
-            texture_source.y *= filter_scale;
-            texture_source.w *= filter_scale;
-            texture_source.h *= filter_scale;
-        }
+        const SDL_Rect texture_source = scaled_source();
         render_seek_effect(target, &texture_source);
         render_seek_hold(target, &texture_source);
     }
@@ -836,6 +1146,7 @@ static SDL_Texture *create_frame_texture(void) {
 
 static int configure_frame(const AVFrame *frame) {
     release_frame_resources();
+    ambient_ready = 0;
     if (!renderer || !frame || frame->width <= 0 || frame->height <= 0) return 0;
 
     source_width = frame->width;
@@ -920,6 +1231,7 @@ static int upload_frame(SDL_Texture *target, const AVFrame *frame) {
         line = strides;
     }
 
+    update_ambient(data, line, filter_scale > 1);
     if (filter_scale > 1) {
         if (config.video.texture_filter == 6)
             super_eagle_32(
@@ -1014,7 +1326,24 @@ void video_render_set_static(const int active) {
     if (static_active) {
         static_deadline = 0;
         update_static_texture(1);
+        crt_warm_start = 0;
+    } else if (crt_enabled && !crt_powered) {
+        crt_warm_start = SDL_GetTicks();
+        if (!crt_warm_start) crt_warm_start = 1;
+        crt_powered = 1;
     }
+}
+
+int video_render_crt_power_off(void) {
+    if (!crt_enabled) return 0;
+    crt_off_start = SDL_GetTicks();
+    if (!crt_off_start) crt_off_start = 1;
+    crt_powered = 0;
+    return CRT_OFF_MS;
+}
+
+int video_render_crt_tick(void) {
+    return crt_enabled && (crt_off_start || crt_warm_start);
 }
 
 int video_render_static_tick(void) {
@@ -1031,6 +1360,9 @@ void video_render_close(void) {
     static_height = 0;
     static_active = 0;
     audio_active = 0;
+    ambient_ready = 0;
+    ambient_tick = 0;
+    crt_warm_start = 0;
     wasabi_visualiser_reset();
     static_deadline = 0;
     if (vignette_texture) SDL_DestroyTexture(vignette_texture);

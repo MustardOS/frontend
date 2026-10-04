@@ -223,8 +223,8 @@ void menu_move(const int direction) {
     refresh_focus();
 }
 
-void menu_adjust(const int direction) {
-    if (!active || direction == 0) return;
+int menu_adjust(const int direction) {
+    if (!active || direction == 0) return 0;
 
     switch ((MenuItem) selected) {
         case ITEM_TERM_FONT_SIZE:
@@ -260,10 +260,11 @@ void menu_adjust(const int direction) {
         case ITEM_RESET_TERMINAL:
         case ITEM_QUIT:
         default:
-            return;
+            return 0;
     }
 
     refresh_values();
+    return 1;
 }
 
 void menu_select(void) {
