@@ -6,6 +6,10 @@
 
 bool mux_retro_environment_cb(unsigned cmd, void *data);
 
+void environment_reset(void);
+
+int environment_update_core_option_visibility(void);
+
 enum retro_pixel_format mux_retro_get_pixel_format(void);
 
 int mux_retro_disk_get_num_images(void);

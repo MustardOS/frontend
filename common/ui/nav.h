@@ -62,6 +62,15 @@ void list_win_update_items(
 
 void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index));
 
+typedef struct {
+    int total;
+    int grid;
+    void (*update_row)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index);
+    void (*update_grid)(int direction);
+} list_win_view;
+
+void list_win_step(const list_win_view *view, int steps, int direction);
+
 void list_win_nav_move(
     int steps, int direction, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
 );

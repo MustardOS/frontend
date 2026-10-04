@@ -586,15 +586,18 @@ void list_win_focus_group(const int index) {
     lv_group_focus_obj(lv_obj_get_child(panel, 1));
 }
 
-int list_win_focus_index(void) {
+static int list_win_focus_index_total(const int total) {
     const int before = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
     const int after = (theme.mux.item.count - 1) / 2;
 
     if (current_item_index < before) return current_item_index;
-    if (current_item_index >= (int) item_count - after)
-        return theme.mux.item.count - ((int) item_count - current_item_index);
+    if (current_item_index >= total - after) return theme.mux.item.count - (total - current_item_index);
 
     return before;
+}
+
+int list_win_focus_index(void) {
+    return list_win_focus_index_total((int) item_count);
 }
 
 void list_win_move_index(const int direction) {
@@ -605,10 +608,11 @@ void list_win_move_index(const int direction) {
     }
 }
 
-void list_win_update_items(
-    const int start_index, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+static void list_win_update_items_total(
+    const int start_index, const int total,
+    void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
 ) {
-    const int max = (int) item_count - start_index;
+    const int max = total - start_index;
     if (max <= 0) return;
 
     const uint64_t list_start = fe_perf_begin();
@@ -622,6 +626,12 @@ void list_win_update_items(
     }
 
     fe_perf_end(fe_perf_stage_list, list_start);
+}
+
+void list_win_update_items(
+    const int start_index, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+) {
+    list_win_update_items_total(start_index, (int) item_count, update_item_cb);
 }
 
 void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)) {
@@ -659,16 +669,14 @@ void list_win_focus_initial(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj
 }
 
 static void (*list_win_active_update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index) = NULL;
+static int list_win_active_total = 0;
 
 static void list_win_update_items_trampoline(const int start_index) {
-    list_win_update_items(start_index, list_win_active_update_item_cb);
+    list_win_update_items_total(start_index, list_win_active_total, list_win_active_update_item_cb);
 }
 
-void list_win_nav_move(
-    const int steps, const int direction,
-    void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
-) {
-    if (!ui_count_static) return;
+void list_win_step(const list_win_view *view, const int steps, const int direction) {
+    if (!ui_count_static || !view) return;
     if (first_open) {
         first_open = 0;
     } else {
@@ -676,38 +684,52 @@ void list_win_nav_move(
     }
 
     const int visible_count = theme.mux.item.count;
-    const int static_list = (int) item_count <= visible_count;
+    const int windowed = !view->grid && view->total > visible_count;
 
-    apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
+    if (!view->grid) apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
 
-    if (static_list) {
-        for (int step = 0; step < steps; ++step) {
+    if (!view->grid && !windowed) {
+        for (int step = 0; step < steps; ++step)
             list_win_move_index(direction);
-        }
         list_win_focus_group(current_item_index);
     } else {
-        list_win_active_update_item_cb = update_item_cb;
+        list_win_active_update_item_cb = view->update_row;
+        list_win_active_total = view->total;
 
         for (int step = 0; step < steps; ++step) {
             list_win_move_index(direction);
 
-            nav_move(ui_group, direction);
-            nav_move(ui_group_glyph, direction);
-            nav_move(ui_group_panel, direction);
+            if (!is_carousel_grid_mode()) {
+                nav_move(ui_group, direction);
+                nav_move(ui_group_glyph, direction);
+                nav_move(ui_group_panel, direction);
+            }
 
-            update_windowed_list(
-                ui_pnl_content, direction, current_item_index, (int) item_count, visible_count, update_item_cb,
-                list_win_update_items_trampoline
-            );
-
-            list_win_focus_group(list_win_focus_index());
+            if (windowed) {
+                update_windowed_list(
+                    ui_pnl_content, direction, current_item_index, view->total, visible_count, view->update_row,
+                    list_win_update_items_trampoline
+                );
+                list_win_focus_group(list_win_focus_index_total(view->total));
+            } else if (view->update_grid) {
+                view->update_grid(direction);
+            }
         }
-        list_win_update_peek(update_item_cb);
+
+        if (windowed) list_win_update_peek_total(view->total, view->update_row);
     }
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+    if (!view->grid) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
 
     nav_moved = 1;
+}
+
+void list_win_nav_move(
+    const int steps, const int direction,
+    void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+) {
+    const list_win_view view = {(int) item_count, 0, update_item_cb, NULL};
+    list_win_step(&view, steps, direction);
 }
 
 int list_win_peek_rows(const int total) {
@@ -731,17 +753,9 @@ void list_win_update_peek_total(
     const int count = theme.mux.item.count;
     if (!list_win_peek_rows(total) || !update_item_cb) return;
 
-    const int before = count / 2;
-    const int after = (count - 1) / 2;
-    int focus = before;
-    if (current_item_index < before)
-        focus = current_item_index;
-    else if (current_item_index >= total - after)
-        focus = count - (total - current_item_index);
-
-    const int window_start = current_item_index - focus;
+    const int window_start = current_item_index - list_win_focus_index_total(total);
     const int peek_index = window_start + count;
-    const int middle = current_item_index >= before && peek_index < total;
+    const int middle = current_item_index >= count / 2 && peek_index < total;
 
     lv_obj_scroll_to_y(ui_pnl_content, middle ? theme.mux.item.panel / 2 : 0, LV_ANIM_OFF);
 

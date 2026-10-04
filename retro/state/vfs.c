@@ -434,6 +434,18 @@ static int vfs_stat(const char *path, int32_t *size) {
     return flags;
 }
 
+static int vfs_stat_64(const char *path, int64_t *size) {
+    struct stat st;
+    if (stat(path, &st) != 0) return 0;
+
+    if (size) *size = (int64_t) st.st_size;
+
+    int flags = RETRO_VFS_STAT_IS_VALID;
+    if (S_ISDIR(st.st_mode)) flags |= RETRO_VFS_STAT_IS_DIRECTORY;
+    if (S_ISCHR(st.st_mode)) flags |= RETRO_VFS_STAT_IS_CHARACTER_SPECIAL;
+    return flags;
+}
+
 static int vfs_mkdir(const char *dir) {
     if (mkdir(dir, 0755) == 0) return 0;
     return errno == EEXIST ? -2 : -1;
@@ -496,12 +508,13 @@ static struct retro_vfs_interface vfs_iface = {
     .dirent_get_name = vfs_dirent_get_name,
     .dirent_is_dir = vfs_dirent_is_dir,
     .closedir = vfs_closedir,
+    .stat_64 = vfs_stat_64,
 };
 
 bool vfs_bridge_get_interface(struct retro_vfs_interface_info *info) {
-    if (!info || info->required_interface_version > 3) return false;
+    if (!info || info->required_interface_version > 4) return false;
 
-    info->required_interface_version = 3;
+    info->required_interface_version = 4;
     info->iface = &vfs_iface;
     vfs_active = 1;
 

@@ -240,10 +240,6 @@ static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph,
     apply_text_long_dot(&theme, ui_lbl_item);
 }
 
-static void update_list_items(const int start_index) {
-    list_win_update_items(start_index, update_list_item);
-}
-
 static void focus_initial(void) {
     list_win_focus_initial(update_list_item);
     list_win_update_peek(update_list_item);
@@ -258,50 +254,8 @@ static void focus_initial(void) {
 
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound(snd_navigate);
-    }
-
-    const int visible_count = theme.mux.item.count;
-    const int static_list = !grid_mode_enabled && (int) item_count <= visible_count;
-    const int multi_list = !grid_mode_enabled && (int) item_count > visible_count;
-
-    if (!grid_mode_enabled) apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
-
-    if (static_list) {
-        for (int step = 0; step < steps; ++step) {
-            list_win_move_index(direction);
-        }
-        list_win_focus_group(current_item_index);
-    } else {
-        for (int step = 0; step < steps; ++step) {
-            list_win_move_index(direction);
-
-            if (!is_carousel_grid_mode()) {
-                nav_move(ui_group, direction);
-                nav_move(ui_group_glyph, direction);
-                nav_move(ui_group_panel, direction);
-            }
-
-            if (multi_list) {
-                update_windowed_list(
-                    ui_pnl_content, direction, current_item_index, (int) item_count, visible_count, update_list_item,
-                    update_list_items
-                );
-            } else if (grid_mode_enabled) {
-                update_grid(direction);
-            }
-
-            if (multi_list) {
-                list_win_focus_group(list_win_focus_index());
-                list_win_update_peek(update_list_item);
-            }
-        }
-    }
-
-    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+    const list_win_view view = {(int) item_count, grid_mode_enabled, update_list_item, update_grid};
+    list_win_step(&view, steps, direction);
     lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].display_name);
 
     video_preview_cancel();

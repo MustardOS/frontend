@@ -410,11 +410,17 @@ static void parse_arguments(
     }
 }
 
+static int direction_pressed(const mux_input_type dpad, const mux_input_type ls, const mux_input_type rs) {
+    const mux_nav_type nav = get_sticknav_mask(config.settings.advanced.stick_nav);
+    return mux_input_pressed(dpad) || ((nav & NAV_LEFT_STICK) && mux_input_pressed(ls))
+           || ((nav & NAV_RIGHT_STICK) && mux_input_pressed(rs));
+}
+
 static uint64_t navigation_mask(void) {
-    return (mux_input_pressed(mux_input_dpad_up) || mux_input_pressed(mux_input_ls_up) ? BIT(0) : 0)
-           | (mux_input_pressed(mux_input_dpad_down) || mux_input_pressed(mux_input_ls_down) ? BIT(1) : 0)
-           | (mux_input_pressed(mux_input_dpad_left) || mux_input_pressed(mux_input_ls_left) ? BIT(2) : 0)
-           | (mux_input_pressed(mux_input_dpad_right) || mux_input_pressed(mux_input_ls_right) ? BIT(3) : 0);
+    return (direction_pressed(mux_input_dpad_up, mux_input_ls_up, mux_input_rs_up) ? BIT(0) : 0)
+           | (direction_pressed(mux_input_dpad_down, mux_input_ls_down, mux_input_rs_down) ? BIT(1) : 0)
+           | (direction_pressed(mux_input_dpad_left, mux_input_ls_left, mux_input_rs_left) ? BIT(2) : 0)
+           | (direction_pressed(mux_input_dpad_right, mux_input_ls_right, mux_input_rs_right) ? BIT(3) : 0);
 }
 
 static void send_arrow(const int direction) {

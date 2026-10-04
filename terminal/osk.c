@@ -754,7 +754,8 @@ void osk_hold_end(void) {
 int osk_hold_tick(Uint32 now) {
     if (!osk_hold_active) return 0;
 
-    if (now - osk_hold_press_t >= g_key_repeat_delay && now - osk_hold_last_rep >= g_key_repeat_rate) {
+    if (SDL_TICKS_PASSED(now, osk_hold_press_t + g_key_repeat_delay)
+        && SDL_TICKS_PASSED(now, osk_hold_last_rep + g_key_repeat_rate)) {
         osk_hold_last_rep = now;
         return 1;
     }

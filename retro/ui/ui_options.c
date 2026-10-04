@@ -61,6 +61,8 @@ static void build_visible_indices(const int category_index) {
     visible_count = 0;
 
     for (int i = 0; i < options_count && visible_count < OPTIONS_MAX; i++) {
+        if (!options_list[i].visible) continue;
+
         int matches;
         if (category_index < 0) {
             matches = 1;
@@ -198,6 +200,27 @@ static void close_options(void) {
     settings_menu_reopen_core_options();
 }
 
+static void cycle_current_option(const int direction, const enum nav_direction shake_dir) {
+    const int option_index = visible_indices[current_item_index];
+    const int previous_row = current_item_index;
+    options_cycle(option_index, direction);
+
+    if (!environment_update_core_option_visibility()) {
+        refresh_row(current_item_index, shake_dir);
+        return;
+    }
+
+    build_visible_indices(options_category_count > 0 ? category_index_for_row(category_cursor) : -1);
+    rebuild_option_rows();
+
+    int row = 0;
+    while (row < visible_count && visible_indices[row] != option_index)
+        row++;
+
+    current_item_index = row < visible_count ? row : previous_row < visible_count ? previous_row : visible_count - 1;
+    if (current_item_index >= 0) list_win_focus_group(current_item_index);
+}
+
 void options_menu_init(void) {
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
@@ -299,12 +322,10 @@ static void tick_options(const uint64_t edge, const uint64_t mask) {
         nav_unsuppress_shake();
         gen_step_movement(1, +1, 2, 0, 1);
     } else if (do_left && ui_count_static > 0) {
-        options_cycle(visible_indices[current_item_index], -1);
-        refresh_row(current_item_index, nav_dir_left);
+        cycle_current_option(-1, nav_dir_left);
         play_sound(snd_option);
     } else if (do_right && ui_count_static > 0) {
-        options_cycle(visible_indices[current_item_index], +1);
-        refresh_row(current_item_index, nav_dir_right);
+        cycle_current_option(+1, nav_dir_right);
         play_sound(snd_option);
     } else if (nav_page_tick(edge, mask, 2)) {
         // do nothing!

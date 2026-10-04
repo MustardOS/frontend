@@ -15,6 +15,7 @@ struct core_option_entry {
     char (*values)[OPTIONS_VALUE_LEN];
     int value_count;
     int current_index;
+    bool visible;
 };
 
 struct core_option_category {
@@ -43,6 +44,8 @@ const char *options_get_value(const char *key);
 int options_find(const char *key);
 
 int options_set(const char *key, const char *value);
+
+void options_set_visible(const char *key, bool visible);
 
 void options_cycle(int index, int direction);
 

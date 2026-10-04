@@ -158,9 +158,7 @@ static void load_daemon_battery_config(void) {
             daemon_charge_full_path, sizeof(daemon_charge_full_path), "%.*s/charge_full", directory_length,
             daemon_capacity_path
         );
-        snprintf(
-            daemon_status_path, sizeof(daemon_status_path), "%.*s/status", directory_length, daemon_capacity_path
-        );
+        snprintf(daemon_status_path, sizeof(daemon_status_path), "%.*s/status", directory_length, daemon_capacity_path);
     }
 }
 
@@ -204,8 +202,8 @@ static int is_charging(void) {
         char *status = read_all_char_from(daemon_status_path);
         if (status) {
             const int charging = strncmp(status, "Charging", 8) == 0 || strncmp(status, "Full", 4) == 0;
-            const int known = charging || strncmp(status, "Discharging", 11) == 0
-                              || strncmp(status, "Not charging", 12) == 0;
+            const int known =
+                charging || strncmp(status, "Discharging", 11) == 0 || strncmp(status, "Not charging", 12) == 0;
             free(status);
             if (known) return charging;
         }

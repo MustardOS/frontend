@@ -886,17 +886,6 @@ static void focus_grid_index(const int index) {
     nav_moved = 1;
 }
 
-static int focus_list_index(void) {
-    const int before = (theme.mux.item.count - theme.mux.item.count % 2) / 2;
-    const int after = (theme.mux.item.count - 1) / 2;
-
-    if (current_item_index < before) return current_item_index;
-    if (current_item_index >= item_count - after)
-        return (int) (theme.mux.item.count - (item_count - current_item_index));
-
-    return before;
-}
-
 static void focus_initial(void) {
     if (grid_mode_enabled) {
         focus_grid_index(current_item_index);
@@ -946,73 +935,10 @@ static void focus_initial(void) {
     nav_moved = 1;
 }
 
-static void move_index(const int direction) {
-    if (direction < 0) {
-        current_item_index = list_nav_wrap_index(current_item_index - 1);
-    } else {
-        current_item_index = list_nav_wrap_index(current_item_index + 1);
-    }
-}
-
 static void list_nav_move(const int steps, const int direction) {
     if (!ui_count_static) return;
-
-    play_sound(snd_navigate);
-
-    const int visible_count = theme.mux.item.count;
-    const int static_list = !grid_mode_enabled && item_count <= visible_count;
-    const int multi_list = !grid_mode_enabled && item_count > visible_count;
-
-    if (!grid_mode_enabled) apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
-
-    if (static_list) {
-        for (int step = 0; step < steps; ++step) {
-            move_index(direction);
-        }
-        focus_group(current_item_index);
-
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
-        lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].display_name);
-
-        video_preview_cancel();
-
-        if (config.visual.box_art < 4) {
-            if (config.visual.box_art_transition != TSN_DISABLED) {
-                transition_box_art_nav_activity();
-            } else {
-                image_refresh("box");
-                if (config.visual.video_preview > 0) video_refresh();
-            }
-        }
-
-        nav_moved = 1;
-
-        return;
-    }
-
-    for (int step = 0; step < steps; ++step) {
-        move_index(direction);
-
-        if (!is_carousel_grid_mode()) {
-            nav_move(ui_group, direction);
-            nav_move(ui_group_glyph, direction);
-            nav_move(ui_group_panel, direction);
-        }
-
-        if (multi_list) {
-            update_windowed_list(
-                ui_pnl_content, direction, current_item_index, (int) item_count, visible_count, update_list_item,
-                update_list_items
-            );
-        } else if (grid_mode_enabled) {
-            update_grid(direction);
-        }
-
-        if (!grid_mode_enabled) focus_group(focus_list_index());
-        if (multi_list) list_win_update_peek(update_list_item);
-    }
-
-    if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
+    const list_win_view view = {(int) item_count, grid_mode_enabled, update_list_item, update_grid};
+    list_win_step(&view, steps, direction);
     lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].display_name);
 
     video_preview_cancel();

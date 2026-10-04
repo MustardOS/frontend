@@ -638,6 +638,7 @@ int main(const int argc, char *argv[]) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
         return abort_startup(1);
     }
+    environment_update_core_option_visibility();
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);
 

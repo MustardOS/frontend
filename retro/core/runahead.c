@@ -87,7 +87,8 @@ void runahead_before_frame(const int allow_replay) {
     }
 
     if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead) || hw_render_bridge_active()
-        || !current_core.retro_serialize || !current_core.retro_unserialize || !current_core.retro_serialize_size) {
+        || (current_core.serialization_quirks & RETRO_SERIALIZATION_QUIRK_INCOMPLETE) || !current_core.retro_serialize
+        || !current_core.retro_unserialize || !current_core.retro_serialize_size) {
         runahead_settle_cheevo();
         return;
     }

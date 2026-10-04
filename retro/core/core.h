@@ -13,6 +13,11 @@ struct core_cbs {
     bool need_fullpath;
     bool block_extract;
     const char *valid_extensions;
+    const struct retro_system_content_info_override *content_info_overrides;
+    const struct retro_game_info_ext *game_info_ext;
+    retro_keyboard_event_t keyboard_event;
+    uint64_t serialization_quirks;
+    unsigned performance_level;
 
     void (*retro_init)(void);
     void (*retro_deinit)(void);

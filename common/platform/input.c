@@ -1101,6 +1101,19 @@ void mux_input_set_msgbox_dismiss(void (*cb)(void)) {
     msgbox_dismiss_cb = cb;
 }
 
+static uint32_t hold_repeat_delay(const uint64_t horizontal, const uint32_t held) {
+    const uint32_t base = config.settings.advanced.accelerate >= 16 ? config.settings.advanced.accelerate : 96;
+    if (!horizontal) return base;
+
+    uint32_t delay = base;
+    if (held >= 1200)
+        delay = base / 3;
+    else if (held >= 500)
+        delay = base * 2 / 3;
+
+    return delay < 16 ? 16 : delay;
+}
+
 // Invokes the relevant handler(s) for a particular input mux_type and action.
 // The alt ("hold") modifier input for this screen, or mux_input_cOUNT when disabled.
 static mux_input_type hold_modifier(const mux_input_options *opts) {
@@ -1219,6 +1232,7 @@ static void handle_inputs(const mux_input_options *opts) {
 
     static uint32_t hold_delay[mux_input_count] = {0};
     static uint32_t hold_tick[mux_input_count] = {0};
+    static uint32_t hold_start[mux_input_count] = {0};
     static uint64_t suppressed_horizontal = 0;
 
     uint64_t blocked = 0;
@@ -1276,10 +1290,12 @@ static void handle_inputs(const mux_input_options *opts) {
 
                 hold_delay[i] = config.settings.advanced.repeat_delay > 0 ? config.settings.advanced.repeat_delay : 208;
                 hold_tick[i] = tick;
+                hold_start[i] = tick;
             } else if (tick - hold_tick[i] >= hold_delay[i]) {
                 dispatch_input(opts, i, mux_input_hold);
 
-                hold_delay[i] = config.settings.advanced.accelerate >= 16 ? config.settings.advanced.accelerate : 96;
+                if (!hold_start[i]) hold_start[i] = tick;
+                hold_delay[i] = hold_repeat_delay(horizontal & bit, tick - hold_start[i]);
                 hold_tick[i] = tick;
             }
 
@@ -1287,6 +1303,7 @@ static void handle_inputs(const mux_input_options *opts) {
             if (!earliest || (int32_t) (deadline - tick) < (int32_t) (earliest - tick)) earliest = deadline;
         } else {
             dispatch_input(opts, i, mux_input_release);
+            hold_start[i] = 0;
         }
     }
 

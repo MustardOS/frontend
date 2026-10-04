@@ -1,7 +1,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/sysinfo.h>
 #include <SDL2/SDL.h>
+#include <common/platform/battery.h>
 #include <common/storage/fileio.h>
 #include <common/platform/display.h>
 #include <common/runtime/init.h>
@@ -23,8 +25,9 @@
 
 static enum retro_pixel_format pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
 
-#define MUX_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB 0x800003
-#define MUX_ENVIRONMENT_SET_HW_SHARED_CONTEXT_LEGACY  44
+#define MUX_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB   0x800003
+#define MUX_ENVIRONMENT_SET_SERIALIZATION_QUIRKS_LEGACY 44
+#define MUX_ENVIRONMENT_COMMAND_MAX                     128
 
 static bool clear_all_thread_waits(const unsigned clear, void *data) {
     (void) clear;
@@ -62,11 +65,40 @@ static uint64_t frame_time_last_counter = 0;
 static int frame_time_last_valid = 0;
 static uint32_t frame_time_clamp_count = 0;
 static retro_usec_t frame_time_clamp_peak = 0;
+static retro_core_options_update_display_callback_t options_update_display_cb = NULL;
+static unsigned char unsupported_commands[MUX_ENVIRONMENT_COMMAND_MAX];
+static int options_api_version = -1;
 
 #define FRAME_TIME_MAX_REFERENCE_MULTIPLIER 4
 
 enum retro_pixel_format mux_retro_get_pixel_format(void) {
     return pixel_format;
+}
+
+void environment_reset(void) {
+    pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
+    disk_control_cb = NULL;
+    disk_control_ext_cb = NULL;
+    core_wants_hw_render = 0;
+    hw_render_refused = 0;
+    memset(&pending_av_info, 0, sizeof(pending_av_info));
+    av_info_pending = 0;
+    frame_time_cb = NULL;
+    frame_time_reference = 0;
+    frame_time_last_counter = 0;
+    frame_time_last_valid = 0;
+    frame_time_clamp_count = 0;
+    frame_time_clamp_peak = 0;
+    audio_cb = NULL;
+    audio_state_cb = NULL;
+    audio_cb_enabled = 0;
+    options_update_display_cb = NULL;
+    options_api_version = -1;
+    memset(unsupported_commands, 0, sizeof(unsupported_commands));
+}
+
+int environment_update_core_option_visibility(void) {
+    return options_update_display_cb && options_update_display_cb();
 }
 
 int mux_retro_disk_get_num_images(void) {
@@ -151,6 +183,11 @@ static void mux_retro_log_printf(const enum retro_log_level level, const char *f
 
 bool mux_retro_environment_cb(const unsigned cmd, void *data) {
     switch (cmd) {
+        case RETRO_ENVIRONMENT_GET_OVERSCAN: {
+            if (data) *(bool *) data = false;
+            return data != NULL;
+        }
+
         case RETRO_ENVIRONMENT_GET_CAN_DUPE: {
             *(bool *) data = true;
             return true;
@@ -166,7 +203,59 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT: {
-            pixel_format = *(const enum retro_pixel_format *) data;
+            if (!data) return false;
+            const enum retro_pixel_format requested = *(const enum retro_pixel_format *) data;
+            if (requested != RETRO_PIXEL_FORMAT_0RGB1555 && requested != RETRO_PIXEL_FORMAT_XRGB8888
+                && requested != RETRO_PIXEL_FORMAT_RGB565)
+                return false;
+            pixel_format = requested;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL: {
+            if (data) current_core.performance_level = *(const unsigned *) data;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_LIBRETRO_PATH: {
+            if (data) *(const char **) data = core_file_path;
+            return data != NULL;
+        }
+
+        case RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME:
+            return true;
+
+        case MUX_ENVIRONMENT_SET_SERIALIZATION_QUIRKS_LEGACY:
+        case RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS: {
+            if (!data) return false;
+            current_core.serialization_quirks = *(const uint64_t *) data;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK: {
+            const struct retro_keyboard_callback *callback = data;
+            current_core.keyboard_event = callback ? callback->callback : NULL;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE: {
+            const struct retro_system_content_info_override *overrides = data;
+            if (!overrides) {
+                current_core.content_info_overrides = NULL;
+                return true;
+            }
+
+            for (size_t index = 0; overrides[index].extensions; index++) {
+                if (overrides[index].persistent_data) return false;
+            }
+
+            current_core.content_info_overrides = overrides;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_GAME_INFO_EXT: {
+            if (!data || !current_core.game_info_ext) return false;
+            *(const struct retro_game_info_ext **) data = current_core.game_info_ext;
             return true;
         }
 
@@ -212,7 +301,10 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
         }
 
         case RETRO_ENVIRONMENT_SET_VARIABLES: {
-            if (options_count == 0) options_store_legacy(data);
+            if (options_api_version <= 0) {
+                options_store_legacy(data);
+                options_api_version = 0;
+            }
             return true;
         }
 
@@ -242,28 +334,45 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_SET_CORE_OPTIONS: {
             options_store_v1(data);
+            options_api_version = 1;
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL: {
             const struct retro_core_options_intl *intl = data;
-            if (intl && intl->us) options_store_v1(intl->us);
+            if (intl && intl->us) {
+                options_store_v1(intl->us);
+                options_api_version = 1;
+            }
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2: {
             options_store_v2(data);
+            options_api_version = 2;
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL: {
             const struct retro_core_options_v2_intl *intl = data;
-            if (intl && intl->us) options_store_v2(intl->us);
+            if (intl && intl->us) {
+                options_store_v2(intl->us);
+                options_api_version = 2;
+            }
             return true;
         }
 
-        case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
+        case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY: {
+            const struct retro_core_option_display *display = data;
+            if (display && display->key) options_set_visible(display->key, display->visible);
             return true;
+        }
+
+        case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK: {
+            const struct retro_core_options_update_display_callback *callback = data;
+            options_update_display_cb = callback ? callback->callback : NULL;
+            return true;
+        }
 
         case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE: {
             if (!data) {
@@ -368,7 +477,6 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return data != NULL;
         }
 
-        case MUX_ENVIRONMENT_SET_HW_SHARED_CONTEXT_LEGACY:
         case RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT:
             return true;
 
@@ -443,6 +551,52 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return true;
         }
 
+        case RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT: {
+            if (data) *(enum retro_savestate_context *) data = RETRO_SAVESTATE_CONTEXT_NORMAL;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_JIT_CAPABLE: {
+            if (data) *(bool *) data = true;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_DEVICE_POWER: {
+            if (data) {
+                struct retro_device_power *power = data;
+                power->state = battery_is_charging() ? RETRO_POWERSTATE_CHARGING : RETRO_POWERSTATE_DISCHARGING;
+                power->seconds = RETRO_POWERSTATE_NO_ESTIMATE;
+                int capacity = battery_get_capacity();
+                if (capacity < 0) capacity = 0;
+                if (capacity > 100) capacity = 100;
+                power->percent = (int8_t) capacity;
+            }
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_PLAYLIST_DIRECTORY: {
+            static const char *dir = RETRO_SHARE_PATH "playlist";
+            create_directories(dir, 0);
+            if (data) *(const char **) data = dir;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_FILE_BROWSER_START_DIRECTORY: {
+            static const char *dir = RUN_STORAGE_PATH MAIN_ROM_DIR;
+            if (data) *(const char **) data = dir;
+            return true;
+        }
+
+        case RETRO_ENVIRONMENT_GET_MEMORY_STATUS: {
+            if (!data) return false;
+            struct sysinfo info;
+            if (sysinfo(&info) != 0) return false;
+            struct retro_memory_status *status = data;
+            status->total = (uint64_t) info.totalram * info.mem_unit;
+            status->free = (uint64_t) (info.freeram + info.bufferram) * info.mem_unit;
+            return true;
+        }
+
         case MUX_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB: {
             if (!data) return false;
 
@@ -497,7 +651,13 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
             return hw_render_bridge_negotiate(data);
         }
 
-        default:
+        default: {
+            const unsigned base_cmd = cmd & ~(RETRO_ENVIRONMENT_EXPERIMENTAL | RETRO_ENVIRONMENT_PRIVATE);
+            if (base_cmd < MUX_ENVIRONMENT_COMMAND_MAX && !unsupported_commands[base_cmd]) {
+                unsupported_commands[base_cmd] = 1;
+                LOG_DEBUG(mux_module, "Unsupported Libretro environment command: %u (0x%x)", base_cmd, cmd);
+            }
+        }
             return false;
     }
 }

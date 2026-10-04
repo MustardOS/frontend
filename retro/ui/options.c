@@ -139,6 +139,7 @@ void options_store_v1(const struct retro_core_option_definition *defs) {
     int i = 0;
     for (; defs[i].key && options_count < OPTIONS_MAX; i++) {
         struct core_option_entry *e = &options_list[options_count];
+        e->visible = true;
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
         snprintf(e->label, sizeof(e->label), "%s", defs[i].desc ? defs[i].desc : defs[i].key);
 
@@ -185,6 +186,7 @@ void options_store_v2(const struct retro_core_options_v2 *opts) {
     int i = 0;
     for (; defs[i].key && options_count < OPTIONS_MAX; i++) {
         struct core_option_entry *e = &options_list[options_count];
+        e->visible = true;
         snprintf(e->key, sizeof(e->key), "%s", defs[i].key);
 
         const int categorised = category_key_is_valid(defs[i].category_key, opts->categories);
@@ -218,6 +220,7 @@ void options_store_legacy(const struct retro_variable *vars) {
     int i = 0;
     for (; vars[i].key && options_count < OPTIONS_MAX; i++) {
         struct core_option_entry *e = &options_list[options_count];
+        e->visible = true;
         snprintf(e->key, sizeof(e->key), "%s", vars[i].key);
 
         const char *desc_sep = strchr(vars[i].value, ';');
@@ -290,6 +293,11 @@ int options_set(const char *key, const char *value) {
     }
 
     return 0;
+}
+
+void options_set_visible(const char *key, const bool visible) {
+    const int index = options_find(key);
+    if (index >= 0) options_list[index].visible = visible;
 }
 
 const char *options_get_value(const char *key) {

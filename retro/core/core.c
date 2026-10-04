@@ -49,6 +49,13 @@ struct core_information_cache {
 };
 
 static struct core_information_cache information_cache;
+static struct retro_game_info_ext game_info_ext;
+static char game_info_full_path[PATH_MAX];
+static char game_info_archive_path[PATH_MAX];
+static char game_info_archive_file[PATH_MAX];
+static char game_info_dir[PATH_MAX];
+static char game_info_name[PATH_MAX];
+static char game_info_extension[64];
 
 static void cache_system_info(const struct retro_system_info *info) {
     if (!info) return;
@@ -80,6 +87,7 @@ static int open_core(const char *corefile) {
 
     perf_interface_reset();
     if (current_core.handle) dlclose(current_core.handle);
+    environment_reset();
 
     void (*set_environment)(retro_environment_t) = NULL;
     void (*set_video_refresh)(retro_video_refresh_t) = NULL;
@@ -495,6 +503,96 @@ static int write_patched_content(const void *data, const size_t size, const char
     return write_whole_file(out_path, data, size);
 }
 
+static int extension_list_contains(const char *extensions, const char *extension) {
+    if (!extensions || !extension || !*extension) return 0;
+
+    const char *entry = extensions;
+    while (*entry) {
+        const char *end = strchr(entry, '|');
+        const size_t length = end ? (size_t) (end - entry) : strlen(entry);
+        if (strlen(extension) == length && strncasecmp(entry, extension, length) == 0) return 1;
+        if (!end) break;
+        entry = end + 1;
+    }
+
+    return 0;
+}
+
+static int content_needs_fullpath(const char *path) {
+    const char *extension = strrchr(path, '.');
+    if (!extension || !extension[1] || !current_core.content_info_overrides) return current_core.need_fullpath;
+    extension++;
+
+    for (const struct retro_system_content_info_override *override = current_core.content_info_overrides;
+         override->extensions; override++) {
+        if (extension_list_contains(override->extensions, extension)) return override->need_fullpath;
+    }
+
+    return current_core.need_fullpath;
+}
+
+static int load_game_with_info(
+    const struct retro_game_info *game, const char *full_path, const char *archive_path, const char *archive_file
+) {
+    memset(&game_info_ext, 0, sizeof(game_info_ext));
+    game_info_full_path[0] = '\0';
+    game_info_archive_path[0] = '\0';
+    game_info_archive_file[0] = '\0';
+    game_info_dir[0] = '\0';
+    game_info_name[0] = '\0';
+    game_info_extension[0] = '\0';
+
+    const int in_archive = archive_path && *archive_path && archive_file && *archive_file;
+    const char *identity_path = in_archive ? archive_file : full_path;
+    const char *directory_path = in_archive ? archive_path : full_path;
+
+    if (full_path && *full_path && !in_archive) {
+        str_copy_checked(game_info_full_path, sizeof(game_info_full_path), full_path);
+        game_info_ext.full_path = game_info_full_path;
+    }
+    if (in_archive) {
+        str_copy_checked(game_info_archive_path, sizeof(game_info_archive_path), archive_path);
+        str_copy_checked(game_info_archive_file, sizeof(game_info_archive_file), archive_file);
+        game_info_ext.archive_path = game_info_archive_path;
+        game_info_ext.archive_file = game_info_archive_file;
+    }
+
+    if (directory_path && *directory_path) {
+        str_copy_checked(game_info_dir, sizeof(game_info_dir), directory_path);
+        char *slash = strrchr(game_info_dir, '/');
+        if (slash)
+            *slash = '\0';
+        else
+            snprintf(game_info_dir, sizeof(game_info_dir), ".");
+    }
+
+    if (identity_path && *identity_path) {
+        const char *base = strrchr(identity_path, '/');
+        base = base ? base + 1 : identity_path;
+        str_copy_checked(game_info_name, sizeof(game_info_name), base);
+        char *dot = strrchr(game_info_name, '.');
+        if (dot && dot[1]) {
+            snprintf(game_info_extension, sizeof(game_info_extension), "%s", dot + 1);
+            for (char *cursor = game_info_extension; *cursor; cursor++)
+                if (*cursor >= 'A' && *cursor <= 'Z') *cursor = (char) (*cursor - 'A' + 'a');
+            *dot = '\0';
+        }
+    }
+
+    game_info_ext.dir = game_info_dir;
+    game_info_ext.name = game_info_name;
+    game_info_ext.ext = game_info_extension;
+    game_info_ext.data = game->data;
+    game_info_ext.size = game->size;
+    game_info_ext.file_in_archive = in_archive;
+    game_info_ext.persistent_data = false;
+
+    current_core.game_info_ext = &game_info_ext;
+    const int loaded = current_core.retro_load_game(game);
+    current_core.game_info_ext = NULL;
+    return loaded;
+}
+
 int core_load_content(const char *content_path) {
     if (!str_copy_checked(core_content_path, sizeof(core_content_path), content_path)
         || !str_copy_checked(core_resolved_content_path, sizeof(core_resolved_content_path), content_path)) {
@@ -511,6 +609,7 @@ int core_load_content(const char *content_path) {
     static const char *archive_exts[] = {".zip", ".7z", ".gz", ".tar", ".rar"};
 
     const char *ext = strrchr(content_path, '.');
+    const int need_fullpath = content_needs_fullpath(content_path);
     int is_archive = 0;
     if (ext) {
         for (size_t i = 0; i < A_SIZE(archive_exts); i++) {
@@ -533,7 +632,7 @@ int core_load_content(const char *content_path) {
             struct retro_game_info game_info = {0};
             char patched_path[PATH_MAX] = "";
 
-            if (current_core.need_fullpath) {
+            if (need_fullpath) {
                 if (write_patched_content(data, size, content_path, patched_path) != 0) {
                     free(data);
                     return -1;
@@ -545,7 +644,7 @@ int core_load_content(const char *content_path) {
                 game_info.path = content_path;
             }
 
-            const int ok = current_core.retro_load_game(&game_info);
+            const int ok = load_game_with_info(&game_info, game_info.path, NULL, NULL);
             free(data);
 
             if (!ok) {
@@ -570,13 +669,13 @@ int core_load_content(const char *content_path) {
         void *direct_data = NULL;
         size_t direct_size = 0;
 
-        if (!current_core.need_fullpath) {
+        if (!need_fullpath) {
             if (read_whole_file(content_path, &direct_data, &direct_size) != 0) return -1;
             game_info.data = direct_data;
             game_info.size = direct_size;
         }
 
-        const int ok = current_core.retro_load_game(&game_info);
+        const int ok = load_game_with_info(&game_info, content_path, NULL, NULL);
         free(direct_data);
 
         if (!ok) {
@@ -595,7 +694,7 @@ int core_load_content(const char *content_path) {
     const int has_patch = patch_exists(content_path);
     char resolved_path[PATH_MAX] = "";
 
-    if (!has_patch && current_core.need_fullpath && vfs_bridge_is_active()) {
+    if (!has_patch && need_fullpath && vfs_bridge_is_active()) {
         char entry_name[PATH_MAX];
         if (find_entry_in_archive(content_path, entry_name) == 0) {
             if (!str_format_checked(resolved_path, sizeof(resolved_path), "%s#%s", content_path, entry_name)) {
@@ -604,7 +703,7 @@ int core_load_content(const char *content_path) {
             }
 
             const struct retro_game_info game_info = {.path = resolved_path};
-            if (current_core.retro_load_game(&game_info)) {
+            if (load_game_with_info(&game_info, NULL, content_path, entry_name)) {
                 const char *method = vfs_bridge_archive_mode() == vfs_archive_streamed
                                          ? lang.muxretro.information_screen.vfs_stream
                                          : lang.muxretro.information_screen.extracted;
@@ -629,7 +728,7 @@ int core_load_content(const char *content_path) {
     void *heap_data = NULL;
     size_t heap_size = 0;
 
-    if (has_patch || !current_core.need_fullpath) {
+    if (has_patch || !need_fullpath) {
         if (read_whole_file(resolved_path, &heap_data, &heap_size) != 0) return -1;
         if (has_patch) {
             core_active_patch_count =
@@ -637,7 +736,7 @@ int core_load_content(const char *content_path) {
         }
     }
 
-    if (current_core.need_fullpath) {
+    if (need_fullpath) {
         if (has_patch) {
             if (write_whole_file(resolved_path, heap_data, heap_size) != 0) {
                 free(heap_data);
@@ -653,7 +752,7 @@ int core_load_content(const char *content_path) {
         game_info.path = resolved_path;
     }
 
-    const int ok = current_core.retro_load_game(&game_info);
+    const int ok = load_game_with_info(&game_info, resolved_path, NULL, NULL);
 
     // Achievements identify what is actually running, and a patched ROM only exists in memory
     if (ok && has_patch && heap_data && device.board.has_network) {
