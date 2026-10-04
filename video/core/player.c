@@ -2764,7 +2764,28 @@ static void handle_page_down(void) {
         video_playback_ui_section(1);
 }
 
+static int seek_hotkey_direction(const mux_input_type input) {
+    if (input == config.video.hotkey_seek_back || input == config.video.hotkey_seek_back_long) return -1;
+    if (input == config.video.hotkey_seek_forward || input == config.video.hotkey_seek_forward_long) return 1;
+    return 0;
+}
+
+static int handle_seek_hotkey(const mux_input_type input) {
+    if (input == config.video.hotkey_seek_back)
+        seek_back();
+    else if (input == config.video.hotkey_seek_forward)
+        seek_forward();
+    else if (input == config.video.hotkey_seek_back_long)
+        seek_back_long();
+    else if (input == config.video.hotkey_seek_forward_long)
+        seek_forward_long();
+    else
+        return 0;
+    return 1;
+}
+
 static void handle_configured_hotkey(const mux_input_type input, const mux_input_action action) {
+    if (action == mux_input_release && seek_hotkey_direction(input)) video_render_seek_release();
     if (player.ui_input_consumed) {
         player.ui_input_consumed = 0;
         return;
@@ -2799,6 +2820,14 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
             return;
         }
     }
+    if (action == mux_input_hold) {
+        const int direction = seek_hotkey_direction(input);
+        if (menu_combo || !direction) return;
+        if (!player.live && player.duration > 0.0 && !player.audio_only && !player.sequenced_audio)
+            video_render_seek_hold(direction);
+        handle_seek_hotkey(input);
+        return;
+    }
     if (action != mux_input_press) return;
     if (menu_combo) {
         if (input == config.video.hotkey_save_bookmark)
@@ -2816,14 +2845,8 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
     }
     if (input == config.video.hotkey_pause)
         toggle_pause();
-    else if (input == config.video.hotkey_seek_back)
-        seek_back();
-    else if (input == config.video.hotkey_seek_forward)
-        seek_forward();
-    else if (input == config.video.hotkey_seek_back_long)
-        seek_back_long();
-    else if (input == config.video.hotkey_seek_forward_long)
-        seek_forward_long();
+    else if (handle_seek_hotkey(input))
+        return;
     else if (input == config.video.hotkey_repeat)
         toggle_repeat();
     else if (input == config.video.hotkey_shuffle)

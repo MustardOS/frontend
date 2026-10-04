@@ -453,7 +453,18 @@ static void update_overlay(void) {
     overlay_key[0] = '\0';
 }
 
-#define SEEK_EFFECT_MS 650
+#define SEEK_EFFECT_MS      650
+#define SEEK_HOLD_RAMP_UP   400
+#define SEEK_HOLD_RAMP_DOWN 500
+#define SEEK_HOLD_TIMEOUT   400
+
+static int seek_hold_active;
+static int seek_hold_direction;
+static uint32_t seek_hold_changed;
+static uint32_t seek_hold_last;
+static float seek_hold_from;
+static float seek_hold_phase;
+static uint32_t seek_hold_phase_tick;
 
 static uint32_t seek_noise(uint32_t *state) {
     uint32_t value = *state;
@@ -469,27 +480,15 @@ static void clip_rows(int *top, int *bottom) {
     if (*bottom > destination.y + destination.h) *bottom = destination.y + destination.h;
 }
 
-static void render_seek_effect(SDL_Renderer *target, const SDL_Rect *texture_source) {
-    if (!seek_effect_start || destination.w <= 0 || destination.h <= 0) return;
+static int seek_effect_allowed(void) {
+    return config.visual.wasabi_seek_effect && !config.visual.reduce_motion && !audio_active && !static_active;
+}
 
-    const uint32_t elapsed = SDL_GetTicks() - seek_effect_start;
-    if (elapsed >= SEEK_EFFECT_MS) return;
-
-    const float progress = (float) elapsed / (float) SEEK_EFFECT_MS;
-    const float strength = 1.0f - progress * progress;
+static void draw_tape_band(
+    SDL_Renderer *target, const SDL_Rect *texture_source, const int band_top, const int band_height,
+    const float strength, const float jitter, uint32_t *state, const int specks
+) {
     const float scale = (float) destination.w / 320.0f;
-
-    uint32_t state = 0x9E3779B9u ^ ((elapsed / 33u) + 1u) * 2654435761u;
-
-    const int band_height = destination.h / 7 > 4 ? destination.h / 7 : 4;
-    const int travel = destination.h + band_height;
-    const int offset = (int) (progress * 1.5f * (float) travel) % travel;
-    const int band_top =
-        seek_effect_direction > 0 ? destination.y - band_height + offset : destination.y + destination.h - offset;
-
-    SDL_RenderSetClipRect(target, &destination);
-    SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_BLEND);
-
     const int can_shift =
         texture && texture_source && texture_source->h > 0 && config.video.rotation == 0 && !config.video.mirrored;
     const int strips = 6;
@@ -501,7 +500,7 @@ static void render_seek_effect(SDL_Renderer *target, const SDL_Rect *texture_sou
         if (bottom <= top) continue;
 
         if (can_shift) {
-            const int shift = (int) ((float) ((int) (seek_noise(&state) % 25u) - 12) * strength * scale);
+            const int shift = (int) ((float) ((int) (seek_noise(state) % 25u) - 12) * jitter * scale);
             const int source_top = texture_source->y + (top - destination.y) * texture_source->h / destination.h;
             int source_rows = (bottom - top) * texture_source->h / destination.h;
             if (source_rows < 1) source_rows = 1;
@@ -516,8 +515,8 @@ static void render_seek_effect(SDL_Renderer *target, const SDL_Rect *texture_sou
         SDL_RenderFillRect(target, &wash);
     }
 
-    for (int speck = 0; speck < 48; speck++) {
-        const uint32_t noise = seek_noise(&state);
+    for (int speck = 0; speck < specks; speck++) {
+        const uint32_t noise = seek_noise(state);
         int top = band_top + (int) ((noise >> 8) % (uint32_t) band_height);
         int bottom = top + 1 + (int) ((noise >> 24) & 1u) * (int) (scale > 1.0f ? scale : 1.0f);
         clip_rows(&top, &bottom);
@@ -533,7 +532,7 @@ static void render_seek_effect(SDL_Renderer *target, const SDL_Rect *texture_sou
     }
 
     for (int line = 0; line < 3; line++) {
-        const uint32_t noise = seek_noise(&state);
+        const uint32_t noise = seek_noise(state);
         const int height = scale > 1.0f ? (int) scale : 1;
         const SDL_Rect rect = {
             destination.x, destination.y + (int) (noise % (uint32_t) destination.h), destination.w, height
@@ -542,23 +541,145 @@ static void render_seek_effect(SDL_Renderer *target, const SDL_Rect *texture_sou
         SDL_SetRenderDrawColor(target, 255, 255, 255, (Uint8) (48.0f * strength));
         SDL_RenderFillRect(target, &rect);
     }
+}
+
+static void render_seek_effect(SDL_Renderer *target, const SDL_Rect *texture_source) {
+    if (!seek_effect_start || destination.w <= 0 || destination.h <= 0) return;
+
+    const uint32_t elapsed = SDL_GetTicks() - seek_effect_start;
+    if (elapsed >= SEEK_EFFECT_MS) return;
+
+    const float progress = (float) elapsed / (float) SEEK_EFFECT_MS;
+    const float strength = 1.0f - progress * progress;
+
+    uint32_t state = 0x9E3779B9u ^ ((elapsed / 33u) + 1u) * 2654435761u;
+
+    const int band_height = destination.h / 7 > 4 ? destination.h / 7 : 4;
+    const int travel = destination.h + band_height;
+    const int offset = (int) (progress * 1.5f * (float) travel) % travel;
+    const int band_top =
+        seek_effect_direction > 0 ? destination.y - band_height + offset : destination.y + destination.h - offset;
+
+    SDL_RenderSetClipRect(target, &destination);
+    SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_BLEND);
+    draw_tape_band(target, texture_source, band_top, band_height, strength, strength, &state, 48);
+    SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
+    SDL_RenderSetClipRect(target, NULL);
+}
+
+static float smoothstep(const float value) {
+    const float clamped = value < 0.0f ? 0.0f : value > 1.0f ? 1.0f : value;
+    return clamped * clamped * (3.0f - 2.0f * clamped);
+}
+
+static float seek_hold_level(const uint32_t now) {
+    const uint32_t elapsed = now - seek_hold_changed;
+    if (seek_hold_active) {
+        const float ramp = smoothstep((float) elapsed / (float) SEEK_HOLD_RAMP_UP);
+        return seek_hold_from + (1.0f - seek_hold_from) * ramp;
+    }
+
+    return seek_hold_from * (1.0f - smoothstep((float) elapsed / (float) SEEK_HOLD_RAMP_DOWN));
+}
+
+static void render_seek_hold(SDL_Renderer *target, const SDL_Rect *texture_source) {
+    if (destination.w <= 0 || destination.h <= 0) return;
+
+    const uint32_t now = SDL_GetTicks();
+    const float level = seek_hold_level(now);
+    if (level <= 0.0f) return;
+
+    const float strength = sqrtf(level);
+    const int band_height = destination.h / 9 + (int) ((float) destination.h / 10.0f * level);
+    if (band_height <= 0) return;
+
+    if (seek_hold_phase_tick) {
+        const uint32_t step = now - seek_hold_phase_tick;
+        seek_hold_phase += (float) step * level * (float) band_height * 0.012f;
+        seek_hold_phase = fmodf(seek_hold_phase, (float) band_height);
+    }
+    seek_hold_phase_tick = now;
+
+    const float wobble = sinf((float) now * 0.006f) * (float) destination.h * 0.02f * level;
+    const int band_top = destination.y + destination.h / 2 - band_height / 2 + (int) wobble;
+
+    const uint32_t frame = (uint32_t) ((float) now / (33.0f / (0.5f + level)));
+    uint32_t state = 0x85EBCA6Bu ^ (frame + 1u) * 2654435761u;
+
+    SDL_RenderSetClipRect(target, &destination);
+    SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_BLEND);
+    draw_tape_band(target, texture_source, band_top, band_height, strength, level, &state, 16 + (int) (48.0f * level));
+
+    const float scale = (float) destination.w / 320.0f;
+    const int line_height = scale > 1.0f ? (int) scale : 1;
+    for (int line = 0; line < 3; line++) {
+        const float position = fmodf(seek_hold_phase + (float) (band_height * line) / 3.0f, (float) band_height);
+        const int offset = seek_hold_direction > 0 ? (int) position : band_height - 1 - (int) position;
+        int top = band_top + offset;
+        int bottom = top + line_height;
+        clip_rows(&top, &bottom);
+        if (bottom <= top) continue;
+
+        SDL_SetRenderDrawColor(target, 255, 255, 255, (Uint8) (110.0f * strength));
+        const SDL_Rect rect = {destination.x, top, destination.w, bottom - top};
+        SDL_RenderFillRect(target, &rect);
+    }
 
     SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
     SDL_RenderSetClipRect(target, NULL);
 }
 
 void video_render_seek_effect(const int direction) {
-    if (!config.visual.wasabi_seek_effect || config.visual.reduce_motion || audio_active || static_active) return;
+    if (!seek_effect_allowed() || seek_hold_active) return;
 
+    seek_hold_from = 0.0f;
+    seek_hold_changed = SDL_GetTicks();
     seek_effect_direction = direction < 0 ? -1 : 1;
     seek_effect_start = SDL_GetTicks();
     if (!seek_effect_start) seek_effect_start = 1;
 }
 
+void video_render_seek_hold(const int direction) {
+    if (!seek_effect_allowed()) return;
+
+    const uint32_t now = SDL_GetTicks();
+    if (!seek_hold_active) {
+        seek_hold_from = seek_hold_level(now);
+        seek_hold_changed = now;
+        seek_hold_active = 1;
+        seek_hold_phase_tick = 0;
+    }
+
+    seek_hold_direction = direction < 0 ? -1 : 1;
+    seek_hold_last = now;
+    seek_effect_start = 0;
+}
+
+void video_render_seek_release(void) {
+    if (!seek_hold_active) return;
+
+    const uint32_t now = SDL_GetTicks();
+    seek_hold_from = seek_hold_level(now);
+    seek_hold_changed = now;
+    seek_hold_active = 0;
+}
+
 int video_render_seek_tick(void) {
-    if (!seek_effect_start) return 0;
-    if (SDL_GetTicks() - seek_effect_start >= SEEK_EFFECT_MS) seek_effect_start = 0;
-    return 1;
+    const uint32_t now = SDL_GetTicks();
+    if (seek_hold_active && now - seek_hold_last > SEEK_HOLD_TIMEOUT) video_render_seek_release();
+
+    int running = 0;
+    if (seek_effect_start) {
+        if (now - seek_effect_start >= SEEK_EFFECT_MS) seek_effect_start = 0;
+        running = 1;
+    }
+
+    if (seek_hold_active || seek_hold_from > 0.0f) {
+        if (!seek_hold_active && seek_hold_level(now) <= 0.0f) seek_hold_from = 0.0f;
+        running = 1;
+    }
+
+    return running;
 }
 
 static void render_frame(SDL_Renderer *target) {
@@ -616,6 +737,7 @@ static void render_frame(SDL_Renderer *target) {
             texture_source.h *= filter_scale;
         }
         render_seek_effect(target, &texture_source);
+        render_seek_hold(target, &texture_source);
     }
     update_overlay();
     if (overlay_texture) {
