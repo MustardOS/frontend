@@ -929,12 +929,13 @@ static void refresh_activity_labels(void) {
     ui_count_static = (int) activity_count;
 
     const size_t limit = theme.mux.item.count;
-    for (size_t i = 0; i < activity_count && i < limit; ++i) {
+    for (size_t i = 0; i < activity_count && i < limit + (size_t) list_win_peek_rows((int) activity_count); ++i) {
         char label_buffer[MAX_BUFFER_SIZE];
         format_activity_row(&activity_items[i], activity_display_mode, label_buffer);
 
         gen_label(mux_module, "rom", label_buffer);
     }
+    list_win_ungroup_peek((int) activity_count);
 
     lv_obj_update_layout(ui_pnl_content);
     current_item_index = 0;
@@ -1357,6 +1358,7 @@ static void list_nav_move(const int steps, const int direction) {
                 update_activity_list_item, update_activity_list_items
             );
             focus_activity_group(focus_activity_list_index());
+            list_win_update_peek_total((int) activity_count, update_activity_list_item);
         } else {
             nav_move(ui_group, direction);
             nav_move(ui_group_glyph, direction);

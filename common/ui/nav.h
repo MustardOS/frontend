@@ -68,6 +68,14 @@ void list_win_nav_move(
 
 void list_win_update_peek(void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index));
 
+int list_win_peek_rows(int total);
+
+void list_win_ungroup_peek(int total);
+
+void list_win_update_peek_total(
+    int total, void (*update_item_cb)(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, int index)
+);
+
 void add_drop_down_options(lv_obj_t *ui_lbl_item_drop_down, char *options[], int count);
 
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);

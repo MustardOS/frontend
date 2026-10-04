@@ -124,7 +124,7 @@ static void do_forget(void) {
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    gen_step_movement(steps, direction, 2, -1, 1);
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 

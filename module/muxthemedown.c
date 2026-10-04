@@ -138,11 +138,13 @@ static void create_content_items(void) {
     }
     sort_theme_items(theme_items, theme_item_count);
 
+    const uint32_t rows = (uint32_t) (theme.mux.item.count + list_win_peek_rows((int) theme_item_count));
     for (int i = 0; i < theme_item_count; i++) {
-        if (lv_obj_get_child_cnt(ui_pnl_content) >= theme.mux.item.count) break;
+        if (lv_obj_get_child_cnt(ui_pnl_content) >= rows) break;
 
         gen_label(mux_module, is_downloaded(i) ? "theme_down" : "theme", theme_items[i].name);
     }
+    list_win_ungroup_peek((int) theme_item_count);
 }
 
 static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
@@ -191,6 +193,7 @@ static void list_nav_move(const int steps, const int direction) {
             update_list_item, update_list_items
         );
     }
+    list_win_update_peek_total((int) theme_item_count, update_list_item);
 
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
     lv_label_set_text(

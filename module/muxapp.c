@@ -372,9 +372,10 @@ clean_up:
         ui_count_static += (int) item_count;
 
         const size_t limit = theme.mux.item.count;
-        for (size_t i = 0; i < item_count && i < limit; i++) {
+        for (size_t i = 0; i < item_count && i < limit + (size_t) list_win_peek_rows((int) item_count); i++) {
             gen_app_label(i);
         }
+        list_win_ungroup_peek((int) item_count);
     }
 
     if (ui_count_static > 0)
@@ -456,6 +457,7 @@ static void list_nav_move(const int steps, const int direction) {
 
             if (multi_list) list_win_focus_group(list_win_focus_index());
         }
+        if (multi_list) list_win_update_peek(update_list_item);
     }
 
     if (!grid_mode_enabled) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);

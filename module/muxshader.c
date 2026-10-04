@@ -129,7 +129,7 @@ static void generate_available_shaders(void) {
     ui_count_static += (int) item_count;
 
     const size_t limit = theme.mux.item.count;
-    for (size_t i = 0; i < item_count && i < limit; i++) {
+    for (size_t i = 0; i < item_count && i < limit + (size_t) list_win_peek_rows((int) item_count); i++) {
         lv_obj_t *ui_pnl_filter = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_filter);
 
@@ -145,6 +145,7 @@ static void generate_available_shaders(void) {
 
         update_list_item(ui_lbl_filter_item, ui_lbl_filter_item_glyph, (int) i);
     }
+    list_win_ungroup_peek((int) item_count);
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 
