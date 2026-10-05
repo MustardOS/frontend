@@ -17,13 +17,14 @@
 #include <time.h>
 #include <unistd.h>
 
-#define MAX_EVENT_DEVICES       64
-#define MAX_CPU_POLICIES        16
-#define MAX_CPUS                32
-#define MAX_QUIESCE_NAMES       16
-#define MAX_QUIESCED_PROCESSES  64
-#define ARM_DELAY_MILLISECONDS  350
-#define TIMER_SLACK_NANOSECONDS 50000000UL
+#define MAX_EVENT_DEVICES         64
+#define MAX_CPU_POLICIES          16
+#define MAX_CPUS                  32
+#define MAX_QUIESCE_NAMES         16
+#define MAX_QUIESCED_PROCESSES    64
+#define ARM_DELAY_MILLISECONDS    350
+#define CHARGER_POLL_MILLISECONDS 500
+#define TIMER_SLACK_NANOSECONDS   50000000UL
 
 #define BITS_PER_LONG (sizeof(unsigned long) * 8U)
 #define BIT_WORD(bit) ((bit) / BITS_PER_LONG)
@@ -33,11 +34,13 @@ enum suspend_result {
     suspend_wake = 0,
     suspend_error = 1,
     suspend_timeout = 2,
+    suspend_unplugged = 3,
 };
 
 struct suspend_options {
     const char *state;
     const char *power_device;
+    const char *charger_path;
     const char *quiesce_names[MAX_QUIESCE_NAMES];
     size_t quiesce_count;
     int timeout_milliseconds;
@@ -215,7 +218,21 @@ static long long milliseconds_since(const struct timespec *started) {
     return (current.tv_sec - started->tv_sec) * 1000LL + (current.tv_nsec - started->tv_nsec) / 1000000LL;
 }
 
-static int wait_for_power_key(const int descriptor, const int timeout_milliseconds) {
+static int charger_disconnected(const char *charger_path) {
+    if (!charger_path) return 0;
+
+    char value[16];
+    if (read_text(charger_path, value, sizeof(value)) < 0) return 0;
+
+    char *end = NULL;
+    errno = 0;
+    const long state = strtol(value, &end, 10);
+    if (errno != 0 || end == value) return 0;
+
+    return state == 0;
+}
+
+static int wait_for_power_key(const int descriptor, const int timeout_milliseconds, const char *charger_path) {
     struct pollfd input = {
         .fd = descriptor,
         .events = POLLIN,
@@ -231,19 +248,27 @@ static int wait_for_power_key(const int descriptor, const int timeout_millisecon
             return suspend_error;
         }
 
-        const int result = poll(&input, 1, remaining);
-        if (result == 0) return suspend_timeout;
+        if (charger_disconnected(charger_path)) return suspend_unplugged;
+
+        int wait = remaining;
+        if (charger_path && (wait < 0 || wait > CHARGER_POLL_MILLISECONDS)) wait = CHARGER_POLL_MILLISECONDS;
+
+        const int result = poll(&input, 1, wait);
+        if (result == 0 && !charger_path) return suspend_timeout;
         if (result < 0) {
             if (errno == EINTR && !stop_requested) continue;
             return suspend_error;
         }
-        if ((input.revents & (POLLERR | POLLHUP | POLLNVAL)) != 0) return suspend_error;
 
-        struct input_event event;
-        while (read(descriptor, &event, sizeof(event)) == (ssize_t) sizeof(event)) {
-            if (event.type == EV_KEY && event.code == KEY_POWER && event.value == 1) return suspend_wake;
+        if (result > 0) {
+            if ((input.revents & (POLLERR | POLLHUP | POLLNVAL)) != 0) return suspend_error;
+
+            struct input_event event;
+            while (read(descriptor, &event, sizeof(event)) == (ssize_t) sizeof(event)) {
+                if (event.type == EV_KEY && event.code == KEY_POWER && event.value == 1) return suspend_wake;
+            }
+            if (errno != EAGAIN && errno != EWOULDBLOCK) return suspend_error;
         }
-        if (errno != EAGAIN && errno != EWOULDBLOCK) return suspend_error;
 
         if (timeout_milliseconds >= 0) {
             const long long elapsed = milliseconds_since(&started);
@@ -434,7 +459,7 @@ static int wait_in_userspace(const struct suspend_options *options) {
         begin_optimisation(&optimisation, options->quiesce_names, options->quiesce_count);
     }
 
-    const int result = wait_for_power_key(descriptor, options->timeout_milliseconds);
+    const int result = wait_for_power_key(descriptor, options->timeout_milliseconds, options->charger_path);
     const int saved_errno = errno;
 
     if (options->optimise) restore_optimisation(&optimisation);
@@ -553,7 +578,7 @@ static void usage(FILE *stream, const char *program) {
     fprintf(
         stream,
         "Usage: %s [--state userspace|auto|mem|freeze|standby] [--timeout seconds]\n"
-        "          [--power-device name] [--optimise] [--quiesce executable]\n",
+        "          [--power-device name] [--charger path] [--optimise] [--quiesce executable]\n",
         program
     );
 }
@@ -573,6 +598,8 @@ static int parse_options(const int argc, char **argv, struct suspend_options *op
             }
         } else if (strcmp(argv[index], "--power-device") == 0 && index + 1 < argc) {
             options->power_device = argv[++index];
+        } else if (strcmp(argv[index], "--charger") == 0 && index + 1 < argc) {
+            options->charger_path = argv[++index];
         } else if (strcmp(argv[index], "--optimise") == 0) {
             options->optimise = 1;
         } else if (strcmp(argv[index], "--quiesce") == 0 && index + 1 < argc) {
@@ -602,6 +629,10 @@ static int parse_options(const int argc, char **argv, struct suspend_options *op
     }
     if (strcmp(options->state, "userspace") != 0 && (options->optimise || options->quiesce_count > 0)) {
         fprintf(stderr, "mususpend: --optimise and --quiesce require --state userspace\n");
+        return 0;
+    }
+    if (strcmp(options->state, "userspace") != 0 && options->charger_path) {
+        fprintf(stderr, "mususpend: --charger requires --state userspace\n");
         return 0;
     }
 
