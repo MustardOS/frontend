@@ -45,9 +45,8 @@ static int token_matches(const char *text, const char *token) {
 }
 
 static int named_disc_number(const char *text) {
-    static const char *const names[] = {
-        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"
-    };
+    static const char *const names[] = {"one",   "two",   "three", "four", "five",   "six",
+                                        "seven", "eight", "nine",  "ten",  "eleven", "twelve"};
     static const char *const roman[] = {"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"};
 
     for (size_t i = 0; i < A_SIZE(names); i++)
@@ -125,10 +124,7 @@ static void refresh_disc_labels(void) {
             if (mux_retro_disk_get_image_path((unsigned) i, path, sizeof(path))) number = disc_number_from_text(path);
         }
 
-        if (number)
-            snprintf(
-                disc_identifiers[i], sizeof(disc_identifiers[i]), lang.muxretro.diskcontrol.disc, number
-            );
+        if (number) snprintf(disc_identifiers[i], sizeof(disc_identifiers[i]), lang.muxretro.diskcontrol.disc, number);
     }
 }
 
@@ -158,8 +154,7 @@ static void refresh_current_marker(void) {
         char display_value[DISKCONTROL_VALUE_MAX];
         if (disc_identifiers[i][0] && inserted) {
             snprintf(
-                display_value, sizeof(display_value), "%s - %s", disc_identifiers[i],
-                lang.muxretro.diskcontrol.inserted
+                display_value, sizeof(display_value), "%s - %s", disc_identifiers[i], lang.muxretro.diskcontrol.inserted
             );
         } else if (disc_identifiers[i][0]) {
             snprintf(display_value, sizeof(display_value), "%s", disc_identifiers[i]);

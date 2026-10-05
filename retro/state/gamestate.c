@@ -22,7 +22,7 @@
 #include "../cheevo/cheevo.h"
 #include "../settings/settings.h"
 
-#define MAX_STATE_SIZE 512
+#define MAX_STATE_SIZE       512
 #define DISC_INSERT_DELAY_MS 150
 
 struct gamestate_slot gamestate_slots[GAMESTATE_MAX_SLOTS];
@@ -834,8 +834,9 @@ int gamestate_delete(const int index) {
     return 0;
 }
 
-static int load_slot(const struct gamestate_slot *slot, const enum history_source source, const int keep_history,
-                     const int show_message) {
+static int load_slot(
+    const struct gamestate_slot *slot, const enum history_source source, const int keep_history, const int show_message
+) {
     int original_index;
     int original_ejected;
     char original_path[GAMESTATE_DISC_PATH_MAX];
