@@ -224,8 +224,10 @@ int audio_transition_fill_handoff(void *stream, const int length, const int volu
         if (volume != 100) {
             float *samples = stream;
             const float gain = (float) volume / 100.0f;
-            for (int sample = 0; sample < count * transition.channels; sample++)
-                samples[sample] *= gain;
+            for (int sample = 0; sample < count * transition.channels; sample++) {
+                const float boosted = samples[sample] * gain;
+                samples[sample] = boosted > 1.0f ? 1.0f : boosted < -1.0f ? -1.0f : boosted;
+            }
         }
     }
     if (count < requested)

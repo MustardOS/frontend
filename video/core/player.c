@@ -683,6 +683,12 @@ static void audio_speed_write(const float *source, const int frames) {
     if (output_frames > 0) audio_write(player.audio_speed_convert, output_frames);
 }
 
+static float boost_sample(const float sample) {
+    if (sample > 1.0f) return 1.0f;
+    if (sample < -1.0f) return -1.0f;
+    return sample;
+}
+
 static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, const int length) {
     if (audio_transition_fill_handoff(stream, length, config.video.volume)) {
         if (player.audio_channels > 0)
@@ -765,14 +771,14 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
         }
         const size_t samples = (size_t) output_frames * (size_t) player.audio_channels;
         for (size_t sample = 0; sample < samples; sample++)
-            output[sample] *= volume;
+            output[sample] = boost_sample(output[sample] * volume);
         wasabi_eq_process(output, output_frames, player.audio_channels, player.audio_rate);
         video_render_audio_samples(output, output_frames, player.audio_channels);
         return;
     }
     for (int frame = 0; frame < output_frames; frame++) {
         for (int channel = 0; channel < channels; channel++) {
-            float sample = output[(size_t) frame * player.audio_channels + channel] * volume;
+            float sample = boost_sample(output[(size_t) frame * player.audio_channels + channel] * volume);
             if (filter == 1) {
                 player.audio_filter_state[channel] += 0.15f * (sample - player.audio_filter_state[channel]);
                 sample = player.audio_filter_state[channel];
@@ -790,9 +796,21 @@ static void audio_callback(void *unused __attribute__((unused)), Uint8 *stream, 
     video_render_audio_samples(output, output_frames, player.audio_channels);
 }
 
+static int sequenced_volume(void) {
+    const int volume = config.video.volume < 100 ? config.video.volume : 100;
+    return volume * MIX_MAX_VOLUME / 100;
+}
+
 static void audio_postmix(void *unused __attribute__((unused)), Uint8 *stream, const int length) {
     const int bytes_per_frame = player.audio_channels * (int) sizeof(float);
     if (!stream || bytes_per_frame <= 0 || length < bytes_per_frame) return;
+    if (config.video.volume > 100) {
+        const float gain = (float) config.video.volume / 100.0f;
+        float *samples = (float *) stream;
+        const size_t count = (size_t) (length / bytes_per_frame) * (size_t) player.audio_channels;
+        for (size_t sample = 0; sample < count; sample++)
+            samples[sample] = boost_sample(samples[sample] * gain);
+    }
     wasabi_eq_process((float *) stream, length / bytes_per_frame, player.audio_channels, player.audio_rate);
     video_render_audio_samples((const float *) stream, length / bytes_per_frame, player.audio_channels);
 }
@@ -1627,7 +1645,7 @@ void video_player_toggle_menu_playback(void) {
 
 void video_player_audio_settings_changed(void) {
     wasabi_eq_changed();
-    if (player.sequenced_audio) Mix_VolumeMusic(config.video.volume * MIX_MAX_VOLUME / 100);
+    if (player.sequenced_audio) Mix_VolumeMusic(sequenced_volume());
     SDL_LockAudio();
     memset(player.audio_filter_state, 0, sizeof(player.audio_filter_state));
     memset(player.audio_filter_input, 0, sizeof(player.audio_filter_input));
@@ -2937,7 +2955,7 @@ static void apply_remote_command(const wasabi_remote_command *command) {
         case wasabi_remote_volume: {
             int volume = config.video.volume + (int) command->value;
             if (volume < 0) volume = 0;
-            if (volume > 100) volume = 100;
+            if (volume > 200) volume = 200;
             config.video.volume = (int16_t) volume;
             wasabi_session_accept_volume();
             video_player_audio_settings_changed();
@@ -3218,7 +3236,7 @@ static int player_open_sequenced(const char *uri, const char *title, const video
     player.ui_ready = 1;
     if (!wasabi_audio_ui_init(&player.audio_information)) return player_open_failed("audio interface", 0);
 
-    Mix_VolumeMusic(config.video.volume * MIX_MAX_VOLUME / 100);
+    Mix_VolumeMusic(sequenced_volume());
     Mix_SetPostMix(audio_postmix, NULL);
     if (Mix_PlayMusic(player.sequenced_audio, 0) < 0) return player_open_failed("MIDI playback", 0);
     if (initial_position > 0.0 && (player.duration <= 0.0 || initial_position < player.duration)) {

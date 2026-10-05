@@ -729,7 +729,7 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             SETTING(progress_bar, "progress_bar", cycle(config.video.progress_bar, direction, 10));
             break;
         case wasabi_setting_volume:
-            SETTING(volume, "volume", step(config.video.volume, direction, 5, 0, 100));
+            SETTING(volume, "volume", step(config.video.volume, direction, 5, 0, 200));
             break;
         case wasabi_setting_sample_rate:
             SETTING(sample_rate, "sample_rate", cycle(config.video.sample_rate, direction, 3));

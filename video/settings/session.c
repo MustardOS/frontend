@@ -243,7 +243,7 @@ static void validate_settings(void) {
     VALIDATE(artwork_position, 0, 2);
     VALIDATE(repeat_mode, 0, 2);
     VALIDATE(shuffle, 0, 1);
-    VALIDATE(volume, 0, 100);
+    VALIDATE(volume, 0, 200);
     VALIDATE(sample_rate, 0, 2);
     VALIDATE(audio_latency, 0, 2);
     VALIDATE(audio_period, 0, 3);
