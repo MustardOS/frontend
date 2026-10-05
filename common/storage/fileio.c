@@ -507,7 +507,7 @@ void free_subdirectories(char **dir_names) {
     free(dir_names);
 }
 
-int cfg_read_int(const char *path, const int fallback) {
+int cfg_file_read_int(const char *path, const int fallback) {
     FILE *f = fopen(path, "r");
     if (!f) return fallback;
 

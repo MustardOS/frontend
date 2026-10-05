@@ -36,7 +36,7 @@ static void preset_int(const char *key, const int value) {
     backup_path(key, kept, sizeof(kept));
     create_directories(kept, 1);
 
-    if (!file_exist(kept)) write_text_to_file(kept, "w", INT, cfg_read_int(live, 0));
+    if (!file_exist(kept)) write_text_to_file(kept, "w", INT, cfg_file_read_int(live, 0));
 
     write_text_to_file(live, "w", INT, value);
 }
@@ -50,7 +50,7 @@ static void revert_int(const char *key) {
     char live[MAX_BUFFER_SIZE];
     snprintf(live, sizeof(live), CONF_CONFIG_PATH "%s", key);
 
-    write_text_to_file(live, "w", INT, cfg_read_int(kept, 0));
+    write_text_to_file(live, "w", INT, cfg_file_read_int(kept, 0));
     remove(kept);
 }
 
@@ -109,7 +109,7 @@ static int text_key_base(const size_t key) {
     char live[MAX_BUFFER_SIZE];
     snprintf(live, sizeof(live), CONF_CONFIG_PATH "%s", text_keys[key]);
 
-    const int stored = cfg_read_int(file_exist(kept) ? kept : live, 0);
+    const int stored = cfg_file_read_int(file_exist(kept) ? kept : live, 0);
 
     return stored > 0 ? stored : text_key_theme_size(key);
 }

@@ -152,7 +152,7 @@ static void reload_audio_sinks(void) {
     label_headphone_sinks();
     add_drop_down_options(ui_dro_audio_sink_tweakgen, audio_sinks, audio_sink_count);
 
-    const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", 0);
+    const int live_sink = cfg_file_read_int(CONF_CONFIG_PATH "settings/general/audiosink", 0);
     lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamp_range(live_sink, 0, audio_sink_count - 1));
 
     show_audio_sink_row();
@@ -178,7 +178,7 @@ static void tweakgen_refresh_task(lv_timer_t *timer) {
     if (!rebuilt && audio_headphones_active() != audio_headphones_seen) {
         reload_audio_sinks();
 
-        const int headphone_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
+        const int headphone_sink = cfg_file_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
         if (headphone_sink >= 0 && headphone_sink < audio_sink_count) restore_sink_volume(headphone_sink, 0);
 
         audio_sink_original = lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen);
@@ -187,7 +187,7 @@ static void tweakgen_refresh_task(lv_timer_t *timer) {
 
     if (!rebuilt && lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen) != audio_sink_original) return;
 
-    const int live_sink = cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
+    const int live_sink = cfg_file_read_int(CONF_CONFIG_PATH "settings/general/audiosink", -1);
     if (live_sink < 0 || audio_sink_count <= 0) return;
 
     if (live_sink >= audio_sink_count) {
@@ -274,7 +274,7 @@ static void restore_tweak_options(void) {
         audio_sink_volume_seed(audio_sink_active_index(), current_volume);
 
         const int active_sink =
-            cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
+            cfg_file_read_int(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
         lv_dropdown_set_selected(ui_dro_audio_sink_tweakgen, clamp_range(active_sink, 0, audio_sink_count - 1));
 
         char *active_name = audio_sink_name(active_sink);

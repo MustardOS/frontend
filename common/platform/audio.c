@@ -380,14 +380,14 @@ int audio_sink_volume_load(const int sink_index, const int fallback) {
         return fallback;
     }
 
-    const int level = cfg_read_int(path, fallback);
+    const int level = cfg_file_read_int(path, fallback);
     LOG_DEBUG("audio", "Loaded volume %d for sink %d from %s", level, sink_index, path);
 
     return level;
 }
 
 int audio_sink_active_index(void) {
-    return cfg_read_int(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
+    return cfg_file_read_int(CONF_CONFIG_PATH "settings/general/audiosink", config.settings.general.audiosink);
 }
 
 void audio_sink_volume_seed(const int sink_index, const int value) {

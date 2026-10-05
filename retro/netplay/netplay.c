@@ -351,8 +351,8 @@ static void host_name_load(void) {
 }
 
 static void host_session_settings_load(void) {
-    const int mode = cfg_read_int(NETPLAY_MODE_FILE, netplay_mode_separate);
-    const int slots = cfg_read_int(NETPLAY_SLOTS_FILE, 1);
+    const int mode = cfg_file_read_int(NETPLAY_MODE_FILE, netplay_mode_separate);
+    const int slots = cfg_file_read_int(NETPLAY_SLOTS_FILE, 1);
     netplay.host_mode = mode == netplay_mode_play_together ? netplay_mode_play_together : netplay_mode_separate;
     netplay.host_slots = slots >= 1 && slots <= (int) NETPLAY_CLIENT_CAPACITY ? (unsigned) slots : 1U;
 }

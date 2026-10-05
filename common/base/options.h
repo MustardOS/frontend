@@ -272,5 +272,5 @@
     do {                                                                                                               \
         snprintf(buffer, sizeof(buffer), "%s", PATH);                                                                  \
         cfg_write_def_int(buffer, DEFAULT);                                                                            \
-        FIELD = cfg_read_int(buffer, DEFAULT);                                                                         \
+        FIELD = cfg_file_read_int(buffer, DEFAULT);                                                                    \
     } while (0)

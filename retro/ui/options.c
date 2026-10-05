@@ -56,7 +56,7 @@ store_values(struct core_option_entry *e, const struct retro_core_option_value *
     e->current_index = 0;
 
     int total = 0;
-    for (int v = 0; values[v].value; v++)
+    while (total < RETRO_NUM_CORE_OPTION_VALUES_MAX && values[total].value)
         total++;
 
     e->values = alloc_values(total);

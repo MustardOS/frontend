@@ -50,7 +50,7 @@ int scan_directory_list(
     const char *dirs[], const char *exts[], char ***results, size_t dir_count, size_t ext_count, size_t *result_count
 );
 
-int cfg_read_int(const char *path, int fallback);
+int cfg_file_read_int(const char *path, int fallback);
 
 char **str_parse_file(const char *filename, int *count, enum parse_mode mode);
 
