@@ -445,6 +445,8 @@ static const lang_field lang_fields[] = {
     {"muxassign", LANG_OFF(muxassign.help), lang_specific, "This is where you can assign a core or external emulator to content"},
     {"muxassign", LANG_OFF(muxassign.core_down), lang_specific, "Core Downloader"},
     {"muxassign", LANG_OFF(muxassign.misconfigured), lang_specific, "Core Incorrectly Configured"},
+    {"muxassign", LANG_OFF(muxassign.other_consoles), lang_specific, "Other Consoles"},
+    {"muxassign", LANG_OFF(muxassign.other_handhelds), lang_specific, "Other Handhelds"},
 
     // muxbackup
     {"muxbackup", LANG_OFF(muxbackup.title), lang_specific, "Backup"},
@@ -1998,6 +2000,7 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.gamestate.state), lang_specific, "State"},
     {"muxretro", LANG_OFF(muxretro.gamestate.list), lang_specific, "List"},
     {"muxretro", LANG_OFF(muxretro.gamestate.load_failed), lang_specific, "Failed to Load State"},
+    {"muxretro", LANG_OFF(muxretro.gamestate.disc_restore_failed), lang_specific, "The save state disc could not be restored"},
     {"muxretro", LANG_OFF(muxretro.gamestate.not_supported), lang_specific, "Save states are not supported by this core"},
     {"muxretro", LANG_OFF(muxretro.gamestate.timeline), lang_specific, "Timeline"},
     {"muxretro", LANG_OFF(muxretro.gamestate.timeline_protected), lang_specific, "The newest timeline save is protected and cannot be deleted"},

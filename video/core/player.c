@@ -2939,6 +2939,7 @@ static void apply_remote_command(const wasabi_remote_command *command) {
             if (volume < 0) volume = 0;
             if (volume > 100) volume = 100;
             config.video.volume = (int16_t) volume;
+            wasabi_session_accept_volume();
             video_player_audio_settings_changed();
             break;
         }

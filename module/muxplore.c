@@ -1378,9 +1378,6 @@ static void show_actions_dialog(void) {
     entries[count++] = (more_entry) {more_sort, 1};
     if (!at_root) entries[count++] = (more_entry) {more_top_level, 1};
 
-    if (ui_count_static > 1 && config.visual.shuffle) entries[count++] = (more_entry) {more_random, 1};
-    if (ui_count_static) entries[count++] = (more_entry) {more_collect, 1};
-
     entries[count++] = (more_entry) {more_help, 1};
 
     more_open(&more_menu, &theme, ui_screen, entries, count);

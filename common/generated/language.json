@@ -207,6 +207,7 @@
     "Add to collection": "Add to collection",
     "Adding…": "Adding…",
     "Address": "Address",
+    "All Media": "All Media",
     "An entry for that content already exists": "An entry for that content already exists",
     "Architecture": "Architecture",
     "Authentication is turned off": "Authentication is turned off",
@@ -444,6 +445,7 @@
     "Play Style": "Play Style",
     "Play style": "Play style",
     "Play time": "Play time",
+    "Playback volume": "Playback volume",
     "Playtime": "Playtime",
     "Position": "Position",
     "Power Off": "Power Off",
@@ -710,6 +712,8 @@
     "Core Downloader": "Core Downloader",
     "Core Incorrectly Configured": "Core Incorrectly Configured",
     "No Cores Found...": "No Cores Found...",
+    "Other Consoles": "Other Consoles",
+    "Other Handhelds": "Other Handhelds",
     "This is where you can assign a core or external emulator to content": "This is where you can assign a core or external emulator to content"
   },
   "muxbackup": {
@@ -2873,6 +2877,7 @@
     "The password for your RetroAchievements account.\n\nIt is used once to obtain a sign-in token and is never written to your storage.": "The password for your RetroAchievements account.\n\nIt is used once to obtain a sign-in token and is never written to your storage.",
     "The quality setting for the sound.\n\nAuto matches whatever the game asks for and is almost always the right answer.": "The quality setting for the sound.\n\nAuto matches whatever the game asks for and is almost always the right answer.",
     "The refresh rate the panel claims, next to the rate frames are actually being delivered at.\n\nThe two drifting apart is usually the reason for judder.": "The refresh rate the panel claims, next to the rate frames are actually being delivered at.\n\nThe two drifting apart is usually the reason for judder.",
+    "The save state disc could not be restored": "The save state disc could not be restored",
     "The secure Network Play connection could not be established": "The secure Network Play connection could not be established",
     "The selected Network Play session is no longer available": "The selected Network Play session is no longer available",
     "The shape of the picture.\n\nAuto uses whatever the game asks for, which is right almost all of the time. Pick a specific shape such as 4:3 or 16:9 only if a game looks noticeably stretched or squashed to you.\n\nOr maybe you like 8:7 we don't judge... much!": "The shape of the picture.\n\nAuto uses whatever the game asks for, which is right almost all of the time. Pick a specific shape such as 4:3 or 16:9 only if a game looks noticeably stretched or squashed to you.\n\nOr maybe you like 8:7 we don't judge... much!",

@@ -52,6 +52,15 @@ static int font_directory_visible;
 static int font_directory_has_root;
 
 typedef struct {
+    char directory[MAX_BUFFER_SIZE];
+    char name[MAX_BUFFER_SIZE];
+    unsigned int face;
+    int valid;
+} font_selection_state;
+
+static font_selection_state font_selection[4];
+
+typedef struct {
     char *name;
     char *label;
     char *path;
@@ -511,6 +520,31 @@ static void select_font_name(const char *wanted, const unsigned int face_index) 
     int idx = font_option_index(wanted, face_index);
     if (idx < 0) idx = font_option_index(DEFAULT_FONT_NAME, 0);
     lv_dropdown_set_selected(ui_dro_font_name_font, idx >= 0 ? (uint32_t) idx : 0);
+}
+
+static void populate_font_names(const char *preferred, unsigned int preferred_face);
+
+static void remember_font_selection(const int canonical_type) {
+    if (canonical_type < 0 || canonical_type >= (int) A_SIZE(font_selection)) return;
+
+    font_selection_state *selection = &font_selection[canonical_type];
+    selected_font_directory(selection->directory, sizeof(selection->directory));
+    const uint32_t selected = lv_dropdown_get_selected(ui_dro_font_name_font);
+    if (selected < font_option_count) {
+        snprintf(selection->name, sizeof(selection->name), "%s", font_options[selected].name);
+        selection->face = font_options[selected].face_index;
+    } else {
+        selection->name[0] = '\0';
+        selection->face = 0;
+    }
+    selection->valid = 1;
+}
+
+static void populate_selected_font_type(void) {
+    const int canonical_type = type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font));
+    const font_selection_state *selection = &font_selection[canonical_type];
+    populate_font_directories(selection->valid ? selection->directory : NULL);
+    populate_font_names(selection->valid ? selection->name : "", selection->valid ? selection->face : 0);
 }
 
 static lv_obj_t *font_axis_dropdown(const enum font_axis_id axis) {
@@ -998,6 +1032,9 @@ static void init_dropdown_settings(void) {
     font_footer_size_saved = config.settings.font.footer_size;
     font_panel_size_saved = config.settings.font.panel_size;
 
+    memset(font_selection, 0, sizeof(font_selection));
+    remember_font_selection(type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font)));
+
     font_apply_lock();
 
     music_volume_original = pct_to_int(lv_dropdown_get_selected(ui_dro_music_volume_custom), 0, 100);
@@ -1402,13 +1439,14 @@ static void handle_option_prev(void) {
     if (font_row_locked(focused) || option_kiosk_locked()) return;
     const int focused_row = list_frame_current_row();
 
+    const int previous_font_type = focused == ui_dro_type_font
+                                       ? type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font))
+                                       : -1;
+    if (previous_font_type >= 0) remember_font_selection(previous_font_type);
     move_option(focused, -1);
 
     if (focused == ui_dro_type_font) {
-        populate_font_directories(NULL);
-        populate_font_names(
-            config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
-        );
+        populate_selected_font_type();
         list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
         apply_font_name_visibility();
         font_apply_lock();
@@ -1432,7 +1470,10 @@ static void handle_option_prev(void) {
         check_focus();
     }
 
-    if (font_row(focused)) apply_current_font_settings();
+    if (font_row(focused)) {
+        apply_current_font_settings();
+        remember_font_selection(type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font)));
+    }
     refresh_overlay_preview();
 }
 
@@ -1459,13 +1500,14 @@ static void handle_option_next(void) {
     if (font_row_locked(focused) || option_kiosk_locked()) return;
     const int focused_row = list_frame_current_row();
 
+    const int previous_font_type = focused == ui_dro_type_font
+                                       ? type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font))
+                                       : -1;
+    if (previous_font_type >= 0) remember_font_selection(previous_font_type);
     move_option(focused, +1);
 
     if (focused == ui_dro_type_font) {
-        populate_font_directories(NULL);
-        populate_font_names(
-            config.settings.font.name, config.settings.font.face >= 0 ? (unsigned int) config.settings.font.face : 0
-        );
+        populate_selected_font_type();
         list_frame_set_suppressed(list_frame_row_of(ui_lbl_font_directory_font), !font_directory_visible);
         apply_font_name_visibility();
         font_apply_lock();
@@ -1489,7 +1531,10 @@ static void handle_option_next(void) {
         check_focus();
     }
 
-    if (font_row(focused)) apply_current_font_settings();
+    if (font_row(focused)) {
+        apply_current_font_settings();
+        remember_font_selection(type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font)));
+    }
     refresh_overlay_preview();
 }
 

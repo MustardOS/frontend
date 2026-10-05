@@ -350,6 +350,8 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char core_down[MAX_BUFFER_SIZE];
         char misconfigured[MAX_BUFFER_SIZE];
+        char other_consoles[MAX_BUFFER_SIZE];
+        char other_handhelds[MAX_BUFFER_SIZE];
     } muxassign;
 
     struct {
@@ -2112,6 +2114,7 @@ struct mux_lang {
             char state[MAX_BUFFER_SIZE];
             char list[MAX_BUFFER_SIZE];
             char load_failed[MAX_BUFFER_SIZE];
+            char disc_restore_failed[MAX_BUFFER_SIZE];
             char not_supported[MAX_BUFFER_SIZE];
             char timeline[MAX_BUFFER_SIZE];
             char timeline_protected[MAX_BUFFER_SIZE];

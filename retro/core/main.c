@@ -732,6 +732,7 @@ int main(const int argc, char *argv[]) {
     has_resume = !startup.fresh && !startup_netplay && state_saves_allowed()
                  && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
 
+    int resume_disc_failed = 0;
     if (has_resume) {
         if (show_startup_messages) loading_message_show(lang.muxretro.content_resuming);
         const int warmup_frames = state_saves_warmup_frames();
@@ -756,9 +757,11 @@ int main(const int argc, char *argv[]) {
 
         startup_log_stage("save-state warm-up", &startup_stage);
 
-        if (gamestate_load_most_recent(&load_blocked, show_startup_messages) == 0) {
+        const int resume_result = gamestate_load_most_recent(&load_blocked, show_startup_messages);
+        if (resume_result == 0) {
             LOG_INFO(mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", warmup_frames);
-        }
+        } else if (resume_result == GAMESTATE_LOAD_DISC_FAIL)
+            resume_disc_failed = 1;
         startup_log_stage("save-state restore", &startup_stage);
     } else {
         startup_log_stage("resume selection (no compatible state)", &startup_stage);
@@ -768,6 +771,8 @@ int main(const int argc, char *argv[]) {
 
     pause_menu_init();
     loading_message_hide();
+
+    if (resume_disc_failed) pause_menu_show_toast(lang.muxretro.gamestate.disc_restore_failed);
 
     if (show_startup_messages && cheevo_connecting_background)
         pause_menu_show_toast_timed(lang.muxretro.cheevo.connecting_background, tst_wait_s);

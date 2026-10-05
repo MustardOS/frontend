@@ -6,6 +6,8 @@
 #define GAMESTATE_NAME_MAX       128
 #define GAMESTATE_TIMELINE_DEPTH 10
 #define GAMESTATE_TRASH_MAX      10
+#define GAMESTATE_DISC_PATH_MAX  512
+#define GAMESTATE_LOAD_DISC_FAIL -2
 
 struct gamestate_slot {
     int index;
@@ -16,6 +18,9 @@ struct gamestate_slot {
     char crc[16];
     char core[64];
     char core_version[64];
+    int disc_index;
+    int disc_ejected;
+    char disc_path[GAMESTATE_DISC_PATH_MAX];
 };
 
 extern struct gamestate_slot gamestate_slots[GAMESTATE_MAX_SLOTS];
@@ -77,6 +82,10 @@ int gamestate_timeline_load(int slot);
 int gamestate_timeline_delete(int slot);
 
 int gamestate_metadata_matches(const struct gamestate_slot *slot);
+
+void gamestate_capture_disc(int *index, int *ejected, char *path, size_t path_len);
+
+int gamestate_restore_disc(int index, int ejected, const char *path);
 
 int gamestate_protect_mismatched_autosave(void);
 

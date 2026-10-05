@@ -1,5 +1,9 @@
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include <common/platform/audio.h>
 #include <common/platform/input.h>
 #include <common/ui/common.h>
@@ -11,6 +15,7 @@
 
 #define DISKCONTROL_MAX_DISCS 32
 #define DISKCONTROL_LABEL_MAX 128
+#define DISKCONTROL_VALUE_MAX 128
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
@@ -19,7 +24,10 @@ static nav_repeat_t rpt_up = {0};
 static nav_repeat_t rpt_down = {0};
 
 static char disc_labels[DISKCONTROL_MAX_DISCS][DISKCONTROL_LABEL_MAX];
+static char disc_identifiers[DISKCONTROL_MAX_DISCS][DISKCONTROL_VALUE_MAX];
 static int disc_count = 0;
+static int pending_disc_index = -1;
+static uint32_t pending_insert_at = 0;
 
 #define ROW_EJECT       0
 #define DISC_ROW(index) ((index) + 1)
@@ -31,15 +39,96 @@ static uint64_t current_nav_mask(void) {
     return (nav_dir_bits() & (BIT(0) | BIT(1))) | (confirm ? BIT(2) : 0) | (back ? BIT(3) : 0) | nav_mask_page();
 }
 
+static int token_matches(const char *text, const char *token) {
+    const size_t length = strlen(token);
+    return strncasecmp(text, token, length) == 0 && !isalnum((unsigned char) text[length]);
+}
+
+static int named_disc_number(const char *text) {
+    static const char *const names[] = {
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"
+    };
+    static const char *const roman[] = {"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"};
+
+    for (size_t i = 0; i < A_SIZE(names); i++)
+        if (token_matches(text, names[i])) return (int) i + 1;
+
+    for (size_t i = A_SIZE(roman); i > 0; i--)
+        if (token_matches(text, roman[i - 1])) return (int) i;
+
+    return 0;
+}
+
+static int disc_number_from_text(const char *text) {
+    if (!text || !*text) return 0;
+
+    for (const char *cursor = text; *cursor; cursor++) {
+        if (cursor > text && isalnum((unsigned char) cursor[-1])) continue;
+
+        size_t keyword_length = 0;
+        if (strncasecmp(cursor, "disc", 4) == 0) {
+            keyword_length = 4;
+        } else if (strncasecmp(cursor, "disk", 4) == 0) {
+            keyword_length = 4;
+        } else if (strncasecmp(cursor, "cd", 2) == 0) {
+            keyword_length = 2;
+        }
+        if (!keyword_length) continue;
+
+        const char *number = cursor + keyword_length;
+        int separated = 0;
+        while (*number && strchr(" \t._-:#([{", *number)) {
+            number++;
+            separated = 1;
+        }
+
+        if (separated && strncasecmp(number, "number", 6) == 0 && !isalnum((unsigned char) number[6])) {
+            number += 6;
+        } else if (separated && strncasecmp(number, "no", 2) == 0 && !isalpha((unsigned char) number[2])) {
+            number += 2;
+        }
+
+        while (*number && strchr(" \t._-:#", *number))
+            number++;
+
+        if (isdigit((unsigned char) *number)) {
+            char *end = NULL;
+            const long parsed = strtol(number, &end, 10);
+            if (parsed > 0 && parsed <= 99 && end && !isalnum((unsigned char) *end)) return (int) parsed;
+        }
+
+        if (separated) {
+            const int parsed = named_disc_number(number);
+            if (parsed > 0) return parsed;
+        }
+    }
+
+    return 0;
+}
+
 static void refresh_disc_labels(void) {
     disc_count = mux_retro_disk_get_num_images();
     if (disc_count > DISKCONTROL_MAX_DISCS) disc_count = DISKCONTROL_MAX_DISCS;
 
     for (int i = 0; i < disc_count; i++) {
+        disc_identifiers[i][0] = '\0';
         if (!mux_retro_disk_get_image_label((unsigned) i, disc_labels[i], sizeof(disc_labels[i]))
             || !disc_labels[i][0]) {
             snprintf(disc_labels[i], sizeof(disc_labels[i]), lang.muxretro.diskcontrol.disc, i + 1);
+            snprintf(disc_identifiers[i], sizeof(disc_identifiers[i]), lang.muxretro.diskcontrol.disc, i + 1);
+            continue;
         }
+
+        int number = disc_number_from_text(disc_labels[i]);
+        if (!number) {
+            char path[PATH_MAX];
+            if (mux_retro_disk_get_image_path((unsigned) i, path, sizeof(path))) number = disc_number_from_text(path);
+        }
+
+        if (number)
+            snprintf(
+                disc_identifiers[i], sizeof(disc_identifiers[i]), lang.muxretro.diskcontrol.disc, number
+            );
     }
 }
 
@@ -65,7 +154,19 @@ static void refresh_current_marker(void) {
         lv_obj_t *value = lv_obj_get_child(panel, 2);
         if (!value) continue;
 
-        lv_label_set_text(value, !ejected && (unsigned) i == current_index ? lang.muxretro.diskcontrol.inserted : "");
+        const int inserted = !ejected && (unsigned) i == current_index;
+        char display_value[DISKCONTROL_VALUE_MAX];
+        if (disc_identifiers[i][0] && inserted) {
+            snprintf(
+                display_value, sizeof(display_value), "%s - %s", disc_identifiers[i],
+                lang.muxretro.diskcontrol.inserted
+            );
+        } else if (disc_identifiers[i][0]) {
+            snprintf(display_value, sizeof(display_value), "%s", disc_identifiers[i]);
+        } else {
+            snprintf(display_value, sizeof(display_value), "%s", inserted ? lang.muxretro.diskcontrol.inserted : "");
+        }
+        lv_label_set_text(value, display_value);
     }
 }
 
@@ -102,7 +203,7 @@ static void rebuild_rows(void) {
     );
 
     for (int i = 0; i < disc_count; i++) {
-        build_row(disc_labels[i], "disc");
+        build_row(disc_labels[i], "cd");
     }
 
     ui_count_static = disc_count + 1;
@@ -123,30 +224,56 @@ static void close_diskcontrol(void) {
 }
 
 static void toggle_eject(void) {
-    mux_retro_disk_set_eject_state(!mux_retro_disk_get_eject_state());
+    const int ejected = mux_retro_disk_get_eject_state();
+    if (!mux_retro_disk_set_eject_state(!ejected)) {
+        pause_menu_show_toast(lang.generic.failed);
+        return;
+    }
+
+    refresh_current_marker();
+}
+
+static void complete_disc_swap(void) {
+    const int index = pending_disc_index;
+    pending_disc_index = -1;
+    pending_insert_at = 0;
+
+    if (index < 0 || index >= disc_count) return;
+    if (!mux_retro_disk_set_eject_state(false)) {
+        pause_menu_show_toast(lang.generic.failed);
+        refresh_current_marker();
+        return;
+    }
+
+    char disc_path[PATH_MAX];
+    if (mux_retro_disk_get_image_path((unsigned) index, disc_path, sizeof(disc_path))) cheevo_change_media(disc_path);
+
+    history_clear();
     refresh_current_marker();
 }
 
 static void select_disc(const int index) {
+    if (index < 0 || index >= disc_count || pending_disc_index >= 0) return;
+
     if (!mux_retro_disk_get_eject_state()) {
         pause_menu_show_toast(lang.muxretro.diskcontrol.eject_first);
         return;
     }
 
-    mux_retro_disk_set_image_index((unsigned) index);
-    mux_retro_disk_set_eject_state(false);
+    if (!mux_retro_disk_set_image_index((unsigned) index)) {
+        pause_menu_show_toast(lang.generic.failed);
+        return;
+    }
 
-    // Achievements are tied to the disc that was identified, so the swap has to be declared
-    char disc_path[PATH_MAX];
-    if (mux_retro_disk_get_image_path((unsigned) index, disc_path, sizeof(disc_path))) cheevo_change_media(disc_path);
-
-    history_clear();
-
+    pending_disc_index = index;
+    pending_insert_at = SDL_GetTicks() + 150;
     refresh_current_marker();
 }
 
 void diskcontrol_menu_open(void) {
     active = 1;
+    pending_disc_index = -1;
+    pending_insert_at = 0;
     prev_nav_mask = current_nav_mask();
 
     rebuild_rows();
@@ -165,6 +292,12 @@ void diskcontrol_menu_tick(void) {
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
 
+    const uint32_t now = SDL_GetTicks();
+    if (pending_disc_index >= 0) {
+        if (SDL_TICKS_PASSED(now, pending_insert_at)) complete_disc_swap();
+        return;
+    }
+
     const int menu_tap = pause_menu_take_menu_tap();
     if (pause_menu_help_input(edge & BIT(0), edge & BIT(1), menu_tap || edge & (BIT(2) | BIT(3)))) return;
 
@@ -176,7 +309,6 @@ void diskcontrol_menu_tick(void) {
 
     if (nav_input_halted()) return;
 
-    const uint32_t now = SDL_GetTicks();
     int do_up = nav_repeat_step(&rpt_up, edge & BIT(0), mask & BIT(0), current_item_index > 0, now);
     int do_down =
         nav_repeat_step(&rpt_down, edge & BIT(1), mask & BIT(1), current_item_index < ui_count_static - 1, now);

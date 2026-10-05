@@ -362,6 +362,10 @@ void wasabi_session_apply_idle_policy(void) {
         write_text_to_file(IDLE_SLEEP_INHIBIT, "w", INT, (int) getpid());
 }
 
+void wasabi_session_accept_volume(void) {
+    if (active) baseline_settings.volume = config.video.volume;
+}
+
 int wasabi_session_begin(const char *uri) {
     base_settings = config.video;
     base_live_quality = config.wasabi.live_quality;

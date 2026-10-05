@@ -1306,9 +1306,9 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
         size_t count;
     } nav_rules[] = {
         {1, 1, 0, (int[]) {nav_x, nav_x_glyph, nav_menu, nav_menu_glyph}, 4},
-        {1, 1, 1, (int[]) {nav_x, nav_x_glyph}, 2},
+        {1, 1, 1, (int[]) {nav_x, nav_x_glyph, nav_menu, nav_menu_glyph}, 4},
         {1, 0, 0, (int[]) {nav_x, nav_x_glyph, nav_y, nav_y_glyph, nav_menu, nav_menu_glyph}, 6},
-        {1, 0, 1, (int[]) {nav_x, nav_x_glyph, nav_y, nav_y_glyph}, 4},
+        {1, 0, 1, (int[]) {nav_x, nav_x_glyph, nav_y, nav_y_glyph, nav_menu, nav_menu_glyph}, 6},
         {0, 1, 0, (int[]) {nav_a, nav_a_glyph, nav_x, nav_x_glyph, nav_menu, nav_menu_glyph}, 6},
         {0, 0, 0, (int[]) {nav_a, nav_a_glyph, nav_x, nav_x_glyph, nav_y, nav_y_glyph, nav_menu, nav_menu_glyph}, 8},
         {0, 0, 1, (int[]) {nav_y, nav_y_glyph}, 2},

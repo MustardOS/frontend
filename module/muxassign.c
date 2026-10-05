@@ -73,9 +73,10 @@ static const char *assigned_stem_dir(void) {
 }
 
 static int assigned_row = -1;
+static int initial_core_row;
 
 static int find_core_item_index(void) {
-    return assigned_row < 0 ? 0 : assigned_row;
+    return assigned_row < 0 ? initial_core_row : assigned_row;
 }
 
 static void show_help(void) {
@@ -136,11 +137,19 @@ static void create_namespace_items(void) {
     reset_ui_groups();
     core_row_count = 0;
 
-    for (int i = 0; i < coredb_namespace_count(); i++) {
-        const char *name = coredb_namespace_at(i);
-        if (coredb_system_count(name) == 0) continue;
+    for (int pass = 0; pass < 2; pass++) {
+        for (int i = 0; i < coredb_namespace_count(); i++) {
+            const char *name = coredb_namespace_at(i);
+            if (coredb_system_count(name) == 0) continue;
 
-        add_list_row(name, name, "system");
+            const int general = strcasecmp(name, "Console") == 0 || strcasecmp(name, "Handheld") == 0;
+            if (general != pass) continue;
+
+            const char *label = strcasecmp(name, "Console") == 0    ? lang.muxassign.other_consoles
+                                : strcasecmp(name, "Handheld") == 0 ? lang.muxassign.other_handhelds
+                                                                    : name;
+            add_list_row(label, name, "system");
+        }
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
@@ -275,6 +284,7 @@ static void create_core_items(const char *target) {
                                 && strcasecmp(from_file.id, from_dir.id) == 0;
 
     assigned_row = -1;
+    initial_core_row = 0;
 
     for (int i = 0; i < core_row_count; i++) {
         const struct assigned_core *match = NULL;
@@ -305,6 +315,7 @@ static void create_core_items(const char *target) {
         ui_count_static++;
 
         if (match && (match == &from_file || assigned_row < 0)) assigned_row = ui_count_static - 1;
+        if (!match && strcasecmp(core_ids[i], default_assign) == 0) initial_core_row = ui_count_static - 1;
 
         lv_obj_t *ui_pnl_core = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_core);
@@ -579,11 +590,14 @@ static void handle_help(void) {
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                  {ui_lbl_nav_lr, lang.generic.change, 0},
+                                  {ui_lbl_nav_a_glyph, "", 0},
                                   {ui_lbl_nav_a, lang.generic.select, 0},
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {NULL, NULL, 0}});
+    nav_show_lr(core_row_count > 0);
 
     overlay_display();
 }

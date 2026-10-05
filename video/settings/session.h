@@ -7,3 +7,4 @@ void wasabi_session_discard(void);
 void wasabi_session_reset(void);
 int wasabi_session_save(int choice);
 void wasabi_session_apply_idle_policy(void);
+void wasabi_session_accept_volume(void);

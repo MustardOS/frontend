@@ -16,6 +16,8 @@ static lv_obj_t *ui_objects[ui_count_dynamic];
 static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
+static int applied_temp_original;
+static int applied_temp_original_valid;
 
 static int any_distemp_modified(void) {
 #define DISTEMP(NAME, UDATA)                                                                                           \
@@ -71,6 +73,19 @@ static void apply_colour_temp(const int temp) {
     const char *trimmed = str_trim(dev_path);
     if (trimmed[0] && file_exist(trimmed)) {
         write_text_to_file(trimmed, "w", INT, temp);
+    }
+
+    free(dev_path);
+}
+
+static void capture_applied_colour_temp(void) {
+    char *dev_path = read_all_char_from(CONF_DEVICE_PATH "screen/colour");
+    if (!dev_path) return;
+
+    const char *trimmed = str_trim(dev_path);
+    if (trimmed[0] && file_exist(trimmed)) {
+        applied_temp_original = read_line_int_from(trimmed, 1);
+        applied_temp_original_valid = 1;
     }
 
     free(dev_path);
@@ -294,6 +309,8 @@ static void handle_a(void) {
                 return;
             }
             save_distemp_options();
+        } else if (applied_temp_original_valid) {
+            apply_colour_temp(applied_temp_original);
         }
 
         play_sound(opt == mux_unsaved_save ? snd_confirm : snd_back);
@@ -342,6 +359,8 @@ static void handle_b(void) {
 
     play_sound(snd_back);
     save_distemp_options();
+    if (!schedule_enabled())
+        apply_colour_temp((int) lv_dropdown_get_selected(ui_dro_temp_distemp) - 255);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "displaytemp");
 
@@ -394,6 +413,7 @@ int muxdistemp_main(void) {
     init_elements();
 
     restore_distemp_options();
+    capture_applied_colour_temp();
     init_dropdown_settings();
 
     refresh_navigation();

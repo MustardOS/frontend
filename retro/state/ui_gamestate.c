@@ -698,19 +698,22 @@ void gamestate_menu_tick(void) {
         const int timeline_slot = timeline_at_row(index);
 
         if (action == pending_load) {
-            int load_ok;
+            int load_result;
             if (gamestate_quicksave_exists && index == 0) {
-                load_ok = gamestate_quicksave_load() == 0;
+                load_result = gamestate_quicksave_load();
             } else if (gamestate_autosave_exists && index == qs_offset) {
-                load_ok = gamestate_autosave_load() == 0;
+                load_result = gamestate_autosave_load();
             } else if (timeline_slot >= 0) {
-                load_ok = gamestate_timeline_load(timeline_slot) == 0;
+                load_result = gamestate_timeline_load(timeline_slot);
             } else {
-                load_ok = gamestate_load(index - offset) == 0;
+                load_result = gamestate_load(index - offset);
             }
             close_gamestate();
             pause_menu_toggle();
-            if (!load_ok) pause_menu_show_toast(lang.muxretro.gamestate.load_failed);
+            if (load_result == GAMESTATE_LOAD_DISC_FAIL)
+                pause_menu_show_toast(lang.muxretro.gamestate.disc_restore_failed);
+            else if (load_result != 0)
+                pause_menu_show_toast(lang.muxretro.gamestate.load_failed);
         } else if (action == pending_delete) {
             if (gamestate_quicksave_exists && index == 0) {
                 gamestate_quicksave_delete();
@@ -930,13 +933,17 @@ void gamestate_menu_tick(void) {
         } else if (in_history()) {
             play_sound(snd_confirm);
 
-            const int restored = history_restore(row - state_row_count) == 0;
+            const int restore_result = history_restore(row - state_row_count);
 
             close_gamestate();
             pause_menu_toggle();
-            pause_menu_show_toast(
-                restored ? lang.muxretro.gamestate.history_restored : lang.muxretro.gamestate.history_failed
-            );
+            if (restore_result == GAMESTATE_LOAD_DISC_FAIL)
+                pause_menu_show_toast(lang.muxretro.gamestate.disc_restore_failed);
+            else
+                pause_menu_show_toast(
+                    restore_result == 0 ? lang.muxretro.gamestate.history_restored
+                                        : lang.muxretro.gamestate.history_failed
+                );
         } else {
             play_sound(snd_confirm);
 

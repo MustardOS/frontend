@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <SDL2/SDL.h>
 #include <common/storage/fileio.h>
 #include <common/config/ini.h>
 #include <common/runtime/init.h>
@@ -18,9 +19,11 @@
 #include "../core/core.h"
 #include "../core/muxretro.h"
 #include "../core/paths.h"
+#include "../cheevo/cheevo.h"
 #include "../settings/settings.h"
 
 #define MAX_STATE_SIZE 512
+#define DISC_INSERT_DELAY_MS 150
 
 struct gamestate_slot gamestate_slots[GAMESTATE_MAX_SLOTS];
 int gamestate_slot_count = 0;
@@ -242,6 +245,78 @@ static void stamp_current_metadata(struct gamestate_slot *slot) {
     current_metadata(
         slot->crc, sizeof(slot->crc), slot->core, sizeof(slot->core), slot->core_version, sizeof(slot->core_version)
     );
+    gamestate_capture_disc(&slot->disc_index, &slot->disc_ejected, slot->disc_path, sizeof(slot->disc_path));
+}
+
+void gamestate_capture_disc(int *index, int *ejected, char *path, const size_t path_len) {
+    if (index) *index = -1;
+    if (ejected) *ejected = 0;
+    if (path && path_len) path[0] = '\0';
+
+    const int count = mux_retro_disk_get_num_images();
+    if (count <= 0) return;
+
+    const unsigned current = mux_retro_disk_get_image_index();
+    if (current >= (unsigned) count) return;
+
+    if (index) *index = (int) current;
+    if (ejected) *ejected = mux_retro_disk_get_eject_state();
+    if (path && path_len) mux_retro_disk_get_image_path(current, path, path_len);
+}
+
+int gamestate_restore_disc(const int index, const int ejected, const char *path) {
+    if (index < 0 && (!path || !path[0])) return 0;
+
+    const int count = mux_retro_disk_get_num_images();
+    if (count <= 0) {
+        LOG_ERROR(mux_module, "The save state needs disc media but the core has none available");
+        return -1;
+    }
+
+    int target = -1;
+    if (path && path[0]) {
+        for (int candidate = 0; candidate < count; candidate++) {
+            char candidate_path[GAMESTATE_DISC_PATH_MAX];
+            if (mux_retro_disk_get_image_path((unsigned) candidate, candidate_path, sizeof(candidate_path))
+                && strcmp(candidate_path, path) == 0) {
+                target = candidate;
+                break;
+            }
+        }
+    } else if (index >= 0 && index < count) {
+        target = index;
+    }
+
+    if (target < 0) {
+        LOG_ERROR(mux_module, "The disc recorded by the save state is not available: '%s'", path ? path : "");
+        return -1;
+    }
+
+    const unsigned original_index = mux_retro_disk_get_image_index();
+    const int original_ejected = mux_retro_disk_get_eject_state();
+    const int wanted_ejected = ejected != 0;
+    if (original_index == (unsigned) target && original_ejected == wanted_ejected) return 0;
+
+    if (!original_ejected && !mux_retro_disk_set_eject_state(true)) goto failed;
+    const int disc_changed = original_index != (unsigned) target;
+    if (disc_changed && !mux_retro_disk_set_image_index((unsigned) target)) goto rollback;
+    if (disc_changed && !wanted_ejected) SDL_Delay(DISC_INSERT_DELAY_MS);
+    if (!wanted_ejected && !mux_retro_disk_set_eject_state(false)) goto rollback;
+
+    if (!wanted_ejected) {
+        char selected_path[GAMESTATE_DISC_PATH_MAX];
+        if (mux_retro_disk_get_image_path((unsigned) target, selected_path, sizeof(selected_path)))
+            cheevo_change_media(selected_path);
+    }
+    LOG_INFO(mux_module, "Restored save-state disc %d%s", target + 1, wanted_ejected ? " (ejected)" : "");
+    return 1;
+
+rollback:
+    mux_retro_disk_set_image_index(original_index);
+    if (!original_ejected) mux_retro_disk_set_eject_state(false);
+failed:
+    LOG_ERROR(mux_module, "The core refused the disc required by the save state");
+    return -1;
 }
 
 static int meta_component_matches(const char *stamped, const char *current) {
@@ -294,6 +369,9 @@ static void write_manifest_group(
         mini_set_string(ini, group_id, "crc", meta->crc);
         mini_set_string(ini, group_id, "core", meta->core);
         mini_set_string(ini, group_id, "core_version", meta->core_version);
+        mini_set_int(ini, group_id, "disc_index", meta->disc_index);
+        mini_set_int(ini, group_id, "disc_ejected", meta->disc_ejected);
+        mini_set_string(ini, group_id, "disc_path", meta->disc_path);
     }
 
     if (mini_save(ini, 0) != MINI_OK)
@@ -407,6 +485,9 @@ static void read_manifest_meta(mini_t *ini, const char *group_id, struct gamesta
     snprintf(slot->crc, sizeof(slot->crc), "%s", get_ini_string(ini, group_id, "crc", ""));
     snprintf(slot->core, sizeof(slot->core), "%s", get_ini_string(ini, group_id, "core", ""));
     snprintf(slot->core_version, sizeof(slot->core_version), "%s", get_ini_string(ini, group_id, "core_version", ""));
+    slot->disc_index = mini_get_int(ini, group_id, "disc_index", -1);
+    slot->disc_ejected = mini_get_int(ini, group_id, "disc_ejected", 0) != 0;
+    snprintf(slot->disc_path, sizeof(slot->disc_path), "%s", get_ini_string(ini, group_id, "disc_path", ""));
 }
 
 int gamestate_init(const char *state_dir) {
@@ -753,12 +834,27 @@ int gamestate_delete(const int index) {
     return 0;
 }
 
+static int load_slot(const struct gamestate_slot *slot, const enum history_source source, const int keep_history,
+                     const int show_message) {
+    int original_index;
+    int original_ejected;
+    char original_path[GAMESTATE_DISC_PATH_MAX];
+    gamestate_capture_disc(&original_index, &original_ejected, original_path, sizeof(original_path));
+
+    if (keep_history) history_push(source);
+    if (gamestate_restore_disc(slot->disc_index, slot->disc_ejected, slot->disc_path) < 0)
+        return GAMESTATE_LOAD_DISC_FAIL;
+
+    const int result = state_load(slot->state_path, show_message);
+    if (result != 0) gamestate_restore_disc(original_index, original_ejected, original_path);
+    return result;
+}
+
 int gamestate_load(const int index) {
     if (!state_saves_allowed()) return -1;
     gamestate_publish_flush();
     if (index < 0 || index >= gamestate_slot_count) return -1;
-    history_push(history_source_standard);
-    return state_load(gamestate_slots[index].state_path, 1);
+    return load_slot(&gamestate_slots[index], history_source_standard, 1, 1);
 }
 
 int gamestate_autosave_save(void) {
@@ -815,8 +911,7 @@ int gamestate_autosave_is_armed(void) {
 
 int gamestate_autosave_load(void) {
     if (!state_saves_allowed() || !gamestate_autosave_exists) return -1;
-    history_push(history_source_auto);
-    return state_load(gamestate_autosave.state_path, 1);
+    return load_slot(&gamestate_autosave, history_source_auto, 1, 1);
 }
 
 static int autosave_remove(const int to_trash) {
@@ -875,8 +970,7 @@ int gamestate_quicksave_save(void) {
 
 int gamestate_quicksave_load(void) {
     if (!state_saves_allowed() || !gamestate_quicksave_exists) return -1;
-    history_push(history_source_quick);
-    return state_load(gamestate_quicksave.state_path, 1);
+    return load_slot(&gamestate_quicksave, history_source_quick, 1, 1);
 }
 
 int gamestate_quicksave_delete(void) {
@@ -952,8 +1046,7 @@ int gamestate_timeline_save(void) {
 int gamestate_timeline_load(const int slot) {
     if (!state_saves_allowed() || slot < 0 || slot >= GAMESTATE_TIMELINE_DEPTH || !gamestate_timeline_exists[slot])
         return -1;
-    history_push(history_source_timeline);
-    return state_load(gamestate_timeline[slot].state_path, 1);
+    return load_slot(&gamestate_timeline[slot], history_source_timeline, 1, 1);
 }
 
 int gamestate_timeline_delete(const int slot) {
@@ -1003,6 +1096,9 @@ int gamestate_protect_mismatched_autosave(void) {
     snprintf(slot->crc, sizeof(slot->crc), "%s", gamestate_autosave.crc);
     snprintf(slot->core, sizeof(slot->core), "%s", gamestate_autosave.core);
     snprintf(slot->core_version, sizeof(slot->core_version), "%s", gamestate_autosave.core_version);
+    slot->disc_index = gamestate_autosave.disc_index;
+    slot->disc_ejected = gamestate_autosave.disc_ejected;
+    snprintf(slot->disc_path, sizeof(slot->disc_path), "%s", gamestate_autosave.disc_path);
 
     write_manifest_entry(index, slot->name, slot->created, slot);
     gamestate_slot_count++;
@@ -1036,11 +1132,14 @@ int gamestate_load_most_recent(int *mismatch_blocked, const int show_message) {
 
     if (mismatch_blocked) *mismatch_blocked = count > 0 && !gamestate_resume_matches(candidates[0].slot);
 
+    int disc_failed = 0;
     for (int i = 0; i < count; i++) {
         const struct gamestate_slot *slot = candidates[i].slot;
         if (!gamestate_resume_matches(slot)) continue;
-        if (state_load(slot->state_path, show_message) == 0) return 0;
+        const int result = load_slot(slot, history_source_auto, 0, show_message);
+        if (result == 0) return 0;
+        if (result == GAMESTATE_LOAD_DISC_FAIL) disc_failed = 1;
         LOG_WARN(mux_module, "Could not restore '%s'; trying the next most recent compatible state", slot->state_path);
     }
-    return -1;
+    return disc_failed ? GAMESTATE_LOAD_DISC_FAIL : -1;
 }

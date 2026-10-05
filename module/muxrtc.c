@@ -53,11 +53,9 @@ static void show_help(void) {
 
 static void toggle_custom_format(const int show) {
     if (show) {
-        lv_obj_clear_flag(ui_pnl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
+        SHOW_VALUE_ITEM(rtc, custom);
     } else {
-        lv_obj_add_flag(ui_pnl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_custom_rtc, MU_OBJ_FLAG_HIDE_FLOAT);
+        HIDE_VALUE_ITEM(rtc, custom);
     }
 }
 

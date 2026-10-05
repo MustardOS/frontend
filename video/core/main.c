@@ -517,6 +517,14 @@ static void playlist_skip(const int direction) {
     ));
 }
 
+static void playlist_random(void) {
+    if (msgbox_active || block_input || playlist_entry_count < 2) return;
+
+    size_t target = (size_t) (random() % (long) (playlist_entry_count - 1));
+    if (target >= playlist_selected_index) target++;
+    playlist_select(target);
+}
+
 static void handle_playlist_up(void) {
     playlist_step(-1, 1);
 }
@@ -778,6 +786,7 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
                 [mux_input_dpad_down] = handle_playlist_down,
                 [mux_input_l1] = handle_playlist_page_up,
                 [mux_input_r1] = handle_playlist_page_down,
+                [mux_input_r2] = playlist_random,
             },
         .release_handler = {[mux_input_menu] = handle_help},
         .hold_handler = {

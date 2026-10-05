@@ -23,6 +23,9 @@ struct history_entry {
     long long created;
     int slot;
     int has_thumbnail;
+    int disc_index;
+    int disc_ejected;
+    char disc_path[GAMESTATE_DISC_PATH_MAX];
 };
 
 static char base_dir[512];
@@ -169,6 +172,10 @@ void history_push(const enum history_source source) {
 
     entries[entry_count].source = source;
     entries[entry_count].created = (long long) time(NULL);
+    gamestate_capture_disc(
+        &entries[entry_count].disc_index, &entries[entry_count].disc_ejected, entries[entry_count].disc_path,
+        sizeof(entries[entry_count].disc_path)
+    );
 
     char path[512];
     entries[entry_count].has_thumbnail = 0;
@@ -211,7 +218,19 @@ int history_restore(const int index) {
 
     governor_boost_begin("history restore");
 
+    int original_index;
+    int original_ejected;
+    char original_path[GAMESTATE_DISC_PATH_MAX];
+    gamestate_capture_disc(&original_index, &original_ejected, original_path, sizeof(original_path));
+
+    if (gamestate_restore_disc(entry->disc_index, entry->disc_ejected, entry->disc_path) < 0) {
+        governor_boost_end();
+        LOG_ERROR(mux_module, "The disc for a save state history moment is unavailable");
+        return GAMESTATE_LOAD_DISC_FAIL;
+    }
+
     if (core_state_restore(entry->buffer.data, entry->buffer.size, 0, "history restore") != 0) {
+        gamestate_restore_disc(original_index, original_ejected, original_path);
         governor_boost_end();
         LOG_ERROR(mux_module, "The core refused a stored history moment");
         return -1;

@@ -397,6 +397,8 @@ Stop playback
 Unlock to control playback
 Position
 Wasabi volume
+Playback volume
+All Media
 Wasabi
 Wasabi is not playing anything
 Wasabi did not accept that command

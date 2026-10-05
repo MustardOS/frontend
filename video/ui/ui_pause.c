@@ -331,7 +331,7 @@ static void show_paused_status(void) {
     lv_label_set_text(status_label, lang.muxretro.hotkeys_screen.paused);
     align_status_panel();
     lv_obj_clear_flag(status_panel, LV_OBJ_FLAG_HIDDEN);
-    status_deadline = 0;
+    status_deadline = SDL_GetTicks() + 2000;
 }
 
 static void set_glyph(lv_obj_t *image, const char *name) {
@@ -416,7 +416,7 @@ static void show_timeline(void) {
     if (menu_active || wasabi_settings_audio_active() || playback_duration <= 0.0 || !timeline_panel) return;
     update_timeline();
     lv_obj_clear_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
-    timeline_deadline = playback_paused ? 0 : SDL_GetTicks() + 2000;
+    timeline_deadline = SDL_GetTicks() + 2000;
 }
 
 static int header_shows_clock(void) {
@@ -2553,15 +2553,12 @@ void video_playback_ui_tick(void) {
     }
     if (timeline_deadline && SDL_TICKS_PASSED(now, timeline_deadline)) {
         timeline_deadline = 0;
-        if (!playback_paused) lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(timeline_panel, LV_OBJ_FLAG_HIDDEN);
         redraw = 1;
     }
     if (status_deadline && SDL_TICKS_PASSED(now, status_deadline)) {
         status_deadline = 0;
-        if (playback_paused && !menu_active)
-            show_paused_status();
-        else
-            lv_obj_add_flag(status_panel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(status_panel, LV_OBJ_FLAG_HIDDEN);
         redraw = 1;
     }
     apply_visibility();

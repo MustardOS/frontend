@@ -304,12 +304,18 @@ int hotkeys_task(void) {
                 LOG_INFO(mux_module, "Quick Load (hotkey): blocked, quicksave metadata mismatch");
                 pause_menu_toggle();
                 gamestate_notice_open();
-            } else if (gamestate_quicksave_load() == 0) {
-                LOG_INFO(mux_module, "Quick Load (hotkey)");
-                pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_load);
             } else {
-                LOG_INFO(mux_module, "Quick Load (hotkey): no quicksave to load");
-                pause_menu_show_toast(lang.muxretro.hotkeys_screen.no_quicksave);
+                const int load_result = gamestate_quicksave_load();
+                if (load_result == 0) {
+                    LOG_INFO(mux_module, "Quick Load (hotkey)");
+                    pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_load);
+                } else if (load_result == GAMESTATE_LOAD_DISC_FAIL) {
+                    LOG_WARN(mux_module, "Quick Load (hotkey): required disc is unavailable");
+                    pause_menu_show_toast(lang.muxretro.gamestate.disc_restore_failed);
+                } else {
+                    LOG_INFO(mux_module, "Quick Load (hotkey): no quicksave to load");
+                    pause_menu_show_toast(lang.muxretro.hotkeys_screen.no_quicksave);
+                }
             }
             input_bridge_suppress((mux_input_type) session_settings.hotkey_quickload_button);
             menu_combo_consumed = 1;
