@@ -359,8 +359,7 @@ static void handle_b(void) {
 
     play_sound(snd_back);
     save_distemp_options();
-    if (!schedule_enabled())
-        apply_colour_temp((int) lv_dropdown_get_selected(ui_dro_temp_distemp) - 255);
+    if (!schedule_enabled()) apply_colour_temp((int) lv_dropdown_get_selected(ui_dro_temp_distemp) - 255);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "displaytemp");
 

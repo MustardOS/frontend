@@ -12,33 +12,98 @@ enum { ui_count_dynamic = E_SIZE(DANGER_ELEMENTS) };
 DANGER_ELEMENTS
 #undef DANGER
 
-static long highest_frequency_in(const char *filename) {
-    char *content = read_all_char_from(filename);
-    if (!content) return 0;
+#define FREQUENCY_MAX 32
 
-    long highest = 0;
-    char *save = NULL;
-    for (const char *tok = strtok_r(content, " \t\n", &save); tok; tok = strtok_r(NULL, " \t\n", &save)) {
-        const long value = strtol(tok, NULL, 10);
-        if (value > highest) highest = value;
-    }
+typedef struct {
+    char values[FREQUENCY_MAX][32];
+    char labels[FREQUENCY_MAX][32];
+    char *options[FREQUENCY_MAX];
+    int count;
+} frequency_list;
 
-    free(content);
-    return highest;
+static frequency_list cpu_frequencies;
+static frequency_list gpu_frequencies;
+
+static int compare_descending(const void *a, const void *b) {
+    const long left = *(const long *) a;
+    const long right = *(const long *) b;
+    return (left < right) - (left > right);
 }
 
-static int cpu_can_overclock(void) {
-    const long stock = strtol(device.cpu.max_freq_default, NULL, 10);
-    if (stock <= 0 || !*device.cpu.max_freq) return 0;
+static void build_frequency_list(frequency_list *list, const char *filename, const long divisor) {
+    list->count = 0;
 
+    char *content = filename ? read_all_char_from(filename) : NULL;
+    if (!content) return;
+
+    long found[FREQUENCY_MAX];
+    int total = 0;
+    char *save = NULL;
+    for (const char *tok = strtok_r(content, " \t\n", &save); tok && total < FREQUENCY_MAX;
+         tok = strtok_r(NULL, " \t\n", &save)) {
+        const long value = strtol(tok, NULL, 10);
+        if (value <= 0) continue;
+
+        int seen = 0;
+        for (int i = 0; i < total; i++) {
+            if (found[i] == value) seen = 1;
+        }
+        if (!seen) found[total++] = value;
+    }
+    free(content);
+
+    qsort(found, (size_t) total, sizeof(long), compare_descending);
+
+    for (int i = 0; i < total; i++) {
+        snprintf(list->values[i], sizeof(list->values[i]), "%ld", i == 0 ? 0 : found[i]);
+        if (i == 0) {
+            snprintf(
+                list->labels[i], sizeof(list->labels[i]), "%s (%ld MHz)", lang.muxdanger.highest, found[i] / divisor
+            );
+        } else {
+            snprintf(list->labels[i], sizeof(list->labels[i]), "%ld MHz", found[i] / divisor);
+        }
+        list->options[i] = list->labels[i];
+    }
+    list->count = total;
+}
+
+static void build_cpu_frequencies(void) {
     char listing[MAX_BUFFER_SIZE];
     snprintf(listing, sizeof(listing), "%s", device.cpu.max_freq);
 
     char *slash = strrchr(listing, '/');
-    if (!slash) return 0;
+    if (!*device.cpu.max_freq || !slash) {
+        cpu_frequencies.count = 0;
+        return;
+    }
     snprintf(slash + 1, sizeof(listing) - (slash + 1 - listing), "scaling_available_frequencies");
 
-    return highest_frequency_in(listing) > stock;
+    build_frequency_list(&cpu_frequencies, listing, 1000);
+}
+
+static void build_gpu_frequencies(void) {
+    glob_t found;
+    if (glob("/sys/class/devfreq/*gpu*/available_frequencies", 0, NULL, &found) != 0) {
+        gpu_frequencies.count = 0;
+        return;
+    }
+
+    build_frequency_list(&gpu_frequencies, found.gl_pathc > 0 ? found.gl_pathv[0] : NULL, 1000000);
+    globfree(&found);
+}
+
+static int frequency_index(const frequency_list *list, const char *value) {
+    for (int i = 0; i < list->count; i++) {
+        if (strcmp(value, list->values[i]) == 0) return i;
+    }
+    return 0;
+}
+
+static int save_frequency(lv_obj_t *dropdown, const int original, const frequency_list *list, const char *file) {
+    const int current = (int) lv_dropdown_get_selected(dropdown);
+    if (current == original || current < 0 || current >= list->count) return 0;
+    return write_text_to_file_atomic(file, CHAR, list->values[current]) ? 1 : -1;
 }
 
 static int cpu_cores_can_change(void) {
@@ -50,23 +115,6 @@ static int cpu_cores_can_change(void) {
     const int can_change = found.gl_pathc > 0;
     globfree(&found);
     return can_change;
-}
-
-static int gpu_can_overclock(void) {
-    const long stock = strtol(device.gpu.max_freq_default, NULL, 10);
-    if (stock <= 0) return 0;
-
-    glob_t found;
-    if (glob("/sys/class/devfreq/*gpu*/available_frequencies", 0, NULL, &found) != 0) return 0;
-
-    long highest = 0;
-    for (size_t i = 0; i < found.gl_pathc; i++) {
-        const long value = highest_frequency_in(found.gl_pathv[i]);
-        if (value > highest) highest = value;
-    }
-
-    globfree(&found);
-    return highest > stock;
 }
 
 static void show_help(void) {
@@ -83,13 +131,6 @@ static void init_dropdown_settings(void) {
 #define DANGER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro_##NAME##_danger);
     DANGER_ELEMENTS
 #undef DANGER
-}
-
-static int index_of_value(const char *value, const char **values, const int count) {
-    for (int i = 0; i < count; i++) {
-        if (strcmp(value, values[i]) == 0) return i;
-    }
-    return 0;
 }
 
 static void restore_danger_options(void) {
@@ -117,16 +158,14 @@ static void restore_danger_options(void) {
                                         : 0
     );
 
-    lv_dropdown_set_selected(ui_dro_overclock_danger, index_of_value(config.danger.overclock, overclock_values, 3));
-    lv_dropdown_set_selected(
-        ui_dro_gpu_overclock_danger, index_of_value(config.danger.gpu_overclock, gpu_overclock_values, 2)
-    );
+    lv_dropdown_set_selected(ui_dro_overclock_danger, frequency_index(&cpu_frequencies, config.danger.cpu_max));
+    lv_dropdown_set_selected(ui_dro_gpu_overclock_danger, frequency_index(&gpu_frequencies, config.danger.gpu_max));
 }
 
 static void save_danger_options(void) {
     int is_modified = 0;
     int save_failed = 0;
-    int online_cores_modified = 0;
+    int apply_now = 0;
 
     CHECK_AND_SAVE_STD(danger, kernel_log, "danger/kernellog", INT, 0);
     CHECK_AND_SAVE_STD(danger, io_stats, "danger/iostats", INT, 0);
@@ -138,7 +177,7 @@ static void save_danger_options(void) {
     const int online_cores = lv_dropdown_get_selected(ui_dro_online_cores_danger);
     if (online_cores != online_cores_original) {
         is_modified++;
-        online_cores_modified = 1;
+        apply_now = 1;
         if (!write_text_to_file_atomic(CONF_CONFIG_PATH "danger/online_cores", INT, online_cores)) save_failed++;
     }
 
@@ -153,11 +192,26 @@ static void save_danger_options(void) {
 
     CHECK_AND_SAVE_VAL(danger, card_mode, "danger/cardmode", CHAR, cardmode_values);
     CHECK_AND_SAVE_VAL(danger, state, "danger/state", CHAR, state_values);
-    CHECK_AND_SAVE_VAL(danger, overclock, "danger/overclock", CHAR, overclock_values);
-    CHECK_AND_SAVE_VAL(danger, gpu_overclock, "danger/gpuoverclock", CHAR, gpu_overclock_values);
+    const int cpu_saved = save_frequency(
+        ui_dro_overclock_danger, overclock_original, &cpu_frequencies, CONF_CONFIG_PATH "danger/cpu_max"
+    );
+    if (cpu_saved) {
+        is_modified++;
+        apply_now = 1;
+    }
+    if (cpu_saved < 0) save_failed++;
+
+    const int gpu_saved = save_frequency(
+        ui_dro_gpu_overclock_danger, gpu_overclock_original, &gpu_frequencies, CONF_CONFIG_PATH "danger/gpu_max"
+    );
+    if (gpu_saved) {
+        is_modified++;
+        apply_now = 1;
+    }
+    if (gpu_saved < 0) save_failed++;
 
     if (is_modified > 0) {
-        if (online_cores_modified) {
+        if (apply_now) {
             run_tweak_script(lang.generic.saving);
         } else {
             toast_message(lang.generic.saving, tst_wait_f);
@@ -198,13 +252,20 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, danger, state, lang.muxdanger.state, "state", state_options, 2);
     INIT_OPTION_ITEM(-1, danger, online_cores, lang.muxdanger.onlinecores, "cores", NULL, 0);
 
-    char *overclock_options[] = {lang.generic.disabled, "1608 MHz", "1704 MHz"};
-    INIT_OPTION_ITEM(-1, danger, overclock, lang.muxdanger.overclock, "overclock", overclock_options, 3);
-    INIT_OPTION_ITEM(-1, danger, gpu_overclock, lang.muxdanger.gpuoverclock, "gpuoverclock", disabled_enabled, 2);
+    build_cpu_frequencies();
+    build_gpu_frequencies();
 
-    if (!cpu_can_overclock()) HIDE_OPTION_ITEM(danger, overclock);
+    INIT_OPTION_ITEM(
+        -1, danger, overclock, lang.muxdanger.overclock, "overclock", cpu_frequencies.options, cpu_frequencies.count
+    );
+    INIT_OPTION_ITEM(
+        -1, danger, gpu_overclock, lang.muxdanger.gpuoverclock, "gpuoverclock", gpu_frequencies.options,
+        gpu_frequencies.count
+    );
+
+    if (cpu_frequencies.count < 2) HIDE_OPTION_ITEM(danger, overclock);
     if (!cpu_cores_can_change()) HIDE_OPTION_ITEM(danger, online_cores);
-    if (!gpu_can_overclock()) HIDE_OPTION_ITEM(danger, gpu_overclock);
+    if (gpu_frequencies.count < 2) HIDE_OPTION_ITEM(danger, gpu_overclock);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_lbl_vm_swap_danger, ui_dro_vm_swap_danger, four_values);

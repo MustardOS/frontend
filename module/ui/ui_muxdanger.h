@@ -27,7 +27,3 @@ extern const int time_slice_values[];
 extern const char *cardmode_values[];
 
 extern const char *state_values[];
-
-extern const char *overclock_values[];
-
-extern const char *gpu_overclock_values[];

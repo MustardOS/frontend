@@ -297,6 +297,10 @@ static const char *get_gpu_speed_range(void) {
 
     if (low == 0 || high == 0) return lang.generic.unknown;
 
+    unsigned long long cap = 0;
+    if (gpu_devfreq_path("max_freq", path) == 0 && read_ll_from_file(path, &cap) == 0 && cap >= low && cap < high)
+        high = cap;
+
     snprintf(buffer, sizeof(buffer), "%llu - %llu MHz", low / 1000000ULL, high / 1000000ULL);
     return buffer;
 }
@@ -1174,6 +1178,8 @@ static const char *get_speed_range(void) {
         "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq"
     };
     const char *max_paths[] = {
+        "/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq",
+        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq",
         "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq",
         "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
     };

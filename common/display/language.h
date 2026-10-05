@@ -916,6 +916,7 @@ struct mux_lang {
         char onlinecores[MAX_BUFFER_SIZE];
         char overclock[MAX_BUFFER_SIZE];
         char gpuoverclock[MAX_BUFFER_SIZE];
+        char highest[MAX_BUFFER_SIZE];
         char warn[MAX_BUFFER_SIZE];
         struct {
             char vm_swap[MAX_BUFFER_SIZE];

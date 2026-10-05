@@ -530,8 +530,8 @@ struct mux_config {
         int16_t online_cores;
         char card_mode[MAX_BUFFER_SIZE];
         char state[MAX_BUFFER_SIZE];
-        char overclock[MAX_BUFFER_SIZE];
-        char gpu_overclock[MAX_BUFFER_SIZE];
+        char cpu_max[MAX_BUFFER_SIZE];
+        char gpu_max[MAX_BUFFER_SIZE];
     } danger;
 
     struct {
