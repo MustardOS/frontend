@@ -499,8 +499,8 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "danger", "online_cores", CFG_OFF(danger.online_cores), 0, {.i = 0}, 1, 0, INT16_MAX},
     {CONF_CONFIG_PATH "danger", "cardmode", CFG_OFF(danger.card_mode), 1, {.s = "noop"}},
     {CONF_CONFIG_PATH "danger", "state", CFG_OFF(danger.state), 1, {.s = "mem"}},
-    {CONF_CONFIG_PATH "danger", "overclock", CFG_OFF(danger.overclock), 1, {.s = "1512000"}},
-    {CONF_CONFIG_PATH "danger", "gpuoverclock", CFG_OFF(danger.gpu_overclock), 1, {.s = "0"}},
+    {CONF_CONFIG_PATH "danger", "cpu_max", CFG_OFF(danger.cpu_max), 1, {.s = "0"}},
+    {CONF_CONFIG_PATH "danger", "gpu_max", CFG_OFF(danger.gpu_max), 1, {.s = "0"}},
 };
 // clang-format on
 

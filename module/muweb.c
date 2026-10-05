@@ -3705,7 +3705,7 @@ static void handle_player_api(
         send_error(connection, 404, "Not found");
         return;
     }
-    if (!write_allowed(connection)) return;
+    if (!lists_write_allowed(connection)) return;
 
     double value = 0.0;
     if (body && body_length > 0 && body_length < 32) {
@@ -3834,6 +3834,8 @@ static void handle_request(struct connection *connection) {
         json_number(&out, "readonly", read_only);
         buffer_puts(&out, ",");
         json_number(&out, "lists_open", lists_open());
+        buffer_puts(&out, ",");
+        json_number(&out, "player_open", lists_open());
         buffer_puts(&out, ",");
         json_number(&out, "unlocked", !code_required || session_valid(connection->auth_session));
         buffer_puts(&out, ",");

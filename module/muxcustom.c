@@ -1439,9 +1439,8 @@ static void handle_option_prev(void) {
     if (font_row_locked(focused) || option_kiosk_locked()) return;
     const int focused_row = list_frame_current_row();
 
-    const int previous_font_type = focused == ui_dro_type_font
-                                       ? type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font))
-                                       : -1;
+    const int previous_font_type =
+        focused == ui_dro_type_font ? type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font)) : -1;
     if (previous_font_type >= 0) remember_font_selection(previous_font_type);
     move_option(focused, -1);
 
@@ -1500,9 +1499,8 @@ static void handle_option_next(void) {
     if (font_row_locked(focused) || option_kiosk_locked()) return;
     const int focused_row = list_frame_current_row();
 
-    const int previous_font_type = focused == ui_dro_type_font
-                                       ? type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font))
-                                       : -1;
+    const int previous_font_type =
+        focused == ui_dro_type_font ? type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font)) : -1;
     if (previous_font_type >= 0) remember_font_selection(previous_font_type);
     move_option(focused, +1);
 
