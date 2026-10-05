@@ -266,7 +266,24 @@ static int16_t invert_y_if_needed(const int16_t y) {
 static unsigned port_applied_device[MUX_RETRO_PORT_COUNT];
 static int port_applied_ready;
 
-static void apply_controller_ports(void) {
+static void resolve_port_connections(int *connected) {
+    int resolved[MUX_RETRO_PORT_COUNT];
+    int fed_by_deck[MUX_RETRO_PORT_COUNT] = {0};
+
+    session_settings_resolve_port_sources(resolved);
+
+    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
+        if (resolved[port] < 0 || !session_settings_port_is_deck(port)) continue;
+
+        const int route = session_settings_port_ketchup_route(port);
+        if (route >= 0) fed_by_deck[route] = 1;
+    }
+
+    for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++)
+        connected[port] = (resolved[port] >= 0 && !session_settings_port_is_deck(port)) || fed_by_deck[port];
+}
+
+static void apply_controller_ports(const int force) {
     if (!current_core.retro_set_controller_port_device) return;
 
     // Every port starts unknown so the first pass always tells the core, which a zero would not
@@ -276,18 +293,20 @@ static void apply_controller_ports(void) {
         port_applied_ready = 1;
     }
 
+    int connected[MUX_RETRO_PORT_COUNT];
+    resolve_port_connections(connected);
+
     for (int port = 0; port < MUX_RETRO_PORT_COUNT; port++) {
         unsigned device = RETRO_DEVICE_NONE;
 
-        const int connected =
-            netplay_player_count ? (unsigned) port < netplay_player_count : port_source_connected[port];
+        const int port_connected = netplay_player_count ? (unsigned) port < netplay_player_count : connected[port];
 
-        if (connected) {
+        if (port_connected) {
             device = session_settings.port_device_id[port] ? (unsigned) session_settings.port_device_id[port]
                                                            : RETRO_DEVICE_JOYPAD;
         }
 
-        if (device == port_applied_device[port]) continue;
+        if (!force && device == port_applied_device[port]) continue;
 
         current_core.retro_set_controller_port_device((unsigned) port, device);
         port_applied_device[port] = device;
@@ -295,7 +314,11 @@ static void apply_controller_ports(void) {
 }
 
 void input_bridge_apply_controller_ports(void) {
-    apply_controller_ports();
+    apply_controller_ports(0);
+}
+
+void input_bridge_reapply_controller_ports(void) {
+    apply_controller_ports(1);
 }
 
 void input_bridge_set_netplay_state(unsigned player_count, const int routes_input) {
@@ -309,7 +332,7 @@ void input_bridge_set_netplay_state(unsigned player_count, const int routes_inpu
     if (!count_changed) return;
 
     hw_render_bridge_enter_core_call();
-    apply_controller_ports();
+    apply_controller_ports(0);
     hw_render_bridge_exit_core_call();
 }
 
@@ -441,7 +464,7 @@ static void input_bridge_build_snapshot(void) {
         memset(port_stick_y, 0, sizeof(port_stick_y));
     }
 
-    if (ports_changed) apply_controller_ports();
+    if (ports_changed) apply_controller_ports(0);
     if (track_latency && input_bridge_snapshot_signature() != previous_signature) perf_note_input_change();
 }
 

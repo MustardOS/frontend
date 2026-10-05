@@ -597,6 +597,7 @@ int main(const int argc, char *argv[]) {
     perf_init();
     session_settings_init(core_path_arg, content_path);
     session_settings_launch_begin();
+    input_bridge_reapply_controller_ports();
     if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) session_settings.run_ahead = 0;
 
     if (!build_state_dir(core_path_arg, content_path)) {
@@ -638,6 +639,7 @@ int main(const int argc, char *argv[]) {
         LOG_ERROR(mux_module, "Failed to load content: %s", content_path);
         return abort_startup(1);
     }
+    input_bridge_reapply_controller_ports();
     environment_update_core_option_visibility();
     LOG_DEBUG(mux_module, "core_load_content done");
     startup_log_stage("content load", &startup_stage);

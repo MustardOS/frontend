@@ -200,6 +200,8 @@ uint64_t input_bridge_snapshot_signature(void);
 
 void input_bridge_apply_controller_ports(void);
 
+void input_bridge_reapply_controller_ports(void);
+
 void input_bridge_set_netplay_state(unsigned player_count, int routes_input);
 
 int environment_core_wants_hw_render(void);
