@@ -81,6 +81,7 @@ static const session_field fields[] = {
     SESSION_I16(header_visibility),
     SESSION_I16(time_display),
     SESSION_I16(crt_television),
+    SESSION_I16(seek_effect),
     SESSION_I16(progress_bar),
     SESSION_I16(artwork_position),
     SESSION_I16(repeat_mode),
@@ -239,6 +240,7 @@ static void validate_settings(void) {
     VALIDATE(header_visibility, 0, 5);
     VALIDATE(time_display, 0, 1);
     VALIDATE(crt_television, 0, 1);
+    VALIDATE(seek_effect, 0, 1);
     VALIDATE(progress_bar, 0, 9);
     VALIDATE(artwork_position, 0, 2);
     VALIDATE(repeat_mode, 0, 2);

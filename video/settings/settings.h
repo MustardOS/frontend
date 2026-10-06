@@ -66,6 +66,7 @@ typedef enum {
     wasabi_setting_live_quality,
     wasabi_setting_live_buffer,
     wasabi_setting_crt_television,
+    wasabi_setting_seek_effect,
     wasabi_setting_sleep,
     wasabi_setting_idle_screensaver,
     wasabi_setting_auto_play,

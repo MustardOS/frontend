@@ -508,7 +508,7 @@ static void clip_rows(int *top, int *bottom) {
 }
 
 static int seek_effect_allowed(void) {
-    return config.visual.wasabi_seek_effect && !config.visual.reduce_motion && !audio_active && !static_active;
+    return config.video.seek_effect && !config.visual.reduce_motion && !audio_active && !static_active;
 }
 
 static void draw_tape_band(

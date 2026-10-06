@@ -415,6 +415,8 @@ static void init_navigation_group(void) {
     const char *combo_path = NULL;
     if (str_startswith(device.board.name, "rg")) {
         combo_path = OPT_PATH "share/hotkey/rg.ini";
+    } else if (str_startswith(device.board.name, "rk")) {
+        combo_path = OPT_PATH "share/hotkey/rk.ini";
     } else if (str_startswith(device.board.name, "tui")) {
         combo_path = OPT_PATH "share/hotkey/tui.ini";
     }

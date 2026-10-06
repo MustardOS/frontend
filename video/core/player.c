@@ -60,6 +60,7 @@
 #define PRESENT_INTERVAL_IDLE_MS           33
 #define PRESENT_INTERVAL_BLEND_MS          2
 #define PRESENT_EARLY_SECONDS              0.002
+#define SEEK_HOLD_WAIT_MS                  750
 #define PLAYBACK_UI_INTERVAL_MS            33
 #define CHANNEL_SWITCH_DELAY_MS            1000
 #define LIVE_AUDIO_CLOCK_HARD_SECONDS      0.250
@@ -140,6 +141,11 @@ typedef struct {
     SDL_atomic_t buffering;
     int seek_pending;
     double seek_target;
+    int seek_preview;
+    int seek_awaiting_frame;
+    uint32_t seek_issued_ticks;
+    int seek_deferred;
+    double seek_deferred_target;
     double position;
     double duration;
     double clock_origin;
@@ -1843,16 +1849,18 @@ static int demux_thread(void *unused __attribute__((unused))) {
 
 static int decode_thread(void *unused __attribute__((unused))) {
     while (!SDL_AtomicGet(&player.stop)) {
+        int previewing = 0;
         if (player.live) {
             if (!packet_queue_pop(player.packet)) break;
         } else {
             SDL_LockMutex(player.lock);
-            while ((SDL_AtomicGet(&player.paused) || SDL_AtomicGet(&player.eof)) && !SDL_AtomicGet(&player.stop)
-                   && !player.seek_pending)
+            while (((SDL_AtomicGet(&player.paused) && !player.seek_preview) || SDL_AtomicGet(&player.eof))
+                   && !SDL_AtomicGet(&player.stop) && !player.seek_pending)
                 SDL_CondWait(player.condition, player.lock);
             const int seek = player.seek_pending;
             const double target = player.seek_target;
             player.seek_pending = 0;
+            previewing = SDL_AtomicGet(&player.paused) && player.seek_preview;
             SDL_UnlockMutex(player.lock);
             if (SDL_AtomicGet(&player.stop)) break;
             if (seek) perform_seek(target);
@@ -1867,7 +1875,7 @@ static int decode_thread(void *unused __attribute__((unused))) {
         }
         if (player.packet->stream_index == player.video_stream)
             decode_video(player.packet);
-        else if (player.packet->stream_index == player.audio_stream)
+        else if (player.packet->stream_index == player.audio_stream && !previewing)
             decode_audio(player.packet);
         av_packet_unref(player.packet);
     }
@@ -2232,11 +2240,19 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             player.live_preview_pending = 0;
         }
     }
+    const int paused = SDL_AtomicGet(&player.paused);
+    const int previewing = paused && player.seek_preview;
     while (!moved && player.video_count > 0) {
         AVFrame *head = player.video_queue[player.video_head];
         double timestamp = normalise_position(frame_seconds(head, player.video_time_base));
         if (timestamp < 0.0) timestamp = clock;
-        if (timestamp > clock + PRESENT_EARLY_SECONDS) break;
+        if (timestamp > clock + PRESENT_EARLY_SECONDS) {
+            if (previewing) {
+                if (player.presented_timestamp < 0.0) moved = queue_pop_locked(player.present_frame);
+                player.seek_preview = 0;
+            }
+            break;
+        }
         if (player.video_count > 1) {
             AVFrame *next = player.video_queue[(player.video_head + 1) % player.video_queue_limit];
             const double next_timestamp = normalise_position(frame_seconds(next, player.video_time_base));
@@ -2249,11 +2265,14 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             }
         }
         moved = queue_pop_locked(player.present_frame);
-        if (moved) player.position = timestamp;
+        if (moved && !previewing) player.position = timestamp;
         break;
     }
+    if (previewing && SDL_AtomicGet(&player.eof)) player.seek_preview = 0;
+    const int preview_finished = previewing && !player.seek_preview;
     const int queue_empty = player.video_count == 0;
     SDL_UnlockMutex(player.lock);
+    if (preview_finished) set_present_timer_idle(1);
 
     const int present_due = blend_present_due();
     if (moved) {
@@ -2266,6 +2285,13 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             player.present_dirty = 1;
         }
         player.blend_timestamp = -1.0;
+    }
+    if (player.seek_awaiting_frame && (moved || SDL_TICKS_PASSED(now, player.seek_issued_ticks + SEEK_HOLD_WAIT_MS))) {
+        player.seek_awaiting_frame = 0;
+        if (player.seek_deferred) {
+            player.seek_deferred = 0;
+            request_seek_to_mode(player.seek_deferred_target, 1);
+        }
     }
     if (present_due && player.frame_blend && player.presented_timestamp >= 0.0) {
         double next_timestamp = -1.0;
@@ -2316,6 +2342,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
 
 static void request_seek_to_mode(double target, const int show_position) {
     if (player.live || player.duration <= 0.0) return;
+    player.seek_deferred = 0;
     if (target < 0.0) target = 0.0;
     if (target > player.duration) target = player.duration;
     if (show_position && !player.audio_only && !player.sequenced_audio && fabs(target - player.position) > 0.001)
@@ -2331,11 +2358,17 @@ static void request_seek_to_mode(double target, const int show_position) {
         return;
     }
     audio_reset();
+    const int has_video = player.video_decoder && !player.audio_only;
+    const int preview = has_video && SDL_AtomicGet(&player.paused);
     SDL_LockMutex(player.lock);
     player.seek_target = target;
     player.seek_pending = 1;
+    player.seek_preview = preview;
     SDL_CondSignal(player.condition);
     SDL_UnlockMutex(player.lock);
+    player.seek_awaiting_frame = has_video;
+    player.seek_issued_ticks = SDL_GetTicks();
+    if (preview) set_present_timer_idle(0);
     if (show_position) video_playback_ui_show_position(player.position, player.duration);
 }
 
@@ -2343,24 +2376,24 @@ static void request_seek_to(const double target) {
     request_seek_to_mode(target, 1);
 }
 
+static void request_seek_hold(const double amount) {
+    if (player.live || player.duration <= 0.0) return;
+    const double base = player.seek_deferred ? player.seek_deferred_target : player.position;
+    if (!player.seek_awaiting_frame) {
+        player.seek_deferred = 0;
+        request_seek_to(base + amount);
+        return;
+    }
+    double target = base + amount;
+    if (target < 0.0) target = 0.0;
+    if (target > player.duration) target = player.duration;
+    player.seek_deferred_target = target;
+    player.seek_deferred = 1;
+    video_playback_ui_show_position(target, player.duration);
+}
+
 static void request_seek(const double amount) {
     request_seek_to(player.position + amount);
-}
-
-static void seek_back(void) {
-    request_seek(-10.0);
-}
-
-static void seek_forward(void) {
-    request_seek(10.0);
-}
-
-static void seek_back_long(void) {
-    request_seek(-60.0);
-}
-
-static void seek_forward_long(void) {
-    request_seek(60.0);
 }
 
 static void toggle_pause(void) {
@@ -2442,6 +2475,7 @@ static void resume_playback(void) {
     }
     if (player.lock) {
         SDL_LockMutex(player.lock);
+        player.seek_preview = 0;
         SDL_CondSignal(player.condition);
         SDL_UnlockMutex(player.lock);
     }
@@ -2901,17 +2935,18 @@ static int seek_hotkey_direction(const mux_input_type input) {
     return 0;
 }
 
+static double seek_hotkey_amount(const mux_input_type input) {
+    if (input == config.video.hotkey_seek_back) return -10.0;
+    if (input == config.video.hotkey_seek_forward) return 10.0;
+    if (input == config.video.hotkey_seek_back_long) return -60.0;
+    if (input == config.video.hotkey_seek_forward_long) return 60.0;
+    return 0.0;
+}
+
 static int handle_seek_hotkey(const mux_input_type input) {
-    if (input == config.video.hotkey_seek_back)
-        seek_back();
-    else if (input == config.video.hotkey_seek_forward)
-        seek_forward();
-    else if (input == config.video.hotkey_seek_back_long)
-        seek_back_long();
-    else if (input == config.video.hotkey_seek_forward_long)
-        seek_forward_long();
-    else
-        return 0;
+    const double amount = seek_hotkey_amount(input);
+    if (amount == 0.0) return 0;
+    request_seek(amount);
     return 1;
 }
 
@@ -3013,7 +3048,11 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         player.ui_input_consumed = 0;
         return;
     }
-    if (video_playback_ui_menu_active() || video_playback_ui_naming_active()) return;
+    if (video_playback_ui_menu_active() || video_playback_ui_naming_active()) {
+        if (action == mux_input_press && input == mux_input_r2 && !video_playback_ui_naming_active())
+            video_playback_ui_shuffle();
+        return;
+    }
     const int menu_combo = mux_input_pressed(mux_input_menu);
     if (!player.live && !player.sequenced_audio) {
         if (input == config.video.hotkey_fast_forward && config.video.fast_forward_mode
@@ -3048,7 +3087,7 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         if (menu_combo || !direction) return;
         if (!player.live && player.duration > 0.0 && !player.audio_only && !player.sequenced_audio)
             video_render_seek_hold(direction);
-        handle_seek_hotkey(input);
+        request_seek_hold(seek_hotkey_amount(input));
         return;
     }
     if (action != mux_input_press) return;

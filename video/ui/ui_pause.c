@@ -620,6 +620,9 @@ static void apply_overlay_row_visibility(void) {
     list_frame_set_suppressed(wasabi_setting_live_quality, !live_content || !video_player_live_quality_available());
     list_frame_set_suppressed(wasabi_setting_live_buffer, !live_content);
     list_frame_set_suppressed(wasabi_setting_crt_television, !live_content);
+    list_frame_set_suppressed(
+        wasabi_setting_seek_effect, wasabi_settings_audio_active() || !video_player_seek_available()
+    );
     list_frame_set_suppressed(wasabi_setting_time_display, wasabi_settings_audio_active() || live_content);
     list_frame_set_suppressed(wasabi_setting_visualiser, !wasabi_settings_audio_active());
     list_frame_set_suppressed(wasabi_setting_progress_bar, 0);
@@ -2207,6 +2210,16 @@ void video_playback_ui_section(const int direction) {
     gen_step_movement(0, 1, 2, 0, 0);
     show_nav();
     display_composite_frame();
+}
+
+void video_playback_ui_shuffle(void) {
+    if (!menu_active || !playlist_active || !config.visual.shuffle || playback_playlist_count < 2) return;
+
+    const size_t pick = (size_t) random() % (playback_playlist_count - 1);
+    const size_t target = pick >= playlist_focus_index ? pick + 1 : pick;
+
+    play_sound(snd_navigate);
+    playlist_focus(target);
 }
 
 void video_playback_ui_change(const int direction) {

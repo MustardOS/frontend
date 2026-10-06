@@ -85,6 +85,7 @@ typedef struct {
     int16_t header_visibility;
     int16_t time_display;
     int16_t crt_television;
+    int16_t seek_effect;
     int16_t progress_bar;
     int16_t artwork_position;
     int16_t repeat_mode;
@@ -469,7 +470,6 @@ struct mux_config {
         int16_t background_scale;
         int16_t launchsplash;
         int16_t pickles_startup_messages;
-        int16_t wasabi_seek_effect;
         int16_t blackfade;
         int16_t notify_time;
         int16_t reduce_motion;

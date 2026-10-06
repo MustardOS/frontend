@@ -123,8 +123,8 @@ static const char *knights[] = {
 };
 
 static const char *contributors[] = {
-    "0xada.3", "antikk", "artur_ditu", "bgelmini", "bitter_bizarro", "corey", "imcokeman", "jeodc",
-    "habbening", "key777", "mugwomp93", "saitamasahil", "thewalruzz", "xikteny", "xonglebongle"
+    "0xada.3", "antikk", "artur_ditu", "bgelmini", "bitter_bizarro", "corey", "imcokeman",
+    "jeodc", "habbening", "mugwomp93", "saitamasahil", "thewalruzz", "xikteny", "xonglebongle"
 };
 // clang-format on
 

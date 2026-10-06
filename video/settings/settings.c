@@ -237,6 +237,8 @@ const char *wasabi_setting_label(const wasabi_setting setting) {
             return lang.wasabi_live_tv_buffer;
         case wasabi_setting_crt_television:
             return lang.muxmedia.crt_television;
+        case wasabi_setting_seek_effect:
+            return lang.muxmedia.seek_effect;
         case wasabi_setting_sleep:
             return lang.muxmedia.sleep;
         case wasabi_setting_idle_screensaver:
@@ -315,6 +317,7 @@ const char *wasabi_setting_glyph(const wasabi_setting setting) {
         "quality",
         "memory",
         "video",
+        "seek",
         "idle_sleep",
         "idle_display",
         "repeat",
@@ -576,6 +579,9 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
         case wasabi_setting_crt_television:
             snprintf(value, size, "%s", config.video.crt_television ? lang.generic.enabled : lang.generic.disabled);
             break;
+        case wasabi_setting_seek_effect:
+            snprintf(value, size, "%s", config.video.seek_effect ? lang.generic.enabled : lang.generic.disabled);
+            break;
         case wasabi_setting_sleep:
             snprintf(value, size, "%s", config.video.sleep ? lang.generic.enabled : lang.generic.disabled);
             break;
@@ -724,6 +730,9 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             break;
         case wasabi_setting_crt_television:
             SETTING(crt_television, "crt_television", !config.video.crt_television);
+            break;
+        case wasabi_setting_seek_effect:
+            SETTING(seek_effect, "seek_effect", !config.video.seek_effect);
             break;
         case wasabi_setting_progress_bar:
             SETTING(progress_bar, "progress_bar", cycle(config.video.progress_bar, direction, 10));

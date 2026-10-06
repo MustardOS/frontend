@@ -23,6 +23,8 @@
 
 #define PRIVATE_DEVICE_DIR "/dev/muinput"
 #define PIXEL_SWAP_PATH    "/run/muinput/input_dpad_to_joystick"
+#define SOURCE_WAIT_TRIES  150
+#define SOURCE_WAIT_US     100000
 
 enum portable_layout_id {
     layout_standard,
@@ -267,6 +269,19 @@ static int open_source(struct portable_state *state, int verbose) {
     );
 }
 
+static int open_source_waiting(struct portable_state *state, int verbose) {
+    for (int attempt = 0; attempt < SOURCE_WAIT_TRIES; ++attempt) {
+        if (open_source(state, verbose) == 0) {
+            if (attempt > 0) fprintf(stderr, "Found %s source after %d ms\n", state->profile->id, attempt * 100);
+            return 0;
+        }
+        if (attempt == 0) fprintf(stderr, "Waiting for %s source\n", state->profile->id);
+        usleep(SOURCE_WAIT_US);
+    }
+    fprintf(stderr, "No %s source after %d seconds\n", state->profile->id, SOURCE_WAIT_TRIES / 10);
+    return -1;
+}
+
 static int portable_probe(void) {
     for (size_t i = 0; i < sizeof(portable_profiles) / sizeof(portable_profiles[0]); ++i) {
         if (evdev_source_probe(NULL, portable_profiles[i].source_name)) return 1;
@@ -500,7 +515,7 @@ static int portable_initialise(
     state->axes[1] = ly;
     state->axes[2] = rx;
     state->axes[3] = ry;
-    if (open_source(state, options->verbose) < 0 || isolate_source(state, options->verbose) < 0) {
+    if (open_source_waiting(state, options->verbose) < 0 || isolate_source(state, options->verbose) < 0) {
         evdev_source_close(&state->source);
         free(state);
         return -1;

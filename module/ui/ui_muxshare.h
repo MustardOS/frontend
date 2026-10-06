@@ -706,7 +706,6 @@
     VISUAL(launch_swap, "launch_swap")                                                                                 \
     VISUAL(launchsplash, "splash")                                                                                     \
     VISUAL(pickles_startup_messages, "picklesstartupmessages")                                                         \
-    VISUAL(wasabi_seek_effect, "wasabiseekeffect")                                                                     \
     VISUAL(shuffle, "shuffle")
 
 #define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS

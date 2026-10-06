@@ -35,6 +35,7 @@ video_ui_action video_playback_ui_back(void);
 void video_playback_ui_move(int steps, int direction);
 void video_playback_ui_move_held(int steps, int direction);
 void video_playback_ui_section(int direction);
+void video_playback_ui_shuffle(void);
 void video_playback_ui_change(int direction);
 void video_playback_ui_tick(void);
 void video_playback_ui_set_paused(int paused);

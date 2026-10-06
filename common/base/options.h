@@ -226,7 +226,6 @@
 
 #define MUOS_OPT_FROM "/tmp/opt_fm" // Content Options Module Return
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
-#define MUOS_AIX_LOAD "/tmp/aix_go" // Core/System Assignment Index
 #define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
 #define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader

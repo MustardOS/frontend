@@ -52,13 +52,20 @@ static int find_system_item_index(const char *system_name) {
     return 0;
 }
 
+static int namespace_is_general(const char *name_space) {
+    return strcasecmp(name_space, "Console") == 0 || strcasecmp(name_space, "Handheld") == 0;
+}
+
 static int find_namespace_item_index(const char *name_space) {
     int visible = 0;
-    for (int i = 0; i < coredb_namespace_count(); i++) {
-        const char *candidate = coredb_namespace_at(i);
-        if (coredb_system_count(candidate) == 0) continue;
-        if (strcmp(candidate, name_space) == 0) return visible;
-        visible++;
+    for (int pass = 0; pass < 2; pass++) {
+        for (int i = 0; i < coredb_namespace_count(); i++) {
+            const char *candidate = coredb_namespace_at(i);
+            if (coredb_system_count(candidate) == 0) continue;
+            if (namespace_is_general(candidate) != pass) continue;
+            if (strcmp(candidate, name_space) == 0) return visible;
+            visible++;
+        }
     }
 
     return 0;
@@ -93,15 +100,6 @@ static int take_forced_pick(char *out, const size_t out_size) {
     remove(MUOS_ASS_SYSP);
 
     return 1;
-}
-
-static int take_stored_index(void) {
-    if (!file_exist(MUOS_AIX_LOAD)) return 0;
-
-    const int index = read_line_int_from(MUOS_AIX_LOAD, 1);
-    remove(MUOS_AIX_LOAD);
-
-    return index;
 }
 
 static void load_namespace_level(const char *name_space) {
@@ -142,8 +140,7 @@ static void create_namespace_items(void) {
             const char *name = coredb_namespace_at(i);
             if (coredb_system_count(name) == 0) continue;
 
-            const int general = strcasecmp(name, "Console") == 0 || strcasecmp(name, "Handheld") == 0;
-            if (general != pass) continue;
+            if (namespace_is_general(name) != pass) continue;
 
             const char *label = strcasecmp(name, "Console") == 0    ? lang.muxassign.other_consoles
                                 : strcasecmp(name, "Handheld") == 0 ? lang.muxassign.other_handhelds
@@ -473,8 +470,6 @@ static void handle_a(void) {
         remove(MUOS_SYS_LOAD);
         remove(OPTION_SKIP);
 
-        write_text_to_file(MUOS_AIX_LOAD, "w", INT, current_item_index);
-
         mux_input_stop();
         return;
     }
@@ -511,8 +506,6 @@ static void handle_a(void) {
 
     remove(MUOS_SYS_LOAD);
     remove(OPTION_SKIP);
-
-    write_text_to_file(MUOS_AIX_LOAD, "w", INT, current_item_index);
 
     mux_input_stop();
 }
@@ -670,7 +663,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
 
         create_system_items(rom_system);
 
-        ass_index = *force_sys_name ? find_system_item_index(force_sys_name) : take_stored_index();
+        ass_index = *force_sys_name ? find_system_item_index(force_sys_name) : 0;
     } else if (strcasecmp(rom_system, "none") == 0) {
         char force_sys_name[PATH_MAX] = "";
         const int force_sys_picker = take_forced_pick(force_sys_name, sizeof(force_sys_name));
@@ -684,7 +677,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
         } else {
             create_namespace_items();
 
-            ass_index = *force_sys_name ? find_namespace_item_index(force_sys_name) : take_stored_index();
+            ass_index = *force_sys_name ? find_namespace_item_index(force_sys_name) : 0;
         }
     } else {
         create_core_items(rom_system);
