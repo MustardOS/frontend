@@ -528,14 +528,57 @@ static void handle_raw_power(void) {
     }
 }
 
+static void raw_volume_set(const mux_input_type type, const int down, int *pressed, uint32_t *next_repeat) {
+    if (down) {
+        *pressed = 1;
+        *next_repeat = global_tick + RAW_REPEAT_INITIAL_MS;
+        run_raw_volume_action(type, mux_input_press);
+    } else {
+        *pressed = 0;
+        *next_repeat = 0;
+        run_raw_volume_action(type, mux_input_release);
+    }
+}
+
+static int raw_key_down(const unsigned long *keys, const int code) {
+    const size_t bits = 8 * sizeof(unsigned long);
+    return (int) ((keys[code / bits] >> (code % bits)) & 1UL);
+}
+
+static int raw_volume_keys(int *up, int *down) {
+    unsigned long keys[(KEY_MAX + 8 * sizeof(unsigned long)) / (8 * sizeof(unsigned long))] = {0};
+    if (vol_pfd.fd < 0 || ioctl(vol_pfd.fd, EVIOCGKEY(sizeof(keys)), keys) < 0) return 0;
+
+    const int vita = board_is(board_special_vita_pro);
+    *up = raw_key_down(keys, KEY_VOLUMEUP) || (vita && raw_key_down(keys, BTN_TRIGGER_HAPPY5));
+    *down = raw_key_down(keys, KEY_VOLUMEDOWN) || (vita && raw_key_down(keys, BTN_TRIGGER_HAPPY4));
+    return 1;
+}
+
+static void raw_volume_resync(void) {
+    int up = 0;
+    int down = 0;
+    if (!raw_volume_keys(&up, &down)) return;
+
+    global_tick = mux_input_tick();
+    if (up != raw_vol_up_pressed) raw_volume_set(mux_input_vol_up, up, &raw_vol_up_pressed, &raw_vol_up_next_repeat);
+    if (down != raw_vol_down_pressed)
+        raw_volume_set(mux_input_vol_down, down, &raw_vol_down_pressed, &raw_vol_down_next_repeat);
+}
+
 static void handle_raw_volume(void) {
     if (vol_pfd.fd < 0 || poll(&vol_pfd, 1, 0) <= 0) return;
     struct input_event ev;
+    int dropped = 0;
 
     for (;;) {
         const ssize_t r = read(vol_pfd.fd, &ev, sizeof(ev));
 
         if (r != sizeof(ev)) break;
+        if (ev.type == EV_SYN && ev.code == SYN_DROPPED) {
+            dropped = 1;
+            continue;
+        }
         if (ev.type != EV_KEY) continue;
 
         mux_input_type type;
@@ -557,9 +600,7 @@ static void handle_raw_volume(void) {
         global_tick = mux_input_tick();
 
         if (ev.value == 1) {
-            *pressed = 1;
-            *next_repeat = global_tick + RAW_REPEAT_INITIAL_MS;
-            run_raw_volume_action(type, mux_input_press);
+            raw_volume_set(type, 1, pressed, next_repeat);
         } else if (ev.value == 2) {
             /*
              * Kernel auto-repeat. Treat it as nothing more than "still held":
@@ -573,11 +614,11 @@ static void handle_raw_volume(void) {
              */
             *pressed = 1;
         } else {
-            *pressed = 0;
-            *next_repeat = 0;
-            run_raw_volume_action(type, mux_input_release);
+            raw_volume_set(type, 0, pressed, next_repeat);
         }
     }
+
+    if (dropped) raw_volume_resync();
 }
 
 static int open_raw_event_index(const int idx, struct pollfd *pfd, const char *label) {
@@ -719,6 +760,11 @@ static void handle_idle(void) {
 
     pending_command_task();
     if (lid_fd >= 0) handle_raw_lid();
+
+    const int vol_up_due = raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat;
+    const int vol_down_due =
+        raw_vol_down_pressed && raw_vol_down_next_repeat && global_tick >= raw_vol_down_next_repeat;
+    if (vol_up_due || vol_down_due) raw_volume_resync();
 
     if (raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat) {
         raw_vol_up_next_repeat = global_tick + RAW_REPEAT_INTERVAL_MS;
