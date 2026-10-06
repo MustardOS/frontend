@@ -2316,6 +2316,7 @@ struct mux_lang {
             char game_renderer_software[MAX_BUFFER_SIZE];
             char game_renderer_restart[MAX_BUFFER_SIZE];
             char audio_rate_control_off[MAX_BUFFER_SIZE];
+            char speed_limiter[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
             char play_profile[MAX_BUFFER_SIZE];
             char profile_safe[MAX_BUFFER_SIZE];
@@ -2679,6 +2680,7 @@ struct mux_lang {
                 char audio_period[MAX_BUFFER_SIZE];
                 char audio_filter[MAX_BUFFER_SIZE];
                 char audio_rate_control[MAX_BUFFER_SIZE];
+                char speed_limiter[MAX_BUFFER_SIZE];
             } sound;
             struct {
                 char show_fps[MAX_BUFFER_SIZE];

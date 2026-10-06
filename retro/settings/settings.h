@@ -236,6 +236,7 @@ struct session_settings_t {
     int audio_period_frames;
     int audio_filter;
     int audio_rate_control;
+    int speed_limiter;
     int game_renderer;
     int shimmer_fix;
     int anti_flicker;
@@ -448,6 +449,7 @@ const char *session_settings_audio_latency_name(int mode);
 const char *session_settings_audio_period_name(int frames);
 
 const char *session_settings_audio_rate_control_name(int hundredths);
+const char *session_settings_speed_limiter_name(int enabled);
 
 const char *session_settings_game_renderer_name(int mode);
 
@@ -640,6 +642,7 @@ void session_settings_cycle_audio_latency(int direction);
 void session_settings_cycle_audio_period(int direction);
 
 void session_settings_cycle_audio_rate_control(int direction);
+void session_settings_cycle_speed_limiter(int direction);
 
 void session_settings_cycle_game_renderer(int direction);
 

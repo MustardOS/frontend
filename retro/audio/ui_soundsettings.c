@@ -12,22 +12,25 @@ enum {
     row_audio_period,
     row_audio_filter,
     row_audio_rate_control,
+    row_speed_limiter,
     row_count
 };
 
 static const char *row_labels[row_count] = {
     lang.muxretro.settings_screen.volume,        lang.muxretro.settings_screen.sample_rate,
     lang.muxretro.settings_screen.audio_latency, lang.muxretro.settings_screen.audio_period,
-    lang.muxretro.settings_screen.audio_filter,  lang.muxretro.settings_screen.audio_rate_control
+    lang.muxretro.settings_screen.audio_filter,  lang.muxretro.settings_screen.audio_rate_control,
+    lang.muxretro.settings_screen.speed_limiter
 };
 
-static const char *row_glyphs[row_count] = {"volume",      "samplerate",  "audiolatency",
-                                            "audioperiod", "audiofilter", "audioratecontrol"};
+static const char *row_glyphs[row_count] = {"volume",      "samplerate",       "audiolatency", "audioperiod",
+                                            "audiofilter", "audioratecontrol", "fpslimit"};
 
 static const char *row_help[row_count] = {
     lang.muxretro.help.sound.volume,        lang.muxretro.help.sound.sample_rate,
     lang.muxretro.help.sound.audio_latency, lang.muxretro.help.sound.audio_period,
-    lang.muxretro.help.sound.audio_filter,  lang.muxretro.help.sound.audio_rate_control
+    lang.muxretro.help.sound.audio_filter,  lang.muxretro.help.sound.audio_rate_control,
+    lang.muxretro.help.sound.speed_limiter
 };
 
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
@@ -49,6 +52,9 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             break;
         case row_audio_rate_control:
             snprintf(buf, buf_len, "%s", session_settings_audio_rate_control_name(session_settings.audio_rate_control));
+            break;
+        case row_speed_limiter:
+            snprintf(buf, buf_len, "%s", session_settings_speed_limiter_name(session_settings.speed_limiter));
             break;
         default:
             buf[0] = '\0';
@@ -75,6 +81,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_audio_rate_control:
             session_settings_cycle_audio_rate_control(direction);
+            break;
+        case row_speed_limiter:
+            session_settings_cycle_speed_limiter(direction);
             break;
         default:
             break;

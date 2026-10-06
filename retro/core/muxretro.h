@@ -139,6 +139,8 @@ uint64_t audio_bridge_pickles_burst_recovery_count(void);
 double audio_bridge_pickles_burst_recovery_peak_percent(void);
 
 uint64_t audio_bridge_batch_calls(void);
+uint64_t audio_bridge_backpressure_waits(void);
+uint64_t audio_bridge_backpressure_wait_ms(void);
 
 size_t audio_bridge_batch_peak_frames(void);
 

@@ -8,6 +8,7 @@ typedef enum {
     board_special_tui_spoon,
     board_special_vita_pro,
     board_special_h700,
+    board_special_pixel_2,
 } board_special_t;
 
 typedef enum {

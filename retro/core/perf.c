@@ -861,6 +861,9 @@ int perf_export_trace(const char *path) {
         f, "audio_batch_calls,%llu\n", (unsigned long long) (audio_bridge_batch_calls() - audio_batch_call_baseline)
     );
     fprintf(f, "audio_batch_peak_frames,%zu\n", audio_bridge_batch_peak_frames());
+    fprintf(f, "speed_limiter,%d\n", session_settings.speed_limiter);
+    fprintf(f, "audio_backpressure_waits,%llu\n", (unsigned long long) audio_bridge_backpressure_waits());
+    fprintf(f, "audio_backpressure_wait_ms,%llu\n", (unsigned long long) audio_bridge_backpressure_wait_ms());
     fprintf(
         f, "audio_drc_input_frames,%llu\n",
         (unsigned long long) (audio_bridge_drc_input_frames() - audio_drc_input_baseline)

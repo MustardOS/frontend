@@ -7,6 +7,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <common/platform/board.h>
 #include <common/platform/device.h>
 #include <common/storage/fileio.h>
 #include <common/runtime/init.h>
@@ -133,6 +134,7 @@ static const struct session_settings_t defaults = {
     .audio_period_frames = 512,
     .audio_filter = audio_filter_none,
     .audio_rate_control = 50,
+    .speed_limiter = 0,
     .game_renderer = game_renderer_hardware,
     .shimmer_fix = 0,
     .anti_flicker = 0,
@@ -166,6 +168,7 @@ static const int *active_source_target = default_source_target;
 
 static struct session_settings_t default_settings(void) {
     struct session_settings_t out = defaults;
+    out.speed_limiter = board_is(board_special_pixel_2);
 
     for (int port = 0; port < MUX_INPUT_PORT_COUNT; port++) {
         out.port_device_id[port] = (int) core_input_meta_preferred_device(port);
@@ -427,6 +430,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_CHOICES(audio_period_frames, audio_period_choices),
     SETTING_RANGE(audio_filter, 0, audio_filter_count - 1),
     SETTING_CHOICES(audio_rate_control, audio_rate_control_choices),
+    SETTING_RANGE(speed_limiter, 0, 1),
     SETTING_RANGE(game_renderer, 0, game_renderer_count - 1),
     SETTING_RANGE(shimmer_fix, 0, 1),
     SETTING_RANGE(anti_flicker, 0, 1),
@@ -885,6 +889,10 @@ const char *session_settings_audio_period_name(const int frames) {
 const char *session_settings_game_renderer_name(const int mode) {
     if (mode < 0 || mode >= game_renderer_count) return game_renderer_names[game_renderer_hardware];
     return game_renderer_names[mode];
+}
+
+const char *session_settings_speed_limiter_name(const int enabled) {
+    return enabled ? lang.generic.enabled : lang.generic.disabled;
 }
 
 const char *session_settings_audio_rate_control_name(const int hundredths) {
@@ -1980,6 +1988,14 @@ void session_settings_cycle_audio_period(const int direction) {
 
     LOG_INFO(mux_module, "Audio Period changed to %d frames", session_settings.audio_period_frames);
     audio_bridge_apply_sample_rate();
+}
+
+void session_settings_cycle_speed_limiter(const int direction) {
+    (void) direction;
+    session_settings.speed_limiter = !session_settings.speed_limiter;
+    LOG_INFO(
+        mux_module, "Speed Limiter changed to %s", session_settings_speed_limiter_name(session_settings.speed_limiter)
+    );
 }
 
 void session_settings_cycle_audio_rate_control(const int direction) {

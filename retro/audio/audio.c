@@ -41,7 +41,9 @@
 
 #define HEADROOM_BACKPRESSURE_RATIO 2
 #define HEADROOM_RECOVERY_QUEUE_MS  1000
-#define HEADROOM_FORCED_WAIT_MS     20
+
+#define AUDIO_WRITE_BACKPRESSURE_MAX_MS 100
+#define HEADROOM_FORCED_WAIT_MS         20
 
 #define CONTENT_FPS_SMOOTHING 0.25
 #define CONTENT_FPS_MIN       20.0
@@ -102,6 +104,9 @@ static uint64_t dropped_frames = 0;
 static uint64_t latency_recovery_frames = 0;
 static uint64_t latency_recovery_count = 0;
 static uint64_t batch_calls = 0;
+
+static uint64_t audio_backpressure_waits = 0;
+static uint64_t audio_backpressure_wait_ms = 0;
 static size_t batch_peak_frames = 0;
 
 static _Atomic uint32_t fade_in_remaining = 0;
@@ -453,11 +458,38 @@ static void submit_audio_frames(const int16_t *data, const size_t frames) {
     }
 }
 
+static void audio_write_wait_for_room(void) {
+    if (!session_settings.speed_limiter) return;
+    if (!audio_dev || audio_muted || device_paused || resume_pending || opened_freq == 0 || netplay_is_active()) return;
+    if (audio_speed_multiplier > 1.0001) return;
+
+    const uint32_t ceiling = audio_bridge_backpressure_ceiling_ms();
+    if (ceiling == 0 || audio_bridge_queued_ms() <= ceiling) return;
+
+    audio_backpressure_waits++;
+
+    const uint64_t wait_start = perf_begin();
+    const uint32_t started = SDL_GetTicks();
+    while (audio_bridge_queued_ms() > ceiling && SDL_GetTicks() - started < AUDIO_WRITE_BACKPRESSURE_MAX_MS)
+        SDL_Delay(1);
+    audio_backpressure_wait_ms += SDL_GetTicks() - started;
+    perf_end(perf_stage_audio_backpressure, wait_start);
+}
+
+uint64_t audio_bridge_backpressure_waits(void) {
+    return audio_backpressure_waits;
+}
+
+uint64_t audio_bridge_backpressure_wait_ms(void) {
+    return audio_backpressure_wait_ms;
+}
+
 void audio_bridge_flush_sample_fifo(void) {
     if (sample_fifo_count == 0) return;
 
     if (audio_dev && !audio_muted) {
         submit_audio_frames(sample_fifo, sample_fifo_count);
+        audio_write_wait_for_room();
 
         single_sample_flushes++;
         if (sample_fifo_count > single_sample_max_batch) single_sample_max_batch = sample_fifo_count;
@@ -1251,6 +1283,7 @@ size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames)
     if (frames > batch_peak_frames) batch_peak_frames = frames;
 
     submit_audio_frames(data, frames);
+    audio_write_wait_for_room();
     return frames;
 }
 
