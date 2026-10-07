@@ -645,7 +645,7 @@ static void log_axis_once(const char *source, const uint8_t axis, const int16_t 
     LOG_INFO("input", "%s axis %u active: %d", source, axis, value);
 }
 
-static void reset_raw_analog(void) {
+static void reset_raw_analogue(void) {
     raw_ls_x = 0;
     raw_ls_y = 0;
     raw_rs_x = 0;
@@ -850,7 +850,7 @@ static void clear_input_state(void) {
     primary_source.stick_x[0] = primary_source.stick_x[1] = 0;
     primary_source.stick_y[0] = primary_source.stick_y[1] = 0;
 
-    reset_raw_analog();
+    reset_raw_analogue();
 }
 
 static void flush_input_events(void) {
@@ -1576,7 +1576,7 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
                 if (device_count == 0) {
                     pressed = 0;
                     held = 0;
-                    reset_raw_analog();
+                    reset_raw_analogue();
                     if (next_retry_tick) *next_retry_tick = 0;
                 }
                 open_all_input_devices();
@@ -1589,7 +1589,7 @@ static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick,
                 if (device_count == 0) {
                     pressed = 0;
                     held = 0;
-                    reset_raw_analog();
+                    reset_raw_analogue();
                     if (next_retry_tick) *next_retry_tick = 0;
                 }
                 open_all_input_devices();
@@ -1613,7 +1613,7 @@ void mux_input_open(void) {
     held = 0;
     primary_instance = -1;
 
-    reset_raw_analog();
+    reset_raw_analogue();
 
     open_all_input_devices();
 }
@@ -1656,7 +1656,7 @@ void mux_input_task(const mux_input_options *opts) {
     combo_repeat_deadline = 0;
     primary_instance = -1;
 
-    reset_raw_analog();
+    reset_raw_analogue();
 
     swap_axis = opts->swap_axis;
     ((mux_input_options *) opts)->nav = get_sticknav_mask(config.settings.advanced.stick_nav);
@@ -1743,7 +1743,7 @@ void mux_input_task(const mux_input_options *opts) {
         handle_inputs(opts);
         handle_combos(opts);
 
-        if (opts->analog_handler) opts->analog_handler(raw_ls_x, raw_ls_y, raw_rs_x, raw_rs_y);
+        if (opts->analogue_handler) opts->analogue_handler(raw_ls_x, raw_ls_y, raw_rs_x, raw_rs_y);
         fe_perf_end(fe_perf_stage_nav, handle_start);
 
         if (opts->idle_handler) {

@@ -386,6 +386,9 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
     const int fd = open(fb_path, O_RDONLY);
     if (fd < 0) return -1;
 
+    uint32_t vsync_screen = 0;
+    ioctl(fd, FBIO_WAITFORVSYNC, &vsync_screen);
+
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
 
@@ -450,28 +453,35 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
         return -1;
     }
 
-    const uint8_t *active = fb + active_offset;
     const size_t active_size = final_row * fix.line_length + source_row_size;
-    if (buffer_is_blank(active, active_size)) {
+    uint8_t *active = malloc(active_size);
+    if (!active) {
         munmap(fb, map_size);
         close(fd);
+        return -1;
+    }
+
+    memcpy(active, fb + active_offset, active_size);
+    munmap(fb, map_size);
+    close(fd);
+
+    if (buffer_is_blank(active, active_size)) {
+        free(active);
         return -1;
     }
 
     const size_t rgb_size = (size_t) var.xres * var.yres * 3U;
     uint8_t *rgb = malloc(rgb_size);
     if (!rgb) {
-        munmap(fb, map_size);
-        close(fd);
+        free(active);
         return -1;
     }
 
     convert_fbdev(rgb, active, var.xres, source_width, var.yres, fix.line_length, &var);
+    free(active);
     const int ret = png_write(path, rgb, var.xres, var.yres);
 
     free(rgb);
-    munmap(fb, map_size);
-    close(fd);
 
     return ret;
 }
@@ -534,29 +544,32 @@ static int capture_drm_crtc(const int fd, const uint32_t crtc_id, const char *pa
     const size_t map_size = (size_t) fb.pitch * fb.height;
 
     int prime_fd = -1;
-    uint8_t *mem = map_gem_handle(fd, fb.handle, map_size, &prime_fd);
-    if (mem == MAP_FAILED) return -1;
+    uint8_t *mapped = map_gem_handle(fd, fb.handle, map_size, &prime_fd);
+    if (mapped == MAP_FAILED) return -1;
+
+    uint8_t *mem = malloc(map_size);
+    if (mem) memcpy(mem, mapped, map_size);
+    munmap(mapped, map_size);
+    if (prime_fd >= 0) close(prime_fd);
+    if (!mem) return -1;
 
     if (buffer_is_blank(mem, map_size)) {
-        munmap(mem, map_size);
-        if (prime_fd >= 0) close(prime_fd);
+        free(mem);
         return -1;
     }
 
     const size_t rgb_size = (size_t) fb.width * fb.height * 3U;
     uint8_t *rgb = malloc(rgb_size);
     if (!rgb) {
-        munmap(mem, map_size);
-        if (prime_fd >= 0) close(prime_fd);
+        free(mem);
         return -1;
     }
 
     convert_drm(rgb, mem, fb.width, fb.height, fb.pitch, fb.bpp);
+    free(mem);
     const int ret = png_write(path, rgb, fb.width, fb.height);
 
     free(rgb);
-    munmap(mem, map_size);
-    if (prime_fd >= 0) close(prime_fd);
 
     if (ret != 0) unlink(path);
     return ret;

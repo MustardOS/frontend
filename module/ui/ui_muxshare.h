@@ -75,6 +75,7 @@
     BACKUP(network, "network")                                                                                         \
     BACKUP(syncthing, "syncthing")                                                                                     \
     BACKUP(profile, "profile")                                                                                         \
+    BACKUP(settings, "settings")                                                                                       \
     BACKUP(package, "package")                                                                                         \
     BACKUP(manifest, "manifest")
 

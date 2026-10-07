@@ -53,12 +53,12 @@ void create_controller_profile(char *controller_profile_path) {
     fprintf(file, "LEFT=6\n");
     fprintf(file, "UP=7\n\n");
 
-    fprintf(file, "[analog_left]\n");
+    fprintf(file, "[analogue_left]\n");
     fprintf(file, "AXIS=32767\n");
     fprintf(file, "LEFT=0\n");
     fprintf(file, "UP=1\n\n");
 
-    fprintf(file, "[analog_right]\n");
+    fprintf(file, "[analogue_right]\n");
     fprintf(file, "AXIS=32767\n");
     fprintf(file, "LEFT=2\n");
     fprintf(file, "UP=3\n");
@@ -112,13 +112,13 @@ void load_controller_profile(struct control *controller, char *controller_name) 
     controller->dpad.left = get_ini_int(muos_controller_profile, "dpad", "LEFT", 6);
     controller->dpad.up = get_ini_int(muos_controller_profile, "dpad", "UP", 7);
 
-    controller->analog.left.axis = get_ini_int(muos_controller_profile, "analog_left", "AXIS", 32767);
-    controller->analog.left.left = get_ini_int(muos_controller_profile, "analog_left", "LEFT", 0);
-    controller->analog.left.up = get_ini_int(muos_controller_profile, "analog_left", "UP", 1);
+    controller->analogue.left.axis = get_ini_int(muos_controller_profile, "analogue_left", "AXIS", 32767);
+    controller->analogue.left.left = get_ini_int(muos_controller_profile, "analogue_left", "LEFT", 0);
+    controller->analogue.left.up = get_ini_int(muos_controller_profile, "analogue_left", "UP", 1);
 
-    controller->analog.right.axis = get_ini_int(muos_controller_profile, "analog_right", "AXIS", 32767);
-    controller->analog.right.left = get_ini_int(muos_controller_profile, "analog_right", "LEFT", 2);
-    controller->analog.right.up = get_ini_int(muos_controller_profile, "analog_right", "UP", 3);
+    controller->analogue.right.axis = get_ini_int(muos_controller_profile, "analogue_right", "AXIS", 32767);
+    controller->analogue.right.left = get_ini_int(muos_controller_profile, "analogue_right", "LEFT", 2);
+    controller->analogue.right.up = get_ini_int(muos_controller_profile, "analogue_right", "UP", 3);
 
     mini_free(muos_controller_profile);
 }

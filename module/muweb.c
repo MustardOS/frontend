@@ -65,6 +65,7 @@ static char screen_image[PATH_MAX];
 static long screen_interval = 0;
 static int screen_public = 0;
 static struct timespec screen_requested;
+static int screen_wanted;
 static char collection_root[PATH_MAX];
 static char content_roots[MUWEB_CONTENT_ROOTS][PATH_MAX];
 static size_t content_root_count = 0;
@@ -3578,12 +3579,17 @@ static double seconds_since(const struct timespec *then) {
     return (double) (now.tv_sec - then->tv_sec) + (double) (now.tv_nsec - then->tv_nsec) / 1e9;
 }
 
-static void screen_capture(const double minimum_gap) {
-    if (seconds_since(&screen_requested) < minimum_gap) return;
+static int screen_capture(const double minimum_gap) {
+    if (seconds_since(&screen_requested) < minimum_gap) return 0;
     clock_gettime(CLOCK_MONOTONIC, &screen_requested);
+    screen_wanted = 0;
 
     const pid_t pid = fork();
-    if (pid != 0) return;
+    if (pid < 0) {
+        screen_wanted = 1;
+        return 0;
+    }
+    if (pid > 0) return 1;
 
     setsid();
     for (int descriptor = 3; descriptor < 1024; ++descriptor)
@@ -3639,9 +3645,12 @@ static void handle_screen_api(struct connection *connection, const char *method,
     const long age = captured ? (long) (now - info.st_mtime) : -1;
 
     if (strcmp(method, "POST") == 0) {
-        screen_capture(10.0);
+        if (!screen_capture(10.0)) screen_wanted = 1;
     } else if (strcmp(method, "GET") == 0) {
-        if (!captured || age < 0 || age >= screen_interval) screen_capture(5.0);
+        if (screen_wanted)
+            screen_capture(10.0);
+        else if (!captured || age < 0 || age >= screen_interval)
+            screen_capture(5.0);
     } else {
         send_error(connection, 405, "Method not allowed");
         return;

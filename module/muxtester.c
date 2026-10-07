@@ -544,7 +544,7 @@ static void handle_input(const mux_input_type type, const mux_input_action actio
     }
 }
 
-static void handle_analog(const int16_t ls_x, const int16_t ls_y, const int16_t rs_x, const int16_t rs_y) {
+static void handle_analogue(const int16_t ls_x, const int16_t ls_y, const int16_t rs_x, const int16_t rs_y) {
     update_stick_canvas(&stick_l, ls_x, ls_y);
     if (device.board.has_stick >= 2) update_stick_canvas(&stick_r, rs_x, rs_y);
 }
@@ -785,7 +785,7 @@ int muxtester_main(void) {
     init_input(&input_opts, 0);
 
     input_opts.remap_to_dpad = 0;
-    input_opts.analog_handler = device.board.has_stick ? handle_analog : NULL;
+    input_opts.analogue_handler = device.board.has_stick ? handle_analogue : NULL;
 
     mux_input_task(&input_opts);
 

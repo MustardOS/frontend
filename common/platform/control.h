@@ -49,7 +49,7 @@ struct control {
             int16_t up;
             int16_t left;
         } right;
-    } analog;
+    } analogue;
 };
 
 void load_controller_profile(struct control *controller, char *controller_name);

@@ -676,6 +676,10 @@ static int child_tick(void) {
     if (viewport_settings_child_tick()) return 1;
     if (overlay_settings_child_tick()) return 1;
     if (image_corrections_settings_child_tick()) return 1;
+    if (shader_adjust_menu_is_active()) {
+        shader_adjust_menu_tick();
+        return 1;
+    }
     if (colfilter_menu_is_active()) {
         colfilter_menu_tick();
         return 1;

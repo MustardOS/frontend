@@ -597,7 +597,7 @@ int main(const int argc, char *argv[]) {
     perf_init();
     session_settings_init(core_path_arg, content_path);
     session_settings_launch_begin();
-    input_bridge_reapply_controller_ports();
+    input_bridge_apply_analogue_ports_before_load();
     if (!coreinfo_feature_enabled(coreinfo_feature_run_ahead)) session_settings.run_ahead = 0;
 
     if (!build_state_dir(core_path_arg, content_path)) {

@@ -153,6 +153,7 @@ struct mux_config {
         int16_t package;
         int16_t profile;
         int16_t retro;
+        int16_t settings;
         int16_t save;
         int16_t screenshot;
         int16_t shaders;

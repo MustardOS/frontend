@@ -46,7 +46,7 @@ static const int source_target[COREDEF_SOURCE_COUNT] = {
     5,              // D-pad down
     6,              // D-pad left
     7,              // D-pad right
-    -1, -1, -1, -1, // Left stick, read by the core as its own analog axes for 2, 4, 6 and 8
+    -1, -1, -1, -1, // Left stick, read by the core as its own analogue axes for 2, 4, 6 and 8
     -1, -1, -1, -1, // Right stick, read by the core as the pointer
 };
 

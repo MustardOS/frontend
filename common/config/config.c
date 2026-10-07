@@ -52,6 +52,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "backup", "name", CFG_OFF(backup.name), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "network", CFG_OFF(backup.network), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "profile", CFG_OFF(backup.profile), 0, {.i = 1}},
+    {CONF_CONFIG_PATH "backup", "settings", CFG_OFF(backup.settings), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "overlays", CFG_OFF(backup.overlays), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "override", CFG_OFF(backup.override), 0, {.i = 1}},
     {CONF_CONFIG_PATH "backup", "package", CFG_OFF(backup.package), 0, {.i = 1}},

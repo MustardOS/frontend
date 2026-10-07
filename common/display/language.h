@@ -380,6 +380,7 @@ struct mux_lang {
         char name[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char profile[MAX_BUFFER_SIZE];
+        char settings[MAX_BUFFER_SIZE];
         char overlays[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
@@ -407,6 +408,7 @@ struct mux_lang {
             char name[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char profile[MAX_BUFFER_SIZE];
+            char settings[MAX_BUFFER_SIZE];
             char overlays[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
