@@ -501,7 +501,6 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char save_current[MAX_BUFFER_SIZE];
         char restore_previous[MAX_BUFFER_SIZE];
         char active[MAX_BUFFER_SIZE];
         char default_name[MAX_BUFFER_SIZE];
@@ -509,7 +508,9 @@ struct mux_lang {
         char merge[MAX_BUFFER_SIZE];
         char replace[MAX_BUFFER_SIZE];
         char apply_title[MAX_BUFFER_SIZE];
-        char apply_desc[MAX_BUFFER_SIZE];
+        char apply_merge[MAX_BUFFER_SIZE];
+        char apply_replace[MAX_BUFFER_SIZE];
+        char apply_cancel[MAX_BUFFER_SIZE];
         char applied[MAX_BUFFER_SIZE];
         char restored[MAX_BUFFER_SIZE];
         char saved[MAX_BUFFER_SIZE];
@@ -520,15 +521,18 @@ struct mux_lang {
         char reduced[MAX_BUFFER_SIZE];
         char delete_title[MAX_BUFFER_SIZE];
         char delete_desc[MAX_BUFFER_SIZE];
+        char apply[MAX_BUFFER_SIZE];
+        char accessibility[MAX_BUFFER_SIZE];
+        char reset_default[MAX_BUFFER_SIZE];
+        char reset_title[MAX_BUFFER_SIZE];
+        char reset_desc[MAX_BUFFER_SIZE];
+        char reset_done[MAX_BUFFER_SIZE];
         struct {
-            char accessibility[MAX_BUFFER_SIZE];
-            char oem[MAX_BUFFER_SIZE];
-            char user[MAX_BUFFER_SIZE];
-        } type;
-        struct {
-            char save[MAX_BUFFER_SIZE];
             char restore[MAX_BUFFER_SIZE];
             char profile[MAX_BUFFER_SIZE];
+            char accessibility[MAX_BUFFER_SIZE];
+            char folder[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
             char bold_focus[MAX_BUFFER_SIZE];
             char high_contrast[MAX_BUFFER_SIZE];
             char reduce_motion[MAX_BUFFER_SIZE];

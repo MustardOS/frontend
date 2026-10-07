@@ -106,8 +106,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, init, lang.muxbackup.init, "init", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, network, lang.muxbackup.network, "network", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, syncthing, lang.muxbackup.syncthing, "syncthing", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, profile, lang.muxbackup.profile, "profile", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, settings, lang.muxbackup.settings, "settings", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, manifest, lang.muxbackup.manifest, "manifest", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
@@ -116,6 +114,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, shaders, lang.muxbackup.shaders, "shaders", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, cheats, lang.muxbackup.cheats, "cheats", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, profile, lang.muxbackup.profile, "profile", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, settings, lang.muxbackup.settings, "settings", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);
     INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", no_yes, 2);
     INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);

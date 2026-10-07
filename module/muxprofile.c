@@ -11,13 +11,14 @@
 #define PROFILE_BUILTIN    PROFILE_SHARE "/accessibility"
 #define PROFILE_OEM        PROFILE_SHARE "/oem"
 #define PROFILE_PREVIOUS   PROFILE_SHARE "/state/previous.conf"
+#define PROFILE_DEFAULT    PROFILE_SHARE "/system/default.conf"
 #define PROFILE_ACTIVE     PROFILE_SHARE "/state/active"
 #define PROFILE_USER       RUN_STORAGE_PATH "profile"
 #define PROFILE_MAX        96
 #define PROFILE_TEXT_MAX   256
 #define PROFILE_NAME_LIMIT 48
 
-typedef enum { row_save = 0, row_restore, row_accessibility, row_oem, row_user } row_kind;
+typedef enum { row_restore = 0, row_reset, row_folder, row_accessibility, row_oem, row_user } row_kind;
 
 typedef struct {
     row_kind kind;
@@ -33,12 +34,25 @@ static int row_count;
 static int pending_row = -1;
 static int restore_index;
 static char active_name[PROFILE_TEXT_MAX];
+static char current_dir[PATH_MAX];
+static char focus_path[PATH_MAX];
+static const char *pending_message;
+static int faded_out;
 
 static lv_obj_t *ui_pnl_entry_profile;
 static lv_obj_t *ui_txt_entry_profile;
 
 static mux_dialogue apply_dlg;
 static mux_dialogue delete_dlg;
+static mux_dialogue reset_dlg;
+
+static void update_apply_description(void) {
+    const char *text = lang.muxprofile.apply_cancel;
+    if (apply_dlg.selected == apply_merge) text = lang.muxprofile.apply_merge;
+    if (apply_dlg.selected == apply_replace) text = lang.muxprofile.apply_replace;
+
+    dialogue_set_description(&apply_dlg, text);
+}
 
 static void read_profile_header(const char *path, char *name, char *description) {
     name[0] = '\0';
@@ -73,22 +87,65 @@ static void add_row(const row_kind kind, const char *path, const char *name, con
     snprintf(row->description, sizeof(row->description), "%s", description ? description : "");
 }
 
+static int in_user_tree(const char *path) {
+    const size_t len = strlen(PROFILE_USER);
+    return strncmp(path, PROFILE_USER, len) == 0 && (path[len] == '\0' || path[len] == '/');
+}
+
+static int count_profiles(const char *dir) {
+    DIR *handle = opendir(dir);
+    if (!handle) return 0;
+
+    int count = 0;
+    const struct dirent *entry;
+    while ((entry = readdir(handle))) {
+        const size_t len = strlen(entry->d_name);
+        if (entry->d_name[0] != '.' && len > 5 && strcasecmp(entry->d_name + len - 5, ".conf") == 0) count++;
+    }
+    closedir(handle);
+
+    return count;
+}
+
 static void scan_profiles(const char *dir, const row_kind kind) {
     DIR *handle = opendir(dir);
     if (!handle) return;
 
+    char *folders[PROFILE_MAX];
     char *names[PROFILE_MAX];
+    int folder_count = 0;
     int count = 0;
 
     const struct dirent *entry;
-    while ((entry = readdir(handle)) && count < PROFILE_MAX) {
+    while ((entry = readdir(handle)) && folder_count + count < PROFILE_MAX) {
+        if (entry->d_name[0] == '.') continue;
+
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), "%s/%s", dir, entry->d_name);
+
+        if (dir_exist(path)) {
+            const int top = kind == row_user && strcmp(dir, PROFILE_USER) == 0;
+            const int reserved = strcasecmp(entry->d_name, "accessibility") == 0
+                                 || strcasecmp(entry->d_name, lang.muxprofile.accessibility) == 0;
+            if (top && !reserved) folders[folder_count++] = strdup(entry->d_name);
+            continue;
+        }
+
         const size_t len = strlen(entry->d_name);
-        if (entry->d_name[0] == '.' || len < 6 || strcasecmp(entry->d_name + len - 5, ".conf") != 0) continue;
+        if (len < 6 || strcasecmp(entry->d_name + len - 5, ".conf") != 0) continue;
         names[count++] = strdup(entry->d_name);
     }
     closedir(handle);
 
+    qsort(folders, (size_t) folder_count, sizeof(folders[0]), compare_names);
     qsort(names, (size_t) count, sizeof(names[0]), compare_names);
+
+    for (int i = 0; i < folder_count; i++) {
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), "%s/%s", dir, folders[i]);
+        add_row(row_folder, path, folders[i], lang.muxprofile.help.folder);
+        free(folders[i]);
+    }
 
     for (int i = 0; i < count; i++) {
         char path[PATH_MAX];
@@ -111,13 +168,20 @@ static void scan_profiles(const char *dir, const row_kind kind) {
 static void build_rows(void) {
     row_count = 0;
 
-    add_row(row_save, NULL, lang.muxprofile.save_current, lang.muxprofile.help.save);
-    if (file_exist(PROFILE_PREVIOUS))
-        add_row(row_restore, PROFILE_PREVIOUS, lang.muxprofile.restore_previous, lang.muxprofile.help.restore);
+    if (current_dir[0]) {
+        scan_profiles(current_dir, in_user_tree(current_dir) ? row_user : row_accessibility);
+    } else {
+        if (file_exist(PROFILE_PREVIOUS))
+            add_row(row_restore, PROFILE_PREVIOUS, lang.muxprofile.restore_previous, lang.muxprofile.help.restore);
+        if (file_exist(PROFILE_DEFAULT))
+            add_row(row_reset, PROFILE_DEFAULT, lang.muxprofile.reset_default, lang.muxprofile.help.reset);
 
-    scan_profiles(PROFILE_BUILTIN, row_accessibility);
-    scan_profiles(PROFILE_OEM, row_oem);
-    scan_profiles(PROFILE_USER, row_user);
+        if (count_profiles(PROFILE_BUILTIN) > 0)
+            add_row(row_folder, PROFILE_BUILTIN, lang.muxprofile.accessibility, lang.muxprofile.help.accessibility);
+
+        scan_profiles(PROFILE_OEM, row_oem);
+        scan_profiles(PROFILE_USER, row_user);
+    }
 
     active_name[0] = '\0';
     char *active = read_line_char_from(PROFILE_ACTIVE, 1);
@@ -132,10 +196,7 @@ static const char *row_value(const profile_row *row) {
         case row_accessibility:
         case row_oem:
         case row_user:
-            if (active_name[0] && strcmp(active_name, row->name) == 0) return lang.muxprofile.active;
-            return row->kind == row_accessibility ? lang.muxprofile.type.accessibility
-                   : row->kind == row_oem         ? lang.muxprofile.type.oem
-                                                  : lang.muxprofile.type.user;
+            return active_name[0] && strcmp(active_name, row->name) == 0 ? lang.muxprofile.active : "";
         default:
             return "";
     }
@@ -143,10 +204,12 @@ static const char *row_value(const profile_row *row) {
 
 static const char *row_glyph(const profile_row *row) {
     switch (row->kind) {
-        case row_save:
-            return "save";
         case row_restore:
             return "restore";
+        case row_reset:
+            return "reset";
+        case row_folder:
+            return "folder";
         case row_accessibility:
             return "accessibility";
         case row_oem:
@@ -206,11 +269,32 @@ static void reload_module(void) {
     mux_input_stop();
 }
 
+static void begin_change(void) {
+    faded_out = config.visual.blackfade;
+
+    if (faded_out) {
+        fade_out_screen();
+        return;
+    }
+
+    toast_message(lang.generic.loading, tst_wait_f);
+    refresh_screen(ui_screen, 1);
+}
+
 static void finish_change(const int result, const char *success) {
     if (result == 0) {
         run_tweak_script(success);
+        if (faded_out) {
+            pending_message = success;
+            fade_reset();
+        }
         reload_module();
         return;
+    }
+
+    if (faded_out) {
+        fade_reset();
+        fade_in_screen();
     }
 
     play_sound(snd_error);
@@ -222,8 +306,7 @@ static void finish_change(const int result, const char *success) {
 }
 
 static void apply_profile(const profile_row *row, const apply_choice choice) {
-    toast_message(lang.generic.loading, tst_wait_f);
-    refresh_screen(ui_screen, 1);
+    begin_change();
 
     const char *mode = choice == apply_replace ? "replace" : "merge";
     const char *args[] = {PROFILE_SCRIPT, "apply", row->path, mode, NULL};
@@ -231,21 +314,27 @@ static void apply_profile(const profile_row *row, const apply_choice choice) {
     finish_change(run_profile_script(args), lang.muxprofile.applied);
 }
 
+static void reset_to_default(void) {
+    begin_change();
+
+    const char *args[] = {PROFILE_SCRIPT, "reset", NULL};
+    finish_change(run_profile_script(args), lang.muxprofile.reset_done);
+}
+
 static void restore_previous(void) {
-    toast_message(lang.generic.loading, tst_wait_f);
-    refresh_screen(ui_screen, 1);
+    begin_change();
 
     const char *args[] = {PROFILE_SCRIPT, "undo", NULL};
     finish_change(run_profile_script(args), lang.muxprofile.restored);
 }
 
-static void unique_profile_path(const char *name, char *out, const size_t len) {
+static void unique_profile_path(const char *dir, const char *name, char *out, const size_t len) {
     char safe[PROFILE_TEXT_MAX];
     str_safe_filename(name, safe, sizeof(safe), "Profile");
 
-    snprintf(out, len, PROFILE_USER "/%s.conf", safe);
+    snprintf(out, len, "%s/%s.conf", dir, safe);
     for (int i = 2; file_exist(out) && i < 100; i++)
-        snprintf(out, len, PROFILE_USER "/%s (%d).conf", safe, i);
+        snprintf(out, len, "%s/%s (%d).conf", dir, safe, i);
 }
 
 static void save_current(const char *name) {
@@ -253,16 +342,18 @@ static void save_current(const char *name) {
     snprintf(trimmed, sizeof(trimmed), "%s", str_trim((char *) name));
     if (!trimmed[0]) snprintf(trimmed, sizeof(trimmed), "%s", lang.muxprofile.default_name);
 
-    create_directories(PROFILE_USER, 0);
+    const char *dir = in_user_tree(current_dir) ? current_dir : PROFILE_USER;
+    create_directories(dir, 0);
 
     char path[PATH_MAX];
-    unique_profile_path(trimmed, path, sizeof(path));
+    unique_profile_path(dir, trimmed, path, sizeof(path));
 
     const char *args[] = {PROFILE_SCRIPT, "save", path, trimmed, "", NULL};
     const int result = run_profile_script(args);
 
     if (result == 0) {
         toast_message(lang.muxprofile.saved, tst_wait_m);
+        snprintf(focus_path, sizeof(focus_path), "%s", path);
         reload_module();
         return;
     }
@@ -315,8 +406,73 @@ static const profile_row *focused_row(void) {
     return &rows[current_item_index];
 }
 
+static void nav_show_x(const int show, const char *text) {
+    if (show) {
+        lv_label_set_text(ui_lbl_nav_x, text);
+        lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static void nav_show_y(const int show) {
+    if (show) {
+        lv_obj_clear_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static void update_nav(void) {
+    const profile_row *row = focused_row();
+
+    if (!row) {
+        nav_show_a(0, NULL);
+    } else if (row->kind == row_folder) {
+        nav_show_a(1, lang.generic.open);
+    } else if (row->kind == row_restore || row->kind == row_reset) {
+        nav_show_a(1, lang.generic.select);
+    } else {
+        nav_show_a(1, lang.muxprofile.apply);
+    }
+
+    nav_show_x(row && row->kind == row_user, lang.generic.remove);
+    nav_show_y(strcmp(current_dir, PROFILE_BUILTIN) != 0);
+}
+
+static void list_nav_prev(const int steps) {
+    gen_step_movement(steps, -1, 2, 0, 1);
+    update_nav();
+}
+
+static void list_nav_next(const int steps) {
+    gen_step_movement(steps, +1, 2, 0, 1);
+    update_nav();
+}
+
+static void open_folder(const char *path) {
+    snprintf(current_dir, sizeof(current_dir), "%s", path);
+    restore_index = 0;
+    load_mux("profile");
+    mux_input_stop();
+}
+
+static void leave_folder(void) {
+    snprintf(focus_path, sizeof(focus_path), "%s", current_dir);
+    current_dir[0] = '\0';
+
+    play_sound(snd_back);
+    load_mux("profile");
+    mux_input_stop();
+}
+
 static void leave_module(void) {
     play_sound(snd_back);
+    current_dir[0] = '\0';
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "access");
     restore_index = 0;
@@ -328,6 +484,7 @@ static void leave_module(void) {
 static mux_dialogue *open_dialogue(void) {
     if (dialogue_active(&apply_dlg)) return &apply_dlg;
     if (dialogue_active(&delete_dlg)) return &delete_dlg;
+    if (dialogue_active(&reset_dlg)) return &reset_dlg;
     return NULL;
 }
 
@@ -347,6 +504,13 @@ static void handle_a(void) {
             apply_profile(&rows[pending_row], choice);
 
         pending_row = -1;
+        return;
+    }
+
+    if (dialogue_active(&reset_dlg)) {
+        const mux_confirm_opt choice = (mux_confirm_opt) reset_dlg.selected;
+        dialogue_dismiss(&reset_dlg);
+        if (choice == mux_confirm_yep) reset_to_default();
         return;
     }
 
@@ -376,16 +540,19 @@ static void handle_a(void) {
     play_sound(snd_confirm);
 
     switch (row->kind) {
-        case row_save:
-            open_name_entry();
-            break;
         case row_restore:
             restore_previous();
             break;
+        case row_reset:
+            dialogue_open(&reset_dlg, &theme);
+            break;
+        case row_folder:
+            open_folder(row->path);
+            break;
         default:
             pending_row = current_item_index;
-            dialogue_set_description(&apply_dlg, lang.muxprofile.apply_desc);
             dialogue_open(&apply_dlg, &theme);
+            update_apply_description();
             break;
     }
 }
@@ -408,6 +575,11 @@ static void handle_b(void) {
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
+        return;
+    }
+
+    if (current_dir[0]) {
+        leave_folder();
         return;
     }
 
@@ -437,6 +609,7 @@ static void handle_y(void) {
     }
 
     if (hold_call || msgbox_active || open_dialogue()) return;
+    if (strcmp(current_dir, PROFILE_BUILTIN) == 0) return;
 
     play_sound(snd_confirm);
     open_name_entry();
@@ -467,6 +640,7 @@ static void handle_dpad(const int direction, const int held) {
             dialogue_handle_dpad_hold(dlg, &theme, direction, !swap_axis);
         else
             dialogue_handle_dpad(dlg, &theme, direction, !swap_axis);
+        if (dlg == &apply_dlg) update_apply_description();
         return;
     }
 
@@ -509,7 +683,10 @@ static void handle_side(const int direction) {
     }
 
     mux_dialogue *dlg = open_dialogue();
-    if (dlg && swap_axis) dialogue_handle_dpad(dlg, &theme, direction, 1);
+    if (!dlg) return;
+
+    dialogue_handle_dpad(dlg, &theme, direction, 1);
+    if (dlg == &apply_dlg) update_apply_description();
 }
 
 static void handle_left(void) {
@@ -620,26 +797,42 @@ int muxprofile_main(void) {
     init_fonts();
 
     build_rows();
+    if (focus_path[0]) {
+        for (int i = 0; i < row_count; i++) {
+            if (strcmp(rows[i].path, focus_path) == 0) restore_index = i;
+        }
+        focus_path[0] = '\0';
+    }
     create_rows();
     init_elements();
     init_name_entry();
 
     const char *apply_options[] = {lang.muxprofile.merge, lang.muxprofile.replace, lang.generic.cancel};
     dialogue_init_choice(
-        &apply_dlg, &theme, ui_screen, lang.muxprofile.apply_title, lang.muxprofile.apply_desc, apply_options,
+        &apply_dlg, &theme, ui_screen, lang.muxprofile.apply_title, lang.muxprofile.apply_merge, apply_options,
         A_SIZE(apply_options), lang.generic.select, lang.generic.cancel
     );
     dialogue_init_confirm(
         &delete_dlg, &theme, ui_screen, lang.muxprofile.delete_title, lang.muxprofile.delete_desc, lang.generic.remove,
         lang.generic.cancel, lang.generic.select, lang.generic.cancel
     );
+    dialogue_init_confirm(
+        &reset_dlg, &theme, ui_screen, lang.muxprofile.reset_title, lang.muxprofile.reset_desc, lang.generic.reset,
+        lang.generic.cancel, lang.generic.select, lang.generic.cancel
+    );
 
     init_osk(ui_pnl_entry_profile, ui_txt_entry_profile, 0, 0, PROFILE_NAME_LIMIT);
-    init_timer(ui_gen_refresh_task, NULL);
-
     const int start = restore_index > 0 && restore_index < ui_count_static ? restore_index : 0;
     restore_index = 0;
-    if (ui_count_static > 0) gen_step_movement(start, +1, 1, 0, 1);
+    if (ui_count_static > 0) gen_step_movement(start, +1, 2, 0, 1);
+    update_nav();
+
+    if (pending_message) {
+        toast_message(pending_message, tst_wait_m);
+        pending_message = NULL;
+    }
+
+    init_timer(ui_gen_refresh_task, NULL);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,
@@ -674,7 +867,7 @@ int muxprofile_main(void) {
 
     orientation_introduce(mux_module, lang.muxprofile.title, lang.muxprofile.overview);
 
-    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);

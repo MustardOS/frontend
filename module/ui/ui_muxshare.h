@@ -74,8 +74,6 @@
     BACKUP(init, "init")                                                                                               \
     BACKUP(network, "network")                                                                                         \
     BACKUP(syncthing, "syncthing")                                                                                     \
-    BACKUP(profile, "profile")                                                                                         \
-    BACKUP(settings, "settings")                                                                                       \
     BACKUP(package, "package")                                                                                         \
     BACKUP(manifest, "manifest")
 
@@ -85,7 +83,9 @@
     BACKUP(overlays, "overlays")                                                                                       \
     BACKUP(shaders, "shaders")                                                                                         \
     BACKUP(override, "override")                                                                                       \
-    BACKUP(cheats, "cheats")
+    BACKUP(cheats, "cheats")                                                                                           \
+    BACKUP(profile, "profile")                                                                                         \
+    BACKUP(settings, "settings")
 
 #define BACKUP_ACTION_ELEMENTS                                                                                         \
     BACKUP(target, "target")                                                                                           \

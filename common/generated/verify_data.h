@@ -155,7 +155,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/system/lowpower.sh", "c1ea30685b34afdb" },
     { "/opt/muos/script/system/os_release.sh", "f887d3813502b8e0" },
     { "/opt/muos/script/system/prepare.sh", "684d5324fc8bebe0" },
-    { "/opt/muos/script/system/profile.sh", "64a2962036c21737" },
+    { "/opt/muos/script/system/profile.sh", "f5228eac9f2e6afd" },
     { "/opt/muos/script/system/reset.sh", "99cac63479430cfe" },
     { "/opt/muos/script/system/rootfs.sh", "72cfa005148a28f4" },
     { "/opt/muos/script/system/serial.sh", "f21747794081166b" },
