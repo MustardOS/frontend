@@ -189,6 +189,7 @@
 #define STORE_LOC_PACK MUOS_BASE_PATH "/package"
 #define STORE_LOC_NETW MUOS_BASE_PATH "/network"
 #define STORE_LOC_SYCT MUOS_BASE_PATH "/syncthing"
+#define STORE_LOC_PROF MUOS_BASE_PATH "/profile"
 #define STORE_LOC_INIT MUOS_BASE_PATH "/init"
 #define STORE_LOC_TRAK MUOS_BASE_PATH "/info/track"
 

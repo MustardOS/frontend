@@ -40,6 +40,8 @@ USAGE() {
 	printf "  XDIR     toolchain directory under XTOOL, detected when unset\n\n"
 	printf "  CLANG_FORMAT         clang-format %s binary, installed into .cache when unset\n" "$FORMAT_VERSION"
 	printf "  INTERNAL_SCRIPT_DIR  internal scripts used to generate verification data\n"
+	printf "  INTERNAL_ROOT        internal repository used to generate profile data and default settings\n"
+	printf "  PROFILE_SCHEMA_OUTPUT generated profile schema output path\n"
 	printf "  INTERNAL_WEB_DIR     dashboard sources checked against the dashboard language list\n"
 	printf "  LANGUAGE_OUTPUT      generated language template output path\n"
 	printf "  THIRDPARTY_OUTPUT    generated third party header output path\n"
@@ -614,10 +616,29 @@ GEN_VERIFY() {
 	GEN_INSTALL "$GEN_TMP" "$GEN_OUT"
 }
 
+GEN_PROFILE() {
+	GEN_INTERNAL_ROOT=${INTERNAL_ROOT:-"$FRONTEND_DIR/../internal"}
+	GEN_OUT=${PROFILE_SCHEMA_OUTPUT:-"$FRONTEND_DIR/common/generated/profile_schema.json"}
+
+	if [ ! -d "$GEN_INTERNAL_ROOT/config" ]; then
+		printf 'Skipping profile data; internal repository not found at %s\n' "$GEN_INTERNAL_ROOT"
+		return 0
+	fi
+
+	command -v python3 >/dev/null 2>&1 || {
+		printf '%s\n' "Error: python3 is required to generate profile data" 1>&2
+		exit 1
+	}
+
+	python3 "$FRONTEND_DIR/tooling/profile_generate.py" --frontend "$FRONTEND_DIR" \
+		--internal "$GEN_INTERNAL_ROOT" --schema "$GEN_OUT" || exit 1
+}
+
 GENERATE() {
 	FRONTEND_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 	GEN_LANGUAGE
 	GEN_THIRDPARTY
+	GEN_PROFILE
 	GEN_VERIFY
 }
 

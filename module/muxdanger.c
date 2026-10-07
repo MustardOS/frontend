@@ -141,14 +141,14 @@ static void restore_danger_options(void) {
     lv_dropdown_set_selected(ui_dro_tune_scale_danger, config.danger.tune_scale);
     lv_dropdown_set_selected(ui_dro_page_cluster_danger, config.danger.page_cluster);
 
-    map_drop_down_to_index(ui_dro_vm_swap_danger, config.danger.vm_swap, four_values, 25, 3);
-    map_drop_down_to_index(ui_dro_dirty_ratio_danger, config.danger.dirty_ratio, four_values, 25, 4);
-    map_drop_down_to_index(ui_dro_dirty_back_danger, config.danger.dirty_back, four_values, 25, 1);
-    map_drop_down_to_index(ui_dro_cache_pressure_danger, config.danger.cache, four_values, 25, 15);
-    map_drop_down_to_index(ui_dro_no_merge_danger, config.danger.merge, merge_values, 3, 2);
+    map_drop_down_to_index(ui_dro_vm_swap_danger, config.danger.vm_swap, four_values, 26, 2);
+    map_drop_down_to_index(ui_dro_dirty_ratio_danger, config.danger.dirty_ratio, four_values, 26, 4);
+    map_drop_down_to_index(ui_dro_dirty_back_danger, config.danger.dirty_back, four_values, 26, 1);
+    map_drop_down_to_index(ui_dro_cache_pressure_danger, config.danger.cache, four_values, 26, 16);
+    map_drop_down_to_index(ui_dro_no_merge_danger, config.danger.merge, merge_values, 3, 0);
     map_drop_down_to_index(ui_dro_nr_requests_danger, config.danger.requests, request_values, 8, 1);
     map_drop_down_to_index(ui_dro_read_ahead_danger, config.danger.read_ahead, read_ahead_values, 9, 6);
-    map_drop_down_to_index(ui_dro_time_slice_danger, config.danger.time_slice, time_slice_values, 11, 1);
+    map_drop_down_to_index(ui_dro_time_slice_danger, config.danger.time_slice, time_slice_values, 11, 0);
 
     lv_dropdown_set_selected(ui_dro_card_mode_danger, strcasecmp(config.danger.card_mode, "deadline") != 0);
     lv_dropdown_set_selected(ui_dro_state_danger, strcasecmp(config.danger.state, "mem") != 0);
@@ -181,14 +181,14 @@ static void save_danger_options(void) {
         if (!write_text_to_file_atomic(CONF_CONFIG_PATH "danger/online_cores", INT, online_cores)) save_failed++;
     }
 
-    CHECK_AND_SAVE_MAP(danger, vm_swap, "danger/vmswap", four_values, 25, 3);
-    CHECK_AND_SAVE_MAP(danger, dirty_ratio, "danger/dirty_ratio", four_values, 25, 4);
-    CHECK_AND_SAVE_MAP(danger, dirty_back, "danger/dirty_back_ratio", four_values, 25, 1);
-    CHECK_AND_SAVE_MAP(danger, cache_pressure, "danger/cache_pressure", four_values, 25, 15);
-    CHECK_AND_SAVE_MAP(danger, no_merge, "danger/nomerges", merge_values, 3, 2);
+    CHECK_AND_SAVE_MAP(danger, vm_swap, "danger/vmswap", four_values, 26, 2);
+    CHECK_AND_SAVE_MAP(danger, dirty_ratio, "danger/dirty_ratio", four_values, 26, 4);
+    CHECK_AND_SAVE_MAP(danger, dirty_back, "danger/dirty_back_ratio", four_values, 26, 1);
+    CHECK_AND_SAVE_MAP(danger, cache_pressure, "danger/cache_pressure", four_values, 26, 16);
+    CHECK_AND_SAVE_MAP(danger, no_merge, "danger/nomerges", merge_values, 3, 0);
     CHECK_AND_SAVE_MAP(danger, nr_requests, "danger/nr_requests", request_values, 8, 1);
     CHECK_AND_SAVE_MAP(danger, read_ahead, "danger/read_ahead", read_ahead_values, 9, 6);
-    CHECK_AND_SAVE_MAP(danger, time_slice, "danger/time_slice", time_slice_values, 11, 1);
+    CHECK_AND_SAVE_MAP(danger, time_slice, "danger/time_slice", time_slice_values, 11, 0);
 
     CHECK_AND_SAVE_VAL(danger, card_mode, "danger/cardmode", CHAR, cardmode_values);
     CHECK_AND_SAVE_VAL(danger, state, "danger/state", CHAR, state_values);

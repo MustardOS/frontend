@@ -177,7 +177,7 @@ static void handle_a(void) {
     const struct {
         const char *glyph_name;
         const char *mux_name;
-    } elements[] = {{"clock", "rtc"},     {"language", "language"}, {"access", "access"},
+    } elements[] = {{"clock", "rtc"},     {"language", "language"}, {"access", "profile"},
                     {"tester", "tester"}, {"shutdown", "shutdown"}, {"install", "install"}};
 
     struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);

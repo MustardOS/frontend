@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <common/config/var_store.h>
@@ -93,6 +94,49 @@ static int cmd_set(const char *ns_arg, const char *key, const char *value, const
     return rc == vs_ok ? 0 : 1;
 }
 
+static int cmd_apply(const char *ns_arg) {
+    const int ns = parse_ns(ns_arg);
+    if (ns < 0) return 1;
+
+    var_store_t vs;
+    var_dirs_t dirs;
+    vs_default_dirs(&dirs);
+
+    const int cached = vs_open(&vs, vs_cache_path(), 1, VS_DEF_CAP, 1) == vs_ok;
+
+    char *line = NULL;
+    size_t capacity = 0;
+    ssize_t length;
+    int failed = 0;
+
+    while ((length = getline(&line, &capacity, stdin)) >= 0) {
+        while (length > 0 && (line[length - 1] == '\n' || line[length - 1] == '\r'))
+            line[--length] = '\0';
+        if (length == 0) continue;
+
+        char *split = strchr(line, '=');
+        if (!split) {
+            failed++;
+            continue;
+        }
+        *split = '\0';
+
+        const char *key = line;
+        const char *value = split + 1;
+        const int rc =
+            cached ? vs_store(&vs, &dirs, (var_ns_t) ns, key, value) : vs_write(&dirs, (var_ns_t) ns, key, value);
+        if (rc != vs_ok) {
+            fprintf(stderr, "muvarctl: apply: could not set '%s'\n", key);
+            failed++;
+        }
+    }
+
+    free(line);
+    if (cached) vs_close(&vs);
+
+    return failed ? 1 : 0;
+}
+
 static int cmd_del(const char *ns_arg, const char *key) {
     const int ns = parse_ns(ns_arg);
     if (ns < 0 || !key) return 1;
@@ -155,11 +199,12 @@ static void usage(const char *argv0) {
         "usage: %s build\n"
         "       %s get   <ns> <key>\n"
         "       %s set   [--defer|--durable] <ns> <key> <value>\n"
+        "       %s apply <ns>  (key=value lines on stdin)\n"
         "       %s del   <ns> <key>\n"
         "       %s flush\n"
         "       %s dump  [ns]\n"
         "  ns := global|device|kiosk|system  (or 0-3)\n",
-        argv0, argv0, argv0, argv0, argv0, argv0
+        argv0, argv0, argv0, argv0, argv0, argv0, argv0
     );
 }
 
@@ -190,6 +235,14 @@ int main(const int argc, char **argv) {
             return 2;
         }
         return cmd_set(argv[base], argv[base + 1], argv[base + 2], defer, durable);
+    }
+
+    if (strcmp(argv[1], "apply") == 0) {
+        if (argc != 3) {
+            usage(argv[0]);
+            return 2;
+        }
+        return cmd_apply(argv[2]);
     }
 
     if (strcmp(argv[1], "del") == 0) {

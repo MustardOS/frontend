@@ -53,13 +53,6 @@
         lv_obj_set_style_bg_opa(ui_bar_##NAME##_##MODULE, LV_OPA_COVER, MU_OBJ_INDI_DEFAULT);                          \
     } while (0)
 
-#define ACCESS_ELEMENTS                                                                                                \
-    ACCESS(reduce_motion, "reducemotion")                                                                              \
-    ACCESS(high_contrast, "highcontrast")                                                                              \
-    ACCESS(bold_focus, "boldfocus")                                                                                    \
-    ACCESS(text_size, "textsize")                                                                                      \
-    ACCESS(legible_font, "legiblefont")
-
 #define APPCON_ELEMENTS                                                                                                \
     APPCON(governor, "governor")                                                                                       \
     APPCON(control, "control")
@@ -81,6 +74,7 @@
     BACKUP(init, "init")                                                                                               \
     BACKUP(network, "network")                                                                                         \
     BACKUP(syncthing, "syncthing")                                                                                     \
+    BACKUP(profile, "profile")                                                                                         \
     BACKUP(package, "package")                                                                                         \
     BACKUP(manifest, "manifest")
 
@@ -293,7 +287,8 @@
     FONT(list_size, "listsize")                                                                                        \
     FONT(header_size, "headersize")                                                                                    \
     FONT(footer_size, "footersize")                                                                                    \
-    FONT(panel_size, "panelsize")
+    FONT(panel_size, "panelsize")                                                                                      \
+    FONT(text_scale, "textscale")
 
 #define HDMI_ELEMENTS                                                                                                  \
     HDMI(resolution, "resolution")                                                                                     \
@@ -543,6 +538,7 @@
     STORAGE(init, "init")                                                                                              \
     STORAGE(network, "network")                                                                                        \
     STORAGE(syncthing, "syncthing")                                                                                    \
+    STORAGE(profile, "profile")                                                                                        \
     STORAGE(manifest, "manifest")                                                                                      \
     STORAGE(override, "override")
 

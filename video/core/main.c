@@ -2,6 +2,7 @@
 #include "player.h"
 #include "paths.h"
 #include "state.h"
+#include "../settings/session.h"
 
 #include <locale.h>
 #include <signal.h>
@@ -880,7 +881,7 @@ int main(const int argc, char **argv) {
 
     load_device(&device);
     load_config(&config);
-    load_wasabi_defaults(&config);
+    wasabi_session_load_defaults();
     init_module("muxmedia");
     if (video_state_init() < 0) LOG_WARN(mux_module, "Video state storage is unavailable");
 

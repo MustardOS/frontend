@@ -16,12 +16,12 @@ void init_muxdanger(lv_obj_t *ui_pnl_content) {
 #undef DANGER
 }
 
-const int four_values[] = {0,  4,  8,  16, 20, 24, 28, 32, 36, 40, 44, 48, 52,
-                           56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100};
+const int four_values[] = {0,  4,  8,  12, 16, 20, 24, 28, 32, 36, 40, 44, 48,
+                           52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100};
 
 const int merge_values[] = {0, 1, 2};
 
-const int request_values[] = {64, 128, 196, 256, 320, 384, 448, 512};
+const int request_values[] = {64, 128, 192, 256, 320, 384, 448, 512};
 
 const int read_ahead_values[] = {64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
 

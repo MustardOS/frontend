@@ -151,6 +151,7 @@ struct mux_config {
         int16_t overlays;
         int16_t override;
         int16_t package;
+        int16_t profile;
         int16_t retro;
         int16_t save;
         int16_t screenshot;
@@ -409,6 +410,7 @@ struct mux_config {
             int16_t header_size;
             int16_t footer_size;
             int16_t panel_size;
+            int16_t scale;
         } font;
         struct {
             int16_t header_height;
@@ -541,5 +543,3 @@ struct mux_config {
 };
 
 void load_config(struct mux_config *config);
-
-void load_wasabi_defaults(struct mux_config *config);

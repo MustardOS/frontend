@@ -5,7 +5,7 @@ CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I. -I.. -I./ui -I../font -I../vendor
 LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
           -L../bin/lib -lui -lmuxcom -lplutosvg
 
-MODULES = muxactivity muxapp muxappcon muxaccess muxdetail muxarchive muxassign muxbackup muxbtall \
+MODULES = muxactivity muxapp muxappcon muxprofile muxdetail muxarchive muxassign muxbackup muxbtall \
           muxbtcon muxbtdev muxcolfilter muxcollect muxconfig muxconnect \
           muxcontrol muxcore muxcustom muxdanger muxdevice muxdistemp \
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk \

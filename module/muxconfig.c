@@ -192,7 +192,7 @@ static void handle_a(void) {
         {"tweakgen", &kiosk.setting.general, NULL},
         {"custom", &kiosk.config.customisation, NULL},
         {"connect", &kiosk.config.connectivity, connectivity_available},
-        {"access", &kiosk.config.accessibility, NULL},
+        {"profile", &kiosk.config.accessibility, NULL},
         {"core", &kiosk.config.cores, NULL},
         {"power", &kiosk.setting.power, NULL},
         {"storage", &kiosk.config.storage, storage_available},

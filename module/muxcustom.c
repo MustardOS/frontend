@@ -44,6 +44,8 @@ static int16_t font_list_size_saved;
 static int16_t font_header_size_saved;
 static int16_t font_footer_size_saved;
 static int16_t font_panel_size_saved;
+static int16_t font_scale_saved;
+static const int text_scale_values[] = {75, 85, 100, 115, 130, 145, 160, 175, 200};
 static int has_theme_type;
 static int dropdown_to_canonical[4];
 static int has_custom_type;
@@ -766,9 +768,16 @@ static void populate_font_size_options(void) {
     }
 }
 
+static int text_scale_index(const int scale) {
+    for (int i = 0; i < (int) A_SIZE(text_scale_values); i++)
+        if (text_scale_values[i] == scale) return i;
+    return 2;
+}
+
 static void apply_font_size_visibility(void) {
     lv_obj_t *const labels[] = {
-        ui_lbl_list_size_font, ui_lbl_header_size_font, ui_lbl_footer_size_font, ui_lbl_panel_size_font
+        ui_lbl_list_size_font, ui_lbl_header_size_font, ui_lbl_footer_size_font, ui_lbl_panel_size_font,
+        ui_lbl_text_scale_font
     };
     for (size_t i = 0; i < A_SIZE(labels); i++)
         list_frame_set_suppressed(list_frame_row_of(labels[i]), !font_size_options_visible);
@@ -804,6 +813,9 @@ static void apply_current_font_settings(void) {
     config.settings.font.panel_size =
         (int16_t) (idx < (uint32_t) active_font_size_count ? active_font_size_values[idx] : 0);
 
+    idx = lv_dropdown_get_selected(ui_dro_text_scale_font);
+    config.settings.font.scale = (int16_t) (idx < A_SIZE(text_scale_values) ? text_scale_values[idx] : 100);
+
     const uint32_t selected_font = lv_dropdown_get_selected(ui_dro_font_name_font);
     if (selected_font < font_option_count) {
         snprintf(config.settings.font.name, sizeof(config.settings.font.name), "%s", font_options[selected_font].name);
@@ -830,6 +842,7 @@ static void revert_font_settings(void) {
     config.settings.font.header_size = font_header_size_saved;
     config.settings.font.footer_size = font_footer_size_saved;
     config.settings.font.panel_size = font_panel_size_saved;
+    config.settings.font.scale = font_scale_saved;
     snprintf(config.settings.font.directory, sizeof(config.settings.font.directory), "%s", font_directory_saved);
     snprintf(config.settings.font.name, sizeof(config.settings.font.name), "%s", font_name_saved);
     config.settings.font.face = font_face_saved;
@@ -890,11 +903,13 @@ static void font_apply_lock(void) {
     LOCK_ROW(header_size);
     LOCK_ROW(footer_size);
     LOCK_ROW(panel_size);
+    LOCK_ROW(text_scale);
 #undef LOCK_ROW
 
     // A dimmed row stays on screen but drops out of navigation
     lv_obj_t *const rows[] = {ui_lbl_font_directory_font, ui_lbl_font_name_font,   ui_lbl_list_size_font,
-                              ui_lbl_header_size_font,    ui_lbl_footer_size_font, ui_lbl_panel_size_font};
+                              ui_lbl_header_size_font,    ui_lbl_footer_size_font, ui_lbl_panel_size_font,
+                              ui_lbl_text_scale_font};
     for (size_t i = 0; i < A_SIZE(rows); i++)
         list_frame_set_inert(list_frame_row_of(rows[i]), font_locked);
 }
@@ -905,7 +920,7 @@ static int font_row_locked(const lv_obj_t *focused) {
 
     return focused == ui_dro_font_directory_font || focused == ui_dro_font_name_font || focused == ui_dro_list_size_font
            || focused == ui_dro_header_size_font || focused == ui_dro_footer_size_font
-           || focused == ui_dro_panel_size_font;
+           || focused == ui_dro_panel_size_font || focused == ui_dro_text_scale_font;
 }
 
 static int font_row(const lv_obj_t *focused) {
@@ -1031,6 +1046,7 @@ static void init_dropdown_settings(void) {
     font_header_size_saved = config.settings.font.header_size;
     font_footer_size_saved = config.settings.font.footer_size;
     font_panel_size_saved = config.settings.font.panel_size;
+    font_scale_saved = config.settings.font.scale;
 
     memset(font_selection, 0, sizeof(font_selection));
     remember_font_selection(type_to_canonical(lv_dropdown_get_selected(ui_dro_type_font)));
@@ -1191,6 +1207,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, font, header_size, lang.muxfont.header_size, "headersize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, footer_size, lang.muxfont.footer_size, "footersize", NULL, 0);
     INIT_OPTION_ITEM(-1, font, panel_size, lang.muxfont.panel_size, "panelsize", NULL, 0);
+    INIT_OPTION_ITEM(-1, font, text_scale, lang.muxfont.text_scale, "textscale", NULL, 0);
     INIT_OPTION_ITEM(
         -1, visual, folder_item_count, lang.muxvisual.folderitemcount, "folderitemcount", disabled_enabled, 2
     );
@@ -1278,6 +1295,9 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_lbl_footer_size_font, ui_dro_footer_size_font, size_options);
     apply_theme_list_drop_down(&theme, ui_lbl_panel_size_font, ui_dro_panel_size_font, size_options);
     populate_font_size_options();
+    apply_theme_list_drop_down(
+        &theme, ui_lbl_text_scale_font, ui_dro_text_scale_font, "75%\n85%\n100%\n115%\n130%\n145%\n160%\n175%\n200%"
+    );
 
     free(size_options);
 
@@ -1577,6 +1597,7 @@ static void restore_custom_options(void) {
     map_drop_down_to_index(
         ui_dro_panel_size_font, config.settings.font.panel_size, active_font_size_values, active_font_size_count, 0
     );
+    lv_dropdown_set_selected(ui_dro_text_scale_font, (uint32_t) text_scale_index(config.settings.font.scale));
 
 #define VISUAL(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_visual, config.visual.NAME);
     VISUAL_CONFIG_ELEMENTS
@@ -1739,6 +1760,12 @@ static int save_custom_options(void) {
     SAVE_FONT_SIZE(footer_size, "footer_size");
     SAVE_FONT_SIZE(panel_size, "panel_size");
 #undef SAVE_FONT_SIZE
+
+    if (config.settings.font.scale != font_scale_saved) {
+        is_modified++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/font/scale", INT, config.settings.font.scale))
+            save_failed++;
+    }
 
     if (config.settings.advanced.font != 1) {
         if (strcasecmp(config.settings.font.directory, font_directory_saved) != 0) {
@@ -1993,6 +2020,7 @@ static int16_t kiosk_pass = 0;
     ROW(font, header_size, "headersize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)           \
     ROW(font, footer_size, "footersize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)           \
     ROW(font, panel_size, "panelsize", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)             \
+    ROW(font, text_scale, "textscale", font, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)             \
     ROW(visual, folder_item_count, "folderitemcount", folders, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,   \
         change)                                                                                                        \
     ROW(visual, menu_counter_folder, "menucounterfolder", folders, menu_option, NULL, NULL, &kiosk.setting.visual,     \

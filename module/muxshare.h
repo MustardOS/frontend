@@ -244,7 +244,7 @@ void resolve_content_artwork_names(char *h_core_artwork, size_t core_size, char 
 
 void refresh_theme_preview_image(char *base_path, char *name, int *preview_index);
 
-int muxaccess_main(void);
+int muxprofile_main(void);
 
 int muxactivity_main(void);
 
@@ -583,7 +583,7 @@ void resolve_grid_item_images(
     do {                                                                                                               \
         int current = lv_dropdown_get_selected(ui_dro_##NAME##_##MODULE);                                              \
         if (current != NAME##_original) {                                                                              \
-            int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT);                                      \
+            int mapped = map_drop_down_to_value(current, VALUES, COUNT, VALUES[DEFAULT]);                              \
             is_modified++;                                                                                             \
             if (!write_text_to_file_atomic(CONF_CONFIG_PATH FILE, INT, mapped)) save_failed++;                         \
         }                                                                                                              \

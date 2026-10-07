@@ -379,6 +379,7 @@ struct mux_lang {
         char music[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
+        char profile[MAX_BUFFER_SIZE];
         char overlays[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
@@ -405,6 +406,7 @@ struct mux_lang {
             char music[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
+            char profile[MAX_BUFFER_SIZE];
             char overlays[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
@@ -497,30 +499,39 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char reducemotion[MAX_BUFFER_SIZE];
-        char highcontrast[MAX_BUFFER_SIZE];
-        char boldfocus[MAX_BUFFER_SIZE];
-        char textsize[MAX_BUFFER_SIZE];
-        char legiblefont[MAX_BUFFER_SIZE];
+        char save_current[MAX_BUFFER_SIZE];
+        char restore_previous[MAX_BUFFER_SIZE];
+        char active[MAX_BUFFER_SIZE];
+        char default_name[MAX_BUFFER_SIZE];
+        char name_prompt[MAX_BUFFER_SIZE];
+        char merge[MAX_BUFFER_SIZE];
+        char replace[MAX_BUFFER_SIZE];
+        char apply_title[MAX_BUFFER_SIZE];
+        char apply_desc[MAX_BUFFER_SIZE];
+        char applied[MAX_BUFFER_SIZE];
+        char restored[MAX_BUFFER_SIZE];
+        char saved[MAX_BUFFER_SIZE];
+        char deleted[MAX_BUFFER_SIZE];
+        char empty[MAX_BUFFER_SIZE];
+        char failed[MAX_BUFFER_SIZE];
+        char invalid[MAX_BUFFER_SIZE];
+        char reduced[MAX_BUFFER_SIZE];
+        char delete_title[MAX_BUFFER_SIZE];
+        char delete_desc[MAX_BUFFER_SIZE];
         struct {
-            char full[MAX_BUFFER_SIZE];
-            char reduced[MAX_BUFFER_SIZE];
-            char off[MAX_BUFFER_SIZE];
-        } motion;
+            char accessibility[MAX_BUFFER_SIZE];
+            char oem[MAX_BUFFER_SIZE];
+            char user[MAX_BUFFER_SIZE];
+        } type;
         struct {
-            char theme[MAX_BUFFER_SIZE];
-            char large[MAX_BUFFER_SIZE];
-            char larger[MAX_BUFFER_SIZE];
-            char largest[MAX_BUFFER_SIZE];
-        } size;
-        struct {
-            char reduce_motion[MAX_BUFFER_SIZE];
-            char high_contrast[MAX_BUFFER_SIZE];
+            char save[MAX_BUFFER_SIZE];
+            char restore[MAX_BUFFER_SIZE];
+            char profile[MAX_BUFFER_SIZE];
             char bold_focus[MAX_BUFFER_SIZE];
-            char text_size[MAX_BUFFER_SIZE];
-            char legible_font[MAX_BUFFER_SIZE];
+            char high_contrast[MAX_BUFFER_SIZE];
+            char reduce_motion[MAX_BUFFER_SIZE];
         } help;
-    } muxaccess;
+    } muxprofile;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -865,6 +876,7 @@ struct mux_lang {
         char header_size[MAX_BUFFER_SIZE];
         char footer_size[MAX_BUFFER_SIZE];
         char panel_size[MAX_BUFFER_SIZE];
+        char text_scale[MAX_BUFFER_SIZE];
         char size_default[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         struct {
@@ -883,6 +895,8 @@ struct mux_lang {
             char header_size[MAX_BUFFER_SIZE];
             char footer_size[MAX_BUFFER_SIZE];
             char panel_size[MAX_BUFFER_SIZE];
+            char text_scale[MAX_BUFFER_SIZE];
+            char face[MAX_BUFFER_SIZE];
         } help;
     } muxfont;
 
@@ -2997,6 +3011,7 @@ struct mux_lang {
         char preview[MAX_BUFFER_SIZE];
         char loading[MAX_BUFFER_SIZE];
         char error_preview[MAX_BUFFER_SIZE];
+        char default_name[MAX_BUFFER_SIZE];
     } muxsoundfont;
 
     struct {
@@ -3074,6 +3089,7 @@ struct mux_lang {
         char music[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
+        char profile[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
@@ -3095,6 +3111,7 @@ struct mux_lang {
             char music[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
+            char profile[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
             char save[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];

@@ -305,7 +305,14 @@ static int get_section_ttf_size(const char *section) {
     return get_font_size();
 }
 
-static int get_custom_section_size(const char *section) {
+static int scale_font_size(const int size) {
+    const int scale = config.settings.font.scale;
+    if (scale <= 0 || scale == 100) return size;
+
+    return size * scale / 100;
+}
+
+static int get_unscaled_section_size(const char *section) {
     if (strcmp(section, FONT_HEADER_DIR) == 0) {
         if (config.settings.font.header_size > 0) return config.settings.font.header_size;
         if (theme.font.font_header_size > 0) return theme.font.font_header_size;
@@ -331,6 +338,10 @@ static int get_custom_section_size(const char *section) {
     if (theme.font.font_list_size > 0) return theme.font.font_list_size;
 
     return get_font_size();
+}
+
+static int get_custom_section_size(const char *section) {
+    return scale_font_size(get_unscaled_section_size(section));
 }
 
 static lv_font_t *load_font_cached_ttf_lang(const char *path, int size);
@@ -1015,6 +1026,7 @@ static void load_font_text_inner(lv_obj_t *screen) {
     } else {
         lang_size = get_font_size();
     }
+    lang_size = scale_font_size(lang_size);
 
     if (eff_type == 2 || eff_type == 3) {
         const char *stored_name = config.settings.font.name[0] ? config.settings.font.name : DEFAULT_NAME;
@@ -1034,6 +1046,7 @@ static void load_font_text_inner(lv_obj_t *screen) {
         } else {
             size = get_font_size();
         }
+        size = scale_font_size(size);
 
         lv_font_t *font = load_font_cached_face(path, size, 1, configured_font_face());
 
