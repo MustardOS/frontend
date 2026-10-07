@@ -443,7 +443,11 @@ static void assign_core(const char *item_data, const char *log_msg, const int as
     LOG_INFO(mux_module, "Content Core Catalogue: %s", core_catalogue);
 
     static char core_governor[MAX_BUFFER_SIZE];
-    snprintf(core_governor, sizeof(core_governor), "%s", core.governor[0] ? core.governor : device.cpu.dflt);
+    const char *board_governor = coredb_board_governor(&core);
+    snprintf(
+        core_governor, sizeof(core_governor), "%s",
+        board_governor ? board_governor : core.governor[0] ? core.governor : device.cpu.dflt
+    );
     LOG_INFO(mux_module, "Content Core Governor: %s", core_governor);
 
     static char core_control[MAX_BUFFER_SIZE];

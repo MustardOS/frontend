@@ -8,6 +8,7 @@
 #include <common/base/strutil.h>
 #include <common/config/config.h>
 #include <common/content/core/coredb.h>
+#include <common/platform/board.h>
 #include <common/platform/device.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
@@ -536,4 +537,14 @@ int coredb_core_find(const char *system, const enum core_runtime runtime, const 
 
 int coredb_runtime_available(const char *system, const enum core_runtime runtime) {
     return coredb_core_count(system, runtime) > 0;
+}
+
+const char *coredb_board_governor(const struct coredb_core *core) {
+    // The GKD Pixel 2 starts Pickles and Wasabi at full speed. Users can
+    // still pick another governor per content afterwards.
+    if (board_is(board_special_pixel_2)
+        && (core->runtime == core_runtime_pickles || strcmp(core->core, "ext-video") == 0))
+        return "performance";
+
+    return NULL;
 }
