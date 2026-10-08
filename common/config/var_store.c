@@ -326,7 +326,8 @@ static int atomic_write_file(const char *path, const char *value, const int dura
     const int n = snprintf(tmp, sizeof(tmp), "%s.tmp.%d", path, (int) getpid());
     if (n < 0 || (size_t) n >= sizeof(tmp)) return -1;
 
-    const int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    unlink(tmp);
+    const int fd = open(tmp, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
     if (fd < 0) return -1;
 
     const size_t len = strlen(value);

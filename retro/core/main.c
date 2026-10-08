@@ -1132,6 +1132,7 @@ int main(const int argc, char *argv[]) {
         perf_end(perf_stage_video, video_start);
         if (ui_visible && SDL_TICKS_PASSED(loop_now, ui_task_deadline)) {
             const uint64_t ui_task_start = perf_begin();
+            focus_scroll_tick();
             lv_task_handler();
             perf_end(perf_stage_ui_task, ui_task_start);
             ui_task_deadline = loop_now + UI_TASK_INTERVAL_MS;

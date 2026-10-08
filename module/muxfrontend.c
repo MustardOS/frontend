@@ -836,6 +836,7 @@ int main(void) {
         process_action(MUOS_ASS_LOAD, "assign");
         process_action(MUOS_GOV_LOAD, "governor");
 
+        screen_switch_start = lv_tick_get();
         module_refresh();
 
         if (file_exist(MUOS_ACT_LOAD)) {

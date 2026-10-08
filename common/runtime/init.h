@@ -10,6 +10,7 @@ extern lv_obj_t *ui_lbl_message;
 extern lv_obj_t *ui_pnl_message;
 
 extern char mux_module[MAX_BUFFER_SIZE];
+extern uint32_t screen_switch_start;
 extern char mux_dim[15];
 extern int msgbox_active;
 extern lv_obj_t *msgbox_element;

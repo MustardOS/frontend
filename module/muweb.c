@@ -70,6 +70,7 @@ static char collection_root[PATH_MAX];
 static char content_roots[MUWEB_CONTENT_ROOTS][PATH_MAX];
 static size_t content_root_count = 0;
 static int read_only = 0;
+static int public_lists = 0;
 static int verbose = 0;
 
 static unsigned char code_secret[TOTP_SECRET_SIZE];
@@ -86,6 +87,25 @@ struct session {
 };
 
 static struct session sessions[MUWEB_SESSION_SLOTS];
+
+#define MUWEB_LIMIT_SLOTS    32
+#define MUWEB_LIMIT_FAILURES 5
+#define MUWEB_LIMIT_GLOBAL   30
+#define MUWEB_LIMIT_WINDOW   60
+#define MUWEB_LIMIT_LOCK_MAX 900
+
+struct code_limit {
+    unsigned char address[16];
+    int failures;
+    int lockouts;
+    time_t window_start;
+    time_t locked_until;
+    time_t last_seen;
+};
+
+static struct code_limit code_limits[MUWEB_LIMIT_SLOTS];
+static int code_global_failures = 0;
+static time_t code_global_window = 0;
 
 static void signal_handler(const int signal_number) {
     (void) signal_number;
@@ -108,6 +128,7 @@ struct buffer {
 };
 
 static int buffer_reserve(struct buffer *buffer, const size_t extra) {
+    if (extra > SIZE_MAX - buffer->length - 1) return 0;
     if (buffer->length + extra + 1 <= buffer->capacity) return 1;
 
     size_t capacity = buffer->capacity ? buffer->capacity : 1024;
@@ -422,7 +443,8 @@ static int write_file_atomic(const char *path, const char *data, const size_t le
     const int written = snprintf(temporary, sizeof(temporary), "%s.tmp", path);
     if (written < 0 || (size_t) written >= sizeof(temporary)) return 0;
 
-    const int descriptor = open(temporary, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0644);
+    unlink(temporary);
+    const int descriptor = open(temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
     if (descriptor < 0) return 0;
 
     size_t offset = 0;
@@ -2263,6 +2285,7 @@ struct connection {
     char if_modified[64];
     char auth_code[16];
     char auth_session[MUWEB_TOKEN_TEXT];
+    unsigned char peer[16];
 };
 
 static const char *status_text(const int status) {
@@ -2287,6 +2310,8 @@ static const char *status_text(const int status) {
             return "Method Not Allowed";
         case 413:
             return "Payload Too Large";
+        case 429:
+            return "Too Many Requests";
         case 500:
             return "Internal Server Error";
         case 501:
@@ -2308,17 +2333,19 @@ static int response_headers(
     return buffer_printf(
         &connection->response,
         "HTTP/1.1 %d %s\r\n"
-        "Server: muweb/%s\r\n"
+        "Server: muweb\r\n"
         "Connection: close\r\n"
         "%s"
         "X-Content-Type-Options: nosniff\r\n"
+        "Referrer-Policy: no-referrer\r\n"
+        "Permissions-Policy: camera=(), microphone=(), geolocation=()\r\n"
         "Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' blob:; "
-        "media-src 'self'; style-src 'self'; script-src 'self'\r\n"
+        "media-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %lld\r\n"
         "%s"
         "\r\n",
-        status, status_text(status), MUWEB_VERSION,
+        status, status_text(status),
         connection->cache_header ? connection->cache_header : "Cache-Control: no-store\r\n", content_type, length,
         extra ? extra : ""
     );
@@ -2507,6 +2534,65 @@ static void session_close(const char *token) {
     }
 }
 
+static struct code_limit *code_limit_find(const unsigned char *address, const int create) {
+    struct code_limit *oldest = &code_limits[0];
+    for (size_t i = 0; i < MUWEB_LIMIT_SLOTS; ++i) {
+        if (code_limits[i].last_seen && memcmp(code_limits[i].address, address, 16) == 0) return &code_limits[i];
+        if (code_limits[i].last_seen < oldest->last_seen) oldest = &code_limits[i];
+    }
+    if (!create) return NULL;
+
+    memset(oldest, 0, sizeof(*oldest));
+    memcpy(oldest->address, address, 16);
+    return oldest;
+}
+
+static int code_check(struct connection *connection) {
+    if (!connection->auth_code[0]) return 0;
+
+    const time_t now = time(NULL);
+    if (now - code_global_window >= MUWEB_LIMIT_WINDOW) {
+        code_global_window = now;
+        code_global_failures = 0;
+    }
+    if (code_global_failures >= MUWEB_LIMIT_GLOBAL) return -1;
+
+    struct code_limit *limit = code_limit_find(connection->peer, 0);
+    if (limit && limit->locked_until > now) return -1;
+
+    if (totp_matches(code_secret, connection->auth_code)) {
+        if (limit) memset(limit, 0, sizeof(*limit));
+        return 1;
+    }
+
+    code_global_failures++;
+
+    limit = code_limit_find(connection->peer, 1);
+    limit->last_seen = now;
+    if (now - limit->window_start >= MUWEB_LIMIT_WINDOW) {
+        limit->window_start = now;
+        limit->failures = 0;
+    }
+
+    if (++limit->failures >= MUWEB_LIMIT_FAILURES) {
+        const int shift = limit->lockouts < 4 ? limit->lockouts : 4;
+        const time_t lock = (time_t) MUWEB_LIMIT_WINDOW << shift;
+        limit->locked_until = now + (lock < MUWEB_LIMIT_LOCK_MAX ? lock : MUWEB_LIMIT_LOCK_MAX);
+        limit->lockouts++;
+        limit->failures = 0;
+        limit->window_start = now;
+        log_verbose("too many wrong codes, locking out a client");
+    }
+
+    return 0;
+}
+
+static int code_refused(struct connection *connection, const int result) {
+    if (result >= 0) return 0;
+    send_error(connection, 429, "Too many wrong codes. Wait a minute and try again");
+    return 1;
+}
+
 static int write_allowed(struct connection *connection) {
     if (read_only) {
         send_error(connection, 403, "The dashboard is running read only");
@@ -2515,7 +2601,10 @@ static int write_allowed(struct connection *connection) {
     if (!code_required) return 1;
 
     if (session_valid(connection->auth_session)) return 1;
-    if (connection->auth_code[0] && totp_matches(code_secret, connection->auth_code)) return 1;
+
+    const int code = code_check(connection);
+    if (code > 0) return 1;
+    if (code_refused(connection, code)) return 0;
 
     send_error(connection, 401, "Unlock the dashboard with the code shown on the device");
     return 0;
@@ -3309,7 +3398,7 @@ static int collection_folder(const char *name, char *out, const size_t size) {
 }
 
 static int lists_open(void) {
-    return read_only && !code_required;
+    return public_lists && !code_required;
 }
 
 static int lists_write_allowed(struct connection *connection) {
@@ -3563,9 +3652,11 @@ static int screen_allowed(struct connection *connection) {
         send_error(connection, 403, "Remote View needs Authentication enabled on the device");
         return 0;
     }
-    if (session_valid(connection->auth_session)
-        || (connection->auth_code[0] && totp_matches(code_secret, connection->auth_code)))
-        return 1;
+    if (session_valid(connection->auth_session)) return 1;
+
+    const int code = code_check(connection);
+    if (code > 0) return 1;
+    if (code_refused(connection, code)) return 0;
 
     send_error(connection, 401, "Unlock the dashboard with the code shown on the device");
     return 0;
@@ -3789,6 +3880,19 @@ static void handle_static(struct connection *connection, const char *path, const
     send_file(connection, target, range_header);
 }
 
+static int same_origin(const char *headers) {
+    char origin[256];
+    char host[256];
+    if (!headers || !header_value(headers, "Origin", origin, sizeof(origin))) return 1;
+    if (!header_value(headers, "Host", host, sizeof(host))) return 0;
+
+    const char *authority = NULL;
+    if (strncasecmp(origin, "http://", 7) == 0) authority = origin + 7;
+    if (strncasecmp(origin, "https://", 8) == 0) authority = origin + 8;
+
+    return authority && strcasecmp(authority, host) == 0;
+}
+
 static void handle_request(struct connection *connection) {
     const char *request = connection->request.data;
     const char *body = request + connection->header_length;
@@ -3829,6 +3933,11 @@ static void handle_request(struct connection *connection) {
     }
 
     log_verbose("%s %s", method, target);
+
+    if (strcmp(method, "GET") != 0 && !same_origin(headers ? headers + 2 : NULL)) {
+        send_error(connection, 403, "Changes are only accepted from the dashboard itself");
+        return;
+    }
 
     if (strcmp(target, "/api/auth") == 0) {
         if (strcmp(method, "GET") != 0) {
@@ -3880,7 +3989,9 @@ static void handle_request(struct connection *connection) {
             send_error(connection, 400, "Authentication is turned off");
             return;
         }
-        if (!connection->auth_code[0] || !totp_matches(code_secret, connection->auth_code)) {
+        const int code = code_check(connection);
+        if (code_refused(connection, code)) return;
+        if (code == 0) {
             send_error(connection, 401, "That code is wrong or has expired");
             return;
         }
@@ -3971,7 +4082,21 @@ static int connection_ready_to_dispatch(struct connection *connection) {
         char storage[64];
         const char *headers = strstr(connection->request.data, "\r\n");
         const char *length = headers ? header_value(headers + 2, "Content-Length", storage, sizeof(storage)) : NULL;
-        connection->content_length = length ? (size_t) strtoull(length, NULL, 10) : 0;
+        char encoding_storage[256];
+        const char *encoding =
+            headers ? header_value(headers + 2, "Transfer-Encoding", encoding_storage, sizeof(encoding_storage)) : NULL;
+
+        char *end = NULL;
+        errno = 0;
+        const unsigned long long parsed = length ? strtoull(length, &end, 10) : 0;
+        if (encoding || (length && (!isdigit((unsigned char) length[0]) || errno || !end || *end))) {
+            send_error(connection, 400, "Malformed request length");
+            connection->header_length = 0;
+            connection->content_length = 0;
+            return 1;
+        }
+
+        connection->content_length = parsed > MUWEB_UPLOAD_LIMIT ? (size_t) MUWEB_UPLOAD_LIMIT + 1 : (size_t) parsed;
 
         if (connection->content_length > MUWEB_UPLOAD_LIMIT) {
             send_error(connection, 413, "That upload is too large");
@@ -4084,7 +4209,9 @@ static void print_usage(FILE *stream) {
                 "  -m, --content DIR      the ROMS directory to take the content roster from,\n"
                 "                         repeat once per storage root (max 4)\n"
                 "  -k, --secret FILE      device secret for the rolling code, minted if absent\n"
-                "  -o, --readonly         serve everything but refuse uploads and deletions\n"
+                "  -o, --readonly         serve everything but refuse every change\n"
+                "  -l, --public-lists     without a secret, still allow History, Collections\n"
+                "                         and Now Playing changes from anyone on the network\n"
                 "  -C, --show-code        print the code the device should display, then exit\n"
                 "  -v, --verbose          log each request\n"
                 "  -V, --version          print version\n"
@@ -4135,6 +4262,7 @@ int main(const int argc, char **argv) {
         {"content", required_argument, NULL, 'm'},
         {"secret", required_argument, NULL, 'k'},
         {"readonly", no_argument, NULL, 'o'},
+        {"public-lists", no_argument, NULL, 'l'},
         {"show-code", no_argument, NULL, 'C'},
         {"verbose", no_argument, NULL, 'v'},
         {"version", no_argument, NULL, 'V'},
@@ -4143,7 +4271,7 @@ int main(const int argc, char **argv) {
     };
 
     int option;
-    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:Pm:k:oCvVh", options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:Pm:k:olCvVh", options, NULL)) != -1) {
         switch (option) {
             case 'r':
                 root_argument = optarg;
@@ -4196,6 +4324,9 @@ int main(const int argc, char **argv) {
             case 'o':
                 read_only = 1;
                 break;
+            case 'l':
+                public_lists = 1;
+                break;
             case 'C':
                 show_code = 1;
                 break;
@@ -4235,6 +4366,8 @@ int main(const int argc, char **argv) {
             return 2;
         }
         code_required = 1;
+    } else {
+        read_only = 1;
     }
 
     if (show_code) {
@@ -4312,7 +4445,10 @@ int main(const int argc, char **argv) {
         const time_t now = time(NULL);
 
         if (ready > 0 && descriptors[0].revents & POLLIN) {
-            const int accepted = accept(listener, NULL, NULL);
+            struct sockaddr_in6 peer_address;
+            socklen_t peer_length = sizeof(peer_address);
+            memset(&peer_address, 0, sizeof(peer_address));
+            const int accepted = accept(listener, (struct sockaddr *) &peer_address, &peer_length);
             if (accepted >= 0) {
                 struct connection *slot = NULL;
                 for (size_t i = 0; i < MUWEB_MAX_CONNECTIONS; ++i) {
@@ -4328,6 +4464,8 @@ int main(const int argc, char **argv) {
                     memset(slot, 0, sizeof(*slot));
                     slot->socket = accepted;
                     slot->body_descriptor = -1;
+                    if (peer_address.sin6_family == AF_INET6)
+                        memcpy(slot->peer, &peer_address.sin6_addr, sizeof(slot->peer));
                     slot->deadline = now + MUWEB_IDLE_SECONDS;
                     fcntl(accepted, F_SETFL, fcntl(accepted, F_GETFL, 0) | O_NONBLOCK);
                 }

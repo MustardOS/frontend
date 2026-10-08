@@ -833,6 +833,10 @@ static int receive_message(netplay_peer *peer) {
     peer->rx_sequence = sequence;
 
     const int payload_kept = type == netplay_message_state || type == netplay_message_netpacket;
+    if (payload_kept && (!peer->compatible || (type == netplay_message_state && netplay.role != netplay_role_client))) {
+        errno = EPROTO;
+        return -1;
+    }
 
     uint8_t *owned = size && payload_kept ? malloc(size) : NULL;
     uint8_t *payload = size ? (payload_kept ? owned : peer->rx_control) : NULL;

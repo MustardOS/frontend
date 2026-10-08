@@ -1,4 +1,7 @@
 #include <stddef.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <common/runtime/init.h>
 #include <common/base/options.h>
@@ -7,10 +10,64 @@
 #include <json/json.h>
 #include <common/storage/fileio.h>
 #include <common/base/util.h>
+#include <common/runtime/log.h>
 
-static struct json translation_generic;
+static char lang_loaded_path[MAX_BUFFER_SIZE];
+static time_t lang_loaded_mtime;
+static off_t lang_loaded_size;
+static char *language_json;
 static struct json translation_specific;
-static char *language_json = NULL;
+
+#define TRANSLATION_CACHE_MAX 64
+
+typedef struct {
+    char *key;
+    char *value;
+} translation_entry;
+
+static translation_entry translation_cache[TRANSLATION_CACHE_MAX];
+static int translation_cache_count;
+
+static void clear_translation_cache(void) {
+    for (int i = 0; i < translation_cache_count; i++) {
+        free(translation_cache[i].key);
+        free(translation_cache[i].value);
+    }
+    translation_cache_count = 0;
+}
+
+static void select_translation_section(void) {
+    clear_translation_cache();
+    translation_specific = language_json ? json_object_get(json_parse(language_json), mux_module) : (struct json) {0};
+}
+
+char *translate_specific(char *key) {
+    if (!key || !key[0]) return key;
+
+    for (int i = 0; i < translation_cache_count; i++) {
+        if (strcmp(translation_cache[i].key, key) == 0) return translation_cache[i].value;
+    }
+
+    const struct json found = json_object_get(translation_specific, key);
+    if (!json_exists(found) || json_type(found) != JSON_STRING) return key;
+
+    char translation[MAX_BUFFER_SIZE];
+    json_string_copy(found, translation, sizeof(translation));
+
+    if (translation_cache_count >= TRANSLATION_CACHE_MAX) clear_translation_cache();
+
+    translation_entry *entry = &translation_cache[translation_cache_count];
+    entry->key = mux_strdup(key);
+    entry->value = mux_strdup(translation);
+    if (!entry->key || !entry->value) {
+        free(entry->key);
+        free(entry->value);
+        return key;
+    }
+
+    translation_cache_count++;
+    return entry->value;
+}
 
 char *disabled_enabled[2];
 char *no_yes[2];
@@ -22,66 +79,6 @@ char *battery_display[3];
 char *debug_log_mode[3];
 char *kernel_log_mode[5];
 char *scroll_speed[4];
-
-void load_language_file(const char *module) {
-    char language_file[MAX_BUFFER_SIZE];
-    snprintf(language_file, sizeof(language_file), STORAGE_LANG "/%s.json", config.settings.general.language);
-
-    char *content = read_all_char_from(language_file);
-    if (!json_valid(content)) {
-        free(content);
-        return;
-    }
-
-    free(language_json);
-    language_json = content;
-
-    const struct json root = json_parse(language_json);
-    translation_specific = json_object_get(root, module);
-    translation_generic = json_object_get(root, "generic");
-}
-
-char *translate_generic(char *key) {
-    const struct json translation_generic_json = json_object_get(translation_generic, key);
-
-    if (json_exists(translation_generic_json)) {
-        char translation[MAX_BUFFER_SIZE];
-        json_string_copy(translation_generic_json, translation, sizeof(translation));
-        return mux_strdup(translation);
-    }
-
-    return key;
-}
-
-char *translate_specific(char *key) {
-    const struct json translation_specific_json = json_object_get(translation_specific, key);
-
-    if (json_exists(translation_specific_json)) {
-        char translation[MAX_BUFFER_SIZE];
-        json_string_copy(translation_specific_json, translation, sizeof(translation));
-        return mux_strdup(translation);
-    }
-
-    return key;
-}
-
-void fill_generic(const char *key, char *field, const size_t size) {
-    const struct json j = json_object_get(translation_generic, key);
-    if (json_exists(j)) {
-        json_string_copy(j, field, size);
-    } else {
-        snprintf(field, size, "%s", key);
-    }
-}
-
-void fill_specific(const char *key, char *field, const size_t size) {
-    const struct json j = json_object_get(translation_specific, key);
-    if (json_exists(j)) {
-        json_string_copy(j, field, size);
-    } else {
-        snprintf(field, size, "%s", key);
-    }
-}
 
 void common_var_init(void) {
     disabled_enabled[0] = lang.generic.disabled;
@@ -1208,6 +1205,7 @@ static const lang_field lang_fields[] = {
     {"muxinstall", LANG_OFF(muxinstall.rtc), lang_specific, "Date and Time"},
     {"muxinstall", LANG_OFF(muxinstall.language), lang_specific, "Language"},
     {"muxinstall", LANG_OFF(muxinstall.access), lang_specific, "Profiles"},
+    {"muxinstall", LANG_OFF(muxinstall.oem_profile), lang_specific, "This device came with its own profile, which has already been applied. Profiles can be changed once installation is complete."},
     {"muxinstall", LANG_OFF(muxinstall.tester), lang_specific, "Input Tester"},
     {"muxinstall", LANG_OFF(muxinstall.abbr.access), lang_specific, "Profile"},
     {"muxinstall", LANG_OFF(muxinstall.abbr.tester), lang_specific, "Tester"},
@@ -3549,30 +3547,216 @@ static const lang_field lang_fields[] = {
 };
 // clang-format on
 
-void load_lang(struct mux_lang *lang) {
-    load_language_file(mux_module);
+#define LANG_INDEX_SIZE  8192
+#define LANG_FIELD_COUNT (sizeof(lang_fields) / sizeof(lang_fields[0]))
 
-    for (size_t i = 0; i < sizeof(lang_fields) / sizeof(lang_fields[0]); i++) {
+static int lang_index_head[LANG_INDEX_SIZE];
+static int lang_index_next[LANG_FIELD_COUNT];
+static int lang_index_ready;
+
+static uint32_t lang_hash(const char *section, const char *key) {
+    uint32_t hash = 2166136261u;
+    for (const unsigned char *p = (const unsigned char *) section; *p; p++)
+        hash = (hash ^ *p) * 16777619u;
+    hash = (hash ^ 0x1fu) * 16777619u;
+    for (const unsigned char *p = (const unsigned char *) key; *p; p++)
+        hash = (hash ^ *p) * 16777619u;
+    return hash & (LANG_INDEX_SIZE - 1);
+}
+
+static void build_lang_index(void) {
+    if (lang_index_ready) return;
+
+    for (size_t i = 0; i < LANG_INDEX_SIZE; i++)
+        lang_index_head[i] = -1;
+
+    for (size_t i = LANG_FIELD_COUNT; i-- > 0;) {
         const lang_field *f = &lang_fields[i];
-        const int is_common = strcmp(f->module, "system") == 0 || strcmp(f->module, "generic") == 0;
+        lang_index_next[i] = -1;
+        if (f->type == lang_system) continue;
 
-        char *field_ptr = (char *) lang + f->offset;
+        const uint32_t hash = lang_hash(f->module, f->default_str);
+        lang_index_next[i] = lang_index_head[hash];
+        lang_index_head[hash] = (int) i;
+    }
 
-        if (!is_common && strcmp(f->module, mux_module) != 0) {
-            if (!field_ptr[0]) snprintf(field_ptr, MAX_BUFFER_SIZE, "%s", f->default_str);
+    lang_index_ready = 1;
+}
+
+static const char *skip_digits(const char *s) {
+    while (*s >= '0' && *s <= '9')
+        s++;
+    return s;
+}
+
+static const char *skip_length(const char *s) {
+    if ((s[0] == 'h' && s[1] == 'h') || (s[0] == 'l' && s[1] == 'l')) return s + 2;
+    if (*s && strchr("hlLjzt", *s)) return s + 1;
+    return s;
+}
+
+static int is_format(const char *s) {
+    for (s = strchr(s, '%'); s; s = strchr(s, '%')) {
+        s++;
+        if (*s == '%') {
+            s++;
             continue;
         }
 
-        switch (f->type) {
-            case lang_system:
-                snprintf(field_ptr, MAX_BUFFER_SIZE, "%s", f->default_str);
-                break;
-            case lang_generic:
-                fill_generic(f->default_str, field_ptr, MAX_BUFFER_SIZE);
-                break;
-            case lang_specific:
-                fill_specific(f->default_str, field_ptr, MAX_BUFFER_SIZE);
-                break;
+        const char *p = s;
+        while (*p && strchr("-+#0", *p))
+            p++;
+        p = skip_digits(p);
+        if (*p == '.' && p[1] >= '0' && p[1] <= '9') p = skip_digits(p + 1);
+        p = skip_length(p);
+
+        if (*p && strchr("diouxXeEfFgGaAcsp", *p)) return 1;
+    }
+
+    return 0;
+}
+
+static int format_signature(const char *s, char *out, const size_t size) {
+    size_t used = 0;
+    out[0] = '\0';
+
+    for (s = strchr(s, '%'); s; s = strchr(s, '%')) {
+        const char *p = s + 1;
+        const char *digits = skip_digits(p);
+        const int positional = digits != p && *digits == '$';
+        if (positional) p = digits + 1;
+
+        while (*p && strchr("-+ #0'", *p))
+            p++;
+
+        int star = 0;
+        if (*p == '*') {
+            star = 1;
+            p++;
+        } else {
+            p = skip_digits(p);
+        }
+
+        if (*p == '.') {
+            p++;
+            if (*p == '*') {
+                star = 1;
+                p++;
+            } else {
+                p = skip_digits(p);
+            }
+        }
+
+        const char *length = p;
+        p = skip_length(p);
+        const char conversion = *p;
+
+        if (conversion == '%') {
+            s = p + 1;
+            continue;
+        }
+
+        char token[8] = "";
+        if (positional || star || !conversion) {
+            snprintf(token, sizeof(token), "!");
+        } else if (conversion && strchr("diouxXeEfFgGaAcspnm", conversion)) {
+            snprintf(token, sizeof(token), "%.*s%c", (int) (p - length), length, conversion);
+        }
+
+        if (token[0]) {
+            const int written = snprintf(out + used, size - used, "%s|", token);
+            if (written < 0 || (size_t) written >= size - used) return 0;
+            used += (size_t) written;
+        }
+
+        s = conversion ? p + 1 : p;
+    }
+
+    return 1;
+}
+
+static int translation_safe(const char *original, const char *translation) {
+    if (!is_format(original)) return 1;
+
+    char expected[256];
+    char found[256];
+    if (!format_signature(original, expected, sizeof(expected))) return 0;
+    if (!format_signature(translation, found, sizeof(found))) return 0;
+
+    return strcmp(expected, found) == 0;
+}
+
+static void apply_lang_section(struct mux_lang *lang, const char *section, const struct json object) {
+    char key[MAX_BUFFER_SIZE * 2];
+    char text[MAX_BUFFER_SIZE];
+
+    for (struct json entry = json_first(object); json_exists(entry); entry = json_next(json_next(entry))) {
+        const struct json value = json_next(entry);
+        if (!json_exists(value)) break;
+        if (json_type(value) != JSON_STRING) continue;
+        if (json_string_copy(entry, key, sizeof(key)) >= sizeof(key)) continue;
+
+        for (int i = lang_index_head[lang_hash(section, key)]; i >= 0; i = lang_index_next[i]) {
+            const lang_field *f = &lang_fields[i];
+            if (strcmp(f->module, section) != 0 || strcmp(f->default_str, key) != 0) continue;
+            json_string_copy(value, text, sizeof(text));
+            if (!translation_safe(f->default_str, text)) {
+                LOG_WARN(mux_module, "Ignoring translation with mismatched placeholders: %s", f->default_str);
+                continue;
+            }
+            memcpy((char *) lang + f->offset, text, sizeof(text));
         }
     }
+}
+
+void load_lang(struct mux_lang *lang) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), STORAGE_LANG "/%s.json", config.settings.general.language);
+
+    struct stat info;
+    const int found = stat(path, &info) == 0;
+    if (found && strcmp(path, lang_loaded_path) == 0 && info.st_mtime == lang_loaded_mtime
+        && info.st_size == lang_loaded_size) {
+        select_translation_section();
+        return;
+    }
+
+    build_lang_index();
+    lang_loaded_path[0] = '\0';
+
+    for (size_t i = 0; i < LANG_FIELD_COUNT; i++) {
+        const lang_field *f = &lang_fields[i];
+        snprintf((char *) lang + f->offset, MAX_BUFFER_SIZE, "%s", f->default_str);
+    }
+
+    free(language_json);
+    language_json = NULL;
+    select_translation_section();
+
+    if (!found) return;
+
+    char *content = read_all_char_from(path);
+    if (!json_valid(content)) {
+        free(content);
+        return;
+    }
+
+    char section[MAX_BUFFER_SIZE];
+    const struct json root = json_parse(content);
+    for (struct json name = json_first(root); json_exists(name); name = json_next(json_next(name))) {
+        const struct json object = json_next(name);
+        if (!json_exists(object)) break;
+        if (json_type(object) != JSON_OBJECT) continue;
+        if (json_string_copy(name, section, sizeof(section)) >= sizeof(section)) continue;
+        if (strcmp(section, "system") == 0) continue;
+
+        apply_lang_section(lang, section, object);
+    }
+
+    language_json = content;
+    select_translation_section();
+
+    snprintf(lang_loaded_path, sizeof(lang_loaded_path), "%s", path);
+    lang_loaded_mtime = info.st_mtime;
+    lang_loaded_size = info.st_size;
 }

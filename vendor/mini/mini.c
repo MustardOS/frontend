@@ -230,7 +230,7 @@ mini_group_t *create_group(mini_t *mini, const char *name) {
     return n;
 }
 
-mini_group_t *get_group(mini_t *mini, char *id, int create) {
+mini_group_t *get_group(mini_t *mini, const char *id, int create) {
     if (!id) return mini->head;
 
     mini_group_t *c = mini->head->next;
@@ -247,10 +247,8 @@ mini_group_t *get_group(mini_t *mini, char *id, int create) {
 }
 
 mini_value_t *get_value(mini_t *mini, const char *group, const char *id, int *err, mini_group_t **group_ptr) {
-    char *tmp = NULL;
     mini_value_t *result = NULL;
-    if (group) tmp = mini_strdup(group);
-    mini_group_t *grp = get_group(mini, tmp, 0);
+    mini_group_t *grp = get_group(mini, group, 0);
 
     if (grp) {
         if (group_ptr) *group_ptr = grp;
@@ -260,7 +258,6 @@ mini_value_t *get_value(mini_t *mini, const char *group, const char *id, int *er
         *err = MINI_GROUP_NOT_FOUND;
     }
 
-    free(tmp);
     return result;
 }
 
@@ -503,9 +500,7 @@ int mini_delete_value(mini_t *mini, const char *group, const char *id) {
 int mini_delete_group(mini_t *mini, const char *group) {
     if (!mini) return MINI_INVALID_ARG;
     int result = MINI_OK;
-    char *tmp = mini_strdup(group);
-    mini_group_t *grp = get_group(mini, tmp, 0);
-    free(tmp);
+    mini_group_t *grp = get_group(mini, group, 0);
 
     if (grp) {
         mini_value_t *cval = grp->head;

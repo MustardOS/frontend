@@ -202,9 +202,21 @@ int totp_secret_load(const char *path, unsigned char *secret) {
     int descriptor = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
 
     if (descriptor >= 0) {
-        const ssize_t got = read(descriptor, secret, TOTP_SECRET_SIZE);
+        struct stat info;
+        const int trusted = fstat(descriptor, &info) == 0 && S_ISREG(info.st_mode) && info.st_uid == geteuid()
+                            && info.st_nlink == 1 && info.st_size == (off_t) TOTP_SECRET_SIZE;
+
+        ssize_t got = -1;
+        if (trusted) {
+            if (info.st_mode & 077) fchmod(descriptor, 0600);
+            got = read(descriptor, secret, TOTP_SECRET_SIZE);
+        }
         close(descriptor);
+
         if (got == (ssize_t) TOTP_SECRET_SIZE) return 1;
+        if (!trusted) unlink(path);
+    } else if (errno == ELOOP) {
+        unlink(path);
     }
 
     const int random = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
@@ -220,8 +232,9 @@ int totp_secret_load(const char *path, unsigned char *secret) {
     if (descriptor < 0) return 0;
 
     const ssize_t written = write(descriptor, secret, TOTP_SECRET_SIZE);
+    const int stored = written == (ssize_t) TOTP_SECRET_SIZE && fchmod(descriptor, 0600) == 0 && fsync(descriptor) == 0;
     close(descriptor);
-    return written == (ssize_t) TOTP_SECRET_SIZE;
+    return stored;
 }
 
 int totp_matches(const unsigned char *secret, const char *candidate) {

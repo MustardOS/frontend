@@ -445,6 +445,7 @@ static void ui_refresh_tick(lv_timer_t *timer) {
     display_process_screenshot_request();
 
     if (ui_refresh_cb) ui_refresh_cb(timer);
+    focus_scroll_tick();
 }
 
 static void status_tick(lv_timer_t *timer) {
@@ -463,6 +464,8 @@ static void status_tick(lv_timer_t *timer) {
     if (ticks % 8u == 7 && config.visual.battery) battery_capacity_task(timer);
 }
 
+uint32_t screen_switch_start = 0;
+
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(const lv_timer_t *)) {
     status_sysinfo_cb = update_system_info;
     ui_refresh_cb = ui_refresh_task;
@@ -472,6 +475,11 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     timer_ensure(&timer_idle, mux_idle_poll, TIMER_IDLE);
 
     lv_refr_now(NULL);
+
+    if (screen_switch_start) {
+        LOG_DEBUG(mux_module, "Screen ready in %u ms", lv_tick_get() - screen_switch_start);
+        screen_switch_start = 0;
+    }
 }
 
 void timer_suspend_all(void) {

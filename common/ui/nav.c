@@ -1025,8 +1025,38 @@ static void raise_row_draw_cb(lv_event_t *e) {
 static lv_obj_t *hoist_panel = NULL;
 static uint32_t hoist_index = 0;
 
+static lv_obj_t *focus_scroll_label = NULL;
+static lv_obj_t *focus_scroll_value = NULL;
+
+static lv_obj_t *focus_scroll_track(lv_obj_t *previous, lv_group_t *group) {
+    lv_obj_t *focused = group ? lv_group_get_focused(group) : NULL;
+    if (focused && (!lv_obj_check_type(focused, &lv_label_class) || lv_obj_has_flag(focused, LV_OBJ_FLAG_HIDDEN)))
+        focused = NULL;
+
+    if (previous && previous != focused && lv_obj_is_valid(previous) && lv_obj_check_type(previous, &lv_label_class)) {
+        const lv_label_long_mode_t mode = lv_label_get_long_mode(previous);
+        if (mode == LV_LABEL_LONG_SCROLL || mode == LV_LABEL_LONG_SCROLL_CIRCULAR)
+            lv_label_set_long_mode(previous, LV_LABEL_LONG_DOT);
+    }
+
+    if (focused && lv_label_get_long_mode(focused) == LV_LABEL_LONG_DOT && lv_label_is_text_dotted(focused))
+        set_option_label_scroll_mode(focused);
+
+    return focused;
+}
+
+void focus_scroll_tick(void) {
+    if (grid_mode_enabled) return;
+
+    focus_scroll_label = focus_scroll_track(focus_scroll_label, ui_group);
+    focus_scroll_value = focus_scroll_track(focus_scroll_value, ui_group_value);
+}
+
 void nav_screen_reset(void) {
     footer_nav_reset_scroll();
+
+    focus_scroll_label = NULL;
+    focus_scroll_value = NULL;
 
     raise_row = NULL;
     hoist_panel = NULL;

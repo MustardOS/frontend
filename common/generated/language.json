@@ -1404,6 +1404,7 @@
     "Storage Format": "Storage Format",
     "Tester": "Tester",
     "The date, time and timezone the device keeps.": "The date, time and timezone the device keeps.",
+    "This device came with its own profile, which has already been applied. Profiles can be changed once installation is complete.": "This device came with its own profile, which has already been applied. Profiles can be changed once installation is complete.",
     "Turn the device off now?": "Turn the device off now?"
   },
   "muxkiosk": {

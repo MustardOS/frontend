@@ -385,9 +385,12 @@ static void open_name_entry(void) {
 }
 
 static void handle_keyboard_ok_press(void) {
+    char name[PROFILE_TEXT_MAX];
+    snprintf(name, sizeof(name), "%s", lv_textarea_get_text(ui_txt_entry_profile));
+
     key_show = 0;
     close_osk(key_entry, ui_group, ui_txt_entry_profile, ui_pnl_entry_profile);
-    save_current(lv_textarea_get_text(ui_txt_entry_profile));
+    save_current(name);
 }
 
 static void handle_keyboard_press(void) {
@@ -441,7 +444,7 @@ static void update_nav(void) {
     }
 
     nav_show_x(row && row->kind == row_user, lang.generic.remove);
-    nav_show_y(strcmp(current_dir, PROFILE_BUILTIN) != 0);
+    nav_show_y(!config.boot.factory_reset && strcmp(current_dir, PROFILE_BUILTIN) != 0);
 }
 
 static void list_nav_prev(const int steps) {
@@ -609,7 +612,7 @@ static void handle_y(void) {
     }
 
     if (hold_call || msgbox_active || open_dialogue()) return;
-    if (strcmp(current_dir, PROFILE_BUILTIN) == 0) return;
+    if (config.boot.factory_reset || strcmp(current_dir, PROFILE_BUILTIN) == 0) return;
 
     play_sound(snd_confirm);
     open_name_entry();

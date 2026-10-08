@@ -115,6 +115,8 @@ void nav_suppress_next_shake(void);
 
 void nav_screen_reset(void);
 
+void focus_scroll_tick(void);
+
 void nav_unsuppress_shake(void);
 
 void nav_set_last_dir(enum nav_direction dir);

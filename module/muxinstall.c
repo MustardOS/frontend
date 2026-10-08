@@ -97,6 +97,7 @@ static void list_nav_next(const int steps) {
 
 static mux_dialogue confirm_shutdown_dlg;
 static mux_dialogue confirm_install_dlg;
+static mux_dialogue oem_profile_dlg;
 static mux_dialogue *confirm_dlg = NULL;
 static char confirm_target[32];
 
@@ -144,6 +145,11 @@ static void ask_install_format(void) {
 }
 
 static void handle_a(void) {
+    if (dialogue_active(&oem_profile_dlg)) {
+        dialogue_dismiss(&oem_profile_dlg);
+        return;
+    }
+
     if (dialogue_active(&format_dlg)) {
         const int picked = format_dlg.selected;
         dialogue_dismiss(&format_dlg);
@@ -200,6 +206,13 @@ static void handle_a(void) {
             return;
         }
 
+        if (strcmp(elements[i].mux_name, "profile") == 0 && file_exist(RUN_PATH "oem_profile")) {
+            play_sound(snd_info_open);
+            dialogue_open(&oem_profile_dlg, &theme);
+
+            return;
+        }
+
         run_action(elements[i].mux_name);
 
         return;
@@ -208,6 +221,11 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (dialogue_active(&oem_profile_dlg)) {
+        dialogue_cancel(&oem_profile_dlg);
+        return;
+    }
 
     if (dialogue_active(&format_dlg)) {
         dialogue_cancel(&format_dlg);
@@ -412,6 +430,10 @@ int muxinstall_main(void) {
     dialogue_init(
         &confirm_install_dlg, &theme, ui_screen, lang.muxinstall.install, lang.muxinstall.confirm.install,
         confirm_labels, 2, lang.generic.select, NULL
+    );
+    dialogue_init_message(
+        &oem_profile_dlg, &theme, ui_screen, lang.muxinstall.access, NULL, lang.muxinstall.oem_profile,
+        lang.generic.close
     );
 
     init_timer(ui_gen_refresh_task, NULL);

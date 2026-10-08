@@ -91,7 +91,7 @@ static const char *commanders[] = {
 };
 
 static const char *enforcers[] = {
-    "acmeplus", "bgelmini", "delibirb77", "duncanyoyo1", "ilfordhp5"
+    "acmeplus", "bgelmini", "delibirb77", "duncanyoyo1", "ilfordhp5", "trademarked69"
 };
 
 static const char *wizards[] = {

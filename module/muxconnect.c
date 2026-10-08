@@ -239,7 +239,7 @@ int muxconnect_main(void) {
         }
     };
 
-    list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
+    list_nav_set_callbacks(list_nav_cb_prev_nowrap, list_nav_cb_next_nowrap);
     init_input(&input_opts, 1);
     orientation_introduce(mux_module, lang.muxconnect.title, lang.muxconnect.overview);
 

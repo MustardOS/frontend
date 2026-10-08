@@ -87,6 +87,7 @@
 #define INPUT_TEST_VOL_DOWN RUN_PATH "input_test_vol_down"
 
 #define RGBLED_BIN  OPT_PATH "frontend/murgb"
+#define VERIFY_BIN  OPT_PATH "frontend/muverify"
 #define DEV_SCRIPT  OPT_PATH "script/device/"
 #define FUNC_SCRIPT OPT_PATH "script/var/func.sh"
 
@@ -197,6 +198,7 @@
 #define CORE_ASSIGN_INDEX    INFO_MNF_PATH "/assign.json"
 #define CORE_MANIFEST_LOCAL  STORE_LOC_MANIFEST "/manifest.json"
 #define CORE_MANIFEST_REMOTE "core-manifest.json"
+#define CORE_MANIFEST_SIG    ".sig"
 
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_MUSI MUOS_BASE_PATH "/music"

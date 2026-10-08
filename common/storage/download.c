@@ -319,11 +319,11 @@ static int perform_download(const char *url, const char *output_path, const curl
     curl_easy_setopt(curl, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
 
 #if LIBCURL_VERSION_NUM >= 0x075500
-    curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
-    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+    curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS_STR, "https");
 #else
-    curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
-    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+    curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
 #endif
 
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 10000L);

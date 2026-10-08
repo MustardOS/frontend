@@ -1,12 +1,15 @@
 #include "muxshare.h"
+#include <sys/wait.h>
 #include <common/ui/list_frame.h>
 #include <common/content/core/retroarch.h>
+#include <common/content/manifest.h>
 #include <common/ui/notify.h>
 #include <common/ui/orientation.h>
 #include <common/storage/download.h>
 #include <common/ui/task_progress.h>
 
 static char remote_manifest_path[MAX_BUFFER_SIZE];
+static char remote_signature_path[MAX_BUFFER_SIZE];
 
 static int starter_image = 0;
 static int extract_pending = 0;
@@ -18,10 +21,32 @@ static struct json remote_manifest;
 static char *local_manifest_raw = NULL;
 static char *remote_manifest_raw = NULL;
 
-static struct json manifest_load(const char *path, char **raw) {
+static int run_verify(const char *mode, const char *first, const char *second) {
+    const pid_t pid = fork();
+    if (pid < 0) return 0;
+
+    if (pid == 0) {
+        execl(VERIFY_BIN, VERIFY_BIN, mode, first, second, (char *) NULL);
+        _exit(127);
+    }
+
+    int status = 0;
+    while (waitpid(pid, &status, 0) < 0) {
+        if (errno != EINTR) return 0;
+    }
+
+    return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
+static struct json manifest_load(const char *path, const char *signature, char **raw) {
     struct json empty = {0};
 
     if (!file_exist(path)) return empty;
+
+    if (signature && (!file_exist(signature) || !run_verify("--core", path, signature))) {
+        LOG_WARN(mux_module, "Ignoring core manifest without a valid signature: %s", path);
+        return empty;
+    }
 
     const char *text = read_all_char_from(path);
     if (!text || !json_valid(text)) return empty;
@@ -149,8 +174,8 @@ static void add_core_row(const int index, const int grouped) {
 }
 
 static void create_content_items(void) {
-    local_manifest = manifest_load(CORE_MANIFEST_LOCAL, &local_manifest_raw);
-    remote_manifest = manifest_load(remote_manifest_path, &remote_manifest_raw);
+    local_manifest = manifest_load(CORE_MANIFEST_LOCAL, NULL, &local_manifest_raw);
+    remote_manifest = manifest_load(remote_manifest_path, remote_signature_path, &remote_manifest_raw);
 
     const struct json sources[] = {local_manifest, remote_manifest};
 
@@ -282,6 +307,17 @@ static void download_finished(const int result) {
     char file_path[MAX_BUFFER_SIZE];
     resolve_muxzip_path(items[current_item_index].name, file_path);
 
+    char archive_sha[MAX_BUFFER_SIZE];
+    manifest_field(remote_manifest, items[current_item_index].name, "archive_sha256", archive_sha, sizeof(archive_sha));
+
+    if (!manifest_sha256_valid(archive_sha) || !run_verify("--sha256", file_path, archive_sha)) {
+        LOG_ERROR(mux_module, "Downloaded core failed verification: %s", file_path);
+        remove(file_path);
+        play_sound(snd_error);
+        toast_message(lang.muxcore.error_get_core, tst_wait_s);
+        return;
+    }
+
     if (extract_archive(file_path, "core", lang.muxcore.title) != 0) {
         play_sound(snd_error);
         notify_send(notify_warning, lang.generic.failed);
@@ -292,15 +328,39 @@ static void download_finished(const int result) {
     task_progress_show();
 }
 
-static void refresh_manifest_finished(const int result) {
-    if (result == 0) {
-        load_mux("core");
-        mux_input_stop();
-    } else {
-        play_sound(snd_error);
-        const char *storage_message = download_storage_message(result);
-        toast_message(storage_message ? storage_message : lang.muxcore.error_get_data, tst_wait_f);
+static void refresh_manifest_failed(const int result) {
+    play_sound(snd_error);
+    const char *storage_message = download_storage_message(result);
+    toast_message(storage_message ? storage_message : lang.muxcore.error_get_data, tst_wait_f);
+}
+
+static void refresh_signature_finished(const int result) {
+    if (result != 0) {
+        refresh_manifest_failed(result);
+        return;
     }
+
+    if (!run_verify("--core", remote_manifest_path, remote_signature_path)) {
+        LOG_ERROR(mux_module, "Downloaded core manifest failed signature verification");
+        refresh_manifest_failed(-1);
+        return;
+    }
+
+    load_mux("core");
+    mux_input_stop();
+}
+
+static void refresh_manifest_finished(const int result) {
+    if (result != 0) {
+        refresh_manifest_failed(result);
+        return;
+    }
+
+    char url[MAX_BUFFER_SIZE];
+    snprintf(url, sizeof(url), "%s" CORE_MANIFEST_SIG, config.extra.core.data);
+
+    set_download_callbacks(refresh_signature_finished);
+    initiate_download(url, remote_signature_path, 1, lang.muxcore.down.data);
 }
 
 static void refresh_manifest(void) {
@@ -328,9 +388,9 @@ static void handle_a(void) {
         return;
     }
 
-    char remote_url[MAX_BUFFER_SIZE];
-    manifest_field(remote_manifest, items[current_item_index].name, "sha256", remote_url, sizeof(remote_url));
-    if (!remote_url[0]) {
+    char archive_sha[MAX_BUFFER_SIZE];
+    manifest_field(remote_manifest, items[current_item_index].name, "archive_sha256", archive_sha, sizeof(archive_sha));
+    if (!manifest_sha256_valid(archive_sha)) {
         play_sound(snd_error);
         toast_message(lang.muxcore.not_published, tst_wait_m);
         return;
@@ -455,6 +515,7 @@ int muxcore_main(void) {
         remote_manifest_path, sizeof(remote_manifest_path), "%s/%s", device.storage.rom.mount,
         MUOS_INFO_PATH "/" CORE_MANIFEST_REMOTE
     );
+    snprintf(remote_signature_path, sizeof(remote_signature_path), "%s" CORE_MANIFEST_SIG, remote_manifest_path);
 
     init_module(__func__);
     init_theme(1, 1);

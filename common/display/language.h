@@ -1234,6 +1234,7 @@ struct mux_lang {
         char rtc[MAX_BUFFER_SIZE];
         char language[MAX_BUFFER_SIZE];
         char access[MAX_BUFFER_SIZE];
+        char oem_profile[MAX_BUFFER_SIZE];
         char tester[MAX_BUFFER_SIZE];
         char install[MAX_BUFFER_SIZE];
         char shutdown[MAX_BUFFER_SIZE];
@@ -3869,14 +3870,6 @@ struct mux_lang {
 
 void load_lang(struct mux_lang *lang);
 
-void common_var_init(void);
-
-void load_language_file(const char *module);
-
-char *translate_generic(char *key);
-
 char *translate_specific(char *key);
 
-void fill_generic(const char *key, char *field, size_t size);
-
-void fill_specific(const char *key, char *field, size_t size);
+void common_var_init(void);
