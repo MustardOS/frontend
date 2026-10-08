@@ -94,12 +94,9 @@ static void create_control_items(const char *target) {
     if (!coredb_system_control(target, default_control, sizeof(default_control)) || !default_control[0])
         snprintf(default_control, sizeof(default_control), "%s", "system");
 
-    for (int r = 0; r < core_runtime_count; r++) {
-        struct coredb_core core;
-        if (!coredb_core_find(target, (enum core_runtime) r, target_default, &core)) continue;
-        if (core.control[0]) snprintf(default_control, sizeof(default_control), "%s", core.control);
-        break;
-    }
+    struct coredb_core core;
+    if (coredb_system_default_core(target, &core) && core.control[0])
+        snprintf(default_control, sizeof(default_control), "%s", core.control);
 
     generate_available_controls(default_control);
 }
@@ -284,12 +281,9 @@ void muxcontrol_main(const int auto_assign, const char *name, const char *dir, c
                 static char core_control[MAX_BUFFER_SIZE];
                 coredb_system_control(ass_config, core_control, sizeof(core_control));
 
-                for (int r = 0; def_sys[0] && r < core_runtime_count; r++) {
-                    struct coredb_core core;
-                    if (!coredb_core_find(ass_config, (enum core_runtime) r, def_sys, &core)) continue;
-                    if (core.control[0]) snprintf(core_control, sizeof(core_control), "%s", core.control);
-                    break;
-                }
+                struct coredb_core core;
+                if (coredb_system_default_core(ass_config, &core) && core.control[0])
+                    snprintf(core_control, sizeof(core_control), "%s", core.control);
 
                 if (core_control[0]) {
                     LOG_INFO(mux_module, "\t(CORE) Core Control: %s", core_control);

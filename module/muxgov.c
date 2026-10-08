@@ -77,12 +77,9 @@ static void create_gov_items(const char *target) {
     if (!coredb_system_governor(target, default_governor, sizeof(default_governor)) || !default_governor[0])
         snprintf(default_governor, sizeof(default_governor), "%s", device.cpu.dflt);
 
-    for (int r = 0; r < core_runtime_count; r++) {
-        struct coredb_core core;
-        if (!coredb_core_find(target, (enum core_runtime) r, target_default, &core)) continue;
-        if (core.governor[0]) snprintf(default_governor, sizeof(default_governor), "%s", core.governor);
-        break;
-    }
+    struct coredb_core core;
+    if (coredb_system_default_core(target, &core) && core.governor[0])
+        snprintf(default_governor, sizeof(default_governor), "%s", core.governor);
 
     generate_available_governors(default_governor);
 }
@@ -268,12 +265,9 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
                 static char core_governor[MAX_BUFFER_SIZE];
                 coredb_system_governor(ass_config, core_governor, sizeof(core_governor));
 
-                for (int r = 0; def_sys[0] && r < core_runtime_count; r++) {
-                    struct coredb_core core;
-                    if (!coredb_core_find(ass_config, (enum core_runtime) r, def_sys, &core)) continue;
-                    if (core.governor[0]) snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
-                    break;
-                }
+                struct coredb_core core;
+                if (coredb_system_default_core(ass_config, &core) && core.governor[0])
+                    snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
 
                 if (core_governor[0]) {
                     LOG_INFO(mux_module, "\t(CORE) Core Governor: %s", core_governor);

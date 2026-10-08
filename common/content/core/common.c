@@ -405,24 +405,14 @@ int automatic_assign_core(char *rom_dir) {
 
             LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config);
 
-            char def_id[COREDB_NAME_MAX];
-            if (!coredb_system_default(ass_config, def_id, sizeof(def_id))) def_id[0] = '\0';
-
-            LOG_INFO(mux_module, "\tDefault Core: %s", def_id);
-
-            // Pickles is the one and true core every system defaults to so we'll try that first
-            // then maybe look at the others... I guess!
             struct coredb_core core;
-            enum core_runtime runtime = core_runtime_count;
-            for (int r = 0; def_id[0] && r < core_runtime_count; r++) {
-                if (!coredb_core_find(ass_config, (enum core_runtime) r, def_id, &core)) continue;
-                runtime = (enum core_runtime) r;
-                break;
-            }
+            const int found = coredb_system_default_core(ass_config, &core);
 
-            if (runtime != core_runtime_count && core.core[0]) {
+            LOG_INFO(mux_module, "\tDefault Core: %s", found ? core.id : "");
+
+            if (found && core.core[0]) {
                 static char def_core[MAX_BUFFER_SIZE];
-                coredb_assign_tag(def_id, runtime, def_core, sizeof(def_core));
+                coredb_assign_tag(core.id, core.runtime, def_core, sizeof(def_core));
 
                 LOG_INFO(mux_module, "\tAssigned Core To: %s", core.core);
 
@@ -458,7 +448,7 @@ int automatic_assign_core(char *rom_dir) {
                 auto_assign_good = 1;
                 LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful");
             } else {
-                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", def_id);
+                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", ass_config);
             }
         } else {
             if (!file_exist(core_file)) {

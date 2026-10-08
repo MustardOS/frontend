@@ -240,8 +240,11 @@ static void refresh_focused_runtime(const int direction) {
 }
 
 static void create_core_items(const char *target) {
+    struct coredb_core default_core;
+    const int has_default = coredb_system_default_core(target, &default_core);
+
     char default_assign[FILENAME_MAX];
-    if (!coredb_system_default(target, default_assign, sizeof(default_assign))) default_assign[0] = '\0';
+    snprintf(default_assign, sizeof(default_assign), "%s", has_default ? default_core.id : "");
 
     core_row_count = 0;
     for (int r = 0; r < core_runtime_count; r++) {
@@ -256,7 +259,8 @@ static void create_core_items(const char *target) {
             if (seen) continue;
 
             snprintf(core_ids[core_row_count], COREDB_NAME_MAX, "%s", core.id);
-            core_runtimes[core_row_count] = (enum core_runtime) r;
+            core_runtimes[core_row_count] =
+                has_default && strcmp(core.id, default_core.id) == 0 ? default_core.runtime : (enum core_runtime) r;
             core_row_count++;
         }
     }

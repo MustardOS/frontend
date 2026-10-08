@@ -48,6 +48,10 @@ int coredb_system_at(const char *name_space, int index, struct coredb_system *ou
 
 int coredb_system_namespace(const char *system, char *out, size_t out_size);
 
+enum core_runtime coredb_system_runtime(const char *system);
+
+int coredb_system_default_core(const char *system, struct coredb_core *out);
+
 int coredb_system_default(const char *system, char *out, size_t out_size);
 
 int coredb_system_catalogue(const char *system, char *out, size_t out_size);

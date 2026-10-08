@@ -45,6 +45,8 @@ static const char *const runtime_prefix[core_runtime_count] = {
     COREDB_TAG_PICKLES, COREDB_TAG_RETROARCH, COREDB_TAG_EXTERNAL
 };
 
+static const char *const runtime_name[core_runtime_count] = {"pickles", "retroarch", "external"};
+
 static char *raw[coredb_file_count];
 static struct json root[coredb_file_count];
 static int loaded;
@@ -369,8 +371,59 @@ int coredb_system_namespace(const char *system, char *out, const size_t out_size
     return 0;
 }
 
+enum core_runtime coredb_system_runtime(const char *system) {
+    const struct json node = system_node_in(coredb_file_libretro, system);
+    if (json_exists(node)) {
+        char value[COREDB_NAME_MAX];
+        json_string_copy(json_object_get(node, "runtime"), value, sizeof(value));
+        for (int r = 0; value[0] && r < core_runtime_count; r++)
+            if (strcasecmp(value, runtime_name[r]) == 0) return (enum core_runtime) r;
+    }
+
+    return core_runtime_pickles;
+}
+
+static int preferred_field(const char *system, const char *key, char *out, const size_t out_size) {
+    const struct json node = system_node(system, coredb_system_runtime(system));
+    if (json_exists(node)) {
+        json_string_copy(json_object_get(node, key), out, out_size);
+        if (out[0]) return 1;
+    }
+
+    return system_field(system, key, out, out_size);
+}
+
+static int runtime_default(const char *system, const enum core_runtime runtime, struct coredb_core *out) {
+    char id[COREDB_NAME_MAX];
+    const struct json node = system_node(system, runtime);
+    if (!json_exists(node)) return 0;
+
+    json_string_copy(json_object_get(node, "default"), id, sizeof(id));
+    if (id[0] && coredb_core_find(system, runtime, id, out)) return 1;
+
+    return system_field(system, "default", id, sizeof(id)) && coredb_core_find(system, runtime, id, out);
+}
+
+int coredb_system_default_core(const char *system, struct coredb_core *out) {
+    const enum core_runtime preferred = coredb_system_runtime(system);
+    if (runtime_default(system, preferred, out)) return 1;
+
+    for (int r = 0; r < core_runtime_count; r++) {
+        if ((enum core_runtime) r == preferred) continue;
+        if (runtime_default(system, (enum core_runtime) r, out)) return 1;
+    }
+
+    return 0;
+}
+
 int coredb_system_default(const char *system, char *out, const size_t out_size) {
-    return system_field(system, "default", out, out_size);
+    struct coredb_core core;
+    if (coredb_system_default_core(system, &core)) {
+        snprintf(out, out_size, "%s", core.id);
+        return 1;
+    }
+
+    return preferred_field(system, "default", out, out_size);
 }
 
 int coredb_system_catalogue(const char *system, char *out, const size_t out_size) {
@@ -393,11 +446,11 @@ int coredb_system_lookup(const char *system) {
 }
 
 int coredb_system_governor(const char *system, char *out, const size_t out_size) {
-    return system_field(system, "governor", out, out_size);
+    return preferred_field(system, "governor", out, out_size);
 }
 
 int coredb_system_control(const char *system, char *out, const size_t out_size) {
-    return system_field(system, "control", out, out_size);
+    return preferred_field(system, "control", out, out_size);
 }
 
 static void
