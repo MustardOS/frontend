@@ -33,13 +33,9 @@
 // TODO: Fix this up - I think it's the java core that has this
 #define COREDB_SUFFIX_STANDALONE " - standalone"
 
-enum coredb_file { coredb_file_libretro = 0, coredb_file_external, coredb_file_count };
+#define COREDB_FILE "core.json"
 
-static const char *const db_file[coredb_file_count] = {"libretro", "external"};
-
-static const enum coredb_file runtime_source[core_runtime_count] = {
-    coredb_file_libretro, coredb_file_libretro, coredb_file_external
-};
+static const char *const runtime_group[core_runtime_count] = {"libretro", "libretro", "external"};
 
 static const char *const runtime_prefix[core_runtime_count] = {
     COREDB_TAG_PICKLES, COREDB_TAG_RETROARCH, COREDB_TAG_EXTERNAL
@@ -47,8 +43,8 @@ static const char *const runtime_prefix[core_runtime_count] = {
 
 static const char *const runtime_name[core_runtime_count] = {"pickles", "retroarch", "external"};
 
-static char *raw[coredb_file_count];
-static struct json root[coredb_file_count];
+static char *raw;
+static struct json root;
 static int loaded;
 
 static char namespaces[COREDB_NAMESPACE_MAX][COREDB_NAME_MAX];
@@ -185,18 +181,14 @@ static int namespace_compare(const void *a, const void *b) {
 static void collect_namespaces(void) {
     namespace_count = 0;
 
-    for (int f = 0; f < coredb_file_count; f++) {
-        if (!json_exists(root[f])) continue;
+    for (struct json key = json_first(root); json_exists(key); key = json_next(json_next(key))) {
+        const struct json system = json_next(key);
+        char name[COREDB_NAME_MAX];
+        json_string_copy(json_object_get(system, "namespace"), name, sizeof(name));
+        if (!name[0]) snprintf(name, sizeof(name), "%s", "Other");
 
-        for (struct json key = json_first(root[f]); json_exists(key); key = json_next(json_next(key))) {
-            const struct json system = json_next(key);
-            char name[COREDB_NAME_MAX];
-            json_string_copy(json_object_get(system, "namespace"), name, sizeof(name));
-            if (!name[0]) snprintf(name, sizeof(name), "%s", "Other");
-
-            if (namespace_known(name) || namespace_count >= COREDB_NAMESPACE_MAX) continue;
-            snprintf(namespaces[namespace_count++], COREDB_NAME_MAX, "%s", name);
-        }
+        if (namespace_known(name) || namespace_count >= COREDB_NAMESPACE_MAX) continue;
+        snprintf(namespaces[namespace_count++], COREDB_NAME_MAX, "%s", name);
     }
 
     qsort(namespaces, (size_t) namespace_count, COREDB_NAME_MAX, namespace_compare);
@@ -215,26 +207,20 @@ static char *read_manifest(const char *path) {
 int coredb_load(void) {
     if (loaded) return 1;
 
-    int found = 0;
-    for (int f = 0; f < coredb_file_count; f++) {
-        char path[COREDB_PATH_MAX];
-        snprintf(path, sizeof(path), "%s/%s.json", INFO_MNF_PATH, db_file[f]);
+    char path[COREDB_PATH_MAX];
+    snprintf(path, sizeof(path), "%s/" COREDB_FILE, INFO_MNF_PATH);
 
-        raw[f] = read_manifest(path);
-        if (!raw[f]) {
-            snprintf(path, sizeof(path), "%s/%s.json", STORE_LOC_MANIFEST, db_file[f]);
-            raw[f] = read_manifest(path);
-            if (!raw[f]) {
-                LOG_WARN(mux_module, "coredb: no usable definitions at %s", path);
-                continue;
-            }
+    raw = read_manifest(path);
+    if (!raw) {
+        snprintf(path, sizeof(path), "%s/" COREDB_FILE, STORE_LOC_MANIFEST);
+        raw = read_manifest(path);
+        if (!raw) {
+            LOG_WARN(mux_module, "coredb: no usable definitions at %s", path);
+            return 0;
         }
-
-        root[f] = json_parse(raw[f]);
-        found++;
     }
 
-    if (!found) return 0;
+    root = json_parse(raw);
 
     collect_namespaces();
     loaded = 1;
@@ -242,11 +228,9 @@ int coredb_load(void) {
 }
 
 void coredb_free(void) {
-    for (int f = 0; f < coredb_file_count; f++) {
-        free(raw[f]);
-        raw[f] = NULL;
-        root[f] = (struct json) {0};
-    }
+    free(raw);
+    raw = NULL;
+    root = (struct json) {0};
 
     namespace_count = 0;
     loaded = 0;
@@ -271,31 +255,22 @@ static int system_in_namespace(const struct json system, const char *name_space)
 static int gather_systems(const char *name_space, struct coredb_system *out, const int limit) {
     int count = 0;
 
-    for (int f = 0; f < coredb_file_count; f++) {
-        if (!json_exists(root[f])) continue;
+    for (struct json key = json_first(root); json_exists(key) && count < limit; key = json_next(json_next(key))) {
+        const struct json system = json_next(key);
 
-        for (struct json key = json_first(root[f]); json_exists(key); key = json_next(json_next(key))) {
-            const struct json system = json_next(key);
+        char id[COREDB_NAME_MAX];
+        json_string_copy(key, id, sizeof(id));
+        if (name_space && !system_in_namespace(system, name_space)) continue;
 
-            char id[COREDB_NAME_MAX];
-            json_string_copy(key, id, sizeof(id));
-            if (name_space && !system_in_namespace(system, name_space)) continue;
-
-            int seen = 0;
-            for (int i = 0; i < count; i++)
-                if (strcmp(out[i].id, id) == 0) seen = 1;
-            if (seen || count >= limit) continue;
-
-            if (coredb_core_count(id, core_runtime_pickles) == 0 && coredb_core_count(id, core_runtime_external) == 0) {
-                continue;
-            }
-
-            snprintf(out[count].id, COREDB_NAME_MAX, "%s", id);
-            json_string_copy(json_object_get(system, "name"), out[count].name, COREDB_NAME_MAX);
-            if (!out[count].name[0]) snprintf(out[count].name, COREDB_NAME_MAX, "%s", id);
-            json_string_copy(json_object_get(system, "namespace"), out[count].name_space, COREDB_NAME_MAX);
-            count++;
+        if (coredb_core_count(id, core_runtime_pickles) == 0 && coredb_core_count(id, core_runtime_external) == 0) {
+            continue;
         }
+
+        snprintf(out[count].id, COREDB_NAME_MAX, "%s", id);
+        json_string_copy(json_object_get(system, "name"), out[count].name, COREDB_NAME_MAX);
+        if (!out[count].name[0]) snprintf(out[count].name, COREDB_NAME_MAX, "%s", id);
+        json_string_copy(json_object_get(system, "namespace"), out[count].name_space, COREDB_NAME_MAX);
+        count++;
     }
 
     return count;
@@ -332,85 +307,63 @@ int coredb_system_at(const char *name_space, const int index, struct coredb_syst
     return 1;
 }
 
-static struct json system_node(const char *system, const enum core_runtime runtime) {
-    if (runtime >= core_runtime_count) return (struct json) {0};
-
-    const enum coredb_file file = runtime_source[runtime];
-    if (!json_exists(root[file])) return (struct json) {0};
-
-    return json_object_get(root[file], system);
+static struct json system_node(const char *system) {
+    return json_exists(root) ? json_object_get(root, system) : (struct json) {0};
 }
 
-static struct json system_node_in(const enum coredb_file file, const char *system) {
-    return json_exists(root[file]) ? json_object_get(root[file], system) : (struct json) {0};
+static struct json group_node(const char *system, const enum core_runtime runtime) {
+    if (runtime >= core_runtime_count) return (struct json) {0};
+
+    const struct json node = system_node(system);
+    return json_exists(node) ? json_object_get(node, runtime_group[runtime]) : (struct json) {0};
 }
 
 static int system_field(const char *system, const char *key, char *out, const size_t out_size) {
-    for (int f = 0; f < coredb_file_count; f++) {
-        const struct json node = system_node_in((enum coredb_file) f, system);
-        if (!json_exists(node)) continue;
-
-        json_string_copy(json_object_get(node, key), out, out_size);
-        if (out[0]) return 1;
-    }
-
     out[0] = '\0';
-    return 0;
+
+    const struct json node = system_node(system);
+    if (!json_exists(node)) return 0;
+
+    json_string_copy(json_object_get(node, key), out, out_size);
+    return out[0] != '\0';
 }
 
 int coredb_system_namespace(const char *system, char *out, const size_t out_size) {
-    for (int f = 0; f < coredb_file_count; f++) {
-        const struct json node = system_node_in((enum coredb_file) f, system);
-        if (!json_exists(node)) continue;
+    if (!json_exists(system_node(system))) return 0;
 
-        json_string_copy(json_object_get(node, "namespace"), out, out_size);
-        if (!out[0]) snprintf(out, out_size, "%s", "Other");
-        return 1;
-    }
-
-    return 0;
+    if (!system_field(system, "namespace", out, out_size)) snprintf(out, out_size, "%s", "Other");
+    return 1;
 }
 
 enum core_runtime coredb_system_runtime(const char *system) {
-    const struct json node = system_node_in(coredb_file_libretro, system);
-    if (json_exists(node)) {
-        char value[COREDB_NAME_MAX];
-        json_string_copy(json_object_get(node, "runtime"), value, sizeof(value));
-        for (int r = 0; value[0] && r < core_runtime_count; r++)
+    char value[COREDB_NAME_MAX];
+    if (system_field(system, "runtime", value, sizeof(value))) {
+        for (int r = 0; r < core_runtime_count; r++)
             if (strcasecmp(value, runtime_name[r]) == 0) return (enum core_runtime) r;
     }
 
     return core_runtime_pickles;
 }
 
-static int preferred_field(const char *system, const char *key, char *out, const size_t out_size) {
-    const struct json node = system_node(system, coredb_system_runtime(system));
-    if (json_exists(node)) {
-        json_string_copy(json_object_get(node, key), out, out_size);
-        if (out[0]) return 1;
-    }
+static int runtime_in_order(const enum core_runtime preferred, const int step) {
+    if (step == 0) return preferred;
 
-    return system_field(system, key, out, out_size);
-}
-
-static int runtime_default(const char *system, const enum core_runtime runtime, struct coredb_core *out) {
-    char id[COREDB_NAME_MAX];
-    const struct json node = system_node(system, runtime);
-    if (!json_exists(node)) return 0;
-
-    json_string_copy(json_object_get(node, "default"), id, sizeof(id));
-    if (id[0] && coredb_core_find(system, runtime, id, out)) return 1;
-
-    return system_field(system, "default", id, sizeof(id)) && coredb_core_find(system, runtime, id, out);
+    const int index = step - 1;
+    return index < (int) preferred ? index : index + 1;
 }
 
 int coredb_system_default_core(const char *system, struct coredb_core *out) {
     const enum core_runtime preferred = coredb_system_runtime(system);
-    if (runtime_default(system, preferred, out)) return 1;
 
-    for (int r = 0; r < core_runtime_count; r++) {
-        if ((enum core_runtime) r == preferred) continue;
-        if (runtime_default(system, (enum core_runtime) r, out)) return 1;
+    char id[COREDB_NAME_MAX];
+    if (system_field(system, "default", id, sizeof(id))) {
+        for (int step = 0; step < core_runtime_count; step++) {
+            if (coredb_core_find(system, (enum core_runtime) runtime_in_order(preferred, step), id, out)) return 1;
+        }
+    }
+
+    for (int step = 0; step < core_runtime_count; step++) {
+        if (coredb_core_at(system, (enum core_runtime) runtime_in_order(preferred, step), 0, out)) return 1;
     }
 
     return 0;
@@ -423,7 +376,7 @@ int coredb_system_default(const char *system, char *out, const size_t out_size) 
         return 1;
     }
 
-    return preferred_field(system, "default", out, out_size);
+    return system_field(system, "default", out, out_size);
 }
 
 int coredb_system_catalogue(const char *system, char *out, const size_t out_size) {
@@ -434,23 +387,19 @@ int coredb_system_catalogue(const char *system, char *out, const size_t out_size
 }
 
 int coredb_system_lookup(const char *system) {
-    for (int f = 0; f < coredb_file_count; f++) {
-        const struct json node = system_node_in((enum coredb_file) f, system);
-        if (!json_exists(node)) continue;
+    const struct json node = system_node(system);
+    if (!json_exists(node)) return 0;
 
-        const struct json value = json_object_get(node, "lookup");
-        if (json_exists(value)) return json_int(value);
-    }
-
-    return 0;
+    const struct json value = json_object_get(node, "lookup");
+    return json_exists(value) ? json_int(value) : 0;
 }
 
 int coredb_system_governor(const char *system, char *out, const size_t out_size) {
-    return preferred_field(system, "governor", out, out_size);
+    return system_field(system, "governor", out, out_size);
 }
 
 int coredb_system_control(const char *system, char *out, const size_t out_size) {
-    return preferred_field(system, "control", out, out_size);
+    return system_field(system, "control", out, out_size);
 }
 
 static void
@@ -483,10 +432,7 @@ static int walk_cores(
     const char *system, const enum core_runtime runtime, const int wanted, const char *wanted_id,
     struct coredb_core *out
 ) {
-    const struct json node = system_node(system, runtime);
-    if (!json_exists(node)) return wanted_id ? 0 : 0;
-
-    const struct json cores = json_object_get(node, "cores");
+    const struct json cores = group_node(system, runtime);
     if (!json_exists(cores)) return 0;
 
     int index = 0;
