@@ -134,6 +134,10 @@ static int board_key_bit_set(const unsigned long *bits, const int bit) {
  * before trusting it. Anything unexpected falls back to the board table.
  */
 static int board_probe_volume_event_index(void) {
+    const int vita = current_board && current_board->special == board_special_vita_pro;
+    const int key_up = vita ? BTN_TRIGGER_HAPPY5 : KEY_VOLUMEUP;
+    const int key_down = vita ? BTN_TRIGGER_HAPPY4 : KEY_VOLUMEDOWN;
+
     for (int idx = 0; idx < VOLUME_KEY_EVENT_SCAN; idx++) {
         char path[32];
         snprintf(path, sizeof(path), "/dev/input/event%d", idx);
@@ -146,8 +150,8 @@ static int board_probe_volume_event_index(void) {
         int match = 0;
 
         if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 && strcmp(name, device.board.vol_name) == 0
-            && ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys) >= 0 && board_key_bit_set(keys, KEY_VOLUMEUP)
-            && board_key_bit_set(keys, KEY_VOLUMEDOWN)) {
+            && ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keys)), keys) >= 0 && board_key_bit_set(keys, key_up)
+            && board_key_bit_set(keys, key_down)) {
             match = 1;
         }
 
