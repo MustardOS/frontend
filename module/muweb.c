@@ -2303,6 +2303,8 @@ static const char *status_text(const int status) {
             return "Partial Content";
         case 304:
             return "Not Modified";
+        case 308:
+            return "Permanent Redirect";
         case 400:
             return "Bad Request";
         case 401:
@@ -2373,6 +2375,14 @@ static void send_error(struct connection *connection, const int status, const ch
 
     send_text(connection, status, "application/json", body.data ? body.data : "{}");
     buffer_free(&body);
+}
+
+static void send_redirect(struct connection *connection, const char *location) {
+    char header[PATH_MAX + 16];
+    snprintf(header, sizeof(header), "Location: %s\r\n", location);
+    connection->response.length = 0;
+    connection_reset_body(connection);
+    response_headers(connection, 308, "text/plain", 0, header);
 }
 
 static void send_json(struct connection *connection, const struct buffer *body) {
@@ -3946,13 +3956,33 @@ static void handle_media(struct connection *connection, const char *path, const 
     send_file(connection, target, range_header);
 }
 
+static int clean_page_path(const char *path) {
+    for (const char *c = path; *c; c++) {
+        if (!isalnum((unsigned char) *c) && *c != '-' && *c != '_' && *c != '.' && *c != '/') return 0;
+    }
+    return 1;
+}
+
 static void handle_static(struct connection *connection, const char *path, const char *range_header) {
     const char *relative = !*path || strcmp(path, "/") == 0 ? "index.html" : path;
+    const size_t length = strlen(relative);
 
     char target[PATH_MAX];
-    if (!resolve_within(web_root, relative, target, sizeof(target))) {
-        send_error(connection, 404, "Not found");
+    if (length > 11 && strncmp(relative, "tools/", 6) == 0 && strcmp(relative + length - 5, ".html") == 0
+        && clean_page_path(relative) && resolve_within(web_root, relative, target, sizeof(target))) {
+        char location[PATH_MAX];
+        snprintf(location, sizeof(location), "/%.*s", (int) (length - 5), relative);
+        send_redirect(connection, location);
         return;
+    }
+
+    if (!resolve_within(web_root, relative, target, sizeof(target))) {
+        char page[PATH_MAX];
+        const int written = snprintf(page, sizeof(page), "%s.html", relative);
+        if (written <= 0 || (size_t) written >= sizeof(page) || !resolve_within(web_root, page, target, sizeof(target))) {
+            send_error(connection, 404, "Not found");
+            return;
+        }
     }
 
     struct stat info;
