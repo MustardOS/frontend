@@ -45,7 +45,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/archive/track.sh", "32254dd39515c4cc" },
     { "/opt/muos/script/control/drastic.sh", "a46f38e55bd545eb" },
     { "/opt/muos/script/control/gamecontrollerdb.sh", "42c3abd3c2f2b312" },
-    { "/opt/muos/script/control/mupen64plus.sh", "8855cf437de92442" },
+    { "/opt/muos/script/control/mupen64plus.sh", "01ae85cc2c35fced" },
     { "/opt/muos/script/control/openbor.sh", "8c35209956c4f301" },
     { "/opt/muos/script/control/playstation.sh", "a7283fd407a2bbf6" },
     { "/opt/muos/script/control/ppsspp.sh", "445d605952b46d54" },

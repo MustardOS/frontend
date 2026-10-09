@@ -62,6 +62,8 @@ int coredb_system_governor(const char *system, char *out, size_t out_size);
 
 int coredb_system_control(const char *system, char *out, size_t out_size);
 
+int coredb_core_file_hidden(const char *core_file);
+
 int coredb_core_count(const char *system, enum core_runtime runtime);
 
 int coredb_core_at(const char *system, enum core_runtime runtime, int index, struct coredb_core *out);

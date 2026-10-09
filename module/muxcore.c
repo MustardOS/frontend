@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include <sys/wait.h>
+#include <common/content/core/coredb.h>
 #include <common/ui/list_frame.h>
 #include <common/content/core/retroarch.h>
 #include <common/content/manifest.h>
@@ -185,6 +186,12 @@ static void create_content_items(void) {
         for (struct json key = json_first(sources[s]); json_exists(key); key = json_next(json_next(key))) {
             char zip[MAX_BUFFER_SIZE];
             json_string_copy(key, zip, sizeof(zip));
+
+            char core_file[MAX_BUFFER_SIZE];
+            snprintf(core_file, sizeof(core_file), "%s", zip);
+            const size_t core_length = strlen(core_file);
+            if (core_length > 4 && strcmp(core_file + core_length - 4, ".zip") == 0) core_file[core_length - 4] = '\0';
+            if (coredb_core_file_hidden(core_file)) continue;
 
             if (zip[0] && get_item_index_by_name(items, item_count, zip, content_type_item) == -1) {
                 char name[MAX_BUFFER_SIZE];

@@ -523,6 +523,31 @@ static int walk_cores(
     return wanted < 0 && !wanted_id ? index : 0;
 }
 
+int coredb_core_file_hidden(const char *core_file) {
+    if (extra_shown() || !core_file || !*core_file || !coredb_load()) return 0;
+
+    int referenced = 0;
+    for (struct json key = json_first(root); json_exists(key); key = json_next(json_next(key))) {
+        const struct json system = json_next(key);
+        const struct json cores = json_object_get(system, "libretro");
+        if (!json_exists(cores)) continue;
+
+        const int system_extra = marked_extra(system);
+        for (struct json core = json_first(cores); json_exists(core); core = json_next(json_next(core))) {
+            const struct json entry = json_next(core);
+
+            char file[COREDB_NAME_MAX];
+            json_string_copy(json_object_get(entry, "core"), file, sizeof(file));
+            if (strcmp(file, core_file) != 0) continue;
+
+            referenced = 1;
+            if (!system_extra && !marked_extra(entry)) return 0;
+        }
+    }
+
+    return referenced;
+}
+
 int coredb_core_count(const char *system, const enum core_runtime runtime) {
     return walk_cores(system, runtime, -1, NULL, NULL);
 }
