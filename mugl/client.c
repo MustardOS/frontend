@@ -28,6 +28,7 @@ static uint8_t *resp;
 static pid_t server_pid;
 static uint32_t msg_left;
 static uint32_t msg_pad;
+static uint32_t msg_resp_seq;
 static uint32_t swaps_sent;
 static uint32_t pending_error;
 
@@ -211,6 +212,7 @@ static void ring_write(const void *data, uint32_t len) {
 void mugl_msg_begin(uint32_t op, uint32_t len) {
     pthread_mutex_lock(&lock);
     if (!hdr && !mugl_connect()) server_gone();
+    msg_resp_seq = __atomic_load_n(&hdr->resp_seq, __ATOMIC_ACQUIRE);
 
     const mugl_msg msg = {op, len};
     ring_write(&msg, sizeof(msg));
@@ -238,7 +240,7 @@ void mugl_msg_end(void) {
 }
 
 const uint8_t *mugl_msg_wait(uint32_t *len) {
-    const uint32_t seq = __atomic_load_n(&hdr->resp_seq, __ATOMIC_ACQUIRE);
+    const uint32_t seq = msg_resp_seq;
     msg_finish();
 
     int spins = 0;
