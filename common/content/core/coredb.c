@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <json/json.h>
 #include <common/base/options.h>
 #include <common/base/strutil.h>
+#include <common/config/config.h>
 #include <common/content/core/coredb.h>
 #include <common/platform/device.h>
 #include <common/runtime/init.h>
@@ -46,9 +48,32 @@ static const char *const runtime_name[core_runtime_count] = {"pickles", "retroar
 static char *raw;
 static struct json root;
 static int loaded;
+static char loaded_path[COREDB_PATH_MAX];
+static time_t loaded_mtime;
+static time_t loaded_user_mtime;
+
+static time_t file_mtime(const char *path) {
+    struct stat info;
+    return stat(path, &info) == 0 ? info.st_mtime : 0;
+}
 
 static char namespaces[COREDB_NAMESPACE_MAX][COREDB_NAME_MAX];
 static int namespace_count;
+static int namespace_extra = -1;
+
+static struct coredb_system system_cache[COREDB_SYSTEM_MAX];
+static char system_cache_key[COREDB_NAME_MAX];
+static int system_cache_count = -1;
+static int system_cache_extra = -1;
+
+static int extra_shown(void) {
+    return config.settings.advanced.extra_cores != 0;
+}
+
+static int marked_extra(const struct json entry) {
+    const struct json value = json_object_get(entry, "extra");
+    return json_exists(value) && json_int(value) != 0;
+}
 
 const char *coredb_runtime_label(const enum core_runtime runtime) {
     switch (runtime) {
@@ -178,11 +203,23 @@ static int namespace_compare(const void *a, const void *b) {
     return strcasecmp((const char *) a, (const char *) b);
 }
 
+static int system_listed(const char *id, const struct json system) {
+    if (!extra_shown() && marked_extra(system)) return 0;
+
+    return coredb_core_count(id, core_runtime_pickles) > 0 || coredb_core_count(id, core_runtime_external) > 0;
+}
+
 static void collect_namespaces(void) {
     namespace_count = 0;
+    namespace_extra = extra_shown();
 
     for (struct json key = json_first(root); json_exists(key); key = json_next(json_next(key))) {
         const struct json system = json_next(key);
+
+        char id[COREDB_NAME_MAX];
+        json_string_copy(key, id, sizeof(id));
+        if (!system_listed(id, system)) continue;
+
         char name[COREDB_NAME_MAX];
         json_string_copy(json_object_get(system, "namespace"), name, sizeof(name));
         if (!name[0]) snprintf(name, sizeof(name), "%s", "Other");
@@ -204,23 +241,42 @@ static char *read_manifest(const char *path) {
     return data;
 }
 
+static int load_from(const char *path) {
+    raw = read_manifest(path);
+    if (!raw) return 0;
+
+    snprintf(loaded_path, sizeof(loaded_path), "%s", path);
+    loaded_mtime = file_mtime(path);
+    return 1;
+}
+
+static time_t user_file_mtime(void) {
+    char user[COREDB_PATH_MAX];
+    snprintf(user, sizeof(user), "%s/" COREDB_FILE, INFO_MNF_PATH);
+    return file_mtime(user);
+}
+
+static int source_changed(void) {
+    return user_file_mtime() != loaded_user_mtime || file_mtime(loaded_path) != loaded_mtime;
+}
+
 int coredb_load(void) {
-    if (loaded) return 1;
+    if (loaded && !source_changed()) return 1;
+    if (loaded) coredb_free();
 
     char path[COREDB_PATH_MAX];
     snprintf(path, sizeof(path), "%s/" COREDB_FILE, INFO_MNF_PATH);
 
-    raw = read_manifest(path);
-    if (!raw) {
+    if (!load_from(path)) {
         snprintf(path, sizeof(path), "%s/" COREDB_FILE, STORE_LOC_MANIFEST);
-        raw = read_manifest(path);
-        if (!raw) {
+        if (!load_from(path)) {
             LOG_WARN(mux_module, "coredb: no usable definitions at %s", path);
             return 0;
         }
     }
 
     root = json_parse(raw);
+    loaded_user_mtime = user_file_mtime();
 
     collect_namespaces();
     loaded = 1;
@@ -231,16 +287,26 @@ void coredb_free(void) {
     free(raw);
     raw = NULL;
     root = (struct json) {0};
+    loaded_path[0] = '\0';
+    loaded_mtime = 0;
+    loaded_user_mtime = 0;
+    system_cache_count = -1;
 
     namespace_count = 0;
     loaded = 0;
 }
 
+static void refresh_namespaces(void) {
+    if (loaded && namespace_extra != extra_shown()) collect_namespaces();
+}
+
 int coredb_namespace_count(void) {
+    refresh_namespaces();
     return namespace_count;
 }
 
 const char *coredb_namespace_at(const int index) {
+    refresh_namespaces();
     return index >= 0 && index < namespace_count ? namespaces[index] : "";
 }
 
@@ -261,10 +327,7 @@ static int gather_systems(const char *name_space, struct coredb_system *out, con
         char id[COREDB_NAME_MAX];
         json_string_copy(key, id, sizeof(id));
         if (name_space && !system_in_namespace(system, name_space)) continue;
-
-        if (coredb_core_count(id, core_runtime_pickles) == 0 && coredb_core_count(id, core_runtime_external) == 0) {
-            continue;
-        }
+        if (!system_listed(id, system)) continue;
 
         snprintf(out[count].id, COREDB_NAME_MAX, "%s", id);
         json_string_copy(json_object_get(system, "name"), out[count].name, COREDB_NAME_MAX);
@@ -280,14 +343,12 @@ static int system_compare(const void *a, const void *b) {
     return strcasecmp(((const struct coredb_system *) a)->name, ((const struct coredb_system *) b)->name);
 }
 
-static struct coredb_system system_cache[COREDB_SYSTEM_MAX];
-static char system_cache_key[COREDB_NAME_MAX];
-static int system_cache_count = -1;
-
 static int systems_for(const char *name_space) {
-    if (system_cache_count >= 0 && strcmp(system_cache_key, name_space ? name_space : "") == 0)
+    if (system_cache_count >= 0 && system_cache_extra == extra_shown()
+        && strcmp(system_cache_key, name_space ? name_space : "") == 0)
         return system_cache_count;
 
+    system_cache_extra = extra_shown();
     system_cache_count = gather_systems(name_space, system_cache, COREDB_SYSTEM_MAX);
     qsort(system_cache, (size_t) system_cache_count, sizeof(system_cache[0]), system_compare);
     snprintf(system_cache_key, sizeof(system_cache_key), "%s", name_space ? name_space : "");
@@ -439,6 +500,7 @@ static int walk_cores(
     for (struct json key = json_first(cores); json_exists(key); key = json_next(json_next(key))) {
         const struct json entry = json_next(key);
         if (!requirements_met(entry)) continue;
+        if (!wanted_id && !extra_shown() && marked_extra(entry)) continue;
 
         if (wanted_id) {
             char id[COREDB_NAME_MAX];

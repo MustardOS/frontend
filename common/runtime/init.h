@@ -75,3 +75,7 @@ void bluetooth_task(const lv_timer_t *timer);
 void network_task(const lv_timer_t *timer);
 
 void battery_task(void);
+
+int system_woke(int64_t *suspended_ns);
+
+void redraw_after_wake(void);

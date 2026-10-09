@@ -438,7 +438,37 @@ void timer_action(const int action) {
 
 static void (*ui_refresh_cb)(lv_timer_t *) = NULL;
 
+static int64_t clock_ns(const clockid_t clock) {
+    struct timespec now;
+    clock_gettime(clock, &now);
+    return (int64_t) now.tv_sec * 1000000000LL + now.tv_nsec;
+}
+
+int system_woke(int64_t *suspended_ns) {
+    const int64_t gap = clock_ns(CLOCK_BOOTTIME) - clock_ns(CLOCK_MONOTONIC);
+    if (*suspended_ns < 0) {
+        *suspended_ns = gap;
+        return 0;
+    }
+
+    const int woke = gap - *suspended_ns > 500000000LL;
+    *suspended_ns = gap;
+    return woke;
+}
+
+void redraw_after_wake(void) {
+    lv_obj_invalidate(lv_scr_act());
+    lv_obj_invalidate(lv_layer_top());
+    lv_obj_invalidate(lv_layer_sys());
+}
+
 static void ui_refresh_tick(lv_timer_t *timer) {
+    static int64_t suspended_ns = -1;
+    if (system_woke(&suspended_ns)) {
+        LOG_INFO(mux_module, "Woke from sleep, redrawing the screen");
+        redraw_after_wake();
+    }
+
     image_async_tick();
     notify_tick();
     orientation_tick();

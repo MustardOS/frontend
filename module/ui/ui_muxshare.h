@@ -607,6 +607,10 @@
     TWEAKADV(retro_wait, "retrowait")                                                                                  \
     TWEAKADV(retro_cache, "retrocache")
 
+#define TWEAKADV_BLUETOOTH_ELEMENTS                                                                                    \
+    TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
+    TWEAKADV(raw_bluetooth, "bluetooth")
+
 #define TWEAKADV_SYSTEM_ELEMENTS                                                                                       \
     TWEAKADV(led, "led")                                                                                               \
     TWEAKADV(rumble, "rumble")                                                                                         \
@@ -614,9 +618,8 @@
     TWEAKADV(verbose, "verbose")                                                                                       \
     TWEAKADV(debug_log, "debuglog")                                                                                    \
     TWEAKADV(user_init, "userinit")                                                                                    \
-    TWEAKADV(bt_scan_timeout, "btscan")                                                                                \
-    TWEAKADV(raw_bluetooth, "bluetooth")                                                                               \
-    TWEAKADV(remember_section, "remembersection")
+    TWEAKADV(remember_section, "remembersection")                                                                      \
+    TWEAKADV(extra_cores, "extracores")
 
 #define TWEAKADV_CONFIRMATIONS_ELEMENTS                                                                                \
     TWEAKADV(trust_modify, "trustmodify")                                                                              \
@@ -630,6 +633,7 @@
     TWEAKADV_PERFORMANCE_ELEMENTS                                                                                      \
     TWEAKADV_STORAGE_ELEMENTS                                                                                          \
     TWEAKADV_RETROARCH_ELEMENTS                                                                                        \
+    TWEAKADV_BLUETOOTH_ELEMENTS                                                                                        \
     TWEAKADV_SYSTEM_ELEMENTS                                                                                           \
     TWEAKADV_CONFIRMATIONS_ELEMENTS
 

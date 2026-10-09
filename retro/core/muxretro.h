@@ -300,6 +300,10 @@ int pause_menu_help_input(int scroll_up, int scroll_down, int dismiss);
 
 void pause_menu_toggle(void);
 
+unsigned pause_menu_input_serial(void);
+
+int pause_menu_at_top_level(void);
+
 void pause_menu_rebuild(void);
 
 void pause_menu_show_nav_hints(void);

@@ -29,6 +29,7 @@
 #define MUWEB_MAX_CONNECTIONS 24
 #define MUWEB_HEADER_LIMIT    (16 * 1024)
 #define MUWEB_UPLOAD_LIMIT    (32 * 1024 * 1024)
+#define MUWEB_LIVE_MAX        2
 #define MUWEB_IDLE_SECONDS    30
 #define MUWEB_SEND_CHUNK      (64 * 1024)
 #define MUWEB_SCAN_DEPTH      8
@@ -58,11 +59,15 @@ static volatile sig_atomic_t running = 1;
 static char web_root[PATH_MAX];
 static char catalogue_root[PATH_MAX];
 static char pickles_root[PATH_MAX];
+static char storage_root[PATH_MAX];
+static char share_root[PATH_MAX];
 static char info_root[PATH_MAX];
 static char history_root[PATH_MAX];
 static char screen_script[PATH_MAX];
 static char screen_image[PATH_MAX];
 static long screen_interval = 0;
+static char screen_live[PATH_MAX];
+static pid_t screen_live_pids[MUWEB_LIVE_MAX];
 static int screen_public = 0;
 static struct timespec screen_requested;
 static int screen_wanted;
@@ -2340,7 +2345,7 @@ static int response_headers(
         "Referrer-Policy: no-referrer\r\n"
         "Permissions-Policy: camera=(), microphone=(), geolocation=()\r\n"
         "Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' blob:; "
-        "media-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'\r\n"
+        "media-src 'self' blob:; style-src 'self'; script-src 'self'; frame-ancestors 'none'\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %lld\r\n"
         "%s"
@@ -3708,8 +3713,84 @@ static void screen_state(char *state, const size_t state_size, int *rotate) {
     fclose(file);
 }
 
+static int screen_live_slot(void) {
+    for (size_t i = 0; i < MUWEB_LIVE_MAX; ++i) {
+        if (screen_live_pids[i] > 0 && kill(screen_live_pids[i], 0) == 0) continue;
+        screen_live_pids[i] = 0;
+        return (int) i;
+    }
+    return -1;
+}
+
+static void connection_close(struct connection *connection);
+
+static void screen_live_stream(struct connection *connection) {
+    if (!screen_live[0] || access(screen_live, X_OK) != 0) {
+        send_error(connection, 404, "Live Remote View is not available");
+        return;
+    }
+
+    const int slot = screen_live_slot();
+    if (slot < 0) {
+        send_error(connection, 503, "Live Remote View is already open in two places");
+        return;
+    }
+
+    static const char headers[] = "HTTP/1.1 200 OK\r\n"
+                                  "Server: muweb\r\n"
+                                  "Connection: close\r\n"
+                                  "Cache-Control: no-store\r\n"
+                                  "X-Content-Type-Options: nosniff\r\n"
+                                  "Referrer-Policy: no-referrer\r\n"
+                                  "Content-Type: multipart/x-mixed-replace; boundary=muframe\r\n"
+                                  "\r\n";
+    const size_t length = sizeof(headers) - 1;
+
+    const pid_t pid = fork();
+    if (pid < 0) {
+        send_error(connection, 500, "Could not start Live Remote View");
+        return;
+    }
+
+    if (pid == 0) {
+        const int socket_fd = connection->socket;
+        fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) & ~O_NONBLOCK);
+        if (dup2(socket_fd, STDOUT_FILENO) < 0) _exit(1);
+        for (int fd = 3; fd < 1024; ++fd)
+            close(fd);
+
+        size_t sent = 0;
+        while (sent < length) {
+            const ssize_t chunk = write(STDOUT_FILENO, headers + sent, length - sent);
+            if (chunk < 0 && errno == EINTR) continue;
+            if (chunk <= 0) _exit(1);
+            sent += (size_t) chunk;
+        }
+
+        signal(SIGPIPE, SIG_DFL);
+        if (screen_public)
+            execl(screen_live, "muscreen", "--all", (char *) NULL);
+        else
+            execl(screen_live, "muscreen", (char *) NULL);
+        _exit(127);
+    }
+
+    screen_live_pids[slot] = pid;
+    log_verbose("started Live Remote View (pid %d)", (int) pid);
+    connection_close(connection);
+}
+
 static void handle_screen_api(struct connection *connection, const char *method, const char *path) {
     if (!screen_allowed(connection)) return;
+
+    if (strcmp(path, "live") == 0) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        screen_live_stream(connection);
+        return;
+    }
 
     if (strcmp(path, "image") == 0) {
         if (strcmp(method, "GET") != 0) {
@@ -3760,6 +3841,8 @@ static void handle_screen_api(struct connection *connection, const char *method,
     json_number(&out, "interval", screen_interval);
     buffer_puts(&out, ",");
     json_number(&out, "rotate", rotate);
+    buffer_puts(&out, ",");
+    json_number(&out, "live", screen_live[0] && access(screen_live, X_OK) == 0);
     buffer_puts(&out, ",");
     json_field(&out, "state", state);
     buffer_puts(&out, "}");
@@ -3878,6 +3961,544 @@ static void handle_static(struct connection *connection, const char *path, const
         return;
     }
     send_file(connection, target, range_header);
+}
+
+#define TOOLS_LIST_LIMIT 4000
+#define TOOLS_LIST_DEPTH 6
+
+struct tool_area {
+    const char *name;
+    int shared;
+    const char *relative;
+    const char *extensions;
+    int writable;
+    int shallow;
+};
+
+static const struct tool_area tool_areas[] = {
+    {"name", 0, "info/name", "json", 1, 0},
+    {"profile", 0, "profile", "conf", 1, 0},
+    {"profile-builtin", 1, "profile/accessibility", "conf", 0, 0},
+    {"equaliser", 0, "save/wasabi/equaliser", "eq", 1, 0},
+    {"track", 0, "info/track", "json", 1, 0},
+    {"bios", 0, "bios", NULL, 0, 0},
+    {"theme", 0, "theme", NULL, 0, 1},
+};
+
+static int extension_listed(const char *list, const char *name) {
+    if (!list) return 1;
+
+    const char *extension = file_extension(name);
+    if (!*extension) return 0;
+
+    const size_t length = strlen(extension);
+    for (const char *p = list; *p;) {
+        const char *end = strchr(p, '|');
+        const size_t span = end ? (size_t) (end - p) : strlen(p);
+        if (span == length && strncasecmp(p, extension, length) == 0) return 1;
+        if (!end) break;
+        p = end + 1;
+    }
+    return 0;
+}
+
+static int tool_area_root(const struct tool_area *area, char *out, const size_t out_size) {
+    const char *base = area->shared ? share_root : storage_root;
+    if (!base[0]) return 0;
+    return join_path(out, out_size, base, area->relative);
+}
+
+static int tool_hidden_name(const char *name) {
+    if (name[0] == '.') return 1;
+
+    const char *extension = file_extension(name);
+    return strcasecmp(extension, "bak") == 0 || strcasecmp(extension, "tmp") == 0;
+}
+
+static int tool_list_walk(
+    struct buffer *out, const char *root, const char *relative, const char *extensions, const int depth, size_t *count,
+    int *truncated
+) {
+    char directory_path[PATH_MAX];
+    if (!join_path(directory_path, sizeof(directory_path), root, relative)) return 1;
+
+    DIR *directory = opendir(directory_path);
+    if (!directory) return 1;
+
+    struct dirent *entry;
+    while ((entry = readdir(directory))) {
+        if (tool_hidden_name(entry->d_name)) continue;
+        if (*count >= TOOLS_LIST_LIMIT) {
+            *truncated = 1;
+            break;
+        }
+
+        char child_relative[PATH_MAX];
+        const int written = relative && *relative
+                                ? snprintf(child_relative, sizeof(child_relative), "%s/%s", relative, entry->d_name)
+                                : snprintf(child_relative, sizeof(child_relative), "%s", entry->d_name);
+        if (written < 0 || (size_t) written >= sizeof(child_relative)) continue;
+
+        char child_path[PATH_MAX];
+        if (!join_path(child_path, sizeof(child_path), root, child_relative)) continue;
+
+        struct stat info;
+        if (lstat(child_path, &info) < 0) continue;
+
+        if (S_ISDIR(info.st_mode)) {
+            if (depth < TOOLS_LIST_DEPTH)
+                tool_list_walk(out, root, child_relative, extensions, depth + 1, count, truncated);
+            continue;
+        }
+        if (!S_ISREG(info.st_mode) || !extension_listed(extensions, entry->d_name)) continue;
+
+        if (*count && !buffer_puts(out, ",")) break;
+        if (!buffer_puts(out, "{") || !json_field(out, "path", child_relative) || !buffer_puts(out, ",")
+            || !json_number(out, "size", (long long) info.st_size) || !buffer_puts(out, ",")
+            || !json_number(out, "modified", (long long) info.st_mtime) || !buffer_puts(out, "}"))
+            break;
+        *count += 1;
+    }
+
+    closedir(directory);
+    return 1;
+}
+
+static int tool_folders_json(struct buffer *out, const char *root) {
+    if (!buffer_puts(out, "\"folders\":[")) return 0;
+
+    DIR *directory = opendir(root);
+    size_t count = 0;
+    struct dirent *entry;
+    while (directory && (entry = readdir(directory))) {
+        if (tool_hidden_name(entry->d_name) || count >= TOOLS_LIST_LIMIT) continue;
+
+        char child[PATH_MAX];
+        struct stat info;
+        if (!join_path(child, sizeof(child), root, entry->d_name) || lstat(child, &info) < 0 || !S_ISDIR(info.st_mode))
+            continue;
+
+        if ((count && !buffer_puts(out, ",")) || !json_string(out, entry->d_name)) {
+            closedir(directory);
+            return 0;
+        }
+        count++;
+    }
+    if (directory) closedir(directory);
+    return buffer_puts(out, "]");
+}
+
+static void tool_send_listing(
+    struct connection *connection, const char *root, const char *relative, const char *extensions, const int shallow
+) {
+    struct buffer out = {0};
+    size_t count = 0;
+    int truncated = 0;
+
+    int ok = buffer_puts(&out, "{\"files\":[");
+    if (ok && !shallow) tool_list_walk(&out, root, relative, extensions, 0, &count, &truncated);
+    ok = ok && buffer_puts(&out, "],");
+    if (ok && shallow) ok = tool_folders_json(&out, root) && buffer_puts(&out, ",");
+    if (ok && json_number(&out, "truncated", truncated) && buffer_puts(&out, "}"))
+        send_json(connection, &out);
+    else
+        send_error(connection, 500, "Could not list those files");
+    buffer_free(&out);
+}
+
+static int copy_to_backup(const char *path) {
+    struct stat info;
+    if (lstat(path, &info) < 0) return errno == ENOENT;
+    if (!S_ISREG(info.st_mode)) return 0;
+
+    FILE *file = fopen(path, "rb");
+    if (!file) return 0;
+
+    struct buffer data = {0};
+    char chunk[16384];
+    size_t read_length;
+    int ok = 1;
+    while (ok && (read_length = fread(chunk, 1, sizeof(chunk), file)) > 0)
+        ok = buffer_append(&data, chunk, read_length);
+    if (ferror(file)) ok = 0;
+    fclose(file);
+
+    char backup[PATH_MAX];
+    if (ok && (size_t) snprintf(backup, sizeof(backup), "%s.bak", path) >= sizeof(backup)) ok = 0;
+    if (ok) ok = write_file_atomic(backup, data.data ? data.data : "", data.length);
+
+    buffer_free(&data);
+    return ok;
+}
+
+static int tool_write(struct connection *connection, const char *target, const char *body, const size_t body_length) {
+    if (!copy_to_backup(target)) {
+        send_error(connection, 500, "Could not keep a backup of the existing file");
+        return 0;
+    }
+    if (!write_file_atomic(target, body, body_length)) {
+        send_error(connection, 500, "Could not write that file");
+        return 0;
+    }
+    return 1;
+}
+
+static int json_object_text(const char *text, const size_t length) {
+    size_t i = 0;
+    if (length >= 3 && (unsigned char) text[0] == 0xef && (unsigned char) text[1] == 0xbb
+        && (unsigned char) text[2] == 0xbf)
+        i = 3;
+    while (i < length && isspace((unsigned char) text[i]))
+        i++;
+    return i < length && text[i] == '{';
+}
+
+static int core_user_path(char *out, const size_t out_size) {
+    return storage_root[0] && join_path(out, out_size, storage_root, "info/manifest/core.json");
+}
+
+static int core_bundled_path(char *out, const size_t out_size) {
+    return share_root[0] && join_path(out, out_size, share_root, "info/manifest/core.json");
+}
+
+static int core_user_valid(const char *path) {
+    FILE *file = fopen(path, "rb");
+    if (!file) return 0;
+
+    char head[64];
+    const size_t length = fread(head, 1, sizeof(head), file);
+    fclose(file);
+    return json_object_text(head, length);
+}
+
+static void handle_core_tool(
+    struct connection *connection, const char *method, const char *rest, const char *body, const size_t body_length
+) {
+    char user[PATH_MAX];
+    char bundled[PATH_MAX];
+    if (!core_user_path(user, sizeof(user)) || !core_bundled_path(bundled, sizeof(bundled))) {
+        send_error(connection, 404, "Core assignments are not configured");
+        return;
+    }
+
+    const int has_user = core_user_valid(user);
+
+    if (strcmp(method, "GET") == 0) {
+        if (strcmp(rest, "core.json") == 0) {
+            send_file(connection, has_user ? user : bundled, NULL);
+            return;
+        }
+        if (*rest) {
+            send_error(connection, 404, "Not found");
+            return;
+        }
+
+        struct buffer out = {0};
+        if (buffer_puts(&out, "{") && json_field(&out, "source", has_user ? "user" : "bundled")
+            && buffer_puts(&out, "}"))
+            send_json(connection, &out);
+        else
+            send_error(connection, 500, "Could not read core assignments");
+        buffer_free(&out);
+        return;
+    }
+
+    if (*rest) {
+        send_error(connection, 404, "Not found");
+        return;
+    }
+
+    if (!write_allowed(connection)) return;
+
+    if (strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0) {
+        if (!json_object_text(body, body_length)) {
+            send_error(connection, 400, "core.json must be a JSON object");
+            return;
+        }
+
+        char target[PATH_MAX];
+        if (!resolve_target(storage_root, "info/manifest/core.json", 1, target, sizeof(target))) {
+            send_error(connection, 400, "Invalid destination");
+            return;
+        }
+        if (!tool_write(connection, target, body, body_length)) return;
+
+        log_verbose("stored core.json (%zu bytes)", body_length);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (strcmp(method, "DELETE") == 0) {
+        if (access(user, F_OK) == 0) {
+            if (!copy_to_backup(user) || unlink(user) < 0) {
+                send_error(connection, 500, "Could not reset core assignments");
+                return;
+            }
+        }
+
+        log_verbose("reset core.json to the bundled file");
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    send_error(connection, 405, "Method not allowed");
+}
+
+static void handle_content_tool(
+    struct connection *connection, const char *method, char *rest, const char *body, const size_t body_length
+) {
+    if (!*rest) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+
+        struct buffer out = {0};
+        int ok = buffer_puts(&out, "{\"roots\":[");
+        for (size_t i = 0; ok && i < content_root_count; ++i) {
+            ok = (!i || buffer_puts(&out, ",")) && buffer_puts(&out, "{") && json_number(&out, "index", (long long) i)
+                 && buffer_puts(&out, ",") && json_field(&out, "path", content_roots[i]) && buffer_puts(&out, "}");
+        }
+        if (ok && buffer_puts(&out, "]}"))
+            send_json(connection, &out);
+        else
+            send_error(connection, 500, "Could not list content roots");
+        buffer_free(&out);
+        return;
+    }
+
+    char *relative = strchr(rest, '/');
+    if (relative) *relative++ = '\0';
+
+    char *end = NULL;
+    errno = 0;
+    const unsigned long index = strtoul(rest, &end, 10);
+    if (errno || !end || *end || index >= content_root_count) {
+        send_error(connection, 404, "No such content root");
+        return;
+    }
+    const char *root = content_roots[index];
+
+    const size_t length = relative ? strlen(relative) : 0;
+    const int folder = !relative || !length || relative[length - 1] == '/';
+    if (folder && length) relative[length - 1] = '\0';
+
+    if (folder) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+
+        char directory_path[PATH_MAX];
+        if (!resolve_within(root, relative && *relative ? relative : NULL, directory_path, sizeof(directory_path))) {
+            send_error(connection, 404, "No such folder");
+            return;
+        }
+
+        DIR *directory = opendir(directory_path);
+        if (!directory) {
+            send_error(connection, 404, "No such folder");
+            return;
+        }
+
+        struct buffer folders = {0};
+        struct buffer files = {0};
+        size_t folder_count = 0;
+        size_t file_count = 0;
+        int ok = 1;
+
+        struct dirent *entry;
+        while (ok && (entry = readdir(directory))) {
+            if (entry->d_name[0] == '.') continue;
+            if (folder_count + file_count >= TOOLS_LIST_LIMIT) break;
+
+            char child[PATH_MAX];
+            if (!join_path(child, sizeof(child), directory_path, entry->d_name)) continue;
+
+            struct stat info;
+            if (stat(child, &info) < 0) continue;
+
+            if (S_ISDIR(info.st_mode)) {
+                ok = (!folder_count || buffer_puts(&folders, ",")) && json_string(&folders, entry->d_name);
+                folder_count++;
+            } else if (S_ISREG(info.st_mode)) {
+                ok = (!file_count || buffer_puts(&files, ",")) && buffer_puts(&files, "{")
+                     && json_field(&files, "name", entry->d_name) && buffer_puts(&files, ",")
+                     && json_number(&files, "size", (long long) info.st_size) && buffer_puts(&files, "}");
+                file_count++;
+            }
+        }
+        closedir(directory);
+
+        struct buffer out = {0};
+        if (ok && buffer_puts(&out, "{\"folders\":[")
+            && (!folders.length || buffer_append(&out, folders.data, folders.length))
+            && buffer_puts(&out, "],\"files\":[") && (!files.length || buffer_append(&out, files.data, files.length))
+            && buffer_puts(&out, "]}"))
+            send_json(connection, &out);
+        else
+            send_error(connection, 500, "Could not list that folder");
+
+        buffer_free(&out);
+        buffer_free(&folders);
+        buffer_free(&files);
+        return;
+    }
+
+    if (!extension_listed("m3u|m3u8", relative)) {
+        send_error(connection, 400, "Only playlists can be opened or saved here");
+        return;
+    }
+
+    if (strcmp(method, "GET") == 0) {
+        char target[PATH_MAX];
+        if (!resolve_within(root, relative, target, sizeof(target))) {
+            send_error(connection, 404, "Not found");
+            return;
+        }
+        send_file(connection, target, NULL);
+        return;
+    }
+
+    if (strcmp(method, "POST") != 0 && strcmp(method, "PUT") != 0) {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!write_allowed(connection)) return;
+
+    char target[PATH_MAX];
+    if (!resolve_target(root, relative, 0, target, sizeof(target))) {
+        send_error(connection, 400, "Invalid destination");
+        return;
+    }
+    if (!tool_write(connection, target, body, body_length)) return;
+
+    log_verbose("stored playlist %s (%zu bytes)", relative, body_length);
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+}
+
+static void handle_tools_api(
+    struct connection *connection, const char *method, char *path, const char *body, const size_t body_length
+) {
+    if (!*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+
+        struct buffer out = {0};
+        int ok = buffer_puts(&out, "{\"areas\":[");
+        size_t listed = 0;
+        for (size_t i = 0; ok && i < sizeof(tool_areas) / sizeof(tool_areas[0]); ++i) {
+            char root[PATH_MAX];
+            if (!tool_area_root(&tool_areas[i], root, sizeof(root))) continue;
+
+            ok = (!listed || buffer_puts(&out, ",")) && buffer_puts(&out, "{")
+                 && json_field(&out, "name", tool_areas[i].name) && buffer_puts(&out, ",")
+                 && json_number(&out, "writable", tool_areas[i].writable && !read_only) && buffer_puts(&out, "}");
+            listed++;
+        }
+        if (ok && buffer_puts(&out, "],") && json_number(&out, "core", storage_root[0] && share_root[0])
+            && buffer_puts(&out, ",") && json_number(&out, "content", (long long) content_root_count)
+            && buffer_puts(&out, ",") && json_number(&out, "readonly", read_only) && buffer_puts(&out, "}"))
+            send_json(connection, &out);
+        else
+            send_error(connection, 500, "Could not list the tools");
+        buffer_free(&out);
+        return;
+    }
+
+    char *rest = strchr(path, '/');
+    if (rest)
+        *rest++ = '\0';
+    else
+        rest = path + strlen(path);
+
+    if (strcmp(path, "core") == 0) {
+        handle_core_tool(connection, method, rest, body, body_length);
+        return;
+    }
+    if (strcmp(path, "content") == 0) {
+        handle_content_tool(connection, method, rest, body, body_length);
+        return;
+    }
+
+    const struct tool_area *area = NULL;
+    for (size_t i = 0; i < sizeof(tool_areas) / sizeof(tool_areas[0]); ++i) {
+        if (strcmp(tool_areas[i].name, path) == 0) area = &tool_areas[i];
+    }
+
+    char root[PATH_MAX];
+    if (!area || !tool_area_root(area, root, sizeof(root))) {
+        send_error(connection, 404, "No such tool area");
+        return;
+    }
+
+    if (!*rest) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        tool_send_listing(connection, root, NULL, area->extensions, area->shallow);
+        return;
+    }
+
+    const size_t rest_length = strlen(rest);
+    if (rest[rest_length - 1] == '/') {
+        rest[rest_length - 1] = '\0';
+
+        char folder[PATH_MAX];
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        if (!safe_relative_path(rest) || !resolve_within(root, rest, folder, sizeof(folder))) {
+            send_error(connection, 404, "No such folder");
+            return;
+        }
+        tool_send_listing(connection, root, rest, area->extensions, 0);
+        return;
+    }
+
+    if (!safe_relative_path(rest) || tool_hidden_name(rest) || !extension_listed(area->extensions, rest)) {
+        send_error(connection, 400, "That file is not handled here");
+        return;
+    }
+
+    if (strcmp(method, "GET") == 0) {
+        char target[PATH_MAX];
+        if (!resolve_within(root, rest, target, sizeof(target))) {
+            send_error(connection, 404, "Not found");
+            return;
+        }
+        send_file(connection, target, NULL);
+        return;
+    }
+
+    if (strcmp(method, "POST") != 0 && strcmp(method, "PUT") != 0) {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!area->writable) {
+        send_error(connection, 403, "These files cannot be changed from the dashboard");
+        return;
+    }
+    if (!write_allowed(connection)) return;
+
+    if (!make_directories(root)) {
+        send_error(connection, 500, "Could not create the folder");
+        return;
+    }
+
+    char target[PATH_MAX];
+    if (!resolve_target(root, rest, 1, target, sizeof(target))) {
+        send_error(connection, 400, "Invalid destination");
+        return;
+    }
+    if (!tool_write(connection, target, body, body_length)) return;
+
+    log_verbose("stored %s/%s (%zu bytes)", area->name, rest, body_length);
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
 }
 
 static int same_origin(const char *headers) {
@@ -4044,6 +4665,10 @@ static void handle_request(struct connection *connection) {
         handle_collection_api(connection, method, target + (target[15] == '/' ? 16 : 15), body, body_length);
         return;
     }
+    if (strncmp(target, "/api/tools", 10) == 0 && (target[10] == '\0' || target[10] == '/')) {
+        handle_tools_api(connection, method, target + (target[10] == '/' ? 11 : 10), body, body_length);
+        return;
+    }
     if (strncmp(target, "/media/", 7) == 0) {
         if (strcmp(method, "GET") != 0) {
             send_error(connection, 405, "Method not allowed");
@@ -4206,8 +4831,14 @@ static void print_usage(FILE *stream) {
                 "  -I, --screen-image F   image the screen script writes for Remote View\n"
                 "  -T, --screen-interval N  seconds before Remote View captures again\n"
                 "  -P, --screen-public    let anyone view Remote View and capture every screen\n"
+                "  -Y, --screen-live F    program that streams the screen live for Remote View\n"
                 "  -m, --content DIR      the ROMS directory to take the content roster from,\n"
                 "                         repeat once per storage root (max 4)\n"
+                "  -D, --storage DIR      the MustardOS storage directory, for the tools to\n"
+                "                         open and save names, profiles, equaliser profiles,\n"
+                "                         activity and core assignments\n"
+                "  -E, --share DIR        the MustardOS share directory, for the bundled core\n"
+                "                         assignments and built-in profiles\n"
                 "  -k, --secret FILE      device secret for the rolling code, minted if absent\n"
                 "  -o, --readonly         serve everything but refuse every change\n"
                 "  -l, --public-lists     without a secret, still allow History, Collections\n"
@@ -4243,6 +4874,8 @@ int main(const int argc, char **argv) {
     const char *info_argument = NULL;
     const char *history_argument = NULL;
     const char *collection_argument = NULL;
+    const char *storage_argument = NULL;
+    const char *share_argument = NULL;
     const char *secret_argument = NULL;
     int show_code = 0;
     long port = 80;
@@ -4259,7 +4892,10 @@ int main(const int argc, char **argv) {
         {"screen-image", required_argument, NULL, 'I'},
         {"screen-interval", required_argument, NULL, 'T'},
         {"screen-public", no_argument, NULL, 'P'},
+        {"screen-live", required_argument, NULL, 'Y'},
         {"content", required_argument, NULL, 'm'},
+        {"storage", required_argument, NULL, 'D'},
+        {"share", required_argument, NULL, 'E'},
         {"secret", required_argument, NULL, 'k'},
         {"readonly", no_argument, NULL, 'o'},
         {"public-lists", no_argument, NULL, 'l'},
@@ -4271,7 +4907,7 @@ int main(const int argc, char **argv) {
     };
 
     int option;
-    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:Pm:k:olCvVh", options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:m:D:E:k:olCvVh", options, NULL)) != -1) {
         switch (option) {
             case 'r':
                 root_argument = optarg;
@@ -4300,6 +4936,9 @@ int main(const int argc, char **argv) {
             case 'P':
                 screen_public = 1;
                 break;
+            case 'Y':
+                snprintf(screen_live, sizeof(screen_live), "%s", optarg);
+                break;
             case 'T': {
                 char *end = NULL;
                 errno = 0;
@@ -4317,6 +4956,12 @@ int main(const int argc, char **argv) {
                 }
                 if (!set_root(content_roots[content_root_count], optarg, "content root")) return 2;
                 content_root_count += 1;
+                break;
+            case 'D':
+                storage_argument = optarg;
+                break;
+            case 'E':
+                share_argument = optarg;
                 break;
             case 'k':
                 secret_argument = optarg;
@@ -4389,6 +5034,8 @@ int main(const int argc, char **argv) {
     if (info_argument && !set_root(info_root, info_argument, "info directory")) return 2;
     if (history_argument && !set_root(history_root, history_argument, "history directory")) return 2;
     if (collection_argument && !set_root(collection_root, collection_argument, "collection directory")) return 2;
+    if (storage_argument && !set_root(storage_root, storage_argument, "storage directory")) return 2;
+    if (share_argument && !set_root(share_root, share_argument, "share directory")) return 2;
 
     srand((unsigned) (time(NULL) ^ (unsigned) getpid()));
 

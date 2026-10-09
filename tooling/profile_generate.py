@@ -211,7 +211,7 @@ for _part in ("gen", "bat", "vol", "bri"):
 FIXED_OPTIONS["settings/font/scale"] = [(str(v), f"{v}%") for v in (75, 85, 100, 115, 130, 145, 160, 175, 200)]
 
 FIXED_OPTIONS["web/remote_view"] = [("0", "lang.generic.disabled"), ("1", "30s"), ("2", "1m"), ("3", "3m"),
-                                    ("4", "5m"), ("5", "10m")]
+                                    ("4", "5m"), ("5", "10m"), ("6", "lang.muxwebserv.remote_live")]
 
 OPEN_OPTIONS = {"settings/general/soundfont", "visual/overlaytransparency"}
 OPEN_OPTIONS.update(f"settings/overlay/{part}_alpha" for part in ("gen", "bat", "vol", "bri"))

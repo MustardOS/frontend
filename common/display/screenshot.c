@@ -330,6 +330,24 @@ static void convert_fbdev(
 ) {
     const uint32_t bytes_pp = (var->bits_per_pixel + 7U) / 8U;
 
+    if (bytes_pp == 4 && source_width == width && var->red.length == 8 && var->green.length == 8
+        && var->blue.length == 8 && !(var->red.offset % 8) && !(var->green.offset % 8) && !(var->blue.offset % 8)) {
+        const uint32_t r = var->red.offset / 8U;
+        const uint32_t g = var->green.offset / 8U;
+        const uint32_t b = var->blue.offset / 8U;
+
+        for (uint32_t y = 0; y < height; y++) {
+            const uint8_t *s = src + (size_t) y * pitch;
+            uint8_t *d = dst + (size_t) y * width * 3U;
+            for (uint32_t x = 0; x < width; x++, s += 4, d += 3) {
+                d[0] = s[r];
+                d[1] = s[g];
+                d[2] = s[b];
+            }
+        }
+        return;
+    }
+
     for (uint32_t y = 0; y < height; y++) {
         const uint8_t *src_row = src + (size_t) y * pitch;
         uint8_t *dst_row = dst + (size_t) y * width * 3U;
@@ -382,7 +400,7 @@ static void convert_drm(
     }
 }
 
-static int capture_fbdev_path(const char *fb_path, const char *path) {
+static int grab_fbdev_path(const char *fb_path, uint8_t **out, uint32_t *out_width, uint32_t *out_height) {
     const int fd = open(fb_path, O_RDONLY);
     if (fd < 0) return -1;
 
@@ -479,21 +497,21 @@ static int capture_fbdev_path(const char *fb_path, const char *path) {
 
     convert_fbdev(rgb, active, var.xres, source_width, var.yres, fix.line_length, &var);
     free(active);
-    const int ret = png_write(path, rgb, var.xres, var.yres);
 
-    free(rgb);
-
-    return ret;
+    *out = rgb;
+    *out_width = var.xres;
+    *out_height = var.yres;
+    return 0;
 }
 
-static int capture_fbdev(const char *path) {
+static int grab_fbdev(uint8_t **out, uint32_t *width, uint32_t *height) {
     char fb_path[32];
 
     for (int i = 0; i < FBDEV_MAX; i++) {
         snprintf(fb_path, sizeof(fb_path), "/dev/fb%d", i);
 
         if (access(fb_path, R_OK) != 0) continue;
-        if (capture_fbdev_path(fb_path, path) == 0) return 0;
+        if (grab_fbdev_path(fb_path, out, width, height) == 0) return 0;
     }
 
     return -1;
@@ -526,7 +544,8 @@ static uint8_t *map_gem_handle(const int drm_fd, const uint32_t handle, const si
     return mem;
 }
 
-static int capture_drm_crtc(const int fd, const uint32_t crtc_id, const char *path) {
+static int
+grab_drm_crtc(const int fd, const uint32_t crtc_id, uint8_t **out, uint32_t *out_width, uint32_t *out_height) {
     drm_mode_crtc crtc = {0};
 
     crtc.crtc_id = crtc_id;
@@ -567,15 +586,14 @@ static int capture_drm_crtc(const int fd, const uint32_t crtc_id, const char *pa
 
     convert_drm(rgb, mem, fb.width, fb.height, fb.pitch, fb.bpp);
     free(mem);
-    const int ret = png_write(path, rgb, fb.width, fb.height);
 
-    free(rgb);
-
-    if (ret != 0) unlink(path);
-    return ret;
+    *out = rgb;
+    *out_width = fb.width;
+    *out_height = fb.height;
+    return 0;
 }
 
-static int capture_drm_card(const char *card_path, const char *path) {
+static int grab_drm_card(const char *card_path, uint8_t **out, uint32_t *width, uint32_t *height) {
     const int fd = open(card_path, O_RDWR);
     if (fd < 0) return -1;
 
@@ -604,7 +622,7 @@ static int capture_drm_card(const char *card_path, const char *path) {
     for (uint32_t i = 0; i < limit; i++) {
         if (crtc_ids[i] == 0) continue;
 
-        if (capture_drm_crtc(fd, crtc_ids[i], path) == 0) {
+        if (grab_drm_crtc(fd, crtc_ids[i], out, width, height) == 0) {
             close(fd);
             return 0;
         }
@@ -614,7 +632,7 @@ static int capture_drm_card(const char *card_path, const char *path) {
     return -1;
 }
 
-static int capture_drm(const char *path) {
+static int grab_drm(uint8_t **out, uint32_t *width, uint32_t *height) {
     static const char *cards[DRM_MAX_CARDS] = {
         "/dev/dri/card0",
         "/dev/dri/card1",
@@ -624,7 +642,7 @@ static int capture_drm(const char *path) {
 
     for (size_t i = 0; i < DRM_MAX_CARDS; i++) {
         if (access(cards[i], R_OK) != 0) continue;
-        if (capture_drm_card(cards[i], path) == 0) return 0;
+        if (grab_drm_card(cards[i], out, width, height) == 0) return 0;
     }
 
     return -1;
@@ -672,6 +690,22 @@ int screenshot_save_renderer(SDL_Renderer *renderer, const char *path, const scr
     return ret;
 }
 
+int screenshot_grab(const screenshot_mode mode, uint8_t **rgb, uint32_t *width, uint32_t *height) {
+    if (!rgb || !width || !height) return -1;
+    *rgb = NULL;
+
+    switch (mode) {
+        case screenshot_fbdev:
+            return grab_fbdev(rgb, width, height);
+        case screenshot_drm:
+            return grab_drm(rgb, width, height);
+        case screenshot_auto:
+        default:
+            if (grab_drm(rgb, width, height) == 0) return 0;
+            return grab_fbdev(rgb, width, height);
+    }
+}
+
 int screenshot_save(const char *path, const screenshot_mode mode, const screenshot_hue hue) {
     if (!path || !*path) return -1;
 
@@ -679,14 +713,14 @@ int screenshot_save(const char *path, const screenshot_mode mode, const screensh
     hue_green = hue.green;
     hue_blue = hue.blue;
 
-    switch (mode) {
-        case screenshot_fbdev:
-            return capture_fbdev(path);
-        case screenshot_drm:
-            return capture_drm(path);
-        case screenshot_auto:
-        default:
-            if (capture_drm(path) == 0) return 0;
-            return capture_fbdev(path);
-    }
+    uint8_t *rgb = NULL;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    if (screenshot_grab(mode, &rgb, &width, &height) != 0) return -1;
+
+    const int ret = png_write(path, rgb, width, height);
+    free(rgb);
+
+    if (ret != 0) unlink(path);
+    return ret;
 }

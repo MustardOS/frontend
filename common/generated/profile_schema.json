@@ -282,7 +282,7 @@
       "group": "advanced",
       "type": "int",
       "default": "0",
-      "label": "Raw Bluetooth Devices",
+      "label": "Raw Device Visibility",
       "module": "muxtweakadv",
       "help": "Shows nearby Bluetooth broadcasts that do not provide a useful device name.\n\nThese normally appear as a hardware address and are hidden to keep the scan list useful. Enable this only when diagnosing or pairing unusual hardware.",
       "options": [
@@ -376,6 +376,25 @@
       "label": "DPAD Swap Function",
       "module": "muxtweakadv",
       "help": "Lets the power button switch the DPAD between behaving normally and standing in for the sticks.\n\nHandy for content that only reads one or the other. Leave it off if you would rather the power button did nothing else.",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ]
+    },
+    {
+      "key": "settings/advanced/extracores",
+      "group": "advanced",
+      "type": "int",
+      "default": "0",
+      "label": "Additional Cores",
+      "module": "muxtweakadv",
+      "help": "Shows the extra systems and cores in Core Assignment as well as the main ones.\n\nLeave this off for a shorter list of the choices that suit most people. Content already assigned to an extra core keeps working either way.",
       "options": [
         {
           "value": "0",
@@ -10187,7 +10206,7 @@
       "type": "int",
       "default": "2",
       "min": 0,
-      "max": 5,
+      "max": 6,
       "label": "Remote View",
       "options": [
         {
@@ -10213,9 +10232,13 @@
         {
           "value": "5",
           "label": "10m"
+        },
+        {
+          "value": "6",
+          "label": "Live"
         }
       ],
-      "help": "How often the Web Dashboard may take a picture of the screen for Remote View.\n\nRemote View needs Authentication and the code from Web Dashboard Code. Pictures are only taken while someone is watching, and never while a private screen such as Web Dashboard Code is open. Disabled hides Remote View from the dashboard."
+      "help": "How often the Web Dashboard may take a picture of the screen for Remote View. Live streams the screen as it changes, at up to 15 frames a second.\n\nRemote View needs Authentication and the code from Web Dashboard Code. The screen is only captured while someone is watching, and never while a private screen such as Web Dashboard Code is open. Live uses more processing and network while it is open. Disabled hides Remote View from the dashboard."
     },
     {
       "key": "web/sftpgo",

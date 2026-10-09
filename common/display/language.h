@@ -350,8 +350,7 @@ struct mux_lang {
         char title[MAX_BUFFER_SIZE];
         char core_down[MAX_BUFFER_SIZE];
         char misconfigured[MAX_BUFFER_SIZE];
-        char other_consoles[MAX_BUFFER_SIZE];
-        char other_handhelds[MAX_BUFFER_SIZE];
+        char invalid[MAX_BUFFER_SIZE];
     } muxassign;
 
     struct {
@@ -3434,6 +3433,7 @@ struct mux_lang {
             char performance[MAX_BUFFER_SIZE];
             char storage[MAX_BUFFER_SIZE];
             char retroarch[MAX_BUFFER_SIZE];
+            char bluetooth[MAX_BUFFER_SIZE];
             char system[MAX_BUFFER_SIZE];
             char confirmations[MAX_BUFFER_SIZE];
         } section;
@@ -3444,6 +3444,7 @@ struct mux_lang {
         char led[MAX_BUFFER_SIZE];
         char retrowait[MAX_BUFFER_SIZE];
         char retrocache[MAX_BUFFER_SIZE];
+        char extracores[MAX_BUFFER_SIZE];
         char activity[MAX_BUFFER_SIZE];
         char verbose[MAX_BUFFER_SIZE];
         char debuglog[MAX_BUFFER_SIZE];
@@ -3516,6 +3517,7 @@ struct mux_lang {
             char led[MAX_BUFFER_SIZE];
             char retro_wait[MAX_BUFFER_SIZE];
             char retro_cache[MAX_BUFFER_SIZE];
+            char extra_cores[MAX_BUFFER_SIZE];
             char activity[MAX_BUFFER_SIZE];
             char verbose[MAX_BUFFER_SIZE];
             char debug_log[MAX_BUFFER_SIZE];
@@ -3818,6 +3820,7 @@ struct mux_lang {
         char local_name[MAX_BUFFER_SIZE];
         char authentication[MAX_BUFFER_SIZE];
         char remote_view[MAX_BUFFER_SIZE];
+        char remote_live[MAX_BUFFER_SIZE];
         char remote_privacy[MAX_BUFFER_SIZE];
         char not_set[MAX_BUFFER_SIZE];
         char invalid_port[MAX_BUFFER_SIZE];

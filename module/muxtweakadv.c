@@ -21,7 +21,9 @@ enum {
     tweakadv_len_storage = E_SIZE(TWEAKADV_STORAGE_ELEMENTS),
     tweakadv_off_retroarch = tweakadv_off_storage + tweakadv_len_storage,
     tweakadv_len_retroarch = E_SIZE(TWEAKADV_RETROARCH_ELEMENTS),
-    tweakadv_off_system = tweakadv_off_retroarch + tweakadv_len_retroarch,
+    tweakadv_off_bluetooth = tweakadv_off_retroarch + tweakadv_len_retroarch,
+    tweakadv_len_bluetooth = E_SIZE(TWEAKADV_BLUETOOTH_ELEMENTS),
+    tweakadv_off_system = tweakadv_off_bluetooth + tweakadv_len_bluetooth,
     tweakadv_len_system = E_SIZE(TWEAKADV_SYSTEM_ELEMENTS),
     tweakadv_off_confirmations = tweakadv_off_system + tweakadv_len_system,
     tweakadv_len_confirmations = E_SIZE(TWEAKADV_CONFIRMATIONS_ELEMENTS),
@@ -150,6 +152,7 @@ static void save_tweak_options(void) {
     } while (0);
 
     CHECK_AND_SAVE_STD(tweakadv, remember_section, "settings/advanced/remember_section", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, extra_cores, "settings/advanced/extracores", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_modify, "settings/advanced/trust_modify", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_power, "settings/advanced/trust_power", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_remove, "settings/advanced/trust_remove", INT, 0);
@@ -238,17 +241,18 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, usb_function, lang.muxtweakadv.usbfunction, "usbfunction", usb_functions, 3);
     INIT_OPTION_ITEM(-1, tweakadv, retro_wait, lang.muxtweakadv.retrowait, "retrowait", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, retro_cache, lang.muxtweakadv.retrocache, "retrocache", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, bt_scan_timeout, lang.muxtweakadv.btscantimeout, "btscan", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakadv, raw_bluetooth, lang.muxtweakadv.rawbluetooth, "bluetooth", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, led, lang.muxtweakadv.led, "led", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, rumble, lang.muxtweakadv.rumble.title, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, activity, lang.muxtweakadv.activity, "activity", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, verbose, lang.muxtweakadv.verbose, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, debug_log, lang.muxtweakadv.debuglog, "debuglog", debug_log_mode, 3);
     INIT_OPTION_ITEM(-1, tweakadv, user_init, lang.muxtweakadv.userinit, "userinit", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, bt_scan_timeout, lang.muxtweakadv.btscantimeout, "btscan", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakadv, raw_bluetooth, lang.muxtweakadv.rawbluetooth, "bluetooth", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, tweakadv, remember_section, lang.muxtweakadv.remembersection, "remembersection", disabled_enabled, 2
     );
+    INIT_OPTION_ITEM(-1, tweakadv, extra_cores, lang.muxtweakadv.extracores, "extracores", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_modify, lang.muxtweakadv.trustmodify, "trustmodify", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_power, lang.muxtweakadv.trustpower, "trustpower", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_remove, lang.muxtweakadv.trustremove, "trustremove", disabled_enabled, 2);
@@ -316,20 +320,27 @@ static void init_navigation_group(void) {
         HIDE_OPTION_ITEM(tweakadv, max_gpu);
     }
 
-    static const list_frame frames[] = {
+    list_frame frames[] = {
         {lang.muxtweakadv.section.input, tweakadv_off_input, tweakadv_len_input},
         {lang.muxtweakadv.section.display, tweakadv_off_display, tweakadv_len_display},
         {lang.muxtweakadv.section.audio, tweakadv_off_audio, tweakadv_len_audio},
         {lang.muxtweakadv.section.performance, tweakadv_off_performance, tweakadv_len_performance},
         {lang.muxtweakadv.section.storage, tweakadv_off_storage, tweakadv_len_storage},
         {lang.muxtweakadv.section.retroarch, tweakadv_off_retroarch, tweakadv_len_retroarch},
+        {lang.muxtweakadv.section.bluetooth, tweakadv_off_bluetooth, tweakadv_len_bluetooth},
         {lang.muxtweakadv.section.system, tweakadv_off_system, tweakadv_len_system},
         {lang.muxtweakadv.section.confirmations, tweakadv_off_confirmations, tweakadv_len_confirmations},
     };
 
+    int frame_count = 0;
+    for (size_t i = 0; i < A_SIZE(frames); i++) {
+        if (frames[i].first == tweakadv_off_bluetooth && !device.board.has_bluetooth) continue;
+        frames[frame_count++] = frames[i];
+    }
+
     list_frame_init(
-        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
-        ui_objects_value, ui_count_dynamic
+        &theme, ui_pnl_content, frames, frame_count, ui_objects_panel, ui_objects, ui_objects_glyph, ui_objects_value,
+        ui_count_dynamic
     );
 
     gen_step_movement(list_frame_restore(), +1, 2, 0, 1);

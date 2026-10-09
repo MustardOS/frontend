@@ -39,6 +39,8 @@
 #define BATTERY_REPORTED_STEP     2
 #define BATTERY_REVERSE_SAMPLES   4
 
+#define BATTERY_REPORTED_ZERO_MAX 10
+
 #define BATTERY_VOLTAGE_SAMPLES 5
 #define BATTERY_WARMUP_CYCLES   3
 
@@ -70,6 +72,7 @@ static int last_ui_percent = -1;
 static int last_ui_charging = -1;
 
 static int last_written_capacity = -1;
+static int reported_capacity_untrusted = 0;
 static int last_written_voltage = -1;
 static int last_written_charging = -1;
 
@@ -523,7 +526,16 @@ void battery_update(void) {
     }
 
     int reported_percent;
-    if (read_capacity_percent(&reported_percent)) {
+    int reported = !reported_capacity_untrusted && read_capacity_percent(&reported_percent);
+
+    if (reported && reported_percent == 0 && mv > 0
+        && voltage_to_percent(filtered_voltage_mv, charging) > BATTERY_REPORTED_ZERO_MAX) {
+        reported_capacity_untrusted = 1;
+        reported = 0;
+        LOG_WARN("battery", "Reported capacity is 0%% at %d mV, using the voltage curve instead", filtered_voltage_mv);
+    }
+
+    if (reported) {
         set_battery_state(mv > 0 ? filtered_voltage_mv : 0, stabilise_reported_percent(reported_percent, charging));
         return;
     }

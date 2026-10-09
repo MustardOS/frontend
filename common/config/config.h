@@ -261,6 +261,7 @@ struct mux_config {
             int16_t random_theme;
             int16_t retro_wait;
             int16_t retro_cache;
+            int16_t extra_cores;
             int16_t activity;
             int16_t usb_function;
             int16_t verbose;

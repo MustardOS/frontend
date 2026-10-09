@@ -14,6 +14,8 @@ typedef struct {
 
 int screenshot_save(const char *path, screenshot_mode mode, screenshot_hue hue);
 
+int screenshot_grab(screenshot_mode mode, uint8_t **rgb, uint32_t *width, uint32_t *height);
+
 int screenshot_write_rgb(const char *path, uint8_t *rgb, uint32_t width, uint32_t height);
 
 // Grabs the frame from the renderer so it never has to go on the screen first

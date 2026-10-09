@@ -14,6 +14,9 @@
 #include "power_protocol.h"
 
 static int power_save_prepared = 0;
+static int menu_opened_for_sleep = 0;
+static unsigned input_serial_at_sleep = 0;
+static int64_t suspended_ns = -1;
 static const char power_save_ready_path[] = "/run/muos/muxretro_save_ready";
 
 void power_session_init(void) {
@@ -72,7 +75,11 @@ int power_session_poll(void) {
     if (events.sleep) {
 
         prepare_power_save("suspend");
-        if (!pause_menu_is_active()) pause_menu_toggle();
+        if (!pause_menu_is_active()) {
+            pause_menu_toggle();
+            menu_opened_for_sleep = 1;
+            input_serial_at_sleep = pause_menu_input_serial();
+        }
         image_writer_flush();
         acknowledge_power_save();
     }
@@ -82,7 +89,15 @@ int power_session_poll(void) {
         power_save_prepared = 0;
         unlink(power_save_ready_path);
 
-        if (pause_menu_is_active()) pause_menu_toggle();
+        if (menu_opened_for_sleep && pause_menu_at_top_level() && pause_menu_input_serial() == input_serial_at_sleep)
+            pause_menu_toggle();
+        menu_opened_for_sleep = 0;
+        redraw_after_wake();
+    }
+
+    if (system_woke(&suspended_ns)) {
+        LOG_INFO(mux_module, "Woke from sleep, redrawing the screen");
+        redraw_after_wake();
     }
 
     if (events.exit_signal) {

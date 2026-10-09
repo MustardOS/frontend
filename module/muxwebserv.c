@@ -274,6 +274,7 @@ static int service_changed(void) {
 
 static const char *remote_view_name(const int value) {
     static const char *const intervals[] = {"30s", "1m", "3m", "5m", "10m"};
+    if (value == 6) return lang.muxwebserv.remote_live;
     return value >= 1 && value <= 5 ? intervals[value - 1] : lang.generic.disabled;
 }
 
@@ -509,7 +510,7 @@ static void cycle_auth(void) {
 }
 
 static void cycle_remote_view(const int direction) {
-    editing_remote_view = (editing_remote_view + direction + 6) % 6;
+    editing_remote_view = (editing_remote_view + direction + 7) % 7;
     lv_label_set_text(ui_objects_value[remote_row_index], remote_view_name(editing_remote_view));
     play_sound(snd_option);
     fields_modified = service_changed();

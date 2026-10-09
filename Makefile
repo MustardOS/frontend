@@ -9,7 +9,7 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-TOOLS = muvarctl mudisp murgb mususpend muswitch muverify
+TOOLS = muvarctl mudisp murgb mususpend muswitch muverify muscreen
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c
@@ -21,6 +21,9 @@ murgb_SRC = common/tooling/rgb_args.c common/config/config.c common/config/confi
             common/display/theme_base.c common/runtime/log.c common/runtime/debug.c
 
 muverify_LDLIBS = $(EXTERNAL_LIB)/libcrypto.a -ldl -lpthread $(EXTERNAL_HIDE)
+
+muscreen_SRC = common/display/screenshot.c
+muscreen_LDLIBS = -lSDL2 -lm -ldl
 muswitch_LDLIBS = $(LDLIBS)
 
 DEPENDENCIES = plutosvg common lvgl module terminal video
@@ -41,7 +44,7 @@ CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
 .PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard clean notify info \
-        dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal dep-video
+        dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal dep-video dep-mugl
 
 .DEFAULT_GOAL := all
 
@@ -74,7 +77,7 @@ config-guard: | vendor-external
 generated: | config-guard
 	$(VERBOSE)./build.sh generate $(QUIET) || exit 1
 
-dep-stage dep-plutosvg dep-lvgl: | generated
+dep-stage dep-plutosvg dep-lvgl dep-mugl: | generated
 dep-common: dep-plutosvg
 dep-module: dep-common dep-lvgl
 dep-retro: dep-module
@@ -105,14 +108,18 @@ dep-terminal:
 	@echo "Building Mustard Terminal: muxterm"
 	$(VERBOSE)$(MAKE) -C terminal DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
+dep-mugl:
+	@echo "Building GL Forwarder: mugl"
+	$(VERBOSE)OUT="$(BIN_DIR)" sh mugl/build.sh $(QUIET) || exit 1
+
 dep-video:
 	@echo "Building Wasabi: muxmedia"
 	$(VERBOSE)$(MAKE) -C video DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
-prebuild: dep-stage dep-retro dep-terminal dep-video
+prebuild: dep-stage dep-retro dep-terminal dep-video dep-mugl
 
 clean:
-	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build \
+	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build mugl/.gen \
 		common/generated/language.json common/generated/thirdparty.h
 	$(VERBOSE)find . \( -name "*.o" -o -name "*.d" \) \
 		-not -path "./.git/*" -not -path "./external/*" -exec rm -f {} +

@@ -20,6 +20,8 @@ static int core_row_count;
 static int prefer_directory_scope = 0;
 
 static mux_dialogue assign_dlg;
+static mux_dialogue invalid_dlg;
+static int single_system_pick = 0;
 
 static int find_assigned_system(char *out_system) {
     // File Spec CFG: line 3 = sys
@@ -52,20 +54,13 @@ static int find_system_item_index(const char *system_name) {
     return 0;
 }
 
-static int namespace_is_general(const char *name_space) {
-    return strcasecmp(name_space, "Console") == 0 || strcasecmp(name_space, "Handheld") == 0;
-}
-
 static int find_namespace_item_index(const char *name_space) {
     int visible = 0;
-    for (int pass = 0; pass < 2; pass++) {
-        for (int i = 0; i < coredb_namespace_count(); i++) {
-            const char *candidate = coredb_namespace_at(i);
-            if (coredb_system_count(candidate) == 0) continue;
-            if (namespace_is_general(candidate) != pass) continue;
-            if (strcmp(candidate, name_space) == 0) return visible;
-            visible++;
-        }
+    for (int i = 0; i < coredb_namespace_count(); i++) {
+        const char *candidate = coredb_namespace_at(i);
+        if (coredb_system_count(candidate) == 0) continue;
+        if (strcmp(candidate, name_space) == 0) return visible;
+        visible++;
     }
 
     return 0;
@@ -135,18 +130,11 @@ static void create_namespace_items(void) {
     reset_ui_groups();
     core_row_count = 0;
 
-    for (int pass = 0; pass < 2; pass++) {
-        for (int i = 0; i < coredb_namespace_count(); i++) {
-            const char *name = coredb_namespace_at(i);
-            if (coredb_system_count(name) == 0) continue;
+    for (int i = 0; i < coredb_namespace_count(); i++) {
+        const char *name = coredb_namespace_at(i);
+        if (coredb_system_count(name) == 0) continue;
 
-            if (namespace_is_general(name) != pass) continue;
-
-            const char *label = strcasecmp(name, "Console") == 0    ? lang.muxassign.other_consoles
-                                : strcasecmp(name, "Handheld") == 0 ? lang.muxassign.other_handhelds
-                                                                    : name;
-            add_list_row(label, name, "system");
-        }
+        add_list_row(name, name, "system");
     }
 
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
@@ -284,6 +272,19 @@ static void create_core_items(const char *target) {
     const int same_assignment = from_file.valid && from_dir.valid && from_file.runtime == from_dir.runtime
                                 && strcasecmp(from_file.id, from_dir.id) == 0;
 
+    const struct assigned_core *assigned[] = {&from_file, &from_dir};
+    for (size_t a = 0; a < A_SIZE(assigned); a++) {
+        if (!assigned[a]->valid || core_row_count >= ASSIGN_CORE_MAX) continue;
+
+        int seen = 0;
+        for (int k = 0; k < core_row_count; k++)
+            if (strcasecmp(core_ids[k], assigned[a]->id) == 0) seen = 1;
+        if (seen) continue;
+
+        snprintf(core_ids[core_row_count], COREDB_NAME_MAX, "%s", assigned[a]->id);
+        core_runtimes[core_row_count++] = assigned[a]->runtime;
+    }
+
     assigned_row = -1;
     initial_core_row = 0;
 
@@ -361,12 +362,25 @@ static void load_return_module(void) {
     }
 }
 
+static void leave_without_assignment(void) {
+    write_text_to_file(MUOS_SYS_LOAD, "w", CHAR, "");
+    load_return_module();
+    remove(MUOS_SAA_LOAD);
+    mux_input_stop();
+}
+
 static void handle_x(void) {
     orientation_handle_skip();
 }
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (dialogue_active(&invalid_dlg)) {
+        dialogue_dismiss(&invalid_dlg);
+        leave_without_assignment();
+        return;
+    }
 
     if (dialogue_active(&assign_dlg)) {
         dialogue_cancel(&assign_dlg);
@@ -407,11 +421,10 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void handle_core_assignment(const char *log_msg, const int assignment_mode) {
+static void assign_core(const char *item_data, const char *log_msg, const int assignment_mode) {
     LOG_INFO(mux_module, "%s", log_msg);
 
-    char *item_data = lv_obj_get_user_data(lv_group_get_focused(ui_group));
-    char *selected_item = str_tolower(item_data);
+    char *selected_item = str_tolower((char *) item_data);
     LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, item_data);
 
     const char *core_id = item_data;
@@ -455,7 +468,17 @@ static void handle_core_assignment(const char *log_msg, const int assignment_mod
     load_return_module();
 }
 
+static void handle_core_assignment(const char *log_msg, const int assignment_mode) {
+    assign_core(lv_obj_get_user_data(lv_group_get_focused(ui_group)), log_msg, assignment_mode);
+}
+
 static void handle_a(void) {
+    if (dialogue_active(&invalid_dlg)) {
+        dialogue_dismiss(&invalid_dlg);
+        leave_without_assignment();
+        return;
+    }
+
     if (dialogue_active(&assign_dlg)) {
         const int method = assign_dlg.option_data[assign_dlg.selected];
         if (method < 0) dialogue_mark_silent(&assign_dlg);
@@ -621,7 +644,10 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
     snprintf(explore_dir, sizeof(explore_dir), "%s", dir);
     snprintf(rom_system, sizeof(rom_system), "%s", sys);
 
-    if (!coredb_load()) LOG_ERROR(mux_module, "Assign Core could not read the core definitions");
+    const int definitions_loaded = coredb_load();
+    if (!definitions_loaded) LOG_ERROR(mux_module, "Assign Core could not read the core definitions");
+
+    single_system_pick = 0;
 
     level_is_namespace = 0;
     if (strncmp(rom_system, ASSIGN_NAMESPACE_TAG, strlen(ASSIGN_NAMESPACE_TAG)) == 0) {
@@ -635,6 +661,7 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
         if (coredb_system_count(rom_system) == 1 && coredb_system_at(rom_system, 0, &only)) {
             snprintf(rom_system, sizeof(rom_system), "%s", only.id);
             level_is_namespace = 0;
+            single_system_pick = 1;
         }
     }
 
@@ -661,7 +688,13 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
 
     int ass_index = 0;
 
-    if (level_is_namespace) {
+    if (!definitions_loaded) {
+        init_elements();
+        dialogue_init_message(
+            &invalid_dlg, &theme, ui_screen, lang.muxassign.title, NULL, lang.muxassign.invalid, lang.generic.close
+        );
+        dialogue_open(&invalid_dlg, &theme);
+    } else if (level_is_namespace) {
         char force_sys_name[PATH_MAX] = "";
         take_forced_pick(force_sys_name, sizeof(force_sys_name));
 
@@ -686,16 +719,28 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
     } else {
         create_core_items(rom_system);
         ass_index = find_core_item_index();
+
+        if (single_system_pick && core_row_count == 1) {
+            char stem[FILENAME_MAX];
+            stored_stem(core_ids[0], core_runtimes[0], stem, sizeof(stem));
+            assign_core(stem, "Only one core for the only system in this group, assigning it automatically", casn_dir);
+
+            remove(MUOS_SYS_LOAD);
+            remove(OPTION_SKIP);
+            return;
+        }
     }
 
-    init_elements();
+    if (definitions_loaded) init_elements();
 
     dialogue_init_assign_scope(
         &assign_dlg, &theme, ui_screen, lang.muxoption.core, is_dir, 0, at_base(rom_dir, MAIN_ROM_DIR),
         lang.generic.select, lang.generic.cancel
     );
 
-    if (ui_count_static > 0) {
+    if (!definitions_loaded) {
+        LOG_ERROR(mux_module, "No valid Core Assign file, showing the notice");
+    } else if (ui_count_static > 0) {
         if (level_is_namespace || strcasecmp(rom_system, "none") == 0) {
             LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
         } else {

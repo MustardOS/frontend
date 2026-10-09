@@ -1069,6 +1069,20 @@ void pause_menu_toggle(void) {
     }
 }
 
+static unsigned input_serial = 0;
+
+unsigned pause_menu_input_serial(void) {
+    return input_serial;
+}
+
+int pause_menu_at_top_level(void) {
+    return active && !gamestate_notice_is_active() && !gamestate_menu_is_active() && !netplay_menu_is_active()
+           && !cheevo_menu_is_active() && !link_menu_is_active() && !diskcontrol_menu_is_active()
+           && !cheats_menu_is_active() && !patch_menu_is_active() && !manual_menu_is_active()
+           && !information_menu_is_active() && !settings_menu_is_active() && !dialogue_active(&destructive_dlg)
+           && !content_switch_active;
+}
+
 int pause_menu_tick(void) {
     if (!active) return 0;
 
@@ -1130,6 +1144,7 @@ int pause_menu_tick(void) {
     const uint64_t mask = current_nav_mask();
     const uint64_t edge = mask & ~prev_nav_mask;
     prev_nav_mask = mask;
+    if (edge) input_serial++;
 
     if (dialogue_active(&destructive_dlg)) {
         if (edge & (BIT(0) | BIT(1))) {

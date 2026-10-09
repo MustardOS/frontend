@@ -1519,6 +1519,10 @@ void ui_common_handle_volume_down(void) {
     show_volume_progress();
 }
 
+static int woke_recently(void) {
+    return access(RUN_PATH "recent_wake", F_OK) == 0;
+}
+
 int ui_common_progress_tick(void) {
     int need_update = 0;
 
@@ -1532,7 +1536,7 @@ int ui_common_progress_tick(void) {
             current_brightness = saved_brightness;
             if (value_changed) {
                 brightness_changed = 1;
-                show_brightness_progress();
+                if (!woke_recently()) show_brightness_progress();
             }
         }
     }
@@ -1547,7 +1551,7 @@ int ui_common_progress_tick(void) {
             current_volume = saved_volume;
             if (value_changed) {
                 volume_changed = 1;
-                show_volume_progress();
+                if (!woke_recently()) show_volume_progress();
             }
         }
     }
