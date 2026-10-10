@@ -7,7 +7,7 @@
 #include "client.h"
 #include "gen_ops.h"
 
-#define MAX_ATTRIBS 16
+#define MAX_ATTRIBS MUGL_MAX_ATTRIBS
 
 typedef struct {
     int enabled;
@@ -22,7 +22,15 @@ typedef struct {
 typedef struct {
     attrib_state attribs[MAX_ATTRIBS];
     GLuint element_buffer;
+    uint32_t sent_mask;
 } vao_state;
+
+typedef struct {
+    const uint8_t *lo;
+    const uint8_t *hi;
+    uint32_t stride;
+    uint32_t bytes;
+} draw_stream;
 
 typedef struct {
     uint8_t *shadow;
@@ -42,16 +50,38 @@ static GLint pack_alignment = 4;
 static char *strings[8];
 
 static const char *const supported_extensions[] = {
-    "GL_OES_vertex_array_object", "GL_EXT_discard_framebuffer", "GL_OES_mapbuffer",
-    "GL_OES_texture_npot", "GL_OES_depth24", "GL_OES_depth32", "GL_OES_packed_depth_stencil",
-    "GL_OES_rgb8_rgba8", "GL_OES_element_index_uint", "GL_OES_standard_derivatives",
-    "GL_OES_texture_float", "GL_OES_texture_half_float", "GL_OES_texture_float_linear",
-    "GL_OES_texture_half_float_linear", "GL_OES_depth_texture", "GL_OES_fragment_precision_high",
-    "GL_OES_compressed_ETC1_RGB8_texture", "GL_IMG_texture_compression_pvrtc", "GL_EXT_texture_format_BGRA8888",
-    "GL_EXT_blend_minmax", "GL_EXT_shader_texture_lod", "GL_EXT_texture_rg", "GL_OES_vertex_half_float",
-    "GL_EXT_read_format_bgra", "GL_EXT_texture_filter_anisotropic", "GL_EXT_sRGB", "GL_IMG_read_format",
-    "GL_EXT_shader_framebuffer_fetch", "GL_OES_required_internalformat", "GL_EXT_color_buffer_half_float",
-    "GL_OES_texture_npot", "GL_IMG_texture_npot",
+    "GL_OES_vertex_array_object",
+    "GL_EXT_discard_framebuffer",
+    "GL_OES_mapbuffer",
+    "GL_OES_texture_npot",
+    "GL_OES_depth24",
+    "GL_OES_depth32",
+    "GL_OES_packed_depth_stencil",
+    "GL_OES_rgb8_rgba8",
+    "GL_OES_element_index_uint",
+    "GL_OES_standard_derivatives",
+    "GL_OES_texture_float",
+    "GL_OES_texture_half_float",
+    "GL_OES_texture_float_linear",
+    "GL_OES_texture_half_float_linear",
+    "GL_OES_depth_texture",
+    "GL_OES_fragment_precision_high",
+    "GL_OES_compressed_ETC1_RGB8_texture",
+    "GL_IMG_texture_compression_pvrtc",
+    "GL_EXT_texture_format_BGRA8888",
+    "GL_EXT_blend_minmax",
+    "GL_EXT_shader_texture_lod",
+    "GL_EXT_texture_rg",
+    "GL_OES_vertex_half_float",
+    "GL_EXT_read_format_bgra",
+    "GL_EXT_texture_filter_anisotropic",
+    "GL_EXT_sRGB",
+    "GL_IMG_read_format",
+    "GL_EXT_shader_framebuffer_fetch",
+    "GL_OES_required_internalformat",
+    "GL_EXT_color_buffer_half_float",
+    "GL_OES_texture_npot",
+    "GL_IMG_texture_npot",
 };
 
 static uint32_t f2u(GLfloat f) {
@@ -64,7 +94,8 @@ static buffer_state *buffer_get(GLuint id) {
     if (!id) return NULL;
     if (id >= buffer_capacity) {
         uint32_t capacity = buffer_capacity ? buffer_capacity : 64;
-        while (capacity <= id) capacity *= 2;
+        while (capacity <= id)
+            capacity *= 2;
         buffer_state *grown = realloc(buffers, capacity * sizeof(buffer_state));
         if (!grown) return NULL;
         memset(grown + buffer_capacity, 0, (capacity - buffer_capacity) * sizeof(buffer_state));
@@ -79,7 +110,8 @@ static vao_state *vao_get(GLuint id, int create) {
     if (id >= vao_capacity) {
         if (!create) return NULL;
         uint32_t capacity = vao_capacity ? vao_capacity : 32;
-        while (capacity <= id) capacity *= 2;
+        while (capacity <= id)
+            capacity *= 2;
         vao_state **grown = realloc(vaos, capacity * sizeof(vao_state *));
         if (!grown) return NULL;
         memset(grown + vao_capacity, 0, (capacity - vao_capacity) * sizeof(vao_state *));
@@ -153,14 +185,16 @@ static uint32_t image_size(GLsizei width, GLsizei height, GLenum format, GLenum 
 }
 
 static void send_words(uint32_t op, const uint32_t *words, uint32_t count, const void *data, uint32_t len) {
+    mugl_trace(op, words, count, NULL);
     mugl_msg_begin(op, count * 4U + len);
     mugl_msg_put(words, count * 4U);
     if (len) mugl_msg_put(data, len);
     mugl_msg_end();
 }
 
-static const uint8_t *call_words(uint32_t op, const uint32_t *words, uint32_t count, const void *data, uint32_t len,
-                                 uint32_t *out_len) {
+static const uint8_t *
+call_words(uint32_t op, const uint32_t *words, uint32_t count, const void *data, uint32_t len, uint32_t *out_len) {
+    mugl_trace(op, words, count, " ...");
     mugl_msg_begin(op, count * 4U + len);
     mugl_msg_put(words, count * 4U);
     if (len) mugl_msg_put(data, len);
@@ -175,27 +209,45 @@ void mugl_gl_reset(void) {
 }
 
 GL_APICALL void GL_APIENTRY glBindBuffer(GLenum target, GLuint buffer) {
-    if (target == GL_ARRAY_BUFFER) array_buffer = buffer;
-    else if (target == GL_ELEMENT_ARRAY_BUFFER) vao->element_buffer = buffer;
+    if (target == GL_ARRAY_BUFFER)
+        array_buffer = buffer;
+    else if (target == GL_ELEMENT_ARRAY_BUFFER)
+        vao->element_buffer = buffer;
     const uint32_t a[2] = {target, buffer};
     mugl_send(MUGL_OP_glBindBuffer, a, 2);
 }
 
 GL_APICALL void GL_APIENTRY glPixelStorei(GLenum pname, GLint param) {
-    if (pname == GL_UNPACK_ALIGNMENT) unpack_alignment = param;
-    else if (pname == GL_PACK_ALIGNMENT) pack_alignment = param;
+    if (pname == GL_UNPACK_ALIGNMENT)
+        unpack_alignment = param;
+    else if (pname == GL_PACK_ALIGNMENT)
+        pack_alignment = param;
     const uint32_t a[2] = {pname, (uint32_t) param};
     mugl_send(MUGL_OP_glPixelStorei, a, 2);
 }
 
+unsigned int mugl_bound_array_buffer(void) {
+    return array_buffer;
+}
+
+unsigned int mugl_bound_element_buffer(void) {
+    return vao->element_buffer;
+}
+
 GL_APICALL void GL_APIENTRY glEnableVertexAttribArray(GLuint index) {
-    if (index < MAX_ATTRIBS) vao->attribs[index].enabled = 1;
+    if (index < MAX_ATTRIBS) {
+        vao->attribs[index].enabled = 1;
+        return;
+    }
     const uint32_t a[1] = {index};
     mugl_send(MUGL_OP_glEnableVertexAttribArray, a, 1);
 }
 
 GL_APICALL void GL_APIENTRY glDisableVertexAttribArray(GLuint index) {
-    if (index < MAX_ATTRIBS) vao->attribs[index].enabled = 0;
+    if (index < MAX_ATTRIBS) {
+        vao->attribs[index].enabled = 0;
+        return;
+    }
     const uint32_t a[1] = {index};
     mugl_send(MUGL_OP_glDisableVertexAttribArray, a, 1);
 }
@@ -210,8 +262,9 @@ GL_APICALL GLenum GL_APIENTRY glGetError(void) {
     return (GLenum) mugl_call_u32(MUGL_OP_glGetError, NULL, 0);
 }
 
-GL_APICALL void GL_APIENTRY glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized,
-                                                  GLsizei stride, const void *pointer) {
+GL_APICALL void GL_APIENTRY glVertexAttribPointer(
+    GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer
+) {
     if (index >= MAX_ATTRIBS) {
         mugl_set_error(GL_INVALID_VALUE);
         return;
@@ -226,56 +279,151 @@ GL_APICALL void GL_APIENTRY glVertexAttribPointer(GLuint index, GLint size, GLen
     a->buffer = array_buffer;
 
     if (array_buffer) {
-        const uint32_t w[6] = {index, (uint32_t) size, type, normalized, (uint32_t) stride, (uint32_t) (uintptr_t) pointer};
+        const uint32_t w[6] = {index,      (uint32_t) size,   type,
+                               normalized, (uint32_t) stride, (uint32_t) (uintptr_t) pointer};
         mugl_send(MUGL_OP_VERTEX_ATTRIB_POINTER, w, 6);
     }
 }
 
 GL_APICALL void GL_APIENTRY glGetVertexAttribPointerv(GLuint index, GLenum pname, void **pointer) {
-    if (index < MAX_ATTRIBS && pname == GL_VERTEX_ATTRIB_ARRAY_POINTER) *pointer = (void *) vao->attribs[index].pointer;
-    else mugl_set_error(GL_INVALID_ENUM);
+    if (index < MAX_ATTRIBS && pname == GL_VERTEX_ATTRIB_ARRAY_POINTER)
+        *pointer = (void *) vao->attribs[index].pointer;
+    else
+        mugl_set_error(GL_INVALID_ENUM);
+}
+
+static uint32_t enabled_mask(void) {
+    uint32_t mask = 0;
+    for (uint32_t i = 0; i < MAX_ATTRIBS; i++) {
+        if (vao->attribs[i].enabled) mask |= 1U << i;
+    }
+    return mask;
 }
 
 static int has_client_arrays(int *has_buffer_arrays) {
     int client = 0;
     *has_buffer_arrays = 0;
-    for (int i = 0; i < MAX_ATTRIBS; i++) {
+    for (uint32_t i = 0; i < MAX_ATTRIBS; i++) {
         const attrib_state *a = &vao->attribs[i];
         if (!a->enabled) continue;
-        if (a->buffer) *has_buffer_arrays = 1;
-        else if (a->pointer) client = 1;
+        if (a->buffer)
+            *has_buffer_arrays = 1;
+        else if (a->pointer)
+            client = 1;
     }
     return client;
 }
 
-static void upload_client_arrays(uint32_t first, uint32_t last) {
-    for (int i = 0; i < MAX_ATTRIBS; i++) {
+static uint32_t attrib_element(const attrib_state *a) {
+    return (uint32_t) a->size * type_size(a->type);
+}
+
+static uint32_t attrib_stride(const attrib_state *a) {
+    return a->stride ? (uint32_t) a->stride : attrib_element(a);
+}
+
+static uint32_t
+plan_streams(uint32_t from, uint32_t last, draw_stream *streams, uint32_t *attribs, uint32_t *attrib_count) {
+    uint32_t stream_count = 0;
+    uint32_t count = 0;
+
+    for (uint32_t i = 0; i < MAX_ATTRIBS; i++) {
         const attrib_state *a = &vao->attribs[i];
         if (!a->enabled || a->buffer || !a->pointer) continue;
 
-        const uint32_t element = (uint32_t) a->size * type_size(a->type);
-        const uint32_t stride = a->stride ? (uint32_t) a->stride : element;
-        const uint32_t len = (last - first) * stride + element;
-        const uint8_t *src = (const uint8_t *) a->pointer + (size_t) first * stride;
+        const uint8_t *p = a->pointer;
+        const uint32_t element = attrib_element(a);
+        const uint32_t stride = attrib_stride(a);
 
-        const uint32_t w[5] = {(uint32_t) i, (uint32_t) a->size, a->type, a->normalized, stride};
-        send_words(MUGL_OP_CLIENT_ARRAY, w, 5, src, len);
+        uint32_t s = 0;
+        for (; s < stream_count; s++) {
+            draw_stream *d = &streams[s];
+            if (d->stride != stride) continue;
+            const uint8_t *lo = p < d->lo ? p : d->lo;
+            const uint8_t *hi = p + element > d->hi ? p + element : d->hi;
+            if ((uint32_t) (hi - lo) <= stride) {
+                d->lo = lo;
+                d->hi = hi;
+                break;
+            }
+        }
+        if (s == stream_count) {
+            streams[s].lo = p;
+            streams[s].hi = p + element;
+            streams[s].stride = stride;
+            stream_count++;
+        }
+
+        uint32_t *w = attribs + count * MUGL_ATTRIB_WORDS;
+        w[0] = i;
+        w[1] = (uint32_t) a->size;
+        w[2] = a->type;
+        w[3] = a->normalized;
+        w[4] = stride;
+        w[5] = s;
+        w[6] = (uint32_t) (uintptr_t) p;
+        count++;
     }
+
+    for (uint32_t c = 0; c < count; c++) {
+        uint32_t *w = attribs + c * MUGL_ATTRIB_WORDS;
+        w[6] = (uint32_t) ((const uint8_t *) (uintptr_t) w[6] - streams[w[5]].lo);
+    }
+
+    for (uint32_t s = 0; s < stream_count; s++) {
+        draw_stream *d = &streams[s];
+        d->bytes = (last - from) * d->stride + (uint32_t) (d->hi - d->lo);
+        d->lo += (size_t) from * d->stride;
+    }
+
+    *attrib_count = count;
+    return stream_count;
+}
+
+static void send_draw(
+    uint32_t mode, uint32_t flags, uint32_t first, uint32_t count, uint32_t index_type, uint32_t index_value,
+    int client, uint32_t from, uint32_t last, const void *indices, uint32_t index_bytes
+) {
+    draw_stream streams[MAX_ATTRIBS];
+    uint32_t attribs[MAX_ATTRIBS * MUGL_ATTRIB_WORDS];
+    uint32_t attrib_count = 0;
+    const uint32_t stream_count = client ? plan_streams(from, last, streams, attribs, &attrib_count) : 0U;
+
+    const uint32_t mask = enabled_mask();
+    uint32_t w[MUGL_DRAW_WORDS + MAX_ATTRIBS] = {
+        mode, flags, first, count, index_type, index_value, mask, mask ^ vao->sent_mask, stream_count, attrib_count,
+    };
+    vao->sent_mask = mask;
+
+    uint32_t len = (MUGL_DRAW_WORDS + stream_count + attrib_count * MUGL_ATTRIB_WORDS) * 4U;
+    for (uint32_t s = 0; s < stream_count; s++) {
+        w[MUGL_DRAW_WORDS + s] = streams[s].bytes;
+        len += (streams[s].bytes + 3U) & ~3U;
+    }
+    len += index_bytes;
+
+    mugl_trace(MUGL_OP_DRAW, w, MUGL_DRAW_WORDS, NULL);
+    static const uint8_t zero[4];
+    mugl_msg_begin(MUGL_OP_DRAW, len);
+    mugl_msg_put(w, (MUGL_DRAW_WORDS + stream_count) * 4U);
+    mugl_msg_put(attribs, attrib_count * MUGL_ATTRIB_WORDS * 4U);
+    for (uint32_t s = 0; s < stream_count; s++) {
+        mugl_msg_put(streams[s].lo, streams[s].bytes);
+        const uint32_t pad = (4U - (streams[s].bytes & 3U)) & 3U;
+        if (pad) mugl_msg_put(zero, pad);
+    }
+    if (index_bytes) mugl_msg_put(indices, index_bytes);
+    mugl_msg_end();
 }
 
 GL_APICALL void GL_APIENTRY glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     if (count <= 0 || first < 0) return;
 
     int buffer_arrays = 0;
-    int start = first;
-    if (has_client_arrays(&buffer_arrays)) {
-        const uint32_t from = buffer_arrays ? 0U : (uint32_t) first;
-        upload_client_arrays(from, (uint32_t) (first + count - 1));
-        start = first - (int) from;
-    }
-
-    const uint32_t w[3] = {mode, (uint32_t) start, (uint32_t) count};
-    mugl_send(MUGL_OP_DRAW_ARRAYS, w, 3);
+    const int client = has_client_arrays(&buffer_arrays);
+    const uint32_t from = client && !buffer_arrays ? (uint32_t) first : 0U;
+    const uint32_t last = (uint32_t) (first + count - 1);
+    send_draw(mode, 0, (uint32_t) first - from, (uint32_t) count, 0, 0, client, from, last, NULL, 0);
 }
 
 static void index_range(const void *indices, GLenum type, GLsizei count, uint32_t *min, uint32_t *max) {
@@ -283,9 +431,12 @@ static void index_range(const void *indices, GLenum type, GLsizei count, uint32_
     uint32_t hi = 0;
     for (GLsizei i = 0; i < count; i++) {
         uint32_t v;
-        if (type == GL_UNSIGNED_BYTE) v = ((const uint8_t *) indices)[i];
-        else if (type == GL_UNSIGNED_SHORT) v = ((const uint16_t *) indices)[i];
-        else v = ((const uint32_t *) indices)[i];
+        if (type == GL_UNSIGNED_BYTE)
+            v = ((const uint8_t *) indices)[i];
+        else if (type == GL_UNSIGNED_SHORT)
+            v = ((const uint16_t *) indices)[i];
+        else
+            v = ((const uint32_t *) indices)[i];
         if (v < lo) lo = v;
         if (v > hi) hi = v;
     }
@@ -298,9 +449,12 @@ static void *rebase_indices(const void *indices, GLenum type, GLsizei count, uin
     uint8_t *copy = malloc((size_t) count * size);
     if (!copy) return NULL;
     for (GLsizei i = 0; i < count; i++) {
-        if (type == GL_UNSIGNED_BYTE) copy[i] = (uint8_t) (((const uint8_t *) indices)[i] - base);
-        else if (type == GL_UNSIGNED_SHORT) ((uint16_t *) copy)[i] = (uint16_t) (((const uint16_t *) indices)[i] - base);
-        else ((uint32_t *) copy)[i] = ((const uint32_t *) indices)[i] - base;
+        if (type == GL_UNSIGNED_BYTE)
+            copy[i] = (uint8_t) (((const uint8_t *) indices)[i] - base);
+        else if (type == GL_UNSIGNED_SHORT)
+            ((uint16_t *) copy)[i] = (uint16_t) (((const uint16_t *) indices)[i] - base);
+        else
+            ((uint32_t *) copy)[i] = ((const uint32_t *) indices)[i] - base;
     }
     return copy;
 }
@@ -310,21 +464,23 @@ GL_APICALL void GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum ty
 
     const uint32_t index_bytes = (uint32_t) count * type_size(type);
     int buffer_arrays = 0;
-    const int client = has_client_arrays(&buffer_arrays);
+    int client = has_client_arrays(&buffer_arrays);
 
     if (vao->element_buffer) {
+        uint32_t hi = 0;
         if (client) {
             const buffer_state *b = buffer_get(vao->element_buffer);
             const uintptr_t offset = (uintptr_t) indices;
-            if (b && b->shadow && offset + index_bytes <= b->size) {
-                uint32_t lo = 0;
-                uint32_t hi = 0;
+            uint32_t lo = 0;
+            if (b && b->shadow && offset + index_bytes <= b->size)
                 index_range(b->shadow + offset, type, count, &lo, &hi);
-                upload_client_arrays(0, hi);
-            }
+            else
+                client = 0;
         }
-        const uint32_t w[5] = {mode, (uint32_t) count, type, 1, (uint32_t) (uintptr_t) indices};
-        mugl_send(MUGL_OP_DRAW_ELEMENTS, w, 5);
+        send_draw(
+            mode, MUGL_DRAW_ELEMENTS | MUGL_DRAW_INDEX_BUFFER, 0, (uint32_t) count, type,
+            (uint32_t) (uintptr_t) indices, client, 0, hi, NULL, 0
+        );
         return;
     }
 
@@ -332,22 +488,21 @@ GL_APICALL void GL_APIENTRY glDrawElements(GLenum mode, GLsizei count, GLenum ty
 
     const void *data = indices;
     void *rebased = NULL;
+    uint32_t from = 0;
+    uint32_t hi = 0;
     if (client) {
         uint32_t lo = 0;
-        uint32_t hi = 0;
         index_range(indices, type, count, &lo, &hi);
         if (!buffer_arrays && lo > 0) {
             rebased = rebase_indices(indices, type, count, lo);
-            if (rebased) data = rebased;
-            else lo = 0;
-            upload_client_arrays(rebased ? lo : 0, hi);
-        } else {
-            upload_client_arrays(0, hi);
+            if (rebased) {
+                data = rebased;
+                from = lo;
+            }
         }
     }
 
-    const uint32_t w[5] = {mode, (uint32_t) count, type, 0, 0};
-    send_words(MUGL_OP_DRAW_ELEMENTS, w, 5, data, index_bytes);
+    send_draw(mode, MUGL_DRAW_ELEMENTS, 0, (uint32_t) count, type, index_bytes, client, from, hi, data, index_bytes);
     free(rebased);
 }
 
@@ -360,8 +515,10 @@ GL_APICALL void GL_APIENTRY glBufferData(GLenum target, GLsizeiptr size, const v
         if (target == GL_ELEMENT_ARRAY_BUFFER && size > 0) {
             b->shadow = malloc((size_t) size);
             if (b->shadow) {
-                if (data) memcpy(b->shadow, data, (size_t) size);
-                else memset(b->shadow, 0, (size_t) size);
+                if (data)
+                    memcpy(b->shadow, data, (size_t) size);
+                else
+                    memset(b->shadow, 0, (size_t) size);
             }
         }
     }
@@ -373,7 +530,8 @@ GL_APICALL void GL_APIENTRY glBufferData(GLenum target, GLsizeiptr size, const v
 GL_APICALL void GL_APIENTRY glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) {
     if (!data || size <= 0) return;
     buffer_state *b = buffer_get(bound_buffer(target));
-    if (b && b->shadow && (uint32_t) offset + (uint32_t) size <= b->size) memcpy(b->shadow + offset, data, (size_t) size);
+    if (b && b->shadow && (uint32_t) offset + (uint32_t) size <= b->size)
+        memcpy(b->shadow + offset, data, (size_t) size);
 
     const uint32_t w[3] = {target, (uint32_t) offset, (uint32_t) size};
     send_words(MUGL_OP_BUFFER_SUB_DATA, w, 3, data, (uint32_t) size);
@@ -451,7 +609,7 @@ GL_APICALL void GL_APIENTRY glDeleteBuffers(GLsizei n, const GLuint *ids) {
         }
         if (ids[i] && ids[i] == array_buffer) array_buffer = 0;
         if (ids[i] && ids[i] == vao->element_buffer) vao->element_buffer = 0;
-        for (int a = 0; a < MAX_ATTRIBS; a++) {
+        for (uint32_t a = 0; a < MAX_ATTRIBS; a++) {
             if (ids[i] && vao->attribs[a].buffer == ids[i]) vao->attribs[a].buffer = 0;
         }
     }
@@ -459,6 +617,7 @@ GL_APICALL void GL_APIENTRY glDeleteBuffers(GLsizei n, const GLuint *ids) {
 }
 
 GL_APICALL void GL_APIENTRY glDeleteTextures(GLsizei n, const GLuint *ids) {
+    mugl_state_textures_deleted(n, ids);
     delete_objects(MUGL_GEN_TEXTURES, n, ids);
 }
 
@@ -478,7 +637,8 @@ GL_APICALL void GL_APIENTRY glGenVertexArraysOES(GLsizei n, GLuint *arrays) {
     const uint32_t bytes = (uint32_t) n * 4U;
     memcpy(arrays, r, len < bytes ? len : bytes);
     mugl_unlock();
-    for (GLsizei i = 0; i < n; i++) vao_get(arrays[i], 1);
+    for (GLsizei i = 0; i < n; i++)
+        vao_get(arrays[i], 1);
 }
 
 GL_APICALL void GL_APIENTRY glDeleteVertexArraysOES(GLsizei n, const GLuint *arrays) {
@@ -512,44 +672,68 @@ GL_APICALL void GL_APIENTRY glDiscardFramebufferEXT(GLenum target, GLsizei count
     send_words(MUGL_OP_DISCARD_FRAMEBUFFER, w, 2, attachments, (uint32_t) count * 4U);
 }
 
-GL_APICALL void GL_APIENTRY glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width,
-                                         GLsizei height, GLint border, GLenum format, GLenum type,
-                                         const void *pixels) {
+GL_APICALL void GL_APIENTRY glTexImage2D(
+    GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format,
+    GLenum type, const void *pixels
+) {
     const uint32_t len = pixels ? image_size(width, height, format, type, unpack_alignment) : 0U;
-    const uint32_t w[9] = {target, (uint32_t) level, (uint32_t) internalformat, (uint32_t) width, (uint32_t) height,
-                           (uint32_t) border, format, type, pixels ? 1U : 0U};
+    const uint32_t w[9] = {target,
+                           (uint32_t) level,
+                           (uint32_t) internalformat,
+                           (uint32_t) width,
+                           (uint32_t) height,
+                           (uint32_t) border,
+                           format,
+                           type,
+                           pixels ? 1U : 0U};
     send_words(MUGL_OP_TEX_IMAGE_2D, w, 9, pixels, len);
 }
 
-GL_APICALL void GL_APIENTRY glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                                            GLsizei height, GLenum format, GLenum type, const void *pixels) {
+GL_APICALL void GL_APIENTRY glTexSubImage2D(
+    GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type,
+    const void *pixels
+) {
     if (!pixels) return;
     const uint32_t len = image_size(width, height, format, type, unpack_alignment);
-    const uint32_t w[8] = {target, (uint32_t) level, (uint32_t) xoffset, (uint32_t) yoffset, (uint32_t) width,
-                           (uint32_t) height, format, type};
+    const uint32_t w[8] = {
+        target, (uint32_t) level, (uint32_t) xoffset, (uint32_t) yoffset, (uint32_t) width, (uint32_t) height, format,
+        type
+    };
     send_words(MUGL_OP_TEX_SUB_IMAGE_2D, w, 8, pixels, len);
 }
 
-GL_APICALL void GL_APIENTRY glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                                                   GLsizei height, GLint border, GLsizei imageSize,
-                                                   const void *data) {
+GL_APICALL void GL_APIENTRY glCompressedTexImage2D(
+    GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize,
+    const void *data
+) {
     const uint32_t len = data && imageSize > 0 ? (uint32_t) imageSize : 0U;
-    const uint32_t w[8] = {target, (uint32_t) level, internalformat, (uint32_t) width, (uint32_t) height,
-                           (uint32_t) border, (uint32_t) imageSize, data ? 1U : 0U};
+    const uint32_t w[8] = {
+        target,
+        (uint32_t) level,
+        internalformat,
+        (uint32_t) width,
+        (uint32_t) height,
+        (uint32_t) border,
+        (uint32_t) imageSize,
+        data ? 1U : 0U
+    };
     send_words(MUGL_OP_COMPRESSED_TEX_IMAGE_2D, w, 8, data, len);
 }
 
-GL_APICALL void GL_APIENTRY glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                                      GLsizei width, GLsizei height, GLenum format, GLsizei imageSize,
-                                                      const void *data) {
+GL_APICALL void GL_APIENTRY glCompressedTexSubImage2D(
+    GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format,
+    GLsizei imageSize, const void *data
+) {
     if (!data || imageSize <= 0) return;
-    const uint32_t w[8] = {target, (uint32_t) level, (uint32_t) xoffset, (uint32_t) yoffset, (uint32_t) width,
-                           (uint32_t) height, format, (uint32_t) imageSize};
+    const uint32_t w[8] = {
+        target, (uint32_t) level,    (uint32_t) xoffset, (uint32_t) yoffset, (uint32_t) width, (uint32_t) height,
+        format, (uint32_t) imageSize
+    };
     send_words(MUGL_OP_COMPRESSED_TEX_SUB_IMAGE_2D, w, 8, data, (uint32_t) imageSize);
 }
 
-GL_APICALL void GL_APIENTRY glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
-                                         void *pixels) {
+GL_APICALL void GL_APIENTRY
+glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels) {
     const uint32_t size = image_size(width, height, format, type, pack_alignment);
     if (!pixels || !size) return;
     if (size > MUGL_RESP_SIZE) {
@@ -571,8 +755,8 @@ GL_APICALL void GL_APIENTRY glTexParameteriv(GLenum target, GLenum pname, const 
     if (params) glTexParameteri(target, pname, params[0]);
 }
 
-GL_APICALL void GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const GLchar *const *string,
-                                           const GLint *length) {
+GL_APICALL void GL_APIENTRY
+glShaderSource(GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length) {
     if (count <= 0 || !string) return;
 
     uint32_t total = 0;
@@ -594,8 +778,10 @@ GL_APICALL void GL_APIENTRY glShaderSource(GLuint shader, GLsizei count, const G
 
 static void copy_string(const uint8_t *r, uint32_t len, GLsizei bufSize, GLsizei *length, GLchar *out) {
     uint32_t n = len;
-    if (bufSize <= 0) n = 0;
-    else if (n > (uint32_t) bufSize - 1U) n = (uint32_t) bufSize - 1U;
+    if (bufSize <= 0)
+        n = 0;
+    else if (n > (uint32_t) bufSize - 1U)
+        n = (uint32_t) bufSize - 1U;
     if (out && bufSize > 0) {
         memcpy(out, r, n);
         out[n] = '\0';
@@ -623,8 +809,10 @@ GL_APICALL void GL_APIENTRY glGetProgramInfoLog(GLuint program, GLsizei bufSize,
     get_text(MUGL_OP_GET_INFO_LOG, MUGL_LOG_PROGRAM, program, bufSize, length, infoLog);
 }
 
-static void get_active(uint32_t kind, GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size,
-                       GLenum *type, GLchar *name) {
+static void get_active(
+    uint32_t kind, GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type,
+    GLchar *name
+) {
     const uint32_t w[3] = {kind, program, index};
     uint32_t len = 0;
     const uint8_t *r = call_words(MUGL_OP_GET_ACTIVE, w, 3, NULL, 0, &len);
@@ -642,13 +830,17 @@ static void get_active(uint32_t kind, GLuint program, GLuint index, GLsizei bufS
     mugl_unlock();
 }
 
-GL_APICALL void GL_APIENTRY glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length,
-                                              GLint *size, GLenum *type, GLchar *name) {
+GL_APICALL void GL_APIENTRY glGetActiveAttrib(
+    GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name
+) {
+    if (mugl_program_active(0, program, index, bufSize, length, size, type, name)) return;
     get_active(MUGL_ACTIVE_ATTRIB, program, index, bufSize, length, size, type, name);
 }
 
-GL_APICALL void GL_APIENTRY glGetActiveUniform(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length,
-                                               GLint *size, GLenum *type, GLchar *name) {
+GL_APICALL void GL_APIENTRY glGetActiveUniform(
+    GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name
+) {
+    if (mugl_program_active(1, program, index, bufSize, length, size, type, name)) return;
     get_active(MUGL_ACTIVE_UNIFORM, program, index, bufSize, length, size, type, name);
 }
 
@@ -671,6 +863,8 @@ GL_APICALL void GL_APIENTRY glBindAttribLocation(GLuint program, GLuint index, c
 
 static GLint get_location(uint32_t kind, GLuint program, const GLchar *name) {
     if (!name) return -1;
+    GLint cached = -1;
+    if (mugl_program_location(kind == MUGL_LOC_UNIFORM, program, name, &cached)) return cached;
     const uint32_t w[2] = {kind, program};
     uint32_t len = 0;
     const uint8_t *r = call_words(MUGL_OP_GET_LOCATION, w, 2, name, (uint32_t) strlen(name), &len);
@@ -735,25 +929,26 @@ static void uniform_matrix(uint32_t n, GLint location, GLsizei count, GLboolean 
     send_words(MUGL_OP_UNIFORM_MATRIX_V, w, 4, value, (uint32_t) count * n * n * 4U);
 }
 
-GL_APICALL void GL_APIENTRY glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose,
-                                               const GLfloat *value) {
+GL_APICALL void GL_APIENTRY
+glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) {
     uniform_matrix(2, location, count, transpose, value);
 }
 
-GL_APICALL void GL_APIENTRY glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose,
-                                               const GLfloat *value) {
+GL_APICALL void GL_APIENTRY
+glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) {
     uniform_matrix(3, location, count, transpose, value);
 }
 
-GL_APICALL void GL_APIENTRY glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose,
-                                               const GLfloat *value) {
+GL_APICALL void GL_APIENTRY
+glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) {
     uniform_matrix(4, location, count, transpose, value);
 }
 
 static void vertex_attrib_v(uint32_t n, GLuint index, const GLfloat *v) {
     if (!v) return;
     uint32_t w[6] = {n, index, 0, 0, 0, f2u(1.0f)};
-    for (uint32_t i = 0; i < n; i++) w[2 + i] = f2u(v[i]);
+    for (uint32_t i = 0; i < n; i++)
+        w[2 + i] = f2u(v[i]);
     mugl_send(MUGL_OP_VERTEX_ATTRIB_V, w, 6);
 }
 
@@ -774,6 +969,8 @@ GL_APICALL void GL_APIENTRY glVertexAttrib4fv(GLuint index, const GLfloat *v) {
 }
 
 static void get_v(uint32_t kind, GLenum pname, void *out) {
+    if (kind == MUGL_GET_INTEGER && mugl_state_query(pname, out)) return;
+    mugl_stats_query(pname);
     const uint32_t w[2] = {kind, pname};
     uint32_t len = 0;
     const uint8_t *r = call_words(MUGL_OP_GET_V, w, 2, NULL, 0, &len);
@@ -814,12 +1011,13 @@ GL_APICALL void GL_APIENTRY glGetBufferParameteriv(GLenum target, GLenum pname, 
     get_obj_v(MUGL_OBJ_BUFFER_PARAM, target, pname, 0, params);
 }
 
-GL_APICALL void GL_APIENTRY glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname,
-                                                                  GLint *params) {
+GL_APICALL void GL_APIENTRY
+glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params) {
     get_obj_v(MUGL_OBJ_FRAMEBUFFER_ATTACHMENT, target, pname, attachment, params);
 }
 
 GL_APICALL void GL_APIENTRY glGetProgramiv(GLuint program, GLenum pname, GLint *params) {
+    if (mugl_program_iv(program, pname, params)) return;
     get_obj_v(MUGL_OBJ_PROGRAM, program, pname, 0, params);
 }
 
@@ -847,16 +1045,49 @@ GL_APICALL void GL_APIENTRY glGetUniformiv(GLuint program, GLint location, GLint
     get_obj_v(MUGL_OBJ_UNIFORM_I, program, (uint32_t) location, 0, params);
 }
 
+static int local_vertex_attrib(GLuint index, GLenum pname, GLint *out) {
+    if (index >= MAX_ATTRIBS || !out) return 0;
+    const attrib_state *a = &vao->attribs[index];
+    switch (pname) {
+        case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+            *out = a->enabled;
+            return 1;
+        case GL_VERTEX_ATTRIB_ARRAY_SIZE:
+            *out = a->size ? a->size : 4;
+            return 1;
+        case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+            *out = a->stride;
+            return 1;
+        case GL_VERTEX_ATTRIB_ARRAY_TYPE:
+            *out = a->type ? (GLint) a->type : GL_FLOAT;
+            return 1;
+        case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+            *out = a->normalized;
+            return 1;
+        case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+            *out = (GLint) a->buffer;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 GL_APICALL void GL_APIENTRY glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params) {
+    GLint value = 0;
+    if (local_vertex_attrib(index, pname, &value)) {
+        *params = (GLfloat) value;
+        return;
+    }
     get_obj_v(MUGL_OBJ_VERTEX_ATTRIB_F, index, pname, 0, params);
 }
 
 GL_APICALL void GL_APIENTRY glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params) {
+    if (local_vertex_attrib(index, pname, params)) return;
     get_obj_v(MUGL_OBJ_VERTEX_ATTRIB_I, index, pname, 0, params);
 }
 
-GL_APICALL void GL_APIENTRY glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint *range,
-                                                       GLint *precision) {
+GL_APICALL void GL_APIENTRY
+glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision) {
     const uint32_t w[2] = {shadertype, precisiontype};
     uint32_t len = 0;
     const uint8_t *r = call_words(MUGL_OP_SHADER_PRECISION, w, 2, NULL, 0, &len);
@@ -867,8 +1098,8 @@ GL_APICALL void GL_APIENTRY glGetShaderPrecisionFormat(GLenum shadertype, GLenum
     mugl_unlock();
 }
 
-GL_APICALL void GL_APIENTRY glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryFormat,
-                                           const void *binary, GLsizei length) {
+GL_APICALL void GL_APIENTRY
+glShaderBinary(GLsizei count, const GLuint *shaders, GLenum binaryFormat, const void *binary, GLsizei length) {
     if (count <= 0 || !shaders || !binary || length < 0) return;
     const uint32_t w[3] = {(uint32_t) count, binaryFormat, (uint32_t) length};
     mugl_msg_begin(MUGL_OP_SHADER_BINARY, 12U + (uint32_t) count * 4U + (uint32_t) length);
@@ -890,9 +1121,11 @@ static char *filter_extensions(const char *all) {
     if (!out) return NULL;
     const char *p = all;
     while (*p) {
-        while (*p == ' ') p++;
+        while (*p == ' ')
+            p++;
         const char *start = p;
-        while (*p && *p != ' ') p++;
+        while (*p && *p != ' ')
+            p++;
         const size_t len = (size_t) (p - start);
         if (len && extension_supported(start, len) && !strstr(out, start)) {
             strncat(out, start, len);

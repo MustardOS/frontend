@@ -7,6 +7,9 @@ HEADER, OUT = sys.argv[1], sys.argv[2]
 MANUAL_CLIENT = {
     "glBindBuffer", "glPixelStorei", "glEnableVertexAttribArray", "glDisableVertexAttribArray",
     "glFinish", "glGetError", "glDrawArrays",
+    "glEnable", "glDisable", "glIsEnabled", "glBlendFunc", "glBlendFuncSeparate", "glBlendEquation",
+    "glBlendEquationSeparate", "glBlendColor", "glUseProgram", "glDeleteProgram", "glActiveTexture",
+    "glBindTexture", "glTexParameteri", "glTexParameterf", "glViewport", "glLinkProgram",
 }
 
 SCALAR = {"GLenum", "GLuint", "GLint", "GLsizei", "GLboolean", "GLbitfield", "GLfloat", "GLclampf"}
@@ -72,12 +75,22 @@ for ret, name, params in simple:
     else:
         cl.write(f"    return ({ret}) mugl_call_u32(MUGL_OP_{name}, {arg_ptr}, {count});\n")
     cl.write("}\n\n")
+cl.write("const char *const mugl_generated_names[] = {\n")
+for ret, name, params in funcs:
+    cl.write(f"    \"{name}\",\n")
+cl.write("};\n\n")
 cl.write("const mugl_proc mugl_gl_procs[] = {\n")
 for ret, name, params in funcs:
     cl.write(f"    {{\"{name}\", (void (*)(void)) {name}}},\n")
 cl.write("};\n\n")
 cl.write(f"const unsigned mugl_gl_proc_count = {len(funcs)}U;\n")
 cl.close()
+
+hd = open(f"{OUT}/server_gl.h", "w")
+hd.write("#pragma once\n\n#include <GLES2/gl2.h>\n\n")
+for ret, name, params in funcs:
+    hd.write(f"extern __typeof__({name}) *p_{name};\n")
+hd.close()
 
 sv = open(f"{OUT}/server_gen.c", "w")
 sv.write("#include <string.h>\n#include <stdint.h>\n#include <SDL2/SDL.h>\n#include <GLES2/gl2.h>\n#include \"server.h\"\n#include \"gen_ops.h\"\n\n")

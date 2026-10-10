@@ -183,8 +183,8 @@ EGLAPI const char *EGLAPIENTRY eglQueryString(EGLDisplay dpy, EGLint name) {
     }
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size,
-                                            EGLint *num_config) {
+EGLAPI EGLBoolean EGLAPIENTRY
+eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size, EGLint *num_config) {
     if (!valid_display(dpy)) return EGL_FALSE;
     if (!num_config) return fail(EGL_BAD_PARAMETER);
     if (configs && config_size > 0) {
@@ -196,8 +196,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, 
     return EGL_TRUE;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs,
-                                              EGLint config_size, EGLint *num_config) {
+EGLAPI EGLBoolean EGLAPIENTRY
+eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config) {
     if (!valid_display(dpy)) return EGL_FALSE;
     if (!num_config) return fail(EGL_BAD_PARAMETER);
     const int match = config_matches(attrib_list);
@@ -210,8 +210,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglChooseConfig(EGLDisplay dpy, const EGLint *attr
     return EGL_TRUE;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute,
-                                                 EGLint *value) {
+EGLAPI EGLBoolean EGLAPIENTRY eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint *value) {
     if (!valid_display(dpy)) return EGL_FALSE;
     if (config != CONFIG_HANDLE) return fail(EGL_BAD_CONFIG);
     int known = 0;
@@ -233,8 +232,8 @@ static EGLSurface make_surface(int window, EGLint width, EGLint height) {
     return (EGLSurface) s;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win,
-                                                     const EGLint *attrib_list) {
+EGLAPI EGLSurface EGLAPIENTRY
+eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint *attrib_list) {
     (void) win;
     (void) attrib_list;
     if (!valid_display(dpy)) return EGL_NO_SURFACE;
@@ -254,14 +253,16 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig 
     EGLint width = 0;
     EGLint height = 0;
     for (const EGLint *a = attrib_list; a && a[0] != EGL_NONE; a += 2) {
-        if (a[0] == EGL_WIDTH) width = a[1];
-        else if (a[0] == EGL_HEIGHT) height = a[1];
+        if (a[0] == EGL_WIDTH)
+            width = a[1];
+        else if (a[0] == EGL_HEIGHT)
+            height = a[1];
     }
     return make_surface(0, width, height);
 }
 
-EGLAPI EGLSurface EGLAPIENTRY eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap,
-                                                     const EGLint *attrib_list) {
+EGLAPI EGLSurface EGLAPIENTRY
+eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint *attrib_list) {
     (void) dpy;
     (void) config;
     (void) pixmap;
@@ -270,8 +271,9 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig c
     return EGL_NO_SURFACE;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer,
-                                                               EGLConfig config, const EGLint *attrib_list) {
+EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferFromClientBuffer(
+    EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list
+) {
     (void) dpy;
     (void) buftype;
     (void) buffer;
@@ -389,8 +391,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglSwapInterval(EGLDisplay dpy, EGLint interval) {
     return EGL_TRUE;
 }
 
-EGLAPI EGLContext EGLAPIENTRY eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context,
-                                               const EGLint *attrib_list) {
+EGLAPI EGLContext EGLAPIENTRY
+eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list) {
     (void) share_context;
     if (!valid_display(dpy)) return EGL_NO_CONTEXT;
     if (config != CONFIG_HANDLE && config != NULL) {
@@ -401,12 +403,15 @@ EGLAPI EGLContext EGLAPIENTRY eglCreateContext(EGLDisplay dpy, EGLConfig config,
     EGLint version = 1;
     EGLint minor = 0;
     for (const EGLint *a = attrib_list; a && a[0] != EGL_NONE; a += 2) {
-        if (a[0] == EGL_CONTEXT_CLIENT_VERSION) version = a[1];
-        else if (a[0] == EGL_CONTEXT_MINOR_VERSION_KHR) minor = a[1];
+        if (a[0] == EGL_CONTEXT_CLIENT_VERSION)
+            version = a[1];
+        else if (a[0] == EGL_CONTEXT_MINOR_VERSION_KHR)
+            minor = a[1];
     }
     if (getenv("MUGL_DEBUG")) {
         fprintf(stderr, "mugl: eglCreateContext");
-        for (const EGLint *a = attrib_list; a && a[0] != EGL_NONE; a += 2) fprintf(stderr, " 0x%x=%d", a[0], a[1]);
+        for (const EGLint *a = attrib_list; a && a[0] != EGL_NONE; a += 2)
+            fprintf(stderr, " 0x%x=%d", a[0], a[1]);
         fprintf(stderr, "\n");
     }
     if (version != 2 || minor != 0) {
@@ -528,7 +533,8 @@ static const mugl_proc egl_procs[] = {
 EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY eglGetProcAddress(const char *procname) {
     if (!procname) return NULL;
     for (size_t i = 0; i < sizeof(egl_procs) / sizeof(egl_procs[0]); i++) {
-        if (strcmp(egl_procs[i].name, procname) == 0) return (__eglMustCastToProperFunctionPointerType) egl_procs[i].func;
+        if (strcmp(egl_procs[i].name, procname) == 0)
+            return (__eglMustCastToProperFunctionPointerType) egl_procs[i].func;
     }
     return (__eglMustCastToProperFunctionPointerType) mugl_gl_lookup(procname);
 }

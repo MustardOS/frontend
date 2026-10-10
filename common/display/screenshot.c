@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <linux/fb.h>
 #include <math.h>
@@ -6,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
 
@@ -14,6 +17,7 @@
 
 #include <stb/stb_image_write.h>
 #include <common/display/screenshot.h>
+#include <mugl/frame.h>
 
 #define DRM_IOCTL_BASE     'd'
 #define DRM_IOWR(nr, type) _IOWR(DRM_IOCTL_BASE, nr, type)
@@ -28,6 +32,10 @@
 #define DRM_MAX_CARDS 4
 
 #define FBDEV_MAX 4
+
+#define MUGL_WAIT_MS  300
+#define MUGL_POLL_US  2000
+#define MUGL_ATTEMPTS 4
 
 #define BLANK_SAMPLE_STEP    256
 #define BLANK_NONZERO_NEEDED 4
@@ -648,6 +656,81 @@ static int grab_drm(uint8_t **out, uint32_t *width, uint32_t *height) {
     return -1;
 }
 
+static void convert_mugl(uint8_t *dst, const uint8_t *src, const uint32_t width, const uint32_t height) {
+    for (uint32_t y = 0; y < height; y++) {
+        const uint8_t *row = src + (size_t) (height - 1U - y) * width * 4U;
+        uint8_t *out = dst + (size_t) y * width * 3U;
+        for (uint32_t x = 0; x < width; x++) {
+            out[x * 3U] = row[x * 4U];
+            out[x * 3U + 1U] = row[x * 4U + 1U];
+            out[x * 3U + 2U] = row[x * 4U + 2U];
+        }
+    }
+}
+
+static int mugl_wait_frame(mugl_frame_header *frame, const uint32_t request) {
+    for (int waited = 0; waited < MUGL_WAIT_MS * 1000; waited += MUGL_POLL_US) {
+        const uint32_t served = __atomic_load_n(&frame->served, __ATOMIC_ACQUIRE);
+        if ((int32_t) (served - request) >= 0) return 1;
+        usleep(MUGL_POLL_US);
+    }
+    return __atomic_load_n(&frame->seq, __ATOMIC_ACQUIRE) != 0;
+}
+
+static int grab_mugl(uint8_t **out, uint32_t *out_width, uint32_t *out_height) {
+    const int fd = open(MUGL_FRAME_PATH, O_RDWR | O_CLOEXEC);
+    if (fd < 0) return -1;
+
+    struct stat st;
+    if (fstat(fd, &st) != 0 || (size_t) st.st_size < MUGL_FRAME_DATA) {
+        close(fd);
+        return -1;
+    }
+
+    const size_t size = (size_t) st.st_size;
+    uint8_t *map = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    close(fd);
+    if (map == MAP_FAILED) return -1;
+
+    mugl_frame_header *frame = (mugl_frame_header *) map;
+    const uint32_t width = frame->width;
+    const uint32_t height = frame->height;
+    const size_t pixels = (size_t) width * height;
+    int ok = __atomic_load_n(&frame->magic, __ATOMIC_ACQUIRE) == MUGL_FRAME_MAGIC && width && height
+             && size >= MUGL_FRAME_DATA + pixels * 4U && (kill((pid_t) frame->server_pid, 0) == 0 || errno == EPERM);
+
+    uint8_t *rgb = ok ? malloc(pixels * 3U) : NULL;
+    ok = rgb != NULL;
+
+    if (ok) {
+        const uint32_t request = __atomic_add_fetch(&frame->request, 1, __ATOMIC_ACQ_REL);
+        ok = mugl_wait_frame(frame, request);
+    }
+
+    int copied = 0;
+    for (int attempt = 0; ok && !copied && attempt < MUGL_ATTEMPTS; attempt++) {
+        const uint32_t before = __atomic_load_n(&frame->seq, __ATOMIC_ACQUIRE);
+        if (before & 1U) {
+            usleep(MUGL_POLL_US);
+            continue;
+        }
+        convert_mugl(rgb, map + MUGL_FRAME_DATA, width, height);
+        __atomic_thread_fence(__ATOMIC_ACQUIRE);
+        copied = __atomic_load_n(&frame->seq, __ATOMIC_ACQUIRE) == before;
+    }
+
+    munmap(map, size);
+    if (!copied) {
+        free(rgb);
+        return -1;
+    }
+
+    *out = rgb;
+    *out_width = width;
+    *out_height = height;
+    return 0;
+}
+
 int screenshot_write_rgb(const char *path, uint8_t *rgb, const uint32_t width, const uint32_t height) {
     if (!path || !*path || !rgb || !width || !height) return -1;
 
@@ -701,6 +784,7 @@ int screenshot_grab(const screenshot_mode mode, uint8_t **rgb, uint32_t *width, 
             return grab_drm(rgb, width, height);
         case screenshot_auto:
         default:
+            if (grab_mugl(rgb, width, height) == 0) return 0;
             if (grab_drm(rgb, width, height) == 0) return 0;
             return grab_fbdev(rgb, width, height);
     }

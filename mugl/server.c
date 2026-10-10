@@ -1,6 +1,8 @@
 #define _GNU_SOURCE
 #include <errno.h>
 #include <linux/futex.h>
+#include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,75 +15,15 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include "server.h"
+#include "server_gl.h"
 #include "gen_ops.h"
 
-#define SPIN_LIMIT  4000
-#define WAIT_NS     50000000L
-#define MAX_ATTRIBS 16
-#define GET_MAX     256
-
-#define GLP(name) extern __typeof__(name) *p_##name
-GLP(glBindBuffer);
-GLP(glBufferData);
-GLP(glBufferSubData);
-GLP(glCompressedTexImage2D);
-GLP(glCompressedTexSubImage2D);
-GLP(glDeleteBuffers);
-GLP(glDeleteFramebuffers);
-GLP(glDeleteRenderbuffers);
-GLP(glDeleteTextures);
-GLP(glDrawArrays);
-GLP(glDrawElements);
-GLP(glFinish);
-GLP(glGenBuffers);
-GLP(glGenFramebuffers);
-GLP(glGenRenderbuffers);
-GLP(glGenTextures);
-GLP(glGetActiveAttrib);
-GLP(glGetActiveUniform);
-GLP(glGetAttachedShaders);
-GLP(glGetAttribLocation);
-GLP(glGetBooleanv);
-GLP(glGetBufferParameteriv);
-GLP(glGetFloatv);
-GLP(glGetFramebufferAttachmentParameteriv);
-GLP(glGetIntegerv);
-GLP(glGetProgramInfoLog);
-GLP(glGetProgramiv);
-GLP(glGetRenderbufferParameteriv);
-GLP(glGetShaderInfoLog);
-GLP(glGetShaderPrecisionFormat);
-GLP(glGetShaderSource);
-GLP(glGetShaderiv);
-GLP(glGetString);
-GLP(glGetTexParameterfv);
-GLP(glGetTexParameteriv);
-GLP(glGetUniformLocation);
-GLP(glGetUniformfv);
-GLP(glGetUniformiv);
-GLP(glGetVertexAttribfv);
-GLP(glGetVertexAttribiv);
-GLP(glBindAttribLocation);
-GLP(glReadPixels);
-GLP(glShaderBinary);
-GLP(glShaderSource);
-GLP(glTexImage2D);
-GLP(glTexSubImage2D);
-GLP(glUniform1fv);
-GLP(glUniform2fv);
-GLP(glUniform3fv);
-GLP(glUniform4fv);
-GLP(glUniform1iv);
-GLP(glUniform2iv);
-GLP(glUniform3iv);
-GLP(glUniform4iv);
-GLP(glUniformMatrix2fv);
-GLP(glUniformMatrix3fv);
-GLP(glUniformMatrix4fv);
-GLP(glVertexAttrib4f);
-GLP(glVertexAttribPointer);
-GLP(glBindFramebuffer);
-GLP(glPixelStorei);
+#define SPIN_LIMIT       4000
+#define WAIT_NS          50000000L
+#define MAX_ATTRIBS      MUGL_MAX_ATTRIBS
+#define MAX_UNIFORM_LOCS 256
+#define GET_MAX          256
+#define PAYLOAD_KEEP     (4U * 1024U * 1024U)
 
 static PFNGLGENVERTEXARRAYSOESPROC p_glGenVertexArraysOES;
 static PFNGLDELETEVERTEXARRAYSOESPROC p_glDeleteVertexArraysOES;
@@ -97,6 +39,20 @@ static uint32_t payload_capacity;
 static void *client_arrays[MAX_ATTRIBS];
 static uint32_t client_array_size[MAX_ATTRIBS];
 static SDL_Window *window;
+static GLuint array_buffer_bound;
+static int stats_on;
+static uint64_t stat_spin_ns;
+static uint64_t stat_sleep_ns;
+static uint64_t stat_work_ns;
+static uint64_t stat_swap_ns;
+static uint64_t stat_msgs;
+static uint64_t stat_bytes;
+
+static uint64_t now_ns(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (uint64_t) t.tv_sec * 1000000000ULL + (uint64_t) t.tv_nsec;
+}
 static SDL_GLContext context;
 
 static long futex(volatile uint32_t *addr, int op, uint32_t val, const struct timespec *ts) {
@@ -104,6 +60,7 @@ static long futex(volatile uint32_t *addr, int op, uint32_t val, const struct ti
 }
 
 static void finish(int code) {
+    server_frame_close();
     if (hdr) {
         __atomic_store_n(&hdr->server_exited, 1, __ATOMIC_RELEASE);
         futex(&hdr->resp_seq, FUTEX_WAKE, 1, NULL);
@@ -126,9 +83,61 @@ static void fail_start(const char *message) {
     finish(1);
 }
 
+static int timing_on;
+static uint64_t frame_work_ns;
+
+unsigned long server_client_ticks(void) {
+    char path[32];
+    snprintf(path, sizeof(path), "/proc/%u/stat", hdr->client_pid);
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
+
+    char line[512];
+    unsigned long utime = 0;
+    unsigned long stime = 0;
+    if (fgets(line, sizeof(line), file)) {
+        const char *rest = strrchr(line, ')');
+        if (rest) sscanf(rest + 2, "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu", &utime, &stime);
+    }
+    fclose(file);
+    return utime + stime;
+}
+
+static int client_alive(void) {
+    char path[32];
+    snprintf(path, sizeof(path), "/proc/%u/stat", hdr->client_pid);
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
+
+    char line[512];
+    const int ok = fgets(line, sizeof(line), file) != NULL;
+    fclose(file);
+    if (!ok) return 0;
+
+    const char *state = strrchr(line, ')');
+    return state && state[1] == ' ' && state[2] != 'Z' && state[2] != 'X';
+}
+
+static void abandon(void) {
+    server_frame_forget();
+    __atomic_store_n(&hdr->server_exited, 1, __ATOMIC_RELEASE);
+    _exit(0);
+}
+
 static void check_client(void) {
-    if (kill((pid_t) hdr->client_pid, 0) != 0 && errno == ESRCH) finish(0);
-    if (getppid() == 1) finish(0);
+    if (!client_alive()) finish(0);
+}
+
+static void *watch_client(void *unused) {
+    (void) unused;
+    for (;;) {
+        usleep(250000);
+        if (!client_alive()) {
+            usleep(500000);
+            abandon();
+        }
+    }
+    return NULL;
 }
 
 float server_f(uint32_t value) {
@@ -158,10 +167,20 @@ int server_missing(const char *name) {
 
 static uint32_t wait_data(void) {
     int spins = 0;
+    uint64_t spin_start = 0;
     for (;;) {
         const uint32_t avail = __atomic_load_n(&hdr->wpos, __ATOMIC_ACQUIRE) - hdr->rpos;
-        if (avail) return avail;
+        if (avail) {
+            if (spin_start) stat_spin_ns += now_ns() - spin_start;
+            return avail;
+        }
+        if (stats_on && !spin_start) spin_start = now_ns();
         if (++spins < SPIN_LIMIT) continue;
+        if (spin_start) {
+            const uint64_t now = now_ns();
+            stat_spin_ns += now - spin_start;
+            spin_start = now;
+        }
 
         const uint32_t seen = __atomic_load_n(&hdr->wpos, __ATOMIC_ACQUIRE);
         __atomic_store_n(&hdr->reader_sleeping, 1, __ATOMIC_SEQ_CST);
@@ -170,6 +189,11 @@ static uint32_t wait_data(void) {
             if (futex(&hdr->wpos, FUTEX_WAIT, seen, &ts) != 0 && errno == ETIMEDOUT) check_client();
         }
         __atomic_store_n(&hdr->reader_sleeping, 0, __ATOMIC_RELAXED);
+        if (spin_start) {
+            const uint64_t now = now_ns();
+            stat_sleep_ns += now - spin_start;
+            spin_start = now;
+        }
         spins = 0;
     }
 }
@@ -198,12 +222,20 @@ static void ring_read(void *dst, uint32_t len) {
 static int payload_reserve(uint32_t len) {
     if (len + 1U <= payload_capacity) return 1;
     uint32_t capacity = payload_capacity ? payload_capacity : 65536U;
-    while (capacity < len + 1U) capacity *= 2U;
+    while (capacity < len + 1U)
+        capacity *= 2U;
     uint8_t *grown = realloc(payload, capacity);
     if (!grown) return 0;
     payload = grown;
     payload_capacity = capacity;
     return 1;
+}
+
+static void payload_trim(void) {
+    if (payload_capacity <= PAYLOAD_KEEP) return;
+    free(payload);
+    payload = NULL;
+    payload_capacity = 0;
 }
 
 static uint32_t get_count(GLenum pname) {
@@ -238,9 +270,12 @@ static void handle_get_v(const uint32_t *a) {
     memset(out, 0, sizeof(out));
     const uint32_t count = get_count(pname);
     out[0] = count;
-    if (kind == MUGL_GET_BOOLEAN) p_glGetBooleanv(pname, (GLboolean *) &out[1]);
-    else if (kind == MUGL_GET_FLOAT) p_glGetFloatv(pname, (GLfloat *) &out[1]);
-    else p_glGetIntegerv(pname, (GLint *) &out[1]);
+    if (kind == MUGL_GET_BOOLEAN)
+        p_glGetBooleanv(pname, (GLboolean *) &out[1]);
+    else if (kind == MUGL_GET_FLOAT)
+        p_glGetFloatv(pname, (GLfloat *) &out[1]);
+    else
+        p_glGetIntegerv(pname, (GLint *) &out[1]);
     server_reply(out, 4U + count * (kind == MUGL_GET_BOOLEAN ? 1U : 4U));
 }
 
@@ -354,6 +389,9 @@ static void handle_delete(const uint32_t *a, uint32_t len) {
     const GLuint *ids = a + 2;
     switch (kind) {
         case MUGL_GEN_BUFFERS:
+            for (GLsizei i = 0; i < n; i++) {
+                if (ids[i] && ids[i] == array_buffer_bound) array_buffer_bound = 0;
+            }
             p_glDeleteBuffers(n, ids);
             break;
         case MUGL_GEN_TEXTURES:
@@ -370,36 +408,98 @@ static void handle_delete(const uint32_t *a, uint32_t len) {
     }
 }
 
-static void handle_client_array(const uint32_t *a, uint32_t len) {
-    const uint32_t index = a[0];
-    if (index >= MAX_ATTRIBS || len < 20U) return;
-    const uint32_t bytes = len - 20U;
-
-    if (bytes > client_array_size[index]) {
-        void *grown = realloc(client_arrays[index], bytes);
-        if (!grown) return;
-        client_arrays[index] = grown;
-        client_array_size[index] = bytes;
-    }
-    memcpy(client_arrays[index], a + 5, bytes);
-
-    GLint previous = 0;
-    p_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &previous);
-    if (previous) p_glBindBuffer(GL_ARRAY_BUFFER, 0);
-    p_glVertexAttribPointer(index, (GLint) a[1], a[2], (GLboolean) a[3], (GLsizei) a[4], client_arrays[index]);
-    if (previous) p_glBindBuffer(GL_ARRAY_BUFFER, (GLuint) previous);
+static int stream_reserve(uint32_t index, uint32_t bytes) {
+    if (bytes <= client_array_size[index]) return 1;
+    void *grown = realloc(client_arrays[index], bytes);
+    if (!grown) return 0;
+    client_arrays[index] = grown;
+    client_array_size[index] = bytes;
+    return 1;
 }
 
-static void handle_draw_elements(const uint32_t *a, uint32_t len) {
-    const GLenum mode = a[0];
-    const GLsizei count = (GLsizei) a[1];
-    const GLenum type = a[2];
-    if (a[3]) {
-        p_glDrawElements(mode, count, type, (const void *) (uintptr_t) a[4]);
+static void skip_bytes(uint32_t bytes) {
+    if (bytes) ring_read(NULL, bytes);
+}
+
+static void read_draw(uint32_t len) {
+    uint32_t w[MUGL_DRAW_WORDS];
+    uint32_t used = MUGL_DRAW_WORDS * 4U;
+    if (len < used) {
+        skip_bytes(len);
         return;
     }
-    if (len <= 20U) return;
-    p_glDrawElements(mode, count, type, a + 5);
+    ring_read(w, used);
+
+    const uint32_t stream_count = w[8];
+    const uint32_t attrib_count = w[9];
+    const uint32_t table = (stream_count + attrib_count * MUGL_ATTRIB_WORDS) * 4U;
+    if (stream_count > MAX_ATTRIBS || attrib_count > MAX_ATTRIBS || len - used < table) {
+        skip_bytes(len - used);
+        return;
+    }
+
+    uint32_t streams[MAX_ATTRIBS];
+    uint32_t attribs[MAX_ATTRIBS * MUGL_ATTRIB_WORDS];
+    ring_read(streams, stream_count * 4U);
+    ring_read(attribs, attrib_count * MUGL_ATTRIB_WORDS * 4U);
+    used += table;
+
+    int ok = 1;
+    for (uint32_t s = 0; s < stream_count; s++) {
+        const uint32_t padded = (streams[s] + 3U) & ~3U;
+        if (len - used < padded) {
+            skip_bytes(len - used);
+            return;
+        }
+        if (ok && stream_reserve(s, streams[s])) {
+            ring_read(client_arrays[s], streams[s]);
+            skip_bytes(padded - streams[s]);
+        } else {
+            ok = 0;
+            skip_bytes(padded);
+        }
+        used += padded;
+    }
+
+    const uint32_t index_bytes = len - used;
+    if (index_bytes) {
+        if (!payload_reserve(index_bytes)) {
+            skip_bytes(index_bytes);
+            return;
+        }
+        ring_read(payload, index_bytes);
+    }
+    if (!ok) return;
+
+    const uint32_t mask = w[6];
+    const uint32_t changed = w[7];
+    for (uint32_t i = 0; i < MAX_ATTRIBS; i++) {
+        if (!(changed & (1U << i))) continue;
+        if (mask & (1U << i))
+            p_glEnableVertexAttribArray(i);
+        else
+            p_glDisableVertexAttribArray(i);
+    }
+
+    if (attrib_count) {
+        if (array_buffer_bound) p_glBindBuffer(GL_ARRAY_BUFFER, 0);
+        for (uint32_t a = 0; a < attrib_count; a++) {
+            const uint32_t *v = attribs + a * MUGL_ATTRIB_WORDS;
+            if (v[0] >= MAX_ATTRIBS || v[5] >= stream_count) continue;
+            const uint8_t *data = (const uint8_t *) client_arrays[v[5]] + v[6];
+            p_glVertexAttribPointer(v[0], (GLint) v[1], v[2], (GLboolean) v[3], (GLsizei) v[4], data);
+        }
+        if (array_buffer_bound) p_glBindBuffer(GL_ARRAY_BUFFER, array_buffer_bound);
+    }
+
+    const GLenum mode = w[0];
+    if (!(w[1] & MUGL_DRAW_ELEMENTS)) {
+        p_glDrawArrays(mode, (GLint) w[2], (GLsizei) w[3]);
+    } else if (w[1] & MUGL_DRAW_INDEX_BUFFER) {
+        p_glDrawElements(mode, (GLsizei) w[3], w[4], (const void *) (uintptr_t) w[5]);
+    } else if (index_bytes) {
+        p_glDrawElements(mode, (GLsizei) w[3], w[4], payload);
+    }
 }
 
 static void handle_uniform_v(const uint32_t *a) {
@@ -410,20 +510,28 @@ static void handle_uniform_v(const uint32_t *a) {
     const int is_int = (shape & 0x100U) != 0;
     switch (shape & 0xFFU) {
         case 1:
-            if (is_int) p_glUniform1iv(location, count, v);
-            else p_glUniform1fv(location, count, v);
+            if (is_int)
+                p_glUniform1iv(location, count, v);
+            else
+                p_glUniform1fv(location, count, v);
             break;
         case 2:
-            if (is_int) p_glUniform2iv(location, count, v);
-            else p_glUniform2fv(location, count, v);
+            if (is_int)
+                p_glUniform2iv(location, count, v);
+            else
+                p_glUniform2fv(location, count, v);
             break;
         case 3:
-            if (is_int) p_glUniform3iv(location, count, v);
-            else p_glUniform3fv(location, count, v);
+            if (is_int)
+                p_glUniform3iv(location, count, v);
+            else
+                p_glUniform3fv(location, count, v);
             break;
         case 4:
-            if (is_int) p_glUniform4iv(location, count, v);
-            else p_glUniform4fv(location, count, v);
+            if (is_int)
+                p_glUniform4iv(location, count, v);
+            else
+                p_glUniform4fv(location, count, v);
             break;
         default:
             break;
@@ -491,12 +599,116 @@ static void handle_get_active(const uint32_t *a) {
     char *name = (char *) resp + 8;
     const GLsizei room = (GLsizei) (MUGL_STR_SIZE - 9U);
 
-    if (kind == MUGL_ACTIVE_ATTRIB) p_glGetActiveAttrib(program, index, room, &written, &size, &type, name);
-    else p_glGetActiveUniform(program, index, room, &written, &size, &type, name);
+    if (kind == MUGL_ACTIVE_ATTRIB)
+        p_glGetActiveAttrib(program, index, room, &written, &size, &type, name);
+    else
+        p_glGetActiveUniform(program, index, room, &written, &size, &type, name);
 
     memcpy(resp, &size, 4);
     memcpy(resp + 4, &type, 4);
     server_reply(resp, 8U + (written > 0 ? (uint32_t) written : 0U));
+}
+
+typedef struct {
+    uint8_t *out;
+    uint32_t len;
+    int full;
+} blob;
+
+static void blob_word(blob *b, uint32_t value) {
+    if (b->full || b->len + 4U > MUGL_RESP_SIZE) {
+        b->full = 1;
+        return;
+    }
+    memcpy(b->out + b->len, &value, 4);
+    b->len += 4U;
+}
+
+static void blob_name(blob *b, const char *name, uint32_t len) {
+    blob_word(b, len);
+    const uint32_t padded = (len + 3U) & ~3U;
+    if (b->full || b->len + padded > MUGL_RESP_SIZE) {
+        b->full = 1;
+        return;
+    }
+    memset(b->out + b->len, 0, padded);
+    memcpy(b->out + b->len, name, len);
+    b->len += padded;
+}
+
+static void handle_program_info(GLuint program) {
+    static char name[MUGL_STR_SIZE];
+    blob b = {resp, 0, 0};
+
+    GLint linked = 0;
+    GLint uniforms = 0;
+    GLint attribs = 0;
+    GLint uniform_max = 0;
+    GLint attrib_max = 0;
+    p_glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (linked) {
+        p_glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniforms);
+        p_glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &attribs);
+        p_glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max);
+        p_glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &attrib_max);
+    }
+    if (uniforms < 0) uniforms = 0;
+    if (attribs < 0) attribs = 0;
+
+    blob_word(&b, (uint32_t) linked);
+    blob_word(&b, (uint32_t) uniforms);
+    blob_word(&b, (uint32_t) attribs);
+    blob_word(&b, (uint32_t) uniform_max);
+    blob_word(&b, (uint32_t) attrib_max);
+
+    for (GLint i = 0; i < uniforms; i++) {
+        GLsizei written = 0;
+        GLint size = 0;
+        GLenum type = 0;
+        p_glGetActiveUniform(program, (GLuint) i, (GLsizei) sizeof(name) - 8, &written, &size, &type, name);
+        if (written < 0) written = 0;
+        name[written] = '\0';
+
+        size_t base = (size_t) written;
+        if (base > 3 && strcmp(name + base - 3, "[0]") == 0) base -= 3;
+        const uint32_t locs = size > 1 ? (uint32_t) (size < MAX_UNIFORM_LOCS ? size : MAX_UNIFORM_LOCS) : 1U;
+
+        blob_word(&b, (uint32_t) size);
+        blob_word(&b, type);
+        blob_word(&b, locs);
+        blob_name(&b, name, (uint32_t) written);
+
+        if (locs == 1) {
+            blob_word(&b, (uint32_t) p_glGetUniformLocation(program, name));
+            continue;
+        }
+        for (uint32_t l = 0; l < locs; l++) {
+            char element[MUGL_STR_SIZE + 16];
+            snprintf(element, sizeof(element), "%.*s[%u]", (int) base, name, l);
+            blob_word(&b, (uint32_t) p_glGetUniformLocation(program, element));
+        }
+    }
+
+    for (GLint i = 0; i < attribs; i++) {
+        GLsizei written = 0;
+        GLint size = 0;
+        GLenum type = 0;
+        p_glGetActiveAttrib(program, (GLuint) i, (GLsizei) sizeof(name) - 8, &written, &size, &type, name);
+        if (written < 0) written = 0;
+        name[written] = '\0';
+
+        blob_word(&b, (uint32_t) size);
+        blob_word(&b, type);
+        blob_word(&b, 1);
+        blob_name(&b, name, (uint32_t) written);
+        blob_word(&b, (uint32_t) p_glGetAttribLocation(program, name));
+    }
+
+    if (b.full) {
+        b.len = 0;
+        blob_word(&b, 0);
+    }
+    server_reply(resp, b.len);
 }
 
 static char *payload_string(uint32_t offset, uint32_t len) {
@@ -508,6 +720,8 @@ static char *payload_string(uint32_t offset, uint32_t len) {
 static void capture_frame(void) {
     static long target = -1;
     static long frame;
+    static int seconds;
+    static uint64_t started;
     static char path[256];
     if (target == -1) {
         const char *spec = getenv("MUGL_CAPTURE");
@@ -516,31 +730,34 @@ static void capture_frame(void) {
         if (colon && (size_t) (colon - spec) < sizeof(path)) {
             memcpy(path, spec, (size_t) (colon - spec));
             path[colon - spec] = '\0';
-            target = atol(colon + 1);
+            char *end = NULL;
+            target = strtol(colon + 1, &end, 10);
+            seconds = end && *end == 's';
+            started = now_ns();
         }
     }
-    if (++frame != target) return;
+    if (target < 0) return;
+    ++frame;
+    if (seconds) {
+        if (now_ns() - started < (uint64_t) target * 1000000000ULL) return;
+        target = -2;
+    } else if (frame != target) {
+        return;
+    }
 
     const int w = (int) hdr->width;
     const int h = (int) hdr->height;
     uint8_t *pixels = malloc((size_t) w * (size_t) h * 4U);
     if (!pixels) return;
 
-    GLint previous = 0;
-    p_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous);
-    if (previous) p_glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    GLint alignment = 4;
-    p_glGetIntegerv(GL_PACK_ALIGNMENT, &alignment);
-    p_glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    p_glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    p_glPixelStorei(GL_PACK_ALIGNMENT, alignment);
-    if (previous) p_glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) previous);
+    server_read_frame(pixels, w, h);
 
     FILE *file = fopen(path, "wb");
     if (file) {
         fprintf(file, "P6\n%d %d\n255\n", w, h);
         for (int y = h - 1; y >= 0; y--) {
-            for (int x = 0; x < w; x++) fwrite(pixels + ((size_t) y * (size_t) w + (size_t) x) * 4U, 1, 3, file);
+            for (int x = 0; x < w; x++)
+                fwrite(pixels + ((size_t) y * (size_t) w + (size_t) x) * 4U, 1, 3, file);
         }
         fclose(file);
         fprintf(stderr, "mugl-server: captured frame %ld to %s\n", frame, path);
@@ -552,7 +769,7 @@ static void report_rate(void) {
     static int enabled = -1;
     static Uint64 since;
     static unsigned frames;
-    if (enabled == -1) enabled = getenv("MUGL_DEBUG") != NULL;
+    if (enabled == -1) enabled = getenv("MUGL_DEBUG") != NULL || stats_on;
     if (!enabled) return;
 
     const Uint64 now = SDL_GetPerformanceCounter();
@@ -560,7 +777,21 @@ static void report_rate(void) {
     frames++;
     const double elapsed = (double) (now - since) / (double) SDL_GetPerformanceFrequency();
     if (elapsed >= 5.0) {
-        fprintf(stderr, "mugl-server: %.1f fps\n", (double) frames / elapsed);
+        if (stats_on) {
+            fprintf(
+                stderr,
+                "mugl-server: %.1f fps | per second: work %.0f ms, swap %.0f ms, spin %.0f ms, sleep %.0f ms, %.0f "
+                "msgs, "
+                "%.0f KB\n",
+                (double) frames / elapsed, (double) (stat_work_ns - stat_swap_ns) / elapsed / 1e6,
+                (double) stat_swap_ns / elapsed / 1e6, (double) stat_spin_ns / elapsed / 1e6,
+                (double) stat_sleep_ns / elapsed / 1e6, (double) stat_msgs / elapsed,
+                (double) stat_bytes / elapsed / 1024.0
+            );
+            stat_work_ns = stat_swap_ns = stat_spin_ns = stat_sleep_ns = stat_msgs = stat_bytes = 0;
+        } else {
+            fprintf(stderr, "mugl-server: %.1f fps\n", (double) frames / elapsed);
+        }
         since = now;
         frames = 0;
     }
@@ -568,17 +799,70 @@ static void report_rate(void) {
 
 static void handle_swap(void) {
     capture_frame();
+    server_frame_publish();
+    const int overlay = server_overlay_active();
+    if (overlay) server_overlay_draw(hdr->width, hdr->height, frame_work_ns);
+    frame_work_ns = 0;
+    timing_on = overlay || stats_on;
     report_rate();
+    const uint64_t swap_start = stats_on ? now_ns() : 0;
     SDL_GL_SwapWindow(window);
+    if (swap_start) stat_swap_ns += now_ns() - swap_start;
     SDL_PumpEvents();
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
     __atomic_add_fetch(&hdr->swap_seq, 1, __ATOMIC_RELEASE);
     futex(&hdr->swap_seq, FUTEX_WAKE, 1, NULL);
 }
 
+static GLint attached_renderbuffer(GLenum target, GLenum attachment) {
+    GLint type = GL_NONE;
+    p_glGetFramebufferAttachmentParameteriv(target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &type);
+    if (type != GL_RENDERBUFFER) return 0;
+    GLint name = 0;
+    p_glGetFramebufferAttachmentParameteriv(target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &name);
+    return name;
+}
+
+static void track_bindings(uint32_t op, const uint32_t *a, uint32_t words) {
+    if (op == MUGL_OP_glBindBuffer && words >= 2 && a[0] == GL_ARRAY_BUFFER) array_buffer_bound = a[1];
+}
+
+static int handle_depth_stencil(uint32_t op, const uint32_t *a, uint32_t words) {
+    if (op == MUGL_OP_glRenderbufferStorage && words >= 4) {
+        GLenum format = a[1];
+        if (format == GL_DEPTH_COMPONENT16 || format == GL_DEPTH_COMPONENT24_OES || format == GL_STENCIL_INDEX8)
+            format = GL_DEPTH24_STENCIL8_OES;
+        p_glRenderbufferStorage(a[0], format, (GLsizei) a[2], (GLsizei) a[3]);
+        return 1;
+    }
+
+    if (op == MUGL_OP_glFramebufferRenderbuffer && words >= 4) {
+        const GLenum target = a[0];
+        const GLenum attachment = a[1];
+        p_glFramebufferRenderbuffer(target, attachment, a[2], a[3]);
+        if (!a[3]) return 1;
+
+        if (attachment == GL_STENCIL_ATTACHMENT) {
+            const GLint depth = attached_renderbuffer(target, GL_DEPTH_ATTACHMENT);
+            if (depth && (GLuint) depth != a[3])
+                p_glFramebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT, a[2], (GLuint) depth);
+        } else if (attachment == GL_DEPTH_ATTACHMENT) {
+            const GLint stencil = attached_renderbuffer(target, GL_STENCIL_ATTACHMENT);
+            if (stencil && (GLuint) stencil != a[3])
+                p_glFramebufferRenderbuffer(target, GL_STENCIL_ATTACHMENT, a[2], a[3]);
+        }
+        return 1;
+    }
+
+    return 0;
+}
+
 static void dispatch(uint32_t op, uint32_t len) {
     const uint32_t *a = (const uint32_t *) payload;
     const uint32_t words = len / 4U;
+
+    track_bindings(op, a, words);
+    if (handle_depth_stencil(op, a, words)) return;
 
     if (op >= MUGL_OP_GENERATED_BASE) {
         if (server_dispatch_generated(op, a, words) != 1) {
@@ -624,26 +908,33 @@ static void dispatch(uint32_t op, uint32_t len) {
             break;
         case MUGL_OP_TEX_IMAGE_2D:
             if (words >= 9) {
-                p_glTexImage2D(a[0], (GLint) a[1], (GLint) a[2], (GLsizei) a[3], (GLsizei) a[4], (GLint) a[5], a[6],
-                               a[7], a[8] ? (const void *) (a + 9) : NULL);
+                p_glTexImage2D(
+                    a[0], (GLint) a[1], (GLint) a[2], (GLsizei) a[3], (GLsizei) a[4], (GLint) a[5], a[6], a[7],
+                    a[8] ? (const void *) (a + 9) : NULL
+                );
             }
             break;
         case MUGL_OP_TEX_SUB_IMAGE_2D:
             if (words >= 8) {
-                p_glTexSubImage2D(a[0], (GLint) a[1], (GLint) a[2], (GLint) a[3], (GLsizei) a[4], (GLsizei) a[5], a[6],
-                                  a[7], a + 8);
+                p_glTexSubImage2D(
+                    a[0], (GLint) a[1], (GLint) a[2], (GLint) a[3], (GLsizei) a[4], (GLsizei) a[5], a[6], a[7], a + 8
+                );
             }
             break;
         case MUGL_OP_COMPRESSED_TEX_IMAGE_2D:
             if (words >= 8) {
-                p_glCompressedTexImage2D(a[0], (GLint) a[1], a[2], (GLsizei) a[3], (GLsizei) a[4], (GLint) a[5],
-                                         (GLsizei) a[6], a[7] ? (const void *) (a + 8) : NULL);
+                p_glCompressedTexImage2D(
+                    a[0], (GLint) a[1], a[2], (GLsizei) a[3], (GLsizei) a[4], (GLint) a[5], (GLsizei) a[6],
+                    a[7] ? (const void *) (a + 8) : NULL
+                );
             }
             break;
         case MUGL_OP_COMPRESSED_TEX_SUB_IMAGE_2D:
             if (words >= 8) {
-                p_glCompressedTexSubImage2D(a[0], (GLint) a[1], (GLint) a[2], (GLint) a[3], (GLsizei) a[4],
-                                            (GLsizei) a[5], a[6], (GLsizei) a[7], a + 8);
+                p_glCompressedTexSubImage2D(
+                    a[0], (GLint) a[1], (GLint) a[2], (GLint) a[3], (GLsizei) a[4], (GLsizei) a[5], a[6],
+                    (GLsizei) a[7], a + 8
+                );
             }
             break;
         case MUGL_OP_READ_PIXELS:
@@ -686,8 +977,10 @@ static void dispatch(uint32_t op, uint32_t len) {
             if (words >= 2) {
                 const char *name = payload_string(8, len);
                 GLint location = -1;
-                if (name && a[0] == MUGL_LOC_ATTRIB) location = p_glGetAttribLocation(a[1], name);
-                else if (name) location = p_glGetUniformLocation(a[1], name);
+                if (name && a[0] == MUGL_LOC_ATTRIB)
+                    location = p_glGetAttribLocation(a[1], name);
+                else if (name)
+                    location = p_glGetUniformLocation(a[1], name);
                 server_reply_u32((uint32_t) location);
             }
             break;
@@ -702,18 +995,13 @@ static void dispatch(uint32_t op, uint32_t len) {
             break;
         case MUGL_OP_VERTEX_ATTRIB_POINTER:
             if (words >= 6) {
-                p_glVertexAttribPointer(a[0], (GLint) a[1], a[2], (GLboolean) a[3], (GLsizei) a[4],
-                                        (const void *) (uintptr_t) a[5]);
+                p_glVertexAttribPointer(
+                    a[0], (GLint) a[1], a[2], (GLboolean) a[3], (GLsizei) a[4], (const void *) (uintptr_t) a[5]
+                );
             }
             break;
-        case MUGL_OP_CLIENT_ARRAY:
-            if (words >= 5) handle_client_array(a, len);
-            break;
-        case MUGL_OP_DRAW_ARRAYS:
-            if (words >= 3) p_glDrawArrays(a[0], (GLint) a[1], (GLsizei) a[2]);
-            break;
-        case MUGL_OP_DRAW_ELEMENTS:
-            if (words >= 5) handle_draw_elements(a, len);
+        case MUGL_OP_PROGRAM_INFO:
+            if (words >= 1) handle_program_info(a[0]);
             break;
         case MUGL_OP_SHADER_PRECISION:
             if (words >= 2) {
@@ -775,8 +1063,10 @@ static void start_display(void) {
     SDL_DisplayMode mode;
     if (SDL_GetDesktopDisplayMode(0, &mode) != 0) fail_start(SDL_GetError());
 
-    window = SDL_CreateWindow("mugl", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, mode.w, mode.h,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
+    window = SDL_CreateWindow(
+        "mugl", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, mode.w, mode.h,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
+    );
     if (!window) fail_start(SDL_GetError());
 
     context = SDL_GL_CreateContext(window);
@@ -796,6 +1086,7 @@ static void start_display(void) {
     SDL_GL_GetDrawableSize(window, &width, &height);
     hdr->width = (uint32_t) width;
     hdr->height = (uint32_t) height;
+    server_frame_open(hdr->width, hdr->height);
 }
 
 int main(int argc, char **argv) {
@@ -816,7 +1107,22 @@ int main(int argc, char **argv) {
     resp = MUGL_RESP(base);
     hdr->server_pid = (uint32_t) getpid();
 
+    stats_on = getenv("MUGL_STATS") != NULL;
+    timing_on = stats_on;
+
+    const char *cpu = getenv("MUGL_SERVER_CPU");
+    if (cpu && *cpu) {
+        cpu_set_t set;
+        CPU_ZERO(&set);
+        CPU_SET(atoi(cpu), &set);
+        if (sched_setaffinity(0, sizeof(set), &set) != 0)
+            fprintf(stderr, "mugl-server: could not pin to CPU %s\n", cpu);
+    }
+
     start_display();
+
+    pthread_t watcher;
+    if (pthread_create(&watcher, NULL, watch_client, NULL) == 0) pthread_detach(watcher);
 
     __atomic_store_n(&hdr->ready, 1, __ATOMIC_RELEASE);
     futex(&hdr->ready, FUTEX_WAKE, 1, NULL);
@@ -824,10 +1130,35 @@ int main(int argc, char **argv) {
     for (;;) {
         mugl_msg msg;
         ring_read(&msg, sizeof(msg));
+        const uint32_t pad = (4U - (msg.len & 3U)) & 3U;
+
+        if (msg.op == MUGL_OP_DRAW) {
+            const uint64_t start = timing_on ? now_ns() : 0;
+            read_draw(msg.len);
+            if (pad) ring_read(NULL, pad);
+            if (start) frame_work_ns += now_ns() - start;
+            if (stats_on) {
+                stat_work_ns += now_ns() - start;
+                stat_msgs++;
+                stat_bytes += sizeof(msg) + msg.len;
+            }
+            continue;
+        }
+
         if (!payload_reserve(msg.len)) fail_start("out of memory");
         ring_read(payload, msg.len);
-        const uint32_t pad = (4U - (msg.len & 3U)) & 3U;
         if (pad) ring_read(NULL, pad);
-        dispatch(msg.op, msg.len);
+        if (timing_on) {
+            const uint64_t start = now_ns();
+            dispatch(msg.op, msg.len);
+            const uint64_t spent = now_ns() - start;
+            if (msg.op != MUGL_OP_SWAP) frame_work_ns += spent;
+            stat_work_ns += spent;
+            stat_msgs++;
+            stat_bytes += sizeof(msg) + msg.len;
+        } else {
+            dispatch(msg.op, msg.len);
+        }
+        if (msg.len > PAYLOAD_KEEP) payload_trim();
     }
 }
