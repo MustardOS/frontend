@@ -125,6 +125,9 @@ HELP_KEYS = {
     "web/landing_auth": "muxwebserv.help.authentication",
     "web/remote_view": "muxwebserv.help.remote_view",
     "web/remote_privacy": "muxwebserv.help.remote_privacy",
+    "web/remote_control": "muxwebserv.help.remote_control",
+    "web/live_fps": "muxwebserv.help.live_fps",
+    "web/live_quality": "muxwebserv.help.live_quality",
     "web/sshd": "muxwebserv.help.sshd",
     "web/sshd_port": "muxwebserv.help.port",
     "web/sftpgo": "muxwebserv.help.sftp_go",
@@ -211,7 +214,10 @@ for _part in ("gen", "bat", "vol", "bri"):
 FIXED_OPTIONS["settings/font/scale"] = [(str(v), f"{v}%") for v in (75, 85, 100, 115, 130, 145, 160, 175, 200)]
 
 FIXED_OPTIONS["web/remote_view"] = [("0", "lang.generic.disabled"), ("1", "30s"), ("2", "1m"), ("3", "3m"),
-                                    ("4", "5m"), ("5", "10m"), ("6", "lang.muxwebserv.remote_live")]
+                                    ("4", "5m"), ("5", "10m"), ("6", "lang.muxwebserv.remote_live"),
+                                    ("7", "lang.muxwebserv.remote_manual")]
+FIXED_OPTIONS["web/live_fps"] = [(str(v), str(v)) for v in range(5, 61, 5)]
+FIXED_OPTIONS["web/live_quality"] = [(str(v), f"{v}%") for v in range(20, 101, 5)]
 
 OPEN_OPTIONS = {"settings/general/soundfont", "visual/overlaytransparency"}
 OPEN_OPTIONS.update(f"settings/overlay/{part}_alpha" for part in ("gen", "bat", "vol", "bri"))
@@ -234,6 +240,9 @@ LABEL_KEYS = {
     "web/landing_auth": "{lang.muxwebserv.landing} {lang.muxwebserv.authentication}",
     "web/remote_view": "lang.muxwebserv.remote_view",
     "web/remote_privacy": "lang.muxwebserv.remote_privacy",
+    "web/remote_control": "lang.muxwebserv.remote_control",
+    "web/live_fps": "lang.muxwebserv.live_fps",
+    "web/live_quality": "lang.muxwebserv.live_quality",
     "web/sshd": "lang.muxwebserv.sshd",
     "web/sshd_port": "{lang.muxwebserv.sshd} {lang.muxwebserv.port}",
     "web/sftpgo": "lang.muxwebserv.sftpgo",

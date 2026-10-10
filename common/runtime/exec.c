@@ -169,7 +169,7 @@ void run_exec(
         // Foreground process, block until child finishes execution
         // Parent process does not wait for background process
         // Destroy the intermediate child immediately to avoid zombies... oh no
-        if (!background) {
+        if (!background || cb == NULL) {
             waitpid(pid, NULL, 0);
         } else {
             pending_exec_pid = pid;

@@ -16,7 +16,9 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/prctl.h>
 #include <sys/statvfs.h>
+#include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -67,10 +69,17 @@ static char screen_script[PATH_MAX];
 static char screen_image[PATH_MAX];
 static long screen_interval = 0;
 static char screen_live[PATH_MAX];
+static int screen_live_fps = 0;
+static int screen_live_quality = 0;
 static pid_t screen_live_pids[MUWEB_LIVE_MAX];
 static int screen_public = 0;
 static struct timespec screen_requested;
 static int screen_wanted;
+static int remote_input = 0;
+static int remote_input_public = 0;
+static int screen_manual = 0;
+static int remote_socket = -1;
+static struct timespec remote_level_at[2];
 static char collection_root[PATH_MAX];
 static char content_roots[MUWEB_CONTENT_ROOTS][PATH_MAX];
 static size_t content_root_count = 0;
@@ -2541,11 +2550,22 @@ static int session_open(char *out, const size_t out_size) {
     return (size_t) snprintf(out, out_size, "%s", token) < out_size;
 }
 
+static char screen_live_tokens[MUWEB_LIVE_MAX][MUWEB_TOKEN_TEXT];
+
 static void session_close(const char *token) {
+    if (!token || !*token) return;
+
     for (size_t i = 0; i < MUWEB_SESSION_SLOTS; ++i) {
-        if (token && *token && strcmp(sessions[i].token, token) != 0) continue;
+        if (strcmp(sessions[i].token, token) != 0) continue;
         sessions[i].token[0] = '\0';
         sessions[i].expires = 0;
+    }
+
+    for (size_t i = 0; i < MUWEB_LIVE_MAX; ++i) {
+        if (screen_live_pids[i] <= 0 || strcmp(screen_live_tokens[i], token) != 0) continue;
+        kill(screen_live_pids[i], SIGTERM);
+        screen_live_pids[i] = 0;
+        screen_live_tokens[i][0] = '\0';
     }
 }
 
@@ -3734,7 +3754,7 @@ static int screen_live_slot(void) {
 
 static void connection_close(struct connection *connection);
 
-static void screen_live_stream(struct connection *connection) {
+static void screen_live_stream(struct connection *connection, const int raw) {
     if (!screen_live[0] || access(screen_live, X_OK) != 0) {
         send_error(connection, 404, "Live Remote View is not available");
         return;
@@ -3746,15 +3766,24 @@ static void screen_live_stream(struct connection *connection) {
         return;
     }
 
-    static const char headers[] = "HTTP/1.1 200 OK\r\n"
-                                  "Server: muweb\r\n"
-                                  "Connection: close\r\n"
-                                  "Cache-Control: no-store\r\n"
-                                  "X-Content-Type-Options: nosniff\r\n"
-                                  "Referrer-Policy: no-referrer\r\n"
-                                  "Content-Type: multipart/x-mixed-replace; boundary=muframe\r\n"
-                                  "\r\n";
-    const size_t length = sizeof(headers) - 1;
+    char headers[320];
+    const int written = snprintf(
+        headers, sizeof(headers),
+        "HTTP/1.1 200 OK\r\n"
+        "Server: muweb\r\n"
+        "Connection: close\r\n"
+        "Cache-Control: no-store\r\n"
+        "X-Content-Type-Options: nosniff\r\n"
+        "Referrer-Policy: no-referrer\r\n"
+        "Content-Type: %s\r\n"
+        "\r\n",
+        raw ? "application/octet-stream" : "multipart/x-mixed-replace; boundary=muframe"
+    );
+    if (written < 0 || (size_t) written >= sizeof(headers)) {
+        send_error(connection, 500, "Could not start Live Remote View");
+        return;
+    }
+    const size_t length = (size_t) written;
 
     const pid_t pid = fork();
     if (pid < 0) {
@@ -3763,6 +3792,8 @@ static void screen_live_stream(struct connection *connection) {
     }
 
     if (pid == 0) {
+        prctl(PR_SET_PDEATHSIG, SIGTERM);
+        if (getppid() == 1) _exit(0);
         const int socket_fd = connection->socket;
         fcntl(socket_fd, F_SETFL, fcntl(socket_fd, F_GETFL, 0) & ~O_NONBLOCK);
         if (dup2(socket_fd, STDOUT_FILENO) < 0) _exit(1);
@@ -3778,19 +3809,39 @@ static void screen_live_stream(struct connection *connection) {
         }
 
         signal(SIGPIPE, SIG_DFL);
-        if (screen_public)
-            execl(screen_live, "muscreen", "--all", (char *) NULL);
-        else
-            execl(screen_live, "muscreen", (char *) NULL);
+        char fps[8];
+        char quality[8];
+        snprintf(fps, sizeof(fps), "%d", screen_live_fps);
+        snprintf(quality, sizeof(quality), "%d", screen_live_quality);
+
+        const char *args[8];
+        size_t count = 0;
+        args[count++] = "muscreen";
+        if (screen_live_fps) {
+            args[count++] = "-f";
+            args[count++] = fps;
+        }
+        if (screen_live_quality) {
+            args[count++] = "-q";
+            args[count++] = quality;
+        }
+        if (screen_public) args[count++] = "--all";
+        args[count] = NULL;
+        execv(screen_live, (char *const *) args);
         _exit(127);
     }
 
     screen_live_pids[slot] = pid;
+    snprintf(
+        screen_live_tokens[slot], sizeof(screen_live_tokens[slot]), "%s",
+        session_valid(connection->auth_session) ? connection->auth_session : ""
+    );
     log_verbose("started Live Remote View (pid %d)", (int) pid);
     connection_close(connection);
 }
 
-static void handle_screen_api(struct connection *connection, const char *method, const char *path) {
+static void
+handle_screen_api(struct connection *connection, const char *method, const char *path, const int peek, const int raw) {
     if (!screen_allowed(connection)) return;
 
     if (strcmp(path, "live") == 0) {
@@ -3798,7 +3849,7 @@ static void handle_screen_api(struct connection *connection, const char *method,
             send_error(connection, 405, "Method not allowed");
             return;
         }
-        screen_live_stream(connection);
+        screen_live_stream(connection, raw);
         return;
     }
 
@@ -3831,7 +3882,7 @@ static void handle_screen_api(struct connection *connection, const char *method,
     } else if (strcmp(method, "GET") == 0) {
         if (screen_wanted)
             screen_capture(10.0);
-        else if (!captured || age < 0 || age >= screen_interval)
+        else if (!peek && !screen_manual && (!captured || age < 0 || age >= screen_interval))
             screen_capture(5.0);
     } else {
         send_error(connection, 405, "Method not allowed");
@@ -3853,6 +3904,8 @@ static void handle_screen_api(struct connection *connection, const char *method,
     json_number(&out, "rotate", rotate);
     buffer_puts(&out, ",");
     json_number(&out, "live", screen_live[0] && access(screen_live, X_OK) == 0);
+    buffer_puts(&out, ",");
+    json_number(&out, "manual", screen_manual);
     buffer_puts(&out, ",");
     json_field(&out, "state", state);
     buffer_puts(&out, "}");
@@ -3929,6 +3982,138 @@ static void handle_player_api(
     send_text(connection, 200, "application/json", "{\"ok\":true}");
 }
 
+#define REMOTE_SOCKET    "/run/muinput/remote.sock"
+#define REMOTE_KEYS      "/run/muinput/remote.keys"
+#define AUDIO_SCRIPT     "/opt/muos/script/device/audio.sh"
+#define BRIGHT_SCRIPT    "/opt/muos/script/device/bright.sh"
+#define REMOTE_LEVEL_GAP 0.12
+
+static int remote_button_name(const char *name) {
+    const size_t length = strlen(name);
+    if (!length || length > 8) return 0;
+    for (const char *p = name; *p; ++p) {
+        if (!islower((unsigned char) *p) && !isdigit((unsigned char) *p)) return 0;
+    }
+    return 1;
+}
+
+static int remote_send(const char *message) {
+    if (remote_socket < 0) {
+        remote_socket = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+        if (remote_socket < 0) return 0;
+    }
+
+    struct sockaddr_un address = {.sun_family = AF_UNIX};
+    snprintf(address.sun_path, sizeof(address.sun_path), "%s", REMOTE_SOCKET);
+    const ssize_t sent =
+        sendto(remote_socket, message, strlen(message), 0, (const struct sockaddr *) &address, sizeof(address));
+    return sent == (ssize_t) strlen(message);
+}
+
+static int remote_level(const int kind, const char *direction) {
+    const char *step = strcmp(direction, "up") == 0 ? "U" : strcmp(direction, "down") == 0 ? "D" : NULL;
+    if (!step) return -1;
+    if (seconds_since(&remote_level_at[kind]) < REMOTE_LEVEL_GAP) return 1;
+    clock_gettime(CLOCK_MONOTONIC, &remote_level_at[kind]);
+
+    const pid_t pid = fork();
+    if (pid < 0) return 0;
+    if (pid > 0) return 1;
+
+    setsid();
+    for (int descriptor = 3; descriptor < 1024; ++descriptor)
+        close(descriptor);
+    execl("/bin/sh", "sh", kind ? BRIGHT_SCRIPT : AUDIO_SCRIPT, step, (char *) NULL);
+    _exit(127);
+}
+
+static void handle_input_api(
+    struct connection *connection, const char *method, char *path, const char *body, const size_t body_length
+) {
+    if (!remote_input) {
+        send_error(connection, 404, "Remote controls are not available");
+        return;
+    }
+
+    if (!*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+
+        char keys[256] = "";
+        FILE *file = fopen(REMOTE_KEYS, "r");
+        if (file) {
+            if (!fgets(keys, sizeof(keys), file)) keys[0] = '\0';
+            fclose(file);
+        }
+        keys[strcspn(keys, "\r\n")] = '\0';
+
+        struct buffer out = {0};
+        buffer_puts(&out, "{\"buttons\":[");
+        int first = 1;
+        for (char *word = strtok(keys, " "); word; word = strtok(NULL, " ")) {
+            if (!remote_button_name(word)) continue;
+            if (!first) buffer_puts(&out, ",");
+            buffer_puts(&out, "\"");
+            buffer_puts(&out, word);
+            buffer_puts(&out, "\"");
+            first = 0;
+        }
+        buffer_puts(&out, "],");
+        json_number(&out, "ready", access(REMOTE_SOCKET, F_OK) == 0);
+        buffer_puts(&out, "}");
+        send_json(connection, &out);
+        buffer_free(&out);
+        return;
+    }
+
+    if (strcmp(method, "POST") != 0) {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!remote_input_public && !write_allowed(connection)) return;
+
+    char *slash = strchr(path, '/');
+    if (slash) {
+        *slash = '\0';
+        const int kind = strcmp(path, "volume") == 0 ? 0 : strcmp(path, "brightness") == 0 ? 1 : -1;
+        const int result = kind < 0 ? -1 : remote_level(kind, slash + 1);
+        if (result < 0) {
+            send_error(connection, 404, "Not found");
+            return;
+        }
+        if (!result) {
+            send_error(connection, 503, "The device did not accept that change");
+            return;
+        }
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    char message[32];
+    if (strcmp(path, "clear") == 0) {
+        snprintf(message, sizeof(message), "clear");
+    } else {
+        if (!remote_button_name(path)) {
+            send_error(connection, 404, "Not found");
+            return;
+        }
+        const int pressed = body_length == 1 && body[0] == '1';
+        if (!(body_length == 1 && (body[0] == '0' || body[0] == '1'))) {
+            send_error(connection, 400, "Send 1 to press or 0 to release");
+            return;
+        }
+        snprintf(message, sizeof(message), "%s %d", path, pressed);
+    }
+
+    if (!remote_send(message)) {
+        send_error(connection, 503, "The device input service is not running");
+        return;
+    }
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+}
+
 static void handle_media(struct connection *connection, const char *path, const char *range_header) {
     char *rest = strchr(path, '/');
     if (!rest) {
@@ -3979,7 +4164,8 @@ static void handle_static(struct connection *connection, const char *path, const
     if (!resolve_within(web_root, relative, target, sizeof(target))) {
         char page[PATH_MAX];
         const int written = snprintf(page, sizeof(page), "%s.html", relative);
-        if (written <= 0 || (size_t) written >= sizeof(page) || !resolve_within(web_root, page, target, sizeof(target))) {
+        if (written <= 0 || (size_t) written >= sizeof(page)
+            || !resolve_within(web_root, page, target, sizeof(target))) {
             send_error(connection, 404, "Not found");
             return;
         }
@@ -4680,11 +4866,17 @@ static void handle_request(struct connection *connection) {
         return;
     }
     if (strncmp(target, "/api/screen", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
-        handle_screen_api(connection, method, target + (target[11] == '/' ? 12 : 11));
+        const int peek = query && strstr(query + 1, "peek=1") != NULL;
+        const int raw = query && strstr(query + 1, "raw=1") != NULL;
+        handle_screen_api(connection, method, target + (target[11] == '/' ? 12 : 11), peek, raw);
         return;
     }
     if (strncmp(target, "/api/player", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
         handle_player_api(connection, method, target + (target[11] == '/' ? 12 : 11), body, body_length);
+        return;
+    }
+    if (strncmp(target, "/api/input", 10) == 0 && (target[10] == '\0' || target[10] == '/')) {
+        handle_input_api(connection, method, target + (target[10] == '/' ? 11 : 10), body, body_length);
         return;
     }
     if (strncmp(target, "/api/history", 12) == 0 && (target[12] == '\0' || target[12] == '/')) {
@@ -4862,6 +5054,12 @@ static void print_usage(FILE *stream) {
                 "  -T, --screen-interval N  seconds before Remote View captures again\n"
                 "  -P, --screen-public    let anyone view Remote View and capture every screen\n"
                 "  -Y, --screen-live F    program that streams the screen live for Remote View\n"
+                "  -R, --remote-input     let unlocked visitors press buttons and change volume\n"
+                "                         and brightness from Remote View\n"
+                "  -U, --remote-public    let anyone use the Remote View controls without a code\n"
+                "  -F, --live-fps N       frames a second for Live Remote View (1 to 60)\n"
+                "  -Q, --live-quality N   JPEG quality for Live Remote View (20 to 100)\n"
+                "  -M, --screen-manual    only capture the screen when a visitor asks for it\n"
                 "  -m, --content DIR      the ROMS directory to take the content roster from,\n"
                 "                         repeat once per storage root (max 4)\n"
                 "  -D, --storage DIR      the MustardOS storage directory, for the tools to\n"
@@ -4923,6 +5121,11 @@ int main(const int argc, char **argv) {
         {"screen-interval", required_argument, NULL, 'T'},
         {"screen-public", no_argument, NULL, 'P'},
         {"screen-live", required_argument, NULL, 'Y'},
+        {"remote-input", no_argument, NULL, 'R'},
+        {"remote-public", no_argument, NULL, 'U'},
+        {"live-fps", required_argument, NULL, 'F'},
+        {"live-quality", required_argument, NULL, 'Q'},
+        {"screen-manual", no_argument, NULL, 'M'},
         {"content", required_argument, NULL, 'm'},
         {"storage", required_argument, NULL, 'D'},
         {"share", required_argument, NULL, 'E'},
@@ -4937,7 +5140,7 @@ int main(const int argc, char **argv) {
     };
 
     int option;
-    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:m:D:E:k:olCvVh", options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:RUMF:Q:m:D:E:k:olCvVh", options, NULL)) != -1) {
         switch (option) {
             case 'r':
                 root_argument = optarg;
@@ -4965,6 +5168,23 @@ int main(const int argc, char **argv) {
                 break;
             case 'P':
                 screen_public = 1;
+                break;
+            case 'R':
+                remote_input = 1;
+                break;
+            case 'U':
+                remote_input_public = 1;
+                break;
+            case 'F':
+                screen_live_fps = atoi(optarg);
+                if (screen_live_fps < 1 || screen_live_fps > 60) screen_live_fps = 0;
+                break;
+            case 'Q':
+                screen_live_quality = atoi(optarg);
+                if (screen_live_quality < 20 || screen_live_quality > 100) screen_live_quality = 0;
+                break;
+            case 'M':
+                screen_manual = 1;
                 break;
             case 'Y':
                 snprintf(screen_live, sizeof(screen_live), "%s", optarg);

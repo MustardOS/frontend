@@ -15,6 +15,15 @@ struct gamepad {
     gamepad_event_observer observer;
     void *observer_context;
     char sysname[64];
+    const unsigned short *keys;
+    size_t key_count;
+    int has_hat;
+    signed char key_physical[KEY_CNT];
+    signed char key_remote[KEY_CNT];
+    signed char key_sent[KEY_CNT];
+    int hat_physical[2];
+    int hat_remote[2];
+    int hat_sent[2];
 };
 
 static int flush_events(struct gamepad *gp) {
@@ -207,6 +216,11 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
         return NULL;
     }
     gp->fd = fd;
+    gp->keys = desc->keys;
+    gp->key_count = desc->key_count;
+    for (size_t i = 0; i < desc->axis_count; ++i) {
+        if (desc->axes[i].code == ABS_HAT0X || desc->axes[i].code == ABS_HAT0Y) gp->has_hat = 1;
+    }
 #ifdef UI_GET_SYSNAME
     if (ioctl(fd, UI_GET_SYSNAME(sizeof(gp->sysname)), gp->sysname) < 0) {
         gp->sysname[0] = '\0';
@@ -234,12 +248,72 @@ static void emit_event(struct gamepad *gp, const unsigned short type, const unsi
     }
 }
 
-void gamepad_emit_key(struct gamepad *gp, const unsigned short code, const int value) {
+static int hat_index(const unsigned short code) {
+    if (code == ABS_HAT0X) return 0;
+    if (code == ABS_HAT0Y) return 1;
+    return -1;
+}
+
+static void send_key(struct gamepad *gp, const unsigned short code) {
+    const int value = gp->key_physical[code] ? gp->key_physical[code] : gp->key_remote[code];
+    if (value == gp->key_sent[code]) return;
+    gp->key_sent[code] = (signed char) value;
     emit_event(gp, EV_KEY, code, value);
 }
 
+static void send_hat(struct gamepad *gp, const int index) {
+    const int value = gp->hat_physical[index] ? gp->hat_physical[index] : gp->hat_remote[index];
+    if (value == gp->hat_sent[index]) return;
+    gp->hat_sent[index] = value;
+    emit_event(gp, EV_ABS, index ? ABS_HAT0Y : ABS_HAT0X, value);
+}
+
+void gamepad_emit_key(struct gamepad *gp, const unsigned short code, const int value) {
+    if (!gp || code >= KEY_CNT || value == 2) {
+        emit_event(gp, EV_KEY, code, value);
+        return;
+    }
+    gp->key_physical[code] = (signed char) (value != 0);
+    send_key(gp, code);
+}
+
 void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int value) {
-    emit_event(gp, EV_ABS, code, value);
+    const int index = hat_index(code);
+    if (!gp || index < 0) {
+        emit_event(gp, EV_ABS, code, value);
+        return;
+    }
+    gp->hat_physical[index] = value;
+    send_hat(gp, index);
+}
+
+int gamepad_has_key(const struct gamepad *gp, const unsigned short code) {
+    if (!gp || !gp->keys) return 0;
+    for (size_t i = 0; i < gp->key_count; ++i) {
+        if (gp->keys[i] == code) return 1;
+    }
+    return 0;
+}
+
+int gamepad_has_hat(const struct gamepad *gp) {
+    return gp && gp->has_hat;
+}
+
+int gamepad_remote_key(struct gamepad *gp, const unsigned short code, const int pressed) {
+    if (!gamepad_has_key(gp, code)) return 0;
+    gp->key_remote[code] = (signed char) (pressed != 0);
+    const signed char before = gp->key_sent[code];
+    send_key(gp, code);
+    return before != gp->key_sent[code];
+}
+
+int gamepad_remote_hat(struct gamepad *gp, const unsigned short code, const int value) {
+    const int index = hat_index(code);
+    if (!gamepad_has_hat(gp) || index < 0) return 0;
+    gp->hat_remote[index] = value;
+    const int before = gp->hat_sent[index];
+    send_hat(gp, index);
+    return before != gp->hat_sent[index];
 }
 
 void gamepad_emit_sw(struct gamepad *gp, const unsigned short code, const int value) {

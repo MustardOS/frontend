@@ -16,6 +16,7 @@
 #include "common/calibration.h"
 #include "devices/registry.h"
 #include "common/uinput.h"
+#include "common/remote.h"
 #include "runtime.h"
 #include "common/tester.h"
 
@@ -313,6 +314,8 @@ int main(int argc, char **argv) {
         }
     }
 
+    struct remote_input *remote = tester ? NULL : remote_input_open(gamepad, options.verbose);
+
     uint64_t next_refresh_ms = 0;
     if (backend->ops.refresh) {
         backend->ops.refresh(device_ctx);
@@ -344,6 +347,7 @@ int main(int argc, char **argv) {
         }
         input_tester_render(tester, 0);
         uint64_t now_ms = monotonic_milliseconds();
+        remote_input_poll(remote, now_ms);
         if (backend->ops.refresh && now_ms >= next_refresh_ms) {
             backend->ops.refresh(device_ctx);
             next_refresh_ms = now_ms + 1000u;
@@ -352,6 +356,7 @@ int main(int argc, char **argv) {
     }
     g_running = 0;
 
+    remote_input_close(remote);
     input_tester_destroy(tester);
     backend->ops.close(device_ctx);
     gamepad_destroy(gamepad);

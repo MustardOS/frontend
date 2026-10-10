@@ -24,7 +24,8 @@
 #define DEFAULT_SECONDS  1800
 #define SEND_TIMEOUT_S   10
 
-static const char *const private_modules[] = {"muxwebcode", "muxpass", "muxnetprofile", "muxwebserv"};
+static const char *const private_modules[] = {"muxwebcode",    "muxpass",     "muxpasscfg",
+                                              "muxnetprofile", "muxnetproxy", "muxwebserv"};
 
 typedef void *(*tj_init_fn)(void);
 typedef int (*tj_compress_fn)(
@@ -152,28 +153,67 @@ static uint64_t fingerprint(const uint8_t *rgb, const size_t length) {
     return hash ^ length;
 }
 
-static int private_screen_open(void) {
-    DIR *proc = opendir("/proc");
-    if (!proc) return 0;
+#define WATCH_MAX 16
 
+static char watched[WATCH_MAX][16];
+static int watched_count;
+
+static int read_process(const char *pid, char *name, const size_t size, char *state) {
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%s/stat", pid);
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
+
+    char line[256];
+    const size_t length = fread(line, 1, sizeof(line) - 1, file);
+    fclose(file);
+    line[length] = '\0';
+
+    const char *open = strchr(line, '(');
+    const char *close = strrchr(line, ')');
+    if (!open || !close || close < open || close[1] != ' ' || !close[2]) return 0;
+
+    size_t name_length = (size_t) (close - open - 1);
+    if (name_length >= size) name_length = size - 1;
+    memcpy(name, open + 1, name_length);
+    name[name_length] = '\0';
+    *state = close[2];
+    return 1;
+}
+
+static int private_name(const char *name) {
+    for (size_t i = 0; i < sizeof(private_modules) / sizeof(private_modules[0]); i++) {
+        if (strcmp(name, private_modules[i]) == 0) return 1;
+    }
+    return 0;
+}
+
+static int private_quick(void) {
+    for (int i = 0; i < watched_count; i++) {
+        char name[32];
+        char state;
+        if (read_process(watched[i], name, sizeof(name), &state) && state != 'Z' && private_name(name)) return 1;
+    }
+    return 0;
+}
+
+static int private_scan(void) {
+    DIR *proc = opendir("/proc");
+    if (!proc) return private_quick();
+
+    watched_count = 0;
     int found = 0;
     struct dirent *entry;
-    while (!found && (entry = readdir(proc))) {
-        if (entry->d_name[0] < '1' || entry->d_name[0] > '9') continue;
+    while ((entry = readdir(proc))) {
+        if (entry->d_name[0] < '1' || entry->d_name[0] > '9' || strlen(entry->d_name) >= sizeof(watched[0])) continue;
 
-        char path[300];
-        snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name);
-        FILE *file = fopen(path, "r");
-        if (!file) continue;
+        char name[32];
+        char state;
+        if (!read_process(entry->d_name, name, sizeof(name), &state) || state == 'Z') continue;
+        if (strncmp(name, "mux", 3) != 0) continue;
 
-        char name[32] = {0};
-        if (fgets(name, sizeof(name), file)) {
-            name[strcspn(name, "\n")] = '\0';
-            for (size_t i = 0; i < sizeof(private_modules) / sizeof(private_modules[0]); i++) {
-                if (strcmp(name, private_modules[i]) == 0) found = 1;
-            }
-        }
-        fclose(file);
+        if (watched_count < WATCH_MAX) memcpy(watched[watched_count++], entry->d_name, strlen(entry->d_name) + 1);
+        if (private_name(name)) found = 1;
     }
 
     closedir(proc);
@@ -228,7 +268,7 @@ int main(const int argc, char **argv) {
         }
     }
 
-    if (fps < 1 || fps > 30 || quality < 20 || quality > 95 || seconds < 1) {
+    if (fps < 1 || fps > 60 || quality < 20 || quality > 100 || seconds < 1) {
         print_usage(stderr);
         return 2;
     }
@@ -246,30 +286,41 @@ int main(const int argc, char **argv) {
     double last_sent = 0;
     double last_private_check = -PRIVATE_CHECK_MS;
     int hidden = 0;
+    int hidden_sent = 0;
     uint64_t last_print = 0;
 
     while (now_ms() < stop_at) {
         const double started = now_ms();
 
-        if (!show_private && started - last_private_check >= PRIVATE_CHECK_MS) {
-            last_private_check = started;
-            hidden = private_screen_open();
+        if (!show_private) {
+            if (started - last_private_check >= PRIVATE_CHECK_MS) {
+                last_private_check = started;
+                hidden = private_scan();
+            } else {
+                hidden = private_quick();
+            }
         }
 
         if (hidden) {
-            if (started - last_sent >= RESEND_MS) {
+            if (!hidden_sent || started - last_sent >= RESEND_MS) {
                 if (!send_part("text/plain", "hidden", 6)) return 0;
                 last_sent = started;
                 last_print = 0;
+                hidden_sent = 1;
             }
             sleep_ms(PRIVATE_CHECK_MS / 4.0);
             continue;
         }
+        hidden_sent = 0;
 
         uint8_t *rgb = NULL;
         uint32_t width = 0;
         uint32_t height = 0;
         if (screenshot_grab(screenshot_auto, &rgb, &width, &height) == 0) {
+            if (!show_private && private_quick()) {
+                free(rgb);
+                continue;
+            }
             if (width >= 1000 || height >= 1000) halve(rgb, &width, &height);
 
             const uint64_t print = fingerprint(rgb, (size_t) width * height * 3U);

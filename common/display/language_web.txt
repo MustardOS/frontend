@@ -358,6 +358,43 @@ Made with the MustardOS Web Dashboard
 Remote View
 Refresh now
 Save image
+A private screen is open on the device, so it is not shown.
+Connecting to the live screen…
+Live. The screen streams while this page is open.
+This browser could not show the live stream, so pictures are used instead.
+Manual
+Live
+Resume
+Pop out
+Close pop out
+Mobile
+Show Live View
+Hide Live View
+Desktop
+Dashboard API
+Remote Controls
+Select
+Menu
+Start
+Volume
+Brightness
+Up
+Down
+Left
+Right
+Brightness down
+Brightness up
+%s (key %s)
+Unlock with the Web Dashboard Code to use the controls.
+The device input service is not running.
+The device did not answer.
+The controls are off while Remote View is paused.
+Remote Controls need Authentication, or Live with Remote View Privacy disabled. Change this in Web Services on the device to use them.
+Manual. Press Refresh now to capture the screen.
+Paused. The picture stays as it is until you press Resume.
+Paused. The live screen stops until you press Resume.
+This browser cannot pop out Remote View.
+Allow pop-ups for the dashboard to pop out Remote View.
 Updates every %s while this page is open.
 Captured at %s.
 A private screen is open on the device, so it was not captured.

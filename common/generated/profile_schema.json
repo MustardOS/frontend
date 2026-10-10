@@ -10173,6 +10173,146 @@
       "help": "The port used to reach this service from a web browser.\n\nChange it only if something else is already using that port."
     },
     {
+      "key": "web/live_fps",
+      "group": "web",
+      "type": "int",
+      "default": "15",
+      "min": 5,
+      "max": 60,
+      "label": "Live View FPS",
+      "options": [
+        {
+          "value": "5",
+          "label": "5"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        },
+        {
+          "value": "15",
+          "label": "15"
+        },
+        {
+          "value": "20",
+          "label": "20"
+        },
+        {
+          "value": "25",
+          "label": "25"
+        },
+        {
+          "value": "30",
+          "label": "30"
+        },
+        {
+          "value": "35",
+          "label": "35"
+        },
+        {
+          "value": "40",
+          "label": "40"
+        },
+        {
+          "value": "45",
+          "label": "45"
+        },
+        {
+          "value": "50",
+          "label": "50"
+        },
+        {
+          "value": "55",
+          "label": "55"
+        },
+        {
+          "value": "60",
+          "label": "60"
+        }
+      ],
+      "help": "How many pictures a second Live Remote View sends, from 5 to 60 in steps of 5.\n\nHigher is smoother but uses more processing on the device and more of your network, and the device may not reach the rate it is asked for. 15 is the default."
+    },
+    {
+      "key": "web/live_quality",
+      "group": "web",
+      "type": "int",
+      "default": "70",
+      "min": 20,
+      "max": 100,
+      "label": "Live View Quality",
+      "options": [
+        {
+          "value": "20",
+          "label": "20%"
+        },
+        {
+          "value": "25",
+          "label": "25%"
+        },
+        {
+          "value": "30",
+          "label": "30%"
+        },
+        {
+          "value": "35",
+          "label": "35%"
+        },
+        {
+          "value": "40",
+          "label": "40%"
+        },
+        {
+          "value": "45",
+          "label": "45%"
+        },
+        {
+          "value": "50",
+          "label": "50%"
+        },
+        {
+          "value": "55",
+          "label": "55%"
+        },
+        {
+          "value": "60",
+          "label": "60%"
+        },
+        {
+          "value": "65",
+          "label": "65%"
+        },
+        {
+          "value": "70",
+          "label": "70%"
+        },
+        {
+          "value": "75",
+          "label": "75%"
+        },
+        {
+          "value": "80",
+          "label": "80%"
+        },
+        {
+          "value": "85",
+          "label": "85%"
+        },
+        {
+          "value": "90",
+          "label": "90%"
+        },
+        {
+          "value": "95",
+          "label": "95%"
+        },
+        {
+          "value": "100",
+          "label": "100%"
+        }
+      ],
+      "help": "How sharp each Live Remote View picture is, from 20 to 100 in steps of 5.\n\nHigher is clearer but sends more data for every picture. 70 is the default."
+    },
+    {
       "key": "web/mdns",
       "group": "web",
       "type": "int",
@@ -10191,6 +10331,16 @@
       "help": "The address used before .local in a browser.\n\nFor example, muos becomes muos.local. This does not alter the device hostname."
     },
     {
+      "key": "web/remote_control",
+      "group": "web",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 1,
+      "label": "Remote Controls",
+      "help": "Whether Remote View shows buttons, volume and brightness controls that work the device from the browser.\n\nThey need Authentication and the code from Web Dashboard Code, because anyone using them can do anything you can do with the device in your hands. With Authentication and Remote View Privacy both disabled, they are open to anyone on your network, but only while Remote View is set to Live."
+    },
+    {
       "key": "web/remote_privacy",
       "group": "web",
       "type": "int",
@@ -10206,7 +10356,7 @@
       "type": "int",
       "default": "2",
       "min": 0,
-      "max": 6,
+      "max": 7,
       "label": "Remote View",
       "options": [
         {
@@ -10236,9 +10386,13 @@
         {
           "value": "6",
           "label": "Live"
+        },
+        {
+          "value": "7",
+          "label": "Manual"
         }
       ],
-      "help": "How often the Web Dashboard may take a picture of the screen for Remote View. Live streams the screen as it changes, at up to 15 frames a second.\n\nRemote View needs Authentication and the code from Web Dashboard Code. The screen is only captured while someone is watching, and never while a private screen such as Web Dashboard Code is open. Live uses more processing and network while it is open. Disabled hides Remote View from the dashboard."
+      "help": "How often the Web Dashboard may take a picture of the screen for Remote View. Live streams the screen as it changes, at the rate set by Live View FPS. Manual only takes a picture when you press Refresh now in the dashboard, so the picture never changes while you are looking at it.\n\nRemote View needs Authentication and the code from Web Dashboard Code. The screen is only captured while someone is watching, and never while a private screen such as Web Dashboard Code is open. Live uses more processing and network while it is open. Disabled hides Remote View from the dashboard."
     },
     {
       "key": "web/sftpgo",
