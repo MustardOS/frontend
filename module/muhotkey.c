@@ -179,7 +179,6 @@ static int lid_fd = -1;
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
 
-static char *boot_governor = NULL;
 static char *running_governor = NULL;
 static char *previous_governor = NULL;
 
@@ -210,8 +209,9 @@ static void do_cleanup(const int signo) {
     if (cleanup_done) return;
     cleanup_done = 1;
 
-    const char *restore_governor = running_governor ? running_governor : boot_governor;
-    if (restore_governor) set_scaling_governor(restore_governor, 0);
+    // Only undo a governor change we made ourselves.  Content may have set
+    // its own governor since we started, and a restart must not clobber it.
+    if (running_governor) set_scaling_governor(running_governor, 0);
 
     for (int i = 0; i < combo_count; ++i) {
         free(combo[i].name);
@@ -245,7 +245,6 @@ static void do_cleanup(const int signo) {
     raw_power_pressed = 0;
     raw_power_long_active = 0;
 
-    free(boot_governor);
     free(running_governor);
     free(previous_governor);
 }
@@ -1157,14 +1156,6 @@ int main(int argc, char *argv[]) {
     if (lid_idx >= 0) {
         lid_fd = open_raw_event_index(lid_idx, &lid_pfd, "lid");
         if (lid_fd < 0) LOG_WARN("input", "Lid input event%d could not be opened", lid_idx);
-    }
-
-    boot_governor = read_all_char_from(device.cpu.governor);
-    if (!boot_governor) {
-        LOG_WARN("input", "Could not read initial CPU governor");
-        boot_governor = strdup("ondemand");
-    } else {
-        LOG_INFO("input", "Initial CPU governor: %s", boot_governor);
     }
 
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
