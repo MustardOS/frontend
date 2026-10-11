@@ -133,7 +133,7 @@ const struct ra_core_name ra_core_names[] = {
     {"potator", "Potator", "Potator"},
     {"wasm4", "WASM-4", "WASM-4"},
     {"fake08", "Fake-08", "fake-08"},
-    {"retro8", "Retro8", "retro-8"},
+    {"picante8", "Picante8", "Picante8"},
     {"neocd", "NeoCD", "NeoCD"},
     {"race", "RACE", "RACE"},
     {"geolith", "Geolith", "Geolith"},

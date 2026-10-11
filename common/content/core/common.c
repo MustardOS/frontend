@@ -481,7 +481,7 @@ int system_uses_pico8_core(char *rom_dir) {
     char *core = read_line_char_from(core_file, global_core);
     const int is_pico8 = core
                          && (strncmp(core, "ext-pico8", 9) == 0 || strcasecmp(core, "fake08_libretro.so") == 0
-                             || strcasecmp(core, "retro8_libretro.so") == 0);
+                             || strcasecmp(core, "picante8_libretro.so") == 0);
     free(core);
 
     return is_pico8;
