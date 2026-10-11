@@ -468,6 +468,7 @@ void fade_in_screen(void) {
     if (!config.visual.blackfade || fade_in_done) return;
     if (!ui_black || !lv_obj_is_valid(ui_black)) {
         ui_black = NULL;
+        display_set_fade_alpha(0);
         return;
     }
 
@@ -502,6 +503,7 @@ void fade_in_screen(void) {
         fade_in_done = 1;
         lv_obj_move_foreground(ui_black);
         lv_refr_now(NULL);
+        display_set_fade_alpha(0);
         fade_step(LV_OPA_COVER, LV_OPA_TRANSP, 0);
     }
 }
@@ -1367,7 +1369,10 @@ void init_ui_common_screen(
     empty_state_init((struct theme_config *) theme, (struct mux_device *) device, ui_screen);
     lv_disp_load_scr(ui_screen_container);
 
-    if (config.visual.blackfade && !fade_in_done) gen_black(LV_OPA_COVER);
+    if (config.visual.blackfade && !fade_in_done) {
+        gen_black(LV_OPA_COVER);
+        display_set_fade_alpha(255);
+    }
 }
 
 int ui_common_check(const int mode) {
