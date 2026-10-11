@@ -38,6 +38,7 @@ typedef struct {
 
     uint8_t *mem;
     uint8_t *base;
+    uint8_t *scratch;
     size_t mem_size;
     size_t page_size;
     int page_count;
@@ -777,6 +778,8 @@ static int flush_fb(const fb_t *fb) {
 }
 
 static void close_fb(fb_t *fb) {
+    free(fb->scratch);
+
     if (fb->mem && fb->mem != MAP_FAILED) {
         if (fb->buffered)
             free(fb->mem);
@@ -1390,9 +1393,28 @@ static int claim_display(fb_t *fb) {
     return 0;
 }
 
+static void copy_to_pages(const fb_t *fb, const uint8_t *source) {
+    for (int page = 0; page < fb->page_count; page++) {
+        const size_t offset = (size_t) page * fb->page_size;
+        if (offset + fb->page_size > fb->mem_size) break;
+        memcpy(fb->mem + offset, source, fb->page_size);
+    }
+}
+
 static int present_image(fb_t *fb, const image_t *img, const options_t *opts) {
-    draw_image(fb, img, opts);
-    mirror_pages(fb);
+    if (!fb->buffered && fb->page_size > 0 && !fb->scratch) fb->scratch = malloc(fb->page_size);
+
+    if (fb->buffered || !fb->scratch) {
+        draw_image(fb, img, opts);
+        mirror_pages(fb);
+    } else {
+        uint8_t *visible = fb->base;
+        fb->base = fb->scratch;
+        draw_image(fb, img, opts);
+        fb->base = visible;
+        copy_to_pages(fb, fb->scratch);
+    }
+
     if (flush_fb(fb) != 0) return -1;
 
     const int claimed = claim_display(fb);
