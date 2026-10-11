@@ -5,7 +5,7 @@ LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(BIN_DIR)/muxretro
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE -pthread
-LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread
+LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread -Wl,--export-dynamic-symbol=eglGetProcAddress
 
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
@@ -18,7 +18,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_shaderadjust.c video/ui_viewport.c \
        video/ui_viewportadjust.c video/ui_viewportcrop.c video/ui_overlay.c video/ui_vignette.c \
        video/ui_overlayimage.c video/ui_overlayadjust.c video/ui_overlaycrop.c \
-       video/image_writer.c video/ui_videosettings.c video/ui_imagecorrections.c video/hw_render.c \
+       video/image_writer.c video/ui_videosettings.c video/ui_imagecorrections.c video/hw_render.c video/egl_proc.c \
        video/filters/filters.c video/filters/scale2x.c video/filters/super_eagle.c \
        audio/audio.c audio/ui_soundsettings.c \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \

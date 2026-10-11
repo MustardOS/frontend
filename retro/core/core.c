@@ -34,6 +34,26 @@ int core_active_patch_count = 0;
 char core_file_path[PATH_MAX] = "";
 int core_restart_requested = 0;
 
+static void *content_held[SUBSYSTEM_ROM_MAX + 1];
+static int content_held_count = 0;
+
+static void content_hold(void *data) {
+    if (!data) return;
+    if (content_held_count >= (int) A_SIZE(content_held)) {
+        free(data);
+        return;
+    }
+    content_held[content_held_count++] = data;
+}
+
+static void content_release(void) {
+    for (int i = 0; i < content_held_count; i++) {
+        free(content_held[i]);
+        content_held[i] = NULL;
+    }
+    content_held_count = 0;
+}
+
 struct core_information_cache {
     struct retro_system_info system;
     struct retro_system_av_info av;
@@ -653,7 +673,11 @@ int core_load_content(const char *content_path) {
             }
 
             const int ok = load_game_with_info(&game_info, game_info.path, NULL, NULL);
-            free(data);
+            if (ok && !need_fullpath) {
+                content_hold(data);
+            } else {
+                free(data);
+            }
 
             if (!ok) {
                 LOG_ERROR(mux_module, "Core rejected patched content: %s", content_path);
@@ -684,7 +708,11 @@ int core_load_content(const char *content_path) {
         }
 
         const int ok = load_game_with_info(&game_info, content_path, NULL, NULL);
-        free(direct_data);
+        if (ok) {
+            content_hold(direct_data);
+        } else {
+            free(direct_data);
+        }
 
         if (!ok) {
             LOG_ERROR(mux_module, "Core rejected content: %s", content_path);
@@ -767,7 +795,11 @@ int core_load_content(const char *content_path) {
         cheevo_set_content_data(heap_data, heap_size);
         heap_data = NULL;
     }
-    free(heap_data);
+    if (ok && !need_fullpath) {
+        content_hold(heap_data);
+    } else {
+        free(heap_data);
+    }
 
     if (!ok) {
         LOG_ERROR(mux_module, "Core rejected content: %s", content_path);
@@ -884,6 +916,7 @@ void core_unload_content(void) {
     }
     environment_clear_audio_callback();
     core_input_meta_clear();
+    content_release();
 }
 
 void core_unload(void) {
@@ -931,8 +964,13 @@ int core_load_subsystem_content(void) {
 
     const int ok = current_core.retro_load_game_special(chosen->id, info, (size_t) count);
 
-    for (int i = 0; i < count; i++)
-        free(data[i]);
+    for (int i = 0; i < count; i++) {
+        if (ok) {
+            content_hold(data[i]);
+        } else {
+            free(data[i]);
+        }
+    }
 
     if (!ok) {
         LOG_ERROR(mux_module, "Core rejected the '%s' subsystem content", chosen->ident);
