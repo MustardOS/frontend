@@ -43,6 +43,13 @@ typedef struct {
     float heading;
     int turning;
     float turn_progress;
+    int figure_checked;
+    int figure_active;
+    int figure_dir;
+    int figure_stage;
+    float figure_hold;
+    float figure_x;
+    float figure_phase;
     uint32_t pixie_due;
     uint32_t pixie_start;
     uint32_t pixie_leave;
@@ -94,6 +101,8 @@ static void on_idle_enter(void *user) {
     mod.next = random_leg();
     mod.has_prev = 0;
     mod.walk_z = 0.0f;
+    mod.figure_checked = 0;
+    mod.figure_active = 0;
     mod.heading = 0.0f;
     mod.turning = 0;
     mod.turn_progress = 0.0f;
@@ -237,20 +246,34 @@ typedef struct {
 } hall_sprite_t;
 
 static const hall_sprite_t hall_sprites[HALL_SPRITE_KINDS] = {
-    {0.34f, 0.34f, {"dddddddddddd", "dbbbbbbbbbbd", "dbdbbbbbbdbd", "dbbdbbbbdbbd", "dbbbdbbdbbbd", "dbbbbddbbbbd",
-                    "dbbbbddbbbbd", "dbbbdbbdbbbd", "dbbdbbbbdbbd", "dbdbbbbbbdbd", "dbbbbbbbbbbd", "dddddddddddd"}},
-    {0.24f, 0.40f, {".....oo.....", ".....oo.....", "....oooo....", "....wwww....", "...oooooo...", "...oooooo...",
-                    "..wwwwwwww..", "..oooooooo..", ".oooooooooo.", ".oooooooooo.", "dddddddddddd", "dddddddddddd"}},
-    {0.22f, 0.22f, {"............", "......yyy...", ".....yyyyy..", ".....ykyyyoo", ".....yyyyyoo", "......yyy...",
-                    "..y..yyyyy..", "..yyyyyyyyy.", "..yyyyyyyyy.", "...yyyyyyy..", "....yyyyy...", "............"}},
-    {0.22f, 0.22f, {"............", "....rrrr....", "..rrrrrrrr..", ".rrllrrrrrr.", ".rlllrrrrrr.", "rrllrrrrrrrr",
-                    "rrrrrrrrrrrr", "rrrrrrrrrrrr", ".rrrrrrrrrr.", ".rrrrrrrrrr.", "..rrrrrrrr..", "....rrrr...."}},
-    {0.30f, 0.70f, {"...ssssss...", "..ssssssss..", ".ssssssssss.", "ssssssssssss", ".....gg.....", ".....gg.....",
-                    ".....gg.....", ".....gg.....", ".....gg.....", ".....gg.....", "...gggggg...", "..gggggggg.."}},
-    {0.36f, 0.55f, {"..pppppppp..", "..pqqqqqqp..", "..pqqqqqqp..", "..pqqqqqqp..", "..pppppppp..", "..p......p..",
-                    "pppppppppppp", "pqqqqqqqqqqp", "pppppppppppp", ".p........p.", ".p........p.", ".p........p."}},
-    {0.40f, 0.40f, {"............", "............", "............", "............", "............", "............",
-                    "............", "............", "..wwww......", ".wmwwmw.ww..", "wwwwwwwwmww.", ".wwmww.wwww."}},
+    {0.34f,
+     0.34f,
+     {"dddddddddddd", "dbbbbbbbbbbd", "dbdbbbbbbdbd", "dbbdbbbbdbbd", "dbbbdbbdbbbd", "dbbbbddbbbbd", "dbbbbddbbbbd",
+      "dbbbdbbdbbbd", "dbbdbbbbdbbd", "dbdbbbbbbdbd", "dbbbbbbbbbbd", "dddddddddddd"}},
+    {0.24f,
+     0.40f,
+     {".....oo.....", ".....oo.....", "....oooo....", "....wwww....", "...oooooo...", "...oooooo...", "..wwwwwwww..",
+      "..oooooooo..", ".oooooooooo.", ".oooooooooo.", "dddddddddddd", "dddddddddddd"}},
+    {0.22f,
+     0.22f,
+     {"............", "......yyy...", ".....yyyyy..", ".....ykyyyoo", ".....yyyyyoo", "......yyy...", "..y..yyyyy..",
+      "..yyyyyyyyy.", "..yyyyyyyyy.", "...yyyyyyy..", "....yyyyy...", "............"}},
+    {0.22f,
+     0.22f,
+     {"............", "....rrrr....", "..rrrrrrrr..", ".rrllrrrrrr.", ".rlllrrrrrr.", "rrllrrrrrrrr", "rrrrrrrrrrrr",
+      "rrrrrrrrrrrr", ".rrrrrrrrrr.", ".rrrrrrrrrr.", "..rrrrrrrr..", "....rrrr...."}},
+    {0.30f,
+     0.70f,
+     {"...ssssss...", "..ssssssss..", ".ssssssssss.", "ssssssssssss", ".....gg.....", ".....gg.....", ".....gg.....",
+      ".....gg.....", ".....gg.....", ".....gg.....", "...gggggg...", "..gggggggg.."}},
+    {0.36f,
+     0.55f,
+     {"..pppppppp..", "..pqqqqqqp..", "..pqqqqqqp..", "..pqqqqqqp..", "..pppppppp..", "..p......p..", "pppppppppppp",
+      "pqqqqqqqqqqp", "pppppppppppp", ".p........p.", ".p........p.", ".p........p."}},
+    {0.40f,
+     0.40f,
+     {"............", "............", "............", "............", "............", "............", "............",
+      "............", "..wwww......", ".wmwwmw.ww..", "wwwwwwwwmww.", ".wwmww.wwww."}},
 };
 
 static float smooth(const float t) {
@@ -286,7 +309,57 @@ static int item_at(const hall_leg_t *leg, const int k, const hall_sprite_t **spr
     return 0;
 }
 
+#define HALL_FIGURE_W     10
+#define HALL_FIGURE_H     14
+#define HALL_FIGURE_SPEED 1.6f
+#define HALL_FIGURE_EDGE  3.5f
+#define HALL_FIGURE_STARE 1.6f
+
+static const char *const hall_figure[3][HALL_FIGURE_H] = {
+    {"....###...", "...#####..", "...###e#..", "....###...", "...#####..", "..#######.", ".##.####.#", "#...####..",
+     "....####..", "...##..##.", "..##....##", ".##......#", ".#........", "##........"},
+    {"....###...", "...#####..", "...###e#..", "....###...", "....####..", "...######.", "...######.", "...#####..",
+     "....####..", "....##.#..", "...##..##.", "...#....#.", "..##....##", "..#......."},
+    {"...####...", "..######..", "..#e##e#..", "..######..", "...####...", "..######..", ".########.", ".#.####.#.",
+     ".#.####.#.", "...####...", "...#..#...", "...#..#...", "...#..#...", "..##..##.."},
+};
+
+static void plan_figure(const float dt) {
+    if (mod.figure_active) {
+        if (mod.figure_stage == 1) {
+            mod.figure_hold -= dt;
+            if (mod.figure_hold <= 0.0f) mod.figure_stage = 2;
+        } else {
+            mod.figure_x += (float) mod.figure_dir * HALL_FIGURE_SPEED * dt;
+            mod.figure_phase += dt;
+            if (mod.figure_stage == 0 && mod.figure_x * (float) mod.figure_dir >= 0.0f) {
+                mod.figure_x = 0.0f;
+                mod.figure_stage = 1;
+                mod.figure_hold = HALL_FIGURE_STARE;
+            }
+        }
+        if (mod.turning || mod.figure_x * (float) mod.figure_dir > HALL_FIGURE_EDGE) mod.figure_active = 0;
+        return;
+    }
+
+    if (mod.figure_checked || mod.turning) return;
+
+    const float ahead = mod.leg.len - mod.walk_z;
+    if (ahead > 7.5f || ahead < 6.0f) return;
+
+    mod.figure_checked = 1;
+    if (saver_rand_range(100) >= 50) return;
+
+    mod.figure_active = 1;
+    mod.figure_dir = saver_rand_range(2) ? 1 : -1;
+    mod.figure_x = -(float) mod.figure_dir * HALL_FIGURE_EDGE;
+    mod.figure_phase = 0.0f;
+    mod.figure_stage = 0;
+}
+
 static void plan_walk(const float dt) {
+    plan_figure(dt);
+
     if (!mod.turning) {
         mod.walk_z += dt * 0.9f;
         if (mod.walk_z >= mod.leg.len + 1.0f) {
@@ -302,6 +375,8 @@ static void plan_walk(const float dt) {
             mod.leg = mod.next;
             mod.next = random_leg();
             mod.walk_z = 0.0f;
+            mod.figure_checked = 0;
+            mod.figure_active = 0;
             mod.turning = 0;
             mod.turn_progress = 0.0f;
         }
@@ -317,7 +392,7 @@ static int sprite_colour(const char key, uint8_t *rgb) {
         char key;
         uint8_t r, g, b;
     } colours[] = {
-        {'d', 92, 58, 30},   {'b', 168, 112, 56}, {'o', 240, 120, 30}, {'w', 236, 236, 228}, {'y', 250, 214, 40},
+        {'d', 92, 58, 30},   {'b', 168, 112, 56}, {'o', 240, 120, 30},  {'w', 236, 236, 228}, {'y', 250, 214, 40},
         {'k', 20, 20, 20},   {'r', 210, 50, 50},  {'l', 255, 170, 170}, {'s', 244, 230, 170}, {'g', 120, 120, 128},
         {'p', 150, 90, 200}, {'q', 100, 56, 140}, {'m', 160, 160, 170},
     };
@@ -351,8 +426,8 @@ static float fog(const float z) {
     return k <= 0.0f ? 0.0f : k * k * 1.15f;
 }
 
-static void wall_colour(uint8_t *rgb, const float u, const float v, const int left, const int plain,
-                        const uint32_t now) {
+static void
+wall_colour(uint8_t *rgb, const float u, const float v, const int left, const int plain, const uint32_t now) {
     const uint32_t segment = (uint32_t) floorf(u);
     const float frac = u - floorf(u);
     const uint32_t h = hash_segment(segment);
@@ -394,8 +469,8 @@ static void wall_colour(uint8_t *rgb, const float u, const float v, const int le
     }
 
     const uint32_t ph = hash_segment(segment ^ 0x1b873593u);
-    if (!plain && !has_door && ph % 4 == 0 && (int) ((ph >> 6) % 2) == left && frac > 0.31f && frac < 0.69f &&
-        v > -hh * 0.06f && v < hh * 0.60f) {
+    if (!plain && !has_door && ph % 4 == 0 && (int) ((ph >> 6) % 2) == left && frac > 0.31f && frac < 0.69f
+        && v > -hh * 0.06f && v < hh * 0.60f) {
         const float fx = (frac - 0.31f) / 0.38f;
         const float fy = (hh * 0.60f - v) / (hh * 0.66f);
         if (fx < 0.08f || fx > 0.92f || fy < 0.07f || fy > 0.93f) {
@@ -415,7 +490,9 @@ static void wall_colour(uint8_t *rgb, const float u, const float v, const int le
             return;
         }
         const int block = ((int) (ax * 3.0f) + (int) (ay * 3.0f) * 3 + (int) (ph >> 14)) % 5;
-        static const uint8_t paint[5][3] = {{200, 40, 40}, {240, 220, 200}, {40, 70, 160}, {230, 190, 40}, {30, 30, 30}};
+        static const uint8_t paint[5][3] = {
+            {200, 40, 40}, {240, 220, 200}, {40, 70, 160}, {230, 190, 40}, {30, 30, 30}
+        };
         rgb[0] = paint[block][0], rgb[1] = paint[block][1], rgb[2] = paint[block][2];
         return;
     }
@@ -510,8 +587,8 @@ static float ceiling_colour(uint8_t *rgb, const float x, const float z, const ui
             return 0.0f;
         }
         if (kind == hall_light_broken) {
-            const int crack = ((int) (x * 40.0f + 40.0f) + (int) (frac * 50.0f)) % 9 == 0 ||
-                              ((int) (x * 40.0f + 40.0f) - (int) (frac * 50.0f) + 90) % 13 == 0;
+            const int crack = ((int) (x * 40.0f + 40.0f) + (int) (frac * 50.0f)) % 9 == 0
+                              || ((int) (x * 40.0f + 40.0f) - (int) (frac * 50.0f) + 90) % 13 == 0;
             rgb[0] = crack ? 34 : 112, rgb[1] = crack ? 34 : 114, rgb[2] = crack ? 38 : 120;
             return 0.0f;
         }
@@ -697,7 +774,8 @@ static void draw_scene(const uint32_t now) {
             float ox, oz;
             const hall_leg_t *owner = owner_point(px + rx * d, pz + rz * d, &ox, &oz);
             const float world_z = (float) owner->base + oz;
-            const float lit = straight && owner == &mod.leg && row < HALL_MAX_ROWS ? row_light[row] : ambient(world_z, now);
+            const float lit =
+                straight && owner == &mod.leg && row < HALL_MAX_ROWS ? row_light[row] : ambient(world_z, now);
             if (row > bottom) {
                 floor_colour(rgb, ox, world_z);
                 shade_pixel(out, rgb, fog(d) * lit, col, row);
@@ -750,6 +828,57 @@ static void draw_scene(const uint32_t now) {
             }
         }
     }
+
+    if (!mod.figure_active) return;
+
+    const float relx = mod.figure_x - px;
+    const float relz = mod.leg.len + 1.0f - pz;
+    const float z = relx * fx + relz * fz;
+    if (z < 0.35f || z >= (float) HALL_DEPTH) return;
+    const float lateral = relx * rgx + relz * rgz;
+
+    const float scale = focal / z;
+    const float sx = cx + lateral * scale;
+    const float floor_row = cy + hh * scale;
+    const float pw = 0.78f * scale;
+    const float ph = 1.15f * scale;
+    const int x0 = (int) (sx - pw * 0.5f);
+    const int x1 = (int) (sx + pw * 0.5f);
+    const int y0 = (int) (floor_row - ph);
+    const int y1 = (int) floor_row;
+    if (x1 <= x0 || y1 <= y0 || x1 < 0 || x0 >= lw) return;
+
+    const char *const *frame =
+        mod.figure_stage == 1 ? hall_figure[2] : hall_figure[(int) (mod.figure_phase * 5.0f) % 2];
+    const float light = fog(z);
+    static const uint8_t body[3] = {10, 9, 14};
+    static const uint8_t rim[3] = {84, 92, 116};
+    static const uint8_t eye[3] = {200, 24, 24};
+
+    for (int col = x0 < 0 ? 0 : x0; col < x1 && col < lw; col++) {
+        if (mod.depth[col] < z) continue;
+        int u = (int) ((float) (col - x0) * HALL_FIGURE_W / (float) (x1 - x0));
+        if (mod.figure_dir < 0 && mod.figure_stage != 1) u = HALL_FIGURE_W - 1 - u;
+        for (int row = y0 < 0 ? 0 : y0; row < y1 && row < lh; row++) {
+            const int v = (int) ((float) (row - y0) * HALL_FIGURE_H / (float) (y1 - y0));
+            const char key = frame[v][u];
+            if (key == '.') continue;
+            uint8_t *out = mod.pixels + ((size_t) row * lw + col) * 3;
+            const int edge = u == 0 || u == HALL_FIGURE_W - 1 || v == 0 || frame[v][u - (u > 0)] == '.'
+                             || frame[v][u + (u < HALL_FIGURE_W - 1)] == '.' || frame[v - (v > 0)][u] == '.';
+            if (key == 'e') {
+                out[0] = eye[0];
+                out[1] = eye[1];
+                out[2] = eye[2];
+            } else if (edge) {
+                shade_pixel(out, rim, light, col, row);
+            } else {
+                out[0] = body[0];
+                out[1] = body[1];
+                out[2] = body[2];
+            }
+        }
+    }
 }
 
 static void add_light(const int x, const int y, const int r, const int g, const int b) {
@@ -771,8 +900,9 @@ static void draw_pixie(void) {
     for (int i = 1; i < HALL_PIXIE_TRAIL; i++) {
         const int index = (mod.trail_head + i) % HALL_PIXIE_TRAIL;
         const int strength = 20 + i * 14;
-        add_light((int) (mod.trail[index][0] * sx), (int) (mod.trail[index][1] * sy), strength / 2, strength,
-                  strength / 2);
+        add_light(
+            (int) (mod.trail[index][0] * sx), (int) (mod.trail[index][1] * sy), strength / 2, strength, strength / 2
+        );
     }
 
     for (int y = -6; y <= 6; y++) {

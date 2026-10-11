@@ -8,6 +8,8 @@
 #include <common/storage/inotify.h>
 #include <common/runtime/init.h>
 #include <common/runtime/perf.h>
+#include <common/platform/device.h>
+#include <common/platform/display.h>
 #include <common/base/options.h>
 #include <common/storage/fileio.h>
 #include <common/saver/saver.h>
@@ -201,6 +203,19 @@ void saver_shutdown_base(saver_state_t *s) {
 int saver_snapshot_take(saver_snapshot_t *snapshot) {
     if (!snapshot) return 0;
     saver_snapshot_free(snapshot);
+
+    const int screen_w = device.screen.width;
+    const int screen_h = device.screen.height;
+    if (screen_w > 0 && screen_h > 0) {
+        uint8_t *frame = malloc((size_t) screen_w * (size_t) screen_h * 3);
+        if (frame && display_capture_clean_pixels(frame, screen_w, screen_h) == 0) {
+            snapshot->rgb = frame;
+            snapshot->w = screen_w;
+            snapshot->h = screen_h;
+            return 1;
+        }
+        free(frame);
+    }
 
     uint8_t *rgb = NULL;
     uint32_t w = 0;
