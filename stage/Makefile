@@ -5,7 +5,7 @@ LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(LIB_DIR)/libmustage.so
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -fPIC
-LDFLAGS := -shared -Wl,--strip-all $(STAGE_LDFLAGS) -ldl -lSDL2 -lSDL2_image -lGLESv2 -lEGL -lm -lpthread
+LDFLAGS := -shared -fPIC -Wl,--strip-all $(STAGE_LDFLAGS) -ldl -lSDL2 -lSDL2_image -lGLESv2 -lEGL -lm -lpthread
 
 RUNTIME_SYMS := ^(gl|egl|vk|drm|SDL_|IMG_|Mix_)
 INCLUDES := -I. -I.. -I./common -I./overlay -I./render

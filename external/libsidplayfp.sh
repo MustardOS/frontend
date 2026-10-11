@@ -36,9 +36,22 @@ env -u CPPFLAGS -u LDFLAGS -u LIBS \
 
 printf 'Building libsidplayfp %s for %s\n' "$VERSION" "$DEVICE"
 make -j"$EXT_JOBS" src/libsidplayfp.la
-make install-libLTLIBRARIES install-src_libsidplayfp_laHEADERS install-nodist_src_libsidplayfp_laHEADERS \
-	install-src_builders_sidlite_builder_libsidplayfp_sidlite_laHEADERS
-rm -f "$EXT_PREFIX/lib/libsidplayfp.la" "$EXT_PREFIX/lib/libstilview.la" "$EXT_PREFIX/lib/libstilview.a"
+mkdir -p "$EXT_PREFIX/lib/pkgconfig" "$EXT_PREFIX/include/sidplayfp/builders"
+install -m 0644 src/.libs/libsidplayfp.a "$EXT_PREFIX/lib/libsidplayfp.a"
+install -m 0644 \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/siddefs.h" \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/SidConfig.h" \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/SidInfo.h" \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/SidTuneInfo.h" \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/sidbuilder.h" \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/sidplayfp.h" \
+	"$EXT_SRC/$SOURCE/src/sidplayfp/SidTune.h" \
+	"$EXT_SRC/$SOURCE/src/utils/SidDatabase.h" \
+	"$EXT_PREFIX/include/sidplayfp/"
+install -m 0644 src/sidplayfp/sidversion.h "$EXT_PREFIX/include/sidplayfp/sidversion.h"
+install -m 0644 "$EXT_SRC/$SOURCE/src/builders/sidlite-builder/sidlite.h" \
+	"$EXT_PREFIX/include/sidplayfp/builders/sidlite.h"
+install -m 0644 libsidplayfp.pc "$EXT_PREFIX/lib/pkgconfig/libsidplayfp.pc"
 
 EXT_STAMP libsidplayfp "$ID"
 printf 'libsidplayfp %s installed\n' "$VERSION"
