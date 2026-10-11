@@ -78,6 +78,7 @@ static int screen_wanted;
 static int remote_input = 0;
 static int remote_input_public = 0;
 static int screen_manual = 0;
+static int screen_rotate = 0;
 static int remote_socket = -1;
 static struct timespec remote_level_at[2];
 static char collection_root[PATH_MAX];
@@ -3726,7 +3727,7 @@ static int screen_capture(const double minimum_gap) {
 
 static void screen_state(char *state, const size_t state_size, int *rotate) {
     snprintf(state, state_size, "ok");
-    *rotate = 0;
+    *rotate = screen_rotate;
 
     char path[PATH_MAX];
     if ((size_t) snprintf(path, sizeof(path), "%s.state", screen_image) >= sizeof(path)) return;
@@ -5148,6 +5149,7 @@ static void print_usage(FILE *stream) {
                 "  -F, --live-fps N       frames a second for Live Remote View (1 to 60)\n"
                 "  -Q, --live-quality N   JPEG quality for Live Remote View (20 to 100)\n"
                 "  -M, --screen-manual    only capture the screen when a visitor asks for it\n"
+                "  -O, --screen-rotate N  degrees the device screen is turned (0, 90, 180, 270)\n"
                 "  -m, --content DIR      the ROMS directory to take the content roster from,\n"
                 "                         repeat once per storage root (max 4)\n"
                 "  -D, --storage DIR      the MustardOS storage directory, for the tools to\n"
@@ -5214,6 +5216,7 @@ int main(const int argc, char **argv) {
         {"live-fps", required_argument, NULL, 'F'},
         {"live-quality", required_argument, NULL, 'Q'},
         {"screen-manual", no_argument, NULL, 'M'},
+        {"screen-rotate", required_argument, NULL, 'O'},
         {"content", required_argument, NULL, 'm'},
         {"storage", required_argument, NULL, 'D'},
         {"share", required_argument, NULL, 'E'},
@@ -5228,7 +5231,7 @@ int main(const int argc, char **argv) {
     };
 
     int option;
-    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:RUMF:Q:m:D:E:k:olCvVh", options, NULL)) != -1) {
+    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:RUMO:F:Q:m:D:E:k:olCvVh", options, NULL)) != -1) {
         switch (option) {
             case 'r':
                 root_argument = optarg;
@@ -5273,6 +5276,10 @@ int main(const int argc, char **argv) {
                 break;
             case 'M':
                 screen_manual = 1;
+                break;
+            case 'O':
+                screen_rotate = atoi(optarg);
+                if (screen_rotate != 90 && screen_rotate != 180 && screen_rotate != 270) screen_rotate = 0;
                 break;
             case 'Y':
                 snprintf(screen_live, sizeof(screen_live), "%s", optarg);
