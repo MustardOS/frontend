@@ -40,6 +40,10 @@
 #include <common/saver/slideshow.h>
 #include <common/saver/boxart.h>
 #include <common/saver/bsod.h>
+#include <common/saver/lavalamp.h>
+#include <common/saver/glitch.h>
+#include <common/saver/hallway.h>
+#include <common/saver/moss.h>
 
 typedef struct {
     // Just the default base stuff we need
@@ -269,6 +273,10 @@ enum {
     saver_type_slideshow = 13,
     saver_type_boxart = 14,
     saver_type_bsod = 15,
+    saver_type_lavalamp = 16,
+    saver_type_glitch = 17,
+    saver_type_hallway = 18,
+    saver_type_moss = 19,
 };
 
 static char video_saver_path[MAX_BUFFER_SIZE];
@@ -281,13 +289,18 @@ static saver_state_t video_saver_base;
 
 static const char *saver_type_name(const int type) {
     static const char *const names[] = {
-        "disabled", "dvd",  "starfield", "matrix",   "firefly", "pulse_grid", "trace",  "constellation",
-        "mystify",  "maze", "blockfall", "datetime", "video",   "slideshow",  "boxart", "blue_screen",
+        "disabled",      "dvd",         "starfield", "matrix",         "firefly",  "pulse_grid", "trace",
+        "constellation", "mystify",     "maze",      "blockfall",      "datetime", "video",      "slideshow",
+        "boxart",        "blue_screen", "lava_lamp", "gravity_glitch", "hallway",  "moss",
     };
     return type >= 0 && type < (int) (sizeof(names) / sizeof(names[0])) ? names[type] : "unknown";
 }
 
 static int saver_active(void) {
+    if (active_saver == saver_type_lavalamp) return lavalamp_active();
+    if (active_saver == saver_type_glitch) return glitch_active();
+    if (active_saver == saver_type_hallway) return hallway_active();
+    if (active_saver == saver_type_moss) return moss_active();
     if (active_saver == saver_type_bsod) return bsod_active();
     if (active_saver == saver_type_boxart) return boxart_active();
     if (active_saver == saver_type_slideshow) return slideshow_active();
@@ -348,6 +361,14 @@ static void saver_update(void) {
         boxart_update();
     else if (active_saver == saver_type_bsod)
         bsod_update();
+    else if (active_saver == saver_type_lavalamp)
+        lavalamp_update();
+    else if (active_saver == saver_type_glitch)
+        glitch_update();
+    else if (active_saver == saver_type_hallway)
+        hallway_update();
+    else if (active_saver == saver_type_moss)
+        moss_update();
 }
 
 static void saver_render(SDL_Renderer *r) {
@@ -384,6 +405,14 @@ static void saver_render(SDL_Renderer *r) {
         boxart_render(r);
     else if (active_saver == saver_type_bsod)
         bsod_render(r);
+    else if (active_saver == saver_type_lavalamp)
+        lavalamp_render(r);
+    else if (active_saver == saver_type_glitch)
+        glitch_render(r);
+    else if (active_saver == saver_type_hallway)
+        hallway_render(r);
+    else if (active_saver == saver_type_moss)
+        moss_render(r);
 }
 
 // Puts back whatever was drawing the background before the video saver took it over
@@ -437,6 +466,14 @@ static void saver_stop(void) {
         boxart_stop();
     else if (active_saver == saver_type_bsod)
         bsod_stop();
+    else if (active_saver == saver_type_lavalamp)
+        lavalamp_stop();
+    else if (active_saver == saver_type_glitch)
+        glitch_stop();
+    else if (active_saver == saver_type_hallway)
+        hallway_stop();
+    else if (active_saver == saver_type_moss)
+        moss_stop();
 }
 
 static void reload_saver(void) {
@@ -458,6 +495,10 @@ static void reload_saver(void) {
     slideshow_shutdown();
     boxart_shutdown();
     bsod_shutdown();
+    lavalamp_shutdown();
+    glitch_shutdown();
+    hallway_shutdown();
+    moss_shutdown();
 
     const int type = config.settings.power.saver_type;
 
@@ -492,6 +533,14 @@ static void reload_saver(void) {
             init_ok = matrix_init(monitor.renderer, device.screen.width, device.screen.height);
         } else if (type == saver_type_star) {
             init_ok = star_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_lavalamp) {
+            init_ok = lavalamp_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_glitch) {
+            init_ok = glitch_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_hallway) {
+            init_ok = hallway_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_moss) {
+            init_ok = moss_init(monitor.renderer, device.screen.width, device.screen.height);
         } else if (type == saver_type_video) {
             char saver_video[MAX_BUFFER_SIZE];
             snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
@@ -786,6 +835,10 @@ void sdl_cleanup(void) {
     slideshow_shutdown();
     boxart_shutdown();
     bsod_shutdown();
+    lavalamp_shutdown();
+    glitch_shutdown();
+    hallway_shutdown();
+    moss_shutdown();
 
     if (monitor.shadow_layer) {
         SDL_DestroyTexture(monitor.shadow_layer);

@@ -12,7 +12,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define REMOTE_HOLD_MS    1500u
+#define REMOTE_HOLD_MS     1500u
 #define REMOTE_MIN_HOLD_MS 60u
 
 enum remote_kind {
@@ -28,15 +28,12 @@ struct remote_button {
 };
 
 static const struct remote_button remote_buttons[] = {
-    {"up", remote_hat, ABS_HAT0Y, -1},      {"down", remote_hat, ABS_HAT0Y, 1},
-    {"left", remote_hat, ABS_HAT0X, -1},    {"right", remote_hat, ABS_HAT0X, 1},
-    {"a", remote_key, BTN_EAST, 0},         {"b", remote_key, BTN_SOUTH, 0},
-    {"x", remote_key, BTN_NORTH, 0},        {"y", remote_key, BTN_WEST, 0},
-    {"l1", remote_key, BTN_TL, 0},          {"r1", remote_key, BTN_TR, 0},
-    {"l2", remote_key, BTN_TL2, 0},         {"r2", remote_key, BTN_TR2, 0},
-    {"l3", remote_key, BTN_THUMBL, 0},      {"r3", remote_key, BTN_THUMBR, 0},
-    {"select", remote_key, BTN_SELECT, 0},  {"start", remote_key, BTN_START, 0},
-    {"menu", remote_key, BTN_MODE, 0},
+    {"up", remote_hat, ABS_HAT0Y, -1},   {"down", remote_hat, ABS_HAT0Y, 1}, {"left", remote_hat, ABS_HAT0X, -1},
+    {"right", remote_hat, ABS_HAT0X, 1}, {"a", remote_key, BTN_EAST, 0},     {"b", remote_key, BTN_SOUTH, 0},
+    {"x", remote_key, BTN_NORTH, 0},     {"y", remote_key, BTN_WEST, 0},     {"l1", remote_key, BTN_TL, 0},
+    {"r1", remote_key, BTN_TR, 0},       {"l2", remote_key, BTN_TL2, 0},     {"r2", remote_key, BTN_TR2, 0},
+    {"l3", remote_key, BTN_THUMBL, 0},   {"r3", remote_key, BTN_THUMBR, 0},  {"select", remote_key, BTN_SELECT, 0},
+    {"start", remote_key, BTN_START, 0}, {"menu", remote_key, BTN_MODE, 0},
 };
 
 #define REMOTE_BUTTON_COUNT (sizeof(remote_buttons) / sizeof(remote_buttons[0]))
@@ -82,7 +79,8 @@ struct remote_input *remote_input_open(struct gamepad *gp, const int verbose) {
 
     remote->gp = gp;
     remote->verbose = verbose;
-    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) remote->available[i] = button_available(gp, &remote_buttons[i]);
+    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i)
+        remote->available[i] = button_available(gp, &remote_buttons[i]);
 
     remote->fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (remote->fd < 0) {
@@ -152,7 +150,8 @@ static int set_held(struct remote_input *remote, const size_t index, const int h
 
 static int release_all(struct remote_input *remote, const uint64_t now_ms) {
     int changed = 0;
-    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) changed |= set_held(remote, i, 0, now_ms);
+    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i)
+        changed |= set_held(remote, i, 0, now_ms);
     return changed;
 }
 

@@ -6107,6 +6107,22 @@
         {
           "value": "15",
           "label": "Blue Screen"
+        },
+        {
+          "value": "16",
+          "label": "Lava Lamp"
+        },
+        {
+          "value": "17",
+          "label": "Gravity Glitch"
+        },
+        {
+          "value": "18",
+          "label": "Endless Hallway"
+        },
+        {
+          "value": "19",
+          "label": "Pixel Moss"
         }
       ],
       "help": "The screensaver shown once the screen has dimmed, or none at all.\n\nThis follows the Idle Display Timeout, so with that turned off you will never see one."

@@ -11,6 +11,7 @@
 #include <common/base/options.h>
 #include <common/storage/fileio.h>
 #include <common/saver/saver.h>
+#include <common/display/screenshot.h>
 
 const uint8_t saver_pastel_r[SAVER_PASTEL_COUNT] = {255, 255, 255, 255, 178, 153, 179, 204, 255, 255, 153};
 
@@ -195,4 +196,106 @@ void saver_shutdown_base(saver_state_t *s) {
     s->suppress_until = 0;
 
     LOG_INFO("saver", "%s Shutdown", s->log_tag ? s->log_tag : "Saver");
+}
+
+int saver_snapshot_take(saver_snapshot_t *snapshot) {
+    if (!snapshot) return 0;
+    saver_snapshot_free(snapshot);
+
+    uint8_t *rgb = NULL;
+    uint32_t w = 0;
+    uint32_t h = 0;
+    if (screenshot_grab(screenshot_auto, &rgb, &w, &h) != 0 || !rgb || !w || !h) {
+        free(rgb);
+        return 0;
+    }
+
+    snapshot->rgb = rgb;
+    snapshot->w = (int) w;
+    snapshot->h = (int) h;
+    return 1;
+}
+
+void saver_snapshot_free(saver_snapshot_t *snapshot) {
+    if (!snapshot) return;
+    free(snapshot->rgb);
+    snapshot->rgb = NULL;
+    snapshot->w = 0;
+    snapshot->h = 0;
+}
+
+SDL_Texture *saver_snapshot_texture(SDL_Renderer *renderer, const saver_snapshot_t *snapshot) {
+    if (!renderer || !snapshot || !snapshot->rgb) return NULL;
+
+    SDL_Texture *texture =
+        SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, snapshot->w, snapshot->h);
+    if (!texture) return NULL;
+
+    if (SDL_UpdateTexture(texture, NULL, snapshot->rgb, snapshot->w * 3) != 0) {
+        SDL_DestroyTexture(texture);
+        return NULL;
+    }
+    return texture;
+}
+
+int saver_snapshot_luma(const saver_snapshot_t *snapshot, int x0, int y0, int x1, int y1) {
+    if (!snapshot || !snapshot->rgb) return 0;
+
+    if (x0 < 0) x0 = 0;
+    if (y0 < 0) y0 = 0;
+    if (x1 > snapshot->w) x1 = snapshot->w;
+    if (y1 > snapshot->h) y1 = snapshot->h;
+    if (x1 <= x0 || y1 <= y0) return 0;
+
+    const int step_x = (x1 - x0) / 4 > 0 ? (x1 - x0) / 4 : 1;
+    const int step_y = (y1 - y0) / 4 > 0 ? (y1 - y0) / 4 : 1;
+    int total = 0;
+    int count = 0;
+    for (int y = y0; y < y1; y += step_y) {
+        const uint8_t *row = snapshot->rgb + ((size_t) y * snapshot->w) * 3;
+        for (int x = x0; x < x1; x += step_x) {
+            const uint8_t *px = row + (size_t) x * 3;
+            total += (px[0] * 54 + px[1] * 183 + px[2] * 19) >> 8;
+            count++;
+        }
+    }
+    return count ? total / count : 0;
+}
+
+int saver_speed_scale_q8(const saver_state_t *s) {
+    const int speed = s && s->speed > 0 ? s->speed : SAVER_SPEED_DEFAULT;
+    return speed * 256 / SAVER_SPEED_DEFAULT;
+}
+
+void saver_hsv(const float hue, const float sat, const float val, uint8_t *out) {
+    const float h = hue * 6.0f;
+    const int sector = (int) h % 6;
+    const float f = h - (float) (int) h;
+    const float p = val * (1.0f - sat);
+    const float q = val * (1.0f - sat * f);
+    const float t = val * (1.0f - sat * (1.0f - f));
+    float r, g, b;
+    switch (sector) {
+        case 0:
+            r = val, g = t, b = p;
+            break;
+        case 1:
+            r = q, g = val, b = p;
+            break;
+        case 2:
+            r = p, g = val, b = t;
+            break;
+        case 3:
+            r = p, g = q, b = val;
+            break;
+        case 4:
+            r = t, g = p, b = val;
+            break;
+        default:
+            r = val, g = p, b = q;
+            break;
+    }
+    out[0] = saver_clamp_u8((int) (r * 255.0f));
+    out[1] = saver_clamp_u8((int) (g * 255.0f));
+    out[2] = saver_clamp_u8((int) (b * 255.0f));
 }

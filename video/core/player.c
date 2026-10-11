@@ -2999,6 +2999,45 @@ static void apply_remote_command(const wasabi_remote_command *command) {
         case wasabi_remote_stop:
             quit_playback();
             break;
+        case wasabi_remote_jump: {
+            if (!player.playlist || command->value < 0) break;
+            const size_t index = (size_t) command->value;
+            if (index >= player.playlist_count || index == player.playlist_index) break;
+            if (player.live && player.playlist_channels) {
+                player.channel_pending_index = index;
+                player.channel_switch_pending = 1;
+                player.channel_switch_deadline = SDL_GetTicks();
+                video_playback_ui_show_channel(index);
+            } else {
+                switch_playlist(index);
+            }
+            break;
+        }
+        case wasabi_remote_set_volume: {
+            int volume = (int) command->value;
+            if (volume < 0) volume = 0;
+            if (volume > 200) volume = 200;
+            config.video.volume = (int16_t) volume;
+            wasabi_session_accept_volume();
+            video_player_audio_settings_changed();
+            break;
+        }
+        case wasabi_remote_shuffle: {
+            if (player.live) break;
+            const int shuffle = command->value != 0;
+            if (shuffle == config.video.shuffle) break;
+            config.video.shuffle = (int16_t) shuffle;
+            video_player_modes_changed();
+            break;
+        }
+        case wasabi_remote_repeat: {
+            if (player.live) break;
+            const int repeat = (int) command->value;
+            if (repeat < 0 || repeat > 2 || repeat == config.video.repeat_mode) break;
+            config.video.repeat_mode = (int16_t) repeat;
+            video_player_modes_changed();
+            break;
+        }
         default:
             break;
     }
@@ -3036,10 +3075,22 @@ static void remote_tick(void) {
         .count = player.playlist ? (int) player.playlist_count : 0,
         .channels = player.playlist_channels,
         .volume = config.video.volume,
+        .shuffle = config.video.shuffle,
+        .repeat = config.video.repeat_mode,
+        .uri = player.uri,
         .position = player.position,
         .duration = player.duration,
     };
     wasabi_remote_publish(&state, changed);
+
+    static const video_library_entry *listed_playlist = NULL;
+    static size_t listed_count = (size_t) -1;
+    const size_t playlist_count = player.playlist ? player.playlist_count : 0;
+    if (wasabi_remote_list_wanted() || player.playlist != listed_playlist || playlist_count != listed_count) {
+        listed_playlist = player.playlist;
+        listed_count = playlist_count;
+        wasabi_remote_publish_list(player.playlist, playlist_count);
+    }
 }
 
 static void handle_configured_hotkey(const mux_input_type input, const mux_input_action action) {

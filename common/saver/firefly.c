@@ -21,6 +21,7 @@ typedef struct {
     int32_t vx, vy;
 
     int32_t target_vx, target_vy;
+    int64_t steer_x, steer_y;
 
     uint32_t heading_due;
 
@@ -106,6 +107,8 @@ static void firefly_reset_one(firefly_t *f, uint32_t now) {
 
     f->vx = random_velocity_for_class(f->size_class);
     f->vy = random_velocity_for_class(f->size_class);
+    f->steer_x = 0;
+    f->steer_y = 0;
 
     int period_ms = 1500 + (int) saver_rand_range(2000);
     f->twinkle_step = SAVER_FRAME_ONE / period_ms;
@@ -160,15 +163,23 @@ int firefly_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     return 1;
 }
 
+static int32_t steer(const int32_t current, const int32_t target, int64_t *carry, const int64_t turn) {
+    const int64_t divisor = (int64_t) 1 << (SAVER_FRAME_SHF + 18);
+    *carry += (int64_t) (target - current) * turn;
+    const int64_t change = *carry / divisor;
+    *carry -= change * divisor;
+    return current + (int32_t) change;
+}
+
 static void integrate_fly(firefly_t *f, int32_t step_fp, uint32_t now) {
     int max_speed = class_max_speed[f->size_class];
     int agility = class_agility[f->size_class];
 
-    int32_t turn = ((int32_t) agility * (step_fp >> SAVER_FRAME_SHF)) >> 10;
-    if (turn > 256) turn = 256;
+    int64_t turn = (int64_t) agility * step_fp;
+    if (turn > ((int64_t) 256 << (SAVER_FRAME_SHF + 10))) turn = (int64_t) 256 << (SAVER_FRAME_SHF + 10);
 
-    f->vx += ((f->target_vx - f->vx) * turn) >> 8;
-    f->vy += ((f->target_vy - f->vy) * turn) >> 8;
+    f->vx = steer(f->vx, f->target_vx, &f->steer_x, turn);
+    f->vy = steer(f->vy, f->target_vy, &f->steer_y, turn);
 
     if (now >= f->heading_due) roll_target_heading(f, now);
 

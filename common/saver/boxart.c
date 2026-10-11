@@ -412,6 +412,10 @@ static void collect_box_images(const char *cat_path, char ***paths, int *count, 
     closedir(sys_d);
 }
 
+void boxart_collect_images(const char *catalogue_path, char ***paths, int *count, int *cap) {
+    collect_box_images(catalogue_path, paths, count, cap);
+}
+
 int boxart_init(SDL_Renderer *renderer, const char *catalogue_path, const int screen_w, const int screen_h) {
     memset(&mod, 0, sizeof(mod));
     mod.renderer = renderer;

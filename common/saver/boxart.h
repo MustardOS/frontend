@@ -13,3 +13,5 @@ int boxart_active(void);
 void boxart_stop(void);
 
 void boxart_shutdown(void);
+
+void boxart_collect_images(const char *catalogue_path, char ***paths, int *count, int *cap);

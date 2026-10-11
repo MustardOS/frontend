@@ -1832,6 +1832,10 @@ struct mux_lang {
                 char slideshow[MAX_BUFFER_SIZE];
                 char boxart[MAX_BUFFER_SIZE];
                 char bsod[MAX_BUFFER_SIZE];
+                char lavalamp[MAX_BUFFER_SIZE];
+                char glitch[MAX_BUFFER_SIZE];
+                char hallway[MAX_BUFFER_SIZE];
+                char moss[MAX_BUFFER_SIZE];
             } type;
             struct {
                 char title[MAX_BUFFER_SIZE];

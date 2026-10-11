@@ -367,6 +367,42 @@ Live
 Resume
 Pop out
 Close pop out
+Now Playing
+Nothing is playing on the device right now. Start something in Pickles or Wasabi and it appears here.
+Something is playing on the device.
+Open Now Playing
+%s is running in Pickles.
+%s is playing in Wasabi.
+A game
+Something
+Playing in Pickles
+Unlock to control the game
+Slow
+Fast
+FPS
+Quick Save
+Quick Load
+Quit
+Shuffle
+Repeat off
+Repeat this item
+Repeat all
+Playlist
+Playlist (%s)
+Channels (%s)
+Played for %s
+The Pickles menu is open on the device, so only Quit works until it closes.
+Paused.
+Fast forward is on.
+Slow motion is on.
+%s frames a second.
+Netplay is active, so pausing and speed changes are not available.
+Quick Save sent
+Quick Load sent
+Quit sent
+Load the quick save in %s? Anything since that save is lost.
+this game
+Quit %s and return to the menu? Pickles saves automatically first when Auto Save is on.
 Mobile
 Show Live View
 Hide Live View

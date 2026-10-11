@@ -47,7 +47,8 @@ UI_SRCS = \
 SAVER_SRCS = \
     saver/saver.c saver/blockfall.c saver/boxart.c saver/bsod.c saver/constellation.c \
     saver/datetime.c saver/dvd.c saver/firefly.c saver/matrix.c saver/maze.c \
-    saver/mystify.c saver/pulse.c saver/slideshow.c saver/star.c saver/trace.c
+    saver/mystify.c saver/pulse.c saver/slideshow.c saver/star.c saver/trace.c \
+    saver/lavalamp.c saver/glitch.c saver/hallway.c saver/moss.c
 
 TOOLING_SRCS = \
     tooling/fbset_args.c tooling/lookup_args.c tooling/message_args.c tooling/rgb_args.c

@@ -61,6 +61,10 @@ int core_open(const char *corefile);
 
 int core_get_name(const char *core_path, char *out, size_t out_size);
 
+const char *core_library_name(void);
+
+const char *core_library_version(void);
+
 int core_content_rel_dir(const char *content_path, char *out, size_t out_size);
 
 int core_content_save_prefix(const char *core_path_arg, const char *content_path, char *out, size_t out_size);

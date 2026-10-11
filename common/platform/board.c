@@ -13,6 +13,8 @@
 #define TOUCH_EVENT_OFFSET(FROM, ADD) {board_event_offset_touch, FROM, ADD}
 
 static const board_info_t board_table[] = {
+    {"MustardOS QEMU", "qemu-x86_64", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
+
     {"Generic H36S", "gcs-h36s", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
     {"MagicX Zero28", "mgx-zero28", board_special_none, nop, nop, nop, NO_EVENT_OFFSET, regular},
 

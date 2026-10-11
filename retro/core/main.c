@@ -34,6 +34,7 @@
 #include "../state/patch.h"
 #include "../input/deck.h"
 #include "../input/hotkeys.h"
+#include "remote.h"
 #include "muxretro.h"
 #include "../ui/options.h"
 #include "../ui/ui_loading.h"
@@ -840,6 +841,8 @@ int main(const int argc, char *argv[]) {
     uint32_t perf_autodump_deadline = SDL_GetTicks() + PERF_AUTODUMP_INTERVAL_MS;
     int timeline_armed_ms = 0;
 
+    pickles_remote_open();
+
     while (!quit) {
         int core_ran = 0;
         unsigned core_frames = 0;
@@ -915,6 +918,7 @@ int main(const int argc, char *argv[]) {
         }
 
         const int paused = pause_menu_is_active();
+        pickles_remote_task(paused);
         const int network_menu_paused = netplay_menu_paused();
         const int game_link_paused = link_menu_paused();
         const int show_netplay_wait = netplay_menu_pause_requested() && !paused;
@@ -981,6 +985,7 @@ int main(const int argc, char *argv[]) {
             if (!peek) {
                 if (pause_menu_tick()) quit = 1;
             }
+            if (hotkeys_is_quit_requested()) quit = 1;
 
             if (!quit && ((netplay_is_playing() && !network_menu_paused) || (link_is_engaged() && !game_link_paused)))
                 run_gameplay = 1;
@@ -1084,6 +1089,7 @@ int main(const int argc, char *argv[]) {
                 const double vfps = (double) fps_frame_count * 1000.0 / (double) fps_elapsed;
                 const double effective_fps = core_reported_emulation_fps(vfps);
                 perf_note_rates(vfps, effective_fps);
+                pickles_remote_set_fps(effective_fps);
 
                 if (session_settings.show_fps) {
                     char fps_text[256];
@@ -1182,6 +1188,7 @@ int main(const int argc, char *argv[]) {
     state_shutdown();
     cheevo_shutdown();
     image_writer_shutdown();
+    pickles_remote_close();
     governor_boost_shutdown();
     runahead_shutdown();
     overlay_bridge_shutdown();

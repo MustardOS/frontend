@@ -28,6 +28,14 @@ muswitch_LDLIBS = $(LDLIBS)
 
 DEPENDENCIES = plutosvg common lvgl module terminal video
 
+# mugl forwards 32-bit ARM OpenGL calls to the native AArch64 display. It has
+# no role on the native x86_64 virtual device and requires both ARM toolchains.
+ifeq ($(DEVICE),X86_64)
+    MUGL_DEP =
+else
+    MUGL_DEP = dep-mugl
+endif
+
 CFLAGS = $(BASE_CFLAGS) $(STRICT_CFLAGS)
 
 INCLUDES = -I. -I./module/ui -I./vendor
@@ -116,7 +124,7 @@ dep-video:
 	@echo "Building Wasabi: muxmedia"
 	$(VERBOSE)$(MAKE) -C video DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
-prebuild: dep-stage dep-retro dep-terminal dep-video dep-mugl
+prebuild: dep-stage dep-retro dep-terminal dep-video $(MUGL_DEP)
 
 clean:
 	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build mugl/.gen \

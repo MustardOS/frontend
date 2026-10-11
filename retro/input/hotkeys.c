@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <common/runtime/init.h>
 #include <common/platform/input.h>
 #include <common/display/language.h>
@@ -170,6 +171,100 @@ static void toggle_content_pause(void) {
     LOG_INFO(mux_module, "Content Pause %s (hotkey)", content_paused ? "enabled" : "disabled");
 }
 
+static void quick_save(const char *source) {
+    if (!state_saves_supported()) {
+        pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
+        return;
+    }
+    if (gamestate_quicksave_save() == 0) {
+        LOG_INFO(mux_module, "Quick Save (%s)", source);
+        pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
+    } else {
+        LOG_WARN(mux_module, "Quick Save (%s) failed", source);
+        pause_menu_show_toast(lang.generic.save_fail);
+    }
+}
+
+static void quick_load(const char *source, const int interactive) {
+    if (!state_saves_supported()) {
+        pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
+        return;
+    }
+    if (gamestate_quicksave_exists && !gamestate_metadata_matches(&gamestate_quicksave)) {
+        LOG_INFO(mux_module, "Quick Load (%s): blocked, quicksave metadata mismatch", source);
+        if (interactive) {
+            pause_menu_toggle();
+            gamestate_notice_open();
+        } else {
+            pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
+        }
+        return;
+    }
+
+    const int load_result = gamestate_quicksave_load();
+    if (load_result == 0) {
+        LOG_INFO(mux_module, "Quick Load (%s)", source);
+        pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_load);
+    } else if (load_result == GAMESTATE_LOAD_DISC_FAIL) {
+        LOG_WARN(mux_module, "Quick Load (%s): required disc is unavailable", source);
+        pause_menu_show_toast(lang.muxretro.gamestate.disc_restore_failed);
+    } else {
+        LOG_INFO(mux_module, "Quick Load (%s): no quicksave to load", source);
+        pause_menu_show_toast(lang.muxretro.hotkeys_screen.no_quicksave);
+    }
+}
+
+static void cycle_fps(const char *source) {
+    session_settings_cycle_fps(0);
+    LOG_INFO(mux_module, "Toggle FPS %s (%s)", session_settings_show_fps_name(session_settings.show_fps), source);
+}
+
+static void request_quit(const char *source) {
+    if (state_saves_allowed() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
+    LOG_INFO(mux_module, "Quit (%s)", source);
+    quit_requested = 1;
+}
+
+int hotkeys_remote_command(const char *command, const int value) {
+    const int speed_allowed = !netplay_is_active();
+
+    if (strcmp(command, "pause") == 0 || strcmp(command, "resume") == 0 || strcmp(command, "toggle") == 0) {
+        if (netplay_is_active()) return 0;
+        const int wanted = strcmp(command, "toggle") == 0 ? !content_paused : strcmp(command, "pause") == 0;
+        if (wanted != content_paused) toggle_content_pause();
+        return 1;
+    }
+    if (strcmp(command, "fast_forward") == 0) {
+        if (!speed_allowed || held_speed) return 0;
+        set_fast_forward(value != 0);
+        return 1;
+    }
+    if (strcmp(command, "slow_motion") == 0) {
+        if (!speed_allowed || held_speed) return 0;
+        set_slow_motion(value != 0);
+        return 1;
+    }
+    if (strcmp(command, "quicksave") == 0) {
+        if (!state_saves_allowed()) return 0;
+        quick_save("remote");
+        return 1;
+    }
+    if (strcmp(command, "quickload") == 0) {
+        if (!state_saves_allowed()) return 0;
+        quick_load("remote", 0);
+        return 1;
+    }
+    if (strcmp(command, "fps") == 0) {
+        cycle_fps("remote");
+        return 1;
+    }
+    if (strcmp(command, "quit") == 0) {
+        request_quit("remote");
+        return 1;
+    }
+    return 0;
+}
+
 void hotkeys_reset(void) {
     update_speed();
     if (!fast_forward_active && !slow_motion_active && !content_paused && speed_current == 1.0) return;
@@ -267,17 +362,7 @@ int hotkeys_task(void) {
 
         if (hotkey_now[hotkey_binding_quicksave] && !prev_hotkey[hotkey_binding_quicksave]
             && session_settings.hotkey_quicksave_enabled && state_saves_allowed()) {
-            if (state_saves_supported()) {
-                if (gamestate_quicksave_save() == 0) {
-                    LOG_INFO(mux_module, "Quick Save (hotkey)");
-                    pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_save);
-                } else {
-                    LOG_WARN(mux_module, "Quick Save (hotkey) failed");
-                    pause_menu_show_toast(lang.generic.save_fail);
-                }
-            } else {
-                pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
-            }
+            quick_save("hotkey");
             input_bridge_suppress((mux_input_type) session_settings.hotkey_quicksave_button);
             menu_combo_consumed = 1;
         }
@@ -298,33 +383,14 @@ int hotkeys_task(void) {
 
         if (hotkey_now[hotkey_binding_quickload] && !prev_hotkey[hotkey_binding_quickload]
             && session_settings.hotkey_quickload_enabled && state_saves_allowed()) {
-            if (!state_saves_supported()) {
-                pause_menu_show_toast(lang.muxretro.gamestate.not_supported);
-            } else if (gamestate_quicksave_exists && !gamestate_metadata_matches(&gamestate_quicksave)) {
-                LOG_INFO(mux_module, "Quick Load (hotkey): blocked, quicksave metadata mismatch");
-                pause_menu_toggle();
-                gamestate_notice_open();
-            } else {
-                const int load_result = gamestate_quicksave_load();
-                if (load_result == 0) {
-                    LOG_INFO(mux_module, "Quick Load (hotkey)");
-                    pause_menu_show_toast(lang.muxretro.hotkeys_screen.quick_load);
-                } else if (load_result == GAMESTATE_LOAD_DISC_FAIL) {
-                    LOG_WARN(mux_module, "Quick Load (hotkey): required disc is unavailable");
-                    pause_menu_show_toast(lang.muxretro.gamestate.disc_restore_failed);
-                } else {
-                    LOG_INFO(mux_module, "Quick Load (hotkey): no quicksave to load");
-                    pause_menu_show_toast(lang.muxretro.hotkeys_screen.no_quicksave);
-                }
-            }
+            quick_load("hotkey", 1);
             input_bridge_suppress((mux_input_type) session_settings.hotkey_quickload_button);
             menu_combo_consumed = 1;
         }
 
         if (hotkey_now[hotkey_binding_toggle_fps] && !prev_hotkey[hotkey_binding_toggle_fps]
             && session_settings.hotkey_toggle_fps_enabled) {
-            session_settings_cycle_fps(0);
-            LOG_INFO(mux_module, "Toggle FPS %s (hotkey)", session_settings_show_fps_name(session_settings.show_fps));
+            cycle_fps("hotkey");
             input_bridge_suppress((mux_input_type) session_settings.hotkey_toggle_fps_button);
             menu_combo_consumed = 1;
         }
@@ -344,9 +410,7 @@ int hotkeys_task(void) {
 
         if (hotkey_now[hotkey_binding_quit] && !prev_hotkey[hotkey_binding_quit]
             && session_settings.hotkey_quit_enabled) {
-            if (state_saves_allowed() && session_settings_auto_save_on_quit()) gamestate_autosave_save();
-            LOG_INFO(mux_module, "Quit (hotkey)");
-            quit_requested = 1;
+            request_quit("hotkey");
             input_bridge_suppress((mux_input_type) session_settings.hotkey_quit_button);
             menu_combo_consumed = 1;
         }

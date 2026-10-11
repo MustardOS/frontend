@@ -3917,17 +3917,40 @@ handle_screen_api(struct connection *connection, const char *method, const char 
 #define PLAYER_CONTROL "/run/muos/wasabi/control"
 
 static int player_command_valid(const char *command) {
-    static const char *const commands[] = {"toggle", "play",     "pause",  "seek", "skip",
-                                           "next",   "previous", "volume", "stop"};
+    static const char *const commands[] = {"toggle", "play", "pause", "seek",      "skip",    "next",  "previous",
+                                           "volume", "stop", "jump",  "setvolume", "shuffle", "repeat"};
     for (size_t index = 0; index < sizeof(commands) / sizeof(commands[0]); index++) {
         if (strcmp(command, commands[index]) == 0) return 1;
     }
     return 0;
 }
 
+#define PLAYER_LIST  "/run/muos/wasabi/list.json"
+#define GAME_STATE   "/run/muos/pickles/now.json"
+#define GAME_CONTROL "/run/muos/pickles/control"
+
+static int state_fresh(const char *path) {
+    struct stat info;
+    return stat(path, &info) == 0 && time(NULL) - info.st_mtime <= 10;
+}
+
 static void handle_player_api(
     struct connection *connection, const char *method, const char *path, const char *body, const size_t body_length
 ) {
+    if (strcmp(path, "list") == 0) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        connection->revalidate = 1;
+        if (!state_fresh(PLAYER_STATE) || access(PLAYER_LIST, R_OK) != 0) {
+            send_text(connection, 200, "application/json", "{\"items\":[]}");
+            return;
+        }
+        send_file(connection, PLAYER_LIST, NULL);
+        return;
+    }
+
     if (!*path) {
         if (strcmp(method, "GET") != 0) {
             send_error(connection, 405, "Method not allowed");
@@ -4109,6 +4132,67 @@ static void handle_input_api(
 
     if (!remote_send(message)) {
         send_error(connection, 503, "The device input service is not running");
+        return;
+    }
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+}
+
+static int game_command_valid(const char *command) {
+    static const char *const commands[] = {"pause",     "resume",    "toggle", "fast_forward", "slow_motion",
+                                           "quicksave", "quickload", "fps",    "quit"};
+    for (size_t index = 0; index < sizeof(commands) / sizeof(commands[0]); index++) {
+        if (strcmp(command, commands[index]) == 0) return 1;
+    }
+    return 0;
+}
+
+static void handle_game_api(
+    struct connection *connection, const char *method, const char *path, const char *body, const size_t body_length
+) {
+    if (!*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        connection->revalidate = 1;
+        if (!state_fresh(GAME_STATE)) {
+            send_text(connection, 200, "application/json", "{\"active\":false}");
+            return;
+        }
+        send_file(connection, GAME_STATE, NULL);
+        return;
+    }
+
+    if (strcmp(method, "POST") != 0) {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!game_command_valid(path)) {
+        send_error(connection, 404, "Not found");
+        return;
+    }
+    if (!lists_write_allowed(connection)) return;
+
+    int value = 1;
+    if (body && body_length > 0) {
+        if (body_length != 1 || (body[0] != '0' && body[0] != '1')) {
+            send_error(connection, 400, "Send 1 to turn it on or 0 to turn it off");
+            return;
+        }
+        value = body[0] == '1';
+    }
+
+    const int control = open(GAME_CONTROL, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (control < 0) {
+        send_error(connection, 409, "Pickles is not running anything");
+        return;
+    }
+    char line[64];
+    const int length = snprintf(line, sizeof(line), "%s %d\n", path, value);
+    const ssize_t written = length > 0 ? write(control, line, (size_t) length) : -1;
+    close(control);
+    if (written != length) {
+        send_error(connection, 503, "Pickles did not accept that command");
         return;
     }
     send_text(connection, 200, "application/json", "{\"ok\":true}");
@@ -4873,6 +4957,10 @@ static void handle_request(struct connection *connection) {
     }
     if (strncmp(target, "/api/player", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
         handle_player_api(connection, method, target + (target[11] == '/' ? 12 : 11), body, body_length);
+        return;
+    }
+    if (strncmp(target, "/api/game", 9) == 0 && (target[9] == '\0' || target[9] == '/')) {
+        handle_game_api(connection, method, target + (target[9] == '/' ? 10 : 9), body, body_length);
         return;
     }
     if (strncmp(target, "/api/input", 10) == 0 && (target[10] == '\0' || target[10] == '/')) {

@@ -15,6 +15,7 @@ typedef struct {
     int32_t fx, fy;
     int32_t vx, vy;
     int32_t target_vx, target_vy;
+    int64_t steer_x, steer_y;
     uint32_t heading_due;
     uint8_t size;
     uint8_t r, g, b;
@@ -78,11 +79,21 @@ static void reset_point(cpoint_t *p, uint32_t now) {
 
     p->vx = random_velocity();
     p->vy = random_velocity();
+    p->steer_x = 0;
+    p->steer_y = 0;
 
     p->size = (uint8_t) (1 + saver_rand_range(CONSTELLATION_MAX_SIZE));
 
     roll_target(p, now);
     apply_point_colour(p);
+}
+
+static int32_t steer(const int32_t current, const int32_t target, int64_t *carry, const int64_t step) {
+    const int64_t divisor = (int64_t) 64 << (SAVER_FRAME_SHF + 1);
+    *carry += (int64_t) (target - current) * step;
+    const int64_t change = *carry / divisor;
+    *carry -= change * divisor;
+    return current + (int32_t) change;
 }
 
 static void seed_all(void) {
@@ -150,11 +161,11 @@ void constellation_update(void) {
     for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
         cpoint_t *p = &mod.point[i];
 
-        int32_t turn = step_fp >> (SAVER_FRAME_SHF + 1);
-        if (turn > 32) turn = 32;
+        int64_t turn = step_fp;
+        if (turn > ((int64_t) 32 << (SAVER_FRAME_SHF + 1))) turn = (int64_t) 32 << (SAVER_FRAME_SHF + 1);
 
-        p->vx += ((p->target_vx - p->vx) * turn) >> 6;
-        p->vy += ((p->target_vy - p->vy) * turn) >> 6;
+        p->vx = steer(p->vx, p->target_vx, &p->steer_x, turn);
+        p->vy = steer(p->vy, p->target_vy, &p->steer_y, turn);
 
         if (now >= p->heading_due) roll_target(p, now);
 

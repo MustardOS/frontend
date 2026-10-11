@@ -177,6 +177,14 @@ int core_open(const char *corefile) {
     return open_core(corefile);
 }
 
+const char *core_library_name(void) {
+    return information_cache.system_valid ? information_cache.library_name : "";
+}
+
+const char *core_library_version(void) {
+    return information_cache.system_valid ? information_cache.library_version : "";
+}
+
 int core_get_name(const char *core_path, char *out, const size_t out_size) {
     const char *base = strrchr(core_path, '/');
     base = base ? base + 1 : core_path;

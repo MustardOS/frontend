@@ -19,3 +19,5 @@ void hotkeys_request_quit(void);
 int hotkeys_is_manual_requested(void);
 
 void hotkeys_reset(void);
+
+int hotkeys_remote_command(const char *command, int value);

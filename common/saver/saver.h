@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <SDL2/SDL.h>
 
 #define SAVER_FRAME_SHF 16
 #define SAVER_FRAME_ONE (1 << SAVER_FRAME_SHF)
@@ -80,3 +81,21 @@ void saver_perf_note_draw_calls(unsigned count);
 int saver_image_file_allowed(const char *path);
 
 int saver_image_dimensions_allowed(int width, int height);
+
+typedef struct {
+    uint8_t *rgb;
+    int w;
+    int h;
+} saver_snapshot_t;
+
+int saver_snapshot_take(saver_snapshot_t *snapshot);
+
+void saver_snapshot_free(saver_snapshot_t *snapshot);
+
+SDL_Texture *saver_snapshot_texture(SDL_Renderer *renderer, const saver_snapshot_t *snapshot);
+
+int saver_snapshot_luma(const saver_snapshot_t *snapshot, int x0, int y0, int x1, int y1);
+
+int saver_speed_scale_q8(const saver_state_t *s);
+
+void saver_hsv(float hue, float sat, float val, uint8_t *out);
