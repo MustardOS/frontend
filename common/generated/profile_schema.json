@@ -10352,9 +10352,9 @@
       "type": "int",
       "default": "0",
       "min": 0,
-      "max": 1,
+      "max": 2,
       "label": "Remote Controls",
-      "help": "Whether Remote View shows buttons, volume and brightness controls that work the device from the browser.\n\nThey need Authentication and the code from Web Dashboard Code, because anyone using them can do anything you can do with the device in your hands. With Authentication and Remote View Privacy both disabled, they are open to anyone on your network, but only while Remote View is set to Live."
+      "help": "Whether Remote View shows buttons, volume and brightness controls that work the device from the browser. Enabled with Sticks also adds the analogue sticks, on devices that have them, and lets a game controller connected to the browser move them.\n\nThey need Authentication and the code from Web Dashboard Code, because anyone using them can do anything you can do with the device in your hands. With Authentication and Remote View Privacy both disabled, they are open to anyone on your network, but only while Remote View is set to Live."
     },
     {
       "key": "web/remote_privacy",
@@ -10365,6 +10365,15 @@
       "max": 1,
       "label": "Remote View Privacy",
       "help": "Whether Remote View protects what is on the screen.\n\nEnabled, Remote View needs the code from Web Dashboard Code and never captures private screens such as Web Dashboard Code, passcodes and passwords. Disabled, anyone on your network can open Remote View without unlocking and every screen is captured, including the Web Dashboard Code, which lets them unlock the dashboard too."
+    },
+    {
+      "key": "web/remote_sound",
+      "group": "web",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 3,
+      "label": "Remote Sound"
     },
     {
       "key": "web/remote_view",

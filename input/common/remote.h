@@ -9,7 +9,7 @@
 
 struct remote_input;
 
-struct remote_input *remote_input_open(struct gamepad *gp, int verbose);
+struct remote_input *remote_input_open(struct gamepad *gp, int verbose, int south_is_a);
 
 void remote_input_poll(struct remote_input *remote, uint64_t now_ms);
 

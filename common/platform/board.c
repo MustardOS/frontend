@@ -8,6 +8,8 @@
 #include <common/platform/device.h>
 #include <common/runtime/log.h>
 
+#define BOARD_TITLE_FILE "/run/muos/board_title"
+
 #define NO_EVENT_OFFSET {board_event_offset_none, nop, 0}
 
 #define TOUCH_EVENT_OFFSET(FROM, ADD) {board_event_offset_touch, FROM, ADD}
@@ -88,6 +90,14 @@ void board_init(const char *code) {
         "board", "Detected Board: %s (%s) (Special: %d)", current_board->name, current_board->code,
         current_board->special
     );
+
+    if (access(BOARD_TITLE_FILE, F_OK) == 0) return;
+
+    FILE *title = fopen(BOARD_TITLE_FILE, "w");
+    if (!title) return;
+
+    fprintf(title, "%s\n", current_board->name);
+    fclose(title);
 }
 
 const board_info_t *board_current(void) {

@@ -75,6 +75,10 @@ int gamepad_remote_key(struct gamepad *gp, unsigned short code, int pressed);
 
 int gamepad_remote_hat(struct gamepad *gp, unsigned short code, int value);
 
+int gamepad_has_stick_axis(const struct gamepad *gp, unsigned short code);
+
+int gamepad_remote_stick(struct gamepad *gp, unsigned short code, int value);
+
 void gamepad_sync(struct gamepad *gp);
 
 void gamepad_destroy(struct gamepad *gp);

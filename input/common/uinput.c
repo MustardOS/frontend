@@ -24,7 +24,26 @@ struct gamepad {
     int hat_physical[2];
     int hat_remote[2];
     int hat_sent[2];
+    int stick_present[4];
+    int stick_min[4];
+    int stick_max[4];
+    int stick_physical[4];
+    int stick_remote[4];
+    int stick_sent[4];
 };
+
+static const unsigned short stick_codes[4] = {ABS_X, ABS_Y, ABS_RX, ABS_RY};
+
+static int stick_index(const unsigned short code) {
+    for (int i = 0; i < 4; ++i) {
+        if (stick_codes[i] == code) return i;
+    }
+    return -1;
+}
+
+static int stick_centre(const struct gamepad *gp, const int index) {
+    return gp->stick_min[index] + (gp->stick_max[index] - gp->stick_min[index]) / 2;
+}
 
 static int flush_events(struct gamepad *gp) {
     if (!gp || gp->pending_count == 0) {
@@ -220,6 +239,12 @@ struct gamepad *gamepad_initialise(const struct gamepad_desc *desc) {
     gp->key_count = desc->key_count;
     for (size_t i = 0; i < desc->axis_count; ++i) {
         if (desc->axes[i].code == ABS_HAT0X || desc->axes[i].code == ABS_HAT0Y) gp->has_hat = 1;
+        const int stick = stick_index(desc->axes[i].code);
+        if (stick < 0) continue;
+        gp->stick_present[stick] = 1;
+        gp->stick_min[stick] = desc->axes[i].min;
+        gp->stick_max[stick] = desc->axes[i].max;
+        gp->stick_physical[stick] = gp->stick_remote[stick] = gp->stick_sent[stick] = stick_centre(gp, stick);
     }
 #ifdef UI_GET_SYSNAME
     if (ioctl(fd, UI_GET_SYSNAME(sizeof(gp->sysname)), gp->sysname) < 0) {
@@ -277,7 +302,24 @@ void gamepad_emit_key(struct gamepad *gp, const unsigned short code, const int v
     send_key(gp, code);
 }
 
+static void send_stick(struct gamepad *gp, const int index) {
+    const int centre = stick_centre(gp, index);
+    const int physical = gp->stick_physical[index];
+    const int remote = gp->stick_remote[index];
+    const int value = abs(remote - centre) > abs(physical - centre) ? remote : physical;
+    if (value == gp->stick_sent[index]) return;
+    gp->stick_sent[index] = value;
+    emit_event(gp, EV_ABS, stick_codes[index], value);
+}
+
 void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int value) {
+    const int stick = gp ? stick_index(code) : -1;
+    if (stick >= 0 && gp->stick_present[stick]) {
+        gp->stick_physical[stick] = value;
+        send_stick(gp, stick);
+        return;
+    }
+
     const int index = hat_index(code);
     if (!gp || index < 0) {
         emit_event(gp, EV_ABS, code, value);
@@ -314,6 +356,24 @@ int gamepad_remote_hat(struct gamepad *gp, const unsigned short code, const int 
     const int before = gp->hat_sent[index];
     send_hat(gp, index);
     return before != gp->hat_sent[index];
+}
+
+int gamepad_has_stick_axis(const struct gamepad *gp, const unsigned short code) {
+    const int index = stick_index(code);
+    return gp && index >= 0 && gp->stick_present[index];
+}
+
+int gamepad_remote_stick(struct gamepad *gp, const unsigned short code, const int value) {
+    const int index = stick_index(code);
+    if (!gp || index < 0 || !gp->stick_present[index]) return 0;
+
+    const int centre = stick_centre(gp, index);
+    const long span = value >= 0 ? gp->stick_max[index] - centre : centre - gp->stick_min[index];
+    gp->stick_remote[index] = centre + (int) ((long) value * span / 32767);
+
+    const int before = gp->stick_sent[index];
+    send_stick(gp, index);
+    return before != gp->stick_sent[index];
 }
 
 void gamepad_emit_sw(struct gamepad *gp, const unsigned short code, const int value) {

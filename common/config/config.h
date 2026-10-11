@@ -506,6 +506,7 @@ struct mux_config {
         int16_t remote_view;
         int16_t remote_privacy;
         int16_t remote_control;
+        int16_t remote_sound;
         int16_t live_fps;
         int16_t live_quality;
         char mdns_name[MAX_BUFFER_SIZE];

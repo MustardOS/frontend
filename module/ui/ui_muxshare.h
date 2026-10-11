@@ -727,4 +727,5 @@
     WEBSERV(ttyd, "ttyd")                                                                                              \
     WEBSERV(syncthing, "syncthing")                                                                                    \
     WEBSERV(tailscaled, "tailscaled")                                                                                  \
-    WEBSERV(spare, "spare")
+    WEBSERV(spare, "spare")                                                                                            \
+    WEBSERV(spare_extra, "spare_extra")

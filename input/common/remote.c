@@ -12,12 +12,15 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define REMOTE_HOLD_MS     1500u
-#define REMOTE_MIN_HOLD_MS 60u
+#define REMOTE_HOLD_MS       1500u
+#define REMOTE_MIN_HOLD_MS   60u
+#define REMOTE_STICK_HOLD_MS 300u
+#define REMOTE_MESSAGE_MAX   256
 
 enum remote_kind {
     remote_key,
     remote_hat,
+    remote_stick,
 };
 
 struct remote_button {
@@ -33,7 +36,8 @@ static const struct remote_button remote_buttons[] = {
     {"x", remote_key, BTN_NORTH, 0},     {"y", remote_key, BTN_WEST, 0},     {"l1", remote_key, BTN_TL, 0},
     {"r1", remote_key, BTN_TR, 0},       {"l2", remote_key, BTN_TL2, 0},     {"r2", remote_key, BTN_TR2, 0},
     {"l3", remote_key, BTN_THUMBL, 0},   {"r3", remote_key, BTN_THUMBR, 0},  {"select", remote_key, BTN_SELECT, 0},
-    {"start", remote_key, BTN_START, 0}, {"menu", remote_key, BTN_MODE, 0},
+    {"start", remote_key, BTN_START, 0}, {"menu", remote_key, BTN_MODE, 0},  {"lx", remote_stick, ABS_X, 0},
+    {"ly", remote_stick, ABS_Y, 0},      {"rx", remote_stick, ABS_RX, 0},    {"ry", remote_stick, ABS_RY, 0},
 };
 
 #define REMOTE_BUTTON_COUNT (sizeof(remote_buttons) / sizeof(remote_buttons[0]))
@@ -49,12 +53,22 @@ struct remote_input {
     int fd;
     int verbose;
     struct gamepad *gp;
+    unsigned short codes[REMOTE_BUTTON_COUNT];
     int available[REMOTE_BUTTON_COUNT];
     struct remote_hold holds[REMOTE_BUTTON_COUNT];
+    int stick_values[REMOTE_BUTTON_COUNT];
 };
 
-static int button_available(struct gamepad *gp, const struct remote_button *button) {
-    return button->kind == remote_hat ? gamepad_has_hat(gp) : gamepad_has_key(gp, button->code);
+static int button_available(struct gamepad *gp, const struct remote_button *button, const unsigned short code) {
+    if (button->kind == remote_stick) return gamepad_has_stick_axis(gp, code);
+    return button->kind == remote_hat ? gamepad_has_hat(gp) : gamepad_has_key(gp, code);
+}
+
+static unsigned short button_code(const struct remote_button *button, const int south_is_a) {
+    if (!south_is_a || button->kind != remote_key) return button->code;
+    if (button->code == BTN_EAST) return BTN_SOUTH;
+    if (button->code == BTN_SOUTH) return BTN_EAST;
+    return button->code;
 }
 
 static void write_key_list(const struct remote_input *remote) {
@@ -73,14 +87,16 @@ static void write_key_list(const struct remote_input *remote) {
     if (fclose(file) != 0 || rename(temporary, MUINPUT_REMOTE_KEYS) != 0) unlink(temporary);
 }
 
-struct remote_input *remote_input_open(struct gamepad *gp, const int verbose) {
+struct remote_input *remote_input_open(struct gamepad *gp, const int verbose, const int south_is_a) {
     struct remote_input *remote = calloc(1, sizeof(*remote));
     if (!remote) return NULL;
 
     remote->gp = gp;
     remote->verbose = verbose;
-    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i)
-        remote->available[i] = button_available(gp, &remote_buttons[i]);
+    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
+        remote->codes[i] = button_code(&remote_buttons[i], south_is_a);
+        remote->available[i] = button_available(gp, &remote_buttons[i], remote->codes[i]);
+    }
 
     remote->fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (remote->fd < 0) {
@@ -122,7 +138,7 @@ static int apply(struct remote_input *remote, const size_t index) {
     if (button->kind == remote_hat) {
         return gamepad_remote_hat(remote->gp, button->code, hat_value(remote, button->code));
     }
-    return gamepad_remote_key(remote->gp, button->code, remote->holds[index].held);
+    return gamepad_remote_key(remote->gp, remote->codes[index], remote->holds[index].held);
 }
 
 static int set_held(struct remote_input *remote, const size_t index, const int held, const uint64_t now_ms) {
@@ -148,29 +164,72 @@ static int set_held(struct remote_input *remote, const size_t index, const int h
     return apply(remote, index);
 }
 
+static int set_stick(struct remote_input *remote, const size_t index, const int value, const uint64_t now_ms) {
+    struct remote_hold *hold = &remote->holds[index];
+    hold->held = value != 0;
+    hold->expires_at = now_ms + REMOTE_STICK_HOLD_MS;
+    if (remote->stick_values[index] == value) return 0;
+    remote->stick_values[index] = value;
+    return gamepad_remote_stick(remote->gp, remote->codes[index], value);
+}
+
 static int release_all(struct remote_input *remote, const uint64_t now_ms) {
     int changed = 0;
-    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i)
-        changed |= set_held(remote, i, 0, now_ms);
+    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
+        if (remote_buttons[i].kind == remote_stick) {
+            changed |= set_stick(remote, i, 0, now_ms);
+            remote->holds[i].held = 0;
+        } else {
+            changed |= set_held(remote, i, 0, now_ms);
+        }
+    }
     return changed;
 }
 
-static int handle_message(struct remote_input *remote, char *message, const uint64_t now_ms) {
-    char *end = message + strcspn(message, "\r\n");
-    *end = '\0';
+static int stick_value(const char *text, int *value) {
+    char *end = NULL;
+    const float level = strtof(text, &end);
+    if (end == text || *end != '\0' || level != level) return 0;
+    const float clamped = level < -1.0f ? -1.0f : level > 1.0f ? 1.0f : level;
+    *value = (int) (clamped * 32767.0f);
+    return 1;
+}
 
-    if (strcmp(message, "clear") == 0) return release_all(remote, now_ms);
+static int handle_line(struct remote_input *remote, char *line, const uint64_t now_ms) {
+    if (strcmp(line, "clear") == 0) return release_all(remote, now_ms);
 
-    char *space = strchr(message, ' ');
-    if (!space || (strcmp(space + 1, "0") != 0 && strcmp(space + 1, "1") != 0)) return 0;
+    char *space = strchr(line, ' ');
+    if (!space) return 0;
     *space = '\0';
+    const char *argument = space + 1;
 
     for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
-        if (strcmp(remote_buttons[i].name, message) != 0 || !remote->available[i]) continue;
-        if (remote->verbose) fprintf(stderr, "remote %s %s\n", message, space + 1);
-        return set_held(remote, i, space[1] == '1', now_ms);
+        if (strcmp(remote_buttons[i].name, line) != 0 || !remote->available[i]) continue;
+        if (remote->verbose) fprintf(stderr, "remote %s %s\n", line, argument);
+
+        if (remote_buttons[i].kind == remote_stick) {
+            int value;
+            return stick_value(argument, &value) ? set_stick(remote, i, value, now_ms) : 0;
+        }
+        if (strcmp(argument, "0") != 0 && strcmp(argument, "1") != 0) return 0;
+        return set_held(remote, i, argument[0] == '1', now_ms);
     }
     return 0;
+}
+
+static int handle_message(struct remote_input *remote, char *message, const uint64_t now_ms) {
+    int changed = 0;
+    char *line = message;
+    while (line && *line) {
+        char *next = line + strcspn(line, "\r\n");
+        if (*next)
+            *next++ = '\0';
+        else
+            next = NULL;
+        if (*line) changed |= handle_line(remote, line, now_ms);
+        line = next;
+    }
+    return changed;
 }
 
 void remote_input_poll(struct remote_input *remote, const uint64_t now_ms) {
@@ -178,7 +237,7 @@ void remote_input_poll(struct remote_input *remote, const uint64_t now_ms) {
 
     int changed = 0;
     for (int messages = 0; messages < 64; ++messages) {
-        char message[64];
+        char message[REMOTE_MESSAGE_MAX];
         const ssize_t length = recv(remote->fd, message, sizeof(message) - 1, 0);
         if (length < 0) {
             if (errno == EINTR) continue;
@@ -191,6 +250,13 @@ void remote_input_poll(struct remote_input *remote, const uint64_t now_ms) {
     for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
         struct remote_hold *hold = &remote->holds[i];
         if (!hold->held) continue;
+        if (remote_buttons[i].kind == remote_stick) {
+            if (now_ms >= hold->expires_at) {
+                changed |= set_stick(remote, i, 0, now_ms);
+                hold->held = 0;
+            }
+            continue;
+        }
         if ((hold->release_at && now_ms >= hold->release_at) || now_ms >= hold->expires_at) {
             hold->held = 0;
             hold->release_at = 0;

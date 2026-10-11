@@ -314,7 +314,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    struct remote_input *remote = tester ? NULL : remote_input_open(gamepad, options.verbose);
+    const int south_is_a = strcmp(backend->id, "rg-vita-pro") == 0;
+    struct remote_input *remote = tester ? NULL : remote_input_open(gamepad, options.verbose, south_is_a);
 
     uint64_t next_refresh_ms = 0;
     if (backend->ops.refresh) {
