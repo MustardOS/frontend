@@ -1546,6 +1546,8 @@ static const lang_field lang_fields[] = {
     {"muxnetwork", LANG_OFF(muxnetwork.connected), lang_specific, "Joined to Wi-Fi"},
     {"muxnetwork", LANG_OFF(muxnetwork.autom), lang_specific, "Auto"},
     {"muxnetwork", LANG_OFF(muxnetwork.manual), lang_specific, "Manual"},
+    {"muxnetwork", LANG_OFF(muxnetwork.wired), lang_specific, "Wired Ethernet Connection"},
+    {"muxnetwork", LANG_OFF(muxnetwork.wired_help), lang_specific, "Configure the wired Ethernet connection. DHCP obtains the network details automatically, while Static lets you set the device address, subnet, gateway and DNS server yourself."},
     {"muxnetwork", LANG_OFF(muxnetwork.help), lang_specific, "Manage saved Wi-Fi networks and automatic joining. Joined describes the local Wi-Fi link, not Internet availability."},
 
     // muxnews

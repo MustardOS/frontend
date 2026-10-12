@@ -1600,6 +1600,8 @@ struct mux_lang {
         char connected[MAX_BUFFER_SIZE];
         char autom[MAX_BUFFER_SIZE];
         char manual[MAX_BUFFER_SIZE];
+        char wired[MAX_BUFFER_SIZE];
+        char wired_help[MAX_BUFFER_SIZE];
         char help[MAX_BUFFER_SIZE];
     } muxnetwork;
 

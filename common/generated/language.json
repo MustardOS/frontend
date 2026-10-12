@@ -1925,13 +1925,15 @@
   },
   "muxnetwork": {
     "Auto": "Auto",
+    "Configure the wired Ethernet connection. DHCP obtains the network details automatically, while Static lets you set the device address, subnet, gateway and DNS server yourself.": "Configure the wired Ethernet connection. DHCP obtains the network details automatically, while Static lets you set the device address, subnet, gateway and DNS server yourself.",
     "Joined to Wi-Fi": "Joined to Wi-Fi",
     "Lists the Wi-Fi networks you have saved. Join or leave them here, choose which one joins automatically and forget any you no longer need.\n\nJoined means connected to the Wi-Fi network. It does not by itself confirm Internet access.": "Lists the Wi-Fi networks you have saved. Join or leave them here, choose which one joins automatically and forget any you no longer need.\n\nJoined means connected to the Wi-Fi network. It does not by itself confirm Internet access.",
     "Manage saved Wi-Fi networks and automatic joining. Joined describes the local Wi-Fi link, not Internet availability.": "Manage saved Wi-Fi networks and automatic joining. Joined describes the local Wi-Fi link, not Internet availability.",
     "Manual": "Manual",
     "No Saved Networks Found": "No Saved Networks Found",
     "Scan for a nearby network and enter its password to save a profile.": "Scan for a nearby network and enter its password to save a profile.",
-    "Wi-Fi Network": "Wi-Fi Network"
+    "Wi-Fi Network": "Wi-Fi Network",
+    "Wired Ethernet Connection": "Wired Ethernet Connection"
   },
   "muxnews": {
     "Community News": "Community News",

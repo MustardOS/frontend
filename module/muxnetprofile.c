@@ -11,6 +11,7 @@ enum { ui_count_dynamic = E_SIZE(NETWORK_ELEMENTS) };
 
 static const char *pass_args[] = {OPT_PATH "script/web/password.sh", NULL};
 static const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
+static const char *net_r_args[] = {OPT_PATH NET_SCRIPT, "restart", NULL};
 
 #define PASS_ENCODE "********"
 
@@ -37,6 +38,7 @@ static int fields_modified = 0;
 static int network_saved = 0;
 static int viewing_existing_profile = 0;
 static int viewing_active_profile = 0;
+static int wired_mode = 0;
 static uint32_t next_connection_label_tick = 0;
 
 static mux_dialogue save_dlg;
@@ -53,6 +55,8 @@ static void list_nav_move(int steps, int direction);
 static int save_profile_ini(void);
 
 static void check_focus(void);
+
+static int read_ip(char *buf);
 
 enum connect_status {
     status_associating,
@@ -86,6 +90,8 @@ static void profile_status_path(char *buf) {
 }
 
 static void clear_current_active_profile(void) {
+    if (wired_mode) return;
+
     char *active = read_line_char_from(CONF_CONFIG_PATH "network/active", 1);
     const int match = active && *active && *current_profile && strcmp(active, current_profile) == 0;
     free(active);
@@ -94,6 +100,11 @@ static void clear_current_active_profile(void) {
 }
 
 static int profile_is_active(void) {
+    if (wired_mode) {
+        char ip[IP_OCTET];
+        return read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0;
+    }
+
     if (!*current_profile) return 0;
 
     char state[MAX_BUFFER_SIZE];
@@ -126,6 +137,8 @@ static int live_network_connected(void) {
 }
 
 static int active_profile_blocks_connect(void) {
+    if (wired_mode) return 0;
+
     if (!*current_profile) return 0;
     if (profile_is_active()) return 0;
 
@@ -317,6 +330,22 @@ static void show_connect_failure(const int exit_code) {
 }
 
 static void can_scan_check(const int forced_disconnect) {
+    if (wired_mode) {
+        nav_scan_hide(1);
+        lv_label_set_text(ui_lbl_connect_network, lang.generic.save);
+
+        char ip[IP_OCTET];
+        if (read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0) {
+            set_active_connection_value(1);
+            update_network_status(ui_sta_network, &theme, 1);
+        } else {
+            set_connect_value(lang.generic.not_connected);
+            set_status_value(lang.generic.not_connected);
+            update_network_status(ui_sta_network, &theme, 2);
+        }
+        return;
+    }
+
     if (ui_network_locked && connecting_phase) {
         lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.disconnect);
         nav_scan_hide(1);
@@ -345,6 +374,24 @@ static int get_current_ip(void) {
     char ip[IP_OCTET];
 
     const int has_ip = read_ip(ip) && *ip && strcasecmp(ip, "0.0.0.0") != 0;
+
+    if (wired_mode) {
+        lv_label_set_text(ui_lbl_connect_network, lang.generic.save);
+        nav_scan_hide(1);
+
+        if (has_ip) {
+            connecting_phase = 0;
+            viewing_active_profile = 1;
+            set_active_connection_value(1);
+            update_network_status(ui_sta_network, &theme, 1);
+            return 1;
+        }
+
+        set_connect_value(connecting_phase ? lang.muxnetprofile.status.waiting_ip : lang.generic.not_connected);
+        set_status_value(connecting_phase ? lang.muxnetprofile.status.internet_checking : lang.generic.not_connected);
+        update_network_status(ui_sta_network, &theme, connecting_phase ? 0 : 2);
+        return 0;
+    }
 
     if (has_ip && (profile_is_active() || (ui_network_locked && connecting_phase))) {
         connecting_phase = 0;
@@ -471,6 +518,39 @@ static void net_connect_check(const int exit_code) {
 
 static void restore_network_values(void) {
     char *profile_name_raw = read_line_char_from(CONF_CONFIG_PATH "network/profile_name", 1);
+
+    if (wired_mode) {
+        const int is_static = read_line_int_from(CONF_CONFIG_PATH "network/type", 1) != 0;
+
+        char *address = read_line_char_from(CONF_CONFIG_PATH "network/address", 1);
+        char *subnet = read_line_char_from(CONF_CONFIG_PATH "network/subnet", 1);
+        char *gateway = read_line_char_from(CONF_CONFIG_PATH "network/gateway", 1);
+        char *dns = read_line_char_from(CONF_CONFIG_PATH "network/dns", 1);
+
+        snprintf(current_profile, sizeof(current_profile), "%s", "__wired__");
+        viewing_existing_profile = 1;
+        viewing_active_profile = live_network_connected();
+
+        lv_label_set_text(ui_val_profile_name_network, lang.muxnetwork.wired);
+        lv_label_set_text(ui_val_identifier_network, "");
+        lv_label_set_text(ui_val_password_network, "");
+        lv_label_set_text(ui_val_priority_network, "");
+        lv_label_set_text(ui_val_type_network, is_static ? lang.muxnetprofile.statc : lang.muxnetprofile.dhcp);
+        lv_label_set_text(ui_val_address_network, address ? address : "");
+        lv_label_set_text(ui_val_subnet_network, subnet ? subnet : "");
+        lv_label_set_text(ui_val_gateway_network, gateway ? gateway : "");
+        lv_label_set_text(ui_val_dns_network, dns ? dns : "");
+        ui_count_static = is_static ? UI_STATIC : UI_DHCP;
+        pending_password[0] = '\0';
+
+        free(address);
+        free(subnet);
+        free(gateway);
+        free(dns);
+        free(profile_name_raw);
+        return;
+    }
+
     viewing_existing_profile = profile_name_raw && *profile_name_raw;
 
     snprintf(current_profile, sizeof(current_profile), "%s", viewing_existing_profile ? profile_name_raw : "");
@@ -549,7 +629,7 @@ static int save_network_config(void) {
 
     if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0) idx_type = 1;
 
-    const char *ssid = lv_label_get_text(ui_val_identifier_network);
+    const char *ssid = wired_mode ? "" : lv_label_get_text(ui_val_identifier_network);
 
     char esc_ssid[MAX_BUFFER_SIZE];
     char pass_buf[MAX_BUFFER_SIZE];
@@ -558,9 +638,11 @@ static int save_network_config(void) {
     snprintf(pass_buf, sizeof(pass_buf), "%s", pending_password);
 
     if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/type", INT, idx_type)) save_failed++;
-    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, ssid ? ssid : "")) save_failed++;
-    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid)) save_failed++;
-    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, pass_buf)) save_failed++;
+    if (!wired_mode) {
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid", CHAR, ssid ? ssid : "")) save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/ssid_wpa", CHAR, esc_ssid)) save_failed++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "network/pass", CHAR, pass_buf)) save_failed++;
+    }
 
     if (idx_type) {
         if (!write_text_to_file_atomic(
@@ -623,7 +705,8 @@ static void init_navigation_group(void) {
 static void check_focus() {
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     const int show_lr =
-        !viewing_active_profile && (e_focused == ui_lbl_priority_network || e_focused == ui_lbl_type_network);
+        (wired_mode || !viewing_active_profile)
+        && ((!wired_mode && e_focused == ui_lbl_priority_network) || e_focused == ui_lbl_type_network);
 
     if (show_lr) {
         lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -757,7 +840,7 @@ int handle_navigate(void) {
     if (e_focused == ui_lbl_priority_network) return 1;
 
     if (e_focused == ui_lbl_type_network) {
-        if (lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
+        if (!wired_mode && lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(snd_error);
             toast_message(lang.muxnetprofile.deny_modify, tst_wait_s);
 
@@ -787,7 +870,46 @@ static void handle_connect_toggle(void) {
     check_focus();
 }
 
+static int wired_config_valid(void) {
+    if (!wired_mode) return 0;
+    if (strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) != 0) return 1;
+
+    const char *address = lv_label_get_text(ui_val_address_network);
+    const char *subnet = lv_label_get_text(ui_val_subnet_network);
+    const char *gateway = lv_label_get_text(ui_val_gateway_network);
+    const char *dns = lv_label_get_text(ui_val_dns_network);
+
+    return *address && *subnet && *gateway && *dns;
+}
+
 static void handle_profile_save(void) {
+    if (wired_mode) {
+        if (!wired_config_valid()) {
+            play_sound(snd_error);
+            toast_message(lang.muxnetprofile.check, tst_wait_s);
+            return;
+        }
+
+        if (!save_network_config()) {
+            play_sound(snd_error);
+            toast_message(lang.generic.save_fail, tst_wait_m);
+            return;
+        }
+
+        play_sound(snd_confirm);
+        fields_modified = 0;
+        network_saved = 1;
+        ui_network_locked = 1;
+        connecting_phase = 1;
+        connect_process_done = 0;
+        connect_exit_code = 0;
+        connect_settle_ticks = 0;
+        set_connect_value(lang.muxnetprofile.status.waiting_ip);
+        set_status_value(lang.muxnetprofile.status.internet_checking);
+        run_exec(net_r_args, A_SIZE(net_r_args), 1, 0, NULL, net_connect_check);
+        return;
+    }
+
     if (active_profile_blocks_connect()) {
         play_sound(snd_error);
         toast_message(lang.muxnetprofile.connect_deny, tst_wait_s);
@@ -872,7 +994,7 @@ static void handle_profile_save(void) {
 }
 
 static void handle_osk_dispatch(const struct _lv_obj_t *e_focused) {
-    if (!lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
+    if (wired_mode || !lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
         play_sound(snd_confirm);
         key_curr = 0;
         if (e_focused == ui_lbl_profile_name_network || e_focused == ui_lbl_identifier_network
@@ -917,7 +1039,9 @@ static void handle_confirm(void) {
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lbl_status_network) return;
     if (e_focused == ui_lbl_connect_network) {
-        if (lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
+        if (wired_mode) {
+            handle_profile_save();
+        } else if (lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
             handle_connect_toggle();
         } else {
             handle_profile_save();
@@ -941,7 +1065,7 @@ static void handle_back(void) {
 }
 
 static void handle_scan(void) {
-    if (ui_network_locked) return;
+    if (wired_mode || ui_network_locked) return;
 
     if (!lv_obj_has_flag(ui_lbl_nav_x, LV_OBJ_FLAG_HIDDEN)) {
         play_sound(snd_confirm);
@@ -1163,9 +1287,16 @@ static void handle_a(void) {
         dialogue_dismiss(&save_dlg);
 
         if (opt == mux_confirm_yep) {
-            const int profile_saved = save_profile_ini();
-            const int active_saved = profile_saved && (!viewing_active_profile || save_network_config());
-            if (!profile_saved || !active_saved) {
+            int saved;
+            if (wired_mode) {
+                saved = wired_config_valid() && save_network_config();
+                if (saved) run_exec(net_r_args, A_SIZE(net_r_args), 1, 0, NULL, NULL);
+            } else {
+                const int profile_saved = save_profile_ini();
+                saved = profile_saved && (!viewing_active_profile || save_network_config());
+            }
+
+            if (!saved) {
                 play_sound(snd_error);
                 toast_message(lang.generic.save_fail, tst_wait_m);
                 return;
@@ -1250,7 +1381,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || hold_call || ui_network_locked) return;
+    if (wired_mode || msgbox_active || hold_call || ui_network_locked) return;
 
     if (key_show == 1) {
         key_space(ui_txt_entry_network);
@@ -1462,6 +1593,24 @@ static void init_elements(void) {
     for (int i = 0; connect_items[i]; i++)
         lv_obj_clear_flag(connect_items[i], LV_OBJ_FLAG_HIDDEN);
 
+    if (wired_mode) {
+        lv_obj_t *wireless_items[] = {
+            ui_pnl_profile_name_network,
+            ui_pnl_identifier_network,
+            ui_pnl_password_network,
+            ui_pnl_priority_network,
+            NULL
+        };
+        for (int i = 0; wireless_items[i]; i++)
+            lv_obj_add_flag(wireless_items[i], MU_OBJ_FLAG_HIDE_FLOAT);
+
+        lv_label_set_text(ui_lbl_connect_network, lang.generic.save);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
     toggle_static_panels(!config.network.type);
 
 #define NETWORK(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_network, UDATA);
@@ -1507,9 +1656,12 @@ int muxnetprofile_main(void) {
     last_status[0] = '\0';
 
     init_module(__func__);
+    wired_mode = strcasecmp(device.network.type, "ethernet") == 0;
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.muxnetprofile.title);
+    init_ui_common_screen(
+        &theme, &device, &lang, wired_mode ? lang.muxnetwork.wired : lang.muxnetprofile.title
+    );
     init_muxnetwork(ui_screen, ui_pnl_content, &theme);
     init_elements();
 
@@ -1526,7 +1678,7 @@ int muxnetprofile_main(void) {
     restore_network_values();
     check_connecting_state();
 
-    if (!viewing_existing_profile) {
+    if (wired_mode || !viewing_existing_profile) {
         lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
@@ -1591,7 +1743,10 @@ int muxnetprofile_main(void) {
     init_input(&input_opts, 1);
 
     register_key_event_callback(on_key_event);
-    orientation_introduce(mux_module, lang.muxnetprofile.title, lang.muxnetprofile.overview);
+    orientation_introduce(
+        mux_module, wired_mode ? lang.muxnetwork.wired : lang.muxnetprofile.title,
+        wired_mode ? lang.muxnetwork.wired_help : lang.muxnetprofile.overview
+    );
 
     mux_input_task(&input_opts);
 

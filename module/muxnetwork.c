@@ -2,8 +2,14 @@
 #include <common/ui/orientation.h>
 #include <common/ui/empty_state.h>
 
+static int wired_network(void) {
+    return strcasecmp(device.network.type, "ethernet") == 0;
+}
+
 static void show_help(void) {
-    show_info_box(lang.muxnetwork.title, lang.muxnetwork.help, 0);
+    show_info_box(
+        lang.muxnetwork.title, wired_network() ? lang.muxnetwork.wired_help : lang.muxnetwork.help, 0
+    );
 }
 
 // Some of the older network scripts are going to cause issues, so we'll
@@ -181,7 +187,41 @@ static int profile_entry_compare(const void *a, const void *b) {
     return strcasecmp(pa->name, pb->name);
 }
 
+static void populate_wired_connection(void) {
+    char value[MAX_BUFFER_SIZE];
+    if (!get_network_ipv4_address(value, sizeof(value)) || !*value) {
+        snprintf(value, sizeof(value), "%s", lang.generic.not_connected);
+    }
+
+    ui_count_static++;
+
+    lv_obj_t *panel = lv_obj_create(ui_pnl_content);
+    apply_theme_list_panel(panel);
+    set_owned_user_data(panel, strdup("__wired__"));
+
+    lv_obj_t *label = lv_label_create(panel);
+    apply_theme_option_item_label(&theme, label, lang.muxnetwork.wired, 1);
+
+    lv_obj_t *status = lv_label_create(panel);
+    apply_theme_list_value(&theme, status, value);
+
+    lv_obj_t *glyph = lv_img_create(panel);
+    apply_theme_list_glyph(&theme, glyph, mux_module, "ethernet");
+
+    lv_group_add_obj(ui_group, label);
+    lv_group_add_obj(ui_group_value, status);
+    lv_group_add_obj(ui_group_glyph, glyph);
+    lv_group_add_obj(ui_group_panel, panel);
+
+    lv_obj_update_layout(ui_pnl_content);
+}
+
 static void populate_profile_list(void) {
+    if (wired_network()) {
+        populate_wired_connection();
+        return;
+    }
+
     const char *dirs[] = {STORAGE_NETWORK};
     const char *exts[] = {".ini"};
 
@@ -302,7 +342,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (msgbox_active || hold_call) return;
+    if (wired_network() || msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
     load_mux("net_scan");
@@ -310,7 +350,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || hold_call) return;
+    if (wired_network() || msgbox_active || hold_call) return;
 
     play_sound(snd_confirm);
 
@@ -329,7 +369,7 @@ static void handle_y(void) {
 }
 
 static void toggle_focused_autoconnect(void) {
-    if (msgbox_active || !ui_count_static || hold_call) return;
+    if (wired_network() || msgbox_active || !ui_count_static || hold_call) return;
 
     lv_obj_t *panel = lv_group_get_focused(ui_group_panel);
     if (!panel) return;
@@ -443,6 +483,15 @@ static void init_elements(void) {
                                   {ui_lbl_nav_y, lang.generic.new, 0},
                                   {NULL, NULL, 0}});
 
+    if (wired_network()) {
+        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
     overlay_display();
 }
 
@@ -461,7 +510,7 @@ int muxnetwork_main(void) {
     init_navigation_group();
     init_elements();
 
-    if (ui_count_static == 0)
+    if (!wired_network() && ui_count_static == 0)
         empty_state_show_action(lang.muxnetwork.none, lang.muxnetwork.none_hint, "x", lang.generic.scan);
 
     init_timer(ui_gen_refresh_task, NULL);
@@ -498,7 +547,10 @@ int muxnetwork_main(void) {
     list_nav_set_callbacks(list_nav_cb_prev, list_nav_cb_next);
     init_input(&input_opts, 1);
 
-    orientation_introduce(mux_module, lang.muxnetwork.title, lang.muxnetwork.overview);
+    orientation_introduce(
+        mux_module, lang.muxnetwork.title,
+        wired_network() ? lang.muxnetwork.wired_help : lang.muxnetwork.overview
+    );
 
     mux_input_task(&input_opts);
 
