@@ -10176,7 +10176,7 @@
       "min": 0,
       "max": 1,
       "label": "Web Dashboard Authentication",
-      "help": "Whether changes made through the Web Dashboard need a code.\n\nDisabled, it can browse and download, and anyone on your network can change History and Collections without a code. Enabled, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code."
+      "help": "Whether changes made through the Web Dashboard need a code.\n\nDisabled, the dashboard can browse and download, and anyone on your network can change History and Collections and control Wasabi and Pickles without a code. The Editors and Tools cannot save to the device. Enabled, saving from the Editors and Tools, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code."
     },
     {
       "key": "web/landing_port",

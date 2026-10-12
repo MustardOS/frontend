@@ -2654,7 +2654,7 @@ static int write_allowed(struct connection *connection) {
     if (code > 0) return 1;
     if (code_refused(connection, code)) return 0;
 
-    send_error(connection, 401, "Unlock the dashboard with the code shown on the device");
+    send_error(connection, 401, "Unlock the dashboard with the code from Web Dashboard Code on the device");
     return 0;
 }
 
@@ -3706,7 +3706,7 @@ static int screen_allowed(struct connection *connection) {
     if (code > 0) return 1;
     if (code_refused(connection, code)) return 0;
 
-    send_error(connection, 401, "Unlock the dashboard with the code shown on the device");
+    send_error(connection, 401, "Unlock the dashboard with the code from Web Dashboard Code on the device");
     return 0;
 }
 

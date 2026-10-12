@@ -16,6 +16,10 @@
 
 #include "../draw/sw/lv_draw_sw.h"
 
+#if LV_USE_GPU_SDL
+#include "../draw/sdl/lv_draw_sdl_texture_cache.h"
+#endif
+
 /*********************
  *      DEFINES
  *********************/
@@ -772,6 +776,13 @@ static void lv_canvas_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
 
     lv_canvas_t *canvas = (lv_canvas_t *) obj;
     lv_img_cache_invalidate_src(&canvas->dsc);
+
+#if LV_USE_GPU_SDL
+    lv_disp_t *disp = lv_obj_get_disp(obj);
+    if (disp && disp->driver && disp->driver->draw_ctx) {
+        lv_draw_sdl_texture_cache_remove_src((lv_draw_sdl_ctx_t *) disp->driver->draw_ctx, &canvas->dsc);
+    }
+#endif
 }
 
 static void init_fake_disp(lv_obj_t *canvas, lv_disp_t *disp, lv_disp_drv_t *drv, lv_area_t *clip_area) {

@@ -560,12 +560,16 @@ static void handle_a(void) {
     }
 }
 
+static void close_name_entry(void) {
+    key_show = 0;
+    close_osk(key_entry, ui_group, ui_txt_entry_profile, ui_pnl_entry_profile);
+}
+
 static void handle_b(void) {
     if (hold_call) return;
 
     if (key_show) {
-        key_show = 0;
-        close_osk(key_entry, ui_group, ui_txt_entry_profile, ui_pnl_entry_profile);
+        key_backspace(ui_txt_entry_profile);
         return;
     }
 
@@ -591,7 +595,7 @@ static void handle_b(void) {
 
 static void handle_x(void) {
     if (key_show) {
-        key_backspace(ui_txt_entry_profile);
+        close_name_entry();
         return;
     }
 
@@ -735,7 +739,7 @@ static void on_key_event(const struct input_event ev) {
     }
 
     if (ev.code == KEY_ESC && ev.value == 1) {
-        handle_b();
+        close_name_entry();
     } else {
         process_key_event(&ev, ui_txt_entry_profile);
     }
