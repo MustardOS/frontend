@@ -641,6 +641,11 @@ static void row_y_action(const int index) {
     if (definition && definition->y_action) definition->y_action(row_local_index(index));
 }
 
+static int row_extra_refreshes(const int index) {
+    const submenu_def *definition = row_definition(index);
+    return definition && definition->extra_refreshes && definition->extra_refreshes(row_local_index(index));
+}
+
 static void row_action(const int index) {
     const submenu_def *definition = row_definition(index);
     const int local_index = row_local_index(index);
@@ -733,6 +738,7 @@ static submenu_def def = {
     .action = row_action,
     .extra_label = row_extra_label,
     .extra_action = row_extra_action,
+    .extra_refreshes = row_extra_refreshes,
     .y_label = row_y_label,
     .y_action = row_y_action,
     .child_tick = child_tick,

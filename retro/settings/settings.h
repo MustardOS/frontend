@@ -748,6 +748,10 @@ void session_settings_reset_viewport(void);
 
 void session_settings_reset_overlay(void);
 
+void session_settings_clear_vignette(void);
+
+void session_settings_clear_overlay(void);
+
 int session_settings_is_dirty(void);
 
 void session_settings_apply_save_choice(int choice);

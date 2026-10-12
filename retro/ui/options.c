@@ -98,19 +98,23 @@ static void close_overrides(void) {
     ovr_content = NULL;
 }
 
-static void apply_value(struct core_option_entry *e, const char *value) {
-    if (!value || !*value) return;
+static int value_index(const struct core_option_entry *e, const char *value) {
+    if (!value || !*value) return -1;
 
-    for (int v = 0; v < e->value_count; v++) {
-        if (strcmp(e->values[v], value) == 0) {
-            e->current_index = v;
-            return;
-        }
-    }
+    for (int v = 0; v < e->value_count; v++)
+        if (strcmp(e->values[v], value) == 0) return v;
+
+    return -1;
+}
+
+static void apply_value(struct core_option_entry *e, const char *value) {
+    const int found = value_index(e, value);
+    if (found >= 0) e->current_index = found;
 }
 
 static void apply_override(struct core_option_entry *e) {
     apply_value(e, coredef_lookup(active_core_name, e->key));
+    e->default_index = e->current_index;
     mini_t *inis[] = {ovr_core, ovr_directory, ovr_content};
 
     for (int p = 0; p < 3; p++) {
@@ -321,18 +325,53 @@ void options_cycle(const int index, const int direction) {
     options_dirty = true;
 }
 
-static int options_save(const char *path) {
-    mini_t *ini = mini_try_load(path);
-    if (!ini) ini = mini_create(path);
+static int tier_index(const struct core_option_entry *e, mini_t *core_ini, mini_t *directory_ini) {
+    int index = e->default_index;
+    mini_t *inis[] = {core_ini, directory_ini};
+
+    for (int p = 0; p < 2; p++) {
+        if (!inis[p]) continue;
+
+        const int found = value_index(e, get_ini_string(inis[p], "options", e->key, ""));
+        if (found >= 0) index = found;
+    }
+
+    return index;
+}
+
+static int options_save(const char *path, const int with_core, const int with_directory) {
+    if (!path || !*path) return 0;
+
+    mini_t *core_ini = with_core && core_ini_path[0] ? mini_try_load(core_ini_path) : NULL;
+    mini_t *directory_ini = with_directory && directory_ini_path[0] ? mini_try_load(directory_ini_path) : NULL;
+
+    mini_t *ini = mini_create(path);
     if (!ini) {
         LOG_ERROR(mux_module, "Could not create core-options document: %s", path);
+        if (core_ini) mini_free(core_ini);
+        if (directory_ini) mini_free(directory_ini);
         return 0;
     }
 
+    int changed = 0;
     for (int i = 0; i < options_count; i++) {
         const struct core_option_entry *e = &options_list[i];
         if (e->value_count == 0) continue;
+        if (e->current_index == tier_index(e, core_ini, directory_ini)) continue;
+
         mini_set_string(ini, "options", e->key, e->values[e->current_index]);
+        changed++;
+    }
+
+    if (core_ini) mini_free(core_ini);
+    if (directory_ini) mini_free(directory_ini);
+
+    if (!changed) {
+        mini_free(ini);
+        if (unlink(path) == 0 || errno == ENOENT) return 1;
+
+        LOG_ERROR(mux_module, "Could not remove redundant core options '%s': %s", path, strerror(errno));
+        return 0;
     }
 
     const int saved = mini_save(ini, 0) == MINI_OK;
@@ -469,20 +508,28 @@ int options_is_dirty(void) {
 }
 
 void options_discard(void) {
-    for (int i = 0; i < options_count; i++)
+    for (int i = 0; i < options_count; i++) {
+        if (options_list[i].current_index == baseline_indices[i]) continue;
+
         options_list[i].current_index = baseline_indices[i];
+        options_dirty = true;
+    }
 }
 
 void options_save_content(void) {
-    if (options_save(content_ini_path)) snapshot_baseline();
+    if (options_save(content_ini_path, 1, 1)) snapshot_baseline();
 }
 
 void options_save_core(void) {
-    if (options_save(core_ini_path)) snapshot_baseline();
+    if (options_save(core_ini_path, 0, 0)) snapshot_baseline();
 }
 
 void options_save_directory(void) {
-    if (options_save(directory_ini_path)) snapshot_baseline();
+    if (options_save(directory_ini_path, 1, 0)) snapshot_baseline();
+}
+
+void options_keep_session(void) {
+    snapshot_baseline();
 }
 
 static int delete_saved_option_file(const char *path) {

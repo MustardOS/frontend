@@ -697,19 +697,19 @@ static void show_nav(void) {
     const int shader_browser_adjust = settings_active && settings_page == wasabi_page_shader
                                       && !wasabi_catalogue_active()
                                       && wasabi_asset_browser_type(current_item_index) == wasabi_asset_row_item;
-    const int shader_adjust = settings_active
-                              && ((settings_page == wasabi_page_root && root_row == wasabi_setting_shader
-                                   && video_effects_parameter_count() > 0)
-                                  || shader_browser_adjust);
+    const int root_adjust =
+        root_row == wasabi_setting_shader && !list_frame_focused() && video_effects_parameter_count() > 0;
+    const int root_clear = root_row >= 0 && !list_frame_focused() && wasabi_setting_clearable((wasabi_setting) root_row);
     const int bookmark_remove = bookmarks_active && bookmark_count > 0;
     const int asset_delete = settings_active && asset_page() && settings_page != wasabi_page_shader
                              && !wasabi_catalogue_active() && wasabi_asset_browser_removable(current_item_index);
     nav_show_x(
-        hotkey_reset || shader_adjust || bookmark_remove || asset_delete,
-        hotkey_reset    ? lang.generic.reset
-        : shader_adjust ? lang.muxretro.shader_screen.adjust
-        : asset_delete  ? lang.muxretro.catalogue_screen.delete_label
-                        : lang.generic.remove
+        hotkey_reset || shader_browser_adjust || root_clear || bookmark_remove || asset_delete,
+        hotkey_reset            ? lang.generic.reset
+        : shader_browser_adjust ? lang.muxretro.shader_screen.adjust
+        : root_clear            ? lang.generic.none
+        : asset_delete          ? lang.muxretro.catalogue_screen.delete_label
+                                : lang.generic.remove
     );
     const int asset_collect = settings_active && asset_page() && !wasabi_catalogue_active()
                               && wasabi_asset_browser_type(current_item_index) == wasabi_asset_row_item;
@@ -720,7 +720,11 @@ static void show_nav(void) {
         collected          ? (removable_shader ? lang.muxretro.catalogue_screen.delete_label : lang.generic.remove)
         : removable_shader ? lang.generic.actions
                            : lang.generic.collect;
-    nav_show_y(bookmarks_active || asset_collect, bookmarks_active ? lang.generic.save : asset_action);
+    nav_show_y(
+        bookmarks_active || asset_collect || root_adjust, bookmarks_active ? lang.generic.save
+                                                          : root_adjust    ? lang.muxretro.shader_screen.adjust
+                                                                           : asset_action
+    );
 }
 
 static void build_pause_at(const int focus_row) {
@@ -1851,6 +1855,9 @@ int video_playback_ui_y_actionable(void) {
     if (!menu_active) return 0;
     if (equaliser_active()) return 1;
     if (bookmarks_active) return !live_content;
+    if (settings_active && settings_page == wasabi_page_root)
+        return !list_frame_focused() && list_frame_current_row() == wasabi_setting_shader
+               && video_effects_parameter_count() > 0;
     return settings_active && asset_page() && !wasabi_catalogue_active()
            && wasabi_asset_browser_type(current_item_index) == wasabi_asset_row_item;
 }
@@ -2262,10 +2269,16 @@ void video_playback_ui_extra(void) {
     }
     if (settings_page == wasabi_page_root) {
         const int row = list_frame_current_row();
-        if (row == wasabi_setting_shader && video_effects_parameter_count() > 0) {
+        if (!list_frame_focused() && wasabi_setting_clear((wasabi_setting) row)) {
             play_sound(snd_confirm);
-            settings_parent_row = row;
-            build_settings_page(wasabi_page_shader_parameters);
+            if (row == wasabi_setting_colour_filter || row == wasabi_setting_shader) {
+                video_player_effect_settings_changed();
+            } else {
+                if (row != wasabi_setting_vignette) build_settings_at(wasabi_setting_overlay_source);
+                video_render_settings_changed();
+            }
+            refresh_setting_value(row);
+            show_nav();
             display_composite_frame();
             return;
         }
@@ -2319,6 +2332,12 @@ int video_playback_ui_collect(void) {
     if (!video_playback_ui_y_actionable()) return 0;
     if (equaliser_active()) {
         begin_equaliser_name();
+        return 1;
+    }
+    if (settings_page == wasabi_page_root) {
+        settings_parent_row = wasabi_setting_shader;
+        build_settings_page(wasabi_page_shader_parameters);
+        display_composite_frame();
         return 1;
     }
     if (settings_page == wasabi_page_shader && wasabi_asset_browser_removable(current_item_index)) {

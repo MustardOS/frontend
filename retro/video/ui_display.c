@@ -99,13 +99,35 @@ static void row_action(const int index) {
     }
 }
 
-static const char *extra_label(const int index) {
+static const char *y_label(const int index) {
     if (index != row_shader || colour_shader_param_count() <= 0) return NULL;
     return lang.muxretro.shader_screen.adjust;
 }
 
-static void extra_action(const int index) {
+static void y_action(const int index) {
     if (index == row_shader && colour_shader_param_count() > 0) shader_adjust_menu_open_direct();
+}
+
+static const char *extra_label(const int index) {
+    const int set = index == row_vignette ? session_settings.vignette_shape != vignette_shape_off
+                    : index == row_filter ? session_settings.colour_filter != 0
+                    : index == row_shader ? session_settings.colour_shader != 0
+                                          : 0;
+    return set ? lang.generic.none : NULL;
+}
+
+static void extra_action(const int index) {
+    if (index == row_vignette)
+        session_settings_clear_vignette();
+    else if (index == row_filter)
+        session_settings_set_colour_filter(0);
+    else if (index == row_shader)
+        session_settings_set_colour_shader(0);
+}
+
+static int extra_refreshes(const int index) {
+    (void) index;
+    return 1;
 }
 
 static int child_tick(void) {
@@ -149,6 +171,9 @@ static submenu_def def = {
     .action = row_action,
     .extra_label = extra_label,
     .extra_action = extra_action,
+    .extra_refreshes = extra_refreshes,
+    .y_label = y_label,
+    .y_action = y_action,
     .child_tick = child_tick,
     .closed = closed,
     .save_title = lang.muxretro.save.display_title,

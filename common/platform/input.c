@@ -455,6 +455,23 @@ static void apply_face_button_layout(void) {
     controller_button_map[SDL_CONTROLLER_BUTTON_Y] = mux_input_y;
 }
 
+static mux_input_type apply_direction_axis_swap(mux_input_type type) {
+    if (!swap_axis || key_show) return type;
+
+    switch (type) {
+        case mux_input_dpad_up:
+            return mux_input_dpad_left;
+        case mux_input_dpad_down:
+            return mux_input_dpad_right;
+        case mux_input_dpad_left:
+            return mux_input_dpad_up;
+        case mux_input_dpad_right:
+            return mux_input_dpad_down;
+        default:
+            return type;
+    }
+}
+
 static void init_input_maps(void) {
     if (input_init_done) return;
 
@@ -501,21 +518,6 @@ static void init_input_maps(void) {
     axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].neg = mux_input_count;
     axis_map[SDL_CONTROLLER_AXIS_TRIGGERRIGHT].pos = mux_input_r2;
 
-    input_map[SDL_SCANCODE_SPACE] = mux_input_a;
-    input_map[SDL_SCANCODE_BACKSPACE] = mux_input_b;
-    input_map[SDL_SCANCODE_R] = mux_input_x;
-    input_map[SDL_SCANCODE_F] = mux_input_y;
-
-    input_map[SDL_SCANCODE_Q] = mux_input_l1;
-    input_map[SDL_SCANCODE_E] = mux_input_r1;
-    input_map[SDL_SCANCODE_Z] = mux_input_l2;
-    input_map[SDL_SCANCODE_C] = mux_input_r2;
-
-    input_map[SDL_SCANCODE_LCTRL] = mux_input_select;
-    input_map[SDL_SCANCODE_LSHIFT] = mux_input_start;
-
-    input_map[SDL_SCANCODE_F1] = mux_input_menu;
-
     input_map[SDL_SCANCODE_UP] = mux_input_dpad_up;
     input_map[SDL_SCANCODE_DOWN] = mux_input_dpad_down;
     input_map[SDL_SCANCODE_LEFT] = mux_input_dpad_left;
@@ -525,6 +527,47 @@ static void init_input_maps(void) {
     input_map[SDL_SCANCODE_S] = mux_input_dpad_down;
     input_map[SDL_SCANCODE_A] = mux_input_dpad_left;
     input_map[SDL_SCANCODE_D] = mux_input_dpad_right;
+
+#if defined(__x86_64__)
+    {
+        // Match the Web Dashboard Remote View keyboard layout on x86 hosts.
+        input_map[SDL_SCANCODE_I] = mux_input_x;
+        input_map[SDL_SCANCODE_J] = mux_input_y;
+        input_map[SDL_SCANCODE_K] = mux_input_b;
+        input_map[SDL_SCANCODE_L] = mux_input_a;
+
+        input_map[SDL_SCANCODE_G] = mux_input_menu;
+        input_map[SDL_SCANCODE_F] = mux_input_select;
+        input_map[SDL_SCANCODE_H] = mux_input_start;
+
+        input_map[SDL_SCANCODE_Q] = mux_input_l1;
+        input_map[SDL_SCANCODE_E] = mux_input_l2;
+        input_map[SDL_SCANCODE_R] = mux_input_l3;
+        input_map[SDL_SCANCODE_O] = mux_input_r1;
+        input_map[SDL_SCANCODE_U] = mux_input_r2;
+        input_map[SDL_SCANCODE_Y] = mux_input_r3;
+
+        input_map[SDL_SCANCODE_V] = mux_input_vol_down;
+        input_map[SDL_SCANCODE_N] = mux_input_vol_up;
+    }
+#else
+    {
+        input_map[SDL_SCANCODE_SPACE] = mux_input_a;
+        input_map[SDL_SCANCODE_BACKSPACE] = mux_input_b;
+        input_map[SDL_SCANCODE_R] = mux_input_x;
+        input_map[SDL_SCANCODE_F] = mux_input_y;
+
+        input_map[SDL_SCANCODE_Q] = mux_input_l1;
+        input_map[SDL_SCANCODE_E] = mux_input_r1;
+        input_map[SDL_SCANCODE_Z] = mux_input_l2;
+        input_map[SDL_SCANCODE_C] = mux_input_r2;
+
+        input_map[SDL_SCANCODE_LCTRL] = mux_input_select;
+        input_map[SDL_SCANCODE_LSHIFT] = mux_input_start;
+
+        input_map[SDL_SCANCODE_F1] = mux_input_menu;
+    }
+#endif
 
     if (!map_sdl_volume_buttons()) {
         switch (board_special()) {
@@ -584,25 +627,8 @@ static void process_sdl_button(const SDL_GameControllerButton btn, const int dow
         return;
     }
 
-    // Wonky donkey input...
-    if (swap_axis && !key_show) {
-        switch (t) {
-            case mux_input_dpad_up:
-                t = mux_input_dpad_left;
-                break;
-            case mux_input_dpad_down:
-                t = mux_input_dpad_right;
-                break;
-            case mux_input_dpad_left:
-                t = mux_input_dpad_up;
-                break;
-            case mux_input_dpad_right:
-                t = mux_input_dpad_down;
-                break;
-            default:
-                break;
-        }
-    }
+    // Grid layouts may store their items across the opposite axis.
+    t = apply_direction_axis_swap(t);
 
     if (t == mux_input_menu) {
         if (down) {
@@ -796,13 +822,15 @@ static void process_sdl_key(const SDL_KeyboardEvent *key, const int down) {
     const SDL_Scancode sc = key->keysym.scancode;
     if (sc >= SDL_NUM_SCANCODES) return;
 
-    const mux_input_type t = input_map[sc];
+    mux_input_type t = input_map[sc];
     if (t == mux_input_count) {
         LOG_DEBUG("input", "Unmapped key %s (%d)", SDL_GetScancodeName(sc), sc);
         return;
     }
 
     if (key->repeat) return;
+
+    t = apply_direction_axis_swap(t);
 
     pressed = down ? pressed | BIT(t) : pressed & ~BIT(t);
 }

@@ -34,6 +34,7 @@ typedef struct {
     void (*extra_action)(int index);
     const char *(*y_label)(int index);
     void (*y_action)(int index);
+    int (*extra_refreshes)(int index);
     int (*child_tick)(void);
     int action_without_save_guard;
     void (*closed)(void);

@@ -618,6 +618,46 @@ int wasabi_setting_is_action(const wasabi_setting setting) {
            || setting == wasabi_setting_reset;
 }
 
+static int asset_chosen(const char *key) {
+    return key[0] && strcasecmp(key, "none") != 0;
+}
+
+int wasabi_setting_clearable(const wasabi_setting setting) {
+    switch (setting) {
+        case wasabi_setting_vignette:
+            return config.video.vignette_shape != 0;
+        case wasabi_setting_colour_filter:
+            return asset_chosen(config.video.colour_filter);
+        case wasabi_setting_shader:
+            return asset_chosen(config.video.shader);
+        case wasabi_setting_overlay_source:
+        case wasabi_setting_overlay_image:
+            return config.video.overlay_mode != 0;
+        default:
+            return 0;
+    }
+}
+
+int wasabi_setting_clear(const wasabi_setting setting) {
+    if (!wasabi_setting_clearable(setting)) return 0;
+
+    switch (setting) {
+        case wasabi_setting_vignette:
+            config.video.vignette_shape = 0;
+            return 1;
+        case wasabi_setting_colour_filter:
+            return wasabi_asset_preview(wasabi_asset_filter, 0);
+        case wasabi_setting_shader:
+            return wasabi_asset_preview(wasabi_asset_shader, 0);
+        case wasabi_setting_overlay_source:
+        case wasabi_setting_overlay_image:
+            config.video.overlay_mode = 0;
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 static int cycle_root_hotkey(const wasabi_setting setting, const int direction) {
     const int index = setting - wasabi_setting_hotkey_pause;
     const int previous = *hotkey_fields[index];

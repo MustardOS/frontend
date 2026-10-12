@@ -67,6 +67,12 @@ static int row_is_action(int index);
 
 static void row_action(int index);
 
+static const char *extra_label(int index);
+
+static void extra_action(int index);
+
+static int extra_refreshes(int index);
+
 static submenu_def def = {
     .labels = row_labels,
     .glyphs = row_glyphs,
@@ -76,6 +82,9 @@ static submenu_def def = {
     .cycle = cycle_row,
     .row_is_action = row_is_action,
     .action = row_action,
+    .extra_label = extra_label,
+    .extra_action = extra_action,
+    .extra_refreshes = extra_refreshes,
     .closed = closed,
     .save_title = lang.muxretro.save.display_title,
     .save_desc = lang.muxretro.save.display_desc,
@@ -189,6 +198,23 @@ static void row_action(const int index) {
         default:
             break;
     }
+}
+
+static const char *extra_label(const int index) {
+    const int logical = logical_of(index);
+    if (logical != logical_source && logical != logical_image) return NULL;
+    return session_settings.overlay_source != overlay_source_off ? lang.generic.none : NULL;
+}
+
+static void extra_action(const int index) {
+    (void) index;
+    session_settings_clear_overlay();
+    rows_dirty = 1;
+}
+
+static int extra_refreshes(const int index) {
+    (void) index;
+    return 1;
 }
 
 int overlay_settings_child_tick(void) {

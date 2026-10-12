@@ -15,6 +15,7 @@ struct core_option_entry {
     char (*values)[OPTIONS_VALUE_LEN];
     int value_count;
     int current_index;
+    int default_index;
     bool visible;
 };
 
@@ -70,5 +71,7 @@ void options_save_content(void);
 void options_save_core(void);
 
 void options_save_directory(void);
+
+void options_keep_session(void);
 
 int options_delete_saved_overrides(void);

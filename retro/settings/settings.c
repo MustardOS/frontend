@@ -1094,6 +1094,32 @@ static int user_profile_target_matches(const char *wanted, const char *first, co
     return (first && strcasecmp(wanted, first) == 0) || (second && strcasecmp(wanted, second) == 0);
 }
 
+#define SHADER_PARAMS_GROUP "shader_params"
+#define SHADER_PARAMS_KEY   "shader_key"
+
+static int apply_named_settings_to(mini_t *ini, struct session_settings_t *settings);
+
+static void reset_visuals(struct session_settings_t *settings) {
+    const struct session_settings_t fallback = default_settings();
+    settings->vignette_shape = fallback.vignette_shape;
+    settings->colour_filter = fallback.colour_filter;
+    settings->colour_shader = fallback.colour_shader;
+    memset(settings->shader_params_for, 0, sizeof(settings->shader_params_for));
+    memset(settings->shader_params, 0, sizeof(settings->shader_params));
+    settings->shader_param_count = 0;
+    settings->overlay_source = fallback.overlay_source;
+    settings->overlay_image = fallback.overlay_image;
+}
+
+static void copy_named_settings(struct session_settings_t *target, const struct session_settings_t *source) {
+    target->colour_filter = source->colour_filter;
+    target->colour_shader = source->colour_shader;
+    target->overlay_image = source->overlay_image;
+    memcpy(target->shader_params_for, source->shader_params_for, sizeof(target->shader_params_for));
+    memcpy(target->shader_params, source->shader_params, sizeof(target->shader_params));
+    target->shader_param_count = source->shader_param_count;
+}
+
 static int user_profile_load(const char *path, const char *file_name, user_profile *profile) {
     mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return 0;
@@ -1111,6 +1137,7 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
 
     memset(profile, 0, sizeof(*profile));
     profile->values = baseline_settings;
+    reset_visuals(&profile->values);
     const struct session_settings_t fallback = default_settings();
     snprintf(profile->path, sizeof(profile->path), "%s", path);
 
@@ -1151,6 +1178,7 @@ static int user_profile_load(const char *path, const char *file_name, user_profi
     const int input_fields = apply_input_settings_to(ini, &profile->values, &fallback, file_name);
     profile->input_present = input_fields > 0;
     profile->field_count += input_fields;
+    profile->field_count += apply_named_settings_to(ini, &profile->values);
 
     for (int option = 0; option < options_count; option++) {
         const struct core_option_entry *entry = &options_list[option];
@@ -1228,11 +1256,13 @@ int session_settings_user_profile_apply(const int index) {
 
     const user_profile *profile = &user_profiles[index];
     struct session_settings_t next = baseline_settings;
+    reset_visuals(&next);
     for (int i = 0; i < setting_descriptor_count; i++) {
         if (!profile->present[i]) continue;
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
         *setting_field(&next, descriptor) = *setting_field_const(&profile->values, descriptor);
     }
+    copy_named_settings(&next, &profile->values);
 
     if (profile->input_present) {
         memcpy(next.port_assignment, profile->values.port_assignment, sizeof(next.port_assignment));
@@ -1354,6 +1384,27 @@ static int user_profile_write(FILE *file, const char *name, const enum user_prof
                        < 0
                 || fprintf(file, "port%d_macro_%d=%d\n", port, source, session_settings.port_source_macro[port][source])
                        < 0)
+                return 0;
+        }
+    }
+
+    if (fprintf(file, "colour_filter_name=%s\n", colour_filter_preset_key(session_settings.colour_filter)) < 0
+        || fprintf(file, "colour_shader_name=%s\n", colour_shader_key(session_settings.colour_shader)) < 0
+        || fprintf(file, "overlay_image_name=%s\n", overlay_library_key(session_settings.overlay_image)) < 0)
+        return 0;
+
+    if (session_settings.shader_params_for[0]) {
+        if (fprintf(
+                file, "\n[%s]\n%s=%s\n", SHADER_PARAMS_GROUP, SHADER_PARAMS_KEY, session_settings.shader_params_for
+            )
+            < 0)
+            return 0;
+        for (int i = 0; i < session_settings.shader_param_count && i < SESSION_SHADER_PARAM_MAX; i++) {
+            if (fprintf(
+                    file, "%s=%g\n", session_settings.shader_params[i].name,
+                    (double) session_settings.shader_params[i].value
+                )
+                < 0)
                 return 0;
         }
     }
@@ -1491,9 +1542,6 @@ static void apply_scalar_settings_to(
     }
 }
 
-#define SHADER_PARAMS_GROUP "shader_params"
-#define SHADER_PARAMS_KEY   "shader_key"
-
 static int shader_params_differ(const struct session_settings_t *a, const struct session_settings_t *b) {
     return strcmp(a->shader_params_for, b->shader_params_for) != 0 || a->shader_param_count != b->shader_param_count
            || memcmp(a->shader_params, b->shader_params, sizeof(a->shader_params)) != 0;
@@ -1548,6 +1596,32 @@ static void write_shader_params(mini_t *ini, const struct session_settings_t *se
     }
 }
 
+static int apply_named_settings_to(mini_t *ini, struct session_settings_t *settings) {
+    int applied = 0;
+
+    if (mini_value_exists(ini, "settings", "colour_filter_name") == MINI_OK) {
+        const char *key = mini_get_string(ini, "settings", "colour_filter_name", "");
+        const int index = colour_filter_preset_index(key);
+        settings->colour_filter = index >= 0 ? index : defaults.colour_filter;
+        applied++;
+    }
+    if (mini_value_exists(ini, "settings", "colour_shader_name") == MINI_OK) {
+        const char *key = mini_get_string(ini, "settings", "colour_shader_name", "");
+        const int index = colour_shader_index(key);
+        settings->colour_shader = index >= 0 ? index : defaults.colour_shader;
+        applied++;
+    }
+    if (mini_value_exists(ini, "settings", "overlay_image_name") == MINI_OK) {
+        const char *key = mini_get_string(ini, "settings", "overlay_image_name", "");
+        const int index = overlay_library_index(key);
+        settings->overlay_image = index >= 0 ? index : defaults.overlay_image;
+        applied++;
+    }
+
+    apply_shader_params_to(ini, settings);
+    return applied;
+}
+
 static void apply_ini_to(const char *path, struct session_settings_t *settings) {
     mini_t *ini = safe_ini_load(path, settings_file_limit);
     if (!ini) return;
@@ -1555,24 +1629,7 @@ static void apply_ini_to(const char *path, struct session_settings_t *settings) 
     const struct session_settings_t fallback = default_settings();
     apply_scalar_settings_to(ini, settings, &fallback, 0, path);
     apply_input_settings_to(ini, settings, &fallback, path);
-
-    if (mini_value_exists(ini, "settings", "colour_filter_name") == MINI_OK) {
-        const char *key = mini_get_string(ini, "settings", "colour_filter_name", "");
-        const int index = colour_filter_preset_index(key);
-        settings->colour_filter = index >= 0 ? index : defaults.colour_filter;
-    }
-    if (mini_value_exists(ini, "settings", "colour_shader_name") == MINI_OK) {
-        const char *key = mini_get_string(ini, "settings", "colour_shader_name", "");
-        const int index = colour_shader_index(key);
-        settings->colour_shader = index >= 0 ? index : defaults.colour_shader;
-    }
-    if (mini_value_exists(ini, "settings", "overlay_image_name") == MINI_OK) {
-        const char *key = mini_get_string(ini, "settings", "overlay_image_name", "");
-        const int index = overlay_library_index(key);
-        settings->overlay_image = index >= 0 ? index : defaults.overlay_image;
-    }
-
-    apply_shader_params_to(ini, settings);
+    apply_named_settings_to(ini, settings);
 
     mini_free(ini);
 }
@@ -2390,6 +2447,15 @@ void session_settings_cycle_overlay_crop_right(const int direction) {
 void session_settings_cycle_overlay_centre_crop(const int direction) {
     (void) direction;
     session_settings.overlay_centre_crop = !session_settings.overlay_centre_crop;
+    overlay_bridge_apply();
+}
+
+void session_settings_clear_vignette(void) {
+    session_settings.vignette_shape = vignette_shape_off;
+}
+
+void session_settings_clear_overlay(void) {
+    session_settings.overlay_source = overlay_source_off;
     overlay_bridge_apply();
 }
 

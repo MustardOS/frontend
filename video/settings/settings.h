@@ -101,6 +101,8 @@ void wasabi_setting_value(wasabi_setting setting, char *value, size_t size);
 int wasabi_setting_can_change(wasabi_setting setting);
 int wasabi_setting_is_action(wasabi_setting setting);
 int wasabi_setting_cycle(wasabi_setting setting, int direction);
+int wasabi_setting_clearable(wasabi_setting setting);
+int wasabi_setting_clear(wasabi_setting setting);
 int wasabi_setting_reset_viewport(void);
 int wasabi_setting_reset_overlay(void);
 const wasabi_setting_section *wasabi_setting_sections(size_t *count);

@@ -627,6 +627,10 @@ void submenu_tick(submenu *m) {
         if (row >= 0 && row_extra_label(m, row)) {
             play_sound(snd_confirm);
             m->def->extra_action(row);
+            if (m->active && m->def->extra_refreshes && m->def->extra_refreshes(row)) {
+                submenu_refresh_values(m);
+                submenu_nav(m, 1);
+            }
         }
     } else if (edge & SUBMENU_NAV_Y_BIT) {
         if (row >= 0 && row_y_label(m, row)) {

@@ -19,7 +19,7 @@ static nav_repeat_t rpt_right = {0};
 
 static mux_dialogue save_dlg;
 
-typedef enum { save_opt_content = 0, save_opt_core, save_opt_directory, save_opt_discard } save_opt_t;
+typedef enum { save_opt_content = 0, save_opt_core, save_opt_directory, save_opt_session, save_opt_discard } save_opt_t;
 
 typedef enum { screen_categories, screen_options } screen_state_t;
 static screen_state_t screen_state = screen_options;
@@ -224,11 +224,11 @@ static void cycle_current_option(const int direction, const enum nav_direction s
 void options_menu_init(void) {
     static const char *save_options[] = {
         lang.muxretro.save.content_save, lang.muxretro.save.core_save, lang.muxretro.save.directory_save,
-        lang.generic.discard
+        lang.muxretro.save.session_save, lang.generic.discard
     };
     dialogue_init(
         &save_dlg, &theme, ui_screen, lang.muxretro.save.options_title, lang.muxretro.save.options_desc, save_options,
-        4, lang.generic.select, lang.generic.cancel
+        5, lang.generic.select, lang.generic.cancel
     );
 }
 
@@ -376,6 +376,9 @@ void options_menu_tick(void) {
                     break;
                 case save_opt_directory:
                     options_save_directory();
+                    break;
+                case save_opt_session:
+                    options_keep_session();
                     break;
                 case save_opt_discard:
                     options_discard();
