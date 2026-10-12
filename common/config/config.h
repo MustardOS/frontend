@@ -342,6 +342,7 @@ struct mux_config {
             int16_t mod_retry;
             int16_t proxy_enabled;
             int16_t proxy_type;
+            int16_t usb_cable;
             char proxy_server[MAX_BUFFER_SIZE];
             char proxy_noproxy[MAX_BUFFER_SIZE];
             int16_t system_dns;

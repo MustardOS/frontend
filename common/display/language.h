@@ -1446,7 +1446,12 @@ struct mux_lang {
         char status_waiting[MAX_BUFFER_SIZE];
         char status_paired[MAX_BUFFER_SIZE];
         char connection_none[MAX_BUFFER_SIZE];
+        char usb_cable[MAX_BUFFER_SIZE];
+        char cable_waiting[MAX_BUFFER_SIZE];
+        char cable_connected[MAX_BUFFER_SIZE];
+        char cable_failed[MAX_BUFFER_SIZE];
         struct {
+            char usb_cable[MAX_BUFFER_SIZE];
             char status[MAX_BUFFER_SIZE];
             char interface[MAX_BUFFER_SIZE];
             char address[MAX_BUFFER_SIZE];

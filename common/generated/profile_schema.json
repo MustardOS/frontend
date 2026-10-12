@@ -10630,6 +10630,12 @@
       "values": "0 to 3"
     },
     {
+      "name": "usb_cable",
+      "key": "settings/network/usb_cable",
+      "label": "Usb Cable",
+      "values": "0 or 1"
+    },
+    {
       "name": "wait_timer",
       "key": "settings/network/wait_timer",
       "label": "Module Wait Timer",

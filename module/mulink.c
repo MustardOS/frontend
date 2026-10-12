@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/inotify.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -23,6 +24,7 @@
 #include <unistd.h>
 
 #include <common/base/options.h>
+#include <common/platform/usb_link.h>
 
 #define LINK_ETHERTYPE  0x88B5
 #define LINK_MAGIC      "MUOSLINK"
@@ -39,7 +41,11 @@
 
 #define SYS_NET "/sys/class/net"
 
+#define CABLE_SETTING_DIR CONF_CONFIG_PATH "settings/network"
+#define CABLE_SETTING     CABLE_SETTING_DIR "/usb_cable"
+
 static volatile sig_atomic_t running = 1;
+static int cable_supported = 0;
 
 struct link_state {
     char iface[IF_NAMESIZE];
@@ -244,6 +250,7 @@ static void write_state(const struct link_state *state, const int carrier) {
         status = "unplugged";
 
     fprintf(file, "status=%s\n", status);
+    fprintf(file, "cable=%s\n", usb_link_state_name(cable_supported ? usb_link_current() : usb_link_unsupported));
     fprintf(file, "interface=%s\n", carrier && state->iface[0] ? state->iface : "-");
 
     char buffer[64];
@@ -335,6 +342,26 @@ static void drain_netlink(const int fd) {
     }
 }
 
+static int cable_wanted(void) {
+    char value[16];
+    return read_small_file(CABLE_SETTING, value, sizeof(value)) == 0 && strtol(value, NULL, 10) == 1;
+}
+
+static void apply_cable(const int notify_fd) {
+    if (!cable_supported) return;
+
+    if (cable_wanted())
+        usb_link_start(notify_fd);
+    else
+        usb_link_stop();
+}
+
+static void drain_descriptor(const int fd) {
+    uint8_t buffer[512];
+    while (read(fd, buffer, sizeof(buffer)) > 0) {
+    }
+}
+
 int main(void) {
     signal(SIGTERM, handle_signal);
     signal(SIGINT, handle_signal);
@@ -348,6 +375,15 @@ int main(void) {
         close(control_fd);
         return 1;
     }
+
+    int cable_pipe[2] = {-1, -1};
+    if (pipe2(cable_pipe, O_NONBLOCK | O_CLOEXEC) != 0) cable_pipe[0] = cable_pipe[1] = -1;
+
+    const int setting_fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+    if (setting_fd >= 0) inotify_add_watch(setting_fd, CABLE_SETTING_DIR, IN_CLOSE_WRITE | IN_MOVED_TO | IN_DELETE);
+
+    cable_supported = cable_pipe[1] >= 0 && usb_link_supported();
+    apply_cable(cable_pipe[1]);
 
     struct link_state state = {0};
     int beacon_fd = -1;
@@ -383,13 +419,29 @@ int main(void) {
             }
         }
 
-        struct pollfd watch[2];
+        struct pollfd watch[4];
         int count = 0;
 
         const int netlink_slot = count;
         watch[count].fd = netlink_fd;
         watch[count].events = POLLIN;
         count++;
+
+        int setting_slot = -1;
+        if (setting_fd >= 0) {
+            setting_slot = count;
+            watch[count].fd = setting_fd;
+            watch[count].events = POLLIN;
+            count++;
+        }
+
+        int cable_slot = -1;
+        if (cable_pipe[0] >= 0) {
+            cable_slot = count;
+            watch[count].fd = cable_pipe[0];
+            watch[count].events = POLLIN;
+            count++;
+        }
 
         int beacon_slot = -1;
         if (beacon_fd >= 0) {
@@ -405,6 +457,16 @@ int main(void) {
         const int ready = poll(watch, (nfds_t) count, timeout);
         if (ready < 0 && errno != EINTR) break;
         if (!running) break;
+
+        if (setting_slot >= 0 && watch[setting_slot].revents & POLLIN) {
+            drain_descriptor(setting_fd);
+            apply_cable(cable_pipe[1]);
+        }
+
+        if (cable_slot >= 0 && watch[cable_slot].revents & POLLIN) {
+            drain_descriptor(cable_pipe[0]);
+            write_state(&state, carrier);
+        }
 
         if (watch[netlink_slot].revents & POLLIN) {
             drain_netlink(netlink_fd);
@@ -451,6 +513,11 @@ int main(void) {
 
         send_beacon(beacon_fd, state.self_mac);
     }
+
+    if (cable_supported) usb_link_stop();
+    if (setting_fd >= 0) close(setting_fd);
+    if (cable_pipe[0] >= 0) close(cable_pipe[0]);
+    if (cable_pipe[1] >= 0) close(cable_pipe[1]);
 
     if (beacon_fd >= 0) close(beacon_fd);
     close(netlink_fd);

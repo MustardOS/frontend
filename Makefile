@@ -12,6 +12,7 @@ DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
 TOOLS = muvarctl mudisp murgb mususpend muswitch muverify muscreen
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
+mulink_SRC = common/platform/usb_link.c
 muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c
 
 muvarctl_SRC = common/config/var_store.c

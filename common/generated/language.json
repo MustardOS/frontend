@@ -1638,10 +1638,11 @@
   },
   "muxlink": {
     "Cable Not Connected": "Cable Not Connected",
-    "Connect two devices with a network cable and they will find each other on their own.": "Connect two devices with a network cable and they will find each other on their own.",
+    "Connect two devices with a network adapter cable, or a USB-C cable, and they will find each other on their own.": "Connect two devices with a network adapter cable, or a USB-C cable, and they will find each other on their own.",
     "Connected": "Connected",
     "Connection": "Connection",
     "Direct Link": "Direct Link",
+    "Link two devices with a USB-C data cable instead of network adapters.\n\nEnable it on both devices, then connect the charging port of one device to the other USB-C port of the second device. The second device powers the link and charges the first, so connect a charger to its own charging port for longer sessions.\n\nWhile it is enabled, USB Function is paused, and it returns when this is disabled.": "Link two devices with a USB-C data cable instead of network adapters.\n\nEnable it on both devices, then connect the charging port of one device to the other USB-C port of the second device. The second device powers the link and charges the first, so connect a charger to its own charging port for longer sessions.\n\nWhile it is enabled, USB Function is paused, and it returns when this is disabled.",
     "Looking For Other Device": "Looking For Other Device",
     "No Supported Adapter Found": "No Supported Adapter Found",
     "None": "None",
@@ -1655,7 +1656,10 @@
     "The network adapter the cable is plugged into.": "The network adapter the cable is plugged into.",
     "This Device": "This Device",
     "This Device ID": "This Device ID",
-    "Where things are up to.\n\nA supported wired network adapter and cable need to be connected at both ends. Direct Link will then set itself up automatically.": "Where things are up to.\n\nA supported wired network adapter and cable need to be connected at both ends. Direct Link will then set itself up automatically."
+    "USB Cable": "USB Cable",
+    "Unavailable": "Unavailable",
+    "Waiting For Cable": "Waiting For Cable",
+    "Where things are up to.\n\nA supported wired network adapter and cable, or the USB cable, need to be connected at both ends. Direct Link will then set itself up automatically.": "Where things are up to.\n\nA supported wired network adapter and cable, or the USB cable, need to be connected at both ends. Direct Link will then set itself up automatically."
   },
   "muxlogo": {
     "Add images to the MUOS/logo folder on your current storage to choose from them here.": "Add images to the MUOS/logo folder on your current storage to choose from them here.",

@@ -14,10 +14,9 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-enum { row_status = 0, row_interface, row_address, row_mac, row_peer_address, row_peer_mac };
-
 struct link_report {
     char status[LINK_FIELD_MAX];
+    char cable[LINK_FIELD_MAX];
     char interface[LINK_FIELD_MAX];
     char address[LINK_FIELD_MAX];
     char mac[LINK_FIELD_MAX];
@@ -27,13 +26,16 @@ struct link_report {
 
 static struct link_report report;
 static int details_visible = -1;
+static int cable_row = 0;
+static int cable_nav = -1;
 
 static void store_field(const char *key, const char *value) {
     struct {
         const char *key;
         char *target;
     } fields[] = {
-        {"status", report.status}, {"interface", report.interface},       {"address", report.address},
+        {"status", report.status}, {"cable", report.cable},
+        {"interface", report.interface},       {"address", report.address},
         {"mac", report.mac},       {"peer_address", report.peer_address}, {"peer_mac", report.peer_mac},
     };
 
@@ -65,21 +67,61 @@ static void read_link_report(void) {
     fclose(file);
 }
 
+static int cable_supported(void) {
+    return report.cable[0] && strcmp(report.cable, "unsupported") != 0;
+}
+
+static int cable_active(void) {
+    return config.settings.network.usb_cable && cable_supported() && strcmp(report.cable, "off") != 0
+           && strcmp(report.cable, "failed") != 0;
+}
+
 static const char *status_label(void) {
     if (strcmp(report.status, "paired") == 0) return lang.muxlink.status_paired;
     if (strcmp(report.status, "waiting") == 0) return lang.muxlink.status_waiting;
-    if (strcmp(report.status, "unplugged") == 0) return lang.muxlink.status_unplugged;
+    if (strcmp(report.status, "unplugged") == 0 || cable_active()) return lang.muxlink.status_unplugged;
 
     return lang.muxlink.status_absent;
+}
+
+static const char *cable_label(void) {
+    if (!config.settings.network.usb_cable) return lang.generic.disabled;
+    if (strcmp(report.cable, "waiting") == 0) return lang.muxlink.cable_waiting;
+    if (strcmp(report.cable, "device") == 0 || strcmp(report.cable, "host") == 0) return lang.muxlink.cable_connected;
+    if (strcmp(report.cable, "failed") == 0) return lang.muxlink.cable_failed;
+
+    return lang.generic.enabled;
 }
 
 static const char *field_or_dash(const char *value) {
     return value[0] && strcmp(value, "-") != 0 ? value : lang.generic.unknown;
 }
 
-static void set_value(const int row, const char *text) {
-    if (strcmp(lv_label_get_text(ui_objects_value[row]), text) == 0) return;
-    lv_label_set_text(ui_objects_value[row], text);
+static void set_value(lv_obj_t *value, const char *text) {
+    if (strcmp(lv_label_get_text(value), text) == 0) return;
+    lv_label_set_text(value, text);
+}
+
+static int cable_focused(void) {
+    return cable_row && lv_group_get_focused(ui_group) == ui_lbl_usb_cable_link;
+}
+
+static void refresh_nav(void) {
+    const int focused = cable_focused();
+    if (focused == cable_nav) return;
+    cable_nav = focused;
+
+    nav_show_lr(focused);
+    if (focused)
+        setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
+                                      {ui_lbl_nav_lr, lang.generic.change, 0},
+                                      {ui_lbl_nav_b_glyph, "", 0},
+                                      {ui_lbl_nav_b, lang.generic.back, 0},
+                                      {NULL, NULL, 0}});
+    else
+        setup_nav(
+            (struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}}
+        );
 }
 
 static void set_details_visible(const int visible) {
@@ -99,11 +141,11 @@ static void set_details_visible(const int visible) {
 
     details_visible = visible;
     if (current_item_index >= ui_count_static) {
-        current_item_index = row_status;
-        lv_group_focus_obj(ui_objects[row_status]);
-        lv_group_focus_obj(ui_objects_value[row_status]);
-        lv_group_focus_obj(ui_objects_glyph[row_status]);
-        lv_group_focus_obj(ui_objects_panel[row_status]);
+        current_item_index = 0;
+        lv_group_focus_obj(ui_objects[0]);
+        lv_group_focus_obj(ui_objects_value[0]);
+        lv_group_focus_obj(ui_objects_glyph[0]);
+        lv_group_focus_obj(ui_objects_panel[0]);
     }
 
     lv_obj_update_layout(ui_pnl_content);
@@ -118,14 +160,31 @@ static void refresh_values(void) {
     const int interface_available = paired || strcmp(report.status, "waiting") == 0;
 
     set_details_visible(paired);
-    set_value(row_status, status_label());
-    set_value(row_interface, interface_available ? field_or_dash(report.interface) : lang.muxlink.connection_none);
+    if (cable_row) set_value(ui_val_usb_cable_link, cable_label());
+    set_value(ui_val_status_link, status_label());
+    set_value(
+        ui_val_interface_link, interface_available ? field_or_dash(report.interface) : lang.muxlink.connection_none
+    );
     if (paired) {
-        set_value(row_address, field_or_dash(report.address));
-        set_value(row_mac, field_or_dash(report.mac));
-        set_value(row_peer_address, field_or_dash(report.peer_address));
-        set_value(row_peer_mac, field_or_dash(report.peer_mac));
+        set_value(ui_val_address_link, field_or_dash(report.address));
+        set_value(ui_val_mac_link, field_or_dash(report.mac));
+        set_value(ui_val_peer_address_link, field_or_dash(report.peer_address));
+        set_value(ui_val_peer_mac_link, field_or_dash(report.peer_mac));
     }
+}
+
+static void toggle_cable(void) {
+    if (!cable_focused() || hold_call || msgbox_active) return;
+
+    const int16_t next = config.settings.network.usb_cable ? 0 : 1;
+    if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/network/usb_cable", INT, next)) {
+        play_sound(snd_error);
+        return;
+    }
+
+    config.settings.network.usb_cable = next;
+    play_sound(snd_option);
+    refresh_values();
 }
 
 static void leave_module(void) {
@@ -135,6 +194,7 @@ static void leave_module(void) {
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
+        {"usbcable", lang.muxlink.help.usb_cable},
         {"status", lang.muxlink.help.status},
         {"interface", lang.muxlink.help.interface},
         {"address", lang.muxlink.help.address},
@@ -160,18 +220,22 @@ static void handle_b(void) {
 
 static void handle_up(void) {
     handle_list_nav_up();
+    refresh_nav();
 }
 
 static void handle_down(void) {
     handle_list_nav_down();
+    refresh_nav();
 }
 
 static void handle_up_hold(void) {
     handle_list_nav_up_hold();
+    refresh_nav();
 }
 
 static void handle_down_hold(void) {
     handle_list_nav_down_hold();
+    refresh_nav();
 }
 
 static void handle_x(void) {
@@ -191,6 +255,14 @@ static void adjust_panels(void) {
 }
 
 static void init_navigation_group(void) {
+    read_link_report();
+    cable_row = cable_supported();
+
+    if (cable_row)
+        INIT_VALUE_ITEM(-1, link, usb_cable, lang.muxlink.usb_cable, "usbcable", "");
+    else
+        lv_obj_add_flag(ui_pnl_usb_cable_link, MU_OBJ_FLAG_HIDE_FLOAT);
+
     INIT_VALUE_ITEM(-1, link, status, lang.muxlink.status, "status", "");
     INIT_VALUE_ITEM(-1, link, interface, lang.muxlink.interface, "interface", "");
     INIT_VALUE_ITEM(-1, link, address, lang.muxlink.address, "address", "");
@@ -198,6 +270,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, link, peer_address, lang.muxlink.peer_address, "peeraddress", "");
     INIT_VALUE_ITEM(-1, link, peer_mac, lang.muxlink.peer_mac, "peermac", "");
 
+    lv_obj_set_user_data(ui_lbl_usb_cable_link, "usbcable");
     lv_obj_set_user_data(ui_lbl_status_link, "status");
     lv_obj_set_user_data(ui_lbl_interface_link, "interface");
     lv_obj_set_user_data(ui_lbl_address_link, "address");
@@ -208,7 +281,8 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0}, {ui_lbl_nav_b, lang.generic.back, 0}, {NULL, NULL, 0}});
+    cable_nav = -1;
+    refresh_nav();
 
     refresh_values();
 
@@ -232,6 +306,8 @@ static void ui_refresh_task(lv_timer_t *timer) {
 
 int muxlink_main(void) {
     details_visible = -1;
+    cable_row = 0;
+    cable_nav = -1;
 
     init_module(__func__);
     init_theme(1, 0);
@@ -254,8 +330,11 @@ int muxlink_main(void) {
         .swap_axis = theme.misc.navigation_type == 1,
         .press_handler =
             {
+                [mux_input_a] = toggle_cable,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
+                [mux_input_dpad_left] = toggle_cable,
+                [mux_input_dpad_right] = toggle_cable,
                 [mux_input_dpad_up] = handle_up,
                 [mux_input_dpad_down] = handle_down,
             },

@@ -712,6 +712,7 @@
 #define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS
 
 #define LINK_ELEMENTS                                                                                                  \
+    LINK(usb_cable, "usbcable")                                                                                        \
     LINK(status, "status")                                                                                             \
     LINK(interface, "interface")                                                                                       \
     LINK(address, "address")                                                                                           \
