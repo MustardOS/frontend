@@ -542,7 +542,10 @@ static void module_refresh(void) {
 
     if (refresh_kiosk) load_kiosk(&kiosk);
     if (refresh_config) load_config(&config);
-    if (refresh_device) load_device(&device);
+    if (refresh_device) {
+        load_device(&device);
+        board_init(device.board.name);
+    }
 
     refresh_kiosk = refresh_config = refresh_device = 0;
 }
@@ -765,6 +768,7 @@ int main(void) {
     };
 
     parallel_load(loaders);
+    board_init(device.board.name);
 
     LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build());
     if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
