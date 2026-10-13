@@ -43,6 +43,14 @@ static int starter_image = 0;
 static mux_dialogue warn_dlg;
 static mux_dialogue export_dlg;
 
+static int network_is_wireless(void) {
+    return strcasecmp(device.network.type, "ethernet") != 0;
+}
+
+static int detail_value_available(const char *value) {
+    return value && *value && strcmp(value, lang.generic.unknown) != 0;
+}
+
 static int read_file_trim(const char *path, char *out) {
     if (!out) return -1;
 
@@ -1413,12 +1421,35 @@ static void init_navigation_group(void) {
     DETAIL_ELEMENTS
 #undef DETAIL
 
-    if (!battery_used_available()) HIDE_VALUE_ITEM(detail, battery_used);
-    if (!power_off_history_available()) {
-        HIDE_VALUE_ITEM(detail, shutdown_capacity);
-        HIDE_VALUE_ITEM(detail, boot_capacity);
-        HIDE_VALUE_ITEM(detail, time_powered_off);
-        HIDE_VALUE_ITEM(detail, off_battery_change);
+    if (!detail_value_available(get_temperature())) HIDE_VALUE_ITEM(detail, temp);
+
+    if (!detail_value_available(get_current_frequency())) HIDE_VALUE_ITEM(detail, speed);
+    if (!detail_value_available(get_speed_range())) HIDE_VALUE_ITEM(detail, speed_range);
+    if (!detail_value_available(get_scaling_governor())) HIDE_VALUE_ITEM(detail, governor);
+    if (!detail_value_available(get_gpu_model())) HIDE_VALUE_ITEM(detail, gpu);
+    if (!detail_value_available(get_gpu_frequency())) HIDE_VALUE_ITEM(detail, gpu_speed);
+    if (!detail_value_available(get_gpu_speed_range())) HIDE_VALUE_ITEM(detail, gpu_speed_range);
+    if (!detail_value_available(get_gpu_governor())) HIDE_VALUE_ITEM(detail, gpu_governor);
+
+    const int has_battery = battery_is_available();
+    if (has_battery) {
+        if (!battery_used_available()) HIDE_VALUE_ITEM(detail, battery_used);
+        if (!power_off_history_available()) {
+            HIDE_VALUE_ITEM(detail, shutdown_capacity);
+            HIDE_VALUE_ITEM(detail, boot_capacity);
+            HIDE_VALUE_ITEM(detail, time_powered_off);
+            HIDE_VALUE_ITEM(detail, off_battery_change);
+        }
+    } else {
+        for (int i = detail_off_battery; i < detail_off_network; i++)
+            lv_obj_add_flag(ui_objects_panel[i], LV_OBJ_FLAG_HIDDEN);
+    }
+
+    const int has_wireless_network = network_is_wireless();
+    if (!has_wireless_network) {
+        HIDE_VALUE_ITEM(detail, ssid);
+        HIDE_VALUE_ITEM(detail, signal);
+        HIDE_VALUE_ITEM(detail, channel);
     }
 
     list_frame frames[8];
@@ -1427,8 +1458,10 @@ static void init_navigation_group(void) {
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.system, detail_off_system, detail_len_system};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.runtime, detail_off_runtime, detail_len_runtime};
     frames[frame_count++] = (list_frame) {lang.muxdetail.section.processor, detail_off_processor, detail_len_processor};
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.battery, detail_off_battery, detail_len_battery};
-    frames[frame_count++] = (list_frame) {lang.muxdetail.section.power, detail_off_power, detail_len_power};
+    if (has_battery) {
+        frames[frame_count++] = (list_frame) {lang.muxdetail.section.battery, detail_off_battery, detail_len_battery};
+        frames[frame_count++] = (list_frame) {lang.muxdetail.section.power, detail_off_power, detail_len_power};
+    }
 
     if (device.board.has_network) {
         frames[frame_count++] = (list_frame) {lang.muxdetail.section.network, detail_off_network, detail_len_network};

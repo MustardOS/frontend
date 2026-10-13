@@ -457,8 +457,16 @@ static const char *reset_confirmation_text(const reset_scope scope) {
 }
 
 static void start_reset(void) {
-    dialogue_open(&reset_scope_dlg, &theme);
     reset_modal_prev_mask = profile_modal_nav_mask();
+
+    if (options_count == 0) {
+        pending_reset_scope = reset_settings;
+        dialogue_set_description(&reset_confirm_dlg, reset_confirmation_text(pending_reset_scope));
+        dialogue_open(&reset_confirm_dlg, &theme);
+        return;
+    }
+
+    dialogue_open(&reset_scope_dlg, &theme);
 }
 
 static void perform_reset(const reset_scope scope) {
@@ -812,7 +820,7 @@ static void build_rows(void) {
     add_settings_frame(lang.muxretro.retroachievements, first);
 
     first = row_count;
-    if (!netplay_is_active())
+    if (!netplay_is_active() && options_count > 0)
         add_special_row(
             settings_special_core_options, lang.muxretro.core_options, "core", lang.muxretro.help.settings.core_options
         );

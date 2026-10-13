@@ -915,12 +915,17 @@ void init_ui_common_screen(
     lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
 
     ui_sta_capacity = create_header_glyph(ui_con_glyphs, theme);
-    battery_update();
-    update_battery_capacity(ui_sta_capacity, theme);
-    update_battery_percent_label(ui_lbl_battery_percent, theme);
-    if (config.visual.battery == 1) {
+    if (!battery_is_available()) {
         lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        battery_update();
+        update_battery_capacity(ui_sta_capacity, theme);
+        update_battery_percent_label(ui_lbl_battery_percent, theme);
+        if (config.visual.battery == 1) {
+            lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+        }
     }
 
     ui_pnl_footer = lv_obj_create(ui_screen);

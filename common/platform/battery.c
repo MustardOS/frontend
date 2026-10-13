@@ -88,6 +88,10 @@ static int voltage_sample_count = 0;
 
 static battery_curve_point_t battery_curve[BATTERY_CURVE_POINTS];
 
+int battery_is_available(void) {
+    return device.battery.capacity[0] != '\0' || device.battery.voltage[0] != '\0';
+}
+
 static unsigned char *battery_lookup = NULL;
 static int battery_lookup_size = 0;
 static int battery_curve_valid = 0;
@@ -611,6 +615,7 @@ char *battery_get_capacity_glyph(void) {
 void battery_capacity_task(const lv_timer_t *timer) {
     LV_UNUSED(timer);
 
+    if (!battery_is_available()) return;
     if (!ui_sta_capacity || !lv_obj_is_valid(ui_sta_capacity)) return;
 
     const int percent = battery_get_capacity();

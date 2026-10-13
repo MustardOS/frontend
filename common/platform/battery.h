@@ -4,6 +4,8 @@
 
 void battery_set_daemon_mode(int enable);
 
+int battery_is_available(void);
+
 void battery_init(void);
 
 void battery_reset(void);
