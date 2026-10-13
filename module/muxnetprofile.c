@@ -19,6 +19,8 @@ static const char *net_r_args[] = {OPT_PATH NET_SCRIPT, "restart", NULL};
 
 #define UI_DHCP        (ui_count_dynamic - 4)
 #define UI_STATIC      ui_count_dynamic
+#define UI_WIRED_DHCP   3
+#define UI_WIRED_STATIC 7
 #define NET_STATUS_DIR "/run/muos/network"
 #define IP_OCTET       64
 
@@ -324,8 +326,10 @@ static void show_connect_failure(const int exit_code) {
     set_connect_value(net_status_label(id));
     set_status_value(lang.generic.not_connected);
 
-    lv_label_set_text(ui_lbl_connect_network, lang.muxnetprofile.connect);
-    nav_scan_hide(0);
+    lv_label_set_text(
+        ui_lbl_connect_network, wired_mode ? lang.generic.save : lang.muxnetprofile.connect
+    );
+    nav_scan_hide(wired_mode);
     update_network_status(ui_sta_network, &theme, 2);
 }
 
@@ -540,7 +544,7 @@ static void restore_network_values(void) {
         lv_label_set_text(ui_val_subnet_network, subnet ? subnet : "");
         lv_label_set_text(ui_val_gateway_network, gateway ? gateway : "");
         lv_label_set_text(ui_val_dns_network, dns ? dns : "");
-        ui_count_static = is_static ? UI_STATIC : UI_DHCP;
+        ui_count_static = is_static ? UI_WIRED_STATIC : UI_WIRED_DHCP;
         pending_password[0] = '\0';
 
         free(address);
@@ -851,7 +855,9 @@ int handle_navigate(void) {
 
         const int is_static = strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0;
         lv_label_set_text(ui_val_type_network, is_static ? lang.muxnetprofile.dhcp : lang.muxnetprofile.statc);
-        ui_count_static = is_static ? UI_DHCP : UI_STATIC;
+        ui_count_static = is_static
+                              ? (wired_mode ? UI_WIRED_DHCP : UI_DHCP)
+                              : (wired_mode ? UI_WIRED_STATIC : UI_STATIC);
         toggle_static_panels(is_static);
 
         return 1;

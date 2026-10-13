@@ -13,6 +13,7 @@
 #include <common/config/skip.h>
 #include <common/content/content.h>
 #include <common/content/core/common.h>
+#include <common/content/launch.h>
 #include <common/storage/fileio.h>
 #include <common/storage/union.h>
 
@@ -132,8 +133,14 @@ static void scan_directory(
         }
 
         const content_switch_native native = native_type(path);
-        if (native != content_switch_native_none)
-            append_entry(list, path, title, source, native, (long) status.st_mtime);
+        if (native != content_switch_native_none) {
+            char resolved[PATH_MAX];
+            char folder[PATH_MAX];
+            const char *real = union_resolve_to_real(path, resolved, sizeof(resolved)) ? resolved : path;
+            const int marked = content_launch_folder_name(real, folder, sizeof(folder));
+
+            append_entry(list, path, marked ? folder : title, source, native, (long) status.st_mtime);
+        }
         free(path);
         free(title);
     }

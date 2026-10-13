@@ -42,7 +42,7 @@ Audio bookmarks store their name and playback position without capturing a scree
 Bookmarks, playback history and their screenshots are stored below:
 
 ```text
-/run/muos/storage/save/wasabi
+/run/muos/storage/wasabi
 ```
 
 ## Controls

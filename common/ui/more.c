@@ -7,6 +7,12 @@ static const char *more_label(const more_id id) {
     switch (id) {
         case more_information:
             return lang.generic.information;
+        case more_open_folder:
+            return lang.generic.open_folder;
+        case more_launch_set:
+            return lang.generic.launch_set;
+        case more_launch_clear:
+            return lang.generic.launch_clear;
         case more_search:
             return lang.generic.search;
         case more_sort:

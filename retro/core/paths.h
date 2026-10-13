@@ -3,7 +3,7 @@
 #include <common/base/options.h>
 
 #define RETRO_INSTANCE_LOCK RUN_PATH "muxretro.lock"
-#define RETRO_SHARE_PATH    RUN_STORAGE_PATH "save/pickles/"
+#define RETRO_SHARE_PATH    RUN_STORAGE_PATH "pickles/"
 
 #define RETRO_STA_PATH RETRO_SHARE_PATH "state"
 #define RETRO_SRM_PATH RETRO_SHARE_PATH "sram"

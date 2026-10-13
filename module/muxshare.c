@@ -486,37 +486,11 @@ char *get_friendly_folder_name(char *folder_name, const int fn_valid, const stru
     return friendly_folder_name;
 }
 
-#define MUX_NAME_FILE "muxname.txt"
-
-static int launch_item_own_name(const char *file_path, char *out, const size_t out_size) {
-    char dir_path[MAX_BUFFER_SIZE];
-    snprintf(dir_path, sizeof(dir_path), "%s", file_path);
-
-    char *slash = strrchr(dir_path, '/');
-    if (!slash) return 0;
-    *slash = '\0';
-
-    char name_path[MAX_BUFFER_SIZE];
-    snprintf(name_path, sizeof(name_path), "%s/%s", dir_path, MUX_NAME_FILE);
-    if (!file_exist(name_path)) return 0;
-
-    char *line = read_line_char_from(name_path, 1);
-    if (!line) return 0;
-
-    const char *trimmed = str_trim(line);
-    const int ok = trimmed && *trimmed;
-    if (ok) snprintf(out, out_size, "%s", trimmed);
-
-    free(line);
-
-    return ok;
-}
-
 static int register_launch_item(const char *file_path, const char *item_name) {
     if (!file_exist(file_path)) return 0;
 
     char fn_name[MAX_BUFFER_SIZE];
-    if (!launch_item_own_name(file_path, fn_name, sizeof(fn_name))) resolve_friendly_name(file_path, fn_name);
+    resolve_friendly_name(file_path, fn_name);
 
     add_item(&items, &item_count, item_name, fn_name, file_path, content_type_item);
 
@@ -560,7 +534,23 @@ int folder_has_matching_launch_file(char *base_dir, char *dir_name) {
     return register_launch_item(file_path, item_name);
 }
 
+static int folder_has_marked_launch_file(const char *base_dir, const char *dir_name) {
+    char dir_path[MAX_BUFFER_SIZE];
+    snprintf(dir_path, sizeof(dir_path), "%s/%s", base_dir, dir_name);
+
+    char file_path[MAX_BUFFER_SIZE];
+    if (!folder_marked_launch(dir_path, file_path, sizeof(file_path))) return 0;
+
+    char item_name[MAX_BUFFER_SIZE];
+    snprintf(item_name, sizeof(item_name), "%s/%s", dir_name, strrchr(file_path, '/') + 1);
+
+    add_item(&items, &item_count, item_name, dir_name, file_path, content_type_item);
+
+    return 1;
+}
+
 int folder_has_launch_file(char *base_dir, char *dir_name) {
+    if (folder_has_marked_launch_file(base_dir, dir_name)) return 1;
     if (folder_has_matching_launch_file(base_dir, dir_name)) return 1;
     if (folder_has_launch_file_with_extension(base_dir, dir_name, "scummvm")) return 1;
     if (folder_has_launch_file_with_extension(base_dir, dir_name, "m3u")) return 1;
@@ -583,6 +573,11 @@ static int launch_file_exists(const char *base_dir, const char *dir_name, const 
 
 int folder_is_content(const char *base_dir, const char *dir_name) {
     if (!base_dir || !dir_name || !dir_name[0]) return 0;
+
+    char dir_path[MAX_BUFFER_SIZE];
+    char marked[MAX_BUFFER_SIZE];
+    snprintf(dir_path, sizeof(dir_path), "%s/%s", base_dir, dir_name);
+    if (folder_marked_launch(dir_path, marked, sizeof(marked))) return 1;
 
     if (launch_file_exists(base_dir, dir_name, NULL)) return 1;
     if (launch_file_exists(base_dir, dir_name, "scummvm")) return 1;
@@ -1011,6 +1006,14 @@ static int read_content_entry(const char *path, char **content_path, char **cont
     return 1;
 }
 
+void resolve_content_name(const char *file_path, char *out, const size_t out_size) {
+    if (content_launch_folder_name(file_path, out, out_size)) return;
+
+    char name[MAX_BUFFER_SIZE];
+    resolve_friendly_name(file_path, name);
+    snprintf(out, out_size, "%s", name);
+}
+
 void gen_item_from_files(const char *base_path, const int file_count, char **file_names) {
     char **created_dirs = calloc((size_t) file_count, sizeof(char *));
     int created_count = 0;
@@ -1073,7 +1076,7 @@ void gen_item_from_files(const char *base_path, const int file_count, char **fil
             }
         }
 
-        resolve_friendly_name(file_path, fn_name);
+        resolve_content_name(file_path, fn_name, sizeof(fn_name));
         add_item(&items, &item_count, file_names[i], fn_name, file_path, content_type_item);
 
         ui_count_static++;
@@ -1400,7 +1403,7 @@ static uint64_t muxmedia_uri_key(const char *uri) {
 static int muxmedia_latest_image(const char *content_path, char *out, const size_t out_size) {
     if (content_path_is_audio(content_path)) return 0;
     const int written = snprintf(
-        out, out_size, RUN_STORAGE_PATH "save/wasabi/state/%016llx/exit.png",
+        out, out_size, RUN_STORAGE_PATH "wasabi/state/%016llx/exit.png",
         (unsigned long long) muxmedia_uri_key(content_path)
     );
     return written > 0 && (size_t) written < out_size && file_exist(out);

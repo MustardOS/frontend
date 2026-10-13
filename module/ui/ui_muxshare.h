@@ -57,35 +57,37 @@
     APPCON(governor, "governor")                                                                                       \
     APPCON(control, "control")
 
+#define BACKUP_PLAY_ELEMENTS                                                                                           \
+    BACKUP(save, "save")                                                                                               \
+    BACKUP(pickles, "pickles")                                                                                         \
+    BACKUP(wasabi, "wasabi")                                                                                           \
+    BACKUP(screenshot, "screenshot")                                                                                   \
+    BACKUP(track, "track")                                                                                             \
+    BACKUP(history, "history")                                                                                         \
+    BACKUP(collection, "collection")
+
 #define BACKUP_CONTENT_ELEMENTS                                                                                        \
     BACKUP(content, "content")                                                                                         \
-    BACKUP(collection, "collection")                                                                                   \
-    BACKUP(history, "history")                                                                                         \
-    BACKUP(catalogue, "catalogue")                                                                                     \
+    BACKUP(override, "override")                                                                                       \
+    BACKUP(launch, "launch")                                                                                           \
     BACKUP(name, "name")                                                                                               \
-    BACKUP(save, "save")                                                                                               \
-    BACKUP(screenshot, "screenshot")                                                                                   \
-    BACKUP(track, "track")
+    BACKUP(catalogue, "catalogue")                                                                                     \
+    BACKUP(bios, "bios")
 
 #define BACKUP_SYSTEM_ELEMENTS                                                                                         \
-    BACKUP(apps, "application")                                                                                        \
-    BACKUP(bios, "bios")                                                                                               \
-    BACKUP(config, "config")                                                                                           \
-    BACKUP(init, "init")                                                                                               \
+    BACKUP(settings, "settings")                                                                                       \
+    BACKUP(profile, "profile")                                                                                         \
     BACKUP(network, "network")                                                                                         \
     BACKUP(syncthing, "syncthing")                                                                                     \
-    BACKUP(package, "package")                                                                                         \
+    BACKUP(init, "init")                                                                                               \
     BACKUP(manifest, "manifest")
 
 #define BACKUP_CUSTOM_ELEMENTS                                                                                         \
+    BACKUP(apps, "application")                                                                                        \
+    BACKUP(package, "package")                                                                                         \
     BACKUP(theme, "theme")                                                                                             \
     BACKUP(music, "music")                                                                                             \
-    BACKUP(overlays, "overlays")                                                                                       \
-    BACKUP(shaders, "shaders")                                                                                         \
-    BACKUP(override, "override")                                                                                       \
-    BACKUP(cheats, "cheats")                                                                                           \
-    BACKUP(profile, "profile")                                                                                         \
-    BACKUP(settings, "settings")
+    BACKUP(retroarch, "retroarch")
 
 #define BACKUP_ACTION_ELEMENTS                                                                                         \
     BACKUP(target, "target")                                                                                           \
@@ -93,6 +95,7 @@
     BACKUP(start, "start")
 
 #define BACKUP_ELEMENTS                                                                                                \
+    BACKUP_PLAY_ELEMENTS                                                                                               \
     BACKUP_CONTENT_ELEMENTS                                                                                            \
     BACKUP_SYSTEM_ELEMENTS                                                                                             \
     BACKUP_CUSTOM_ELEMENTS                                                                                             \
@@ -409,21 +412,30 @@
     NETWORK(connect, "connect")                                                                                        \
     NETWORK(status, "status")
 
-#define OPTION_ELEMENTS                                                                                                \
+#define OPTION_MAIN_ELEMENTS                                                                                           \
     OPTION(core, "core")                                                                                               \
     OPTION(governor, "governor")                                                                                       \
     OPTION(control, "control")                                                                                         \
     OPTION(retro_arch, "retroarch")                                                                                    \
     OPTION(rem_config, "remconfig")                                                                                    \
+    OPTION(tag, "tag")
+
+#define OPTION_DISPLAY_ELEMENTS                                                                                        \
     OPTION(col_filter, "colfilter")                                                                                    \
     OPTION(shader, "shader")                                                                                           \
-    OPTION(overlay, "overlay")                                                                                         \
-    OPTION(tag, "tag")                                                                                                 \
+    OPTION(overlay, "overlay")
+
+#define OPTION_INFO_ELEMENTS                                                                                           \
     OPTION(storage, "storage")                                                                                         \
     OPTION(folder, "folder")                                                                                           \
     OPTION(name, "name")                                                                                               \
     OPTION(time, "time")                                                                                               \
     OPTION(launch, "launch")
+
+#define OPTION_ELEMENTS                                                                                                \
+    OPTION_MAIN_ELEMENTS                                                                                               \
+    OPTION_DISPLAY_ELEMENTS                                                                                            \
+    OPTION_INFO_ELEMENTS
 
 #define OVERLAY_ELEMENTS                                                                                               \
     OVERLAY(gen_alpha, "gen_alpha")                                                                                    \
@@ -525,29 +537,34 @@
     SPACE_INFO(external)                                                                                               \
     SPACE_INFO(system)
 
-#define STORAGE_CONTENT_ELEMENTS                                                                                       \
-    STORAGE(catalogue, "catalogue")                                                                                    \
-    STORAGE(collection, "collection")                                                                                  \
-    STORAGE(history, "history")                                                                                        \
-    STORAGE(name, "name")                                                                                              \
+#define STORAGE_PLAY_ELEMENTS                                                                                          \
     STORAGE(save, "save")                                                                                              \
+    STORAGE(pickles, "pickles")                                                                                        \
+    STORAGE(wasabi, "wasabi")                                                                                          \
     STORAGE(screenshot, "screenshot")                                                                                  \
-    STORAGE(track, "track")
+    STORAGE(track, "track")                                                                                            \
+    STORAGE(history, "history")                                                                                        \
+    STORAGE(collection, "collection")
+
+#define STORAGE_CONTENT_ELEMENTS                                                                                       \
+    STORAGE(override, "override")                                                                                      \
+    STORAGE(launch, "launch")                                                                                          \
+    STORAGE(name, "name")                                                                                              \
+    STORAGE(catalogue, "catalogue")                                                                                    \
+    STORAGE(bios, "bios")
 
 #define STORAGE_SYSTEM_ELEMENTS                                                                                        \
-    STORAGE(bios, "bios")                                                                                              \
-    STORAGE(init, "init")                                                                                              \
+    STORAGE(profile, "profile")                                                                                        \
     STORAGE(network, "network")                                                                                        \
     STORAGE(syncthing, "syncthing")                                                                                    \
-    STORAGE(profile, "profile")                                                                                        \
-    STORAGE(manifest, "manifest")                                                                                      \
-    STORAGE(override, "override")
+    STORAGE(init, "init")                                                                                              \
+    STORAGE(manifest, "manifest")
 
 #define STORAGE_CUSTOM_ELEMENTS                                                                                        \
     STORAGE(apps, "apps")                                                                                              \
-    STORAGE(music, "music")                                                                                            \
     STORAGE(package, "package")                                                                                        \
-    STORAGE(theme, "theme")
+    STORAGE(theme, "theme")                                                                                            \
+    STORAGE(music, "music")
 
 #define STORAGE_BULK_ELEMENTS                                                                                          \
     STORAGE(migrate_all, "migrate_all")                                                                                \
@@ -555,6 +572,7 @@
     STORAGE(purge_all, "purge_all")
 
 #define STORAGE_ELEMENTS                                                                                               \
+    STORAGE_PLAY_ELEMENTS                                                                                              \
     STORAGE_CONTENT_ELEMENTS                                                                                           \
     STORAGE_SYSTEM_ELEMENTS                                                                                            \
     STORAGE_CUSTOM_ELEMENTS                                                                                            \

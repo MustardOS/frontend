@@ -4,6 +4,9 @@
 
 typedef enum {
     more_information = 0,
+    more_open_folder,
+    more_launch_set,
+    more_launch_clear,
     more_search,
     more_sort,
     more_filter,

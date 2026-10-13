@@ -589,9 +589,9 @@ static const char *get_ra_config_dir(const char *core) {
     return core_id;
 }
 
-#define MURETRO_SET_PATH RUN_STORAGE_PATH "save/pickles/settings"
-#define MURETRO_OPT_PATH RUN_STORAGE_PATH "save/pickles/coreopt"
-#define MURETRO_STA_PATH RUN_STORAGE_PATH "save/pickles/state"
+#define MURETRO_SET_PATH RUN_STORAGE_PATH "pickles/settings"
+#define MURETRO_OPT_PATH RUN_STORAGE_PATH "pickles/coreopt"
+#define MURETRO_STA_PATH RUN_STORAGE_PATH "pickles/state"
 
 static void muxretro_core_name(const char *core, char *out) {
     const char *base = strrchr(core, '/');

@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <common/content/launch.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include "core.h"
@@ -110,6 +112,20 @@ static void json_text(FILE *file, const char *key, const char *value) {
 }
 
 static void content_name(char *out, const size_t size) {
+    static char cached_path[PATH_MAX];
+    static char cached_folder[PATH_MAX];
+    static int cached_marked = 0;
+
+    if (strcmp(cached_path, core_content_path) != 0) {
+        snprintf(cached_path, sizeof(cached_path), "%s", core_content_path);
+        cached_marked = content_launch_folder_name(core_content_path, cached_folder, sizeof(cached_folder));
+    }
+
+    if (cached_marked) {
+        snprintf(out, size, "%s", cached_folder);
+        return;
+    }
+
     const char *base = strrchr(core_content_path, '/');
     snprintf(out, size, "%s", base ? base + 1 : core_content_path);
     char *dot = strrchr(out, '.');
@@ -140,7 +156,7 @@ static void publish(const int menu_open, const int force) {
     content_folder(folder, sizeof(folder));
     if (!core_get_name(core_file_path, core, sizeof(core))) core[0] = '\0';
 
-    const char *speed = hotkeys_is_fast_forward_active()   ? "fast_forward"
+    const char *speed = hotkeys_is_fast_forward_active()  ? "fast_forward"
                         : hotkeys_is_slow_motion_active() ? "slow_motion"
                                                           : "normal";
 

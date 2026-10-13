@@ -9,7 +9,9 @@
 enum { ui_count_dynamic = E_SIZE(BACKUP_ELEMENTS), storage_count = ui_count_dynamic - E_SIZE(BACKUP_ACTION_ELEMENTS) };
 
 enum {
-    backup_off_content = 0,
+    backup_off_play = 0,
+    backup_len_play = E_SIZE(BACKUP_PLAY_ELEMENTS),
+    backup_off_content = backup_off_play + backup_len_play,
     backup_len_content = E_SIZE(BACKUP_CONTENT_ELEMENTS),
     backup_off_system = backup_off_content + backup_len_content,
     backup_len_system = E_SIZE(BACKUP_SYSTEM_ELEMENTS),
@@ -86,36 +88,36 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-#define BACKUP_ACTION_SECTION 3
+#define BACKUP_ACTION_SECTION 4
 
 static const char *target_token[3];
 static int target_count = 0;
 
 static void init_navigation_group(void) {
-    INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, collection, lang.muxbackup.collection, "collection", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, history, lang.muxbackup.history, "history", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, catalogue, lang.muxbackup.catalogue, "catalogue", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, name, lang.muxbackup.name, "name", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, save, lang.muxbackup.save, "save", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, pickles, lang.muxbackup.pickles, "pickles", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, wasabi, lang.muxbackup.wasabi, "wasabi", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, screenshot, lang.muxbackup.screenshot, "screenshot", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, track, lang.muxbackup.track, "track", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, apps, lang.muxbackup.apps, "application", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, history, lang.muxbackup.history, "history", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, collection, lang.muxbackup.collection, "collection", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, launch, lang.muxbackup.launch, "launch", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, name, lang.muxbackup.name, "name", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, catalogue, lang.muxbackup.catalogue, "catalogue", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, bios, lang.muxbackup.bios, "bios", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, config, lang.muxbackup.config, "config", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, init, lang.muxbackup.init, "init", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, settings, lang.muxbackup.settings, "settings", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, profile, lang.muxbackup.profile, "profile", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, network, lang.muxbackup.network, "network", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, syncthing, lang.muxbackup.syncthing, "syncthing", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, init, lang.muxbackup.init, "init", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, manifest, lang.muxbackup.manifest, "manifest", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, apps, lang.muxbackup.apps, "application", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, music, lang.muxbackup.music, "music", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, overlays, lang.muxbackup.overlays, "overlays", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, shaders, lang.muxbackup.shaders, "shaders", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, cheats, lang.muxbackup.cheats, "cheats", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, profile, lang.muxbackup.profile, "profile", excluded_included, 2);
-    INIT_OPTION_ITEM(-1, backup, settings, lang.muxbackup.settings, "settings", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, retroarch, lang.muxbackup.retroarch, "retroarch", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);
     INIT_OPTION_ITEM(-1, backup, merge, lang.muxbackup.merge, "merge", no_yes, 2);
     INIT_OPTION_ITEM(-1, backup, start, lang.muxbackup.start, "start", NULL, 0);
@@ -138,6 +140,7 @@ static void init_navigation_group(void) {
 
     reset_ui_groups();
     static const list_frame frames[] = {
+        {lang.muxbackup.section.play, backup_off_play, backup_len_play},
         {lang.muxbackup.section.content, backup_off_content, backup_len_content},
         {lang.muxbackup.section.system, backup_off_system, backup_len_system},
         {lang.muxbackup.section.custom, backup_off_custom, backup_len_custom},

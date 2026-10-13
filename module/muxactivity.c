@@ -833,7 +833,7 @@ static int load_activity_record(activity_item_t *it, const char *record) {
         it->dir[n] = '\0';
     }
 
-    resolve_friendly_name(it->path, it->name);
+    resolve_content_name(it->path, it->name, sizeof(it->name));
     adjust_content_label(it->name);
 
     it->total_time = json_size_positive(json_object_get(val, "total_time"));

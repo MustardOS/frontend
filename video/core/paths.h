@@ -2,7 +2,7 @@
 
 #include <common/base/options.h>
 
-#define WASABI_SHARE_PATH         RUN_STORAGE_PATH "save/wasabi/"
+#define WASABI_SHARE_PATH         RUN_STORAGE_PATH "wasabi/"
 #define WASABI_STATE_PATH         WASABI_SHARE_PATH "state"
 #define WASABI_HISTORY_FILE       WASABI_SHARE_PATH "history.tsv"
 #define WASABI_BOOKMARK_FILE      WASABI_SHARE_PATH "bookmarks.tsv"

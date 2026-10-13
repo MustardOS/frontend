@@ -36,6 +36,7 @@
 #include <common/storage/archive.h>
 #include <common/content/catalogue.h>
 #include <common/content/content.h>
+#include <common/content/launch.h>
 #include <common/runtime/exec.h>
 #include <common/platform/sysinfo.h>
 #include <common/config/ini.h>
@@ -205,6 +206,8 @@ void handle_msgbox_dismiss(void);
 int build_safe_path(char *dst, size_t n, const char *base, const char *name);
 
 void resolve_friendly_name(const char *file_path, char *out);
+
+void resolve_content_name(const char *file_path, char *out, size_t out_size);
 
 void gen_item_from_files(const char *base_path, int file_count, char **file_names);
 

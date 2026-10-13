@@ -25,7 +25,7 @@ and last-working snapshots.
 Settings and profile readers accept only regular files up to 64 KiB. Unknown keys are ignored. Loading never renames, rewrites, upgrades, or otherwise migrates
 an older file; incompatible or malformed data simply cannot enter the live settings model.
 
-User-made profiles live in `/run/muos/storage/save/pickles/profile/`. Pickles reads ordinary `.ini` files from this directory and shows a profile only when its
+User-made profiles live in `/run/muos/storage/pickles/profile/`. Pickles reads ordinary `.ini` files from this directory and shows a profile only when its
 optional core and content targets match the game being played. Leave both targets out to make a profile available everywhere. Applying a profile changes only
 the valid settings named in its
 `[settings]` section, then uses the normal save dialogue so the result can be kept for this content, its directory, its core, or only the current session.

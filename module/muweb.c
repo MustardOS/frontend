@@ -4436,7 +4436,7 @@ static const struct tool_area tool_areas[] = {
     {"name", 0, "info/name", "json", 1, 0},
     {"profile", 0, "profile", "conf", 1, 0},
     {"profile-builtin", 1, "profile/accessibility", "conf", 0, 0},
-    {"equaliser", 0, "save/wasabi/equaliser", "eq", 1, 0},
+    {"equaliser", 0, "wasabi/equaliser", "eq", 1, 0},
     {"track", 0, "info/track", "json", 1, 0},
     {"bios", 0, "bios", NULL, 0, 0},
     {"theme", 0, "theme", NULL, 0, 1},

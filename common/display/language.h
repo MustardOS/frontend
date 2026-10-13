@@ -79,6 +79,11 @@ struct mux_lang {
         char included[MAX_BUFFER_SIZE];
         char info[MAX_BUFFER_SIZE];
         char information[MAX_BUFFER_SIZE];
+        char open_folder[MAX_BUFFER_SIZE];
+        char launch_set[MAX_BUFFER_SIZE];
+        char launch_clear[MAX_BUFFER_SIZE];
+        char launch_set_done[MAX_BUFFER_SIZE];
+        char launch_clear_done[MAX_BUFFER_SIZE];
         char launch_count[MAX_BUFFER_SIZE];
         char location[MAX_BUFFER_SIZE];
         char location_gone[MAX_BUFFER_SIZE];
@@ -360,6 +365,7 @@ struct mux_lang {
         } bulk;
         char title[MAX_BUFFER_SIZE];
         struct {
+            char play[MAX_BUFFER_SIZE];
             char content[MAX_BUFFER_SIZE];
             char system[MAX_BUFFER_SIZE];
             char custom[MAX_BUFFER_SIZE];
@@ -369,24 +375,24 @@ struct mux_lang {
         char apps[MAX_BUFFER_SIZE];
         char bios[MAX_BUFFER_SIZE];
         char catalogue[MAX_BUFFER_SIZE];
-        char cheats[MAX_BUFFER_SIZE];
         char collection[MAX_BUFFER_SIZE];
-        char config[MAX_BUFFER_SIZE];
         char content[MAX_BUFFER_SIZE];
         char history[MAX_BUFFER_SIZE];
         char init[MAX_BUFFER_SIZE];
         char music[MAX_BUFFER_SIZE];
+        char retroarch[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
+        char launch[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char profile[MAX_BUFFER_SIZE];
         char settings[MAX_BUFFER_SIZE];
-        char overlays[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
         char manifest[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
+        char pickles[MAX_BUFFER_SIZE];
+        char wasabi[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
-        char shaders[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
         char track[MAX_BUFFER_SIZE];
@@ -397,24 +403,24 @@ struct mux_lang {
             char apps[MAX_BUFFER_SIZE];
             char bios[MAX_BUFFER_SIZE];
             char catalogue[MAX_BUFFER_SIZE];
-            char cheats[MAX_BUFFER_SIZE];
             char collection[MAX_BUFFER_SIZE];
-            char config[MAX_BUFFER_SIZE];
             char content[MAX_BUFFER_SIZE];
             char history[MAX_BUFFER_SIZE];
             char init[MAX_BUFFER_SIZE];
             char music[MAX_BUFFER_SIZE];
+            char retroarch[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
+            char launch[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char profile[MAX_BUFFER_SIZE];
             char settings[MAX_BUFFER_SIZE];
-            char overlays[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
             char manifest[MAX_BUFFER_SIZE];
             char save[MAX_BUFFER_SIZE];
+            char pickles[MAX_BUFFER_SIZE];
+            char wasabi[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
-            char shaders[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
             char track[MAX_BUFFER_SIZE];
@@ -1617,7 +1623,11 @@ struct mux_lang {
     struct {
         char title_main[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char title_info[MAX_BUFFER_SIZE];
+        struct {
+            char options[MAX_BUFFER_SIZE];
+            char display[MAX_BUFFER_SIZE];
+            char info[MAX_BUFFER_SIZE];
+        } section;
         char name[MAX_BUFFER_SIZE];
         char time[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
@@ -3105,10 +3115,13 @@ struct mux_lang {
         char init[MAX_BUFFER_SIZE];
         char music[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
+        char launch[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char profile[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
         char save[MAX_BUFFER_SIZE];
+        char pickles[MAX_BUFFER_SIZE];
+        char wasabi[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char manifest[MAX_BUFFER_SIZE];
@@ -3127,10 +3140,13 @@ struct mux_lang {
             char init[MAX_BUFFER_SIZE];
             char music[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
+            char launch[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char profile[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
             char save[MAX_BUFFER_SIZE];
+            char pickles[MAX_BUFFER_SIZE];
+            char wasabi[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char manifest[MAX_BUFFER_SIZE];
@@ -3150,6 +3166,7 @@ struct mux_lang {
             char purge_all[MAX_BUFFER_SIZE];
         } confirm;
         struct {
+            char play[MAX_BUFFER_SIZE];
             char content[MAX_BUFFER_SIZE];
             char system[MAX_BUFFER_SIZE];
             char custom[MAX_BUFFER_SIZE];

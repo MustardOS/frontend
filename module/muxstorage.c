@@ -13,7 +13,9 @@ enum {
 };
 
 enum {
-    storage_off_content = 0,
+    storage_off_play = 0,
+    storage_len_play = E_SIZE(STORAGE_PLAY_ELEMENTS),
+    storage_off_content = storage_off_play + storage_len_play,
     storage_len_content = E_SIZE(STORAGE_CONTENT_ELEMENTS),
     storage_off_system = storage_off_content + storage_len_content,
     storage_len_system = E_SIZE(STORAGE_SYSTEM_ELEMENTS),
@@ -61,26 +63,27 @@ static void add_storage(int *sp, const char *suffix, lv_obj_t *label) {
 static void update_storage_info(void) {
     int sp = 0;
 
-    add_storage(&sp, STORE_LOC_CLOG, ui_val_catalogue_storage);
-    add_storage(&sp, STORE_LOC_COLL, ui_val_collection_storage);
-    add_storage(&sp, STORE_LOC_HIST, ui_val_history_storage);
-    add_storage(&sp, STORE_LOC_NAME, ui_val_name_storage);
     add_storage(&sp, STORE_LOC_SAVE, ui_val_save_storage);
+    add_storage(&sp, STORE_LOC_PICK, ui_val_pickles_storage);
+    add_storage(&sp, STORE_LOC_WASA, ui_val_wasabi_storage);
     add_storage(&sp, STORE_LOC_SCRS, ui_val_screenshot_storage);
     add_storage(&sp, STORE_LOC_TRAK, ui_val_track_storage);
-
+    add_storage(&sp, STORE_LOC_HIST, ui_val_history_storage);
+    add_storage(&sp, STORE_LOC_COLL, ui_val_collection_storage);
+    add_storage(&sp, STORE_LOC_OVER, ui_val_override_storage);
+    add_storage(&sp, STORE_LOC_LNCH, ui_val_launch_storage);
+    add_storage(&sp, STORE_LOC_NAME, ui_val_name_storage);
+    add_storage(&sp, STORE_LOC_CLOG, ui_val_catalogue_storage);
     add_storage(&sp, STORE_LOC_BIOS, ui_val_bios_storage);
-    add_storage(&sp, STORE_LOC_INIT, ui_val_init_storage);
+    add_storage(&sp, STORE_LOC_PROF, ui_val_profile_storage);
     add_storage(&sp, STORE_LOC_NETW, ui_val_network_storage);
     add_storage(&sp, STORE_LOC_SYCT, ui_val_syncthing_storage);
-    add_storage(&sp, STORE_LOC_PROF, ui_val_profile_storage);
+    add_storage(&sp, STORE_LOC_INIT, ui_val_init_storage);
     add_storage(&sp, STORE_LOC_MANI, ui_val_manifest_storage);
-    add_storage(&sp, STORE_LOC_OVER, ui_val_override_storage);
-
     add_storage(&sp, STORE_LOC_APPS, ui_val_apps_storage);
-    add_storage(&sp, STORE_LOC_MUSI, ui_val_music_storage);
     add_storage(&sp, STORE_LOC_PACK, ui_val_package_storage);
     add_storage(&sp, STORE_LOC_THEM, ui_val_theme_storage);
+    add_storage(&sp, STORE_LOC_MUSI, ui_val_music_storage);
 
     char dir[FILENAME_MAX];
 
@@ -139,6 +142,7 @@ static void init_navigation_group(void) {
     reset_ui_groups();
 
     static const list_frame frames[] = {
+        {lang.muxstorage.section.play, storage_off_play, storage_len_play},
         {lang.muxstorage.section.content, storage_off_content, storage_len_content},
         {lang.muxstorage.section.system, storage_off_system, storage_len_system},
         {lang.muxstorage.section.custom, storage_off_custom, storage_len_custom},

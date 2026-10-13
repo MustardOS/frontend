@@ -40,7 +40,7 @@ On the port you want to hand over (**Settings → Input → Port 2**, say):
 ## Layouts
 
 A layout is the whole deck setup in one named file: who it helps, every button mapping, every turbo rate, every macro binding, and the priority flag etc. They
-live on their own in `save/pickles/deck/<name>.ini`. The same layout can be used by other controllers on any content. Up to 16 of them, mange them wisely.
+live on their own in `pickles/deck/<name>.ini`. The same layout can be used by other controllers on any content. Up to 16 of them, mange them wisely.
 
 Which port is *using* which layout is an ordinary Pickles setting, so it inherits per content, per core and per directory like everything else
 in [settings](settings.md). The uptake is that one `Fight Stick` layout can be used across every fighting game, while others still remember whether it wanted a

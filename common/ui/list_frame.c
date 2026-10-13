@@ -213,8 +213,16 @@ void list_frame_apply(void) {
     }
 
     if (bar_label) {
+        int position = 0;
+        int shown = 0;
+        for (int i = 0; i < frame_count; i++) {
+            if (!frame_has_rows(i)) continue;
+            shown++;
+            if (i <= current) position = shown;
+        }
+
         char text[MAX_BUFFER_SIZE];
-        snprintf(text, sizeof(text), "%s  %d / %d", f->label ? f->label : "", current + 1, frame_count);
+        snprintf(text, sizeof(text), "%s  %d / %d", f->label ? f->label : "", position, shown);
         lv_label_set_text(bar_label, text);
     }
 

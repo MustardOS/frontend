@@ -11,6 +11,7 @@ static lv_obj_t *ui_img_splash;
 static lv_obj_t *ui_viewport_objects[7];
 
 static char prev_dir[PATH_MAX];
+static char focus_after_load[PATH_MAX];
 
 static int exit_status = 0;
 static int sys_index = -1;
@@ -34,6 +35,9 @@ static void show_search(void);
 static void go_top_level(void);
 static void show_module_help(void);
 static void show_sort_order(void);
+static void open_launch_folder(void);
+static void set_launch_file(void);
+static void clear_launch_file(void);
 
 static void group_label(const char *name, char *out, const size_t len) {
     const int size = config.visual.group_content;
@@ -763,6 +767,17 @@ static void create_content_items(void) {
     order_prepare(items, item_count, sys_dir);
     order_apply(items, item_count);
 
+    if (focus_after_load[0]) {
+        for (size_t i = 0; i < item_count; i++) {
+            if (strcmp(items[i].extra_data, focus_after_load) == 0) {
+                sys_index = (int) i;
+                break;
+            }
+        }
+
+        focus_after_load[0] = '\0';
+    }
+
     if (file_exist(MUOS_IDX_LOAD)) {
         const int idx = read_line_int_from(MUOS_IDX_LOAD, 1);
         remove(MUOS_IDX_LOAD);
@@ -783,8 +798,15 @@ static void create_content_items(void) {
     }
 
     if (sys_index < 0) {
+        const size_t prev_len = strlen(prev_dir);
+
         for (size_t i = 0; i < item_count; i++) {
-            if (strcasecmp(items[i].extra_data, prev_dir) == 0) {
+            const char *path = items[i].extra_data;
+            const int launch_alias = items[i].content_type == content_type_item && prev_len
+                                     && strncasecmp(path, prev_dir, prev_len) == 0 && path[prev_len] == '/'
+                                     && !strchr(path + prev_len + 1, '/');
+
+            if (strcasecmp(path, prev_dir) == 0 || launch_alias) {
                 sys_index = (int) i;
                 break;
             }
@@ -1186,6 +1208,12 @@ static void handle_a(void) {
             show_module_help();
         } else if (opt == more_information) {
             show_information();
+        } else if (opt == more_open_folder) {
+            open_launch_folder();
+        } else if (opt == more_launch_set) {
+            set_launch_file();
+        } else if (opt == more_launch_clear) {
+            clear_launch_file();
         } else if (opt == more_search) {
             show_search();
         } else if (opt == more_top_level) {
@@ -1367,6 +1395,79 @@ static void show_module_help(void) {
     show_info_box(lang.muxplore.title, lang.muxplore.help, 0);
 }
 
+static void item_parent_dir(const char *path, char *out, const size_t out_size) {
+    snprintf(out, out_size, "%s", path);
+
+    char *slash = strrchr(out, '/');
+    if (slash && slash != out) *slash = '\0';
+}
+
+static int item_in_other_folder(const char *path) {
+    char item_dir[PATH_MAX];
+    item_parent_dir(path, item_dir, sizeof(item_dir));
+
+    char item_rel[PATH_MAX];
+    char sys_rel[PATH_MAX];
+    union_get_relative_path(item_dir, item_rel, sizeof(item_rel));
+    union_get_relative_path(sys_dir, sys_rel, sizeof(sys_rel));
+
+    return strcmp(item_rel, sys_rel) != 0;
+}
+
+static int launch_folder_allowed(void) {
+    char rel[PATH_MAX];
+    union_get_relative_path(sys_dir, rel, sizeof(rel));
+
+    const size_t root_len = strlen(MAIN_ROM_DIR);
+    if (strncasecmp(rel, MAIN_ROM_DIR, root_len) != 0 || rel[root_len] != '/') return 0;
+
+    const char *sub = rel + root_len;
+    while (*sub == '/')
+        sub++;
+
+    return *sub != '\0';
+}
+
+static void open_launch_folder(void) {
+    char folder[PATH_MAX];
+    item_parent_dir(items[current_item_index].extra_data, folder, sizeof(folder));
+
+    fwd_hist_set(sys_dir, current_item_index);
+    navigate_to_dir(folder, -1);
+}
+
+static void set_launch_file(void) {
+    char parent[PATH_MAX];
+    item_parent_dir(sys_dir, parent, sizeof(parent));
+
+    if (!launch_marker_set(items[current_item_index].extra_data)) {
+        play_sound(snd_error);
+        return;
+    }
+
+    toast_message(lang.generic.launch_set_done, tst_wait_m);
+
+    snprintf(focus_after_load, sizeof(focus_after_load), "%s", items[current_item_index].extra_data);
+    navigate_to_dir(parent, -1);
+}
+
+static void clear_launch_file(void) {
+    char folder[PATH_MAX];
+    item_parent_dir(items[current_item_index].extra_data, folder, sizeof(folder));
+
+    if (!launch_marker_clear(folder)) {
+        play_sound(snd_error);
+        return;
+    }
+
+    toast_message(lang.generic.launch_clear_done, tst_wait_m);
+
+    if (item_in_other_folder(items[current_item_index].extra_data)) {
+        snprintf(focus_after_load, sizeof(focus_after_load), "%s", folder);
+        navigate_to_dir(sys_dir, -1);
+    }
+}
+
 static void show_actions_dialog(void) {
     const int at_root = union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR);
 
@@ -1374,6 +1475,22 @@ static void show_actions_dialog(void) {
     int count = 0;
 
     if (ui_count_static) entries[count++] = (more_entry) {more_information, 1};
+
+    if (ui_count_static && items[current_item_index].content_type == content_type_item) {
+        const char *path = items[current_item_index].extra_data;
+        const int marked = launch_marker_matches(path);
+        const int editable = !is_ksk(kiosk.content.option);
+
+        if (item_in_other_folder(path)) {
+            entries[count++] = (more_entry) {more_open_folder, 1};
+            if (marked && editable) entries[count++] = (more_entry) {more_launch_clear, 1};
+        } else if (marked) {
+            if (editable) entries[count++] = (more_entry) {more_launch_clear, 1};
+        } else if (editable && launch_folder_allowed()) {
+            entries[count++] = (more_entry) {more_launch_set, 1};
+        }
+    }
+
     entries[count++] = (more_entry) {more_search, 1};
     entries[count++] = (more_entry) {more_sort, 1};
     if (!at_root) entries[count++] = (more_entry) {more_top_level, 1};

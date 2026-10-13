@@ -1,14 +1,20 @@
 #include "muxshare.h"
 #include <common/ui/orientation.h>
+#include <common/ui/list_frame.h>
 #include "ui/ui_muxoption.h"
 
 #define OPTION(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(OPTION_ELEMENTS) };
+
+enum {
+    option_off_main = 0,
+    option_len_main = E_SIZE(OPTION_MAIN_ELEMENTS),
+    option_off_display = option_off_main + option_len_main,
+    option_len_display = E_SIZE(OPTION_DISPLAY_ELEMENTS),
+    option_off_info = option_off_display + option_len_display,
+    option_len_info = E_SIZE(OPTION_INFO_ELEMENTS),
+};
 #undef OPTION
-
-typedef enum { view_options = 0, view_info } option_view_t;
-
-static option_view_t current_view = view_options;
 
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
@@ -25,14 +31,18 @@ static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_value[ui_count_dynamic];
 
 static int rem_config = 0;
-static int options_item_index = 0;
-static int info_item_index = 0;
 static int core_is_muxretro = 0;
 static int core_on_stage_overlay = 0;
 
 static void list_nav_move(int steps, int direction);
 
 static void show_help(void) {
+    if (list_frame_focused()) {
+        list_frame_help();
+
+        return;
+    }
+
     const struct help_msg help_messages[] = {
 #define OPTION(NAME, UDATA) {UDATA, lang.muxoption.help.NAME},
         OPTION_ELEMENTS
@@ -41,19 +51,6 @@ static void show_help(void) {
 
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
-
-#define OPTION_VISIBLE(NAME, OBJ)                                                                                      \
-    static int visible_##NAME(void) {                                                                                  \
-        return !lv_obj_has_flag(OBJ, LV_OBJ_FLAG_HIDDEN);                                                              \
-    }
-
-OPTION_VISIBLE(control, ui_pnl_control_option)
-OPTION_VISIBLE(retroarch, ui_pnl_retro_arch_option)
-OPTION_VISIBLE(col_filter, ui_pnl_col_filter_option)
-OPTION_VISIBLE(shader, ui_pnl_shader_option)
-OPTION_VISIBLE(overlay, ui_pnl_overlay_option)
-OPTION_VISIBLE(remconfig, ui_pnl_rem_config_option)
-OPTION_VISIBLE(tag, ui_pnl_tag_option)
 
 static void refresh_option_row_widths(void) {
 #define OPTION(NAME, UDATA)                                                                                            \
@@ -269,11 +266,29 @@ static void populate_info_values(void) {
     }
 }
 
-static void rebuild_ui_groups(void) {
-    lv_obj_update_layout(ui_pnl_content);
-    refresh_option_row_widths();
-    reset_ui_groups();
-    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
+static void hide_unused_items(void) {
+    if (is_dir) {
+        HIDE_VALUE_ITEM(option, tag);
+        HIDE_VALUE_ITEM(option, name);
+        HIDE_VALUE_ITEM(option, time);
+        HIDE_VALUE_ITEM(option, launch);
+    }
+
+    const char *core_label = lv_label_get_text(ui_val_core_option);
+    const int core_is_retroarch = core_label && strcasestr(core_label, "RetroArch");
+    if (!core_is_retroarch) {
+        HIDE_VALUE_ITEM(option, retro_arch);
+        if (!core_is_muxretro) HIDE_VALUE_ITEM(option, rem_config);
+    }
+
+    if (hdmi_mode || !config.settings.advanced.stage_overlay || !core_on_stage_overlay) {
+        HIDE_VALUE_ITEM(option, col_filter);
+        HIDE_VALUE_ITEM(option, shader);
+    }
+
+    if (hdmi_mode || !config.settings.advanced.stage_overlay || !(core_on_stage_overlay || core_is_retroarch)) {
+        HIDE_VALUE_ITEM(option, overlay);
+    }
 }
 
 static void build_all_items(void) {
@@ -296,201 +311,63 @@ static void build_all_items(void) {
         -1, option, rem_config, lang.muxoption.remconfig, "remconfig",
         is_dir ? lang.generic.directory : lang.generic.content
     );
+    INIT_VALUE_ITEM(-1, option, tag, lang.muxoption.tag, "tag", "");
+
     INIT_VALUE_ITEM(-1, option, col_filter, lang.muxoption.colfilter, "colfilter", "");
     INIT_VALUE_ITEM(-1, option, shader, lang.muxoption.shader, "shader", "");
     INIT_VALUE_ITEM(-1, option, overlay, lang.muxoption.overlay, "overlay", "");
-    INIT_VALUE_ITEM(-1, option, tag, lang.muxoption.tag, "tag", "");
 
     INIT_VALUE_ITEM(-1, option, storage, lang.generic.storage, "storage", "");
     INIT_VALUE_ITEM(-1, option, folder, lang.muxoption.folder, "folder", "");
-
     INIT_VALUE_ITEM(-1, option, name, lang.muxoption.name, "name", "");
     INIT_VALUE_ITEM(-1, option, time, lang.muxoption.time, "time", "");
     INIT_VALUE_ITEM(-1, option, launch, lang.muxoption.launch, "launch", "");
 
-    if (is_dir) {
-        HIDE_VALUE_ITEM(option, tag);
-        HIDE_VALUE_ITEM(option, name);
-        HIDE_VALUE_ITEM(option, time);
-        HIDE_VALUE_ITEM(option, launch);
-    }
-
     populate_info_values();
-    rebuild_ui_groups();
-}
 
-static void build_options_view(void) {
-    SHOW_VALUE_ITEM(option, core);
-    SHOW_VALUE_ITEM(option, governor);
-    SHOW_VALUE_ITEM(option, control);
-    SHOW_VALUE_ITEM(option, retro_arch);
-    SHOW_VALUE_ITEM(option, rem_config);
-    SHOW_VALUE_ITEM(option, col_filter);
-    SHOW_VALUE_ITEM(option, shader);
-    SHOW_VALUE_ITEM(option, overlay);
-    if (!is_dir) SHOW_VALUE_ITEM(option, tag);
+    lv_obj_update_layout(ui_pnl_content);
+    refresh_option_row_widths();
 
-    HIDE_VALUE_ITEM(option, storage);
-    HIDE_VALUE_ITEM(option, folder);
-    if (!is_dir) {
-        HIDE_VALUE_ITEM(option, name);
-        HIDE_VALUE_ITEM(option, time);
-        HIDE_VALUE_ITEM(option, launch);
-    }
+    reset_ui_groups();
+    hide_unused_items();
+    add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 
-    const char *core_label = lv_label_get_text(ui_val_core_option);
-    const int core_is_retroarch = core_label && strcasestr(core_label, "RetroArch");
-    if (!core_is_retroarch) {
-        HIDE_VALUE_ITEM(option, retro_arch);
-        if (!core_is_muxretro) HIDE_VALUE_ITEM(option, rem_config);
-    }
+    static const list_frame frames[] = {
+        {lang.muxoption.section.options, option_off_main, option_len_main},
+        {lang.muxoption.section.display, option_off_display, option_len_display},
+        {lang.muxoption.section.info, option_off_info, option_len_info},
+    };
 
-    // Colour filter/shader belong to the stage overlay pipeline, which only externally
-    // launched cores flagged stage_overlay_enabled in ext_core_names actually render
-    // through - RetroArch has its own filter/shader system, muRetro carries in-app
-    // display settings, and unassigned content has no launcher at all.
-    if (hdmi_mode || !config.settings.advanced.stage_overlay || !core_on_stage_overlay) {
-        HIDE_VALUE_ITEM(option, col_filter);
-        HIDE_VALUE_ITEM(option, shader);
-    }
+    list_frame_init(
+        &theme, ui_pnl_content, frames, A_SIZE(frames), ui_objects_panel, ui_objects, ui_objects_glyph,
+        ui_objects_value, ui_count_dynamic
+    );
 
-    if (hdmi_mode || !config.settings.advanced.stage_overlay || !(core_on_stage_overlay || core_is_retroarch)) {
-        HIDE_VALUE_ITEM(option, overlay);
-    }
-}
-
-static void build_info_view(void) {
-    SHOW_VALUE_ITEM(option, storage);
-    SHOW_VALUE_ITEM(option, folder);
-
-    if (!is_dir) {
-        SHOW_VALUE_ITEM(option, name);
-        SHOW_VALUE_ITEM(option, time);
-        SHOW_VALUE_ITEM(option, launch);
-    }
-
-    HIDE_VALUE_ITEM(option, core);
-    HIDE_VALUE_ITEM(option, governor);
-    HIDE_VALUE_ITEM(option, control);
-    HIDE_VALUE_ITEM(option, retro_arch);
-    HIDE_VALUE_ITEM(option, rem_config);
-    HIDE_VALUE_ITEM(option, col_filter);
-    HIDE_VALUE_ITEM(option, shader);
-    HIDE_VALUE_ITEM(option, overlay);
-    if (!is_dir) HIDE_VALUE_ITEM(option, tag);
+    list_nav_move(list_frame_restore(), +1);
 }
 
 static void check_focus(void) {
-    if (current_view != view_options) {
-        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        return;
-    }
+    const int row = list_frame_current_row();
+    const int on_frame = list_frame_focused() || row < 0;
+    const int is_remove = !on_frame && lv_group_get_focused(ui_group) == ui_lbl_rem_config_option;
+    const int is_info = !on_frame && row >= option_off_info;
 
-    lv_obj_clear_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_clear_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    nav_show_a(!on_frame && !is_remove && !is_info, lang.generic.select);
+    nav_show_lr(is_remove);
 
-    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused == ui_lbl_rem_config_option) {
-        lv_obj_add_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    if (is_remove) {
         lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
-        lv_obj_clear_flag(ui_lbl_nav_a, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_clear_flag(ui_lbl_nav_a_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
-        lv_obj_add_flag(ui_lbl_nav_lr_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
-}
-
-static void refresh_option_view(void) {
-    int anchor_index = 0;
-
-    if (current_view == view_options) {
-        lv_label_set_text(ui_lbl_title, lang.muxoption.title_main);
-
-        build_options_view();
-
-        lv_label_set_text(ui_lbl_nav_y, lang.generic.info);
-
-        anchor_index = options_item_index;
-        current_item_index = options_item_index;
-    } else {
-        lv_label_set_text(ui_lbl_title, lang.muxoption.title_info);
-
-        build_info_view();
-
-        anchor_index = 7 + info_item_index;
-        current_item_index = info_item_index;
-    }
-
-    lv_obj_update_layout(ui_pnl_content);
-
-    if (!ui_count_static) {
-        current_item_index = 0;
-        check_focus();
-        return;
-    }
-
-    if (ui_objects[anchor_index]) lv_group_focus_obj(ui_objects[anchor_index]);
-    if (ui_objects_value[anchor_index]) lv_group_focus_obj(ui_objects_value[anchor_index]);
-    if (ui_objects_glyph[anchor_index]) lv_group_focus_obj(ui_objects_glyph[anchor_index]);
-    if (ui_objects_panel[anchor_index]) lv_group_focus_obj(ui_objects_panel[anchor_index]);
-
-    check_focus();
-    nav_moved = 1;
 }
 
 static void list_nav_move(const int steps, const int direction) {
-    if (!ui_count_static) return;
     if (first_open) first_open = 0;
 
-    for (int i = 0; i < steps; i++) {
-        if (lv_group_get_focused(ui_group)) {
-            apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
-        }
-
-        if (lv_group_get_focused(ui_group_value)) {
-            apply_text_long_dot(&theme, lv_group_get_focused(ui_group_value));
-        }
-        gen_step_movement(1, direction, 2, 0, 1);
-    }
-
-    if (!nav_silent) {
-        if (current_view == view_options) {
-            options_item_index = current_item_index;
-        } else {
-            info_item_index = current_item_index;
-        }
-    }
-
-    if (lv_group_get_focused(ui_group)) {
-        apply_text_long_dot(&theme, lv_group_get_focused(ui_group));
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
-    }
-
-    if (lv_group_get_focused(ui_group_value)) {
-        apply_text_long_dot(&theme, lv_group_get_focused(ui_group_value));
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group_value), config.visual.name_scroll);
-    }
-
-    update_scroll_position(
-        theme.mux.item.count, theme.mux.item.panel, ui_count_static, current_item_index, ui_pnl_content
-    );
-    update_label_scroll();
-    nav_moved = 1;
-
+    gen_step_movement(steps, direction, 2, 0, 1);
     check_focus();
 }
 
@@ -534,7 +411,6 @@ static void do_remove(void) {
                 break;
         }
 
-        refresh_option_view();
         return;
     }
 
@@ -559,8 +435,6 @@ static void do_remove(void) {
         default:
             break;
     }
-
-    refresh_option_view();
 }
 
 static char *change_config_opt(const int steps) {
@@ -587,7 +461,16 @@ static void handle_option_prev(void) {
         return;
     }
 
-    if (current_view != view_options || msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call) return;
+
+    if (list_frame_focused()) {
+        if (list_frame_move(-1)) {
+            play_sound(snd_option);
+            check_focus();
+        }
+
+        return;
+    }
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lbl_rem_config_option) {
@@ -605,12 +488,39 @@ static void handle_option_next(void) {
         return;
     }
 
-    if (current_view != view_options || msgbox_active || hold_call) return;
+    if (msgbox_active || hold_call) return;
+
+    if (list_frame_focused()) {
+        if (list_frame_move(+1)) {
+            play_sound(snd_option);
+            check_focus();
+        }
+
+        return;
+    }
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused == ui_lbl_rem_config_option) {
         play_sound(snd_option);
         lv_label_set_text(ui_val_rem_config_option, change_config_opt(+1));
+    }
+}
+
+static void handle_frame_prev(void) {
+    if (msgbox_active || hold_call || dialogue_active(&remove_dlg)) return;
+
+    if (list_frame_move(-1)) {
+        play_sound(snd_option);
+        check_focus();
+    }
+}
+
+static void handle_frame_next(void) {
+    if (msgbox_active || hold_call || dialogue_active(&remove_dlg)) return;
+
+    if (list_frame_move(+1)) {
+        play_sound(snd_option);
+        check_focus();
     }
 }
 
@@ -664,41 +574,29 @@ static void handle_a(void) {
         return;
     }
 
-    if (current_view != view_options || msgbox_active || hold_call) return;
-
-    const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    if (e_focused == ui_lbl_rem_config_option) return;
-
-    typedef int (*visible_fn)(void);
+    if (msgbox_active || hold_call || list_frame_focused()) return;
 
     typedef struct {
         const char *mux_name;
         int16_t *kiosk_flag;
-        visible_fn visible;
     } menu_entry;
 
     static const menu_entry entries[ui_count_dynamic] = {
-        {"assign", &kiosk.content.core, NULL},
-        {"governor", &kiosk.content.governor, NULL},
-        {"control", &kiosk.content.control, visible_control},
-        {"retroarch", &kiosk.content.retroarch, visible_retroarch},
-        {"remconfig", &kiosk.content.remconfig, visible_remconfig},
-        {"filter", &kiosk.content.colfilter, visible_col_filter},
-        {"shader", &kiosk.content.shader, visible_shader},
-        {"overlay", &kiosk.content.overlay, visible_overlay},
-        {"tag", &kiosk.content.tag, visible_tag},
+        {"assign", &kiosk.content.core},
+        {"governor", &kiosk.content.governor},
+        {"control", &kiosk.content.control},
+        {"retroarch", &kiosk.content.retroarch},
+        {NULL, NULL},
+        {"tag", &kiosk.content.tag},
+        {"filter", &kiosk.content.colfilter},
+        {"shader", &kiosk.content.shader},
+        {"overlay", &kiosk.content.overlay},
     };
 
-    const menu_entry *visible_entries[ui_count_dynamic];
-    size_t visible_count = 0;
+    const int row = list_frame_current_row();
+    if (row < 0 || row >= ui_count_dynamic || !entries[row].mux_name) return;
 
-    for (size_t i = 0; i < A_SIZE(entries); i++) {
-        if (entries[i].visible && !entries[i].visible()) continue;
-        visible_entries[visible_count++] = &entries[i];
-    }
-
-    if ((unsigned) current_item_index >= visible_count) return;
-    const menu_entry *entry = visible_entries[current_item_index];
+    const menu_entry *entry = &entries[row];
 
     if (is_ksk(*entry->kiosk_flag)) {
         kiosk_denied();
@@ -706,9 +604,9 @@ static void handle_a(void) {
     }
 
     play_sound(snd_confirm);
-    load_mux(entry->mux_name);
 
-    write_text_to_file(MUOS_OPI_LOAD, "w", INT, current_item_index);
+    list_frame_remember(lv_group_get_focused(ui_group));
+    load_mux(entry->mux_name);
 
     mux_input_stop();
 }
@@ -724,15 +622,6 @@ static void handle_b(void) {
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
-        return;
-    }
-
-    if (current_view == view_info) {
-        play_sound(snd_back);
-
-        current_view = view_options;
-
-        refresh_option_view();
         return;
     }
 
@@ -759,7 +648,7 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (current_view != view_options) return;
+    if (list_frame_focused()) return;
 
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
     if (e_focused != ui_lbl_rem_config_option || dialogue_active(&remove_dlg)) return;
@@ -771,15 +660,6 @@ static void handle_x(void) {
 
     play_sound(snd_confirm);
     dialogue_open(&remove_dlg, &theme);
-}
-
-static void handle_y(void) {
-    if (hold_call) return;
-
-    play_sound(snd_confirm);
-
-    current_view = current_view == view_options ? view_info : view_options;
-    refresh_option_view();
 }
 
 static void handle_help(void) {
@@ -800,8 +680,6 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
                                   {ui_lbl_nav_x, lang.generic.remove, 0},
-                                  {ui_lbl_nav_y_glyph, "", 0},
-                                  {ui_lbl_nav_y, lang.generic.info, 0},
                                   {NULL, NULL, 0}});
 
     overlay_display();
@@ -813,10 +691,6 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
 
     nav_silent = 1;
     rem_config = 0;
-    current_view = view_options;
-
-    options_item_index = 0;
-    info_item_index = 0;
 
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", dir, name);
     is_dir = dir_exist(rom_dir) && !folder_is_content(dir, name);
@@ -848,12 +722,6 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
 
     init_fonts();
     build_all_items();
-    refresh_option_view();
-
-    if (file_exist(MUOS_OPI_LOAD) && current_view == view_options) {
-        list_nav_move(read_line_int_from(MUOS_OPI_LOAD, 1), +1);
-        remove(MUOS_OPI_LOAD);
-    }
 
     nav_silent = 0;
 
@@ -870,13 +738,12 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
-                [mux_input_y] = handle_y,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
                 [mux_input_dpad_up] = handle_dpad_up,
                 [mux_input_dpad_down] = handle_dpad_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_l1] = handle_frame_prev,
+                [mux_input_r1] = handle_frame_next,
             },
         .release_handler =
             {
@@ -887,8 +754,8 @@ void muxoption_main(const int auto_assign, const char *name, const char *dir, co
             [mux_input_dpad_right] = handle_option_next,
             [mux_input_dpad_up] = handle_dpad_up_hold,
             [mux_input_dpad_down] = handle_dpad_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_l1] = handle_frame_prev,
+            [mux_input_r1] = handle_frame_next,
         }
     };
 
