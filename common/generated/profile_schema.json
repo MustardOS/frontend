@@ -2171,6 +2171,133 @@
       "type": "int",
       "default": "0",
       "label": "Footer Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        },
+        {
+          "value": "12",
+          "label": "12"
+        },
+        {
+          "value": "14",
+          "label": "14"
+        },
+        {
+          "value": "16",
+          "label": "16"
+        },
+        {
+          "value": "18",
+          "label": "18"
+        },
+        {
+          "value": "20",
+          "label": "20"
+        },
+        {
+          "value": "22",
+          "label": "22"
+        },
+        {
+          "value": "24",
+          "label": "24"
+        },
+        {
+          "value": "26",
+          "label": "26"
+        },
+        {
+          "value": "28",
+          "label": "28"
+        },
+        {
+          "value": "30",
+          "label": "30"
+        },
+        {
+          "value": "32",
+          "label": "32"
+        },
+        {
+          "value": "34",
+          "label": "34"
+        },
+        {
+          "value": "36",
+          "label": "36"
+        },
+        {
+          "value": "38",
+          "label": "38"
+        },
+        {
+          "value": "40",
+          "label": "40"
+        },
+        {
+          "value": "42",
+          "label": "42"
+        },
+        {
+          "value": "44",
+          "label": "44"
+        },
+        {
+          "value": "46",
+          "label": "46"
+        },
+        {
+          "value": "48",
+          "label": "48"
+        },
+        {
+          "value": "50",
+          "label": "50"
+        },
+        {
+          "value": "52",
+          "label": "52"
+        },
+        {
+          "value": "54",
+          "label": "54"
+        },
+        {
+          "value": "56",
+          "label": "56"
+        },
+        {
+          "value": "58",
+          "label": "58"
+        },
+        {
+          "value": "60",
+          "label": "60"
+        },
+        {
+          "value": "62",
+          "label": "62"
+        },
+        {
+          "value": "64",
+          "label": "64"
+        }
+      ],
+      "open": 1,
       "help": "The text size used in the footer bar.\n\nLeave it at 0 to use whatever suits the device."
     },
     {
@@ -2179,6 +2306,133 @@
       "type": "int",
       "default": "0",
       "label": "Header Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        },
+        {
+          "value": "12",
+          "label": "12"
+        },
+        {
+          "value": "14",
+          "label": "14"
+        },
+        {
+          "value": "16",
+          "label": "16"
+        },
+        {
+          "value": "18",
+          "label": "18"
+        },
+        {
+          "value": "20",
+          "label": "20"
+        },
+        {
+          "value": "22",
+          "label": "22"
+        },
+        {
+          "value": "24",
+          "label": "24"
+        },
+        {
+          "value": "26",
+          "label": "26"
+        },
+        {
+          "value": "28",
+          "label": "28"
+        },
+        {
+          "value": "30",
+          "label": "30"
+        },
+        {
+          "value": "32",
+          "label": "32"
+        },
+        {
+          "value": "34",
+          "label": "34"
+        },
+        {
+          "value": "36",
+          "label": "36"
+        },
+        {
+          "value": "38",
+          "label": "38"
+        },
+        {
+          "value": "40",
+          "label": "40"
+        },
+        {
+          "value": "42",
+          "label": "42"
+        },
+        {
+          "value": "44",
+          "label": "44"
+        },
+        {
+          "value": "46",
+          "label": "46"
+        },
+        {
+          "value": "48",
+          "label": "48"
+        },
+        {
+          "value": "50",
+          "label": "50"
+        },
+        {
+          "value": "52",
+          "label": "52"
+        },
+        {
+          "value": "54",
+          "label": "54"
+        },
+        {
+          "value": "56",
+          "label": "56"
+        },
+        {
+          "value": "58",
+          "label": "58"
+        },
+        {
+          "value": "60",
+          "label": "60"
+        },
+        {
+          "value": "62",
+          "label": "62"
+        },
+        {
+          "value": "64",
+          "label": "64"
+        }
+      ],
+      "open": 1,
       "help": "The text size used in the header bar.\n\nLeave it at 0 to use whatever suits the device."
     },
     {
@@ -2189,6 +2443,16 @@
       "min": 0,
       "max": 1,
       "label": "Italic",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Use the italic axis provided by the selected variable font."
     },
     {
@@ -2197,6 +2461,133 @@
       "type": "int",
       "default": "0",
       "label": "List Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        },
+        {
+          "value": "12",
+          "label": "12"
+        },
+        {
+          "value": "14",
+          "label": "14"
+        },
+        {
+          "value": "16",
+          "label": "16"
+        },
+        {
+          "value": "18",
+          "label": "18"
+        },
+        {
+          "value": "20",
+          "label": "20"
+        },
+        {
+          "value": "22",
+          "label": "22"
+        },
+        {
+          "value": "24",
+          "label": "24"
+        },
+        {
+          "value": "26",
+          "label": "26"
+        },
+        {
+          "value": "28",
+          "label": "28"
+        },
+        {
+          "value": "30",
+          "label": "30"
+        },
+        {
+          "value": "32",
+          "label": "32"
+        },
+        {
+          "value": "34",
+          "label": "34"
+        },
+        {
+          "value": "36",
+          "label": "36"
+        },
+        {
+          "value": "38",
+          "label": "38"
+        },
+        {
+          "value": "40",
+          "label": "40"
+        },
+        {
+          "value": "42",
+          "label": "42"
+        },
+        {
+          "value": "44",
+          "label": "44"
+        },
+        {
+          "value": "46",
+          "label": "46"
+        },
+        {
+          "value": "48",
+          "label": "48"
+        },
+        {
+          "value": "50",
+          "label": "50"
+        },
+        {
+          "value": "52",
+          "label": "52"
+        },
+        {
+          "value": "54",
+          "label": "54"
+        },
+        {
+          "value": "56",
+          "label": "56"
+        },
+        {
+          "value": "58",
+          "label": "58"
+        },
+        {
+          "value": "60",
+          "label": "60"
+        },
+        {
+          "value": "62",
+          "label": "62"
+        },
+        {
+          "value": "64",
+          "label": "64"
+        }
+      ],
+      "open": 1,
       "help": "The text size used for list items.\n\nLeave it at 0 to use whatever suits the device."
     },
     {
@@ -2213,6 +2604,133 @@
       "type": "int",
       "default": "0",
       "label": "Panel Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        },
+        {
+          "value": "12",
+          "label": "12"
+        },
+        {
+          "value": "14",
+          "label": "14"
+        },
+        {
+          "value": "16",
+          "label": "16"
+        },
+        {
+          "value": "18",
+          "label": "18"
+        },
+        {
+          "value": "20",
+          "label": "20"
+        },
+        {
+          "value": "22",
+          "label": "22"
+        },
+        {
+          "value": "24",
+          "label": "24"
+        },
+        {
+          "value": "26",
+          "label": "26"
+        },
+        {
+          "value": "28",
+          "label": "28"
+        },
+        {
+          "value": "30",
+          "label": "30"
+        },
+        {
+          "value": "32",
+          "label": "32"
+        },
+        {
+          "value": "34",
+          "label": "34"
+        },
+        {
+          "value": "36",
+          "label": "36"
+        },
+        {
+          "value": "38",
+          "label": "38"
+        },
+        {
+          "value": "40",
+          "label": "40"
+        },
+        {
+          "value": "42",
+          "label": "42"
+        },
+        {
+          "value": "44",
+          "label": "44"
+        },
+        {
+          "value": "46",
+          "label": "46"
+        },
+        {
+          "value": "48",
+          "label": "48"
+        },
+        {
+          "value": "50",
+          "label": "50"
+        },
+        {
+          "value": "52",
+          "label": "52"
+        },
+        {
+          "value": "54",
+          "label": "54"
+        },
+        {
+          "value": "56",
+          "label": "56"
+        },
+        {
+          "value": "58",
+          "label": "58"
+        },
+        {
+          "value": "60",
+          "label": "60"
+        },
+        {
+          "value": "62",
+          "label": "62"
+        },
+        {
+          "value": "64",
+          "label": "64"
+        }
+      ],
+      "open": 1,
       "help": "Set the font size for grid panel labels (0 uses the device default, only applies in grid mode)"
     },
     {
@@ -2269,6 +2787,13 @@
       "type": "int",
       "default": "0",
       "label": "Width",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        }
+      ],
+      "open": 1,
       "help": "Adjust the width axis provided by the selected variable font."
     },
     {
@@ -9424,6 +9949,69 @@
       "type": "int",
       "default": "1",
       "label": "Overlay Image",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Theme Provided"
+        },
+        {
+          "value": "2",
+          "label": "Checkerboard (1px)"
+        },
+        {
+          "value": "3",
+          "label": "Checkerboard (4px)"
+        },
+        {
+          "value": "4",
+          "label": "Diagonal Lines (1px)"
+        },
+        {
+          "value": "5",
+          "label": "Diagonal Lines (2px)"
+        },
+        {
+          "value": "6",
+          "label": "Diagonal Lines (4px)"
+        },
+        {
+          "value": "7",
+          "label": "Dot Lattice (1px)"
+        },
+        {
+          "value": "8",
+          "label": "Dot Lattice (4px)"
+        },
+        {
+          "value": "9",
+          "label": "Horizontal Lines (1px)"
+        },
+        {
+          "value": "10",
+          "label": "Horizontal Lines (2px)"
+        },
+        {
+          "value": "11",
+          "label": "Horizontal Lines (4px)"
+        },
+        {
+          "value": "12",
+          "label": "Vertical Lines (1px)"
+        },
+        {
+          "value": "13",
+          "label": "Vertical Lines (2px)"
+        },
+        {
+          "value": "14",
+          "label": "Vertical Lines (4px)"
+        }
+      ],
+      "open": 1,
       "help": "An image laid over the frontend, usually to imitate a screen grille or add a border.\n\nThis covers the menus only, not your content."
     },
     {
@@ -10170,6 +10758,16 @@
       "min": 0,
       "max": 1,
       "label": "Web Dashboard",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves."
     },
     {
@@ -10180,6 +10778,16 @@
       "min": 0,
       "max": 1,
       "label": "Web Dashboard Authentication",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Whether changes made through the Web Dashboard need a code.\n\nDisabled, the dashboard can browse and download, and anyone on your network can change History and Collections and control Wasabi and Pickles without a code. The Editors and Tools cannot save to the device. Enabled, saving from the Editors and Tools, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code."
     },
     {
@@ -10340,6 +10948,16 @@
       "min": 0,
       "max": 1,
       "label": "Local DNS Resolver",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Makes the device available at a memorable .local address without changing its system hostname.\n\nUse a different local name when more than one muOS device shares a network."
     },
     {
@@ -10358,6 +10976,20 @@
       "min": 0,
       "max": 2,
       "label": "Remote Controls",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        },
+        {
+          "value": "2",
+          "label": "Enabled with Sticks"
+        }
+      ],
       "help": "Whether Remote View shows buttons, volume and brightness controls that work the device from the browser. Enabled with Sticks also adds the analogue sticks, on devices that have them, and lets a game controller connected to the browser move them.\n\nThey need Authentication and the code from Web Dashboard Code, because anyone using them can do anything you can do with the device in your hands. With Authentication and Remote View Privacy both disabled, they are open to anyone on your network, but only while Remote View is set to Live."
     },
     {
@@ -10368,6 +11000,16 @@
       "min": 0,
       "max": 1,
       "label": "Remote View Privacy",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Whether Remote View protects what is on the screen.\n\nEnabled, Remote View needs the code from Web Dashboard Code and never captures private screens such as Web Dashboard Code, passcodes and passwords. Disabled, anyone on your network can open Remote View without unlocking and every screen is captured, including the Web Dashboard Code, which lets them unlock the dashboard too."
     },
     {
@@ -10377,7 +11019,25 @@
       "default": "0",
       "min": 0,
       "max": 3,
-      "label": "Remote Sound"
+      "label": "Remote Sound",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Low"
+        },
+        {
+          "value": "2",
+          "label": "Medium"
+        },
+        {
+          "value": "3",
+          "label": "High"
+        }
+      ]
     },
     {
       "key": "web/remote_view",
@@ -10431,6 +11091,16 @@
       "min": 0,
       "max": 1,
       "label": "SFTP + Filebrowser",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "File transfer and a browser based file manager."
     },
     {
@@ -10461,6 +11131,16 @@
       "min": 0,
       "max": 1,
       "label": "Secure Shell",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "A secure shell for connecting to the device from a computer."
     },
     {
@@ -10481,6 +11161,16 @@
       "min": 0,
       "max": 1,
       "label": "Syncthing",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Keeps folders in step with another machine over the network."
     },
     {
@@ -10501,6 +11191,16 @@
       "min": 0,
       "max": 1,
       "label": "Tailscale",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Joins the device to a private Tailscale network, so it can be reached from elsewhere."
     },
     {
@@ -10511,6 +11211,16 @@
       "min": 0,
       "max": 1,
       "label": "Virtual Terminal",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
       "help": "Whether this service runs.\n\nEach one costs a little battery and memory while it is on, so leave off what you do not use."
     },
     {

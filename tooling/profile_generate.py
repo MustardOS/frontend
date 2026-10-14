@@ -219,7 +219,27 @@ FIXED_OPTIONS["web/remote_view"] = [("0", "lang.generic.disabled"), ("1", "30s")
 FIXED_OPTIONS["web/live_fps"] = [(str(v), str(v)) for v in range(5, 61, 5)]
 FIXED_OPTIONS["web/live_quality"] = [(str(v), f"{v}%") for v in range(20, 101, 5)]
 
-OPEN_OPTIONS = {"settings/general/soundfont", "visual/overlaytransparency"}
+for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "sftpgo", "ttyd", "syncthing", "tailscaled"):
+    FIXED_OPTIONS[f"web/{_service}"] = DISABLED_ENABLED
+FIXED_OPTIONS["web/remote_control"] = [("0", "lang.generic.disabled"), ("1", "lang.generic.enabled"),
+                                       ("2", "lang.muxwebserv.remote_sticks")]
+FIXED_OPTIONS["web/remote_sound"] = [("0", "lang.generic.disabled"), ("1", "lang.generic.low"),
+                                     ("2", "lang.generic.medium"), ("3", "lang.generic.high")]
+
+OVERLAY_PATTERNS = ("checkerboard.t1", "checkerboard.t4", "diagonal.t1", "diagonal.t2", "diagonal.t4", "lattice.t1",
+                    "lattice.t4", "horizontal.t1", "horizontal.t2", "horizontal.t4", "vertical.t1", "vertical.t2",
+                    "vertical.t4")
+FIXED_OPTIONS["visual/overlayimage"] = [("0", "lang.generic.disabled"), ("1", "lang.muxvisual.overlay.theme")] + [
+    (str(index), f"lang.muxvisual.overlay.{pattern}") for index, pattern in enumerate(OVERLAY_PATTERNS, 2)]
+
+for _size in ("list", "header", "footer", "panel"):
+    FIXED_OPTIONS[f"settings/font/{_size}_size"] = [("0", "lang.muxfont.size_default")] + [
+        (str(v), str(v)) for v in range(6, 65, 2)]
+FIXED_OPTIONS["settings/font/width"] = [("0", "lang.muxfont.size_default")]
+FIXED_OPTIONS["settings/font/italic"] = [("0", "lang.muxfont.size_default"), ("1", "lang.generic.enabled")]
+
+OPEN_OPTIONS = {"settings/general/soundfont", "visual/overlaytransparency", "visual/overlayimage", "settings/font/width"}
+OPEN_OPTIONS.update(f"settings/font/{size}_size" for size in ("list", "header", "footer", "panel"))
 OPEN_OPTIONS.update(f"settings/overlay/{part}_alpha" for part in ("gen", "bat", "vol", "bri"))
 
 FIXED_RANGES = {
