@@ -10,7 +10,7 @@ enum { ui_count_dynamic = E_SIZE(NETWORK_ELEMENTS) };
 #define NET_SCRIPT "script/init/async/S02network.sh"
 
 static const char *pass_args[] = {OPT_PATH "script/web/password.sh", NULL};
-static const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "stop", NULL};
+static const char *net_d_args[] = {OPT_PATH NET_SCRIPT, "disconnect", NULL};
 static const char *net_r_args[] = {OPT_PATH NET_SCRIPT, "restart", NULL};
 
 #define PASS_ENCODE "********"

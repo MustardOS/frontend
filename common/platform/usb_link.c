@@ -609,10 +609,8 @@ static void run_usb_script(const char *action) {
 }
 
 static void gadget_teardown(void) {
-    if (cable.gadget_built && release_udc(LINK_GADGET) != 0) {
-        set_device_state(usb_link_failed);
-        return;
-    }
+    int release_failed = cable.gadget_built && release_udc(LINK_GADGET) != 0;
+    if (release_failed) set_device_state(usb_link_failed);
 
     if (cable.control_started) {
         pthread_kill(cable.control, SIGUSR1);
@@ -624,6 +622,8 @@ static void gadget_teardown(void) {
     if (cable.ep_out >= 0) close(cable.ep_out);
     if (cable.ep0 >= 0) close(cable.ep0);
     cable.ep_in = cable.ep_out = cable.ep0 = -1;
+
+    if (release_failed && release_udc(LINK_GADGET) == 0) release_failed = 0;
 
     if (cable.ffs_mounted) {
         if (umount(LINK_FFS) != 0) umount2(LINK_FFS, MNT_DETACH);
@@ -638,11 +638,11 @@ static void gadget_teardown(void) {
         gadget_rmdir("functions/" LINK_FUNCTION);
         gadget_rmdir("strings/0x409");
         gadget_rmdir("");
-        cable.gadget_built = 0;
+        cable.gadget_built = path_exists(LINK_GADGET);
     }
 
     int usb_function = 0;
-    if (!cable.gadget_built && read_decimal(LINK_USB_FUNCTION, &usb_function) == 0 && usb_function > 0)
+    if (read_decimal(LINK_USB_FUNCTION, &usb_function) == 0 && usb_function > 0)
         run_usb_script("start");
 }
 
