@@ -75,7 +75,7 @@ char *excluded_included[2];
 char *allowed_restricted[2];
 char *hidden_visible[2];
 char *toggle_icon_visible[3];
-char *battery_display[3];
+char *battery_display[4];
 char *debug_log_mode[3];
 char *kernel_log_mode[5];
 char *scroll_speed[4];
@@ -103,6 +103,7 @@ void common_var_init(void) {
     battery_display[0] = lang.generic.icon_only;
     battery_display[1] = lang.generic.text_only;
     battery_display[2] = lang.generic.text_icon;
+    battery_display[3] = lang.generic.hidden;
 
     debug_log_mode[0] = lang.generic.disabled;
     debug_log_mode[1] = lang.generic.standard;
@@ -416,7 +417,7 @@ static const lang_field lang_fields[] = {
     {"muxapp", LANG_OFF(muxapp.help.task), lang_specific, "Run the bundled maintenance scripts, covering diagnostics, clearing caches and mounting storage"},
     {"muxapp", LANG_OFF(muxapp.third_party.title), lang_specific, "Third Party Application"},
     {"muxapp", LANG_OFF(muxapp.third_party.message), lang_specific, "This application did not come with MustardOS, so we cannot vouch for how it behaves or help when it misbehaves.\n\nPlease take any problems with it to whoever wrote it.\n\nThis is only mentioned once!"},
-    {"muxapp", LANG_OFF(muxapp.overview), lang_specific, "Everything on your device that is not typically a game. Tools, utilities, ports and the odd bit of fun.\n\nPress A to launch one. Press Y to read what an application does, and MENU as many times as you like to read this message."},
+    {"muxapp", LANG_OFF(muxapp.overview), lang_specific, "Everything on your device that is not typically a game. Tools, utilities, ports and the odd bit of fun.\n\nPress A to launch one, and MENU to read what the highlighted application does."},
 
     // muxappcon
     {"muxappcon", LANG_OFF(muxappcon.title), lang_specific, "Application Option"},
@@ -3475,7 +3476,7 @@ static const lang_field lang_fields[] = {
     {"muxvisual", LANG_OFF(muxvisual.overlay.vertical.t2), lang_specific, "Vertical Lines (2px)"},
     {"muxvisual", LANG_OFF(muxvisual.overlay.vertical.t4), lang_specific, "Vertical Lines (4px)"},
     {"muxvisual", LANG_OFF(muxvisual.help.sort), lang_specific, "The order content is listed in, and which rule wins when two could apply."},
-    {"muxvisual", LANG_OFF(muxvisual.help.battery), lang_specific, "Whether the battery indicator appears in the header."},
+    {"muxvisual", LANG_OFF(muxvisual.help.battery), lang_specific, "How the battery appears in the header, as a glyph, a percentage or both, or hidden altogether."},
     {"muxvisual", LANG_OFF(muxvisual.help.network), lang_specific, "Whether the Wi-Fi indicator appears in the header.\n\nIts strength reflects the local wireless link and does not claim that the Internet is reachable."},
     {"muxvisual", LANG_OFF(muxvisual.help.bluetooth), lang_specific, "Whether the Bluetooth indicator appears in the header."},
     {"muxvisual", LANG_OFF(muxvisual.help.sort_order), lang_specific, "Whether the current sort order is shown in the header, which saves opening the menu to check."},

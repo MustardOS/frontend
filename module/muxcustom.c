@@ -1163,7 +1163,7 @@ static void init_navigation_group(void) {
 
     char *size_options = generate_number_string(6, 64, 2, lang.muxfont.size_default, NULL, NULL, 0);
 
-    INIT_OPTION_ITEM(-1, visual, battery, lang.muxvisual.battery, "battery", battery_display, 3);
+    INIT_OPTION_ITEM(-1, visual, battery, lang.muxvisual.battery, "battery", battery_display, 4);
     INIT_OPTION_ITEM(-1, visual, clock, lang.muxvisual.clock, "clock", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, network, lang.muxvisual.network, "network", hidden_visible, 2);
     INIT_OPTION_ITEM(-1, visual, bluetooth, lang.muxvisual.bluetooth, "bluetooth", hidden_visible, 2);

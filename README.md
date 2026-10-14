@@ -18,7 +18,7 @@ Everything else depends on which target you are building for.
 
 **Cross-compiling for ARM devices (normal workflow)**
 
-A pre-built aarch64 toolchain is expected at `~/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be pointed to by setting the `XTOOL`
+A pre-built aarch64 toolchain is expected at `$HOME/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be pointed to by setting the `XTOOL`
 environment variable. The toolchain must include `gcc`, `g++`, `ar`, `ld`, and `strip` for the target host tuple.
 
 **Native builds for x86 / x86-64**
@@ -44,25 +44,62 @@ On Debian/Ubuntu:
 
 ### Cross-Compile Build (ARM Devices)
 
-All cross-compile builds go through `build.sh`, which sets up the toolchain environment and then calls `make`.
+All builds go through `build.sh`, which sets up the toolchain environment and then calls `make`.
 
-Run it with no arguments for a guided setup that asks for the device, build type and toolchain, then starts the build. It uses `dialog` or `whiptail` when
-either is installed, and falls back to plain numbered prompts otherwise.
+```sh
+# Shipping build (aarch64 Cortex-A53, the most common target)
+./build.sh release
+
+# Development build with debug symbols, for gdb and crash backtraces
+./build.sh debug
+```
+
+`release` builds with `BUILD=release`. `debug` builds the development image (`BUILD=test`, which keeps test only code) with `DEBUGSYM=1`, so binaries keep
+their symbols and are not stripped. Every build runs one job per CPU core, so there is no `-j` to pass. Anything after `release` or `debug` is handed to
+`make`, such as `./build.sh release clean`.
+
+Run `build.sh` with no arguments for a guided setup that asks for the device, build type and toolchain, then starts the build. It uses `dialog` or `whiptail`
+when either is installed, and falls back to plain numbered prompts otherwise.
 
 ```sh
 # Guided / Spoon Fed
 ./build.sh
 ```
 
-Passing arguments skips the questions entirely, so scripted builds are unaffected.
+`./build.sh make` still works as before and takes `BUILD` from the environment, defaulting to `test` when it is unset.
 
-```sh
-# Standard release build (aarch64 Cortex-A53, the most common target)
-BUILD=release ./build.sh make -j$(nproc)
+#### What every build does
 
-# Verbose build (shows each compiler command and all error output)
-DEBUG=1 BUILD=release ./build.sh make -j$(nproc)
-```
+Before compiling, each build:
+
+1. Sets every file in the repository to `755` and owned by the current user, the same as `chmod -R 755 .` and `chown -R "$(id -un):" .`. A file that
+   cannot be changed, such as one left owned by root, gives a warning and the build carries on.
+2. Refreshes the generated files, see [Generated metadata](#generated-metadata).
+3. Copies the generated language template to `../language/mux/en.json` when it has changed.
+4. Formats any C source you have changed or added with the pinned clang-format, keeping the executable bit.
+5. Runs `shellcheck -s sh` over any changed script in `../internal` and warns about problems. This is skipped with a warning when `shellcheck` is not
+   installed.
+
+Set `SKIP_CHECKS=1` to skip steps 2 to 5 and compile straight away. Permissions and ownership are always set.
+
+#### Build output and the build log
+
+Each build starts with a summary of what it is about to use: the build type and device, the toolchain with its GCC version, location and sysroot, whether
+`ccache` is available, the job count and log location, whether the sibling `internal` and `language` repositories were found, and which helper tools are
+installed. Anything missing is highlighted along with what it affects, and the first build for a device warns that external libraries are compiled first.
+If no toolchain can be found at all, `build.sh` explains where one is expected and how to point it elsewhere.
+
+After that the screen shows a short summary: each stage, every component as it builds, generated and formatted files, and any warnings or errors with the offending
+source line. A failed build ends with a list of the first errors.
+
+The complete output of every step, including each sub `make`, is written to `build.log` beside `build.sh`, which is replaced on each build and ignored by Git.
+Look there for anything the summary leaves out, rather than rebuilding with extra output.
+
+| Variable   | Effect                                                     |
+|------------|------------------------------------------------------------|
+| `RAW=1`    | Shows the full output on screen as well as in the log      |
+| `DEBUG=2`  | Also writes every compiler command into the log            |
+| `NO_COLOR` | Turns off coloured output, which is also off when piped    |
 
 **DEVICE targets**
 
@@ -82,10 +119,8 @@ name under it to choose a specific toolchain.
 
 ```sh
 # Example: build for generic ARM64
-DEVICE=ARM64 BUILD=release ./build.sh make -j$(nproc)
+DEVICE=ARM64 ./build.sh release
 ```
-
-`BUILD` accepts `release` (production image) or `test` (development image with test flags). It defaults to `test` if unset.
 
 ---
 
@@ -94,7 +129,7 @@ DEVICE=ARM64 BUILD=release ./build.sh make -j$(nproc)
 Use `DEVICE=NATIVE` to build and run directly on the host machine. This is useful for quick iteration and debugging without hardware.
 
 ```sh
-DEVICE=NATIVE BUILD=release ./build.sh make -j$(nproc)
+DEVICE=NATIVE ./build.sh release
 ```
 
 Binaries and shared libraries land in `bin/` just like a cross-compiled build.
@@ -108,18 +143,19 @@ component, so a rebuild only touches what actually changed.
 
 ```sh
 # Full rebuild from nothing
-./build.sh make clean
+./build.sh release clean
+./build.sh release
 ```
 
-Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with different flags cannot be reused. The current
-configuration is recorded in `.build-config`.
+Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with different flags cannot be reused. Switching
+between `release` and `debug` therefore rebuilds everything. The current configuration is recorded in `.build-config`.
 
 ### Compilation database
 
 Generate `compile_commands.json` from a clean build when using CLion, clangd or another editor that supports compilation databases:
 
 ```sh
-BUILD=release ./build.sh database -j$(nproc)
+BUILD=release ./build.sh database
 ```
 
 The command uses the selected cross-toolchain and records the real compiler arguments from the root project and its nested components. Temporary capture files
@@ -132,18 +168,34 @@ Deployment → Compilation Database**.
 
 ### Generated metadata
 
-Every normal build refreshes the generated language template, third-party version table, and internal script hashes after any configuration-driven clean. Output
-is compared before replacement, so unchanged metadata keeps its timestamp and does not cause unnecessary recompilation.
+Every build refreshes the generated language template, third-party version table, profile schema and internal script hashes before compiling, and again after
+any configuration-driven clean. Output is compared before replacement, so unchanged metadata keeps its timestamp and does not cause unnecessary recompilation.
 
 ```sh
 # Refresh generated files without compiling
 ./build.sh generate
 ```
 
-The standard outputs are `common/generated/language.json`, `common/generated/thirdparty.h`, and
+The standard outputs are `common/generated/language.json`, `common/generated/thirdparty.h`, `common/generated/profile_schema.json` and
 `common/generated/verify_data.h`. Verification data is refreshed from the sibling `internal/script` tree when it is available; otherwise the checked-in data is
-retained. Set `INTERNAL_SCRIPT_DIR`, `LANGUAGE_OUTPUT`,
-`THIRDPARTY_OUTPUT`, or `VERIFY_OUTPUT` to override those paths. Generating verification data requires `xxhsum`.
+retained. Set `INTERNAL_SCRIPT_DIR`, `INTERNAL_ROOT`, `LANGUAGE_OUTPUT`, `PROFILE_SCHEMA_OUTPUT`, `THIRDPARTY_OUTPUT`, or `VERIFY_OUTPUT` to override those
+paths, and `LANGUAGE_REPO_FILE` to change where the language template is copied. Generating verification data requires `xxhsum`.
+
+### Formatting
+
+Sources are formatted with clang-format 21.1.8, matching CLion. `build.sh` installs that exact version into `.cache` when it is not already available, or uses
+the binary named by `CLANG_FORMAT`.
+
+```sh
+# Format everything tracked by Git
+./build.sh format
+
+# Format or check particular files
+./build.sh format retro/ui/ui_manual.c
+./build.sh format --check
+```
+
+Builds format only the files you have changed, so committed files that predate the formatter are left alone until you format them yourself.
 
 ---
 
@@ -165,12 +217,17 @@ Linking them statically means the version shipped in a device rootfs never matte
 ### Dependency
 
 * `common`: Common Libraries and Functions
+* `emmc`: TrimUI internal eMMC probe module
 * `external`: Third party dependencies fetched and built from source
+* `input`: Input service and per device input drivers
 * `module`: Frontend menu system modules
+* `mugl`: 32-bit GLES2 forwarder for TrimUI devices
 * `retro`: LibRetro core host
 * `stage`: Hardware overlay staging system
 * `terminal`: Mustard Terminal emulator, settings menu and on-screen keyboard
+* `tooling`: Build and development helpers
 * `vendor`: Bundled third party source and licence files
+* `video`: Wasabi media player
 
 The `common` source tree is grouped into `base`, `compat`, `config`, `content`, `display`, `generated`, `platform`,
 `runtime`, `saver`, `storage`, `tooling`, and `ui`. See [`common/README.md`](common/README.md) for ownership and migration rules. Its Makefile uses explicit
@@ -180,19 +237,30 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 
 * `mubattery`: Background battery monitor daemon
 * `mucredits`: Supporter Credits
+* `mudisp`: Display and HDMI output control
+* `mudns`: Local network discovery over multicast DNS
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
+* `muinput`: Input service and remote input socket
+* `mulink`: Direct Link daemon for cable connections between devices
 * `mulog`: System log viewer
 * `mulookup`: Content Name Lookup
 * `muremap`: Background input remap daemon
 * `murgb`: RGB LED and MCU controller daemon
+* `muscreen`: Remote View screen streamer
 * `musplash`: Standalone PNG splash screen
+* `mususpend`: Suspend and wake helper
+* `muswitch`: Launches content directly
+* `muvarctl`: Configuration value store control
+* `muverify`: Signed manifest verification
 * `muwarn`: First Install Disclaimer Message
 * `muweb`: Landing page web server, catalogue and save management API
 * `muxcharge`: Charging Information Screen
-* `muxterm`: Mustard Terminal
 * `muxfrontend`: Main Frontend Specific Runner
+* `muxmedia`: Wasabi media player
 * `muxmessage`: Information and Progress Screen
+* `muxretro`: Pickles, the LibRetro core host
+* `muxterm`: Mustard Terminal
 
 ### Modules
 
@@ -205,18 +273,17 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `muxbtall`: Bluetooth Device List
 * `muxbtcon`: Bluetooth Connection Manager
 * `muxbtdev`: Bluetooth Device Information
-* `muxchrony`: System Clock Information
-* `muxcoladjust`: Content Colour Adjustment Menu
 * `muxcolfilter`: Content Colour Filter Menu
 * `muxcollect`: Content Collection Manager
 * `muxconfig`: Configuration Menu
 * `muxconnect`: Connectivity Menu
 * `muxcontrol`: Content Control Scheme Selector
+* `muxcore`: Core Management
 * `muxcustom`: Customisation Menu
 * `muxdanger`: Dangerous Settings
+* `muxdetail`: Device Details
 * `muxdevice`: Device Settings
-* `muxdownload`: Archive Downloader
-* `muxfont`: Font Settings
+* `muxdistemp`: Display Colour Temperature
 * `muxgov`: System Governor Selector
 * `muxhdmi`: HDMI Configuration
 * `muxhistory`: Content History Menu
@@ -225,32 +292,37 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `muxkiosk`: Kiosk Mode Management
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
+* `muxlink`: Direct Link Settings
+* `muxlogo`: Boot Logo Selector
 * `muxnetadv`: Advanced Network Settings
-* `muxnetinfo`: Network Information
 * `muxnetprofile`: Network Profile Manager
+* `muxnetproxy`: Network Proxy Settings
 * `muxnetscan`: Network SSID Scanner
 * `muxnetwork`: Network Configuration
 * `muxnews`: Community News
 * `muxoption`: Content Explorer Options
+* `muxorder`: Content Sort Order
 * `muxoverlay`: Content Overlay Settings
 * `muxpass`: Passcode Screen
 * `muxpasscfg`: Passcode Configuration
 * `muxpicker`: Customisation Package Selector
 * `muxplore`: Content Explorer
 * `muxpower`: Power Settings
+* `muxprofile`: Settings Profiles
 * `muxraopt`: RetroArch Options
 * `muxremap`: Button Remapping
 * `muxrgb`: RGB LED Settings
+* `muxrgbzone`: RGB LED Zone Settings
 * `muxrtc`: Date and Time
 * `muxsearch`: Content Search
 * `muxshader`: Shader Settings
 * `muxshare`: Shared Frontend Module State
 * `muxshot`: Screenshot Viewer
 * `muxsort`: Sorting Settings
+* `muxsoundfont`: Soundfont Selector
 * `muxspace`: Disk Usage Information
 * `muxsplash`: Simple PNG Based Splash Screen
 * `muxstorage`: Storage Migrate/Sync Information
-* `muxsysinfo`: System Information
 * `muxtag`: Content Tag Manager
 * `muxtask`: Task Toolkit
 * `muxtester`: Input Tester
@@ -258,11 +330,11 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `muxtheme`: Theme Picker
 * `muxthemedown`: Custom Theme Download
 * `muxthemefilter`: Custom Theme Filter
-* `muxthemeopt`: Theme Options
+* `muxthird`: Third Party Licences
 * `muxtimezone`: Timezone Selector
 * `muxtweakadv`: Advanced Settings
 * `muxtweakgen`: General Settings
-* `muxvisual`: Interface Options
+* `muxwebcode`: Web Dashboard Code
 * `muxwebserv`: Web Services
 
 ---

@@ -12,6 +12,7 @@ bin/
 lvgl/build/
 .build-config
 .buildcount
+build.log
 
 # External dependencies, fetched and built by external/build.sh
 external/dist/

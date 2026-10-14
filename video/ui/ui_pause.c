@@ -491,11 +491,11 @@ static void apply_gameplay_header(void) {
         lv_obj_add_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
 
     if (header_shows_battery()) {
-        if (config.visual.battery != 1)
+        if (config.visual.battery == 0 || config.visual.battery == 2)
             lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
         else
             lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
-        if (config.visual.battery != 0)
+        if (config.visual.battery == 1 || config.visual.battery == 2)
             lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
         else
             lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
@@ -699,7 +699,8 @@ static void show_nav(void) {
                                       && wasabi_asset_browser_type(current_item_index) == wasabi_asset_row_item;
     const int root_adjust =
         root_row == wasabi_setting_shader && !list_frame_focused() && video_effects_parameter_count() > 0;
-    const int root_clear = root_row >= 0 && !list_frame_focused() && wasabi_setting_clearable((wasabi_setting) root_row);
+    const int root_clear =
+        root_row >= 0 && !list_frame_focused() && wasabi_setting_clearable((wasabi_setting) root_row);
     const int bookmark_remove = bookmarks_active && bookmark_count > 0;
     const int asset_delete = settings_active && asset_page() && settings_page != wasabi_page_shader
                              && !wasabi_catalogue_active() && wasabi_asset_browser_removable(current_item_index);

@@ -14,38 +14,72 @@ XDIR=${XDIR:-${XHOST:-}}
 # this is the one we currently use... royal we! Meaning me!
 FORMAT_VERSION=21.1.8
 
+if [ -t 1 ] && [ -z "${NO_COLOR-}" ] && [ "${TERM-}" != "dumb" ]; then
+	ESC=$(printf '\033')
+	C_RESET="${ESC}[0m"
+	C_BOLD="${ESC}[1m"
+	C_DIM="${ESC}[2m"
+	C_RED="${ESC}[31m"
+	C_GREEN="${ESC}[32m"
+	C_YELLOW="${ESC}[33m"
+	C_BLUE="${ESC}[34m"
+	C_CYAN="${ESC}[36m"
+else
+	C_RESET=""
+	C_BOLD=""
+	C_DIM=""
+	C_RED=""
+	C_GREEN=""
+	C_YELLOW=""
+	C_BLUE=""
+	C_CYAN=""
+fi
+
 USAGE() {
 	printf "MustardOS Frontend Builder + Cross Compile Tool\n"
 	printf "\n"
 	printf "%s\n" "Usage:"
-	printf "  %s guided setup so no flags to remember\n" "$0"
-	printf "  %s [print|generate|database|make [args...]]\n" "$0"
+	printf "  %s                  guided setup so no flags to remember\n" "$0"
+	printf "  %s release          shipping build\n" "$0"
+	printf "  %s debug            development build with debug symbols\n" "$0"
+	printf "  %s make [args...]   build with BUILD from the environment, test when unset\n" "$0"
+	printf "  %s generate         refresh generated files without compiling\n" "$0"
 	printf "  %s format [--check] [files...]\n" "$0"
+	printf "  %s [print|database [args...]]\n" "$0"
+	printf "\n"
+	printf "  Every build sets permissions to 755 and ownership to the current user, uses one\n"
+	printf "  job per CPU core, refreshes the generated files, copies the\n"
+	printf "  language template into ../language, formats changed C sources, and warns about\n"
+	printf "  changed internal scripts that fail shellcheck. The full output goes to build.log\n"
+	printf "  beside this script, the screen only shows progress, warnings and errors.\n"
 	printf "\n"
 	printf "%s\n" "Examples:"
-	printf "  %s print\n" "$0"
-	printf "  %s generate\n" "$0"
-	printf "  %s format\n" "$0"
-	printf "  %s format --check\n" "$0"
+	printf "  %s release\n" "$0"
+	printf "  %s debug\n" "$0"
+	printf "  %s release clean\n" "$0"
+	printf "  DEVICE=ARM32 %s release\n" "$0"
 	printf "  %s format retro/ui/ui_manual.c\n" "$0"
-	printf "  %s database -j4\n" "$0"
-	printf "  %s make -j4\n" "$0"
-	printf "  DEVICE=ARM32 BUILD=release %s make -j4\n" "$0"
+	printf "  %s format --check\n" "$0"
+	printf "  BUILD=release %s database\n" "$0"
 	printf "\n"
 	printf "%s\n" "Environment:"
-	printf "  DEVICE   ARM64 ARM64_A53 ARM64_A53_CRYPTO ARM32 ARM32_A9 X86_64 RISCV64 NATIVE GENERIC\n\n"
-	printf "  BUILD    test or release\n"
-	printf "  DEBUG    0 quiet, 1 normal, 2 verbose\n"
-	printf "  XTOOL    toolchain root, default %s/x-tools\n" "$HOME"
-	printf "  XDIR     toolchain directory under XTOOL, detected when unset\n\n"
-	printf "  CLANG_FORMAT         clang-format %s binary, installed into .cache when unset\n" "$FORMAT_VERSION"
-	printf "  INTERNAL_SCRIPT_DIR  internal scripts used to generate verification data\n"
-	printf "  INTERNAL_ROOT        internal repository used to generate profile data and default settings\n"
+	printf "  DEVICE       ARM64 ARM64_A53 ARM64_A53_CRYPTO ARM32 ARM32_A9 X86_64 RISCV64 NATIVE GENERIC\n"
+	printf "  BUILD        test or release, set for you by release and debug\n"
+	printf "  DEBUG        2 also logs every compiler command, the build log always has full output\n"
+	printf "  RAW          1 shows the full build output on screen as well as in the log\n"
+	printf "  NO_COLOR     set to turn off coloured output\n"
+	printf "  SKIP_CHECKS  1 skips generate, formatting and the checks before building\n"
+	printf "  XTOOL        toolchain root, default %s/x-tools\n" "$HOME"
+	printf "  XDIR         toolchain directory under XTOOL, detected when unset\n\n"
+	printf "  CLANG_FORMAT          clang-format %s binary, installed into .cache when unset\n" "$FORMAT_VERSION"
+	printf "  INTERNAL_SCRIPT_DIR   internal scripts used to generate verification data\n"
+	printf "  INTERNAL_ROOT         internal repository used for profile data and script checks\n"
 	printf "  PROFILE_SCHEMA_OUTPUT generated profile schema output path\n"
-	printf "  INTERNAL_WEB_DIR     dashboard sources checked against the dashboard language list\n"
-	printf "  LANGUAGE_OUTPUT      generated language template output path\n"
-	printf "  THIRDPARTY_OUTPUT    generated third party header output path\n"
-	printf "  VERIFY_OUTPUT        generated script verification data output path\n"
+	printf "  INTERNAL_WEB_DIR      dashboard sources checked against the dashboard language list\n"
+	printf "  LANGUAGE_OUTPUT       generated language template output path\n"
+	printf "  LANGUAGE_REPO_FILE    language template copy, default ../language/mux/en.json\n"
+	printf "  THIRDPARTY_OUTPUT     generated third party header output path\n"
+	printf "  VERIFY_OUTPUT         generated script verification data output path\n"
 	printf "\n"
 	printf "Keep Shell Variables:\n"
 	printf "  . %s\n" "$0"
@@ -109,22 +143,6 @@ ASK_MENU() {
 	printf "%s" "$MENU_CHOSEN"
 }
 
-ASK_INPUT() {
-	ASK_TITLE=$1
-	ASK_TEXT=$2
-	ASK_DEFAULT=$3
-
-	if [ -n "$DIALOG" ]; then
-		"$DIALOG" --clear --title "$ASK_TITLE" --inputbox "$ASK_TEXT" 10 60 "$ASK_DEFAULT" 3>&1 1>&2 2>&3
-		return $?
-	fi
-
-	printf "\n%s [%s]: " "$ASK_TEXT" "$ASK_DEFAULT" 1>&2
-	read -r ASK_VALUE
-
-	printf "%s" "${ASK_VALUE:-$ASK_DEFAULT}"
-}
-
 WIZARD() {
 	DIALOG=""
 	command -v dialog >/dev/null 2>&1 && DIALOG=dialog
@@ -149,14 +167,6 @@ WIZARD() {
 
 	[ -n "$WIZ_BUILD" ] || exit 0
 	BUILD=$WIZ_BUILD
-
-	WIZ_DEBUG=$(ASK_MENU "Build Output" "How much should the build print?" \
-		1 "Normal, show each step" \
-		0 "Quiet" \
-		2 "Verbose, show every command") || exit 0
-
-	[ -n "$WIZ_DEBUG" ] || exit 0
-	DEBUG=$WIZ_DEBUG
 
 	if [ "$DEVICE" != "NATIVE" ]; then
 		WIZ_FOUND=$(LIST_TOOLCHAINS)
@@ -183,14 +193,9 @@ WIZARD() {
 		fi
 	fi
 
-	WIZ_JOBS=$(ASK_INPUT "Parallel Jobs" "How many compile jobs at once?" "$(nproc 2>/dev/null || echo 4)")
-	[ -n "$WIZ_JOBS" ] || WIZ_JOBS=1
-
 	[ -n "$DIALOG" ] && "$DIALOG" --clear --title "Ready" --yesno \
 		"Device:   $DEVICE
 Build:    $BUILD
-Debug:    $DEBUG
-Jobs:     $WIZ_JOBS
 Toolchain: ${XDIR:-auto}
 
 Start the build?" 14 60 || {
@@ -199,13 +204,9 @@ Start the build?" 14 60 || {
 
 	[ -n "$DIALOG" ] && clear
 
-	export DEVICE BUILD DEBUG XDIR
+	export DEVICE BUILD XDIR
 
-	printf "Running: DEVICE=%s BUILD=%s DEBUG=%s %s%s make -j%s\n\n" \
-		"$DEVICE" "$BUILD" "$DEBUG" \
-		"${XDIR:+XDIR=$XDIR }" "$0" "$WIZ_JOBS"
-
-	WIZARD_JOBS=$WIZ_JOBS
+	printf "Running: DEVICE=%s BUILD=%s %s%s make\n\n" "$DEVICE" "$BUILD" "${XDIR:+XDIR=$XDIR }" "$0"
 }
 
 DEVICE_ARCH() {
@@ -656,8 +657,10 @@ COMPILE_DATABASE() {
 	export MUOS_COMPDB_DIR="$DB_CAPTURE_DIR"
 	export MUOS_COMPDB_ROOT="$FRONTEND_DIR"
 
+	DB_JOBS=$(nproc 2>/dev/null || printf "4")
+
 	make BUILD="$BUILD" clean
-	make BUILD="$BUILD" CC="$DB_CAPTURE ccache $DB_CC" "$@"
+	make -j"$DB_JOBS" BUILD="$BUILD" CC="$DB_CAPTURE ccache $DB_CC" "$@"
 	"$DB_CAPTURE" --merge "$DB_OUTPUT" "$DB_CAPTURE_DIR"
 
 	printf 'Wrote %s\n' "$DB_OUTPUT"
@@ -778,6 +781,428 @@ FORMAT() {
 	fi
 }
 
+CHANGED_FILES() {
+	CF_REPO=$1
+	shift
+
+	{
+		git -C "$CF_REPO" diff --name-only --diff-filter=ACMR HEAD -- "$@" 2>/dev/null
+		git -C "$CF_REPO" ls-files --others --exclude-standard -- "$@" 2>/dev/null
+	} | sort -u
+}
+
+PRE_BUILD_LANGUAGE() {
+	PB_SOURCE=${LANGUAGE_OUTPUT:-"$FRONTEND_DIR/common/generated/language.json"}
+	PB_TARGET=${LANGUAGE_REPO_FILE:-"$FRONTEND_DIR/../language/mux/en.json"}
+
+	[ -f "$PB_SOURCE" ] && [ -d "$(dirname "$PB_TARGET")" ] || return 0
+	cmp -s "$PB_SOURCE" "$PB_TARGET" && return 0
+
+	cp "$PB_SOURCE" "$PB_TARGET"
+	printf 'Wrote %s\n' "$PB_TARGET"
+}
+
+PRE_BUILD_FORMAT() {
+	FIND_CLANG_FORMAT
+
+	CHANGED_FILES "$FRONTEND_DIR" '*.c' '*.h' | while IFS= read -r PB_FILE; do
+		[ -f "$FRONTEND_DIR/$PB_FILE" ] || continue
+		(cd "$FRONTEND_DIR" && "$FORMAT_BIN" --dry-run -Werror "$PB_FILE" >/dev/null 2>&1) && continue
+
+		# Rewriting in place drops the executable bit the sources are tracked with
+		PB_EXEC=0
+		[ ! -x "$FRONTEND_DIR/$PB_FILE" ] || PB_EXEC=1
+
+		if (cd "$FRONTEND_DIR" && "$FORMAT_BIN" -i "$PB_FILE"); then
+			[ "$PB_EXEC" -eq 0 ] || chmod +x "$FRONTEND_DIR/$PB_FILE"
+			printf 'Formatted %s\n' "$PB_FILE"
+		else
+			printf 'Warning: could not format %s\n' "$PB_FILE" 1>&2
+		fi
+	done
+}
+
+PRE_BUILD_SHELL() {
+	PB_INTERNAL=${INTERNAL_ROOT:-"$FRONTEND_DIR/../internal"}
+	[ -d "$PB_INTERNAL/.git" ] || return 0
+
+	if ! command -v shellcheck >/dev/null 2>&1; then
+		printf 'Warning: shellcheck not found, skipping internal script checks\n' 1>&2
+		return 0
+	fi
+
+	CHANGED_FILES "$PB_INTERNAL" '*.sh' | while IFS= read -r PB_FILE; do
+		[ -f "$PB_INTERNAL/$PB_FILE" ] || continue
+		if ! shellcheck -s sh -S warning "$PB_INTERNAL/$PB_FILE" >/dev/null 2>&1; then
+			printf 'Warning: shellcheck found problems in internal/%s\n' "$PB_FILE" 1>&2
+		fi
+	done
+}
+
+FIX_PERMISSIONS() {
+	FP_OWNER="$(id -un):"
+
+	if chmod -R 755 "$FRONTEND_DIR"; then
+		printf 'Permissions set to 755\n'
+	else
+		printf 'Warning: could not set every permission to 755\n' 1>&2
+	fi
+
+	if chown -R "$FP_OWNER" "$FRONTEND_DIR" 2>/dev/null; then
+		printf 'Ownership set to %s\n' "$FP_OWNER"
+	else
+		printf 'Warning: could not change some files to %s, they may belong to root\n' "$FP_OWNER" 1>&2
+	fi
+}
+
+PRE_BUILD() {
+	[ "${SKIP_CHECKS:-0}" -eq 1 ] && return 0
+
+	GENERATE
+	PRE_BUILD_LANGUAGE
+	PRE_BUILD_FORMAT
+	PRE_BUILD_SHELL
+}
+
+# Keeps the full output in the log and shows a summary, warnings and errors on screen
+PRETTY_OUTPUT() {
+	awk -v reset="$C_RESET" -v bold="$C_BOLD" -v dim="$C_DIM" -v red="$C_RED" -v green="$C_GREEN" \
+		-v yellow="$C_YELLOW" -v blue="$C_BLUE" -v cyan="$C_CYAN" -v raw="${RAW:-0}" -v root="$FRONTEND_DIR/" '
+		function tag(colour, label, text) {
+			printf "  %s%s%-7s%s %s\n", bold, colour, label, reset, text
+			fflush()
+		}
+
+		function context(text) {
+			printf "          %s%s%s\n", dim, text, reset
+			fflush()
+		}
+
+		function heading(text) {
+			printf "\n%s%s==>%s %s%s%s\n", bold, blue, reset, bold, text, reset
+			fflush()
+		}
+
+		function located(text) {
+			gsub(root, "", text)
+			if (depth > 0 && dir[depth] != "" && text ~ /^[A-Za-z0-9_.\/-]+\.(c|h|cpp|S):[0-9]+/ && text !~ /^\//)
+				text = dir[depth] "/" text
+			return text
+		}
+
+		{
+			line = $0
+			if (raw == 1) {
+				print line
+				fflush()
+			}
+		}
+
+		line ~ /^make(\[[0-9]+\])?: Entering directory / {
+			path = line
+			sub(/^[^`'\'']*[`'\'']/, "", path)
+			sub(/'\''$/, "", path)
+			if (index(path, root) == 1) path = substr(path, length(root) + 1)
+			else if (path "/" == root) path = ""
+			dir[++depth] = path
+			next
+		}
+
+		line ~ /^make(\[[0-9]+\])?: Leaving directory / {
+			if (depth > 0) depth--
+			next
+		}
+
+		line ~ /: (fatal )?error: |undefined reference|^Error: |collect2: error|Segmentation fault/ {
+			sub(/^Error: /, "", line)
+			line = located(line)
+			errors++
+			if (errors <= 10) first[errors] = line
+			diag = 1
+			if (raw != 1) tag(red, "ERROR", line)
+			next
+		}
+
+		line ~ /: warning: |^Warning: / {
+			sub(/^Warning: /, "", line)
+			warnings++
+			diag = 1
+			if (raw != 1) tag(yellow, "WARN", located(line))
+			next
+		}
+
+		raw == 1 { next }
+
+		line ~ /^make(\[[0-9]+\])?: \*\*\* / {
+			context(line)
+			next
+		}
+
+		diag && (line ~ /^ *[0-9]* \| / || line ~ /^ +\| / || line ~ /^ +\|$/) {
+			context(line)
+			next
+		}
+
+		line ~ /^In file included from|: In function |: note: / {
+			context(located(line))
+			next
+		}
+
+		{ diag = 0 }
+
+		line ~ /^Running Checks$/ {
+			heading("Checks")
+			next
+		}
+
+		line ~ /^=+ MustardOS Frontend Builder =+$/ {
+			heading("Configuration")
+			next
+		}
+
+		line ~ /^=+ Complete! =+$/ { next }
+
+		line ~ /^(Targeting|Modules|Daemons|Tools|Dependencies): / {
+			split(line, part, ": ")
+			printf "  %s%-13s%s %s\n", dim, part[1], reset, substr(line, length(part[1]) + 3)
+			fflush()
+			next
+		}
+
+		line ~ /^Building External Dependencies$/ { next }
+
+		function external() {
+			if (!external_shown) heading("External dependencies")
+			external_shown = 1
+		}
+
+		line ~ / already built for / {
+			external()
+			split(line, part, " already built for ")
+			tag(dim, "CACHED", part[1])
+			next
+		}
+
+		line ~ /^(Fetching|Extracting) / {
+			external()
+			split(line, part, " ")
+			tag(cyan, toupper(part[1]) == "FETCHING" ? "FETCH" : "UNPACK", substr(line, length(part[1]) + 2))
+			next
+		}
+
+		line ~ /^Building [^:]+: / {
+			if (!building) {
+				heading("Compiling")
+				building = 1
+			}
+			split(line, part, ": ")
+			sub(/^Building /, "", part[1])
+			tag(cyan, "BUILD", part[2] " " dim "(" part[1] ")" reset)
+			next
+		}
+
+		line ~ /^(Permissions|Ownership) set to / {
+			tag(green, "PERMS", line)
+			next
+		}
+
+		line ~ /^Formatted [^ ]+$/ {
+			sub(/^Formatted /, "", line)
+			tag(cyan, "FORMAT", line)
+			next
+		}
+
+		line ~ /^Wrote / {
+			sub(/^Wrote /, "", line)
+			gsub(root, "", line)
+			tag(green, "GEN", line)
+			next
+		}
+
+		line ~ /^Compiled [0-9]+ / {
+			summary = line
+			next
+		}
+
+		END {
+			if (raw == 1) exit
+			printf "\n"
+			if (summary != "") tag(green, "DONE", summary)
+			if (warnings > 0) tag(yellow, "WARN", warnings " warning(s)")
+			if (errors > 0) {
+				tag(red, "ERROR", errors " error(s)")
+				printf "\n  %sFirst errors%s\n", bold, reset
+				for (i = 1; i <= errors && i <= 10; i++) printf "  %s-%s %s\n", red, reset, first[i]
+			}
+			fflush()
+		}
+	'
+}
+
+INFO_LINE() {
+	printf "  %s%-13s%s %s\n" "$C_DIM" "$1" "$C_RESET" "$2"
+}
+
+NOTE_LINE() {
+	printf "  %s%-13s%s %s%s%s\n" "$C_DIM" "$1" "$C_RESET" "$C_YELLOW" "$2" "$C_RESET"
+}
+
+DEVICE_PURPOSE() {
+	case "$DEVICE" in
+		ARM64_A53) printf "H700 and A133P handhelds" ;;
+		ARM64_A53_CRYPTO) printf "Cortex-A53 with hardware crypto" ;;
+		ARM64) printf "any other 64 bit ARM" ;;
+		ARM32) printf "original 35x series, armhf" ;;
+		ARM32_A9) printf "Cortex-A9 with NEON" ;;
+		X86_64) printf "64 bit x86" ;;
+		RISCV64) printf "64 bit RISC-V" ;;
+		NATIVE) printf "this machine" ;;
+		GENERIC) printf "custom, using ARCH_FLAGS" ;;
+		*) printf "unknown device" ;;
+	esac
+}
+
+# Everything a first time builder needs to know before the compile output starts
+BUILD_SUMMARY() {
+	printf "%s%sMustardOS Frontend Builder%s\n\n" "$C_BOLD" "$C_CYAN" "$C_RESET"
+
+	if [ "$BUILD" = "release" ]; then
+		INFO_LINE "Build" "release, the shipping image"
+	elif [ "${DEBUGSYM:-0}" = "1" ]; then
+		INFO_LINE "Build" "test with debug symbols, for development and gdb"
+	else
+		INFO_LINE "Build" "test, the development image"
+	fi
+	INFO_LINE "Device" "$DEVICE, $(DEVICE_PURPOSE)"
+
+	if [ "$DEVICE" = "NATIVE" ]; then
+		SUM_CC=$(command -v gcc 2>/dev/null || printf "gcc")
+		INFO_LINE "Compiler" "host GCC $(gcc -dumpfullversion 2>/dev/null || printf "unknown")"
+		INFO_LINE "Location" "$SUM_CC"
+	else
+		INFO_LINE "Toolchain" "${XHOST-}, GCC $("$CC" -dumpfullversion 2>/dev/null || printf "unknown")"
+		INFO_LINE "Location" "$XTOOL/${XDIR-}"
+		if [ -n "${SYSROOT-}" ]; then
+			INFO_LINE "Sysroot" "$SYSROOT"
+		else
+			NOTE_LINE "Sysroot" "not found, system headers and libraries may be missed"
+		fi
+	fi
+
+	if command -v ccache >/dev/null 2>&1; then
+		INFO_LINE "Cache" "ccache $(ccache --version 2>/dev/null | awk 'NR == 1 { print $NF }'), repeat builds reuse compiled objects"
+	else
+		NOTE_LINE "Cache" "ccache is not installed and the build needs it"
+	fi
+
+	INFO_LINE "Jobs" "$BUILD_JOBS, one per CPU core"
+	INFO_LINE "Log" "$BUILD_LOG"
+
+	printf "\n"
+
+	SUM_INTERNAL=${INTERNAL_ROOT:-"$FRONTEND_DIR/../internal"}
+	if [ -d "$SUM_INTERNAL/script" ]; then
+		INFO_LINE "Internal" "$(CDPATH='' cd -- "$SUM_INTERNAL" && pwd)"
+	else
+		NOTE_LINE "Internal" "not found beside frontend, script hashes and profiles stay as checked in"
+	fi
+
+	SUM_LANGUAGE=${LANGUAGE_REPO_FILE:-"$FRONTEND_DIR/../language/mux/en.json"}
+	if [ -d "$(dirname "$SUM_LANGUAGE")" ]; then
+		INFO_LINE "Language" "$(CDPATH='' cd -- "$(dirname "$SUM_LANGUAGE")" && pwd)/$(basename "$SUM_LANGUAGE")"
+	else
+		NOTE_LINE "Language" "not found beside frontend, the language template is not copied"
+	fi
+
+	SUM_TOOLS=""
+	SUM_MISSING=""
+
+	if [ -n "${CLANG_FORMAT-}" ] || FORMAT_IS_PINNED "$FRONTEND_DIR/.cache/clang-format-$FORMAT_VERSION/bin/clang-format" ||
+		FORMAT_IS_PINNED "$(command -v clang-format-21 2>/dev/null || true)" || FORMAT_IS_PINNED "$(command -v clang-format 2>/dev/null || true)"; then
+		SUM_TOOLS="clang-format $FORMAT_VERSION"
+	else
+		SUM_MISSING="clang-format $FORMAT_VERSION installs into .cache on first use with python3"
+	fi
+
+	if command -v shellcheck >/dev/null 2>&1; then
+		SUM_TOOLS="$SUM_TOOLS, shellcheck"
+	else
+		SUM_MISSING="${SUM_MISSING:+$SUM_MISSING; }shellcheck is missing, internal scripts go unchecked"
+	fi
+
+	if command -v xxhsum >/dev/null 2>&1; then
+		SUM_TOOLS="$SUM_TOOLS, xxhsum"
+	else
+		SUM_MISSING="${SUM_MISSING:+$SUM_MISSING; }xxhsum is missing, script hashes stay as checked in"
+	fi
+
+	[ -z "$SUM_TOOLS" ] || INFO_LINE "Tools" "${SUM_TOOLS#, }"
+	[ -z "$SUM_MISSING" ] || NOTE_LINE "Missing" "$SUM_MISSING"
+
+	if [ ! -d "$FRONTEND_DIR/external/prefix/$DEVICE" ]; then
+		NOTE_LINE "First build" "external libraries for $DEVICE are downloaded and compiled first, this takes a while"
+	fi
+
+	[ "${SKIP_CHECKS:-0}" -ne 1 ] || NOTE_LINE "Checks" "skipped by SKIP_CHECKS=1"
+}
+
+RUN_BUILD() {
+	FRONTEND_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+	BUILD_LOG="$FRONTEND_DIR/build.log"
+	BUILD_STATUS=$(mktemp)
+
+	if ! command -v make >/dev/null 2>&1; then
+		printf "%s%sError:%s 'make' not found on PATH.\n" "$C_BOLD" "$C_RED" "$C_RESET" 1>&2
+		exit 1
+	fi
+
+	# The log needs every sub make to report, so the quiet level is never used here
+	BUILD_DEBUG=${DEBUG:-1}
+	[ "$BUILD_DEBUG" != "0" ] || BUILD_DEBUG=1
+
+	BUILD_JOBS=$(nproc 2>/dev/null || printf "4")
+
+	BUILD_SUMMARY
+
+	BUILD_START=$(date +%s)
+
+	{
+		{
+			printf "%s %s BUILD=%s DEBUGSYM=%s DEBUG=%s make -j%s %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$DEVICE" "$BUILD" "${DEBUGSYM:-0}" "$BUILD_DEBUG" "$BUILD_JOBS" "$*"
+
+			printf "Running Checks\n"
+			FIX_PERMISSIONS
+
+			if [ "${SKIP_CHECKS:-0}" -ne 1 ]; then
+				if ! (PRE_BUILD); then
+					printf "Error: generate or the pre-build checks failed\n"
+					printf "1" >"$BUILD_STATUS"
+					exit 0
+				fi
+			fi
+
+			BUILD_RC=0
+			make -j"$BUILD_JOBS" BUILD="$BUILD" DEBUG="$BUILD_DEBUG" "$@" || BUILD_RC=$?
+			printf "%s" "$BUILD_RC" >"$BUILD_STATUS"
+		} 2>&1
+	} | tee "$BUILD_LOG" | PRETTY_OUTPUT
+
+	BUILD_RESULT=$(cat "$BUILD_STATUS" 2>/dev/null)
+	rm -f "$BUILD_STATUS"
+	case "$BUILD_RESULT" in
+		'' | *[!0-9]*) BUILD_RESULT=1 ;;
+	esac
+	BUILD_TIME=$(($(date +%s) - BUILD_START))
+
+	if [ "$BUILD_RESULT" -eq 0 ]; then
+		printf "\n%s%sBuild complete%s in %ss\n" "$C_BOLD" "$C_GREEN" "$C_RESET" "$BUILD_TIME"
+	else
+		printf "\n%s%sBuild failed%s after %ss, the full output is in %s\n" "$C_BOLD" "$C_RED" "$C_RESET" "$BUILD_TIME" "$BUILD_LOG"
+	fi
+
+	exit "$BUILD_RESULT"
+}
+
 if [ "${1-}" = "generate" ]; then
 	shift
 	[ $# -eq 0 ] || USAGE
@@ -791,10 +1216,24 @@ if [ "${1-}" = "format" ]; then
 	exit 0
 fi
 
-WIZARD_JOBS=""
+case "${1-}" in
+	release)
+		shift
+		BUILD=release
+		set -- make "$@"
+		;;
+	debug)
+		shift
+		BUILD="test"
+		DEBUGSYM=1
+		export DEBUGSYM
+		set -- make "$@"
+		;;
+esac
+
 if [ $# -eq 0 ] && [ -t 0 ] && [ -t 1 ]; then
 	WIZARD
-	set -- make -j"$WIZARD_JOBS"
+	set -- make
 fi
 
 if [ "$DEVICE" = "NATIVE" ]; then
@@ -813,11 +1252,7 @@ if [ "$DEVICE" = "NATIVE" ]; then
 			;;
 		make)
 			shift
-			if command -v make >/dev/null 2>&1; then
-				exec make BUILD="$BUILD" "$@"
-			fi
-			printf "%s\n" "Error: 'make' not found on PATH." 1>&2
-			exit 1
+			RUN_BUILD "$@"
 			;;
 		print)
 			printf "Device:        %s\n" "$DEVICE"
@@ -833,8 +1268,12 @@ fi
 DETECT_TOOLCHAIN
 
 if [ -z "${CROSS_COMPILE-}" ]; then
-	printf "Error: no usable toolchain found under %s\n" "$XTOOL" 1>&2
-	printf "  Set XDIR to a directory name under it, or XTOOL to another root.\n" 1>&2
+	printf "%s%sError:%s no usable %s toolchain found under %s\n\n" "$C_BOLD" "$C_RED" "$C_RESET" "$DEVICE" "$XTOOL" 1>&2
+	printf "  A cross toolchain is expected at %s/<name>/bin/<tuple>-gcc,\n" "$XTOOL" 1>&2
+	printf "  for example %s/aarch64-buildroot-linux-gnu for H700 and A133P devices.\n\n" "$XTOOL" 1>&2
+	printf "  Set XTOOL to another toolchain root, or XDIR to pick one directory inside it.\n" 1>&2
+	printf "  DEVICE=NATIVE builds for this machine with the system gcc instead.\n" 1>&2
+	printf "  README.md describes the prerequisites for each target.\n" 1>&2
 	exit 1
 fi
 
@@ -925,19 +1364,10 @@ PRINT_ENV() {
 	fi
 }
 
-RUN_MAKE() {
-	if command -v make >/dev/null 2>&1; then
-		exec make BUILD="$BUILD" "${@-}"
-	fi
-
-	printf "%s\n" "Error: 'make' not found on PATH." 1>&2
-	exit 1
-}
-
 CMD=${1-}
 case "$CMD" in
 	database) shift && COMPILE_DATABASE "$CC" "$@" ;;
-	make) shift && RUN_MAKE "$@" ;;
+	make) shift && RUN_BUILD "$@" ;;
 	print) PRINT_ENV ;;
 	*) USAGE ;;
 esac

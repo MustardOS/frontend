@@ -925,6 +925,8 @@ void init_ui_common_screen(
         if (config.visual.battery == 1) {
             lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+        } else if (config.visual.battery == 3) {
+            lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
         }
     }
 

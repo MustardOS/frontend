@@ -508,22 +508,11 @@ static void handle_b(void) {
     mux_input_stop();
 }
 
-static void show_help(void) {
-    show_info_box(lang.muxapp.title, lang.muxapp.overview, 0);
-}
-
-static void handle_info(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
-
-    play_sound(snd_info_open);
-    show_app_info();
-}
-
 static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
     play_sound(snd_info_open);
-    show_help();
+    show_app_info();
 }
 
 static void handle_x(void) {
@@ -561,8 +550,6 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
                                   {ui_lbl_nav_x, lang.generic.option, 0},
-                                  {ui_lbl_nav_y_glyph, "", 1},
-                                  {ui_lbl_nav_y, lang.generic.info, 1},
                                   {NULL, NULL, 0}});
 
     check_focus();
@@ -629,7 +616,6 @@ int muxapp_main(void) {
                 [mux_input_a] = handle_a,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
-                [mux_input_y] = handle_info,
                 [mux_input_dpad_up] = handle_list_nav_up,
                 [mux_input_dpad_down] = handle_list_nav_down,
                 [mux_input_dpad_left] = handle_list_nav_left,

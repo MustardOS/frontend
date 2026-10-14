@@ -596,6 +596,10 @@ static void apply_gameplay_header_overlay(void) {
                 lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
                 break;
+            case 3: // Hidden
+                lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
+                break;
             default: // Icon Only (0)
                 lv_obj_clear_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);

@@ -7733,7 +7733,7 @@
       "default": "2",
       "label": "Battery",
       "module": "muxcustom",
-      "help": "Whether the battery indicator appears in the header.",
+      "help": "How the battery appears in the header, as a glyph, a percentage or both, or hidden altogether.",
       "options": [
         {
           "value": "0",
@@ -7746,6 +7746,10 @@
         {
           "value": "2",
           "label": "Percent + Glyph"
+        },
+        {
+          "value": "3",
+          "label": "Hidden"
         }
       ]
     },

@@ -491,7 +491,7 @@ static void status_tick(lv_timer_t *timer) {
     if (ticks % 4u == 2 && device.board.has_bluetooth && config.visual.bluetooth) bluetooth_task(timer);
 
     if (config.visual.clock) datetime_task(timer);
-    if (ticks % 8u == 7 && config.visual.battery && battery_is_available()) battery_capacity_task(timer);
+    if (ticks % 8u == 7 && config.visual.battery != 3 && battery_is_available()) battery_capacity_task(timer);
 }
 
 uint32_t screen_switch_start = 0;
@@ -618,7 +618,7 @@ void status_task(const lv_timer_t *timer) {
 
 void status_poll(void) {
     if (config.visual.clock) datetime_task(NULL);
-    if (config.visual.battery && battery_is_available()) battery_capacity_task(NULL);
+    if (config.visual.battery != 3 && battery_is_available()) battery_capacity_task(NULL);
 }
 
 void bluetooth_task(const lv_timer_t *timer) {
