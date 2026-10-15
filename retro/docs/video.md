@@ -29,7 +29,7 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
   `video.c` - see [`architecture.md`](architecture.md#video).
 - **Colour grading**: brightness/contrast/saturation/hue-shift/gamma, plus drop-in filter presets (`.ini`) and shader presets (`.frag`) scanned from the
   `OPT_SHARE_PATH` filter and shader directories. Works for software and hardware-rendered cores.
-- **Border Colour**: theme / black / dark grey / white, filled outside the game's `dest_rect`.
+- **Border Colour**: theme / black / dark grey / white (black by default), filled outside the game's `dest_rect`.
 - **Overlays**: predefined fullscreen patterns or a per game catalogue overlay, rendered as part of the video content layer. Below the pause menu, header, and
   indicators.
 

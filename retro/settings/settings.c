@@ -49,7 +49,7 @@ static const struct session_settings_t defaults = {
     .show_playtime = 0,
     .idle_in_game = 1,
     .content_precache = content_precache_off,
-    .border_colour = border_colour_theme,
+    .border_colour = border_colour_black,
     .sample_rate = 0,
     .fps_limit = fps_limit_auto,
     .header_visibility = header_visibility_none,
@@ -1394,9 +1394,7 @@ static int user_profile_write(FILE *file, const char *name, const enum user_prof
         return 0;
 
     if (session_settings.shader_params_for[0]) {
-        if (fprintf(
-                file, "\n[%s]\n%s=%s\n", SHADER_PARAMS_GROUP, SHADER_PARAMS_KEY, session_settings.shader_params_for
-            )
+        if (fprintf(file, "\n[%s]\n%s=%s\n", SHADER_PARAMS_GROUP, SHADER_PARAMS_KEY, session_settings.shader_params_for)
             < 0)
             return 0;
         for (int i = 0; i < session_settings.shader_param_count && i < SESSION_SHADER_PARAM_MAX; i++) {
