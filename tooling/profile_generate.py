@@ -106,6 +106,8 @@ FIXED_OPTIONS = {
     "settings/advanced/repeat_delay": [("32767", "lang.generic.disabled")] + [(str(v), str(v)) for v in range(16, 513, 16)],
     "settings/advanced/swapfile": [("0", "lang.generic.disabled")] + [(str(v), f"{v} MB") for v in range(128, 1025, 128)],
     "settings/advanced/zramfile": [("0", "lang.generic.disabled")] + [(str(v), f"{v} MB") for v in range(128, 1025, 128)],
+    "settings/colour/sunrise_temp": [(str(v), str(v)) for v in range(-255, 256)],
+    "settings/colour/sunset_temp": [(str(v), str(v)) for v in range(-255, 256)],
     "settings/colour/sunrise_time": [(str(i), f"{i * 15 // 60:02d}:{i * 15 % 60:02d}") for i in range(96)],
     "settings/colour/sunset_time": [(str(i), f"{i * 15 // 60:02d}:{i * 15 % 60:02d}") for i in range(96)],
     "settings/theme/header_height": [("-1", "lang.muxthemeopt.size_default")] + [(str(v), str(v)) for v in range(65)],
@@ -301,9 +303,10 @@ PROFILE_DENIED = {
 }
 
 CONFIG_FIELD = re.compile(
-    r'\{CONF_CONFIG_PATH "([^"]+)", "([^"]+)", CFG_OFF\([^)]*\), (\d+), \{\.([is]) = ("(?:[^"\\]|\\.)*"|-?\d+)\}'
+    r'\{CONF_CONFIG_PATH "([^"]+)", "([^"]+)", CFG_OFF\([^)]*\), (\d+), \{\.([is]) = ("(?:[^"\\]|\\.)*"|-?\d+|[A-Z][A-Z0-9_]*)\}'
     r'(?:, (\d+), (-?\d+), (-?\d+))?\}'
 )
+DEFINE_NUMBER = re.compile(r"^#define ([A-Z][A-Z0-9_]*) (-?\d+)\s*$", re.MULTILINE)
 KIOSK_FIELD = re.compile(r'CFG_INT_FIELD\([^,]+, CONF_KIOSK_PATH "([^"]+)", (-?\d+)\)')
 LANGUAGE_ENTRY = re.compile(r'\{"[^"]*", LANG_OFF\(([A-Za-z0-9_.\[\]]+)\), \w+, "((?:[^"\\]|\\.)*)"\}')
 SAVE_MACRO = re.compile(
@@ -427,10 +430,25 @@ def allowed(key):
     return profile_group(key) is not None
 
 
+def parse_defines(frontend):
+    defines = {}
+    for root, _, names in os.walk(os.path.join(frontend, "common")):
+        for name in names:
+            if name.endswith(".h"):
+                for match in DEFINE_NUMBER.finditer(read(os.path.join(root, name))):
+                    defines.setdefault(match.group(1), match.group(2))
+    return defines
+
+
 def parse_config(frontend):
     fields = []
+    defines = parse_defines(frontend)
     for match in CONFIG_FIELD.finditer(read(os.path.join(frontend, "common/config/config.c"))):
         directory, key, kind, slot, raw, has_range, minimum, maximum = match.groups()
+        if slot == "i" and not raw.lstrip("-").isdigit():
+            if raw not in defines:
+                sys.exit(f"Default {raw} for {directory}/{key} is not a numeric #define")
+            raw = defines[raw]
         default = unescape(raw[1:-1]) if slot == "s" else raw
         field = {
             "key": f"{directory}/{key}",
