@@ -6,10 +6,11 @@
 
 #define MUINPUT_REMOTE_SOCKET "/run/muinput/remote.sock"
 #define MUINPUT_REMOTE_KEYS   "/run/muinput/remote.keys"
+#define MUINPUT_SDL_MAP       "/opt/muos/device/config/board/sdl_map"
 
 struct remote_input;
 
-struct remote_input *remote_input_open(struct gamepad *gp, int verbose, int south_is_a);
+struct remote_input *remote_input_open(struct gamepad *gp, int verbose);
 
 void remote_input_poll(struct remote_input *remote, uint64_t now_ms);
 

@@ -62,6 +62,7 @@ const struct ra_core_name ra_core_names[] = {
     {"picodrive", "PicoDrive", "PicoDrive"},
     {"gearsystem", "GearSystem", "Gearsystem"},
     {"smsplus", "SMS Plus GX", "SMS Plus GX"},
+    {"yabadabadoo", "Yabadabadoo", "Yabadabadoo"},
     {"yabause", "Yabause", "Yabause"},
     {"yabasanshiro", "YabaSanshiro", "YabaSanshiro"},
     {"mednafen_saturn", "Beetle Saturn", "Beetle Saturn"},

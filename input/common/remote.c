@@ -25,19 +25,34 @@ enum remote_kind {
 
 struct remote_button {
     const char *name;
+    const char *sdl_name;
     enum remote_kind kind;
     unsigned short code;
     int direction;
 };
 
 static const struct remote_button remote_buttons[] = {
-    {"up", remote_hat, ABS_HAT0Y, -1},   {"down", remote_hat, ABS_HAT0Y, 1}, {"left", remote_hat, ABS_HAT0X, -1},
-    {"right", remote_hat, ABS_HAT0X, 1}, {"a", remote_key, BTN_EAST, 0},     {"b", remote_key, BTN_SOUTH, 0},
-    {"x", remote_key, BTN_NORTH, 0},     {"y", remote_key, BTN_WEST, 0},     {"l1", remote_key, BTN_TL, 0},
-    {"r1", remote_key, BTN_TR, 0},       {"l2", remote_key, BTN_TL2, 0},     {"r2", remote_key, BTN_TR2, 0},
-    {"l3", remote_key, BTN_THUMBL, 0},   {"r3", remote_key, BTN_THUMBR, 0},  {"select", remote_key, BTN_SELECT, 0},
-    {"start", remote_key, BTN_START, 0}, {"menu", remote_key, BTN_MODE, 0},  {"lx", remote_stick, ABS_X, 0},
-    {"ly", remote_stick, ABS_Y, 0},      {"rx", remote_stick, ABS_RX, 0},    {"ry", remote_stick, ABS_RY, 0},
+    {"up", NULL, remote_hat, ABS_HAT0Y, -1},
+    {"down", NULL, remote_hat, ABS_HAT0Y, 1},
+    {"left", NULL, remote_hat, ABS_HAT0X, -1},
+    {"right", NULL, remote_hat, ABS_HAT0X, 1},
+    {"a", "a", remote_key, BTN_EAST, 0},
+    {"b", "b", remote_key, BTN_SOUTH, 0},
+    {"x", "x", remote_key, BTN_NORTH, 0},
+    {"y", "y", remote_key, BTN_WEST, 0},
+    {"l1", "leftshoulder", remote_key, BTN_TL, 0},
+    {"r1", "rightshoulder", remote_key, BTN_TR, 0},
+    {"l2", "lefttrigger", remote_key, BTN_TL2, 0},
+    {"r2", "righttrigger", remote_key, BTN_TR2, 0},
+    {"l3", "leftstick", remote_key, BTN_THUMBL, 0},
+    {"r3", "rightstick", remote_key, BTN_THUMBR, 0},
+    {"select", "back", remote_key, BTN_SELECT, 0},
+    {"start", "start", remote_key, BTN_START, 0},
+    {"menu", "guide", remote_key, BTN_MODE, 0},
+    {"lx", NULL, remote_stick, ABS_X, 0},
+    {"ly", NULL, remote_stick, ABS_Y, 0},
+    {"rx", NULL, remote_stick, ABS_RX, 0},
+    {"ry", NULL, remote_stick, ABS_RY, 0},
 };
 
 #define REMOTE_BUTTON_COUNT (sizeof(remote_buttons) / sizeof(remote_buttons[0]))
@@ -64,11 +79,36 @@ static int button_available(struct gamepad *gp, const struct remote_button *butt
     return button->kind == remote_hat ? gamepad_has_hat(gp) : gamepad_has_key(gp, code);
 }
 
-static unsigned short button_code(const struct remote_button *button, const int south_is_a) {
-    if (!south_is_a || button->kind != remote_key) return button->code;
-    if (button->code == BTN_EAST) return BTN_SOUTH;
-    if (button->code == BTN_SOUTH) return BTN_EAST;
-    return button->code;
+static int read_sdl_map(char *map, const size_t size) {
+    FILE *file = fopen(MUINPUT_SDL_MAP, "r");
+    if (!file) return 0;
+    const int read = fgets(map, (int) size, file) != NULL;
+    fclose(file);
+    return read;
+}
+
+static int sdl_map_index(const char *map, const char *sdl_name, size_t *index) {
+    const size_t length = strlen(sdl_name);
+    for (const char *field = map; field && *field; field = strchr(field, ',')) {
+        if (*field == ',') ++field;
+        if (strncmp(field, sdl_name, length) != 0 || field[length] != ':' || field[length + 1] != 'b') continue;
+
+        char *end = NULL;
+        const unsigned long value = strtoul(field + length + 2, &end, 10);
+        if (end == field + length + 2 || (*end != ',' && *end != '\0' && *end != '\n')) return 0;
+        *index = (size_t) value;
+        return 1;
+    }
+    return 0;
+}
+
+static unsigned short button_code(const struct gamepad *gp, const struct remote_button *button, const char *map) {
+    if (button->kind != remote_key || !button->sdl_name || !map) return button->code;
+
+    size_t index;
+    unsigned short code;
+    if (!sdl_map_index(map, button->sdl_name, &index) || !gamepad_key_at_index(gp, index, &code)) return button->code;
+    return code;
 }
 
 static void write_key_list(const struct remote_input *remote) {
@@ -87,14 +127,17 @@ static void write_key_list(const struct remote_input *remote) {
     if (fclose(file) != 0 || rename(temporary, MUINPUT_REMOTE_KEYS) != 0) unlink(temporary);
 }
 
-struct remote_input *remote_input_open(struct gamepad *gp, const int verbose, const int south_is_a) {
+struct remote_input *remote_input_open(struct gamepad *gp, const int verbose) {
     struct remote_input *remote = calloc(1, sizeof(*remote));
     if (!remote) return NULL;
 
     remote->gp = gp;
     remote->verbose = verbose;
+
+    char map[1024];
+    const char *sdl_map = read_sdl_map(map, sizeof(map)) ? map : NULL;
     for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
-        remote->codes[i] = button_code(&remote_buttons[i], south_is_a);
+        remote->codes[i] = button_code(gp, &remote_buttons[i], sdl_map);
         remote->available[i] = button_available(gp, &remote_buttons[i], remote->codes[i]);
     }
 

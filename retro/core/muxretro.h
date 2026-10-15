@@ -350,6 +350,8 @@ void pause_menu_set_speed_indicator(const char *text, const char *glyph);
 
 void pause_menu_show_toast(const char *msg);
 
+void pause_menu_clear_toast(void);
+
 void pause_menu_show_toast_timed(const char *msg, uint32_t duration_ms);
 
 void pause_menu_show_glyph_toast_timed(const char *msg, const char *glyph, uint32_t duration_ms);

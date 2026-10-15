@@ -337,6 +337,21 @@ int gamepad_has_key(const struct gamepad *gp, const unsigned short code) {
     return 0;
 }
 
+int gamepad_key_at_index(const struct gamepad *gp, const size_t index, unsigned short *code) {
+    if (!gp || !gp->keys) return 0;
+    for (size_t i = 0; i < gp->key_count; ++i) {
+        size_t lower = 0;
+        for (size_t j = 0; j < gp->key_count; ++j) {
+            if (gp->keys[j] < gp->keys[i]) ++lower;
+        }
+        if (lower == index) {
+            *code = gp->keys[i];
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int gamepad_has_hat(const struct gamepad *gp) {
     return gp && gp->has_hat;
 }

@@ -69,6 +69,8 @@ void gamepad_emit_sw(struct gamepad *gp, unsigned short code, int value);
 
 int gamepad_has_key(const struct gamepad *gp, unsigned short code);
 
+int gamepad_key_at_index(const struct gamepad *gp, size_t index, unsigned short *code);
+
 int gamepad_has_hat(const struct gamepad *gp);
 
 int gamepad_remote_key(struct gamepad *gp, unsigned short code, int pressed);
