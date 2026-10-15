@@ -94,6 +94,16 @@ static destructive_action pending_destructive_action = destructive_none;
 static void compute_row_indices(void) {
     has_disc_control = mux_retro_disk_get_num_images() > 1;
 
+    if (core_child_process_lost()) {
+        row_resume = row_game_state = row_netplay = row_cheevo = row_game_link = -1;
+        row_disc_control = row_cheats = row_patches = row_content_switch = row_settings = -1;
+        row_information = 0;
+        row_restart = 1;
+        row_quit = 2;
+        row_count = 3;
+        return;
+    }
+
     int i = 0;
     row_resume = i++;
     row_game_state = state_saves_allowed() ? i++ : -1;
@@ -105,7 +115,7 @@ static void compute_row_indices(void) {
     row_disc_control = has_disc_control && !netplay_is_active() ? i++ : -1;
     row_cheats = cheats_supported() && !netplay_is_active() ? i++ : -1;
     row_patches = patch_manual_count > 0 && !netplay_is_active() ? i++ : -1;
-    row_content_switch = !netplay_is_active() && !link_is_engaged() && content_switch_items.count > 1 ? i++ : -1;
+    row_content_switch = !netplay_is_active() && !link_is_engaged() ? i++ : -1;
     row_settings = i++;
     row_information = i++;
     row_restart = i++;
@@ -552,6 +562,14 @@ void pause_menu_show_toast(const char *msg) {
     pause_menu_show_toast_timed(msg, TOAST_DURATION_MS);
 }
 
+void pause_menu_clear_toast(void) {
+    if (!toast_active) return;
+
+    lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_invalidate(ui_screen);
+    toast_active = 0;
+}
+
 static void pause_menu_toast_tick(const uint32_t now) {
     if (!toast_active) return;
     if (!SDL_TICKS_PASSED(now, toast_expire_tick)) return;
@@ -754,7 +772,7 @@ void pause_menu_rebuild(void) {
 
     compute_row_indices();
 
-    add_label("resume", lang.muxretro.resume, lang.muxretro.help.pause.resume);
+    if (row_resume >= 0) add_label("resume", lang.muxretro.resume, lang.muxretro.help.pause.resume);
     if (row_game_state >= 0) add_label("state", lang.muxretro.game_state, lang.muxretro.help.pause.game_state);
     if (row_netplay >= 0) add_label("network", lang.muxretro.network_play, lang.muxretro.help.pause.network_play);
     if (row_cheevo >= 0) add_label("trophy", lang.muxretro.cheevo.achievements, lang.muxretro.help.pause.cheevo);
@@ -763,7 +781,7 @@ void pause_menu_rebuild(void) {
     if (row_cheats >= 0) add_label("cheat", lang.muxretro.cheats, lang.muxretro.help.pause.cheats);
     if (row_patches >= 0) add_label("patch", lang.muxretro.patches, lang.muxretro.help.pause.patches);
     if (row_content_switch >= 0) add_label("switch", lang.content_switch.title, lang.content_switch.help);
-    add_label("settings", lang.muxretro.settings, lang.muxretro.help.pause.settings);
+    if (row_settings >= 0) add_label("settings", lang.muxretro.settings, lang.muxretro.help.pause.settings);
     add_label("info", lang.muxretro.information, lang.muxretro.help.pause.information);
     add_label("restart", lang.muxretro.restart, lang.muxretro.help.pause.restart);
     add_label("exit", lang.muxretro.quit, lang.muxretro.help.pause.quit);
@@ -915,6 +933,10 @@ void pause_menu_show_nav_hints(void) {
                                   {ui_lbl_nav_b_glyph, "", 0},
                                   {ui_lbl_nav_b, lang.muxretro.resume, 0},
                                   {NULL, NULL, 0}});
+    if (core_child_process_lost()) {
+        lv_obj_add_flag(ui_lbl_nav_b_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_b, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
     pause_menu_fix_nav_order();
 }
 
@@ -1057,6 +1079,7 @@ void pause_menu_toggle(void) {
     rumble_bridge_set_suppressed(active);
 
     if (active) {
+        if (!netplay_is_playing() && !link_is_engaged()) core_freeze_child_processes();
         if (!netplay_is_playing()) audio_bridge_set_paused(1);
         if (state_saves_allowed()) gamestate_capture_pending(0);
         hotkeys_reset();

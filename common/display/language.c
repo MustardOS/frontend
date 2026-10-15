@@ -1824,6 +1824,8 @@ static const lang_field lang_fields[] = {
     {"muxretro", LANG_OFF(muxretro.content_loading), lang_specific, "Content is loading..."},
     {"muxretro", LANG_OFF(muxretro.content_resuming), lang_specific, "Content is resuming..."},
     {"muxretro", LANG_OFF(muxretro.content_restarting), lang_specific, "Content is restarting..."},
+    {"muxretro", LANG_OFF(muxretro.core_process_stopped), lang_specific, "Content Stopped"},
+    {"muxretro", LANG_OFF(muxretro.core_process_stopped_help), lang_specific, "The content was running in a separate program alongside Pickles, such as the Java runtime used for J2ME, and that program has closed unexpectedly, so the content cannot continue.\n\nThis is usually caused by the content running out of memory, the content using a phone feature the emulator does not support, or the runtime being missing or damaged.\n\nChoose Restart to try the content again, or Quit to return to the content list. If it keeps happening, try changing the core options for this content, such as a smaller resolution or turning sound off."},
     {"muxretro", LANG_OFF(muxretro.information_loading), lang_specific, "Game information is loading..."},
     {"muxretro", LANG_OFF(muxretro.resume), lang_specific, "Resume"},
     {"muxretro", LANG_OFF(muxretro.game_state), lang_specific, "Game State"},

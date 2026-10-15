@@ -20,13 +20,17 @@ struct coredef_core {
     // for unbound. Only for cores whose own assignment is a poor fit for a handheld, such as
     // a phone keypad where the action key lands on Y. NULL leaves the usual map in place.
     const int *source_target;
+    int freeze_children;
 };
 
 #define COREDEF_CORE(IDENT, NAME, ARR)                                                                                 \
-    const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), NULL}
+    const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), NULL, 0}
 
 #define COREDEF_CORE_MAP(IDENT, NAME, ARR, MAP)                                                                        \
-    const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), MAP}
+    const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), MAP, 0}
+
+#define COREDEF_CORE_MAP_FROZEN(IDENT, NAME, ARR, MAP)                                                                 \
+    const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), MAP, 1}
 
 #define COREDEF_DECLARE(IDENT) extern const struct coredef_core coredef_##IDENT;
 
@@ -34,6 +38,8 @@ const char *coredef_lookup(const char *core_name, const char *key);
 
 // The core's starting control map, or NULL when it has none and the usual map applies
 const int *coredef_source_target(const char *core_name);
+
+int coredef_freeze_children(const char *core_name);
 
 // One entry per core file in this directory!
 #define COREDEF_LIST                                                                                                   \

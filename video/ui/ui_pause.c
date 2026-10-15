@@ -768,11 +768,8 @@ static void build_pause_at(const int focus_row) {
                                        : lang.muxmedia.episodes
         );
     }
-    content_switch_row = -1;
-    if (content_switch_items.count > 1) {
-        content_switch_row = ui_count_static;
-        add_row("switch", lang.content_switch.title);
-    }
+    content_switch_row = ui_count_static;
+    add_row("switch", lang.content_switch.title);
     settings_row = ui_count_static;
     add_row("settings", lang.muxretro.settings);
     equaliser_row = ui_count_static;

@@ -184,7 +184,7 @@ const struct ra_core_name ra_core_names[] = {
     {"ep128emu_core", "ep128emu", "ep128emu"},
     {"fbalpha", "FB Alpha", "FB Alpha"},
     {"fceunext", "FCEUNext", "FCEUNext"},
-    {"freej2me", "FreeJ2ME - RetroArch", "FreeJ2ME - RetroArch"},
+    {"freej2me", "FreeJ2ME", "FreeJ2ME"},
     {"frodo", "Frodo", "Frodo"},
     {"fuse", "Fuse", "Fuse"},
     {"gearcoleco", "Gearcoleco", "Gearcoleco"},

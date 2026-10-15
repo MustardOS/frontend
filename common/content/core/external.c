@@ -17,13 +17,6 @@ const struct ext_core_name ext_core_names[] = {
     {"mreader-landscape", "mReader Ln.", stage_overlay_disabled},
     {"mreader-portrait", "mReader Pt.", stage_overlay_disabled},
 
-    // Java J2ME
-    {"freej2me-128", "J2ME 128x128", stage_overlay_enabled},
-    {"freej2me-176", "J2ME 176x208", stage_overlay_enabled},
-    {"freej2me-240", "J2ME 240x320", stage_overlay_enabled},
-    {"freej2me-320", "J2ME 320x240", stage_overlay_enabled},
-    {"freej2me-640", "J2ME 640x360", stage_overlay_enabled},
-
     // Nontondo
     {"drastic", "DraStic Advanced", stage_overlay_enabled},
     {"drastic-legacy", "DraStic Legacy", stage_overlay_enabled},

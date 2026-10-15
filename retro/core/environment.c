@@ -403,14 +403,14 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_SET_MESSAGE: {
             const struct retro_message *msg = data;
-            if (msg && msg->msg && ui_pnl_message)
+            if (msg && msg->msg && ui_pnl_message && !core_child_process_lost())
                 pause_menu_show_toast_timed(msg->msg, msg->frames > 0 ? (uint32_t) msg->frames * 16 : 3000);
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_MESSAGE_EXT: {
             const struct retro_message_ext *msg = data;
-            if (msg && msg->msg && ui_pnl_message)
+            if (msg && msg->msg && ui_pnl_message && !core_child_process_lost())
                 pause_menu_show_toast_timed(msg->msg, msg->duration > 0 ? (uint32_t) msg->duration : 3000);
             return true;
         }

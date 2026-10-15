@@ -27,6 +27,15 @@ const char *coredef_lookup(const char *core_name, const char *key) {
     return NULL;
 }
 
+int coredef_freeze_children(const char *core_name) {
+    if (!core_name || !*core_name) return 0;
+
+    for (size_t i = 0; i < sizeof(registry) / sizeof(registry[0]); i++)
+        if (strcmp(registry[i]->name, core_name) == 0) return registry[i]->freeze_children;
+
+    return 0;
+}
+
 const int *coredef_source_target(const char *core_name) {
     if (!core_name || !*core_name) return NULL;
 

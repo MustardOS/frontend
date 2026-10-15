@@ -1931,6 +1931,8 @@ struct mux_lang {
         char content_loading[MAX_BUFFER_SIZE];
         char content_resuming[MAX_BUFFER_SIZE];
         char content_restarting[MAX_BUFFER_SIZE];
+        char core_process_stopped[MAX_BUFFER_SIZE];
+        char core_process_stopped_help[MAX_BUFFER_SIZE];
         char information_loading[MAX_BUFFER_SIZE];
         char resume[MAX_BUFFER_SIZE];
         char game_state[MAX_BUFFER_SIZE];

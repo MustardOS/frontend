@@ -284,6 +284,10 @@ void pause_menu_shutdown(void);
 
 int pause_menu_is_active(void);
 
+void core_freeze_child_processes(void);
+
+int core_child_process_lost(void);
+
 int pause_menu_content_switch_requested(void);
 
 void advisory_init(const char *content_path);

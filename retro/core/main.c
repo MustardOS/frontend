@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
+#include <signal.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -37,6 +39,7 @@
 #include "remote.h"
 #include "muxretro.h"
 #include "../ui/options.h"
+#include "../coredef/coredef.h"
 #include "../ui/ui_loading.h"
 #include "core.h"
 #include "governor_boost.h"
@@ -76,11 +79,99 @@ static int instance_lock_fd = -1;
 static double target_fps = 60.0;
 static double counter_ticks_to_ms = 0.0;
 static int active_core_is_flycast = 0;
+static int active_core_freezes_children = 0;
+static int children_frozen = 0;
+static int children_lost_reported = 0;
+static int children_seen = 0;
+static uint32_t children_check_at = 0;
 static int active_core_is_ppsspp = 0;
 
 static double counter_elapsed_ms(const uint64_t start) {
     if (counter_ticks_to_ms == 0.0) counter_ticks_to_ms = 1000.0 / (double) SDL_GetPerformanceFrequency();
     return (double) (SDL_GetPerformanceCounter() - start) * counter_ticks_to_ms;
+}
+
+static int signal_child_processes(const int sig) {
+    DIR *proc = opendir("/proc");
+    if (!proc) return 0;
+
+    int count = 0;
+    const pid_t self = getpid();
+    const struct dirent *entry;
+    while ((entry = readdir(proc))) {
+        char *end;
+        const long pid = strtol(entry->d_name, &end, 10);
+        if (*end || pid <= 0 || pid == self) continue;
+
+        char path[64];
+        snprintf(path, sizeof(path), "/proc/%ld/stat", pid);
+        FILE *file = fopen(path, "r");
+        if (!file) continue;
+
+        char line[512];
+        const int read_ok = fgets(line, sizeof(line), file) != NULL;
+        fclose(file);
+        if (!read_ok) continue;
+
+        const char *close_paren = strrchr(line, ')');
+        char state = 0;
+        long parent = 0;
+        if (!close_paren || sscanf(close_paren + 1, " %c %ld", &state, &parent) != 2) continue;
+        if (parent != self || state == 'Z') continue;
+
+        count++;
+        if (sig) kill((pid_t) pid, sig);
+    }
+
+    closedir(proc);
+    return count;
+}
+
+static void set_children_frozen(const int frozen) {
+    if (!active_core_freezes_children || frozen == children_frozen) return;
+
+    signal_child_processes(frozen ? SIGSTOP : SIGCONT);
+    children_frozen = frozen;
+    LOG_INFO(mux_module, "%s core child processes", frozen ? "Stopped" : "Resumed");
+}
+
+void core_freeze_child_processes(void) {
+    set_children_frozen(1);
+}
+
+int core_child_process_lost(void) {
+    return children_lost_reported;
+}
+
+static void ignore_broken_pipe(const int sig) {
+    (void) sig;
+}
+
+static void check_child_processes(const uint32_t now, const uint32_t started) {
+    if (!active_core_freezes_children) return;
+    if (children_lost_reported) {
+        if (!pause_menu_is_active()) pause_menu_toggle();
+        return;
+    }
+    if (children_frozen || now < children_check_at) return;
+    if (!children_seen && now - started < 10000) {
+        children_check_at = now + 500;
+        children_seen = signal_child_processes(0) > 0;
+        return;
+    }
+
+    children_check_at = now + 500;
+    if (signal_child_processes(0) > 0) {
+        children_seen = 1;
+        return;
+    }
+
+    children_lost_reported = 1;
+    LOG_ERROR(mux_module, "Core child process has stopped");
+    pause_menu_clear_toast();
+    if (!pause_menu_is_active()) pause_menu_toggle();
+    pause_menu_show_nav_hints();
+    show_info_box(lang.muxretro.core_process_stopped, lang.muxretro.core_process_stopped_help, 0);
 }
 
 static int instance_lock_acquire(void) {
@@ -494,7 +585,7 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames, 
 }
 
 void core_prime_audio(void) {
-    if (!audio_bridge_is_active()) return;
+    if (!audio_bridge_is_active() || active_core_freezes_children) return;
     runahead_settle_cheevo();
     runahead_invalidate();
 
@@ -548,6 +639,10 @@ int main(const int argc, char *argv[]) {
 
     setenv("DISABLE_HW_OVERLAY", "1", 1);
     if (!instance_lock_acquire()) return EXIT_FAILURE;
+
+    struct sigaction broken_pipe = {.sa_handler = ignore_broken_pipe};
+    sigemptyset(&broken_pipe.sa_mask);
+    sigaction(SIGPIPE, &broken_pipe, NULL);
 
     const char *core_path_arg = startup.core_path;
     const char *content_path = startup.content_path;
@@ -695,6 +790,7 @@ int main(const int argc, char *argv[]) {
     active_core_is_flycast =
         core_name_available && (strcmp(loaded_core_name, "flycast") == 0 || strcmp(loaded_core_name, "flycastvl") == 0);
     active_core_is_ppsspp = core_name_available && strcmp(loaded_core_name, "ppsspp") == 0;
+    active_core_freezes_children = core_name_available && coredef_freeze_children(loaded_core_name);
 
     audio_bridge_set_latency_floor(active_core_is_ppsspp ? PPSSPP_AUDIO_LATENCY_FLOOR_MS : 0);
     audio_bridge_open(av_info.timing.sample_rate > 0 ? av_info.timing.sample_rate : 48000.0);
@@ -823,6 +919,7 @@ int main(const int argc, char *argv[]) {
     LOG_INFO(mux_module, "Startup: ready in %.2f ms total", startup_elapsed_ms(startup_start));
 
     int quit = 0;
+    const uint32_t content_started_at = SDL_GetTicks();
     int peeking = 0;
     int prev_paused = 0;
     int peer_wait_visible = 0;
@@ -851,6 +948,7 @@ int main(const int argc, char *argv[]) {
         const uint64_t frame_start = SDL_GetPerformanceCounter();
         const uint32_t loop_now = SDL_GetTicks();
         const uint64_t services_start = perf_begin();
+        check_child_processes(loop_now, content_started_at);
 
         mux_input_poll();
         rumble_bridge_tick(loop_now);
@@ -945,6 +1043,7 @@ int main(const int argc, char *argv[]) {
             network_menu_paused || game_link_paused || (paused && !netplay_is_playing() && !link_is_engaged());
 
         if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
+        set_children_frozen(content_paused || hotkeys_is_content_paused());
         if (prev_paused && !content_paused) {
             core_prime_audio();
             video_bridge_reset_temporal();
@@ -1187,6 +1286,7 @@ int main(const int argc, char *argv[]) {
     history_shutdown();
     state_shutdown();
     cheevo_shutdown();
+    set_children_frozen(0);
     image_writer_shutdown();
     pickles_remote_close();
     governor_boost_shutdown();
