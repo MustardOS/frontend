@@ -3,6 +3,14 @@
 #include <stddef.h>
 
 typedef enum {
+    wasabi_border_atmosphere = 0,
+    wasabi_border_black,
+    wasabi_border_dark_grey,
+    wasabi_border_white,
+    wasabi_border_count
+} wasabi_border_mode;
+
+typedef enum {
     wasabi_setting_scaling = 0,
     wasabi_setting_rotation,
     wasabi_setting_mirrored,

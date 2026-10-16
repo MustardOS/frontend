@@ -689,6 +689,7 @@ static int child_tick(void) {
     if (viewport_settings_child_tick()) return 1;
     if (overlay_settings_child_tick()) return 1;
     if (image_corrections_settings_child_tick()) return 1;
+    if (storage_settings_child_tick()) return 1;
     if (shader_adjust_menu_is_active()) {
         shader_adjust_menu_tick();
         return 1;
@@ -974,8 +975,12 @@ void settings_menu_reopen_hud(void) {
 }
 
 void settings_menu_reopen_storage(void) {
+    settings_menu_reopen_storage_at(0);
+}
+
+void settings_menu_reopen_storage_at(const int local_index) {
     build_rows();
-    submenu_reopen_at(&self, row_for_definition(storage_menu_definition(), 0));
+    submenu_reopen_at(&self, row_for_definition(storage_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_cheevo(void) {

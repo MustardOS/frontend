@@ -20,4 +20,8 @@ int hotkeys_is_manual_requested(void);
 
 void hotkeys_reset(void);
 
+void hotkeys_pause_menu_opened(int preserve_speed);
+
+void hotkeys_refresh_indicator(void);
+
 int hotkeys_remote_command(const char *command, int value);

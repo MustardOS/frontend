@@ -55,6 +55,7 @@ static const struct session_settings_t defaults = {
     .header_visibility = header_visibility_none,
     .ff_speed = ff_speed_4_x,
     .slowmo_speed = slowmo_speed_1_2_x,
+    .speed_persistence = 1,
     .hotkey_ff_enabled = hotkey_activation_press,
     .hotkey_ff_button = mux_input_r1,
     .hotkey_ff_audio_enabled = 0,
@@ -82,6 +83,8 @@ static const struct session_settings_t defaults = {
     .sram_flush_seconds = 60,
     .timeline_interval = 0,
     .timeline_count = 3,
+    .timeline_reset = 1,
+    .timeline_bar = timeline_bar_bottom,
     .history_depth = 5,
     .trash_count = 5,
     .state_thumbnail = state_thumbnail_medium,
@@ -278,8 +281,8 @@ static const char *audio_filter_names[audio_filter_count] = {
 };
 
 static const char *border_names[border_colour_count] = {
-    lang.muxretro.settings_screen.theme, lang.muxretro.settings_screen.black, lang.muxretro.settings_screen.dark_grey,
-    lang.muxretro.settings_screen.white
+    lang.muxretro.settings_screen.atmosphere, lang.muxretro.settings_screen.black,
+    lang.muxretro.settings_screen.dark_grey, lang.muxretro.settings_screen.white
 };
 
 static const int sample_rate_choices[] = {0, 44100, 48000};
@@ -351,6 +354,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(header_visibility, 0, header_visibility_count - 1),
     SETTING_RANGE(ff_speed, 0, ff_speed_count - 1),
     SETTING_RANGE(slowmo_speed, 0, slowmo_speed_count - 1),
+    SETTING_RANGE(speed_persistence, 0, 1),
     SETTING_RANGE(hotkey_ff_enabled, 0, hotkey_activation_count - 1),
     SETTING_CHOICES(hotkey_ff_button, hotkey_button_choices),
     SETTING_RANGE(hotkey_ff_audio_enabled, 0, 1),
@@ -376,8 +380,10 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_CHOICES(hotkey_manual_button, hotkey_button_choices),
     SETTING_RANGE(auto_save, 0, auto_save_count - 1),
     SETTING_CHOICES(sram_flush_seconds, sram_flush_choices),
-    SETTING_RANGE(timeline_interval, 0, 6),
+    SETTING_RANGE(timeline_interval, 0, 8),
     SETTING_RANGE(timeline_count, 2, 10),
+    SETTING_RANGE(timeline_reset, 0, 1),
+    SETTING_RANGE(timeline_bar, 0, timeline_bar_count - 1),
     SETTING_RANGE(history_depth, 0, HISTORY_DEPTH_MAX),
     SETTING_RANGE(trash_count, 0, GAMESTATE_TRASH_MAX),
     SETTING_RANGE(state_thumbnail, 0, state_thumbnail_count - 1),
@@ -519,6 +525,18 @@ static const char *header_visibility_names[header_visibility_count] = {
     lang.muxretro.settings_screen.header_battery, lang.muxretro.settings_screen.header_both
 };
 
+static const char *timeline_bar_names[timeline_bar_count] = {
+    lang.generic.disabled,
+    lang.muxretro.settings_screen.timeline_bar_bottom,
+    lang.muxretro.settings_screen.timeline_bar_top,
+    lang.muxretro.settings_screen.timeline_bar_left,
+    lang.muxretro.settings_screen.timeline_bar_right,
+    lang.muxretro.settings_screen.timeline_bar_bottom_reversed,
+    lang.muxretro.settings_screen.timeline_bar_top_reversed,
+    lang.muxretro.settings_screen.timeline_bar_left_reversed,
+    lang.muxretro.settings_screen.timeline_bar_right_reversed,
+};
+
 static const char *auto_save_names[auto_save_count] = {
     lang.generic.disabled, lang.muxretro.settings_screen.auto_save_idle, lang.muxretro.settings_screen.auto_save_quit,
     lang.muxretro.settings_screen.auto_save_idle_quit
@@ -587,7 +605,7 @@ const char *session_settings_audio_filter_name(const int mode) {
 }
 
 const char *session_settings_border_name(const int mode) {
-    if (mode < 0 || mode >= border_colour_count) return border_names[border_colour_theme];
+    if (mode < 0 || mode >= border_colour_count) return border_names[border_colour_atmosphere];
     return border_names[mode];
 }
 
@@ -670,10 +688,14 @@ const char *session_settings_sram_flush_name(const int seconds) {
     return buf;
 }
 
-static const int timeline_interval_minutes[7] = {0, 5, 10, 15, 30, 45, 60};
+// Keep the original persisted values for 5-60 minutes intact. The shorter
+// choices live at the end of the stored range, while this order keeps the UI
+// natural: Disabled, 1m, 2m, 5m ... 60m.
+static const int timeline_interval_minutes[9] = {0, 5, 10, 15, 30, 45, 60, 1, 2};
+static const int timeline_interval_order[9] = {0, 7, 8, 1, 2, 3, 4, 5, 6};
 
 const char *session_settings_timeline_interval_name(const int mode) {
-    if (mode <= 0 || mode > 6) return lang.generic.disabled;
+    if (mode <= 0 || mode >= (int) A_SIZE(timeline_interval_minutes)) return lang.generic.disabled;
 
     static char buf[16];
     snprintf(buf, sizeof(buf), "%dm", timeline_interval_minutes[mode]);
@@ -682,12 +704,20 @@ const char *session_settings_timeline_interval_name(const int mode) {
 
 int session_settings_timeline_interval_ms(void) {
     const int mode = session_settings.timeline_interval;
-    if (mode <= 0 || mode > 6) return 0;
+    if (mode <= 0 || mode >= (int) A_SIZE(timeline_interval_minutes)) return 0;
     return timeline_interval_minutes[mode] * 60 * 1000;
 }
 
 void session_settings_cycle_timeline_interval(const int direction) {
-    session_settings.timeline_interval = (session_settings.timeline_interval + direction + 7) % 7;
+    int position = 0;
+    while (position < (int) A_SIZE(timeline_interval_order)
+           && timeline_interval_order[position] != session_settings.timeline_interval)
+        position++;
+    if (position >= (int) A_SIZE(timeline_interval_order)) position = 0;
+
+    position = (position + (direction < 0 ? -1 : 1) + (int) A_SIZE(timeline_interval_order))
+               % (int) A_SIZE(timeline_interval_order);
+    session_settings.timeline_interval = timeline_interval_order[position];
 }
 
 void session_settings_cycle_timeline_count(const int direction) {
@@ -695,6 +725,21 @@ void session_settings_cycle_timeline_count(const int direction) {
     if (next < 2) next = 10;
     if (next > 10) next = 2;
     session_settings.timeline_count = next;
+}
+
+void session_settings_cycle_timeline_reset(const int direction) {
+    (void) direction;
+    session_settings.timeline_reset = !session_settings.timeline_reset;
+}
+
+void session_settings_cycle_timeline_bar(const int direction) {
+    session_settings.timeline_bar =
+        (session_settings.timeline_bar + direction + timeline_bar_count) % timeline_bar_count;
+}
+
+const char *session_settings_timeline_bar_name(const int mode) {
+    if (mode < 0 || mode >= timeline_bar_count) return timeline_bar_names[timeline_bar_off];
+    return timeline_bar_names[mode];
 }
 
 const char *session_settings_state_thumbnail_name(const int value) {
@@ -2098,6 +2143,11 @@ void session_settings_cycle_ff_speed(const int direction) {
 void session_settings_cycle_slowmo_speed(const int direction) {
     session_settings.slowmo_speed =
         (session_settings.slowmo_speed + direction + slowmo_speed_count) % slowmo_speed_count;
+}
+
+void session_settings_cycle_speed_persistence(const int direction) {
+    (void) direction;
+    session_settings.speed_persistence = !session_settings.speed_persistence;
 }
 
 const char *session_settings_hotkey_mode_name(const int mode) {

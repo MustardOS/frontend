@@ -266,14 +266,26 @@ int hotkeys_remote_command(const char *command, const int value) {
 }
 
 void hotkeys_reset(void) {
+    hotkeys_pause_menu_opened(0);
+}
+
+void hotkeys_pause_menu_opened(const int preserve_speed) {
     update_speed();
-    if (!fast_forward_active && !slow_motion_active && !content_paused && speed_current == 1.0) return;
-    fast_forward_active = 0;
-    slow_motion_active = 0;
+    if (!preserve_speed) {
+        fast_forward_active = 0;
+        slow_motion_active = 0;
+    }
     held_speed = 0;
     content_paused = 0;
-    set_speed_target(1.0, 0);
+    const double target = fast_forward_active  ? session_settings_ff_speed_value(session_settings.ff_speed)
+                          : slow_motion_active ? session_settings_slowmo_speed_value(session_settings.slowmo_speed)
+                                               : 1.0;
+    set_speed_target(target, 0);
     sync_audio_mute();
+    sync_speed_indicator();
+}
+
+void hotkeys_refresh_indicator(void) {
     sync_speed_indicator();
 }
 

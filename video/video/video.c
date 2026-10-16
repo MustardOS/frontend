@@ -21,6 +21,7 @@
 #include <common/content/core/common.h>
 #include <common/platform/display.h>
 #include "../settings/assets.h"
+#include "../settings/settings.h"
 
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
@@ -869,7 +870,7 @@ static void render_ambient_side(
 }
 
 static int ambient_active(void) {
-    return config.video.border_colour == 4 && !audio_active && !static_active;
+    return config.video.border_colour == wasabi_border_atmosphere && !audio_active && !static_active;
 }
 
 static void render_ambient_borders(SDL_Renderer *target) {
@@ -1016,10 +1017,8 @@ static void render_frame(SDL_Renderer *target) {
         return;
     }
     if (render_crt_warm_up(target, now)) return;
-    const SDL_Color borders[] = {
-        {0, 0, 0, 255}, {0, 0, 0, 255}, {32, 32, 32, 255}, {255, 255, 255, 255}, {0, 0, 0, 255}
-    };
-    const SDL_Color border = borders[clamp_int(config.video.border_colour, 0, 4)];
+    const SDL_Color borders[] = {{0, 0, 0, 255}, {0, 0, 0, 255}, {32, 32, 32, 255}, {255, 255, 255, 255}};
+    const SDL_Color border = borders[config.video.border_colour];
     SDL_SetRenderDrawColor(target, border.r, border.g, border.b, border.a);
     SDL_RenderClear(target);
     if (texture && !clean_capture && ambient_active()) render_ambient_borders(target);

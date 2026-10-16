@@ -623,7 +623,6 @@ static void gen_item(char **file_names, char **file_paths, const int file_count)
 
     build_content_file_items(file_names, file_paths, file_count);
 
-    restore_explorer_index();
     merge_history_and_collection();
     assign_content_glyphs(sub_path);
 }
@@ -760,12 +759,12 @@ static void create_content_items(void) {
 
     group_read_state();
     apply_content_grouping();
-    restore_explorer_index();
     assign_item_buckets();
 
     order_load(sys_dir);
     order_prepare(items, item_count, sys_dir);
     order_apply(items, item_count);
+    restore_explorer_index();
 
     if (focus_after_load[0]) {
         for (size_t i = 0; i < item_count; i++) {
@@ -1370,6 +1369,8 @@ static void show_search(void) {
         kiosk_denied();
         return;
     }
+
+    write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
 
     if (ui_count_static > 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);

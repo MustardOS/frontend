@@ -50,8 +50,6 @@ REFUSED_REASONS = [
     ("clock/", "The clock cannot be set by a profile"),
     ("danger/", "Danger settings cannot be set by a profile"),
     ("settings/general/audiosink", "The audio output is chosen on each device and cannot be set by a profile"),
-    ("settings/general/brightness", "Brightness is adjusted on the device and cannot be set by a profile"),
-    ("settings/general/volume", "Volume is adjusted on the device and cannot be set by a profile"),
     ("settings/rgb/", "RGB lighting is set by the active theme and cannot be set by a profile"),
     ("theme/", "Theme choices cannot be set by a profile"),
     ("sort/", "Content sorting cannot be set by a profile"),
@@ -201,6 +199,8 @@ FIXED_OPTIONS.update({
     "settings/advanced/boxartpaddiv": [(str(i), str(v)) for i, v in enumerate((50, 100, 200, 400, 600, 800))],
     "settings/advanced/incbright": [(str(v), str(v)) for v in range(1, 33)],
     "settings/advanced/incvolume": [(str(v), str(v)) for v in range(1, 33)],
+    "settings/general/brightness": percent_of(255)[1:],
+    "settings/general/volume": PERCENT,
     "settings/general/bgmvol": PERCENT,
     "settings/general/soundvol": PERCENT,
     "settings/power/low_battery": PERCENT,
@@ -240,12 +240,14 @@ for _size in ("list", "header", "footer", "panel"):
 FIXED_OPTIONS["settings/font/width"] = [("0", "lang.muxfont.size_default")]
 FIXED_OPTIONS["settings/font/italic"] = [("0", "lang.muxfont.size_default"), ("1", "lang.generic.enabled")]
 
-OPEN_OPTIONS = {"settings/general/soundfont", "visual/overlaytransparency", "visual/overlayimage", "settings/font/width"}
+OPEN_OPTIONS = {"settings/general/brightness", "settings/general/volume", "settings/general/soundfont", "visual/overlaytransparency", "visual/overlayimage", "settings/font/width"}
 OPEN_OPTIONS.update(f"settings/font/{size}_size" for size in ("list", "header", "footer", "panel"))
 OPEN_OPTIONS.update(f"settings/overlay/{part}_alpha" for part in ("gen", "bat", "vol", "bri"))
 
 FIXED_RANGES = {
     "settings/power/low_battery": (0, 100),
+    "settings/general/brightness": (1, 255),
+    "settings/general/volume": (0, 200),
     "settings/general/bgmvol": (0, 100),
     "settings/general/soundvol": (0, 100),
     "visual/overlaytransparency": (0, 255),
@@ -292,8 +294,6 @@ PROFILE_DENIED = {
     "web/ttyd_user",
     "web/ttyd_pass",
     "settings/general/audiosink",
-    "settings/general/brightness",
-    "settings/general/volume",
     "settings/general/orientation",
     "settings/general/rgb",
     "settings/advanced/part_external",

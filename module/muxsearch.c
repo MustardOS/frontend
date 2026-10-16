@@ -261,6 +261,13 @@ static void process_results(const char *json_results) {
             snprintf(folder_name, sizeof(folder_name), "unknown");
         }
 
+        const size_t folder_len = strlen(folder_name);
+        if (folder_len >= 5 && strcmp(folder_name + folder_len - 5, "/ROMS") == 0
+            && folder_len + 1 < sizeof(folder_name)) {
+            folder_name[folder_len] = '/';
+            folder_name[folder_len + 1] = '\0';
+        }
+
         char storage_name_short[MAX_BUFFER_SIZE] = "";
         char *storage_name = NULL;
 
@@ -298,6 +305,10 @@ static void process_results(const char *json_results) {
                 snprintf(folder_name_short, sizeof(folder_name_short), "%s", folder_name);
             }
         }
+
+        size_t short_len = strlen(folder_name_short);
+        while (short_len > 1 && folder_name_short[short_len - 1] == '/')
+            folder_name_short[--short_len] = '\0';
 
         if (strcasecmp(folder_name, ".") != 0) {
             gen_result("folder", folder_name_short, "folder", "");
@@ -585,9 +596,20 @@ static void handle_confirm(void) {
         char *last_slash = strrchr(base_dir, '/');
         if (last_slash) *last_slash = '\0';
 
+        char item_name[MAX_BUFFER_SIZE * 2];
+        char launch_folder[MAX_BUFFER_SIZE];
+        if (content_launch_folder_name(resolved_path, launch_folder, sizeof(launch_folder))) {
+            last_slash = strrchr(base_dir, '/');
+            if (last_slash) *last_slash = '\0';
+            snprintf(item_name, sizeof(item_name), "%s/%s", launch_folder, get_last_dir(resolved_path));
+        } else {
+            snprintf(item_name, sizeof(item_name), "%s", get_last_dir(resolved_path));
+        }
+
         write_text_to_file(EXPLORE_DIR, "w", CHAR, base_dir);
-        char *item_file = get_last_dir(resolved_path);
-        write_text_to_file(MUOS_HST_LOAD, "w", CHAR, item_file);
+        write_text_to_file(MUOS_HST_LOAD, "w", CHAR, item_name);
+        if (file_exist(MUOS_IDX_LOAD)) remove(MUOS_IDX_LOAD);
+        if (file_exist(MUOS_CIX_LOAD)) remove(MUOS_CIX_LOAD);
 
         load_mux("explore");
 

@@ -382,9 +382,9 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
             break;
         }
         case wasabi_setting_border: {
-            const char *names[] = {
-                lang.muxretro.settings_screen.theme, lang.muxretro.settings_screen.black,
-                lang.muxretro.settings_screen.dark_grey, lang.muxretro.settings_screen.white, lang.muxmedia.ambient
+            const char *names[wasabi_border_count] = {
+                lang.muxretro.settings_screen.atmosphere, lang.muxretro.settings_screen.black,
+                lang.muxretro.settings_screen.dark_grey, lang.muxretro.settings_screen.white
             };
             snprintf(value, size, "%s", names[config.video.border_colour]);
             break;
@@ -721,7 +721,7 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             SETTING(texture_filter, "texture_filter", cycle(config.video.texture_filter, direction, 7));
             break;
         case wasabi_setting_border:
-            SETTING(border_colour, "border_colour", cycle(config.video.border_colour, direction, 5));
+            SETTING(border_colour, "border_colour", cycle(config.video.border_colour, direction, wasabi_border_count));
             break;
         case wasabi_setting_brightness:
             SETTING(brightness, "brightness", step(config.video.brightness, direction, 5, -100, 100));

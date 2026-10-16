@@ -21,6 +21,7 @@ struct coredef_core {
     // a phone keypad where the action key lands on Y. NULL leaves the usual map in place.
     const int *source_target;
     int freeze_children;
+    int threaded_run;
 };
 
 #define COREDEF_CORE(IDENT, NAME, ARR)                                                                                 \
@@ -32,6 +33,9 @@ struct coredef_core {
 #define COREDEF_CORE_MAP_FROZEN(IDENT, NAME, ARR, MAP)                                                                 \
     const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), MAP, 1}
 
+#define COREDEF_CORE_THREADED(IDENT, NAME, ARR)                                                                        \
+    const struct coredef_core coredef_##IDENT = {NAME, ARR, sizeof(ARR) / sizeof((ARR)[0]), NULL, 0, 1}
+
 #define COREDEF_DECLARE(IDENT) extern const struct coredef_core coredef_##IDENT;
 
 const char *coredef_lookup(const char *core_name, const char *key);
@@ -40,6 +44,8 @@ const char *coredef_lookup(const char *core_name, const char *key);
 const int *coredef_source_target(const char *core_name);
 
 int coredef_freeze_children(const char *core_name);
+
+int coredef_threaded_run(const char *core_name);
 
 // One entry per core file in this directory!
 #define COREDEF_LIST                                                                                                   \
@@ -86,4 +92,5 @@ int coredef_freeze_children(const char *core_name);
     COREDEF(vice_xplus4)                                                                                               \
     COREDEF(vice_xscpu64)                                                                                              \
     COREDEF(vice_xvic)                                                                                                 \
-    COREDEF(vbam)
+    COREDEF(vbam)                                                                                                      \
+    COREDEF(yabadabadoo)

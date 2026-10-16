@@ -366,8 +366,20 @@ static void module_search(void) {
         char *file_path = read_line_char_from(MUOS_RES_LOAD, 1);
         char *ex_directory = strip_dir(file_path);
 
-        write_text_to_file(EXPLORE_DIR, "w", CHAR, ex_directory);
-        write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_dir(file_path));
+        char launch_folder[MAX_BUFFER_SIZE];
+        if (content_launch_folder_name(file_path, launch_folder, sizeof(launch_folder))) {
+            char *parent_directory = strip_dir(ex_directory);
+            char item_name[MAX_BUFFER_SIZE * 2];
+            snprintf(item_name, sizeof(item_name), "%s/%s", launch_folder, get_last_dir(file_path));
+
+            write_text_to_file(EXPLORE_DIR, "w", CHAR, parent_directory);
+            write_text_to_file(EXPLORE_NAME, "w", CHAR, item_name);
+
+            free(parent_directory);
+        } else {
+            write_text_to_file(EXPLORE_DIR, "w", CHAR, ex_directory);
+            write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_dir(file_path));
+        }
 
         free(ex_directory);
         free(file_path);

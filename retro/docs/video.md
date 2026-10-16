@@ -29,7 +29,9 @@ See [`architecture.md`](architecture.md#video) for the file-by-file breakdown of
   `video.c` - see [`architecture.md`](architecture.md#video).
 - **Colour grading**: brightness/contrast/saturation/hue-shift/gamma, plus drop-in filter presets (`.ini`) and shader presets (`.frag`) scanned from the
   `OPT_SHARE_PATH` filter and shader directories. Works for software and hardware-rendered cores.
-- **Border Colour**: theme / black / dark grey / white (black by default), filled outside the game's `dest_rect`.
+- **Border Colour**: atmosphere / black / dark grey / white (black by default), filled outside the game's `dest_rect`. Atmosphere averages the colours of eight
+  cells along each edge of every software frame (`atmosphere_sample`), eases towards them over 180 ms, and draws each side as a gradient from 85%
+  brightness at the picture edge to 25% at the screen edge, the same treatment as Wasabi. Hardware rendered cores give no pixel data and get the dark base.
 - **Overlays**: predefined fullscreen patterns or a per game catalogue overlay, rendered as part of the video content layer. Below the pause menu, header, and
   indicators.
 

@@ -53,7 +53,7 @@ enum game_renderer_mode { game_renderer_hardware = 0, game_renderer_software, ga
 enum audio_filter_mode { audio_filter_none = 0, audio_filter_low_pass, audio_filter_high_pass, audio_filter_count };
 
 enum border_colour_mode {
-    border_colour_theme = 0,
+    border_colour_atmosphere = 0,
     border_colour_black,
     border_colour_dark_grey,
     border_colour_white,
@@ -118,6 +118,19 @@ enum overlay_source_mode {
     overlay_source_count
 };
 
+enum timeline_bar_mode {
+    timeline_bar_off = 0,
+    timeline_bar_bottom,
+    timeline_bar_top,
+    timeline_bar_left,
+    timeline_bar_right,
+    timeline_bar_bottom_reversed,
+    timeline_bar_top_reversed,
+    timeline_bar_left_reversed,
+    timeline_bar_right_reversed,
+    timeline_bar_count
+};
+
 enum auto_save_mode { auto_save_off = 0, auto_save_idle, auto_save_quit, auto_save_idle_quit, auto_save_count };
 
 #define MUX_INPUT_PORT_COUNT 4
@@ -154,6 +167,7 @@ struct session_settings_t {
     int header_visibility;
     int ff_speed;
     int slowmo_speed;
+    int speed_persistence;
     int hotkey_ff_enabled;
     int hotkey_ff_button;
     int hotkey_ff_audio_enabled;
@@ -181,6 +195,8 @@ struct session_settings_t {
     int sram_flush_seconds;
     int timeline_interval;
     int timeline_count;
+    int timeline_reset;
+    int timeline_bar;
     int history_depth;
     int trash_count;
     int state_thumbnail;
@@ -331,6 +347,12 @@ int session_settings_timeline_interval_ms(void);
 void session_settings_cycle_timeline_interval(int direction);
 
 void session_settings_cycle_timeline_count(int direction);
+
+void session_settings_cycle_timeline_reset(int direction);
+
+void session_settings_cycle_timeline_bar(int direction);
+
+const char *session_settings_timeline_bar_name(int mode);
 
 #define VIGNETTE_SIZE_MIN   10
 #define VIGNETTE_SIZE_MAX   200
@@ -516,6 +538,8 @@ void session_settings_cycle_header_visibility(int direction);
 void session_settings_cycle_ff_speed(int direction);
 
 void session_settings_cycle_slowmo_speed(int direction);
+
+void session_settings_cycle_speed_persistence(int direction);
 
 const char *session_settings_hotkey_mode_name(int mode);
 

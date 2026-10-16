@@ -37,6 +37,7 @@ typedef struct {
     int (*extra_refreshes)(int index);
     int (*child_tick)(void);
     int action_without_save_guard;
+    int keep_unavailable_rows;
     void (*closed)(void);
 
     const char *remember_section_key;

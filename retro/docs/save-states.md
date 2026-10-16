@@ -23,6 +23,9 @@ See [`architecture.md`](architecture.md#state) for the file-by-file breakdown of
 - SRAM is dirty checked and written atomically (tmp + rename + fsync) on a background worker thread, flushed on a configurable interval and on idle/quit per the
   **Auto Save** setting.
 - SRAM is also backed up within a configurable option setting.
+- Timeline controls live on their own Storage submenu. Durations include 1, 2, 5, 10, 15, 30, 45 and 60 minutes, with a configurable rolling count. Timeline
+  Reset restarts the interval whenever play is interrupted. When it is disabled, the deadline continues through pause and idle; an interrupted deadline skips
+  the save and starts a fresh interval. The optional three-pixel gameplay bar shows progress towards the next attempt and is excluded from thumbnails.
 - Each successful save refreshes a small shared `resume.ini` index for the frontend. It contains only the newest compatible state and preview for up to 12
   games, along with the content path, state type, core and timestamp. Pickles removes stale entries when their final state is deleted and writes the small index
   atomically after successful state persistence.

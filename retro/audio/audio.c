@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
@@ -1265,7 +1266,63 @@ void audio_bridge_notify_buffer_status(void) {
     buffer_status_cb(active, occupancy_pct, underrun_likely);
 }
 
+static int stage_active;
+static int16_t *stage_buf;
+static size_t stage_frames;
+static size_t stage_cap;
+static int16_t *ready_buf;
+static size_t ready_frames;
+static size_t ready_cap;
+
+static size_t audio_submit_batch(const int16_t *data, size_t frames);
+
+static void stage_append(const int16_t *data, const size_t frames) {
+    if (stage_frames + frames > stage_cap) {
+        const size_t want = (stage_frames + frames) * 2;
+        int16_t *grown = realloc(stage_buf, want * 2 * sizeof(int16_t));
+        if (!grown) return;
+        stage_buf = grown;
+        stage_cap = want;
+    }
+
+    memcpy(stage_buf + stage_frames * 2, data, frames * 2 * sizeof(int16_t));
+    stage_frames += frames;
+}
+
+void audio_bridge_set_staging(const int staging) {
+    stage_active = staging;
+    if (staging || !stage_frames) return;
+
+    if (ready_frames) {
+        audio_submit_batch(ready_buf, ready_frames);
+        ready_frames = 0;
+    }
+
+    int16_t *buf = ready_buf;
+    const size_t cap = ready_cap;
+    ready_buf = stage_buf;
+    ready_cap = stage_cap;
+    ready_frames = stage_frames;
+    stage_buf = buf;
+    stage_cap = cap;
+    stage_frames = 0;
+}
+
+void audio_bridge_commit_staged(void) {
+    if (!ready_frames) return;
+
+    const size_t frames = ready_frames;
+    ready_frames = 0;
+    audio_submit_batch(ready_buf, frames);
+}
+
 void mux_retro_audio_sample_cb(const int16_t left, const int16_t right) {
+    if (stage_active) {
+        const int16_t frame[2] = {left, right};
+        stage_append(frame, 1);
+        return;
+    }
+
     if (!audio_dev || audio_muted) return;
 
     single_sample_calls++;
@@ -1277,6 +1334,15 @@ void mux_retro_audio_sample_cb(const int16_t left, const int16_t right) {
 }
 
 size_t mux_retro_audio_sample_batch_cb(const int16_t *data, const size_t frames) {
+    if (stage_active) {
+        if (data) stage_append(data, frames);
+        return frames;
+    }
+
+    return audio_submit_batch(data, frames);
+}
+
+static size_t audio_submit_batch(const int16_t *data, const size_t frames) {
     if (!audio_dev || !data || audio_muted) return frames;
 
     batch_calls++;

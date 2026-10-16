@@ -36,7 +36,7 @@ static const wasabi_video_config defaults = {
     .aspect_ratio = 0,
     .scale_multiplier = 0,
     .texture_filter = 0,
-    .border_colour = 0,
+    .border_colour = wasabi_border_black,
     .vignette_shape = 0,
     .vignette_scaling = 0,
     .vignette_width = 100,
@@ -294,7 +294,7 @@ static void validate_settings(void) {
     VALIDATE(aspect_ratio, 0, 5);
     VALIDATE(scale_multiplier, 0, 8);
     VALIDATE(texture_filter, 0, 6);
-    VALIDATE(border_colour, 0, 4);
+    VALIDATE(border_colour, wasabi_border_atmosphere, wasabi_border_count - 1);
     VALIDATE(vignette_shape, 0, 5);
     VALIDATE(vignette_scaling, 0, 1);
     VALIDATE(vignette_width, 25, 200);

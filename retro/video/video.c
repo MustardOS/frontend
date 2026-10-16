@@ -410,6 +410,178 @@ static void draw_sharp_bilinear(SDL_Renderer *renderer, const SDL_Rect *output_r
     colour_render_pass(renderer, sharp_bilinear_tex, crop_tex_rect(&crop_src, int_scale), output_rect);
 }
 
+#define ATMOSPHERE_SEGMENTS   8
+#define ATMOSPHERE_SMOOTH_MS  180.0f
+#define ATMOSPHERE_INNER_GAIN 0.85f
+#define ATMOSPHERE_OUTER_GAIN 0.25f
+
+typedef struct {
+    float r;
+    float g;
+    float b;
+} atmosphere_colour;
+
+static atmosphere_colour atmosphere_target[4][ATMOSPHERE_SEGMENTS];
+static atmosphere_colour atmosphere_current[4][ATMOSPHERE_SEGMENTS];
+static int atmosphere_ready;
+static uint32_t atmosphere_tick;
+
+static atmosphere_colour atmosphere_pixel(const uint8_t *row, const int x, const enum retro_pixel_format format) {
+    if (format == RETRO_PIXEL_FORMAT_XRGB8888) {
+        uint32_t pixel;
+        memcpy(&pixel, row + (size_t) x * 4, sizeof(pixel));
+        return (atmosphere_colour) {(float) ((pixel >> 16) & 0xFF), (float) ((pixel >> 8) & 0xFF),
+                                    (float) (pixel & 0xFF)};
+    }
+
+    uint16_t pixel;
+    memcpy(&pixel, row + (size_t) x * 2, sizeof(pixel));
+
+    if (format == RETRO_PIXEL_FORMAT_RGB565) {
+        return (atmosphere_colour) {(float) ((pixel >> 11) & 0x1F) * (255.0f / 31.0f),
+                                    (float) ((pixel >> 5) & 0x3F) * (255.0f / 63.0f),
+                                    (float) (pixel & 0x1F) * (255.0f / 31.0f)};
+    }
+
+    return (atmosphere_colour) {(float) ((pixel >> 10) & 0x1F) * (255.0f / 31.0f),
+                                (float) ((pixel >> 5) & 0x1F) * (255.0f / 31.0f),
+                                (float) (pixel & 0x1F) * (255.0f / 31.0f)};
+}
+
+static atmosphere_colour atmosphere_cell(
+    const uint8_t *data, const size_t pitch, const enum retro_pixel_format format, const int x0, const int y0,
+    const int x1, const int y1
+) {
+    atmosphere_colour sum = {0.0f, 0.0f, 0.0f};
+    const int step_x = (x1 - x0) / 8 > 1 ? (x1 - x0) / 8 : 1;
+    const int step_y = (y1 - y0) / 8 > 1 ? (y1 - y0) / 8 : 1;
+    int count = 0;
+
+    for (int y = y0; y < y1; y += step_y) {
+        const uint8_t *row = data + (size_t) y * pitch;
+        for (int x = x0; x < x1; x += step_x) {
+            const atmosphere_colour colour = atmosphere_pixel(row, x, format);
+            sum.r += colour.r;
+            sum.g += colour.g;
+            sum.b += colour.b;
+            count++;
+        }
+    }
+
+    if (!count) return sum;
+    return (atmosphere_colour) {sum.r / (float) count, sum.g / (float) count, sum.b / (float) count};
+}
+
+static int clamp_axis(const int value, const int minimum, const int maximum) {
+    if (value < minimum) return minimum;
+    if (value > maximum) return maximum;
+    return value;
+}
+
+static void
+atmosphere_vertex(SDL_Vertex *vertex, const float x, const float y, const atmosphere_colour colour, const float gain) {
+    const float r = colour.r * gain > 255.0f ? 255.0f : colour.r * gain;
+    const float g = colour.g * gain > 255.0f ? 255.0f : colour.g * gain;
+    const float b = colour.b * gain > 255.0f ? 255.0f : colour.b * gain;
+    vertex->position.x = x;
+    vertex->position.y = y;
+    vertex->color = (SDL_Color) {(Uint8) r, (Uint8) g, (Uint8) b, 255};
+    vertex->tex_coord.x = 0.0f;
+    vertex->tex_coord.y = 0.0f;
+}
+
+static void draw_atmosphere_side(
+    SDL_Renderer *renderer, const atmosphere_colour *colours, const float start_x, const float start_y,
+    const float end_x, const float end_y, const float outer_dx, const float outer_dy
+) {
+    SDL_Vertex vertices[(ATMOSPHERE_SEGMENTS + 1) * 2];
+    int indices[ATMOSPHERE_SEGMENTS * 6];
+
+    for (int point = 0; point <= ATMOSPHERE_SEGMENTS; point++) {
+        atmosphere_colour colour;
+        if (point == 0) {
+            colour = colours[0];
+        } else if (point == ATMOSPHERE_SEGMENTS) {
+            colour = colours[ATMOSPHERE_SEGMENTS - 1];
+        } else {
+            colour = (atmosphere_colour) {(colours[point - 1].r + colours[point].r) * 0.5f,
+                                          (colours[point - 1].g + colours[point].g) * 0.5f,
+                                          (colours[point - 1].b + colours[point].b) * 0.5f};
+        }
+
+        const float share = (float) point / ATMOSPHERE_SEGMENTS;
+        const float x = start_x + (end_x - start_x) * share;
+        const float y = start_y + (end_y - start_y) * share;
+        atmosphere_vertex(&vertices[point * 2], x, y, colour, ATMOSPHERE_INNER_GAIN);
+        atmosphere_vertex(&vertices[point * 2 + 1], x + outer_dx, y + outer_dy, colour, ATMOSPHERE_OUTER_GAIN);
+    }
+
+    for (int segment = 0; segment < ATMOSPHERE_SEGMENTS; segment++) {
+        const int base = segment * 2;
+        int *index = &indices[segment * 6];
+        index[0] = base;
+        index[1] = base + 1;
+        index[2] = base + 2;
+        index[3] = base + 1;
+        index[4] = base + 3;
+        index[5] = base + 2;
+    }
+
+    SDL_RenderGeometry(renderer, NULL, vertices, (ATMOSPHERE_SEGMENTS + 1) * 2, indices, ATMOSPHERE_SEGMENTS * 6);
+}
+
+static void draw_atmosphere_border(SDL_Renderer *renderer, const SDL_Rect *output_rect, const int physical_output) {
+    int canvas_w, canvas_h;
+    get_canvas_size(&canvas_w, &canvas_h);
+
+    SDL_Rect canvas = {0, 0, canvas_w, canvas_h};
+    if (physical_output) {
+        const SDL_Rect logical_canvas = canvas;
+        display_map_logical_rect(&logical_canvas, &canvas);
+    }
+
+    SDL_SetRenderDrawColor(renderer, 4, 4, 4, 255);
+    SDL_RenderFillRect(renderer, &canvas);
+
+    if (!atmosphere_ready) return;
+
+    const uint32_t now = SDL_GetTicks();
+    float blend = atmosphere_tick ? (float) (now - atmosphere_tick) / ATMOSPHERE_SMOOTH_MS : 1.0f;
+    if (blend > 1.0f) blend = 1.0f;
+    atmosphere_tick = now;
+
+    for (int side = 0; side < 4; side++) {
+        for (int segment = 0; segment < ATMOSPHERE_SEGMENTS; segment++) {
+            atmosphere_colour *current = &atmosphere_current[side][segment];
+            const atmosphere_colour *wanted = &atmosphere_target[side][segment];
+            current->r += (wanted->r - current->r) * blend;
+            current->g += (wanted->g - current->g) * blend;
+            current->b += (wanted->b - current->b) * blend;
+        }
+    }
+
+    const int canvas_right = canvas.x + canvas.w;
+    const int canvas_bottom = canvas.y + canvas.h;
+    const float left = (float) clamp_axis(output_rect->x, canvas.x, canvas_right);
+    const float right = (float) clamp_axis(output_rect->x + output_rect->w, canvas.x, canvas_right);
+    const float top = (float) clamp_axis(output_rect->y, canvas.y, canvas_bottom);
+    const float bottom = (float) clamp_axis(output_rect->y + output_rect->h, canvas.y, canvas_bottom);
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    if (left > (float) canvas.x)
+        draw_atmosphere_side(renderer, atmosphere_current[0], left, top, left, bottom, (float) canvas.x - left, 0.0f);
+    if (right < (float) canvas_right)
+        draw_atmosphere_side(
+            renderer, atmosphere_current[1], right, top, right, bottom, (float) canvas_right - right, 0.0f
+        );
+    if (top > (float) canvas.y)
+        draw_atmosphere_side(renderer, atmosphere_current[2], left, top, right, top, 0.0f, (float) canvas.y - top);
+    if (bottom < (float) canvas_bottom)
+        draw_atmosphere_side(
+            renderer, atmosphere_current[3], left, bottom, right, bottom, 0.0f, (float) canvas_bottom - bottom
+        );
+}
+
 static void draw_video_content(SDL_Renderer *renderer, const int physical_output) {
     SDL_Rect output_rect = dest_rect;
     if (physical_output) display_map_logical_rect(&dest_rect, &output_rect);
@@ -419,11 +591,12 @@ static void draw_video_content(SDL_Renderer *renderer, const int physical_output
     if (session_settings.shimmer_fix) video_geometry_snap_integer(&output_rect, source_w, source_h);
     last_output_rect = output_rect;
 
-    if (session_settings.border_colour != border_colour_theme) {
-        const int border_index =
-            session_settings.border_colour >= 0 && session_settings.border_colour < border_colour_count
-                ? session_settings.border_colour
-                : border_colour_theme;
+    const int border_index = session_settings.border_colour >= 0 && session_settings.border_colour < border_colour_count
+                                 ? session_settings.border_colour
+                                 : border_colour_atmosphere;
+    if (border_index == border_colour_atmosphere) {
+        draw_atmosphere_border(renderer, &output_rect, physical_output);
+    } else {
         const SDL_Color *c = &border_colours[border_index];
         SDL_SetRenderDrawColor(renderer, c->r, c->g, c->b, c->a);
         SDL_RenderFillRect(renderer, NULL);
@@ -875,6 +1048,9 @@ void video_bridge_shutdown(void) {
     raw_frame_buf_cap = 0;
     raw_frame_valid = 0;
 
+    atmosphere_ready = 0;
+    atmosphere_tick = 0;
+
     free(scaled_buf);
     scaled_buf = NULL;
     scaled_buf_cap = 0;
@@ -899,7 +1075,120 @@ int video_bridge_get_frame_skip(void) {
     return frame_skip;
 }
 
+static void atmosphere_sample(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
+    if (session_settings.border_colour != border_colour_atmosphere || !data) return;
+
+    SDL_Rect source = {0, 0, split_frame_w(), split_frame_h()};
+    if (crop_active) source = crop_src_rect;
+    if (source.x < 0) source.x = 0;
+    if (source.y < 0) source.y = 0;
+    if (source.x + source.w > (int) width) source.w = (int) width - source.x;
+    if (source.y + source.h > (int) height) source.h = (int) height - source.y;
+    if (source.w < ATMOSPHERE_SEGMENTS || source.h < ATMOSPHERE_SEGMENTS) return;
+
+    const enum retro_pixel_format format = mux_retro_get_pixel_format();
+    const uint8_t *pixels = data;
+    const int depth_x = source.w / 20 > 1 ? source.w / 20 : 1;
+    const int depth_y = source.h / 20 > 1 ? source.h / 20 : 1;
+
+    for (int segment = 0; segment < ATMOSPHERE_SEGMENTS; segment++) {
+        const int y0 = source.y + source.h * segment / ATMOSPHERE_SEGMENTS;
+        const int y1 = source.y + source.h * (segment + 1) / ATMOSPHERE_SEGMENTS;
+        const int x0 = source.x + source.w * segment / ATMOSPHERE_SEGMENTS;
+        const int x1 = source.x + source.w * (segment + 1) / ATMOSPHERE_SEGMENTS;
+        atmosphere_target[0][segment] = atmosphere_cell(pixels, pitch, format, source.x, y0, source.x + depth_x, y1);
+        atmosphere_target[1][segment] =
+            atmosphere_cell(pixels, pitch, format, source.x + source.w - depth_x, y0, source.x + source.w, y1);
+        atmosphere_target[2][segment] = atmosphere_cell(pixels, pitch, format, x0, source.y, x1, source.y + depth_y);
+        atmosphere_target[3][segment] =
+            atmosphere_cell(pixels, pitch, format, x0, source.y + source.h - depth_y, x1, source.y + source.h);
+    }
+
+    if (!atmosphere_ready) memcpy(atmosphere_current, atmosphere_target, sizeof(atmosphere_current));
+    atmosphere_ready = 1;
+}
+
+static int stage_active;
+static int stage_state;
+static void *stage_buf;
+static size_t stage_cap;
+static unsigned stage_w;
+static unsigned stage_h;
+static size_t stage_pitch;
+
+static int ready_state;
+static void *ready_buf;
+static size_t ready_cap;
+static unsigned ready_w;
+static unsigned ready_h;
+static size_t ready_pitch;
+
+void video_bridge_set_staging(const int staging) {
+    stage_active = staging;
+
+    if (staging) {
+        stage_state = 0;
+        return;
+    }
+
+    if (!stage_state) return;
+
+    void *buf = ready_buf;
+    const size_t cap = ready_cap;
+    ready_buf = stage_buf;
+    ready_cap = stage_cap;
+    stage_buf = buf;
+    stage_cap = cap;
+
+    ready_state = stage_state;
+    ready_w = stage_w;
+    ready_h = stage_h;
+    ready_pitch = stage_pitch;
+    stage_state = 0;
+}
+
+static void video_refresh_apply(const void *data, unsigned width, unsigned height, size_t pitch);
+
+void video_bridge_commit_staged(void) {
+    if (!ready_state) return;
+
+    const int state = ready_state;
+    ready_state = 0;
+    video_refresh_apply(state == 1 ? ready_buf : NULL, ready_w, ready_h, ready_pitch);
+}
+
 void mux_retro_video_refresh_cb(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
+    if (!stage_active) {
+        video_refresh_apply(data, width, height, pitch);
+        return;
+    }
+
+    stage_w = width;
+    stage_h = height;
+    stage_pitch = pitch;
+
+    if (!data || data == RETRO_HW_FRAME_BUFFER_VALID || width == 0 || height == 0 || pitch > SIZE_MAX / height) {
+        stage_state = data == RETRO_HW_FRAME_BUFFER_VALID ? 0 : 2;
+        return;
+    }
+
+    const size_t needed = pitch * height;
+    if (needed > stage_cap) {
+        void *grown = malloc(needed);
+        if (!grown) {
+            stage_state = 0;
+            return;
+        }
+        free(stage_buf);
+        stage_buf = grown;
+        stage_cap = needed;
+    }
+
+    memcpy(stage_buf, data, needed);
+    stage_state = 1;
+}
+
+static void video_refresh_apply(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
     if (frame_skip) return;
 
     perf_note_video_frame(data == NULL);
@@ -935,6 +1224,8 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     // the setting changed.
     int target_w = 0, target_h = 0;
     compute_target_tex_size(&target_w, &target_h);
+
+    atmosphere_sample(data, width, height, pitch);
 
     if (!session_settings.anti_flicker && !cpu_filter_active) {
         raw_frame_valid = 0;
@@ -979,16 +1270,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
 
 static int video_output_is_opaque(void) {
     if (!frame_tex && !hw_render_bridge_active()) return 0;
-
-    if (session_settings.border_colour != border_colour_theme) return 1;
-
-    if (effective_rotation() != video_rotate_0 || session_settings.mirrored) return 0;
-
-    int canvas_w, canvas_h;
-    get_canvas_size(&canvas_w, &canvas_h);
-
-    return dest_rect.x <= 0 && dest_rect.y <= 0 && dest_rect.x + dest_rect.w >= canvas_w
-           && dest_rect.y + dest_rect.h >= canvas_h;
+    return 1;
 }
 
 void video_bridge_flush_frame(void) {

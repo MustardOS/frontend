@@ -6,6 +6,26 @@
 
 bool mux_retro_environment_cb(unsigned cmd, void *data);
 
+int run_thread_start(void);
+
+void run_thread_stop(void);
+
+int run_thread_active(void);
+
+void run_thread_kick(void (*run)(void));
+
+double run_thread_wait(void);
+
+int run_thread_marshal(unsigned cmd, void *data, bool *result);
+
+void video_bridge_set_staging(int staging);
+
+void video_bridge_commit_staged(void);
+
+void audio_bridge_set_staging(int staging);
+
+void audio_bridge_commit_staged(void);
+
 void environment_reset(void);
 
 int environment_update_core_option_visibility(void);
@@ -347,6 +367,8 @@ void pause_menu_playtime_reset(void);
 void pause_menu_set_fps_text(const char *text);
 
 void pause_menu_set_speed_indicator(const char *text, const char *glyph);
+
+void pause_menu_set_timeline_progress(int visible, int progress);
 
 void pause_menu_show_toast(const char *msg);
 

@@ -110,4 +110,5 @@ while both buttons remain down. Value `1` retains the original press-to-toggle b
 
 Fast Forward, Slow Motion, and Pause Content each have an independent on screen glyph toggle, so a hotkey can keep working with its indicator hidden. Pausing
 this way won't disturb Fast Forward/Slow Motion. Resuming drops straight back into whichever of the two, if any, was active before the pause. All rumble is
-suppressed while the pause menu is open.
+suppressed while the pause menu is open. **Speed Persistence** also controls whether an active Fast Forward or Slow Motion mode survives opening the Pickles
+Menu. It is enabled by default; disabling it restores normal speed whenever the menu opens.

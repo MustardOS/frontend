@@ -2301,7 +2301,7 @@ struct mux_lang {
             char sharp_bilinear[MAX_BUFFER_SIZE];
             char scale2_x_smooth[MAX_BUFFER_SIZE];
             char super_eagle[MAX_BUFFER_SIZE];
-            char theme[MAX_BUFFER_SIZE];
+            char atmosphere[MAX_BUFFER_SIZE];
             char black[MAX_BUFFER_SIZE];
             char dark_grey[MAX_BUFFER_SIZE];
             char white[MAX_BUFFER_SIZE];
@@ -2320,7 +2320,18 @@ struct mux_lang {
             char sram_flush[MAX_BUFFER_SIZE];
             char content_precache[MAX_BUFFER_SIZE];
             char timeline_saves[MAX_BUFFER_SIZE];
+            char timeline_duration[MAX_BUFFER_SIZE];
             char timeline_count[MAX_BUFFER_SIZE];
+            char timeline_reset[MAX_BUFFER_SIZE];
+            char timeline_bar[MAX_BUFFER_SIZE];
+            char timeline_bar_bottom[MAX_BUFFER_SIZE];
+            char timeline_bar_bottom_reversed[MAX_BUFFER_SIZE];
+            char timeline_bar_top[MAX_BUFFER_SIZE];
+            char timeline_bar_top_reversed[MAX_BUFFER_SIZE];
+            char timeline_bar_left[MAX_BUFFER_SIZE];
+            char timeline_bar_left_reversed[MAX_BUFFER_SIZE];
+            char timeline_bar_right[MAX_BUFFER_SIZE];
+            char timeline_bar_right_reversed[MAX_BUFFER_SIZE];
             char history_states[MAX_BUFFER_SIZE];
             char trash_count[MAX_BUFFER_SIZE];
             char state_thumbnail[MAX_BUFFER_SIZE];
@@ -2490,6 +2501,7 @@ struct mux_lang {
             char toggle_header[MAX_BUFFER_SIZE];
             char ff_glyph[MAX_BUFFER_SIZE];
             char slowmo_glyph[MAX_BUFFER_SIZE];
+            char speed_persistence[MAX_BUFFER_SIZE];
             char pause_content[MAX_BUFFER_SIZE];
             char pause_glyph[MAX_BUFFER_SIZE];
             char paused[MAX_BUFFER_SIZE];
@@ -2733,8 +2745,11 @@ struct mux_lang {
             } hud;
             struct {
                 char auto_save[MAX_BUFFER_SIZE];
+                char timeline_menu[MAX_BUFFER_SIZE];
                 char timeline[MAX_BUFFER_SIZE];
                 char timeline_count[MAX_BUFFER_SIZE];
+                char timeline_reset[MAX_BUFFER_SIZE];
+                char timeline_bar[MAX_BUFFER_SIZE];
                 char history_states[MAX_BUFFER_SIZE];
                 char trash_count[MAX_BUFFER_SIZE];
                 char sram_flush[MAX_BUFFER_SIZE];
@@ -2835,6 +2850,7 @@ struct mux_lang {
                 char slowmo_speed[MAX_BUFFER_SIZE];
                 char slowmo_audio[MAX_BUFFER_SIZE];
                 char slowmo_glyph[MAX_BUFFER_SIZE];
+                char speed_persistence[MAX_BUFFER_SIZE];
                 char pause_content[MAX_BUFFER_SIZE];
                 char pause_glyph[MAX_BUFFER_SIZE];
                 char quick_save[MAX_BUFFER_SIZE];
@@ -3334,7 +3350,6 @@ struct mux_lang {
         char tape_counter[MAX_BUFFER_SIZE];
         char crt_television[MAX_BUFFER_SIZE];
         char seek_effect[MAX_BUFFER_SIZE];
-        char ambient[MAX_BUFFER_SIZE];
         char scope_all_voices[MAX_BUFFER_SIZE];
         char cover_art[MAX_BUFFER_SIZE];
         char repeat[MAX_BUFFER_SIZE];

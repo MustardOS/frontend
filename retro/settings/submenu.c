@@ -21,6 +21,11 @@ static lv_obj_t *section_labels[SUBMENU_SECTION_ROW_MAX];
 static lv_obj_t *section_glyphs[SUBMENU_SECTION_ROW_MAX];
 static lv_obj_t *section_values[SUBMENU_SECTION_ROW_MAX];
 
+static int shown_row[SUBMENU_SECTION_ROW_MAX];
+static int shown_position[SUBMENU_SECTION_ROW_MAX];
+static int built_visible[SUBMENU_SECTION_ROW_MAX];
+static int shown_count;
+
 #define SUBMENU_NAV_X_BIT  BIT(6)
 #define SUBMENU_NAV_Y_BIT  BIT(7)
 #define SUBMENU_NAV_L2_BIT BIT(14)
@@ -35,7 +40,9 @@ static int sectioned(const submenu *m) {
 }
 
 static int selected_row(const submenu *m) {
-    return sectioned(m) ? list_frame_current_row() : current_item_index;
+    if (sectioned(m)) return list_frame_current_row();
+    if (current_item_index < 0 || current_item_index >= shown_count) return -1;
+    return shown_row[current_item_index];
 }
 
 static int row_can_cycle(const submenu *m, const int index) {
@@ -90,23 +97,16 @@ static void row_value(const submenu *m, const int index, char *buf) {
     if (m->def->value_text) m->def->value_text(index, buf, SUBMENU_VALUE_MAX);
 }
 
-static void apply_row_availability(const submenu *m, const int index, lv_obj_t *panel) {
-    if (!panel || !m->def->cycle || row_is_action(m, index)) return;
+static int row_visible(const submenu *m, const int index) {
+    if (m->def->keep_unavailable_rows || !m->def->cycle || row_is_action(m, index)) return 1;
+    return row_can_cycle(m, index);
+}
 
-    const int available = row_can_cycle(m, index);
-    lv_obj_t *label = lv_obj_get_child(panel, 0);
-    lv_obj_t *glyph = lv_obj_get_child(panel, 1);
-    lv_obj_t *value = lv_obj_get_child(panel, 2);
-    const lv_opa_t opacity = available ? LV_OPA_COVER : (lv_opa_t) theme.list_disabled.text_alpha;
-
-    if (label) {
-        lv_obj_set_style_text_color(
-            label, lv_color_hex(available ? theme.list_default.text : theme.list_disabled.text), MU_OBJ_MAIN_DEFAULT
-        );
-        lv_obj_set_style_text_opa(label, opacity, MU_OBJ_MAIN_DEFAULT);
-    }
-    if (glyph) lv_obj_set_style_img_opa(glyph, opacity, MU_OBJ_MAIN_DEFAULT);
-    if (value) lv_obj_set_style_text_opa(value, opacity, MU_OBJ_MAIN_DEFAULT);
+static int visibility_changed(const submenu *m) {
+    const int count = m->def->row_count < SUBMENU_SECTION_ROW_MAX ? m->def->row_count : SUBMENU_SECTION_ROW_MAX;
+    for (int i = 0; i < count; i++)
+        if (row_visible(m, i) != built_visible[i]) return 1;
+    return 0;
 }
 
 static void build_row(const submenu *m, const int index) {
@@ -124,17 +124,31 @@ static void build_row(const submenu *m, const int index) {
         row_value(m, index, value_text);
         apply_theme_list_value(&theme, value, value_text);
     }
-    apply_row_availability(m, index, panel);
 
     apply_size_to_content(&theme, ui_pnl_content, label, icon, m->def->labels[index]);
     apply_text_long_dot(&theme, label);
 
     if (m->def->help) lv_obj_set_user_data(label, (void *) m->def->help[index]);
 
-    lv_group_add_obj(ui_group, label);
-    lv_group_add_obj(ui_group_glyph, icon);
-    lv_group_add_obj(ui_group_panel, panel);
-    if (value) lv_group_add_obj(ui_group_value, value);
+    const int visible = row_visible(m, index);
+    if (index < SUBMENU_SECTION_ROW_MAX) {
+        built_visible[index] = visible;
+        shown_position[index] = -1;
+    }
+
+    if (!visible) {
+        lv_obj_add_flag(panel, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_group_add_obj(ui_group, label);
+        lv_group_add_obj(ui_group_glyph, icon);
+        lv_group_add_obj(ui_group_panel, panel);
+        if (value) lv_group_add_obj(ui_group_value, value);
+
+        if (index < SUBMENU_SECTION_ROW_MAX && shown_count < SUBMENU_SECTION_ROW_MAX) {
+            shown_position[index] = shown_count;
+            shown_row[shown_count++] = index;
+        }
+    }
 
     if (sectioned(m) && index < SUBMENU_SECTION_ROW_MAX) {
         section_panels[index] = panel;
@@ -156,6 +170,7 @@ static void rebuild_rows(const submenu *m) {
 
     ui_count_static = 0;
     current_item_index = 0;
+    shown_count = 0;
 
     for (int i = 0; i < m->def->row_count; i++)
         build_row(m, i);
@@ -170,12 +185,23 @@ static void rebuild_rows(const submenu *m) {
         return;
     }
 
-    ui_count_static = m->def->row_count;
+    ui_count_static = shown_count;
     first_open = 0;
 }
 
-static void focus_row(const submenu *m, const int index) {
+static int nearest_visible_row(const submenu *m, const int index) {
+    for (int distance = 0; distance < m->def->row_count; distance++) {
+        if (index + distance < m->def->row_count && row_visible(m, index + distance)) return index + distance;
+        if (index - distance >= 0 && row_visible(m, index - distance)) return index - distance;
+    }
+    return -1;
+}
+
+static void focus_row(const submenu *m, int index) {
     if (index < 0 || index >= m->def->row_count) return;
+
+    index = nearest_visible_row(m, index);
+    if (index < 0) return;
 
     lv_obj_t *panel;
     if (sectioned(m)) {
@@ -183,13 +209,13 @@ static void focus_row(const submenu *m, const int index) {
             const list_frame *section = &m->def->frames[frame];
             if (index < section->first || index >= section->first + section->count) continue;
             if (list_frame_current() != frame) list_frame_go(frame);
-            current_item_index = index - section->first + 1;
+            current_item_index = list_frame_steps_to_row(index);
             break;
         }
         panel = section_panels[index];
     } else {
-        if (index >= ui_count_static) return;
-        current_item_index = index;
+        if (index >= SUBMENU_SECTION_ROW_MAX || shown_position[index] < 0) return;
+        current_item_index = shown_position[index];
         panel = lv_obj_get_child(ui_pnl_content, index);
     }
     if (!panel) return;
@@ -221,10 +247,31 @@ static void refresh_row(const submenu *m, const int index, const enum nav_direct
         if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
         if (play_shake) nav_play_shake(value, shake_dir);
     }
-    apply_row_availability(m, index, panel);
+}
+
+static void rebuild_rows(const submenu *m);
+static void focus_row(const submenu *m, int index);
+
+static int rebuild_if_visibility_changed(const submenu *m, const int keep_row) {
+    if (!visibility_changed(m)) return 0;
+
+    const int section = sectioned(m) ? list_frame_current() : -1;
+    rebuild_rows(m);
+    if (section >= 0) list_frame_go(section);
+
+    if (keep_row >= 0 && row_visible(m, keep_row)) {
+        focus_row(m, keep_row);
+    } else if (sectioned(m)) {
+        gen_step_movement(0, +1, 2, 0, 0);
+    } else if (shown_count > 0) {
+        focus_row(m, shown_row[0]);
+    }
+    return 1;
 }
 
 static void refresh_cycle_result(const submenu *m, const int changed_index, const enum nav_direction shake_dir) {
+    if (rebuild_if_visibility_changed(m, changed_index)) return;
+
     refresh_row(m, changed_index, shake_dir, 1);
     if (!m->def->row_depends_on) return;
 
@@ -234,6 +281,8 @@ static void refresh_cycle_result(const submenu *m, const int changed_index, cons
 }
 
 void submenu_refresh_values(const submenu *m) {
+    if (rebuild_if_visibility_changed(m, selected_row(m))) return;
+
     for (int i = 0; i < m->def->row_count; i++) {
         lv_obj_t *panel = sectioned(m) ? section_panels[i] : lv_obj_get_child(ui_pnl_content, i);
         if (!panel) continue;
@@ -244,7 +293,6 @@ void submenu_refresh_values(const submenu *m) {
         char value_text[SUBMENU_VALUE_MAX];
         row_value(m, i, value_text);
         if (strcmp(lv_label_get_text(value), value_text) != 0) lv_label_set_text(value, value_text);
-        apply_row_availability(m, i, panel);
     }
 }
 
@@ -443,8 +491,8 @@ void submenu_open(submenu *m) {
     if (sectioned(m)) {
         const int steps = m->def->remember_section_key ? list_frame_restore_key(m->def->remember_section_key) : 0;
         gen_step_movement(steps, +1, 2, 0, 0);
-    } else {
-        focus_row(m, current_item_index);
+    } else if (shown_count > 0) {
+        focus_row(m, shown_row[0]);
     }
     submenu_nav(m, 1);
 }

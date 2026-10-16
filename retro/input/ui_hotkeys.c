@@ -14,6 +14,7 @@ enum {
     row_slowmo_speed,
     row_slowmo_audio_enabled,
     row_slowmo_glyph_enabled,
+    row_speed_persistence,
     row_pause_enabled,
     row_pause_glyph_enabled,
     row_quicksave_enabled,
@@ -35,6 +36,7 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.slowmo_speed,
     lang.muxretro.hotkeys_screen.slowmo_audio,
     lang.muxretro.hotkeys_screen.slowmo_glyph,
+    lang.muxretro.hotkeys_screen.speed_persistence,
     lang.muxretro.hotkeys_screen.pause_content,
     lang.muxretro.hotkeys_screen.pause_glyph,
     lang.muxretro.hotkeys_screen.quick_save,
@@ -45,10 +47,10 @@ static const char *row_labels[row_count] = {
     lang.muxretro.hotkeys_screen.manual
 };
 
-static const char *row_glyphs[row_count] = {"hotkeys",    "fastforward", "ffspeed",   "sound",       "ffglyph",
-                                            "slowmotion", "slowmospeed", "sound",     "slowmoglyph", "pause",
-                                            "pauseglyph", "quicksave",   "quickload", "togglefps",   "toggleheader",
-                                            "quit",       "manual"};
+static const char *row_glyphs[row_count] = {"hotkeys",      "fastforward", "ffspeed",   "sound",       "ffglyph",
+                                            "slowmotion",   "slowmospeed", "sound",     "slowmoglyph", "fastforward",
+                                            "pause",        "pauseglyph",  "quicksave", "quickload",   "togglefps",
+                                            "toggleheader", "quit",        "manual"};
 
 static const char *row_help[row_count] = {
     lang.muxretro.help.hotkeys.button_assignments,
@@ -60,6 +62,7 @@ static const char *row_help[row_count] = {
     lang.muxretro.help.hotkeys.slowmo_speed,
     lang.muxretro.help.hotkeys.slowmo_audio,
     lang.muxretro.help.hotkeys.slowmo_glyph,
+    lang.muxretro.help.hotkeys.speed_persistence,
     lang.muxretro.help.hotkeys.pause_content,
     lang.muxretro.help.hotkeys.pause_glyph,
     lang.muxretro.help.hotkeys.quick_save,
@@ -128,6 +131,11 @@ static void row_value_text(const int index, char *buf, const size_t buf_len) {
             snprintf(
                 buf, buf_len, "%s",
                 session_settings.hotkey_slowmo_glyph_enabled ? lang.generic.enabled : lang.generic.disabled
+            );
+            break;
+        case row_speed_persistence:
+            snprintf(
+                buf, buf_len, "%s", session_settings.speed_persistence ? lang.generic.enabled : lang.generic.disabled
             );
             break;
         case row_pause_enabled: {
@@ -202,6 +210,9 @@ static void cycle_row(const int index, const int direction) {
             break;
         case row_slowmo_glyph_enabled:
             session_settings_cycle_hotkey_slowmo_glyph_enabled(direction);
+            break;
+        case row_speed_persistence:
+            session_settings_cycle_speed_persistence(direction);
             break;
         case row_pause_enabled:
             session_settings_cycle_hotkey_pause_enabled(direction);

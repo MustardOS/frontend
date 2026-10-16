@@ -66,6 +66,7 @@
 
 #define PERF_AUTODUMP_INTERVAL_MS 15000
 #define SLOW_CORE_PACE_RATIO      0.98
+#define PACE_CATCHUP_FRAMES       4.0
 #define CHEEVO_STARTUP_WAIT_MS    5000
 
 static inotify_status *idle_ino = NULL;
@@ -80,6 +81,8 @@ static double target_fps = 60.0;
 static double counter_ticks_to_ms = 0.0;
 static int active_core_is_flycast = 0;
 static int active_core_freezes_children = 0;
+static int active_core_threaded_run = 0;
+static int async_run_pending = 0;
 static int children_frozen = 0;
 static int children_lost_reported = 0;
 static int children_seen = 0;
@@ -420,6 +423,50 @@ static unsigned run_core_batch(const unsigned frames) {
     return ran;
 }
 
+static void core_async_finish(void) {
+    if (!async_run_pending) return;
+
+    const double run_ms = run_thread_wait();
+    async_run_pending = 0;
+
+    video_bridge_set_staging(0);
+    audio_bridge_set_staging(0);
+
+    environment_pump_audio_callback();
+
+    if (cheevo_needs_frame() && !runahead_cheevo_deferred()) {
+        const uint64_t cheevo_frame_start = perf_begin();
+        cheevo_do_frame();
+        perf_end(perf_stage_cheevo_frame, cheevo_frame_start);
+    }
+
+    core_run_ema_ms = core_run_ema_ms <= 0.0 ? run_ms : core_run_ema_ms * 0.9 + run_ms * 0.1;
+    perf_record(perf_stage_core, run_ms);
+
+    audio_bridge_flush_sample_fifo();
+    rumble_bridge_commit();
+}
+
+static int core_async_eligible(const unsigned frames) {
+    return active_core_threaded_run && frames == 1 && !netplay_is_active() && !link_is_engaged()
+           && !hw_render_bridge_active() && !environment_av_info_pending() && !session_settings.run_ahead;
+}
+
+static void core_async_kick(void) {
+    frame_pacer_maybe_wait();
+
+    video_bridge_set_frame_skip(0);
+    input_bridge_begin_run();
+    audio_bridge_notify_buffer_status();
+    environment_notify_frame_time();
+    runahead_before_frame(1);
+
+    video_bridge_set_staging(1);
+    audio_bridge_set_staging(1);
+    async_run_pending = 1;
+    run_thread_kick(current_core.retro_run);
+}
+
 static double core_panel_rate(void) {
     const double reported = display_panel_refresh_hz();
     return reported > 0.0 ? reported : (double) frame_pacer_get_refresh_hz();
@@ -572,7 +619,8 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames, 
     const double batch_ticks = target_ticks * batch;
     const double target_change =
         target_ms > fps_limit_target_ms ? target_ms - fps_limit_target_ms : fps_limit_target_ms - target_ms;
-    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < (double) now_counter - batch_ticks || target_change > 0.01)
+    if (fps_limit_deadline <= 0.0 || fps_limit_deadline < (double) now_counter - target_ticks * PACE_CATCHUP_FRAMES
+        || target_change > 0.01)
         fps_limit_deadline = (double) frame_start;
     fps_limit_target_ms = target_ms;
 
@@ -791,6 +839,9 @@ int main(const int argc, char *argv[]) {
         core_name_available && (strcmp(loaded_core_name, "flycast") == 0 || strcmp(loaded_core_name, "flycastvl") == 0);
     active_core_is_ppsspp = core_name_available && strcmp(loaded_core_name, "ppsspp") == 0;
     active_core_freezes_children = core_name_available && coredef_freeze_children(loaded_core_name);
+    active_core_threaded_run = core_name_available && coredef_threaded_run(loaded_core_name)
+                               && !hw_render_bridge_active() && run_thread_start();
+    if (active_core_threaded_run) LOG_INFO(mux_module, "Core runs on its own thread, overlapped with presenting");
 
     audio_bridge_set_latency_floor(active_core_is_ppsspp ? PPSSPP_AUDIO_LATENCY_FLOOR_MS : 0);
     audio_bridge_open(av_info.timing.sample_rate > 0 ? av_info.timing.sample_rate : 48000.0);
@@ -946,6 +997,7 @@ int main(const int argc, char *argv[]) {
         double speed_multiplier = 1.0;
 
         const uint64_t frame_start = SDL_GetPerformanceCounter();
+        core_async_finish();
         const uint32_t loop_now = SDL_GetTicks();
         const uint64_t services_start = perf_begin();
         check_child_processes(loop_now, content_started_at);
@@ -1058,12 +1110,31 @@ int main(const int argc, char *argv[]) {
             timeline_deadline = timeline_ms > 0 ? loop_now + (uint32_t) timeline_ms : 0;
         }
 
-        if (timeline_ms > 0 && !state_saves_allowed()) {
-            timeline_deadline = loop_now + (uint32_t) timeline_ms;
-        } else if (timeline_ms > 0 && !paused && !hotkeys_is_content_paused() && loop_now >= timeline_deadline) {
-            gamestate_timeline_save();
-            timeline_deadline = loop_now + (uint32_t) timeline_ms;
+        const int timeline_interrupted = paused || hotkeys_is_content_paused();
+        const int timeline_allowed = timeline_ms > 0 && state_saves_allowed();
+
+        if (timeline_ms > 0) {
+            if (!timeline_allowed || (session_settings.timeline_reset && timeline_interrupted)) {
+                timeline_deadline = loop_now + (uint32_t) timeline_ms;
+            } else if (SDL_TICKS_PASSED(loop_now, timeline_deadline)) {
+                if (!timeline_interrupted) {
+                    gamestate_timeline_save();
+                } else {
+                    LOG_DEBUG(mux_module, "Timeline save skipped while play was interrupted");
+                }
+                timeline_deadline = loop_now + (uint32_t) timeline_ms;
+            }
         }
+
+        int timeline_progress = 0;
+        if (timeline_allowed && timeline_deadline && !SDL_TICKS_PASSED(loop_now, timeline_deadline)) {
+            const uint32_t remaining = timeline_deadline - loop_now;
+            const uint32_t elapsed = remaining < (uint32_t) timeline_ms ? (uint32_t) timeline_ms - remaining : 0;
+            timeline_progress = (int) ((uint64_t) elapsed * 1000U / (uint32_t) timeline_ms);
+        }
+        pause_menu_set_timeline_progress(
+            session_settings.timeline_bar && timeline_allowed && !timeline_interrupted, timeline_progress
+        );
         perf_end(perf_stage_maintenance, maintenance_start);
 
         int run_gameplay = 0;
@@ -1163,7 +1234,13 @@ int main(const int argc, char *argv[]) {
                 ff_frame_credit = 0.0;
             }
 
-            const unsigned ran_frames = run_core_batch(frames);
+            unsigned ran_frames;
+            if (core_async_eligible(frames)) {
+                core_async_kick();
+                ran_frames = 1;
+            } else {
+                ran_frames = run_core_batch(frames);
+            }
             audio_bridge_note_core_frames(ran_frames);
             core_ran = ran_frames > 0;
             core_frames = ran_frames;
@@ -1233,6 +1310,8 @@ int main(const int argc, char *argv[]) {
         perf_end(perf_stage_ui_logic, ui_tick_start);
 
         const uint64_t video_start = core_ran ? perf_begin() : 0;
+        video_bridge_commit_staged();
+        audio_bridge_commit_staged();
         video_bridge_flush_frame();
         perf_end(perf_stage_video, video_start);
         if (ui_visible && SDL_TICKS_PASSED(loop_now, ui_task_deadline)) {
@@ -1267,6 +1346,9 @@ int main(const int argc, char *argv[]) {
         if (core_ran) pace_core_output(frame_start, core_frames, speed_multiplier);
         perf_frame_complete(core_ran);
     }
+
+    core_async_finish();
+    run_thread_stop();
 
     if (perf_is_capture_active()) {
         if (perf_export_trace(RETRO_SHARE_PATH "performance.csv") == 0)

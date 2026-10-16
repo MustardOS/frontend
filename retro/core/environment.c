@@ -182,6 +182,9 @@ static void mux_retro_log_printf(const enum retro_log_level level, const char *f
 }
 
 bool mux_retro_environment_cb(const unsigned cmd, void *data) {
+    bool marshalled;
+    if (run_thread_marshal(cmd, data, &marshalled)) return marshalled;
+
     switch (cmd) {
         case RETRO_ENVIRONMENT_GET_OVERSCAN: {
             if (data) *(bool *) data = false;

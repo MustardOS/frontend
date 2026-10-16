@@ -541,6 +541,7 @@ static submenu_def root_definition = {
 };
 
 static submenu_def host_definition = {
+    .keep_unavailable_rows = 1,
     .labels = host_labels,
     .glyphs = host_glyphs,
     .help = host_help,
@@ -557,6 +558,7 @@ static submenu_def host_definition = {
 };
 
 static submenu_def join_definition = {
+    .keep_unavailable_rows = 1,
     .labels = join_labels,
     .glyphs = join_glyphs,
     .help = join_help,

@@ -62,6 +62,10 @@ static lv_obj_t *ui_lbl_speed_mode = NULL;
 static lv_obj_t *ui_lbl_playtime = NULL;
 static lv_obj_t *ui_img_playtime_glyph = NULL;
 static lv_obj_t *ui_lbl_break = NULL;
+static lv_obj_t *ui_bar_timeline = NULL;
+static lv_obj_t *ui_timeline_fill = NULL;
+static int timeline_progress_shown = -1;
+static int timeline_bar_layout = -1;
 static uint32_t playtime_started = 0;
 static uint32_t playtime_shown = UINT32_MAX;
 static lv_obj_t *ui_img_speed_glyph = NULL;
@@ -491,6 +495,104 @@ static void create_speed_mode_label(void) {
     lv_obj_add_flag(ui_pnl_speed_mode, LV_OBJ_FLAG_HIDDEN);
 }
 
+static int timeline_bar_reversed(const int mode) {
+    return mode >= timeline_bar_bottom_reversed;
+}
+
+static int timeline_bar_vertical(const int mode) {
+    return mode == timeline_bar_left || mode == timeline_bar_right || mode == timeline_bar_left_reversed
+           || mode == timeline_bar_right_reversed;
+}
+
+static void create_timeline_bar(void) {
+    ui_bar_timeline = lv_obj_create(ui_screen);
+    lv_obj_remove_style_all(ui_bar_timeline);
+    lv_obj_clear_flag(ui_bar_timeline, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_color(ui_bar_timeline, lv_color_hex(theme.bar.progress_main_background), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(
+        ui_bar_timeline, (lv_opa_t) (theme.bar.progress_main_background_alpha / 2), MU_OBJ_MAIN_DEFAULT
+    );
+
+    ui_timeline_fill = lv_obj_create(ui_bar_timeline);
+    lv_obj_remove_style_all(ui_timeline_fill);
+    lv_obj_clear_flag(ui_timeline_fill, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_color(
+        ui_timeline_fill, lv_color_hex(theme.bar.progress_active_background), MU_OBJ_MAIN_DEFAULT
+    );
+    lv_obj_set_style_bg_opa(ui_timeline_fill, theme.bar.progress_active_background_alpha, MU_OBJ_MAIN_DEFAULT);
+
+    timeline_bar_layout = -1;
+    lv_obj_add_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void layout_timeline_bar(const int mode) {
+    const int thickness = 3;
+
+    switch (mode) {
+        case timeline_bar_top:
+        case timeline_bar_top_reversed:
+            lv_obj_set_size(ui_bar_timeline, device.mux.width, thickness);
+            lv_obj_align(ui_bar_timeline, LV_ALIGN_TOP_LEFT, 0, 0);
+            break;
+        case timeline_bar_left:
+        case timeline_bar_left_reversed:
+            lv_obj_set_size(ui_bar_timeline, thickness, device.mux.height);
+            lv_obj_align(ui_bar_timeline, LV_ALIGN_TOP_LEFT, 0, 0);
+            break;
+        case timeline_bar_right:
+        case timeline_bar_right_reversed:
+            lv_obj_set_size(ui_bar_timeline, thickness, device.mux.height);
+            lv_obj_align(ui_bar_timeline, LV_ALIGN_TOP_RIGHT, 0, 0);
+            break;
+        default:
+            lv_obj_set_size(ui_bar_timeline, device.mux.width, thickness);
+            lv_obj_align(ui_bar_timeline, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+            break;
+    }
+
+    if (timeline_bar_vertical(mode)) {
+        lv_obj_set_size(ui_timeline_fill, thickness, 0);
+        lv_obj_align(ui_timeline_fill, LV_ALIGN_TOP_MID, 0, 0);
+    } else {
+        lv_obj_set_size(ui_timeline_fill, 0, thickness);
+        lv_obj_align(ui_timeline_fill, LV_ALIGN_LEFT_MID, 0, 0);
+    }
+
+    timeline_bar_layout = mode;
+    timeline_progress_shown = -1;
+}
+
+void pause_menu_set_timeline_progress(const int visible, int progress) {
+    if (!ui_bar_timeline) return;
+
+    const int mode = session_settings.timeline_bar;
+    const int want_visible = visible && !active && mode > timeline_bar_off && mode < timeline_bar_count;
+    if (!want_visible) {
+        lv_obj_add_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
+        timeline_progress_shown = -1;
+        return;
+    }
+
+    if (mode != timeline_bar_layout) layout_timeline_bar(mode);
+
+    const int was_hidden = lv_obj_has_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
+    if (progress < 0) progress = 0;
+    if (progress > 1000) progress = 1000;
+    if (progress != timeline_progress_shown) {
+        const int filled = timeline_bar_reversed(mode) ? 1000 - progress : progress;
+        if (timeline_bar_vertical(mode))
+            lv_obj_set_height(ui_timeline_fill, (lv_coord_t) (device.mux.height * filled / 1000));
+        else
+            lv_obj_set_width(ui_timeline_fill, (lv_coord_t) (device.mux.width * filled / 1000));
+        timeline_progress_shown = progress;
+    }
+
+    if (was_hidden) {
+        lv_obj_clear_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_bar_timeline);
+    }
+}
+
 void pause_menu_set_speed_indicator(const char *text, const char *glyph) {
     if (!ui_lbl_speed_mode) return;
     lv_obj_t *panel = lv_obj_get_parent(ui_lbl_speed_mode);
@@ -731,6 +833,8 @@ int pause_menu_gameplay_hud_active(void) {
 
     if (header_fading) return 1;
 
+    if (ui_bar_timeline && !lv_obj_has_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN)) return 1;
+
     return 0;
 }
 
@@ -841,6 +945,7 @@ static void set_chrome_visible(const int visible) {
         if (ui_lbl_playtime) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_playtime), LV_OBJ_FLAG_HIDDEN);
         if (ui_lbl_break) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_break), LV_OBJ_FLAG_HIDDEN);
         if (ui_lbl_gb_slot) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_gb_slot), LV_OBJ_FLAG_HIDDEN);
+        if (ui_bar_timeline) lv_obj_add_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
         pause_menu_set_speed_indicator(NULL, NULL);
         restore_header_chrome();
     } else {
@@ -961,6 +1066,7 @@ void pause_menu_init(void) {
     create_break_label();
     create_playtime_label();
     create_speed_mode_label();
+    create_timeline_bar();
     gamestate_menu_init();
     if (device.board.has_network) {
         netplay_menu_init();
@@ -992,6 +1098,10 @@ void pause_menu_shutdown(void) {
     content_switch_free(&content_switch_items);
     ui_lbl_gb_slot = NULL;
     ui_img_gb_slot_glyph = NULL;
+    ui_bar_timeline = NULL;
+    ui_timeline_fill = NULL;
+    timeline_bar_layout = -1;
+    timeline_progress_shown = -1;
     link_menu_teardown();
     ui_screen_teardown();
 
@@ -1012,10 +1122,12 @@ static int capture_clean_frame(const char *path, uint8_t *pixels, const int rest
     const int fps_was_visible = ui_lbl_fps && !lv_obj_has_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     const int header_was_visible = ui_pnl_header && !lv_obj_has_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
     const int toast_was_visible = ui_pnl_message && !lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    const int timeline_was_visible = ui_bar_timeline && !lv_obj_has_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
 
     if (fps_was_visible) lv_obj_add_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
     if (toast_was_visible) lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    if (timeline_was_visible) lv_obj_add_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
 
     // Keep the frame off the screen so the markers do not blink
     display_set_composite_suppressed(1);
@@ -1041,8 +1153,10 @@ static int capture_clean_frame(const char *path, uint8_t *pixels, const int rest
     if (fps_was_visible) lv_obj_clear_flag(lv_obj_get_parent(ui_lbl_fps), LV_OBJ_FLAG_HIDDEN);
     if (header_was_visible) lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
     if (toast_was_visible) lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
+    if (timeline_was_visible) lv_obj_clear_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
 
-    if (fps_was_visible || header_was_visible || toast_was_visible) lv_obj_invalidate(ui_screen);
+    if (fps_was_visible || header_was_visible || toast_was_visible || timeline_was_visible)
+        lv_obj_invalidate(ui_screen);
 
     perf_end(perf_stage_screenshot, capture_start);
     return result;
@@ -1082,12 +1196,14 @@ void pause_menu_toggle(void) {
         if (!netplay_is_playing() && !link_is_engaged()) core_freeze_child_processes();
         if (!netplay_is_playing()) audio_bridge_set_paused(1);
         if (state_saves_allowed()) gamestate_capture_pending(0);
-        hotkeys_reset();
+        hotkeys_pause_menu_opened(session_settings.speed_persistence);
     } else {
         input_bridge_suppress_held();
     }
 
     set_chrome_visible(active);
+
+    if (!active) hotkeys_refresh_indicator();
 
     if (active) {
         pause_menu_rebuild();

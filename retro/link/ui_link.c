@@ -275,6 +275,7 @@ static void link_closed(void) {
 }
 
 static submenu_def link_definition = {
+    .keep_unavailable_rows = 1,
     .labels = link_labels,
     .glyphs = link_glyphs,
     .help = link_help,

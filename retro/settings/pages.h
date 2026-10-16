@@ -18,6 +18,8 @@ const submenu_def *input_menu_definition(void);
 
 const submenu_def *storage_menu_definition(void);
 
+int storage_settings_child_tick(void);
+
 const submenu_def *performance_menu_definition(void);
 
 void video_diagnostics_menu_open(void);
@@ -35,3 +37,5 @@ int viewport_settings_child_tick(void);
 int overlay_settings_child_tick(void);
 
 int image_corrections_settings_child_tick(void);
+
+void settings_menu_reopen_storage_at(int local_index);
