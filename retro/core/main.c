@@ -41,6 +41,7 @@
 #include "../ui/options.h"
 #include "../coredef/coredef.h"
 #include "../ui/ui_loading.h"
+#include "../state/bios_check.h"
 #include "core.h"
 #include "governor_boost.h"
 #include "runahead.h"
@@ -669,6 +670,20 @@ static int abort_startup(const int core_opened) {
     return EXIT_FAILURE;
 }
 
+static int bios_allows_start(const char *core_path) {
+    char missing[MAX_BUFFER_SIZE];
+    const int listed = bios_check_missing(core_path, missing, sizeof(missing));
+    if (listed <= 0) return 1;
+
+    LOG_WARN(mux_module, "BIOS files needed by %s were not found", core_path);
+
+    loading_prompt_close(
+        lang.muxretro.bios_title, listed > 1 ? lang.muxretro.bios_missing_any : lang.muxretro.bios_missing, missing,
+        lang.generic.close
+    );
+    return 0;
+}
+
 int main(const int argc, char *argv[]) {
     if (argc == 2 && strcmp(argv[1], "--help") == 0) {
         startup_options_print_usage(stdout, argv[0]);
@@ -727,6 +742,15 @@ int main(const int argc, char *argv[]) {
     options_init_paths(core_path_arg, content_path);
 
     governor_boost_begin("content startup");
+    if (show_startup_messages) loading_message_show(startup_message);
+
+    if (!startup.restarting && !bios_allows_start(core_path_arg)) {
+        LOG_INFO(mux_module, "Launch stopped because the core has no BIOS");
+        governor_boost_end();
+        mux_input_close();
+        sdl_cleanup();
+        return EXIT_SUCCESS;
+    }
     if (show_startup_messages) loading_message_show(startup_message);
 
     if (core_open(core_path_arg) != 0) {

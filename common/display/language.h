@@ -1931,6 +1931,9 @@ struct mux_lang {
         char content_loading[MAX_BUFFER_SIZE];
         char content_resuming[MAX_BUFFER_SIZE];
         char content_restarting[MAX_BUFFER_SIZE];
+        char bios_title[MAX_BUFFER_SIZE];
+        char bios_missing[MAX_BUFFER_SIZE];
+        char bios_missing_any[MAX_BUFFER_SIZE];
         char core_process_stopped[MAX_BUFFER_SIZE];
         char core_process_stopped_help[MAX_BUFFER_SIZE];
         char information_loading[MAX_BUFFER_SIZE];

@@ -2,7 +2,10 @@
 #include <common/ui/common.h>
 #include <common/platform/display.h>
 #include <common/ui/font.h>
+#include <common/ui/dialogue.h>
+#include <common/platform/input.h>
 #include <lvgl/lvgl.h>
+#include <SDL2/SDL.h>
 #include "ui_loading.h"
 
 static lv_obj_t *loading_root = NULL;
@@ -15,6 +18,31 @@ static void style_plain(lv_obj_t *obj) {
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_pad_all(obj, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_width(obj, 0, MU_OBJ_MAIN_DEFAULT);
+}
+
+static lv_obj_t *loading_parent(void) {
+    if (ui_screen && lv_obj_is_valid(ui_screen)) {
+        owns_root = 0;
+        return ui_screen;
+    }
+
+    if (owns_root && loading_root && lv_obj_is_valid(loading_root)) return loading_root;
+
+    loading_root = lv_obj_create(NULL);
+    style_plain(loading_root);
+    lv_obj_set_style_bg_color(loading_root, lv_color_hex(theme.system.background), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(loading_root, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_disp_load_scr(loading_root);
+    load_font_text(loading_root);
+    owns_root = 1;
+
+    return loading_root;
+}
+
+static void loading_present(void) {
+    lv_task_handler();
+    lv_refr_now(NULL);
+    display_composite_frame();
 }
 
 void loading_message_show(const char *message) {
@@ -31,20 +59,7 @@ void loading_message_show(const char *message) {
         return;
     }
 
-    lv_obj_t *parent = NULL;
-    if (ui_screen && lv_obj_is_valid(ui_screen)) {
-        parent = ui_screen;
-        owns_root = 0;
-    } else {
-        loading_root = lv_obj_create(NULL);
-        style_plain(loading_root);
-        lv_obj_set_style_bg_color(loading_root, lv_color_hex(theme.system.background), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_bg_opa(loading_root, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
-        lv_disp_load_scr(loading_root);
-        load_font_text(loading_root);
-        parent = loading_root;
-        owns_root = 1;
-    }
+    lv_obj_t *parent = loading_parent();
 
     loading_dim = lv_obj_create(parent);
     style_plain(loading_dim);
@@ -103,4 +118,36 @@ void loading_message_hide(void) {
             lv_refr_now(NULL);
         }
     }
+}
+
+void loading_prompt_close(const char *title, const char *description, const char *message, const char *nav_b) {
+    if (loading_panel && lv_obj_is_valid(loading_panel)) lv_obj_del(loading_panel);
+    if (loading_dim && lv_obj_is_valid(loading_dim)) lv_obj_del(loading_dim);
+    loading_panel = NULL;
+    loading_dim = NULL;
+    loading_label = NULL;
+
+    lv_obj_t *parent = loading_parent();
+
+    mux_dialogue prompt = {0};
+    dialogue_init_message(&prompt, &theme, parent, title, description, message, nav_b);
+    dialogue_show(&prompt);
+
+    mux_input_poll();
+    int b_was = mux_input_pressed(mux_input_b);
+
+    for (;;) {
+        loading_present();
+        SDL_Delay(16);
+
+        mux_input_poll();
+        const int b_now = mux_input_pressed(mux_input_b);
+        if (b_now && !b_was) break;
+        b_was = b_now;
+    }
+
+    dialogue_hide(&prompt);
+    if (prompt.panel && lv_obj_is_valid(prompt.panel)) lv_obj_del(prompt.panel);
+    if (prompt.dim && lv_obj_is_valid(prompt.dim)) lv_obj_del(prompt.dim);
+    loading_present();
 }
