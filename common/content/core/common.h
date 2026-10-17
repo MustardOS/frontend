@@ -25,6 +25,8 @@ int core_external_uses_stage_overlay(const char *core);
 
 const char *format_core_name(const char *core, int use_lang, int is_muxretro);
 
+const char *core_assigned_name(const char *system, const char *tag, const char *core_file, int is_muxretro);
+
 int remove_content_config(const char *name, const char *core);
 
 int remove_dir_config(const char *dir, const char *core);

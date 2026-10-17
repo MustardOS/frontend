@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
 
 size_t item_count = 0;
@@ -593,6 +594,7 @@ void update_title(
 ) {
     char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
     adjust_content_label(display_title);
+    if (display_title) rich_text_strip(display_title, display_title, strlen(display_title) + 1);
 
     char title[PATH_MAX];
     const char *module_type = "";

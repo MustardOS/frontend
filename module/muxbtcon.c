@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
 
 static void cancel_scan(void);
@@ -209,7 +210,13 @@ static void handle_y(void) {
     const char *name = label && lv_obj_is_valid(label) ? lv_label_get_text(label) : mac_copy;
 
     play_sound(snd_info_open);
-    show_info_box(name, *info_buf ? info_buf : mac_copy, 0);
+    if (*info_buf) {
+        char markup[1024];
+        rich_text_bold_labels(info_buf, markup, sizeof(markup));
+        show_info_box(name, markup, 0);
+    } else {
+        show_info_box(name, mac_copy, 0);
+    }
     msgbox_active = 1;
 }
 

@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <common/ui/rich_text.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1387,8 +1388,11 @@ void apply_size_to_content(
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnl_content, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnl_content, LV_PART_MAIN);
 
+        char measured[MAX_BUFFER_SIZE];
+        rich_text_strip(item_text, measured, sizeof(measured));
+
         const lv_coord_t act_line_length =
-            lv_txt_get_width(item_text, strlen(item_text), font, letter_space, LV_TEXT_FLAG_EXPAND);
+            lv_txt_get_width(measured, strlen(measured), font, letter_space, LV_TEXT_FLAG_EXPAND);
         const int item_width = LV_MIN(
             c_theme->font.list_pad_left + act_line_length + c_theme->font.list_pad_right,
             c_theme->misc.content.width - (c_theme->list_default.border_width * 2)
@@ -1408,7 +1412,7 @@ void apply_theme_list_panel(lv_obj_t *ui_pnl_list) {
 }
 
 void apply_theme_list_item(const struct theme_config *theme, lv_obj_t *ui_lbl_item, const char *item_text) {
-    lv_label_set_text(ui_lbl_item, item_text);
+    rich_text_label_set(ui_lbl_item, item_text);
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_WRAP);
 
     lv_obj_add_style(ui_lbl_item, &style_list_item_default, MU_OBJ_MAIN_DEFAULT);

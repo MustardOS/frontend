@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <common/ui/rich_text.h>
 #include "muxshare.h"
 #include <common/ui/empty_state.h>
 #include <common/ui/orientation.h>
@@ -839,8 +840,46 @@ static void create_content_items(void) {
     turbo_time(0, 1);
 }
 
+static const char folder_note_token[] = "c2a763786f6e676c65626f6e676c65";
+
+static const char folder_note_title[] = "41686f79204d6174657921";
+
+static const char folder_note_text[] =
+    "c2a76c4c6f6f6b20617420796f7520676fc2a7722c20796f7520666f756e64206120c2a736c2a76c736563726574c2a77221"
+    "0a0a596f75276c6c206861766520746f2074616b65206120c2a76c73637265656e73686f74c2a772206f6620746869732073"
+    "656e6420697420746f2068696d20736179696e6720686f7720796f7520666f756e642069742e20204f6b61792077656c6c20"
+    "74686572652069736e2774206d75636820656c736520746f2069742c20c2a76f7468697320776173206a75737420736f6d65"
+    "7468696e672066756e21c2a7720a0a5468616e6b20796f7520666f722063686f6f73696e6720c2a736c2a76c4d7573746172"
+    "644f53c2a7722e2020c2a761456e6a6f7921c2a772";
+
+static void folder_note_decode(const char *source, char *out, const size_t size) {
+    size_t written = 0;
+
+    while (source[0] && source[1] && written + 1 < size) {
+        const char pair[3] = {source[0], source[1], '\0'};
+        out[written++] = (char) strtol(pair, NULL, 16);
+        source += 2;
+    }
+
+    out[written] = '\0';
+}
+
+static int folder_note(const char *name) {
+    char token[64];
+    folder_note_decode(folder_note_token, token, sizeof(token));
+    if (!name || strcasecmp(name, token) != 0) return 0;
+
+    static char title[64];
+    static char text[1024];
+    folder_note_decode(folder_note_title, title, sizeof(title));
+    folder_note_decode(folder_note_text, text, sizeof(text));
+
+    show_info_box(title, text, 0);
+    return 1;
+}
+
 static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
-    lv_label_set_text(ui_lbl_item, items[index].display_name);
+    rich_text_label_set(ui_lbl_item, items[index].display_name);
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (config.visual.list_glyph && theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {
@@ -1126,6 +1165,8 @@ static void process_load(const int from_start) {
     }
 
     if (items[current_item_index].content_type == content_type_folder) {
+        if (folder_note(items[current_item_index].name)) return;
+
         char folder_path[PATH_MAX];
         snprintf(folder_path, sizeof(folder_path), "%s", items[current_item_index].extra_data);
 

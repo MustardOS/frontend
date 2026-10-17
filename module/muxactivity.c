@@ -1000,7 +1000,7 @@ static void show_detail_view(const activity_item_t *it) {
                 snprintf(core_tmp, sizeof(core_tmp), "%s", it->core);
                 snprintf(
                     detail_value, sizeof(detail_value), "%s",
-                    format_core_name(core_tmp, 0, activity_item_uses_muxretro(it))
+                    core_assigned_name(NULL, NULL, core_tmp, activity_item_uses_muxretro(it))
                 );
 
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_core");
@@ -1156,7 +1156,10 @@ static void show_global_view(void) {
 
                 char core_tmp[64];
                 snprintf(core_tmp, sizeof(core_tmp), "%s", gs.core);
-                snprintf(global_value, sizeof(global_value), "%s", format_core_name(core_tmp, 0, gs.core_is_muxretro));
+                snprintf(
+                    global_value, sizeof(global_value), "%s",
+                    core_assigned_name(NULL, NULL, core_tmp, gs.core_is_muxretro)
+                );
 
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_core");
                 break;

@@ -11,6 +11,7 @@
 #include <common/ui/orientation.h>
 #include <common/ui/grid.h>
 #include <common/ui/transition.h>
+#include <common/ui/rich_text.h>
 #include <common/platform/audio.h>
 #include <common/storage/fileio.h>
 #include <common/config/config.h>
@@ -146,6 +147,33 @@ void footer_nav_check_scroll(void) {
     lv_anim_start(&a);
 }
 
+static lv_obj_t *help_rich_text(const int create) {
+    lv_obj_t *parent = lv_obj_get_parent(ui_lbl_help_content);
+    if (!parent) return NULL;
+
+    for (uint32_t i = 0; i < lv_obj_get_child_cnt(parent); i++) {
+        lv_obj_t *child = lv_obj_get_child(parent, (int32_t) i);
+        if (lv_obj_check_type(child, &lv_spangroup_class)) return child;
+    }
+
+    if (!create) return NULL;
+
+    lv_obj_t *group = rich_text_create(parent, "", lv_obj_get_style_text_font(ui_lbl_help_content, LV_PART_MAIN));
+    if (!group) return NULL;
+
+    lv_obj_set_width(group, lv_pct(100));
+    lv_obj_set_height(group, LV_SIZE_CONTENT);
+    lv_obj_set_align(group, LV_ALIGN_TOP_LEFT);
+    lv_obj_set_style_text_color(
+        group, lv_obj_get_style_text_color(ui_lbl_help_content, LV_PART_MAIN), MU_OBJ_MAIN_DEFAULT
+    );
+    lv_obj_set_style_text_opa(group, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_line_space(group, 5, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_flag(group, LV_OBJ_FLAG_HIDDEN);
+
+    return group;
+}
+
 void show_info_box(const char *title, const char *content, const int is_content) {
     if (msgbox_active == 0) {
         modal_claim(MODAL_MASK_MESSAGE);
@@ -173,7 +201,18 @@ void show_info_box(const char *title, const char *content, const int is_content)
         msgbox_element = ui_pnl_help;
 
         lv_label_set_text(ui_lbl_help_header, title);
-        lv_label_set_text(ui_lbl_help_content, content);
+        const int formatted = rich_text_has_codes(content);
+        lv_label_set_text(ui_lbl_help_content, formatted ? "" : content);
+
+        lv_obj_t *rich = help_rich_text(formatted);
+        if (formatted && rich) {
+            rich_text_set(rich, content, lv_obj_get_style_text_font(ui_lbl_help_content, LV_PART_MAIN));
+            lv_obj_add_flag(ui_lbl_help_content, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(rich, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            if (rich) lv_obj_add_flag(rich, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lbl_help_content, LV_OBJ_FLAG_HIDDEN);
+        }
 
         if (is_content) lv_label_set_text(ui_lbl_help_preview_header, title);
 

@@ -70,6 +70,8 @@ int coredb_core_at(const char *system, enum core_runtime runtime, int index, str
 
 int coredb_core_find(const char *system, enum core_runtime runtime, const char *id, struct coredb_core *out);
 
+int coredb_core_find_file(const char *core_file, enum core_runtime runtime, struct coredb_core *out);
+
 int coredb_runtime_available(const char *system, enum core_runtime runtime);
 
 const char *coredb_board_governor(const struct coredb_core *core);

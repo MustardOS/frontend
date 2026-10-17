@@ -391,7 +391,13 @@ def explicit_options(frontend, strings, key):
     return options
 
 
+def strip_formatting(text):
+    return re.sub(r"\u00a7(\u00a7|[0-9a-fk-or])", lambda match: "\u00a7" if match.group(1) == "\u00a7" else "",
+                  text, flags=re.IGNORECASE)
+
+
 def website_help(text):
+    text = strip_formatting(text)
     paragraphs = [part for part in text.split("\n\n")
                   if not part.lstrip().startswith(("Press ", "Select this to open"))]
     return "\n\n".join(paragraphs).strip()

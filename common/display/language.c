@@ -434,7 +434,7 @@ static const lang_field lang_fields[] = {
     {"muxarchive", LANG_OFF(muxarchive.installed), lang_specific, "INSTALLED"},
     {"muxarchive", LANG_OFF(muxarchive.install_anyway), lang_specific, "Install Anyway"},
     {"muxarchive", LANG_OFF(muxarchive.backup.created), lang_specific, "Created"},
-    {"muxarchive", LANG_OFF(muxarchive.backup.release), lang_specific, "MustardOS"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.release), lang_specific, "Version"},
     {"muxarchive", LANG_OFF(muxarchive.backup.device), lang_specific, "Device"},
     {"muxarchive", LANG_OFF(muxarchive.backup.size), lang_specific, "Size"},
     {"muxarchive", LANG_OFF(muxarchive.backup.contents), lang_specific, "Contents"},

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
 
 static char rom_name[PATH_MAX];
@@ -56,19 +57,15 @@ static void show_help(void) {
 
     if (name && *name) {
         char buffer[MAX_BUFFER_SIZE];
-        buffer[0] = '\0';
+        int used = snprintf(buffer, sizeof(buffer), RICH_TEXT_BOLD "%s" RICH_TEXT_RESET, name);
 
-        snprintf(buffer, sizeof(buffer), "%s", name);
+        if (author && *author && used >= 0 && (size_t) used < sizeof(buffer))
+            used += snprintf(
+                buffer + used, sizeof(buffer) - (size_t) used, "\n" RICH_TEXT_ITALIC "%s" RICH_TEXT_RESET, author
+            );
 
-        if (author && *author) {
-            strncat(buffer, "\n", sizeof(buffer) - strlen(buffer) - 1);
-            strncat(buffer, author, sizeof(buffer) - strlen(buffer) - 1);
-        }
-
-        if (version && *version) {
-            strncat(buffer, "\n", sizeof(buffer) - strlen(buffer) - 1);
-            strncat(buffer, version, sizeof(buffer) - strlen(buffer) - 1);
-        }
+        if (version && *version && used >= 0 && (size_t) used < sizeof(buffer))
+            snprintf(buffer + used, sizeof(buffer) - (size_t) used, "\n%s", version);
 
         show_info_box(lang.muxshader.title, buffer, 0);
     } else {

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
 #include <common/storage/download.h>
 
@@ -83,17 +84,11 @@ static void render_gotm(mini_t *ini) {
 
     snprintf(
         text_buffer, sizeof(text_buffer),
-        "%s\n\n"
-        "Current Month\n"
-        "Title: %s (%s)\n"
-        "System: %s\n"
-        "Year: %s\n"
-        "Emulator: %s\n\n"
-        "Last Month\n"
-        "Title: %s\n"
-        "System: %s\n"
-        "Winner: %s\n"
-        "Score: %s\n",
+        "%s\n\n" RICH_TEXT_BOLD "Current Month" RICH_TEXT_RESET "\n" RICH_TEXT_BOLD "Title:" RICH_TEXT_RESET
+        " %s (%s)\n" RICH_TEXT_BOLD "System:" RICH_TEXT_RESET " %s\n" RICH_TEXT_BOLD "Year:" RICH_TEXT_RESET
+        " %s\n" RICH_TEXT_BOLD "Emulator:" RICH_TEXT_RESET " %s\n\n" RICH_TEXT_BOLD "Last Month" RICH_TEXT_RESET
+        "\n" RICH_TEXT_BOLD "Title:" RICH_TEXT_RESET " %s\n" RICH_TEXT_BOLD "System:" RICH_TEXT_RESET
+        " %s\n" RICH_TEXT_BOLD "Winner:" RICH_TEXT_RESET " %s\n" RICH_TEXT_BOLD "Score:" RICH_TEXT_RESET " %s\n",
         intro, c_title, c_region, c_system, c_year, c_emu, l_title, l_system, l_winner, l_score
     );
 

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <common/ui/rich_text.h>
 #include <SDL2/SDL.h>
 #include <unistd.h>
 #include <common/runtime/exec.h>
@@ -610,7 +611,6 @@ lv_obj_t *build_message_panel(const struct theme_config *theme, const struct mux
     lv_obj_set_height(label, LV_SIZE_CONTENT);
     lv_obj_set_align(label, LV_ALIGN_CENTER);
     lv_label_set_text(label, "");
-    lv_label_set_recolor(label, 1);
     lv_obj_set_style_text_color(label, lv_color_hex(theme->message.text), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(label, theme->message.text_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(label, 4, MU_OBJ_MAIN_DEFAULT);
@@ -1098,7 +1098,6 @@ void init_ui_common_screen(
     lv_obj_set_align(ui_lbl_help_content, LV_ALIGN_TOP_LEFT);
     lv_label_set_long_mode(ui_lbl_help_content, LV_LABEL_LONG_WRAP);
     lv_label_set_text(ui_lbl_help_content, "");
-    lv_label_set_recolor(ui_lbl_help_content, 1);
     lv_obj_set_style_text_color(ui_lbl_help_content, lv_color_hex(theme->help.content), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbl_help_content, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lbl_help_content, 0, MU_OBJ_MAIN_DEFAULT);
@@ -1712,7 +1711,6 @@ lv_obj_t *create_footer_text(
     lv_obj_set_align(ui_lbl_nav_text, LV_ALIGN_CENTER);
 
     lv_label_set_text(ui_lbl_nav_text, "");
-    lv_label_set_recolor(ui_lbl_nav_text, 1);
 
     lv_obj_set_style_text_color(ui_lbl_nav_text, lv_color_hex(text_color), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbl_nav_text, text_alpha, MU_OBJ_MAIN_DEFAULT);
@@ -1985,8 +1983,7 @@ static void hide_message(lv_timer_t *msg_timer) {
 
 static void
 show_message(lv_obj_t *panel, lv_obj_t *label, const char *msg, const uint32_t delay, lv_timer_t **msg_timer) {
-    lv_label_set_text(label, msg);
-    lv_label_set_recolor(label, 1);
+    rich_text_label_set(label, msg);
 
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_opa(panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);

@@ -766,12 +766,12 @@
     "INSTALLED": "INSTALLED",
     "Install Anyway": "Install Anyway",
     "Installs archives placed on your storage, covering system updates, applications, themes, save data and configuration packages.\n\nSelect an archive to install it. The device works through it and reports what changed once it has finished.": "Installs archives placed on your storage, covering system updates, applications, themes, save data and configuration packages.\n\nSelect an archive to install it. The device works through it and reports what changed once it has finished.",
-    "MustardOS": "MustardOS",
     "No Archives Found": "No Archives Found",
     "Size": "Size",
     "This backup has no readable manifest, so its details cannot be shown. It will not restore until it is replaced with a complete backup.": "This backup has no readable manifest, so its details cannot be shown. It will not restore until it is replaced with a complete backup.",
     "This update does not contain a valid manifest, so its files cannot be checked for damage. Installing it anyway may leave MustardOS unusable. Continue?": "This update does not contain a valid manifest, so its files cannot be checked for damage. Installing it anyway may leave MustardOS unusable. Continue?",
     "UPDATE MANIFEST WARNING": "UPDATE MANIFEST WARNING",
+    "Version": "Version",
     "file": "file",
     "files": "files"
   },

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <common/ui/rich_text.h>
 #include <common/ui/notify.h>
 #include <common/ui/common.h>
 #include <common/ui/nav.h>
@@ -132,8 +133,7 @@ static void present(const notify_entry *entry) {
 
         if (!stack[i].active || !slot_usable(i)) continue;
 
-        lv_label_set_text(stack[i].label, stack[i].text);
-        lv_label_set_recolor(stack[i].label, 1);
+        rich_text_label_set(stack[i].label, stack[i].text);
         lv_obj_clear_flag(stack[i].panel, LV_OBJ_FLAG_HIDDEN);
         lv_obj_set_style_opa(stack[i].panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_border_color(
@@ -145,8 +145,7 @@ static void present(const notify_entry *entry) {
     stack[0].active = 1;
     stack[0].until = entry->hold_ms ? lv_tick_get() + entry->hold_ms : 0;
 
-    lv_label_set_text(stack[0].label, stack[0].text);
-    lv_label_set_recolor(stack[0].label, 1);
+    rich_text_label_set(stack[0].label, stack[0].text);
     lv_obj_clear_flag(stack[0].panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_opa(stack[0].panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_color(stack[0].panel, lv_color_hex(level_colour(entry->level)), MU_OBJ_MAIN_DEFAULT);

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/content/core/coredb.h>
 #include <common/ui/orientation.h>
 #include <common/ui/list_frame.h>
 #include "ui/ui_muxoption.h"
@@ -32,6 +33,7 @@ static lv_obj_t *ui_objects_value[ui_count_dynamic];
 
 static int rem_config = 0;
 static int core_is_muxretro = 0;
+static char core_label[MAX_BUFFER_SIZE];
 static int core_on_stage_overlay = 0;
 
 static void list_nav_move(int steps, int direction);
@@ -107,6 +109,8 @@ static void add_info_item_type(
     if (is_cfg) {
         if (strcmp(value, lang.muxoption.not_assigned) == 0) {
             snprintf(cap_value, sizeof(cap_value), "%s", lang.muxoption.not_assigned);
+        } else if (core_label[0]) {
+            snprintf(cap_value, sizeof(cap_value), "%s", core_label);
         } else {
             snprintf(cap_value, sizeof(cap_value), "%s", format_core_name(value, 1, is_muxretro));
         }
@@ -202,7 +206,12 @@ static void populate_info_values(void) {
     }
 
     core_is_muxretro = *def_core && *assign_sys ? core_uses_muxretro(def_core) : 0;
-    core_on_stage_overlay = core_external_uses_stage_overlay(*core_file ? core_file : core_dir);
+
+    const char *core_value = *core_file ? core_file : core_dir;
+    snprintf(
+        core_label, sizeof(core_label), "%s",
+        *core_value ? core_assigned_name(assign_sys, def_core, core_value, core_is_muxretro) : ""
+    );
 
     add_info_item_type(ui_val_core_option, core_file, core_dir, "core", 0, core_is_muxretro);
 

@@ -560,6 +560,30 @@ int coredb_core_find(const char *system, const enum core_runtime runtime, const 
     return walk_cores(system, runtime, -1, id, out);
 }
 
+int coredb_core_find_file(const char *core_file, const enum core_runtime runtime, struct coredb_core *out) {
+    if (!core_file || !*core_file || !coredb_load()) return 0;
+
+    for (int n = 0; n < coredb_namespace_count(); n++) {
+        const char *name_space = coredb_namespace_at(n);
+
+        for (int s = 0; s < coredb_system_count(name_space); s++) {
+            struct coredb_system system;
+            if (!coredb_system_at(name_space, s, &system)) continue;
+
+            for (int c = 0; c < coredb_core_count(system.id, runtime); c++) {
+                struct coredb_core core;
+                if (!coredb_core_at(system.id, runtime, c, &core)) continue;
+                if (strcmp(core.core, core_file) != 0) continue;
+
+                if (out) *out = core;
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 int coredb_runtime_available(const char *system, const enum core_runtime runtime) {
     return coredb_core_count(system, runtime) > 0;
 }

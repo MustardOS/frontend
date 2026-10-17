@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/ui/rich_text.h>
 #include <common/ui/empty_state.h>
 #include <common/ui/orientation.h>
 #include "ui/ui_muxcollect.h"
@@ -312,7 +313,7 @@ static void update_option_nav(void) {
 }
 
 static void update_list_item(lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_glyph, const int index) {
-    lv_label_set_text(ui_lbl_item, items[index].display_name);
+    rich_text_label_set(ui_lbl_item, items[index].display_name);
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (config.visual.list_glyph && theme.list_default.glyph_alpha > 0 && theme.list_focus.glyph_alpha > 0) {

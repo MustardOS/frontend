@@ -8,6 +8,7 @@
 #include <common/config/config.h>
 #include <common/platform/device.h>
 #include <common/base/strutil.h>
+#include <common/ui/rich_text.h>
 #include <common/storage/fileio.h>
 #include <common/runtime/init.h>
 
@@ -62,6 +63,7 @@ content_item *add_item(
     item->extra_data = item->sort_name + sort_size;
     memcpy(item->name, name, name_size);
     memcpy(item->sort_name, sort_name, sort_size);
+    rich_text_strip(item->sort_name, item->sort_name, sort_size);
     memcpy(item->extra_data, extra_data, extra_size);
     item->content_type = content_type;
     item->use_module = mux_module;

@@ -6,6 +6,7 @@
 #include <common/ui/task_progress.h>
 #include <common/storage/archive.h>
 #include "ui/ui_muxshare.h"
+#include <common/ui/rich_text.h>
 #include <sys/stat.h>
 
 static int mount_points_init = 0;
@@ -102,7 +103,7 @@ static int show_backup_details(const char *path) {
         } else if (strncmp(line, "section=", 8) == 0) {
             char key[64] = "";
             int files = 0;
-            if (sscanf(line + 8, "%63s files=%d", key, &files) < 1) continue;
+            if (sscanf(line + 8, "%63s files=%d", key, &files) < 2 || files <= 0) continue;
 
             char entry[256];
             snprintf(
@@ -120,19 +121,24 @@ static int show_backup_details(const char *path) {
     size_t used = 0;
     details[0] = '\0';
 
-    snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.created, created);
+    snprintf(line, sizeof(line), RICH_TEXT_BOLD "%s:" RICH_TEXT_RESET " %s", lang.muxarchive.backup.created, created);
     used = (size_t) append_line(details, sizeof(details), used, line);
     if (build[0]) {
-        snprintf(line, sizeof(line), "%s: %s (%s)", lang.muxarchive.backup.release, version, build);
+        snprintf(
+            line, sizeof(line), RICH_TEXT_BOLD "%s:" RICH_TEXT_RESET " %s (%s)", lang.muxarchive.backup.release,
+            version, build
+        );
     } else {
-        snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.release, version);
+        snprintf(
+            line, sizeof(line), RICH_TEXT_BOLD "%s:" RICH_TEXT_RESET " %s", lang.muxarchive.backup.release, version
+        );
     }
     used = (size_t) append_line(details, sizeof(details), used, line);
-    snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.device, board);
+    snprintf(line, sizeof(line), RICH_TEXT_BOLD "%s:" RICH_TEXT_RESET " %s", lang.muxarchive.backup.device, board);
     used = (size_t) append_line(details, sizeof(details), used, line);
-    snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.size, size);
+    snprintf(line, sizeof(line), RICH_TEXT_BOLD "%s:" RICH_TEXT_RESET " %s", lang.muxarchive.backup.size, size);
     used = (size_t) append_line(details, sizeof(details), used, line);
-    snprintf(line, sizeof(line), "\n%s:", lang.muxarchive.backup.contents);
+    snprintf(line, sizeof(line), "\n" RICH_TEXT_BOLD "%s:" RICH_TEXT_RESET, lang.muxarchive.backup.contents);
     used = (size_t) append_line(details, sizeof(details), used, line);
     snprintf(details + used, sizeof(details) - used, "%s", sections);
 

@@ -500,7 +500,11 @@ static font_blob_t *font_blob_load(const char *path) {
     return blob;
 }
 
+static void synth_style_clear(void);
+
 void font_cache_clear(void) {
+    synth_style_clear();
+
     while (script_fallbacks) {
         script_fallback_t *next = script_fallbacks->next;
         free(script_fallbacks);
@@ -774,6 +778,174 @@ fixed_style_face(const char *path, const unsigned int current_face, const int bo
     return current_face;
 }
 
+#define SYNTH_STYLE_MAX 16
+#define SYNTH_SLANT     0.21f
+
+typedef struct {
+    lv_font_t font;
+    const lv_font_t *base;
+    int bold;
+    int italic;
+    uint8_t *buffer;
+    size_t capacity;
+    uint8_t *scratch;
+    size_t scratch_capacity;
+} synth_style_t;
+
+static synth_style_t *synth_style_fonts[SYNTH_STYLE_MAX];
+
+static int synth_can_draw(const lv_font_glyph_dsc_t *dsc) {
+    return !dsc->is_placeholder && dsc->bpp == 8 && dsc->box_w > 0 && dsc->box_h > 0;
+}
+
+static void synth_slant_span(const lv_font_glyph_dsc_t *dsc, int *low, int *high) {
+    *low = (int) floorf(SYNTH_SLANT * (float) dsc->ofs_y);
+    *high = (int) ceilf(SYNTH_SLANT * (float) (dsc->ofs_y + dsc->box_h - 1)) + 1;
+}
+
+static int synth_style_glyph_dsc(
+    const lv_font_t *font, lv_font_glyph_dsc_t *dsc, const uint32_t letter, const uint32_t letter_next
+) {
+    const synth_style_t *style = font->user_data;
+    if (!style->base->get_glyph_dsc(style->base, dsc, letter, letter_next)) return 0;
+    if (!synth_can_draw(dsc)) return 1;
+
+    if (style->bold) {
+        dsc->box_w++;
+        dsc->adv_w++;
+    }
+
+    if (style->italic) {
+        int low, high;
+        synth_slant_span(dsc, &low, &high);
+        dsc->box_w = (uint16_t) (dsc->box_w + high - low);
+        dsc->ofs_x = (int16_t) (dsc->ofs_x + low);
+    }
+
+    return 1;
+}
+
+static uint8_t *synth_reserve(uint8_t **buffer, size_t *capacity, const size_t need) {
+    if (need <= *capacity) return *buffer;
+
+    uint8_t *grown = realloc(*buffer, need);
+    if (!grown) return NULL;
+
+    *buffer = grown;
+    *capacity = need;
+    return grown;
+}
+
+static const uint8_t *synth_style_glyph_bitmap(const lv_font_t *font, const uint32_t letter) {
+    synth_style_t *style = font->user_data;
+    lv_font_glyph_dsc_t dsc = {0};
+
+    if (!style->base->get_glyph_dsc(style->base, &dsc, letter, 0)) return NULL;
+
+    const uint8_t *source = style->base->get_glyph_bitmap(style->base, letter);
+    if (!source || !synth_can_draw(&dsc)) return source;
+
+    size_t width = dsc.box_w;
+    const size_t height = dsc.box_h;
+
+    if (style->bold) {
+        const size_t wide = width + 1;
+        uint8_t *thick = style->italic ? synth_reserve(&style->scratch, &style->scratch_capacity, wide * height)
+                                       : synth_reserve(&style->buffer, &style->capacity, wide * height);
+        if (!thick) return source;
+
+        for (size_t row = 0; row < height; row++) {
+            const uint8_t *in = source + row * width;
+            uint8_t *out = thick + row * wide;
+
+            for (size_t x = 0; x < wide; x++) {
+                const uint8_t here = x < width ? in[x] : 0;
+                const uint8_t left = x > 0 ? in[x - 1] : 0;
+                out[x] = here > left ? here : left;
+            }
+        }
+
+        source = thick;
+        width = wide;
+        if (!style->italic) return source;
+    }
+
+    int low, high;
+    synth_slant_span(&dsc, &low, &high);
+    const size_t slanted = width + (size_t) (high - low);
+
+    uint8_t *out = synth_reserve(&style->buffer, &style->capacity, slanted * height);
+    if (!out) return source;
+    memset(out, 0, slanted * height);
+
+    for (size_t row = 0; row < height; row++) {
+        const float shift = SYNTH_SLANT * (float) (dsc.ofs_y + (int) (height - 1 - row)) - (float) low;
+        const int whole = (int) floorf(shift);
+        const float part = shift - (float) whole;
+        const uint8_t *in = source + row * width;
+        uint8_t *line = out + row * slanted;
+
+        for (size_t x = 0; x < width; x++) {
+            if (!in[x]) continue;
+
+            const size_t target = x + (size_t) whole;
+            const int first = line[target] + (int) ((float) in[x] * (1.0f - part) + 0.5f);
+            line[target] = (uint8_t) (first > 255 ? 255 : first);
+
+            if (target + 1 < slanted) {
+                const int second = line[target + 1] + (int) ((float) in[x] * part + 0.5f);
+                line[target + 1] = (uint8_t) (second > 255 ? 255 : second);
+            }
+        }
+    }
+
+    return out;
+}
+
+static void synth_style_clear(void) {
+    for (int i = 0; i < SYNTH_STYLE_MAX; i++) {
+        if (!synth_style_fonts[i]) continue;
+
+        free(synth_style_fonts[i]->buffer);
+        free(synth_style_fonts[i]->scratch);
+        free(synth_style_fonts[i]);
+        synth_style_fonts[i] = NULL;
+    }
+}
+
+static lv_font_t *synth_style_variant(const lv_font_t *base, const int bold, const int italic) {
+    if (!base || (!bold && !italic)) return (lv_font_t *) base;
+
+    for (int i = 0; i < SYNTH_STYLE_MAX; i++) {
+        const synth_style_t *style = synth_style_fonts[i];
+        if (style && style->base == base && style->bold == !!bold && style->italic == !!italic)
+            return &synth_style_fonts[i]->font;
+    }
+
+    int slot = -1;
+    for (int i = 0; i < SYNTH_STYLE_MAX; i++) {
+        if (!synth_style_fonts[i]) {
+            slot = i;
+            break;
+        }
+    }
+    if (slot < 0) return (lv_font_t *) base;
+
+    synth_style_t *style = calloc(1, sizeof(*style));
+    if (!style) return (lv_font_t *) base;
+
+    style->font = *base;
+    style->base = base;
+    style->bold = !!bold;
+    style->italic = !!italic;
+    style->font.get_glyph_dsc = synth_style_glyph_dsc;
+    style->font.get_glyph_bitmap = synth_style_glyph_bitmap;
+    style->font.user_data = style;
+
+    synth_style_fonts[slot] = style;
+    return &style->font;
+}
+
 lv_font_t *font_style_variant(const lv_font_t *base, const int bold, const int italic) {
     if (!base || (!bold && !italic)) return (lv_font_t *) base;
 
@@ -784,28 +956,56 @@ lv_font_t *font_style_variant(const lv_font_t *base, const int bold, const int i
     int variable = 0;
     font_axis_info_t axis;
 
+    int real_bold = 0;
+    int real_italic = 0;
+
     if (bold && font_info_axis(entry->path, entry->face_index, HB_TAG('w', 'g', 'h', 't'), &axis)) {
         variations.weight = (int16_t) axis_value_for_style(
             entry->path, entry->face_index, HB_TAG('w', 'g', 'h', 't'), variations.weight, 1
         );
         variable = 1;
+        real_bold = 1;
     }
     if (italic && font_info_axis(entry->path, entry->face_index, HB_TAG('i', 't', 'a', 'l'), &axis)) {
         variations.italic = 1;
         variable = 1;
+        real_italic = 1;
     } else if (italic && font_info_axis(entry->path, entry->face_index, HB_TAG('s', 'l', 'n', 't'), &axis)) {
         variations.slant = (int16_t) axis_value_for_style(
             entry->path, entry->face_index, HB_TAG('s', 'l', 'n', 't'), variations.slant, 0
         );
         variable = 1;
+        real_italic = 1;
     }
 
-    const unsigned int face =
-        variable ? entry->face_index : fixed_style_face(entry->path, entry->face_index, bold, italic);
-    if (!variable && face == entry->face_index) return (lv_font_t *) base;
+    if (!variable) {
+        const unsigned int both = fixed_style_face(entry->path, entry->face_index, bold, italic);
+        if (both != entry->face_index) {
+            lv_font_t *variant = load_ttf_impl(entry->path, entry->size, 1, both, &variations);
+            return variant ? variant : synth_style_variant(base, bold, italic);
+        }
 
-    lv_font_t *variant = load_ttf_impl(entry->path, entry->size, 1, face, &variations);
-    return variant ? variant : (lv_font_t *) base;
+        if (bold && italic) {
+            const unsigned int only_bold = fixed_style_face(entry->path, entry->face_index, 1, 0);
+            const unsigned int only_italic = fixed_style_face(entry->path, entry->face_index, 0, 1);
+
+            if (only_bold != entry->face_index) {
+                lv_font_t *variant = load_ttf_impl(entry->path, entry->size, 1, only_bold, &variations);
+                return variant ? synth_style_variant(variant, 0, 1) : synth_style_variant(base, 1, 1);
+            }
+            if (only_italic != entry->face_index) {
+                lv_font_t *variant = load_ttf_impl(entry->path, entry->size, 1, only_italic, &variations);
+                return variant ? synth_style_variant(variant, 1, 0) : synth_style_variant(base, 1, 1);
+            }
+        }
+
+        return synth_style_variant(base, bold, italic);
+    }
+
+    lv_font_t *variant = load_ttf_impl(entry->path, entry->size, 1, entry->face_index, &variations);
+    if (!variant) return synth_style_variant(base, bold, italic);
+
+    return synth_style_variant(variant, bold && !real_bold, italic && !real_italic);
 }
 
 static enum script_font cjk_fallback(void) {
