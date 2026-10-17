@@ -1007,6 +1007,10 @@ int main(const int argc, char **argv) {
     }
 
     load_config(&config);
+    if ((args.command == rgb_command_off || args.command == rgb_command_restore)
+        && read_config_int("settings/rgb/mode", RGB_MODE_OFF) == RGB_MODE_EXTERNAL)
+        return 0;
+
     if (args.command == rgb_command_off) {
         dispatch_off();
         return 0;

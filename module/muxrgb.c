@@ -77,6 +77,8 @@ static int mode_raw_to_dropdown(const int raw) {
             return 1;
         case RGB_MODE_THEME_SUPPLIED:
             return 2;
+        case RGB_MODE_EXTERNAL:
+            return 3;
         default:
             return 0;
     }
@@ -88,6 +90,8 @@ static int mode_dropdown_to_raw(const int idx) {
             return RGB_MODE_STATIC;
         case 2:
             return RGB_MODE_THEME_SUPPLIED;
+        case 3:
+            return RGB_MODE_EXTERNAL;
         default:
             return RGB_MODE_OFF;
     }
@@ -358,8 +362,11 @@ static void init_navigation_group(void) {
 
     build_zone_table();
 
-    char *mode_options[3] = {lang.muxrgb.mode_name.off, lang.muxrgb.mode_name.zone, lang.muxrgb.mode_name.theme};
-    INIT_OPTION_ITEM(-1, rgb, mode, lang.muxrgb.mode, "mode", mode_options, 3);
+    char *mode_options[4] = {
+        lang.muxrgb.mode_name.off, lang.muxrgb.mode_name.zone, lang.muxrgb.mode_name.theme,
+        lang.muxrgb.mode_name.external
+    };
+    INIT_OPTION_ITEM(-1, rgb, mode, lang.muxrgb.mode, "mode", mode_options, 4);
 
     INIT_STATIC_ITEM(-1, rgb, zone_l, zones[zone_l].label, "zone", 0);
     INIT_STATIC_ITEM(-1, rgb, zone_r, zones[zone_r].label, "zone", 0);

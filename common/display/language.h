@@ -2984,6 +2984,7 @@ struct mux_lang {
             char off[MAX_BUFFER_SIZE];
             char zone[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
+            char external[MAX_BUFFER_SIZE];
         } mode_name;
         struct {
             char autom[MAX_BUFFER_SIZE];
