@@ -4,16 +4,19 @@
 #include <common/ui/empty_state.h>
 #include <common/ui/more.h>
 #include <common/ui/task_progress.h>
+#include <common/storage/archive.h>
+#include "ui/ui_muxshare.h"
+#include <sys/stat.h>
 
 static int mount_points_init = 0;
 static int extract_pending = 0;
 static const char *mount_points[4];
 
-static const char *subdirs[] = {MUOS_BACKUP_PATH, MUOS_ARCH_PATH};
+static const char *subdirs[] = {MUOS_ARCH_PATH};
 
 static const char *mount_labels[] = {"SD1", "SD2", "USB", "THM"};
 
-static const char *mux_archive[] = {".muxupd", ".muxapp", ".muxzip", ".muxthm", ".muxcat", ".muxcfg"};
+static const char *mux_archive[] = {".muxupd", ".muxapp", ".muxbak", ".muxzip", ".muxthm", ".muxcat", ".muxcfg"};
 
 static const char *del_marked[] = {LANG_ARCHIVE};
 
@@ -24,7 +27,124 @@ static void finish_extract(void) {
     mux_input_stop();
 }
 
+#define BACKUP(NAME, UDATA) {UDATA, lang.muxbackup.NAME},
+static const struct {
+    const char *key;
+    const char *label;
+} backup_labels[] = {BACKUP_ELEMENTS};
+#undef BACKUP
+
+static const char *backup_section_label(const char *key) {
+    for (size_t i = 0; i < A_SIZE(backup_labels); i++)
+        if (strcmp(backup_labels[i].key, key) == 0) return backup_labels[i].label;
+    return key;
+}
+
+static void format_archive_size(const char *path, char *out, const size_t out_size) {
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        snprintf(out, out_size, "-");
+        return;
+    }
+
+    const double bytes = (double) st.st_size;
+    if (bytes >= 1024.0 * 1024.0 * 1024.0) {
+        snprintf(out, out_size, "%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+    } else if (bytes >= 1024.0 * 1024.0) {
+        snprintf(out, out_size, "%.1f MB", bytes / (1024.0 * 1024.0));
+    } else {
+        snprintf(out, out_size, "%.1f KB", bytes / 1024.0);
+    }
+}
+
+static int append_line(char *out, const size_t out_size, size_t used, const char *text) {
+    const int wrote = snprintf(out + used, out_size - used, "%s\n", text);
+    if (wrote < 0 || (size_t) wrote >= out_size - used) return (int) out_size - 1;
+    return (int) (used + (size_t) wrote);
+}
+
+static int show_backup_details(const char *path) {
+    const char *dot = strrchr(path, '.');
+    if (!dot || strcasecmp(dot, ".muxbak") != 0) return 0;
+
+    char title[MAX_BUFFER_SIZE];
+    const char *base = strrchr(path, '/');
+    snprintf(title, sizeof(title), "%s", base ? base + 1 : path);
+    char *ext = strrchr(title, '.');
+    if (ext) *ext = '\0';
+
+    static char manifest[8192];
+    static char details[8192];
+    if (!read_file_from_zip(path, "backup.manifest", manifest, sizeof(manifest))) {
+        show_info_box(title, lang.muxarchive.backup.unreadable, 0);
+        return 1;
+    }
+
+    char created[64] = "-";
+    char version[128] = "-";
+    char build[64] = "";
+    char board[128] = "-";
+    char sections[6144] = "";
+    size_t sections_used = 0;
+
+    char *save = NULL;
+    for (char *line = strtok_r(manifest, "\n", &save); line; line = strtok_r(NULL, "\n", &save)) {
+        if (strncmp(line, "created=", 8) == 0) {
+            snprintf(created, sizeof(created), "%s", line + 8);
+            char *t = strchr(created, 'T');
+            if (t) *t = ' ';
+        } else if (strncmp(line, "version=", 8) == 0) {
+            snprintf(version, sizeof(version), "%s", line + 8);
+        } else if (strncmp(line, "build=", 6) == 0) {
+            snprintf(build, sizeof(build), "%s", line + 6);
+        } else if (strncmp(line, "device=", 7) == 0) {
+            snprintf(board, sizeof(board), "%s", line + 7);
+        } else if (strncmp(line, "section=", 8) == 0) {
+            char key[64] = "";
+            int files = 0;
+            if (sscanf(line + 8, "%63s files=%d", key, &files) < 1) continue;
+
+            char entry[256];
+            snprintf(
+                entry, sizeof(entry), "%s (%d %s)", backup_section_label(key), files,
+                files == 1 ? lang.muxarchive.backup.file : lang.muxarchive.backup.files
+            );
+            sections_used = (size_t) append_line(sections, sizeof(sections), sections_used, entry);
+        }
+    }
+
+    char size[32];
+    format_archive_size(path, size, sizeof(size));
+
+    char line[256];
+    size_t used = 0;
+    details[0] = '\0';
+
+    snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.created, created);
+    used = (size_t) append_line(details, sizeof(details), used, line);
+    if (build[0]) {
+        snprintf(line, sizeof(line), "%s: %s (%s)", lang.muxarchive.backup.release, version, build);
+    } else {
+        snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.release, version);
+    }
+    used = (size_t) append_line(details, sizeof(details), used, line);
+    snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.device, board);
+    used = (size_t) append_line(details, sizeof(details), used, line);
+    snprintf(line, sizeof(line), "%s: %s", lang.muxarchive.backup.size, size);
+    used = (size_t) append_line(details, sizeof(details), used, line);
+    snprintf(line, sizeof(line), "\n%s:", lang.muxarchive.backup.contents);
+    used = (size_t) append_line(details, sizeof(details), used, line);
+    snprintf(details + used, sizeof(details) - used, "%s", sections);
+
+    show_info_box(title, details, 0);
+    return 1;
+}
+
 static void show_help(void) {
+    if (ui_count_static > 0 && current_item_index >= 0 && (size_t) current_item_index < item_count
+        && show_backup_details(items[current_item_index].name))
+        return;
+
     show_info_box(lang.muxarchive.title, lang.muxarchive.help, 0);
 }
 

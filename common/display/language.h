@@ -339,6 +339,16 @@ struct mux_lang {
         char install_anyway[MAX_BUFFER_SIZE];
         char invalid_manifest[MAX_BUFFER_SIZE];
         char invalid_manifest_title[MAX_BUFFER_SIZE];
+        struct {
+            char created[MAX_BUFFER_SIZE];
+            char release[MAX_BUFFER_SIZE];
+            char device[MAX_BUFFER_SIZE];
+            char size[MAX_BUFFER_SIZE];
+            char contents[MAX_BUFFER_SIZE];
+            char file[MAX_BUFFER_SIZE];
+            char files[MAX_BUFFER_SIZE];
+            char unreadable[MAX_BUFFER_SIZE];
+        } backup;
         char overview[MAX_BUFFER_SIZE];
         char installed[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];

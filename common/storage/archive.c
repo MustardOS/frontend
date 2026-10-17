@@ -281,3 +281,25 @@ int extract_file_from_zip(const char *zip_path, const char *file_name, const cha
     mz_zip_reader_end(&zip);
     return 1;
 }
+
+int read_file_from_zip(const char *zip_path, const char *file_name, char *out, const size_t out_size) {
+    if (!out || out_size < 2) return 0;
+    out[0] = '\0';
+
+    mz_zip_archive zip = {0};
+    if (!mz_zip_reader_init_file(&zip, zip_path, 0)) return 0;
+
+    const int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
+    mz_zip_archive_file_stat stat;
+
+    if (file_index < 0 || !mz_zip_reader_file_stat(&zip, (mz_uint) file_index, &stat) || stat.m_uncomp_size >= out_size
+        || !mz_zip_reader_extract_to_mem(&zip, (mz_uint) file_index, out, (size_t) stat.m_uncomp_size, 0)) {
+        mz_zip_reader_end(&zip);
+        out[0] = '\0';
+        return 0;
+    }
+
+    out[stat.m_uncomp_size] = '\0';
+    mz_zip_reader_end(&zip);
+    return 1;
+}

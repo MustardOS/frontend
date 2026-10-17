@@ -433,6 +433,14 @@ static const lang_field lang_fields[] = {
     {"muxarchive", LANG_OFF(muxarchive.overview), lang_specific, "Installs archives placed on your storage, covering system updates, applications, themes, save data and configuration packages.\n\nSelect an archive to install it. The device works through it and reports what changed once it has finished."},
     {"muxarchive", LANG_OFF(muxarchive.installed), lang_specific, "INSTALLED"},
     {"muxarchive", LANG_OFF(muxarchive.install_anyway), lang_specific, "Install Anyway"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.created), lang_specific, "Created"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.release), lang_specific, "MustardOS"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.device), lang_specific, "Device"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.size), lang_specific, "Size"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.contents), lang_specific, "Contents"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.file), lang_specific, "file"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.files), lang_specific, "files"},
+    {"muxarchive", LANG_OFF(muxarchive.backup.unreadable), lang_specific, "This backup has no readable manifest, so its details cannot be shown. It will not restore until it is replaced with a complete backup."},
     {"muxarchive", LANG_OFF(muxarchive.invalid_manifest_title), lang_specific, "UPDATE MANIFEST WARNING"},
     {"muxarchive", LANG_OFF(muxarchive.invalid_manifest), lang_specific, "This update does not contain a valid manifest, so its files cannot be checked for damage. Installing it anyway may leave MustardOS unusable. Continue?"},
     {"muxarchive", LANG_OFF(muxarchive.none), lang_specific, "No Archives Found"},
@@ -513,7 +521,7 @@ static const lang_field lang_fields[] = {
     {"muxbackup", LANG_OFF(muxbackup.help.track), lang_specific, "The record of how long you have played each item."},
     {"muxbackup", LANG_OFF(muxbackup.help.target), lang_specific, "Which storage the finished archive is written to.\n\nPick somewhere with room, and ideally not the card you are backing up."},
     {"muxbackup", LANG_OFF(muxbackup.help.merge), lang_specific, "Gathers everything you have chosen into a single archive rather than writing one for each.\n\nSimpler to carry about, though separate archives let you restore one thing without the rest."},
-    {"muxbackup", LANG_OFF(muxbackup.help.start), lang_specific, "Begins the backup using whatever you have selected above.\n\nOn a full device this takes a while, so leave it to finish. Go make a nice cup of coffee!"},
+    {"muxbackup", LANG_OFF(muxbackup.help.start), lang_specific, "Begins the backup using whatever you have selected above.\n\nThe finished backup is saved as a .muxbak file in the ARCHIVE folder, with a checksum manifest that is checked before it is restored from the Archive Manager.\n\nOn a full device this takes a while, so leave it to finish. Go make a nice cup of coffee!"},
 
     // muxcharge
     {"muxcharge", LANG_OFF(muxcharge.boot), lang_specific, "Booting System - Please Wait..."},

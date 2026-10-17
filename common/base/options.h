@@ -176,9 +176,8 @@
 #define INFO_MNF_PATH RUN_STORAGE_PATH "info/manifest"
 #define INFO_VID_PATH RUN_STORAGE_PATH "info/video"
 
-#define MUOS_ARCH_PATH   "ARCHIVE"
-#define MUOS_BACKUP_PATH "BACKUP"
-#define MUOS_BASE_PATH   "MUOS"
+#define MUOS_ARCH_PATH "ARCHIVE"
+#define MUOS_BASE_PATH "MUOS"
 
 #define MUOS_APPS_PATH MUOS_BASE_PATH "/application"
 #define MUOS_INFO_PATH MUOS_BASE_PATH "/info"
