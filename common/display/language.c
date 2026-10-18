@@ -3588,7 +3588,7 @@ static const lang_field lang_fields[] = {
     {"muxwebserv", LANG_OFF(muxwebserv.incomplete_login), lang_specific, "Enter both login fields or leave both blank"},
     {"muxwebserv", LANG_OFF(muxwebserv.invalid_login), lang_specific, "Login details contain unsupported characters"},
     {"muxwebserv", LANG_OFF(muxwebserv.help.mdns), lang_specific, "Makes the device available at a memorable .local address without changing its system hostname.\n\nUse a different local name when more than one muOS device shares a network."},
-    {"muxwebserv", LANG_OFF(muxwebserv.help.landing), lang_specific, "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves.\n\nSelect this to open its settings."},
+    {"muxwebserv", LANG_OFF(muxwebserv.help.landing), lang_specific, "A home page in the browser showing what the device is doing, with activity, system information, remote viewing, playback controls, and device tools.\n\nSelect this to open its settings."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.ttyd), lang_specific, "Open Virtual Terminal settings. Login details are optional on this single-user system."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.syncthing), lang_specific, "Keeps folders in step with another machine over the network.\n\nSelect this to open its settings."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.sshd), lang_specific, "A secure shell for connecting to the device from a computer.\n\nSelect this to open its settings."},

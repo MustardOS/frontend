@@ -3830,7 +3830,7 @@
     "Web Dashboard Code": "Web Dashboard Code"
   },
   "muxwebserv": {
-    "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves.\n\nSelect this to open its settings.": "A home page in the browser showing what the device is doing, and letting you manage catalogue artwork and Pickles saves.\n\nSelect this to open its settings.",
+    "A home page in the browser showing what the device is doing, with activity, system information, remote viewing, playback controls, and device tools.\n\nSelect this to open its settings.": "A home page in the browser showing what the device is doing, with activity, system information, remote viewing, playback controls, and device tools.\n\nSelect this to open its settings.",
     "A secure shell for connecting to the device from a computer.\n\nSelect this to open its settings.": "A secure shell for connecting to the device from a computer.\n\nSelect this to open its settings.",
     "Authentication": "Authentication",
     "Enabled with Sticks": "Enabled with Sticks",
