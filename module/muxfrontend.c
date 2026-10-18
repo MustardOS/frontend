@@ -721,6 +721,11 @@ static void *init_audio(void *unused __attribute__((unused))) {
 
     for (size_t i = 0; i < tries; ++i) {
         if (init_audio_backend()) {
+            for (int ready_wait = 0; ready_wait < 100; ++ready_wait) {
+                if (read_line_int_from(CONF_DEVICE_PATH "audio/ready", 1) == 1) break;
+                usleep(20000);
+            }
+
             init_fe_snd(&fe_snd, config.settings.general.sound, 0);
             init_fe_bgm(&fe_bgm, config.settings.general.bgm, 0);
 

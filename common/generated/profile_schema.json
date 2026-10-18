@@ -163,7 +163,7 @@
       "default": "1",
       "label": "Audio Subsystem Wait",
       "module": "muxtweakadv",
-      "help": "Holds the boot until the audio system has finished starting.\n\nThis adds a moment to startup but stops the first sound of the session being missed or cut short. Turn it off only if you want the quickest boot you can get.",
+      "help": "Waits for the audio system to finish starting before showing the frontend.\n\nEnable it if the first sound of the session is missed or cut short. Leaving it disabled provides the quickest boot.",
       "options": [
         {
           "value": "0",

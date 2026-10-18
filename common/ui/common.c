@@ -466,6 +466,21 @@ static void fade_step(const int start, const int end, const int keep) {
 }
 
 void fade_in_screen(void) {
+    if (display_startup_transition_active()) {
+        fade_in_done = 1;
+
+        if (ui_black && lv_obj_is_valid(ui_black)) {
+            lv_obj_del(ui_black);
+            ui_black = NULL;
+        }
+
+        display_set_fade_alpha(0);
+        lv_obj_invalidate(ui_screen);
+        lv_refr_now(NULL);
+        display_finish_startup_transition();
+        return;
+    }
+
     if (!config.visual.blackfade || fade_in_done) return;
     if (!ui_black || !lv_obj_is_valid(ui_black)) {
         ui_black = NULL;

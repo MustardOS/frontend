@@ -22,6 +22,10 @@ void display_set_stop_requested_query(int (*fn)(void));
 
 void display_set_fade_alpha(uint8_t alpha);
 
+int display_startup_transition_active(void);
+
+void display_finish_startup_transition(void);
+
 void display_composite_frame(void);
 
 uint64_t display_present_serial(void);

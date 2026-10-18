@@ -97,6 +97,8 @@ static int flip_pending = 0;
 static uint64_t present_serial = 0;
 static int monitor_blend_configured = 0;
 static double panel_refresh_hz = 0.0;
+static SDL_Texture *startup_splash = NULL;
+static uint8_t startup_splash_alpha = 255;
 
 double display_panel_refresh_hz(void) {
     return panel_refresh_hz;
@@ -112,6 +114,10 @@ SDL_Window *display_get_window(void) {
 
 SDL_Texture *display_get_shadow_layer(void) {
     return monitor.shadow_layer;
+}
+
+int display_startup_transition_active(void) {
+    return startup_splash != NULL;
 }
 
 void display_set_video_overlay(const display_overlay_fn fn) {
@@ -799,6 +805,39 @@ void sdl_init(void) {
     SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderTarget(monitor.renderer, NULL);
 
+    if (strcmp(mux_module, "muxfrontend") == 0 && !file_exist(FIRST_PAINT) && device.storage.boot.mount[0]) {
+        char boot_logo[MAX_BUFFER_SIZE];
+        snprintf(boot_logo, sizeof(boot_logo), "%s/bootlogo.bmp", device.storage.boot.mount);
+
+        SDL_Surface *surface = SDL_LoadBMP(boot_logo);
+        if (!surface) {
+            int logo_width = device.screen.internal.width;
+            int logo_height = device.screen.internal.height;
+            if (logo_width <= 0) logo_width = device.screen.width;
+            if (logo_height <= 0) logo_height = device.screen.height;
+
+            snprintf(
+                boot_logo, sizeof(boot_logo), OPT_SHARE_PATH "bootlogo/%dx%d/bootlogo.bmp", logo_width, logo_height
+            );
+            surface = SDL_LoadBMP(boot_logo);
+        }
+
+        if (surface) {
+            startup_splash = SDL_CreateTextureFromSurface(monitor.renderer, surface);
+            SDL_FreeSurface(surface);
+
+            if (startup_splash) {
+                SDL_SetTextureBlendMode(startup_splash, SDL_BLENDMODE_BLEND);
+                SDL_SetTextureScaleMode(startup_splash, SDL_ScaleModeLinear);
+                SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 255);
+                SDL_RenderClear(monitor.renderer);
+                SDL_RenderCopy(monitor.renderer, startup_splash, NULL, NULL);
+                SDL_RenderPresent(monitor.renderer);
+                present_serial++;
+            }
+        }
+    }
+
     monitor.refresh = 1;
     monitor.force_clear = 1;
 
@@ -843,6 +882,10 @@ void sdl_cleanup(void) {
     if (monitor.shadow_layer) {
         SDL_DestroyTexture(monitor.shadow_layer);
         monitor.shadow_layer = NULL;
+    }
+    if (startup_splash) {
+        SDL_DestroyTexture(startup_splash);
+        startup_splash = NULL;
     }
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
@@ -1236,6 +1279,11 @@ static void composite_to(SDL_Texture *target, const int present) {
         SDL_RenderFillRect(monitor.renderer, NULL);
     }
 
+    if (startup_splash) {
+        SDL_SetTextureAlphaMod(startup_splash, startup_splash_alpha);
+        SDL_RenderCopy(monitor.renderer, startup_splash, NULL, NULL);
+    }
+
     // The caller wants to read this frame back, so leave it where it is
     if (!present) return;
 
@@ -1249,6 +1297,21 @@ void display_composite_frame(void) {
     composite_to(NULL, 1);
     fe_perf_end(fe_perf_stage_render, render_start);
     display_process_screenshot_request();
+}
+
+void display_finish_startup_transition(void) {
+    if (!startup_splash) return;
+
+    for (int i = 0; i <= FADE_STEP; i++) {
+        startup_splash_alpha = (uint8_t) (255 - 255 * i / FADE_STEP);
+        display_composite_frame();
+        SDL_Delay(FADE_TIME / FADE_STEP);
+    }
+
+    SDL_DestroyTexture(startup_splash);
+    startup_splash = NULL;
+    startup_splash_alpha = 255;
+    display_composite_frame();
 }
 
 uint64_t display_present_serial(void) {
