@@ -43,6 +43,8 @@ static void lv_spangroup_constructor(const lv_obj_class_t *class_p, lv_obj_t *ob
 static void lv_spangroup_event(const lv_obj_class_t *class_p, lv_event_t *e);
 static void draw_main(lv_event_t *e);
 static void refresh_self_size(lv_obj_t *obj);
+static void
+draw_span_letter(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *draw_dsc, const lv_point_t *pos, uint32_t letter);
 
 static const lv_font_t *lv_span_get_style_text_font(lv_obj_t *par, lv_span_t *span);
 static lv_coord_t lv_span_get_style_text_letter_space(lv_obj_t *par, lv_span_t *span);
@@ -743,6 +745,7 @@ static void lv_draw_span(lv_obj_t *obj, lv_draw_ctx_t *draw_ctx) {
 
     lv_draw_label_dsc_t label_draw_dsc;
     lv_draw_label_dsc_init(&label_draw_dsc);
+    lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &label_draw_dsc);
 
     int is_first_line = 1;
     /* the loop control how many lines need to draw */
@@ -917,7 +920,7 @@ static void lv_draw_span(lv_obj_t *obj, lv_draw_ctx_t *draw_ctx) {
 
                 if (ellipsis_valid && pos.x + letter_w + pinfo->letter_space > ellipsis_width) {
                     for (int ell = 0; ell < 3; ell++) {
-                        lv_draw_letter(draw_ctx, &label_draw_dsc, &pos, '.');
+                        draw_span_letter(draw_ctx, &label_draw_dsc, &pos, '.');
                         pos.x = pos.x + dot_letter_w + pinfo->letter_space;
                     }
                     if (pos.x <= ellipsis_width) {
@@ -925,7 +928,7 @@ static void lv_draw_span(lv_obj_t *obj, lv_draw_ctx_t *draw_ctx) {
                     }
                     break;
                 } else {
-                    lv_draw_letter(draw_ctx, &label_draw_dsc, &pos, letter);
+                    draw_span_letter(draw_ctx, &label_draw_dsc, &pos, letter);
                     if (letter_w > 0) {
                         pos.x = pos.x + letter_w + pinfo->letter_space;
                     }
@@ -978,6 +981,24 @@ static void lv_draw_span(lv_obj_t *obj, lv_draw_ctx_t *draw_ctx) {
         max_w = max_width;
     }
     draw_ctx->clip_area = clip_area_ori;
+}
+
+static void draw_span_letter(
+    lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *draw_dsc, const lv_point_t *pos, const uint32_t letter
+) {
+    if (draw_dsc->effect_type > 0) {
+        lv_draw_label_dsc_t effect = *draw_dsc;
+        effect.effect_type = 0;
+        effect.color = draw_dsc->effect_color;
+        effect.opa = draw_dsc->effect_opa;
+        const lv_point_t shadow = {
+            pos->x + draw_dsc->effect_x_offset,
+            pos->y + draw_dsc->effect_y_offset,
+        };
+        lv_draw_letter(draw_ctx, &effect, &shadow, letter);
+    }
+
+    lv_draw_letter(draw_ctx, draw_dsc, pos, letter);
 }
 
 static void refresh_self_size(lv_obj_t *obj) {

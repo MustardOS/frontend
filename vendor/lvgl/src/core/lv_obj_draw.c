@@ -296,11 +296,10 @@ void lv_obj_init_draw_label_dsc(lv_obj_t *obj, uint32_t part, lv_draw_label_dsc_
     draw_dsc->align = lv_obj_get_style_text_align(obj, part);
 
     draw_dsc->effect_type = (int8_t) g_font_shadow_enabled;
-    lv_state_t shadow_state = lv_obj_get_state(obj);
-
-    if (!(shadow_state & LV_STATE_FOCUSED)) {
-        lv_obj_t *shadow_parent = lv_obj_get_parent(obj);
-        if (shadow_parent) shadow_state = lv_obj_get_state(shadow_parent);
+    lv_state_t shadow_state = LV_STATE_DEFAULT;
+    for (lv_obj_t *shadow_obj = obj; shadow_obj; shadow_obj = lv_obj_get_parent(shadow_obj)) {
+        shadow_state = lv_obj_get_state(shadow_obj);
+        if (shadow_state & LV_STATE_FOCUSED) break;
     }
 
     if (shadow_state & LV_STATE_FOCUSED) {
