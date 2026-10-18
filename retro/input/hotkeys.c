@@ -455,7 +455,8 @@ static int prev_vol_down = 0;
 
 static inotify_status *level_ino = NULL;
 
-static void level_watch_task(void) {
+static void level_watch_task(const uint32_t now) {
+    static uint32_t deadline;
     if (!level_ino) {
         level_ino = inotify_create();
         if (!level_ino) return;
@@ -469,19 +470,20 @@ static void level_watch_task(void) {
         inotify_track(level_ino, CONF_CONFIG_PATH "settings/general", "volume", &volume_exists, &volume_config_changes);
     }
 
+    if (deadline && !SDL_TICKS_PASSED(now, deadline)) return;
+    deadline = now + IDLE_MS;
     inotify_check(level_ino);
     if (ui_pnl_progress_volume && ui_pnl_progress_brightness) ui_common_progress_tick();
 }
 
 void hotkeys_volume_bright_task(void) {
-    level_watch_task();
+    const uint32_t now = SDL_GetTicks();
+    level_watch_task(now);
 
     const int bright_mod = mux_input_pressed(mux_input_menu) || mux_input_pressed(mux_input_switch);
 
     const int vol_up_now = mux_input_pressed(mux_input_vol_up);
     const int vol_down_now = mux_input_pressed(mux_input_vol_down);
-
-    const uint32_t now = SDL_GetTicks();
 
     if (nav_repeat_step(&rpt_vol_up, vol_up_now && !prev_vol_up, vol_up_now, 1, now)) {
         if (bright_mod) {

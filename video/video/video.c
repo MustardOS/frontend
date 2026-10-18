@@ -1,8 +1,8 @@
 #include "video.h"
 #include "effects.h"
 #include "../visualiser/visualiser.h"
-#include "../../retro/video/filters/scale2x.h"
-#include "../../retro/video/filters/super_eagle.h"
+#include <common/display/scale2x.h>
+#include <common/display/super_eagle.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>

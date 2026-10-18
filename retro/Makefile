@@ -19,7 +19,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        video/ui_viewportadjust.c video/ui_viewportcrop.c video/ui_overlay.c video/ui_vignette.c \
        video/ui_overlayimage.c video/ui_overlayadjust.c video/ui_overlaycrop.c \
        video/image_writer.c video/ui_videosettings.c video/ui_imagecorrections.c video/hw_render.c video/egl_proc.c \
-       video/filters/filters.c video/filters/scale2x.c video/filters/super_eagle.c \
+       video/filters/filters.c \
        audio/audio.c audio/ui_soundsettings.c \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
        input/ui_inputsettings.c input/ui_controlleroptions.c input/ui_inputport.c \

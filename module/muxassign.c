@@ -21,7 +21,6 @@ static int prefer_directory_scope = 0;
 
 static mux_dialogue assign_dlg;
 static mux_dialogue invalid_dlg;
-static int single_system_pick = 0;
 
 static int find_assigned_system(char *out_system) {
     // File Spec CFG: line 3 = sys
@@ -446,7 +445,9 @@ static void assign_core(const char *item_data, const char *log_msg, const int as
     const char *board_governor = coredb_board_governor(&core);
     snprintf(
         core_governor, sizeof(core_governor), "%s",
-        board_governor ? board_governor : core.governor[0] ? core.governor : device.cpu.dflt
+        board_governor     ? board_governor
+        : core.governor[0] ? core.governor
+                           : device.cpu.dflt
     );
     LOG_INFO(mux_module, "Content Core Governor: %s", core_governor);
 
@@ -651,8 +652,6 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
     const int definitions_loaded = coredb_load();
     if (!definitions_loaded) LOG_ERROR(mux_module, "Assign Core could not read the core definitions");
 
-    single_system_pick = 0;
-
     level_is_namespace = 0;
     if (strncmp(rom_system, ASSIGN_NAMESPACE_TAG, strlen(ASSIGN_NAMESPACE_TAG)) == 0) {
         char stripped[PATH_MAX];
@@ -665,7 +664,6 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
         if (coredb_system_count(rom_system) == 1 && coredb_system_at(rom_system, 0, &only)) {
             snprintf(rom_system, sizeof(rom_system), "%s", only.id);
             level_is_namespace = 0;
-            single_system_pick = 1;
         }
     }
 
@@ -723,16 +721,6 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
     } else {
         create_core_items(rom_system);
         ass_index = find_core_item_index();
-
-        if (single_system_pick && core_row_count == 1) {
-            char stem[FILENAME_MAX];
-            stored_stem(core_ids[0], core_runtimes[0], stem, sizeof(stem));
-            assign_core(stem, "Only one core for the only system in this group, assigning it automatically", casn_dir);
-
-            remove(MUOS_SYS_LOAD);
-            remove(OPTION_SKIP);
-            return;
-        }
     }
 
     if (definitions_loaded) init_elements();

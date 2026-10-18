@@ -16,7 +16,6 @@ SRC := core/audio.c core/audio_source.c core/audio_transition.c core/main.c core
        visualiser/starfield.c visualiser/shape.c visualiser/scope.c \
        visualiser/voices.c
 OBJ := $(SRC:.c=.o)
-OBJ += video/scale2x.o video/super_eagle.o
 
 .PHONY: all clean
 
@@ -36,12 +35,6 @@ $(shell mkdir -p $(DEPDIR))
 	$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,video,$*)
 
 visualiser/voices.o: CFLAGS += -isystem $(EXTERNAL_PREFIX)/include
-
-video/scale2x.o: ../retro/video/filters/scale2x.c
-	$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,video,video/scale2x)
-
-video/super_eagle.o: ../retro/video/filters/super_eagle.c
-	$(CC) $(CFLAGS) -c $< -o $@ -MF $(call DEP_NAME,video,video/super_eagle)
 
 clean:
 	rm -f $(OBJ) *.o

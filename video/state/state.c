@@ -153,10 +153,15 @@ int video_state_thumbnail_path(
     return snprintf(path, path_size, "%s/bookmark_%012lld.png", directory, milliseconds) < (int) path_size ? 0 : -1;
 }
 
-static int append_entry(video_state_entry **entries, size_t *count, const video_state_entry *entry) {
-    video_state_entry *grown = realloc(*entries, (*count + 1) * sizeof(**entries));
-    if (!grown) return -1;
-    *entries = grown;
+static int append_entry(video_state_entry **entries, size_t *count, size_t *capacity, const video_state_entry *entry) {
+    if (*count == *capacity) {
+        const size_t next_capacity = *capacity ? *capacity * 2 : 32;
+        if (next_capacity < *capacity || next_capacity > SIZE_MAX / sizeof(**entries)) return -1;
+        video_state_entry *grown = realloc(*entries, next_capacity * sizeof(**entries));
+        if (!grown) return -1;
+        *entries = grown;
+        *capacity = next_capacity;
+    }
     (*entries)[*count] = *entry;
     (*count)++;
     return 0;
@@ -170,8 +175,10 @@ static int load_file(const char *path, video_state_entry **entries, size_t *coun
     if (!file) return errno == ENOENT ? 0 : -1;
 
     char *line = NULL;
-    size_t capacity = 0;
-    while (getline(&line, &capacity, file) >= 0) {
+    size_t line_capacity = 0;
+    size_t entry_capacity = 0;
+    while (getline(&line, &line_capacity, file) >= 0) {
+        if (history && *count >= HISTORY_LIMIT) break;
         line[strcspn(line, "\r\n")] = '\0';
         if (!line[0]) continue;
 
@@ -196,7 +203,8 @@ static int load_file(const char *path, video_state_entry **entries, size_t *coun
             .updated = updated ? (time_t) strtoll(updated, NULL, 10) : 0,
             .live = live ? atoi(live) != 0 : 0,
         };
-        if (!entry.uri || !entry.title || !entry.thumbnail || !entry.name || append_entry(entries, count, &entry) < 0) {
+        if (!entry.uri || !entry.title || !entry.thumbnail || !entry.name
+            || append_entry(entries, count, &entry_capacity, &entry) < 0) {
             free(entry.uri);
             free(entry.title);
             free(entry.thumbnail);
@@ -354,6 +362,7 @@ int video_history_update(
             entries[index].thumbnail = replacement_thumbnail;
         }
     } else {
+        size_t capacity = count;
         video_state_entry entry = {
             .uri = strdup(uri),
             .title = strdup(title),
@@ -365,7 +374,7 @@ int video_history_update(
             .live = live,
         };
         if (!entry.uri || !entry.title || !entry.thumbnail || !entry.name
-            || append_entry(&entries, &count, &entry) < 0) {
+            || append_entry(&entries, &count, &capacity, &entry) < 0) {
             free(entry.uri);
             free(entry.title);
             free(entry.thumbnail);
@@ -442,6 +451,7 @@ static int bookmark_upsert(
             entries[index].thumbnail = replacement_thumbnail;
         }
     } else {
+        size_t capacity = count;
         video_state_entry entry = {
             .uri = strdup(uri),
             .title = strdup(title),
@@ -452,7 +462,7 @@ static int bookmark_upsert(
             .updated = time(NULL),
         };
         if (!entry.uri || !entry.title || !entry.thumbnail || !entry.name
-            || append_entry(&entries, &count, &entry) < 0) {
+            || append_entry(&entries, &count, &capacity, &entry) < 0) {
             free(entry.uri);
             free(entry.title);
             free(entry.thumbnail);
@@ -573,11 +583,12 @@ int video_collection_toggle(const char *uri, const char *title, const int live, 
         count--;
         if (collected) *collected = 0;
     } else {
+        size_t capacity = count;
         video_state_entry entry = {
             .uri = strdup(uri), .title = strdup(title), .thumbnail = strdup(""), .name = strdup(""), .live = live
         };
         if (!entry.uri || !entry.title || !entry.thumbnail || !entry.name
-            || append_entry(&entries, &count, &entry) < 0) {
+            || append_entry(&entries, &count, &capacity, &entry) < 0) {
             free(entry.uri);
             free(entry.title);
             free(entry.thumbnail);

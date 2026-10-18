@@ -906,6 +906,7 @@ int audio_bridge_is_muted(void) {
 void audio_bridge_set_speed_multiplier(double multiplier) {
     if (multiplier < 0.125) multiplier = 0.125;
     if (multiplier > 8.0) multiplier = 8.0;
+    if (multiplier == audio_speed_multiplier) return;
     audio_speed_multiplier = multiplier;
     speed_filter_alpha = multiplier > 1.0 ? (float) (2.0 / (multiplier + 1.0)) : 1.0f;
 }

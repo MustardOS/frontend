@@ -41,12 +41,13 @@
 #include <common/platform/audio.h>
 #include <common/platform/soundfont.h>
 #include <common/runtime/exec.h>
+#include <common/runtime/remote.h>
 #include <common/storage/fileio.h>
 
 #define VIDEO_QUEUE_SIZE                   120
 #define LOCAL_VIDEO_QUEUE_SIZE             16
 #define LIVE_VIDEO_QUEUE_SECONDS           4.0
-#define LIVE_VIDEO_QUEUE_MEMORY            (96U * 1024U * 1024U)
+#define LIVE_VIDEO_QUEUE_MEMORY            ((size_t) 96U * 1024U * 1024U)
 #define LIVE_VIDEO_TARGET                  8
 #define LIVE_AUDIO_BUFFER_HEADROOM_SECONDS 3
 #define LIVE_AUDIO_UNDERRUN_GRACE          5
@@ -67,7 +68,7 @@
 #define LIVE_AUDIO_CLOCK_SOFT_SECONDS      0.020
 #define LIVE_AUDIO_CLOCK_STEP_SECONDS      0.001
 #define LIVE_AUDIO_CLOCK_CORRECTION_FACTOR 0.125
-#define HLS_MANIFEST_LIMIT                 (512U * 1024U)
+#define HLS_MANIFEST_LIMIT                 ((size_t) 512U * 1024U)
 #define LIVE_BUFFER_FAILURE_MS             15000U
 #define LIVE_AUTOMATIC_BITRATE_LIMIT       4000000LL
 #define PACKET_CACHE_LIMIT                 256
@@ -1008,6 +1009,7 @@ typedef struct {
 
 static size_t hls_manifest_write(void *contents, const size_t size, const size_t count, void *userdata) {
     hls_manifest_buffer *buffer = userdata;
+    if (!size || count > SIZE_MAX / size) return 0;
     const size_t bytes = size * count;
     if (!bytes || buffer->overflow) return bytes;
     if (bytes > HLS_MANIFEST_LIMIT || buffer->size > HLS_MANIFEST_LIMIT - bytes) {
@@ -3044,6 +3046,11 @@ static void apply_remote_command(const wasabi_remote_command *command) {
 }
 
 static void remote_tick(void) {
+    static uint32_t next_poll;
+    const uint32_t now = SDL_GetTicks();
+    if (next_poll && !SDL_TICKS_PASSED(now, next_poll)) return;
+    next_poll = now + REMOTE_CONTROL_POLL_MS;
+
     wasabi_remote_command command;
     int changed = 0;
     while (wasabi_remote_poll(&command)) {

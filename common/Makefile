@@ -9,7 +9,7 @@ BASE_SRCS = \
     base/randname.c base/strpath.c base/strutil.c base/totp.c base/util.c
 
 RUNTIME_SRCS = \
-    runtime/debug.c runtime/exec.c runtime/init.c runtime/log.c runtime/perf.c \
+    runtime/debug.c runtime/exec.c runtime/init.c runtime/log.c runtime/perf.c runtime/remote.c \
     runtime/task_exec.c runtime/task_protocol.c
 
 CONFIG_SRCS = \
@@ -35,7 +35,7 @@ CONTENT_SRCS = \
 DISPLAY_SRCS = \
     display/anim.c display/colour.c display/datetime.c display/image.c \
     display/language.c display/overlay.c display/screenshot.c display/svg.c \
-    display/text.c display/theme.c display/theme_base.c
+    display/scale2x.c display/super_eagle.c display/text.c display/theme.c display/theme_base.c
 
 UI_SRCS = \
     ui/cache.c ui/common.c ui/dialogue.c ui/empty_state.c ui/font.c ui/font_info.c \

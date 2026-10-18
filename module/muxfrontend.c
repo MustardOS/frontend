@@ -40,8 +40,9 @@ __attribute__((cold)) static void module_install(void);
 
 typedef struct {
     void (*func)(void *);
-
     void *arg;
+    pthread_t thread;
+    int started;
 } param_loader;
 
 typedef struct {
@@ -714,7 +715,7 @@ static void reset_alert(void) {
     }
 }
 
-static void init_audio(void) {
+static void *init_audio(void *unused __attribute__((unused))) {
     const useconds_t backoff[] = {10000, 25000, 50000, 100000, 200000, 400000, 800000};
     const size_t tries = sizeof(backoff) / sizeof(backoff[0]);
 
@@ -728,18 +729,34 @@ static void init_audio(void) {
                 play_sound(snd_startup);
 
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
-            return;
+            return NULL;
         }
 
         usleep(backoff[i]);
     }
+    return NULL;
 }
 
-static void *load_params(const void *arg) {
-    const param_loader *p_load = arg;
+static void *load_params(void *arg) {
+    param_loader *p_load = arg;
     p_load->func(p_load->arg);
-
     return NULL;
+}
+
+static void load_device_param(void *arg) {
+    load_device(arg);
+}
+
+static void load_config_param(void *arg) {
+    load_config(arg);
+}
+
+static void load_kiosk_param(void *arg) {
+    load_kiosk(arg);
+}
+
+static void load_passcode_param(void *arg) {
+    load_passcode(arg);
 }
 
 static void parallel_load(param_loader *loaders) {
@@ -749,15 +766,12 @@ static void parallel_load(param_loader *loaders) {
 
     if (!count) return;
 
-    pthread_t *threads = malloc(count * sizeof(*threads));
-    if (!threads) return;
-
+    for (size_t i = 0; i < count; ++i) {
+        loaders[i].started = pthread_create(&loaders[i].thread, NULL, load_params, &loaders[i]) == 0;
+        if (!loaders[i].started) loaders[i].func(loaders[i].arg);
+    }
     for (size_t i = 0; i < count; ++i)
-        pthread_create(&threads[i], NULL, (void *(*) (void *) ) load_params, &loaders[i]);
-    for (size_t i = 0; i < count; ++i)
-        pthread_join(threads[i], NULL);
-
-    free(threads);
+        if (loaders[i].started) pthread_join(loaders[i].thread, NULL);
 }
 
 int main(void) {
@@ -772,11 +786,11 @@ int main(void) {
     if (getppid() == 1) raise(SIGTERM);
 
     param_loader loaders[] = {
-        {(void (*)(void *)) load_device, &device},
-        {(void (*)(void *)) load_config, &config},
-        {(void (*)(void *)) load_kiosk, &kiosk},
-        {(void (*)(void *)) load_passcode, &passcode},
-        {NULL, NULL},
+        {load_device_param, &device, 0, 0},
+        {load_config_param, &config, 0, 0},
+        {load_kiosk_param, &kiosk, 0, 0},
+        {load_passcode_param, &passcode, 0, 0},
+        {NULL, NULL, 0, 0},
     };
 
     parallel_load(loaders);
@@ -801,7 +815,7 @@ int main(void) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&t_audio, &attr, (void *(*) (void *) ) init_audio, NULL);
+    pthread_create(&t_audio, &attr, init_audio, NULL);
     pthread_attr_destroy(&attr);
 
     if (strcasecmp(passcode.code.boot, "000000") != 0 && !file_exist(MUX_BOOT_AUTH)) {

@@ -1,6 +1,6 @@
 #include "filters.h"
-#include "scale2x.h"
-#include "super_eagle.h"
+#include <common/display/scale2x.h>
+#include <common/display/super_eagle.h>
 #include "../../core/muxretro.h"
 #include "../../settings/settings.h"
 

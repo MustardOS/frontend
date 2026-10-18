@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -18,15 +19,20 @@
 #include <common/storage/union.h>
 
 static int append_entry(
-    content_switch_list *list, const char *path, const char *title, const content_switch_source source,
-    const content_switch_native native, const long modified
+    content_switch_list *list, const char *path, const char *title, const content_switch_native native,
+    const long modified
 ) {
     for (size_t index = 0; index < list->count; index++)
         if (strcasecmp(list->entries[index].path, path) == 0) return 1;
 
-    content_switch_entry *entries = realloc(list->entries, (list->count + 1) * sizeof(*entries));
-    if (!entries) return 0;
-    list->entries = entries;
+    if (list->count == list->capacity) {
+        const size_t capacity = list->capacity ? list->capacity * 2 : 32;
+        if (capacity < list->capacity || capacity > SIZE_MAX / sizeof(*list->entries)) return 0;
+        content_switch_entry *entries = realloc(list->entries, capacity * sizeof(*entries));
+        if (!entries) return 0;
+        list->entries = entries;
+        list->capacity = capacity;
+    }
 
     content_switch_entry *entry = &list->entries[list->count];
     memset(entry, 0, sizeof(*entry));
@@ -38,7 +44,6 @@ static int append_entry(
         free(entry->title);
         return 0;
     }
-    entry->source = source;
     entry->native = native;
     entry->modified = modified;
     list->count++;
@@ -102,9 +107,7 @@ static content_switch_native native_type(const char *path) {
     return native;
 }
 
-static void scan_directory(
-    content_switch_list *list, const char *directory, const content_switch_source source, const int recurse
-) {
+static void scan_directory(content_switch_list *list, const char *directory) {
     DIR *stream = opendir(directory);
     if (!stream) return;
 
@@ -118,10 +121,6 @@ static void scan_directory(
 
         struct stat status;
         if (lstat(entry_path, &status) != 0) continue;
-        if (S_ISDIR(status.st_mode) && recurse) {
-            scan_directory(list, entry_path, source, recurse);
-            continue;
-        }
         if (!S_ISREG(status.st_mode) || !ends_with(item->d_name, ".cfg")) continue;
 
         char *path = read_line_char_from(entry_path, 1);
@@ -139,7 +138,7 @@ static void scan_directory(
             const char *real = union_resolve_to_real(path, resolved, sizeof(resolved)) ? resolved : path;
             const int marked = content_launch_folder_name(real, folder, sizeof(folder));
 
-            append_entry(list, path, marked ? folder : title, source, native, (long) status.st_mtime);
+            append_entry(list, path, marked ? folder : title, native, (long) status.st_mtime);
         }
         free(path);
         free(title);
@@ -150,9 +149,7 @@ static void scan_directory(
 static int compare_entries(const void *left, const void *right) {
     const content_switch_entry *a = left;
     const content_switch_entry *b = right;
-    if (a->source != b->source) return a->source < b->source ? -1 : 1;
-    if (a->source == content_switch_source_history && a->modified != b->modified)
-        return a->modified > b->modified ? -1 : 1;
+    if (a->modified != b->modified) return a->modified > b->modified ? -1 : 1;
     const int title = strcasecmp(a->title, b->title);
     return title ? title : strcasecmp(a->path, b->path);
 }
@@ -160,7 +157,7 @@ static int compare_entries(const void *left, const void *right) {
 int content_switch_load(content_switch_list *list, const char *current_path) {
     if (!list) return 0;
     content_switch_free(list);
-    scan_directory(list, INFO_HIS_PATH, content_switch_source_history, 0);
+    scan_directory(list, INFO_HIS_PATH);
     if (list->count > 1) qsort(list->entries, list->count, sizeof(*list->entries), compare_entries);
 
     list->selected = 0;

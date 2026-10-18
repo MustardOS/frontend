@@ -3,11 +3,6 @@
 #include <stddef.h>
 
 typedef enum {
-    content_switch_source_history,
-    content_switch_source_collection,
-} content_switch_source;
-
-typedef enum {
     content_switch_native_none,
     content_switch_native_pickles,
     content_switch_native_wasabi,
@@ -16,7 +11,6 @@ typedef enum {
 typedef struct {
     char *path;
     char *title;
-    content_switch_source source;
     content_switch_native native;
     long modified;
 } content_switch_entry;
@@ -24,6 +18,7 @@ typedef struct {
 typedef struct {
     content_switch_entry *entries;
     size_t count;
+    size_t capacity;
     size_t selected;
 } content_switch_list;
 

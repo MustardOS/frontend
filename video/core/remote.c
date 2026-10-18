@@ -1,14 +1,13 @@
 #include "remote.h"
 
 #include <SDL2/SDL.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <common/runtime/remote.h>
 
 #define REMOTE_DIR        "/run/muos/wasabi"
 #define REMOTE_FIFO       REMOTE_DIR "/control"
@@ -19,22 +18,12 @@
 #define REMOTE_PERIOD_MS  1000
 #define REMOTE_LINE       128
 
-static int remote_reader = -1;
-static int remote_keeper = -1;
-static char remote_buffer[REMOTE_LINE * 4];
-static size_t remote_length;
+static remote_control remote = REMOTE_CONTROL_INITIALIZER;
 static uint32_t remote_published;
 static int remote_list_wanted;
 
 void wasabi_remote_open(void) {
-    if (remote_reader >= 0) return;
-    mkdir(REMOTE_DIR, 0755);
-    unlink(REMOTE_FIFO);
-    if (mkfifo(REMOTE_FIFO, 0600) != 0) return;
-    remote_reader = open(REMOTE_FIFO, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (remote_reader < 0) return;
-    remote_keeper = open(REMOTE_FIFO, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
-    remote_length = 0;
+    if (!remote_control_open(&remote, REMOTE_DIR, REMOTE_FIFO)) return;
     remote_published = 0;
     remote_list_wanted = 1;
 }
@@ -46,11 +35,7 @@ int wasabi_remote_list_wanted(void) {
 }
 
 void wasabi_remote_close(void) {
-    if (remote_reader >= 0) close(remote_reader);
-    if (remote_keeper >= 0) close(remote_keeper);
-    remote_reader = remote_keeper = -1;
-    remote_length = 0;
-    unlink(REMOTE_FIFO);
+    remote_control_close(&remote, REMOTE_FIFO);
     unlink(REMOTE_STATE);
     unlink(REMOTE_LIST);
 }
@@ -87,41 +72,16 @@ static int parse_command(char *line, wasabi_remote_command *command) {
 }
 
 int wasabi_remote_poll(wasabi_remote_command *command) {
-    if (remote_reader < 0 || !command) return 0;
-    for (;;) {
-        char *newline = memchr(remote_buffer, '\n', remote_length);
-        if (newline) {
-            *newline = '\0';
-            const size_t used = (size_t) (newline - remote_buffer) + 1;
-            char line[REMOTE_LINE];
-            snprintf(line, sizeof(line), "%s", remote_buffer);
-            memmove(remote_buffer, remote_buffer + used, remote_length - used);
-            remote_length -= used;
-            if (parse_command(line, command)) return 1;
-            continue;
-        }
-        if (remote_length >= sizeof(remote_buffer)) remote_length = 0;
-        const ssize_t got = read(remote_reader, remote_buffer + remote_length, sizeof(remote_buffer) - remote_length);
-        if (got <= 0) return 0;
-        remote_length += (size_t) got;
+    if (!command) return 0;
+    char line[REMOTE_LINE];
+    while (remote_control_read_line(&remote, line, sizeof(line))) {
+        if (parse_command(line, command)) return 1;
     }
-}
-
-static void json_text(FILE *file, const char *key, const char *value) {
-    fprintf(file, "\"%s\":\"", key);
-    for (const unsigned char *cursor = (const unsigned char *) (value ? value : ""); *cursor; cursor++) {
-        if (*cursor == '"' || *cursor == '\\')
-            fprintf(file, "\\%c", *cursor);
-        else if (*cursor < 0x20)
-            fprintf(file, "\\u%04x", *cursor);
-        else
-            fputc(*cursor, file);
-    }
-    fputs("\",", file);
+    return 0;
 }
 
 void wasabi_remote_publish(const wasabi_remote_state *state, const int force) {
-    if (remote_reader < 0 || !state) return;
+    if (remote.reader < 0 || !state) return;
     const uint32_t now = SDL_GetTicks();
     if (!force && remote_published && now - remote_published < REMOTE_PERIOD_MS) return;
     remote_published = now ? now : 1;
@@ -129,10 +89,10 @@ void wasabi_remote_publish(const wasabi_remote_state *state, const int force) {
     FILE *file = fopen(REMOTE_STATE_TEMP, "w");
     if (!file) return;
     fputc('{', file);
-    json_text(file, "title", state->title);
-    json_text(file, "artist", state->artist);
-    json_text(file, "album", state->album);
-    json_text(file, "uri", state->uri);
+    remote_json_text(file, "title", state->title);
+    remote_json_text(file, "artist", state->artist);
+    remote_json_text(file, "album", state->album);
+    remote_json_text(file, "uri", state->uri);
     fprintf(
         file,
         "\"live\":%d,\"audio\":%d,\"paused\":%d,\"seek\":%d,\"index\":%d,\"count\":%d,\"channels\":%d,"
@@ -144,7 +104,7 @@ void wasabi_remote_publish(const wasabi_remote_state *state, const int force) {
 }
 
 void wasabi_remote_publish_list(const video_library_entry *entries, const size_t count) {
-    if (remote_reader < 0) return;
+    if (remote.reader < 0) return;
 
     FILE *file = fopen(REMOTE_LIST_TEMP, "w");
     if (!file) return;
@@ -156,7 +116,7 @@ void wasabi_remote_publish_list(const video_library_entry *entries, const size_t
                             : base                                          ? base + 1
                                                                             : uri;
         fputs(index ? ",{" : "{", file);
-        json_text(file, "title", title);
+        remote_json_text(file, "title", title);
         fprintf(file, "\"index\":%zu}", index);
     }
     fputs("]}\n", file);

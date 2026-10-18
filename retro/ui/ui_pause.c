@@ -568,7 +568,7 @@ void pause_menu_set_timeline_progress(const int visible, int progress) {
     const int mode = session_settings.timeline_bar;
     const int want_visible = visible && !active && mode > timeline_bar_off && mode < timeline_bar_count;
     if (!want_visible) {
-        lv_obj_add_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
+        if (!lv_obj_has_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN)) lv_obj_add_flag(ui_bar_timeline, LV_OBJ_FLAG_HIDDEN);
         timeline_progress_shown = -1;
         return;
     }
