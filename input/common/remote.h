@@ -12,6 +12,8 @@ struct remote_input;
 
 struct remote_input *remote_input_open(struct gamepad *gp, int verbose);
 
+int remote_input_send(const char *message);
+
 void remote_input_poll(struct remote_input *remote, uint64_t now_ms);
 
 void remote_input_close(struct remote_input *remote);

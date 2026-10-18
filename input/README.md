@@ -33,6 +33,16 @@ muinput --list-devices
 muinput --device tui-brick-pro --foreground --verbose --rumble-strength 75
 ```
 
+The running service also accepts validated button and analogue events through its local datagram socket. The client mode is intended for the shared
+`SENDKEY()` shell helper and diagnostics; it does not start another input daemon:
+
+```text
+muinput --send 'a 1'
+muinput --send 'a 0'
+muinput --send 'lx -0.75'
+muinput --send 'clear'
+```
+
 ## Hardware Testing
 
 Run the interactive CLI tester with the production backend stopped first:

@@ -13,9 +13,33 @@
 #include <unistd.h>
 
 #define REMOTE_HOLD_MS       1500u
-#define REMOTE_MIN_HOLD_MS   60u
+#define REMOTE_MIN_HOLD_MS   20u
 #define REMOTE_STICK_HOLD_MS 300u
 #define REMOTE_MESSAGE_MAX   256
+
+int remote_input_send(const char *message) {
+    if (!message || !*message) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    const size_t length = strlen(message);
+    if (length >= REMOTE_MESSAGE_MAX) {
+        errno = EMSGSIZE;
+        return -1;
+    }
+
+    const int fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+    if (fd < 0) return -1;
+
+    struct sockaddr_un address = {.sun_family = AF_UNIX};
+    snprintf(address.sun_path, sizeof(address.sun_path), "%s", MUINPUT_REMOTE_SOCKET);
+    const ssize_t sent = sendto(fd, message, length, 0, (const struct sockaddr *) &address, sizeof(address));
+    const int saved_errno = errno;
+    close(fd);
+    errno = saved_errno;
+    return sent == (ssize_t) length ? 0 : -1;
+}
 
 enum remote_kind {
     remote_key,

@@ -27,11 +27,13 @@ static volatile sig_atomic_t g_reload_config = 0;
 
 struct service_options {
     const char *backend_id;
+    const char *send_message;
     unsigned int rumble_strength;
     int foreground;
     int verbose;
     int test_mode;
     int rumble_strength_locked;
+    int service_option_seen;
 };
 
 static void print_usage(FILE *stream, const char *program) {
@@ -42,6 +44,7 @@ static void print_usage(FILE *stream, const char *program) {
         "  -f, --foreground      do not daemonise\n"
         "  -v, --verbose         enable backend diagnostics\n"
         "  -t, --test            interactive buttons/axes/rumble test\n"
+        "  -s, --send MESSAGE    send buttons or axes to the running service\n"
         "  -r, --rumble-strength PERCENT\n"
         "                        scale force feedback from 0 to 100\n"
         "  -l, --list-devices    list registered backend IDs\n"
@@ -105,6 +108,7 @@ static int parse_options(int argc, char **argv, struct service_options *options)
         {"foreground", no_argument, NULL, 'f'},
         {"verbose", no_argument, NULL, 'v'},
         {"test", no_argument, NULL, 't'},
+        {"send", required_argument, NULL, 's'},
         {"rumble-strength", required_argument, NULL, 'r'},
         {"list-devices", no_argument, NULL, 'l'},
         {"help", no_argument, NULL, 'h'},
@@ -112,24 +116,32 @@ static int parse_options(int argc, char **argv, struct service_options *options)
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "d:fvtr:lh", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:fvts:r:lh", long_options, NULL)) != -1) {
         switch (opt) {
             case 'd':
                 options->backend_id = optarg;
+                options->service_option_seen = 1;
                 break;
             case 'f':
                 options->foreground = 1;
+                options->service_option_seen = 1;
                 break;
             case 'v':
                 options->verbose = 1;
+                options->service_option_seen = 1;
                 break;
             case 't':
                 options->test_mode = 1;
                 options->foreground = 1;
+                options->service_option_seen = 1;
+                break;
+            case 's':
+                options->send_message = optarg;
                 break;
             case 'r':
                 if (parse_strength(optarg, &options->rumble_strength) < 0) return -1;
                 options->rumble_strength_locked = 1;
+                options->service_option_seen = 1;
                 break;
             case 'l':
                 device_registry_print(stdout);
@@ -145,6 +157,10 @@ static int parse_options(int argc, char **argv, struct service_options *options)
 
     if (optind != argc) {
         fprintf(stderr, "Unexpected argument: %s\n", argv[optind]);
+        return -1;
+    }
+    if (options->send_message && options->service_option_seen) {
+        fprintf(stderr, "--send cannot be combined with service options\n");
         return -1;
     }
     return 0;
@@ -264,6 +280,13 @@ int main(int argc, char **argv) {
     int parse_result = parse_options(argc, argv, &options);
     if (parse_result != 0) {
         return parse_result > 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+    if (options.send_message) {
+        if (remote_input_send(options.send_message) < 0) {
+            perror("remote input send");
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
     }
 
     const struct device_backend *backend = select_backend(options.backend_id);
