@@ -199,7 +199,7 @@ FIXED_OPTIONS.update({
     "settings/advanced/boxartpaddiv": [(str(i), str(v)) for i, v in enumerate((50, 100, 200, 400, 600, 800))],
     "settings/advanced/incbright": [(str(v), str(v)) for v in range(1, 33)],
     "settings/advanced/incvolume": [(str(v), str(v)) for v in range(1, 33)],
-    "settings/general/brightness": percent_of(255)[1:],
+    "settings/general/brightness": [(str(v), f"{v * 100 / 255:.1f}%") for v in range(1, 256)],
     "settings/general/volume": PERCENT,
     "settings/general/bgmvol": PERCENT,
     "settings/general/soundvol": PERCENT,
@@ -244,6 +244,10 @@ OPEN_OPTIONS = {"settings/general/brightness", "settings/general/volume", "setti
 OPEN_OPTIONS.update(f"settings/font/{size}_size" for size in ("list", "header", "footer", "panel"))
 OPEN_OPTIONS.update(f"settings/overlay/{part}_alpha" for part in ("gen", "bat", "vol", "bri"))
 
+TIMEZONE_KEY = "settings/general/timezone"
+TIMEZONE_DEFAULT = "Australia/Brisbane"
+TIMEZONE_ARRAY = re.compile(r'timezone_location\[\]\s*=\s*\{(.*?)\};', re.S)
+
 FIXED_RANGES = {
     "settings/power/low_battery": (0, 100),
     "settings/general/brightness": (1, 255),
@@ -256,6 +260,8 @@ for _part in ("gen", "bat", "vol", "bri"):
     FIXED_RANGES[f"settings/overlay/{_part}_alpha"] = (0, 255)
 
 LABEL_KEYS = {
+    TIMEZONE_KEY: "lang.muxrtc.timezone",
+    "settings/colour/sunrise_temp": "Daytime / Manual Temperature",
     "settings/advanced/font": "lang.muxfont.type",
     "web/mdns": "lang.muxwebserv.mdns",
     "web/mdns_name": "lang.muxwebserv.local_name",
@@ -277,6 +283,16 @@ LABEL_KEYS = {
     "web/syncthing": "lang.muxwebserv.syncthing",
     "web/syncthing_port": "{lang.muxwebserv.syncthing} {lang.muxwebserv.web_port}",
     "web/tailscaled": "lang.muxwebserv.tailscaled",
+}
+
+HELP_TEXT = {
+    "settings/colour/sunrise_temp": (
+        "The display temperature used during daytime when scheduling is enabled, or the manual display temperature "
+        "when scheduling is disabled."
+    ),
+    "settings/general/brightness": (
+        "Screen brightness as a percentage. Profiles retain the exact native 1-255 brightness level used by the device."
+    ),
 }
 
 LABEL_LEAVES = {
@@ -434,6 +450,12 @@ def allowed(key):
     if key in PROFILE_DENIED:
         return False
     return profile_group(key) is not None
+
+
+def timezone_options(frontend):
+    match = TIMEZONE_ARRAY.search(read(os.path.join(frontend, "common/platform/timezone.c")))
+    zones = re.findall(r'"([^"]+)"', match.group(1)) if match else []
+    return [{"value": zone, "label": zone} for zone in sorted(set(zones))]
 
 
 def parse_defines(frontend):
@@ -665,6 +687,8 @@ def main():
     strings = parse_language(args.frontend)
     labels = parse_modules(args.frontend, strings)
 
+    fields.append({"key": TIMEZONE_KEY, "type": "text", "default": TIMEZONE_DEFAULT})
+
     profile_fields = [field for field in fields if allowed(field["key"])]
     profile_fields.sort(key=lambda field: field["key"])
 
@@ -695,10 +719,15 @@ def main():
                                   for value, label in FIXED_OPTIONS[field["key"]]]
         if field["key"] == "settings/general/soundfont":
             setting["options"] = soundfont_options(args.internal, strings)
+        if field["key"] == TIMEZONE_KEY:
+            setting["options"] = timezone_options(args.frontend)
+            setting["help"] = strings.get("muxrtc.help_item.timezone") or setting.get("help")
         if field["key"] in OPEN_OPTIONS:
             setting["open"] = 1
         if field["key"] in HELP_KEYS:
             setting["help"] = strings.get(HELP_KEYS[field["key"]]) or setting.get("help")
+        if field["key"] in HELP_TEXT:
+            setting["help"] = HELP_TEXT[field["key"]]
         if setting.get("help"):
             setting["help"] = website_help(setting["help"])
         if not setting.get("help"):
@@ -718,7 +747,7 @@ def main():
                             or humanise(field["key"]))
         oem_settings.append(setting)
 
-    rules = [rule_line(setting) for setting in schema_settings]
+    rules = [rule_line(setting, "live" if setting["key"] == TIMEZONE_KEY else "") for setting in schema_settings]
     rules += [rule_line(setting, "oem") for setting in oem_settings]
     refused_keys = sorted({field["key"] for field in fields
                            if not allowed(field["key"]) and not oem_only(field["key"])} | PROFILE_DENIED)
