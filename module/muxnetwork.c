@@ -7,9 +7,7 @@ static int wired_network(void) {
 }
 
 static void show_help(void) {
-    show_info_box(
-        lang.muxnetwork.title, wired_network() ? lang.muxnetwork.wired_help : lang.muxnetwork.help, 0
-    );
+    show_info_box(lang.muxnetwork.title, wired_network() ? lang.muxnetwork.wired_help : lang.muxnetwork.help, 0);
 }
 
 // Some of the older network scripts are going to cause issues, so we'll
@@ -548,8 +546,7 @@ int muxnetwork_main(void) {
     init_input(&input_opts, 1);
 
     orientation_introduce(
-        mux_module, lang.muxnetwork.title,
-        wired_network() ? lang.muxnetwork.wired_help : lang.muxnetwork.overview
+        mux_module, lang.muxnetwork.title, wired_network() ? lang.muxnetwork.wired_help : lang.muxnetwork.overview
     );
 
     mux_input_task(&input_opts);

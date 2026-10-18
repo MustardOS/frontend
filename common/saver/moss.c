@@ -6,11 +6,11 @@
 #include <common/saver/saver.h>
 #include <common/saver/moss.h>
 
-#define MOSS_SHADES     4
-#define MOSS_TICK_MS    50
-#define MOSS_BLOOM_MS   7000
-#define MOSS_FLOWERS    64
-#define MOSS_MAX_CELLS  20000
+#define MOSS_SHADES    4
+#define MOSS_TICK_MS   50
+#define MOSS_BLOOM_MS  7000
+#define MOSS_FLOWERS   64
+#define MOSS_MAX_CELLS 20000
 
 enum moss_phase {
     moss_grow = 0,
@@ -307,8 +307,9 @@ void moss_render(SDL_Renderer *renderer) {
             uint8_t r, g, b;
             saver_pastel_pick(mod.flower_colour[f], &r, &g, &b);
             SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-            SDL_Rect petal = {(i % mod.cols) * mod.cell + mod.cell / 4, (i / mod.cols) * mod.cell + mod.cell / 4, dot,
-                              dot};
+            SDL_Rect petal = {
+                (i % mod.cols) * mod.cell + mod.cell / 4, (i / mod.cols) * mod.cell + mod.cell / 4, dot, dot
+            };
             SDL_RenderFillRect(renderer, &petal);
         }
         draw_calls += MOSS_FLOWERS;

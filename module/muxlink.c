@@ -34,9 +34,9 @@ static void store_field(const char *key, const char *value) {
         const char *key;
         char *target;
     } fields[] = {
-        {"status", report.status}, {"cable", report.cable},
-        {"interface", report.interface},       {"address", report.address},
-        {"mac", report.mac},       {"peer_address", report.peer_address}, {"peer_mac", report.peer_mac},
+        {"status", report.status},     {"cable", report.cable}, {"interface", report.interface},
+        {"address", report.address},   {"mac", report.mac},     {"peer_address", report.peer_address},
+        {"peer_mac", report.peer_mac},
     };
 
     for (size_t i = 0; i < A_SIZE(fields); i++) {

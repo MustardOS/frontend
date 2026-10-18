@@ -141,35 +141,33 @@ static const struct {
                     .wMaxPacketSize = 64,
                 },
         },
-    .hs =
-        {
-            .interface =
-                {
-                    .bLength = sizeof(struct usb_interface_descriptor),
-                    .bDescriptorType = USB_DT_INTERFACE,
-                    .bNumEndpoints = 2,
-                    .bInterfaceClass = USB_CLASS_VENDOR_SPEC,
-                    .bInterfaceSubClass = LINK_SUBCLASS,
-                    .bInterfaceProtocol = LINK_PROTOCOL,
-                    .iInterface = 1,
-                },
-            .in =
-                {
-                    .bLength = sizeof(struct usb_endpoint_descriptor_no_audio),
-                    .bDescriptorType = USB_DT_ENDPOINT,
-                    .bEndpointAddress = 1 | USB_DIR_IN,
-                    .bmAttributes = USB_ENDPOINT_XFER_BULK,
-                    .wMaxPacketSize = 512,
-                },
-            .out =
-                {
-                    .bLength = sizeof(struct usb_endpoint_descriptor_no_audio),
-                    .bDescriptorType = USB_DT_ENDPOINT,
-                    .bEndpointAddress = 2 | USB_DIR_OUT,
-                    .bmAttributes = USB_ENDPOINT_XFER_BULK,
-                    .wMaxPacketSize = 512,
-                },
+    .hs = {
+        .interface =
+            {
+                .bLength = sizeof(struct usb_interface_descriptor),
+                .bDescriptorType = USB_DT_INTERFACE,
+                .bNumEndpoints = 2,
+                .bInterfaceClass = USB_CLASS_VENDOR_SPEC,
+                .bInterfaceSubClass = LINK_SUBCLASS,
+                .bInterfaceProtocol = LINK_PROTOCOL,
+                .iInterface = 1,
+            },
+        .in =
+            {
+                .bLength = sizeof(struct usb_endpoint_descriptor_no_audio),
+                .bDescriptorType = USB_DT_ENDPOINT,
+                .bEndpointAddress = 1 | USB_DIR_IN,
+                .bmAttributes = USB_ENDPOINT_XFER_BULK,
+                .wMaxPacketSize = 512,
+            },
+        .out = {
+            .bLength = sizeof(struct usb_endpoint_descriptor_no_audio),
+            .bDescriptorType = USB_DT_ENDPOINT,
+            .bEndpointAddress = 2 | USB_DIR_OUT,
+            .bmAttributes = USB_ENDPOINT_XFER_BULK,
+            .wMaxPacketSize = 512,
         },
+    },
 };
 
 #define LINK_INTERFACE_NAME "MustardOS Direct Link"
@@ -642,8 +640,7 @@ static void gadget_teardown(void) {
     }
 
     int usb_function = 0;
-    if (read_decimal(LINK_USB_FUNCTION, &usb_function) == 0 && usb_function > 0)
-        run_usb_script("start");
+    if (read_decimal(LINK_USB_FUNCTION, &usb_function) == 0 && usb_function > 0) run_usb_script("start");
 }
 
 static int gadget_build(void) {

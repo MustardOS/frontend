@@ -129,7 +129,8 @@ void lavalamp_update(void) {
     if (!elapsed) return;
     mod.base.last_tick = now;
 
-    const float dt = (float) (elapsed > 100 ? 100 : elapsed) / 1000.0f * (float) saver_speed_scale_q8(&mod.base) / 256.0f;
+    const float dt =
+        (float) (elapsed > 100 ? 100 : elapsed) / 1000.0f * (float) saver_speed_scale_q8(&mod.base) / 256.0f;
     const float w = (float) mod.base.screen_w;
     const float h = (float) mod.base.screen_h;
 

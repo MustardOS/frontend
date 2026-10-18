@@ -117,7 +117,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "terminal", "background_image", CFG_OFF(terminal.background_image), 1, {.s = ""}},
     {CONF_CONFIG_PATH "terminal", "shell", CFG_OFF(terminal.shell), 1, {.s = ""}},
     {CONF_CONFIG_PATH "terminal", "osk_layout", CFG_OFF(terminal.osk_layout), 1, {.s = ""}},
-    {CONF_CONFIG_PATH "terminal", "scrollback_path", CFG_OFF(terminal.scrollback_path), 1, {.s = "/run/muos/muxterm.sb"}},
+    {CONF_CONFIG_PATH "terminal", "scrollback_path", CFG_OFF(terminal.scrollback_path), 1, {.s = "/tmp/mustardos/muxterm.cache"}},
 
     // extra/language/
     {CONF_CONFIG_PATH "extra/language", "data", CFG_OFF(extra.language.data), 1, {.s = ""}},

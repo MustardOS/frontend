@@ -80,8 +80,10 @@ static void create_gov_items(const char *target) {
     struct coredb_core core;
     if (coredb_system_default_core(target, &core)) {
         const char *board_governor = coredb_board_governor(&core);
-        if (board_governor) snprintf(default_governor, sizeof(default_governor), "%s", board_governor);
-        else if (core.governor[0]) snprintf(default_governor, sizeof(default_governor), "%s", core.governor);
+        if (board_governor)
+            snprintf(default_governor, sizeof(default_governor), "%s", board_governor);
+        else if (core.governor[0])
+            snprintf(default_governor, sizeof(default_governor), "%s", core.governor);
     }
 
     generate_available_governors(default_governor);
@@ -271,8 +273,10 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
                 struct coredb_core core;
                 if (coredb_system_default_core(ass_config, &core)) {
                     const char *board_governor = coredb_board_governor(&core);
-                    if (board_governor) snprintf(core_governor, sizeof(core_governor), "%s", board_governor);
-                    else if (core.governor[0]) snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
+                    if (board_governor)
+                        snprintf(core_governor, sizeof(core_governor), "%s", board_governor);
+                    else if (core.governor[0])
+                        snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
                 }
 
                 if (core_governor[0]) {

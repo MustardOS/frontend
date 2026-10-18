@@ -17,12 +17,12 @@ static const char *net_r_args[] = {OPT_PATH NET_SCRIPT, "restart", NULL};
 
 #define CONNECT_SETTLE_TICKS 120
 
-#define UI_DHCP        (ui_count_dynamic - 4)
-#define UI_STATIC      ui_count_dynamic
+#define UI_DHCP         (ui_count_dynamic - 4)
+#define UI_STATIC       ui_count_dynamic
 #define UI_WIRED_DHCP   3
 #define UI_WIRED_STATIC 7
-#define NET_STATUS_DIR "/run/muos/network"
-#define IP_OCTET       64
+#define NET_STATUS_DIR  "/run/muos/network"
+#define IP_OCTET        64
 
 int connecting_phase = 0;
 int ui_network_locked = 0;
@@ -326,9 +326,7 @@ static void show_connect_failure(const int exit_code) {
     set_connect_value(net_status_label(id));
     set_status_value(lang.generic.not_connected);
 
-    lv_label_set_text(
-        ui_lbl_connect_network, wired_mode ? lang.generic.save : lang.muxnetprofile.connect
-    );
+    lv_label_set_text(ui_lbl_connect_network, wired_mode ? lang.generic.save : lang.muxnetprofile.connect);
     nav_scan_hide(wired_mode);
     update_network_status(ui_sta_network, &theme, 2);
 }
@@ -708,9 +706,8 @@ static void init_navigation_group(void) {
 
 static void check_focus() {
     const struct _lv_obj_t *e_focused = lv_group_get_focused(ui_group);
-    const int show_lr =
-        (wired_mode || !viewing_active_profile)
-        && ((!wired_mode && e_focused == ui_lbl_priority_network) || e_focused == ui_lbl_type_network);
+    const int show_lr = (wired_mode || !viewing_active_profile)
+                        && ((!wired_mode && e_focused == ui_lbl_priority_network) || e_focused == ui_lbl_type_network);
 
     if (show_lr) {
         lv_obj_clear_flag(ui_lbl_nav_lr, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -855,9 +852,8 @@ int handle_navigate(void) {
 
         const int is_static = strcasecmp(lv_label_get_text(ui_val_type_network), lang.muxnetprofile.statc) == 0;
         lv_label_set_text(ui_val_type_network, is_static ? lang.muxnetprofile.dhcp : lang.muxnetprofile.statc);
-        ui_count_static = is_static
-                              ? (wired_mode ? UI_WIRED_DHCP : UI_DHCP)
-                              : (wired_mode ? UI_WIRED_STATIC : UI_STATIC);
+        ui_count_static =
+            is_static ? (wired_mode ? UI_WIRED_DHCP : UI_DHCP) : (wired_mode ? UI_WIRED_STATIC : UI_STATIC);
         toggle_static_panels(is_static);
 
         return 1;
@@ -1601,10 +1597,7 @@ static void init_elements(void) {
 
     if (wired_mode) {
         lv_obj_t *wireless_items[] = {
-            ui_pnl_profile_name_network,
-            ui_pnl_identifier_network,
-            ui_pnl_password_network,
-            ui_pnl_priority_network,
+            ui_pnl_profile_name_network, ui_pnl_identifier_network, ui_pnl_password_network, ui_pnl_priority_network,
             NULL
         };
         for (int i = 0; wireless_items[i]; i++)
@@ -1665,9 +1658,7 @@ int muxnetprofile_main(void) {
     wired_mode = strcasecmp(device.network.type, "ethernet") == 0;
     init_theme(1, 0);
 
-    init_ui_common_screen(
-        &theme, &device, &lang, wired_mode ? lang.muxnetwork.wired : lang.muxnetprofile.title
-    );
+    init_ui_common_screen(&theme, &device, &lang, wired_mode ? lang.muxnetwork.wired : lang.muxnetprofile.title);
     init_muxnetwork(ui_screen, ui_pnl_content, &theme);
     init_elements();
 

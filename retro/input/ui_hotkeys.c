@@ -49,7 +49,7 @@ static const char *row_labels[row_count] = {
 
 static const char *row_glyphs[row_count] = {"hotkeys",      "fastforward", "ffspeed",   "sound",       "ffglyph",
                                             "slowmotion",   "slowmospeed", "sound",     "slowmoglyph", "fastforward",
-                                            "pause",        "pauseglyph",  "quicksave", "quickload",   "togglefps",
+                                            "pause",        "pause",       "quicksave", "quickload",   "togglefps",
                                             "toggleheader", "quit",        "manual"};
 
 static const char *row_help[row_count] = {

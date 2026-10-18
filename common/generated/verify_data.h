@@ -83,7 +83,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/init/S81mode.sh", "e469e2e9e1d34bf7" },
     { "/opt/muos/script/init/S99muos.sh", "f42f139748237f2d" },
     { "/opt/muos/script/init/async/S00entropy.sh", "3773901d7885d416" },
-    { "/opt/muos/script/init/async/S01init.sh", "756656a35ab6e11b" },
+    { "/opt/muos/script/init/async/S01init.sh", "1a28f2c01c6b7d25" },
     { "/opt/muos/script/init/async/S02network.sh", "2626e3a7fd029214" },
     { "/opt/muos/script/init/async/S03chrony.sh", "10f3fc33dfc3c1e7" },
     { "/opt/muos/script/init/async/S04rumble.sh", "4ba8683413445529" },
