@@ -2416,6 +2416,18 @@ static void send_file(struct connection *connection, const char *path, const cha
         return;
     }
 
+    const int descriptor = open(path, O_RDONLY | O_CLOEXEC);
+    if (descriptor < 0) {
+        send_error(connection, 403, "Cannot read that file");
+        return;
+    }
+
+    if (fstat(descriptor, &info) < 0 || !S_ISREG(info.st_mode)) {
+        close(descriptor);
+        send_error(connection, 404, "Not found");
+        return;
+    }
+
     char modified[64] = "";
     if (connection->revalidate && http_date(info.st_mtime, modified, sizeof(modified))) {
         connection->cache_header = "Cache-Control: no-cache\r\n";
@@ -2423,15 +2435,10 @@ static void send_file(struct connection *connection, const char *path, const cha
         if (connection->if_modified[0] && strcmp(connection->if_modified, modified) == 0) {
             connection->response.length = 0;
             connection_reset_body(connection);
+            close(descriptor);
             response_headers(connection, 304, "text/plain", 0, NULL);
             return;
         }
-    }
-
-    const int descriptor = open(path, O_RDONLY | O_CLOEXEC);
-    if (descriptor < 0) {
-        send_error(connection, 403, "Cannot read that file");
-        return;
     }
 
     long long start = 0;
@@ -5641,7 +5648,7 @@ int main(const int argc, char **argv) {
             struct connection *connection = slots[i];
             if (!connection || connection->socket < 0) continue;
 
-            if (descriptors[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            if (descriptors[i].revents & (POLLERR | POLLNVAL)) {
                 connection_close(connection);
                 continue;
             }
@@ -5654,11 +5661,22 @@ int main(const int argc, char **argv) {
                 if (!connection->response.length && connection_ready_to_dispatch(connection)) {
                     if (!connection->response.length) handle_request(connection);
                 }
+
+                if (connection->response.length || connection->body_remaining) {
+                    const int state = connection_send(connection);
+                    if (state <= 0) connection_close(connection);
+                    continue;
+                }
             }
 
             if (descriptors[i].revents & POLLOUT) {
                 const int state = connection_send(connection);
                 if (state <= 0) connection_close(connection);
+                continue;
+            }
+
+            if (descriptors[i].revents & POLLHUP) {
+                connection_close(connection);
                 continue;
             }
 
