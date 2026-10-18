@@ -403,8 +403,6 @@ static void show_actions_dialog(void) {
     if (has_items && !is_folder) entries[count++] = (more_entry) {more_location, 1};
     if (has_items) entries[count++] = (more_entry) {more_remove, 1};
 
-    if (has_items && ui_count_static > 1 && config.visual.shuffle) entries[count++] = (more_entry) {more_random, 1};
-
     entries[count++] = (more_entry) {more_help, 1};
 
     more_open(&more_menu, &theme, ui_screen, entries, count);
