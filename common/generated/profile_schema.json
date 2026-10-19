@@ -8882,7 +8882,7 @@
       "default": "launcher",
       "label": "Device Startup",
       "module": "muxtweakgen",
-      "help": "Which screen the device opens on when it starts.\n\nSet it to Explore or a collection to land on your content without going through the menu first.",
+      "help": "Which screen the device opens on when it starts.\n\nContent Collection opens the main Collections screen. Last Content always reopens the most recently launched content. Resume Content only reopens content after sleep shuts the device down.",
       "options": [
         {
           "value": "launcher",
@@ -8902,11 +8902,11 @@
         },
         {
           "value": "last",
-          "label": "Last Game"
+          "label": "Last Content"
         },
         {
           "value": "resume",
-          "label": "Resume Game"
+          "label": "Resume Content"
         }
       ]
     },
@@ -18743,7 +18743,7 @@
           "label": "Enabled"
         }
       ],
-      "help": "Whether changes made through the Web Dashboard need a code.\n\nDisabled, the dashboard can browse and download, and anyone on your network can change History and Collections and control Wasabi and Pickles without a code. The Editors and Tools cannot save to the device. Enabled, saving from the Editors and Tools, uploading and deleting are unlocked, and each change asks for the code from Web Dashboard Code."
+      "help": "Whether changes made through the Web Dashboard need a code.\n\nDisabled, anyone on your network can manage files, save from Editors and Tools, change History and Collections, and control Wasabi and Pickles without a code. Enabled, changes require the code from Web Dashboard Code."
     },
     {
       "key": "web/landing_port",
@@ -19039,53 +19039,13 @@
       "help": "How often the Web Dashboard may take a picture of the screen for Remote View. Live streams the screen as it changes, at the rate set by Live View FPS. Manual only takes a picture when you press Refresh now in the dashboard, so the picture never changes while you are looking at it.\n\nRemote View needs Authentication and the code from Web Dashboard Code. The screen is only captured while someone is watching, and never while a private screen such as Web Dashboard Code is open. Live uses more processing and network while it is open. Disabled hides Remote View from the dashboard."
     },
     {
-      "key": "web/sftpgo",
-      "group": "web",
-      "type": "int",
-      "default": "0",
-      "min": 0,
-      "max": 1,
-      "label": "SFTP + Filebrowser",
-      "options": [
-        {
-          "value": "0",
-          "label": "Disabled"
-        },
-        {
-          "value": "1",
-          "label": "Enabled"
-        }
-      ],
-      "help": "File transfer and a browser based file manager."
-    },
-    {
-      "key": "web/sftpgo_port",
-      "group": "web",
-      "type": "int",
-      "default": "9090",
-      "min": 1,
-      "max": 65535,
-      "label": "SFTP + Filebrowser Web Port",
-      "help": "The port used to reach this service from a web browser.\n\nChange it only if something else is already using that port."
-    },
-    {
-      "key": "web/sftpgo_sftp_port",
-      "group": "web",
-      "type": "int",
-      "default": "2022",
-      "min": 1,
-      "max": 65535,
-      "label": "SFTP + Filebrowser SFTP Port",
-      "help": "The port used for SFTP file transfers.\n\nChange it only if something else is already using that port."
-    },
-    {
       "key": "web/sshd",
       "group": "web",
       "type": "int",
       "default": "0",
       "min": 0,
       "max": 1,
-      "label": "Secure Shell",
+      "label": "Secure Shell + SFTP",
       "options": [
         {
           "value": "0",
@@ -19096,7 +19056,7 @@
           "label": "Enabled"
         }
       ],
-      "help": "A secure shell for connecting to the device from a computer."
+      "help": "Secure shell and SFTP file transfer through one lightweight service and one network port."
     },
     {
       "key": "web/sshd_port",
@@ -19105,7 +19065,7 @@
       "default": "22",
       "min": 1,
       "max": 65535,
-      "label": "Secure Shell Port",
+      "label": "Secure Shell + SFTP Port",
       "help": "The network port this service listens on.\n\nThe default suits almost everyone. Change it only if something else is already using that port."
     },
     {

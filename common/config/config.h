@@ -499,7 +499,6 @@ struct mux_config {
         int16_t mdns;
         int16_t landing;
         int16_t sshd;
-        int16_t sftp_go;
         int16_t ttyd;
         int16_t syncthing;
         int16_t tailscaled;
@@ -513,8 +512,6 @@ struct mux_config {
         char mdns_name[MAX_BUFFER_SIZE];
         char landing_port[MAX_BUFFER_SIZE];
         char sshd_port[MAX_BUFFER_SIZE];
-        char sftpgo_port[MAX_BUFFER_SIZE];
-        char sftpgo_sftp_port[MAX_BUFFER_SIZE];
         char ttyd_port[MAX_BUFFER_SIZE];
         char ttyd_user[MAX_BUFFER_SIZE];
         char ttyd_pass[MAX_BUFFER_SIZE];

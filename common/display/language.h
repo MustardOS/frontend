@@ -3868,12 +3868,10 @@ struct mux_lang {
         char ttyd[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char sshd[MAX_BUFFER_SIZE];
-        char sftpgo[MAX_BUFFER_SIZE];
         char tailscaled[MAX_BUFFER_SIZE];
         char service[MAX_BUFFER_SIZE];
         char port[MAX_BUFFER_SIZE];
         char web_port[MAX_BUFFER_SIZE];
-        char sftp_port[MAX_BUFFER_SIZE];
         char username[MAX_BUFFER_SIZE];
         char password[MAX_BUFFER_SIZE];
         char local_name[MAX_BUFFER_SIZE];
@@ -3898,12 +3896,10 @@ struct mux_lang {
             char ttyd[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char sshd[MAX_BUFFER_SIZE];
-            char sftp_go[MAX_BUFFER_SIZE];
             char tailscaled[MAX_BUFFER_SIZE];
             char service[MAX_BUFFER_SIZE];
             char port[MAX_BUFFER_SIZE];
             char web_port[MAX_BUFFER_SIZE];
-            char sftp_port[MAX_BUFFER_SIZE];
             char username[MAX_BUFFER_SIZE];
             char password[MAX_BUFFER_SIZE];
             char local_name[MAX_BUFFER_SIZE];

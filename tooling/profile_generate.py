@@ -130,9 +130,6 @@ HELP_KEYS = {
     "web/live_quality": "muxwebserv.help.live_quality",
     "web/sshd": "muxwebserv.help.sshd",
     "web/sshd_port": "muxwebserv.help.port",
-    "web/sftpgo": "muxwebserv.help.sftp_go",
-    "web/sftpgo_port": "muxwebserv.help.web_port",
-    "web/sftpgo_sftp_port": "muxwebserv.help.sftp_port",
     "web/ttyd": "muxwebserv.help.service",
     "web/ttyd_port": "muxwebserv.help.port",
     "web/syncthing": "muxwebserv.help.syncthing",
@@ -221,7 +218,7 @@ FIXED_OPTIONS["web/remote_view"] = [("0", "lang.generic.disabled"), ("1", "30s")
 FIXED_OPTIONS["web/live_fps"] = [(str(v), str(v)) for v in range(5, 61, 5)]
 FIXED_OPTIONS["web/live_quality"] = [(str(v), f"{v}%") for v in range(20, 101, 5)]
 
-for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "sftpgo", "ttyd", "syncthing", "tailscaled"):
+for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "ttyd", "syncthing", "tailscaled"):
     FIXED_OPTIONS[f"web/{_service}"] = DISABLED_ENABLED
 FIXED_OPTIONS["web/remote_control"] = [("0", "lang.generic.disabled"), ("1", "lang.generic.enabled"),
                                        ("2", "lang.muxwebserv.remote_sticks")]
@@ -275,9 +272,6 @@ LABEL_KEYS = {
     "web/live_quality": "lang.muxwebserv.live_quality",
     "web/sshd": "lang.muxwebserv.sshd",
     "web/sshd_port": "{lang.muxwebserv.sshd} {lang.muxwebserv.port}",
-    "web/sftpgo": "lang.muxwebserv.sftpgo",
-    "web/sftpgo_port": "{lang.muxwebserv.sftpgo} {lang.muxwebserv.web_port}",
-    "web/sftpgo_sftp_port": "{lang.muxwebserv.sftpgo} {lang.muxwebserv.sftp_port}",
     "web/ttyd": "lang.muxwebserv.ttyd",
     "web/ttyd_port": "{lang.muxwebserv.ttyd} {lang.muxwebserv.port}",
     "web/syncthing": "lang.muxwebserv.syncthing",

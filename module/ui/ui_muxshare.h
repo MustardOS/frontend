@@ -742,7 +742,6 @@
     WEBSERV(mdns, "mdns")                                                                                              \
     WEBSERV(landing, "landing")                                                                                        \
     WEBSERV(sshd, "sshd")                                                                                              \
-    WEBSERV(sftp_go, "sftpgo")                                                                                         \
     WEBSERV(ttyd, "ttyd")                                                                                              \
     WEBSERV(syncthing, "syncthing")                                                                                    \
     WEBSERV(tailscaled, "tailscaled")                                                                                  \
