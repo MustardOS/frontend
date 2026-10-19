@@ -40,12 +40,36 @@
 #define MUWEB_CONTENT_DEPTH   6
 
 #define MUWEB_CONTENT_ROOTS 4
+#define MUWEB_FILE_ROOTS    5
+
+struct file_root {
+    char id[16];
+    char label[32];
+    char path[PATH_MAX];
+    int removable;
+    int protected;
+};
+
+static struct file_root file_roots[MUWEB_FILE_ROOTS];
+static size_t file_root_count = 0;
+static size_t file_upload_count = 0;
 
 static const char *const catalogue_types[] = {
     "box",   "grid",         "preview",         "text",           "splash",        "manual",
     "video", "overlay/base", "overlay/battery", "overlay/bright", "overlay/volume"
 };
 #define CATALOGUE_TYPE_COUNT (sizeof(catalogue_types) / sizeof(catalogue_types[0]))
+#define OVERLAY_STEPS        10
+
+static const char *const overlay_steps[] = {"overlay/battery", "overlay/bright", "overlay/volume"};
+#define OVERLAY_STEP_COUNT (sizeof(overlay_steps) / sizeof(overlay_steps[0]))
+
+static int overlay_is_stepped(const char *type) {
+    for (size_t i = 0; i < OVERLAY_STEP_COUNT; ++i)
+        if (strcmp(overlay_steps[i], type) == 0) return 1;
+
+    return 0;
+}
 
 void *mux_malloc(const size_t size) {
     void *memory = malloc(size);
@@ -1415,6 +1439,58 @@ static int catalogue_files_json(
     return ok && buffer_puts(out, "}");
 }
 
+static size_t catalogue_files_held(const struct catalogue_view *view, const char *stem) {
+    size_t held = 0;
+
+    for (size_t type = 0; type < CATALOGUE_TYPE_COUNT; ++type) {
+        if (overlay_is_stepped(catalogue_types[type])) continue;
+
+        for (size_t file = 0; file < view->scans[type].count; ++file) {
+            if (strcmp(view->scans[type].files[file].stem, stem) != 0) continue;
+            held += 1;
+            break;
+        }
+    }
+
+    return held;
+}
+
+static size_t content_folder_missing(const struct content_folder *folder) {
+    const size_t required = CATALOGUE_TYPE_COUNT - OVERLAY_STEP_COUNT;
+    size_t missing = 0;
+
+    for (size_t i = 0; i < folder->count; ++i) {
+        const struct content_item *item = &folder->items[i];
+        if (item->folder) continue;
+        if (!item->catalogue[0]) {
+            missing += 1;
+            continue;
+        }
+
+        int seen = 0;
+        for (size_t earlier = 0; earlier < i; ++earlier) {
+            const struct content_item *previous = &folder->items[earlier];
+            if (!previous->folder && strcmp(previous->catalogue, item->catalogue) == 0) {
+                seen = 1;
+                break;
+            }
+        }
+        if (seen) continue;
+
+        struct catalogue_view view;
+        catalogue_view_load(&view, item->catalogue);
+        for (size_t entry = i; entry < folder->count; ++entry) {
+            const struct content_item *candidate = &folder->items[entry];
+            if (!candidate->folder && strcmp(candidate->catalogue, item->catalogue) == 0
+                && catalogue_files_held(&view, candidate->stem) < required)
+                missing += 1;
+        }
+        catalogue_view_free(&view);
+    }
+
+    return missing;
+}
+
 static const char *catalogue_for_path(const char *relative) {
     const char *found = NULL;
     const char *segment = relative;
@@ -1572,6 +1648,7 @@ static int content_index_json(struct buffer *out) {
             if (!folder->items[item].folder) held += 1;
 
         ok = ok && json_number(out, "content", (long long) held) && buffer_puts(out, ",")
+             && json_number(out, "missing", (long long) content_folder_missing(folder)) && buffer_puts(out, ",")
              && catalogue_files_json(out, &folders, folder->name, &bytes, &modified) && buffer_puts(out, ",")
              && json_number(out, "bytes", bytes) && buffer_puts(out, ",") && json_number(out, "modified", modified)
              && buffer_puts(out, "}");
@@ -1579,18 +1656,6 @@ static int content_index_json(struct buffer *out) {
 
     catalogue_view_free(&folders);
     return ok && buffer_puts(out, "]}");
-}
-
-#define OVERLAY_STEPS 10
-
-static const char *const overlay_steps[] = {"overlay/battery", "overlay/bright", "overlay/volume"};
-#define OVERLAY_STEP_COUNT (sizeof(overlay_steps) / sizeof(overlay_steps[0]))
-
-static int overlay_is_stepped(const char *type) {
-    for (size_t i = 0; i < OVERLAY_STEP_COUNT; ++i)
-        if (strcmp(overlay_steps[i], type) == 0) return 1;
-
-    return 0;
 }
 
 static int overlays_json(struct buffer *out, const struct catalogue_view *view) {
@@ -2298,12 +2363,18 @@ struct connection {
 
     int body_descriptor;
     long long body_remaining;
+    int upload_descriptor;
+    int upload_active;
+    unsigned long long upload_remaining;
+    char upload_temporary[PATH_MAX];
+    char upload_target[PATH_MAX];
     int head_only;
     int revalidate;
     const char *cache_header;
     char if_modified[64];
     char auth_code[16];
     char auth_session[MUWEB_TOKEN_TEXT];
+    char system_write[16];
     unsigned char peer[16];
 };
 
@@ -2329,6 +2400,8 @@ static const char *status_text(const int status) {
             return "Not Found";
         case 405:
             return "Method Not Allowed";
+        case 409:
+            return "Conflict";
         case 413:
             return "Payload Too Large";
         case 429:
@@ -2337,6 +2410,8 @@ static const char *status_text(const int status) {
             return "Internal Server Error";
         case 501:
             return "Not Implemented";
+        case 507:
+            return "Insufficient Storage";
         default:
             return "Error";
     }
@@ -2346,6 +2421,17 @@ static void connection_reset_body(struct connection *connection) {
     if (connection->body_descriptor >= 0) close(connection->body_descriptor);
     connection->body_descriptor = -1;
     connection->body_remaining = 0;
+}
+
+static void connection_reset_upload(struct connection *connection) {
+    if (connection->upload_descriptor >= 0) close(connection->upload_descriptor);
+    connection->upload_descriptor = -1;
+    if (connection->upload_active && file_upload_count) file_upload_count--;
+    connection->upload_active = 0;
+    connection->upload_remaining = 0;
+    if (connection->upload_temporary[0]) unlink(connection->upload_temporary);
+    connection->upload_temporary[0] = '\0';
+    connection->upload_target[0] = '\0';
 }
 
 static int response_headers(
@@ -2663,6 +2749,490 @@ static int write_allowed(struct connection *connection) {
 
     send_error(connection, 401, "Unlock the dashboard with the code from Web Dashboard Code on the device");
     return 0;
+}
+
+static int body_text(const char *body, size_t length, char *out, size_t size);
+
+static struct file_root *file_root_find(const char *id) {
+    for (size_t i = 0; i < file_root_count; ++i)
+        if (strcmp(file_roots[i].id, id) == 0) return &file_roots[i];
+    return NULL;
+}
+
+static void mount_path_decode(char *path) {
+    char *read_at = path;
+    char *write_at = path;
+    while (*read_at) {
+        if (read_at[0] == '\\' && read_at[1] >= '0' && read_at[1] <= '7' && read_at[2] >= '0' && read_at[2] <= '7'
+            && read_at[3] >= '0' && read_at[3] <= '7') {
+            *write_at++ = (char) ((read_at[1] - '0') * 64 + (read_at[2] - '0') * 8 + (read_at[3] - '0'));
+            read_at += 4;
+        } else {
+            *write_at++ = *read_at++;
+        }
+    }
+    *write_at = '\0';
+}
+
+static int file_root_mounted(const struct file_root *root) {
+    if (!root->removable) return 1;
+
+    FILE *mounts = fopen("/proc/self/mountinfo", "r");
+    if (!mounts) return 0;
+
+    char line[8192];
+    int mounted = 0;
+    while (fgets(line, sizeof(line), mounts)) {
+        char point[PATH_MAX];
+        if (sscanf(line, "%*s %*s %*s %*s %4095s", point) != 1) continue;
+        mount_path_decode(point);
+        if (strcmp(point, root->path) == 0) {
+            mounted = 1;
+            break;
+        }
+    }
+    fclose(mounts);
+    return mounted;
+}
+
+static int file_root_available(const struct file_root *root) {
+    struct stat info;
+    return file_root_mounted(root) && stat(root->path, &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+static int file_relative_path(const char *relative, const int empty_ok) {
+    if (!relative || !*relative) return empty_ok;
+    if (*relative == '/' || strlen(relative) >= PATH_MAX - 1) return 0;
+
+    const char *segment = relative;
+    while (*segment) {
+        const char *end = strchr(segment, '/');
+        const size_t length = end ? (size_t) (end - segment) : strlen(segment);
+        if (!length || (length == 1 && segment[0] == '.') || (length == 2 && segment[0] == '.' && segment[1] == '.'))
+            return 0;
+        for (size_t i = 0; i < length; ++i)
+            if (segment[i] == '\\' || (unsigned char) segment[i] < 0x20) return 0;
+        if (!end) break;
+        segment = end + 1;
+    }
+    return 1;
+}
+
+static int file_sensitive(const struct file_root *root, const char *relative) {
+    if (strcmp(root->id, "system") != 0 || !relative) return 0;
+    return strcmp(relative, "config/system/landing_secret") == 0 || strncmp(relative, "config/network/", 15) == 0
+           || strcmp(relative, "config/network") == 0 || strncmp(relative, "config/terminal/", 16) == 0
+           || strcmp(relative, "config/terminal") == 0;
+}
+
+static int file_resolve_existing(const struct file_root *root, const char *relative, char *out, const size_t out_size) {
+    if (!file_root_available(root) || !file_relative_path(relative, 1) || file_sensitive(root, relative)) return 0;
+
+    char candidate[PATH_MAX];
+    if (!join_path(candidate, sizeof(candidate), root->path, relative)) return 0;
+
+    char resolved[PATH_MAX];
+    char resolved_root[PATH_MAX];
+    if (!realpath(candidate, resolved) || !realpath(root->path, resolved_root)) return 0;
+
+    const size_t root_length = strlen(resolved_root);
+    if (strncmp(resolved, resolved_root, root_length) != 0 || (resolved[root_length] && resolved[root_length] != '/'))
+        return 0;
+
+    const char *resolved_relative = resolved[root_length] == '/' ? resolved + root_length + 1 : "";
+    if (file_sensitive(root, resolved_relative)) return 0;
+
+    return snprintf(out, out_size, "%s", resolved) > 0 && strlen(resolved) < out_size;
+}
+
+static int file_resolve_entry(const struct file_root *root, const char *relative, char *out, const size_t out_size) {
+    if (!file_relative_path(relative, 0) || file_sensitive(root, relative)) return 0;
+
+    char parent_relative[PATH_MAX];
+    const char *leaf = strrchr(relative, '/');
+    if (leaf) {
+        const size_t length = (size_t) (leaf - relative);
+        if (length >= sizeof(parent_relative)) return 0;
+        memcpy(parent_relative, relative, length);
+        parent_relative[length] = '\0';
+        leaf += 1;
+    } else {
+        parent_relative[0] = '\0';
+        leaf = relative;
+    }
+
+    char parent[PATH_MAX];
+    if (!file_resolve_existing(root, parent_relative, parent, sizeof(parent))) return 0;
+    const int written = snprintf(out, out_size, "%s/%s", parent, leaf);
+    if (written < 1 || (size_t) written >= out_size) return 0;
+
+    struct stat info;
+    return lstat(out, &info) == 0;
+}
+
+static int file_resolve_target(const struct file_root *root, const char *relative, char *out, const size_t out_size) {
+    if (!file_root_available(root) || !file_relative_path(relative, 0) || file_sensitive(root, relative)) return 0;
+
+    char parent_relative[PATH_MAX];
+    const char *leaf = strrchr(relative, '/');
+    if (leaf) {
+        const size_t length = (size_t) (leaf - relative);
+        if (length >= sizeof(parent_relative)) return 0;
+        memcpy(parent_relative, relative, length);
+        parent_relative[length] = '\0';
+        leaf += 1;
+    } else {
+        parent_relative[0] = '\0';
+        leaf = relative;
+    }
+
+    char parent[PATH_MAX];
+    if (!file_resolve_existing(root, parent_relative, parent, sizeof(parent))) return 0;
+    const int written = snprintf(out, out_size, "%s/%s", parent, leaf);
+    return written > 0 && (size_t) written < out_size;
+}
+
+static int file_mutation_allowed(struct connection *connection, const struct file_root *root) {
+    if (!write_allowed(connection)) return 0;
+    if (!root->protected || strcmp(connection->system_write, "confirm") == 0) return 1;
+    send_error(connection, 403, "Confirm write access for this system location");
+    return 0;
+}
+
+static void file_roots_json(struct connection *connection) {
+    struct buffer out = {0};
+    buffer_puts(&out, "{\"roots\":[");
+    int first = 1;
+    for (size_t i = 0; i < file_root_count; ++i) {
+        struct file_root *root = &file_roots[i];
+        if (!file_root_available(root)) continue;
+        if (!first) buffer_puts(&out, ",");
+        first = 0;
+        buffer_puts(&out, "{");
+        json_field(&out, "id", root->id);
+        buffer_puts(&out, ",");
+        json_field(&out, "label", root->label);
+        buffer_puts(&out, ",");
+        json_field(&out, "path", root->path);
+        buffer_puts(&out, ",");
+        json_number(&out, "protected", root->protected);
+        buffer_puts(&out, "}");
+    }
+    buffer_puts(&out, "]}");
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static int file_name_compare(const struct dirent **left, const struct dirent **right) {
+    return strcasecmp((*left)->d_name, (*right)->d_name);
+}
+
+static void file_directory_json(
+    struct connection *connection, const struct file_root *root, const char *relative, const char *directory
+) {
+    struct dirent **entries = NULL;
+    const int count = scandir(directory, &entries, NULL, file_name_compare);
+    if (count < 0) {
+        send_error(connection, 403, "Cannot read that folder");
+        return;
+    }
+
+    struct buffer out = {0};
+    buffer_puts(&out, "{");
+    json_field(&out, "root", root->id);
+    buffer_puts(&out, ",");
+    json_field(&out, "label", root->label);
+    buffer_puts(&out, ",");
+    json_field(&out, "path", relative ? relative : "");
+    buffer_puts(&out, ",");
+    json_number(&out, "protected", root->protected);
+
+    struct statvfs space;
+    if (statvfs(directory, &space) == 0) {
+        const unsigned long long unit = space.f_frsize ? space.f_frsize : space.f_bsize;
+        const unsigned long long total = (unsigned long long) space.f_blocks * unit;
+        const unsigned long long free_space = (unsigned long long) space.f_bavail * unit;
+        buffer_printf(&out, ",\"space\":{\"total\":%llu,\"free\":%llu}", total, free_space);
+    }
+
+    buffer_puts(&out, ",\"items\":[");
+    int first = 1;
+    for (int i = 0; i < count; ++i) {
+        struct dirent *entry = entries[i];
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            free(entry);
+            continue;
+        }
+
+        char item_relative[PATH_MAX];
+        const int relative_written =
+            relative && *relative ? snprintf(item_relative, sizeof(item_relative), "%s/%s", relative, entry->d_name)
+                                  : snprintf(item_relative, sizeof(item_relative), "%s", entry->d_name);
+        if (relative_written < 1 || (size_t) relative_written >= sizeof(item_relative)
+            || file_sensitive(root, item_relative)) {
+            free(entry);
+            continue;
+        }
+
+        char item_path[PATH_MAX];
+        if (!join_path(item_path, sizeof(item_path), directory, entry->d_name)) {
+            free(entry);
+            continue;
+        }
+
+        struct stat info;
+        if (lstat(item_path, &info) < 0) {
+            free(entry);
+            continue;
+        }
+
+        if (!first) buffer_puts(&out, ",");
+        first = 0;
+        buffer_puts(&out, "{");
+        json_field(&out, "name", entry->d_name);
+        buffer_puts(&out, ",");
+        json_number(&out, "directory", S_ISDIR(info.st_mode));
+        buffer_puts(&out, ",");
+        json_number(&out, "link", S_ISLNK(info.st_mode));
+        buffer_puts(&out, ",");
+        json_number(&out, "bytes", S_ISREG(info.st_mode) ? (long long) info.st_size : 0);
+        buffer_puts(&out, ",");
+        json_number(&out, "modified", (long long) info.st_mtime);
+        buffer_puts(&out, "}");
+        free(entry);
+    }
+    free(entries);
+    buffer_puts(&out, "]}");
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static int file_remove_tree(const char *path) {
+    struct stat info;
+    if (lstat(path, &info) < 0) return 0;
+    if (!S_ISDIR(info.st_mode) || S_ISLNK(info.st_mode)) return unlink(path) == 0;
+
+    DIR *directory = opendir(path);
+    if (!directory) return 0;
+    int ok = 1;
+    struct dirent *entry;
+    while (ok && (entry = readdir(directory))) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        char child[PATH_MAX];
+        if (!join_path(child, sizeof(child), path, entry->d_name) || !file_remove_tree(child)) ok = 0;
+    }
+    closedir(directory);
+    return ok && rmdir(path) == 0;
+}
+
+static int file_copy_regular(const char *source, const char *target) {
+    const int input = open(source, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    if (input < 0) return 0;
+
+    struct stat info;
+    if (fstat(input, &info) < 0 || !S_ISREG(info.st_mode)) {
+        close(input);
+        return 0;
+    }
+
+    char temporary[PATH_MAX];
+    if (snprintf(temporary, sizeof(temporary), "%s.muweb.XXXXXX", target) < 1) {
+        close(input);
+        return 0;
+    }
+    const int output = mkstemp(temporary);
+    if (output < 0) {
+        close(input);
+        return 0;
+    }
+    fchmod(output, info.st_mode & 0777);
+
+    int ok = 1;
+    char block[MUWEB_SEND_CHUNK];
+    ssize_t got;
+    while ((got = read(input, block, sizeof(block))) > 0) {
+        ssize_t offset = 0;
+        while (offset < got) {
+            const ssize_t put = write(output, block + offset, (size_t) (got - offset));
+            if (put < 0 && errno == EINTR) continue;
+            if (put <= 0) {
+                ok = 0;
+                break;
+            }
+            offset += put;
+        }
+        if (!ok) break;
+    }
+    if (got < 0 || fsync(output) < 0) ok = 0;
+    if (close(input) < 0 || close(output) < 0) ok = 0;
+    if (ok && rename(temporary, target) == 0) return 1;
+    unlink(temporary);
+    return 0;
+}
+
+static int file_copy_tree(const char *source, const char *target) {
+    struct stat info;
+    if (lstat(source, &info) < 0) return 0;
+    if (S_ISREG(info.st_mode)) return file_copy_regular(source, target);
+    if (!S_ISDIR(info.st_mode) || S_ISLNK(info.st_mode) || mkdir(target, info.st_mode & 0777) < 0) return 0;
+
+    DIR *directory = opendir(source);
+    if (!directory) {
+        rmdir(target);
+        return 0;
+    }
+
+    int ok = 1;
+    struct dirent *entry;
+    while (ok && (entry = readdir(directory))) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        char source_child[PATH_MAX];
+        char target_child[PATH_MAX];
+        if (!join_path(source_child, sizeof(source_child), source, entry->d_name)
+            || !join_path(target_child, sizeof(target_child), target, entry->d_name)
+            || !file_copy_tree(source_child, target_child))
+            ok = 0;
+    }
+    closedir(directory);
+    if (ok && chmod(target, info.st_mode & 0777) == 0) return 1;
+    file_remove_tree(target);
+    return 0;
+}
+
+static int file_path_within(const char *parent, const char *path) {
+    const size_t length = strlen(parent);
+    return strncmp(parent, path, length) == 0 && (!path[length] || path[length] == '/');
+}
+
+static int file_route(char *path, struct file_root **root, char **action, char **relative) {
+    if (!path || !*path) return 0;
+    char *slash = strchr(path, '/');
+    if (!slash) return 0;
+    *slash = '\0';
+    *root = file_root_find(path);
+    if (!*root || !file_root_available(*root)) return 0;
+
+    *action = slash + 1;
+    slash = strchr(*action, '/');
+    if (slash) {
+        *slash = '\0';
+        *relative = slash + 1;
+    } else {
+        *relative = slash ? slash + 1 : (char *) "";
+    }
+    return 1;
+}
+
+static void handle_files_api(
+    struct connection *connection, const char *method, char *path, const char *body, const size_t body_length,
+    const char *range_header
+) {
+    if (!path || !*path) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+        file_roots_json(connection);
+        return;
+    }
+
+    struct file_root *root;
+    char *action;
+    char *relative;
+    if (!file_route(path, &root, &action, &relative)) {
+        send_error(connection, 404, "Storage location is not available");
+        return;
+    }
+
+    if (strcmp(action, "browse") == 0 && strcmp(method, "GET") == 0) {
+        char target[PATH_MAX];
+        if (!file_resolve_existing(root, relative, target, sizeof(target))) {
+            send_error(connection, 404, "Folder not found");
+            return;
+        }
+        struct stat info;
+        if (stat(target, &info) < 0 || !S_ISDIR(info.st_mode)) {
+            send_error(connection, 400, "That is not a folder");
+            return;
+        }
+        file_directory_json(connection, root, relative, target);
+        return;
+    }
+
+    if (strcmp(action, "download") == 0 && strcmp(method, "GET") == 0) {
+        char target[PATH_MAX];
+        if (!file_resolve_existing(root, relative, target, sizeof(target))) {
+            send_error(connection, 404, "File not found");
+            return;
+        }
+        send_file(connection, target, range_header);
+        return;
+    }
+
+    if (strcmp(action, "upload") == 0 && strcmp(method, "PUT") == 0) {
+        send_error(connection, 400, "Upload body was not streamed");
+        return;
+    }
+
+    if (!file_mutation_allowed(connection, root)) return;
+
+    if (strcmp(action, "mkdir") == 0 && strcmp(method, "POST") == 0) {
+        char target[PATH_MAX];
+        if (!file_resolve_target(root, relative, target, sizeof(target))) {
+            send_error(connection, 400, "Invalid folder name");
+            return;
+        }
+        if (mkdir(target, 0755) < 0) {
+            send_error(connection, errno == EEXIST ? 409 : 500, "Could not create that folder");
+            return;
+        }
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (strcmp(action, "remove") == 0 && strcmp(method, "DELETE") == 0) {
+        char target[PATH_MAX];
+        if (!file_resolve_entry(root, relative, target, sizeof(target)) || !*relative) {
+            send_error(connection, 404, "Item not found");
+            return;
+        }
+        if (!file_remove_tree(target)) {
+            send_error(connection, 500, "Could not remove that item");
+            return;
+        }
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if ((strcmp(action, "move") == 0 || strcmp(action, "copy") == 0) && strcmp(method, "POST") == 0) {
+        char destination_relative[PATH_MAX];
+        if (!body_text(body, body_length, destination_relative, sizeof(destination_relative))) {
+            send_error(connection, 400, "Invalid destination");
+            return;
+        }
+        char source[PATH_MAX];
+        char target[PATH_MAX];
+        if (!file_resolve_entry(root, relative, source, sizeof(source))
+            || !file_resolve_target(root, destination_relative, target, sizeof(target))) {
+            send_error(connection, 400, "Invalid source or destination");
+            return;
+        }
+
+        const int copied = strcmp(action, "copy") == 0;
+        if (copied && file_path_within(source, target)) {
+            send_error(connection, 400, "A folder cannot be copied into itself");
+            return;
+        }
+        const int ok = copied ? file_copy_tree(source, target) : rename(source, target) == 0;
+        if (!ok) {
+            send_error(connection, 500, copied ? "Could not copy that item" : "Could not move that item");
+            return;
+        }
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    send_error(connection, 405, "Method not allowed");
 }
 
 static void handle_catalogue_api(
@@ -3105,6 +3675,155 @@ static int pointer_file_name(const char *path, char *out, const size_t size) {
     return written > 0 && (size_t) written < size;
 }
 
+typedef struct {
+    char source[PATH_MAX];
+    char target[PATH_MAX];
+    pointer_entry before;
+    pointer_entry after;
+    struct timespec times[2];
+    int had_time;
+} pointer_rename_change;
+
+static int pointer_rename_change_add(
+    pointer_rename_change **changes, size_t *count, size_t *capacity, const char *file, const char *new_path,
+    const char *new_name
+) {
+    pointer_entry entry;
+    if (!pointer_read(file, &entry) || strcmp(entry.path, new_path) == 0) return 1;
+
+    if (*count == *capacity) {
+        const size_t grown_capacity = *capacity ? *capacity * 2 : 8;
+        pointer_rename_change *grown = realloc(*changes, grown_capacity * sizeof(*grown));
+        if (!grown) return 0;
+        *changes = grown;
+        *capacity = grown_capacity;
+    }
+
+    pointer_rename_change *change = &(*changes)[*count];
+    memset(change, 0, sizeof(*change));
+    snprintf(change->source, sizeof(change->source), "%s", file);
+    change->before = entry;
+    change->after = entry;
+    snprintf(change->after.path, sizeof(change->after.path), "%s", new_path);
+    snprintf(change->after.name, sizeof(change->after.name), "%s", new_name);
+
+    char leaf[PATH_MAX];
+    const char *slash = strrchr(file, '/');
+    if (!slash || !pointer_file_name(new_path, leaf, sizeof(leaf))
+        || (size_t) snprintf(change->target, sizeof(change->target), "%.*s/%s", (int) (slash - file), file, leaf)
+               >= sizeof(change->target)
+        || strcmp(change->source, change->target) == 0)
+        return 0;
+
+    struct stat info;
+    if (stat(file, &info) == 0) {
+        change->times[0] = info.st_atim;
+        change->times[1] = info.st_mtim;
+        change->had_time = 1;
+    }
+
+    *count += 1;
+    return 1;
+}
+
+static int pointer_rename_scan_folder(
+    const char *folder, const char *old_path, const char *new_path, const char *new_name,
+    pointer_rename_change **changes, size_t *count, size_t *capacity
+) {
+    DIR *directory = opendir(folder);
+    if (!directory) return errno == ENOENT;
+
+    int ok = 1;
+    const struct dirent *entry;
+    while (ok && (entry = readdir(directory))) {
+        if (!is_cfg_name(entry->d_name)) continue;
+
+        char file[PATH_MAX];
+        pointer_entry pointer;
+        if ((size_t) snprintf(file, sizeof(file), "%s/%s", folder, entry->d_name) >= sizeof(file)
+            || !pointer_read(file, &pointer) || strcmp(pointer.path, old_path) != 0)
+            continue;
+
+        ok = pointer_rename_change_add(changes, count, capacity, file, new_path, new_name);
+    }
+    closedir(directory);
+    return ok;
+}
+
+static int pointer_rename_scan_root(
+    const char *root, const int folders, const char *old_path, const char *new_path, const char *new_name,
+    pointer_rename_change **changes, size_t *count, size_t *capacity
+) {
+    if (!root[0]) return 1;
+    if (!pointer_rename_scan_folder(root, old_path, new_path, new_name, changes, count, capacity)) return 0;
+    if (!folders) return 1;
+
+    DIR *directory = opendir(root);
+    if (!directory) return errno == ENOENT;
+
+    int ok = 1;
+    const struct dirent *entry;
+    while (ok && (entry = readdir(directory))) {
+        if (entry->d_name[0] == '.') continue;
+
+        char folder[PATH_MAX];
+        struct stat info;
+        if ((size_t) snprintf(folder, sizeof(folder), "%s/%s", root, entry->d_name) >= sizeof(folder)
+            || lstat(folder, &info) < 0 || !S_ISDIR(info.st_mode))
+            continue;
+
+        ok = pointer_rename_scan_folder(folder, old_path, new_path, new_name, changes, count, capacity);
+    }
+    closedir(directory);
+    return ok;
+}
+
+static int pointer_rename_target_seen(const pointer_rename_change *changes, const size_t before, const char *target) {
+    for (size_t i = 0; i < before; ++i)
+        if (strcmp(changes[i].target, target) == 0) return 1;
+    return 0;
+}
+
+static void pointer_rename_remove_targets(const pointer_rename_change *changes, const size_t count) {
+    for (size_t i = 0; i < count; ++i)
+        if (!pointer_rename_target_seen(changes, i, changes[i].target)) unlink(changes[i].target);
+}
+
+static void pointer_rename_restore_sources(const pointer_rename_change *changes, const size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        if (!pointer_write(changes[i].source, &changes[i].before)) continue;
+        if (changes[i].had_time) utimensat(AT_FDCWD, changes[i].source, changes[i].times, 0);
+    }
+}
+
+static int pointer_content_rename_paths(
+    const char *path, const char *name, char *source, const size_t source_size, char *target, const size_t target_size
+) {
+    char resolved[PATH_MAX];
+    if (!realpath(path, resolved)) return 0;
+
+    for (size_t i = 0; i < file_root_count; ++i) {
+        const struct file_root *root = &file_roots[i];
+        if (root->protected || !file_root_available(root)) continue;
+
+        char resolved_root[PATH_MAX];
+        if (!realpath(root->path, resolved_root) || !file_path_within(resolved_root, resolved)) continue;
+
+        const size_t root_length = strlen(resolved_root);
+        const char *relative = resolved[root_length] == '/' ? resolved + root_length + 1 : "";
+        if (!*relative || !file_resolve_entry(root, relative, source, source_size)) return 0;
+
+        char destination[PATH_MAX];
+        const char *slash = strrchr(relative, '/');
+        const int written =
+            slash ? snprintf(destination, sizeof(destination), "%.*s/%s", (int) (slash - relative), relative, name)
+                  : snprintf(destination, sizeof(destination), "%s", name);
+        return written > 0 && (size_t) written < sizeof(destination)
+               && file_resolve_target(root, destination, target, target_size);
+    }
+    return 0;
+}
+
 static void pointer_json(struct buffer *out, const pointer_item *item) {
     struct stat info;
     const int exists = stat(item->entry.path, &info) == 0 && S_ISREG(info.st_mode);
@@ -3441,6 +4160,114 @@ static void pointer_update_path(
     send_text(connection, 200, "application/json", "{\"ok\":true}");
 }
 
+static void pointer_rename_content(
+    struct connection *connection, const char *root, const char *id, const char *body, const size_t body_length
+) {
+    char file[PATH_MAX];
+    if (!is_cfg_name(strrchr(id, '/') ? strrchr(id, '/') + 1 : id) || !resolve_within(root, id, file, sizeof(file))) {
+        send_error(connection, 404, "That entry no longer exists");
+        return;
+    }
+
+    char name[NAME_MAX + 1];
+    if (!body_text(body, body_length, name, sizeof(name)) || !single_name(name)) {
+        send_error(connection, 400, "Enter a valid file name");
+        return;
+    }
+
+    pointer_entry entry;
+    if (!pointer_read(file, &entry)) {
+        send_error(connection, 500, "Could not read that entry");
+        return;
+    }
+
+    struct stat content;
+    if (stat(entry.path, &content) < 0 || !S_ISREG(content.st_mode)) {
+        send_error(connection, 404, "That content is no longer available");
+        return;
+    }
+
+    char source[PATH_MAX];
+    char target[PATH_MAX];
+    if (!pointer_content_rename_paths(entry.path, name, source, sizeof(source), target, sizeof(target))) {
+        send_error(connection, 403, "Content can only be renamed on user storage");
+        return;
+    }
+    if (strcmp(source, target) == 0) {
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+    if (access(target, F_OK) == 0) {
+        send_error(connection, 409, "A file with that name already exists");
+        return;
+    }
+
+    char display_name[PATH_MAX];
+    path_stem(target, display_name, sizeof(display_name));
+
+    pointer_rename_change *changes = NULL;
+    size_t change_count = 0;
+    size_t change_capacity = 0;
+    const int scanned =
+        pointer_rename_scan_root(
+            history_root, 0, entry.path, target, display_name, &changes, &change_count, &change_capacity
+        )
+        && pointer_rename_scan_root(
+            collection_root, 1, entry.path, target, display_name, &changes, &change_count, &change_capacity
+        );
+    if (!scanned || !change_count) {
+        free(changes);
+        send_error(connection, 500, "Could not prepare the content rename");
+        return;
+    }
+
+    for (size_t i = 0; i < change_count; ++i) {
+        if (access(changes[i].target, F_OK) == 0) {
+            free(changes);
+            send_error(connection, 409, "An entry for that file name already exists");
+            return;
+        }
+    }
+
+    size_t written = 0;
+    for (; written < change_count; ++written) {
+        if (pointer_rename_target_seen(changes, written, changes[written].target)) continue;
+        if (!pointer_write(changes[written].target, &changes[written].after)) break;
+        if (changes[written].had_time) utimensat(AT_FDCWD, changes[written].target, changes[written].times, 0);
+    }
+    if (written != change_count) {
+        pointer_rename_remove_targets(changes, written);
+        free(changes);
+        send_error(connection, 500, "Could not update the content entries");
+        return;
+    }
+
+    if (rename(source, target) < 0) {
+        pointer_rename_remove_targets(changes, change_count);
+        free(changes);
+        send_error(connection, 500, "Could not rename the content file");
+        return;
+    }
+
+    int removed = 1;
+    for (size_t i = 0; i < change_count; ++i) {
+        if (unlink(changes[i].source) < 0 && errno != ENOENT) removed = 0;
+    }
+    if (!removed) {
+        if (rename(target, source) == 0) {
+            pointer_rename_remove_targets(changes, change_count);
+            pointer_rename_restore_sources(changes, change_count);
+        }
+        free(changes);
+        send_error(connection, 500, "Could not finish the content rename");
+        return;
+    }
+
+    log_verbose("renamed content %s to %s and updated %zu entries", source, target, change_count);
+    free(changes);
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+}
+
 static int collection_folder(const char *name, char *out, const size_t size) {
     if (!*name) {
         const int written = snprintf(out, size, "%s", collection_root);
@@ -3505,6 +4332,15 @@ static void handle_history_api(
 
     if (action && strcmp(action, "path") == 0 && strcmp(method, "PUT") == 0) {
         pointer_update_path(connection, history_root, path, body, body_length);
+        return;
+    }
+
+    if (action && strcmp(action, "rename") == 0 && strcmp(method, "POST") == 0) {
+        if (module_open("muxcollect")) {
+            send_error(connection, 409, "Collections is open on the device, close it there to rename content");
+            return;
+        }
+        pointer_rename_content(connection, history_root, path, body, body_length);
         return;
     }
 
@@ -3641,6 +4477,15 @@ static void handle_collection_api(
 
     if (is_item && action && strcmp(action, "path") == 0 && strcmp(method, "PUT") == 0) {
         pointer_update_path(connection, collection_root, path, body, body_length);
+        return;
+    }
+
+    if (is_item && action && strcmp(action, "rename") == 0 && strcmp(method, "POST") == 0) {
+        if (module_open("muxhistory")) {
+            send_error(connection, 409, "History is open on the device, close it there to rename content");
+            return;
+        }
+        pointer_rename_content(connection, collection_root, path, body, body_length);
         return;
     }
 
@@ -4978,6 +5823,140 @@ static int same_origin(const char *headers) {
     return authority && strcasecmp(authority, host) == 0;
 }
 
+static int file_upload_write(struct connection *connection, const char *data, size_t length) {
+    if ((unsigned long long) length > connection->upload_remaining) return 0;
+    size_t offset = 0;
+    while (offset < length) {
+        const ssize_t written = write(connection->upload_descriptor, data + offset, length - offset);
+        if (written < 0 && errno == EINTR) continue;
+        if (written <= 0) return 0;
+        offset += (size_t) written;
+    }
+    connection->upload_remaining -= length;
+    return 1;
+}
+
+static int file_upload_finish(struct connection *connection) {
+    if (connection->upload_remaining) return 1;
+
+    const int descriptor = connection->upload_descriptor;
+    connection->upload_descriptor = -1;
+    if (connection->upload_active && file_upload_count) file_upload_count--;
+    connection->upload_active = 0;
+    const int synced = fsync(descriptor);
+    const int closed = close(descriptor);
+    if (synced < 0 || closed < 0 || rename(connection->upload_temporary, connection->upload_target) < 0) {
+        unlink(connection->upload_temporary);
+        connection->upload_temporary[0] = '\0';
+        connection->upload_target[0] = '\0';
+        send_error(connection, 500, "Could not finish that upload");
+        return 0;
+    }
+
+    connection->upload_temporary[0] = '\0';
+    connection->upload_target[0] = '\0';
+    send_text(connection, 200, "application/json", "{\"ok\":true}");
+    return 1;
+}
+
+static int
+connection_prepare_file_upload(struct connection *connection, const unsigned long long length, const char *headers) {
+    char method[16];
+    char raw_target[2048];
+    if (sscanf(connection->request.data, "%15s %2047s", method, raw_target) != 2 || strcmp(method, "PUT") != 0)
+        return -1;
+
+    char *query = strchr(raw_target, '?');
+    if (query) *query = '\0';
+    char target[2048];
+    if (!url_decode(raw_target, target, sizeof(target)) || strncmp(target, "/api/files/", 11) != 0) return -1;
+
+    char route[2048];
+    snprintf(route, sizeof(route), "%s", target + 11);
+    struct file_root *root;
+    char *action;
+    char *relative;
+    if (!file_route(route, &root, &action, &relative) || strcmp(action, "upload") != 0) return -1;
+
+    connection->auth_code[0] = '\0';
+    connection->auth_session[0] = '\0';
+    connection->system_write[0] = '\0';
+    header_value(headers, "X-muOS-Code", connection->auth_code, sizeof(connection->auth_code));
+    header_value(headers, "X-muOS-Session", connection->auth_session, sizeof(connection->auth_session));
+    header_value(headers, "X-muOS-System-Write", connection->system_write, sizeof(connection->system_write));
+
+    if (!same_origin(headers)) {
+        send_error(connection, 403, "Changes are only accepted from the dashboard itself");
+        return 0;
+    }
+    if (!file_mutation_allowed(connection, root)) return 0;
+    if (file_upload_count) {
+        send_error(connection, 409, "Another upload is already in progress");
+        return 0;
+    }
+    if (!file_resolve_target(root, relative, connection->upload_target, sizeof(connection->upload_target))) {
+        send_error(connection, 400, "Invalid upload path");
+        return 0;
+    }
+
+    struct stat existing;
+    if (lstat(connection->upload_target, &existing) == 0 && S_ISDIR(existing.st_mode)) {
+        send_error(connection, 409, "A folder already uses that name");
+        return 0;
+    }
+
+    char parent[PATH_MAX];
+    snprintf(parent, sizeof(parent), "%s", connection->upload_target);
+    char *leaf = strrchr(parent, '/');
+    if (!leaf) {
+        send_error(connection, 400, "Invalid upload path");
+        return 0;
+    }
+    *leaf = '\0';
+    struct statvfs space;
+    if (statvfs(parent, &space) == 0) {
+        const unsigned long long unit = space.f_frsize ? space.f_frsize : space.f_bsize;
+        const unsigned long long available = (unsigned long long) space.f_bavail * unit;
+        if (length > available) {
+            send_error(connection, 507, "There is not enough free space for that upload");
+            return 0;
+        }
+    }
+
+    const int temporary_length =
+        snprintf(connection->upload_temporary, sizeof(connection->upload_temporary), "%s/.muweb-upload-XXXXXX", parent);
+    if (temporary_length < 1 || (size_t) temporary_length >= sizeof(connection->upload_temporary)) {
+        send_error(connection, 400, "Upload path is too long");
+        return 0;
+    }
+
+    connection->upload_descriptor = mkstemp(connection->upload_temporary);
+    if (connection->upload_descriptor < 0) {
+        connection->upload_temporary[0] = '\0';
+        send_error(connection, 500, "Could not start that upload");
+        return 0;
+    }
+    fcntl(connection->upload_descriptor, F_SETFD, FD_CLOEXEC);
+    fchmod(connection->upload_descriptor, 0644);
+    connection->upload_active = 1;
+    file_upload_count++;
+    connection->upload_remaining = length;
+
+    const size_t present = connection->request.length - connection->header_length;
+    if ((unsigned long long) present > length
+        || !file_upload_write(connection, connection->request.data + connection->header_length, present)) {
+        connection_reset_upload(connection);
+        send_error(connection, 400, "Upload body is longer than declared");
+        return 0;
+    }
+
+    buffer_free(&connection->request);
+    connection->header_length = 1;
+    connection->content_length = 0;
+    if (!connection->upload_remaining) file_upload_finish(connection);
+    return 1;
+}
+
 static void handle_request(struct connection *connection) {
     const char *request = connection->request.data;
     const char *body = request + connection->header_length;
@@ -5010,10 +5989,12 @@ static void handle_request(struct connection *connection) {
     connection->cache_header = "Cache-Control: no-store\r\n";
     connection->auth_code[0] = '\0';
     connection->auth_session[0] = '\0';
+    connection->system_write[0] = '\0';
     connection->if_modified[0] = '\0';
     if (headers) {
         header_value(headers + 2, "X-muOS-Code", connection->auth_code, sizeof(connection->auth_code));
         header_value(headers + 2, "X-muOS-Session", connection->auth_session, sizeof(connection->auth_session));
+        header_value(headers + 2, "X-muOS-System-Write", connection->system_write, sizeof(connection->system_write));
         header_value(headers + 2, "If-Modified-Since", connection->if_modified, sizeof(connection->if_modified));
     }
 
@@ -5105,6 +6086,11 @@ static void handle_request(struct connection *connection) {
         return;
     }
 
+    if (strncmp(target, "/api/files", 10) == 0 && (target[10] == '\0' || target[10] == '/')) {
+        handle_files_api(connection, method, target + (target[10] == '/' ? 11 : 10), body, body_length, range_header);
+        return;
+    }
+
     if (strncmp(target, "/api/catalogue", 14) == 0 && (target[14] == '\0' || target[14] == '/')) {
         handle_catalogue_api(connection, method, target + (target[14] == '/' ? 15 : 14), body, body_length);
         return;
@@ -5166,12 +6152,14 @@ static void handle_request(struct connection *connection) {
 static void connection_close(struct connection *connection) {
     if (connection->socket >= 0) close(connection->socket);
     connection_reset_body(connection);
+    connection_reset_upload(connection);
     buffer_free(&connection->request);
     buffer_free(&connection->response);
     connection->socket = -1;
 }
 
 static int connection_ready_to_dispatch(struct connection *connection) {
+    if (connection->upload_descriptor >= 0) return 0;
     if (!connection->header_length) {
         const char *blank = strstr(connection->request.data ? connection->request.data : "", "\r\n\r\n");
         if (!blank) return 0;
@@ -5195,6 +6183,9 @@ static int connection_ready_to_dispatch(struct connection *connection) {
             return 1;
         }
 
+        const int upload = connection_prepare_file_upload(connection, parsed, headers ? headers + 2 : "");
+        if (upload >= 0) return connection->response.length > 0;
+
         connection->content_length = parsed > MUWEB_UPLOAD_LIMIT ? (size_t) MUWEB_UPLOAD_LIMIT + 1 : (size_t) parsed;
 
         if (connection->content_length > MUWEB_UPLOAD_LIMIT) {
@@ -5214,6 +6205,17 @@ static int connection_receive(struct connection *connection) {
 
     if (received < 0) return errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR ? 1 : 0;
     if (received == 0) return 0;
+
+    if (connection->upload_descriptor >= 0) {
+        if (!file_upload_write(connection, chunk, (size_t) received)) {
+            connection_reset_upload(connection);
+            send_error(connection, 500, "Could not write that upload");
+            return 1;
+        }
+        if (!connection->upload_remaining) file_upload_finish(connection);
+        connection->deadline = time(NULL) + MUWEB_IDLE_SECONDS;
+        return 1;
+    }
 
     if (!buffer_append(&connection->request, chunk, (size_t) received)) return 0;
 
@@ -5323,6 +6325,8 @@ static void print_usage(FILE *stream) {
                 "                         activity and core assignments\n"
                 "  -E, --share DIR        the MustardOS share directory, for the bundled core\n"
                 "                         assignments and built-in profiles\n"
+                "      --file-root ID=DIR storage location for Dashboard file management,\n"
+                "                         using boot, mmc, sdcard, usb or system (max 5)\n"
                 "  -k, --secret FILE      device secret for the rolling code, minted if absent\n"
                 "  -o, --readonly         serve everything but refuse every change\n"
                 "  -l, --public-lists     without a secret, still allow History, Collections\n"
@@ -5348,6 +6352,68 @@ static int set_root(char *destination, const char *value, const char *label) {
     }
 
     snprintf(destination, PATH_MAX, "%s", resolved);
+    return 1;
+}
+
+static int set_file_root(const char *value) {
+    if (file_root_count >= MUWEB_FILE_ROOTS) {
+        fprintf(stderr, "muweb: at most %d file roots\n", MUWEB_FILE_ROOTS);
+        return 0;
+    }
+
+    const char *separator = strchr(value, '=');
+    if (!separator || separator == value || separator[1] != '/') {
+        fprintf(stderr, "muweb: invalid file root '%s'\n", value);
+        return 0;
+    }
+
+    const size_t id_length = (size_t) (separator - value);
+    if (id_length >= sizeof(file_roots[0].id)) return 0;
+
+    char id[sizeof(file_roots[0].id)];
+    memcpy(id, value, id_length);
+    id[id_length] = '\0';
+    if (file_root_find(id)) {
+        fprintf(stderr, "muweb: duplicate file root '%s'\n", id);
+        return 0;
+    }
+
+    const char *label;
+    int removable = 0;
+    int protected = 0;
+    if (strcmp(id, "boot") == 0) {
+        label = "Boot";
+        protected = 1;
+    } else if (strcmp(id, "mmc") == 0) {
+        label = "Primary Storage";
+    } else if (strcmp(id, "sdcard") == 0) {
+        label = "Secondary Storage";
+        removable = 1;
+    } else if (strcmp(id, "usb") == 0) {
+        label = "External Storage";
+        removable = 1;
+    } else if (strcmp(id, "system") == 0) {
+        label = "Internal";
+        protected = 1;
+    } else {
+        fprintf(stderr, "muweb: unsupported file root '%s'\n", id);
+        return 0;
+    }
+
+    struct file_root *root = &file_roots[file_root_count];
+    snprintf(root->id, sizeof(root->id), "%s", id);
+    snprintf(root->label, sizeof(root->label), "%s", label);
+    snprintf(root->path, sizeof(root->path), "%s", separator + 1);
+    size_t path_length = strlen(root->path);
+    while (path_length > 1 && root->path[path_length - 1] == '/')
+        root->path[--path_length] = '\0';
+    if (strstr(root->path, "/../") || strcmp(root->path + path_length - (path_length >= 3 ? 3 : 0), "/..") == 0) {
+        fprintf(stderr, "muweb: invalid file root path '%s'\n", root->path);
+        return 0;
+    }
+    root->removable = removable;
+    root->protected = protected;
+    file_root_count++;
     return 1;
 }
 
@@ -5389,6 +6455,7 @@ int main(const int argc, char **argv) {
         {"content", required_argument, NULL, 'm'},
         {"storage", required_argument, NULL, 'D'},
         {"share", required_argument, NULL, 'E'},
+        {"file-root", required_argument, NULL, 1000},
         {"secret", required_argument, NULL, 'k'},
         {"readonly", no_argument, NULL, 'o'},
         {"public-lists", no_argument, NULL, 'l'},
@@ -5488,6 +6555,9 @@ int main(const int argc, char **argv) {
             case 'E':
                 share_argument = optarg;
                 break;
+            case 1000:
+                if (!set_file_root(optarg)) return 2;
+                break;
             case 'k':
                 secret_argument = optarg;
                 break;
@@ -5536,8 +6606,6 @@ int main(const int argc, char **argv) {
             return 2;
         }
         code_required = 1;
-    } else {
-        read_only = 1;
     }
 
     if (show_code) {
@@ -5579,6 +6647,7 @@ int main(const int argc, char **argv) {
     for (size_t i = 0; i < MUWEB_MAX_CONNECTIONS; ++i) {
         connections[i].socket = -1;
         connections[i].body_descriptor = -1;
+        connections[i].upload_descriptor = -1;
     }
 
     log_verbose(
@@ -5636,6 +6705,7 @@ int main(const int argc, char **argv) {
                     memset(slot, 0, sizeof(*slot));
                     slot->socket = accepted;
                     slot->body_descriptor = -1;
+                    slot->upload_descriptor = -1;
                     if (peer_address.sin6_family == AF_INET6)
                         memcpy(slot->peer, &peer_address.sin6_addr, sizeof(slot->peer));
                     slot->deadline = now + MUWEB_IDLE_SECONDS;

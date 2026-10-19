@@ -2072,7 +2072,7 @@ static int16_t kiosk_pass = 0;
     ROW(custom, theme_scaling, "scaling", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
     ROW(custom, theme_alternate, "alternate", theme, menu_theme_alternate, NULL, NULL, &kiosk_pass,                    \
         visible_theme_alternate, change_set)                                                                           \
-    ROW(custom, random_theme, "randomtheme", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
+    ROW(custom, random_theme, "randomtheme", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
     ROW(custom, header_height, "headerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, footer_height, "footerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, content_item_count, "count", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \

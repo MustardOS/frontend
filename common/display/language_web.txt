@@ -6,8 +6,9 @@ Activity Tracker
 System Information
 History
 Collections
+Library
 Catalogue
-Saves
+Save States
 Documentation
 Grand Tour
 Hotkeys
@@ -36,7 +37,7 @@ No activity recorded.
 Services
 Files
 Terminal
-Secure Shell
+Secure Shell + SFTP
 None enabled.
 Activity groups
 Activity summary
@@ -176,6 +177,9 @@ Save
 Top level
 Add to collection
 Choose where %s should go.
+Choose where the selected items should go.
+%s item
+%s items
 Add
 Remove from history
 %s will be removed from History. The content itself is not touched.
@@ -184,6 +188,7 @@ New collection
 Create
 Collection name
 Rename collection
+Rename content
 Rename
 Remove collection
 %s will be removed.
@@ -201,9 +206,17 @@ Adding…
 Removing…
 Creating…
 Renaming…
+Unavailable content cannot be added to a collection.
 Moving…
 Path updated
 Removed from history
+Added to collection
+Selected entries will be removed from History. The content itself is not touched.
+Selected entries will be removed from the collection. The content itself is not touched.
+Selected entries and empty collections will be removed. The content itself is not touched.
+Collection folders cannot be moved.
+Empty a collection before removing it.
+Empty a collection before removing it
 Collection created
 Collection renamed
 Collection removed
@@ -451,6 +464,9 @@ Next refresh in about %s
 Refreshing…
 Not in a collection
 No collections match that search.
+No collections yet.
+Nothing matches that search.
+This collection is empty.
 Everything is in a collection.
 History is open on the device, so changes are paused until it is closed there.
 Collections is open on the device, so changes are paused until it is closed there.
@@ -458,6 +474,91 @@ History is open on the device, close it there to make changes
 Collections is open on the device, close it there to make changes
 Now playing in Wasabi
 Watching live TV in Wasabi
+Activity
+Content artwork requires an assigned system. You can still set artwork for the %s folder.
+Could not read that %s
+Current save
+Edit %s
+Most recent copy
+No artwork
+No content on the card.
+No saves for this game.
+No save state image
+Nothing on the card is named %s, so none of this is drawn.
+not on the card
+Pickles Saves
+Preview image
+Preview save state
+Preview video
+Reading %s...
+Remove artwork
+Remove save state
+Replace
+Replace save game
+Restore
+Restore earlier copy
+%s adjusted
+%s content
+Show more (%s left)
+%s is no longer here
+%s is not assigned to a system, so artwork for %s cannot be stored.
+%s is %s, over the %s limit
+%s removed
+%s rotations back
+%s saved
+%s shown
+%s will be deleted.
+%s will be overwritten. Earlier copies are kept.
+Text files must be %s or smaller.
+The copy from %s will replace the current save.
+The %s for %s will be deleted.
+This Folder
+%s files uploaded
+%s free
+%s selected
+Changes here can stop MustardOS from starting or working correctly.
+Choose another folder.
+Clear
+Complete
+Collection
+Continue
+Copy
+Date
+Destination folder
+Don't Remind Me
+Enter a path relative to %s.
+File uploaded
+File Management
+Primary Storage
+Secondary Storage
+External Storage
+Internal
+Folder
+Folder created
+Folder name
+Link
+Modify system files
+New folder
+New Folder
+No storage is mounted.
+Options
+Remove %s
+Remove %s items
+Removed
+Select %s
+Select all
+Selected items will be permanently removed.
+Size
+Location
+System Storage
+This file will be permanently removed.
+This folder and everything inside it will be permanently removed.
+This folder is empty.
+Upload Files
+Upload Folders
+Uploading...
+User Storage
+Waiting...
 Listening in Wasabi
 Watching in Wasabi
 Channel %s of %s
