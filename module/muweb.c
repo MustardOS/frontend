@@ -54,10 +54,9 @@ static struct file_root file_roots[MUWEB_FILE_ROOTS];
 static size_t file_root_count = 0;
 static size_t file_upload_count = 0;
 
-static const char *const catalogue_types[] = {
-    "box",   "grid",         "preview",         "text",           "splash",        "manual",
-    "video", "overlay/base", "overlay/battery", "overlay/bright", "overlay/volume"
-};
+static const char *const catalogue_types[] = {"box",           "grid",         "preview",         "text",
+                                              "manual",        "overlay/base", "overlay/battery", "overlay/bright",
+                                              "overlay/volume"};
 #define CATALOGUE_TYPE_COUNT (sizeof(catalogue_types) / sizeof(catalogue_types[0]))
 #define OVERLAY_STEPS        10
 
@@ -548,6 +547,7 @@ static const char *mime_for(const char *name) {
         {"json", "application/json"},
         {"svg", "image/svg+xml"},
         {"png", "image/png"},
+        {"apng", "image/apng"},
         {"jpg", "image/jpeg"},
         {"jpeg", "image/jpeg"},
         {"webp", "image/webp"},
@@ -557,6 +557,7 @@ static const char *mime_for(const char *name) {
         {"bmp", "image/bmp"},
         {"pcx", "image/x-pcx"},
         {"txt", "text/plain; charset=utf-8"},
+        {"conf", "text/plain; charset=utf-8"},
         {"pdf", "application/pdf"},
         {"mp4", "video/mp4"},
         {"webm", "video/webm"},
@@ -572,16 +573,19 @@ static const char *mime_for(const char *name) {
     return "application/octet-stream";
 }
 
-static int upload_extension_allowed(const char *type, const char *extension) {
-    static const char *const images[] = {"svg", "png", "jpg", "jpeg", "webp", "qoi", "tga", "gif", "bmp", "pcx", NULL};
+static int upload_extension_allowed(const char *type, const char *leaf) {
+    static const char *const images[] = {"svg", "png", "apng", "jpg", "jpeg", "webp",
+                                         "qoi", "tga", "gif",  "bmp", "pcx",  NULL};
     static const char *const documents[] = {"txt", NULL};
-    static const char *const videos[] = {"mp4", NULL};
+    const char *extension = file_extension(leaf);
+
+    if (strcasecmp(extension, "conf") == 0 && (strcmp(type, "box") == 0 || strcmp(type, "preview") == 0)
+        && (strncmp(leaf, "_edit/", 6) == 0 || strstr(leaf, "/_edit/") != NULL))
+        return 1;
+    if (strcasecmp(extension, "mp4") == 0) return strcmp(type, "box") == 0 || strcmp(type, "preview") == 0;
 
     const char *const *allowed = images;
-    if (strcmp(type, "text") == 0 || strcmp(type, "manual") == 0)
-        allowed = documents;
-    else if (strcmp(type, "video") == 0)
-        allowed = videos;
+    if (strcmp(type, "text") == 0 || strcmp(type, "manual") == 0) allowed = documents;
 
     for (size_t i = 0; allowed[i]; ++i) {
         if (strcasecmp(extension, allowed[i]) == 0) return 1;
@@ -1069,7 +1073,7 @@ static void catalogue_scan_type(const char *type_path, struct catalogue_scan *sc
             catalogue_scan_add(scan, entry->d_name, entry->d_name, want_sizes ? &info : &unsized);
             continue;
         }
-        if (kind != DT_DIR) continue;
+        if (kind != DT_DIR || strcmp(entry->d_name, "_edit") == 0) continue;
 
         DIR *nested = opendir(child);
         if (!nested) continue;
@@ -3314,7 +3318,7 @@ static void handle_catalogue_api(
     if (!write_allowed(connection)) return;
 
     if (strcmp(method, "POST") == 0) {
-        if (!upload_extension_allowed(type, file_extension(leaf))) {
+        if (!upload_extension_allowed(type, leaf)) {
             send_error(connection, 400, "That file type is not accepted here");
             return;
         }

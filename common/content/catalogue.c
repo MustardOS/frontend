@@ -82,7 +82,7 @@ static cat_dir_entry *cat_dir_lookup(const char *dir_path) {
         if (!dot) continue;
         const char *ext = dot + 1;
 
-        if (!is_image_ext(ext)) continue;
+        if (!is_image_ext(ext) && strcasecmp(ext, "mp4") != 0) continue;
 
         if (e->count >= cap) {
             const int new_cap = cap * 2;
@@ -108,18 +108,6 @@ static const char *cat_dir_find_file(cat_dir_entry *e, const char *filename) {
 
     char **match = bsearch(&filename, e->files, (size_t) e->count, sizeof(char *), cat_file_cmp);
     return match ? *match : NULL;
-}
-
-void load_splash_image_fallback(const char *mux_dim, char *image, const size_t image_size) {
-    if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist_nocase(image, image, image_size))
-        return;
-
-    if (snprintf(image, image_size, "%s/%simage/splash.png", theme_base, mux_dim) >= 0
-        && file_exist_nocase(image, image, image_size))
-        return;
-
-    snprintf(image, image_size, "%s/image/splash.png", theme_base);
-    file_exist_nocase(image, image, image_size);
 }
 
 int is_supported_theme_catalogue(const char *catalogue_name, const char *image_type) {
@@ -243,6 +231,41 @@ int load_image_catalogue(
     );
 }
 
+int load_media_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
+    const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
+) {
+    static const char *extensions[] = {"mp4",  "apng", "gif", "png", "webp", "jpg",
+                                       "jpeg", "qoi",  "tga", "bmp", "pcx",  "svg"};
+
+    return load_image_catalogue_exts(
+        catalogue_name, program, program_alt, program_default, mux_dim, image_type, extensions,
+        (int) A_SIZE(extensions), image_path, path_size
+    );
+}
+
+int catalogue_media_is_animated(const char *path) {
+    const char *extension = strrchr(path ? path : "", '.');
+    if (!extension) return 0;
+    extension++;
+    if (strcasecmp(extension, "mp4") == 0 || strcasecmp(extension, "gif") == 0 || strcasecmp(extension, "apng") == 0)
+        return 1;
+    if (strcasecmp(extension, "png") != 0) return 0;
+
+    FILE *file = fopen(path, "rb");
+    if (!file) return 0;
+    unsigned char buffer[65536];
+    const size_t length = fread(buffer, 1, sizeof(buffer), file);
+    fclose(file);
+    if (length < 16) return 0;
+
+    for (size_t i = 8; i + 4 <= length; ++i) {
+        if (memcmp(buffer + i, "acTL", 4) == 0) return 1;
+        if (memcmp(buffer + i, "IDAT", 4) == 0) return 0;
+    }
+    return 0;
+}
+
 int load_png_catalogue(
     const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
     const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
@@ -283,43 +306,6 @@ int load_manual_catalogue(
         snprintf(manual_path, path_size, "%s", full_path);
         LOG_DEBUG(mux_module, "Catalogue manual found: %s", manual_path);
         return 1;
-    }
-
-    return 0;
-}
-
-int load_video_catalogue(
-    const char *catalogue_name, const char *program, const char *program_alt, const char *mux_dim, char *video_path,
-    const size_t path_size
-) {
-    const struct {
-        const char *dimension;
-        const char *program;
-    } args[] = {
-        {mux_dim, program},
-        {mux_dim, program_alt},
-        {"", program},
-        {"", program_alt},
-    };
-
-    const char *extensions[] = {"mp4"}; // Just MP4 for now...
-
-    for (size_t j = 0; j < A_SIZE(extensions); j++) {
-        for (size_t i = 0; i < A_SIZE(args); i++) {
-            if (!args[i].program || args[i].program[0] == '\0') continue;
-
-            char dir[MAX_BUFFER_SIZE];
-            const int dw = snprintf(dir, sizeof(dir), "%s/%s/video", INFO_CAT_PATH, catalogue_name);
-            if (dw < 0 || (size_t) dw >= sizeof(dir)) continue;
-
-            char filename[MAX_BUFFER_SIZE];
-            const int fw =
-                snprintf(filename, sizeof(filename), "%s%s.%s", args[i].dimension, args[i].program, extensions[j]);
-            if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
-
-            const int pw = snprintf(video_path, path_size, "%s/%s", dir, filename);
-            if (pw >= 0 && (size_t) pw < path_size && file_exist_nocase(video_path, video_path, path_size)) return 1;
-        }
     }
 
     return 0;

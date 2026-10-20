@@ -37,7 +37,8 @@ No activity recorded.
 Services
 Files
 Terminal
-Secure Shell + SFTP
+Secure Shell
+Secure File Transfer
 None enabled.
 Activity groups
 Activity summary

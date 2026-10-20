@@ -202,6 +202,8 @@ void mux_input_stop(void);
 
 void mux_input_set_msgbox_dismiss(void (*cb)(void));
 
+void mux_input_swallow(mux_input_type mux_type);
+
 void mux_input_flush_all(void);
 
 void mux_input_flush_queue(void);

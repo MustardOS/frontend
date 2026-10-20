@@ -1,4 +1,5 @@
 #include <string.h>
+#include <strings.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <lvgl/lvgl.h>
@@ -12,12 +13,12 @@ static void decoder_close(lv_img_decoder_t *, lv_img_decoder_dsc_t *);
 
 static const uint8_t png_sig[8] = {0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
 
-static const char *image_exts[] = {"svg", "png", "jpg", "jpeg", "webp", "qoi", "tga", "gif", "bmp", "pcx"};
+static const char *image_exts[] = {"svg", "png", "apng", "jpg", "jpeg", "webp", "qoi", "tga", "gif", "bmp", "pcx"};
 static const int image_exts_n = sizeof(image_exts) / sizeof(image_exts[0]);
 
 int is_image_ext(const char *ext) {
     for (int i = 0; i < image_exts_n; i++) {
-        if (strcmp(ext, image_exts[i]) == 0) return 1;
+        if (strcasecmp(ext, image_exts[i]) == 0) return 1;
     }
     return 0;
 }

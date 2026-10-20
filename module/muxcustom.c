@@ -1137,10 +1137,6 @@ static void init_navigation_group(void) {
         lang.generic.disabled, lang.muxcontent.save_screenshot.collection, lang.muxcontent.save_screenshot.history,
         lang.muxcontent.save_screenshot.both
     };
-    char *video_preview_options[] = {
-        lang.generic.disabled, lang.muxcontent.video_preview.delay_3, lang.muxcontent.video_preview.delay_5,
-        lang.muxcontent.video_preview.delay_10
-    };
 
     has_theme_type = theme_has_font();
     has_custom_type = user_font_count() > 0;
@@ -1232,9 +1228,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, mixed_content, lang.muxvisual.mixedcontent, "mixedcontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, forward_history, lang.muxvisual.forwardhistory, "forwardhistory", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, content_width, lang.muxcontent.full_width, "width", disabled_enabled, 2);
-    INIT_OPTION_ITEM(
-        -1, visual, video_preview, lang.muxcontent.video_preview.title, "videopreview", video_preview_options, 4
-    );
     INIT_OPTION_ITEM(-1, visual, page_skip, lang.muxvisual.pageskip, "pageskip", page_skip_options, 2);
     INIT_OPTION_ITEM(-1, visual, shuffle, lang.muxcontent.shuffle, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, box_art, lang.muxcontent.box_art.title, "boxart", boxart_image, 5);
@@ -1254,7 +1247,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, grid_mode_content, lang.muxcontent.grid_mode, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, box_art_hide, lang.muxcontent.grid_mode_art, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, launch_swap, lang.muxcontent.launch_swap.title, "launch_swap", launch_swap_options, 4);
-    INIT_OPTION_ITEM(-1, visual, launchsplash, lang.muxcontent.launch_splash, "splash", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
         disabled_enabled, 2
@@ -1617,7 +1609,6 @@ static void restore_custom_options(void) {
         ui_dro_box_art_align_visual, config.visual.box_art_align > 0 ? config.visual.box_art_align - 1 : 0
     );
     lv_dropdown_set_selected(ui_dro_content_width_visual, config.visual.content_width);
-    lv_dropdown_set_selected(ui_dro_launchsplash_visual, config.visual.launchsplash);
     lv_dropdown_set_selected(ui_dro_grid_mode_content_visual, config.visual.grid_mode_content);
     lv_dropdown_set_selected(ui_dro_box_art_hide_visual, 1 - config.visual.box_art_hide);
 
@@ -1719,7 +1710,6 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, content_width, "visual/contentwidth", INT, 0);
     CHECK_AND_SAVE_STD(visual, page_skip, "visual/pageskip", INT, 0);
     CHECK_AND_SAVE_STD(visual, group_content, "visual/groupcontent", INT, 0);
-    CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(visual, pickles_startup_messages, "visual/pickles_startup_messages", INT, 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
 
@@ -1738,7 +1728,6 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, box_art_padding, "visual/boxartpadding", INT, 0);
     CHECK_AND_SAVE_STD(visual, box_art_placeholder, "visual/boxartplaceholder", INT, 0);
     CHECK_AND_SAVE_STD(visual, save_screenshot, "visual/savescreenshot", INT, 0);
-    CHECK_AND_SAVE_STD(visual, video_preview, "visual/videopreview", INT, 0);
 
     const int modified_before_font = is_modified;
 
@@ -2040,7 +2029,6 @@ static int16_t kiosk_pass = 0;
     ROW(visual, forward_history, "forwardhistory", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,      \
         change)                                                                                                        \
     ROW(visual, content_width, "width", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)         \
-    ROW(visual, video_preview, "videopreview", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)  \
     ROW(visual, page_skip, "pageskip", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)          \
     ROW(visual, shuffle, "shuffle", content, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)             \
     ROW(visual, box_art, "boxart", box_art, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)              \
@@ -2058,7 +2046,6 @@ static int16_t kiosk_pass = 0;
         change)                                                                                                        \
     ROW(visual, box_art_hide, "boxarthide", grid, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)        \
     ROW(visual, launch_swap, "launch_swap", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)   \
-    ROW(visual, launchsplash, "splash", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)       \
     ROW(visual, pickles_startup_messages, "picklesstartupmessages", launching, menu_option, NULL, NULL,                \
         &kiosk.setting.visual, NULL, change)                                                                           \
     ROW(custom, black_fade, "blackfade", launching, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \

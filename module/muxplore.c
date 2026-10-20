@@ -8,7 +8,6 @@
 #define LARGE_CONTENT_LOAD 512
 #define GROUP_CONTENT_GO   "/tmp/group_go"
 
-static lv_obj_t *ui_img_splash;
 static lv_obj_t *ui_viewport_objects[7];
 
 static char prev_dir[PATH_MAX];
@@ -19,7 +18,6 @@ static int sys_index = -1;
 static int file_count = 0;
 static int dir_count = 0;
 static int starter_image = 0;
-static int splash_valid = 0;
 static int content_is_pico8 = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
@@ -227,32 +225,12 @@ static void image_refresh(const char *image_type) {
         }
     }
 
-    render_image_refresh(
-        image_type, h_core_artwork, file_name_no_ext, ui_img_splash, ui_viewport_objects, &starter_image, &splash_valid
-    );
-}
-
-static void video_refresh(void) {
-    if (!ui_count_static || union_is_root(sys_dir) || at_base(sys_dir, MAIN_ROM_DIR)) return;
-    if (items[current_item_index].content_type != content_type_item) return;
-
-    char *file_name = get_file_name(items[current_item_index].name);
-
-    char file_name_no_ext[MAX_BUFFER_SIZE];
-    snprintf(file_name_no_ext, sizeof(file_name_no_ext), "%s", file_name);
-    char *dot = strrchr(file_name_no_ext, '.');
-    if (dot) *dot = '\0';
-
-    char core_artwork[MAX_BUFFER_SIZE];
-    get_catalogue_name(sys_dir, file_name, core_artwork, sizeof(core_artwork));
-
-    render_video_refresh(core_artwork, file_name_no_ext);
+    render_image_refresh(image_type, h_core_artwork, file_name_no_ext, ui_viewport_objects, &starter_image);
 }
 
 static void image_refresh_transition(void) {
     image_refresh("box");
     transition_box_art_apply_in(config.visual.box_art_transition);
-    if (config.visual.video_preview > 0) video_refresh();
 }
 
 static void add_directory_and_file_names(
@@ -949,7 +927,6 @@ static void focus_grid_index(const int index) {
 static void focus_initial(void) {
     if (grid_mode_enabled) {
         focus_grid_index(current_item_index);
-        if (config.visual.video_preview > 0) video_refresh();
         return;
     }
 
@@ -960,7 +937,6 @@ static void focus_initial(void) {
 
         if (config.visual.box_art < 4) {
             image_refresh("box");
-            if (config.visual.video_preview > 0) video_refresh();
         }
         nav_moved = 1;
 
@@ -990,7 +966,6 @@ static void focus_initial(void) {
 
     if (config.visual.box_art < 4) {
         image_refresh("box");
-        if (config.visual.video_preview > 0) video_refresh();
     }
     nav_moved = 1;
 }
@@ -1008,7 +983,6 @@ static void list_nav_move(const int steps, const int direction) {
             transition_box_art_nav_activity();
         } else {
             image_refresh("box");
-            if (config.visual.video_preview > 0) video_refresh();
         }
     }
 
@@ -1021,25 +995,6 @@ static void list_nav_prev(const int steps) {
 
 static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
-}
-
-static void show_splash(void) {
-    if (config.visual.launchsplash) {
-        image_refresh("splash");
-        if (splash_valid) {
-            lv_obj_center(ui_img_splash);
-            lv_obj_move_foreground(ui_img_splash);
-            if (overlay_image) lv_obj_move_foreground(overlay_image);
-
-            for (unsigned int i = 0; i <= 255; i += 15) {
-                lv_obj_set_style_img_opa(ui_img_splash, i, MU_OBJ_MAIN_DEFAULT);
-                lv_task_handler();
-                usleep(4096);
-            }
-
-            sleep(1);
-        }
-    }
 }
 
 static int fwd_hist_parse(const char *line, char *key, int *out_val) {
@@ -1142,14 +1097,7 @@ static void process_load(const int from_start) {
     if (msgbox_active) {
         if (!preview_hint_active()) return;
 
-        play_sound(snd_info_close);
-        if (lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnl_help_message, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnl_help_message, LV_OBJ_FLAG_HIDDEN);
-        }
+        toggle_content_preview();
         return;
     }
 
@@ -1191,7 +1139,6 @@ static void process_load(const int from_start) {
                 switch (result) {
                     case 1:
                         if (!content_launch_is_integrated()) {
-                            show_splash();
                             fade_out_screen();
                         }
                         exit_status = 1;
@@ -1215,7 +1162,6 @@ static void process_load(const int from_start) {
         } else {
             write_text_to_file(MUOS_HST_LOAD, "w", CHAR, items[current_item_index].name);
             if (!content_launch_is_integrated()) {
-                show_splash();
                 fade_out_screen();
             }
             exit_status = 1;
@@ -1424,11 +1370,7 @@ static void show_search(void) {
 }
 
 static void show_information(void) {
-    play_sound(snd_info_open);
-    set_preview_hint(1);
-    image_refresh("preview");
-
-    show_info_box(items[current_item_index].display_name, load_content_description(), 1);
+    show_content_information(items[current_item_index].display_name, load_content_description(), image_refresh);
 }
 
 static void show_module_help(void) {
@@ -1549,6 +1491,15 @@ static void show_sort_order(void) {
 
     load_mux("order");
     mux_input_stop();
+}
+
+static void handle_menu_hold(void) {
+    if (!content_menu_held()) return;
+    if (more_active(&more_menu) || msgbox_active || progress_onscreen != -1 || hold_call) return;
+    if (!ui_count_static) return;
+
+    mux_input_swallow(mux_input_menu);
+    show_information();
 }
 
 static void handle_help(void) {
@@ -1782,7 +1733,6 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
     file_count = 0;
     dir_count = 0;
     starter_image = 0;
-    splash_valid = 0;
     current_item_index = 0;
     sys_index = restore_index;
 
@@ -1857,7 +1807,6 @@ int muxplore_main(const int index, char *dir) {
     file_count = 0;
     dir_count = 0;
     starter_image = 0;
-    splash_valid = 0;
 
     if (dir && *dir) {
         snprintf(sys_dir, sizeof(sys_dir), "%s", dir);
@@ -1889,9 +1838,6 @@ int muxplore_main(const int index, char *dir) {
     ui_viewport_objects[4] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
-
-    ui_img_splash = lv_img_create(ui_screen);
-    lv_obj_set_style_img_opa(ui_img_splash, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lbl_datetime, get_datetime());
@@ -1974,6 +1920,7 @@ int muxplore_main(const int index, char *dir) {
                      || (grid_mode_enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5),
         .press_handler =
             {
+                [mux_input_menu] = content_menu_press,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
                 [mux_input_y] = handle_y,
@@ -1998,6 +1945,7 @@ int muxplore_main(const int index, char *dir) {
             },
         .hold_handler = {
             [mux_input_a] = handle_a_hold,
+            [mux_input_menu] = handle_menu_hold,
             [mux_input_dpad_up] = handle_nav_up_hold,
             [mux_input_dpad_down] = handle_nav_down_hold,
             [mux_input_dpad_left] = handle_nav_left_hold,

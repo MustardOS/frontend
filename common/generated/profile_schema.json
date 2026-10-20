@@ -17746,25 +17746,6 @@
       ]
     },
     {
-      "key": "visual/launchsplash",
-      "group": "visual",
-      "type": "int",
-      "default": "1",
-      "label": "Launch Splash",
-      "module": "muxcustom",
-      "options": [
-        {
-          "value": "0",
-          "label": "Disabled"
-        },
-        {
-          "value": "1",
-          "label": "Enabled"
-        }
-      ],
-      "help": "Whether a picture is shown while content is loading.\n\nIt does not make loading any quicker, but it does make the wait look less like nothing is happening."
-    },
-    {
       "key": "visual/listglyph",
       "group": "visual",
       "type": "int",
@@ -18679,33 +18660,6 @@
       ]
     },
     {
-      "key": "visual/videopreview",
-      "group": "visual",
-      "type": "int",
-      "default": "2",
-      "label": "Video Preview",
-      "module": "muxcustom",
-      "help": "Plays a short video for an item once you have stayed on it for a moment.\n\nOnly items with a video in the catalogue have anything to show.",
-      "options": [
-        {
-          "value": "0",
-          "label": "Disabled"
-        },
-        {
-          "value": "1",
-          "label": "3 Second Delay"
-        },
-        {
-          "value": "2",
-          "label": "5 Second Delay"
-        },
-        {
-          "value": "3",
-          "label": "10 Second Delay"
-        }
-      ]
-    },
-    {
       "key": "web/landing",
       "group": "web",
       "type": "int",
@@ -19039,13 +18993,31 @@
       "help": "How often the Web Dashboard may take a picture of the screen for Remote View. Live streams the screen as it changes, at the rate set by Live View FPS. Manual only takes a picture when you press Refresh now in the dashboard, so the picture never changes while you are looking at it.\n\nRemote View needs Authentication and the code from Web Dashboard Code. The screen is only captured while someone is watching, and never while a private screen such as Web Dashboard Code is open. Live uses more processing and network while it is open. Disabled hides Remote View from the dashboard."
     },
     {
+      "key": "web/sftp",
+      "group": "web",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 1,
+      "label": "Sftp"
+    },
+    {
+      "key": "web/sftp_port",
+      "group": "web",
+      "type": "int",
+      "default": "2022",
+      "min": 1,
+      "max": 65535,
+      "label": "Sftp Port"
+    },
+    {
       "key": "web/sshd",
       "group": "web",
       "type": "int",
       "default": "0",
       "min": 0,
       "max": 1,
-      "label": "Secure Shell + SFTP",
+      "label": "Secure Shell",
       "options": [
         {
           "value": "0",
@@ -19056,7 +19028,7 @@
           "label": "Enabled"
         }
       ],
-      "help": "Secure shell and SFTP file transfer through one lightweight service and one network port."
+      "help": "Root command-line access through Secure Shell."
     },
     {
       "key": "web/sshd_port",
@@ -19065,7 +19037,7 @@
       "default": "22",
       "min": 1,
       "max": 65535,
-      "label": "Secure Shell + SFTP Port",
+      "label": "Secure Shell Port",
       "help": "The network port this service listens on.\n\nThe default suits almost everyone. Change it only if something else is already using that port."
     },
     {
@@ -19097,26 +19069,6 @@
       "max": 65535,
       "label": "Syncthing Web Port",
       "help": "The port used to reach this service from a web browser.\n\nChange it only if something else is already using that port."
-    },
-    {
-      "key": "web/tailscaled",
-      "group": "web",
-      "type": "int",
-      "default": "0",
-      "min": 0,
-      "max": 1,
-      "label": "Tailscale",
-      "options": [
-        {
-          "value": "0",
-          "label": "Disabled"
-        },
-        {
-          "value": "1",
-          "label": "Enabled"
-        }
-      ],
-      "help": "Joins the device to a private Tailscale network, so it can be reached from elsewhere."
     },
     {
       "key": "web/ttyd",

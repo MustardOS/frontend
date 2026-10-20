@@ -107,7 +107,6 @@ extern lv_group_t *ui_group_value;
 
 extern char box_image_previous_path[MAX_BUFFER_SIZE];
 extern char preview_image_previous_path[MAX_BUFFER_SIZE];
-extern char splash_image_previous_path[MAX_BUFFER_SIZE];
 extern char sys_dir[MAX_BUFFER_SIZE];
 
 enum passcode_type { pct_boot, pct_config, pct_launch };
@@ -139,6 +138,14 @@ void nav_show_lr(int show);
 void set_preview_hint(int visible);
 
 int preview_hint_active(void);
+
+void show_content_information(const char *title, const char *content, void (*refresh)(const char *image_type));
+
+void toggle_content_preview(void);
+
+void content_menu_press(void);
+
+int content_menu_held(void);
 
 void header_and_footer_setup(void);
 
@@ -216,8 +223,7 @@ void adjust_label_value_width(const lv_obj_t *panel, const lv_obj_t *label, lv_o
 void update_label_scroll(void);
 
 void render_image_refresh(
-    const char *image_type, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_img_splash,
-    lv_obj_t *ui_viewport_objects[], int *starter_image, int *splash_valid
+    const char *image_type, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_viewport_objects[], int *starter_image
 );
 
 int resolve_save_screenshot(const char *content_path, int scope, char *out, size_t out_size);
@@ -225,8 +231,6 @@ int resolve_save_screenshot(const char *content_path, int scope, char *out, size
 void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], int *starter_image);
 
 void clear_box_image(void);
-
-void render_video_refresh(const char *h_core_artwork, const char *h_file_name);
 
 void create_marker_assignment(
     const char *ext, const char *op_label, const char *value, const char *rom, char *rom_dir, int is_app,

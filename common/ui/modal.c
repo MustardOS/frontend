@@ -19,7 +19,7 @@ static void apply(void) {
 }
 
 void modal_claim(const uint64_t allowed) {
-    video_preview_cancel();
+    if (video_preview_active()) video_preview_cancel();
 
     if (depth >= MODAL_STACK_MAX) return;
 

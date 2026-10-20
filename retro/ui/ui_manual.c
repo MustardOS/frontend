@@ -57,6 +57,20 @@ static int manual_font_size = MANUAL_FONT_DEF;
 static char *manual_text = NULL;
 static size_t manual_text_len = 0;
 
+typedef struct {
+    uint8_t bold;
+    uint8_t italic;
+    uint8_t underline;
+    uint8_t strike;
+    int8_t colour;
+} manual_text_style;
+
+static manual_text_style *manual_styles = NULL;
+static const uint32_t manual_palette[16] = {
+    0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
+    0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF,
+};
+
 static int wrap_enabled = 0;
 
 static size_t *line_offset = NULL;
@@ -102,6 +116,148 @@ static SDL_Color theme_text_colour(void) {
     const uint32_t hex = theme.list_default.text;
     const SDL_Color col = {(hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF, 255};
     return col;
+}
+
+static int colour_code(const char code) {
+    if (code >= '0' && code <= '9') return code - '0';
+    if (code >= 'a' && code <= 'f') return code - 'a' + 10;
+    if (code >= 'A' && code <= 'F') return code - 'A' + 10;
+    return -1;
+}
+
+static int known_code(const char code) {
+    return colour_code(code) >= 0 || strchr("lLoOnNmMrR", code) != NULL;
+}
+
+static void load_manual_text(void) {
+    char *markup = read_all_char_from(manual_get_path());
+    free(manual_text);
+    free(manual_styles);
+    manual_text = NULL;
+    manual_styles = NULL;
+    manual_text_len = 0;
+    if (!markup) return;
+
+    const size_t length = strlen(markup);
+    manual_text = malloc(length + 1);
+    manual_styles = malloc((length + 1) * sizeof(*manual_styles));
+    if (!manual_text || !manual_styles) {
+        free(markup);
+        free(manual_text);
+        free(manual_styles);
+        manual_text = NULL;
+        manual_styles = NULL;
+        return;
+    }
+
+    manual_text_style style = {0, 0, 0, 0, -1};
+    size_t out = 0;
+    for (size_t at = 0; at < length;) {
+        if ((unsigned char) markup[at] == 0xC2 && at + 2 < length && (unsigned char) markup[at + 1] == 0xA7) {
+            if (at + 3 < length && (unsigned char) markup[at + 2] == 0xC2 && (unsigned char) markup[at + 3] == 0xA7) {
+                manual_text[out] = markup[at];
+                manual_styles[out++] = style;
+                manual_text[out] = markup[at + 1];
+                manual_styles[out++] = style;
+                at += 4;
+                continue;
+            }
+            const char code = markup[at + 2];
+            if (known_code(code)) {
+                const int colour = colour_code(code);
+                if (colour >= 0)
+                    style.colour = (int8_t) colour;
+                else if (code == 'l' || code == 'L')
+                    style.bold = 1;
+                else if (code == 'o' || code == 'O')
+                    style.italic = 1;
+                else if (code == 'n' || code == 'N')
+                    style.underline = 1;
+                else if (code == 'm' || code == 'M')
+                    style.strike = 1;
+                else
+                    style = (manual_text_style) {0, 0, 0, 0, -1};
+                at += 3;
+                continue;
+            }
+        }
+        manual_text[out] = markup[at];
+        manual_styles[out++] = style;
+        at++;
+    }
+    manual_text[out] = '\0';
+    manual_text_len = out;
+    free(markup);
+}
+
+static int style_equal(const manual_text_style left, const manual_text_style right) {
+    return left.bold == right.bold && left.italic == right.italic && left.underline == right.underline
+           && left.strike == right.strike && left.colour == right.colour;
+}
+
+static SDL_Surface *render_styled_line(const size_t offset, const size_t length, const SDL_Color fallback) {
+    int width = 0;
+    for (size_t begin = 0; begin < length;) {
+        size_t end = begin + 1;
+        while (end < length && style_equal(manual_styles[offset + begin], manual_styles[offset + end]))
+            end++;
+        char *text = strndup(manual_text + offset + begin, end - begin);
+        if (text) {
+            const manual_text_style style = manual_styles[offset + begin];
+            int flags = TTF_STYLE_NORMAL;
+            if (style.bold) flags |= TTF_STYLE_BOLD;
+            if (style.italic) flags |= TTF_STYLE_ITALIC;
+            if (style.underline) flags |= TTF_STYLE_UNDERLINE;
+            if (style.strike) flags |= TTF_STYLE_STRIKETHROUGH;
+            TTF_SetFontStyle(manual_font, flags);
+            int run_width = 0;
+            TTF_SizeUTF8(manual_font, text, &run_width, NULL);
+            width += run_width;
+            free(text);
+        }
+        begin = end;
+    }
+    TTF_SetFontStyle(manual_font, TTF_STYLE_NORMAL);
+    if (width < 1) return NULL;
+
+    const int height = TTF_FontLineSkip(manual_font);
+    SDL_Surface *line = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
+    if (!line) return NULL;
+    SDL_FillRect(line, NULL, SDL_MapRGBA(line->format, 0, 0, 0, 0));
+    SDL_SetSurfaceBlendMode(line, SDL_BLENDMODE_BLEND);
+
+    int x = 0;
+    for (size_t begin = 0; begin < length;) {
+        size_t end = begin + 1;
+        while (end < length && style_equal(manual_styles[offset + begin], manual_styles[offset + end]))
+            end++;
+        char *text = strndup(manual_text + offset + begin, end - begin);
+        if (text) {
+            const manual_text_style style = manual_styles[offset + begin];
+            int flags = TTF_STYLE_NORMAL;
+            if (style.bold) flags |= TTF_STYLE_BOLD;
+            if (style.italic) flags |= TTF_STYLE_ITALIC;
+            if (style.underline) flags |= TTF_STYLE_UNDERLINE;
+            if (style.strike) flags |= TTF_STYLE_STRIKETHROUGH;
+            TTF_SetFontStyle(manual_font, flags);
+            SDL_Color colour = fallback;
+            if (style.colour >= 0) {
+                const uint32_t hex = manual_palette[style.colour];
+                colour = (SDL_Color) {(hex >> 16) & 0xFF, (hex >> 8) & 0xFF, hex & 0xFF, 255};
+            }
+            SDL_Surface *run = sdl_render_text_surface(manual_font, text, colour, 0);
+            if (run) {
+                SDL_Rect target = {x, 0, run->w, run->h};
+                SDL_BlitSurface(run, NULL, line, &target);
+                x += run->w;
+                SDL_FreeSurface(run);
+            }
+            free(text);
+        }
+        begin = end;
+    }
+    TTF_SetFontStyle(manual_font, TTF_STYLE_NORMAL);
+    return line;
 }
 
 static int content_wrap_width(void) {
@@ -166,9 +322,16 @@ static int add_wrapped_line(const size_t start, const size_t length, const int w
         memcpy(window, manual_text + pos, win);
         window[win] = '\0';
 
+        int measure_style = TTF_STYLE_NORMAL;
+        for (size_t i = 0; i < win; ++i) {
+            if (manual_styles[pos + i].bold) measure_style |= TTF_STYLE_BOLD;
+            if (manual_styles[pos + i].italic) measure_style |= TTF_STYLE_ITALIC;
+        }
+        TTF_SetFontStyle(manual_font, measure_style);
         int extent = 0;
         int count = 0;
         if (TTF_MeasureUTF8(manual_font, window, wrap_w, &extent, &count) != 0) count = (int) win;
+        TTF_SetFontStyle(manual_font, TTF_STYLE_NORMAL);
 
         size_t fit = utf8_bytes_for_chars(window, win, count);
         if (fit >= end - pos) return add_line(pos, end - pos);
@@ -310,14 +473,7 @@ static void render_view(void) {
         const size_t len = line_length[line_idx];
         if (len == 0) continue;
 
-        char *line_text = malloc(len + 1);
-        if (!line_text) continue;
-
-        memcpy(line_text, manual_text + off, len);
-        line_text[len] = '\0';
-
-        line_surf[row] = sdl_render_text_surface(manual_font, line_text, col, 0);
-        free(line_text);
+        line_surf[row] = render_styled_line(off, len, col);
 
         if (line_surf[row] && line_surf[row]->w > max_w) max_w = line_surf[row]->w;
     }
@@ -460,9 +616,7 @@ static void build_txt_view(void) {
     if (loaded_size > MANUAL_FONT_MAX) loaded_size = MANUAL_FONT_MAX;
     ensure_font(loaded_size);
 
-    free(manual_text);
-    manual_text = read_all_char_from(manual_get_path());
-    manual_text_len = manual_text ? strlen(manual_text) : 0;
+    load_manual_text();
 
     build_lines();
 
@@ -487,7 +641,9 @@ static void close_manual(void) {
     ui_bar_thumb = NULL;
 
     free(manual_text);
+    free(manual_styles);
     manual_text = NULL;
+    manual_styles = NULL;
     manual_text_len = 0;
 
     free_lines();

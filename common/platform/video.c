@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <errno.h>
@@ -12,9 +13,10 @@
 #include <libavutil/channel_layout.h>
 #include <common/platform/video.h>
 #include <common/runtime/log.h>
-#include <common/ui/modal.h>
 #include <common/platform/display.h>
 #include <common/config/config.h>
+#include <common/ui/common.h>
+#include <lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h>
 
 #define PRESENT_MS               16   // Presentation timer period (main thread)
 #define FADE_STEP_MS             16   // How many ms between fade steps
@@ -36,6 +38,14 @@
 static char video_path[MAX_BUFFER_SIZE];
 static char saved_wall_path[MAX_BUFFER_SIZE];
 static char preview_pending_path[MAX_BUFFER_SIZE];
+static const lv_obj_t *preview_pending_container = NULL;
+static const lv_obj_t *preview_pending_box = NULL;
+static lv_obj_t *preview_pending_image = NULL;
+static video_size_cb preview_pending_size = NULL;
+static lv_obj_t *preview_image = NULL;
+static video_size_cb preview_size = NULL;
+static lv_img_dsc_t *image_dsc = NULL;
+static lv_opa_t image_opa = LV_OPA_COVER;
 
 static lv_timer_t *preview_timer = NULL;
 static lv_timer_t *present_timer = NULL;
@@ -50,11 +60,19 @@ static int64_t last_pts = INT64_MIN;
 static SDL_Renderer *sdl_ren = NULL;
 static SDL_Texture *video_tex = NULL;
 static SDL_Rect video_dst;
+static SDL_Rect preview_area;
 
 static int dim_alpha = 0;
 static int fade_step = 0;
 static int has_frame = 0;
 static int is_wallpaper = 0;
+static int preview_embedded = 0;
+static int preview_alpha = 255;
+static int64_t clip_start_ms = 0;
+static int64_t clip_end_ms = 0;
+static int64_t clip_fade_in_ms = 0;
+static int64_t clip_fade_out_ms = 0;
+static volatile int restart_requested = 0;
 static uint32_t stall_last_ticks = 0;
 static uint32_t wallpaper_frame_ms = WALLPAPER_DEF_FRAME_MS;
 static uint32_t wallpaper_next_ticks = 0;
@@ -94,6 +112,49 @@ static volatile int ring_w = 0;
 static float audio_tmp[AUDIO_TMP_FRAMES * 2];
 
 static uint32_t play_start_ms = 0;
+
+static void load_preview_edit(void) {
+    clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
+    const char *slash = strrchr(video_path, '/');
+    const char *dot = strrchr(slash ? slash + 1 : video_path, '.');
+    if (!slash || !dot || dot <= slash + 1) return;
+
+    char path[MAX_BUFFER_SIZE];
+    const int written = snprintf(
+        path, sizeof(path), "%.*s/_edit/%.*s.conf", (int) (slash - video_path), video_path, (int) (dot - slash - 1),
+        slash + 1
+    );
+    if (written < 0 || (size_t) written >= sizeof(path)) return;
+
+    FILE *file = fopen(path, "r");
+    if (!file) return;
+    char line[128];
+    while (fgets(line, sizeof(line), file)) {
+        long long value = 0;
+        if (sscanf(line, "start_ms=%lld", &value) == 1)
+            clip_start_ms = value;
+        else if (sscanf(line, "end_ms=%lld", &value) == 1)
+            clip_end_ms = value;
+        else if (sscanf(line, "fade_in_ms=%lld", &value) == 1)
+            clip_fade_in_ms = value;
+        else if (sscanf(line, "fade_out_ms=%lld", &value) == 1)
+            clip_fade_out_ms = value;
+    }
+    fclose(file);
+}
+
+static int preview_gain(const int64_t position_ms) {
+    int gain = 255;
+    const int64_t elapsed = position_ms - clip_start_ms;
+    if (clip_fade_in_ms > 0 && elapsed < clip_fade_in_ms)
+        gain = (int) (255 * (elapsed > 0 ? elapsed : 0) / clip_fade_in_ms);
+    if (clip_end_ms > 0 && clip_fade_out_ms > 0 && clip_end_ms - position_ms < clip_fade_out_ms) {
+        const int64_t left = clip_end_ms - position_ms;
+        const int fade = (int) (255 * (left > 0 ? left : 0) / clip_fade_out_ms);
+        if (fade < gain) gain = fade;
+    }
+    return gain < 0 ? 0 : gain > 255 ? 255 : gain;
+}
 
 static int64_t frame_pts_ms(const AVFrame *f) {
     int64_t pts = f->best_effort_timestamp;
@@ -220,6 +281,12 @@ static void audio_hook_cb(void *udata __attribute__((unused)), Uint8 *stream, co
         memcpy(out + first * 2, ring_buf, (size_t) (to_read - first) * 2 * sizeof(float));
 
         ring_r = (ring_r + to_read) % ring_frames;
+
+        if (!is_wallpaper && (clip_fade_in_ms > 0 || clip_fade_out_ms > 0)) {
+            const int gain = preview_gain(clip_start_ms + (int64_t) (SDL_GetTicks() - play_start_ms));
+            for (int i = 0; i < to_read * mix_ch; ++i)
+                out[i] *= (float) gain / 255.0f;
+        }
     }
 
     if (to_read < nframes) SDL_memset(out + to_read * mix_ch, 0, (size_t) (nframes - to_read) * mix_ch * sizeof(float));
@@ -275,11 +342,13 @@ static SDL_Texture *make_corner_mask(const int w, const int h) {
 }
 
 static void sdl_overlay_cb(SDL_Renderer *r) {
-    if (dim_alpha <= 0) return;
+    if (!preview_embedded && dim_alpha <= 0) return;
 
-    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(r, 0, 0, 0, (uint8_t) dim_alpha);
-    SDL_RenderFillRect(r, NULL);
+    if (!preview_embedded) {
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(r, 0, 0, 0, (uint8_t) dim_alpha);
+        SDL_RenderFillRect(r, NULL);
+    }
 
     if (!has_frame || !video_tex) return;
 
@@ -292,11 +361,14 @@ static void sdl_overlay_cb(SDL_Renderer *r) {
         SDL_RenderCopy(r, video_tex, NULL, NULL);
         SDL_RenderCopy(r, corner_mask, NULL, NULL);
         SDL_SetRenderTarget(r, NULL);
+        SDL_SetTextureAlphaMod(round_target, (uint8_t) preview_alpha);
         SDL_RenderCopy(r, round_target, NULL, &video_dst);
     } else {
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
         SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
         SDL_RenderFillRect(r, &video_dst);
+        SDL_SetTextureBlendMode(video_tex, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureAlphaMod(video_tex, (uint8_t) preview_alpha);
         SDL_RenderCopy(r, video_tex, NULL, &video_dst);
     }
 }
@@ -319,7 +391,44 @@ static void fade_cb(lv_timer_t *t) {
     display_composite_frame();
 }
 
+static void image_forget_texture(void) {
+    if (!image_dsc) return;
+
+    lv_img_cache_invalidate_src(image_dsc);
+    const lv_disp_t *disp = lv_disp_get_default();
+    if (disp && disp->driver && disp->driver->draw_ctx)
+        lv_draw_sdl_texture_cache_remove_src((lv_draw_sdl_ctx_t *) disp->driver->draw_ctx, image_dsc);
+}
+
+static int ensure_image(const AVFrame *f) {
+    if (image_dsc) return 1;
+
+    const int w = f->width;
+    const int h = f->height;
+    int target_w = w;
+    int target_h = h;
+    if (preview_size && !preview_size(w, h, &target_w, &target_h)) {
+        target_w = w;
+        target_h = h;
+    }
+    if (w <= 0 || h <= 0 || target_w <= 0 || target_h <= 0) return 0;
+
+    sws_ctx = sws_getContext(
+        w, h, (enum AVPixelFormat) f->format, target_w, target_h, AV_PIX_FMT_BGRA, SWS_BILINEAR, NULL, NULL, NULL
+    );
+    image_dsc = lv_img_buf_alloc(target_w, target_h, LV_IMG_CF_TRUE_COLOR_ALPHA);
+    if (!sws_ctx || !image_dsc) return 0;
+
+    memset((void *) image_dsc->data, 0, image_dsc->data_size);
+    if (!lv_obj_is_valid(preview_image)) return 0;
+
+    image_opa = lv_obj_get_style_img_opa(preview_image, LV_PART_MAIN);
+    lv_img_set_src(preview_image, image_dsc);
+    return 1;
+}
+
 static int ensure_texture(const AVFrame *f) {
+    if (preview_image) return ensure_image(f);
     if (video_tex) return 1;
     if (!sdl_ren) return 0;
 
@@ -390,8 +499,10 @@ static int ensure_texture(const AVFrame *f) {
         if (!video_tex) return 0;
         SDL_SetTextureScaleMode(video_tex, SDL_ScaleModeLinear);
 
-        const int bw = dw - 2 * PREVIEW_VIDEO_BOX_PAD_H;
-        const int bh = dh - 2 * PREVIEW_VIDEO_BOX_PAD_V;
+        const int bx = preview_embedded ? preview_area.x : PREVIEW_VIDEO_BOX_PAD_H;
+        const int by = preview_embedded ? preview_area.y : PREVIEW_VIDEO_BOX_PAD_V;
+        const int bw = preview_embedded ? preview_area.w : dw - 2 * PREVIEW_VIDEO_BOX_PAD_H;
+        const int bh = preview_embedded ? preview_area.h : dh - 2 * PREVIEW_VIDEO_BOX_PAD_V;
         int vw = bw, vh = h * bw / w;
 
         if (vh > bh) {
@@ -399,8 +510,7 @@ static int ensure_texture(const AVFrame *f) {
             vw = w * bh / h;
         }
 
-        video_dst =
-            (SDL_Rect) {PREVIEW_VIDEO_BOX_PAD_H + (bw - vw) / 2, PREVIEW_VIDEO_BOX_PAD_V + (bh - vh) / 2, vw, vh};
+        video_dst = (SDL_Rect) {bx + (bw - vw) / 2, by + (bh - vh) / 2, vw, vh};
 
         use_round = 0;
         if (want_round) {
@@ -432,7 +542,26 @@ static int ensure_texture(const AVFrame *f) {
     return 1;
 }
 
+static void image_upload(const AVFrame *f) {
+    if (!ensure_image(f) || !lv_obj_is_valid(preview_image)) return;
+
+    uint8_t *dst[4] = {(uint8_t *) image_dsc->data, NULL, NULL, NULL};
+    const int dls[4] = {(int) image_dsc->header.w * 4, 0, 0, 0};
+    if (sws_scale(sws_ctx, (const uint8_t **) f->data, f->linesize, 0, f->height, dst, dls) <= 0) return;
+
+    image_forget_texture();
+    if (clip_fade_in_ms > 0 || clip_fade_out_ms > 0)
+        lv_obj_set_style_img_opa(preview_image, (lv_opa_t) (image_opa * preview_alpha / 255), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_invalidate(preview_image);
+    has_frame = 1;
+}
+
 static void video_upload(const AVFrame *f) {
+    if (preview_image) {
+        image_upload(f);
+        return;
+    }
+
     if (!ensure_texture(f)) return;
 
     int ok = 0;
@@ -546,9 +675,10 @@ static void reset_audio_ring(void) {
 
 static int restart_stream(void) {
     int seek_ok = -1;
+    const int64_t target = video_si >= 0 ? (int64_t) ((double) clip_start_ms / 1000.0 / av_q2d(video_tb)) : 0;
 
-    if (video_si >= 0) seek_ok = av_seek_frame(fmt_ctx, video_si, 0, AVSEEK_FLAG_BACKWARD);
-    if (seek_ok < 0) seek_ok = av_seek_frame(fmt_ctx, -1, 0, AVSEEK_FLAG_BACKWARD);
+    if (video_si >= 0) seek_ok = av_seek_frame(fmt_ctx, video_si, target, AVSEEK_FLAG_BACKWARD);
+    if (seek_ok < 0) seek_ok = av_seek_frame(fmt_ctx, -1, clip_start_ms * 1000, AVSEEK_FLAG_BACKWARD);
     if (seek_ok < 0) return 0;
 
     if (video_dec) avcodec_flush_buffers(video_dec);
@@ -570,18 +700,24 @@ static int restart_stream(void) {
     }
 
     reset_audio_ring();
+    restart_requested = 0;
     return 1;
 }
 
 static int decode_thread_fn(void *unused __attribute__((unused))) {
     while (1) {
         SDL_LockMutex(vq_lock);
-        while (decode_run && vq_count >= VFRAME_Q - 2)
+        while (decode_run && !restart_requested && vq_count >= VFRAME_Q - 2)
             SDL_CondWait(vq_cond, vq_lock);
         const int run = decode_run;
+        const int restart = restart_requested;
         SDL_UnlockMutex(vq_lock);
 
         if (!run) break;
+        if (restart) {
+            if (!restart_stream()) break;
+            continue;
+        }
 
         if (av_read_frame(fmt_ctx, av_pkt) < 0) {
             av_packet_unref(av_pkt);
@@ -638,16 +774,22 @@ static void present_cb(lv_timer_t *t __attribute__((unused))) {
         if (vq_count > 0) {
             const int64_t head_pts = frame_pts_ms(vq_at(0));
 
+            if (clip_end_ms > clip_start_ms && head_pts >= clip_end_ms) {
+                restart_requested = 1;
+                SDL_CondSignal(vq_cond);
+            }
+
             if (last_pts != INT64_MIN && head_pts + LOOP_BACK_MS < last_pts) {
-                play_start_ms = ticks - (uint32_t) (head_pts > 0 ? head_pts : 0);
+                const int64_t relative = head_pts - clip_start_ms;
+                play_start_ms = ticks - (uint32_t) (relative > 0 ? relative : 0);
                 last_pts = INT64_MIN;
             }
         }
 
         const int64_t now = (int64_t) ticks - (int64_t) play_start_ms;
 
-        while (vq_count > 0 && frame_pts_ms(vq_at(0)) <= now + DISPLAY_SLACK) {
-            if (vq_count >= 2 && frame_pts_ms(vq_at(1)) <= now + DISPLAY_SLACK) {
+        while (!restart_requested && vq_count > 0 && frame_pts_ms(vq_at(0)) - clip_start_ms <= now + DISPLAY_SLACK) {
+            if (vq_count >= 2 && frame_pts_ms(vq_at(1)) - clip_start_ms <= now + DISPLAY_SLACK) {
                 vq_pop();
                 SDL_CondSignal(vq_cond);
                 continue;
@@ -665,9 +807,10 @@ static void present_cb(lv_timer_t *t __attribute__((unused))) {
 
     if (!moved_frame) return;
 
+    preview_alpha = is_wallpaper ? 255 : preview_gain(moved_pts);
     video_upload(present_frame);
 
-    if (has_frame) display_composite_frame();
+    if (has_frame && !preview_image) display_composite_frame();
 }
 
 static int start_decode_thread(void) {
@@ -713,14 +856,30 @@ static void cleanup(void) {
 
     if (is_wallpaper) {
         display_clear_video_background();
-    } else {
+    } else if (!preview_image) {
         display_clear_video_overlay();
     }
+
+    if (preview_image && lv_obj_is_valid(preview_image) && lv_img_get_src(preview_image) == image_dsc) {
+        lv_img_set_src(preview_image, &ui_img_blank);
+        lv_obj_set_style_img_opa(preview_image, image_opa, MU_OBJ_MAIN_DEFAULT);
+    }
+    if (image_dsc) {
+        image_forget_texture();
+        lv_img_buf_free(image_dsc);
+        image_dsc = NULL;
+    }
+    preview_image = NULL;
+    preview_size = NULL;
 
     dim_alpha = 0;
     has_frame = 0;
     fade_step = 0;
     is_wallpaper = 0;
+    preview_embedded = 0;
+    preview_alpha = 255;
+    clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
+    restart_requested = 0;
     last_pts = INT64_MIN;
 
     if (fade_timer) {
@@ -813,6 +972,7 @@ static void cleanup(void) {
 }
 
 static void preview_open(void) {
+    load_preview_edit();
     if (avformat_open_input(&fmt_ctx, video_path, NULL, NULL) < 0) return;
 
     fmt_ctx->probesize = 1000000;
@@ -863,6 +1023,13 @@ static void preview_open(void) {
 
     if (video_si < 0) goto fail;
 
+    if (clip_start_ms > 0) {
+        const int64_t target = (int64_t) ((double) clip_start_ms / 1000.0 / av_q2d(video_tb));
+        av_seek_frame(fmt_ctx, video_si, target, AVSEEK_FLAG_BACKWARD);
+        avcodec_flush_buffers(video_dec);
+        if (audio_dec) avcodec_flush_buffers(audio_dec);
+    }
+
     sdl_ren = display_get_renderer();
     if (!sdl_ren) goto fail;
 
@@ -898,10 +1065,13 @@ static void preview_open(void) {
 
     if (!start_decode_thread()) goto fail;
 
-    display_set_video_overlay(sdl_overlay_cb);
+    if (!preview_image) display_set_video_overlay(sdl_overlay_cb);
 
     present_timer = lv_timer_create(present_cb, PRESENT_MS, NULL);
-    fade_timer = lv_timer_create(fade_cb, FADE_STEP_MS, NULL);
+    if (!preview_embedded)
+        fade_timer = lv_timer_create(fade_cb, FADE_STEP_MS, NULL);
+    else
+        display_composite_frame();
 
     return;
 
@@ -909,22 +1079,47 @@ fail:
     cleanup();
 }
 
-static int video_preview_blocked(void) {
-    return modal_active();
+static int preview_resolve_area(SDL_Rect *out) {
+    const lv_obj_t *container =
+        preview_pending_container && lv_obj_is_valid(preview_pending_container) ? preview_pending_container : NULL;
+    const lv_obj_t *box = preview_pending_box && lv_obj_is_valid(preview_pending_box) ? preview_pending_box : NULL;
+    preview_pending_container = preview_pending_box = NULL;
+    preview_pending_image = NULL;
+    preview_pending_size = NULL;
+
+    lv_area_t area = {0};
+    const lv_obj_t *target = box ? box : container;
+    if (target) {
+        lv_obj_update_layout((lv_obj_t *) target);
+        lv_obj_get_coords(target, &area);
+    }
+    if (container && ((area.x2 - area.x1 + 1) < 16 || (area.y2 - area.y1 + 1) < 16)) {
+        target = container;
+        lv_obj_get_coords(target, &area);
+    }
+
+    *out = (SDL_Rect) {area.x1, area.y1, area.x2 >= area.x1 ? area.x2 - area.x1 + 1 : lv_disp_get_hor_res(NULL),
+                       area.y2 >= area.y1 ? area.y2 - area.y1 + 1 : lv_disp_get_ver_res(NULL)};
+    return target != NULL;
 }
 
 static void preview_timer_cb(lv_timer_t *t __attribute__((unused))) {
     lv_timer_pause(preview_timer);
     if (!preview_pending_path[0]) return;
 
-    if (video_preview_blocked()) {
-        preview_pending_path[0] = '\0';
-        return;
-    }
-
     snprintf(video_path, sizeof(video_path), "%s", preview_pending_path);
     preview_pending_path[0] = '\0';
+    lv_obj_t *image = preview_pending_image && lv_obj_is_valid(preview_pending_image) ? preview_pending_image : NULL;
+    const video_size_cb size = preview_pending_size;
+    preview_pending_image = NULL;
+    preview_pending_size = NULL;
+    SDL_Rect area;
+    const int embedded = preview_resolve_area(&area);
     cleanup();
+    preview_area = area;
+    preview_embedded = embedded || image;
+    preview_image = image;
+    preview_size = size;
     preview_open();
 }
 
@@ -1054,11 +1249,17 @@ int video_wallpaper_active(void) {
     return is_wallpaper && present_timer != NULL;
 }
 
-void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img) {
-    if (video_preview_blocked()) return;
+void video_preview_arm_image(const char *path, lv_obj_t *image, const video_size_cb size) {
+    video_preview_arm(path, 0, NULL, NULL);
+    preview_pending_image = image;
+    preview_pending_size = size;
+}
 
-    (void) container;
-    (void) box_img;
+void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img) {
+    preview_pending_container = container;
+    preview_pending_box = box_img;
+    preview_pending_image = NULL;
+    preview_pending_size = NULL;
 
     if (is_wallpaper && video_path[0] && !saved_wall_path[0]) {
         snprintf(saved_wall_path, sizeof(saved_wall_path), "%s", video_path);
@@ -1067,10 +1268,10 @@ void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *con
     snprintf(preview_pending_path, sizeof(preview_pending_path), "%s", path);
 
     if (!preview_timer) {
-        preview_timer = lv_timer_create(preview_timer_cb, (uint32_t) delay_ms, NULL);
+        preview_timer = lv_timer_create(preview_timer_cb, (uint32_t) (delay_ms > 0 ? delay_ms : 1), NULL);
         lv_timer_pause(preview_timer);
     } else {
-        lv_timer_set_period(preview_timer, (uint32_t) delay_ms);
+        lv_timer_set_period(preview_timer, (uint32_t) (delay_ms > 0 ? delay_ms : 1));
     }
 
     lv_timer_reset(preview_timer);
@@ -1078,12 +1279,15 @@ void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *con
 }
 
 int video_preview_active(void) {
-    return present_timer != NULL && !is_wallpaper;
+    return present_timer != NULL && !is_wallpaper && !preview_image;
 }
 
 void video_preview_cancel(void) {
     if (preview_timer) lv_timer_pause(preview_timer);
     preview_pending_path[0] = '\0';
+    preview_pending_container = preview_pending_box = NULL;
+    preview_pending_image = NULL;
+    preview_pending_size = NULL;
 
     if (is_wallpaper) return;
 
@@ -1107,6 +1311,9 @@ void video_preview_destroy(void) {
     }
 
     preview_pending_path[0] = '\0';
+    preview_pending_container = preview_pending_box = NULL;
+    preview_pending_image = NULL;
+    preview_pending_size = NULL;
     cleanup();
     saved_wall_path[0] = '\0';
     video_path[0] = '\0';

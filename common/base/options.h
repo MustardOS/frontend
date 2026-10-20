@@ -85,6 +85,7 @@
 #define INPUT_TEST_ACTIVE   RUN_PATH "input_test"
 #define INPUT_TEST_VOL_UP   RUN_PATH "input_test_vol_up"
 #define INPUT_TEST_VOL_DOWN RUN_PATH "input_test_vol_down"
+#define INPUT_RESUME        RUN_PATH "input_resume"
 
 #define RGBLED_BIN  OPT_PATH "frontend/murgb"
 #define VERIFY_BIN  OPT_PATH "frontend/muverify"

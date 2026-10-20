@@ -10,15 +10,12 @@ enum { ui_count_dynamic = E_SIZE(SEARCH_ELEMENTS) };
 #define SEARCH_TIMEOUT 30
 
 static int starter_image = 0;
-static int splash_valid = 0;
 static int got_results = 0;
 
 static int search_pending = 0;
 static int search_use_global = 0;
 static time_t search_start = 0;
 static lv_timer_t *search_poll_timer = NULL;
-
-static lv_obj_t *ui_img_splash;
 
 static char sd1[MAX_BUFFER_SIZE];
 static char sd2[MAX_BUFFER_SIZE];
@@ -75,36 +72,12 @@ static void image_refresh(void) {
     char *dot = strrchr(item_no_ext, '.');
     if (dot) *dot = '\0';
 
-    render_image_refresh(
-        "box", core_artwork, item_no_ext, ui_img_splash, ui_viewport_objects, &starter_image, &splash_valid
-    );
-}
-
-static void video_refresh(void) {
-    if (!ui_count_static || all_items[current_item_index].content_type == content_type_folder) return;
-
-    char *item_dir = get_content_path(all_items[current_item_index].extra_data);
-
-    char item_file_name_buf[MAX_BUFFER_SIZE];
-    snprintf(
-        item_file_name_buf, sizeof(item_file_name_buf), "%s", get_last_dir(all_items[current_item_index].extra_data)
-    );
-
-    char core_artwork[MAX_BUFFER_SIZE];
-    get_catalogue_name(item_dir, item_file_name_buf, core_artwork, sizeof(core_artwork));
-
-    char item_no_ext[MAX_BUFFER_SIZE];
-    snprintf(item_no_ext, sizeof(item_no_ext), "%s", item_file_name_buf);
-    char *dot = strrchr(item_no_ext, '.');
-    if (dot) *dot = '\0';
-
-    render_video_refresh(core_artwork, item_no_ext);
+    render_image_refresh("box", core_artwork, item_no_ext, ui_viewport_objects, &starter_image);
 }
 
 static void image_refresh_transition(void) {
     image_refresh();
     transition_box_art_apply_in(config.visual.box_art_transition);
-    if (config.visual.video_preview > 0) video_refresh();
 }
 
 static void gen_result(const char *item_glyph, const char *item_text, char *item_data, const char *item_value) {
@@ -201,7 +174,6 @@ static void list_nav_move(const int steps, const int direction) {
                 transition_box_art_nav_activity();
             } else {
                 image_refresh();
-                if (config.visual.video_preview > 0) video_refresh();
             }
         }
     } else {

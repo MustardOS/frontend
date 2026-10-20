@@ -677,7 +677,6 @@ struct mux_lang {
         char overview[MAX_BUFFER_SIZE];
         char shuffle[MAX_BUFFER_SIZE];
         char full_width[MAX_BUFFER_SIZE];
-        char launch_splash[MAX_BUFFER_SIZE];
         char grid_mode[MAX_BUFFER_SIZE];
         char grid_mode_art[MAX_BUFFER_SIZE];
         struct {
@@ -728,12 +727,6 @@ struct mux_lang {
         } launch_swap;
         struct {
             char title[MAX_BUFFER_SIZE];
-            char delay_3[MAX_BUFFER_SIZE];
-            char delay_5[MAX_BUFFER_SIZE];
-            char delay_10[MAX_BUFFER_SIZE];
-        } video_preview;
-        struct {
-            char title[MAX_BUFFER_SIZE];
             char collection[MAX_BUFFER_SIZE];
             char history[MAX_BUFFER_SIZE];
             char both[MAX_BUFFER_SIZE];
@@ -744,14 +737,12 @@ struct mux_lang {
             char box_art_image[MAX_BUFFER_SIZE];
             char box_art_align[MAX_BUFFER_SIZE];
             char full_width[MAX_BUFFER_SIZE];
-            char launch_splash[MAX_BUFFER_SIZE];
             char grid_mode[MAX_BUFFER_SIZE];
             char grid_mode_art[MAX_BUFFER_SIZE];
             char box_art_scale[MAX_BUFFER_SIZE];
             char box_art_padding[MAX_BUFFER_SIZE];
             char box_art_placeholder[MAX_BUFFER_SIZE];
             char box_art_transition[MAX_BUFFER_SIZE];
-            char video_preview[MAX_BUFFER_SIZE];
             char save_screenshot[MAX_BUFFER_SIZE];
         } help;
     } muxcontent;
@@ -789,7 +780,6 @@ struct mux_lang {
         char videowallpaper[MAX_BUFFER_SIZE];
         char backgroundscale[MAX_BUFFER_SIZE];
         char blackfade[MAX_BUFFER_SIZE];
-        char launchsplash[MAX_BUFFER_SIZE];
         char pickles_startup_messages[MAX_BUFFER_SIZE];
         char shuffle[MAX_BUFFER_SIZE];
         char chime[MAX_BUFFER_SIZE];
@@ -861,7 +851,6 @@ struct mux_lang {
             char boxarthide[MAX_BUFFER_SIZE];
             char contentwidth[MAX_BUFFER_SIZE];
             char black_fade[MAX_BUFFER_SIZE];
-            char launchsplash[MAX_BUFFER_SIZE];
             char shuffle[MAX_BUFFER_SIZE];
             char launchswap[MAX_BUFFER_SIZE];
             char font[MAX_BUFFER_SIZE];
@@ -3848,11 +3837,9 @@ struct mux_lang {
             char box_art_padding[MAX_BUFFER_SIZE];
             char box_art_placeholder[MAX_BUFFER_SIZE];
             char save_screenshot[MAX_BUFFER_SIZE];
-            char video_preview[MAX_BUFFER_SIZE];
             char content_width[MAX_BUFFER_SIZE];
             char page_skip[MAX_BUFFER_SIZE];
             char group_content[MAX_BUFFER_SIZE];
-            char launchsplash[MAX_BUFFER_SIZE];
             char pickles_startup_messages[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];
             char box_art_hide[MAX_BUFFER_SIZE];
@@ -3868,7 +3855,7 @@ struct mux_lang {
         char ttyd[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char sshd[MAX_BUFFER_SIZE];
-        char tailscaled[MAX_BUFFER_SIZE];
+        char sftp[MAX_BUFFER_SIZE];
         char service[MAX_BUFFER_SIZE];
         char port[MAX_BUFFER_SIZE];
         char web_port[MAX_BUFFER_SIZE];
@@ -3896,7 +3883,7 @@ struct mux_lang {
             char ttyd[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char sshd[MAX_BUFFER_SIZE];
-            char tailscaled[MAX_BUFFER_SIZE];
+            char sftp[MAX_BUFFER_SIZE];
             char service[MAX_BUFFER_SIZE];
             char port[MAX_BUFFER_SIZE];
             char web_port[MAX_BUFFER_SIZE];

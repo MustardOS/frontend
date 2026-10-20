@@ -712,7 +712,6 @@
     VISUAL(content_width, "width")                                                                                     \
     VISUAL(page_skip, "pageskip")                                                                                      \
     VISUAL(group_content, "groupcontent")                                                                              \
-    VISUAL(video_preview, "videopreview")                                                                              \
     VISUAL(box_art, "boxart")                                                                                          \
     VISUAL(box_art_align, "align")                                                                                     \
     VISUAL(box_art_transition, "boxarttransition")                                                                     \
@@ -723,7 +722,6 @@
     VISUAL(grid_mode_content, "gridmodecontent")                                                                       \
     VISUAL(box_art_hide, "boxarthide")                                                                                 \
     VISUAL(launch_swap, "launch_swap")                                                                                 \
-    VISUAL(launchsplash, "splash")                                                                                     \
     VISUAL(pickles_startup_messages, "picklesstartupmessages")                                                         \
     VISUAL(shuffle, "shuffle")
 
@@ -742,8 +740,9 @@
     WEBSERV(mdns, "mdns")                                                                                              \
     WEBSERV(landing, "landing")                                                                                        \
     WEBSERV(sshd, "sshd")                                                                                              \
+    WEBSERV(sftp, "sftp")                                                                                              \
     WEBSERV(ttyd, "ttyd")                                                                                              \
     WEBSERV(syncthing, "syncthing")                                                                                    \
-    WEBSERV(tailscaled, "tailscaled")                                                                                  \
     WEBSERV(spare, "spare")                                                                                            \
-    WEBSERV(spare_extra, "spare_extra")
+    WEBSERV(spare_extra, "spare_extra")                                                                                \
+    WEBSERV(spare_final, "spare_final")

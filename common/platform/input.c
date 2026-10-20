@@ -40,6 +40,7 @@ int input_init_done = 0;
 
 static int menu_short_pressed = 0;
 static int menu_short_consumed = 0;
+static uint64_t swallowed_keys = 0;
 
 // Cross-thread quit flag (set during shutdown)
 static volatile sig_atomic_t stop_flag = 0;
@@ -873,6 +874,7 @@ static void clear_input_state(void) {
 
     menu_short_pressed = 0;
     menu_short_consumed = 0;
+    swallowed_keys = 0;
 
     primary_source.pressed = 0;
     primary_source.stick_x[0] = primary_source.stick_x[1] = 0;
@@ -1061,6 +1063,42 @@ static void open_all_input_devices(void) {
     }
 }
 
+static uint64_t input_resume_generation(void) {
+    FILE *file = fopen(INPUT_RESUME, "r");
+    if (!file) return 0;
+
+    unsigned long long generation = 0;
+    const int parsed = fscanf(file, "%llu", &generation);
+    fclose(file);
+    return parsed == 1 ? (uint64_t) generation : 0;
+}
+
+static int reinitialise_input_after_resume(void) {
+    for (int i = 0; i < device_count; i++)
+        release_extra_player_slot(devices[i].instance);
+
+    close_all_devices();
+    primary_instance = -1;
+    mappings_loaded = 0;
+    clear_input_state();
+    flush_input_events();
+
+    SDL_GameControllerEventState(SDL_DISABLE);
+    SDL_JoystickEventState(SDL_DISABLE);
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+
+    if (SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
+        LOG_ERROR("input", "Failed to reinitialise SDL input after resume: %s", SDL_GetError());
+        return -1;
+    }
+
+    open_all_input_devices();
+    apply_face_button_layout();
+    suppress_until_tick = (uint32_t) (mux_tick() + INPUT_COOLDOWN);
+    return 0;
+}
+
 void mux_input_scan_devices(void) {
     open_all_input_devices();
 }
@@ -1165,6 +1203,10 @@ static void update_hold_modifier(const mux_input_options *opts) {
 
 static mux_input_gate input_gate = NULL;
 
+void mux_input_swallow(const mux_input_type mux_type) {
+    if (mux_type < mux_input_count) swallowed_keys |= BIT(mux_type);
+}
+
 void mux_input_set_gate(const mux_input_gate gate) {
     input_gate = gate;
 }
@@ -1173,6 +1215,12 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
     // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->remap_to_dpad) mux_type = remap_stick_to_dpad(opts->nav, mux_type);
+
+    if (swallowed_keys & BIT(mux_type)) {
+        if (action == mux_input_release) swallowed_keys &= ~BIT(mux_type);
+        if (action != mux_input_press) return;
+        swallowed_keys &= ~BIT(mux_type);
+    }
 
     // Whatever MENU opened, MENU closes again! This sits ahead of the gate because a
     // message box never lets MENU through, so it would otherwise never be seen here
@@ -1185,10 +1233,9 @@ static void dispatch_input(const mux_input_options *opts, mux_input_type mux_typ
     // We typically want to gate straight to the dialogue box instead of anything else.
     if (input_gate && !input_gate(mux_type)) return;
 
-    // Any press dismisses a playing preview, and that press does nothing else
+    // Any press dismisses a playing preview before the module handles it
     if (action == mux_input_press && video_preview_active()) {
         video_preview_cancel();
-        return;
     }
 
     // Route through the alt layer for inputs whose press happened while the modifier was held,
@@ -1695,6 +1742,8 @@ void mux_input_task(const mux_input_options *opts) {
 
     uint32_t next_retry_tick = 0;
     int retry_count = 0;
+    uint64_t resume_generation = input_resume_generation();
+    uint32_t resume_check_tick = 0;
 
     fade_in_screen();
 
@@ -1733,6 +1782,18 @@ void mux_input_task(const mux_input_options *opts) {
         if (stop_flag) break;
 
         tick = (uint32_t) mux_tick();
+
+        if ((int32_t) (tick - resume_check_tick) >= 0) {
+            const uint64_t generation = input_resume_generation();
+            resume_check_tick = tick + 250U;
+            if (generation && generation != resume_generation) {
+                resume_generation = generation;
+                LOG_INFO("input", "System resume detected, reinitialising input devices");
+                reinitialise_input_after_resume();
+                next_retry_tick = 0;
+                retry_count = 0;
+            }
+        }
 
         if (device_count == 0 && tick >= next_retry_tick) {
             const uint32_t retry_interval_fast_ms = 750U;

@@ -9,7 +9,7 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-TOOLS = muvarctl mudisp murgb mususpend muswitch muverify muscreen
+TOOLS = muvarctl mudisp murgb musftpjail mususpend muswitch muverify muscreen
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 mulink_SRC = common/platform/usb_link.c

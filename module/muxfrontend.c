@@ -118,7 +118,6 @@ static void cleanup_screen(void) {
     RESET_PATH(current_wall);
     RESET_PATH(box_image_previous_path);
     RESET_PATH(preview_image_previous_path);
-    RESET_PATH(splash_image_previous_path);
 }
 
 static void cleanup_all(void) {

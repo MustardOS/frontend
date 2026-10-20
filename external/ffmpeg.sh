@@ -11,9 +11,9 @@ SMALL="${FFMPEG_SMALL:-1}"
 
 COMPONENTS="
 	--enable-protocol=file
-	--enable-demuxer=mov
-	--enable-decoder=h264,hevc,mpeg4,aac,mp3,pcm_s16le,pcm_s16be,pcm_u8
-	--enable-parser=h264,hevc,mpeg4video,aac,mpegaudio
+	--enable-demuxer=mov,gif,apng
+	--enable-decoder=h264,hevc,mpeg4,gif,png,apng,aac,mp3,pcm_s16le,pcm_s16be,pcm_u8
+	--enable-parser=h264,hevc,mpeg4video,gif,png,aac,mpegaudio
 "
 
 ASM_ARG=""
@@ -67,7 +67,7 @@ env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS \
 	--disable-avdevice \
 	--disable-avfilter \
 	--disable-debug \
-	--disable-zlib \
+	--enable-zlib \
 	--disable-bzlib \
 	--disable-lzma \
 	--disable-iconv \

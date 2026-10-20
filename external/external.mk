@@ -15,7 +15,7 @@ FFMPEG_LIBS := -Wl,--start-group \
                $(EXTERNAL_LIB)/libswscale.a \
                $(EXTERNAL_LIB)/libswresample.a \
                $(EXTERNAL_LIB)/libavutil.a \
-               -Wl,--end-group -lm -lpthread -latomic
+               -Wl,--end-group -lz -lm -lpthread -latomic
 
 VIDEO_FFMPEG_CFLAGS := -isystem $(VIDEO_FFMPEG_PREFIX)/include
 VIDEO_FFMPEG_LIBS := -Wl,--start-group \

@@ -457,7 +457,6 @@ struct mux_config {
         int16_t box_art_placeholder;
         int16_t save_screenshot;
         int16_t box_art_transition;
-        int16_t video_preview;
         int16_t content_width;
         int16_t name;
         int16_t dash;
@@ -473,7 +472,6 @@ struct mux_config {
         int16_t menu_counter_file;
         int16_t video_wallpaper;
         int16_t background_scale;
-        int16_t launchsplash;
         int16_t pickles_startup_messages;
         int16_t blackfade;
         int16_t notify_time;
@@ -499,9 +497,9 @@ struct mux_config {
         int16_t mdns;
         int16_t landing;
         int16_t sshd;
+        int16_t sftp;
         int16_t ttyd;
         int16_t syncthing;
-        int16_t tailscaled;
         int16_t landing_auth;
         int16_t remote_view;
         int16_t remote_privacy;
@@ -512,6 +510,7 @@ struct mux_config {
         char mdns_name[MAX_BUFFER_SIZE];
         char landing_port[MAX_BUFFER_SIZE];
         char sshd_port[MAX_BUFFER_SIZE];
+        char sftp_port[MAX_BUFFER_SIZE];
         char ttyd_port[MAX_BUFFER_SIZE];
         char ttyd_user[MAX_BUFFER_SIZE];
         char ttyd_pass[MAX_BUFFER_SIZE];

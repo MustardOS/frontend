@@ -40,7 +40,6 @@ lv_group_t *ui_group_value;
 
 char box_image_previous_path[MAX_BUFFER_SIZE];
 char preview_image_previous_path[MAX_BUFFER_SIZE];
-char splash_image_previous_path[MAX_BUFFER_SIZE];
 char sys_dir[MAX_BUFFER_SIZE];
 
 int is_ksk(const int k) {
@@ -227,6 +226,51 @@ void set_preview_hint(const int visible) {
 
 int preview_hint_active(void) {
     return preview_hint_visible;
+}
+
+#define CONTENT_MENU_HOLD_MS 500
+
+static uint32_t content_menu_pressed_at = 0;
+
+void content_menu_press(void) {
+    content_menu_pressed_at = mux_input_tick();
+}
+
+int content_menu_held(void) {
+    return mux_input_tick() - content_menu_pressed_at >= CONTENT_MENU_HOLD_MS;
+}
+
+static int preview_media_present = 0;
+static void (*content_info_refresh)(const char *image_type) = NULL;
+
+static void show_content_preview(const int visible) {
+    if (visible) {
+        lv_obj_add_flag(ui_pnl_help_message, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_update_layout(ui_pnl_help_preview);
+        if (content_info_refresh) content_info_refresh("preview");
+    } else {
+        video_preview_cancel();
+        lv_obj_add_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnl_help_message, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+void show_content_information(const char *title, const char *content, void (*refresh)(const char *image_type)) {
+    play_sound(snd_info_open);
+    set_preview_hint(1);
+    content_info_refresh = refresh;
+
+    video_preview_cancel();
+    show_info_box(title, content, 1);
+
+    if (refresh) refresh("preview");
+    if (preview_media_present) show_content_preview(1);
+}
+
+void toggle_content_preview(void) {
+    play_sound(snd_info_close);
+    show_content_preview(lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN));
 }
 
 void header_and_footer_setup(void) {
@@ -804,6 +848,13 @@ void handle_msgbox_dismiss(void) {
     } else {
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
     }
+
+    if (content_info_refresh) {
+        void (*refresh)(const char *image_type) = content_info_refresh;
+        content_info_refresh = NULL;
+        video_preview_cancel();
+        if (config.visual.box_art < 4) refresh("box");
+    }
 }
 
 int build_safe_path(char *dst, const size_t n, const char *base, const char *name) {
@@ -1184,24 +1235,6 @@ static void render_preview_refresh(char *image) {
     update_image(ui_img_help_preview_image, image_settings);
 }
 
-static void render_splash_refresh(lv_obj_t *ui_img_splash, char *image, int *splash_valid) {
-    const int is_loaded = file_exist(image);
-    if (!refresh_cached_image(splash_image_previous_path, image, is_loaded)) {
-        return;
-    }
-
-    *splash_valid = is_loaded;
-
-    if (!is_loaded) {
-        lv_img_set_src(ui_img_splash, &ui_img_blank);
-        return;
-    }
-
-    char image_path[MAX_BUFFER_SIZE];
-    snprintf(image_path, sizeof(image_path), "M:%s", image);
-    lv_img_set_src(ui_img_splash, image_path);
-}
-
 static void resolve_box_art_padding(const int box_h, int *pad_left, int *pad_right, int *pad_top, int *pad_bottom) {
     const int explicit_align = config.visual.box_art_align > 0;
     static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
@@ -1216,6 +1249,60 @@ static void resolve_box_art_padding(const int box_h, int *pad_left, int *pad_rig
     *pad_bottom = (explicit_align ? 0 : theme.image_list.pad_bottom) + user_pad;
 }
 
+static void resolve_box_art_geometry(int16_t *max_w, int *box_h, int *pad_l, int *pad_r, int *pad_t, int *pad_b) {
+    const int box_w = device.mux.width;
+    const int fullscreen = config.visual.box_art == 2 || config.visual.box_art == 3;
+
+    *box_h = fullscreen ? device.mux.height : device.mux.height - theme.header.height - theme.footer.height - 4;
+    if (*box_h <= 0) *box_h = device.mux.height;
+
+    *max_w = (int16_t) (config.visual.box_art_scale > 0 ? box_w * config.visual.box_art_scale / 100 : 0);
+    resolve_box_art_padding(*box_h, pad_l, pad_r, pad_t, pad_b);
+}
+
+static int box_video_size(const int width, const int height, int *target_w, int *target_h) {
+    if (width <= 0 || height <= 0) return 0;
+
+    int16_t max_w;
+    int box_h;
+    int pad_l;
+    int pad_r;
+    int pad_t;
+    int pad_b;
+    resolve_box_art_geometry(&max_w, &box_h, &pad_l, &pad_r, &pad_t, &pad_b);
+
+    *target_w = width;
+    *target_h = height;
+    if (max_w > 0 && box_h > 0) {
+        const float width_ratio = (float) max_w / (float) width;
+        const float height_ratio = (float) box_h / (float) height;
+        const float ratio = width_ratio < height_ratio ? width_ratio : height_ratio;
+        *target_w = (int) ((float) width * ratio);
+        *target_h = (int) ((float) height * ratio);
+    }
+
+    return *target_w > 0 && *target_h > 0;
+}
+
+static void prepare_box_video(void) {
+    int16_t max_w;
+    int box_h;
+    int pad_l;
+    int pad_r;
+    int pad_t;
+    int pad_b;
+    resolve_box_art_geometry(&max_w, &box_h, &pad_l, &pad_r, &pad_t, &pad_b);
+
+    clear_image(ui_img_box);
+    lv_img_set_size_mode(ui_img_box, LV_IMG_SIZE_MODE_VIRTUAL);
+    lv_img_set_zoom(ui_img_box, LV_IMG_ZOOM_NONE);
+    lv_obj_set_align(ui_img_box, config.visual.box_art_align);
+    lv_obj_set_style_pad_left(ui_img_box, pad_l, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_img_box, pad_r, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_top(ui_img_box, pad_t, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_img_box, pad_b, MU_OBJ_MAIN_DEFAULT);
+}
+
 static void render_box_single(const char *image, int *starter_image) {
     if (!file_exist(image)) {
         apply_box_blank_or_fallback(NULL, starter_image);
@@ -1226,18 +1313,13 @@ static void render_box_single(const char *image, int *starter_image) {
     lv_obj_set_align(ui_img_box, config.visual.box_art_align);
 
     const int box_w = device.mux.width;
-    const int fullscreen = config.visual.box_art == 2 || config.visual.box_art == 3;
-
-    int box_h = fullscreen ? device.mux.height : device.mux.height - theme.header.height - theme.footer.height - 4;
-    if (box_h <= 0) box_h = device.mux.height;
-
-    const int16_t max_w = (int16_t) (config.visual.box_art_scale > 0 ? box_w * config.visual.box_art_scale / 100 : 0);
-
+    int16_t max_w;
+    int box_h;
     int pad_l;
     int pad_r;
     int pad_t;
     int pad_b;
-    resolve_box_art_padding(box_h, &pad_l, &pad_r, &pad_t, &pad_b);
+    resolve_box_art_geometry(&max_w, &box_h, &pad_l, &pad_r, &pad_t, &pad_b);
 
     char image_path[MAX_BUFFER_SIZE];
     const size_t ilen = strlen(image);
@@ -1468,17 +1550,15 @@ void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], 
 }
 
 void render_image_refresh(
-    const char *image_type, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_img_splash,
-    lv_obj_t *ui_viewport_objects[], int *starter_image, int *splash_valid
+    const char *image_type, char *h_core_artwork, char *h_file_name, lv_obj_t *ui_viewport_objects[], int *starter_image
 ) {
+    const int is_preview = strcasecmp(image_type, "preview") == 0;
+    if (is_preview) preview_media_present = 0;
+
     if (strlen(h_core_artwork) <= 1) {
-        if (strcasecmp(image_type, "preview") == 0) {
+        if (is_preview) {
             lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
             snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
-        } else if (strcasecmp(image_type, "splash") == 0) {
-            *splash_valid = 0;
-            lv_img_set_src(ui_img_splash, &ui_img_blank);
-            snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
         } else {
             apply_box_blank_or_fallback(ui_viewport_objects, starter_image);
         }
@@ -1488,19 +1568,35 @@ void render_image_refresh(
     char image[MAX_BUFFER_SIZE] = {0};
 
     if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.visual.box_art_hide) {
-        load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, image_type, image, sizeof(image));
+        if (strcasecmp(image_type, "box") == 0 || is_preview)
+            load_media_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, image_type, image, sizeof(image));
+        else
+            load_image_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, image_type, image, sizeof(image));
         LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
     }
 
-    if (strcasecmp(image_type, "splash") == 0 && !file_exist(image)) {
-        load_splash_image_fallback(mux_dim, image, sizeof(image));
-        LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image);
+    const int animated = catalogue_media_is_animated(image);
+    if (animated && config.visual.reduce_motion == 0) {
+        video_preview_cancel();
+        if (is_preview) {
+            preview_media_present = 1;
+            lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
+            snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
+            video_preview_arm(image, 0, ui_pnl_help_preview_image, NULL);
+        } else {
+            prepare_box_video();
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+            *starter_image = 1;
+            video_preview_arm_image(image, ui_img_box, box_video_size);
+        }
+        return;
     }
+    const char *extension = strrchr(image, '.');
+    if (animated && extension && strcasecmp(extension + 1, "mp4") == 0) image[0] = '\0';
 
-    if (strcasecmp(image_type, "preview") == 0) {
+    if (is_preview) {
+        preview_media_present = image[0] && file_exist(image);
         render_preview_refresh(image);
-    } else if (strcasecmp(image_type, "splash") == 0) {
-        render_splash_refresh(ui_img_splash, image, splash_valid);
     } else {
         render_box_refresh(image, h_core_artwork, h_file_name, ui_viewport_objects, starter_image);
     }
@@ -1509,14 +1605,6 @@ void render_image_refresh(
 void clear_box_image(void) {
     lv_img_set_src(ui_img_box, &ui_img_blank);
     snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
-}
-
-void render_video_refresh(const char *h_core_artwork, const char *h_file_name) {
-    char vpath[MAX_BUFFER_SIZE];
-    if (!load_video_catalogue(h_core_artwork, h_file_name, h_file_name, mux_dim, vpath, sizeof(vpath))) return;
-
-    const int delay_ms = config.visual.video_preview == 3 ? 10000 : config.visual.video_preview == 2 ? 5000 : 3000;
-    video_preview_arm(vpath, delay_ms, ui_pnl_box, ui_img_box);
 }
 
 static void write_marker_file(const char *path, const char *value, const char *op_label, const char *op_suffix) {

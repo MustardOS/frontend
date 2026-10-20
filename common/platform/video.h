@@ -9,7 +9,11 @@ void video_wallpaper_stop(void);
 
 int video_wallpaper_active(void);
 
+typedef int (*video_size_cb)(int width, int height, int *target_w, int *target_h);
+
 void video_preview_arm(const char *path, int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img);
+
+void video_preview_arm_image(const char *path, lv_obj_t *image, video_size_cb size);
 
 int video_preview_active(void);
 

@@ -213,7 +213,6 @@ int fe_perf_export_support(const char *path) {
     fprintf(f, "motion_mode=%d\n", config.visual.reduce_motion);
     fprintf(f, "render_shadows=%d\n", config.visual.render_shadows);
     fprintf(f, "video_wallpaper=%d\n", config.visual.video_wallpaper);
-    fprintf(f, "video_preview=%d\n", config.visual.video_preview);
     fprintf(f, "double_buffer=%d\n", config.settings.advanced.double_buffer);
     fprintf(f, "capture_enabled=%d\n", enabled);
     fprintf(f, "saver=%s\n", saver_name[0] ? saver_name : "none");
