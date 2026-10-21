@@ -18999,7 +18999,18 @@
       "default": "0",
       "min": 0,
       "max": 1,
-      "label": "Sftp"
+      "label": "Secure File Transfer",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Root-backed file transfer for your storage, the boot partition and MustardOS itself. Enabling it grants read and write access to those locations. Connect on port 2022 with the username muos and password muos."
     },
     {
       "key": "web/sftp_port",
@@ -19008,7 +19019,8 @@
       "default": "2022",
       "min": 1,
       "max": 65535,
-      "label": "Sftp Port"
+      "label": "Secure File Transfer Port",
+      "help": "The network port this service listens on.\n\nThe default suits almost everyone. Change it only if something else is already using that port."
     },
     {
       "key": "web/sshd",
@@ -19227,6 +19239,109 @@
       "key": "settings/network/wake",
       "label": "Start Network on Wake",
       "values": "0 or 1"
+    }
+  ],
+  "builtin": [
+    {
+      "file": "10-clear-view.conf",
+      "name": "Clear View",
+      "description": "Slightly larger text in an easy to read typeface, with a stronger highlight on the selected item",
+      "settings": {
+        "settings/font/scale": "115",
+        "settings/advanced/font": "2",
+        "settings/font/name": "Atkinson Hyperlegible",
+        "visual/boldfocus": "1",
+        "visual/shadow": "1"
+      }
+    },
+    {
+      "file": "20-low-vision.conf",
+      "name": "Low Vision",
+      "description": "Larger text, strong contrast and a legible typeface, with messages and scrolling labels that stay on screen longer",
+      "settings": {
+        "settings/font/scale": "130",
+        "settings/advanced/font": "2",
+        "settings/font/name": "Atkinson Hyperlegible",
+        "visual/highcontrast": "1",
+        "visual/boldfocus": "1",
+        "visual/shadow": "1",
+        "visual/notifytime": "2",
+        "visual/labelscrollspeed": "1"
+      }
+    },
+    {
+      "file": "30-large-print.conf",
+      "name": "Large Print",
+      "description": "The largest text with strong contrast and a legible typeface, and box art turned off so lists have room to breathe",
+      "settings": {
+        "settings/font/scale": "160",
+        "settings/advanced/font": "2",
+        "settings/font/name": "Atkinson Hyperlegible",
+        "visual/highcontrast": "1",
+        "visual/boldfocus": "1",
+        "visual/shadow": "1",
+        "visual/notifytime": "3",
+        "visual/labelscrollspeed": "1",
+        "visual/boxart": "4"
+      }
+    },
+    {
+      "file": "40-calm-motion.conf",
+      "name": "Calm Motion",
+      "description": "Gentle fades in place of sliding and bouncing, with background video and moving text turned off",
+      "settings": {
+        "visual/reducemotion": "1",
+        "visual/elementtransition": "0",
+        "visual/boxarttransition": "0",
+        "visual/selectionanimation": "1",
+        "visual/blackfade": "1",
+        "visual/namescroll": "0",
+        "visual/labelscrollspeed": "1",
+        "visual/video_wallpaper": "0"
+      }
+    },
+    {
+      "file": "50-still-screen.conf",
+      "name": "Still Screen",
+      "description": "Removes every transition, animation and moving element, including the screensaver, for anyone sensitive to motion",
+      "settings": {
+        "visual/reducemotion": "2",
+        "visual/elementtransition": "13",
+        "visual/boxarttransition": "13",
+        "visual/selectionanimation": "0",
+        "visual/blackfade": "0",
+        "visual/namescroll": "0",
+        "visual/labelscrollspeed": "0",
+        "visual/video_wallpaper": "0",
+        "settings/power/saver_type": "0"
+      }
+    },
+    {
+      "file": "60-steady-hands.conf",
+      "name": "Steady Hands",
+      "description": "Lists move at a steadier pace and wait longer before repeating, and the device asks before saving, removing or powering off",
+      "settings": {
+        "settings/advanced/accelerate": "192",
+        "settings/advanced/repeat_delay": "400",
+        "settings/advanced/trust_modify": "0",
+        "settings/advanced/trust_remove": "0",
+        "settings/advanced/trust_power": "0",
+        "visual/notifytime": "2"
+      }
+    },
+    {
+      "file": "70-fewer-distractions.conf",
+      "name": "Fewer Distractions",
+      "description": "A quieter, calmer interface with background music, the start up chime, video and moving text turned off",
+      "settings": {
+        "visual/reducemotion": "1",
+        "settings/general/bgm": "0",
+        "settings/general/chime": "0",
+        "visual/video_wallpaper": "0",
+        "visual/namescroll": "0",
+        "visual/labelscrollspeed": "1",
+        "visual/notifytime": "2"
+      }
     }
   ]
 }

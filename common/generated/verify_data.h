@@ -91,7 +91,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/init/async/S06mount.sh", "4eb6dfb090f36630" },
     { "/opt/muos/script/init/async/S07battery.sh", "dc2fab89d8ad5612" },
     { "/opt/muos/script/init/async/S08sunrise.sh", "e49481a83fa3513d" },
-    { "/opt/muos/script/init/async/S09directlink.sh", "b5d523c2cfd0bb65" },
+    { "/opt/muos/script/init/async/S09directlink.sh", "0346799a845e8b0a" },
     { "/opt/muos/script/init/shutdown", "79d0214e5139cc86" },
     { "/opt/muos/script/init/sysinit", "4ae68cce8191fa3a" },
     { "/opt/muos/script/launch/doom-provision.sh", "84d674772b767bb8" },
@@ -211,7 +211,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/web/macchange.sh", "a92de35f4b436e19" },
     { "/opt/muos/script/web/password.sh", "e52e2db8292143dc" },
     { "/opt/muos/script/web/screen.sh", "631fc3a31f94fb49" },
-    { "/opt/muos/script/web/service.sh", "010234ed61d99af9" },
+    { "/opt/muos/script/web/service.sh", "028d317b1eff7c85" },
     { "/opt/muos/script/web/ssid.sh", "f415f92369353623" },
     { "/opt/muos/script/web/status.sh", "9f5a7b5763350c9b" },
 };

@@ -25,6 +25,7 @@
 #include <common/base/totp.h>
 #include <common/content/core/state_preview.h>
 #include <common/content/lookup.h>
+#include <common/storage/mount.h>
 
 #define MUWEB_VERSION "0.1.0"
 
@@ -551,6 +552,7 @@ static const char *mime_for(const char *name) {
         {"jpg", "image/jpeg"},
         {"jpeg", "image/jpeg"},
         {"webp", "image/webp"},
+        {"avif", "image/avif"},
         {"qoi", "image/qoi"},
         {"tga", "image/x-targa"},
         {"gif", "image/gif"},
@@ -867,6 +869,101 @@ content_item_add(struct content_folder *folder, const char *stem, const char *ca
     return 1;
 }
 
+static int read_cfg_line(const char *path, const int line, char *out, const size_t size) {
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
+
+    char text[PATH_MAX];
+    int at = 0;
+    int found = 0;
+    while (fgets(text, sizeof(text), file)) {
+        if (++at != line) continue;
+        text[strcspn(text, "\r\n")] = '\0';
+        const size_t length = strlen(text);
+        if (length && length < size) {
+            memcpy(out, text, length + 1);
+            found = 1;
+        }
+        break;
+    }
+
+    fclose(file);
+    return found;
+}
+
+static int assigned_catalogue(const char *relative, const char *stem, char *out, const size_t size) {
+    if (!share_root[0] || !relative || !*relative) return 0;
+
+    char path[PATH_MAX];
+    const int written = stem ? snprintf(path, sizeof(path), "%s/info/content/%s/%s.cfg", share_root, relative, stem)
+                             : snprintf(path, sizeof(path), "%s/info/content/%s/core.cfg", share_root, relative);
+    if (written < 0 || (size_t) written >= sizeof(path)) return 0;
+
+    return read_cfg_line(path, stem ? 4 : 3, out, size);
+}
+
+static int item_cfgs_present(const char *relative) {
+    if (!share_root[0] || !relative || !*relative) return 0;
+
+    char path[PATH_MAX];
+    if ((size_t) snprintf(path, sizeof(path), "%s/info/content/%s", share_root, relative) >= sizeof(path)) return 0;
+
+    DIR *directory = opendir(path);
+    if (!directory) return 0;
+
+    int present = 0;
+    const struct dirent *entry;
+    while (!present && (entry = readdir(directory))) {
+        const size_t length = strlen(entry->d_name);
+        present = entry->d_name[0] != '.' && length > 4 && strcasecmp(entry->d_name + length - 4, ".cfg") == 0
+                  && strcmp(entry->d_name, "core.cfg") != 0;
+    }
+
+    closedir(directory);
+    return present;
+}
+
+static void assignment_latest(const char *path, const int depth, long long *latest) {
+    struct stat info;
+    if (stat(path, &info) < 0) return;
+
+    const long long stamp = (long long) info.st_mtim.tv_sec * 1000000000LL + info.st_mtim.tv_nsec;
+    if (stamp > *latest) *latest = stamp;
+    if (depth > MUWEB_CONTENT_DEPTH) return;
+
+    DIR *directory = opendir(path);
+    if (!directory) return;
+
+    const struct dirent *entry;
+    while ((entry = readdir(directory))) {
+        if (entry->d_name[0] == '.' || entry->d_type != DT_DIR) continue;
+
+        char child[PATH_MAX];
+        if ((size_t) snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >= sizeof(child)) continue;
+        assignment_latest(child, depth + 1, latest);
+    }
+
+    closedir(directory);
+}
+
+static void assignment_check(void) {
+    static long long seen = 0;
+    if (!share_root[0]) return;
+
+    char path[PATH_MAX];
+    if ((size_t) snprintf(path, sizeof(path), "%s/info/content", share_root) >= sizeof(path)) return;
+
+    long long latest = 0;
+    assignment_latest(path, 0, &latest);
+    if (latest == seen) return;
+
+    if (seen) {
+        cache_drop();
+        content_made = 0;
+    }
+    seen = latest;
+}
+
 static void content_walk(
     const char *root, const char *path, struct content_folder *folder, const char *catalogue, const int depth
 ) {
@@ -874,6 +971,11 @@ static void content_walk(
 
     DIR *directory = opendir(path);
     if (!directory) return;
+
+    const size_t root_length = strlen(root);
+    const char *relative =
+        strncmp(path, root, root_length) == 0 && path[root_length] == '/' ? path + root_length + 1 : "";
+    const int item_cfgs = item_cfgs_present(relative);
 
     const struct dirent *entry;
     while ((entry = readdir(directory))) {
@@ -904,7 +1006,11 @@ static void content_walk(
 
             content_item_add(folder, entry->d_name, CATALOGUE_FOLDER, 1);
 
-            const char *assigned = assign_lookup(entry->d_name);
+            char assigned_dir[NAME_MAX + 1];
+            const char *child_relative = child + root_length + 1;
+            const char *assigned = assigned_catalogue(child_relative, NULL, assigned_dir, sizeof(assigned_dir))
+                                       ? assigned_dir
+                                       : assign_lookup(entry->d_name);
             content_walk(root, child, folder, assigned ? assigned : catalogue, depth + 1);
             continue;
         }
@@ -912,7 +1018,12 @@ static void content_walk(
         char stem[NAME_MAX + 1];
         snprintf(stem, sizeof(stem), "%s", entry->d_name);
         strip_extension(stem);
-        if (stem[0]) content_item_add(folder, stem, catalogue, 0);
+
+        char assigned_item[NAME_MAX + 1];
+        const char *item_catalogue =
+            item_cfgs && assigned_catalogue(relative, stem, assigned_item, sizeof(assigned_item)) ? assigned_item
+                                                                                                  : catalogue;
+        if (stem[0]) content_item_add(folder, stem, item_catalogue, 0);
     }
 
     closedir(directory);
@@ -928,6 +1039,7 @@ static int content_item_compare(const void *left, const void *right) {
 
 static void content_index_build(void) {
     if (!content_root_count) return;
+    assignment_check();
     if (content_made && time(NULL) - content_made < MUWEB_CONTENT_SECONDS) return;
 
     content_free();
@@ -968,7 +1080,10 @@ static void content_index_build(void) {
             struct content_folder *folder = content_folder_for(entry->d_name);
             if (!folder) continue;
 
-            const char *assigned = assign_lookup(entry->d_name);
+            char assigned_dir[NAME_MAX + 1];
+            const char *assigned = assigned_catalogue(entry->d_name, NULL, assigned_dir, sizeof(assigned_dir))
+                                       ? assigned_dir
+                                       : assign_lookup(entry->d_name);
             if (assigned && !folder->catalogue[0])
                 snprintf(folder->catalogue, sizeof(folder->catalogue), "%s", assigned);
 
@@ -1718,7 +1833,10 @@ static int content_folder_json(struct buffer *out, const char *relative) {
     children_of(relative, &directories, &files);
 
     const char *leaf = path_leaf(relative);
-    const char *catalogue = catalogue_for_path(relative);
+    char assigned_here[NAME_MAX + 1];
+    const int assigned_folder = assigned_catalogue(relative, NULL, assigned_here, sizeof(assigned_here));
+    const char *catalogue = assigned_folder ? assigned_here : catalogue_for_path(relative);
+    const int item_cfgs = item_cfgs_present(relative);
 
     struct catalogue_view folders;
     struct catalogue_view system;
@@ -1754,13 +1872,30 @@ static int content_folder_json(struct buffer *out, const char *relative) {
 
         const char *friendly = friendly_content_name(leaf, files.items[i].name);
         if (ok && friendly) ok = json_field(out, "friendly", friendly) && buffer_puts(out, ",");
-        if (ok && catalogue) ok = json_field(out, "catalogue", catalogue) && buffer_puts(out, ",");
 
-        ok = ok && catalogue_files_json(out, catalogue ? &system : &folders, files.items[i].name, &bytes, &modified)
+        char assigned_item[NAME_MAX + 1];
+        const int own = item_cfgs
+                        && assigned_catalogue(relative, files.items[i].name, assigned_item, sizeof(assigned_item))
+                        && (!catalogue || strcmp(assigned_item, catalogue) != 0);
+        const char *item_catalogue = own ? assigned_item : catalogue;
+        struct catalogue_view item_view;
+        if (own) catalogue_view_load(&item_view, item_catalogue);
+
+        if (ok && item_catalogue) ok = json_field(out, "catalogue", item_catalogue) && buffer_puts(out, ",");
+
+        ok = ok
+             && catalogue_files_json(
+                 out,
+                 own         ? &item_view
+                 : catalogue ? &system
+                             : &folders,
+                 files.items[i].name, &bytes, &modified
+             )
              && buffer_puts(out, ",") && json_number(out, "bytes", files.items[i].bytes) && buffer_puts(out, ",")
              && json_number(out, "modified", files.items[i].modified) && buffer_puts(out, ",")
              && json_number(out, "artBytes", bytes) && buffer_puts(out, ",")
              && json_number(out, "artModified", modified) && buffer_puts(out, "}");
+        if (own) catalogue_view_free(&item_view);
     }
 
     for (size_t i = 0; ok && i < directories.count; ++i) {
@@ -1782,7 +1917,7 @@ static int content_folder_json(struct buffer *out, const char *relative) {
              && json_number(out, "modified", modified) && buffer_puts(out, "}");
     }
 
-    const int names_catalogue = catalogue && assign_lookup(leaf) != NULL;
+    const int names_catalogue = catalogue && (assigned_folder || assign_lookup(leaf) != NULL);
 
     for (size_t type = 0; ok && names_catalogue && type < CATALOGUE_TYPE_COUNT; ++type) {
         if (overlay_is_stepped(catalogue_types[type])) continue;
@@ -2763,40 +2898,8 @@ static struct file_root *file_root_find(const char *id) {
     return NULL;
 }
 
-static void mount_path_decode(char *path) {
-    char *read_at = path;
-    char *write_at = path;
-    while (*read_at) {
-        if (read_at[0] == '\\' && read_at[1] >= '0' && read_at[1] <= '7' && read_at[2] >= '0' && read_at[2] <= '7'
-            && read_at[3] >= '0' && read_at[3] <= '7') {
-            *write_at++ = (char) ((read_at[1] - '0') * 64 + (read_at[2] - '0') * 8 + (read_at[3] - '0'));
-            read_at += 4;
-        } else {
-            *write_at++ = *read_at++;
-        }
-    }
-    *write_at = '\0';
-}
-
 static int file_root_mounted(const struct file_root *root) {
-    if (!root->removable) return 1;
-
-    FILE *mounts = fopen("/proc/self/mountinfo", "r");
-    if (!mounts) return 0;
-
-    char line[8192];
-    int mounted = 0;
-    while (fgets(line, sizeof(line), mounts)) {
-        char point[PATH_MAX];
-        if (sscanf(line, "%*s %*s %*s %*s %4095s", point) != 1) continue;
-        mount_path_decode(point);
-        if (strcmp(point, root->path) == 0) {
-            mounted = 1;
-            break;
-        }
-    }
-    fclose(mounts);
-    return mounted;
+    return !root->removable || mount_path_active(root->path);
 }
 
 static int file_root_available(const struct file_root *root) {
@@ -3563,6 +3666,7 @@ static void handle_content_api(struct connection *connection, const char *method
         return;
     }
 
+    assignment_check();
     struct buffer out = {0};
 
     if (!*path) {

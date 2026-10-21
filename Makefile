@@ -13,7 +13,8 @@ TOOLS = muvarctl mudisp murgb musftpjail mususpend muswitch muverify muscreen
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 mulink_SRC = common/platform/usb_link.c
-muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c
+muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c common/storage/mount.c
+musftpjail_SRC = common/storage/mount.c
 
 muvarctl_SRC = common/config/var_store.c
 

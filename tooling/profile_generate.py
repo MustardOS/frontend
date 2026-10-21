@@ -130,11 +130,12 @@ HELP_KEYS = {
     "web/live_quality": "muxwebserv.help.live_quality",
     "web/sshd": "muxwebserv.help.sshd",
     "web/sshd_port": "muxwebserv.help.port",
+    "web/sftp": "muxwebserv.help.sftp",
+    "web/sftp_port": "muxwebserv.help.port",
     "web/ttyd": "muxwebserv.help.service",
     "web/ttyd_port": "muxwebserv.help.port",
     "web/syncthing": "muxwebserv.help.syncthing",
     "web/syncthing_port": "muxwebserv.help.web_port",
-    "web/tailscaled": "muxwebserv.help.tailscaled",
     "settings/advanced/bt_scan_timeout": "muxtweakadv.help.bt_scan_timeout",
     "settings/advanced/font": "muxfont.help.type",
     "settings/advanced/overdrive": "muxtweakadv.help.overdrive",
@@ -218,7 +219,7 @@ FIXED_OPTIONS["web/remote_view"] = [("0", "lang.generic.disabled"), ("1", "30s")
 FIXED_OPTIONS["web/live_fps"] = [(str(v), str(v)) for v in range(5, 61, 5)]
 FIXED_OPTIONS["web/live_quality"] = [(str(v), f"{v}%") for v in range(20, 101, 5)]
 
-for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "ttyd", "syncthing", "tailscaled"):
+for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "sftp", "ttyd", "syncthing"):
     FIXED_OPTIONS[f"web/{_service}"] = DISABLED_ENABLED
 FIXED_OPTIONS["web/remote_control"] = [("0", "lang.generic.disabled"), ("1", "lang.generic.enabled"),
                                        ("2", "lang.muxwebserv.remote_sticks")]
@@ -272,11 +273,12 @@ LABEL_KEYS = {
     "web/live_quality": "lang.muxwebserv.live_quality",
     "web/sshd": "lang.muxwebserv.sshd",
     "web/sshd_port": "{lang.muxwebserv.sshd} {lang.muxwebserv.port}",
+    "web/sftp": "lang.muxwebserv.sftp",
+    "web/sftp_port": "{lang.muxwebserv.sftp} {lang.muxwebserv.port}",
     "web/ttyd": "lang.muxwebserv.ttyd",
     "web/ttyd_port": "{lang.muxwebserv.ttyd} {lang.muxwebserv.port}",
     "web/syncthing": "lang.muxwebserv.syncthing",
     "web/syncthing_port": "{lang.muxwebserv.syncthing} {lang.muxwebserv.web_port}",
-    "web/tailscaled": "lang.muxwebserv.tailscaled",
 }
 
 HELP_TEXT = {
@@ -366,8 +368,36 @@ def refused_reason(key):
 def rule_line(setting, scope=""):
     values = "" if setting.get("open") else ",".join(option["value"] for option in setting.get("options", []))
     if setting["type"] != "int":
-        return f"{setting['key']}\ttext\t\t\t{values}\t{scope}"
-    return f"{setting['key']}\tint\t{setting.get('min', '')}\t{setting.get('max', '')}\t{values}\t{scope}"
+        return f"{setting['key']}\ttext\t\t\t{values}\t{scope}".rstrip("\t")
+    return f"{setting['key']}\tint\t{setting.get('min', '')}\t{setting.get('max', '')}\t{values}\t{scope}".rstrip("\t")
+
+
+def builtin_profiles(internal):
+    directory = os.path.join(internal, "share/profile/accessibility")
+    profiles = []
+    if not os.path.isdir(directory):
+        return profiles
+
+    for filename in sorted(name for name in os.listdir(directory) if name.endswith(".conf")):
+        fields = {}
+        settings = {}
+        for line in read(os.path.join(directory, filename)).splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            if "/" in key:
+                settings[key] = value
+            else:
+                fields[key] = value
+        if fields.get("name"):
+            profiles.append({
+                "file": filename,
+                "name": fields["name"],
+                "description": fields.get("description", ""),
+                "settings": settings,
+            })
+    return profiles
 
 
 def combo_options(internal, key):
@@ -745,7 +775,7 @@ def main():
     rules += [rule_line(setting, "oem") for setting in oem_settings]
     refused_keys = sorted({field["key"] for field in fields
                            if not allowed(field["key"]) and not oem_only(field["key"])} | PROFILE_DENIED)
-    rules += [f"{key}\trefused\t{refused_reason(key)}\t\t\t" for key in refused_keys]
+    rules += [f"{key}\trefused\t{refused_reason(key)}" for key in refused_keys]
 
     default_conf = os.path.join(args.internal, "share/profile/system/default.conf")
     rules_conf = os.path.join(args.internal, "share/profile/system/rules.conf")
@@ -759,6 +789,7 @@ def main():
                  for setting in sorted(oem_settings, key=lambda entry: (entry["key"].startswith("settings/"),
                                                                         WIFI_ORDER.get(entry["key"], 99),
                                                                         entry["key"]))],
+        "builtin": builtin_profiles(args.internal),
     }
     seen_groups = []
     for group in schema["groups"]:
@@ -774,8 +805,12 @@ def main():
         print(f"Wrote {default_conf}")
     if write_if_changed(rules_conf, "\n".join(rules) + "\n"):
         print(f"Wrote {rules_conf}")
-    if write_if_changed(args.schema, json.dumps(schema, indent=2, ensure_ascii=False) + "\n"):
+    schema_text = json.dumps(schema, indent=2, ensure_ascii=False) + "\n"
+    if write_if_changed(args.schema, schema_text):
         print(f"Wrote {args.schema}")
+    dashboard_schema = os.path.join(args.internal, "share/web/tools/assets/data/profile-schema.json")
+    if os.path.abspath(dashboard_schema) != os.path.abspath(args.schema) and write_if_changed(dashboard_schema, schema_text):
+        print(f"Wrote {dashboard_schema}")
 
 
 if __name__ == "__main__":

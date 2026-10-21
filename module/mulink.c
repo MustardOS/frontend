@@ -389,6 +389,7 @@ int main(void) {
     int beacon_fd = -1;
     int carrier = 0;
     int rescan = 1;
+    write_state(&state, carrier);
 
     while (running) {
         if (rescan) {

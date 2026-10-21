@@ -3579,7 +3579,7 @@ static const lang_field lang_fields[] = {
     {"muxwebserv", LANG_OFF(muxwebserv.help.ttyd), lang_specific, "Open Virtual Terminal settings. Login details are optional on this single-user system."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.syncthing), lang_specific, "Keeps folders in step with another machine over the network.\n\nSelect this to open its settings."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.sshd), lang_specific, "Root command-line access through Secure Shell.\n\nSelect this to open its settings."},
-    {"muxwebserv", LANG_OFF(muxwebserv.help.sftp), lang_specific, "File transfer for your storage, the boot partition and MustardOS itself. Connect on port 2022 with the username muos and password muos.\n\nSelect this to open its settings."},
+    {"muxwebserv", LANG_OFF(muxwebserv.help.sftp), lang_specific, "Root-backed file transfer for your storage, the boot partition and MustardOS itself. Enabling it grants read and write access to those locations. Connect on port 2022 with the username muos and password muos.\n\nSelect this to open its settings."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.service), lang_specific, "Whether this service runs.\n\nEach one costs a little battery and memory while it is on, so leave off what you do not use."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.port), lang_specific, "The network port this service listens on.\n\nThe default suits almost everyone. Change it only if something else is already using that port."},
     {"muxwebserv", LANG_OFF(muxwebserv.help.web_port), lang_specific, "The port used to reach this service from a web browser.\n\nChange it only if something else is already using that port."},

@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <common/runtime/init.h>
 #include <common/storage/fileio.h>
+#include <common/storage/mount.h>
 #include <common/base/util.h>
 #include <common/base/strutil.h>
 #include <common/runtime/log.h>
@@ -585,26 +586,7 @@ char **str_parse_file(const char *filename, int *count, const enum parse_mode mo
 }
 
 int is_partition_mounted(const char *partition) {
-    if (strcmp(partition, "/") == 0) return 1; // this is rootfs so I mean it should always be mounted
-
-    FILE *fp = fopen("/proc/mounts", "r");
-    if (!fp) {
-        perror("fopen /proc/mounts");
-        return 0;
-    }
-
-    char line[MAX_BUFFER_SIZE];
-    int mounted = 0;
-
-    while (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, partition)) {
-            mounted = 1;
-            break;
-        }
-    }
-
-    fclose(fp);
-    return mounted;
+    return mount_path_active(partition);
 }
 
 void get_storage_info(const char *partition, double *total, double *free, double *used) {

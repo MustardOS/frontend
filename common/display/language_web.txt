@@ -538,6 +538,10 @@ Folder
 Folder created
 Folder name
 Link
+Close
+Preview Image
+Preview Text
+Preview %s
 Modify system files
 New folder
 New Folder
