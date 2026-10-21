@@ -257,6 +257,8 @@ int muxactivity_main(void);
 
 int muxapp_main(void);
 
+int muxarc_main(void);
+
 void muxappcon_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxarchive_main(void);

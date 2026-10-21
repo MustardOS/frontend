@@ -171,6 +171,7 @@ HELP_KEYS = {
     "visual/overlayimage": "muxvisual.help.overlay_image",
     "visual/overlaytransparency": "muxvisual.help.overlay_transparency",
     "visual/pickles_startup_messages": "muxvisual.help.pickles_startup_messages",
+    "visual/power_off": "muxvisual.help.power_off",
     "settings/font/face": "muxfont.help.face",
     "visual/boldfocus": "muxprofile.help.bold_focus",
     "visual/highcontrast": "muxprofile.help.high_contrast",

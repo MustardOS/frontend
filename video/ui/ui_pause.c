@@ -2722,6 +2722,12 @@ void video_playback_ui_hide_channel(void) {
     display_composite_frame();
 }
 
+void video_playback_ui_prepare_quit(void) {
+    menu_active = 0;
+    menu_peeking = 0;
+    apply_playback_chrome();
+}
+
 void video_playback_ui_prepare_channel_transition(void) {
     menu_active = 0;
     menu_peeking = 0;

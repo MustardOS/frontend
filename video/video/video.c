@@ -3,6 +3,7 @@
 #include "../visualiser/visualiser.h"
 #include <common/display/scale2x.h>
 #include <common/display/super_eagle.h>
+#include <common/ui/crt.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -69,6 +70,9 @@ static int crt_enabled;
 static int crt_powered;
 static uint32_t crt_warm_start;
 static uint32_t crt_off_start;
+static SDL_Texture *crt_snapshot_texture;
+static int crt_snapshot_width;
+static int crt_snapshot_height;
 
 #define AMBIENT_SEGMENTS 8
 
@@ -85,10 +89,6 @@ static uint32_t ambient_tick;
 
 #define STATIC_PERIOD      33
 #define CRT_WARM_MS        420
-#define CRT_OFF_SQUASH_MS  220
-#define CRT_OFF_SHRINK_MS  160
-#define CRT_OFF_FADE_MS    280
-#define CRT_OFF_MS         (CRT_OFF_SQUASH_MS + CRT_OFF_SHRINK_MS + CRT_OFF_FADE_MS)
 #define AMBIENT_SMOOTH_MS  180.0f
 #define AMBIENT_OUTER_GAIN 0.25f
 #define AMBIENT_INNER_GAIN 0.85f
@@ -727,11 +727,6 @@ static float ease_out(const float value) {
     return 1.0f - inverse * inverse * inverse;
 }
 
-static float ease_in(const float value) {
-    const float clamped = value < 0.0f ? 0.0f : value > 1.0f ? 1.0f : value;
-    return clamped * clamped;
-}
-
 static void render_plain_texture(SDL_Renderer *target, const SDL_Rect *rect) {
     if (!texture || rect->w <= 0 || rect->h <= 0) return;
     const SDL_Rect texture_source = scaled_source();
@@ -747,52 +742,14 @@ static void fill_rect_alpha(SDL_Renderer *target, const SDL_Rect *rect, const Ui
     SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
 }
 
-static void render_crt_power_off(SDL_Renderer *target, const uint32_t now) {
-    int width = 0;
-    int height = 0;
-    if (SDL_GetRendererOutputSize(target, &width, &height) != 0 || width <= 0 || height <= 0) return;
-
-    SDL_SetRenderDrawColor(target, 0, 0, 0, 255);
-    SDL_RenderClear(target);
-
-    const uint32_t elapsed = now - crt_off_start;
-    const int centre_x = destination.w > 0 ? destination.x + destination.w / 2 : width / 2;
-    const int centre_y = destination.h > 0 ? destination.y + destination.h / 2 : height / 2;
-    const int line = height / 180 > 2 ? height / 180 : 2;
-
-    if (elapsed < CRT_OFF_SQUASH_MS) {
-        const float progress = (float) elapsed / CRT_OFF_SQUASH_MS;
-        const SDL_Rect frame = destination.w > 0 ? destination : (SDL_Rect) {0, 0, width, height};
-        int squashed = (int) ((float) frame.h * (1.0f - ease_in(progress)));
-        if (squashed < line) squashed = line;
-        const SDL_Rect rect = {frame.x, centre_y - squashed / 2, frame.w, squashed};
-        if (static_active && static_texture)
-            SDL_RenderCopy(target, static_texture, NULL, &rect);
-        else
-            render_plain_texture(target, &rect);
-        fill_rect_alpha(target, &rect, 255, progress * 0.9f);
-        return;
-    }
-
-    if (elapsed < CRT_OFF_SQUASH_MS + CRT_OFF_SHRINK_MS) {
-        const float progress = (float) (elapsed - CRT_OFF_SQUASH_MS) / CRT_OFF_SHRINK_MS;
-        const int full = destination.w > 0 ? destination.w : width;
-        int span = (int) ((float) full * (1.0f - ease_in(progress)));
-        if (span < line * 2) span = line * 2;
-        const SDL_Rect rect = {centre_x - span / 2, centre_y - line / 2, span, line};
-        fill_rect_alpha(target, &rect, 255, 1.0f);
-        return;
-    }
-
-    if (elapsed < CRT_OFF_MS) {
-        const float progress = (float) (elapsed - CRT_OFF_SQUASH_MS - CRT_OFF_SHRINK_MS) / CRT_OFF_FADE_MS;
-        const int dot = line * 2;
-        const int glow = dot * 3;
-        const SDL_Rect halo = {centre_x - glow / 2, centre_y - glow / 2, glow, glow};
-        const SDL_Rect core = {centre_x - dot / 2, centre_y - dot / 2, dot, dot};
-        fill_rect_alpha(target, &halo, 255, (1.0f - progress) * 0.25f);
-        fill_rect_alpha(target, &core, 255, 1.0f - ease_out(progress));
-    }
+static void render_crt_content(SDL_Renderer *target, const SDL_Rect *rect, void *userdata) {
+    (void) userdata;
+    if (crt_snapshot_texture)
+        SDL_RenderCopy(target, crt_snapshot_texture, NULL, rect);
+    else if (static_active && static_texture)
+        SDL_RenderCopy(target, static_texture, NULL, rect);
+    else
+        render_plain_texture(target, rect);
 }
 
 static int render_crt_warm_up(SDL_Renderer *target, const uint32_t now) {
@@ -1000,7 +957,11 @@ static void render_frame(SDL_Renderer *target) {
     SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
     const uint32_t now = SDL_GetTicks();
     if (crt_off_start) {
-        render_crt_power_off(target, now);
+        int width = 0;
+        int height = 0;
+        SDL_GetRendererOutputSize(target, &width, &height);
+        const SDL_Rect frame = {0, 0, width, height};
+        crt_effect_render_power_off(target, &frame, crt_off_start, now, render_crt_content, NULL);
         return;
     }
     if (static_active) {
@@ -1334,11 +1295,39 @@ void video_render_set_static(const int active) {
 }
 
 int video_render_crt_power_off(void) {
-    if (!crt_enabled) return 0;
+    if (!renderer || !config.visual.power_off || config.visual.reduce_motion) return 0;
+
+    const int width = device.screen.width;
+    const int height = device.screen.height;
+    if (width <= 0 || height <= 0 || (size_t) width > SIZE_MAX / (size_t) height / 3U) return 0;
+
+    if (!crt_snapshot_texture || crt_snapshot_width != width || crt_snapshot_height != height) {
+        if (crt_snapshot_texture) SDL_DestroyTexture(crt_snapshot_texture);
+        crt_snapshot_texture =
+            SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, width, height);
+        if (!crt_snapshot_texture) {
+            crt_snapshot_width = 0;
+            crt_snapshot_height = 0;
+            return 0;
+        }
+        SDL_SetTextureBlendMode(crt_snapshot_texture, SDL_BLENDMODE_NONE);
+        crt_snapshot_width = width;
+        crt_snapshot_height = height;
+    }
+
+    uint8_t *pixels = malloc((size_t) width * (size_t) height * 3U);
+    if (!pixels) return 0;
+    const int captured = display_capture_clean_pixels(pixels, width, height) == 0
+                         && SDL_UpdateTexture(crt_snapshot_texture, NULL, pixels, width * 3) == 0;
+    free(pixels);
+    if (!captured) return 0;
+
     crt_off_start = SDL_GetTicks();
     if (!crt_off_start) crt_off_start = 1;
     crt_powered = 0;
-    return CRT_OFF_MS;
+    display_set_ui_hidden(1);
+    display_set_video_background_opaque(1);
+    return (int) crt_effect_power_off_duration();
 }
 
 int video_render_crt_tick(void) {
@@ -1358,6 +1347,10 @@ void video_render_close(void) {
     static_width = 0;
     static_height = 0;
     static_active = 0;
+    if (crt_snapshot_texture) SDL_DestroyTexture(crt_snapshot_texture);
+    crt_snapshot_texture = NULL;
+    crt_snapshot_width = 0;
+    crt_snapshot_height = 0;
     audio_active = 0;
     ambient_ready = 0;
     ambient_tick = 0;

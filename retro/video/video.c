@@ -5,8 +5,10 @@
 #include <SDL2/SDL.h>
 #include <common/platform/device.h>
 #include <common/platform/display.h>
+#include <common/config/config.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
+#include <common/ui/crt.h>
 #include "colour.h"
 #include "geometry.h"
 #include "filters/filters.h"
@@ -71,6 +73,9 @@ static SDL_Texture *output_canvas_tex = NULL;
 static int output_canvas_w = 0;
 static int output_canvas_h = 0;
 
+static SDL_Texture *crt_snapshot_tex = NULL;
+static uint32_t crt_power_off_start = 0;
+
 static int frame_dirty = 0;
 static int frame_skip = 0;
 static int applied_swap_interval = -2;
@@ -81,6 +86,7 @@ static int cpu_filter_limit_logged = 0;
 enum { max_output_pixels = 1920 * 1080, max_output_dimension = 1920, anti_flicker_max_bytes = 64 * 1024 * 1024 };
 
 static void upload_frame(void);
+static void draw_crt_snapshot(SDL_Renderer *renderer, const SDL_Rect *rect, void *userdata);
 
 static void reset_anti_flicker_history(const int release) {
     anti_flicker_history_count = 0;
@@ -621,6 +627,18 @@ static void draw_video_content(SDL_Renderer *renderer, const int physical_output
 }
 
 static void draw_video_background_logical(SDL_Renderer *renderer, const int physical_output) {
+    if (crt_power_off_start && crt_snapshot_tex) {
+        SDL_Rect frame = {0, 0, device.mux.width, device.mux.height};
+        if (physical_output) {
+            const SDL_Rect logical_frame = frame;
+            display_map_logical_rect(&logical_frame, &frame);
+        }
+        crt_effect_render_power_off(
+            renderer, &frame, crt_power_off_start, SDL_GetTicks(), draw_crt_snapshot, crt_snapshot_tex
+        );
+        return;
+    }
+
     if (!frame_tex && !hw_render_bridge_active()) return;
 
     const int rot = effective_rotation();
@@ -991,6 +1009,47 @@ void video_bridge_init(void) {
     display_set_video_background(draw_video_background);
 }
 
+static void draw_crt_snapshot(SDL_Renderer *renderer, const SDL_Rect *rect, void *userdata) {
+    SDL_RenderCopy(renderer, userdata, NULL, rect);
+}
+
+int video_bridge_power_off(void) {
+    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start) return 0;
+    if (!frame_tex && !hw_render_bridge_active()) return 0;
+
+    SDL_Renderer *renderer = display_get_renderer();
+    if (!renderer) return 0;
+
+    if (!crt_snapshot_tex) {
+        crt_snapshot_tex = SDL_CreateTexture(
+            renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
+        );
+        if (!crt_snapshot_tex) return 0;
+        SDL_SetTextureBlendMode(crt_snapshot_tex, SDL_BLENDMODE_NONE);
+    }
+
+    SDL_Texture *previous_target = SDL_GetRenderTarget(renderer);
+    if (SDL_SetRenderTarget(renderer, crt_snapshot_tex) != 0) return 0;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+    draw_video_background_logical(renderer, 0);
+    SDL_SetRenderTarget(renderer, previous_target);
+
+    crt_power_off_start = SDL_GetTicks();
+    if (!crt_power_off_start) crt_power_off_start = 1;
+    display_set_ui_hidden(1);
+    display_set_video_background_opaque(1);
+
+    const uint32_t duration = crt_effect_power_off_duration();
+    while (SDL_GetTicks() - crt_power_off_start < duration) {
+        display_composite_frame();
+        SDL_Delay(8);
+    }
+    display_composite_frame();
+    return 1;
+}
+
 void video_bridge_set_core_aspect(const double aspect_ratio) {
     core_aspect_ratio = aspect_ratio;
     recompute_dest_rect();
@@ -1042,6 +1101,12 @@ void video_bridge_shutdown(void) {
 
     output_canvas_w = 0;
     output_canvas_h = 0;
+
+    if (crt_snapshot_tex) {
+        SDL_DestroyTexture(crt_snapshot_tex);
+        crt_snapshot_tex = NULL;
+    }
+    crt_power_off_start = 0;
 
     free(raw_frame_buf);
     raw_frame_buf = NULL;

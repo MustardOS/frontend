@@ -473,6 +473,7 @@ struct mux_config {
         int16_t video_wallpaper;
         int16_t background_scale;
         int16_t pickles_startup_messages;
+        int16_t power_off;
         int16_t blackfade;
         int16_t notify_time;
         int16_t reduce_motion;

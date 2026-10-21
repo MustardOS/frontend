@@ -6,6 +6,8 @@ static mux_dialogue confirm_dlg;
 
 static mux_dialogue tour_dlg;
 static int pending_power_action = 0;
+static uint32_t arc_hold_started = 0;
+static int arc_hold_fired = 0;
 
 static void show_confirm_dialog(const char *title) {
     lv_label_set_text(confirm_dlg.title_label, title);
@@ -258,6 +260,31 @@ static void handle_x(void) {
         load_mux("kiosk");
         mux_input_stop();
     }
+}
+
+static int arc_launch_allowed(void) {
+    return current_item_index == 3 && !msgbox_active && !dialogue_active(&tour_dlg) && !dialogue_active(&confirm_dlg)
+           && !hold_call;
+}
+
+static void handle_arc_press(void) {
+    arc_hold_started = arc_launch_allowed() ? mux_input_tick() : 0;
+    arc_hold_fired = 0;
+}
+
+static void handle_arc_hold(void) {
+    if (!arc_hold_started || arc_hold_fired || !arc_launch_allowed()) return;
+    if (mux_input_tick() - arc_hold_started < 1000) return;
+
+    arc_hold_fired = 1;
+    play_sound(snd_confirm);
+    load_mux("arc");
+    mux_input_stop();
+}
+
+static void handle_arc_release(void) {
+    arc_hold_started = 0;
+    arc_hold_fired = 0;
 }
 
 static void handle_help(void) {
@@ -556,6 +583,15 @@ int muxlaunch_main(void) {
     };
 
     init_input(&input_opts, 1);
+
+    append_combo(
+        &input_opts, (mux_input_combo) {
+                         .type_mask = BIT(mux_input_start) | BIT(mux_input_x),
+                         .press_handler = handle_arc_press,
+                         .hold_handler = handle_arc_hold,
+                         .release_handler = handle_arc_release,
+                     }
+    );
 
     if (orientation_pending())
         show_tour_offer();

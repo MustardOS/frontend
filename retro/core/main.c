@@ -1179,7 +1179,10 @@ int main(const int argc, char *argv[]) {
             if (!peek) {
                 if (pause_menu_tick()) quit = 1;
             }
-            if (hotkeys_is_quit_requested()) quit = 1;
+            if (hotkeys_is_quit_requested()) {
+                if (!video_bridge_power_off()) fade_out_screen_forced();
+                quit = 1;
+            }
 
             if (!quit && ((netplay_is_playing() && !network_menu_paused) || (link_is_engaged() && !game_link_paused)))
                 run_gameplay = 1;
@@ -1199,7 +1202,8 @@ int main(const int argc, char *argv[]) {
             pause_menu_toggle();
             manual_menu_open();
         } else if (hotkeys_is_quit_requested()) {
-            fade_out_screen_forced();
+            audio_bridge_set_paused(1);
+            if (!video_bridge_power_off()) fade_out_screen_forced();
             quit = 1;
         } else if (netplay_blocks_core()) {
             perf_end(perf_stage_control, control_start);
@@ -1218,6 +1222,11 @@ int main(const int argc, char *argv[]) {
             run_gameplay = 1;
         }
         perf_end(perf_stage_control, control_start);
+
+        if (quit) {
+            perf_frame_complete(0);
+            break;
+        }
 
         if (run_gameplay) {
             audio_bridge_apply_pending_min_latency();

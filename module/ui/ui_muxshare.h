@@ -723,6 +723,7 @@
     VISUAL(box_art_hide, "boxarthide")                                                                                 \
     VISUAL(launch_swap, "launch_swap")                                                                                 \
     VISUAL(pickles_startup_messages, "picklesstartupmessages")                                                         \
+    VISUAL(power_off, "blackfade")                                                                                     \
     VISUAL(shuffle, "shuffle")
 
 #define VISUAL_ELEMENTS VISUAL_CONFIG_ELEMENTS

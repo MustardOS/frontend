@@ -596,6 +596,7 @@ static const module_entry modules[] = {
     // the following modules can be loaded directly
     // without any other functionality
     {"launcher", "launcher", "muxlaunch", muxlaunch_main, NULL},
+    {"arc", "launcher", "muxarc", muxarc_main, NULL},
     {"info", "launcher", "muxinfo", muxinfo_main, NULL},
     {"archive", "app", "muxarchive", muxarchive_main, NULL},
     {"tweakgen", "config", "muxtweakgen", muxtweakgen_main, NULL},

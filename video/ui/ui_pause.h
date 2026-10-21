@@ -46,6 +46,7 @@ void video_playback_ui_show_position(double position, double duration);
 void video_playback_ui_show_speed(const char *value, const char *glyph);
 void video_playback_ui_show_channel(size_t index);
 void video_playback_ui_hide_channel(void);
+void video_playback_ui_prepare_quit(void);
 void video_playback_ui_prepare_channel_transition(void);
 int video_playback_ui_bookmarks_active(void);
 video_ui_action video_playback_ui_begin_bookmark_name(void);

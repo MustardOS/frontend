@@ -51,6 +51,7 @@ void mux_retro_video_refresh_cb(const void *data, unsigned width, unsigned heigh
 void video_bridge_init(void);
 
 void video_bridge_shutdown(void);
+int video_bridge_power_off(void);
 
 void video_bridge_apply_scaling(void);
 

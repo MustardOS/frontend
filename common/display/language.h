@@ -781,6 +781,7 @@ struct mux_lang {
         char backgroundscale[MAX_BUFFER_SIZE];
         char blackfade[MAX_BUFFER_SIZE];
         char pickles_startup_messages[MAX_BUFFER_SIZE];
+        char power_off[MAX_BUFFER_SIZE];
         char shuffle[MAX_BUFFER_SIZE];
         char chime[MAX_BUFFER_SIZE];
         char contentwidth[MAX_BUFFER_SIZE];
@@ -3841,6 +3842,7 @@ struct mux_lang {
             char page_skip[MAX_BUFFER_SIZE];
             char group_content[MAX_BUFFER_SIZE];
             char pickles_startup_messages[MAX_BUFFER_SIZE];
+            char power_off[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];
             char box_art_hide[MAX_BUFFER_SIZE];
             char font[MAX_BUFFER_SIZE];

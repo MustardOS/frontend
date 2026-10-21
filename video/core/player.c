@@ -2590,7 +2590,13 @@ static void set_slow_motion(const int active) {
 
 static void quit_playback(void) {
     if (player.quit_deadline) return;
-    const int duration = player.live ? video_render_crt_power_off() : 0;
+    int duration = 0;
+    if (config.visual.power_off && !config.visual.reduce_motion) {
+        video_playback_ui_prepare_quit();
+        display_set_ui_hidden(!player.audio_only);
+        display_composite_frame();
+        duration = video_render_crt_power_off();
+    }
     if (duration <= 0) {
         stop_playback();
         return;
