@@ -1,5 +1,6 @@
 #include <common/runtime/remote.h>
 
+#include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -14,9 +15,18 @@ int remote_control_open(remote_control *control, const char *directory, const ch
     if (mkfifo(fifo, 0600) != 0) return 0;
 
     control->reader = open(fifo, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (control->reader < 0) return 0;
+    if (control->reader < 0) {
+        unlink(fifo);
+        return 0;
+    }
 
     control->keeper = open(fifo, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (control->keeper < 0) {
+        close(control->reader);
+        control->reader = -1;
+        unlink(fifo);
+        return 0;
+    }
     control->length = 0;
     return 1;
 }
@@ -51,6 +61,7 @@ int remote_control_read_line(remote_control *control, char *line, const size_t s
         if (control->length == sizeof(control->buffer)) control->length = 0;
         const ssize_t received =
             read(control->reader, control->buffer + control->length, sizeof(control->buffer) - control->length);
+        if (received < 0 && errno == EINTR) continue;
         if (received <= 0) return 0;
         control->length += (size_t) received;
     }

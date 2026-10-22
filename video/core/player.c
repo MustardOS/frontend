@@ -3189,7 +3189,7 @@ static void player_cleanup(void) {
     SDL_AtomicSet(&player.stop, 1);
     if (player.lock) {
         SDL_LockMutex(player.lock);
-        SDL_CondBroadcast(player.condition);
+        if (player.condition) SDL_CondBroadcast(player.condition);
         SDL_UnlockMutex(player.lock);
     }
     if (player.demux_thread) SDL_WaitThread(player.demux_thread, NULL);

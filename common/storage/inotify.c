@@ -79,18 +79,29 @@ int inotify_track(inotify_status *proc, const char *dir, const char *name, int *
     if (proc->count >= INOTIFY_MAX_TRACKED) return -1;
     if (strchr(name, '/')) return -1;
 
-    int wd;
-    if (ensure_dir_watch(proc, dir, &wd) < 0) return -1;
+    char *dir_copy = strdup(dir);
+    char *name_copy = strdup(name);
+    if (!dir_copy || !name_copy) {
+        free(dir_copy);
+        free(name_copy);
+        return -1;
+    }
 
-    tracked_t *t = &proc->tracked[proc->count++];
+    int wd;
+    if (ensure_dir_watch(proc, dir, &wd) < 0) {
+        free(dir_copy);
+        free(name_copy);
+        return -1;
+    }
+
+    tracked_t *t = &proc->tracked[proc->count];
 
     t->wd = wd;
-    t->dir = strdup(dir);
-    t->name = strdup(name);
+    t->dir = dir_copy;
+    t->name = name_copy;
     t->exists_out = exists_out;
     t->changes_out = changes_out;
-
-    if (!t->dir || !t->name) return -1;
+    proc->count++;
 
     *exists_out = file_exists_joined(dir, name);
     if (t->changes_out) *t->changes_out = 1;

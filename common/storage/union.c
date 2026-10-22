@@ -16,7 +16,7 @@
 
 #define UNION_SET_INIT_BIT 8
 #define UNION_SET_INIT_CAP 512
-#define UNION_SET_LOAD_NUM 4
+#define UNION_SET_LOAD_NUM 3
 #define UNION_SET_LOAD_DEN 4
 
 #define DENTS_BUF_SIZE (64 * 1024)
@@ -170,15 +170,34 @@ static int union_set_insert(union_set *s, const char *name) {
     }
 
     size_t i = union_set_hash(name, s->capacity);
+    char **available = NULL;
 
-    while (s->buckets[i] && s->buckets[i] != TOMBSTONE) {
-        if (strcasecmp(s->buckets[i], name) == 0) return 1;
+    for (size_t probed = 0; probed < s->capacity && s->buckets[i]; probed++) {
+        if (s->buckets[i] == TOMBSTONE) {
+            if (!available) available = &s->buckets[i];
+        } else if (strcasecmp(s->buckets[i], name) == 0) {
+            return 1;
+        }
         i = (i + 1) & (s->capacity - 1);
     }
 
-    s->buckets[i] = (char *) name;
+    *(available ? available : &s->buckets[i]) = (char *) name;
     s->count++;
     return 0;
+}
+
+static void union_set_remove(union_set *s, const char *name) {
+    if (!s->buckets) return;
+
+    size_t i = union_set_hash(name, s->capacity);
+    for (size_t probed = 0; probed < s->capacity && s->buckets[i]; probed++) {
+        if (s->buckets[i] != TOMBSTONE && strcasecmp(s->buckets[i], name) == 0) {
+            s->buckets[i] = TOMBSTONE;
+            s->count--;
+            return;
+        }
+        i = (i + 1) & (s->capacity - 1);
+    }
 }
 
 static void union_init_mounts(void) {
@@ -253,11 +272,13 @@ static void scan_mount(
 
             char *path_copy = strdup(full_path);
             if (!path_copy) {
+                union_set_remove(set, name_copy);
                 free(name_copy);
                 goto done;
             }
 
             if (!union_entry_list_push(list, name_copy, path_copy)) {
+                union_set_remove(set, name_copy);
                 free(name_copy);
                 free(path_copy);
                 goto done;
@@ -315,14 +336,14 @@ done:
     close(fd);
 }
 
-static void *union_scan_thread(const void *arg) {
+static void *union_scan_thread(void *arg) {
     const deep_arg_t *da = arg;
     scan_worker_t *w = da->w;
 
-    if (!w->mount || !*w->mount) pthread_exit(NULL);
+    if (!w->mount || !*w->mount) return NULL;
 
     scan_mount(w->mount, w->rel_path, &w->dir_set, &w->dir_list, &w->file_set, &w->file_list, da->counts);
-    pthread_exit(NULL);
+    return NULL;
 }
 
 static int union_is_path_prefix(const char *path, const char *prefix) {
@@ -418,6 +439,7 @@ int union_collect(
 
     scan_worker_t workers[A_SIZE(union_mounts)];
     pthread_t threads[A_SIZE(union_mounts)];
+    int started[A_SIZE(union_mounts)] = {0};
     deep_arg_t args[A_SIZE(union_mounts)];
 
     int *mount_counts[A_SIZE(union_mounts)] = {0};
@@ -437,11 +459,12 @@ int union_collect(
         args[i].w = w;
         args[i].counts = dir_item_counts ? &mount_counts[i] : NULL;
 
-        pthread_create(&threads[i], NULL, (void *(*) (void *) ) union_scan_thread, &args[i]);
+        started[i] = pthread_create(&threads[i], NULL, union_scan_thread, &args[i]) == 0;
+        if (!started[i]) union_scan_thread(&args[i]);
     }
 
     for (size_t i = 0; i < n; i++)
-        pthread_join(threads[i], NULL);
+        if (started[i]) pthread_join(threads[i], NULL);
 
     union_set global_dir_set, global_file_set;
     union_entry_list global_dir_list, global_file_list;
@@ -469,6 +492,7 @@ int union_collect(
 
             if (union_set_insert(&global_dir_set, name) == 0) {
                 if (!union_entry_list_push(&global_dir_list, name, path)) {
+                    union_set_remove(&global_dir_set, name);
                     free(name);
                     free(path);
                     continue;
@@ -504,6 +528,7 @@ int union_collect(
 
             if (union_set_insert(&global_file_set, name) == 0) {
                 if (!union_entry_list_push(&global_file_list, name, path)) {
+                    union_set_remove(&global_file_set, name);
                     free(name);
                     free(path);
                 }

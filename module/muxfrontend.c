@@ -818,10 +818,13 @@ int main(void) {
 
     pthread_t t_audio;
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&t_audio, &attr, init_audio, NULL);
-    pthread_attr_destroy(&attr);
+    int audio_started = 0;
+    if (pthread_attr_init(&attr) == 0) {
+        if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0)
+            audio_started = pthread_create(&t_audio, &attr, init_audio, NULL) == 0;
+        pthread_attr_destroy(&attr);
+    }
+    if (!audio_started) init_audio(NULL);
 
     if (strcasecmp(passcode.code.boot, "000000") != 0 && !file_exist(MUX_BOOT_AUTH)) {
         int result = 0;
