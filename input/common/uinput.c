@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <time.h>
 #include <unistd.h>
+#include "../runtime.h"
 #include "uinput.h"
 
 struct gamepad {
@@ -33,6 +35,27 @@ struct gamepad {
 };
 
 static const unsigned short stick_codes[4] = {ABS_X, ABS_Y, ABS_RX, ABS_RY};
+
+static void record_local_activity(void) {
+    static long long last_activity;
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return;
+
+    const long long milliseconds = (long long) now.tv_sec * 1000 + now.tv_nsec / 1000000;
+    if (milliseconds - last_activity < 100) return;
+    char value[32];
+    const int length = snprintf(value, sizeof(value), "%lld\n", milliseconds);
+    if (length <= 0 || (size_t) length >= sizeof(value)) return;
+
+    const int descriptor = open(MUINPUT_STATE_DIR "/local_activity", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    if (descriptor < 0) return;
+    ssize_t written;
+    do {
+        written = write(descriptor, value, (size_t) length);
+    } while (written < 0 && errno == EINTR);
+    close(descriptor);
+    if (written == (ssize_t) length) last_activity = milliseconds;
+}
 
 static int stick_index(const unsigned short code) {
     for (int i = 0; i < 4; ++i) {
@@ -298,6 +321,7 @@ void gamepad_emit_key(struct gamepad *gp, const unsigned short code, const int v
         emit_event(gp, EV_KEY, code, value);
         return;
     }
+    if (value == 1) record_local_activity();
     gp->key_physical[code] = (signed char) (value != 0);
     send_key(gp, code);
 }
@@ -315,6 +339,9 @@ static void send_stick(struct gamepad *gp, const int index) {
 void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int value) {
     const int stick = gp ? stick_index(code) : -1;
     if (stick >= 0 && gp->stick_present[stick]) {
+        const int centre = stick_centre(gp, stick);
+        const int range = gp->stick_max[stick] - gp->stick_min[stick];
+        if (range > 0 && abs(value - centre) > range / 20) record_local_activity();
         gp->stick_physical[stick] = value;
         send_stick(gp, stick);
         return;
@@ -325,6 +352,7 @@ void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int v
         emit_event(gp, EV_ABS, code, value);
         return;
     }
+    if (value != 0) record_local_activity();
     gp->hat_physical[index] = value;
     send_hat(gp, index);
 }

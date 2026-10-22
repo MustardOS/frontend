@@ -20,6 +20,7 @@ Merch
 Device Dashboard
 Website
 Download
+Download All
 Support
 No data from the device.
 Summary
@@ -374,7 +375,6 @@ Refresh now
 Save image
 A private screen is open on the device, so it is not shown.
 Connecting to the live screen…
-Live. The screen streams while this page is open.
 This browser could not show the live stream, so pictures are used instead.
 Manual
 Live
@@ -539,6 +539,8 @@ Folder created
 Folder name
 Link
 Close
+Editor
+Preview
 Preview Image
 Preview Text
 Preview %s
@@ -564,6 +566,11 @@ Upload Folders
 Uploading...
 User Storage
 Waiting...
+Preparing archive...
+Adding %s (%s of %s)
+Archive ready. Download starting...
+Could not prepare that archive
+%s items
 Listening in Wasabi
 Watching in Wasabi
 Channel %s of %s
@@ -588,3 +595,11 @@ Wasabi
 Wasabi is not playing anything
 Wasabi did not accept that command
 Invalid value
+Add content
+Controls are paused while the device is being used.
+Enter a destination beginning with the Pickles core folder.
+Enter the full path to content on the device.
+Formatted preview
+Import
+Import save game
+Refreshing...

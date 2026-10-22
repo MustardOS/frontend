@@ -13,7 +13,9 @@ TOOLS = muvarctl mudisp murgb musftpjail mususpend muswitch muverify muscreen
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 mulink_SRC = common/platform/usb_link.c
-muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c common/storage/mount.c
+muweb_SRC = common/base/totp.c common/content/lookup.c common/content/core/state_preview.c common/storage/mount.c \
+            vendor/miniz/miniz.c
+muweb_CFLAGS = -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
 musftpjail_SRC = common/storage/mount.c
 
 muvarctl_SRC = common/config/var_store.c
@@ -159,7 +161,7 @@ $(MODULES):
 $(MODULE_DAEMONS):
 	@echo "Building Daemon: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $($@_CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 $(INPUT_DAEMON):

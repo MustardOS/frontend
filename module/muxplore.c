@@ -1188,7 +1188,8 @@ static void handle_a(void) {
     if (hold_call) return;
 
     if (more_active(&more_menu)) {
-        const more_id opt = more_take(&more_menu, 0);
+        const more_id opt = more_peek(&more_menu);
+        more_take(&more_menu, opt == more_information);
 
         if (opt == more_help) {
             show_module_help();
@@ -1504,7 +1505,6 @@ static void handle_menu_hold(void) {
 
 static void handle_help(void) {
     if (more_active(&more_menu)) {
-        play_sound(snd_back);
         more_cancel(&more_menu);
         return;
     }

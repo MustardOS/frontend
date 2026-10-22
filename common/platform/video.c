@@ -72,6 +72,7 @@ static int64_t clip_start_ms = 0;
 static int64_t clip_end_ms = 0;
 static int64_t clip_fade_in_ms = 0;
 static int64_t clip_fade_out_ms = 0;
+static int clip_mute = 0;
 static volatile int restart_requested = 0;
 static uint32_t stall_last_ticks = 0;
 static uint32_t wallpaper_frame_ms = WALLPAPER_DEF_FRAME_MS;
@@ -115,6 +116,7 @@ static uint32_t play_start_ms = 0;
 
 static void load_preview_edit(void) {
     clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
+    clip_mute = 0;
     const char *slash = strrchr(video_path, '/');
     const char *dot = strrchr(slash ? slash + 1 : video_path, '.');
     if (!slash || !dot || dot <= slash + 1) return;
@@ -139,6 +141,8 @@ static void load_preview_edit(void) {
             clip_fade_in_ms = value;
         else if (sscanf(line, "fade_out_ms=%lld", &value) == 1)
             clip_fade_out_ms = value;
+        else if (sscanf(line, "mute=%lld", &value) == 1)
+            clip_mute = value != 0;
     }
     fclose(file);
 }
@@ -282,7 +286,9 @@ static void audio_hook_cb(void *udata __attribute__((unused)), Uint8 *stream, co
 
         ring_r = (ring_r + to_read) % ring_frames;
 
-        if (!is_wallpaper && (clip_fade_in_ms > 0 || clip_fade_out_ms > 0)) {
+        if (!is_wallpaper && clip_mute) {
+            SDL_memset(out, 0, (size_t) to_read * mix_ch * sizeof(float));
+        } else if (!is_wallpaper && (clip_fade_in_ms > 0 || clip_fade_out_ms > 0)) {
             const int gain = preview_gain(clip_start_ms + (int64_t) (SDL_GetTicks() - play_start_ms));
             for (int i = 0; i < to_read * mix_ch; ++i)
                 out[i] *= (float) gain / 255.0f;
@@ -722,6 +728,16 @@ static int decode_thread_fn(void *unused __attribute__((unused))) {
         if (av_read_frame(fmt_ctx, av_pkt) < 0) {
             av_packet_unref(av_pkt);
             drain_video_decoder();
+
+            SDL_LockMutex(vq_lock);
+            while (decode_run && !restart_requested && vq_count > 0)
+                SDL_CondWait(vq_cond, vq_lock);
+            const int drained_run = decode_run;
+            const int drained_restart = restart_requested;
+            SDL_UnlockMutex(vq_lock);
+
+            if (!drained_run) break;
+            if (drained_restart) continue;
             if (!restart_stream()) break;
             continue;
         }
@@ -879,6 +895,7 @@ static void cleanup(void) {
     preview_embedded = 0;
     preview_alpha = 255;
     clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
+    clip_mute = 0;
     restart_requested = 0;
     last_pts = INT64_MIN;
 
@@ -1283,13 +1300,23 @@ int video_preview_active(void) {
 }
 
 void video_preview_cancel(void) {
+    const int pending = preview_pending_path[0] != '\0';
     if (preview_timer) lv_timer_pause(preview_timer);
     preview_pending_path[0] = '\0';
     preview_pending_container = preview_pending_box = NULL;
     preview_pending_image = NULL;
     preview_pending_size = NULL;
 
-    if (is_wallpaper) return;
+    if (is_wallpaper) {
+        if (pending) saved_wall_path[0] = '\0';
+        return;
+    }
+
+    if (!pending && !present_timer && !fmt_ctx && !preview_image && !image_dsc && !decode_thread
+        && !saved_wall_path[0]) {
+        video_path[0] = '\0';
+        return;
+    }
 
     cleanup();
     video_path[0] = '\0';

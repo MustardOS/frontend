@@ -37,6 +37,8 @@ static int editing_remote_privacy;
 static int privacy_row_index = -1;
 static int editing_remote_control;
 static int control_row_index = -1;
+static int editing_remote_local_priority;
+static int local_priority_row_index = -1;
 static int editing_live_fps;
 static int fps_row_index = -1;
 static int editing_live_quality;
@@ -223,6 +225,7 @@ static void load_service_values(void) {
     editing_remote_view = config.web.remote_view;
     editing_remote_privacy = config.web.remote_privacy != 0;
     editing_remote_control = config.web.remote_control;
+    editing_remote_local_priority = config.web.remote_local_priority != 0;
     editing_live_fps = config.web.live_fps;
     editing_live_quality = config.web.live_quality;
     editing_remote_sound = config.web.remote_sound;
@@ -242,6 +245,8 @@ static int service_changed(void) {
     if (service_has_auth(selected_service) && editing_remote_view != config.web.remote_view) return 1;
     if (service_has_auth(selected_service) && editing_remote_privacy != (config.web.remote_privacy != 0)) return 1;
     if (service_has_auth(selected_service) && editing_remote_control != config.web.remote_control) return 1;
+    if (service_has_auth(selected_service) && editing_remote_local_priority != (config.web.remote_local_priority != 0))
+        return 1;
     if (service_has_auth(selected_service) && editing_live_fps != config.web.live_fps) return 1;
     if (service_has_auth(selected_service) && editing_live_quality != config.web.live_quality) return 1;
     if (service_has_auth(selected_service) && editing_remote_sound != config.web.remote_sound) return 1;
@@ -377,9 +382,15 @@ static void build_detail_rows(const enum web_service service, const int focus_re
     }
 
     control_row_index = -1;
+    local_priority_row_index = -1;
     if (service_has_auth(service)) {
         control_row_index = count;
         set_row(count++, lang.muxwebserv.remote_control, "landing", remote_control_text(), "remote_control");
+        local_priority_row_index = count;
+        set_row(
+            count++, lang.muxwebserv.remote_local_priority, "landing",
+            editing_remote_local_priority ? lang.generic.enabled : lang.generic.disabled, "remote_local_priority"
+        );
     }
 
     setup_service_nav();
@@ -476,6 +487,8 @@ static int save_service(void) {
         config.web.remote_privacy = (int16_t) editing_remote_privacy;
         write_text_to_file_atomic(CONF_CONFIG_PATH "web/remote_control", INT, editing_remote_control);
         config.web.remote_control = (int16_t) editing_remote_control;
+        write_text_to_file_atomic(CONF_CONFIG_PATH "web/remote_local_priority", INT, editing_remote_local_priority);
+        config.web.remote_local_priority = (int16_t) editing_remote_local_priority;
         write_text_to_file_atomic(CONF_CONFIG_PATH "web/live_fps", INT, editing_live_fps);
         config.web.live_fps = (int16_t) editing_live_fps;
         write_text_to_file_atomic(CONF_CONFIG_PATH "web/live_quality", INT, editing_live_quality);
@@ -539,6 +552,7 @@ static void show_help(void) {
         {"remote_view", lang.muxwebserv.help.remote_view},
         {"remote_privacy", lang.muxwebserv.help.remote_privacy},
         {"remote_control", lang.muxwebserv.help.remote_control},
+        {"remote_local_priority", lang.muxwebserv.help.remote_local_priority},
         {"live_fps", lang.muxwebserv.help.live_fps},
         {"live_quality", lang.muxwebserv.help.live_quality},
         {"remote_sound", lang.muxwebserv.help.remote_sound}
@@ -603,6 +617,16 @@ static void cycle_remote_control(const int direction) {
     fields_modified = service_changed();
 }
 
+static void cycle_remote_local_priority(void) {
+    editing_remote_local_priority = !editing_remote_local_priority;
+    lv_label_set_text(
+        ui_objects_value[local_priority_row_index],
+        editing_remote_local_priority ? lang.generic.enabled : lang.generic.disabled
+    );
+    play_sound(snd_option);
+    fields_modified = service_changed();
+}
+
 static void cycle_remote_sound(const int direction) {
     editing_remote_sound = (editing_remote_sound + (direction < 0 ? 3 : 1)) % 4;
     lv_label_set_text(ui_objects_value[sound_row_index], remote_sound_text());
@@ -623,6 +647,8 @@ static void cycle_current_toggle(const int direction) {
         cycle_remote_privacy();
     } else if (control_row_index >= 0 && current_item_index == control_row_index) {
         cycle_remote_control(direction);
+    } else if (local_priority_row_index >= 0 && current_item_index == local_priority_row_index) {
+        cycle_remote_local_priority();
     } else if (fps_row_index >= 0 && current_item_index == fps_row_index) {
         cycle_live_fps(direction);
     } else if (quality_row_index >= 0 && current_item_index == quality_row_index) {
@@ -750,6 +776,11 @@ static void handle_confirm(void) {
 
     if (control_row_index >= 0 && current_item_index == control_row_index) {
         cycle_remote_control(+1);
+        return;
+    }
+
+    if (local_priority_row_index >= 0 && current_item_index == local_priority_row_index) {
+        cycle_remote_local_priority();
         return;
     }
 

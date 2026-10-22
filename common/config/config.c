@@ -378,6 +378,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "web", "remote_view", CFG_OFF(web.remote_view), 0, {.i = 2}, 1, 0, 7},
     {CONF_CONFIG_PATH "web", "remote_privacy", CFG_OFF(web.remote_privacy), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "remote_control", CFG_OFF(web.remote_control), 0, {.i = 0}, 1, 0, 2},
+    {CONF_CONFIG_PATH "web", "remote_local_priority", CFG_OFF(web.remote_local_priority), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "web", "remote_sound", CFG_OFF(web.remote_sound), 0, {.i = 0}, 1, 0, 3},
     {CONF_CONFIG_PATH "web", "live_fps", CFG_OFF(web.live_fps), 0, {.i = 15}, 1, 5, 60},
     {CONF_CONFIG_PATH "web", "live_quality", CFG_OFF(web.live_quality), 0, {.i = 70}, 1, 20, 100},

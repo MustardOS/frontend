@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <fnmatch.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -143,35 +144,150 @@ static int text_run_compare(const char *a, const size_t a_len, const char *b, co
     return order;
 }
 
+static int roman_token(const char *text, size_t *length, unsigned long long *value) {
+    static const struct {
+        unsigned int value;
+        const char *digits;
+    } parts[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
+                 {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
+
+    size_t used = 0;
+    while (text[used] && strchr("IVXLCDM", text[used]))
+        used += 1;
+    if (!used || isalnum((unsigned char) text[used])) return 0;
+
+    long long number = 0;
+    for (size_t i = 0; i < used; ++i) {
+        const char *digit = strchr("IVXLCDM", text[i]);
+        const unsigned int values[] = {1, 5, 10, 50, 100, 500, 1000};
+        const unsigned int current = values[digit - "IVXLCDM"];
+        unsigned int next = 0;
+        if (i + 1 < used) {
+            digit = strchr("IVXLCDM", text[i + 1]);
+            next = values[digit - "IVXLCDM"];
+        }
+        number += current < next ? -(long long) current : current;
+    }
+    if (!number || number > 3999) return 0;
+
+    char canonical[16] = "";
+    size_t written = 0;
+    unsigned long long remaining = number;
+    for (size_t i = 0; i < sizeof(parts) / sizeof(parts[0]); ++i) {
+        while (remaining >= parts[i].value) {
+            const size_t part_length = strlen(parts[i].digits);
+            if (written + part_length >= sizeof(canonical)) return 0;
+            memcpy(canonical + written, parts[i].digits, part_length);
+            written += part_length;
+            remaining -= parts[i].value;
+        }
+    }
+    canonical[written] = '\0';
+    if (written != used || memcmp(canonical, text, used) != 0) return 0;
+
+    *length = used;
+    *value = number;
+    return 1;
+}
+
+static int
+number_token(const char *text, const char *start, const char *end, size_t *length, unsigned long long *value) {
+    *length = 0;
+    *value = 0;
+    if (isdigit((unsigned char) *text)) {
+        while (isdigit((unsigned char) text[*length])) {
+            const unsigned int digit = (unsigned int) (text[*length] - '0');
+            *value = *value > (ULLONG_MAX - digit) / 10 ? ULLONG_MAX : *value * 10 + digit;
+            *length += 1;
+        }
+        return 1;
+    }
+    if (text == start || !isspace((unsigned char) text[-1])) return 0;
+    if (!roman_token(text, length, value)) return 0;
+
+    const char *after = text + *length;
+    while (after < end && isspace((unsigned char) *after))
+        after++;
+    if (after != end) {
+        *length = 0;
+        *value = 0;
+        return 0;
+    }
+    return 1;
+}
+
+static const char *natural_name_end(const char *text) {
+    const char *end = text + strlen(text);
+    for (const char *candidate = text; candidate[0] && candidate[1]; ++candidate) {
+        if (candidate[0] != ' ' || (candidate[1] != '(' && candidate[1] != '[')) continue;
+
+        const char *position = candidate + 1;
+        int valid = 1;
+        while (*position) {
+            while (*position == ' ')
+                position++;
+            const char open = *position;
+            const char close = open == '(' ? ')' : open == '[' ? ']' : '\0';
+            if (!close) {
+                valid = 0;
+                break;
+            }
+            const char *closed = strchr(position + 1, close);
+            if (!closed) {
+                valid = 0;
+                break;
+            }
+            position = closed + 1;
+        }
+        if (valid) return candidate;
+    }
+    return end;
+}
+
 int str_compare(const void *a, const void *b) {
     const char *str1 = *(const char **) a;
     const char *str2 = *(const char **) b;
+    const char *start1 = str1;
+    const char *start2 = str2;
+    const char *end1 = natural_name_end(str1);
+    const char *end2 = natural_name_end(str2);
 
-    while (*str1 && *str2) {
-        if (isdigit((unsigned char) *str1) && isdigit((unsigned char) *str2)) {
-            unsigned long long n1 = 0, n2 = 0;
-            while (isdigit((unsigned char) *str1))
-                n1 = n1 * 10 + (*str1++ - '0');
-            while (isdigit((unsigned char) *str2))
-                n2 = n2 * 10 + (*str2++ - '0');
-
+    while (str1 < end1 && str2 < end2) {
+        size_t length1 = 0, length2 = 0;
+        unsigned long long n1 = 0, n2 = 0;
+        const int number1 = number_token(str1, start1, end1, &length1, &n1);
+        const int number2 = number_token(str2, start2, end2, &length2, &n2);
+        if (number1 && number2) {
             if (n1 != n2) return (n1 > n2) - (n1 < n2);
+            str1 += length1;
+            str2 += length2;
             continue;
         }
+        if (number1 != number2) return number1 ? -1 : 1;
 
         const char *run1 = str1;
         const char *run2 = str2;
 
-        while (*str1 && !isdigit((unsigned char) *str1))
+        while (str1 < end1) {
+            size_t length = 0;
+            unsigned long long value = 0;
+            if (number_token(str1, start1, end1, &length, &value)) break;
             str1++;
-        while (*str2 && !isdigit((unsigned char) *str2))
+        }
+        while (str2 < end2) {
+            size_t length = 0;
+            unsigned long long value = 0;
+            if (number_token(str2, start2, end2, &length, &value)) break;
             str2++;
+        }
 
         const int order = text_run_compare(run1, (size_t) (str1 - run1), run2, (size_t) (str2 - run2));
         if (order != 0) return order;
     }
 
-    return (unsigned char) *str1 - (unsigned char) *str2;
+    if (str1 < end1) return 1;
+    if (str2 < end2) return -1;
+    return text_run_compare(start1, strlen(start1), start2, strlen(start2));
 }
 
 char *str_nonew(char *text) {

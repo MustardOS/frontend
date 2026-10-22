@@ -705,6 +705,8 @@ void dialogue_hide_chained(mux_dialogue *dlg) {
     lv_obj_add_flag(dlg->panel, MU_OBJ_FLAG_HIDE_FLOAT);
     lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_translate_x(dlg->panel, 0, MU_OBJ_MAIN_DEFAULT);
+    page_nav_blocked = 0;
+    timer_resume_all();
 }
 
 void dialogue_hide(mux_dialogue *dlg) {

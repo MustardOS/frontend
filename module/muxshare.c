@@ -258,17 +258,19 @@ static void show_content_preview(const int visible) {
 
 void show_content_information(const char *title, const char *content, void (*refresh)(const char *image_type)) {
     play_sound(snd_info_open);
-    set_preview_hint(1);
     content_info_refresh = refresh;
 
     video_preview_cancel();
-    show_info_box(title, content, 1);
-
     if (refresh) refresh("preview");
+    const int description_present = content && content[0];
+    set_preview_hint(preview_media_present && description_present);
+    show_info_box(title, description_present ? content : "", 1);
+
     if (preview_media_present) show_content_preview(1);
 }
 
 void toggle_content_preview(void) {
+    if (!preview_hint_visible) return;
     play_sound(snd_info_close);
     show_content_preview(lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN));
 }
@@ -1554,6 +1556,7 @@ void render_image_refresh(
 ) {
     const int is_preview = strcasecmp(image_type, "preview") == 0;
     if (is_preview) preview_media_present = 0;
+    video_preview_cancel();
 
     if (strlen(h_core_artwork) <= 1) {
         if (is_preview) {
@@ -1577,7 +1580,6 @@ void render_image_refresh(
 
     const int animated = catalogue_media_is_animated(image);
     if (animated && config.visual.reduce_motion == 0) {
-        video_preview_cancel();
         if (is_preview) {
             preview_media_present = 1;
             lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);

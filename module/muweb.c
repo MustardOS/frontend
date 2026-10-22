@@ -26,6 +26,7 @@
 #include <common/content/core/state_preview.h>
 #include <common/content/lookup.h>
 #include <common/storage/mount.h>
+#include <miniz/miniz.h>
 
 #define MUWEB_VERSION "0.1.0"
 
@@ -42,6 +43,9 @@
 
 #define MUWEB_CONTENT_ROOTS 4
 #define MUWEB_FILE_ROOTS    5
+#define MUWEB_ARCHIVE_ITEMS 4096
+#define MUWEB_ARCHIVE_JOBS  2
+#define MUWEB_ARCHIVE_TTL   3600
 
 struct file_root {
     char id[16];
@@ -105,6 +109,25 @@ static int screen_wanted;
 static int remote_input = 0;
 static int remote_input_public = 0;
 static int remote_sticks = 0;
+static int remote_local_priority = 0;
+
+#define LOCAL_INPUT_ACTIVITY "/run/muinput/local_activity"
+#define LOCAL_INPUT_LOCK_MS  1800
+
+static int local_input_active(void) {
+    FILE *file = fopen(LOCAL_INPUT_ACTIVITY, "r");
+    if (!file) return 0;
+
+    long long activity = 0;
+    const int valid = fscanf(file, "%lld", &activity) == 1;
+    fclose(file);
+    if (!valid) return 0;
+
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0;
+    const long long current = (long long) now.tv_sec * 1000 + now.tv_nsec / 1000000;
+    return activity <= current && current - activity < LOCAL_INPUT_LOCK_MS;
+}
 static int screen_manual = 0;
 static int screen_rotate = 0;
 static int remote_socket = -1;
@@ -444,6 +467,32 @@ static int make_directories(const char *path) {
     return mkdir(working, 0755) == 0 || errno == EEXIST;
 }
 
+static int make_directories_within(const char *root, const char *relative) {
+    char working[PATH_MAX];
+    const int written = snprintf(working, sizeof(working), "%s", relative);
+    if (written < 1 || (size_t) written >= sizeof(working)) return 0;
+
+    int descriptor = open(root, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (descriptor < 0) return 0;
+
+    char *state = NULL;
+    char *segment = strtok_r(working, "/", &state);
+    while (segment) {
+        if (mkdirat(descriptor, segment, 0755) < 0 && errno != EEXIST) {
+            close(descriptor);
+            return 0;
+        }
+        const int child = openat(descriptor, segment, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        close(descriptor);
+        if (child < 0) return 0;
+        descriptor = child;
+        segment = strtok_r(NULL, "/", &state);
+    }
+
+    close(descriptor);
+    return 1;
+}
+
 static int
 resolve_target(const char *root, const char *relative, const int create_parents, char *out, const size_t out_size) {
     if (!safe_relative_path(relative)) return 0;
@@ -462,11 +511,7 @@ resolve_target(const char *root, const char *relative, const int create_parents,
         leaf = relative;
     }
 
-    if (create_parents && parent_relative[0]) {
-        char parent_path[PATH_MAX];
-        if (!join_path(parent_path, sizeof(parent_path), root, parent_relative)) return 0;
-        if (!make_directories(parent_path)) return 0;
-    }
+    if (create_parents && parent_relative[0] && !make_directories_within(root, parent_relative)) return 0;
 
     char parent_resolved[PATH_MAX];
     if (!resolve_within(root, parent_relative[0] ? parent_relative : NULL, parent_resolved, sizeof(parent_resolved)))
@@ -2239,8 +2284,8 @@ static int save_index_json(struct buffer *out, const char *root) {
 
         if (!first) ok = buffer_puts(out, ",");
         ok = ok && buffer_puts(out, "{") && json_field(out, "path", save->relative) && buffer_puts(out, ",")
-             && json_field(out, "name", name) && buffer_puts(out, ",")
-             && (!friendly || (json_field(out, "friendly", friendly) && buffer_puts(out, ",")))
+             && json_field(out, "core", save->group) && buffer_puts(out, ",") && json_field(out, "name", name)
+             && buffer_puts(out, ",") && (!friendly || (json_field(out, "friendly", friendly) && buffer_puts(out, ",")))
              && json_number(out, "bytes", save->bytes) && buffer_puts(out, ",")
              && json_number(out, "modified", save->modified) && buffer_puts(out, ",\"backups\":[");
 
@@ -2762,7 +2807,9 @@ static int session_valid(const char *token) {
     return 0;
 }
 
-static int session_open(char *out, const size_t out_size) {
+static int random_token(char *out, const size_t out_size) {
+    if (!out || out_size < MUWEB_TOKEN_TEXT) return 0;
+
     unsigned char raw[MUWEB_TOKEN_BYTES];
 
     const int random = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
@@ -2772,9 +2819,15 @@ static int session_open(char *out, const size_t out_size) {
     close(random);
     if (got != (ssize_t) sizeof(raw)) return 0;
 
-    char token[MUWEB_TOKEN_TEXT];
     for (size_t i = 0; i < sizeof(raw); ++i)
-        snprintf(token + i * 2, 3, "%02x", raw[i]);
+        snprintf(out + i * 2, 3, "%02x", raw[i]);
+
+    return 1;
+}
+
+static int session_open(char *out, const size_t out_size) {
+    char token[MUWEB_TOKEN_TEXT];
+    if (!random_token(token, sizeof(token))) return 0;
 
     size_t slot = 0;
     for (size_t i = 1; i < MUWEB_SESSION_SLOTS; ++i) {
@@ -2979,24 +3032,307 @@ static int file_resolve_entry(const struct file_root *root, const char *relative
 
 static int file_resolve_target(const struct file_root *root, const char *relative, char *out, const size_t out_size) {
     if (!file_root_available(root) || !file_relative_path(relative, 0) || file_sensitive(root, relative)) return 0;
+    return resolve_target(root->path, relative, 1, out, out_size);
+}
 
-    char parent_relative[PATH_MAX];
-    const char *leaf = strrchr(relative, '/');
-    if (leaf) {
-        const size_t length = (size_t) (leaf - relative);
-        if (length >= sizeof(parent_relative)) return 0;
-        memcpy(parent_relative, relative, length);
-        parent_relative[length] = '\0';
-        leaf += 1;
-    } else {
-        parent_relative[0] = '\0';
-        leaf = relative;
+static int file_zip_tree(
+    mz_zip_archive *zip, const struct file_root *root, const char *path, const char *relative,
+    const char *source_relative
+) {
+    if (root && file_sensitive(root, source_relative)) return 1;
+    struct stat info;
+    if (lstat(path, &info) < 0) return 0;
+    if (S_ISLNK(info.st_mode)) return 1;
+    if (S_ISREG(info.st_mode)) return mz_zip_writer_add_file(zip, relative, path, NULL, 0, MZ_NO_COMPRESSION) != 0;
+    if (!S_ISDIR(info.st_mode)) return 1;
+
+    char directory_name[PATH_MAX];
+    const int directory_length = snprintf(directory_name, sizeof(directory_name), "%s/", relative);
+    if (directory_length < 1 || (size_t) directory_length >= sizeof(directory_name)
+        || !mz_zip_writer_add_mem(zip, directory_name, NULL, 0, MZ_NO_COMPRESSION))
+        return 0;
+
+    DIR *directory = opendir(path);
+    if (!directory) return 0;
+    int ok = 1;
+    const struct dirent *entry;
+    while (ok && (entry = readdir(directory))) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        char child[PATH_MAX];
+        char archived[PATH_MAX];
+        char child_relative[PATH_MAX];
+        if ((size_t) snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >= sizeof(child)
+            || (size_t) snprintf(archived, sizeof(archived), "%s/%s", relative, entry->d_name) >= sizeof(archived)
+            || (size_t) snprintf(child_relative, sizeof(child_relative), "%s/%s", source_relative, entry->d_name)
+                   >= sizeof(child_relative)) {
+            ok = 0;
+            break;
+        }
+        ok = file_zip_tree(zip, root, child, archived, child_relative);
+    }
+    closedir(directory);
+    return ok;
+}
+
+static int file_zip_directory(
+    const struct file_root *root, const char *relative, const char *path, char *archive, const size_t archive_size
+) {
+    if (archive_size < sizeof("/tmp/muweb-folder-XXXXXX.zip")) return 0;
+    snprintf(archive, archive_size, "/tmp/muweb-folder-XXXXXX.zip");
+    const int descriptor = mkstemps(archive, 4);
+    if (descriptor < 0) return 0;
+    close(descriptor);
+    unlink(archive);
+
+    const char *name = strrchr(path, '/');
+    name = name && name[1] ? name + 1 : "folder";
+
+    mz_zip_archive zip;
+    mz_zip_zero_struct(&zip);
+    if (!mz_zip_writer_init_file(&zip, archive, 0)) return 0;
+    const int ok = file_zip_tree(&zip, root, path, name, relative) && mz_zip_writer_finalize_archive(&zip);
+    mz_zip_writer_end(&zip);
+    if (!ok) unlink(archive);
+    return ok;
+}
+
+struct file_archive_item {
+    char *source;
+    char *relative;
+    char *name;
+};
+
+static void file_archive_items_free(struct file_archive_item *items, const size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        free(items[i].source);
+        free(items[i].relative);
+        free(items[i].name);
+    }
+    free(items);
+}
+
+static int file_archive_token_valid(const char *token) {
+    if (!token || strlen(token) != MUWEB_TOKEN_TEXT - 1) return 0;
+    for (const unsigned char *p = (const unsigned char *) token; *p; ++p)
+        if (!isxdigit(*p)) return 0;
+    return 1;
+}
+
+static int file_archive_path(char *out, const size_t out_size, const char *token, const char *suffix) {
+    if (!file_archive_token_valid(token)) return 0;
+    const int written = snprintf(out, out_size, "/tmp/muweb-archive-%s%s", token, suffix);
+    return written > 0 && (size_t) written < out_size;
+}
+
+static void file_archive_cleanup(void) {
+    DIR *directory = opendir("/tmp");
+    if (!directory) return;
+
+    const time_t now = time(NULL);
+    const char prefix[] = "muweb-archive-";
+    const struct dirent *entry;
+    while ((entry = readdir(directory))) {
+        if (strncmp(entry->d_name, prefix, sizeof(prefix) - 1) != 0) continue;
+        char path[PATH_MAX];
+        if ((size_t) snprintf(path, sizeof(path), "/tmp/%s", entry->d_name) >= sizeof(path)) continue;
+        struct stat info;
+        if (lstat(path, &info) == 0 && now - info.st_mtime > MUWEB_ARCHIVE_TTL) unlink(path);
+    }
+    closedir(directory);
+}
+
+static size_t file_archive_jobs(void) {
+    DIR *directory = opendir("/tmp");
+    if (!directory) return 0;
+
+    size_t jobs = 0;
+    const char prefix[] = "muweb-archive-";
+    const char suffix[] = ".work";
+    const struct dirent *entry;
+    while ((entry = readdir(directory))) {
+        const size_t length = strlen(entry->d_name);
+        if (length > sizeof(prefix) + sizeof(suffix) - 2 && strncmp(entry->d_name, prefix, sizeof(prefix) - 1) == 0
+            && strcmp(entry->d_name + length - (sizeof(suffix) - 1), suffix) == 0)
+            jobs += 1;
+    }
+    closedir(directory);
+    return jobs;
+}
+
+static int file_archive_status(
+    const char *token, const char *state, const char *current, const size_t completed, const size_t total,
+    const long long bytes, const char *error
+) {
+    char status_path[PATH_MAX];
+    if (!file_archive_path(status_path, sizeof(status_path), token, ".json")) return 0;
+
+    struct buffer out = {0};
+    int ok = buffer_puts(&out, "{") && json_field(&out, "state", state) && buffer_puts(&out, ",")
+             && json_field(&out, "current", current ? current : "") && buffer_puts(&out, ",")
+             && json_number(&out, "completed", (long long) completed) && buffer_puts(&out, ",")
+             && json_number(&out, "total", (long long) total) && buffer_puts(&out, ",")
+             && json_number(&out, "bytes", bytes);
+    if (ok && error && *error) ok = buffer_puts(&out, ",") && json_field(&out, "error", error);
+    ok = ok && buffer_puts(&out, "}") && write_file_atomic(status_path, out.data, out.length);
+    buffer_free(&out);
+    return ok;
+}
+
+static void file_archive_build(
+    const char *token, const struct file_root *root, struct file_archive_item *items, const size_t count
+) {
+    char pending[PATH_MAX];
+    char archive[PATH_MAX];
+    char working[PATH_MAX];
+    if (!file_archive_path(pending, sizeof(pending), token, ".pending")
+        || !file_archive_path(archive, sizeof(archive), token, ".zip")
+        || !file_archive_path(working, sizeof(working), token, ".work"))
+        _exit(1);
+
+    for (int descriptor = 3; descriptor < 1024; ++descriptor)
+        close(descriptor);
+
+    mz_zip_archive zip;
+    mz_zip_zero_struct(&zip);
+    int ok = mz_zip_writer_init_file(&zip, pending, 0) != 0;
+    for (size_t i = 0; ok && i < count; ++i) {
+        file_archive_status(token, "working", items[i].name, i, count, 0, NULL);
+        ok = file_zip_tree(&zip, root, items[i].source, items[i].name, items[i].relative);
+    }
+    if (ok) ok = mz_zip_writer_finalize_archive(&zip) != 0;
+    mz_zip_writer_end(&zip);
+
+    struct stat info;
+    if (ok) ok = rename(pending, archive) == 0 && stat(archive, &info) == 0;
+    if (ok)
+        file_archive_status(token, "ready", "", count, count, info.st_size, NULL);
+    else {
+        unlink(pending);
+        unlink(archive);
+        file_archive_status(token, "failed", "", 0, count, 0, "Could not prepare that archive");
+    }
+    unlink(working);
+    file_archive_items_free(items, count);
+    _exit(ok ? 0 : 1);
+}
+
+static int file_archive_start(
+    struct connection *connection, const struct file_root *root, const char *relative, const char *body,
+    const size_t body_length
+) {
+    if (!write_allowed(connection)) return 0;
+    if (!body || !body_length || body_length > MUWEB_UPLOAD_LIMIT) {
+        send_error(connection, 400, "Select at least two items");
+        return 0;
     }
 
-    char parent[PATH_MAX];
-    if (!file_resolve_existing(root, parent_relative, parent, sizeof(parent))) return 0;
-    const int written = snprintf(out, out_size, "%s/%s", parent, leaf);
-    return written > 0 && (size_t) written < out_size;
+    file_archive_cleanup();
+    if (file_archive_jobs() >= MUWEB_ARCHIVE_JOBS) {
+        send_error(connection, 429, "Too many archives are being prepared");
+        return 0;
+    }
+
+    char *names = malloc(body_length + 1);
+    if (!names) {
+        send_error(connection, 500, "Could not prepare that archive");
+        return 0;
+    }
+    memcpy(names, body, body_length);
+    names[body_length] = '\0';
+
+    struct file_archive_item *items = NULL;
+    size_t count = 0;
+    size_t capacity = 0;
+    char *position = NULL;
+    char *name = strtok_r(names, "\n", &position);
+    int valid = 1;
+    while (name && count < MUWEB_ARCHIVE_ITEMS) {
+        const size_t length = strlen(name);
+        if (length && name[length - 1] == '\r') name[length - 1] = '\0';
+        if (!*name || strchr(name, '/') || !file_relative_path(name, 0)) {
+            valid = 0;
+            break;
+        }
+
+        int duplicate = 0;
+        for (size_t i = 0; i < count; ++i)
+            if (strcmp(items[i].name, name) == 0) duplicate = 1;
+        if (!duplicate) {
+            char selected[PATH_MAX];
+            const int written = relative && *relative ? snprintf(selected, sizeof(selected), "%s/%s", relative, name)
+                                                      : snprintf(selected, sizeof(selected), "%s", name);
+            char source[PATH_MAX];
+            struct stat info;
+            if (written < 1 || (size_t) written >= sizeof(selected)
+                || !file_resolve_entry(root, selected, source, sizeof(source)) || lstat(source, &info) < 0
+                || S_ISLNK(info.st_mode)) {
+                valid = 0;
+                break;
+            }
+            if (count == capacity) {
+                const size_t grown_capacity = capacity ? capacity * 2 : 16;
+                struct file_archive_item *grown = realloc(items, grown_capacity * sizeof(*grown));
+                if (!grown) {
+                    valid = 0;
+                    break;
+                }
+                items = grown;
+                capacity = grown_capacity;
+            }
+            items[count].source = strdup(source);
+            items[count].relative = strdup(selected);
+            items[count].name = strdup(name);
+            if (!items[count].source || !items[count].relative || !items[count].name) {
+                free(items[count].source);
+                free(items[count].relative);
+                free(items[count].name);
+                valid = 0;
+                break;
+            }
+            count += 1;
+        }
+        name = strtok_r(NULL, "\n", &position);
+    }
+    if (name) valid = 0;
+    free(names);
+
+    if (!valid || count < 2) {
+        file_archive_items_free(items, count);
+        send_error(connection, 400, count < 2 ? "Select at least two items" : "Invalid archive selection");
+        return 0;
+    }
+
+    char token[MUWEB_TOKEN_TEXT];
+    char working[PATH_MAX] = "";
+    char status_path[PATH_MAX] = "";
+    if (!random_token(token, sizeof(token)) || !file_archive_path(working, sizeof(working), token, ".work")
+        || !file_archive_path(status_path, sizeof(status_path), token, ".json") || !write_file_atomic(working, "", 0)
+        || !file_archive_status(token, "waiting", "", 0, count, 0, NULL)) {
+        if (working[0]) unlink(working);
+        if (status_path[0]) unlink(status_path);
+        file_archive_items_free(items, count);
+        send_error(connection, 500, "Could not prepare that archive");
+        return 0;
+    }
+
+    const pid_t child = fork();
+    if (child < 0) {
+        unlink(working);
+        unlink(status_path);
+        file_archive_items_free(items, count);
+        send_error(connection, 500, "Could not prepare that archive");
+        return 0;
+    }
+    if (child == 0) file_archive_build(token, root, items, count);
+
+    file_archive_items_free(items, count);
+    struct buffer out = {0};
+    buffer_puts(&out, "{");
+    json_field(&out, "job", token);
+    buffer_puts(&out, "}");
+    send_json(connection, &out);
+    buffer_free(&out);
+    return 1;
 }
 
 static int file_mutation_allowed(struct connection *connection, const struct file_root *root) {
@@ -3266,13 +3602,53 @@ static void handle_files_api(
         return;
     }
 
+    if (strcmp(action, "archive") == 0 && strcmp(method, "POST") == 0) {
+        file_archive_start(connection, root, relative, body, body_length);
+        return;
+    }
+
+    if (strcmp(action, "archive-status") == 0 && strcmp(method, "GET") == 0) {
+        char status_path[PATH_MAX];
+        if (!file_archive_path(status_path, sizeof(status_path), relative, ".json")) {
+            send_error(connection, 404, "Archive not found");
+            return;
+        }
+        send_file(connection, status_path, NULL);
+        return;
+    }
+
+    if (strcmp(action, "archive-download") == 0 && strcmp(method, "GET") == 0) {
+        char archive[PATH_MAX];
+        char status_path[PATH_MAX];
+        if (!file_archive_path(archive, sizeof(archive), relative, ".zip")
+            || !file_archive_path(status_path, sizeof(status_path), relative, ".json") || access(archive, R_OK) < 0) {
+            send_error(connection, 404, "Archive not found");
+            return;
+        }
+        send_file(connection, archive, NULL);
+        unlink(archive);
+        unlink(status_path);
+        return;
+    }
+
     if (strcmp(action, "download") == 0 && strcmp(method, "GET") == 0) {
         char target[PATH_MAX];
         if (!file_resolve_existing(root, relative, target, sizeof(target))) {
             send_error(connection, 404, "File not found");
             return;
         }
-        send_file(connection, target, range_header);
+        struct stat info;
+        if (stat(target, &info) == 0 && S_ISDIR(info.st_mode)) {
+            char archive[PATH_MAX];
+            if (!file_zip_directory(root, relative, target, archive, sizeof(archive))) {
+                send_error(connection, 500, "Could not prepare that folder");
+                return;
+            }
+            send_file(connection, archive, NULL);
+            unlink(archive);
+        } else {
+            send_file(connection, target, range_header);
+        }
         return;
     }
 
@@ -3293,6 +3669,7 @@ static void handle_files_api(
             send_error(connection, errno == EEXIST ? 409 : 500, "Could not create that folder");
             return;
         }
+        cache_drop();
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
@@ -3307,6 +3684,7 @@ static void handle_files_api(
             send_error(connection, 500, "Could not remove that item");
             return;
         }
+        cache_drop();
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
@@ -3335,6 +3713,7 @@ static void handle_files_api(
             send_error(connection, 500, copied ? "Could not copy that item" : "Could not move that item");
             return;
         }
+        cache_drop();
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
@@ -3347,6 +3726,12 @@ static void handle_catalogue_api(
 ) {
     if (!catalogue_root[0]) {
         send_error(connection, 404, "No catalogue is configured");
+        return;
+    }
+
+    if (strcmp(path, "refresh") == 0 && strcmp(method, "POST") == 0) {
+        cache_drop();
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
 
@@ -3568,8 +3953,8 @@ static void handle_pickles_api(
             return;
         }
         if (!write_allowed(connection)) return;
-        if (strcasecmp(file_extension(rest), "srm") != 0) {
-            send_error(connection, 400, "Only .srm files can be restored");
+        if (!is_save_extension(rest)) {
+            send_error(connection, 400, "That is not a supported save file");
             return;
         }
 
@@ -4160,7 +4545,7 @@ static int split_action(char *path, const char **action) {
 
     const char *last = slash + 1;
     if (strcmp(last, "path") == 0 || strcmp(last, "move") == 0 || strcmp(last, "rename") == 0
-        || strcmp(last, "collect") == 0) {
+        || strcmp(last, "collect") == 0 || strcmp(last, "add") == 0) {
         *slash = '\0';
         *action = last;
     }
@@ -4560,6 +4945,43 @@ static void handle_collection_api(
             return;
         }
         log_verbose("created collection %s", path);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (is_folder && action && strcmp(action, "add") == 0 && strcmp(method, "POST") == 0) {
+        char content[PATH_MAX];
+        struct stat info;
+        if (!name[0] || name[0] != '/' || !realpath(name, content) || stat(content, &info) < 0
+            || !S_ISREG(info.st_mode)) {
+            send_error(connection, 400, "Choose an existing content file");
+            return;
+        }
+
+        char folder[PATH_MAX];
+        if (!collection_folder(path, folder, sizeof(folder))) {
+            send_error(connection, 404, "That collection no longer exists");
+            return;
+        }
+        if (folder_holds_path(folder, content, NULL)) {
+            send_error(connection, 409, "That collection already holds this content");
+            return;
+        }
+
+        char leaf[PATH_MAX];
+        char target[PATH_MAX];
+        pointer_entry entry = {0};
+        snprintf(entry.path, sizeof(entry.path), "%s", content);
+        derive_system(content, entry.system, sizeof(entry.system));
+        path_stem(content, entry.name, sizeof(entry.name));
+        if (!pointer_file_name(content, leaf, sizeof(leaf))
+            || (size_t) snprintf(target, sizeof(target), "%s/%s", folder, leaf) >= sizeof(target)
+            || !pointer_write(target, &entry)) {
+            send_error(connection, 500, "Could not add that content");
+            return;
+        }
+
+        log_verbose("added %s to collection %s", content, path);
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
@@ -5184,6 +5606,8 @@ static void handle_input_api(
         }
         buffer_puts(&out, "],");
         json_number(&out, "ready", access(REMOTE_SOCKET, F_OK) == 0);
+        buffer_puts(&out, ",");
+        json_number(&out, "local_active", remote_local_priority && local_input_active());
         buffer_puts(&out, "}");
         send_json(connection, &out);
         buffer_free(&out);
@@ -5195,6 +5619,11 @@ static void handle_input_api(
         return;
     }
     if (!remote_input_public && !write_allowed(connection)) return;
+
+    if (remote_local_priority && strcmp(path, "clear") != 0 && local_input_active()) {
+        send_error(connection, 409, "The device is being controlled locally");
+        return;
+    }
 
     char *slash = strchr(path, '/');
     if (slash) {
@@ -5963,6 +6392,7 @@ static int file_upload_finish(struct connection *connection) {
 
     connection->upload_temporary[0] = '\0';
     connection->upload_target[0] = '\0';
+    cache_drop();
     send_text(connection, 200, "application/json", "{\"ok\":true}");
     return 1;
 }
@@ -6422,6 +6852,7 @@ static void print_usage(FILE *stream) {
                 "                         and brightness from Remote View\n"
                 "  -U, --remote-public    let anyone use the Remote View controls without a code\n"
                 "  -J, --remote-sticks    also offer the analogue sticks in the Remote View controls\n"
+                "  -K, --local-priority   briefly pause Remote View controls after local input\n"
                 "  -F, --live-fps N       frames a second for Live Remote View (1 to 60)\n"
                 "  -Q, --live-quality N   JPEG quality for Live Remote View (20 to 100)\n"
                 "  -M, --screen-manual    only capture the screen when a visitor asks for it\n"
@@ -6556,6 +6987,7 @@ int main(const int argc, char **argv) {
         {"remote-input", no_argument, NULL, 'R'},
         {"remote-public", no_argument, NULL, 'U'},
         {"remote-sticks", no_argument, NULL, 'J'},
+        {"local-priority", no_argument, NULL, 'K'},
         {"live-fps", required_argument, NULL, 'F'},
         {"live-quality", required_argument, NULL, 'Q'},
         {"screen-manual", no_argument, NULL, 'M'},
@@ -6575,7 +7007,7 @@ int main(const int argc, char **argv) {
     };
 
     int option;
-    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:A:Z:RUJMO:F:Q:m:D:E:k:olCvVh", options, NULL))
+    while ((option = getopt_long(argc, argv, "r:p:c:s:i:H:L:S:I:T:PY:A:Z:RUJKMO:F:Q:m:D:E:k:olCvVh", options, NULL))
            != -1) {
         switch (option) {
             case 'r':
@@ -6613,6 +7045,9 @@ int main(const int argc, char **argv) {
                 break;
             case 'J':
                 remote_sticks = 1;
+                break;
+            case 'K':
+                remote_local_priority = 1;
                 break;
             case 'F':
                 screen_live_fps = atoi(optarg);

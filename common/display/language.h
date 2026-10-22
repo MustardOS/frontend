@@ -3870,6 +3870,7 @@ struct mux_lang {
         char remote_manual[MAX_BUFFER_SIZE];
         char remote_privacy[MAX_BUFFER_SIZE];
         char remote_control[MAX_BUFFER_SIZE];
+        char remote_local_priority[MAX_BUFFER_SIZE];
         char remote_sticks[MAX_BUFFER_SIZE];
         char remote_sound[MAX_BUFFER_SIZE];
         char live_fps[MAX_BUFFER_SIZE];
@@ -3896,6 +3897,7 @@ struct mux_lang {
             char remote_view[MAX_BUFFER_SIZE];
             char remote_privacy[MAX_BUFFER_SIZE];
             char remote_control[MAX_BUFFER_SIZE];
+            char remote_local_priority[MAX_BUFFER_SIZE];
             char remote_sound[MAX_BUFFER_SIZE];
             char live_fps[MAX_BUFFER_SIZE];
             char live_quality[MAX_BUFFER_SIZE];

@@ -647,8 +647,9 @@ static void handle_random_select(void);
 static void handle_a(void) {
     if (more_active(&more_menu)) {
         const more_id opt = more_peek(&more_menu);
-        const int chains = opt == more_remove && !is_ksk(kiosk.collect.remove)
-                           && !(config.settings.advanced.trust_remove || skip_confirm);
+        const int chains = opt == more_information
+                           || (opt == more_remove && !is_ksk(kiosk.collect.remove)
+                               && !(config.settings.advanced.trust_remove || skip_confirm));
 
         more_take(&more_menu, chains);
 
@@ -884,7 +885,6 @@ static void handle_menu_hold(void) {
 
 static void handle_help(void) {
     if (more_active(&more_menu)) {
-        play_sound(snd_back);
         more_cancel(&more_menu);
         return;
     }
