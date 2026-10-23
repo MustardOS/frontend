@@ -376,7 +376,7 @@ static size_t string_array_dedupe(char **items, const size_t count) {
     return unique;
 }
 
-static void strip_extension(const char *name) {
+static void strip_extension(char *name) {
     char *dot = strrchr(name, '.');
     if (dot && dot != name) *dot = '\0';
 }
@@ -392,7 +392,7 @@ static int url_decode(const char *source, char *out, const size_t out_size) {
         if (written + 1 >= out_size) return 0;
 
         if (*p == '%') {
-            if (!isxdigit((unsigned char) p[1]) || !isxdigit((unsigned char) p[2])) return 0;
+            if (!p[1] || !p[2] || !isxdigit((unsigned char) p[1]) || !isxdigit((unsigned char) p[2])) return 0;
             const char hex[3] = {p[1], p[2], '\0'};
             const long value = strtol(hex, NULL, 16);
             if (value == 0) return 0;
@@ -1303,7 +1303,7 @@ static int catalogue_index_json(struct buffer *out) {
     }
     closedir(directory);
 
-    qsort(systems, system_count, sizeof(char *), string_compare);
+    if (system_count > 1) qsort(systems, system_count, sizeof(char *), string_compare);
 
     if (!buffer_puts(out, "{") || !space_json(out, "space", catalogue_root) || !catalogue_types_json(out)
         || !buffer_puts(out, ",\"systems\":[")) {
@@ -1774,8 +1774,8 @@ static void children_of(const char *relative, struct child_list *directories, st
         closedir(directory);
     }
 
-    qsort(directories->items, directories->count, sizeof(struct child), child_compare);
-    qsort(files->items, files->count, sizeof(struct child), child_compare);
+    if (directories->count > 1) qsort(directories->items, directories->count, sizeof(struct child), child_compare);
+    if (files->count > 1) qsort(files->items, files->count, sizeof(struct child), child_compare);
 }
 
 static void child_list_free(struct child_list *list) {
@@ -2490,7 +2490,7 @@ static int pickles_content_json(struct buffer *out, const char *relative) {
     }
     closedir(directory);
 
-    qsort(slots, slot_count, sizeof(char *), string_compare);
+    if (slot_count > 1) qsort(slots, slot_count, sizeof(char *), string_compare);
 
     int ok = buffer_puts(out, "{") && json_field(out, "path", relative) && buffer_puts(out, ",\"slots\":[");
 
@@ -6699,13 +6699,16 @@ static void connection_close(struct connection *connection) {
 static int connection_ready_to_dispatch(struct connection *connection) {
     if (connection->upload_descriptor >= 0) return 0;
     if (!connection->header_length) {
-        const char *blank = strstr(connection->request.data ? connection->request.data : "", "\r\n\r\n");
+        const char *request = connection->request.data;
+        if (!request) return 0;
+
+        const char *blank = strstr(request, "\r\n\r\n");
         if (!blank) return 0;
 
-        connection->header_length = (size_t) (blank - connection->request.data) + 4;
+        connection->header_length = (size_t) (blank - request) + 4;
 
         char storage[64];
-        const char *headers = strstr(connection->request.data, "\r\n");
+        const char *headers = strstr(request, "\r\n");
         const char *length = headers ? header_value(headers + 2, "Content-Length", storage, sizeof(storage)) : NULL;
         char encoding_storage[256];
         const char *encoding =

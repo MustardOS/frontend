@@ -68,10 +68,28 @@ static void results_push(results *r, const char *name, const char *value) {
         r->cap = new_cap;
     }
 
-    r->items[r->count].name = dup_fast(name);
-    r->items[r->count].value = dup_fast(value);
+    char *name_copy = dup_fast(name);
+    char *value_copy = dup_fast(value);
+    if (!name_copy || !value_copy) {
+        free(name_copy);
+        free(value_copy);
+        return;
+    }
 
+    r->items[r->count].name = name_copy;
+    r->items[r->count].value = value_copy;
     r->count++;
+}
+
+static void results_free(results *r) {
+    for (size_t i = 0; i < r->count; ++i) {
+        free(r->items[i].name);
+        free(r->items[i].value);
+    }
+    free(r->items);
+    r->items = NULL;
+    r->count = 0;
+    r->cap = 0;
 }
 
 static int load_json_cache(const char *path) {
@@ -221,6 +239,7 @@ static void generate_internal(void) {
     }
 
     write_results_to_file(&r, LOOKUP_INTERNAL);
+    results_free(&r);
 }
 
 static void generate_global(void) {
@@ -233,6 +252,9 @@ static void generate_global(void) {
     }
 
     write_results_to_file(&r, LOOKUP_GLOBAL);
+    results_free(&r);
+    free(json_cache_data);
+    json_cache_data = NULL;
 }
 
 static void generate_folder(const char *folder_name) {
@@ -251,6 +273,9 @@ static void generate_folder(const char *folder_name) {
     }
 
     write_results_to_file(&r, f_path);
+    results_free(&r);
+    free(json_cache_data);
+    json_cache_data = NULL;
 }
 
 static void generate_all(void) {
@@ -316,9 +341,12 @@ int main(const int argc, char **argv) {
         }
     }
 
+    const char *search_term = term;
+    if (!search_term || !*search_term) return 1;
+
     size_t i = 0;
-    for (; term[i]; i++)
-        term_lower[i] = tolower((unsigned char) term[i]);
+    for (; search_term[i] && i < sizeof(term_lower) - 1; i++)
+        term_lower[i] = tolower((unsigned char) search_term[i]);
     term_lower[i] = 0;
 
     char json_path[PATH_MAX];
@@ -334,7 +362,7 @@ int main(const int argc, char **argv) {
     results out;
     results_reserve(&out);
 
-    const unsigned char f0 = tolower((unsigned char) term[0]);
+    const unsigned char f0 = (unsigned char) term_lower[0];
     int forward_start = 0, forward_end = LOOKUP_TABLE_COUNT;
 
     if (isalnum(f0)) {
@@ -361,11 +389,17 @@ int main(const int argc, char **argv) {
     qsort(out.items, out.count, sizeof(result_item), cmp_items);
     dedupe_results(&out);
 
-    if (out.count == 0) return 0;
+    if (out.count == 0) {
+        results_free(&out);
+        free(json_cache_data);
+        return 0;
+    }
 
     for (size_t j = 0; j < out.count; j++) {
         printf("%s|%s\n", out.items[j].name, out.items[j].value);
     }
 
+    results_free(&out);
+    free(json_cache_data);
     return 0;
 }

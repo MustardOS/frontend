@@ -92,6 +92,7 @@ BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto -MMD -MP \
 
 STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Werror=incompatible-pointer-types -Werror=return-type \
+                -Wformat=2 -Werror=format-security \
                 -Wformat-truncation=2 -Werror=format-truncation \
                 -Werror=unused-function
 

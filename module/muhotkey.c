@@ -213,6 +213,7 @@ static void do_cleanup(const int signo) {
     // Only undo a governor change we made ourselves.  Content may have set
     // its own governor since we started, and a restart must not clobber it.
     if (running_governor) set_scaling_governor(running_governor, 0);
+    if (file_exist(WAKE_CPU_GOV)) remove(WAKE_CPU_GOV);
 
     for (int i = 0; i < combo_count; ++i) {
         free(combo[i].name);
@@ -685,6 +686,7 @@ static void check_idle(idle_timer *timer, const uint32_t timeout_ms, const int i
             running_governor = NULL;
             free(previous_governor);
             previous_governor = NULL;
+            if (file_exist(WAKE_CPU_GOV)) remove(WAKE_CPU_GOV);
         }
 
         if (file_exist(IDLE_STATE)) remove(IDLE_STATE);

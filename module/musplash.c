@@ -150,8 +150,8 @@ static void log_msg(const options_t *opts, const char *msg) {
     if (opts->verbose) fprintf(stderr, "%s\n", msg);
 }
 
-static void log_fmt(const options_t *opts, const char *fmt, const char *value) {
-    if (opts->verbose) fprintf(stderr, fmt, value);
+static void log_value(const options_t *opts, const char *message, const char *value) {
+    if (opts->verbose) fprintf(stderr, "%s%s\n", message, value);
 }
 
 static void handle_signal(const int sig) {
@@ -1429,10 +1429,10 @@ static int run_clear(const options_t *opts) {
     fb_t fb = {0};
     fb.fd = -1;
 
-    log_fmt(opts, "Opening framebuffer: %s\n", opts->fb_path);
+    log_value(opts, "Opening framebuffer: ", opts->fb_path);
 
     if (open_fb(opts->fb_path, &fb) != 0) {
-        log_fmt(opts, "Failed to open framebuffer: %s\n", opts->fb_path);
+        log_value(opts, "Failed to open framebuffer: ", opts->fb_path);
 
         return 1;
     }
@@ -1469,20 +1469,20 @@ static int run_draw(const options_t *opts) {
     trace_open(opts);
     trace("start image=%s wait=%d", opts->image_path ? opts->image_path : "(none)", opts->wait);
 
-    log_fmt(opts, "Loading image: %s\n", opts->image_path);
+    log_value(opts, "Loading image: ", opts->image_path);
 
     if (load_png_to_rgba(opts->image_path, &img) != 0) {
-        log_fmt(opts, "Failed to load PNG: %s\n", opts->image_path);
+        log_value(opts, "Failed to load PNG: ", opts->image_path);
         trace("failed to load png");
         trace_close();
 
         return 1;
     }
 
-    log_fmt(opts, "Opening framebuffer: %s\n", opts->fb_path);
+    log_value(opts, "Opening framebuffer: ", opts->fb_path);
 
     if (open_fb(opts->fb_path, &fb) != 0) {
-        log_fmt(opts, "Failed to open framebuffer: %s\n", opts->fb_path);
+        log_value(opts, "Failed to open framebuffer: ", opts->fb_path);
         trace("failed to open %s: %s", opts->fb_path, fb_error[0] ? fb_error : "unknown");
         trace_close();
         free_image(&img);
@@ -1535,7 +1535,7 @@ static int run_draw(const options_t *opts) {
     );
 
     if (notify_ready(opts->ready_path) != 0) {
-        log_fmt(opts, "Failed to create ready file: %s\n", opts->ready_path);
+        log_value(opts, "Failed to create ready file: ", opts->ready_path);
         trace("failed to create ready file %s", opts->ready_path);
         trace_close();
         close_fb(&fb);

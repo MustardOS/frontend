@@ -44,10 +44,7 @@ static void save_device_options(void) {
     CHECK_AND_SAVE_DEV(device, has_network, "board/network", INT, 0);
     CHECK_AND_SAVE_DEV(device, has_portmaster, "board/portmaster", INT, 0);
 
-    if (is_modified > 0) {
-        toast_message(lang.generic.saving, tst_wait_f);
-        refresh_device = 1;
-    }
+    if (is_modified > 0) run_tweak_script(lang.generic.saving);
 
     REPORT_SAVE_FAILURE();
 }

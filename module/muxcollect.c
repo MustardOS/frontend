@@ -15,8 +15,6 @@ static int add_mode = 0;
 static int sys_index = -1;
 static int file_count = 0;
 static int dir_count = 0;
-static int file_cap = 0;
-static int dir_cap = 0;
 static int starter_image = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
@@ -83,7 +81,21 @@ static void image_refresh_transition(void) {
     transition_box_art_apply_in(config.visual.box_art_transition);
 }
 
-static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+static void add_directory_and_file_names(
+    const char *base_dir, char ***dir_names, int *directory_total, char ***file_names, int *file_total
+) {
+    *dir_names = NULL;
+    *file_names = NULL;
+    *directory_total = 0;
+    *file_total = 0;
+
+    char **directories = NULL;
+    char **files = NULL;
+    int directory_count = 0;
+    int regular_file_count = 0;
+    int directory_capacity = 0;
+    int file_capacity = 0;
+
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
@@ -92,11 +104,6 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     }
 
     struct dirent *entry;
-    file_count = 0;
-    dir_count = 0;
-    file_cap = 0;
-    dir_cap = 0;
-
     while ((entry = readdir(dir))) {
         const char *name = entry->d_name;
 
@@ -123,36 +130,42 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
             if (!at_base(sys_dir, access_mode)) continue;
             if (strcmp(name, "kiosk") == 0) continue;
 
-            if (dir_count >= dir_cap) {
-                const int new_cap = dir_cap ? dir_cap * 2 : 16;
-                char **tmp = realloc(*dir_names, (size_t) new_cap * sizeof(char *));
+            if (directory_count >= directory_capacity) {
+                const int new_capacity = directory_capacity ? directory_capacity * 2 : 16;
+                char **tmp = realloc(directories, (size_t) new_capacity * sizeof(char *));
 
                 if (!tmp) continue;
 
-                *dir_names = tmp;
-                dir_cap = new_cap;
+                directories = tmp;
+                directory_capacity = new_capacity;
             }
 
-            (*dir_names)[dir_count++] = strdup(name);
+            char *copy = strdup(name);
+            if (copy) directories[directory_count++] = copy;
 
         } else if (type == DT_REG) {
             if (strcmp(name, ".nogrid") == 0) continue;
 
-            if (file_count >= file_cap) {
-                const int new_cap = file_cap ? file_cap * 2 : 16;
-                char **tmp = realloc(*file_names, (size_t) new_cap * sizeof(char *));
+            if (regular_file_count >= file_capacity) {
+                const int new_capacity = file_capacity ? file_capacity * 2 : 16;
+                char **tmp = realloc(files, (size_t) new_capacity * sizeof(char *));
 
                 if (!tmp) continue;
 
-                *file_names = tmp;
-                file_cap = new_cap;
+                files = tmp;
+                file_capacity = new_capacity;
             }
 
-            (*file_names)[file_count++] = strdup(name);
+            char *copy = strdup(name);
+            if (copy) files[regular_file_count++] = copy;
         }
     }
 
     closedir(dir);
+    *dir_names = directories;
+    *file_names = files;
+    *directory_total = directory_count;
+    *file_total = regular_file_count;
 }
 
 static void gen_item(const int file_count, char **file_names) {
@@ -164,8 +177,12 @@ static void gen_item(const int file_count, char **file_names) {
 static void create_collection_items(void) {
     char **dir_names = NULL;
     char **file_names = NULL;
+    int scanned_dir_count = 0;
+    int scanned_file_count = 0;
 
-    add_directory_and_file_names(sys_dir, &dir_names, &file_names);
+    add_directory_and_file_names(sys_dir, &dir_names, &scanned_dir_count, &file_names, &scanned_file_count);
+    dir_count = scanned_dir_count;
+    file_count = scanned_file_count;
 
     int fn_valid = 0;
     struct json fn_json = {0};
@@ -199,9 +216,9 @@ static void create_collection_items(void) {
     const char *col_path = is_ksk(kiosk.collect.access) && dir_exist(INFO_CKS_PATH) ? INFO_CKS_PATH : INFO_COL_PATH;
     update_title(sys_dir, fn_valid, fn_json, lang.muxcollect.title, col_path);
 
-    if (dir_count > 0 || file_count > 0) {
+    if (scanned_dir_count > 0 || scanned_file_count > 0) {
         if (at_base(sys_dir, access_mode)) {
-            for (int i = 0; i < dir_count; i++) {
+            for (int i = 0; i < scanned_dir_count; i++) {
                 char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
 
                 char collection_dir[MAX_BUFFER_SIZE];
@@ -230,11 +247,11 @@ static void create_collection_items(void) {
             }
         }
 
-        grid_mode_enabled =
-            !disable_grid_file_exists(sys_dir) && theme.grid.enabled
-            && ((file_count > 0 && config.visual.grid_mode_content) || (dir_count > 0 && file_count == 0));
+        grid_mode_enabled = !disable_grid_file_exists(sys_dir) && theme.grid.enabled
+                            && ((scanned_file_count > 0 && config.visual.grid_mode_content)
+                                || (scanned_dir_count > 0 && scanned_file_count == 0));
 
-        gen_item(file_count, file_names);
+        gen_item(scanned_file_count, file_names);
 
         if (grid_mode_enabled) {
             init_grid_dynamic(prev_dir, &sys_index);
@@ -261,10 +278,10 @@ static void create_collection_items(void) {
         }
 
         if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
-
-        free(file_names);
-        free(dir_names);
     }
+
+    free(file_names);
+    free(dir_names);
 
     free(fn_json_buf);
     fn_json_buf = NULL;

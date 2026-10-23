@@ -209,14 +209,13 @@ static void set_previous_module(char *module) {
 
 int set_splash_image_path(char *splash_image_name) {
     static const struct {
-        const char *fmt;
         int uses_dim;
         int uses_lang;
     } paths[] = {
-        {"%s/%simage/%s/%s.png", 1, 1},
-        {"%s/%simage/%s.png", 1, 0},
-        {"%s/image/%s/%s.png", 0, 1},
-        {"%s/image/%s.png", 0, 0},
+        {1, 1},
+        {1, 0},
+        {0, 1},
+        {0, 0},
     };
 
     const char *curr_lang = config.settings.general.language;
@@ -226,20 +225,23 @@ int set_splash_image_path(char *splash_image_name) {
 
         if (paths[i].uses_dim && paths[i].uses_lang) {
             written = snprintf(
-                splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, mux_dim, curr_lang,
+                splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png", theme_base, mux_dim, curr_lang,
                 splash_image_name
             );
         } else if (paths[i].uses_dim) {
             written = snprintf(
-                splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, mux_dim, splash_image_name
+                splash_image_path, sizeof(splash_image_path), "%s/%simage/%s.png", theme_base, mux_dim,
+                splash_image_name
             );
         } else if (paths[i].uses_lang) {
             written = snprintf(
-                splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, curr_lang, splash_image_name
+                splash_image_path, sizeof(splash_image_path), "%s/image/%s/%s.png", theme_base, curr_lang,
+                splash_image_name
             );
         } else {
-            written =
-                snprintf(splash_image_path, sizeof(splash_image_path), paths[i].fmt, theme_base, splash_image_name);
+            written = snprintf(
+                splash_image_path, sizeof(splash_image_path), "%s/image/%s.png", theme_base, splash_image_name
+            );
         }
 
         if (written < 0 || (size_t) written >= sizeof(splash_image_path)) continue;

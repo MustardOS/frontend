@@ -31,11 +31,23 @@ void load_tag_items(tag_item **tag_items, size_t *count) {
             cap = new_cap;
         }
 
-        char *glyph_name_dup = strdup(tags[i]);
-        char *glyph_name = str_tolower(str_remchar(str_trim(glyph_name_dup), ' '));
-        free(glyph_name_dup);
+        char *glyph_source = strdup(tags[i]);
+        char *display_name = strdup(tags[i]);
+        if (!glyph_source || !display_name) {
+            free(glyph_source);
+            free(display_name);
+            break;
+        }
 
-        (*tag_items)[*count].name = str_capital(strdup(tags[i]));
+        char *glyph_name = str_tolower(str_remchar(str_trim(glyph_source), ' '));
+        free(glyph_source);
+        if (!glyph_name) {
+            free(display_name);
+            break;
+        }
+
+        str_capital(display_name);
+        (*tag_items)[*count].name = display_name;
         (*tag_items)[*count].glyph = glyph_name;
 
         char sorting_config_path[MAX_BUFFER_SIZE];
@@ -46,6 +58,8 @@ void load_tag_items(tag_item **tag_items, size_t *count) {
 
         (*count)++;
     }
+
+    free_array(tags, (size_t) tag_count);
 }
 
 int get_tag_sort_bucket(const tag_item *tag_items, const size_t count, const char *glyph) {

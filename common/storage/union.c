@@ -595,6 +595,9 @@ int union_get_directory_item_count(const char *base_dir, const char *name, const
 
     union_set seen;
     union_set_init(&seen);
+    char **owned = NULL;
+    size_t owned_count = 0;
+    size_t owned_capacity = 0;
 
     int found = 0;
 
@@ -652,12 +655,27 @@ int union_get_directory_item_count(const char *base_dir, const char *name, const
 
                 if (!count_quality) continue;
 
+                if (owned_count == owned_capacity) {
+                    const size_t capacity = owned_capacity ? owned_capacity * 2 : UNION_SET_INIT_CAP;
+                    char **grown = realloc(owned, capacity * sizeof(*grown));
+                    if (!grown) {
+                        close(fd);
+                        goto done;
+                    }
+                    owned = grown;
+                    owned_capacity = capacity;
+                }
+
                 char *copy = strdup(entry);
-                if (!copy) goto done;
+                if (!copy) {
+                    close(fd);
+                    goto done;
+                }
 
                 const int ret = union_set_insert(&seen, copy);
                 if (ret < 0) {
                     free(copy);
+                    close(fd);
                     goto done;
                 }
 
@@ -666,6 +684,7 @@ int union_get_directory_item_count(const char *base_dir, const char *name, const
                     continue;
                 }
 
+                owned[owned_count++] = copy;
                 found++;
             }
         }
@@ -674,6 +693,9 @@ int union_get_directory_item_count(const char *base_dir, const char *name, const
     }
 
 done:
+    for (size_t i = 0; i < owned_count; ++i)
+        free(owned[i]);
+    free(owned);
     union_set_free(&seen);
     free(buf);
     return found;

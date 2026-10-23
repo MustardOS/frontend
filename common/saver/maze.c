@@ -296,8 +296,8 @@ static int maze_actor_step(maze_actor_t *actor, int32_t speed_fp_per_ms, uint32_
     move_x = maze_axis_delta_step(dx, step);
     move_y = maze_axis_delta_step(dy, step);
 
-    actor->fx += ((int32_t) move_x) << SAVER_FRAME_SHF;
-    actor->fy += ((int32_t) move_y) << SAVER_FRAME_SHF;
+    actor->fx += (int32_t) move_x * SAVER_FRAME_ONE;
+    actor->fy += (int32_t) move_y * SAVER_FRAME_ONE;
 
     maze_actor_push_trail(actor, actor->fx >> SAVER_FRAME_SHF, actor->fy >> SAVER_FRAME_SHF);
     return 0;

@@ -285,7 +285,7 @@ int slideshow_init(
 
         int unique = 1;
         for (int i = 1; i < count; i++) {
-            if (strcmp(paths[i], paths[i - 1]) != 0) {
+            if (strcmp(paths[i], paths[unique - 1]) != 0) {
                 paths[unique++] = paths[i];
             } else {
                 free(paths[i]);

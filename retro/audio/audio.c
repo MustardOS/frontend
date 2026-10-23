@@ -1278,8 +1278,13 @@ static size_t ready_cap;
 static size_t audio_submit_batch(const int16_t *data, size_t frames);
 
 static void stage_append(const int16_t *data, const size_t frames) {
-    if (stage_frames + frames > stage_cap) {
-        const size_t want = (stage_frames + frames) * 2;
+    if (!data || frames > SIZE_MAX - stage_frames) return;
+    const size_t total = stage_frames + frames;
+    const size_t maximum = SIZE_MAX / (2 * sizeof(int16_t));
+    if (total > maximum) return;
+
+    if (total > stage_cap) {
+        const size_t want = total <= maximum / 2 ? total * 2 : total;
         int16_t *grown = realloc(stage_buf, want * 2 * sizeof(int16_t));
         if (!grown) return;
         stage_buf = grown;
@@ -1287,7 +1292,7 @@ static void stage_append(const int16_t *data, const size_t frames) {
     }
 
     memcpy(stage_buf + stage_frames * 2, data, frames * 2 * sizeof(int16_t));
-    stage_frames += frames;
+    stage_frames = total;
 }
 
 void audio_bridge_set_staging(const int staging) {

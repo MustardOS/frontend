@@ -188,6 +188,7 @@ static void apply_anti_flicker(
     const enum retro_pixel_format format
 ) {
     if (!session_settings.anti_flicker || !anti_flicker_available) return;
+    if (!original || !width || !height || !pitch) return;
 
     const size_t bytes_per_pixel = format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
     if (width > SIZE_MAX / bytes_per_pixel || pitch < (size_t) width * bytes_per_pixel || pitch % bytes_per_pixel != 0

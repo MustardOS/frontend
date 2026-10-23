@@ -2206,7 +2206,6 @@ static int v_record_cmdbuf(
         }
 
         colour_active = 0;
-        post_active = 0;
     }
 
     if (colour_active) {
@@ -2384,9 +2383,9 @@ VkResult vkCreateSwapchainKHR(
     VkDevice device, const VkSwapchainCreateInfoKHR *ci, const VkAllocationCallbacks *alloc, VkSwapchainKHR *out_sc
 ) {
     resolve_vulkan_symbols();
-    if (!real_vk_create_swapchain_khr) return VK_ERROR_INITIALIZATION_FAILED;
+    if (!real_vk_create_swapchain_khr || !ci || !out_sc) return VK_ERROR_INITIALIZATION_FAILED;
 
-    if (vk_dl.ready && ci && ci->oldSwapchain != VK_NULL_HANDLE) {
+    if (vk_dl.ready && ci->oldSwapchain != VK_NULL_HANDLE) {
         pthread_mutex_lock(&v_swapchains_lock);
         v_swapchain_t *old = v_swapchain_find(ci->oldSwapchain);
         if (old) v_swapchain_destroy(old);
@@ -2394,7 +2393,7 @@ VkResult vkCreateSwapchainKHR(
     }
 
     VkResult r = real_vk_create_swapchain_khr(device, ci, alloc, out_sc);
-    if (r != VK_SUCCESS || !out_sc || *out_sc == VK_NULL_HANDLE) return r;
+    if (r != VK_SUCCESS || *out_sc == VK_NULL_HANDLE) return r;
     if (!vk_dl.ready) return r;
 
     pthread_mutex_lock(&v_devices_lock);

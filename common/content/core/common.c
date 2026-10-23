@@ -517,6 +517,8 @@ static const char *format_retroarch_core(const char *ra_core) {
     static char out[CORE_BUFFER];
     char tmp[CORE_BUFFER];
 
+    if (!ra_core || !*ra_core) return NULL;
+
     snprintf(tmp, sizeof(tmp), "%s", ra_core);
 
     char *ra_so = strstr(tmp, "_libretro.so");
@@ -538,6 +540,8 @@ static const char *format_retroarch_core(const char *ra_core) {
 }
 
 static const char *format_external_core(const char *ext_core) {
+    if (!ext_core || !*ext_core) return NULL;
+
     if (strcmp(ext_core, "external") == 0) return "Portmaster";
     if (strncmp(ext_core, "ext-", 4) != 0) return NULL;
 
