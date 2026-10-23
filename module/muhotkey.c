@@ -175,6 +175,7 @@ static uint32_t raw_power_press_tick = 0;
 #define RAW_REPEAT_INTERVAL_MS 110
 
 static int lid_fd = -1;
+static int lid_input_disabled = 0;
 
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
@@ -1111,6 +1112,7 @@ static void usage(FILE *file) {
         file, "Usage: muhotkey [-v]\n\n"
               "Monitor input for activity and hotkey combos.\n\n"
               "\t-v prints a lot of information input messages (verbose mode)\n"
+              "\t-L ignores lid input on boards with lid support disabled\n"
               "\t-l lists valid input names to be used for combos\n"
               "\t-h displays this usage message\n\n"
               "Hotkey names are arbitrary strings. Use -l to see valid values for inputs.\n\n"
@@ -1152,12 +1154,6 @@ int main(int argc, char *argv[]) {
         if (pwr_fd < 0) LOG_WARN("input", "Power input event%d could not be opened", power_idx);
     }
 
-    int lid_idx = board_lid_event_index();
-    if (lid_idx >= 0) {
-        lid_fd = open_raw_event_index(lid_idx, &lid_pfd, "lid");
-        if (lid_fd < 0) LOG_WARN("input", "Lid input event%d could not be opened", lid_idx);
-    }
-
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
         LOG_ERROR("input", "SDL init failed: %s", SDL_GetError());
         return 1;
@@ -1166,10 +1162,14 @@ int main(int argc, char *argv[]) {
     SDL_GameControllerEventState(SDL_ENABLE);
     SDL_JoystickEventState(SDL_ENABLE);
 
-    for (int opt; (opt = getopt(argc, argv, "vlh")) != -1;) {
+    for (int opt; (opt = getopt(argc, argv, "vlhL")) != -1;) {
         switch (opt) {
             case 'v':
                 verbose = 1;
+                break;
+
+            case 'L':
+                lid_input_disabled = 1;
                 break;
 
             case 'l':
@@ -1185,6 +1185,14 @@ int main(int argc, char *argv[]) {
             default:
                 usage(stderr);
                 return 1;
+        }
+    }
+
+    if (!lid_input_disabled) {
+        const int lid_idx = board_lid_event_index();
+        if (lid_idx >= 0) {
+            lid_fd = open_raw_event_index(lid_idx, &lid_pfd, "lid");
+            if (lid_fd < 0) LOG_WARN("input", "Lid input event%d could not be opened", lid_idx);
         }
     }
 

@@ -45,6 +45,7 @@ struct suspend_options {
     size_t quiesce_count;
     int timeout_milliseconds;
     int optimise;
+    int lid_wake;
 };
 
 struct cpu_policy_snapshot {
@@ -232,7 +233,8 @@ static int charger_disconnected(const char *charger_path) {
     return state == 0;
 }
 
-static int wait_for_power_key(const int descriptor, const int timeout_milliseconds, const char *charger_path) {
+static int
+wait_for_power_key(const int descriptor, const int timeout_milliseconds, const char *charger_path, const int lid_wake) {
     struct pollfd input = {
         .fd = descriptor,
         .events = POLLIN,
@@ -266,6 +268,9 @@ static int wait_for_power_key(const int descriptor, const int timeout_millisecon
             struct input_event event;
             while (read(descriptor, &event, sizeof(event)) == (ssize_t) sizeof(event)) {
                 if (event.type == EV_KEY && event.code == KEY_POWER && event.value == 1) return suspend_wake;
+                if (lid_wake && event.type == EV_KEY && event.code == KEY_DELETE && event.value == 1) {
+                    return suspend_wake;
+                }
             }
             if (errno != EAGAIN && errno != EWOULDBLOCK) return suspend_error;
         }
@@ -459,7 +464,8 @@ static int wait_in_userspace(const struct suspend_options *options) {
         begin_optimisation(&optimisation, options->quiesce_names, options->quiesce_count);
     }
 
-    const int result = wait_for_power_key(descriptor, options->timeout_milliseconds, options->charger_path);
+    const int result =
+        wait_for_power_key(descriptor, options->timeout_milliseconds, options->charger_path, options->lid_wake);
     const int saved_errno = errno;
 
     if (options->optimise) restore_optimisation(&optimisation);
@@ -578,7 +584,8 @@ static void usage(FILE *stream, const char *program) {
     fprintf(
         stream,
         "Usage: %s [--state userspace|auto|mem|freeze|standby] [--timeout seconds]\n"
-        "          [--power-device name] [--charger path] [--optimise] [--quiesce executable]\n",
+        "          [--power-device name] [--charger path] [--lid-wake] [--optimise]\n"
+        "          [--quiesce executable]\n",
         program
     );
 }
@@ -600,6 +607,8 @@ static int parse_options(const int argc, char **argv, struct suspend_options *op
             options->power_device = argv[++index];
         } else if (strcmp(argv[index], "--charger") == 0 && index + 1 < argc) {
             options->charger_path = argv[++index];
+        } else if (strcmp(argv[index], "--lid-wake") == 0) {
+            options->lid_wake = 1;
         } else if (strcmp(argv[index], "--optimise") == 0) {
             options->optimise = 1;
         } else if (strcmp(argv[index], "--quiesce") == 0 && index + 1 < argc) {
@@ -627,8 +636,9 @@ static int parse_options(const int argc, char **argv, struct suspend_options *op
         fprintf(stderr, "mususpend: invalid sleep state: %s\n", options->state);
         return 0;
     }
-    if (strcmp(options->state, "userspace") != 0 && (options->optimise || options->quiesce_count > 0)) {
-        fprintf(stderr, "mususpend: --optimise and --quiesce require --state userspace\n");
+    if (strcmp(options->state, "userspace") != 0
+        && (options->optimise || options->quiesce_count > 0 || options->lid_wake)) {
+        fprintf(stderr, "mususpend: --optimise, --quiesce, and --lid-wake require --state userspace\n");
         return 0;
     }
     if (strcmp(options->state, "userspace") != 0 && options->charger_path) {
