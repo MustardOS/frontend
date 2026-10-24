@@ -345,6 +345,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "visual", "counterfile", CFG_OFF(visual.menu_counter_file), 0, {.i = 1}},
     {CONF_CONFIG_PATH "visual", "video_wallpaper", CFG_OFF(visual.video_wallpaper), 0, {.i = 1}},
     {CONF_CONFIG_PATH "visual", "background_scale", CFG_OFF(visual.background_scale), 0, {.i = 2}},
+    {CONF_CONFIG_PATH "visual", "launchsplash", CFG_OFF(visual.launchsplash), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "pickles_startup_messages", CFG_OFF(visual.pickles_startup_messages), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "power_off", CFG_OFF(visual.power_off), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "blackfade", CFG_OFF(visual.blackfade), 0, {.i = 1}},

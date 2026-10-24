@@ -1113,6 +1113,8 @@ static void handle_r1(void) {
 }
 
 static void handle_nav_key_released(void) {
+    if (msgbox_active) return;
+
     if (config.visual.box_art_transition != TSN_DISABLED) {
         transition_box_art_key_released();
     }

@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <common/platform/input.h>
+#include <common/ui/common.h>
 #include "../../module/muxshare.h"
 #include "../core/muxretro.h"
+#include "../input/nav_repeat.h"
 #include "../settings/settings.h"
 #include "../settings/submenu.h"
 
@@ -267,27 +270,190 @@ static void button_value_text(const int index, char *buf, const size_t buf_len) 
     session_settings_hotkey_combo_name((enum hotkey_binding) index, buf, buf_len);
 }
 
-static void cycle_button(const int index, const int direction) {
-    const int displaced = session_settings_hotkey_button((enum hotkey_binding) index);
-    session_settings_cycle_hotkey_button((enum hotkey_binding) index, direction);
-    for (int other = 0; other < hotkey_binding_count; other++) {
-        if (other == index || session_settings_hotkey_button((enum hotkey_binding) other) != displaced) continue;
+#define PICK_COLS 4
+#define PICK_MAX  16
 
-        char message[256];
-        char combo[64];
-        session_settings_hotkey_combo_name((enum hotkey_binding) other, combo, sizeof(combo));
-        snprintf(message, sizeof(message), lang.muxretro.hotkeys_screen.reassigned_combo, button_labels[other], combo);
-        pause_menu_show_toast(message);
-        break;
+static const char *pick_map[PICK_MAX + PICK_MAX / PICK_COLS + 1];
+static int pick_buttons[PICK_MAX];
+static int pick_count = 0;
+static lv_obj_t *pick_grid = NULL;
+static int pick_index = 0;
+static int pick_active = 0;
+static int pick_row = -1;
+static uint64_t pick_prev_mask = 0;
+
+static nav_repeat_t rpt_pick_up = {0};
+static nav_repeat_t rpt_pick_down = {0};
+static nav_repeat_t rpt_pick_left = {0};
+static nav_repeat_t rpt_pick_right = {0};
+
+static submenu self;
+static submenu buttons_self;
+
+static void pick_build(void) {
+    pick_count = 0;
+    for (int i = 0; i < session_settings_hotkey_choice_count() && pick_count < PICK_MAX - 1; i++)
+        pick_buttons[pick_count++] = session_settings_hotkey_choice(i);
+    pick_buttons[pick_count++] = HOTKEY_UNBOUND;
+
+    int slot = 0;
+    for (int i = 0; i < pick_count; i++) {
+        pick_map[slot++] = pick_buttons[i] == HOTKEY_UNBOUND ? lang.muxretro.settings_screen.unbound
+                                                             : mux_input_label((mux_input_type) pick_buttons[i]);
+        if ((i + 1) % PICK_COLS == 0 && i + 1 < pick_count) pick_map[slot++] = "\n";
     }
+    pick_map[slot] = "";
+}
+
+static void pick_select(const int index) {
+    if (index < 0 || index >= pick_count) return;
+    pick_index = index;
+
+    if (!pick_grid || !lv_obj_is_valid(pick_grid)) return;
+    lv_btnmatrix_set_selected_btn(pick_grid, (uint16_t) pick_index);
+    lv_btnmatrix_set_btn_ctrl(pick_grid, (uint16_t) pick_index, LV_BTNMATRIX_CTRL_CHECKED);
+}
+
+static void pick_move(const int dx, const int dy) {
+    const int rows = (pick_count + PICK_COLS - 1) / PICK_COLS;
+    int row = pick_index / PICK_COLS;
+    int col = pick_index % PICK_COLS;
+
+    if (dx) {
+        const int width = row == rows - 1 ? pick_count - row * PICK_COLS : PICK_COLS;
+        col = ((col + dx) % width + width) % width;
+    } else if (dy) {
+        row = ((row + dy) % rows + rows) % rows;
+        const int width = row == rows - 1 ? pick_count - row * PICK_COLS : PICK_COLS;
+        if (col >= width) col = width - 1;
+    }
+
+    pick_select(row * PICK_COLS + col);
+}
+
+static void pick_nav_bar(void) {
+    nav_show_lr(0);
+    lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
+    pause_menu_fix_nav_order();
+}
+
+static void pick_open(const int row) {
+    pick_row = row;
+    pick_active = 1;
+
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+
+    ui_count_static = 0;
+    current_item_index = 0;
+    first_open = 0;
+
+    pick_build();
+
+    pick_grid = lv_btnmatrix_create(ui_pnl_content);
+    lv_obj_set_width(pick_grid, lv_pct(92));
+    lv_obj_set_height(pick_grid, lv_pct(72));
+
+    lv_btnmatrix_set_one_checked(pick_grid, 1);
+    lv_btnmatrix_set_map(pick_grid, pick_map);
+    lv_obj_clear_flag(pick_grid, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_add_flag(pick_grid, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_align(pick_grid, LV_ALIGN_CENTER, 0, 0);
+
+    apply_osk_theme(pick_grid);
+
+    lv_shadow_zone_register(
+        pick_grid, lv_color_hex(theme.osk.item.shadow_colour), (lv_opa_t) theme.osk.item.shadow_alpha,
+        (int8_t) theme.osk.item.shadow_x_offset, (int8_t) theme.osk.item.shadow_y_offset,
+        lv_color_hex(theme.osk.item.shadow_colour_focus), (lv_opa_t) theme.osk.item.shadow_alpha_focus,
+        (int8_t) theme.osk.item.shadow_x_offset_focus, (int8_t) theme.osk.item.shadow_y_offset_focus
+    );
+
+    const int current = session_settings_hotkey_button((enum hotkey_binding) row);
+    pick_index = pick_count - 1;
+    for (int i = 0; i < pick_count; i++) {
+        if (pick_buttons[i] == current) {
+            pick_index = i;
+            break;
+        }
+    }
+
+    pick_select(pick_index);
+
+    pick_prev_mask = nav_mask_standard();
+    pick_nav_bar();
+    pause_menu_sync_input_mask();
+}
+
+static void pick_close(void) {
+    pick_active = 0;
+
+    if (pick_grid && lv_obj_is_valid(pick_grid)) lv_shadow_zone_unregister(pick_grid);
+    pick_grid = NULL;
+    submenu_reopen_at(&buttons_self, pick_row);
+}
+
+static void pick_apply(void) {
+    const int button = pick_buttons[pick_index];
+    if (button == session_settings_hotkey_button((enum hotkey_binding) pick_row)) return;
+
+    const int displaced = session_settings_set_hotkey_button((enum hotkey_binding) pick_row, button);
+    if (displaced < 0) return;
+
+    char message[256];
+    snprintf(message, sizeof(message), lang.muxretro.hotkeys_screen.unbound_combo, button_labels[displaced]);
+    pause_menu_show_toast(message);
+}
+
+static void pick_tick(void) {
+    const uint64_t mask = nav_mask_standard();
+    const uint64_t edge = mask & ~pick_prev_mask;
+    pick_prev_mask = mask;
+
+    if (nav_input_halted()) return;
+
+    const uint32_t now = SDL_GetTicks();
+    const int do_up = nav_repeat_step(&rpt_pick_up, edge & BIT(0), mask & BIT(0), 1, now);
+    const int do_down = nav_repeat_step(&rpt_pick_down, edge & BIT(1), mask & BIT(1), 1, now);
+    const int do_left = nav_repeat_step(&rpt_pick_left, edge & BIT(2), mask & BIT(2), 1, now);
+    const int do_right = nav_repeat_step(&rpt_pick_right, edge & BIT(3), mask & BIT(3), 1, now);
+
+    if (do_up || do_down || do_left || do_right) {
+        play_sound(snd_navigate);
+        pick_move(do_right - do_left, do_down - do_up);
+    } else if (edge & BIT(4)) {
+        play_sound(snd_confirm);
+        pick_apply();
+        pick_close();
+    } else if (edge & BIT(5)) {
+        play_sound(snd_back);
+        pick_close();
+    }
+}
+
+static int button_row_is_action(const int index) {
+    (void) index;
+    return 1;
+}
+
+static void button_action(const int index) {
+    if (index < 0 || index >= hotkey_binding_count) return;
+    pick_open(index);
 }
 
 static int button_row_depends_on(const int index, const int changed_index) {
     return index != changed_index;
 }
-
-static submenu self;
-static submenu buttons_self;
 
 static const char *button_extra_label(const int index) {
     (void) index;
@@ -310,7 +476,8 @@ static const submenu_def buttons_def = {
     .help = button_help,
     .row_count = hotkey_binding_count,
     .value_text = button_value_text,
-    .cycle = cycle_button,
+    .row_is_action = button_row_is_action,
+    .action = button_action,
     .row_depends_on = button_row_depends_on,
     .extra_label = button_extra_label,
     .extra_action = reset_buttons,
@@ -349,6 +516,10 @@ static void row_action(const int index) {
 }
 
 static int child_tick(void) {
+    if (pick_active) {
+        pick_tick();
+        return 1;
+    }
     if (!submenu_is_active(&buttons_self)) return 0;
     submenu_tick(&buttons_self);
     return 1;

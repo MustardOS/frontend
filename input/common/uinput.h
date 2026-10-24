@@ -81,6 +81,8 @@ int gamepad_has_stick_axis(const struct gamepad *gp, unsigned short code);
 
 int gamepad_remote_stick(struct gamepad *gp, unsigned short code, int value);
 
+int gamepad_lock_physical(struct gamepad *gp, int locked);
+
 void gamepad_sync(struct gamepad *gp);
 
 void gamepad_destroy(struct gamepad *gp);

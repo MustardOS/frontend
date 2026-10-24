@@ -96,6 +96,7 @@ struct remote_input {
     int available[REMOTE_BUTTON_COUNT];
     struct remote_hold holds[REMOTE_BUTTON_COUNT];
     int stick_values[REMOTE_BUTTON_COUNT];
+    uint64_t physical_lock_until;
 };
 
 static int button_available(struct gamepad *gp, const struct remote_button *button, const unsigned short code) {
@@ -175,6 +176,7 @@ struct remote_input *remote_input_open(struct gamepad *gp, const int verbose) {
     struct sockaddr_un address = {.sun_family = AF_UNIX};
     snprintf(address.sun_path, sizeof(address.sun_path), "%s", MUINPUT_REMOTE_SOCKET);
     unlink(MUINPUT_REMOTE_SOCKET);
+    unlink(MUINPUT_PHYSICAL_LOCK);
 
     const mode_t mask = umask(0177);
     const int bound = bind(remote->fd, (const struct sockaddr *) &address, sizeof(address));
@@ -262,6 +264,17 @@ static int stick_value(const char *text, int *value) {
     return 1;
 }
 
+static int set_physical_lock(struct remote_input *remote, const uint64_t duration_ms, const uint64_t now_ms) {
+    remote->physical_lock_until = duration_ms ? now_ms + duration_ms : 0;
+    if (duration_ms) {
+        FILE *file = fopen(MUINPUT_PHYSICAL_LOCK, "w");
+        if (file) fclose(file);
+    } else {
+        unlink(MUINPUT_PHYSICAL_LOCK);
+    }
+    return gamepad_lock_physical(remote->gp, duration_ms != 0);
+}
+
 static int handle_line(struct remote_input *remote, char *line, const uint64_t now_ms) {
     if (strcmp(line, "clear") == 0) return release_all(remote, now_ms);
 
@@ -269,6 +282,13 @@ static int handle_line(struct remote_input *remote, char *line, const uint64_t n
     if (!space) return 0;
     *space = '\0';
     const char *argument = space + 1;
+
+    if (strcmp(line, "lock") == 0) {
+        char *end = NULL;
+        unsigned long duration = strtoul(argument, &end, 10);
+        if (end == argument || *end || duration > 10000) return 0;
+        return set_physical_lock(remote, duration, now_ms);
+    }
 
     for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
         if (strcmp(remote_buttons[i].name, line) != 0 || !remote->available[i]) continue;
@@ -331,12 +351,17 @@ void remote_input_poll(struct remote_input *remote, const uint64_t now_ms) {
         }
     }
 
+    if (remote->physical_lock_until && now_ms >= remote->physical_lock_until) {
+        changed |= set_physical_lock(remote, 0, now_ms);
+    }
+
     if (changed) gamepad_sync(remote->gp);
 }
 
 void remote_input_close(struct remote_input *remote) {
     if (!remote) return;
 
+    unlink(MUINPUT_PHYSICAL_LOCK);
     close(remote->fd);
     unlink(MUINPUT_REMOTE_SOCKET);
     unlink(MUINPUT_REMOTE_KEYS);

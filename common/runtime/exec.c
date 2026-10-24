@@ -4,8 +4,11 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <glob.h>
+#include <limits.h>
 #include <sys/prctl.h>
 #include <errno.h>
+#include <common/config/config.h>
 #include <common/runtime/init.h>
 #include <common/runtime/exec.h>
 #include <common/runtime/log.h>
@@ -18,6 +21,63 @@
 
 static pid_t pending_exec_pid = -1;
 static exec_callback pending_exec_cb = NULL;
+
+static int write_frequency(const char *path, const long long frequency) {
+    FILE *fp = fopen(path, "w");
+    if (!fp) return -1;
+
+    const int result = fprintf(fp, "%lld", frequency) < 0 ? -1 : 0;
+    fclose(fp);
+    return result;
+}
+
+static void sync_gpu_frequency(const char *governor) {
+    glob_t found = {0};
+    if (glob("/sys/class/devfreq/*gpu*/available_frequencies", 0, NULL, &found) != 0) {
+        globfree(&found);
+        return;
+    }
+
+    long long cap = strtoll(config.danger.gpu_max, NULL, 10);
+    if (cap <= 0) cap = strtoll(device.gpu.max_freq_default, NULL, 10);
+
+    for (size_t i = 0; i < found.gl_pathc; i++) {
+        FILE *fp = fopen(found.gl_pathv[i], "r");
+        if (!fp) continue;
+
+        long long floor = LLONG_MAX;
+        long long ceiling = 0;
+        long long frequency = 0;
+        while (fscanf(fp, "%lld", &frequency) == 1) {
+            if (frequency <= 0 || (cap > 0 && frequency > cap)) continue;
+            if (frequency < floor) floor = frequency;
+            if (frequency > ceiling) ceiling = frequency;
+        }
+        fclose(fp);
+
+        if (floor == LLONG_MAX || ceiling <= 0) continue;
+
+        char directory[PATH_MAX];
+        snprintf(directory, sizeof(directory), "%s", found.gl_pathv[i]);
+        char *leaf = strrchr(directory, '/');
+        if (!leaf) continue;
+        *leaf = '\0';
+
+        char minimum[PATH_MAX];
+        char maximum[PATH_MAX];
+        snprintf(minimum, sizeof(minimum), "%s/min_freq", directory);
+        snprintf(maximum, sizeof(maximum), "%s/max_freq", directory);
+
+        const long long target = strcmp(governor, "performance") == 0 ? ceiling : floor;
+        const long long maximum_target = strcmp(governor, "powersave") == 0 ? floor : ceiling;
+
+        write_frequency(minimum, floor);
+        write_frequency(maximum, maximum_target);
+        write_frequency(minimum, target);
+    }
+
+    globfree(&found);
+}
 
 const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     size_t arg_count = 0;
@@ -219,6 +279,7 @@ int set_scaling_governor(const char *governor, const int show_done) {
     if (show_done) LOG_SUCCESS(mux_module, "Governor switched to '%s' successfully", governor);
 
     fclose(fp);
+    sync_gpu_frequency(governor);
     return 0;
 }
 

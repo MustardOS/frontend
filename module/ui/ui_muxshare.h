@@ -722,6 +722,7 @@
     VISUAL(grid_mode_content, "gridmodecontent")                                                                       \
     VISUAL(box_art_hide, "boxarthide")                                                                                 \
     VISUAL(launch_swap, "launch_swap")                                                                                 \
+    VISUAL(launchsplash, "splash")                                                                                     \
     VISUAL(pickles_startup_messages, "picklesstartupmessages")                                                         \
     VISUAL(power_off, "blackfade")                                                                                     \
     VISUAL(shuffle, "shuffle")

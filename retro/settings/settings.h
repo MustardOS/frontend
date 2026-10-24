@@ -294,6 +294,8 @@ enum hotkey_binding {
     hotkey_binding_count
 };
 
+#define HOTKEY_UNBOUND (-1)
+
 extern const int session_settings_source_types[PORT_SOURCE_COUNT];
 
 extern struct session_settings_t session_settings;
@@ -549,7 +551,11 @@ const char *session_settings_hotkey_button_name(enum hotkey_binding binding);
 
 void session_settings_hotkey_combo_name(enum hotkey_binding binding, char *buf, size_t len);
 
-void session_settings_cycle_hotkey_button(enum hotkey_binding binding, int direction);
+int session_settings_hotkey_choice_count(void);
+
+int session_settings_hotkey_choice(int index);
+
+int session_settings_set_hotkey_button(enum hotkey_binding binding, int button);
 
 void session_settings_reset_hotkey_buttons(void);
 

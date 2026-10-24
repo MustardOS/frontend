@@ -53,4 +53,4 @@ enum coreinfo_state_load_policy coreinfo_state_load_policy(void);
 
 const char *coreinfo_name(void);
 
-#define COREINFO_LIST COREINFO(flycastvl)
+#define COREINFO_LIST COREINFO(flycastvl) COREINFO(mame2003_midway) COREINFO(mupen64plus_next)

@@ -15,6 +15,10 @@ void video_preview_arm(const char *path, int delay_ms, const lv_obj_t *container
 
 void video_preview_arm_image(const char *path, lv_obj_t *image, video_size_cb size);
 
+void video_preview_arm_image_delay(const char *path, lv_obj_t *image, video_size_cb size, int delay_ms);
+
+int video_preview_matches(const char *path);
+
 int video_preview_active(void);
 
 void video_preview_cancel(void);

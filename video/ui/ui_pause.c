@@ -163,6 +163,7 @@ static wasabi_asset_kind current_asset_kind(void) {
 
 static void set_glyph(lv_obj_t *image, const char *name);
 static void populate_asset_page(int focus);
+static int hotkey_target(void);
 
 static void align_status_panel(void) {
     if (!status_panel) return;
@@ -672,7 +673,7 @@ static void show_nav(void) {
                  && (!content_switch_active || content_switch_items.count > 0);
     if (settings_active) {
         const int row = settings_page == wasabi_page_root ? list_frame_current_row() : current_item_index;
-        show_a = (wasabi_catalogue_active() && wasabi_catalogue_count() > 0)
+        show_a = hotkey_target() >= 0 || (wasabi_catalogue_active() && wasabi_catalogue_count() > 0)
                  || (asset_page() && wasabi_asset_browser_type(current_item_index) != wasabi_asset_row_empty)
                  || (settings_page == wasabi_page_root && row >= 0 && wasabi_setting_is_action((wasabi_setting) row));
     }
@@ -684,7 +685,7 @@ static void show_nav(void) {
     if (settings_active) {
         const int row = settings_page == wasabi_page_root ? list_frame_current_row() : current_item_index;
         const int changeable =
-            (asset_page() || wasabi_catalogue_active()) ? 0
+            (asset_page() || wasabi_catalogue_active() || hotkey_target() >= 0) ? 0
             : settings_page == wasabi_page_root
                 ? list_frame_focused() || (row >= 0 && wasabi_setting_can_change((wasabi_setting) row))
             : settings_page == wasabi_page_shader_parameters ? row >= 0 && row < video_effects_parameter_count()
@@ -1413,6 +1414,158 @@ static void refresh_setting_value(const int row) {
     adjust_label_value_width(setting_panels[row], setting_labels[row], setting_values[row]);
 }
 
+#define HOTKEY_PICK_COLS 4
+#define HOTKEY_PICK_MAX  20
+
+static lv_obj_t *hotkey_pick_dim;
+static lv_obj_t *hotkey_pick_grid;
+static const char *hotkey_pick_map[HOTKEY_PICK_MAX + HOTKEY_PICK_MAX / HOTKEY_PICK_COLS + 1];
+static int hotkey_pick_buttons[HOTKEY_PICK_MAX];
+static int hotkey_pick_count;
+static int hotkey_pick_index;
+static int hotkey_pick_target = -1;
+
+static int hotkey_target(void) {
+    if (!menu_active || !settings_active) return -1;
+    if (settings_page == wasabi_page_hotkeys) {
+        return current_item_index >= 0 && current_item_index < wasabi_page_row_count(wasabi_page_hotkeys)
+                   ? current_item_index
+                   : -1;
+    }
+    if (settings_page != wasabi_page_root || list_frame_focused()) return -1;
+    const int row = list_frame_current_row();
+    return row >= wasabi_setting_hotkey_pause && row <= wasabi_setting_hotkey_slow_motion
+               ? row - wasabi_setting_hotkey_pause
+               : -1;
+}
+
+static int hotkey_pick_active(void) {
+    return hotkey_pick_target >= 0;
+}
+
+static void hotkey_pick_select(const int index) {
+    if (index < 0 || index >= hotkey_pick_count) return;
+    hotkey_pick_index = index;
+    if (!hotkey_pick_grid || !lv_obj_is_valid(hotkey_pick_grid)) return;
+    lv_btnmatrix_set_selected_btn(hotkey_pick_grid, (uint16_t) index);
+    lv_btnmatrix_set_btn_ctrl(hotkey_pick_grid, (uint16_t) index, LV_BTNMATRIX_CTRL_CHECKED);
+}
+
+static void hotkey_pick_move(const int dx, const int dy) {
+    const int rows = (hotkey_pick_count + HOTKEY_PICK_COLS - 1) / HOTKEY_PICK_COLS;
+    int row = hotkey_pick_index / HOTKEY_PICK_COLS;
+    int col = hotkey_pick_index % HOTKEY_PICK_COLS;
+
+    if (dx) {
+        const int width = row == rows - 1 ? hotkey_pick_count - row * HOTKEY_PICK_COLS : HOTKEY_PICK_COLS;
+        col = ((col + dx) % width + width) % width;
+    } else if (dy) {
+        row = ((row + dy) % rows + rows) % rows;
+        const int width = row == rows - 1 ? hotkey_pick_count - row * HOTKEY_PICK_COLS : HOTKEY_PICK_COLS;
+        if (col >= width) col = width - 1;
+    }
+
+    play_sound(snd_navigate);
+    hotkey_pick_select(row * HOTKEY_PICK_COLS + col);
+    display_composite_frame();
+}
+
+static void hotkey_pick_open(const int target) {
+    hotkey_pick_count = 0;
+    for (int i = 0; i < wasabi_hotkey_choice_count() && hotkey_pick_count < HOTKEY_PICK_MAX - 1; i++)
+        hotkey_pick_buttons[hotkey_pick_count++] = wasabi_hotkey_choice(i);
+    hotkey_pick_buttons[hotkey_pick_count++] = WASABI_HOTKEY_UNBOUND;
+
+    int slot = 0;
+    for (int i = 0; i < hotkey_pick_count; i++) {
+        hotkey_pick_map[slot++] = hotkey_pick_buttons[i] == WASABI_HOTKEY_UNBOUND
+                                      ? lang.muxretro.settings_screen.unbound
+                                      : mux_input_label((mux_input_type) hotkey_pick_buttons[i]);
+        if ((i + 1) % HOTKEY_PICK_COLS == 0 && i + 1 < hotkey_pick_count) hotkey_pick_map[slot++] = "\n";
+    }
+    hotkey_pick_map[slot] = "";
+
+    hotkey_pick_dim = lv_obj_create(ui_screen);
+    lv_obj_set_size(hotkey_pick_dim, LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_pos(hotkey_pick_dim, 0, 0);
+    lv_obj_set_style_bg_color(hotkey_pick_dim, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(hotkey_pick_dim, theme.dialogue.dim_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(hotkey_pick_dim, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(hotkey_pick_dim, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(hotkey_pick_dim, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+
+    hotkey_pick_grid = lv_btnmatrix_create(hotkey_pick_dim);
+    lv_obj_set_width(hotkey_pick_grid, lv_pct(92));
+    lv_obj_set_height(hotkey_pick_grid, lv_pct(60));
+    lv_btnmatrix_set_one_checked(hotkey_pick_grid, 1);
+    lv_btnmatrix_set_map(hotkey_pick_grid, hotkey_pick_map);
+    lv_obj_clear_flag(hotkey_pick_grid, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_align(hotkey_pick_grid, LV_ALIGN_CENTER, 0, 0);
+    apply_osk_theme(hotkey_pick_grid);
+
+    hotkey_pick_target = target;
+    const int current = wasabi_hotkey_button(target);
+    int focus = hotkey_pick_count - 1;
+    for (int i = 0; i < hotkey_pick_count; i++) {
+        if (hotkey_pick_buttons[i] == current) {
+            focus = i;
+            break;
+        }
+    }
+    hotkey_pick_select(focus);
+
+    nav_hide_all();
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.generic.select, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.back, 0},
+                                  {NULL, NULL, 0}});
+    display_composite_frame();
+}
+
+static void refresh_hotkey_values(void) {
+    if (settings_page == wasabi_page_hotkeys) {
+        for (int row = 0; row < wasabi_page_row_count(settings_page); row++) {
+            if (!setting_values[row]) continue;
+            char value[128];
+            wasabi_page_value(settings_page, row, value, sizeof(value));
+            lv_label_set_text(setting_values[row], value);
+            adjust_label_value_width(setting_panels[row], setting_labels[row], setting_values[row]);
+        }
+        return;
+    }
+    for (int item = wasabi_setting_hotkey_pause; item <= wasabi_setting_hotkey_slow_motion; item++)
+        refresh_setting_value(item);
+}
+
+static void hotkey_pick_close(const int apply) {
+    const int target = hotkey_pick_target;
+    hotkey_pick_target = -1;
+
+    if (hotkey_pick_dim && lv_obj_is_valid(hotkey_pick_dim)) lv_obj_del(hotkey_pick_dim);
+    hotkey_pick_dim = NULL;
+    hotkey_pick_grid = NULL;
+
+    if (apply) {
+        const int button = hotkey_pick_buttons[hotkey_pick_index];
+        if (button != wasabi_hotkey_button(target)) {
+            const int displaced = wasabi_hotkey_assign(target, button);
+            refresh_hotkey_values();
+            if (displaced >= 0) {
+                char message[256];
+                snprintf(
+                    message, sizeof(message), lang.muxretro.hotkeys_screen.unbound_combo,
+                    wasabi_setting_label((wasabi_setting) (wasabi_setting_hotkey_pause + displaced))
+                );
+                toast_message(message, tst_wait_m);
+            }
+        }
+    }
+
+    show_nav();
+    display_composite_frame();
+}
+
 static void change_setting(const int direction) {
     if (settings_page != wasabi_page_root) {
         if (!wasabi_page_cycle(settings_page, current_item_index, direction)) {
@@ -1881,11 +2034,18 @@ int video_playback_ui_menu_release(void) {
 
 video_ui_action video_playback_ui_toggle_menu(void) {
     if (!menu_active) {
+        display_clear_ui_layer();
         build_pause();
         menu_active = 1;
         apply_menu_chrome();
+        lv_obj_invalidate(ui_screen);
+        lv_refr_now(NULL);
         display_composite_frame();
         return video_ui_action_opened;
+    }
+    if (hotkey_pick_active()) {
+        hotkey_pick_close(0);
+        return video_ui_action_none;
     }
     if (settings_active && settings_page == wasabi_page_equaliser) {
         leave_equaliser();
@@ -1933,6 +2093,11 @@ video_ui_action video_playback_ui_confirm(void) {
         return video_ui_action_switch_content;
     }
     if (settings_active) {
+        const int hotkey = hotkey_target();
+        if (hotkey >= 0) {
+            hotkey_pick_open(hotkey);
+            return video_ui_action_none;
+        }
         if (settings_page != wasabi_page_root) {
             if (asset_page()) {
                 const wasabi_asset_kind kind = current_asset_kind();
@@ -2193,7 +2358,7 @@ void video_playback_ui_move_held(const int steps, const int direction) {
 }
 
 void video_playback_ui_section(const int direction) {
-    if (!menu_active) return;
+    if (!menu_active || hotkey_pick_active()) return;
     if (equaliser_active()) {
         equaliser_profile(direction);
         return;
@@ -2229,6 +2394,11 @@ void video_playback_ui_shuffle(void) {
 
 void video_playback_ui_change(const int direction) {
     if (!menu_active) return;
+    if (hotkey_pick_active()) {
+        hotkey_pick_move(direction, 0);
+        return;
+    }
+    if (hotkey_target() >= 0) return;
     if (equaliser_active()) {
         equaliser_select(direction);
         return;
@@ -2257,7 +2427,7 @@ void video_playback_ui_change(const int direction) {
 }
 
 void video_playback_ui_extra(void) {
-    if (!menu_active || !settings_active) return;
+    if (!menu_active || !settings_active || hotkey_pick_active()) return;
     if (settings_page == wasabi_page_equaliser) {
         if (!wasabi_eq_profile_deletable()) return;
         play_sound(snd_confirm);
@@ -2377,12 +2547,16 @@ static void delete_selected_asset(void) {
 }
 
 int video_playback_ui_modal_active(void) {
-    return dialogue_active(&asset_actions_dialogue) || dialogue_active(&asset_delete_dialogue)
+    return hotkey_pick_active() || dialogue_active(&asset_actions_dialogue) || dialogue_active(&asset_delete_dialogue)
            || dialogue_active(&settings_save_dialogue) || dialogue_active(&settings_reset_dialogue)
            || dialogue_active(&bookmark_delete_dialogue) || dialogue_active(&equaliser_delete_dialogue);
 }
 
 void video_playback_ui_modal_move(const int direction) {
+    if (hotkey_pick_active()) {
+        hotkey_pick_move(0, direction);
+        return;
+    }
     mux_dialogue *dialogue = dialogue_active(&asset_actions_dialogue)      ? &asset_actions_dialogue
                              : dialogue_active(&asset_delete_dialogue)     ? &asset_delete_dialogue
                              : dialogue_active(&settings_save_dialogue)    ? &settings_save_dialogue
@@ -2394,6 +2568,11 @@ void video_playback_ui_modal_move(const int direction) {
 }
 
 void video_playback_ui_modal_confirm(void) {
+    if (hotkey_pick_active()) {
+        play_sound(snd_confirm);
+        hotkey_pick_close(1);
+        return;
+    }
     if (dialogue_active(&equaliser_delete_dialogue)) {
         const mux_confirm_opt action = (mux_confirm_opt) equaliser_delete_dialogue.selected;
         dialogue_dismiss(&equaliser_delete_dialogue);
@@ -2487,6 +2666,11 @@ void video_playback_ui_modal_confirm(void) {
 }
 
 void video_playback_ui_modal_cancel(void) {
+    if (hotkey_pick_active()) {
+        play_sound(snd_back);
+        hotkey_pick_close(0);
+        return;
+    }
     if (dialogue_active(&asset_actions_dialogue)) {
         dialogue_mark_cancelled(&asset_actions_dialogue);
         dialogue_dismiss(&asset_actions_dialogue);

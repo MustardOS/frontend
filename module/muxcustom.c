@@ -1247,6 +1247,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, grid_mode_content, lang.muxcontent.grid_mode, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, box_art_hide, lang.muxcontent.grid_mode_art, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, launch_swap, lang.muxcontent.launch_swap.title, "launch_swap", launch_swap_options, 4);
+    INIT_OPTION_ITEM(-1, visual, launchsplash, lang.muxcontent.launch_splash, "splash", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
         disabled_enabled, 2
@@ -1610,6 +1611,7 @@ static void restore_custom_options(void) {
         ui_dro_box_art_align_visual, config.visual.box_art_align > 0 ? config.visual.box_art_align - 1 : 0
     );
     lv_dropdown_set_selected(ui_dro_content_width_visual, config.visual.content_width);
+    lv_dropdown_set_selected(ui_dro_launchsplash_visual, config.visual.launchsplash);
     lv_dropdown_set_selected(ui_dro_grid_mode_content_visual, config.visual.grid_mode_content);
     lv_dropdown_set_selected(ui_dro_box_art_hide_visual, 1 - config.visual.box_art_hide);
 
@@ -1711,6 +1713,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, content_width, "visual/contentwidth", INT, 0);
     CHECK_AND_SAVE_STD(visual, page_skip, "visual/pageskip", INT, 0);
     CHECK_AND_SAVE_STD(visual, group_content, "visual/groupcontent", INT, 0);
+    CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(visual, pickles_startup_messages, "visual/pickles_startup_messages", INT, 0);
     CHECK_AND_SAVE_STD(visual, power_off, "visual/power_off", INT, 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
@@ -2048,6 +2051,7 @@ static int16_t kiosk_pass = 0;
         change)                                                                                                        \
     ROW(visual, box_art_hide, "boxarthide", grid, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)        \
     ROW(visual, launch_swap, "launch_swap", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)   \
+    ROW(visual, launchsplash, "splash", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)       \
     ROW(visual, pickles_startup_messages, "picklesstartupmessages", launching, menu_option, NULL, NULL,                \
         &kiosk.setting.visual, NULL, change)                                                                           \
     ROW(visual, power_off, "blackfade", launching, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)       \

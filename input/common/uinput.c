@@ -32,6 +32,7 @@ struct gamepad {
     int stick_physical[4];
     int stick_remote[4];
     int stick_sent[4];
+    int physical_locked;
 };
 
 static const unsigned short stick_codes[4] = {ABS_X, ABS_Y, ABS_RX, ABS_RY};
@@ -303,14 +304,14 @@ static int hat_index(const unsigned short code) {
 }
 
 static void send_key(struct gamepad *gp, const unsigned short code) {
-    const int value = gp->key_physical[code] ? gp->key_physical[code] : gp->key_remote[code];
+    const int value = !gp->physical_locked && gp->key_physical[code] ? gp->key_physical[code] : gp->key_remote[code];
     if (value == gp->key_sent[code]) return;
     gp->key_sent[code] = (signed char) value;
     emit_event(gp, EV_KEY, code, value);
 }
 
 static void send_hat(struct gamepad *gp, const int index) {
-    const int value = gp->hat_physical[index] ? gp->hat_physical[index] : gp->hat_remote[index];
+    const int value = !gp->physical_locked && gp->hat_physical[index] ? gp->hat_physical[index] : gp->hat_remote[index];
     if (value == gp->hat_sent[index]) return;
     gp->hat_sent[index] = value;
     emit_event(gp, EV_ABS, index ? ABS_HAT0Y : ABS_HAT0X, value);
@@ -321,14 +322,14 @@ void gamepad_emit_key(struct gamepad *gp, const unsigned short code, const int v
         emit_event(gp, EV_KEY, code, value);
         return;
     }
-    if (value == 1) record_local_activity();
+    if (!gp->physical_locked && value == 1) record_local_activity();
     gp->key_physical[code] = (signed char) (value != 0);
     send_key(gp, code);
 }
 
 static void send_stick(struct gamepad *gp, const int index) {
     const int centre = stick_centre(gp, index);
-    const int physical = gp->stick_physical[index];
+    const int physical = gp->physical_locked ? centre : gp->stick_physical[index];
     const int remote = gp->stick_remote[index];
     const int value = abs(remote - centre) > abs(physical - centre) ? remote : physical;
     if (value == gp->stick_sent[index]) return;
@@ -341,7 +342,7 @@ void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int v
     if (stick >= 0 && gp->stick_present[stick]) {
         const int centre = stick_centre(gp, stick);
         const int range = gp->stick_max[stick] - gp->stick_min[stick];
-        if (range > 0 && abs(value - centre) > range / 20) record_local_activity();
+        if (!gp->physical_locked && range > 0 && abs(value - centre) > range / 20) record_local_activity();
         gp->stick_physical[stick] = value;
         send_stick(gp, stick);
         return;
@@ -352,7 +353,7 @@ void gamepad_emit_abs(struct gamepad *gp, const unsigned short code, const int v
         emit_event(gp, EV_ABS, code, value);
         return;
     }
-    if (value != 0) record_local_activity();
+    if (!gp->physical_locked && value != 0) record_local_activity();
     gp->hat_physical[index] = value;
     send_hat(gp, index);
 }
@@ -417,6 +418,22 @@ int gamepad_remote_stick(struct gamepad *gp, const unsigned short code, const in
     const int before = gp->stick_sent[index];
     send_stick(gp, index);
     return before != gp->stick_sent[index];
+}
+
+int gamepad_lock_physical(struct gamepad *gp, const int locked) {
+    if (!gp || gp->physical_locked == (locked != 0)) return 0;
+    gp->physical_locked = locked != 0;
+
+    const size_t before = gp->pending_count;
+    for (size_t i = 0; i < gp->key_count; ++i)
+        if (gp->keys[i] < KEY_CNT) send_key(gp, gp->keys[i]);
+    if (gp->has_hat) {
+        send_hat(gp, 0);
+        send_hat(gp, 1);
+    }
+    for (int i = 0; i < 4; ++i)
+        if (gp->stick_present[i]) send_stick(gp, i);
+    return gp->pending_count != before;
 }
 
 void gamepad_emit_sw(struct gamepad *gp, const unsigned short code, const int value) {

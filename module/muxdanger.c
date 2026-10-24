@@ -30,16 +30,17 @@ static int compare_descending(const void *a, const void *b) {
     return (left < right) - (left > right);
 }
 
-static void build_frequency_list(frequency_list *list, const char *filename, const long divisor) {
+static void
+build_frequency_list(frequency_list *list, const char *filename, const long divisor, const char *default_frequency) {
     list->count = 0;
 
     char *content = filename ? read_all_char_from(filename) : NULL;
     if (!content) return;
 
-    long found[FREQUENCY_MAX];
+    long found[FREQUENCY_MAX - 1];
     int total = 0;
     char *save = NULL;
-    for (const char *tok = strtok_r(content, " \t\n", &save); tok && total < FREQUENCY_MAX;
+    for (const char *tok = strtok_r(content, " \t\n", &save); tok && total < FREQUENCY_MAX - 1;
          tok = strtok_r(NULL, " \t\n", &save)) {
         const long value = strtol(tok, NULL, 10);
         if (value <= 0) continue;
@@ -54,18 +55,20 @@ static void build_frequency_list(frequency_list *list, const char *filename, con
 
     qsort(found, (size_t) total, sizeof(long), compare_descending);
 
-    for (int i = 0; i < total; i++) {
-        snprintf(list->values[i], sizeof(list->values[i]), "%ld", i == 0 ? 0 : found[i]);
-        if (i == 0) {
-            snprintf(
-                list->labels[i], sizeof(list->labels[i]), "%s (%ld MHz)", lang.muxdanger.highest, found[i] / divisor
-            );
-        } else {
-            snprintf(list->labels[i], sizeof(list->labels[i]), "%ld MHz", found[i] / divisor);
-        }
-        list->options[i] = list->labels[i];
+    long default_value = strtol(default_frequency ? default_frequency : "", NULL, 10);
+    if (default_value <= 0 && total > 0) default_value = found[0];
+
+    snprintf(list->values[0], sizeof(list->values[0]), "0");
+    snprintf(list->labels[0], sizeof(list->labels[0]), "%s (%ld MHz)", lang.muxdanger.highest, default_value / divisor);
+    list->options[0] = list->labels[0];
+    list->count = 1;
+
+    for (int i = 0; i < total && list->count < FREQUENCY_MAX; i++) {
+        const int index = list->count++;
+        snprintf(list->values[index], sizeof(list->values[index]), "%ld", found[i]);
+        snprintf(list->labels[index], sizeof(list->labels[index]), "%ld MHz", found[i] / divisor);
+        list->options[index] = list->labels[index];
     }
-    list->count = total;
 }
 
 static void build_cpu_frequencies(void) {
@@ -79,7 +82,7 @@ static void build_cpu_frequencies(void) {
     }
     snprintf(slash + 1, sizeof(listing) - (slash + 1 - listing), "scaling_available_frequencies");
 
-    build_frequency_list(&cpu_frequencies, listing, 1000);
+    build_frequency_list(&cpu_frequencies, listing, 1000, device.cpu.max_freq_default);
 }
 
 static void build_gpu_frequencies(void) {
@@ -89,7 +92,9 @@ static void build_gpu_frequencies(void) {
         return;
     }
 
-    build_frequency_list(&gpu_frequencies, found.gl_pathc > 0 ? found.gl_pathv[0] : NULL, 1000000);
+    build_frequency_list(
+        &gpu_frequencies, found.gl_pathc > 0 ? found.gl_pathv[0] : NULL, 1000000, device.gpu.max_freq_default
+    );
     globfree(&found);
 }
 
@@ -263,9 +268,9 @@ static void init_navigation_group(void) {
         gpu_frequencies.count
     );
 
-    if (cpu_frequencies.count < 2) HIDE_OPTION_ITEM(danger, overclock);
+    if (cpu_frequencies.count < 3) HIDE_OPTION_ITEM(danger, overclock);
     if (!cpu_cores_can_change()) HIDE_OPTION_ITEM(danger, online_cores);
-    if (gpu_frequencies.count < 2) HIDE_OPTION_ITEM(danger, gpu_overclock);
+    if (gpu_frequencies.count < 3) HIDE_OPTION_ITEM(danger, gpu_overclock);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_lbl_vm_swap_danger, ui_dro_vm_swap_danger, four_values);

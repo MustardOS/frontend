@@ -1197,6 +1197,7 @@ void pause_menu_toggle(void) {
         if (!netplay_is_playing()) audio_bridge_set_paused(1);
         if (state_saves_allowed()) gamestate_capture_pending(0);
         hotkeys_pause_menu_opened(session_settings.speed_persistence);
+        display_clear_ui_layer();
     } else {
         input_bridge_suppress_held();
     }
@@ -1209,6 +1210,7 @@ void pause_menu_toggle(void) {
         pause_menu_rebuild();
         if (remembered_row && *remembered_row > 0) focus_item(*remembered_row);
         lv_label_set_text(ui_lbl_datetime, get_datetime());
+        lv_obj_invalidate(ui_screen);
     }
 }
 

@@ -34,6 +34,8 @@ void display_set_ui_hidden(int hidden);
 
 int display_ui_is_hidden(void);
 
+void display_clear_ui_layer(void);
+
 double display_panel_refresh_hz(void);
 
 int display_video_fast_path_allowed(void);

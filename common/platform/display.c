@@ -1103,6 +1103,43 @@ int display_ui_is_hidden(void) {
     return ui_layer_hidden;
 }
 
+void display_clear_ui_layer(void) {
+    if (!monitor.renderer || !monitor.texture) return;
+
+    SDL_Texture *previous_target = SDL_GetRenderTarget(monitor.renderer);
+    SDL_BlendMode previous_blend = SDL_BLENDMODE_BLEND;
+    SDL_Rect previous_viewport;
+    SDL_Rect previous_clip;
+    const SDL_bool clip_enabled = SDL_RenderIsClipEnabled(monitor.renderer);
+    Uint8 red = 0;
+    Uint8 green = 0;
+    Uint8 blue = 0;
+    Uint8 alpha = 255;
+
+    SDL_GetRenderDrawBlendMode(monitor.renderer, &previous_blend);
+    SDL_GetRenderDrawColor(monitor.renderer, &red, &green, &blue, &alpha);
+    SDL_RenderGetViewport(monitor.renderer, &previous_viewport);
+    SDL_RenderGetClipRect(monitor.renderer, &previous_clip);
+    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
+    SDL_RenderSetViewport(monitor.renderer, NULL);
+    SDL_RenderSetClipRect(monitor.renderer, NULL);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 0);
+    SDL_RenderFillRect(monitor.renderer, NULL);
+    if (monitor.shadow_layer) {
+        SDL_SetRenderTarget(monitor.renderer, monitor.shadow_layer);
+        SDL_RenderSetViewport(monitor.renderer, NULL);
+        SDL_RenderSetClipRect(monitor.renderer, NULL);
+        SDL_RenderFillRect(monitor.renderer, NULL);
+    }
+    SDL_RenderFlush(monitor.renderer);
+    SDL_SetRenderTarget(monitor.renderer, previous_target);
+    SDL_RenderSetViewport(monitor.renderer, &previous_viewport);
+    SDL_RenderSetClipRect(monitor.renderer, clip_enabled ? &previous_clip : NULL);
+    SDL_SetRenderDrawColor(monitor.renderer, red, green, blue, alpha);
+    SDL_SetRenderDrawBlendMode(monitor.renderer, previous_blend);
+}
+
 int display_video_fast_path_allowed(void) {
     return ui_layer_hidden && !video_overlay_fn_ptr && display_fade_alpha == 0 && !anim_is_active();
 }

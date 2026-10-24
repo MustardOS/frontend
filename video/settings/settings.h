@@ -123,8 +123,14 @@ const char *wasabi_page_label(wasabi_settings_page page, int row);
 const char *wasabi_page_glyph(wasabi_settings_page page, int row);
 void wasabi_page_value(wasabi_settings_page page, int row, char *value, size_t size);
 int wasabi_page_cycle(wasabi_settings_page page, int row, int direction);
+#define WASABI_HOTKEY_UNBOUND (-1)
+
 void wasabi_hotkey_set_defaults(void);
 void wasabi_hotkey_reset(void);
 int wasabi_hotkey_button_valid(int input);
+int wasabi_hotkey_choice_count(void);
+int wasabi_hotkey_choice(int index);
+int wasabi_hotkey_button(int index);
+int wasabi_hotkey_assign(int index, int button);
 int wasabi_hotkey_uses_menu(wasabi_setting setting);
 int wasabi_vignette_secret(int shape);

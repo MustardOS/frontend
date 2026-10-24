@@ -16,6 +16,7 @@
 #include <common/platform/display.h>
 #include <common/config/config.h>
 #include <common/ui/common.h>
+#include <common/ui/image.h>
 #include <lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h>
 
 #define PRESENT_MS               16   // Presentation timer period (main thread)
@@ -429,6 +430,7 @@ static int ensure_image(const AVFrame *f) {
     if (!lv_obj_is_valid(preview_image)) return 0;
 
     image_opa = lv_obj_get_style_img_opa(preview_image, LV_PART_MAIN);
+    clear_image(preview_image);
     lv_img_set_src(preview_image, image_dsc);
     return 1;
 }
@@ -1267,9 +1269,20 @@ int video_wallpaper_active(void) {
 }
 
 void video_preview_arm_image(const char *path, lv_obj_t *image, const video_size_cb size) {
-    video_preview_arm(path, 0, NULL, NULL);
+    video_preview_arm_image_delay(path, image, size, 0);
+}
+
+void video_preview_arm_image_delay(const char *path, lv_obj_t *image, const video_size_cb size, const int delay_ms) {
+    video_preview_arm(path, delay_ms, NULL, NULL);
     preview_pending_image = image;
     preview_pending_size = size;
+}
+
+int video_preview_matches(const char *path) {
+    if (!path || !path[0] || is_wallpaper) return 0;
+    if (preview_pending_path[0]) return strcmp(preview_pending_path, path) == 0;
+
+    return strcmp(video_path, path) == 0 && (present_timer || fmt_ctx || decode_thread || preview_image || image_dsc);
 }
 
 void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *container, const lv_obj_t *box_img) {

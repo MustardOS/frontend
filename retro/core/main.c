@@ -665,6 +665,7 @@ void core_prime_audio(void) {
 static int abort_startup(const int core_opened) {
     governor_boost_end();
     if (core_opened) core_unload();
+    loading_message_hide();
     mux_input_close();
     sdl_cleanup();
     return EXIT_FAILURE;
@@ -717,7 +718,7 @@ int main(const int argc, char *argv[]) {
 
     load_device(&device);
     load_config(&config);
-    const int show_startup_messages = config.visual.pickles_startup_messages;
+    int show_startup_messages = config.visual.pickles_startup_messages;
 
     init_module("muxretro");
     LOG_DEBUG(mux_module, "init_module done");
@@ -727,6 +728,8 @@ int main(const int argc, char *argv[]) {
 
     init_display();
     LOG_DEBUG(mux_module, "init_display done, renderer=%p", (void *) display_get_renderer());
+
+    if (loading_splash_show(content_path)) show_startup_messages = 0;
 
     board_init(device.board.name);
     mux_input_open();
@@ -742,16 +745,17 @@ int main(const int argc, char *argv[]) {
     options_init_paths(core_path_arg, content_path);
 
     governor_boost_begin("content startup");
-    if (show_startup_messages) loading_message_show(startup_message);
+    loading_startup_progress(startup_message, show_startup_messages);
 
     if (!startup.restarting && !bios_allows_start(core_path_arg)) {
         LOG_INFO(mux_module, "Launch stopped because the core has no BIOS");
         governor_boost_end();
+        loading_message_hide();
         mux_input_close();
         sdl_cleanup();
         return EXIT_SUCCESS;
     }
-    if (show_startup_messages) loading_message_show(startup_message);
+    loading_startup_progress(startup_message, show_startup_messages);
 
     if (core_open(core_path_arg) != 0) {
         LOG_ERROR(mux_module, "Failed to open core: %s", core_path_arg);
@@ -782,7 +786,7 @@ int main(const int argc, char *argv[]) {
     const int startup_netplay = startup.netplay_host || startup.netplay_address[0];
     int has_resume = !startup.fresh && !startup_netplay && state_saves_supported()
                      && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
-    if (show_startup_messages) loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
+    loading_startup_progress(has_resume ? lang.muxretro.content_resuming : startup_message, show_startup_messages);
 
     precache_content(content_path);
 
@@ -877,7 +881,7 @@ int main(const int argc, char *argv[]) {
 
     int cheevo_connecting_background = 0;
     if (cheevo_is_starting()) {
-        if (show_startup_messages) loading_message_show(lang.muxretro.cheevo.connecting);
+        loading_startup_progress(lang.muxretro.cheevo.connecting, show_startup_messages);
         const uint32_t cheevo_deadline = SDL_GetTicks() + CHEEVO_STARTUP_WAIT_MS;
         while (cheevo_is_starting() && !SDL_TICKS_PASSED(SDL_GetTicks(), cheevo_deadline)) {
             cheevo_tick();
@@ -889,7 +893,7 @@ int main(const int argc, char *argv[]) {
             cheevo_connecting_background = 1;
             LOG_INFO(mux_module, "RetroAchievements connection is continuing in the background");
         }
-        if (show_startup_messages) loading_message_show(has_resume ? lang.muxretro.content_resuming : startup_message);
+        loading_startup_progress(has_resume ? lang.muxretro.content_resuming : startup_message, show_startup_messages);
     }
 
     overlay_bridge_apply();
@@ -906,7 +910,7 @@ int main(const int argc, char *argv[]) {
 
     int resume_disc_failed = 0;
     if (has_resume) {
-        if (show_startup_messages) loading_message_show(lang.muxretro.content_resuming);
+        loading_startup_progress(lang.muxretro.content_resuming, show_startup_messages);
         const int warmup_frames = state_saves_warmup_frames();
         video_bridge_set_frame_skip(1);
         audio_bridge_set_muted(1);
@@ -930,6 +934,7 @@ int main(const int argc, char *argv[]) {
         startup_log_stage("save-state warm-up", &startup_stage);
 
         const int resume_result = gamestate_load_most_recent(&load_blocked, show_startup_messages);
+        loading_startup_progress(lang.muxretro.content_resuming, show_startup_messages);
         if (resume_result == 0) {
             LOG_INFO(mux_module, "Auto-loaded most recent save state (after %d warm-up frames)", warmup_frames);
         } else if (resume_result == GAMESTATE_LOAD_DISC_FAIL)

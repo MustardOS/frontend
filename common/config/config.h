@@ -472,6 +472,7 @@ struct mux_config {
         int16_t menu_counter_file;
         int16_t video_wallpaper;
         int16_t background_scale;
+        int16_t launchsplash;
         int16_t pickles_startup_messages;
         int16_t power_off;
         int16_t blackfade;

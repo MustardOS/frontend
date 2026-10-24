@@ -1499,6 +1499,7 @@ static void progress_show(lv_obj_t *show, lv_obj_t *hide) {
     lv_anim_del(show, progress_fade_exec_cb);
     lv_obj_set_style_opa(show, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(show, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(show);
 }
 
 static void show_brightness_progress(void) {
@@ -2516,6 +2517,8 @@ void create_grid_item(
 }
 
 void scroll_help_content(const int direction, const int page_down) {
+    if (!lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN)) return;
+
     if (lv_obj_get_content_height(ui_lbl_help_content) <= lv_obj_get_content_height(ui_pnl_help_content)) return;
 
     const int line_height = lv_font_get_line_height(lv_obj_get_style_text_font(ui_lbl_help_content, LV_PART_MAIN));

@@ -1067,7 +1067,8 @@ void video_bridge_set_geometry(const unsigned base_width, const unsigned base_he
 }
 
 void video_bridge_set_core_rotation(const int quarter_turns) {
-    core_rotation_quarters = (quarter_turns % video_rotate_count + video_rotate_count) % video_rotate_count;
+    const int normalised = (quarter_turns % video_rotate_count + video_rotate_count) % video_rotate_count;
+    core_rotation_quarters = (video_rotate_count - normalised) % video_rotate_count;
     recompute_dest_rect();
 }
 

@@ -248,7 +248,6 @@ static void show_content_preview(const int visible) {
         lv_obj_add_flag(ui_pnl_help_message, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
         lv_obj_update_layout(ui_pnl_help_preview);
-        if (content_info_refresh) content_info_refresh("preview");
     } else {
         video_preview_cancel();
         lv_obj_add_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
@@ -1295,7 +1294,6 @@ static void prepare_box_video(void) {
     int pad_b;
     resolve_box_art_geometry(&max_w, &box_h, &pad_l, &pad_r, &pad_t, &pad_b);
 
-    clear_image(ui_img_box);
     lv_img_set_size_mode(ui_img_box, LV_IMG_SIZE_MODE_VIRTUAL);
     lv_img_set_zoom(ui_img_box, LV_IMG_ZOOM_NONE);
     lv_obj_set_align(ui_img_box, config.visual.box_art_align);
@@ -1556,9 +1554,9 @@ void render_image_refresh(
 ) {
     const int is_preview = strcasecmp(image_type, "preview") == 0;
     if (is_preview) preview_media_present = 0;
-    video_preview_cancel();
 
     if (strlen(h_core_artwork) <= 1) {
+        video_preview_cancel();
         if (is_preview) {
             lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
             snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
@@ -1582,19 +1580,26 @@ void render_image_refresh(
     if (animated && config.visual.reduce_motion == 0) {
         if (is_preview) {
             preview_media_present = 1;
-            lv_img_set_src(ui_img_help_preview_image, &ui_img_blank);
-            snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
+            if (video_preview_matches(image)) return;
+            snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
             video_preview_arm(image, 0, ui_pnl_help_preview_image, NULL);
         } else {
+            if (video_preview_matches(image)) return;
+            clear_image(ui_img_box);
+            if (ui_viewport_objects)
+                for (int i = 1; i < 6; i++)
+                    clear_image(ui_viewport_objects[i]);
             prepare_box_video();
-            snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             *starter_image = 1;
-            video_preview_arm_image(image, ui_img_box, box_video_size);
+            video_preview_arm_image_delay(image, ui_img_box, box_video_size, 100);
         }
         return;
     }
     const char *extension = strrchr(image, '.');
     if (animated && extension && strcasecmp(extension + 1, "mp4") == 0) image[0] = '\0';
+
+    video_preview_cancel();
 
     if (is_preview) {
         preview_media_present = image[0] && file_exist(image);

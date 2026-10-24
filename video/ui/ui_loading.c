@@ -26,6 +26,9 @@ void video_loading_prepare_content(void) {
     if (ui_pnl_header && lv_obj_is_valid(ui_pnl_header)) lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
     if (ui_pnl_content && lv_obj_is_valid(ui_pnl_content)) lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
     if (ui_pnl_footer && lv_obj_is_valid(ui_pnl_footer)) lv_obj_add_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
+    display_clear_ui_layer();
+    lv_obj_invalidate(ui_screen);
+    lv_refr_now(NULL);
     display_set_ui_hidden(0);
 }
 

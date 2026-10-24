@@ -295,8 +295,8 @@ int hotkeys_task(void) {
 
     int hotkey_now[hotkey_binding_count];
     for (int binding = 0; binding < hotkey_binding_count; binding++) {
-        hotkey_now[binding] =
-            mux_input_pressed((mux_input_type) session_settings_hotkey_button((enum hotkey_binding) binding));
+        const int button = session_settings_hotkey_button((enum hotkey_binding) binding);
+        hotkey_now[binding] = button != HOTKEY_UNBOUND && mux_input_pressed((mux_input_type) button);
     }
 
     int open_pause = 0;

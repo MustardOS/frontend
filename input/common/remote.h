@@ -6,6 +6,7 @@
 
 #define MUINPUT_REMOTE_SOCKET "/run/muinput/remote.sock"
 #define MUINPUT_REMOTE_KEYS   "/run/muinput/remote.keys"
+#define MUINPUT_PHYSICAL_LOCK "/run/muinput/physical.lock"
 #define MUINPUT_SDL_MAP       "/opt/muos/device/config/board/sdl_map"
 
 struct remote_input;

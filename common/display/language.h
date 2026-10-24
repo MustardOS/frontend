@@ -679,6 +679,7 @@ struct mux_lang {
         char full_width[MAX_BUFFER_SIZE];
         char grid_mode[MAX_BUFFER_SIZE];
         char grid_mode_art[MAX_BUFFER_SIZE];
+        char launch_splash[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char behind[MAX_BUFFER_SIZE];
@@ -2512,6 +2513,7 @@ struct mux_lang {
             char enabled_combo[MAX_BUFFER_SIZE];
             char mode_combo[MAX_BUFFER_SIZE];
             char reassigned_combo[MAX_BUFFER_SIZE];
+            char unbound_combo[MAX_BUFFER_SIZE];
         } hotkeys_screen;
         struct {
             char miscellaneous[MAX_BUFFER_SIZE];
@@ -3841,6 +3843,7 @@ struct mux_lang {
             char content_width[MAX_BUFFER_SIZE];
             char page_skip[MAX_BUFFER_SIZE];
             char group_content[MAX_BUFFER_SIZE];
+            char launchsplash[MAX_BUFFER_SIZE];
             char pickles_startup_messages[MAX_BUFFER_SIZE];
             char power_off[MAX_BUFFER_SIZE];
             char grid_mode_content[MAX_BUFFER_SIZE];

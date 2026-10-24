@@ -386,6 +386,7 @@ static void validate_settings(void) {
     };
     int hotkeys_valid = 1;
     for (size_t index = 0; index < sizeof(hotkeys) / sizeof(hotkeys[0]); index++) {
+        if (*hotkeys[index] == WASABI_HOTKEY_UNBOUND) continue;
         if (!wasabi_hotkey_button_valid(*hotkeys[index])) hotkeys_valid = 0;
         for (size_t earlier = 0; earlier < index; earlier++)
             if (wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + index))

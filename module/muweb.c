@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <common/base/totp.h>
+#include <common/base/image_ext.h>
 #include <common/content/core/state_preview.h>
 #include <common/content/lookup.h>
 #include <common/storage/mount.h>
@@ -59,9 +60,10 @@ static struct file_root file_roots[MUWEB_FILE_ROOTS];
 static size_t file_root_count = 0;
 static size_t file_upload_count = 0;
 
-static const char *const catalogue_types[] = {"box",           "grid",         "preview",         "text",
-                                              "manual",        "overlay/base", "overlay/battery", "overlay/bright",
-                                              "overlay/volume"};
+static const char *const catalogue_types[] = {
+    "box",    "grid",         "preview",         "splash",         "text",
+    "manual", "overlay/base", "overlay/battery", "overlay/bright", "overlay/volume"
+};
 #define CATALOGUE_TYPE_COUNT (sizeof(catalogue_types) / sizeof(catalogue_types[0]))
 #define OVERLAY_STEPS        10
 
@@ -621,23 +623,17 @@ static const char *mime_for(const char *name) {
 }
 
 static int upload_extension_allowed(const char *type, const char *leaf) {
-    static const char *const images[] = {"svg", "png", "apng", "jpg", "jpeg", "webp",
-                                         "qoi", "tga", "gif",  "bmp", "pcx",  NULL};
-    static const char *const documents[] = {"txt", NULL};
     const char *extension = file_extension(leaf);
 
-    if (strcasecmp(extension, "conf") == 0 && (strcmp(type, "box") == 0 || strcmp(type, "preview") == 0)
+    if (strcasecmp(extension, "conf") == 0
+        && (strcmp(type, "box") == 0 || strcmp(type, "preview") == 0 || strcmp(type, "splash") == 0)
         && (strncmp(leaf, "_edit/", 6) == 0 || strstr(leaf, "/_edit/") != NULL))
         return 1;
-    if (strcasecmp(extension, "mp4") == 0) return strcmp(type, "box") == 0 || strcmp(type, "preview") == 0;
+    if (strcasecmp(extension, "mp4") == 0)
+        return strcmp(type, "box") == 0 || strcmp(type, "preview") == 0 || strcmp(type, "splash") == 0;
 
-    const char *const *allowed = images;
-    if (strcmp(type, "text") == 0 || strcmp(type, "manual") == 0) allowed = documents;
-
-    for (size_t i = 0; allowed[i]; ++i) {
-        if (strcasecmp(extension, allowed[i]) == 0) return 1;
-    }
-    return 0;
+    if (strcmp(type, "text") == 0 || strcmp(type, "manual") == 0) return strcasecmp(extension, "txt") == 0;
+    return is_image_ext(extension);
 }
 
 struct content_item {
@@ -5495,6 +5491,7 @@ static void handle_player_api(
 
 #define REMOTE_SOCKET    "/run/muinput/remote.sock"
 #define REMOTE_KEYS      "/run/muinput/remote.keys"
+#define REMOTE_LOCK      "/run/muinput/physical.lock"
 #define AUDIO_SCRIPT     "/opt/muos/script/device/audio.sh"
 #define BRIGHT_SCRIPT    "/opt/muos/script/device/bright.sh"
 #define REMOTE_LEVEL_GAP 0.12
@@ -5608,6 +5605,8 @@ static void handle_input_api(
         json_number(&out, "ready", access(REMOTE_SOCKET, F_OK) == 0);
         buffer_puts(&out, ",");
         json_number(&out, "local_active", remote_local_priority && local_input_active());
+        buffer_puts(&out, ",");
+        json_number(&out, "locked", access(REMOTE_LOCK, F_OK) == 0);
         buffer_puts(&out, "}");
         send_json(connection, &out);
         buffer_free(&out);
@@ -5620,8 +5619,21 @@ static void handle_input_api(
     }
     if (!remote_input_public && !write_allowed(connection)) return;
 
-    if (remote_local_priority && strcmp(path, "clear") != 0 && local_input_active()) {
+    if (remote_local_priority && strcmp(path, "clear") != 0 && strcmp(path, "lock") != 0 && local_input_active()) {
         send_error(connection, 409, "The device is being controlled locally");
+        return;
+    }
+
+    if (strcmp(path, "lock") == 0) {
+        if (!(body_length == 1 && (body[0] == '0' || body[0] == '1'))) {
+            send_error(connection, 400, "Send 1 to lock or 0 to unlock physical controls");
+            return;
+        }
+        if (!remote_send(body[0] == '1' ? "lock 3000" : "lock 0")) {
+            send_error(connection, 503, "The device input service is not running");
+            return;
+        }
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
 

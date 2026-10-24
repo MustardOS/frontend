@@ -96,17 +96,58 @@ int wasabi_hotkey_uses_menu(const wasabi_setting setting) {
            || setting == wasabi_setting_hotkey_fast_forward || setting == wasabi_setting_hotkey_slow_motion;
 }
 
-static int cycle_hotkey(const int value, const int direction) {
-    const int count = (int) (sizeof(hotkey_choices) / sizeof(hotkey_choices[0]));
-    int position = 0;
-    while (position < count && hotkey_choices[position] != value)
-        position++;
-    if (position >= count) position = 0;
-    for (int step = 0; step < count; step++) {
-        position = cycle(position, direction, count);
-        if (wasabi_hotkey_button_valid(hotkey_choices[position])) break;
+int wasabi_hotkey_choice_count(void) {
+    int count = 0;
+    for (size_t index = 0; index < A_SIZE(hotkey_choices); index++)
+        if (wasabi_hotkey_button_valid(hotkey_choices[index])) count++;
+    return count;
+}
+
+int wasabi_hotkey_choice(const int index) {
+    int seen = 0;
+    for (size_t choice = 0; choice < A_SIZE(hotkey_choices); choice++) {
+        if (!wasabi_hotkey_button_valid(hotkey_choices[choice])) continue;
+        if (seen++ == index) return hotkey_choices[choice];
     }
-    return hotkey_choices[position];
+    return WASABI_HOTKEY_UNBOUND;
+}
+
+int wasabi_hotkey_button(const int index) {
+    if (index < 0 || index >= WASABI_HOTKEY_COUNT) return WASABI_HOTKEY_UNBOUND;
+    return *hotkey_fields[index];
+}
+
+int wasabi_hotkey_assign(const int index, const int button) {
+    if (index < 0 || index >= WASABI_HOTKEY_COUNT) return -1;
+
+    // Direct buttons and MENU combinations are separate groups. Taking a button
+    // another shortcut in the same group uses leaves that shortcut unbound.
+    const wasabi_setting setting = (wasabi_setting) (wasabi_setting_hotkey_pause + index);
+    int displaced = -1;
+    if (button != WASABI_HOTKEY_UNBOUND) {
+        for (int other = 0; other < WASABI_HOTKEY_COUNT; other++) {
+            if (other == index || *hotkey_fields[other] != button
+                || wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + other))
+                       != wasabi_hotkey_uses_menu(setting))
+                continue;
+            *hotkey_fields[other] = (int16_t) WASABI_HOTKEY_UNBOUND;
+            save_value(hotkey_keys[other], WASABI_HOTKEY_UNBOUND);
+            displaced = other;
+            break;
+        }
+    }
+
+    *hotkey_fields[index] = (int16_t) button;
+    save_value(hotkey_keys[index], button);
+    return displaced;
+}
+
+static void hotkey_value_text(const wasabi_setting setting, const int button, char *value, const size_t size) {
+    if (button == WASABI_HOTKEY_UNBOUND) {
+        snprintf(value, size, "%s", lang.muxretro.settings_screen.unbound);
+        return;
+    }
+    snprintf(value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s", mux_input_label((mux_input_type) button));
 }
 
 const char *wasabi_setting_label(const wasabi_setting setting) {
@@ -550,11 +591,7 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
         case wasabi_setting_hotkey_quit:
         case wasabi_setting_hotkey_fast_forward:
         case wasabi_setting_hotkey_slow_motion: {
-            const int index = setting - wasabi_setting_hotkey_pause;
-            snprintf(
-                value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s",
-                mux_input_label((mux_input_type) *hotkey_fields[index])
-            );
+            hotkey_value_text(setting, *hotkey_fields[setting - wasabi_setting_hotkey_pause], value, size);
             break;
         }
         case wasabi_setting_thumbnail: {
@@ -658,27 +695,8 @@ int wasabi_setting_clear(const wasabi_setting setting) {
     }
 }
 
-static int cycle_root_hotkey(const wasabi_setting setting, const int direction) {
-    const int index = setting - wasabi_setting_hotkey_pause;
-    const int previous = *hotkey_fields[index];
-    const int next = cycle_hotkey(previous, direction);
-    for (int other = 0; other < WASABI_HOTKEY_COUNT; other++) {
-        if (other == index
-            || wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + other))
-                   != wasabi_hotkey_uses_menu(setting)
-            || *hotkey_fields[other] != next)
-            continue;
-        *hotkey_fields[other] = (int16_t) previous;
-        save_value(hotkey_keys[other], previous);
-        break;
-    }
-    *hotkey_fields[index] = (int16_t) next;
-    return save_value(hotkey_keys[index], next);
-}
-
 int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
-    if (setting >= wasabi_setting_hotkey_pause && setting <= wasabi_setting_hotkey_slow_motion)
-        return cycle_root_hotkey(setting, direction);
+    if (setting >= wasabi_setting_hotkey_pause && setting <= wasabi_setting_hotkey_slow_motion) return 0;
     if (setting == wasabi_setting_live_quality) {
         config.wasabi.live_quality = (int16_t) cycle(config.wasabi.live_quality, direction, 4);
         return save_value("live_quality", config.wasabi.live_quality);
@@ -1059,11 +1077,7 @@ void wasabi_page_value(const wasabi_settings_page page, const int row, char *val
     }
 
     if (page == wasabi_page_hotkeys) {
-        const wasabi_setting setting = (wasabi_setting) (wasabi_setting_hotkey_pause + row);
-        snprintf(
-            value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s",
-            mux_input_label((mux_input_type) *hotkey_fields[row])
-        );
+        hotkey_value_text((wasabi_setting) (wasabi_setting_hotkey_pause + row), *hotkey_fields[row], value, size);
         return;
     }
     if (page == wasabi_page_shader_parameters) {
@@ -1157,12 +1171,7 @@ static int page_field(
         return 1;
     }
 
-    if (page == wasabi_page_hotkeys) {
-        *field = hotkey_fields[row];
-        *key = hotkey_keys[row];
-        *next = cycle_hotkey(*hotkey_fields[row], direction);
-        return 1;
-    }
+    if (page == wasabi_page_hotkeys) return 0;
 
     const int overlay = page == wasabi_page_overlay_adjustment || page == wasabi_page_overlay_cropping;
     if (page == wasabi_page_overlay_adjustment || page == wasabi_page_viewport_adjustment) {
@@ -1280,20 +1289,6 @@ int wasabi_page_cycle(const wasabi_settings_page page, const int row, const int 
     int next = 0;
     if (!page_field(page, row, &field, &key, &next, direction) || !field || !key) return 0;
 
-    if (page == wasabi_page_hotkeys) {
-        const int previous = *field;
-        const wasabi_setting setting = (wasabi_setting) (wasabi_setting_hotkey_pause + row);
-        for (int index = 0; index < WASABI_HOTKEY_COUNT; index++) {
-            if (hotkey_fields[index] == field
-                || wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + index))
-                       != wasabi_hotkey_uses_menu(setting)
-                || *hotkey_fields[index] != next)
-                continue;
-            *hotkey_fields[index] = (int16_t) previous;
-            save_value(hotkey_keys[index], previous);
-            break;
-        }
-    }
     const int previous = *field;
     *field = (int16_t) next;
     int saved = save_value(key, next);

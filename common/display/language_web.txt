@@ -526,7 +526,7 @@ Continue
 Copy
 Date
 Destination folder
-Don't Remind Me
+Do Not Remind Me
 Enter a path relative to %s.
 File uploaded
 File Management
@@ -541,6 +541,8 @@ Link
 Close
 Editor
 Preview
+Launch Splash
+Splash
 Preview Image
 Preview Text
 Preview %s

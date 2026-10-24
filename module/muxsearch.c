@@ -740,7 +740,7 @@ static void handle_r1(void) {
 }
 
 static void handle_nav_key_released(void) {
-    if (key_show) return;
+    if (key_show || msgbox_active) return;
 
     if (config.visual.box_art_transition != TSN_DISABLED) {
         transition_box_art_key_released();

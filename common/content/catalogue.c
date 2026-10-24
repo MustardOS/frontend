@@ -12,6 +12,8 @@
 
 #define CAT_DIR_CACHE_MAX 256
 
+static const char *catalogue_video_exts[] = {"mp4"};
+
 typedef struct cat_dir_entry {
     char path[MAX_BUFFER_SIZE];
     char **files;
@@ -235,13 +237,48 @@ int load_media_catalogue(
     const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
     const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
 ) {
-    static const char *extensions[] = {"mp4",  "apng", "gif", "png", "webp", "jpg",
-                                       "jpeg", "qoi",  "tga", "bmp", "pcx",  "svg"};
+    if (load_image_catalogue_exts(
+            catalogue_name, program, program_alt, program_default, mux_dim, image_type, catalogue_video_exts,
+            (int) A_SIZE(catalogue_video_exts), image_path, path_size
+        )) {
+        return 1;
+    }
 
+    int ext_count;
+    const char **extensions = image_ext_list(&ext_count);
     return load_image_catalogue_exts(
-        catalogue_name, program, program_alt, program_default, mux_dim, image_type, extensions,
-        (int) A_SIZE(extensions), image_path, path_size
+        catalogue_name, program, program_alt, program_default, mux_dim, image_type, extensions, ext_count, image_path,
+        path_size
     );
+}
+
+int load_splash_catalogue(
+    const char *catalogue_name, const char *program, const char *program_alt, const char *mux_dim, char *image_path,
+    const size_t path_size
+) {
+    if (load_media_catalogue(catalogue_name, program, program_alt, "default", mux_dim, "splash", image_path, path_size))
+        return 1;
+
+    const char *roots[] = {INFO_CAT_PATH, theme_base, theme_base};
+    const char *parts[] = {"", mux_dim, ""};
+    int image_ext_count;
+    const char **image_extensions = image_ext_list(&image_ext_count);
+    for (size_t root = 0; root < A_SIZE(roots); root++) {
+        for (size_t ext = 0; ext < A_SIZE(catalogue_video_exts) + (size_t) image_ext_count; ext++) {
+            const char *extension = ext < A_SIZE(catalogue_video_exts)
+                                        ? catalogue_video_exts[ext]
+                                        : image_extensions[ext - A_SIZE(catalogue_video_exts)];
+            const int written =
+                root == 0
+                    ? snprintf(image_path, path_size, "%s/splash.%s", roots[root], extension)
+                    : snprintf(image_path, path_size, "%s/%simage/splash.%s", roots[root], parts[root], extension);
+            if (written < 0 || (size_t) written >= path_size) continue;
+            if (file_exist_nocase(image_path, image_path, path_size)) return 1;
+        }
+    }
+
+    if (image_path && path_size) image_path[0] = '\0';
+    return 0;
 }
 
 int catalogue_media_is_animated(const char *path) {
