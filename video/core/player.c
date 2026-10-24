@@ -232,6 +232,7 @@ typedef struct {
 } video_player;
 
 static video_player player;
+static uint64_t primary_hotkey_active;
 static int network_ready;
 typedef struct {
     video_library_entry *entries;
@@ -3106,18 +3107,31 @@ static void remote_tick(void) {
     }
 }
 
+static int primary_hotkey_event(const mux_input_type input, const mux_input_action action) {
+    const uint64_t bit = BIT(input);
+    if (action == mux_input_press) {
+        if (!(mux_input_source_pressed_mask(0) & bit)) return 0;
+        primary_hotkey_active |= bit;
+        return 1;
+    }
+    if (!(primary_hotkey_active & bit)) return 0;
+    if (action == mux_input_release) primary_hotkey_active &= ~bit;
+    return 1;
+}
+
 static void handle_configured_hotkey(const mux_input_type input, const mux_input_action action) {
-    if (action == mux_input_release && seek_hotkey_direction(input)) video_render_seek_release();
     if (player.ui_input_consumed) {
         player.ui_input_consumed = 0;
         return;
     }
+    if (!primary_hotkey_event(input, action)) return;
+    if (action == mux_input_release && seek_hotkey_direction(input)) video_render_seek_release();
     if (video_playback_ui_menu_active() || video_playback_ui_naming_active()) {
         if (action == mux_input_press && input == mux_input_r2 && !video_playback_ui_naming_active())
             video_playback_ui_shuffle();
         return;
     }
-    const int menu_combo = mux_input_pressed(mux_input_menu);
+    const int menu_combo = (mux_input_source_pressed_mask(0) & BIT(mux_input_menu)) != 0;
     if (!player.live && !player.sequenced_audio) {
         if (input == config.video.hotkey_fast_forward && config.video.fast_forward_mode
             && (menu_combo || player.fast_forward_active)) {
@@ -3780,6 +3794,7 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
                 },
             .input_handler = handle_configured_hotkey,
         };
+        primary_hotkey_active = 0;
         init_input(&input_options, 1);
         mux_input_task(&input_options);
 

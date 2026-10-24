@@ -290,13 +290,14 @@ void hotkeys_refresh_indicator(void) {
 }
 
 int hotkeys_task(void) {
-    const int menu_now = mux_input_pressed(mux_input_menu);
-    const int a_now = mux_input_pressed(mux_input_a);
+    const uint64_t primary_mask = input_bridge_primary_pressed_mask();
+    const int menu_now = (primary_mask & BIT(mux_input_menu)) != 0;
+    const int a_now = (primary_mask & BIT(mux_input_a)) != 0;
 
     int hotkey_now[hotkey_binding_count];
     for (int binding = 0; binding < hotkey_binding_count; binding++) {
         const int button = session_settings_hotkey_button((enum hotkey_binding) binding);
-        hotkey_now[binding] = button != HOTKEY_UNBOUND && mux_input_pressed((mux_input_type) button);
+        hotkey_now[binding] = button != HOTKEY_UNBOUND && (primary_mask & BIT(button)) != 0;
     }
 
     int open_pause = 0;

@@ -883,6 +883,35 @@ static void clear_input_state(void) {
     reset_raw_analogue();
 }
 
+static void select_primary_input_device(void) {
+    int selected = -1;
+
+    for (int i = 0; i < device_count; i++) {
+        if (is_board_device(devices[i].instance)) {
+            selected = i;
+            break;
+        }
+    }
+
+    if (selected < 0 && primary_instance >= 0 && is_tracked_instance(primary_instance)) return;
+    if (selected < 0 && device_count > 0) selected = 0;
+    if (selected < 0 || devices[selected].instance == primary_instance) return;
+
+    const SDL_JoystickID previous = primary_instance;
+    release_extra_player_slot(devices[selected].instance);
+    primary_instance = devices[selected].instance;
+    clear_input_state();
+
+    if (previous >= 0) {
+        const int previous_index = find_device_by_instance(previous);
+        if (previous_index >= 0)
+            assign_extra_player_slot(devices[previous_index].instance, devices[previous_index].guid);
+    }
+
+    LOG_INFO("input", "Primary input device set (instance %d)", primary_instance);
+    bump_source_generation();
+}
+
 static void flush_input_events(void) {
     SDL_FlushEvents(SDL_JOYAXISMOTION, SDL_JOYDEVICEREMOVED);
     SDL_FlushEvents(SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERDEVICEREMAPPED);
@@ -914,7 +943,6 @@ static void load_active_controller_mappings(void) {
 
 static void open_all_input_devices(void) {
     static uint32_t last_no_device_log = UINT32_MAX;
-    const int was_empty = device_count == 0;
 
     if (!mappings_loaded) {
         load_active_controller_mappings();
@@ -1031,26 +1059,9 @@ static void open_all_input_devices(void) {
 
     if (device_count == 0) LOG_WARN("input", "No usable input device found");
 
-    if (was_empty && device_count > 0 && primary_instance < 0) {
-        primary_instance = devices[0].instance;
-        LOG_INFO("input", "Primary input device set (instance %d)", primary_instance);
-        bump_source_generation();
-    }
+    select_primary_input_device();
 
-    // An earlier scan can settle on a raw fallback before the controller muinput publishes exists,
-    // and the raw device must not keep the primary slot once the real one shows up
-    if (primary_instance >= 0 && !is_tracked_as_controller(primary_instance)) {
-        for (int i = 0; i < device_count; i++) {
-            if (!devices[i].controller) continue;
-
-            release_extra_player_slot(devices[i].instance);
-            primary_instance = devices[i].instance;
-            clear_input_state();
-            LOG_INFO("input", "Primary input device promoted to controller (instance %d)", primary_instance);
-            bump_source_generation();
-            break;
-        }
-
+    if (primary_instance >= 0 && is_tracked_as_controller(primary_instance)) {
         for (int i = device_count - 1; i >= 0; i--) {
             if (devices[i].controller) continue;
             const char *name = SDL_JoystickName(devices[i].joystick);

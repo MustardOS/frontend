@@ -362,12 +362,20 @@ static void resolve_port_assignments_cached(void) {
     memcpy(resolve_cached_keys, session_settings.port_device_key, sizeof(resolve_cached_keys));
 }
 
+uint64_t input_bridge_primary_pressed_mask(void) {
+    resolve_port_assignments_cached();
+    const int source = resolved_source[0] >= 0 ? resolved_source[0] : 0;
+    return mux_input_source_pressed_mask(source);
+}
+
 static void input_bridge_build_snapshot(void) {
     const int track_latency = perf_is_enabled();
-    const int frontend_modifier_held = mux_input_pressed(mux_input_menu);
     const uint64_t previous_signature = track_latency ? input_bridge_snapshot_signature() : 0;
 
     resolve_port_assignments_cached();
+    const int primary_source = resolved_source[0] >= 0 ? resolved_source[0] : 0;
+    const uint64_t primary_mask = mux_input_source_pressed_mask(primary_source);
+    const int frontend_modifier_held = (primary_mask & BIT(mux_input_menu)) != 0;
 
     int ports_changed = 0;
     int fed_by_deck[MUX_RETRO_PORT_COUNT] = {0};
@@ -401,7 +409,7 @@ static void input_bridge_build_snapshot(void) {
             continue;
         }
 
-        port_retropad_mask[port] = build_retropad_mask(port, mux_input_source_pressed_mask(source), source == 0);
+        port_retropad_mask[port] = build_retropad_mask(port, mux_input_source_pressed_mask(source), port == 0);
 
         for (int s = 0; s < 2; s++) {
             // A playing stick macro owns that stick outright and ignores any axis transform
@@ -505,8 +513,9 @@ uint64_t input_bridge_snapshot_signature(void) {
 }
 
 void input_bridge_suppress_held(void) {
+    const uint64_t primary_mask = input_bridge_primary_pressed_mask();
     for (int i = 0; i < mux_input_count; i++) {
-        suppress_until_released[i] = mux_input_pressed((mux_input_type) i) ? 1 : 0;
+        suppress_until_released[i] = (primary_mask & BIT(i)) != 0;
     }
 }
 

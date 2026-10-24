@@ -192,9 +192,14 @@ static void handle_y(void) {
     char mac_copy[18];
     snprintf(mac_copy, sizeof(mac_copy), "%s", mac);
 
+    const lv_obj_t *label = lv_group_get_focused(ui_group);
+    const char *label_text = label && lv_obj_is_valid(label) ? lv_label_get_text(label) : mac_copy;
+    char name_copy[64];
+    snprintf(name_copy, sizeof(name_copy), "%s", label_text);
+
     toast_message(lang.generic.refresh_run, tst_wait_f);
 
-    const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "info", mac_copy, NULL};
+    const char *args[] = {OPT_PATH "script/mux/bt_scan.sh", "info", mac_copy, name_copy, NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 
     lv_obj_set_style_opa(ui_pnl_message, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
@@ -206,16 +211,13 @@ static void handle_y(void) {
         fclose(f);
     }
 
-    const lv_obj_t *label = lv_group_get_focused(ui_group);
-    const char *name = label && lv_obj_is_valid(label) ? lv_label_get_text(label) : mac_copy;
-
     play_sound(snd_info_open);
     if (*info_buf) {
         char markup[1024];
         rich_text_bold_labels(info_buf, markup, sizeof(markup));
-        show_info_box(name, markup, 0);
+        show_info_box(name_copy, markup, 0);
     } else {
-        show_info_box(name, mac_copy, 0);
+        show_info_box(name_copy, mac_copy, 0);
     }
     msgbox_active = 1;
 }

@@ -51,7 +51,9 @@ LDFLAGS = $(COMMON_LIBS) $(BIN_LDFLAGS)
 DEPDIR := $(DEP_ROOT)/root
 $(shell mkdir -p $(DEPDIR))
 
-CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)
+COMPILER_TARGET  := $(shell $(CC) -dumpmachine 2>/dev/null)
+COMPILER_VERSION := $(shell $(CC) -dumpfullversion -dumpversion 2>/dev/null)
+CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)|$(CROSS_COMPILE)|$(COMPILER_TARGET)|$(COMPILER_VERSION)
 CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 

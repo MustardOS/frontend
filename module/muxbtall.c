@@ -15,7 +15,6 @@ static void list_nav_next(int steps);
 static void cancel_bt_poll(void);
 
 static int bt_list_pending = 0;
-static time_t bt_list_start = 0;
 static lv_timer_t *bt_poll_timer = NULL;
 
 static void populate_paired_device_list(void) {
@@ -74,25 +73,13 @@ static void populate_paired_device_list(void) {
     if (ui_count_static > 0) lv_obj_update_layout(ui_pnl_content);
 }
 
-static void bt_poll_task(lv_timer_t *t) {
-    if (!bt_list_pending) {
-        lv_timer_del(t);
-        bt_poll_timer = NULL;
-        return;
-    }
-
-    const int list_timeout =
-        config.settings.advanced.bt_scan_timeout > 0 ? config.settings.advanced.bt_scan_timeout : 10;
-
-    struct stat st;
-    const int file_ready = stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0 && st.st_mtime >= bt_list_start;
-    const int timed_out = time(NULL) - bt_list_start >= list_timeout;
-
-    if (!file_ready && !timed_out) return;
-
+static void bt_list_complete(const int exit_code __attribute__((unused))) {
+    if (!bt_list_pending) return;
     bt_list_pending = 0;
-    lv_timer_del(t);
-    bt_poll_timer = NULL;
+    if (bt_poll_timer) {
+        lv_timer_del(bt_poll_timer);
+        bt_poll_timer = NULL;
+    }
 
     hide_bounce_progress_bar();
     populate_paired_device_list();
@@ -115,9 +102,8 @@ static void bt_poll_task(lv_timer_t *t) {
     check_focus();
 }
 
-static int has_paired_bt_devices(void) {
-    struct stat st;
-    return stat(CONF_CONFIG_PATH "bluetooth/paired", &st) == 0 && st.st_size > 0;
+static void bt_poll_task(lv_timer_t *timer __attribute__((unused))) {
+    if (bt_list_pending) exec_watch_task();
 }
 
 static void create_paired_device_items(void) {
@@ -126,20 +112,12 @@ static void create_paired_device_items(void) {
         remove(MUOS_BTI_LOAD);
     }
 
-    if (!has_paired_bt_devices()) {
-        empty_state_show_action(lang.muxbtall.none, lang.muxbtall.none_hint, "x", lang.generic.scan);
-        return;
-    }
-
-    bt_list_start = time(NULL);
     bt_list_pending = 1;
 
-    const int list_timeout =
-        config.settings.advanced.bt_scan_timeout > 0 ? config.settings.advanced.bt_scan_timeout : 10;
-    show_bounce_progress_bar(lang.muxbtall.loading, list_timeout);
+    show_bounce_progress_bar(lang.muxbtall.loading, 0);
 
     const char *args[] = {OPT_PATH "script/mux/bt_device.sh", "list", NULL};
-    run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+    run_exec(args, A_SIZE(args), 1, 0, NULL, bt_list_complete);
 }
 
 static const char *get_focused_device_mac(void) {

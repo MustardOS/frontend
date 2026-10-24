@@ -279,6 +279,8 @@ double core_auto_pace_target_ms(void);
 
 void input_bridge_suppress_held(void);
 
+uint64_t input_bridge_primary_pressed_mask(void);
+
 void input_bridge_suppress(mux_input_type type);
 
 void state_saves_init(const char *core_file_path);
