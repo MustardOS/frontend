@@ -1153,11 +1153,17 @@ static void init_elements(void) {
 
 static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     if (nav_moved) {
+        lv_obj_t *focused = lv_group_get_focused(ui_group);
+        if (!focused) {
+            nav_moved = 0;
+            return;
+        }
+
         starter_image = adjust_wallpaper_element(ui_group, starter_image, wall_general);
         adjust_panels();
 
-        const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
-        snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);
+        const char *content_label = lv_obj_get_user_data(focused);
+        snprintf(current_content_label, sizeof(current_content_label), "%s", content_label ? content_label : "");
 
         if (!lv_obj_has_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
@@ -1186,6 +1192,7 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
     exit_status = 0;
     add_mode = add;
     remove_pending = 0;
+    nav_moved = 0;
     sys_index = last_index;
     current_item_index = 0;
     file_count = 0;
