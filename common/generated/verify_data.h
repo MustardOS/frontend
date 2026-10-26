@@ -86,7 +86,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/init/S99muos.sh", "f42f139748237f2d" },
     { "/opt/muos/script/init/async/S00entropy.sh", "3773901d7885d416" },
     { "/opt/muos/script/init/async/S01init.sh", "1a28f2c01c6b7d25" },
-    { "/opt/muos/script/init/async/S02network.sh", "466b6901e0a2126a" },
+    { "/opt/muos/script/init/async/S02network.sh", "df1c59e4c716fea9" },
     { "/opt/muos/script/init/async/S03chrony.sh", "10f3fc33dfc3c1e7" },
     { "/opt/muos/script/init/async/S04rumble.sh", "4ba8683413445529" },
     { "/opt/muos/script/init/async/S05device.sh", "f87ccd3b831c2482" },
@@ -214,6 +214,6 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/web/password.sh", "e52e2db8292143dc" },
     { "/opt/muos/script/web/screen.sh", "631fc3a31f94fb49" },
     { "/opt/muos/script/web/service.sh", "6b4efe1a0550989e" },
-    { "/opt/muos/script/web/ssid.sh", "f415f92369353623" },
+    { "/opt/muos/script/web/ssid.sh", "b0c720ab4f8f0837" },
     { "/opt/muos/script/web/status.sh", "9f5a7b5763350c9b" },
 };

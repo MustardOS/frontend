@@ -7,7 +7,7 @@ static int scan_pending = 0;
 static time_t scan_start = 0;
 static lv_timer_t *scan_poll_timer = NULL;
 
-#define SCANNER_TIMEOUT 30
+#define SCANNER_TIMEOUT 45
 
 static void show_help(void) {
     show_info_box(lang.muxnetscan.title, lang.muxnetscan.help, 0);
