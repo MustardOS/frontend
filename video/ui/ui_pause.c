@@ -685,7 +685,8 @@ static void show_nav(void) {
     if (settings_active) {
         const int row = settings_page == wasabi_page_root ? list_frame_current_row() : current_item_index;
         const int changeable =
-            (asset_page() || wasabi_catalogue_active() || hotkey_target() >= 0) ? 0
+            hotkey_target() >= 0                          ? 1
+            : (asset_page() || wasabi_catalogue_active()) ? 0
             : settings_page == wasabi_page_root
                 ? list_frame_focused() || (row >= 0 && wasabi_setting_can_change((wasabi_setting) row))
             : settings_page == wasabi_page_shader_parameters ? row >= 0 && row < video_effects_parameter_count()
@@ -1415,7 +1416,7 @@ static void refresh_setting_value(const int row) {
 }
 
 #define HOTKEY_PICK_COLS 4
-#define HOTKEY_PICK_MAX  20
+#define HOTKEY_PICK_MAX  28
 
 static lv_obj_t *hotkey_pick_dim;
 static lv_obj_t *hotkey_pick_grid;
@@ -2398,7 +2399,23 @@ void video_playback_ui_change(const int direction) {
         hotkey_pick_move(direction, 0);
         return;
     }
-    if (hotkey_target() >= 0) return;
+    const int target = hotkey_target();
+    if (target >= 0) {
+        play_sound(snd_option);
+        const int displaced = wasabi_hotkey_set_direct(target, !wasabi_hotkey_direct(target));
+        refresh_hotkey_values();
+        if (displaced >= 0) {
+            char message[256];
+            snprintf(
+                message, sizeof(message), lang.muxretro.hotkeys_screen.unbound_combo,
+                wasabi_setting_label((wasabi_setting) (wasabi_setting_hotkey_pause + displaced))
+            );
+            toast_message(message, tst_wait_m);
+        }
+        show_nav();
+        display_composite_frame();
+        return;
+    }
     if (equaliser_active()) {
         equaliser_select(direction);
         return;

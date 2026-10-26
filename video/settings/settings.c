@@ -37,10 +37,12 @@ static int step(int value, const int direction, const int amount, const int low,
     return value;
 }
 
-static const int hotkey_choices[] = {mux_input_a,         mux_input_b,         mux_input_x,      mux_input_y,
-                                     mux_input_l1,        mux_input_r1,        mux_input_l2,     mux_input_r2,
-                                     mux_input_l3,        mux_input_r3,        mux_input_select, mux_input_start,
-                                     mux_input_dpad_left, mux_input_dpad_right};
+static const int hotkey_choices[] = {mux_input_a,         mux_input_b,          mux_input_x,      mux_input_y,
+                                     mux_input_l1,        mux_input_r1,         mux_input_l2,     mux_input_r2,
+                                     mux_input_l3,        mux_input_r3,         mux_input_select, mux_input_start,
+                                     mux_input_dpad_left, mux_input_dpad_right, mux_input_ls_up,  mux_input_ls_down,
+                                     mux_input_ls_left,   mux_input_ls_right,   mux_input_rs_up,  mux_input_rs_down,
+                                     mux_input_rs_left,   mux_input_rs_right};
 
 static const int hotkey_defaults[] = {mux_input_a,          mux_input_r2, mux_input_l2,    mux_input_dpad_left,
                                       mux_input_dpad_right, mux_input_l1, mux_input_r1,    mux_input_x,
@@ -77,23 +79,25 @@ static const char *const hotkey_keys[] = {"hotkey_pause",
                                           "hotkey_fast_forward",
                                           "hotkey_slow_motion"};
 
-#define WASABI_HOTKEY_COUNT ((int) A_SIZE(hotkey_defaults))
-
+_Static_assert(wasabi_hotkey_count == A_SIZE(hotkey_defaults), "Wasabi hotkey defaults must match");
 _Static_assert(A_SIZE(hotkey_fields) == A_SIZE(hotkey_defaults), "Wasabi hotkey fields and defaults must match");
 _Static_assert(A_SIZE(hotkey_keys) == A_SIZE(hotkey_defaults), "Wasabi hotkey keys and defaults must match");
 
 int wasabi_hotkey_button_valid(const int input) {
-    if (input == mux_input_l3 && device.board.has_stick < 1) return 0;
-    if (input == mux_input_r3 && device.board.has_stick < 2) return 0;
+    if ((input == mux_input_l3 || (input >= mux_input_ls_up && input <= mux_input_ls_right))
+        && device.board.has_stick < 1)
+        return 0;
+    if ((input == mux_input_r3 || (input >= mux_input_rs_up && input <= mux_input_rs_right))
+        && device.board.has_stick < 2)
+        return 0;
     for (size_t index = 0; index < sizeof(hotkey_choices) / sizeof(hotkey_choices[0]); index++)
         if (hotkey_choices[index] == input) return 1;
     return 0;
 }
 
 int wasabi_hotkey_uses_menu(const wasabi_setting setting) {
-    return setting == wasabi_setting_hotkey_save_bookmark || setting == wasabi_setting_hotkey_load_bookmark
-           || setting == wasabi_setting_hotkey_header || setting == wasabi_setting_hotkey_quit
-           || setting == wasabi_setting_hotkey_fast_forward || setting == wasabi_setting_hotkey_slow_motion;
+    const int index = setting - wasabi_setting_hotkey_pause;
+    return index < 0 || index >= wasabi_hotkey_count || !wasabi_hotkey_direct(index);
 }
 
 int wasabi_hotkey_choice_count(void) {
@@ -113,19 +117,22 @@ int wasabi_hotkey_choice(const int index) {
 }
 
 int wasabi_hotkey_button(const int index) {
-    if (index < 0 || index >= WASABI_HOTKEY_COUNT) return WASABI_HOTKEY_UNBOUND;
+    if (index < 0 || index >= wasabi_hotkey_count) return WASABI_HOTKEY_UNBOUND;
     return *hotkey_fields[index];
 }
 
-int wasabi_hotkey_assign(const int index, const int button) {
-    if (index < 0 || index >= WASABI_HOTKEY_COUNT) return -1;
+int wasabi_hotkey_direct(const int index) {
+    if (index < 0 || index >= wasabi_hotkey_count) return 0;
+    return (config.video.hotkey_direct_mask & (1 << index)) != 0;
+}
 
-    // Direct buttons and MENU combinations are separate groups. Taking a button
-    // another shortcut in the same group uses leaves that shortcut unbound.
+int wasabi_hotkey_assign(const int index, const int button) {
+    if (index < 0 || index >= wasabi_hotkey_count) return -1;
+
     const wasabi_setting setting = (wasabi_setting) (wasabi_setting_hotkey_pause + index);
     int displaced = -1;
     if (button != WASABI_HOTKEY_UNBOUND) {
-        for (int other = 0; other < WASABI_HOTKEY_COUNT; other++) {
+        for (int other = 0; other < wasabi_hotkey_count; other++) {
             if (other == index || *hotkey_fields[other] != button
                 || wasabi_hotkey_uses_menu((wasabi_setting) (wasabi_setting_hotkey_pause + other))
                        != wasabi_hotkey_uses_menu(setting))
@@ -142,12 +149,38 @@ int wasabi_hotkey_assign(const int index, const int button) {
     return displaced;
 }
 
+int wasabi_hotkey_set_direct(const int index, const int direct) {
+    if (index < 0 || index >= wasabi_hotkey_count) return -1;
+
+    if (direct)
+        config.video.hotkey_direct_mask |= (int16_t) (1 << index);
+    else
+        config.video.hotkey_direct_mask &= (int16_t) ~(1 << index);
+    save_value("hotkey_direct_mask", config.video.hotkey_direct_mask);
+
+    const int button = *hotkey_fields[index];
+    if (button == WASABI_HOTKEY_UNBOUND) return -1;
+    for (int other = 0; other < wasabi_hotkey_count; other++) {
+        if (other == index || wasabi_hotkey_direct(other) != (direct != 0) || *hotkey_fields[other] != button) continue;
+        *hotkey_fields[other] = (int16_t) WASABI_HOTKEY_UNBOUND;
+        save_value(hotkey_keys[other], WASABI_HOTKEY_UNBOUND);
+        return other;
+    }
+    return -1;
+}
+
 static void hotkey_value_text(const wasabi_setting setting, const int button, char *value, const size_t size) {
     if (button == WASABI_HOTKEY_UNBOUND) {
         snprintf(value, size, "%s", lang.muxretro.settings_screen.unbound);
         return;
     }
-    snprintf(value, size, wasabi_hotkey_uses_menu(setting) ? "M+%s" : "%s", mux_input_label((mux_input_type) button));
+    if (wasabi_hotkey_uses_menu(setting)) {
+        snprintf(value, size, "M+%s", mux_input_label((mux_input_type) button));
+    } else {
+        snprintf(
+            value, size, "%s %s", lang.muxretro.information_screen.direct, mux_input_label((mux_input_type) button)
+        );
+    }
 }
 
 const char *wasabi_setting_label(const wasabi_setting setting) {
@@ -1300,11 +1333,13 @@ int wasabi_page_cycle(const wasabi_settings_page page, const int row, const int 
 }
 
 void wasabi_hotkey_set_defaults(void) {
-    for (int index = 0; index < WASABI_HOTKEY_COUNT; index++)
+    config.video.hotkey_direct_mask = WASABI_HOTKEY_DIRECT_DEFAULT;
+    for (int index = 0; index < wasabi_hotkey_count; index++)
         *hotkey_fields[index] = (int16_t) hotkey_defaults[index];
 }
 
 void wasabi_hotkey_reset(void) {
     wasabi_hotkey_set_defaults();
-    save_many(hotkey_keys, hotkey_defaults, WASABI_HOTKEY_COUNT);
+    save_value("hotkey_direct_mask", config.video.hotkey_direct_mask);
+    save_many(hotkey_keys, hotkey_defaults, wasabi_hotkey_count);
 }

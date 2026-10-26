@@ -2938,22 +2938,34 @@ static void handle_page_down(void) {
         video_playback_ui_section(1);
 }
 
-static int seek_hotkey_direction(const mux_input_type input) {
-    if (input == config.video.hotkey_seek_back || input == config.video.hotkey_seek_back_long) return -1;
-    if (input == config.video.hotkey_seek_forward || input == config.video.hotkey_seek_forward_long) return 1;
+static int configured_hotkey_matches(const wasabi_hotkey binding, const mux_input_type input, const int menu_combo) {
+    return wasabi_hotkey_button(binding) == input && wasabi_hotkey_direct(binding) == !menu_combo;
+}
+
+static int seek_hotkey_binding(const mux_input_type input, const int menu_combo, const int match_operation) {
+    for (int binding = wasabi_hotkey_seek_back; binding <= wasabi_hotkey_seek_forward_long; binding++) {
+        if (wasabi_hotkey_button(binding) != input) continue;
+        if (!match_operation || configured_hotkey_matches((wasabi_hotkey) binding, input, menu_combo)) return binding;
+    }
+    return -1;
+}
+
+static int seek_hotkey_direction(const int binding) {
+    if (binding == wasabi_hotkey_seek_back || binding == wasabi_hotkey_seek_back_long) return -1;
+    if (binding == wasabi_hotkey_seek_forward || binding == wasabi_hotkey_seek_forward_long) return 1;
     return 0;
 }
 
-static double seek_hotkey_amount(const mux_input_type input) {
-    if (input == config.video.hotkey_seek_back) return -10.0;
-    if (input == config.video.hotkey_seek_forward) return 10.0;
-    if (input == config.video.hotkey_seek_back_long) return -60.0;
-    if (input == config.video.hotkey_seek_forward_long) return 60.0;
+static double seek_hotkey_amount(const int binding) {
+    if (binding == wasabi_hotkey_seek_back) return -10.0;
+    if (binding == wasabi_hotkey_seek_forward) return 10.0;
+    if (binding == wasabi_hotkey_seek_back_long) return -60.0;
+    if (binding == wasabi_hotkey_seek_forward_long) return 60.0;
     return 0.0;
 }
 
-static int handle_seek_hotkey(const mux_input_type input) {
-    const double amount = seek_hotkey_amount(input);
+static int handle_seek_hotkey(const int binding) {
+    const double amount = seek_hotkey_amount(binding);
     if (amount == 0.0) return 0;
     request_seek(amount);
     return 1;
@@ -3125,7 +3137,7 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         return;
     }
     if (!primary_hotkey_event(input, action)) return;
-    if (action == mux_input_release && seek_hotkey_direction(input)) video_render_seek_release();
+    if (action == mux_input_release && seek_hotkey_binding(input, 0, 0) >= 0) video_render_seek_release();
     if (video_playback_ui_menu_active() || video_playback_ui_naming_active()) {
         if (action == mux_input_press && input == mux_input_r2 && !video_playback_ui_naming_active())
             video_playback_ui_shuffle();
@@ -3134,11 +3146,13 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
     const int menu_combo = (mux_input_source_pressed_mask(0) & BIT(mux_input_menu)) != 0;
     if (!player.live && !player.sequenced_audio) {
         if (input == config.video.hotkey_fast_forward && config.video.fast_forward_mode
-            && (menu_combo || player.fast_forward_active)) {
+            && (configured_hotkey_matches(wasabi_hotkey_fast_forward, input, menu_combo)
+                || player.fast_forward_active)) {
             if (action == mux_input_release && config.video.fast_forward_mode == 1) {
                 set_fast_forward(0);
-            } else if (action == mux_input_press && menu_combo) {
-                video_playback_ui_menu_consume();
+            } else if (action == mux_input_press
+                       && configured_hotkey_matches(wasabi_hotkey_fast_forward, input, menu_combo)) {
+                if (menu_combo) video_playback_ui_menu_consume();
                 if (config.video.fast_forward_mode == 1)
                     set_fast_forward(1);
                 else
@@ -3147,11 +3161,12 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
             return;
         }
         if (input == config.video.hotkey_slow_motion && config.video.slow_motion_mode
-            && (menu_combo || player.slow_motion_active)) {
+            && (configured_hotkey_matches(wasabi_hotkey_slow_motion, input, menu_combo) || player.slow_motion_active)) {
             if (action == mux_input_release && config.video.slow_motion_mode == 1) {
                 set_slow_motion(0);
-            } else if (action == mux_input_press && menu_combo) {
-                video_playback_ui_menu_consume();
+            } else if (action == mux_input_press
+                       && configured_hotkey_matches(wasabi_hotkey_slow_motion, input, menu_combo)) {
+                if (menu_combo) video_playback_ui_menu_consume();
                 if (config.video.slow_motion_mode == 1)
                     set_slow_motion(1);
                 else
@@ -3161,39 +3176,59 @@ static void handle_configured_hotkey(const mux_input_type input, const mux_input
         }
     }
     if (action == mux_input_hold) {
-        const int direction = seek_hotkey_direction(input);
-        if (menu_combo || !direction) return;
+        const int binding = seek_hotkey_binding(input, menu_combo, 1);
+        const int direction = seek_hotkey_direction(binding);
+        if (!direction) return;
         if (!player.live && player.duration > 0.0 && !player.audio_only && !player.sequenced_audio)
             video_render_seek_hold(direction);
-        request_seek_hold(seek_hotkey_amount(input));
+        request_seek_hold(seek_hotkey_amount(binding));
+        if (menu_combo) video_playback_ui_menu_consume();
         return;
     }
     if (action != mux_input_press) return;
-    if (menu_combo) {
-        if (input == config.video.hotkey_save_bookmark)
-            save_quick_bookmark();
-        else if (input == config.video.hotkey_load_bookmark)
-            load_quick_bookmark();
-        else if (input == config.video.hotkey_header)
-            toggle_header();
-        else if (input == config.video.hotkey_quit)
-            quit_playback();
-        else
-            return;
-        video_playback_ui_menu_consume();
+    if (configured_hotkey_matches(wasabi_hotkey_save_bookmark, input, menu_combo)) {
+        save_quick_bookmark();
+        if (menu_combo) video_playback_ui_menu_consume();
         return;
     }
-    if (input == config.video.hotkey_pause)
-        toggle_pause();
-    else if (handle_seek_hotkey(input))
+    if (configured_hotkey_matches(wasabi_hotkey_load_bookmark, input, menu_combo)) {
+        load_quick_bookmark();
+        if (menu_combo) video_playback_ui_menu_consume();
         return;
-    else if (input == config.video.hotkey_repeat)
+    }
+    if (configured_hotkey_matches(wasabi_hotkey_header, input, menu_combo)) {
+        toggle_header();
+        if (menu_combo) video_playback_ui_menu_consume();
+        return;
+    }
+    if (configured_hotkey_matches(wasabi_hotkey_quit, input, menu_combo)) {
+        quit_playback();
+        if (menu_combo) video_playback_ui_menu_consume();
+        return;
+    }
+    if (configured_hotkey_matches(wasabi_hotkey_pause, input, menu_combo)) {
+        toggle_pause();
+        if (menu_combo) video_playback_ui_menu_consume();
+        return;
+    }
+    const int seek_binding = seek_hotkey_binding(input, menu_combo, 1);
+    if (handle_seek_hotkey(seek_binding)) {
+        if (menu_combo) video_playback_ui_menu_consume();
+        return;
+    }
+    if (configured_hotkey_matches(wasabi_hotkey_repeat, input, menu_combo)) {
         toggle_repeat();
-    else if (input == config.video.hotkey_shuffle)
+        if (menu_combo) video_playback_ui_menu_consume();
+        return;
+    }
+    if (configured_hotkey_matches(wasabi_hotkey_shuffle, input, menu_combo)) {
         toggle_shuffle();
-    else if (input == mux_input_l2)
+        if (menu_combo) video_playback_ui_menu_consume();
+        return;
+    }
+    if (!menu_combo && input == mux_input_l2)
         step_track(-1);
-    else if (input == mux_input_r2)
+    else if (!menu_combo && input == mux_input_r2)
         step_track(1);
 }
 

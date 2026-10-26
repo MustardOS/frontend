@@ -1687,13 +1687,10 @@ lv_obj_t *create_footer_glyph(
         )
         && nav_footer_glyph.glyph_alpha > 0) {
         const int footer_target = resolve_glyph_size(
-            config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->mux.item.height * 3 / 4
+            config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->footer.height * 3 / 4
         );
-        const int footer_px =
-            glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme->glyph.footer, theme->footer.height);
         append_glyph_size_hint(footer_image_embed, sizeof(footer_image_embed), footer_target);
-        set_list_glyph_image(ui_glyph, footer_image_embed);
-        apply_glyph_scale(ui_glyph, footer_image_embed, footer_px, footer_px);
+        set_footer_glyph_image(ui_glyph, footer_image_embed);
     }
 
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
@@ -2457,14 +2454,14 @@ void create_grid_item(
     }
 
     // Grid glyph size: -1 native, 0 auto, > 0 fixed pixels
-    int grid_hint_w, grid_hint_h, grid_px;
-    resolve_grid_glyph_hint(theme, &grid_hint_w, &grid_hint_h, &grid_px);
+    int grid_hint_w, grid_hint_h, grid_box_w, grid_box_h;
+    resolve_grid_glyph_hint(theme, &grid_hint_w, &grid_hint_h, &grid_box_w, &grid_box_h);
 
     if (item_image_path && *item_image_path && file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
         build_embed_path(grid_image, sizeof(grid_image), item_image_path, grid_hint_w, grid_hint_h);
         lv_img_set_src(cell_image, grid_image);
-        apply_glyph_scale(cell_image, grid_image, grid_px, grid_px);
+        apply_glyph_scale(cell_image, grid_image, grid_box_w, grid_box_h);
     } else {
         lv_img_set_src(cell_image, &ui_img_blank);
     }
@@ -2479,7 +2476,7 @@ void create_grid_item(
             grid_image_focused, sizeof(grid_image_focused), item_image_focused_path, grid_hint_w, grid_hint_h
         );
         lv_img_set_src(cell_image_focused, grid_image_focused);
-        apply_glyph_scale(cell_image_focused, grid_image_focused, grid_px, grid_px);
+        apply_glyph_scale(cell_image_focused, grid_image_focused, grid_box_w, grid_box_h);
     } else {
         lv_img_set_src(cell_image_focused, &ui_img_blank);
     }

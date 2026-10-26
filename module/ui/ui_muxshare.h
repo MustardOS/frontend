@@ -263,7 +263,8 @@
     DANGER(state, "state")                                                                                             \
     DANGER(online_cores, "onlinecores")                                                                                \
     DANGER(overclock, "overclock")                                                                                     \
-    DANGER(gpu_overclock, "gpuoverclock")
+    DANGER(gpu_overclock, "gpuoverclock")                                                                              \
+    DANGER(emmc, "emmc")
 
 #define DEVICE_ELEMENTS                                                                                                \
     DEVICE(has_bluetooth, "bluetooth")                                                                                 \

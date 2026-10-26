@@ -566,6 +566,11 @@ This folder is empty.
 Upload Files
 Upload Folders
 Uploading...
+Uploading... %s%%
+Upload cancelled
+Network error while uploading
+Global
+Override
 User Storage
 Waiting...
 Preparing archive...

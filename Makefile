@@ -9,7 +9,7 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-TOOLS = muvarctl mudisp murgb musftpjail mususpend muswitch muverify muscreen
+TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 mulink_SRC = common/platform/usb_link.c
@@ -17,6 +17,7 @@ muweb_SRC = common/base/image_ext.c common/base/totp.c common/content/lookup.c \
             common/content/core/state_preview.c common/storage/mount.c vendor/miniz/miniz.c
 muweb_CFLAGS = -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
 musftpjail_SRC = common/storage/mount.c
+mustate_LDLIBS = -lz -lzstd
 
 muvarctl_SRC = common/config/var_store.c
 

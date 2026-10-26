@@ -945,6 +945,8 @@ static const lang_field lang_fields[] = {
     {"muxdanger", LANG_OFF(muxdanger.onlinecores), lang_specific, "Online Processor Cores"},
     {"muxdanger", LANG_OFF(muxdanger.overclock), lang_specific, "Processor Maximum"},
     {"muxdanger", LANG_OFF(muxdanger.gpuoverclock), lang_specific, "Graphics Maximum"},
+    {"muxdanger", LANG_OFF(muxdanger.emmc), lang_specific, "Internal Storage"},
+    {"muxdanger", LANG_OFF(muxdanger.emmc_warning), lang_specific, "This exposes the device's built-in eMMC as secondary storage after the next restart. Its existing partitions may contain the original operating system. Enabling this setting does not erase anything, but formatting or preparing that storage later will permanently remove its contents and MustardOS cannot restore them."},
     {"muxdanger", LANG_OFF(muxdanger.highest), lang_specific, "Default"},
     {"muxdanger", LANG_OFF(muxdanger.kernellog), lang_specific, "Kernel Log Level"},
     {"muxdanger", LANG_OFF(muxdanger.kernellevel.silent), lang_specific, "Silent"},
@@ -970,6 +972,7 @@ static const lang_field lang_fields[] = {
     {"muxdanger", LANG_OFF(muxdanger.help.online_cores), lang_specific, "Limits how many processor cores remain online while the device is awake.\n\nFewer cores may save power in multi-threaded workloads, but can substantially reduce interface and emulator performance. All restores every available core; the first core always remains online."},
     {"muxdanger", LANG_OFF(muxdanger.help.overclock), lang_specific, "The highest speed the processor is allowed to reach.\n\nDefault uses the device's tested normal limit. Higher speeds may improve performance but use more power and produce more heat."},
     {"muxdanger", LANG_OFF(muxdanger.help.gpu_overclock), lang_specific, "The highest speed the graphics chip is allowed to reach.\n\nDefault uses the device's tested normal limit. Higher speeds may improve performance but use more power and produce more heat."},
+    {"muxdanger", LANG_OFF(muxdanger.help.emmc), lang_specific, "Exposes supported TrimUI built-in eMMC as secondary storage after a restart.\n\nEnabling this setting does not alter the eMMC, but formatting or preparing it later erases its existing system and data. Disable the setting and restart to hide it again."},
     {"muxdanger", LANG_OFF(muxdanger.warn), lang_specific, "These are low level kernel parameters.\n\nIncorrect values can cause system instability or data loss!"},
     {"muxdanger", LANG_OFF(muxdanger.help.kernel_log), lang_specific, "How much the system writes to its own internal log.\n\nThis is separate from the debug log and covers messages from the device itself rather than from MustardOS.\n\nLower settings keep it quiet and save a little work. Raise it only when you are chasing a problem, as a busy log costs time on every message."},
 

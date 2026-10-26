@@ -30,20 +30,22 @@ void append_glyph_size_hint(char *embed, const size_t embed_size, const int size
     snprintf(embed + n, embed_size - n, "?%dx%d", size, size);
 }
 
-void resolve_grid_glyph_hint(const struct theme_config *theme, int *hint_w, int *hint_h, int *px) {
+void resolve_grid_glyph_hint(const struct theme_config *theme, int *hint_w, int *hint_h, int *box_w, int *box_h) {
     int16_t grid_glyph = config.settings.themeopt.glyph_size_grid;
     if (grid_glyph == -2) grid_glyph = theme->glyph.grid;
 
     if (grid_glyph < 0) {
         *hint_w = *hint_h = -1;
+        *box_w = *box_h = 0;
     } else if (grid_glyph == 0) {
         *hint_w = theme->grid.cell.width * 3 / 4;
         *hint_h = theme->grid.cell.height * 3 / 4;
+        *box_w = *hint_w;
+        *box_h = *hint_h;
     } else {
         *hint_w = *hint_h = grid_glyph;
+        *box_w = *box_h = grid_glyph;
     }
-
-    *px = grid_glyph > 0 ? grid_glyph : 0;
 }
 
 void build_embed_path(char *embed, const size_t embed_size, const char *path, const int hint_w, const int hint_h) {
@@ -59,7 +61,9 @@ void build_embed_path(char *embed, const size_t embed_size, const char *path, co
     snprintf(embed + written, embed_size - (size_t) written, "?%dx%d", hint_w, hint_h);
 }
 
-void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const int box_h) {
+static void apply_glyph_scale_internal(
+    lv_obj_t *img, const char *embed, const int box_w, const int box_h, const int preserve_left
+) {
     lv_img_set_zoom(img, LV_IMG_ZOOM_NONE);
     if (!embed || box_w <= 0 || box_h <= 0) return;
 
@@ -78,16 +82,17 @@ void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const 
     if (zoom < 1) zoom = 1;
     if (zoom > 0xFFFF) zoom = 0xFFFF;
 
-    // Calculate the scaled image width.
-    const int scaled_w = (int) header.w * zoom / LV_IMG_ZOOM_NONE;
-
-    // LVGL zooms around the center, so compensate for the increase/decrease in width.
-    const int offset_x = (scaled_w - (int) header.w) / 2;
-
     lv_img_set_zoom(img, (uint16_t) zoom);
 
-    // Keep the visible left edge at the configured X.
-    lv_obj_set_x(img, theme.list_default.glyph_padding_left + offset_x);
+    if (preserve_left) {
+        const int scaled_w = (int) header.w * zoom / LV_IMG_ZOOM_NONE;
+        const int offset_x = (scaled_w - (int) header.w) / 2;
+        lv_obj_set_x(img, theme.list_default.glyph_padding_left + offset_x);
+    }
+}
+
+void apply_glyph_scale(lv_obj_t *img, const char *embed, const int box_w, const int box_h) {
+    apply_glyph_scale_internal(img, embed, box_w, box_h, 0);
 }
 
 int glyph_explicit_px(const int16_t runtime_size, const int16_t section_size, const int16_t parent_height) {
@@ -105,7 +110,7 @@ void set_list_glyph_image(lv_obj_t *img, const char *embed) {
 
     lv_img_set_src(img, embed);
     const int px = glyph_explicit_px(config.settings.themeopt.glyph_size_list, theme.glyph.list, theme.mux.item.height);
-    apply_glyph_scale(img, embed, px, px);
+    apply_glyph_scale_internal(img, embed, px, px, 1);
 
     fe_perf_end(fe_perf_stage_glyph, glyph_start);
 }

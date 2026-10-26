@@ -107,6 +107,7 @@ typedef struct {
     int16_t sleep;
     int16_t idle_screensaver;
     int16_t auto_play;
+    int16_t hotkey_direct_mask;
     int16_t hotkey_pause;
     int16_t hotkey_save_bookmark;
     int16_t hotkey_load_bookmark;
@@ -536,6 +537,7 @@ struct mux_config {
         int16_t time_slice;
         int16_t tune_scale;
         int16_t online_cores;
+        int16_t emmc;
         char card_mode[MAX_BUFFER_SIZE];
         char state[MAX_BUFFER_SIZE];
         char cpu_max[MAX_BUFFER_SIZE];

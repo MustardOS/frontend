@@ -168,6 +168,7 @@ struct session_settings_t {
     int ff_speed;
     int slowmo_speed;
     int speed_persistence;
+    int hotkey_direct_mask;
     int hotkey_ff_enabled;
     int hotkey_ff_button;
     int hotkey_ff_audio_enabled;
@@ -547,6 +548,8 @@ const char *session_settings_hotkey_mode_name(int mode);
 
 int session_settings_hotkey_button(enum hotkey_binding binding);
 
+int session_settings_hotkey_direct(enum hotkey_binding binding);
+
 const char *session_settings_hotkey_button_name(enum hotkey_binding binding);
 
 void session_settings_hotkey_combo_name(enum hotkey_binding binding, char *buf, size_t len);
@@ -556,6 +559,8 @@ int session_settings_hotkey_choice_count(void);
 int session_settings_hotkey_choice(int index);
 
 int session_settings_set_hotkey_button(enum hotkey_binding binding, int button);
+
+int session_settings_set_hotkey_direct(enum hotkey_binding binding, int direct);
 
 void session_settings_reset_hotkey_buttons(void);
 

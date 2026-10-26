@@ -9,22 +9,25 @@
 #include <common/runtime/log.h>
 
 const char *theme_base;
-char *theme_back_compat[theme_compat];
 
-static void compat_theme_init(void) {
-    theme_back_compat[0] = config.system.version;
-    theme_back_compat[1] = "2601.1_FUNKY_JACARANDA";
-    theme_back_compat[2] = "2601.0_JACARANDA";
-    theme_back_compat[3] = "2508.4_LOOSE_GOOSE";
-    theme_back_compat[4] = "2508.3_GOLDEN_GOOSE";
-    theme_back_compat[5] = "2508.2_SILLY_GOOSE";
-    theme_back_compat[6] = "2508.1_CANADA_GOOSE";
-    theme_back_compat[7] = "2508.0_GOOSE";
+static const char *const theme_back_compat[] = {
+    "2606.0_ANDROMEDA",   "2601.2_MIDNIGHT_JACARANDA", "2601.1_FUNKY_JACARANDA",
+    "2601.0_JACARANDA",   "2508.4_LOOSE_GOOSE",        "2508.3_GOLDEN_GOOSE",
+    "2508.2_SILLY_GOOSE", "2508.1_CANADA_GOOSE",       "2508.0_GOOSE",
+};
+
+int theme_version_compatible(const char *theme_version) {
+    if (!theme_version || !*theme_version) return 0;
+    if (str_startswith(config.system.version, theme_version)) return 1;
+
+    for (size_t i = 0; i < sizeof(theme_back_compat) / sizeof(theme_back_compat[0]); i++) {
+        if (str_startswith(theme_back_compat[i], theme_version)) return 1;
+    }
+
+    return 0;
 }
 
 const char *get_theme_base(void) {
-    compat_theme_init();
-
     static char storage_theme[MAX_BUFFER_SIZE];
     char theme_version_file[MAX_BUFFER_SIZE];
 
@@ -49,17 +52,7 @@ const char *get_theme_base(void) {
             continue;
         }
 
-        int compatible = 0;
-        for (size_t i = 0; i < theme_compat; i++) {
-            const char *compat = theme_back_compat[i];
-            if (!compat) continue;
-            if (str_startswith(compat, theme_version)) {
-                compatible = 1;
-                break;
-            }
-        }
-
-        if (compatible) {
+        if (theme_version_compatible(theme_version)) {
             free(theme_version);
             return paths[p];
         }

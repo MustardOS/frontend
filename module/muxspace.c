@@ -347,6 +347,8 @@ typedef struct {
 
 static storage_entry *storage_table(void) {
     static storage_entry table[4];
+    const char *secondary_device =
+        config.danger.emmc && str_startswith(device.board.name, "tui-") ? "mmcblk2" : device.storage.sdcard.device;
 
     table[0] = (storage_entry) {ui_pnl_primary_space,
                                 ui_pnl_primary_bar_space,
@@ -368,7 +370,7 @@ static storage_entry *storage_table(void) {
                          ui_bar_secondary_space,
                          ui_lbl_secondary_space,
                          device.storage.sdcard.mount,
-                         device.storage.sdcard.device,
+                         secondary_device,
                          "sdcard",
                          1,
                          {ui_val_secondary_total_space, ui_val_secondary_used_space, ui_val_secondary_free_space,

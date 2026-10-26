@@ -258,6 +258,15 @@ static int16_t apply_stick_transform(const int16_t raw) {
     return (int16_t) ((raw < 0 ? -scaled : scaled) * 32767.0);
 }
 
+static int16_t suppress_stick_axis(
+    const int16_t value, const mux_input_type negative, const mux_input_type positive, const int apply_suppress
+) {
+    if (!apply_suppress) return value;
+    if (value < 0 && suppress_until_released[negative]) return 0;
+    if (value > 0 && suppress_until_released[positive]) return 0;
+    return value;
+}
+
 static int16_t invert_y_if_needed(const int16_t y) {
     if (!session_settings.stick_invert_y) return y;
     return y == INT16_MIN ? INT16_MAX : (int16_t) -y;
@@ -377,6 +386,9 @@ static void input_bridge_build_snapshot(void) {
     const uint64_t primary_mask = mux_input_source_pressed_mask(primary_source);
     const int frontend_modifier_held = (primary_mask & BIT(mux_input_menu)) != 0;
 
+    for (int input = 0; input < mux_input_count; input++)
+        if (!(primary_mask & BIT(input))) suppress_until_released[input] = 0;
+
     int ports_changed = 0;
     int fed_by_deck[MUX_RETRO_PORT_COUNT] = {0};
 
@@ -430,6 +442,13 @@ static void input_bridge_build_snapshot(void) {
 
             int16_t x, y;
             mux_input_source_stick(source, s, &x, &y);
+            if (s == 0) {
+                x = suppress_stick_axis(x, mux_input_ls_left, mux_input_ls_right, port == 0);
+                y = suppress_stick_axis(y, mux_input_ls_up, mux_input_ls_down, port == 0);
+            } else {
+                x = suppress_stick_axis(x, mux_input_rs_left, mux_input_rs_right, port == 0);
+                y = suppress_stick_axis(y, mux_input_rs_up, mux_input_rs_down, port == 0);
+            }
             port_stick_x[port][s] = apply_stick_transform(x);
             port_stick_y[port][s] = invert_y_if_needed(apply_stick_transform(y));
         }

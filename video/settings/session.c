@@ -107,6 +107,7 @@ static const wasabi_video_config defaults = {
     .sleep = 0,
     .idle_screensaver = 0,
     .auto_play = 1,
+    .hotkey_direct_mask = WASABI_HOTKEY_DIRECT_DEFAULT,
     .hotkey_pause = mux_input_a,
     .hotkey_save_bookmark = mux_input_r2,
     .hotkey_load_bookmark = mux_input_l2,
@@ -200,6 +201,7 @@ static const session_field fields[] = {
     SESSION_I16(sleep),
     SESSION_I16(idle_screensaver),
     SESSION_I16(auto_play),
+    SESSION_I16(hotkey_direct_mask),
     SESSION_I16(hotkey_pause),
     SESSION_I16(hotkey_save_bookmark),
     SESSION_I16(hotkey_load_bookmark),
@@ -359,6 +361,7 @@ static void validate_settings(void) {
     VALIDATE(sleep, 0, 1);
     VALIDATE(idle_screensaver, 0, 1);
     VALIDATE(auto_play, 0, 1);
+    VALIDATE(hotkey_direct_mask, 0, (1 << wasabi_hotkey_count) - 1);
     if (config.wasabi.live_quality < 0 || config.wasabi.live_quality > 3)
         config.wasabi.live_quality = base_live_quality;
     if (config.wasabi.live_buffer != 4 && config.wasabi.live_buffer != 8 && config.wasabi.live_buffer != 16

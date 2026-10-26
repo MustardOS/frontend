@@ -271,7 +271,7 @@ static void button_value_text(const int index, char *buf, const size_t buf_len) 
 }
 
 #define PICK_COLS 4
-#define PICK_MAX  16
+#define PICK_MAX  24
 
 static const char *pick_map[PICK_MAX + PICK_MAX / PICK_COLS + 1];
 static int pick_buttons[PICK_MAX];
@@ -446,6 +446,21 @@ static int button_row_is_action(const int index) {
     return 1;
 }
 
+static int button_row_can_cycle(const int index) {
+    return index >= 0 && index < hotkey_binding_count;
+}
+
+static void button_cycle(const int index, const int direction) {
+    (void) direction;
+    const enum hotkey_binding binding = (enum hotkey_binding) index;
+    const int displaced = session_settings_set_hotkey_direct(binding, !session_settings_hotkey_direct(binding));
+    if (displaced < 0) return;
+
+    char message[256];
+    snprintf(message, sizeof(message), lang.muxretro.hotkeys_screen.unbound_combo, button_labels[displaced]);
+    pause_menu_show_toast(message);
+}
+
 static void button_action(const int index) {
     if (index < 0 || index >= hotkey_binding_count) return;
     pick_open(index);
@@ -476,6 +491,8 @@ static const submenu_def buttons_def = {
     .help = button_help,
     .row_count = hotkey_binding_count,
     .value_text = button_value_text,
+    .cycle = button_cycle,
+    .row_can_cycle = button_row_can_cycle,
     .row_is_action = button_row_is_action,
     .action = button_action,
     .row_depends_on = button_row_depends_on,

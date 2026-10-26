@@ -941,6 +941,8 @@ struct mux_lang {
         char onlinecores[MAX_BUFFER_SIZE];
         char overclock[MAX_BUFFER_SIZE];
         char gpuoverclock[MAX_BUFFER_SIZE];
+        char emmc[MAX_BUFFER_SIZE];
+        char emmc_warning[MAX_BUFFER_SIZE];
         char highest[MAX_BUFFER_SIZE];
         char warn[MAX_BUFFER_SIZE];
         struct {
@@ -962,6 +964,7 @@ struct mux_lang {
             char online_cores[MAX_BUFFER_SIZE];
             char overclock[MAX_BUFFER_SIZE];
             char gpu_overclock[MAX_BUFFER_SIZE];
+            char emmc[MAX_BUFFER_SIZE];
             char kernel_log[MAX_BUFFER_SIZE];
         } help;
     } muxdanger;

@@ -56,6 +56,7 @@ static const struct session_settings_t defaults = {
     .ff_speed = ff_speed_4_x,
     .slowmo_speed = slowmo_speed_1_2_x,
     .speed_persistence = 1,
+    .hotkey_direct_mask = 0,
     .hotkey_ff_enabled = hotkey_activation_press,
     .hotkey_ff_button = mux_input_r1,
     .hotkey_ff_audio_enabled = 0,
@@ -301,13 +302,17 @@ static const int sram_flush_choices[] = {0, 15, 30, 60, 90, 120, 240, 300};
 static const int frame_delay_choices[] = {FRAME_DELAY_OFF, FRAME_DELAY_AUTO, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16};
 #define FRAME_DELAY_CHOICE_COUNT ((int) (sizeof(frame_delay_choices) / sizeof(frame_delay_choices[0])))
 
-static const int hotkey_button_choices[] = {mux_input_b,  mux_input_x,      mux_input_y,    mux_input_l1,
-                                            mux_input_r1, mux_input_l2,     mux_input_r2,   mux_input_l3,
-                                            mux_input_r3, mux_input_select, mux_input_start};
+static const int hotkey_button_choices[] = {mux_input_b,       mux_input_x,       mux_input_y,        mux_input_l1,
+                                            mux_input_r1,      mux_input_l2,      mux_input_r2,       mux_input_l3,
+                                            mux_input_r3,      mux_input_select,  mux_input_start,    mux_input_ls_up,
+                                            mux_input_ls_down, mux_input_ls_left, mux_input_ls_right, mux_input_rs_up,
+                                            mux_input_rs_down, mux_input_rs_left, mux_input_rs_right};
 
-static const int hotkey_button_values[] = {HOTKEY_UNBOUND, mux_input_b,  mux_input_x,      mux_input_y,
-                                           mux_input_l1,   mux_input_r1, mux_input_l2,     mux_input_r2,
-                                           mux_input_l3,   mux_input_r3, mux_input_select, mux_input_start};
+static const int hotkey_button_values[] = {HOTKEY_UNBOUND,  mux_input_b,       mux_input_x,       mux_input_y,
+                                           mux_input_l1,    mux_input_r1,      mux_input_l2,      mux_input_r2,
+                                           mux_input_l3,    mux_input_r3,      mux_input_select,  mux_input_start,
+                                           mux_input_ls_up, mux_input_ls_down, mux_input_ls_left, mux_input_ls_right,
+                                           mux_input_rs_up, mux_input_rs_down, mux_input_rs_left, mux_input_rs_right};
 
 enum setting_validation {
     setting_range,
@@ -359,6 +364,7 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(ff_speed, 0, ff_speed_count - 1),
     SETTING_RANGE(slowmo_speed, 0, slowmo_speed_count - 1),
     SETTING_RANGE(speed_persistence, 0, 1),
+    SETTING_RANGE(hotkey_direct_mask, 0, (1 << hotkey_binding_count) - 1),
     SETTING_RANGE(hotkey_ff_enabled, 0, hotkey_activation_count - 1),
     SETTING_CHOICES(hotkey_ff_button, hotkey_button_values),
     SETTING_RANGE(hotkey_ff_audio_enabled, 0, 1),
@@ -1686,18 +1692,19 @@ static void apply_ini(const char *path) {
 }
 
 static void normalise_hotkey_buttons(void) {
-    unsigned used = 0;
+    unsigned used[2] = {0, 0};
     struct session_settings_t fallback = defaults;
 
     for (int binding = 0; binding < hotkey_binding_count; binding++) {
         int *field = hotkey_button_field((enum hotkey_binding) binding);
         if (!field || *field == HOTKEY_UNBOUND) continue;
+        const int group = session_settings_hotkey_direct((enum hotkey_binding) binding);
 
         int choice = 0;
         while (choice < (int) A_SIZE(hotkey_button_choices) && hotkey_button_choices[choice] != *field)
             choice++;
-        if (choice < (int) A_SIZE(hotkey_button_choices) && !(used & BIT(choice))) {
-            used |= BIT(choice);
+        if (choice < (int) A_SIZE(hotkey_button_choices) && !(used[group] & BIT(choice))) {
+            used[group] |= BIT(choice);
             continue;
         }
 
@@ -1705,18 +1712,18 @@ static void normalise_hotkey_buttons(void) {
         const int wanted_default = default_field ? *default_field : mux_input_count;
         int replacement = 0;
         while (replacement < (int) A_SIZE(hotkey_button_choices)
-               && (hotkey_button_choices[replacement] != wanted_default || (used & BIT(replacement))))
+               && (hotkey_button_choices[replacement] != wanted_default || (used[group] & BIT(replacement))))
             replacement++;
         if (replacement >= (int) A_SIZE(hotkey_button_choices)) {
             replacement = 0;
-            while (replacement < (int) A_SIZE(hotkey_button_choices) && (used & BIT(replacement)))
+            while (replacement < (int) A_SIZE(hotkey_button_choices) && (used[group] & BIT(replacement)))
                 replacement++;
         }
         if (replacement >= (int) A_SIZE(hotkey_button_choices)) continue;
 
         LOG_WARN(mux_module, "Defaulting duplicate hotkey binding %d", binding);
         *field = hotkey_button_choices[replacement];
-        used |= BIT(replacement);
+        used[group] |= BIT(replacement);
     }
 }
 
@@ -2201,6 +2208,11 @@ int session_settings_hotkey_button(const enum hotkey_binding binding) {
     return field ? *field : mux_input_count;
 }
 
+int session_settings_hotkey_direct(const enum hotkey_binding binding) {
+    if (binding < 0 || binding >= hotkey_binding_count) return 0;
+    return (session_settings.hotkey_direct_mask & BIT(binding)) != 0;
+}
+
 const char *session_settings_hotkey_button_name(const enum hotkey_binding binding) {
     const int button = session_settings_hotkey_button(binding);
     if (button == HOTKEY_UNBOUND) return lang.muxretro.settings_screen.unbound;
@@ -2213,30 +2225,51 @@ void session_settings_hotkey_combo_name(const enum hotkey_binding binding, char 
         snprintf(buf, len, "%s", lang.muxretro.settings_screen.unbound);
         return;
     }
-    snprintf(buf, len, "M+%s", session_settings_hotkey_button_name(binding));
+    if (session_settings_hotkey_direct(binding)) {
+        snprintf(
+            buf, len, "%s %s", lang.muxretro.information_screen.direct, session_settings_hotkey_button_name(binding)
+        );
+    } else {
+        snprintf(buf, len, "M+%s", session_settings_hotkey_button_name(binding));
+    }
+}
+
+static int hotkey_button_available(const int button) {
+    if (button == mux_input_l3 || (button >= mux_input_ls_up && button <= mux_input_ls_right))
+        return device.board.has_stick >= 1;
+    if (button == mux_input_r3 || (button >= mux_input_rs_up && button <= mux_input_rs_right))
+        return device.board.has_stick >= 2;
+    return 1;
 }
 
 int session_settings_hotkey_choice_count(void) {
-    return (int) A_SIZE(hotkey_button_choices);
+    int count = 0;
+    for (size_t index = 0; index < A_SIZE(hotkey_button_choices); index++)
+        if (hotkey_button_available(hotkey_button_choices[index])) count++;
+    return count;
 }
 
 int session_settings_hotkey_choice(const int index) {
-    if (index < 0 || index >= (int) A_SIZE(hotkey_button_choices)) return HOTKEY_UNBOUND;
-    return hotkey_button_choices[index];
+    int seen = 0;
+    for (size_t choice = 0; choice < A_SIZE(hotkey_button_choices); choice++) {
+        if (!hotkey_button_available(hotkey_button_choices[choice])) continue;
+        if (seen++ == index) return hotkey_button_choices[choice];
+    }
+    return HOTKEY_UNBOUND;
 }
 
 int session_settings_set_hotkey_button(const enum hotkey_binding binding, const int button) {
     int *field = hotkey_button_field(binding);
     if (!field) return -1;
 
-    // Keep every combo unique. Taking a button another shortcut already uses
-    // leaves that shortcut unbound, so nothing else moves.
     int displaced = -1;
     if (button != HOTKEY_UNBOUND) {
         for (int other = 0; other < hotkey_binding_count; other++) {
             if (other == binding) continue;
             int *other_field = hotkey_button_field((enum hotkey_binding) other);
-            if (other_field && *other_field == button) {
+            if (other_field && *other_field == button
+                && session_settings_hotkey_direct((enum hotkey_binding) other)
+                       == session_settings_hotkey_direct(binding)) {
                 *other_field = HOTKEY_UNBOUND;
                 displaced = other;
                 break;
@@ -2248,7 +2281,30 @@ int session_settings_set_hotkey_button(const enum hotkey_binding binding, const 
     return displaced;
 }
 
+int session_settings_set_hotkey_direct(const enum hotkey_binding binding, const int direct) {
+    if (binding < 0 || binding >= hotkey_binding_count) return -1;
+
+    if (direct)
+        session_settings.hotkey_direct_mask |= BIT(binding);
+    else
+        session_settings.hotkey_direct_mask &= ~BIT(binding);
+
+    const int button = session_settings_hotkey_button(binding);
+    if (button == HOTKEY_UNBOUND) return -1;
+
+    for (int other = 0; other < hotkey_binding_count; other++) {
+        if (other == binding || session_settings_hotkey_direct((enum hotkey_binding) other) != (direct != 0)) continue;
+        int *other_field = hotkey_button_field((enum hotkey_binding) other);
+        if (other_field && *other_field == button) {
+            *other_field = HOTKEY_UNBOUND;
+            return other;
+        }
+    }
+    return -1;
+}
+
 void session_settings_reset_hotkey_buttons(void) {
+    session_settings.hotkey_direct_mask = defaults.hotkey_direct_mask;
     session_settings.hotkey_ff_button = defaults.hotkey_ff_button;
     session_settings.hotkey_slowmo_button = defaults.hotkey_slowmo_button;
     session_settings.hotkey_pause_button = defaults.hotkey_pause_button;

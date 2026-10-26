@@ -31,13 +31,14 @@
 
 #define MUWEB_VERSION "0.1.0"
 
-#define MUWEB_MAX_CONNECTIONS 24
-#define MUWEB_HEADER_LIMIT    (16 * 1024)
-#define MUWEB_UPLOAD_LIMIT    (32 * 1024 * 1024)
-#define MUWEB_LIVE_MAX        2
-#define MUWEB_IDLE_SECONDS    30
-#define MUWEB_SEND_CHUNK      (64 * 1024)
-#define MUWEB_SCAN_DEPTH      8
+#define MUWEB_MAX_CONNECTIONS     24
+#define MUWEB_HEADER_LIMIT        (16 * 1024)
+#define MUWEB_UPLOAD_LIMIT        (32 * 1024 * 1024)
+#define MUWEB_LIVE_MAX            2
+#define MUWEB_IDLE_SECONDS        30
+#define MUWEB_UPLOAD_IDLE_SECONDS 120
+#define MUWEB_SEND_CHUNK          (64 * 1024)
+#define MUWEB_SCAN_DEPTH          8
 
 #define MUWEB_CONTENT_SECONDS 60
 #define MUWEB_CONTENT_DEPTH   6
@@ -418,7 +419,9 @@ static int safe_relative_path(const char *relative) {
         const char *end = strchr(segment, '/');
         const size_t length = end ? (size_t) (end - segment) : strlen(segment);
 
-        if (length == 0 || segment[0] == '.') return 0;
+        if (length == 0 || (length == 1 && segment[0] == '.')
+            || (length == 2 && segment[0] == '.' && segment[1] == '.'))
+            return 0;
         for (size_t i = 0; i < length; ++i) {
             if (segment[i] == '\\' || (unsigned char) segment[i] < 0x20) return 0;
         }
@@ -536,6 +539,15 @@ static int write_file_atomic(const char *path, const char *data, const size_t le
     unlink(temporary);
     const int descriptor = open(temporary, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0644);
     if (descriptor < 0) return 0;
+
+    mode_t mode = 0644;
+    struct stat existing;
+    if (lstat(path, &existing) == 0 && S_ISREG(existing.st_mode)) mode = existing.st_mode & 0777;
+    if (fchmod(descriptor, mode) < 0) {
+        close(descriptor);
+        unlink(temporary);
+        return 0;
+    }
 
     size_t offset = 0;
     while (offset < length) {
@@ -1574,10 +1586,10 @@ static void catalogue_view_free(struct catalogue_view *view) {
     view->loaded = 0;
 }
 
-static int catalogue_files_json(
+static int catalogue_files_object_json(
     struct buffer *out, const struct catalogue_view *view, const char *stem, long long *bytes, long long *modified
 ) {
-    int ok = buffer_puts(out, "\"files\":{");
+    int ok = buffer_puts(out, "{");
     int first = 1;
 
     for (size_t type = 0; ok && type < CATALOGUE_TYPE_COUNT; ++type) {
@@ -1599,17 +1611,34 @@ static int catalogue_files_json(
     return ok && buffer_puts(out, "}");
 }
 
+static int catalogue_files_json(
+    struct buffer *out, const struct catalogue_view *view, const char *stem, long long *bytes, long long *modified
+) {
+    return buffer_puts(out, "\"files\":") && catalogue_files_object_json(out, view, stem, bytes, modified);
+}
+
 static size_t catalogue_files_held(const struct catalogue_view *view, const char *stem) {
     size_t held = 0;
 
     for (size_t type = 0; type < CATALOGUE_TYPE_COUNT; ++type) {
         if (overlay_is_stepped(catalogue_types[type])) continue;
 
+        int found = 0;
         for (size_t file = 0; file < view->scans[type].count; ++file) {
             if (strcmp(view->scans[type].files[file].stem, stem) != 0) continue;
-            held += 1;
+            found = 1;
             break;
         }
+        if (!found
+            && (strcmp(catalogue_types[type], "splash") == 0 || strcmp(catalogue_types[type], "overlay/base") == 0)) {
+            for (size_t file = 0; file < view->scans[type].count; ++file) {
+                if (strcmp(view->scans[type].files[file].stem, "default") == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+        }
+        held += (size_t) found;
     }
 
     return held;
@@ -1924,15 +1953,12 @@ static int content_folder_json(struct buffer *out, const char *relative) {
 
         if (ok && item_catalogue) ok = json_field(out, "catalogue", item_catalogue) && buffer_puts(out, ",");
 
-        ok = ok
-             && catalogue_files_json(
-                 out,
-                 own         ? &item_view
-                 : catalogue ? &system
-                             : &folders,
-                 files.items[i].name, &bytes, &modified
-             )
-             && buffer_puts(out, ",") && json_number(out, "bytes", files.items[i].bytes) && buffer_puts(out, ",")
+        const struct catalogue_view *item_catalogue_view = own ? &item_view : catalogue ? &system : &folders;
+        ok = ok && catalogue_files_json(out, item_catalogue_view, files.items[i].name, &bytes, &modified);
+        if (ok && item_catalogue)
+            ok = buffer_puts(out, ",\"defaults\":")
+                 && catalogue_files_object_json(out, item_catalogue_view, "default", NULL, NULL);
+        ok = ok && buffer_puts(out, ",") && json_number(out, "bytes", files.items[i].bytes) && buffer_puts(out, ",")
              && json_number(out, "modified", files.items[i].modified) && buffer_puts(out, ",")
              && json_number(out, "artBytes", bytes) && buffer_puts(out, ",")
              && json_number(out, "artModified", modified) && buffer_puts(out, "}");
@@ -1993,6 +2019,8 @@ static int content_folder_json(struct buffer *out, const char *relative) {
     }
 
     ok = ok && buffer_puts(out, "]");
+    if (ok && catalogue)
+        ok = buffer_puts(out, ",\"defaults\":") && catalogue_files_object_json(out, &system, "default", NULL, NULL);
     if (ok && catalogue) ok = overlays_json(out, &system);
 
     catalogue_view_free(&folders);
@@ -3484,7 +3512,15 @@ static int file_copy_regular(const char *source, const char *target) {
         close(input);
         return 0;
     }
-    fchmod(output, info.st_mode & 0777);
+    mode_t mode = info.st_mode & 0777;
+    struct stat existing;
+    if (lstat(target, &existing) == 0 && S_ISREG(existing.st_mode)) mode = existing.st_mode & 0777;
+    if (fchmod(output, mode) < 0) {
+        close(input);
+        close(output);
+        unlink(temporary);
+        return 0;
+    }
 
     int ok = 1;
     char block[MUWEB_SEND_CHUNK];
@@ -6487,7 +6523,16 @@ connection_prepare_file_upload(struct connection *connection, const unsigned lon
         return 0;
     }
     fcntl(connection->upload_descriptor, F_SETFD, FD_CLOEXEC);
-    fchmod(connection->upload_descriptor, 0644);
+    mode_t mode = 0644;
+    if (lstat(connection->upload_target, &existing) == 0 && S_ISREG(existing.st_mode)) mode = existing.st_mode & 0777;
+    if (fchmod(connection->upload_descriptor, mode) < 0) {
+        close(connection->upload_descriptor);
+        connection->upload_descriptor = -1;
+        unlink(connection->upload_temporary);
+        connection->upload_temporary[0] = '\0';
+        send_error(connection, 500, "Could not preserve file permissions");
+        return 0;
+    }
     connection->upload_active = 1;
     file_upload_count++;
     connection->upload_remaining = length;
@@ -6766,7 +6811,7 @@ static int connection_receive(struct connection *connection) {
             return 1;
         }
         if (!connection->upload_remaining) file_upload_finish(connection);
-        connection->deadline = time(NULL) + MUWEB_IDLE_SECONDS;
+        connection->deadline = time(NULL) + MUWEB_UPLOAD_IDLE_SECONDS;
         return 1;
     }
 

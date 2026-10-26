@@ -12,6 +12,7 @@
 #include <libswresample/swresample.h>
 #include <libavutil/channel_layout.h>
 #include <common/platform/video.h>
+#include <common/platform/audio.h>
 #include <common/runtime/log.h>
 #include <common/platform/display.h>
 #include <common/config/config.h>
@@ -109,11 +110,34 @@ static int mix_ch = 0;
 static float *ring_buf = NULL;
 static int ring_frames = 0;
 static char audio_hook_owner;
+static int bgm_interrupted = 0;
+static double bgm_position = -1.0;
 static volatile int ring_r = 0;
 static volatile int ring_w = 0;
 static float audio_tmp[AUDIO_TMP_FRAMES * 2];
 
 static uint32_t play_start_ms = 0;
+
+static void interrupt_bgm(void) {
+    if (bgm_interrupted || !fe_bgm || !current_bgm || !Mix_PlayingMusic()) return;
+
+    bgm_position = Mix_GetMusicPosition(current_bgm);
+    Mix_HookMusicFinished(NULL);
+    Mix_HaltMusic();
+    bgm_interrupted = 1;
+}
+
+static void restore_bgm(void) {
+    if (!bgm_interrupted) return;
+
+    if (fe_bgm && current_bgm) {
+        if (Mix_PlayMusic(current_bgm, 1) == 0 && bgm_position > 0.0) Mix_SetMusicPosition(bgm_position);
+        Mix_HookMusicFinished(play_random_bgm);
+    }
+
+    bgm_interrupted = 0;
+    bgm_position = -1.0;
+}
 
 static void load_preview_edit(void) {
     clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
@@ -360,6 +384,7 @@ static void sdl_overlay_cb(SDL_Renderer *r) {
     if (!has_frame || !video_tex) return;
 
     if (use_round && round_target && corner_mask) {
+        SDL_Texture *previous_target = SDL_GetRenderTarget(r);
         SDL_SetRenderTarget(r, round_target);
         SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
         SDL_SetRenderDrawColor(r, 0, 0, 0, 0);
@@ -367,7 +392,7 @@ static void sdl_overlay_cb(SDL_Renderer *r) {
         SDL_SetTextureBlendMode(video_tex, SDL_BLENDMODE_NONE);
         SDL_RenderCopy(r, video_tex, NULL, NULL);
         SDL_RenderCopy(r, corner_mask, NULL, NULL);
-        SDL_SetRenderTarget(r, NULL);
+        SDL_SetRenderTarget(r, previous_target);
         SDL_SetTextureAlphaMod(round_target, (uint8_t) preview_alpha);
         SDL_RenderCopy(r, round_target, NULL, &video_dst);
     } else {
@@ -912,6 +937,7 @@ static void cleanup(void) {
     }
 
     if (Mix_GetMusicHookData() == &audio_hook_owner) Mix_HookMusic(NULL, NULL);
+    restore_bgm();
 
     if (swr) {
         swr_free(&swr);
@@ -1064,7 +1090,7 @@ static void preview_open(void) {
 
     vq_head = vq_tail = vq_count = 0;
 
-    if (audio_si >= 0 && audio_dec) {
+    if (audio_si >= 0 && audio_dec && !clip_mute) {
         Uint16 mix_fmt;
         Mix_QuerySpec(&mix_freq, &mix_fmt, &mix_ch);
 
@@ -1074,7 +1100,7 @@ static void preview_open(void) {
 
             if (ring_buf) {
                 ring_r = ring_w = 0;
-                Mix_HaltMusic();
+                interrupt_bgm();
                 Mix_HookMusic(audio_hook_cb, &audio_hook_owner);
             }
         }

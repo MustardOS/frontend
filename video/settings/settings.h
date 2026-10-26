@@ -83,6 +83,25 @@ typedef enum {
 } wasabi_setting;
 
 typedef enum {
+    wasabi_hotkey_pause = 0,
+    wasabi_hotkey_save_bookmark,
+    wasabi_hotkey_load_bookmark,
+    wasabi_hotkey_seek_back,
+    wasabi_hotkey_seek_forward,
+    wasabi_hotkey_seek_back_long,
+    wasabi_hotkey_seek_forward_long,
+    wasabi_hotkey_header,
+    wasabi_hotkey_repeat,
+    wasabi_hotkey_shuffle,
+    wasabi_hotkey_quit,
+    wasabi_hotkey_fast_forward,
+    wasabi_hotkey_slow_motion,
+    wasabi_hotkey_count
+} wasabi_hotkey;
+
+#define WASABI_HOTKEY_DIRECT_DEFAULT 889
+
+typedef enum {
     wasabi_page_root = 0,
     wasabi_page_vignette,
     wasabi_page_overlay_adjustment,
@@ -132,5 +151,7 @@ int wasabi_hotkey_choice_count(void);
 int wasabi_hotkey_choice(int index);
 int wasabi_hotkey_button(int index);
 int wasabi_hotkey_assign(int index, int button);
+int wasabi_hotkey_direct(int index);
+int wasabi_hotkey_set_direct(int index, int direct);
 int wasabi_hotkey_uses_menu(wasabi_setting setting);
 int wasabi_vignette_secret(int shape);

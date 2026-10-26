@@ -361,15 +361,11 @@ static void update_footer_glyph(lv_obj_t *glyph, const char *name) {
             mux_dim, "footer", name, image_path, sizeof(image_path), image_embed, sizeof(image_embed)
         )) {
         const int footer_target = resolve_glyph_size(
-            config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.mux.item.height * 3 / 4
+            config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height * 3 / 4
         );
 
-        const int footer_px =
-            glyph_explicit_px(config.settings.themeopt.glyph_size_footer, theme.glyph.footer, theme.footer.height);
-
         append_glyph_size_hint(image_embed, sizeof(image_embed), footer_target);
-        lv_img_set_src(glyph, image_embed);
-        apply_glyph_scale(glyph, image_embed, footer_px, footer_px);
+        set_footer_glyph_image(glyph, image_embed);
     }
 
     lv_obj_update_layout(glyph);

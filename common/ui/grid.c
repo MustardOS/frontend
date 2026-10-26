@@ -197,14 +197,14 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         return;
     }
 
-    int grid_hint_w, grid_hint_h, grid_px;
-    resolve_grid_glyph_hint(&theme, &grid_hint_w, &grid_hint_h, &grid_px);
+    int grid_hint_w, grid_hint_h, grid_box_w, grid_box_h;
+    resolve_grid_glyph_hint(&theme, &grid_hint_w, &grid_hint_h, &grid_box_w, &grid_box_h);
 
     char grid_image[MAX_BUFFER_SIZE];
     build_embed_path(grid_image, sizeof(grid_image), image_path, grid_hint_w, grid_hint_h);
 
     lv_img_set_src(cell, grid_image);
-    apply_glyph_scale(cell, grid_image, grid_px, grid_px);
+    apply_glyph_scale(cell, grid_image, grid_box_w, grid_box_h);
 }
 
 static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {

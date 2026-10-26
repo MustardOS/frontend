@@ -887,11 +887,11 @@ void sdl_cleanup(void) {
         SDL_DestroyTexture(startup_splash);
         startup_splash = NULL;
     }
+    if (monitor.background_image) SDL_DestroyTexture(monitor.background_image);
+    if (monitor.theme_overlay) SDL_DestroyTexture(monitor.theme_overlay);
     if (monitor.texture) SDL_DestroyTexture(monitor.texture);
     if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
     if (monitor.window) SDL_DestroyWindow(monitor.window);
-    if (monitor.background_image) SDL_DestroyTexture(monitor.background_image);
-    if (monitor.theme_overlay) SDL_DestroyTexture(monitor.theme_overlay);
 
     IMG_Quit();
     SDL_Quit();

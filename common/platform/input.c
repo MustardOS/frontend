@@ -319,6 +319,28 @@ apply_source_dir(volatile uint64_t *bits, const mux_input_type neg, const mux_in
         *bits |= BIT(pos);
 }
 
+static uint64_t reconciled_source_mask(
+    uint64_t bits, const int16_t left_x, const int16_t left_y, const int16_t right_x, const int16_t right_y
+) {
+    mux_input_type negative = mux_input_ls_left;
+    mux_input_type positive = mux_input_ls_right;
+    apply_source_dir(&bits, negative, positive, compute_axis_direction(left_x, &negative, &positive));
+
+    negative = mux_input_ls_up;
+    positive = mux_input_ls_down;
+    apply_source_dir(&bits, negative, positive, compute_axis_direction(left_y, &negative, &positive));
+
+    negative = mux_input_rs_left;
+    positive = mux_input_rs_right;
+    apply_source_dir(&bits, negative, positive, compute_axis_direction(right_x, &negative, &positive));
+
+    negative = mux_input_rs_up;
+    positive = mux_input_rs_down;
+    apply_source_dir(&bits, negative, positive, compute_axis_direction(right_y, &negative, &positive));
+
+    return bits;
+}
+
 static void update_primary_dir(const SDL_JoystickID id, mux_input_type neg, mux_input_type pos, const int16_t value) {
     if (id != primary_instance) return;
     const int direction = compute_axis_direction(value, &neg, &pos);
@@ -1934,9 +1956,16 @@ int mux_input_source_get(const int index, mux_input_source_info *out) {
 }
 
 uint64_t mux_input_source_pressed_mask(const int index) {
-    if (index == 0) return primary_source.pressed;
+    if (index == 0)
+        return reconciled_source_mask(
+            primary_source.pressed, primary_source.stick_x[0], primary_source.stick_y[0], primary_source.stick_x[1],
+            primary_source.stick_y[1]
+        );
     if (index < 1 || index >= mux_input_source_count()) return 0;
-    return extra_players[index - 1].pressed;
+    const extra_player_t *source = &extra_players[index - 1];
+    return reconciled_source_mask(
+        source->pressed, source->stick_x[0], source->stick_y[0], source->stick_x[1], source->stick_y[1]
+    );
 }
 
 void mux_input_source_stick(const int index, const int stick, int16_t *x, int16_t *y) {

@@ -23,6 +23,15 @@ typedef struct {
 
 static frequency_list cpu_frequencies;
 static frequency_list gpu_frequencies;
+static mux_dialogue emmc_dlg;
+
+static int emmc_supported(void) {
+    return str_startswith(device.board.name, "tui-");
+}
+
+static int emmc_focused(void) {
+    return emmc_supported() && lv_group_get_focused(ui_group_value) == ui_dro_emmc_danger;
+}
 
 static int compare_descending(const void *a, const void *b) {
     const long left = *(const long *) a;
@@ -145,6 +154,7 @@ static void restore_danger_options(void) {
     lv_dropdown_set_selected(ui_dro_child_first_danger, config.danger.child_first);
     lv_dropdown_set_selected(ui_dro_tune_scale_danger, config.danger.tune_scale);
     lv_dropdown_set_selected(ui_dro_page_cluster_danger, config.danger.page_cluster);
+    lv_dropdown_set_selected(ui_dro_emmc_danger, config.danger.emmc);
 
     map_drop_down_to_index(ui_dro_vm_swap_danger, config.danger.vm_swap, four_values, 26, 2);
     map_drop_down_to_index(ui_dro_dirty_ratio_danger, config.danger.dirty_ratio, four_values, 26, 4);
@@ -178,6 +188,7 @@ static void save_danger_options(void) {
     CHECK_AND_SAVE_STD(danger, child_first, "danger/child_first", INT, 0);
     CHECK_AND_SAVE_STD(danger, tune_scale, "danger/tune_scale", INT, 0);
     CHECK_AND_SAVE_STD(danger, page_cluster, "danger/page_cluster", INT, 0);
+    CHECK_AND_SAVE_STD(danger, emmc, "danger/emmc", INT, 0);
 
     const int online_cores = lv_dropdown_get_selected(ui_dro_online_cores_danger);
     if (online_cores != online_cores_original) {
@@ -267,10 +278,12 @@ static void init_navigation_group(void) {
         -1, danger, gpu_overclock, lang.muxdanger.gpuoverclock, "gpuoverclock", gpu_frequencies.options,
         gpu_frequencies.count
     );
+    INIT_OPTION_ITEM(-1, danger, emmc, lang.muxdanger.emmc, "emmc", disabled_enabled, 2);
 
     if (cpu_frequencies.count < 3) HIDE_OPTION_ITEM(danger, overclock);
     if (!cpu_cores_can_change()) HIDE_OPTION_ITEM(danger, online_cores);
     if (gpu_frequencies.count < 3) HIDE_OPTION_ITEM(danger, gpu_overclock);
+    if (!emmc_supported()) HIDE_OPTION_ITEM(danger, emmc);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_lbl_vm_swap_danger, ui_dro_vm_swap_danger, four_values);
@@ -295,23 +308,58 @@ static void init_navigation_group(void) {
     apply_theme_list_drop_down(&theme, ui_lbl_online_cores_danger, ui_dro_online_cores_danger, online_core_values);
     free(online_core_values);
 
+    int visible = 0;
+    for (int i = 0; i < ui_count_dynamic; i++) {
+        if (!ui_objects_panel[i] || lv_obj_has_flag(ui_objects_panel[i], MU_OBJ_FLAG_HIDE_FLOAT)) continue;
+        ui_objects[visible] = ui_objects[i];
+        ui_objects_value[visible] = ui_objects_value[i];
+        ui_objects_glyph[visible] = ui_objects_glyph[i];
+        ui_objects_panel[visible] = ui_objects_panel[i];
+        visible++;
+    }
+    ui_count_static = visible;
+
     reset_ui_groups();
     add_ui_groups(ui_objects, ui_objects_value, ui_objects_glyph, ui_objects_panel, 0);
 }
 
 static void handle_option_prev(void) {
+    if (dialogue_active(&emmc_dlg)) {
+        dialogue_handle_dpad(&emmc_dlg, &theme, -1, swap_axis);
+        return;
+    }
     if (msgbox_active) return;
+
+    if (emmc_focused() && lv_dropdown_get_selected(ui_dro_emmc_danger) == 0) {
+        dialogue_open(&emmc_dlg, &theme);
+        return;
+    }
 
     move_option(lv_group_get_focused(ui_group_value), -1);
 }
 
 static void handle_option_next(void) {
+    if (dialogue_active(&emmc_dlg)) {
+        dialogue_handle_dpad(&emmc_dlg, &theme, +1, swap_axis);
+        return;
+    }
     if (msgbox_active) return;
+
+    if (emmc_focused() && lv_dropdown_get_selected(ui_dro_emmc_danger) == 0) {
+        dialogue_open(&emmc_dlg, &theme);
+        return;
+    }
 
     move_option(lv_group_get_focused(ui_group_value), +1);
 }
 
 static void handle_a(void) {
+    if (dialogue_active(&emmc_dlg)) {
+        const mux_confirm_opt selected = (mux_confirm_opt) emmc_dlg.selected;
+        dialogue_dismiss(&emmc_dlg);
+        if (selected == mux_confirm_yep) lv_dropdown_set_selected(ui_dro_emmc_danger, 1);
+        return;
+    }
     if (msgbox_active || hold_call) return;
 
     handle_option_next();
@@ -323,6 +371,11 @@ static void handle_x(void) {
 
 static void handle_b(void) {
     if (hold_call) return;
+
+    if (dialogue_active(&emmc_dlg)) {
+        dialogue_cancel(&emmc_dlg);
+        return;
+    }
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -338,7 +391,7 @@ static void handle_b(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count_static || hold_call) return;
+    if (msgbox_active || dialogue_active(&emmc_dlg) || progress_onscreen != -1 || !ui_count_static || hold_call) return;
 
     play_sound(snd_info_open);
     show_help();
@@ -358,6 +411,43 @@ static void init_elements(void) {
 #undef DANGER
 
     overlay_display();
+
+    dialogue_init_confirm(
+        &emmc_dlg, &theme, ui_screen, lang.muxdanger.emmc, lang.muxdanger.emmc_warning, lang.generic.understand,
+        lang.generic.cancel, lang.generic.select, lang.generic.back
+    );
+}
+
+static void handle_list_up(void) {
+    if (dialogue_active(&emmc_dlg)) {
+        dialogue_handle_dpad(&emmc_dlg, &theme, -1, !swap_axis);
+        return;
+    }
+    handle_list_nav_up();
+}
+
+static void handle_list_down(void) {
+    if (dialogue_active(&emmc_dlg)) {
+        dialogue_handle_dpad(&emmc_dlg, &theme, +1, !swap_axis);
+        return;
+    }
+    handle_list_nav_down();
+}
+
+static void handle_list_up_hold(void) {
+    if (!dialogue_active(&emmc_dlg)) handle_list_nav_up_hold();
+}
+
+static void handle_list_down_hold(void) {
+    if (!dialogue_active(&emmc_dlg)) handle_list_nav_down_hold();
+}
+
+static void handle_page_up(void) {
+    if (!dialogue_active(&emmc_dlg)) handle_list_nav_page_up();
+}
+
+static void handle_page_down(void) {
+    if (!dialogue_active(&emmc_dlg)) handle_list_nav_page_down();
 }
 
 int muxdanger_main(void) {
@@ -391,10 +481,10 @@ int muxdanger_main(void) {
                 [mux_input_x] = handle_x,
                 [mux_input_dpad_left] = handle_option_prev,
                 [mux_input_dpad_right] = handle_option_next,
-                [mux_input_dpad_up] = handle_list_nav_up,
-                [mux_input_dpad_down] = handle_list_nav_down,
-                [mux_input_l1] = handle_list_nav_page_up,
-                [mux_input_r1] = handle_list_nav_page_down,
+                [mux_input_dpad_up] = handle_list_up,
+                [mux_input_dpad_down] = handle_list_down,
+                [mux_input_l1] = handle_page_up,
+                [mux_input_r1] = handle_page_down,
             },
         .release_handler =
             {
@@ -403,10 +493,10 @@ int muxdanger_main(void) {
         .hold_handler = {
             [mux_input_dpad_left] = handle_option_prev,
             [mux_input_dpad_right] = handle_option_next,
-            [mux_input_dpad_up] = handle_list_nav_up_hold,
-            [mux_input_dpad_down] = handle_list_nav_down_hold,
-            [mux_input_l1] = handle_list_nav_page_up,
-            [mux_input_r1] = handle_list_nav_page_down,
+            [mux_input_dpad_up] = handle_list_up_hold,
+            [mux_input_dpad_down] = handle_list_down_hold,
+            [mux_input_l1] = handle_page_up,
+            [mux_input_r1] = handle_page_down,
         }
     };
 
