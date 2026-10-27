@@ -633,10 +633,8 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_img_
                 lv_img_set_src(ui_img_wall, &ui_img_blank);
                 lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
             } else {
-                if (video_wallpaper_active()) {
-                    video_wallpaper_stop();
-                    set_gradient_visible(1);
-                }
+                if (video_wallpaper_active()) video_wallpaper_stop();
+                set_gradient_visible(1);
                 const size_t wlen = strlen(new_wall);
                 if (wlen > 4 && strcmp(new_wall + wlen - 4, ".svg") == 0) {
                     char svg_wall[MAX_BUFFER_SIZE];
@@ -664,10 +662,8 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_img_
                 }
             }
         } else {
-            if (video_wallpaper_active()) {
-                video_wallpaper_stop();
-                set_gradient_visible(1);
-            }
+            if (video_wallpaper_active()) video_wallpaper_stop();
+            set_gradient_visible(1);
             lv_img_set_src(ui_img_wall, &ui_img_blank);
         }
     }

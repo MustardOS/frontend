@@ -6,7 +6,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
 #include <common/display/image.h>
 #include <common/runtime/log.h>
 #include <common/runtime/perf.h>
@@ -17,8 +16,6 @@
 
 #define CROSSFADE_MS       1500u
 #define SLIDESHOW_PATH_MAX 4096
-
-#define SLIDESHOW_FONT_FILE OPT_PATH "share/font/mucredits.ttf"
 
 typedef struct {
     SDL_Texture *tex;
@@ -40,8 +37,7 @@ typedef struct {
     float fade_t;
     uint32_t slide_display_ms;
     SDL_Renderer *renderer;
-    SDL_Texture *tex_empty;
-    int empty_w, empty_h;
+    saver_message_t empty;
 } slideshow_module_t;
 
 static slideshow_module_t mod;
@@ -155,53 +151,6 @@ static void free_slide(slide_t *s) {
     memset(s, 0, sizeof(*s));
 }
 
-static void build_empty_message(SDL_Renderer *renderer, const int screen_w, const int screen_h) {
-    if (!TTF_WasInit() && TTF_Init() != 0) {
-        LOG_ERROR("saver", "Slideshow: TTF_Init failed: %s", TTF_GetError());
-        return;
-    }
-
-    int font_size = screen_h / 20;
-    if (font_size < 14) font_size = 14;
-
-    TTF_Font *font = TTF_OpenFont(SLIDESHOW_FONT_FILE, font_size);
-    if (!font) {
-        LOG_ERROR("saver", "Slideshow: failed to open font %s: %s", SLIDESHOW_FONT_FILE, TTF_GetError());
-        return;
-    }
-
-    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
-
-    const int margin_x = (int) ((float) screen_w * 0.1f);
-    int wrap_w = screen_w - margin_x * 2;
-    if (wrap_w < 32) wrap_w = 32;
-
-    const SDL_Color white = {255, 255, 255, 255};
-    SDL_Surface *surf = TTF_RenderUTF8_Blended_Wrapped(font, lang.generic.no_slideshow_image, white, wrap_w);
-    if (surf) {
-        mod.tex_empty = SDL_CreateTextureFromSurface(renderer, surf);
-        mod.empty_w = surf->w;
-        mod.empty_h = surf->h;
-        SDL_FreeSurface(surf);
-    } else {
-        LOG_ERROR("saver", "Slideshow: failed to render empty message: %s", TTF_GetError());
-    }
-
-    TTF_CloseFont(font);
-}
-
-static void render_empty_state(SDL_Renderer *renderer) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(renderer, NULL);
-
-    if (!mod.tex_empty) return;
-
-    const SDL_Rect dst = {
-        (mod.base.screen_w - mod.empty_w) / 2, (mod.base.screen_h - mod.empty_h) / 2, mod.empty_w, mod.empty_h
-    };
-    SDL_RenderCopy(renderer, mod.tex_empty, NULL, &dst);
-}
-
 static void on_idle_enter(void *user) {
     slideshow_module_t *m = user;
     if (m->path_count == 0) return;
@@ -299,7 +248,7 @@ int slideshow_init(
     mod.current_idx = count > 0 ? saver_rand_range(count) : 0;
     mod.next_idx = count > 1 ? (mod.current_idx + 1) % count : 0;
 
-    if (count == 0) build_empty_message(renderer, screen_w, screen_h);
+    if (count == 0) saver_message_init(&mod.empty, renderer, screen_w, screen_h, lang.generic.no_slideshow_image);
 
     saver_init_base(&mod.base, screen_w, screen_h, "Image Slideshow", 0, 0, 0, NULL, on_idle_enter, &mod);
 
@@ -349,8 +298,8 @@ void slideshow_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active) return;
 
     if (mod.path_count == 0) {
-        render_empty_state(renderer);
-        saver_perf_note_draw_calls((unsigned) (1 + !!mod.tex_empty));
+        saver_message_render(&mod.empty, renderer);
+        saver_perf_note_draw_calls((unsigned) (1 + !!mod.empty.texture));
         return;
     }
 
@@ -383,10 +332,7 @@ void slideshow_shutdown(void) {
     free_slide(&mod.current);
     free_slide(&mod.next);
 
-    if (mod.tex_empty) {
-        SDL_DestroyTexture(mod.tex_empty);
-        mod.tex_empty = NULL;
-    }
+    saver_message_destroy(&mod.empty);
 
     for (int i = 0; i < mod.path_count; i++)
         free(mod.paths[i]);

@@ -45,7 +45,7 @@ UI_SRCS = \
     ui/navigation/grid_nav.c ui/navigation/list_nav.c
 
 SAVER_SRCS = \
-    saver/saver.c saver/blockfall.c saver/boxart.c saver/bsod.c saver/constellation.c \
+    saver/saver.c saver/blank.c saver/blockfall.c saver/boxart.c saver/bsod.c saver/constellation.c \
     saver/datetime.c saver/dvd.c saver/firefly.c saver/matrix.c saver/maze.c \
     saver/mystify.c saver/pulse.c saver/slideshow.c saver/star.c saver/trace.c \
     saver/lavalamp.c saver/glitch.c saver/hallway.c saver/moss.c

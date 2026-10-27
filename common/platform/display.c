@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,7 @@
 #include <common/runtime/perf.h>
 #include <lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h>
 #include <common/display/anim.h>
+#include <common/display/language.h>
 #include <common/runtime/log.h>
 #include <common/runtime/init.h>
 #include <common/platform/device.h>
@@ -24,6 +26,8 @@
 #include <common/storage/inotify.h>
 #include <common/storage/fileio.h>
 #include <common/saver/saver.h>
+#include <common/saver/type.h>
+#include <common/saver/blank.h>
 #include <common/display/screenshot.h>
 #include <common/platform/video.h>
 #include <common/saver/dvd.h>
@@ -262,29 +266,6 @@ static void reload_background(const char *active_theme) {
     LOG_INFO("video", "Loaded theme background: %s", back_image);
 }
 
-enum {
-    saver_type_disabled = 0,
-    saver_type_dvd = 1,
-    saver_type_star = 2,
-    saver_type_matrix = 3,
-    saver_type_firefly = 4,
-    saver_type_pulse = 5,
-    saver_type_trace = 6,
-    saver_type_constellation = 7,
-    saver_type_mystify = 8,
-    saver_type_maze = 9,
-    saver_type_blockfall = 10,
-    saver_type_datetime = 11,
-    saver_type_video = 12,
-    saver_type_slideshow = 13,
-    saver_type_boxart = 14,
-    saver_type_bsod = 15,
-    saver_type_lavalamp = 16,
-    saver_type_glitch = 17,
-    saver_type_hallway = 18,
-    saver_type_moss = 19,
-};
-
 static char video_saver_path[MAX_BUFFER_SIZE];
 static char video_saver_prev_path[MAX_BUFFER_SIZE];
 static display_overlay_fn video_saver_prev_bg = NULL;
@@ -292,17 +273,19 @@ static int video_saver_prev_bg_opaque = 0;
 static int video_saver_running = 0;
 static int active_saver = -1;
 static saver_state_t video_saver_base;
+static saver_message_t video_saver_empty;
 
 static const char *saver_type_name(const int type) {
     static const char *const names[] = {
         "disabled",      "dvd",         "starfield", "matrix",         "firefly",  "pulse_grid", "trace",
         "constellation", "mystify",     "maze",      "blockfall",      "datetime", "video",      "slideshow",
-        "boxart",        "blue_screen", "lava_lamp", "gravity_glitch", "hallway",  "moss",
+        "boxart",        "blue_screen", "lava_lamp", "gravity_glitch", "hallway",  "moss",       "blank",
     };
     return type >= 0 && type < (int) (sizeof(names) / sizeof(names[0])) ? names[type] : "unknown";
 }
 
 static int saver_active(void) {
+    if (active_saver == saver_type_blank) return blank_active();
     if (active_saver == saver_type_lavalamp) return lavalamp_active();
     if (active_saver == saver_type_glitch) return glitch_active();
     if (active_saver == saver_type_hallway) return hallway_active();
@@ -334,12 +317,17 @@ static void saver_update(void) {
             );
             video_saver_prev_bg = video_bg_fn_ptr;
             video_saver_prev_bg_opaque = video_bg_opaque;
-            video_wallpaper_play(video_saver_path);
+            if (video_saver_path[0])
+                video_wallpaper_play(video_saver_path);
+            else
+                video_wallpaper_stop();
             video_saver_running = 1;
         }
         return;
     }
-    if (active_saver == saver_type_datetime)
+    if (active_saver == saver_type_blank)
+        blank_update();
+    else if (active_saver == saver_type_datetime)
         datetime_update();
     else if (active_saver == saver_type_blockfall)
         blockfall_update();
@@ -379,11 +367,16 @@ static void saver_update(void) {
 
 static void saver_render(SDL_Renderer *r) {
     if (active_saver == saver_type_video) {
-        video_wallpaper_render_frame(r);
+        if (video_saver_path[0])
+            video_wallpaper_render_frame(r);
+        else
+            saver_message_render(&video_saver_empty, r);
         saver_perf_note_draw_calls(1);
         return;
     }
-    if (active_saver == saver_type_datetime)
+    if (active_saver == saver_type_blank)
+        blank_render(r);
+    else if (active_saver == saver_type_datetime)
         datetime_render(r);
     else if (active_saver == saver_type_blockfall)
         blockfall_render(r);
@@ -423,6 +416,8 @@ static void saver_render(SDL_Renderer *r) {
 
 // Puts back whatever was drawing the background before the video saver took it over
 static void video_saver_restore(void) {
+    if (!video_saver_running) return;
+
     video_wallpaper_stop();
 
     if (video_saver_prev_path[0]) {
@@ -444,7 +439,9 @@ static void saver_stop(void) {
         saver_stop_base(&video_saver_base);
         return;
     }
-    if (active_saver == saver_type_datetime)
+    if (active_saver == saver_type_blank)
+        blank_stop();
+    else if (active_saver == saver_type_datetime)
         datetime_stop();
     else if (active_saver == saver_type_blockfall)
         blockfall_stop();
@@ -482,6 +479,50 @@ static void saver_stop(void) {
         moss_stop();
 }
 
+static int find_video_in_directory(const char *directory, char *path, const size_t path_size) {
+    if (!directory || !directory[0] || !path || path_size == 0) return 0;
+
+    DIR *dir = opendir(directory);
+    if (!dir) return 0;
+
+    char selected[MAX_BUFFER_SIZE] = "";
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') continue;
+
+        const size_t name_length = strlen(entry->d_name);
+        if (name_length < 5 || strcasecmp(entry->d_name + name_length - 4, ".mp4") != 0) continue;
+
+        char candidate[MAX_BUFFER_SIZE];
+        const int written = snprintf(candidate, sizeof(candidate), "%s/%s", directory, entry->d_name);
+        if (written < 0 || (size_t) written >= sizeof(candidate) || !file_exist(candidate)) continue;
+
+        if (!selected[0] || strcasecmp(candidate, selected) < 0) snprintf(selected, sizeof(selected), "%s", candidate);
+    }
+
+    closedir(dir);
+
+    if (!selected[0]) return 0;
+    snprintf(path, path_size, "%s", selected);
+    return 1;
+}
+
+static int find_user_wallpaper_video(char *path, const size_t path_size) {
+    char directory[MAX_BUFFER_SIZE];
+
+    if (device.storage.sdcard.mount[0]) {
+        snprintf(directory, sizeof(directory), "%s/MUOS/wallpaper", device.storage.sdcard.mount);
+        if (find_video_in_directory(directory, path, path_size)) return 1;
+    }
+
+    if (device.storage.rom.mount[0] && strcmp(device.storage.rom.mount, device.storage.sdcard.mount) != 0) {
+        snprintf(directory, sizeof(directory), "%s/MUOS/wallpaper", device.storage.rom.mount);
+        if (find_video_in_directory(directory, path, path_size)) return 1;
+    }
+
+    return 0;
+}
+
 static void reload_saver(void) {
     if (active_saver == saver_type_video && video_saver_running) {
         video_saver_restore();
@@ -498,6 +539,7 @@ static void reload_saver(void) {
     maze_shutdown();
     blockfall_shutdown();
     datetime_shutdown();
+    blank_shutdown();
     slideshow_shutdown();
     boxart_shutdown();
     bsod_shutdown();
@@ -505,6 +547,7 @@ static void reload_saver(void) {
     glitch_shutdown();
     hallway_shutdown();
     moss_shutdown();
+    saver_message_destroy(&video_saver_empty);
 
     const int type = config.settings.power.saver_type;
 
@@ -513,7 +556,9 @@ static void reload_saver(void) {
     for (int attempt = 0; attempt < 2; attempt++) {
         init_ok = 1;
 
-        if (type == saver_type_datetime) {
+        if (type == saver_type_blank) {
+            init_ok = blank_init(monitor.renderer, device.screen.width, device.screen.height);
+        } else if (type == saver_type_datetime) {
             const uint32_t tc = theme.list_default.text;
             const uint8_t dt_r = (uint8_t) (tc >> 16 & 0xFF);
             const uint8_t dt_g = (uint8_t) (tc >> 8 & 0xFF);
@@ -549,12 +594,14 @@ static void reload_saver(void) {
             init_ok = moss_init(monitor.renderer, device.screen.width, device.screen.height);
         } else if (type == saver_type_video) {
             char saver_video[MAX_BUFFER_SIZE];
+            saver_video[0] = '\0';
             snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
 
             if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video))) {
                 snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
-                if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video)))
-                    snprintf(saver_video, sizeof(saver_video), OPT_SHARE_PATH "media/logo.mp4");
+                if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video))
+                    && !find_user_wallpaper_video(saver_video, sizeof(saver_video)))
+                    saver_video[0] = '\0';
             }
 
             snprintf(video_saver_path, sizeof(video_saver_path), "%s", saver_video);
@@ -562,6 +609,11 @@ static void reload_saver(void) {
                 &video_saver_base, device.screen.width, device.screen.height, "Video Wallpaper", 0, 0, 0, NULL, NULL,
                 NULL
             );
+            if (!video_saver_path[0])
+                saver_message_init(
+                    &video_saver_empty, monitor.renderer, device.screen.width, device.screen.height,
+                    lang.generic.no_wallpaper_video
+                );
         } else if (type == saver_type_dvd) {
             char saver_image[MAX_BUFFER_SIZE];
             snprintf(saver_image, sizeof(saver_image), "%s/%simage/screensaver.png", theme_base, mux_dim);
@@ -871,6 +923,7 @@ void sdl_cleanup(void) {
     maze_shutdown();
     blockfall_shutdown();
     datetime_shutdown();
+    blank_shutdown();
     slideshow_shutdown();
     boxart_shutdown();
     bsod_shutdown();
@@ -878,6 +931,7 @@ void sdl_cleanup(void) {
     glitch_shutdown();
     hallway_shutdown();
     moss_shutdown();
+    saver_message_destroy(&video_saver_empty);
 
     if (monitor.shadow_layer) {
         SDL_DestroyTexture(monitor.shadow_layer);

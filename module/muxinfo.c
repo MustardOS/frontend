@@ -16,16 +16,11 @@ static void show_help(void) {
     gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
 }
 
-static int visible_network_opt(void) {
-    return device.board.has_network;
-}
-
 static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    INIT_STATIC_ITEM(-1, info, news, lang.muxinfo.news, "news", 0);
     INIT_STATIC_ITEM(-1, info, activity, lang.muxinfo.activity, "activity", 0);
     INIT_STATIC_ITEM(-1, info, screenshot, lang.muxinfo.screenshot, "screenshot", 0);
     INIT_STATIC_ITEM(-1, info, space, lang.muxinfo.space, "space", 0);
@@ -38,8 +33,6 @@ static void init_navigation_group(void) {
     reset_ui_groups();
     add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
 
-    if (!visible_network_opt()) HIDE_STATIC_ITEM(info, news);
-
     gen_step_movement(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1, 1, 0, 1);
 }
 
@@ -48,7 +41,6 @@ static void handle_a(void) {
 
     typedef enum {
         menu_general = 0,
-        menu_news,
         menu_credits,
         menu_reload,
     } menu_action;
@@ -62,15 +54,9 @@ static void handle_a(void) {
     } menu_entry;
 
     static const menu_entry entries[ui_count_dynamic] = {
-        {"news", menu_news, visible_network_opt},
-        {"activity", menu_general, NULL},
-        {"screenshot", menu_general, NULL},
-        {"space", menu_general, NULL},
-        {"tester", menu_general, NULL},
-        {"detail", menu_general, NULL},
-        {"credits", menu_credits, NULL},
-        {"reload", menu_reload, NULL},
-        {"third", menu_general, NULL},
+        {"activity", menu_general, NULL}, {"screenshot", menu_general, NULL}, {"space", menu_general, NULL},
+        {"tester", menu_general, NULL},   {"detail", menu_general, NULL},     {"credits", menu_credits, NULL},
+        {"reload", menu_reload, NULL},    {"third", menu_general, NULL},
     };
 
     SELECT_VISIBLE_ENTRY(entries, entry);
@@ -81,17 +67,6 @@ static void handle_a(void) {
             load_mux(entry->mux_name);
 
             mux_input_stop();
-            break;
-        case menu_news:
-            if (is_network_connected()) {
-                play_sound(snd_confirm);
-                load_mux(entry->mux_name);
-
-                mux_input_stop();
-            } else {
-                play_sound(snd_error);
-                toast_message(lang.generic.need_connect, tst_wait_m);
-            }
             break;
         case menu_reload:
             toast_message(lang.muxinfo.reload_run, tst_wait_f);

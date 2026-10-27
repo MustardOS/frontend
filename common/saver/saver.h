@@ -88,6 +88,22 @@ typedef struct {
     int h;
 } saver_snapshot_t;
 
+typedef struct {
+    SDL_Texture *texture;
+    int width;
+    int height;
+    int screen_width;
+    int screen_height;
+} saver_message_t;
+
+int saver_message_init(
+    saver_message_t *message, SDL_Renderer *renderer, int screen_width, int screen_height, const char *text
+);
+
+void saver_message_render(const saver_message_t *message, SDL_Renderer *renderer);
+
+void saver_message_destroy(saver_message_t *message);
+
 int saver_snapshot_take(saver_snapshot_t *snapshot);
 
 void saver_snapshot_free(saver_snapshot_t *snapshot);

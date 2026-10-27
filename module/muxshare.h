@@ -325,8 +325,6 @@ int muxnetscan_main(void);
 
 int muxnetwork_main(void);
 
-int muxnews_main(void);
-
 void muxoption_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 void muxoverlay_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);

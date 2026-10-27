@@ -90,6 +90,18 @@ int cheevo_cache_request_name(const char *post, char *name, const size_t name_si
         return written > 0 && (size_t) written < name_size && cheevo_cache_name_valid(name) ? 2 : 0;
     }
 
+    if (strcmp(request_type, "gameid") == 0) {
+        char hash[65];
+        if (!form_value(post, "m", hash, sizeof(hash))) return 0;
+        for (size_t index = 0; hash[index]; index++) {
+            const char value = hash[index];
+            if (!((value >= 'a' && value <= 'f') || (value >= 'A' && value <= 'F') || (value >= '0' && value <= '9')))
+                return 0;
+        }
+        const int written = snprintf(name, name_size, "data-resolve-%s.json", hash);
+        return written > 0 && (size_t) written < name_size && cheevo_cache_name_valid(name) ? 2 : 0;
+    }
+
     if (strcmp(request_type, "achievementsets") != 0) return 0;
 
     char identity[65];

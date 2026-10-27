@@ -32,8 +32,14 @@ static int bluetooth_ready(void) {
 
     if (ready) return 1;
 
+    if (unavailable || !file_exist(RUN_PATH "bluetooth_state")) {
+        write_text_to_file(RUN_PATH "bluetooth_state", "w", CHAR, "starting");
+        const char *args[] = {OPT_PATH "script/init/S75bluetooth.sh", "start"};
+        run_exec(args, A_SIZE(args), 1, 0, NULL, NULL);
+    }
+
     play_sound(snd_error);
-    toast_message(unavailable ? lang.muxbtall.unavailable : lang.muxbtall.starting, tst_wait_m);
+    toast_message(lang.muxbtall.starting, tst_wait_m);
     return 0;
 }
 

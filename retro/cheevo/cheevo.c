@@ -31,6 +31,7 @@
 #include "../video/image_writer.h"
 #include "account.h"
 #include "cache.h"
+#include "chd_reader.h"
 #include "cheevo.h"
 #include "spool.h"
 #include "../state/vfs.h"
@@ -1154,6 +1155,7 @@ int cheevo_hash_content(const char *content_path, char out[33]) {
     rc_hash_initialize_iterator(&iterator, content_path, NULL, 0);
 
     memcpy(&iterator.callbacks.filereader, &hash_reader, sizeof(hash_reader));
+    cheevo_chd_reader_callbacks(&iterator.callbacks.cdreader);
 
     const int ok = rc_hash_iterate(out, &iterator);
     rc_hash_destroy_iterator(&iterator);
@@ -1180,6 +1182,7 @@ static int runtime_start(void) {
 
     rc_hash_callbacks_t hash_callbacks = {0};
     memcpy(&hash_callbacks.filereader, &hash_reader, sizeof(hash_reader));
+    cheevo_chd_reader_callbacks(&hash_callbacks.cdreader);
     rc_client_set_hash_callbacks(client, &hash_callbacks);
 
     // RetroAchievements identifies clients by user agent, and the rcheevos clause has to come

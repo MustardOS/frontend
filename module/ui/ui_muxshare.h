@@ -304,7 +304,6 @@
     HDMI(mirror, "mirror")
 
 #define INFO_ELEMENTS                                                                                                  \
-    INFO(news, "news")                                                                                                 \
     INFO(activity, "activity")                                                                                         \
     INFO(screenshot, "screenshot")                                                                                     \
     INFO(space, "space")                                                                                               \

@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <common/runtime/log.h>
 #include <common/storage/inotify.h>
 #include <common/runtime/init.h>
@@ -22,6 +24,7 @@ const uint8_t saver_pastel_g[SAVER_PASTEL_COUNT] = {255, 182, 179, 255, 255, 255
 const uint8_t saver_pastel_b[SAVER_PASTEL_COUNT] = {255, 193, 128, 153, 178, 255, 255, 255, 204, 153, 220};
 
 #define SAVER_SPEED_PATH "/opt/muos/config/settings/power/saver_speed"
+#define SAVER_FONT_PATH  OPT_PATH "share/font/mucredits.ttf"
 
 static int saver_speed_override = 0;
 
@@ -198,6 +201,75 @@ void saver_shutdown_base(saver_state_t *s) {
     s->suppress_until = 0;
 
     LOG_INFO("saver", "%s Shutdown", s->log_tag ? s->log_tag : "Saver");
+}
+
+int saver_message_init(
+    saver_message_t *message, SDL_Renderer *renderer, const int screen_width, const int screen_height, const char *text
+) {
+    if (!message || !renderer || !text) return 0;
+
+    saver_message_destroy(message);
+    message->screen_width = screen_width;
+    message->screen_height = screen_height;
+
+    if (!TTF_WasInit() && TTF_Init() != 0) {
+        LOG_ERROR("saver", "TTF_Init failed: %s", TTF_GetError());
+        return 0;
+    }
+
+    int font_size = screen_height / 20;
+    if (font_size < 14) font_size = 14;
+
+    TTF_Font *font = TTF_OpenFont(SAVER_FONT_PATH, font_size);
+    if (!font) {
+        LOG_ERROR("saver", "Failed to open font %s: %s", SAVER_FONT_PATH, TTF_GetError());
+        return 0;
+    }
+
+    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
+
+    int wrap_width = screen_width - (int) ((float) screen_width * 0.2f);
+    if (wrap_width < 32) wrap_width = 32;
+
+    const SDL_Color white = {255, 255, 255, 255};
+    SDL_Surface *surface = TTF_RenderUTF8_Blended_Wrapped(font, text, white, wrap_width);
+    TTF_CloseFont(font);
+
+    if (!surface) {
+        LOG_ERROR("saver", "Failed to render message: %s", TTF_GetError());
+        return 0;
+    }
+
+    message->texture = SDL_CreateTextureFromSurface(renderer, surface);
+    message->width = surface->w;
+    message->height = surface->h;
+    SDL_FreeSurface(surface);
+
+    return message->texture != NULL;
+}
+
+void saver_message_render(const saver_message_t *message, SDL_Renderer *renderer) {
+    if (!message || !renderer) return;
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(renderer, NULL);
+
+    if (!message->texture) return;
+
+    const SDL_Rect destination = {
+        (message->screen_width - message->width) / 2,
+        (message->screen_height - message->height) / 2,
+        message->width,
+        message->height,
+    };
+    SDL_RenderCopy(renderer, message->texture, NULL, &destination);
+}
+
+void saver_message_destroy(saver_message_t *message) {
+    if (!message) return;
+
+    if (message->texture) SDL_DestroyTexture(message->texture);
+    memset(message, 0, sizeof(*message));
 }
 
 int saver_snapshot_take(saver_snapshot_t *snapshot) {

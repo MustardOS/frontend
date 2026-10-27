@@ -11,6 +11,7 @@
 #include <common/runtime/perf.h>
 #include <common/saver/saver.h>
 #include <common/saver/boxart.h>
+#include <common/display/language.h>
 
 #define BOX_PARTICLE_COUNT     8
 #define BOX_PATH_MAX           4096
@@ -52,6 +53,7 @@ typedef struct {
     box_particle_t particles[BOX_PARTICLE_COUNT];
     box_cache_entry_t cache[BOX_CACHE_COUNT];
     SDL_Renderer *renderer;
+    saver_message_t empty;
 } boxart_module_t;
 
 static boxart_module_t mod;
@@ -435,6 +437,7 @@ int boxart_init(SDL_Renderer *renderer, const char *catalogue_path, const int sc
     mod.paths = paths;
     mod.path_count = count;
     if (count > 0) mod.bad_paths = calloc((size_t) count, sizeof(unsigned char));
+    if (count == 0) saver_message_init(&mod.empty, renderer, screen_w, screen_h, lang.generic.no_box_art);
 
     saver_init_base(&mod.base, screen_w, screen_h, "Flying Box Art", 0, 0, 0, NULL, on_idle_enter, &mod);
 
@@ -470,7 +473,11 @@ void boxart_update(void) {
 
 void boxart_render(SDL_Renderer *renderer) {
     if (!mod.base.enabled || !mod.base.idle_active) return;
-    if (mod.path_count == 0) return;
+    if (mod.path_count == 0) {
+        saver_message_render(&mod.empty, renderer);
+        saver_perf_note_draw_calls((unsigned) (1 + !!mod.empty.texture));
+        return;
+    }
 
     int order[BOX_PARTICLE_COUNT];
     unsigned draw_calls = 0;
@@ -520,7 +527,6 @@ void boxart_render(SDL_Renderer *renderer) {
 }
 
 int boxart_active(void) {
-    if (mod.path_count == 0) return 0;
     return saver_active_base(&mod.base);
 }
 
@@ -532,6 +538,7 @@ void boxart_stop(void) {
 
 void boxart_shutdown(void) {
     release_particles();
+    saver_message_destroy(&mod.empty);
 
     for (int i = 0; i < BOX_CACHE_COUNT; i++) {
         if (mod.cache[i].tex) {

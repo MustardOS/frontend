@@ -20,6 +20,8 @@
 #define MAX_EVENT_DEVICES         64
 #define MAX_CPU_POLICIES          16
 #define MAX_CPUS                  32
+#define MAX_CPU_IDLE_STATES       256
+#define MAX_DEVFREQ_DEVICES       16
 #define MAX_QUIESCE_NAMES         16
 #define MAX_QUIESCED_PROCESSES    64
 #define ARM_DELAY_MILLISECONDS    350
@@ -57,11 +59,25 @@ struct cpu_policy_snapshot {
     int maximum_changed;
 };
 
+struct cpu_idle_snapshot {
+    char path[PATH_MAX];
+    char disabled[8];
+};
+
+struct devfreq_snapshot {
+    char maximum_path[PATH_MAX];
+    char maximum[64];
+};
+
 struct optimisation_snapshot {
     struct cpu_policy_snapshot policies[MAX_CPU_POLICIES];
     size_t policy_count;
     int offlined_cpus[MAX_CPUS];
     size_t offlined_count;
+    struct cpu_idle_snapshot idle_states[MAX_CPU_IDLE_STATES];
+    size_t idle_state_count;
+    struct devfreq_snapshot devfreq_devices[MAX_DEVFREQ_DEVICES];
+    size_t devfreq_count;
     pid_t quiesced_processes[MAX_QUIESCED_PROCESSES];
     size_t quiesced_count;
 };
@@ -410,6 +426,55 @@ static void offline_secondary_cpus(struct optimisation_snapshot *snapshot) {
     }
 }
 
+static void enable_cpu_idle_states(struct optimisation_snapshot *snapshot) {
+    glob_t paths = {0};
+    if (glob("/sys/devices/system/cpu/cpu*/cpuidle/state*/disable", 0, NULL, &paths) != 0) return;
+
+    for (size_t index = 0; index < paths.gl_pathc && snapshot->idle_state_count < MAX_CPU_IDLE_STATES; index++) {
+        struct cpu_idle_snapshot *state = &snapshot->idle_states[snapshot->idle_state_count];
+        if (strlen(paths.gl_pathv[index]) >= sizeof(state->path)) continue;
+        if (read_text(paths.gl_pathv[index], state->disabled, sizeof(state->disabled)) < 0
+            || strcmp(state->disabled, "0") == 0) {
+            continue;
+        }
+        if (write_text(paths.gl_pathv[index], "0") != 0) continue;
+        snprintf(state->path, sizeof(state->path), "%s", paths.gl_pathv[index]);
+        snapshot->idle_state_count++;
+    }
+
+    globfree(&paths);
+}
+
+static void minimise_devfreq_devices(struct optimisation_snapshot *snapshot) {
+    glob_t paths = {0};
+    if (glob("/sys/class/devfreq/*/max_freq", 0, NULL, &paths) != 0) return;
+
+    for (size_t index = 0; index < paths.gl_pathc && snapshot->devfreq_count < MAX_DEVFREQ_DEVICES; index++) {
+        struct devfreq_snapshot *device = &snapshot->devfreq_devices[snapshot->devfreq_count];
+        if (strlen(paths.gl_pathv[index]) >= sizeof(device->maximum_path)) continue;
+
+        char directory[PATH_MAX];
+        snprintf(directory, sizeof(directory), "%s", paths.gl_pathv[index]);
+        char *separator = strrchr(directory, '/');
+        if (!separator) continue;
+        *separator = '\0';
+
+        char minimum_path[PATH_MAX];
+        char minimum[64];
+        if (join_path(minimum_path, sizeof(minimum_path), directory, "min_freq") < 0
+            || read_text(paths.gl_pathv[index], device->maximum, sizeof(device->maximum)) < 0
+            || read_text(minimum_path, minimum, sizeof(minimum)) < 0 || strcmp(device->maximum, minimum) == 0
+            || write_text(paths.gl_pathv[index], minimum) != 0) {
+            continue;
+        }
+
+        snprintf(device->maximum_path, sizeof(device->maximum_path), "%s", paths.gl_pathv[index]);
+        snapshot->devfreq_count++;
+    }
+
+    globfree(&paths);
+}
+
 static void begin_optimisation(
     struct optimisation_snapshot *snapshot, const char *const *quiesce_names, const size_t quiesce_count
 ) {
@@ -417,6 +482,8 @@ static void begin_optimisation(
     prctl(PR_SET_TIMERSLACK, TIMER_SLACK_NANOSECONDS, 0, 0, 0);
     quiesce_processes(snapshot, quiesce_names, quiesce_count);
     optimise_cpu_policies(snapshot);
+    enable_cpu_idle_states(snapshot);
+    minimise_devfreq_devices(snapshot);
     offline_secondary_cpus(snapshot);
 }
 
@@ -433,6 +500,16 @@ static void restore_optimisation(const struct optimisation_snapshot *snapshot) {
         const struct cpu_policy_snapshot *policy = &snapshot->policies[index - 1];
         if (policy->maximum_changed) write_text(policy->maximum_path, policy->maximum);
         if (policy->governor_changed) write_text(policy->governor_path, policy->governor);
+    }
+
+    for (size_t index = snapshot->idle_state_count; index > 0; --index) {
+        const struct cpu_idle_snapshot *state = &snapshot->idle_states[index - 1];
+        write_text(state->path, state->disabled);
+    }
+
+    for (size_t index = snapshot->devfreq_count; index > 0; --index) {
+        const struct devfreq_snapshot *device = &snapshot->devfreq_devices[index - 1];
+        write_text(device->maximum_path, device->maximum);
     }
 
     for (size_t index = 0; index < snapshot->quiesced_count; ++index) {

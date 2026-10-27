@@ -14,6 +14,7 @@
 #include <common/base/strutil.h>
 #include <common/config/config.h>
 #include <common/runtime/init.h>
+#include <common/runtime/log.h>
 #include <lvgl/lvgl.h>
 #include <SDL2/SDL.h>
 #include "ui_loading.h"
@@ -79,7 +80,11 @@ static void loading_splash_hide(void) {
 }
 
 int loading_splash_show(const char *content_path) {
-    if (!config.visual.launchsplash || !content_path || !content_path[0]) return 0;
+    if (!config.visual.launchsplash) {
+        LOG_DEBUG(mux_module, "Launch splash disabled");
+        return 0;
+    }
+    if (!content_path || !content_path[0]) return 0;
 
     char catalogue_name[MAX_BUFFER_SIZE];
     get_catalogue_name_for_content(content_path, catalogue_name, sizeof(catalogue_name));
@@ -91,6 +96,12 @@ int loading_splash_show(const char *content_path) {
     const int found = load_splash_catalogue(
         catalogue_name, program, get_file_name(content_path), mux_dim, splash_path, sizeof(splash_path)
     );
+    if (!found) {
+        LOG_DEBUG(
+            mux_module, "No launch splash found for content '%s' in catalogue '%s'", get_file_name(content_path),
+            catalogue_name
+        );
+    }
     free(program);
     if (!found) return 0;
 

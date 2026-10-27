@@ -246,7 +246,9 @@ static const lang_field lang_fields[] = {
     {"generic", LANG_OFF(generic.section_help), lang_generic, "Press Left or Right to move between the sections of this screen. The shoulder buttons do the same."},
     {"generic", LANG_OFF(generic.no_info), lang_generic, "No Information Found"},
     {"generic", LANG_OFF(generic.no_load), lang_generic, "Cannot find original launch content..."},
+    {"generic", LANG_OFF(generic.no_box_art), lang_generic, "No Box Art Found...\n\nAdd box art through Catalogue in the Web Dashboard!"},
     {"generic", LANG_OFF(generic.no_slideshow_image), lang_generic, "No Images Found...\n\nPlace images in 'MUOS/slideshow' folder!"},
+    {"generic", LANG_OFF(generic.no_wallpaper_video), lang_generic, "No Videos Found...\n\nPlace videos in 'MUOS/wallpaper' folder!"},
     {"generic", LANG_OFF(generic.offline), lang_generic, "Offline"},
     {"generic", LANG_OFF(generic.online), lang_generic, "Online"},
     {"generic", LANG_OFF(generic.open), lang_generic, "Open"},
@@ -1187,8 +1189,7 @@ static const lang_field lang_fields[] = {
 
     // muxinfo
     {"muxinfo", LANG_OFF(muxinfo.title), lang_specific, "Information"},
-    {"muxinfo", LANG_OFF(muxinfo.overview), lang_specific, "Reports what your device is doing, covering system and battery details, network status, storage use, play activity and the community news feed."},
-    {"muxinfo", LANG_OFF(muxinfo.news), lang_specific, "Community News"},
+    {"muxinfo", LANG_OFF(muxinfo.overview), lang_specific, "Reports what your device is doing, covering system and battery details, network status, storage use and play activity."},
     {"muxinfo", LANG_OFF(muxinfo.detail), lang_specific, "Device Details"},
     {"muxinfo", LANG_OFF(muxinfo.reload), lang_specific, "Reload Frontend"},
     {"muxinfo", LANG_OFF(muxinfo.reload_run), lang_specific, "Reloading Frontend..."},
@@ -1201,7 +1202,6 @@ static const lang_field lang_fields[] = {
     {"muxinfo", LANG_OFF(muxinfo.help.third), lang_specific, "The third party libraries built into this release, with the version of each one."},
     {"muxthird", LANG_OFF(muxthird.title), lang_specific, "Third Party"},
     {"muxthird", LANG_OFF(muxthird.overview), lang_specific, "Every third party library this release is built with, listed alphabetically with its version."},
-    {"muxinfo", LANG_OFF(muxinfo.help.news), lang_specific, "Community news and announcements, fetched while you are online."},
     {"muxinfo", LANG_OFF(muxinfo.help.detail), lang_specific, "Everything about the device itself, its battery and its network connection, grouped into sections."},
     {"muxinfo", LANG_OFF(muxinfo.help.reload), lang_specific, "Restarts the frontend so it picks up any configuration or theme changes.\n\nQuicker than a full reboot, and your content is left alone."},
     {"muxinfo", LANG_OFF(muxinfo.help.activity), lang_specific, "How long you have played each item and how often, gathered from the activity tracker."},
@@ -1561,14 +1561,6 @@ static const lang_field lang_fields[] = {
     {"muxnetwork", LANG_OFF(muxnetwork.wired_help), lang_specific, "Configure the wired Ethernet connection. DHCP obtains the network details automatically, while Static lets you set the device address, subnet, gateway and DNS server yourself."},
     {"muxnetwork", LANG_OFF(muxnetwork.help), lang_specific, "Manage saved Wi-Fi networks and automatic joining. Joined describes the local Wi-Fi link, not Internet availability."},
 
-    // muxnews
-    {"muxnews", LANG_OFF(muxnews.title), lang_specific, "Community News"},
-    {"muxnews", LANG_OFF(muxnews.overview), lang_specific, "Shows announcements from the MustardOS crew, covering releases, changes and anything worth knowing about your device. Select an entry to read it in full and scroll with the D-pad."},
-    {"muxnews", LANG_OFF(muxnews.none), lang_specific, "No News Found..."},
-    {"muxnews", LANG_OFF(muxnews.download), lang_specific, "Downloading Community News..."},
-    {"muxnews", LANG_OFF(muxnews.error), lang_specific, "Error Obtaining Community News"},
-    {"muxnews", LANG_OFF(muxnews.open), lang_specific, "Downloading Post..."},
-
     // muxoption
     {"muxoption", LANG_OFF(muxoption.title_main), lang_specific, "CONTENT OPTIONS"},
     {"muxoption", LANG_OFF(muxoption.overview), lang_specific, "Sets how one piece of content behaves, covering its core, control scheme and any overrides. Changes here apply only to the item you opened this from."},
@@ -1765,6 +1757,7 @@ static const lang_field lang_fields[] = {
     {"muxpower", LANG_OFF(muxpower.saver.type.glitch), lang_specific, "Gravity Glitch"},
     {"muxpower", LANG_OFF(muxpower.saver.type.hallway), lang_specific, "Endless Hallway"},
     {"muxpower", LANG_OFF(muxpower.saver.type.moss), lang_specific, "Pixel Moss"},
+    {"muxpower", LANG_OFF(muxpower.saver.type.blank), lang_specific, "Blank"},
     {"muxpower", LANG_OFF(muxpower.saver.speed.title), lang_specific, "Screensaver Speed"},
     {"muxpower", LANG_OFF(muxpower.saver.speed.crawl), lang_specific, "Crawl"},
     {"muxpower", LANG_OFF(muxpower.saver.speed.cruise), lang_specific, "Cruise"},

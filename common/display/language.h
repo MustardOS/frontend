@@ -130,7 +130,9 @@ struct mux_lang {
         char section_help[MAX_BUFFER_SIZE];
         char no_info[MAX_BUFFER_SIZE];
         char no_load[MAX_BUFFER_SIZE];
+        char no_box_art[MAX_BUFFER_SIZE];
         char no_slideshow_image[MAX_BUFFER_SIZE];
+        char no_wallpaper_video[MAX_BUFFER_SIZE];
         char offline[MAX_BUFFER_SIZE];
         char online[MAX_BUFFER_SIZE];
         char open[MAX_BUFFER_SIZE];
@@ -1210,7 +1212,6 @@ struct mux_lang {
     struct {
         char title[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
-        char news[MAX_BUFFER_SIZE];
         char detail[MAX_BUFFER_SIZE];
         char activity[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
@@ -1221,7 +1222,6 @@ struct mux_lang {
         char reload_run[MAX_BUFFER_SIZE];
         char third[MAX_BUFFER_SIZE];
         struct {
-            char news[MAX_BUFFER_SIZE];
             char detail[MAX_BUFFER_SIZE];
             char activity[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
@@ -1616,15 +1616,6 @@ struct mux_lang {
     } muxnetwork;
 
     struct {
-        char title[MAX_BUFFER_SIZE];
-        char overview[MAX_BUFFER_SIZE];
-        char none[MAX_BUFFER_SIZE];
-        char download[MAX_BUFFER_SIZE];
-        char error[MAX_BUFFER_SIZE];
-        char open[MAX_BUFFER_SIZE];
-    } muxnews;
-
-    struct {
         char title_main[MAX_BUFFER_SIZE];
         char overview[MAX_BUFFER_SIZE];
         struct {
@@ -1857,6 +1848,7 @@ struct mux_lang {
                 char glitch[MAX_BUFFER_SIZE];
                 char hallway[MAX_BUFFER_SIZE];
                 char moss[MAX_BUFFER_SIZE];
+                char blank[MAX_BUFFER_SIZE];
             } type;
             struct {
                 char title[MAX_BUFFER_SIZE];

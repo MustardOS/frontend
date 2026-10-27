@@ -299,7 +299,6 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `muxnetproxy`: Network Proxy Settings
 * `muxnetscan`: Network SSID Scanner
 * `muxnetwork`: Network Configuration
-* `muxnews`: Community News
 * `muxoption`: Content Explorer Options
 * `muxorder`: Content Sort Order
 * `muxoverlay`: Content Overlay Settings

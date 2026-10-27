@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include <common/ui/orientation.h>
+#include <common/saver/type.h>
 #include "ui/ui_muxpower.h"
 
 static mux_dialogue save_dlg;
@@ -41,35 +42,8 @@ static const int saver_speed_values[SAVER_SPEED_COUNT] = {
     saver_speed_crawl, saver_speed_cruise, saver_speed_fast, saver_speed_turbo
 };
 
-#define SAVER_TYPE_COUNT 20
-enum saver_type {
-    saver_type_disabled = 0,
-    saver_type_dvd = 1,
-    saver_type_star = 2,
-    saver_type_matrix = 3,
-    saver_type_firefly = 4,
-    saver_type_pulse = 5,
-    saver_type_trace = 6,
-    saver_type_constellation = 7,
-    saver_type_mystify = 8,
-    saver_type_maze = 9,
-    saver_type_blockfall = 10,
-    saver_type_datetime = 11,
-    saver_type_video = 12,
-    saver_type_slideshow = 13,
-    saver_type_boxart = 14,
-    saver_type_bsod = 15,
-    saver_type_lavalamp = 16,
-    saver_type_glitch = 17,
-    saver_type_hallway = 18,
-    saver_type_moss = 19,
-};
-
-static const int saver_type_values[SAVER_TYPE_COUNT] = {
-    saver_type_disabled,  saver_type_dvd,      saver_type_star,          saver_type_matrix,    saver_type_firefly,
-    saver_type_pulse,     saver_type_trace,    saver_type_constellation, saver_type_mystify,   saver_type_maze,
-    saver_type_blockfall, saver_type_datetime, saver_type_video,         saver_type_slideshow, saver_type_boxart,
-    saver_type_bsod,      saver_type_lavalamp, saver_type_glitch,        saver_type_hallway,   saver_type_moss,
+static const int saver_type_values[saver_type_count] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 };
 
 char **gov_values_lower = NULL;
@@ -188,7 +162,7 @@ static void set_saver(void) {
 
 static int get_selected_saver_type(void) {
     return map_drop_down_to_value(
-        lv_dropdown_get_selected(ui_dro_saver_type_power), saver_type_values, SAVER_TYPE_COUNT, saver_type_dvd
+        lv_dropdown_get_selected(ui_dro_saver_type_power), saver_type_values, saver_type_count, saver_type_dvd
     );
 }
 
@@ -207,6 +181,11 @@ static int saver_type_enabled(void) {
     return get_selected_saver_type() != saver_type_disabled;
 }
 
+static int saver_speed_enabled(void) {
+    const int type = get_selected_saver_type();
+    return type != saver_type_disabled && type != saver_type_blank;
+}
+
 static int saver_preview_focus_active(void) {
     const lv_obj_t *focused = lv_group_get_focused(ui_group);
 
@@ -214,7 +193,7 @@ static int saver_preview_focus_active(void) {
 }
 
 static void check_focus(void) {
-    if (saver_type_enabled()) {
+    if (saver_speed_enabled()) {
         lv_obj_clear_flag(ui_pnl_saver_speed_power, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
         lv_obj_add_flag(ui_pnl_saver_speed_power, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -252,7 +231,7 @@ static void restore_power_options(void) {
     }
 
     map_drop_down_to_index(
-        ui_dro_saver_type_power, config.settings.power.saver_type, saver_type_values, SAVER_TYPE_COUNT, saver_type_dvd
+        ui_dro_saver_type_power, config.settings.power.saver_type, saver_type_values, saver_type_count, saver_type_dvd
     );
 
     for (int i = 0; i < 2; i++) {
@@ -358,7 +337,7 @@ static int save_power_options(void) {
     if (lv_dropdown_get_option_cnt(ui_dro_saver_type_power) > 1
         && lv_dropdown_get_selected(ui_dro_saver_type_power) != saver_type_original) {
         const int idx_type = map_drop_down_to_value(
-            lv_dropdown_get_selected(ui_dro_saver_type_power), saver_type_values, SAVER_TYPE_COUNT, saver_type_dvd
+            lv_dropdown_get_selected(ui_dro_saver_type_power), saver_type_values, saver_type_count, saver_type_dvd
         );
         is_modified++;
         if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/power/saver_type", INT, idx_type)) save_failed++;
@@ -411,7 +390,7 @@ static void init_navigation_group(void) {
         lang.muxpower.saver.speed.turbo
     };
 
-    static const char *saver_type[SAVER_TYPE_COUNT] = {
+    static const char *saver_type[saver_type_count] = {
         lang.generic.disabled,
         lang.muxpower.saver.type.dvd,
         lang.muxpower.saver.type.star,
@@ -432,6 +411,7 @@ static void init_navigation_group(void) {
         lang.muxpower.saver.type.glitch,
         lang.muxpower.saver.type.hallway,
         lang.muxpower.saver.type.moss,
+        lang.muxpower.saver.type.blank,
     };
 
     INIT_OPTION_ITEM(-1, power, shutdown, lang.muxpower.sleep.title, "shutdown", sleep_timer, SHUTDOWN_COUNT);
@@ -442,7 +422,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, power, gov_idle, lang.muxpower.gov.idle, "gov_idle", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(-1, power, gov_default, lang.muxpower.gov.dflt, "gov_default", gov_values_disp, (int) gov_count);
     INIT_OPTION_ITEM(
-        -1, power, saver_type, lang.muxpower.saver.type.title, "saver_type", (char **) saver_type, SAVER_TYPE_COUNT
+        -1, power, saver_type, lang.muxpower.saver.type.title, "saver_type", (char **) saver_type, saver_type_count
     );
     INIT_OPTION_ITEM(
         -1, power, saver_speed, lang.muxpower.saver.speed.title, "saver_speed", (char **) saver_speed, SAVER_SPEED_COUNT
