@@ -30,6 +30,8 @@ void apply_gradient_to_ui_screen(
 
 void set_gradient_visible(int visible);
 
+void set_video_wallpaper_background(int playing);
+
 void ui_common_get_gradient_buffer(void **buf, int *w, int *h);
 
 void fade_reset(void);

@@ -390,6 +390,17 @@ void set_gradient_visible(const int visible) {
     }
 }
 
+void set_video_wallpaper_background(const int playing) {
+    const lv_opa_t opa = playing ? LV_OPA_TRANSP : (lv_opa_t) theme.system.background_alpha;
+
+    if (lv_obj_is_valid(canvas)) lv_obj_set_style_opa(canvas, opa, MU_OBJ_MAIN_DEFAULT);
+    if (lv_obj_is_valid(ui_screen)) {
+        lv_obj_set_style_bg_opa(
+            ui_screen, theme.system.background_gradient_direction == 0 ? opa : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT
+        );
+    }
+}
+
 void ui_common_get_gradient_buffer(void **buf, int *w, int *h) {
     if (!canvas_buffer || !lv_obj_is_valid(canvas)) {
         *buf = NULL;
@@ -2068,6 +2079,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
                     video_wallpaper_play(mp4_path);
                     lv_img_set_src(ui_img_wall, &ui_img_blank);
                     lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+                    set_video_wallpaper_background(video_wallpaper_active());
                     video_played = 1;
                 }
             }
