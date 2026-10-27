@@ -1828,8 +1828,7 @@ void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_
 }
 
 static int update_status_glyph(
-    lv_obj_t *ui_img, const struct theme_config *theme, const char *glyph_folder, const char *glyph_name,
-    const int size_pct
+    lv_obj_t *ui_img, const struct theme_config *theme, const char *glyph_folder, const char *glyph_name
 ) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
@@ -1838,16 +1837,11 @@ static int update_status_glyph(
             mux_dim, glyph_folder, glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed)
         )) {
         int header_target =
-            resolve_glyph_size(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
-        int header_px =
-            glyph_explicit_px(config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->header.height);
-
-        if (header_target > 0) header_target = header_target * size_pct / 100;
-        if (header_px > 0) header_px = header_px * size_pct / 100;
+            resolve_glyph_size(config.settings.themeopt.glyph_size_header, theme->glyph.header,  theme->mux.item.height * 3 / 4);
 
         append_glyph_size_hint(image_embed, sizeof(image_embed), header_target);
         lv_img_set_src(ui_img, image_embed);
-        apply_glyph_scale(ui_img, image_embed, header_px, header_px);
+        apply_glyph_scale(ui_img, image_embed, header_target, header_target);
         return 1;
     }
 
@@ -1869,7 +1863,7 @@ static int header_extra_glyph(
     lv_obj_set_style_img_recolor(ui_img, lv_color_hex(theme->datetime.text), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_img, theme->datetime.alpha, MU_OBJ_MAIN_DEFAULT);
 
-    update_status_glyph(ui_img, theme, glyph_folder, glyph_name, 75);
+    update_status_glyph(ui_img, theme, glyph_folder, glyph_name);
     lv_obj_clear_flag(ui_img, LV_OBJ_FLAG_HIDDEN);
 
     return 1;
@@ -1911,7 +1905,7 @@ void update_battery_capacity(lv_obj_t *ui_sta_capacity, const struct theme_confi
         lv_obj_set_style_img_recolor_opa(ui_sta_capacity, theme->status.battery.normal_alpha, MU_OBJ_MAIN_DEFAULT);
     }
 
-    update_status_glyph(ui_sta_capacity, theme, "header", battery_glyph_name, 100);
+    update_status_glyph(ui_sta_capacity, theme, "header", battery_glyph_name);
 }
 
 void update_battery_percent_label(lv_obj_t *ui_label, const struct theme_config *theme) {
@@ -1956,7 +1950,7 @@ void update_bluetooth_status(lv_obj_t *ui_sta_bluetooth, const struct theme_conf
 
     const char *bluetooth_status_filename = status_style.status[0] == 'a' ? "bluetooth_active" : "bluetooth_normal";
 
-    update_status_glyph(ui_sta_bluetooth, theme, "header", bluetooth_status_filename, 75);
+    update_status_glyph(ui_sta_bluetooth, theme, "header", bluetooth_status_filename);
 }
 
 void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *theme, const int force_glyph) {
@@ -2007,10 +2001,10 @@ void update_network_status(lv_obj_t *ui_sta_network, const struct theme_config *
     if (connected && signal_band >= 0) {
         char strength_filename[32];
         snprintf(strength_filename, sizeof(strength_filename), "network_active_%d", signal_band);
-        if (update_status_glyph(ui_sta_network, theme, "header", strength_filename, 75)) return;
+        if (update_status_glyph(ui_sta_network, theme, "header", strength_filename)) return;
     }
 
-    update_status_glyph(ui_sta_network, theme, "header", network_status_filename, 75);
+    update_status_glyph(ui_sta_network, theme, "header", network_status_filename);
 }
 
 static void hide_message(lv_timer_t *msg_timer) {
