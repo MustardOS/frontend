@@ -233,6 +233,10 @@ OVERLAY_PATTERNS = ("checkerboard.t1", "checkerboard.t4", "diagonal.t1", "diagon
 FIXED_OPTIONS["visual/overlayimage"] = [("0", "lang.generic.disabled"), ("1", "lang.muxvisual.overlay.theme")] + [
     (str(index), f"lang.muxvisual.overlay.{pattern}") for index, pattern in enumerate(OVERLAY_PATTERNS, 2)]
 
+FIXED_OPTIONS["visual/launchsplash"] = [("0", "lang.generic.disabled"), ("1", "lang.muxcontent.launch_splash_second")] + [
+    (str(v), f"{v} {{lang.muxtweakadv.seconds}}") for v in range(2, 11)] + [
+    ("11", "lang.muxcontent.launch_splash_finish"), ("12", "lang.muxcontent.launch_splash_press")]
+
 for _size in ("list", "header", "footer", "panel"):
     FIXED_OPTIONS[f"settings/font/{_size}_size"] = [("0", "lang.muxfont.size_default")] + [
         (str(v), str(v)) for v in range(6, 65, 2)]

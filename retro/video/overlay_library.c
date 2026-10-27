@@ -6,6 +6,7 @@
 #include <strings.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <common/base/image_ext.h>
 #include <common/display/language.h>
 #include <common/platform/device.h>
 #include <common/storage/fileio.h>
@@ -33,9 +34,21 @@ static int overlay_system_dir(char *out, const size_t out_size) {
            < out_size;
 }
 
-static int has_png_extension(const char *name) {
+static int has_overlay_extension(const char *name) {
     const char *dot = strrchr(name, '.');
-    return dot && strcasecmp(dot, ".png") == 0;
+    return dot && is_overlay_ext(dot + 1);
+}
+
+static int library_file(const char *root, const char *key, char *out, const size_t out_size) {
+    int ext_count;
+    const char **extensions = overlay_ext_list(&ext_count);
+
+    for (int i = 0; i < ext_count; i++) {
+        if ((size_t) snprintf(out, out_size, "%s%s.%s", root, key, extensions[i]) < out_size && file_exist(out))
+            return 1;
+    }
+
+    return 0;
 }
 
 static void prettify(const char *key, char *out, const size_t out_size) {
@@ -117,7 +130,7 @@ static int scan_into(const char *root, const char *prefix, const int depth) {
             okay = scan_into(root, nested, depth + 1);
             continue;
         }
-        if (!S_ISREG(status.st_mode) || !has_png_extension(item->d_name)) continue;
+        if (!S_ISREG(status.st_mode) || !has_overlay_extension(item->d_name)) continue;
 
         char *dot = strrchr(key, '.');
         if (dot) *dot = '\0';
@@ -175,13 +188,9 @@ int overlay_library_path(const int index, char *out, const size_t out_size) {
     if (index <= 0 || index >= entry_count) return 0;
 
     char root[PATH_MAX];
-    if (overlay_library_dir(root, sizeof(root))
-        && (size_t) snprintf(out, out_size, "%s%s.png", root, entries[index].key) < out_size && file_exist(out))
-        return 1;
+    if (overlay_library_dir(root, sizeof(root)) && library_file(root, entries[index].key, out, out_size)) return 1;
 
-    if (!overlay_system_dir(root, sizeof(root))) return 0;
-
-    return (size_t) snprintf(out, out_size, "%s%s.png", root, entries[index].key) < out_size;
+    return overlay_system_dir(root, sizeof(root)) && library_file(root, entries[index].key, out, out_size);
 }
 
 int overlay_library_is_user(const int index) {
@@ -191,9 +200,8 @@ int overlay_library_is_user(const int index) {
     char root[PATH_MAX];
     char path[PATH_MAX];
     if (!overlay_library_dir(root, sizeof(root))) return 0;
-    if ((size_t) snprintf(path, sizeof(path), "%s%s.png", root, entries[index].key) >= sizeof(path)) return 0;
 
-    return file_exist(path);
+    return library_file(root, entries[index].key, path, sizeof(path));
 }
 
 int overlay_library_delete(const int index) {
@@ -206,17 +214,23 @@ int overlay_library_delete(const int index) {
     DIR *root = opendir(OVERLAY_IMAGE_ROOT);
     if (!root) return 0;
 
+    int ext_count;
+    const char **extensions = overlay_ext_list(&ext_count);
+
     int removed = 0;
     const struct dirent *item;
 
     while ((item = readdir(root))) {
         if (item->d_name[0] == '.') continue;
 
-        char path[PATH_MAX];
-        if ((size_t) snprintf(path, sizeof(path), OVERLAY_IMAGE_ROOT "%s/%s.png", item->d_name, key) >= sizeof(path))
-            continue;
+        for (int i = 0; i < ext_count; i++) {
+            char path[PATH_MAX];
+            if ((size_t) snprintf(path, sizeof(path), OVERLAY_IMAGE_ROOT "%s/%s.%s", item->d_name, key, extensions[i])
+                >= sizeof(path))
+                continue;
 
-        if (remove(path) == 0) removed++;
+            if (remove(path) == 0) removed++;
+        }
     }
 
     closedir(root);

@@ -311,9 +311,7 @@ static void process_load(const int from_start) {
 
                 if (result == 1) {
                     write_text_to_file(WASABI_HISTORY_LAUNCH, "w", CHAR, "1");
-                    if (!content_launch_is_integrated()) {
-                        fade_out_screen();
-                    }
+                    fade_out_screen();
                     exit_status = 1;
                 } else {
                     if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
@@ -327,9 +325,7 @@ static void process_load(const int from_start) {
             }
         } else {
             write_text_to_file(WASABI_HISTORY_LAUNCH, "w", CHAR, "1");
-            if (!content_launch_is_integrated()) {
-                fade_out_screen();
-            }
+            fade_out_screen();
             exit_status = 1;
         }
     } else {

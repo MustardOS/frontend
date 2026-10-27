@@ -455,19 +455,28 @@ static void gen_black(const int opacity) {
     lv_obj_invalidate(ui_black);
 }
 
+int fade_level(const uint32_t started, const int from, const int to, int *done) {
+    const uint32_t elapsed = SDL_GetTicks() - started;
+    *done = elapsed >= FADE_TIME;
+    if (*done) return to;
+
+    return from + (to - from) * (int) elapsed / FADE_TIME;
+}
+
 static void fade_step(const int start, const int end, const int keep) {
     if (!ui_black || !lv_obj_is_valid(ui_black)) return;
 
-    for (int i = 0; i <= FADE_STEP; i++) {
+    const uint32_t started = SDL_GetTicks();
+    int done = 0;
+
+    while (!done) {
         if (!ui_black || !lv_obj_is_valid(ui_black)) return;
 
-        const lv_opa_t opa = (lv_opa_t) (start + (end - start) * i / FADE_STEP);
+        const lv_opa_t opa = (lv_opa_t) fade_level(started, start, end, &done);
         lv_obj_set_style_bg_opa(ui_black, opa, MU_OBJ_MAIN_DEFAULT);
 
         lv_obj_invalidate(ui_black);
         lv_refr_now(NULL);
-
-        usleep(FADE_TIME * 1000 / FADE_STEP);
     }
 
     if (!keep && ui_black && lv_obj_is_valid(ui_black)) {
@@ -517,12 +526,13 @@ void fade_in_screen(void) {
 
         fade_in_done = 1;
 
-        for (int i = 0; i <= FADE_STEP; i++) {
-            const uint8_t alpha = (uint8_t) (255 - 255 * i / FADE_STEP);
-            display_set_fade_alpha(alpha);
+        const uint32_t started = SDL_GetTicks();
+        int done = 0;
+
+        while (!done) {
+            display_set_fade_alpha((uint8_t) fade_level(started, 255, 0, &done));
             lv_obj_invalidate(ui_screen);
             lv_refr_now(NULL);
-            usleep(FADE_TIME * 1000 / FADE_STEP);
         }
 
         display_set_fade_alpha(0);
@@ -548,10 +558,12 @@ void fade_in_instant(void) {
 }
 
 static void fade_out_compositor(void) {
-    for (int i = 0; i <= FADE_STEP; i++) {
-        display_set_fade_alpha((uint8_t) (255 * i / FADE_STEP));
+    const uint32_t started = SDL_GetTicks();
+    int done = 0;
+
+    while (!done) {
+        display_set_fade_alpha((uint8_t) fade_level(started, 0, 255, &done));
         display_composite_frame();
-        usleep(FADE_TIME * 1000 / FADE_STEP);
     }
 }
 
@@ -574,11 +586,13 @@ static void fade_out_screen_internal(const int forced) {
         }
 
         if (anim_is_active()) {
-            for (int i = 0; i <= FADE_STEP; i++) {
-                display_set_fade_alpha((uint8_t) (255 * i / FADE_STEP));
+            const uint32_t started = SDL_GetTicks();
+            int done = 0;
+
+            while (!done) {
+                display_set_fade_alpha((uint8_t) fade_level(started, 0, 255, &done));
                 lv_obj_invalidate(ui_screen);
                 lv_refr_now(NULL);
-                usleep(FADE_TIME * 1000 / FADE_STEP);
             }
 
             unload_image_animation();
@@ -595,6 +609,11 @@ static void fade_out_screen_internal(const int forced) {
 
                 fade_step(LV_OPA_TRANSP, LV_OPA_COVER, 1);
             }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (ui_black && lv_obj_is_valid(ui_black)) lv_obj_invalidate(ui_black);
+            lv_refr_now(NULL);
         }
     }
 

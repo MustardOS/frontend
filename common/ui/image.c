@@ -18,6 +18,7 @@
 #include <common/config/config.h>
 #include <common/platform/device.h>
 #include <common/display/theme.h>
+#include <common/base/image_ext.h>
 #include <module/muxshare.h>
 #include <lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h>
 
@@ -741,6 +742,21 @@ int resolve_overlay_pattern_image(const int value, char *path, const size_t path
     return file_exist(path);
 }
 
+static int find_theme_overlay(const char *program, char *path, const size_t path_size) {
+    const char *dims[] = {mux_dim, ""};
+
+    int ext_count;
+    const char **extensions = overlay_ext_list(&ext_count);
+
+    for (size_t d = 0; d < A_SIZE(dims); d++) {
+        for (int i = 0; i < ext_count; i++) {
+            if (load_image_specifics(dims[d], program, "overlay", extensions[i], path, path_size)) return 1;
+        }
+    }
+
+    return 0;
+}
+
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
     if (config.visual.overlay_image == 0) return;
 
@@ -751,8 +767,7 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
 
     switch (config.visual.overlay_image) {
         case 1:
-            if (load_image_specifics(mux_dim, program, "overlay", "png", static_image_path, sizeof(static_image_path))
-                || load_image_specifics("", program, "overlay", "png", static_image_path, sizeof(static_image_path))) {
+            if (find_theme_overlay(program, static_image_path, sizeof(static_image_path))) {
                 const int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
                 if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
             } else {
@@ -793,10 +808,7 @@ void load_overlay_image_sdl(void) {
 
     switch (config.visual.overlay_image) {
         case 1:
-            if (!load_image_specifics(mux_dim, program, "overlay", "png", image_path, sizeof(image_path))
-                && !load_image_specifics("", program, "overlay", "png", image_path, sizeof(image_path))) {
-                return;
-            }
+            if (!find_theme_overlay(program, image_path, sizeof(image_path))) return;
             break;
         default:
             resolve_overlay_pattern_image(config.visual.overlay_image, image_path, sizeof(image_path));
@@ -805,7 +817,7 @@ void load_overlay_image_sdl(void) {
 
     if (!file_exist(image_path)) return;
 
-    SDL_Texture *tex = display_load_png_texture(image_path);
+    SDL_Texture *tex = display_load_image_texture(image_path);
     if (tex) display_set_theme_overlay(tex, (uint8_t) config.visual.overlay_transparency);
 }
 

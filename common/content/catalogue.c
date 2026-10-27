@@ -303,14 +303,16 @@ int catalogue_media_is_animated(const char *path) {
     return 0;
 }
 
-int load_png_catalogue(
+int load_overlay_catalogue(
     const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
     const char *mux_dim, const char *image_type, char *image_path, const size_t path_size
 ) {
-    static const char *png_only[] = {"png"};
+    int ext_count;
+    const char **extensions = overlay_ext_list(&ext_count);
 
     return load_image_catalogue_exts(
-        catalogue_name, program, program_alt, program_default, mux_dim, image_type, png_only, 1, image_path, path_size
+        catalogue_name, program, program_alt, program_default, mux_dim, image_type, extensions, ext_count, image_path,
+        path_size
     );
 }
 

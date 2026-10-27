@@ -23,7 +23,6 @@ static lv_obj_t *loading_root = NULL;
 static lv_obj_t *loading_dim = NULL;
 static lv_obj_t *loading_panel = NULL;
 static lv_obj_t *loading_label = NULL;
-static lv_obj_t *loading_splash = NULL;
 static int owns_root = 0;
 
 static void style_plain(lv_obj_t *obj) {
@@ -57,90 +56,8 @@ static void loading_present(void) {
     display_composite_frame();
 }
 
-static int loading_splash_size(const int width, const int height, int *target_w, int *target_h) {
-    if (width <= 0 || height <= 0) return 0;
-
-    const float width_ratio = (float) device.mux.width / (float) width;
-    const float height_ratio = (float) device.mux.height / (float) height;
-    const float ratio = width_ratio < height_ratio ? width_ratio : height_ratio;
-    *target_w = (int) ((float) width * ratio);
-    *target_h = (int) ((float) height * ratio);
-    return *target_w > 0 && *target_h > 0;
-}
-
-static void loading_splash_hide(void) {
-    if (!loading_splash) return;
-
-    video_preview_cancel();
-    if (lv_obj_is_valid(loading_splash)) {
-        clear_image(loading_splash);
-        lv_obj_del(loading_splash);
-    }
-    loading_splash = NULL;
-}
-
-int loading_splash_show(const char *content_path) {
-    if (!config.visual.launchsplash) {
-        LOG_DEBUG(mux_module, "Launch splash disabled");
-        return 0;
-    }
-    if (!content_path || !content_path[0]) return 0;
-
-    char catalogue_name[MAX_BUFFER_SIZE];
-    get_catalogue_name_for_content(content_path, catalogue_name, sizeof(catalogue_name));
-
-    char *program = strip_ext(get_file_name(content_path));
-    if (!program) return 0;
-
-    char splash_path[MAX_BUFFER_SIZE];
-    const int found = load_splash_catalogue(
-        catalogue_name, program, get_file_name(content_path), mux_dim, splash_path, sizeof(splash_path)
-    );
-    if (!found) {
-        LOG_DEBUG(
-            mux_module, "No launch splash found for content '%s' in catalogue '%s'", get_file_name(content_path),
-            catalogue_name
-        );
-    }
-    free(program);
-    if (!found) return 0;
-
-    const char *extension = strrchr(splash_path, '.');
-    const int animated = catalogue_media_is_animated(splash_path);
-    if (config.visual.reduce_motion && animated && extension && strcasecmp(extension + 1, "mp4") == 0) return 0;
-
-    lv_obj_t *parent = loading_parent();
-    loading_splash_hide();
-    loading_splash = lv_img_create(parent);
-    lv_obj_set_size(loading_splash, device.mux.width, device.mux.height);
-    lv_obj_align(loading_splash, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(loading_splash, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(loading_splash, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
-    lv_img_set_src(loading_splash, &ui_img_blank);
-
-    if (animated && !config.visual.reduce_motion) {
-        video_preview_arm_image(splash_path, loading_splash, loading_splash_size);
-    } else {
-        const struct image_settings settings = {
-            splash_path, LV_ALIGN_CENTER, device.mux.width, device.mux.height, 0, 0, 0, 0
-        };
-        update_image(loading_splash, settings);
-    }
-
-    for (int i = 0; i < 4; i++) {
-        loading_present();
-        SDL_Delay(4);
-    }
-
-    return 1;
-}
-
 void loading_startup_progress(const char *message, const int show_message) {
-    if (show_message) {
-        loading_message_show(message);
-    } else if (loading_splash && lv_obj_is_valid(loading_splash)) {
-        loading_present();
-    }
+    if (show_message) loading_message_show(message);
 }
 
 void loading_message_show(const char *message) {
@@ -195,7 +112,6 @@ void loading_message_show(const char *message) {
 }
 
 void loading_message_hide(void) {
-    loading_splash_hide();
     if (owns_root && loading_root && lv_obj_is_valid(loading_root) && lv_scr_act() == loading_root) return;
 
     if (loading_panel && lv_obj_is_valid(loading_panel)) lv_obj_del(loading_panel);

@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <SDL2/SDL.h>
 #include "common.h"
+#include <common/base/image_ext.h>
 #include <common/runtime/log.h>
 
 SDL_Window *render_window;
@@ -162,6 +163,21 @@ static void strip_libretro(const char *str) {
     if (new_str) *new_str = '\0';
 }
 
+static int stage_image_found(char *img_path, const char *stem) {
+    int ext_count;
+    const char **extensions = overlay_ext_list(&ext_count);
+
+    for (int i = 0; i < ext_count; i++) {
+        const int n = snprintf(img_path, sizeof(overlay_path), "%s.%s", stem, extensions[i]);
+        if (n <= 0 || (size_t) n >= sizeof(overlay_path)) continue;
+
+        remove_double_slashes(img_path);
+        if (file_exist(img_path)) return 1;
+    }
+
+    return 0;
+}
+
 int load_stage_image(
     const char *type, const char *core, const char *sys, const char *file, const char *dim, char *img_path
 ) {
@@ -185,6 +201,7 @@ int load_stage_image(
     const char *dims[] = {dim_safe, ""};
 
     char file_strip[MAX_BUFFER_SIZE];
+    char stem[PATH_MAX];
 
     // Catalogue system
     for (size_t d = 0; d < A_SIZE(dims); d++) {
@@ -192,16 +209,10 @@ int load_stage_image(
             strlcpy(file_strip, files[f], sizeof(file_strip));
             strip_libretro(file_strip);
 
-            const int n = snprintf(
-                img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s%s.png", CATALOGUE_PATH, sys, type, dims[d],
-                file_strip
-            );
+            const int n =
+                snprintf(stem, sizeof(stem), "%s/%s/overlay/%s/%s%s", CATALOGUE_PATH, sys, type, dims[d], file_strip);
 
-            if (n > 0 && (size_t) n < sizeof(overlay_path)) {
-                remove_double_slashes(img_path);
-                // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
-                if (file_exist(img_path)) return 1;
-            }
+            if (n > 0 && (size_t) n < sizeof(stem) && stage_image_found(img_path, stem)) return 1;
         }
     }
 
@@ -220,21 +231,16 @@ int load_stage_image(
                     int n;
                     if (use_system) {
                         n = snprintf(
-                            img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s/%s.png", theme_path, theme_prefix, sys,
-                            type, file_strip
+                            stem, sizeof(stem), "%s/%s/overlay/%s/%s/%s", theme_path, theme_prefix, sys, type,
+                            file_strip
                         );
                     } else {
                         n = snprintf(
-                            img_path, sizeof(overlay_path), "%s/%s/overlay/%s/%s.png", theme_path, theme_prefix, type,
-                            file_strip
+                            stem, sizeof(stem), "%s/%s/overlay/%s/%s", theme_path, theme_prefix, type, file_strip
                         );
                     }
 
-                    if (n > 0 && (size_t) n < sizeof(overlay_path)) {
-                        remove_double_slashes(img_path);
-                        // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
-                        if (file_exist(img_path)) return 1;
-                    }
+                    if (n > 0 && (size_t) n < sizeof(stem) && stage_image_found(img_path, stem)) return 1;
                 }
             }
         }
@@ -250,18 +256,12 @@ int load_stage_image(
 
             int n;
             if (use_system) {
-                n = snprintf(
-                    img_path, sizeof(overlay_path), "%s/overlay/%s/%s/%s.png", INTERNAL_SHARE, sys, type, file_strip
-                );
+                n = snprintf(stem, sizeof(stem), "%s/overlay/%s/%s/%s", INTERNAL_SHARE, sys, type, file_strip);
             } else {
-                n = snprintf(img_path, sizeof(overlay_path), "%s/overlay/%s/%s.png", INTERNAL_SHARE, type, file_strip);
+                n = snprintf(stem, sizeof(stem), "%s/overlay/%s/%s", INTERNAL_SHARE, type, file_strip);
             }
 
-            if (n > 0 && (size_t) n < sizeof(overlay_path)) {
-                remove_double_slashes(img_path);
-                // LOG_DEBUG("stage", OVERLAY_TRY, type, img_path);
-                if (file_exist(img_path)) return 1;
-            }
+            if (n > 0 && (size_t) n < sizeof(stem) && stage_image_found(img_path, stem)) return 1;
         }
     }
 

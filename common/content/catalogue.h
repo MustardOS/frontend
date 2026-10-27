@@ -23,7 +23,7 @@ int load_splash_catalogue(
 
 int catalogue_media_is_animated(const char *path);
 
-int load_png_catalogue(
+int load_overlay_catalogue(
     const char *catalogue_name, const char *program, const char *program_alt, const char *program_default,
     const char *mux_dim, const char *image_type, char *image_path, size_t path_size
 );

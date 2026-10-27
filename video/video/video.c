@@ -70,6 +70,9 @@ static int crt_enabled;
 static int crt_powered;
 static uint32_t crt_warm_start;
 static uint32_t crt_off_start;
+static uint32_t crt_on_start;
+static int crt_on_pending;
+static int crt_on_done;
 static SDL_Texture *crt_snapshot_texture;
 static int crt_snapshot_width;
 static int crt_snapshot_height;
@@ -170,6 +173,9 @@ static int update_static_texture(const int force) {
 void video_render_set_content(const char *content_path, const int live) {
     crt_enabled = live && config.video.crt_television && !config.visual.reduce_motion;
     crt_off_start = 0;
+    crt_on_start = 0;
+    crt_on_pending = !crt_on_done && !crt_enabled && config.visual.power_off && !config.visual.reduce_motion
+                     && file_exist(MUOS_SPL_LOAD);
     catalogue_overlay_path[0] = '\0';
     if (live || !content_path || !content_path[0]) return;
 
@@ -179,7 +185,7 @@ void video_render_set_content(const char *content_path, const int live) {
 
     char *program = strip_ext(get_file_name(content_path));
     if (!program) return;
-    load_png_catalogue(
+    load_overlay_catalogue(
         catalogue, program, program, "default", mux_dim, "overlay/base", catalogue_overlay_path,
         sizeof(catalogue_overlay_path)
     );
@@ -976,6 +982,22 @@ static void render_frame(SDL_Renderer *target) {
         if (audio_background_texture) SDL_RenderCopy(target, audio_background_texture, NULL, NULL);
         wasabi_visualiser_render(target);
         return;
+    }
+    if (crt_on_pending && texture) {
+        crt_on_pending = 0;
+        crt_on_done = 1;
+        crt_on_start = now ? now : 1;
+    }
+    if (crt_on_start) {
+        if (now - crt_on_start < crt_effect_power_off_duration()) {
+            int width = 0;
+            int height = 0;
+            SDL_GetRendererOutputSize(target, &width, &height);
+            const SDL_Rect frame = {0, 0, width, height};
+            crt_effect_render_power_on(target, &frame, crt_on_start, now, render_crt_content, NULL);
+            return;
+        }
+        crt_on_start = 0;
     }
     if (render_crt_warm_up(target, now)) return;
     const SDL_Color borders[] = {{0, 0, 0, 255}, {0, 0, 0, 255}, {32, 32, 32, 255}, {255, 255, 255, 255}};

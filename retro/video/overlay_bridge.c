@@ -39,7 +39,7 @@ void overlay_bridge_init(const char *core_path_arg, const char *content_path) {
     snprintf(program, sizeof(program), "%s", program_no_ext ? program_no_ext : content_label);
     free(program_no_ext);
 
-    if (load_png_catalogue(
+    if (load_overlay_catalogue(
             catalogue_name, program, program, "default", mux_dim, "overlay/base", catalogue_overlay_path,
             sizeof(catalogue_overlay_path)
         )) {
@@ -61,17 +61,17 @@ void overlay_bridge_apply(void) {
             if (resolve_overlay_pattern_image(
                     overlay_pattern_to_value(session_settings.overlay_pattern), path, sizeof(path)
                 )) {
-                current_overlay_tex = display_load_png_texture(path);
+                current_overlay_tex = display_load_image_texture(path);
             }
             break;
         }
         case overlay_source_catalogue:
-            if (catalogue_overlay_path[0]) current_overlay_tex = display_load_png_texture(catalogue_overlay_path);
+            if (catalogue_overlay_path[0]) current_overlay_tex = display_load_image_texture(catalogue_overlay_path);
             break;
         case overlay_source_downloaded: {
             char path[MAX_BUFFER_SIZE];
             if (overlay_library_path(session_settings.overlay_image, path, sizeof(path)))
-                current_overlay_tex = display_load_png_texture(path);
+                current_overlay_tex = display_load_image_texture(path);
             break;
         }
         default:

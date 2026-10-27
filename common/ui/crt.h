@@ -11,3 +11,8 @@ void crt_effect_render_power_off(
     SDL_Renderer *renderer, const SDL_Rect *frame, uint32_t started, uint32_t now, crt_effect_draw_fn draw,
     void *userdata
 );
+
+void crt_effect_render_power_on(
+    SDL_Renderer *renderer, const SDL_Rect *frame, uint32_t started, uint32_t now, crt_effect_draw_fn draw,
+    void *userdata
+);

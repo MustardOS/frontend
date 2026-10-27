@@ -1,8 +1,8 @@
 #include "crt.h"
 
-#define CRT_OFF_SQUASH_MS 220
-#define CRT_OFF_SHRINK_MS 160
-#define CRT_OFF_FADE_MS   280
+#define CRT_OFF_SQUASH_MS 175
+#define CRT_OFF_SHRINK_MS 125
+#define CRT_OFF_FADE_MS   220
 #define CRT_OFF_MS        (CRT_OFF_SQUASH_MS + CRT_OFF_SHRINK_MS + CRT_OFF_FADE_MS)
 
 static float ease_out(const float value) {
@@ -28,12 +28,9 @@ uint32_t crt_effect_power_off_duration(void) {
     return CRT_OFF_MS;
 }
 
-void crt_effect_render_power_off(
-    SDL_Renderer *renderer, const SDL_Rect *frame, const uint32_t started, const uint32_t now,
-    const crt_effect_draw_fn draw, void *userdata
+static void render_at(
+    SDL_Renderer *renderer, const SDL_Rect *frame, const uint32_t elapsed, const crt_effect_draw_fn draw, void *userdata
 ) {
-    if (!renderer || !frame || !started) return;
-
     int width = 0;
     int height = 0;
     if (SDL_GetRendererOutputSize(renderer, &width, &height) != 0 || width <= 0 || height <= 0) return;
@@ -42,7 +39,6 @@ void crt_effect_render_power_off(
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    const uint32_t elapsed = now - started;
     const int centre_x = frame->w > 0 ? frame->x + frame->w / 2 : width / 2;
     const int centre_y = frame->h > 0 ? frame->y + frame->h / 2 : height / 2;
     const int line = height / 180 > 2 ? height / 180 : 2;
@@ -75,4 +71,22 @@ void crt_effect_render_power_off(
         fill_rect_alpha(renderer, &halo, 255, (1.0f - progress) * 0.25f);
         fill_rect_alpha(renderer, &core, 255, 1.0f - ease_out(progress));
     }
+}
+
+void crt_effect_render_power_off(
+    SDL_Renderer *renderer, const SDL_Rect *frame, const uint32_t started, const uint32_t now,
+    const crt_effect_draw_fn draw, void *userdata
+) {
+    if (!renderer || !frame || !started) return;
+    render_at(renderer, frame, now - started, draw, userdata);
+}
+
+void crt_effect_render_power_on(
+    SDL_Renderer *renderer, const SDL_Rect *frame, const uint32_t started, const uint32_t now,
+    const crt_effect_draw_fn draw, void *userdata
+) {
+    if (!renderer || !frame || !started) return;
+
+    const uint32_t elapsed = now - started;
+    render_at(renderer, frame, elapsed >= CRT_OFF_MS ? 0 : CRT_OFF_MS - elapsed, draw, userdata);
 }

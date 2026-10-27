@@ -11,6 +11,8 @@
 #include <common/display/language.h>
 #include <common/storage/union.h>
 #include <common/platform/input.h>
+#include <common/content/catalogue.h>
+#include <common/content/core/common.h>
 #include <module/muxshare.h>
 
 typedef struct {
@@ -457,6 +459,46 @@ uint32_t fnv_hash_file(FILE *fp) {
     return hash;
 }
 
+static void write_launch_splash(const char *file_path) {
+    remove(MUOS_SPL_LOAD);
+    if (!config.visual.launchsplash) return;
+
+    char catalogue_name[MAX_BUFFER_SIZE];
+    get_catalogue_name_for_content(file_path, catalogue_name, sizeof(catalogue_name));
+
+    const char *file_name = get_file_name((char *) file_path);
+    char *program = strip_ext((char *) file_name);
+    if (!program) return;
+
+    char splash_path[MAX_BUFFER_SIZE];
+    const int found =
+        load_splash_catalogue(catalogue_name, program, file_name, mux_dim, splash_path, sizeof(splash_path));
+    free(program);
+
+    if (!found) {
+        LOG_DEBUG(mux_module, "No launch splash found for '%s' in catalogue '%s'", file_name, catalogue_name);
+        return;
+    }
+
+    char duration[16];
+    switch (config.visual.launchsplash) {
+        case 11:
+            snprintf(duration, sizeof(duration), "finish");
+            break;
+        case 12:
+            snprintf(duration, sizeof(duration), "press");
+            break;
+        default:
+            snprintf(duration, sizeof(duration), "%d", config.visual.launchsplash);
+            break;
+    }
+
+    char splash[MAX_BUFFER_SIZE + 32];
+    snprintf(splash, sizeof(splash), "%s\n%d\n%s", splash_path, config.visual.reduce_motion ? 1 : 0, duration);
+    write_text_to_file(MUOS_SPL_LOAD, "w", CHAR, splash);
+    LOG_INFO(mux_module, "Launch splash: %s", splash_path);
+}
+
 int load_content(int add_collection, char *file_path) {
     char resolved_path[PATH_MAX];
 
@@ -632,6 +674,8 @@ int load_content(int add_collection, char *file_path) {
         free(assigned_shd);
         free(assigned_ovl);
 
+        write_launch_splash(file_path);
+
         char *loader_text = read_all_char_from(content_loader_file);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, loader_text);
         free(loader_text);
@@ -644,22 +688,6 @@ int load_content(int add_collection, char *file_path) {
     free(item_dir);
     free(assigned_core);
     return 1;
-}
-
-int content_launch_is_integrated(void) {
-    char *core = read_line_char_from(MUOS_ROM_LOAD, content_core);
-    char *launch = read_line_char_from(MUOS_ROM_LOAD, content_assign);
-    if (!core || !launch) {
-        free(core);
-        free(launch);
-        return 0;
-    }
-
-    const int integrated = core_uses_muxretro(launch) || strcasecmp(core, "ext-video") == 0
-                           || strcasecmp(launch, "ext-video") == 0 || strcasecmp(launch, "ext-video.sh") == 0;
-    free(core);
-    free(launch);
-    return integrated;
 }
 
 char *load_content_core(const int force, const int run_quit, char *file_path) {

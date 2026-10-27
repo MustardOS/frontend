@@ -52,6 +52,7 @@ void video_bridge_init(void);
 
 void video_bridge_shutdown(void);
 int video_bridge_power_off(void);
+int video_bridge_power_on(void);
 
 void video_bridge_apply_scaling(void);
 

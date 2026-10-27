@@ -73,6 +73,9 @@ static font_option *font_options;
 static size_t font_option_count;
 
 #define FONT_SIZE_OPTION_MAX 128
+#define LAUNCH_SPLASH_MAX    10
+#define LAUNCH_SPLASH_FINISH (LAUNCH_SPLASH_MAX + 1)
+#define LAUNCH_SPLASH_PRESS  (LAUNCH_SPLASH_MAX + 2)
 static int active_font_size_values[FONT_SIZE_OPTION_MAX];
 static int active_font_size_count;
 static int font_size_options_visible = 1;
@@ -1247,7 +1250,23 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, visual, grid_mode_content, lang.muxcontent.grid_mode, "gridmodecontent", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, box_art_hide, lang.muxcontent.grid_mode_art, "boxarthide", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, visual, launch_swap, lang.muxcontent.launch_swap.title, "launch_swap", launch_swap_options, 4);
-    INIT_OPTION_ITEM(-1, visual, launchsplash, lang.muxcontent.launch_splash, "splash", disabled_enabled, 2);
+    static char launch_splash_labels[LAUNCH_SPLASH_MAX][MAX_BUFFER_SIZE];
+    char *launch_splash_options[LAUNCH_SPLASH_PRESS + 1];
+    launch_splash_options[0] = lang.generic.disabled;
+    for (int i = 1; i <= LAUNCH_SPLASH_MAX; i++) {
+        if (i == 1) {
+            snprintf(launch_splash_labels[i - 1], MAX_BUFFER_SIZE, "%s", lang.muxcontent.launch_splash_second);
+        } else {
+            snprintf(launch_splash_labels[i - 1], MAX_BUFFER_SIZE, lang.muxcontent.launch_splash_seconds, i);
+        }
+        launch_splash_options[i] = launch_splash_labels[i - 1];
+    }
+    launch_splash_options[LAUNCH_SPLASH_FINISH] = lang.muxcontent.launch_splash_finish;
+    launch_splash_options[LAUNCH_SPLASH_PRESS] = lang.muxcontent.launch_splash_press;
+    INIT_OPTION_ITEM(
+        -1, visual, launchsplash, lang.muxcontent.launch_splash, "splash", launch_splash_options,
+        LAUNCH_SPLASH_PRESS + 1
+    );
     INIT_OPTION_ITEM(
         -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
         disabled_enabled, 2

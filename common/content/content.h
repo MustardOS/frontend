@@ -65,8 +65,6 @@ int activity_summary_read(uint32_t hash, activity_summary *summary);
 
 int load_content(int add_collection, char *file_path);
 
-int content_launch_is_integrated(void);
-
 typedef enum {
     content_audio_none = 0,
     content_audio_stream,

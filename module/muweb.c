@@ -645,6 +645,7 @@ static int upload_extension_allowed(const char *type, const char *leaf) {
         return strcmp(type, "box") == 0 || strcmp(type, "preview") == 0 || strcmp(type, "splash") == 0;
 
     if (strcmp(type, "text") == 0 || strcmp(type, "manual") == 0) return strcasecmp(extension, "txt") == 0;
+    if (strncmp(type, "overlay/", 8) == 0) return is_overlay_ext(extension);
     return is_image_ext(extension);
 }
 

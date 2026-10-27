@@ -38,6 +38,8 @@ void fade_reset(void);
 
 void ui_screen_teardown(void);
 
+int fade_level(uint32_t started, int from, int to, int *done);
+
 void fade_in_screen(void);
 
 void fade_in_instant(void);

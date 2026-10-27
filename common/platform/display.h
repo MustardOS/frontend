@@ -82,7 +82,7 @@ void display_set_present_timing(void (*fn)(double draw_ms, double flip_ms));
 
 double display_take_flip_ms(void);
 
-SDL_Texture *display_load_png_texture(const char *path);
+SDL_Texture *display_load_image_texture(const char *path);
 
 void display_set_theme_overlay(SDL_Texture *tex, uint8_t opacity);
 

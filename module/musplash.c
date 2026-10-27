@@ -1,7 +1,15 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/fb.h>
+#include <linux/input.h>
 #include <png.h>
+#include <poll.h>
+#include <strings.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -16,6 +24,9 @@
 
 // Where the display engine says it is reading pixels from
 #define SCANOUT_PATH "/sys/class/disp/disp/attr/sys"
+
+#define DURATION_FINISH (-1)
+#define DURATION_PRESS  (-2)
 
 typedef enum { scale_original = 0, scale_keep = 1, scale_stretch = 2, scale_fill = 3 } scale_mode_t;
 
@@ -77,6 +88,9 @@ typedef struct {
     int wait;
     int verbose;
     int clear;
+    int play;
+    int duration;
+    int fade;
     gradient_t gradient;
 
     int recolour_enabled;
@@ -178,7 +192,11 @@ static void print_usage(const char *name) {
         "  %s -c [options]\n"
         "  %s <image.png> [fbdev]\n\n"
         "Options:\n"
-        "  -i, --image <path>          PNG image path\n"
+        "  -i, --image <path>          Image, animation or video path\n"
+        "  -p, --play                  Play animations and videos through, any button skips\n"
+        "  -d, --duration <value>      Seconds to keep the image up, finish (animations play through,\n"
+        "                              stills wait for a button) or press (wait for a button)\n"
+        "  -F, --fade <ms>             Fade in from black and out to black over this many milliseconds\n"
         "  -f, --fb <path>             Framebuffer device, default: /dev/fb0\n"
         "  -r, --rotate <0|90|180|270> Rotation, default: 0\n"
         "  -s, --scale <mode>          0/original | 1/keep | 2/stretch | 3/fill, default: keep\n"
@@ -341,6 +359,31 @@ static int parse_alpha(const char *value, int *out) {
     return 0;
 }
 
+static int parse_duration(const char *value, int *out) {
+    if (strcmp(value, "finish") == 0) {
+        *out = DURATION_FINISH;
+        return 0;
+    }
+
+    if (strcmp(value, "press") == 0) {
+        *out = DURATION_PRESS;
+        return 0;
+    }
+
+    char *end = NULL;
+
+    errno = 0;
+    long v = strtol(value, &end, 10);
+
+    if (errno != 0 || !end || *end != '\0') return -1;
+
+    if (v < 0) v = 0;
+    if (v > 60) v = 60;
+
+    *out = (int) v;
+    return 0;
+}
+
 static int option_takes_value(const char *arg) {
     return strcmp(arg, "-i") == 0 || strcmp(arg, "--image") == 0 || strcmp(arg, "-f") == 0 || strcmp(arg, "--fb") == 0
            || strcmp(arg, "-r") == 0 || strcmp(arg, "--rotate") == 0 || strcmp(arg, "-s") == 0
@@ -348,7 +391,23 @@ static int option_takes_value(const char *arg) {
            || strcmp(arg, "-t") == 0 || strcmp(arg, "--tint") == 0 || strcmp(arg, "--recolour") == 0
            || strcmp(arg, "--recolor") == 0 || strcmp(arg, "-a") == 0 || strcmp(arg, "--alpha") == 0
            || strcmp(arg, "-n") == 0 || strcmp(arg, "--notify") == 0 || strcmp(arg, "-l") == 0
-           || strcmp(arg, "--log") == 0;
+           || strcmp(arg, "--log") == 0 || strcmp(arg, "-d") == 0 || strcmp(arg, "--duration") == 0
+           || strcmp(arg, "-F") == 0 || strcmp(arg, "--fade") == 0;
+}
+
+static int parse_fade(const char *value, int *out) {
+    char *end = NULL;
+
+    errno = 0;
+    long v = strtol(value, &end, 10);
+
+    if (errno != 0 || !end || *end != '\0') return -1;
+
+    if (v < 0) v = 0;
+    if (v > 2000) v = 2000;
+
+    *out = (int) v;
+    return 0;
 }
 
 static int parse_args(const int argc, char *argv[], options_t *opts) {
@@ -362,6 +421,9 @@ static int parse_args(const int argc, char *argv[], options_t *opts) {
     opts->wait = 0;
     opts->verbose = 0;
     opts->clear = 0;
+    opts->play = 0;
+    opts->duration = 0;
+    opts->fade = 0;
     memset(&opts->gradient, 0, sizeof(opts->gradient));
 
     opts->recolour_enabled = 0;
@@ -401,6 +463,11 @@ static int parse_args(const int argc, char *argv[], options_t *opts) {
 
         if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--clear") == 0) {
             opts->clear = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--play") == 0) {
+            opts->play = 1;
             continue;
         }
 
@@ -450,6 +517,16 @@ static int parse_args(const int argc, char *argv[], options_t *opts) {
 
         if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "--alpha") == 0) {
             if (parse_alpha(argv[++i], &opts->recolour_alpha) != 0) return -1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--duration") == 0) {
+            if (parse_duration(argv[++i], &opts->duration) != 0) return -1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "-F") == 0 || strcmp(argv[i], "--fade") == 0) {
+            if (parse_fade(argv[++i], &opts->fade) != 0) return -1;
             continue;
         }
 
@@ -1425,6 +1502,422 @@ static int present_image(fb_t *fb, const image_t *img, const options_t *opts) {
     return 0;
 }
 
+#define INPUT_MAX 32
+
+typedef enum { media_still, media_animation, media_video } media_kind_t;
+
+typedef struct {
+    AVFormatContext *format;
+    AVCodecContext *codec;
+    struct SwsContext *sws;
+    AVPacket *packet;
+    AVFrame *frame;
+    int stream;
+    int draining;
+    double time_base;
+} video_t;
+
+static int input_fds[INPUT_MAX];
+static int input_count = 0;
+
+static int has_extension(const char *path, const char *extension) {
+    const char *dot = strrchr(path, '.');
+    return dot && strcasecmp(dot + 1, extension) == 0;
+}
+
+static int png_is_animated(const char *path) {
+    FILE *file = fopen(path, "rb");
+    if (!file) return 0;
+
+    uint8_t buffer[65536];
+    const size_t length = fread(buffer, 1, sizeof(buffer), file);
+    fclose(file);
+
+    for (size_t i = 8; i + 4 <= length; i++) {
+        if (memcmp(buffer + i, "acTL", 4) == 0) return 1;
+        if (memcmp(buffer + i, "IDAT", 4) == 0) return 0;
+    }
+
+    return 0;
+}
+
+static media_kind_t media_kind(const char *path) {
+    if (has_extension(path, "mp4") || has_extension(path, "apng")) return media_video;
+    if (has_extension(path, "png")) return png_is_animated(path) ? media_video : media_still;
+    if (has_extension(path, "gif") || has_extension(path, "webp")) return media_animation;
+    return media_still;
+}
+
+static double now_seconds(void) {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (double) now.tv_sec + (double) now.tv_nsec / 1e9;
+}
+
+static int surface_to_image(SDL_Surface *surface, image_t *img) {
+    SDL_Surface *rgba = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
+    if (!rgba) return -1;
+
+    const size_t row = (size_t) rgba->w * 4;
+    uint8_t *pixels = malloc(row * (size_t) rgba->h);
+    if (!pixels) {
+        SDL_FreeSurface(rgba);
+        return -1;
+    }
+
+    for (int y = 0; y < rgba->h; y++) {
+        memcpy(pixels + row * (size_t) y, (const uint8_t *) rgba->pixels + (size_t) y * (size_t) rgba->pitch, row);
+    }
+
+    free_image(img);
+    img->pixels = pixels;
+    img->width = rgba->w;
+    img->height = rgba->h;
+
+    SDL_FreeSurface(rgba);
+    return 0;
+}
+
+static void video_close(video_t *video) {
+    sws_freeContext(video->sws);
+    av_frame_free(&video->frame);
+    av_packet_free(&video->packet);
+    avcodec_free_context(&video->codec);
+    avformat_close_input(&video->format);
+    memset(video, 0, sizeof(*video));
+}
+
+static int video_open(video_t *video, const char *path) {
+    const AVCodec *decoder = NULL;
+
+    memset(video, 0, sizeof(*video));
+
+    if (avformat_open_input(&video->format, path, NULL, NULL) < 0) return -1;
+    if (avformat_find_stream_info(video->format, NULL) < 0) goto fail;
+
+    video->stream = av_find_best_stream(video->format, AVMEDIA_TYPE_VIDEO, -1, -1, &decoder, 0);
+    if (video->stream < 0 || !decoder) goto fail;
+
+    video->codec = avcodec_alloc_context3(decoder);
+    if (!video->codec) goto fail;
+    if (avcodec_parameters_to_context(video->codec, video->format->streams[video->stream]->codecpar) < 0) goto fail;
+    if (avcodec_open2(video->codec, decoder, NULL) < 0) goto fail;
+
+    video->packet = av_packet_alloc();
+    video->frame = av_frame_alloc();
+    if (!video->packet || !video->frame) goto fail;
+
+    video->time_base = av_q2d(video->format->streams[video->stream]->time_base);
+    return 0;
+
+fail:
+    video_close(video);
+    return -1;
+}
+
+static int video_frame_to_image(video_t *video, image_t *img) {
+    const AVFrame *frame = video->frame;
+
+    video->sws = sws_getCachedContext(
+        video->sws, frame->width, frame->height, frame->format, frame->width, frame->height, AV_PIX_FMT_RGBA,
+        SWS_BILINEAR, NULL, NULL, NULL
+    );
+    if (!video->sws) return -1;
+
+    if (!img->pixels || img->width != frame->width || img->height != frame->height) {
+        free_image(img);
+
+        img->pixels = malloc((size_t) frame->width * (size_t) frame->height * 4);
+        if (!img->pixels) return -1;
+
+        img->width = frame->width;
+        img->height = frame->height;
+    }
+
+    uint8_t *destination[4] = {img->pixels, NULL, NULL, NULL};
+    const int stride[4] = {frame->width * 4, 0, 0, 0};
+
+    sws_scale(video->sws, (const uint8_t *const *) frame->data, frame->linesize, 0, frame->height, destination, stride);
+
+    return 0;
+}
+
+static int video_next(video_t *video, image_t *img, double *seconds) {
+    for (;;) {
+        const int received = avcodec_receive_frame(video->codec, video->frame);
+
+        if (received == 0) {
+            const int64_t pts = video->frame->best_effort_timestamp;
+            *seconds = pts == AV_NOPTS_VALUE ? -1.0 : (double) pts * video->time_base;
+
+            const int converted = video_frame_to_image(video, img);
+            av_frame_unref(video->frame);
+
+            return converted == 0 ? 1 : -1;
+        }
+
+        if (received == AVERROR_EOF) return 0;
+        if (received != AVERROR(EAGAIN)) return -1;
+        if (video->draining) return 0;
+
+        if (av_read_frame(video->format, video->packet) < 0) {
+            avcodec_send_packet(video->codec, NULL);
+            video->draining = 1;
+            continue;
+        }
+
+        if (video->packet->stream_index == video->stream) avcodec_send_packet(video->codec, video->packet);
+        av_packet_unref(video->packet);
+    }
+}
+
+static int load_media_still(const char *path, const media_kind_t kind, image_t *img) {
+    if (kind == media_video) {
+        video_t video;
+        double seconds;
+
+        if (video_open(&video, path) != 0) return -1;
+
+        const int found = video_next(&video, img, &seconds);
+        video_close(&video);
+
+        return found > 0 ? 0 : -1;
+    }
+
+    if (has_extension(path, "png")) return load_png_to_rgba(path, img);
+
+    SDL_Surface *surface = IMG_Load(path);
+    if (!surface) return -1;
+
+    const int converted = surface_to_image(surface, img);
+    SDL_FreeSurface(surface);
+
+    return converted;
+}
+
+static int input_pressed(void) {
+    int pressed = 0;
+    struct input_event event;
+
+    for (int i = 0; i < input_count; i++) {
+        while (read(input_fds[i], &event, sizeof(event)) == (ssize_t) sizeof(event)) {
+            if (event.type == EV_KEY && event.value == 1) pressed = 1;
+            if (event.type == EV_ABS && (event.code == ABS_HAT0X || event.code == ABS_HAT0Y) && event.value != 0)
+                pressed = 1;
+        }
+    }
+
+    return pressed;
+}
+
+static void input_open(void) {
+    for (int i = 0; i < INPUT_MAX && input_count < INPUT_MAX; i++) {
+        char path[32];
+        snprintf(path, sizeof(path), "/dev/input/event%d", i);
+
+        const int fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+        if (fd >= 0) input_fds[input_count++] = fd;
+    }
+
+    input_pressed();
+}
+
+static void input_close(void) {
+    for (int i = 0; i < input_count; i++) {
+        close(input_fds[i]);
+    }
+
+    input_count = 0;
+}
+
+static int wait_until(const double target) {
+    struct pollfd fds[INPUT_MAX];
+
+    for (;;) {
+        if (!keep_running || input_pressed()) return 1;
+
+        const double left = target - now_seconds();
+        if (left <= 0.0) return 0;
+
+        for (int i = 0; i < input_count; i++) {
+            fds[i].fd = input_fds[i];
+            fds[i].events = POLLIN;
+            fds[i].revents = 0;
+        }
+
+        poll(fds, (nfds_t) input_count, left > 0.05 ? 50 : (int) (left * 1000.0) + 1);
+    }
+}
+
+static void scale_frame(const fb_t *fb, const uint8_t *source, uint8_t *destination, const unsigned level) {
+    const size_t size = fb->page_size;
+
+    if (fb->bpp == 32 || fb->bpp == 24) {
+        const size_t bytes = (size_t) fb->bytes_per_pixel;
+        uint8_t keep[4] = {0, 0, 0, 0};
+
+        if (fb->var.transp.length && fb->var.transp.offset % 8 == 0 && fb->var.transp.offset / 8 < bytes) {
+            keep[fb->var.transp.offset / 8] = 1;
+        }
+
+        for (size_t i = 0; i < size; i++) {
+            destination[i] = keep[i % bytes] ? source[i] : (uint8_t) (((unsigned) source[i] * level) >> 8);
+        }
+
+        return;
+    }
+
+    if (fb->bpp == 16) {
+        const struct fb_bitfield *channels[3] = {&fb->var.red, &fb->var.green, &fb->var.blue};
+
+        for (size_t i = 0; i + 1 < size; i += 2) {
+            uint16_t pixel;
+            memcpy(&pixel, source + i, sizeof(pixel));
+
+            uint16_t scaled = pixel;
+            for (int c = 0; c < 3; c++) {
+                const uint16_t mask = (uint16_t) (((1u << channels[c]->length) - 1u) << channels[c]->offset);
+                const unsigned value = ((unsigned) (pixel & mask) >> channels[c]->offset) * level >> 8;
+
+                scaled = (uint16_t) ((scaled & ~mask) | ((value << channels[c]->offset) & mask));
+            }
+
+            memcpy(destination + i, &scaled, sizeof(scaled));
+        }
+
+        return;
+    }
+
+    memcpy(destination, source, size);
+}
+
+static void fade_frame(fb_t *fb, const options_t *opts, const uint8_t *source, const int fade_in) {
+    uint8_t *frame = malloc(fb->page_size);
+    if (!frame) return;
+
+    const double start = now_seconds();
+    const double length = (double) opts->fade / 1000.0;
+    int steps = 0;
+
+    for (;;) {
+        double progress = (now_seconds() - start) / length;
+        if (progress > 1.0) progress = 1.0;
+
+        unsigned level = (unsigned) (256.0 * progress);
+        if (!fade_in) level = 256u - level;
+
+        scale_frame(fb, source, frame, level);
+        copy_to_pages(fb, frame);
+        flush_fb(fb);
+        claim_display(fb);
+        unblank_fb(opts->fb_path);
+        steps++;
+
+        if (progress >= 1.0) break;
+    }
+
+    trace("fade %s took %.0fms in %d steps", fade_in ? "in" : "out", (now_seconds() - start) * 1000.0, steps);
+    free(frame);
+}
+
+static int fade_in_image(fb_t *fb, const image_t *img, const options_t *opts) {
+    uint8_t *frame = calloc(1, fb->page_size);
+    if (!frame) return present_image(fb, img, opts);
+
+    uint8_t *visible = fb->base;
+    fb->base = frame;
+    draw_image(fb, img, opts);
+    fb->base = visible;
+
+    fade_frame(fb, opts, frame, 1);
+    free(frame);
+
+    trace("faded in over %dms scanout=%lx", opts->fade, read_scanout_addr());
+    return 0;
+}
+
+static void fade_out_screen(fb_t *fb, const options_t *opts) {
+    uint8_t *frame = malloc(fb->page_size);
+    if (!frame) return;
+
+    memcpy(frame, fb->base, fb->page_size);
+    fade_frame(fb, opts, frame, 0);
+    free(frame);
+
+    trace("faded out over %dms", opts->fade);
+}
+
+static int play_animation(fb_t *fb, const options_t *opts, image_t *img) {
+    IMG_Animation *animation = IMG_LoadAnimation(opts->image_path);
+    if (!animation) return 0;
+
+    double target = now_seconds();
+    int skipped = 0;
+
+    for (int i = 0; i < animation->count; i++) {
+        if (surface_to_image(animation->frames[i], img) != 0) break;
+        if (present_image(fb, img, opts) != 0) break;
+
+        target += (animation->delays[i] > 0 ? animation->delays[i] : 100) / 1000.0;
+        if (wait_until(target)) {
+            skipped = 1;
+            break;
+        }
+    }
+
+    trace("animation finished frames=%d skipped=%d", animation->count, skipped);
+    IMG_FreeAnimation(animation);
+
+    return skipped;
+}
+
+static int play_video(fb_t *fb, const options_t *opts, image_t *img) {
+    video_t video;
+    if (video_open(&video, opts->image_path) != 0) return 0;
+
+    const double start = now_seconds();
+
+    double first = -1.0;
+    double previous = 0.0;
+    double seconds = 0.0;
+
+    int shown = 1;
+    int presented = 0;
+    int dropped = 0;
+    int skipped = 0;
+
+    while (video_next(&video, img, &seconds) > 0) {
+        if (seconds < 0.0) seconds = previous + 1.0 / 30.0;
+        if (first < 0.0) first = seconds;
+        previous = seconds;
+
+        const double target = start + (seconds - first);
+        shown = 0;
+
+        if (wait_until(target)) {
+            shown = 1;
+            skipped = 1;
+            break;
+        }
+
+        if (now_seconds() - target > 0.1) {
+            dropped++;
+            continue;
+        }
+
+        if (present_image(fb, img, opts) != 0) break;
+        shown = 1;
+        presented++;
+    }
+
+    if (!shown && img->pixels) present_image(fb, img, opts);
+
+    trace("video finished presented=%d dropped=%d skipped=%d", presented, dropped, skipped);
+    video_close(&video);
+
+    return skipped;
+}
+
 static int run_clear(const options_t *opts) {
     fb_t fb = {0};
     fb.fd = -1;
@@ -1471,9 +1964,11 @@ static int run_draw(const options_t *opts) {
 
     log_value(opts, "Loading image: ", opts->image_path);
 
-    if (load_png_to_rgba(opts->image_path, &img) != 0) {
-        log_value(opts, "Failed to load PNG: ", opts->image_path);
-        trace("failed to load png");
+    const media_kind_t kind = media_kind(opts->image_path);
+
+    if (load_media_still(opts->image_path, kind, &img) != 0) {
+        log_value(opts, "Failed to load image: ", opts->image_path);
+        trace("failed to load image");
         trace_close();
 
         return 1;
@@ -1520,7 +2015,10 @@ static int run_draw(const options_t *opts) {
         }
     }
 
-    if (present_image(&fb, &img, opts) != 0) {
+    const int fading = opts->fade > 0 && !opts->wait && fb.page_size > 0;
+    const int shown = fading ? fade_in_image(&fb, &img, opts) : present_image(&fb, &img, opts);
+
+    if (shown != 0) {
         log_msg(opts, "Failed to flush framebuffer");
         trace("failed to flush framebuffer");
         trace_close();
@@ -1542,6 +2040,28 @@ static int run_draw(const options_t *opts) {
         free_image(&img);
         return 1;
     }
+
+    const double shown_at = now_seconds();
+    const int playing = opts->play && kind != media_still;
+
+    if (playing || opts->duration != 0) {
+        input_open();
+
+        int skipped = 0;
+        if (playing) skipped = kind == media_animation ? play_animation(&fb, opts, &img) : play_video(&fb, opts, &img);
+
+        if (!skipped) {
+            if (opts->duration == DURATION_PRESS || (opts->duration == DURATION_FINISH && !playing)) {
+                wait_until(shown_at + 86400.0);
+            } else if (opts->duration > 0) {
+                wait_until(shown_at + opts->duration);
+            }
+        }
+
+        input_close();
+    }
+
+    if (fading) fade_out_screen(&fb, opts);
 
     if (opts->wait) {
         log_msg(opts, "Waiting until killed");

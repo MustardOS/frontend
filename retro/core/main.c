@@ -729,7 +729,11 @@ int main(const int argc, char *argv[]) {
     init_display();
     LOG_DEBUG(mux_module, "init_display done, renderer=%p", (void *) display_get_renderer());
 
-    if (loading_splash_show(content_path)) show_startup_messages = 0;
+    int power_on_pending = 0;
+    if (file_exist(MUOS_SPL_LOAD)) {
+        show_startup_messages = 0;
+        power_on_pending = !startup.restarting;
+    }
 
     board_init(device.board.name);
     mux_input_open();
@@ -1351,6 +1355,7 @@ int main(const int argc, char *argv[]) {
         video_bridge_commit_staged();
         audio_bridge_commit_staged();
         video_bridge_flush_frame();
+        if (power_on_pending && core_ran && video_bridge_power_on() >= 0) power_on_pending = 0;
         perf_end(perf_stage_video, video_start);
         if (ui_visible && SDL_TICKS_PASSED(loop_now, ui_task_deadline)) {
             const uint64_t ui_task_start = perf_begin();

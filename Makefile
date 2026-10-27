@@ -18,6 +18,7 @@ muweb_SRC = common/base/image_ext.c common/base/totp.c common/content/lookup.c \
 muweb_CFLAGS = -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
 musftpjail_SRC = common/storage/mount.c
 mustate_LDLIBS = -lz -lzstd
+musplash_LDLIBS = $(FFMPEG_LIBS)
 
 muvarctl_SRC = common/config/var_store.c
 
@@ -158,7 +159,7 @@ $(MODULES):
 		UI_OBJ=""; \
 	fi; \
 	$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $$UI_OBJ -o $@ \
-		-MF $(DEP_ROOT)/root/$@.d $(LDLIBS) $(LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }; \
+		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(LDLIBS) $(LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }; \
 	mkdir -p $(BIN_DIR); mv $@ $(BIN_DIR) || { echo "Error moving $@ to $(BIN_DIR)"; exit 1; }
 
 $(MODULE_DAEMONS):

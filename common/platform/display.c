@@ -173,10 +173,10 @@ static void update_blend_mode(void) {
     monitor.force_clear = 1;
 }
 
-static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
+static SDL_Texture *load_image(SDL_Renderer *renderer, const char *path) {
     SDL_Surface *surf = IMG_Load(path);
     if (!surf) {
-        LOG_ERROR("video", "PNG loading failure: %s", IMG_GetError());
+        LOG_ERROR("video", "Image loading failure: %s", IMG_GetError());
         return NULL;
     }
 
@@ -187,8 +187,8 @@ static SDL_Texture *load_png(SDL_Renderer *renderer, const char *path) {
     return tex;
 }
 
-SDL_Texture *display_load_png_texture(const char *path) {
-    return load_png(monitor.renderer, path);
+SDL_Texture *display_load_image_texture(const char *path) {
+    return load_image(monitor.renderer, path);
 }
 
 void display_set_theme_overlay(SDL_Texture *tex, const uint8_t opacity) {
@@ -255,7 +255,7 @@ static void reload_background(const char *active_theme) {
         monitor.background_image = NULL;
     }
 
-    monitor.background_image = load_png(monitor.renderer, back_image);
+    monitor.background_image = load_image(monitor.renderer, back_image);
 
     if (!monitor.background_image) {
         monitor.theme_name[0] = '\0';
@@ -1393,10 +1393,12 @@ void display_composite_frame(void) {
 void display_finish_startup_transition(void) {
     if (!startup_splash) return;
 
-    for (int i = 0; i <= FADE_STEP; i++) {
-        startup_splash_alpha = (uint8_t) (255 - 255 * i / FADE_STEP);
+    const uint32_t started = SDL_GetTicks();
+    int done = 0;
+
+    while (!done) {
+        startup_splash_alpha = (uint8_t) fade_level(started, 255, 0, &done);
         display_composite_frame();
-        SDL_Delay(FADE_TIME / FADE_STEP);
     }
 
     SDL_DestroyTexture(startup_splash);

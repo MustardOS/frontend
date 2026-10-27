@@ -682,6 +682,10 @@ struct mux_lang {
         char grid_mode[MAX_BUFFER_SIZE];
         char grid_mode_art[MAX_BUFFER_SIZE];
         char launch_splash[MAX_BUFFER_SIZE];
+        char launch_splash_second[MAX_BUFFER_SIZE];
+        char launch_splash_seconds[MAX_BUFFER_SIZE];
+        char launch_splash_finish[MAX_BUFFER_SIZE];
+        char launch_splash_press[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char behind[MAX_BUFFER_SIZE];

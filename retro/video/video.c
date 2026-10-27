@@ -75,6 +75,7 @@ static int output_canvas_h = 0;
 
 static SDL_Texture *crt_snapshot_tex = NULL;
 static uint32_t crt_power_off_start = 0;
+static uint32_t crt_power_on_start = 0;
 
 static int frame_dirty = 0;
 static int frame_skip = 0;
@@ -628,15 +629,21 @@ static void draw_video_content(SDL_Renderer *renderer, const int physical_output
 }
 
 static void draw_video_background_logical(SDL_Renderer *renderer, const int physical_output) {
-    if (crt_power_off_start && crt_snapshot_tex) {
+    if ((crt_power_off_start || crt_power_on_start) && crt_snapshot_tex) {
         SDL_Rect frame = {0, 0, device.mux.width, device.mux.height};
         if (physical_output) {
             const SDL_Rect logical_frame = frame;
             display_map_logical_rect(&logical_frame, &frame);
         }
-        crt_effect_render_power_off(
-            renderer, &frame, crt_power_off_start, SDL_GetTicks(), draw_crt_snapshot, crt_snapshot_tex
-        );
+        if (crt_power_on_start) {
+            crt_effect_render_power_on(
+                renderer, &frame, crt_power_on_start, SDL_GetTicks(), draw_crt_snapshot, crt_snapshot_tex
+            );
+        } else {
+            crt_effect_render_power_off(
+                renderer, &frame, crt_power_off_start, SDL_GetTicks(), draw_crt_snapshot, crt_snapshot_tex
+            );
+        }
         return;
     }
 
@@ -1014,13 +1021,7 @@ static void draw_crt_snapshot(SDL_Renderer *renderer, const SDL_Rect *rect, void
     SDL_RenderCopy(renderer, userdata, NULL, rect);
 }
 
-int video_bridge_power_off(void) {
-    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start) return 0;
-    if (!frame_tex && !hw_render_bridge_active()) return 0;
-
-    SDL_Renderer *renderer = display_get_renderer();
-    if (!renderer) return 0;
-
+static int capture_crt_snapshot(SDL_Renderer *renderer) {
     if (!crt_snapshot_tex) {
         crt_snapshot_tex = SDL_CreateTexture(
             renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, device.mux.width, device.mux.height
@@ -1036,6 +1037,39 @@ int video_bridge_power_off(void) {
     SDL_RenderClear(renderer);
     draw_video_background_logical(renderer, 0);
     SDL_SetRenderTarget(renderer, previous_target);
+
+    return 1;
+}
+
+int video_bridge_power_on(void) {
+    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start || crt_power_on_start) return 0;
+    if (!frame_tex && !hw_render_bridge_active()) return -1;
+
+    SDL_Renderer *renderer = display_get_renderer();
+    if (!renderer || !capture_crt_snapshot(renderer)) return 0;
+
+    crt_power_on_start = SDL_GetTicks();
+    if (!crt_power_on_start) crt_power_on_start = 1;
+    display_set_ui_hidden(1);
+    display_set_video_background_opaque(1);
+
+    const uint32_t duration = crt_effect_power_off_duration();
+    while (SDL_GetTicks() - crt_power_on_start < duration) {
+        display_composite_frame();
+        SDL_Delay(8);
+    }
+
+    crt_power_on_start = 0;
+    display_composite_frame();
+    return 1;
+}
+
+int video_bridge_power_off(void) {
+    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start) return 0;
+    if (!frame_tex && !hw_render_bridge_active()) return 0;
+
+    SDL_Renderer *renderer = display_get_renderer();
+    if (!renderer || !capture_crt_snapshot(renderer)) return 0;
 
     crt_power_off_start = SDL_GetTicks();
     if (!crt_power_off_start) crt_power_off_start = 1;

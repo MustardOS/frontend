@@ -52,8 +52,7 @@
 #define TIMER_IDLE    512
 #define TIMER_REFRESH IDLE_MS
 
-#define FADE_TIME 256
-#define FADE_STEP 16
+#define FADE_TIME 192
 
 #define OPTION_COLUMN_PCT     50
 #define OPTION_LABEL_ONLY_PCT 95
@@ -226,6 +225,7 @@
 #define MUOS_OVO_LOAD RUN_PATH "overlay_options"
 #define MUOS_RAC_LOAD RUN_PATH "retroarch"
 #define MUOS_ROM_LOAD RUN_PATH "content"
+#define MUOS_SPL_LOAD RUN_PATH "splash"
 #define MUOS_SAA_LOAD RUN_PATH "auto_core"
 #define MUOS_SAG_LOAD RUN_PATH "auto_governor"
 #define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
