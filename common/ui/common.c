@@ -1661,6 +1661,7 @@ void ui_common_handle_idle(void) {
     }
 
     inotify_check(ino_proc);
+    battery_task();
     int need_update = ui_common_progress_tick();
 
     if (hdmi_refresh_exists) {
@@ -1836,8 +1837,9 @@ static int update_status_glyph(
     if (generate_image_embed(
             mux_dim, glyph_folder, glyph_name, image_path, sizeof(image_path), image_embed, sizeof(image_embed)
         )) {
-        int header_target =
-            resolve_glyph_size(config.settings.themeopt.glyph_size_header, theme->glyph.header,  theme->mux.item.height * 3 / 4);
+        int header_target = resolve_glyph_size(
+            config.settings.themeopt.glyph_size_header, theme->glyph.header, theme->mux.item.height * 3 / 4
+        );
 
         append_glyph_size_hint(image_embed, sizeof(image_embed), header_target);
         lv_img_set_src(ui_img, image_embed);
@@ -2569,8 +2571,7 @@ void scroll_help_content(const int direction, const int page_down) {
 
     if (scroll_y - total_line_height * direction < 0) {
         lv_obj_scroll_to_y(ui_pnl_help_content, 0, LV_ANIM_ON);
-    } else if (scroll_y - total_line_height * direction
-               >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
+    } else if (scroll_y - total_line_height * direction >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
         lv_obj_scroll_to_y(ui_pnl_help_content, lv_obj_get_content_height(ui_lbl_help_content), LV_ANIM_ON);
     } else {
         lv_obj_scroll_by(ui_pnl_help_content, 0, total_line_height * direction, LV_ANIM_ON);

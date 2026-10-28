@@ -11,7 +11,7 @@ static void handle_signal(const int sig) {
 }
 
 int main(void) {
-    const struct timespec ts = {3, 0};
+    const struct timespec ts = {1, 0};
 
     signal(SIGTERM, handle_signal);
     signal(SIGINT, handle_signal);

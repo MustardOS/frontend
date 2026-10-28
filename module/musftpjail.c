@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <common/storage/mount.h>
+#include <common/storage/view.h>
 
 extern char **environ;
 
@@ -70,51 +70,6 @@ static int write_file(const char *name, const char *text) {
     return fclose(file) == 0 && ok;
 }
 
-static int bind_folder(const char *name, const char *source) {
-    char target[PATH_MAX];
-    struct stat source_stat;
-    if (stat(source, &source_stat) < 0 || !S_ISDIR(source_stat.st_mode)) return 0;
-    if (!jail_path(target, sizeof(target), name)) return 0;
-    if (mkdir(target, 0755) < 0) return 0;
-
-    if (mount(source, target, NULL, MS_BIND, NULL) < 0) return 0;
-    return mount(NULL, target, NULL, MS_BIND | MS_REMOUNT | MS_NOSUID | MS_NODEV | MS_NOEXEC, NULL) == 0;
-}
-
-enum folder_availability {
-    FOLDER_REQUIRED,
-    FOLDER_PRESENT,
-    FOLDER_MOUNTED,
-};
-
-static const struct {
-    const char *name;
-    const char *source;
-    enum folder_availability availability;
-} folders[] = {
-    {"Primary Storage", "/mnt/mmc", FOLDER_MOUNTED},
-    {"Secondary Storage", "/mnt/sdcard", FOLDER_MOUNTED},
-    {"External Storage", "/mnt/usb", FOLDER_MOUNTED},
-    {"Internal", JAIL_SOURCE, FOLDER_REQUIRED},
-    {"Boot", "/mnt/boot", FOLDER_MOUNTED},
-    {"History", "/run/muos/storage/info/history", FOLDER_PRESENT},
-    {"Collections", "/run/muos/storage/info/collection", FOLDER_PRESENT},
-    {"Catalogue", "/run/muos/storage/info/catalogue", FOLDER_PRESENT},
-};
-
-static int bind_folders(void) {
-    for (size_t i = 0; i < sizeof(folders) / sizeof(folders[0]); ++i) {
-        struct stat source_stat;
-        if (folders[i].availability == FOLDER_MOUNTED && !mount_path_active(folders[i].source)) continue;
-        if (folders[i].availability == FOLDER_PRESENT
-            && (stat(folders[i].source, &source_stat) < 0 || !S_ISDIR(source_stat.st_mode)))
-            continue;
-        if (!bind_folder(folders[i].name, folders[i].source)) return 0;
-    }
-
-    return 1;
-}
-
 static int build_jail(void) {
     struct stat jail_stat;
     if (lstat(JAIL_ROOT, &jail_stat) < 0) {
@@ -138,7 +93,7 @@ static int build_jail(void) {
     if (!write_file("etc/passwd", "root:x:0:0:root:/:/bin/sh\n")) return fail("write passwd");
     if (!write_file("etc/group", "root:x:0:\n")) return fail("write group");
 
-    if (!bind_folders()) return fail("bind storage");
+    if (!storage_view_bind_all(JAIL_ROOT)) return fail("bind storage");
 
     if (mount(NULL, JAIL_ROOT, NULL, MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NODEV | MS_NOEXEC, NULL) < 0)
         return fail("seal jail");

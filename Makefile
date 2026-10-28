@@ -9,14 +9,16 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen
+SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen
+EXTERNAL_TOOLS = muadb mumtp
+TOOLS = $(SOURCE_TOOLS) $(EXTERNAL_TOOLS)
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
 mulink_SRC = common/platform/usb_link.c
 muweb_SRC = common/base/image_ext.c common/base/totp.c common/content/lookup.c \
             common/content/core/state_preview.c common/storage/mount.c vendor/miniz/miniz.c
 muweb_CFLAGS = -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
-musftpjail_SRC = common/storage/mount.c
+musftpjail_SRC = common/storage/mount.c common/storage/view.c
 mustate_LDLIBS = -lz -lzstd
 musplash_LDLIBS = $(FFMPEG_LIBS)
 
@@ -175,11 +177,23 @@ $(INPUT_DAEMON):
 		LDFLAGS="$(BIN_LDFLAGS)" BUILDDIR="$(abspath $(DEP_ROOT)/input)" $(QUIET) || exit 1
 	$(VERBOSE)cp "$(DEP_ROOT)/input/bin/$(INPUT_DAEMON)" "$(BIN_DIR)/$(INPUT_DAEMON)"
 
-$(TOOLS):
+$(SOURCE_TOOLS):
 	@echo "Building Tool: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
 	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
+
+muadb:
+	@echo "Installing Tool: $@"
+	@mkdir -p $(BIN_DIR) $(BIN_DIR)/license
+	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/bin/muadb" "$(BIN_DIR)/muadb"
+	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/share/licenses/muadb/copyright" "$(BIN_DIR)/license/Android-tools.txt"
+
+mumtp:
+	@echo "Installing Tool: $@"
+	@mkdir -p $(BIN_DIR) $(BIN_DIR)/license
+	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/bin/mumtp" "$(BIN_DIR)/mumtp"
+	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/share/licenses/umtprd/LICENSE" "$(BIN_DIR)/license/uMTP-Responder.txt"
 
 cursor: $(CURSOR_LIB)
 

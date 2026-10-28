@@ -1,0 +1,270 @@
+--- a/core/adbd/usb_linux_client.c
++++ b/core/adbd/usb_linux_client.c
+@@ -33,6 +33,7 @@
+ 
+ #define MAX_PACKET_SIZE_FS	64
+ #define MAX_PACKET_SIZE_HS	512
++#define FUNCTIONFS_RETRY_MS	250
+ 
+ #if __BYTE_ORDER == __LITTLE_ENDIAN
+ # define cpu_to_le16(x) (x)
+@@ -267,57 +268,66 @@ static void usb_adb_init()
+ }
+ 
+ 
+-static void init_functionfs(struct usb_handle *h)
++static void close_functionfs(struct usb_handle *h)
++{
++    if (h->bulk_in >= 0) {
++        adb_close(h->bulk_in);
++        h->bulk_in = -1;
++    }
++    if (h->bulk_out >= 0) {
++        adb_close(h->bulk_out);
++        h->bulk_out = -1;
++    }
++    if (h->control >= 0) {
++        adb_close(h->control);
++        h->control = -1;
++    }
++}
++
++static int init_functionfs(struct usb_handle *h)
+ {
+     ssize_t ret;
+ 
+     D("OPENING %s\n", USB_FFS_ADB_EP0);
+-    h->control = adb_open(USB_FFS_ADB_EP0, O_RDWR);
++    h->control = adb_open(USB_FFS_ADB_EP0, O_RDWR | O_CLOEXEC);
+     if (h->control < 0) {
+         D("[ %s: cannot open control endpoint: errno=%d]\n", USB_FFS_ADB_EP0, errno);
+         goto err;
+     }
+ 
+     ret = adb_write(h->control, &descriptors, sizeof(descriptors));
+-    if (ret < 0) {
++    if (ret != (ssize_t) sizeof(descriptors)) {
++        if (ret >= 0)
++            errno = EIO;
+         D("[ %s: write descriptors failed: errno=%d ]\n", USB_FFS_ADB_EP0, errno);
+         goto err;
+     }
+ 
+     ret = adb_write(h->control, &strings, sizeof(strings));
+-    if (ret < 0) {
++    if (ret != (ssize_t) sizeof(strings)) {
++        if (ret >= 0)
++            errno = EIO;
+         D("[ %s: writing strings failed: errno=%d]\n", USB_FFS_ADB_EP0, errno);
+         goto err;
+     }
+ 
+-    h->bulk_out = adb_open(USB_FFS_ADB_OUT, O_RDWR);
++    h->bulk_out = adb_open(USB_FFS_ADB_OUT, O_RDWR | O_CLOEXEC);
+     if (h->bulk_out < 0) {
+         D("[ %s: cannot open bulk-out ep: errno=%d ]\n", USB_FFS_ADB_OUT, errno);
+         goto err;
+     }
+ 
+-    h->bulk_in = adb_open(USB_FFS_ADB_IN, O_RDWR);
++    h->bulk_in = adb_open(USB_FFS_ADB_IN, O_RDWR | O_CLOEXEC);
+     if (h->bulk_in < 0) {
+         D("[ %s: cannot open bulk-in ep: errno=%d ]\n", USB_FFS_ADB_IN, errno);
+         goto err;
+     }
+ 
+-    return;
++    return 0;
+ 
+ err:
+-    if (h->bulk_in > 0) {
+-        adb_close(h->bulk_in);
+-        h->bulk_in = -1;
+-    }
+-    if (h->bulk_out > 0) {
+-        adb_close(h->bulk_out);
+-        h->bulk_out = -1;
+-    }
+-    if (h->control > 0) {
+-        adb_close(h->control);
+-        h->control = -1;
+-    }
+-    return;
++    close_functionfs(h);
++    return -1;
+ }
+ 
+ static void *usb_ffs_open_thread(void *x)
+@@ -332,12 +342,10 @@ static void *usb_ffs_open_thread(void *x)
+         adb_mutex_unlock(&usb->lock);
+ 
+         while (1) {
+-            init_functionfs(usb);
+-
+-            if (usb->control >= 0)
++            if (init_functionfs(usb) == 0)
+                 break;
+ 
+-            adb_sleep_ms(1000);
++            adb_sleep_ms(FUNCTIONFS_RETRY_MS);
+         }
+ 
+         D("[ usb_thread - registering device ]\n");
+@@ -358,6 +366,9 @@ static int bulk_write(int bulk_in, const char *buf, size_t length)
+         if (ret < 0) {
+             if (errno != EINTR)
+                 return ret;
++        } else if (ret == 0) {
++            errno = EPIPE;
++            return -1;
+         } else {
+             count += ret;
+         }
+@@ -395,6 +406,9 @@ static int bulk_read(int bulk_out, char *buf, size_t length)
+                                            bulk_out, length, count);
+                 return ret;
+             }
++        } else if (ret == 0) {
++            errno = EPIPE;
++            return -1;
+         } else {
+             count += ret;
+         }
+@@ -422,19 +436,21 @@ static void usb_ffs_kick(usb_handle *h)
+ {
+     int err;
+ 
+-    err = ioctl(h->bulk_in, FUNCTIONFS_CLEAR_HALT);
+-    if (err < 0)
+-        D("[ kick: source (fd=%d) clear halt failed (%d) ]", h->bulk_in, errno);
+-
+-    err = ioctl(h->bulk_out, FUNCTIONFS_CLEAR_HALT);
+-    if (err < 0)
+-        D("[ kick: sink (fd=%d) clear halt failed (%d) ]", h->bulk_out, errno);
+-
+     adb_mutex_lock(&h->lock);
+-    adb_close(h->control);
+-    adb_close(h->bulk_out);
+-    adb_close(h->bulk_in);
+-    h->control = h->bulk_out = h->bulk_in = -1;
++
++    if (h->bulk_in >= 0) {
++        err = ioctl(h->bulk_in, FUNCTIONFS_CLEAR_HALT);
++        if (err < 0)
++            D("[ kick: source (fd=%d) clear halt failed (%d) ]", h->bulk_in, errno);
++    }
++
++    if (h->bulk_out >= 0) {
++        err = ioctl(h->bulk_out, FUNCTIONFS_CLEAR_HALT);
++        if (err < 0)
++            D("[ kick: sink (fd=%d) clear halt failed (%d) ]", h->bulk_out, errno);
++    }
++
++    close_functionfs(h);
+ 
+     // notify usb_ffs_open_thread that we are disconnected
+     adb_cond_signal(&h->notify);
+@@ -456,7 +472,7 @@ static void usb_ffs_init()
+ 
+     h->control  = -1;
+     h->bulk_out = -1;
+-    h->bulk_out = -1;
++    h->bulk_in  = -1;
+ 
+     adb_cond_init(&h->notify, 0);
+     adb_mutex_init(&h->lock, 0);
+--- a/core/adbd/adb.c
++++ b/core/adbd/adb.c
+@@ -38,6 +38,10 @@
+ 
+ #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+ 
++#ifndef MUADB_VERSION
++#define MUADB_VERSION "unknown"
++#endif
++
+ #if !ADB_HOST
+ #include "android_filesystem_config.h"
+ #include <linux/capability.h>
+@@ -1713,6 +1717,11 @@ int main(int argc, char **argv)
+     D("Handling commandline()\n");
+     return adb_commandline(argc - 1, argv + 1);
+ #else
++    if ((argc > 1) && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
++        printf("muadb %s (Android Debug Bridge compatible)\n", MUADB_VERSION);
++        return 0;
++    }
++
+     /* If adbd runs inside the emulator this will enable adb tracing via
+      * adb-debug qemud service in the emulator. */
+     adb_qemu_trace_init();
+--- a/core/adbd/framebuffer_service.c
++++ b/core/adbd/framebuffer_service.c
+@@ -60,11 +60,12 @@ void framebuffer_service(int fd, void *cookie)
+     char buf[640];
+     int fd_screencap;
+     int w, h, f;
+-    int fds[2];
++    int fds[2] = {-1, -1};
++    pid_t pid = -1;
+ 
+     if (pipe(fds) < 0) goto done;
+ 
+-    pid_t pid = fork();
++    pid = fork();
+     if (pid < 0) goto done;
+ 
+     if (pid == 0) {
+@@ -165,17 +166,20 @@ void framebuffer_service(int fd, void *cookie)
+     if(writex(fd, &fbinfo, sizeof(fbinfo))) goto done;
+ 
+     /* write data */
+-    for(i = 0; i < fbinfo.size; i += sizeof(buf)) {
+-      if(readx(fd_screencap, buf, sizeof(buf))) goto done;
+-      if(writex(fd, buf, sizeof(buf))) goto done;
++    for(i = 0; i < fbinfo.size;) {
++      const size_t chunk = fbinfo.size - i < sizeof(buf) ? fbinfo.size - i : sizeof(buf);
++      if(readx(fd_screencap, buf, chunk)) goto done;
++      if(writex(fd, buf, chunk)) goto done;
++      i += chunk;
+     }
+-    if(readx(fd_screencap, buf, fbinfo.size % sizeof(buf))) goto done;
+-    if(writex(fd, buf, fbinfo.size % sizeof(buf))) goto done;
+ 
+ done:
+-    TEMP_FAILURE_RETRY(waitpid(pid, NULL, 0));
++    if (pid > 0)
++        TEMP_FAILURE_RETRY(waitpid(pid, NULL, 0));
+ 
+-    close(fds[0]);
+-    close(fds[1]);
++    if (fds[0] >= 0)
++        close(fds[0]);
++    if (fds[1] >= 0)
++        close(fds[1]);
+     close(fd);
+ }
+--- a/core/adbd/services.c
++++ b/core/adbd/services.c
+@@ -113,7 +113,7 @@ void restart_root_service(int fd, void *cookie)
+ void restart_root_service(int fd, void *cookie)
+ {
+     char buf[100];
+-    char value[PROPERTY_VALUE_MAX];
++    char value[PROPERTY_VALUE_MAX] = "0";
+ 
+     if (getuid() == 0) {
+         snprintf(buf, sizeof(buf), "adbd is already running as root\n");
+--- a/core/adbd/transport.c
++++ b/core/adbd/transport.c
+@@ -796,8 +796,8 @@ atransport *acquire_one_transport(int state, transport_type ttype, const char* serial, char** error_out)
+     adb_mutex_lock(&transport_lock);
+     for (t = transport_list.next; t != &transport_list; t = t->next) {
+         if (t->connection_state == CS_NOPERM) {
+-        if (error_out)
+-            *error_out = "insufficient permissions for device";
++            if (error_out)
++                *error_out = "insufficient permissions for device";
+             continue;
+         }
+ 

@@ -358,28 +358,32 @@ void init_input(mux_input_options *opts, const int def_combo) {
 
         for (size_t i = 0; i < sizeof(bright_mods) / sizeof(bright_mods[0]); i++) {
             append_combo(
-                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
-                                         .press_handler = ui_common_handle_bright_up,
-                                         .hold_handler = ui_common_handle_bright_up}
+                opts, (mux_input_combo
+                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
+                        .press_handler = ui_common_handle_bright_up,
+                        .hold_handler = ui_common_handle_bright_up}
             );
 
             append_combo(
-                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
-                                         .press_handler = ui_common_handle_bright_down,
-                                         .hold_handler = ui_common_handle_bright_down}
+                opts, (mux_input_combo
+                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
+                        .press_handler = ui_common_handle_bright_down,
+                        .hold_handler = ui_common_handle_bright_down}
             );
         }
 
         append_combo(
-            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_up),
-                                     .press_handler = ui_common_handle_volume_up,
-                                     .hold_handler = ui_common_handle_volume_up}
+            opts, (mux_input_combo
+                  ){.type_mask = BIT(mux_input_vol_up),
+                    .press_handler = ui_common_handle_volume_up,
+                    .hold_handler = ui_common_handle_volume_up}
         );
 
         append_combo(
-            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_down),
-                                     .press_handler = ui_common_handle_volume_down,
-                                     .hold_handler = ui_common_handle_volume_down}
+            opts, (mux_input_combo
+                  ){.type_mask = BIT(mux_input_vol_down),
+                    .press_handler = ui_common_handle_volume_down,
+                    .hold_handler = ui_common_handle_volume_down}
         );
     }
 
@@ -618,6 +622,15 @@ void status_task(const lv_timer_t *timer) {
 
 void status_poll(void) {
     if (config.visual.clock) datetime_task(NULL);
+    if (config.visual.battery != 3 && battery_is_available()) battery_capacity_task(NULL);
+}
+
+void battery_task(void) {
+    static unsigned last_charging_changes = 0;
+
+    if (!ino_proc || charging_changes == last_charging_changes) return;
+    last_charging_changes = charging_changes;
+
     if (config.visual.battery != 3 && battery_is_available()) battery_capacity_task(NULL);
 }
 

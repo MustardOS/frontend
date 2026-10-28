@@ -519,6 +519,7 @@ GEN_THIRDPARTY() {
 	GEN_TMP="$GEN_OUT.tmp"
 
 	GEN_ROWS=$(
+		printf '%s\t%s\n' "Android Debug Bridge" "$(GEN_EXTERNAL_VERSION muadb)"
 		printf '%s\t%s\n' "FFmpeg" "$(GEN_EXTERNAL_VERSION ffmpeg)"
 		printf '%s\t%s\n' "json.c" ""
 		printf '%s\t%s\n' "libarchive" "$(GEN_EXTERNAL_VERSION libarchive)"
@@ -536,6 +537,7 @@ GEN_THIRDPARTY() {
 		printf '%s\t%s\n' "stb_image_write" "1.16"
 		printf '%s\t%s\n' "stb_rect_pack" "1.01"
 		printf '%s\t%s\n' "stb_truetype" "1.26"
+		printf '%s\t%s\n' "uMTP Responder" "$(GEN_EXTERNAL_VERSION umtprd)"
 		printf '%s\t%s\n' "xxHash" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/xxhash/xxhash.h" XXH_VERSION_MAJOR XXH_VERSION_MINOR XXH_VERSION_RELEASE)"
 	)
 

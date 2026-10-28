@@ -8,6 +8,7 @@ struct third_party_lib {
 };
 
 static const struct third_party_lib third_party_libs[] = {
+    {"Android Debug Bridge", "4.2.2+git20130218-muos1"},
     {"FFmpeg", "9.0.1"},
     {"json.c", "-"},
     {"libarchive", "3.8.9"},
@@ -25,5 +26,6 @@ static const struct third_party_lib third_party_libs[] = {
     {"stb_image_write", "1.16"},
     {"stb_rect_pack", "1.01"},
     {"stb_truetype", "1.26"},
+    {"uMTP Responder", "1.9.1-muos1"},
     {"xxHash", "0.8.3"},
 };
