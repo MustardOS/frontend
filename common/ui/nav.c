@@ -262,6 +262,12 @@ void show_info_box(const char *title, const char *content, const int is_content)
                 break;
         }
 
+        if (trans == TSN_DISABLED) {
+            lv_obj_set_style_bg_opa(ui_pnl_help, 155, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_set_style_opa(ui_pnl_help_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+            return;
+        }
+
         lv_anim_t ad;
         lv_anim_init(&ad);
         lv_anim_set_var(&ad, ui_pnl_help);
@@ -270,8 +276,6 @@ void show_info_box(const char *title, const char *content, const int is_content)
         lv_anim_set_time(&ad, 200);
         lv_anim_set_path_cb(&ad, lv_anim_path_ease_out);
         lv_anim_start(&ad);
-
-        if (trans == TSN_DISABLED) return;
 
         lv_anim_t ap;
         lv_anim_init(&ap);
@@ -329,6 +333,11 @@ void hide_info_box(void) {
     lv_anim_del(ui_pnl_help_message, help_panel_y_cb);
     lv_anim_del(ui_pnl_help_message, help_panel_x_cb);
     lv_anim_del(ui_pnl_help_message, help_panel_opa_cb);
+
+    if (config.visual.element_transition == TSN_DISABLED) {
+        help_hide_ready_cb(NULL);
+        return;
+    }
 
     lv_anim_t ap;
     lv_anim_init(&ap);

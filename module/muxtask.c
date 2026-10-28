@@ -8,13 +8,15 @@
 static char base_dir[PATH_MAX];
 
 static void show_help(void) {
-    char *title = items[current_item_index].name;
+    const content_item *item = &items[current_item_index];
+    char *title = item->name;
 
-    char help_info[MAX_BUFFER_SIZE];
-    snprintf(help_info, sizeof(help_info), OPT_SHARE_PATH "task/%s.sh", title);
+    char *message = NULL;
+    if (item->content_type == content_type_item && item->extra_data && item->extra_data[0])
+        message = get_script_value(item->extra_data, "HELP", lang.generic.no_help);
 
-    char *message = get_script_value(help_info, "HELP", lang.generic.no_help);
-    show_info_box(TRS(title), TRS(message), 0);
+    show_info_box(TRS(title), TRS(message ? message : lang.generic.no_help), 0);
+    free(message);
 }
 
 static int task_dir_has_content(const char *dir_path, const int depth) {
