@@ -74,9 +74,8 @@
 #define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
 #define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"
 
-#define IDLE_STATE   RUN_PATH "idle_state"
-#define NOTIFY_DROP  RUN_PATH "notify"
-#define WAKE_CPU_GOV RUN_PATH "wake_cpu_gov"
+#define IDLE_STATE  RUN_PATH "idle_state"
+#define NOTIFY_DROP RUN_PATH "notify"
 
 #define IDLE_GAME_INHIBIT  RUN_PATH "idle_game_inhibit"
 #define IDLE_SLEEP_INHIBIT RUN_PATH "idle_sleep_inhibit"

@@ -155,6 +155,10 @@ void viewport_refresh(
     lv_obj_t **ui_viewport_objects, const char *artwork_config, char *catalogue_folder, char *content_name
 );
 
+const char *cpu_profile_label(int id);
+
+const char *cpu_profile_value_label(const char *value);
+
 char *specify_asset(char *val, const char *def_val, const char *label);
 
 char *load_content_governor(char *sys_dir, const char *pointer, int force, int run_quit, int is_app);

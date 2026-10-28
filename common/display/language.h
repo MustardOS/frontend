@@ -1172,6 +1172,26 @@ struct mux_lang {
         char help[MAX_BUFFER_SIZE];
         char none[MAX_BUFFER_SIZE];
         char title[MAX_BUFFER_SIZE];
+        char range[MAX_BUFFER_SIZE];
+        char fixed[MAX_BUFFER_SIZE];
+        struct {
+            char automatic[MAX_BUFFER_SIZE];
+            char powersave[MAX_BUFFER_SIZE];
+            char efficient[MAX_BUFFER_SIZE];
+            char balanced[MAX_BUFFER_SIZE];
+            char responsive[MAX_BUFFER_SIZE];
+            char turbo[MAX_BUFFER_SIZE];
+            char extreme[MAX_BUFFER_SIZE];
+        } profile;
+        struct {
+            char automatic[MAX_BUFFER_SIZE];
+            char powersave[MAX_BUFFER_SIZE];
+            char efficient[MAX_BUFFER_SIZE];
+            char balanced[MAX_BUFFER_SIZE];
+            char responsive[MAX_BUFFER_SIZE];
+            char turbo[MAX_BUFFER_SIZE];
+            char extreme[MAX_BUFFER_SIZE];
+        } desc;
     } muxgov;
 
     struct {

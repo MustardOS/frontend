@@ -18,6 +18,8 @@ void exec_watch_task(void);
 
 int set_scaling_governor(const char *governor, int show_done);
 
+int cpu_performance_apply(int profile);
+
 void turbo_time(int toggle, int show_done);
 
 void set_process_name(const char *module);

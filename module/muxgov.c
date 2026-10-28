@@ -1,5 +1,6 @@
 #include <common/content/core/coredb.h>
 #include "muxshare.h"
+#include <common/platform/cpu_profile.h>
 #include <common/ui/orientation.h>
 
 static char rom_name[PATH_MAX];
@@ -11,82 +12,120 @@ static int is_app = 0;
 
 static mux_dialogue assign_dlg;
 
+static int default_profile = cpu_profile_automatic;
+
 static void show_help(void) {
     show_info_box(lang.muxgov.title, lang.muxgov.help, 0);
 }
 
+static const char *profile_description(const int id) {
+    switch (id) {
+        case cpu_profile_powersave:
+            return lang.muxgov.desc.powersave;
+        case cpu_profile_efficient:
+            return lang.muxgov.desc.efficient;
+        case cpu_profile_balanced:
+            return lang.muxgov.desc.balanced;
+        case cpu_profile_responsive:
+            return lang.muxgov.desc.responsive;
+        case cpu_profile_turbo:
+            return lang.muxgov.desc.turbo;
+        case cpu_profile_extreme:
+            return lang.muxgov.desc.extreme;
+        default:
+            return lang.muxgov.desc.automatic;
+    }
+}
+
+static void show_profile_help(const int id) {
+    char range[MAX_BUFFER_SIZE] = "";
+    unsigned min = 0;
+    unsigned max = 0;
+
+    if (cpu_profile_range(id, &min, &max)) {
+        if (min == max) {
+            snprintf(range, sizeof(range), lang.muxgov.fixed, max / 1000);
+        } else {
+            snprintf(range, sizeof(range), lang.muxgov.range, min / 1000, max / 1000);
+        }
+    }
+
+    char text[MAX_BUFFER_SIZE * 2];
+    const int written = snprintf(text, sizeof(text), "%s%s%s", profile_description(id), range[0] ? "\n\n" : "", range);
+    if (written < 0) return;
+
+    show_info_box(cpu_profile_label(id), text, 0);
+}
+
 static void create_gov_assignment(const char *gov, const char *rom, const enum gen_type method) {
-    create_marker_assignment("gov", "Assign Governor", gov, rom, rom_dir, is_app, method);
+    create_marker_assignment("gov", "Assign Performance", gov, rom, rom_dir, is_app, method);
 
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }
 
-static void generate_available_governors(const char *default_governor) {
-    int governor_count;
-    char **governors = str_parse_file(device.cpu.available, &governor_count, parse_tokens);
-    if (!governors) return;
-
-    for (int i = 0; i < governor_count; ++i)
-        add_item(&items, &item_count, governors[i], governors[i], "", content_type_item);
-    sort_items(items, item_count);
-
+static void generate_profiles(void) {
     reset_ui_groups();
 
-    for (size_t i = 0; i < item_count; i++) {
+    for (int i = 0; i < cpu_profile_count; i++) {
         ui_count_static++;
 
-        const char *cap_name = str_capital(items[i].display_name);
-
-        char *raw_name_dup = strdup(items[i].display_name);
-        char *raw_name = str_tolower(str_remchar(str_trim(raw_name_dup), ' '));
-        free(raw_name_dup);
+        const char *label = cpu_profile_label(i);
 
         lv_obj_t *ui_pnl_gov = lv_obj_create(ui_pnl_content);
         apply_theme_list_panel(ui_pnl_gov);
 
         lv_obj_t *ui_lbl_gov_item = lv_label_create(ui_pnl_gov);
-        apply_theme_list_item(&theme, ui_lbl_gov_item, cap_name);
+        apply_theme_list_item(&theme, ui_lbl_gov_item, label);
 
         lv_obj_t *ui_lbl_gov_item_glyph = lv_img_create(ui_pnl_gov);
-
-        const char *glyph = strcasecmp(raw_name, default_governor) == 0 ? "default" : str_remchar(raw_name, ' ');
-        apply_theme_list_glyph(&theme, ui_lbl_gov_item_glyph, mux_module, glyph);
-        free(raw_name);
+        apply_theme_list_glyph(
+            &theme, ui_lbl_gov_item_glyph, mux_module, i == default_profile ? "default" : cpu_profile_name(i)
+        );
 
         lv_group_add_obj(ui_group, ui_lbl_gov_item);
         lv_group_add_obj(ui_group_glyph, ui_lbl_gov_item_glyph);
         lv_group_add_obj(ui_group_panel, ui_pnl_gov);
 
-        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_gov_item, ui_lbl_gov_item_glyph, cap_name);
+        apply_size_to_content(&theme, ui_pnl_content, ui_lbl_gov_item, ui_lbl_gov_item_glyph, label);
         apply_text_long_dot(&theme, ui_lbl_gov_item);
     }
 
-    if (ui_count_static > 0) {
-        lv_obj_update_layout(ui_pnl_content);
-        free_items(&items, &item_count);
-    }
+    lv_obj_update_layout(ui_pnl_content);
 }
 
-static void create_gov_items(const char *target) {
-    if (strcmp(target, "none") == 0) generate_available_governors(target);
-
-    char target_default[COREDB_NAME_MAX];
-    if (!coredb_system_default(target, target_default, sizeof(target_default)) || !target_default[0]) return;
-
-    char default_governor[FILENAME_MAX];
-    if (!coredb_system_governor(target, default_governor, sizeof(default_governor)) || !default_governor[0])
-        snprintf(default_governor, sizeof(default_governor), "%s", device.cpu.dflt);
+static const char *system_default_value(const char *target) {
+    char governor[COREDB_NAME_MAX] = "";
+    if (!coredb_system_governor(target, governor, sizeof(governor))) governor[0] = '\0';
 
     struct coredb_core core;
     if (coredb_system_default_core(target, &core)) {
         const char *board_governor = coredb_board_governor(&core);
-        if (board_governor)
-            snprintf(default_governor, sizeof(default_governor), "%s", board_governor);
-        else if (core.governor[0])
-            snprintf(default_governor, sizeof(default_governor), "%s", core.governor);
+        if (board_governor) {
+            snprintf(governor, sizeof(governor), "%s", board_governor);
+        } else if (core.governor[0]) {
+            snprintf(governor, sizeof(governor), "%s", core.governor);
+        }
     }
 
-    generate_available_governors(default_governor);
+    return cpu_profile_assign_value(governor);
+}
+
+static int profile_from_value(const char *value) {
+    if (!value || !*value || strcasecmp(value, "default") == 0) return cpu_profile_setting("gov_default");
+    return cpu_profile_from_name(value);
+}
+
+static int current_profile(void) {
+    char value[MAX_BUFFER_SIZE] = "";
+
+    if (is_app) {
+        snprintf(value, sizeof(value), "%s", get_application_line(rom_dir, "gov", 1));
+    } else {
+        snprintf(value, sizeof(value), "%s", get_content_line(rom_dir, is_dir ? NULL : rom_name, "gov", 1));
+        if (!value[0] && !is_dir) snprintf(value, sizeof(value), "%s", get_content_line(rom_dir, NULL, "gov", 1));
+    }
+
+    return value[0] ? profile_from_value(value) : default_profile;
 }
 
 static void close_screen(void) {
@@ -109,9 +148,9 @@ static void handle_a(void) {
 
         LOG_INFO(mux_module, "Governor Assignment Triggered (method %d)", method);
 
-        char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-        create_gov_assignment(selected, is_app ? "mux_option" : rom_name, (enum gen_type) method);
-        free(selected);
+        create_gov_assignment(
+            cpu_profile_name(current_item_index), is_app ? "mux_option" : rom_name, (enum gen_type) method
+        );
 
         if (is_app) load_mux("appcon");
 
@@ -199,7 +238,7 @@ static void handle_help(void) {
         return;
 
     play_sound(snd_info_open);
-    show_help();
+    show_profile_help(current_item_index);
 }
 
 static void init_elements(void) {
@@ -226,16 +265,16 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
     init_module(__func__);
 
     if (is_app) {
-        LOG_INFO(mux_module, "Assign Governor APP_NAME: \"%s\"", rom_name);
-        LOG_INFO(mux_module, "Assign Governor APP_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign Performance APP_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Performance APP_DIR: \"%s\"", rom_dir);
     } else {
-        LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name);
-        LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir);
-        LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system);
+        LOG_INFO(mux_module, "Assign Performance ROM_NAME: \"%s\"", rom_name);
+        LOG_INFO(mux_module, "Assign Performance ROM_DIR: \"%s\"", rom_dir);
+        LOG_INFO(mux_module, "Assign Performance ROM_SYS: \"%s\"", rom_system);
     }
 
     if (auto_assign && !file_exist(MUOS_SAG_LOAD) && !is_app) {
-        LOG_INFO(mux_module, "Automatic Assign Governor Initiated");
+        LOG_INFO(mux_module, "Automatic Assign Performance Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), INFO_CON_PATH "/%s/core.gov", get_last_subdir(rom_dir, '/', 4));
@@ -243,10 +282,9 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
 
         if (file_exist(core_file)) return;
 
-        char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), CORE_ASSIGN_INDEX);
+        const char *assign_value = "default";
 
-        char *assign_content = read_all_char_from(assign_file);
+        char *assign_content = read_all_char_from(CORE_ASSIGN_INDEX);
         if (json_valid(assign_content)) {
             static char assign_check[MAX_BUFFER_SIZE];
             char *last_dir_lower = str_tolower(get_last_dir(rom_dir));
@@ -261,44 +299,15 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
                 LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config);
-
-                static char def_sys[COREDB_NAME_MAX];
-                if (!coredb_system_default(ass_config, def_sys, sizeof(def_sys))) def_sys[0] = '\0';
-
-                LOG_INFO(mux_module, "\tObtaining Core Definition: %s / %s", ass_config, def_sys);
-
-                static char core_governor[MAX_BUFFER_SIZE];
-                coredb_system_governor(ass_config, core_governor, sizeof(core_governor));
-
-                struct coredb_core core;
-                if (coredb_system_default_core(ass_config, &core)) {
-                    const char *board_governor = coredb_board_governor(&core);
-                    if (board_governor)
-                        snprintf(core_governor, sizeof(core_governor), "%s", board_governor);
-                    else if (core.governor[0])
-                        snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
-                }
-
-                if (core_governor[0]) {
-                    LOG_INFO(mux_module, "\t(CORE) Core Governor: %s", core_governor);
-                    create_gov_assignment(core_governor, rom_name, casn_dir_nowipe);
-                    LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful");
-                } else {
-                    LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.cpu.dflt);
-                    create_gov_assignment(device.cpu.dflt, rom_name, casn_dir_nowipe);
-                }
-
-                free(assign_content);
-                return;
+                assign_value = system_default_value(ass_config);
             }
-            LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.cpu.dflt);
-            create_gov_assignment(device.cpu.dflt, rom_name, casn_dir_nowipe);
-
-            free(assign_content);
-            return;
         }
 
         free(assign_content);
+
+        LOG_INFO(mux_module, "\tAssigned Performance: %s", assign_value);
+        create_gov_assignment(assign_value, rom_name, casn_dir_nowipe);
+        return;
     }
 
     init_theme(1, 0);
@@ -339,7 +348,12 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
         free(assign_content);
     }
 
-    create_gov_items(rom_system);
+    if (strcasecmp(rom_system, "none") != 0)
+        default_profile = profile_from_value(system_default_value(rom_system));
+    else
+        default_profile = cpu_profile_setting("gov_default");
+
+    generate_profiles();
     init_elements();
 
     dialogue_init_assign_scope(
@@ -348,10 +362,8 @@ void muxgov_main(const int auto_assign, const char *name, const char *dir, const
     );
 
     if (ui_count_static > 0) {
-        LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count_static, ui_count_static == 1 ? "" : "s");
-        gen_step_movement(0, +1, 1, 0, 1);
+        gen_step_movement(current_profile(), +1, 1, 0, 1);
     } else {
-        LOG_ERROR(mux_module, "No Governors Detected!");
         lv_label_set_text(ui_lbl_screen_message, lang.muxgov.none);
     }
 

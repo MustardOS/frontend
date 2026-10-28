@@ -468,7 +468,7 @@ static void handle_a(void) {
             toast_message(lang.muxapp.load_app, tst_wait_f);
 
             char *assigned_gov = specify_asset(
-                load_content_governor(items[current_item_index].extra_data, NULL, 0, 1, 1), device.cpu.dflt, "Governor"
+                load_content_governor(items[current_item_index].extra_data, NULL, 0, 1, 1), "default", "Performance"
             );
 
             char *assigned_con = specify_asset(

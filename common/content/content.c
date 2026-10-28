@@ -598,7 +598,7 @@ int load_content(int add_collection, char *file_path) {
         LOG_INFO(mux_module, "Assigned Core: %s", core);
 
         char *assigned_gov =
-            specify_asset(load_content_governor(content_path, content_name, 0, 1, 0), device.cpu.dflt, "Governor");
+            specify_asset(load_content_governor(content_path, content_name, 0, 1, 0), "default", "Performance");
         char *assigned_con =
             specify_asset(load_content_control_scheme(content_path, content_name, 0, 1, 0), "system", "Control Scheme");
         char *assigned_rac =

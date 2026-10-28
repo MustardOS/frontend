@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/platform/cpu_profile.h>
 #include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
 
@@ -310,6 +311,31 @@ void overlay_display(void) {
     }
 
     load_overlay_image_sdl();
+}
+
+const char *cpu_profile_label(const int id) {
+    switch (id) {
+        case cpu_profile_powersave:
+            return lang.muxgov.profile.powersave;
+        case cpu_profile_efficient:
+            return lang.muxgov.profile.efficient;
+        case cpu_profile_balanced:
+            return lang.muxgov.profile.balanced;
+        case cpu_profile_responsive:
+            return lang.muxgov.profile.responsive;
+        case cpu_profile_turbo:
+            return lang.muxgov.profile.turbo;
+        case cpu_profile_extreme:
+            return lang.muxgov.profile.extreme;
+        default:
+            return lang.muxgov.profile.automatic;
+    }
+}
+
+const char *cpu_profile_value_label(const char *value) {
+    if (!value || !*value || strcasecmp(value, "default") == 0)
+        return cpu_profile_label(cpu_profile_setting("gov_default"));
+    return cpu_profile_label(cpu_profile_from_name(value));
 }
 
 char *specify_asset(char *val, const char *def_val, const char *label) {

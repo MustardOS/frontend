@@ -89,7 +89,12 @@ for _part in ("gen", "bat", "vol", "bri"):
     EXPLICIT_OPTIONS[f"settings/overlay/{_part}_anchor"] = ("muxoverlay", "anchor_options", None, [])
     EXPLICIT_OPTIONS[f"settings/overlay/{_part}_scale"] = ("muxoverlay", "scale_options", None, [])
 
+CPU_PROFILES = [(name, f"lang.muxgov.profile.{name}") for name in (
+    "automatic", "powersave", "efficient", "balanced", "responsive", "turbo", "extreme")]
+
 FIXED_OPTIONS = {
+    "settings/power/gov_default": CPU_PROFILES,
+    "settings/power/gov_idle": CPU_PROFILES,
     "visual/highcontrast": DISABLED_ENABLED,
     "visual/boldfocus": DISABLED_ENABLED,
     "visual/boxarthide": DISABLED_ENABLED,

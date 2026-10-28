@@ -96,7 +96,7 @@ static void add_info_item_type(
 
     if (!*value) {
         value = is_cfg   ? lang.muxoption.not_assigned
-                : is_gov ? device.cpu.dflt
+                : is_gov ? "default"
                 : is_con ? lang.muxoption.none
                 : is_tag ? lang.muxoption.not_assigned
                 : is_flt ? lang.muxoption.none
@@ -136,6 +136,8 @@ static void add_info_item_type(
 
             if (meta_name) free(meta_name);
         }
+    } else if (is_gov) {
+        snprintf(cap_value, sizeof(cap_value), "%s", cpu_profile_value_label(value));
     } else if (is_flt) {
         char *display_value = str_replace(value, "_", " ");
         snprintf(cap_value, sizeof(cap_value), "%s", display_value);

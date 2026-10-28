@@ -9,7 +9,7 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen
+SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen mucpu
 EXTERNAL_TOOLS = muadb mumtp
 TOOLS = $(SOURCE_TOOLS) $(EXTERNAL_TOOLS)
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
@@ -23,6 +23,7 @@ mustate_LDLIBS = -lz -lzstd
 musplash_LDLIBS = $(FFMPEG_LIBS)
 
 muvarctl_SRC = common/config/var_store.c
+mucpu_SRC = common/platform/cpu_profile.c
 
 murgb_SRC = common/tooling/rgb_args.c common/config/config.c common/config/config_value.c \
             common/display/colour.c common/storage/fileio_lite.c common/base/strpath.c \

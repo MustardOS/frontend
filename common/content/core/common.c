@@ -13,6 +13,7 @@
 #include <common/ui/common.h>
 #include <common/ui/nav.h>
 #include <common/platform/device.h>
+#include <common/platform/cpu_profile.h>
 #include <common/display/language.h>
 #include <common/runtime/log.h>
 #include <common/storage/fileio.h>
@@ -426,9 +427,10 @@ int automatic_assign_core(char *rom_dir) {
                     snprintf(core_governor, sizeof(core_governor), "%s", board_governor);
                 else if (core.governor[0])
                     snprintf(core_governor, sizeof(core_governor), "%s", core.governor);
-                else if (!coredb_system_governor(ass_config, core_governor, sizeof(core_governor)) || !core_governor[0])
-                    snprintf(core_governor, sizeof(core_governor), "%s", device.cpu.dflt);
-                LOG_INFO(mux_module, "\tCore Governor: %s", core_governor);
+                else if (!coredb_system_governor(ass_config, core_governor, sizeof(core_governor)))
+                    core_governor[0] = '\0';
+                snprintf(core_governor, sizeof(core_governor), "%s", cpu_profile_assign_value(core_governor));
+                LOG_INFO(mux_module, "\tCore Performance: %s", core_governor);
 
                 static char core_control[MAX_BUFFER_SIZE];
                 if (core.control[0])

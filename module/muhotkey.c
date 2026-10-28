@@ -15,6 +15,7 @@
 #include <common/runtime/log.h>
 #include <common/config/config.h>
 #include <common/platform/device.h>
+#include <common/platform/cpu_profile.h>
 #include <common/platform/board.h>
 #include <common/display/theme.h>
 #include <common/base/strutil.h>
@@ -180,8 +181,7 @@ static int lid_input_disabled = 0;
 static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
 static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
 
-static char *running_governor = NULL;
-static char *previous_governor = NULL;
+static int idle_profile_active = 0;
 
 static volatile sig_atomic_t pending_signal = 0;
 static uint32_t inhibit_check_tick = 0;
@@ -210,10 +210,7 @@ static void do_cleanup(const int signo) {
     if (cleanup_done) return;
     cleanup_done = 1;
 
-    // Only undo a governor change we made ourselves.  Content may have set
-    // its own governor since we started, and a restart must not clobber it.
-    if (running_governor) set_scaling_governor(running_governor, 0);
-    if (file_exist(WAKE_CPU_GOV)) remove(WAKE_CPU_GOV);
+    if (idle_profile_active) cpu_performance_apply(-1);
 
     for (int i = 0; i < combo_count; ++i) {
         free(combo[i].name);
@@ -246,9 +243,6 @@ static void do_cleanup(const int signo) {
 
     raw_power_pressed = 0;
     raw_power_long_active = 0;
-
-    free(running_governor);
-    free(previous_governor);
 }
 
 static void cleanup(const int signo) {
@@ -664,14 +658,9 @@ static void check_idle(idle_timer *timer, const uint32_t timeout_ms, const int i
         if (verbose) LOG_INFO("input", "Device is now IDLE");
         if (timer->idle_name) printf("%s\n", timer->idle_name);
 
-        if (idle_governor) {
-            if (!running_governor) {
-                running_governor = read_all_char_from(device.cpu.governor);
-                if (running_governor) write_text_to_file(WAKE_CPU_GOV, "w", CHAR, running_governor);
-            }
-
-            if (!previous_governor) previous_governor = read_all_char_from(device.cpu.governor);
-            set_scaling_governor(config.settings.power.gov.idle, 0);
+        if (idle_governor && !idle_profile_active) {
+            if (cpu_performance_apply(cpu_profile_from_name(config.settings.power.gov.idle)) == 0)
+                idle_profile_active = 1;
         }
 
         write_text_to_file(IDLE_STATE, "w", INT, 1);
@@ -680,13 +669,9 @@ static void check_idle(idle_timer *timer, const uint32_t timeout_ms, const int i
         if (verbose) LOG_INFO("input", "Device is now ACTIVE");
         if (timer->active_name) printf("%s\n", timer->active_name);
 
-        if (running_governor && previous_governor) {
-            set_scaling_governor(previous_governor, 0);
-            free(running_governor);
-            running_governor = NULL;
-            free(previous_governor);
-            previous_governor = NULL;
-            if (file_exist(WAKE_CPU_GOV)) remove(WAKE_CPU_GOV);
+        if (idle_profile_active) {
+            cpu_performance_apply(-1);
+            idle_profile_active = 0;
         }
 
         if (file_exist(IDLE_STATE)) remove(IDLE_STATE);

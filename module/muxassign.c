@@ -1,5 +1,6 @@
 #include <common/content/core/coredb.h>
 #include "muxshare.h"
+#include <common/platform/cpu_profile.h>
 #include <common/ui/orientation.h>
 
 static char explore_dir[PATH_MAX];
@@ -445,11 +446,9 @@ static void assign_core(const char *item_data, const char *log_msg, const int as
     const char *board_governor = coredb_board_governor(&core);
     snprintf(
         core_governor, sizeof(core_governor), "%s",
-        board_governor     ? board_governor
-        : core.governor[0] ? core.governor
-                           : device.cpu.dflt
+        cpu_profile_assign_value(board_governor ? board_governor : core.governor)
     );
-    LOG_INFO(mux_module, "Content Core Governor: %s", core_governor);
+    LOG_INFO(mux_module, "Content Core Performance: %s", core_governor);
 
     static char core_control[MAX_BUFFER_SIZE];
     snprintf(core_control, sizeof(core_control), "%s", core.control[0] ? core.control : "system");

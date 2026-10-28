@@ -64,10 +64,11 @@ static void add_static_item(
 static void add_info_item_type(lv_obj_t *ui_lbl_item_value, const char *get_file, const char *opt_type) {
     const char *value = get_file;
 
-    if (!*value) value = strcmp(opt_type, "gov") == 0 ? device.cpu.dflt : "System";
+    const int is_gov = strcmp(opt_type, "gov") == 0;
+    if (!*value) value = is_gov ? "default" : "System";
 
     char cap_value[MAX_BUFFER_SIZE];
-    snprintf(cap_value, sizeof(cap_value), "%s", value);
+    snprintf(cap_value, sizeof(cap_value), "%s", is_gov ? cpu_profile_value_label(value) : value);
 
     apply_theme_list_value(&theme, ui_lbl_item_value, str_capital_all(cap_value));
 }

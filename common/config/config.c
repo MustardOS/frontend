@@ -249,9 +249,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/power", "saver_type", CFG_OFF(settings.power.saver_type), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/power", "saver_speed", CFG_OFF(settings.power.saver_speed), 0, {.i = 0}},
     {CONF_CONFIG_PATH "settings/power", "gov_idle", CFG_OFF(settings.power.gov.idle), 1, {.s = "powersave"}},
-
-    // cpu/ (SETTINGS.power.gov.dflt lives in the device config, not user config)
-    {CONF_DEVICE_PATH "cpu", "default", CFG_OFF(settings.power.gov.dflt), 1, {.s = "ondemand"}},
+    {CONF_CONFIG_PATH "settings/power", "gov_default", CFG_OFF(settings.power.gov.dflt), 1, {.s = "automatic"}},
 
     // settings/rgb/
     {CONF_CONFIG_PATH "settings/rgb", "mode", CFG_OFF(settings.rgb.mode), 0, {.i = 0}},

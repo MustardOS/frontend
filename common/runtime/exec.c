@@ -18,6 +18,7 @@
 #include <common/ui/image.h>
 #include <common/display/theme.h>
 #include <common/platform/device.h>
+#include <common/platform/cpu_profile.h>
 
 static pid_t pending_exec_pid = -1;
 static exec_callback pending_exec_cb = NULL;
@@ -264,27 +265,36 @@ void exec_watch_task(void) {
 int set_scaling_governor(const char *governor, const int show_done) {
     if (!governor) return -1;
 
-    FILE *fp = fopen(device.cpu.governor, "w");
-    if (!fp) {
-        LOG_ERROR(mux_module, "Failed to open %s: %s", device.cpu.governor, strerror(errno));
-        return -1;
-    }
-
-    if (fprintf(fp, "%s", governor) < 0) {
-        LOG_ERROR(mux_module, "Failed to write '%s' to %s: %s", governor, device.cpu.governor, strerror(errno));
-        fclose(fp);
+    if (cpu_profile_set_governor(governor) != 0) {
+        LOG_ERROR(mux_module, "Failed to switch governor to '%s'", governor);
         return -1;
     }
 
     if (show_done) LOG_SUCCESS(mux_module, "Governor switched to '%s' successfully", governor);
 
-    fclose(fp);
     sync_gpu_frequency(governor);
     return 0;
 }
 
+int cpu_performance_apply(const int profile) {
+    char governor[CPU_GOVERNOR_MAX];
+    const int result = profile < 0 ? cpu_profile_reapply(governor, sizeof(governor))
+                                   : cpu_profile_apply(profile, 1, governor, sizeof(governor));
+
+    if (result < 0) {
+        LOG_ERROR(
+            mux_module, "Failed to apply CPU performance '%s'", profile < 0 ? "session" : cpu_profile_name(profile)
+        );
+        return -1;
+    }
+
+    if (governor[0]) sync_gpu_frequency(governor);
+    return 0;
+}
+
 void turbo_time(const int toggle, const int show_done) {
-    set_scaling_governor(toggle ? "performance" : device.cpu.dflt, show_done);
+    if (cpu_performance_apply(toggle ? cpu_profile_extreme : -1) == 0 && show_done)
+        LOG_SUCCESS(mux_module, "CPU performance %s", toggle ? "raised" : "restored");
 }
 
 void set_process_name(const char *module) {
