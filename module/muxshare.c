@@ -271,7 +271,10 @@ void show_content_information(const char *title, const char *content, void (*ref
 void toggle_content_preview(void) {
     if (!preview_hint_visible) return;
     play_sound(snd_info_close);
-    show_content_preview(lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN));
+
+    const int visible = lv_obj_has_flag(ui_pnl_help_preview, LV_OBJ_FLAG_HIDDEN);
+    if (visible && content_info_refresh) content_info_refresh("preview");
+    show_content_preview(visible);
 }
 
 void header_and_footer_setup(void) {
