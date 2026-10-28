@@ -2356,11 +2356,24 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
         ui_pnl_grid_current_item, theme->grid.current_item_label.text_padding_bottom, MU_OBJ_MAIN_DEFAULT
     );
 
-    lv_obj_set_width(ui_lbl_grid_current_item, LV_PCT(100));
+    const int fit_width = theme->grid.current_item_label.width == 0;
+    const int fit_height = theme->grid.current_item_label.height == 0;
+
+    lv_obj_set_width(ui_lbl_grid_current_item, fit_width ? LV_SIZE_CONTENT : LV_PCT(100));
     lv_obj_set_height(ui_lbl_grid_current_item, LV_SIZE_CONTENT);
     lv_obj_align(ui_lbl_grid_current_item, LV_ALIGN_CENTER, 0, -2);
 
-    lv_label_set_long_mode(ui_lbl_grid_current_item, LV_LABEL_LONG_DOT);
+    if (fit_width) {
+        const lv_coord_t pad_hor =
+            theme->grid.current_item_label.text_padding_left + theme->grid.current_item_label.text_padding_right;
+        lv_obj_set_style_max_width(ui_pnl_grid_current_item, LV_HOR_RES, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_max_width(ui_lbl_grid_current_item, LV_HOR_RES - pad_hor, MU_OBJ_MAIN_DEFAULT);
+    }
+
+    const lv_label_long_mode_t long_mode =
+        theme->grid.current_item_label.label_long_mode == LV_LABEL_LONG_WRAP || fit_height ? LV_LABEL_LONG_WRAP
+                                                                                           : LV_LABEL_LONG_DOT;
+    lv_label_set_long_mode(ui_lbl_grid_current_item, long_mode);
     lv_obj_set_style_text_align(
         ui_lbl_grid_current_item, theme->grid.current_item_label.text_alignment, MU_OBJ_MAIN_DEFAULT
     );
