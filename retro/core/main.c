@@ -1189,7 +1189,7 @@ int main(const int argc, char *argv[]) {
                 if (pause_menu_tick()) quit = 1;
             }
             if (hotkeys_is_quit_requested()) {
-                if (!video_bridge_power_off()) fade_out_screen_forced();
+                if (!video_bridge_power_off() && config.visual.blackfade) fade_out_screen_forced();
                 quit = 1;
             }
 
@@ -1212,7 +1212,7 @@ int main(const int argc, char *argv[]) {
             manual_menu_open();
         } else if (hotkeys_is_quit_requested()) {
             audio_bridge_set_paused(1);
-            if (!video_bridge_power_off()) fade_out_screen_forced();
+            if (!video_bridge_power_off() && config.visual.blackfade) fade_out_screen_forced();
             quit = 1;
         } else if (netplay_blocks_core()) {
             perf_end(perf_stage_control, control_start);

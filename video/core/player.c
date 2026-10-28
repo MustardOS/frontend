@@ -3844,7 +3844,7 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
         if (quitting) {
             const int ui_was_hidden = display_ui_is_hidden();
             display_set_ui_hidden(1);
-            fade_out_screen_forced();
+            if (config.visual.blackfade) fade_out_screen_forced();
             display_blank_fb();
             display_set_composite_suppressed(1);
             display_set_fade_alpha(0);

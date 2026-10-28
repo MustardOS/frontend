@@ -134,7 +134,7 @@ static int perform_restart(void) {
 }
 
 static int perform_quit(void) {
-    if (!video_bridge_power_off()) fade_out_screen_forced();
+    if (!video_bridge_power_off() && config.visual.blackfade) fade_out_screen_forced();
     return 1;
 }
 
