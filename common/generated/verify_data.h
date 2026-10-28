@@ -183,7 +183,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/system/suspend.sh", "617bd22d3de3a12c" },
     { "/opt/muos/script/system/swap.sh", "aeb7e67188939968" },
     { "/opt/muos/script/system/tegridy.sh", "3115725c8011d0f3" },
-    { "/opt/muos/script/system/usb_gadget.sh", "a1b6a6c577ef1876" },
+    { "/opt/muos/script/system/usb_gadget.sh", "7c8a4b9b63b143c1" },
     { "/opt/muos/script/system/user_init.sh", "9307f744241f9f99" },
     { "/opt/muos/script/var/audio.sh", "6dfb4a939a853c92" },
     { "/opt/muos/script/var/base.sh", "d9a089a999d225ba" },

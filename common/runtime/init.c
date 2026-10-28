@@ -358,32 +358,28 @@ void init_input(mux_input_options *opts, const int def_combo) {
 
         for (size_t i = 0; i < sizeof(bright_mods) / sizeof(bright_mods[0]); i++) {
             append_combo(
-                opts, (mux_input_combo
-                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
-                        .press_handler = ui_common_handle_bright_up,
-                        .hold_handler = ui_common_handle_bright_up}
+                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_up),
+                                         .press_handler = ui_common_handle_bright_up,
+                                         .hold_handler = ui_common_handle_bright_up}
             );
 
             append_combo(
-                opts, (mux_input_combo
-                      ){.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
-                        .press_handler = ui_common_handle_bright_down,
-                        .hold_handler = ui_common_handle_bright_down}
+                opts, (mux_input_combo) {.type_mask = BIT(bright_mods[i]) | BIT(mux_input_vol_down),
+                                         .press_handler = ui_common_handle_bright_down,
+                                         .hold_handler = ui_common_handle_bright_down}
             );
         }
 
         append_combo(
-            opts, (mux_input_combo
-                  ){.type_mask = BIT(mux_input_vol_up),
-                    .press_handler = ui_common_handle_volume_up,
-                    .hold_handler = ui_common_handle_volume_up}
+            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_up),
+                                     .press_handler = ui_common_handle_volume_up,
+                                     .hold_handler = ui_common_handle_volume_up}
         );
 
         append_combo(
-            opts, (mux_input_combo
-                  ){.type_mask = BIT(mux_input_vol_down),
-                    .press_handler = ui_common_handle_volume_down,
-                    .hold_handler = ui_common_handle_volume_down}
+            opts, (mux_input_combo) {.type_mask = BIT(mux_input_vol_down),
+                                     .press_handler = ui_common_handle_volume_down,
+                                     .hold_handler = ui_common_handle_volume_down}
         );
     }
 

@@ -2571,7 +2571,8 @@ void scroll_help_content(const int direction, const int page_down) {
 
     if (scroll_y - total_line_height * direction < 0) {
         lv_obj_scroll_to_y(ui_pnl_help_content, 0, LV_ANIM_ON);
-    } else if (scroll_y - total_line_height * direction >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
+    } else if (scroll_y - total_line_height * direction
+               >= lv_obj_get_content_height(ui_lbl_help_content) - lv_obj_get_content_height(ui_pnl_help_content)) {
         lv_obj_scroll_to_y(ui_pnl_help_content, lv_obj_get_content_height(ui_lbl_help_content), LV_ANIM_ON);
     } else {
         lv_obj_scroll_by(ui_pnl_help_content, 0, total_line_height * direction, LV_ANIM_ON);
