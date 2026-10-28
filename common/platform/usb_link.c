@@ -170,7 +170,7 @@ static const struct {
     },
 };
 
-#define LINK_INTERFACE_NAME "MustardOS Direct Link"
+#define LINK_INTERFACE_NAME "MustardOS Device Link"
 
 static const struct {
     struct usb_functionfs_strings_head header;
