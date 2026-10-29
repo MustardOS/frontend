@@ -230,27 +230,28 @@
 #define MUOS_SAR_LOAD RUN_PATH "auto_retroarch"
 #define MUOS_SHD_LOAD RUN_PATH "shader"
 
-#define MUOS_OPT_FROM "/tmp/opt_fm" // Content Options Module Return
-#define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
-#define MUOS_APL_LOAD "/tmp/apl_go" // Application Content Loader
-#define MUOS_ASS_FROM "/tmp/ass_fm" // Core/System Assignment Module Return
-#define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
-#define MUOS_ASS_SYSP "/tmp/ass_sp" // Core/System Assignment Force System Picker
-#define MUOS_BTI_LOAD "/tmp/bti_go" // Bluetooth Paired Last Index
-#define MUOS_BTL_LOAD "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
-#define MUOS_CIX_LOAD "/tmp/cix_go" // Content Item Index
-#define MUOS_CRS_LOAD "/tmp/crs_go" // Crash Module Information
-#define MUOS_PWR_LOSS "/tmp/pwr_no" // Unexpected Power Loss Alert
-#define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
-#define MUOS_HST_LOAD "/tmp/hst_go" // Last History Index
-#define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
-#define MUOS_OPI_LOAD "/tmp/opi_go" // Content Options Last Index
-#define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
-#define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
-#define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index
-#define MUOS_RES_LOAD "/tmp/res_go" // Full Path of ROM Content Search
-#define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
-#define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
+#define MUOS_OPT_FROM      "/tmp/opt_fm" // Content Options Module Return
+#define MUOS_AIN_LOAD      "/tmp/ain_go" // Application Last Index
+#define MUOS_APL_LOAD      "/tmp/apl_go" // Application Content Loader
+#define MUOS_ASS_FROM      "/tmp/ass_fm" // Core/System Assignment Module Return
+#define MUOS_ASS_LOAD      "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_ASS_SYSP      "/tmp/ass_sp" // Core/System Assignment Force System Picker
+#define MUOS_BTI_LOAD      "/tmp/bti_go" // Bluetooth Paired Last Index
+#define MUOS_BTL_LOAD      "/tmp/btl_go" // Refresh Bootlogo on Restart or Shutdown
+#define MUOS_CIX_LOAD      "/tmp/cix_go" // Content Item Index
+#define MUOS_CRS_LOAD      "/tmp/crs_go" // Crash Module Information
+#define MUOS_PWR_LOSS      "/tmp/pwr_no" // Unexpected Power Loss Alert
+#define MUOS_DBI_LOAD      "/tmp/dbi_go" // Device Backup Last Index
+#define MUOS_HST_LOAD      "/tmp/hst_go" // Last History Index
+#define MUOS_IDX_LOAD      "/tmp/idx_go" // Last Known Item Index
+#define MUOS_OPI_LOAD      "/tmp/opi_go" // Content Options Last Index
+#define MUOS_PDI_LOAD      "/tmp/pdi_go" // Last Directory String
+#define SAVER_OPTIONS_TYPE RUN_PATH "saver_options_type"
+#define MUOS_PIK_LOAD      "/tmp/pik_go" // Customisation Picker Launch
+#define MUOS_PIN_LOAD      "/tmp/pin_go" // Customisation Picker Last Index
+#define MUOS_RES_LOAD      "/tmp/res_go" // Full Path of ROM Content Search
+#define MUOS_SYS_LOAD      "/tmp/sys_go" // Core/System Assignment Flag
+#define MUOS_TIN_LOAD      "/tmp/tin_go" // Task Toolkit Last Index
 
 #define MUOS_SFI_LOAD "/tmp/sfi_" // Section Frame Last Index, one per module
 

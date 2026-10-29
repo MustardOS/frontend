@@ -386,3 +386,24 @@ void saver_hsv(const float hue, const float sat, const float val, uint8_t *out) 
     out[1] = saver_clamp_u8((int) (g * 255.0f));
     out[2] = saver_clamp_u8((int) (b * 255.0f));
 }
+
+int saver_option(const int value, const int count, const int fallback) {
+    return value >= 0 && value < count ? value : fallback;
+}
+
+int saver_option_scale(const int value, const int index) {
+    static const int percent[] = {70, 100, 140};
+    return value * percent[saver_option(index, 3, 1)] / 100;
+}
+
+void saver_apply_colour(saver_state_t *s, const int index) {
+    static const uint8_t colours[SAVER_COLOUR_COUNT][3] = {
+        {0, 0, 0},       {255, 255, 255}, {255, 96, 96},   {255, 160, 64},  {255, 204, 64},
+        {110, 255, 130}, {96, 230, 255},  {110, 150, 255}, {190, 130, 255}, {255, 140, 210},
+    };
+    const int choice = saver_option(index, SAVER_COLOUR_COUNT, 0);
+    if (!s || !choice) return;
+    s->colour_r = colours[choice][0];
+    s->colour_g = colours[choice][1];
+    s->colour_b = colours[choice][2];
+}

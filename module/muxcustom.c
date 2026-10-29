@@ -1298,6 +1298,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, sound, lang.muxcustom.sound.title, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, sound_volume, lang.muxcustom.sound.volume, "soundvolume", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, chime, lang.muxcustom.chime, "chime", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, track_notice, lang.muxcustom.track_notice, "tracknotice", disabled_enabled, 2);
 
     populate_font_directories(config.settings.font.directory);
     populate_font_names(
@@ -1655,6 +1656,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_dro_sound_custom, config.settings.general.sound);
     lv_dropdown_set_selected(ui_dro_sound_volume_custom, int_to_pct(config.settings.general.soundvol, 0, 100));
     lv_dropdown_set_selected(ui_dro_chime_custom, config.settings.general.chime);
+    lv_dropdown_set_selected(ui_dro_track_notice_custom, config.settings.general.track_notice);
     lv_dropdown_set_selected(ui_dro_theme_scaling_custom, config.settings.general.theme_scaling);
     lv_dropdown_set_selected(ui_dro_random_theme_custom, config.settings.advanced.random_theme);
 
@@ -1824,6 +1826,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_PCT(custom, sound_volume, "settings/general/soundvol", INT, 0, 100);
     CHECK_AND_SAVE_STD(custom, chime, "settings/general/chime", INT, 0);
+    CHECK_AND_SAVE_STD(custom, track_notice, "settings/general/track_notice", INT, 0);
     CHECK_AND_SAVE_STD(custom, theme_scaling, "settings/general/theme_scaling", INT, 0);
     CHECK_AND_SAVE_STD(custom, random_theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(custom, header_height, "settings/theme/header_height", INT, -1);
@@ -2100,7 +2103,8 @@ static int16_t kiosk_pass = 0;
     ROW(custom, music_volume, "musicvolume", audio, menu_music_volume, NULL, NULL, &kiosk_pass, NULL, change_set)      \
     ROW(custom, sound, "sound", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                             \
     ROW(custom, sound_volume, "soundvolume", audio, menu_sound_volume, NULL, NULL, &kiosk_pass, NULL, change_set)      \
-    ROW(custom, chime, "chime", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)
+    ROW(custom, chime, "chime", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                             \
+    ROW(custom, track_notice, "tracknotice", audio, menu_option, NULL, NULL, &kiosk_pass, NULL, change)
 
 #define MENU_ENTRY(MODULE, NAME, ID, SECTION, ACTION, MUX, PATH, KIOSK, VISIBLE, NAV)                                  \
     {ID, menu_section_##SECTION, MUX, PATH, KIOSK, ACTION, VISIBLE, menu_nav_##NAV},

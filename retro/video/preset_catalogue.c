@@ -45,6 +45,8 @@ typedef struct {
     char resolution[12];
     char url[CATALOGUE_VARIANT_URL];
     char sha256[SHA256_DIGEST_LENGTH * 2 + 1];
+    int x_offset;
+    int y_offset;
 } catalogue_variant;
 
 typedef struct {
@@ -257,6 +259,10 @@ static int read_variants(const struct json node, catalogue_item *item, char *ste
     char wanted[16];
     device_resolution(wanted, sizeof(wanted));
 
+    int default_x_offset;
+    int default_y_offset;
+    if (!manifest_json_viewport(node, 0, 0, &default_x_offset, &default_y_offset)) return 0;
+
     int matched = 0;
     stem[0] = '\0';
     item->variant_count = 0;
@@ -269,6 +275,9 @@ static int read_variants(const struct json node, catalogue_item *item, char *ste
             || !manifest_json_string(image, "resolution", variant->resolution, sizeof(variant->resolution))
             || !manifest_json_string(image, "url", variant->url, sizeof(variant->url))
             || !manifest_json_string(image, "sha256", variant->sha256, sizeof(variant->sha256))
+            || !manifest_json_viewport(
+                image, default_x_offset, default_y_offset, &variant->x_offset, &variant->y_offset
+            )
             || !manifest_https_url(variant->url) || !manifest_sha256_valid(variant->sha256))
             return 0;
 
@@ -497,6 +506,11 @@ static int publish_package(void) {
 
     create_directories(destination, 1);
     if (rename(package_path, destination) != 0) return 0;
+
+    if (package_variant >= 0 && package_variant < item->variant_count) {
+        const catalogue_variant *variant = &item->variants[package_variant];
+        if (!overlay_library_write_offsets(destination, variant->x_offset, variant->y_offset)) return 0;
+    }
 
     char directory[PATH_MAX];
     snprintf(directory, sizeof(directory), "%s", destination);

@@ -18,7 +18,7 @@ CONFIG_SRCS = \
 
 PLATFORM_SRCS = \
     platform/audio.c platform/battery.c platform/bluetooth.c platform/board.c \
-    platform/control.c platform/cpu_profile.c platform/device.c platform/display.c platform/input.c \
+    platform/control.c platform/cpu_profile.c platform/device.c platform/display.c platform/input.c platform/media.c \
     platform/soundfont.c platform/sysinfo.c platform/timezone.c platform/video.c
 
 STORAGE_SRCS = \

@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/constellation.h>
 
-#define CONSTELLATION_POINT_COUNT 64
-#define CONSTELLATION_LINK_DIST   118
+#define CONSTELLATION_POINT_COUNT 128
 #define CONSTELLATION_MAX_SIZE    4
 #define CONSTELLATION_MAX_LINKS   6
 #define CONSTELLATION_MAX_BUCKETS 1024
@@ -24,6 +24,8 @@ typedef struct {
 typedef struct {
     saver_state_t base;
     cpoint_t point[CONSTELLATION_POINT_COUNT];
+    int count;
+    int link;
     int32_t speed_fp_per_ms;
     int edge_margin;
 } constellation_module_t;
@@ -98,7 +100,7 @@ static int32_t steer(const int32_t current, const int32_t target, int64_t *carry
 
 static void seed_all(void) {
     uint32_t now = SDL_GetTicks();
-    for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++)
+    for (int i = 0; i < mod.count; i++)
         reset_point(&mod.point[i], now);
 }
 
@@ -128,13 +130,17 @@ int constellation_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     saver_init_base(
         &mod.base, screen_w, screen_h, "Constellation", 179, 204, 255, on_speed_changed, on_idle_enter, &mod
     );
+    saver_apply_colour(&mod.base, config.settings.saver.constellation_colour);
+    static const int counts[] = {32, 64, 128};
+    static const int links[] = {80, 118, 170};
+    mod.count = counts[saver_option(config.settings.saver.constellation_count, 3, 1)];
+    mod.link = links[saver_option(config.settings.saver.constellation_link, 3, 1)];
 
     on_speed_changed(NULL);
     seed_all();
 
     LOG_INFO(
-        "saver", "Constellation Initialised (%dx%d, points=%d, speed=%d)", screen_w, screen_h,
-        CONSTELLATION_POINT_COUNT, mod.base.speed
+        "saver", "Constellation Initialised (%dx%d, points=%d, speed=%d)", screen_w, screen_h, mod.count, mod.base.speed
     );
 
     return 1;
@@ -158,7 +164,7 @@ void constellation_update(void) {
 
     int32_t step_fp = mod.speed_fp_per_ms * (int32_t) elapsed;
 
-    for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
+    for (int i = 0; i < mod.count; i++) {
         cpoint_t *p = &mod.point[i];
 
         int64_t turn = step_fp;
@@ -213,9 +219,9 @@ void constellation_render(SDL_Renderer *renderer) {
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    const int link_dist_sq = CONSTELLATION_LINK_DIST * CONSTELLATION_LINK_DIST;
-    const int bucket_cols = (mod.base.screen_w + CONSTELLATION_LINK_DIST - 1) / CONSTELLATION_LINK_DIST;
-    const int bucket_rows = (mod.base.screen_h + CONSTELLATION_LINK_DIST - 1) / CONSTELLATION_LINK_DIST;
+    const int link_dist_sq = mod.link * mod.link;
+    const int bucket_cols = (mod.base.screen_w + mod.link - 1) / mod.link;
+    const int bucket_rows = (mod.base.screen_h + mod.link - 1) / mod.link;
     const int bucket_count = bucket_cols * bucket_rows;
     int bucket_head[CONSTELLATION_MAX_BUCKETS];
     int bucket_next[CONSTELLATION_POINT_COUNT];
@@ -224,24 +230,24 @@ void constellation_render(SDL_Renderer *renderer) {
     if (bucket_count > 0 && bucket_count <= CONSTELLATION_MAX_BUCKETS) {
         for (int i = 0; i < bucket_count; i++)
             bucket_head[i] = -1;
-        for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
+        for (int i = 0; i < mod.count; i++) {
             const int x = mod.point[i].fx >> SAVER_FRAME_SHF;
             const int y = mod.point[i].fy >> SAVER_FRAME_SHF;
-            const int bucket = (y / CONSTELLATION_LINK_DIST) * bucket_cols + x / CONSTELLATION_LINK_DIST;
+            const int bucket = (y / mod.link) * bucket_cols + x / mod.link;
             bucket_next[i] = bucket_head[bucket];
             bucket_head[bucket] = i;
         }
     }
 
-    for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
+    for (int i = 0; i < mod.count; i++) {
         const cpoint_t *a = &mod.point[i];
 
         int ax = a->fx >> SAVER_FRAME_SHF;
         int ay = a->fy >> SAVER_FRAME_SHF;
 
         int links = 0;
-        const int base_bx = ax / CONSTELLATION_LINK_DIST;
-        const int base_by = ay / CONSTELLATION_LINK_DIST;
+        const int base_bx = ax / mod.link;
+        const int base_by = ay / mod.link;
         const int neighbour_count = bucket_count > 0 && bucket_count <= CONSTELLATION_MAX_BUCKETS ? 9 : 1;
 
         for (int neighbour = 0; neighbour < neighbour_count && links < CONSTELLATION_MAX_LINKS; neighbour++) {
@@ -252,7 +258,7 @@ void constellation_render(SDL_Renderer *renderer) {
                 continue;
 
             int j = neighbour_count == 9 ? bucket_head[by_cell * bucket_cols + bx_cell] : i + 1;
-            while (j >= 0 && j < CONSTELLATION_POINT_COUNT && links < CONSTELLATION_MAX_LINKS) {
+            while (j >= 0 && j < mod.count && links < CONSTELLATION_MAX_LINKS) {
                 if (j <= i) {
                     j = neighbour_count == 9 ? bucket_next[j] : j + 1;
                     continue;
@@ -261,14 +267,14 @@ void constellation_render(SDL_Renderer *renderer) {
 
                 int bx = b->fx >> SAVER_FRAME_SHF;
                 int dx = ax - bx;
-                if (dx > CONSTELLATION_LINK_DIST || dx < -CONSTELLATION_LINK_DIST) {
+                if (dx > mod.link || dx < -mod.link) {
                     j = neighbour_count == 9 ? bucket_next[j] : j + 1;
                     continue;
                 }
 
                 int by = b->fy >> SAVER_FRAME_SHF;
                 int dy = ay - by;
-                if (dy > CONSTELLATION_LINK_DIST || dy < -CONSTELLATION_LINK_DIST) {
+                if (dy > mod.link || dy < -mod.link) {
                     j = neighbour_count == 9 ? bucket_next[j] : j + 1;
                     continue;
                 }
@@ -291,7 +297,7 @@ void constellation_render(SDL_Renderer *renderer) {
         }
     }
 
-    for (int i = 0; i < CONSTELLATION_POINT_COUNT; i++) {
+    for (int i = 0; i < mod.count; i++) {
         const cpoint_t *p = &mod.point[i];
 
         int x = p->fx >> SAVER_FRAME_SHF;

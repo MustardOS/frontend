@@ -10,6 +10,7 @@ PROFILE_GROUPS = [
     ("settings/advanced", "advanced", "Advanced Settings"),
     ("settings/font", "font", "Font"),
     ("settings/power", "power", "Power"),
+    ("settings/saver", "saver", "Screensaver"),
     ("settings/hotkey", "hotkey", "Hotkeys"),
     ("settings/colour", "colour", "Display Colour"),
     ("settings/hdmi", "hdmi", "HDMI"),
@@ -251,6 +252,8 @@ FIXED_OPTIONS["settings/font/italic"] = [("0", "lang.muxfont.size_default"), ("1
 OPEN_OPTIONS = {"settings/general/brightness", "settings/general/volume", "settings/general/soundfont", "visual/overlaytransparency", "visual/overlayimage", "settings/font/width"}
 OPEN_OPTIONS.update(f"settings/font/{size}_size" for size in ("list", "header", "footer", "panel"))
 OPEN_OPTIONS.update(f"settings/overlay/{part}_alpha" for part in ("gen", "bat", "vol", "bri"))
+
+SAVER_PREFIX = "settings/saver/"
 
 TIMEZONE_KEY = "settings/general/timezone"
 TIMEZONE_DEFAULT = "Australia/Brisbane"
@@ -714,6 +717,15 @@ def main():
     if len(fields) < 100:
         sys.exit(f"Only {len(fields)} configuration fields parsed, refusing to continue")
 
+    for field in fields:
+        if not field["key"].startswith(SAVER_PREFIX):
+            continue
+        leaf = field["key"][len(SAVER_PREFIX):]
+        saver = leaf.split("_", 1)[0]
+        LABEL_KEYS[field["key"]] = f"{{lang.muxpower.saver.type.{saver}}} {{lang.muxsaver.{leaf}}}"
+        HELP_KEYS[field["key"]] = f"muxsaver.help.{leaf}"
+        EXPLICIT_OPTIONS[field["key"]] = ("muxsaver", f"{leaf}_options", None, [])
+
     created = ensure_defaults(args.internal, fields, args.dry_run)
     for key in created:
         print(f"{'Would create' if args.dry_run else 'Created'} default: {key}")
@@ -766,6 +778,8 @@ def main():
             setting["help"] = website_help(setting["help"])
         if not setting.get("help"):
             setting.pop("help", None)
+        if field["key"].startswith(SAVER_PREFIX):
+            setting["module"] = "muxsaver"
         if field["key"] in FIXED_RANGES and "min" not in setting:
             setting["min"], setting["max"] = FIXED_RANGES[field["key"]]
         schema_settings.append(setting)

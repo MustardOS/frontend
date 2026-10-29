@@ -2,6 +2,7 @@
 #include "player.h"
 #include "paths.h"
 #include "state.h"
+#include "background.h"
 #include "../settings/session.h"
 
 #include <locale.h>
@@ -890,8 +891,20 @@ int main(const int argc, char **argv) {
     const char *link_file = NULL;
     int live = 0;
     int history = 0;
+    int background = 0;
+    double background_start = 0.0;
+    size_t background_index = 0;
+    const char *background_track = NULL;
     for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "--live") == 0) {
+        if (strcmp(argv[i], "--background") == 0) {
+            background = 1;
+        } else if (strcmp(argv[i], "--start") == 0 && i + 1 < argc) {
+            background_start = strtod(argv[++i], NULL);
+        } else if (strcmp(argv[i], "--index") == 0 && i + 1 < argc) {
+            background_index = (size_t) strtoul(argv[++i], NULL, 10);
+        } else if (strcmp(argv[i], "--track") == 0 && i + 1 < argc) {
+            background_track = argv[++i];
+        } else if (strcmp(argv[i], "--live") == 0) {
             live = 1;
         } else if (strcmp(argv[i], "--history") == 0) {
             history = 1;
@@ -907,6 +920,17 @@ int main(const int argc, char **argv) {
             return EXIT_FAILURE;
         }
     }
+
+    if (background)
+        return uri && uri[0] ? wasabi_background_run(uri, background_index, background_track, background_start)
+                             : EXIT_FAILURE;
+
+    char resumed_track[PATH_MAX];
+    char resumed_source[PATH_MAX];
+    double resumed_position = 0.0;
+    const int took_over = wasabi_background_takeover(
+        resumed_track, sizeof(resumed_track), &resumed_position, resumed_source, sizeof(resumed_source)
+    );
 
     char *link_value = NULL;
     if (link_file) {
@@ -934,6 +958,13 @@ int main(const int argc, char **argv) {
             }
             if (playlist_type == video_playlist_hls) live = 1;
         }
+        double start_position = 0.0;
+        if (took_over && resumed_track[0] && !remote
+            && (strcmp(uri, resumed_track) == 0 || strcmp(uri, resumed_source) == 0)) {
+            uri = resumed_track;
+            title = NULL;
+            start_position = resumed_position;
+        }
         char derived_title[PATH_MAX];
         if (!title || !title[0]) title = video_title_from_uri(uri, derived_title, sizeof(derived_title));
         const video_player_options options = {
@@ -942,7 +973,7 @@ int main(const int argc, char **argv) {
             .deinterlace = config.video.deinterlace,
             .keep_history = config.video.keep_history,
             .live = live,
-            .start_position = 0.0,
+            .start_position = start_position,
         };
         initialise_ui();
         const int result = live || remote ? video_player_run(uri, title, &options) : play_folder(uri, title, &options);

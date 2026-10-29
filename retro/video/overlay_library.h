@@ -22,6 +22,10 @@ int overlay_library_index(const char *key);
 
 int overlay_library_path(int index, char *out, size_t out_size);
 
+int overlay_library_offsets(int index, int *x_offset, int *y_offset);
+
+int overlay_library_write_offsets(const char *image_path, int x_offset, int y_offset);
+
 int overlay_library_file_valid(const char *path);
 
 int overlay_library_is_user(int index);

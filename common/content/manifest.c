@@ -1,5 +1,7 @@
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -13,6 +15,43 @@ int manifest_json_string(const struct json object, const char *key, char *output
     if (json_type(value) != JSON_STRING) return 0;
     const size_t length = json_string_copy(value, output, size);
     return length > 0 && length < size;
+}
+
+static int viewport_coordinate(const struct json value, int *output) {
+    char text[16];
+    if (json_type(value) == JSON_STRING) {
+        const size_t length = json_string_copy(value, text, sizeof(text));
+        if (!length || length >= sizeof(text)) return 0;
+    } else if (json_type(value) == JSON_NUMBER) {
+        const size_t length = json_raw_length(value);
+        if (!length || length >= sizeof(text)) return 0;
+        memcpy(text, json_raw(value), length);
+        text[length] = '\0';
+    } else {
+        return 0;
+    }
+
+    char *end = NULL;
+    errno = 0;
+    const long parsed = strtol(text, &end, 10);
+    if (errno || !end || *end || parsed < -4096 || parsed > 4096) return 0;
+    *output = (int) parsed;
+    return 1;
+}
+
+int manifest_json_viewport(
+    const struct json object, const int fallback_x, const int fallback_y, int *x_offset, int *y_offset
+) {
+    if (!x_offset || !y_offset) return 0;
+    const struct json viewport = json_object_get(object, "viewport");
+    if (!json_exists(viewport)) {
+        *x_offset = fallback_x;
+        *y_offset = fallback_y;
+        return 1;
+    }
+    return json_type(viewport) == JSON_ARRAY && json_array_count(viewport) == 2
+           && viewport_coordinate(json_array_get(viewport, 0), x_offset)
+           && viewport_coordinate(json_array_get(viewport, 1), y_offset);
 }
 
 int manifest_https_url(const char *url) {

@@ -8,12 +8,12 @@
  
  #if __BYTE_ORDER == __LITTLE_ENDIAN
  # define cpu_to_le16(x) (x)
-@@ -267,57 +268,66 @@ static void usb_adb_init()
+@@ -267,57 +268,73 @@ static void usb_adb_init()
  }
  
  
 -static void init_functionfs(struct usb_handle *h)
-+static void close_functionfs(struct usb_handle *h)
++static void close_functionfs_endpoints(struct usb_handle *h)
 +{
 +    if (h->bulk_in >= 0) {
 +        adb_close(h->bulk_in);
@@ -23,6 +23,11 @@
 +        adb_close(h->bulk_out);
 +        h->bulk_out = -1;
 +    }
++}
++
++static void close_functionfs(struct usb_handle *h)
++{
++    close_functionfs_endpoints(h);
 +    if (h->control >= 0) {
 +        adb_close(h->control);
 +        h->control = -1;
@@ -33,31 +38,48 @@
  {
      ssize_t ret;
  
-     D("OPENING %s\n", USB_FFS_ADB_EP0);
+-    D("OPENING %s\n", USB_FFS_ADB_EP0);
 -    h->control = adb_open(USB_FFS_ADB_EP0, O_RDWR);
-+    h->control = adb_open(USB_FFS_ADB_EP0, O_RDWR | O_CLOEXEC);
-     if (h->control < 0) {
-         D("[ %s: cannot open control endpoint: errno=%d]\n", USB_FFS_ADB_EP0, errno);
-         goto err;
-     }
- 
-     ret = adb_write(h->control, &descriptors, sizeof(descriptors));
+-    if (h->control < 0) {
+-        D("[ %s: cannot open control endpoint: errno=%d]\n", USB_FFS_ADB_EP0, errno);
+-        goto err;
+-    }
+-
+-    ret = adb_write(h->control, &descriptors, sizeof(descriptors));
 -    if (ret < 0) {
-+    if (ret != (ssize_t) sizeof(descriptors)) {
-+        if (ret >= 0)
-+            errno = EIO;
-         D("[ %s: write descriptors failed: errno=%d ]\n", USB_FFS_ADB_EP0, errno);
-         goto err;
-     }
- 
-     ret = adb_write(h->control, &strings, sizeof(strings));
+-        D("[ %s: write descriptors failed: errno=%d ]\n", USB_FFS_ADB_EP0, errno);
+-        goto err;
+-    }
+-
+-    ret = adb_write(h->control, &strings, sizeof(strings));
 -    if (ret < 0) {
-+    if (ret != (ssize_t) sizeof(strings)) {
-+        if (ret >= 0)
-+            errno = EIO;
-         D("[ %s: writing strings failed: errno=%d]\n", USB_FFS_ADB_EP0, errno);
-         goto err;
-     }
+-        D("[ %s: writing strings failed: errno=%d]\n", USB_FFS_ADB_EP0, errno);
+-        goto err;
+-    }
++    if (h->control < 0) {
++        D("OPENING %s\n", USB_FFS_ADB_EP0);
++        h->control = adb_open(USB_FFS_ADB_EP0, O_RDWR | O_CLOEXEC);
++        if (h->control < 0) {
++            D("[ %s: cannot open control endpoint: errno=%d]\n", USB_FFS_ADB_EP0, errno);
++            goto err;
++        }
++
++        ret = adb_write(h->control, &descriptors, sizeof(descriptors));
++        if (ret != (ssize_t) sizeof(descriptors)) {
++            if (ret >= 0)
++                errno = EIO;
++            D("[ %s: write descriptors failed: errno=%d ]\n", USB_FFS_ADB_EP0, errno);
++            goto err;
++        }
++
++        ret = adb_write(h->control, &strings, sizeof(strings));
++        if (ret != (ssize_t) sizeof(strings)) {
++            if (ret >= 0)
++                errno = EIO;
++            D("[ %s: writing strings failed: errno=%d]\n", USB_FFS_ADB_EP0, errno);
++            goto err;
++        }
++    }
  
 -    h->bulk_out = adb_open(USB_FFS_ADB_OUT, O_RDWR);
 +    h->bulk_out = adb_open(USB_FFS_ADB_OUT, O_RDWR | O_CLOEXEC);
@@ -95,7 +117,13 @@
  }
  
  static void *usb_ffs_open_thread(void *x)
-@@ -332,12 +342,10 @@ static void *usb_ffs_open_thread(void *x)
+@@ -327,17 +343,15 @@ static void *usb_ffs_open_thread(void *x)
+     while (1) {
+         // wait until the USB device needs opening
+         adb_mutex_lock(&usb->lock);
+-        while (usb->control != -1)
++        while (usb->control != -1 && usb->bulk_in != -1 && usb->bulk_out != -1)
+             adb_cond_wait(&usb->notify, &usb->lock);
          adb_mutex_unlock(&usb->lock);
  
          while (1) {
@@ -110,7 +138,7 @@
          }
  
          D("[ usb_thread - registering device ]\n");
-@@ -358,6 +366,9 @@ static int bulk_write(int bulk_in, const char *buf, size_t length)
+@@ -358,6 +372,9 @@ static int bulk_write(int bulk_in, const char *buf, size_t length)
          if (ret < 0) {
              if (errno != EINTR)
                  return ret;
@@ -120,17 +148,7 @@
          } else {
              count += ret;
          }
-@@ -395,6 +406,9 @@ static int bulk_read(int bulk_out, char *buf, size_t length)
-                                            bulk_out, length, count);
-                 return ret;
-             }
-+        } else if (ret == 0) {
-+            errno = EPIPE;
-+            return -1;
-         } else {
-             count += ret;
-         }
-@@ -422,19 +436,21 @@ static void usb_ffs_kick(usb_handle *h)
+@@ -422,19 +439,21 @@ static void usb_ffs_kick(usb_handle *h)
  {
      int err;
  
@@ -160,11 +178,11 @@
 +            D("[ kick: sink (fd=%d) clear halt failed (%d) ]", h->bulk_out, errno);
 +    }
 +
-+    close_functionfs(h);
++    close_functionfs_endpoints(h);
  
      // notify usb_ffs_open_thread that we are disconnected
      adb_cond_signal(&h->notify);
-@@ -456,7 +472,7 @@ static void usb_ffs_init()
+@@ -456,7 +475,7 @@ static void usb_ffs_init()
  
      h->control  = -1;
      h->bulk_out = -1;
@@ -186,7 +204,73 @@
  #if !ADB_HOST
  #include "android_filesystem_config.h"
  #include <linux/capability.h>
-@@ -1713,6 +1717,11 @@ int main(int argc, char **argv)
+@@ -295,32 +299,39 @@ static size_t fill_connect_data(char *buf, size_t bufsize)
+ #if ADB_HOST
+     return snprintf(buf, bufsize, "host::") + 1;
+ #else
+-    static const char *cnxn_props[] = {
+-        "ro.product.name",
+-        "ro.product.model",
+-        "ro.product.device",
+-    };
+-    static const int num_cnxn_props = ARRAY_SIZE(cnxn_props);
+-    static const char *values[] = {
+-        "occam",
+-        "Nexus 4",
+-        "mako",
+-    };
+-    int i;
+-    size_t remaining = bufsize;
+-    size_t len;
+-
+-    len = snprintf(buf, remaining, "%s::", adb_device_banner);
+-    remaining -= len;
+-    buf += len;
+-    for (i = 0; i < num_cnxn_props; i++) {
+-        char value[PROPERTY_VALUE_MAX];
+-        //property_get(cnxn_props[i], value, "");
+-        len = snprintf(buf, remaining, "%s=%s;", cnxn_props[i], values[i]);
+-        remaining -= len;
+-        buf += len;
++    char device[PROPERTY_VALUE_MAX] = "muos";
++    char model[PROPERTY_VALUE_MAX] = "MustardOS Device";
++    FILE *board = fopen("/opt/muos/device/config/board/name", "r");
++
++    if (board) {
++        char name[PROPERTY_VALUE_MAX];
++
++        if (fgets(name, sizeof(name), board)) {
++            name[strcspn(name, "\r\n")] = '\0';
++            if (name[0]) {
++                size_t i;
++
++                snprintf(device, sizeof(device), "%s", name);
++                snprintf(model, sizeof(model), "%s", name);
++                for (i = 0; model[i]; i++) {
++                    if (model[i] == '-' || model[i] == '_')
++                        model[i] = ' ';
++                    else
++                        model[i] = toupper((unsigned char) model[i]);
++                }
++            }
++        }
++        fclose(board);
+     }
+-
++
+-    return bufsize - remaining + 1;
++    int len = snprintf(buf, bufsize,
++                       "%s::ro.product.name=MustardOS;ro.product.model=%s;ro.product.device=%s;",
++                       adb_device_banner, model, device);
++
++    if (len < 0)
++        return 1;
++    if ((size_t) len >= bufsize)
++        return bufsize;
++    return (size_t) len + 1;
+ #endif
+ }
+@@ -1713,9 +1717,15 @@ int main(int argc, char **argv)
      D("Handling commandline()\n");
      return adb_commandline(argc - 1, argv + 1);
  #else
@@ -198,6 +282,10 @@
      /* If adbd runs inside the emulator this will enable adb tracing via
       * adb-debug qemud service in the emulator. */
      adb_qemu_trace_init();
++    adb_trace_init();
+     if((argc > 1) && (!strcmp(argv[1],"recovery"))) {
+         adb_device_banner = "recovery";
+         recovery_mode = 1;
 --- a/core/adbd/framebuffer_service.c
 +++ b/core/adbd/framebuffer_service.c
 @@ -60,11 +60,12 @@ void framebuffer_service(int fd, void *cookie)

@@ -23,6 +23,7 @@
 #include <common/platform/display.h>
 #include "../settings/assets.h"
 #include "../settings/settings.h"
+#include "subtitle.h"
 
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
@@ -71,6 +72,7 @@ static int crt_powered;
 static uint32_t crt_warm_start;
 static uint32_t crt_off_start;
 static uint32_t crt_on_start;
+static uint32_t crt_degauss_start;
 static int crt_on_pending;
 static int crt_on_done;
 static SDL_Texture *crt_snapshot_texture;
@@ -174,6 +176,7 @@ void video_render_set_content(const char *content_path, const int live) {
     crt_enabled = live && config.video.crt_television && !config.visual.reduce_motion;
     crt_off_start = 0;
     crt_on_start = 0;
+    crt_degauss_start = 0;
     crt_on_pending = !crt_on_done && !crt_enabled && config.visual.power_off && !config.visual.reduce_motion
                      && file_exist(MUOS_SPL_LOAD);
     catalogue_overlay_path[0] = '\0';
@@ -290,8 +293,15 @@ static void update_geometry(void) {
     destination.h = height;
     if (destination.w < 1) destination.w = 1;
     if (destination.h < 1) destination.h = 1;
-    destination.x = (screen_width - width) / 2 + screen_width * config.video.viewport_x / 100;
-    destination.y = (screen_height - height) / 2 + screen_height * config.video.viewport_y / 100;
+    int overlay_viewport_x = 0;
+    int overlay_viewport_y = 0;
+    if (config.video.overlay_mode == 3) {
+        wasabi_assets_refresh(wasabi_asset_overlay);
+        const int selected = wasabi_asset_selected(wasabi_asset_overlay);
+        wasabi_asset_viewport(wasabi_asset_overlay, selected, &overlay_viewport_x, &overlay_viewport_y);
+    }
+    destination.x = (screen_width - width) / 2 + screen_width * config.video.viewport_x / 100 + overlay_viewport_x;
+    destination.y = (screen_height - height) / 2 + screen_height * config.video.viewport_y / 100 + overlay_viewport_y;
     if (!config.video.viewport_centre_crop) {
         destination.x += (int) lround((double) (crop_left - crop_right) * width / (2.0 * viewport_width));
         destination.y += (int) lround((double) (crop_top - crop_bottom) * height / (2.0 * viewport_height));
@@ -962,6 +972,17 @@ static void update_ambient(const uint8_t *const *data, const int *line, const in
 static void render_frame(SDL_Renderer *target) {
     SDL_SetRenderDrawBlendMode(target, SDL_BLENDMODE_NONE);
     const uint32_t now = SDL_GetTicks();
+    if (crt_degauss_start) {
+        if (now - crt_degauss_start < crt_effect_degauss_duration()) {
+            int width = 0;
+            int height = 0;
+            SDL_GetRendererOutputSize(target, &width, &height);
+            const SDL_Rect frame = {0, 0, width, height};
+            crt_effect_render_degauss(target, &frame, crt_degauss_start, now, crt_snapshot_texture);
+            return;
+        }
+        crt_degauss_start = 0;
+    }
     if (crt_off_start) {
         int width = 0;
         int height = 0;
@@ -1063,6 +1084,7 @@ static void render_frame(SDL_Renderer *target) {
         if (overlay_source.w > 0 && overlay_source.h > 0 && overlay_destination.w > 0 && overlay_destination.h > 0)
             SDL_RenderCopy(target, overlay_texture, &overlay_source, &overlay_destination);
     }
+    if (texture) subtitle_render(target, &destination, config.video.rotation * 90.0);
 }
 
 static void release_frame_resources(void) {
@@ -1316,9 +1338,7 @@ void video_render_set_static(const int active) {
     }
 }
 
-int video_render_crt_power_off(void) {
-    if (!renderer || !config.visual.power_off || config.visual.reduce_motion) return 0;
-
+static int capture_crt_snapshot(void) {
     const int width = device.screen.width;
     const int height = device.screen.height;
     if (width <= 0 || height <= 0 || (size_t) width > SIZE_MAX / (size_t) height / 3U) return 0;
@@ -1342,8 +1362,13 @@ int video_render_crt_power_off(void) {
     const int captured = display_capture_clean_pixels(pixels, width, height) == 0
                          && SDL_UpdateTexture(crt_snapshot_texture, NULL, pixels, width * 3) == 0;
     free(pixels);
-    if (!captured) return 0;
+    return captured;
+}
 
+int video_render_crt_power_off(void) {
+    if (!renderer || !config.visual.power_off || config.visual.reduce_motion || !capture_crt_snapshot()) return 0;
+
+    crt_degauss_start = 0;
     crt_off_start = SDL_GetTicks();
     if (!crt_off_start) crt_off_start = 1;
     crt_powered = 0;
@@ -1352,8 +1377,18 @@ int video_render_crt_power_off(void) {
     return (int) crt_effect_power_off_duration();
 }
 
+int video_render_crt_degauss(void) {
+    if (!renderer || !config.visual.power_off || config.visual.reduce_motion || crt_off_start || crt_on_start
+        || crt_degauss_start || !capture_crt_snapshot())
+        return 0;
+
+    crt_degauss_start = SDL_GetTicks();
+    if (!crt_degauss_start) crt_degauss_start = 1;
+    return 1;
+}
+
 int video_render_crt_tick(void) {
-    return crt_enabled && (crt_off_start || crt_warm_start);
+    return crt_degauss_start || (crt_enabled && (crt_off_start || crt_warm_start));
 }
 
 int video_render_static_tick(void) {
@@ -1377,6 +1412,7 @@ void video_render_close(void) {
     ambient_ready = 0;
     ambient_tick = 0;
     crt_warm_start = 0;
+    crt_degauss_start = 0;
     wasabi_visualiser_reset();
     static_deadline = 0;
     if (vignette_texture) SDL_DestroyTexture(vignette_texture);

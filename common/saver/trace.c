@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/trace.h>
 
-#define TRACE_HEAD_COUNT 12
-#define TRACE_SEG_COUNT  192
+#define TRACE_HEAD_COUNT 24
+#define TRACE_SEG_COUNT  384
 
 #define TRACE_MIN_GRID 12
 #define TRACE_MAX_GRID 28
@@ -34,6 +35,7 @@ typedef struct {
 typedef struct {
     saver_state_t base;
     head_t head[TRACE_HEAD_COUNT];
+    int head_count;
     seg_t seg[TRACE_SEG_COUNT];
     int grid;
     int cols, rows;
@@ -166,24 +168,24 @@ static void start_head(head_t *h) {
 static void spawn_head(void) {
     head_t *slot = NULL;
 
-    for (int i = 0; i < TRACE_HEAD_COUNT; i++) {
+    for (int i = 0; i < mod.head_count; i++) {
         if (!mod.head[i].active) {
             slot = &mod.head[i];
             break;
         }
     }
 
-    if (!slot) slot = &mod.head[saver_rand_range(TRACE_HEAD_COUNT)];
+    if (!slot) slot = &mod.head[saver_rand_range(mod.head_count)];
     start_head(slot);
 }
 
 static void seed_all(void) {
-    for (int i = 0; i < TRACE_HEAD_COUNT; i++)
+    for (int i = 0; i < mod.head_count; i++)
         mod.head[i].active = 0;
     for (int i = 0; i < TRACE_SEG_COUNT; i++)
         mod.seg[i].active = 0;
 
-    const int start_count = TRACE_HEAD_COUNT / 2;
+    const int start_count = mod.head_count / 2;
     for (int i = 0; i < start_count; i++)
         spawn_head();
 }
@@ -194,6 +196,8 @@ static void rebuild_grid(void) {
 
     if (mod.grid < TRACE_MIN_GRID) mod.grid = TRACE_MIN_GRID;
     if (mod.grid > TRACE_MAX_GRID) mod.grid = TRACE_MAX_GRID;
+    mod.grid = saver_option_scale(mod.grid, config.settings.saver.trace_size);
+    if (mod.grid < 6) mod.grid = 6;
 
     mod.cols = mod.base.screen_w / mod.grid;
     mod.rows = mod.base.screen_h / mod.grid;
@@ -217,6 +221,9 @@ int trace_init(const SDL_Renderer *renderer, const int screen_w, const int scree
     saver_init_base(
         &mod.base, screen_w, screen_h, "Circuit Trace", 153, 255, 220, on_speed_changed, on_idle_enter, &mod
     );
+    saver_apply_colour(&mod.base, config.settings.saver.trace_colour);
+    static const int heads[] = {6, 12, 24};
+    mod.head_count = heads[saver_option(config.settings.saver.trace_count, 3, 1)];
 
     rebuild_grid();
     seed_all();
@@ -250,7 +257,7 @@ void trace_update(void) {
             s->life = (uint16_t) (s->life - elapsed);
     }
 
-    for (int i = 0; i < TRACE_HEAD_COUNT; i++) {
+    for (int i = 0; i < mod.head_count; i++) {
         head_t *h = &mod.head[i];
         if (!h->active) continue;
 
@@ -351,7 +358,7 @@ void trace_render(SDL_Renderer *renderer) {
         }
     }
 
-    for (int i = 0; i < TRACE_HEAD_COUNT; i++) {
+    for (int i = 0; i < mod.head_count; i++) {
         const head_t *h = &mod.head[i];
         if (!h->active) continue;
 

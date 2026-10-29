@@ -11,7 +11,7 @@ MODULES = muxactivity muxapp muxappcon muxprofile muxdetail muxarchive muxarc mu
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk \
           muxlanguage muxlaunch muxlink muxlogo muxnetadv muxnetprofile muxnetproxy muxnetscan \
           muxnetwork muxoption muxorder muxoverlay muxpass muxpasscfg muxpicker muxplore \
-          muxpower muxraopt muxrgb muxrgbzone muxrtc muxsearch muxshader muxshot muxsort \
+          muxpower muxraopt muxrgb muxrgbzone muxrtc muxsaver muxsearch muxshader muxshot muxsort \
           muxsoundfont muxspace muxsplash muxstorage muxtag muxtask muxtheme \
           muxthemedown muxthemefilter muxtester muxtext muxtimezone \
           muxtweakadv muxtweakgen muxwebserv muxwebcode muxshare muxremap muxthird

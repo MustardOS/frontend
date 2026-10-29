@@ -3,11 +3,12 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <common/runtime/log.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/saver/glitch.h>
 
-#define GLITCH_COLS       16
-#define GLITCH_MAX_ROWS   16
+#define GLITCH_COLS       24
+#define GLITCH_MAX_ROWS   24
 #define GLITCH_TILES      (GLITCH_COLS * GLITCH_MAX_ROWS)
 #define GLITCH_HOLD_MS    6000
 #define GLITCH_TREMBLE_MS 2200
@@ -40,6 +41,8 @@ typedef struct {
     SDL_Texture *texture;
     int texture_w, texture_h;
     int rows;
+    int cols;
+    uint32_t hold_ms;
     glitch_tile_t tile[GLITCH_TILES];
     enum glitch_phase phase;
     uint32_t phase_start;
@@ -70,7 +73,7 @@ static void make_fallback(void) {
 }
 
 static void reset_tiles(void) {
-    for (int i = 0; i < GLITCH_COLS * mod.rows; i++) {
+    for (int i = 0; i < mod.cols * mod.rows; i++) {
         glitch_tile_t *t = &mod.tile[i];
         t->source = i;
         t->flip = SDL_FLIP_NONE;
@@ -86,7 +89,7 @@ static void start_phase(const enum glitch_phase phase, const uint32_t now) {
     mod.phase = phase;
     mod.phase_start = now;
 
-    const int count = GLITCH_COLS * mod.rows;
+    const int count = mod.cols * mod.rows;
     if (phase == glitch_fall) {
         for (int i = 0; i < count; i++) {
             glitch_tile_t *t = &mod.tile[i];
@@ -144,7 +147,12 @@ int glitch_init(SDL_Renderer *renderer, const int screen_w, const int screen_h) 
     mod.renderer = renderer;
     saver_init_base(&mod.base, screen_w, screen_h, "Gravity Glitch", 255, 255, 255, NULL, on_idle_enter, &mod);
 
-    mod.rows = (GLITCH_COLS * screen_h + screen_w / 2) / (screen_w > 0 ? screen_w : 1);
+    static const int cols[] = {24, 16, 10};
+    static const uint32_t holds[] = {3000, 6000, 12000};
+    mod.cols = cols[saver_option(config.settings.saver.glitch_size, 3, 1)];
+    mod.hold_ms = holds[saver_option(config.settings.saver.glitch_hold, 3, 1)];
+
+    mod.rows = (mod.cols * screen_h + screen_w / 2) / (screen_w > 0 ? screen_w : 1);
     if (mod.rows < 4) mod.rows = 4;
     if (mod.rows > GLITCH_MAX_ROWS) mod.rows = GLITCH_MAX_ROWS;
 
@@ -152,7 +160,7 @@ int glitch_init(SDL_Renderer *renderer, const int screen_w, const int screen_h) 
     mod.phase = glitch_hold;
     mod.phase_start = SDL_GetTicks();
 
-    LOG_INFO("saver", "Gravity Glitch Initialised (%dx%d, %dx%d tiles)", screen_w, screen_h, GLITCH_COLS, mod.rows);
+    LOG_INFO("saver", "Gravity Glitch Initialised (%dx%d, %dx%d tiles)", screen_w, screen_h, mod.cols, mod.rows);
     return 1;
 }
 
@@ -168,11 +176,11 @@ void glitch_update(void) {
     const float dt = (float) (elapsed > 100 ? 100 : elapsed) / 1000.0f * scale;
     const uint32_t in_phase = (uint32_t) ((float) (now - mod.phase_start) * scale);
     const float h = (float) mod.base.screen_h;
-    const int count = GLITCH_COLS * mod.rows;
+    const int count = mod.cols * mod.rows;
 
     switch (mod.phase) {
         case glitch_hold:
-            if (in_phase >= GLITCH_HOLD_MS) start_phase(glitch_tremble, now);
+            if (in_phase >= mod.hold_ms) start_phase(glitch_tremble, now);
             break;
         case glitch_tremble:
             if (in_phase >= GLITCH_TREMBLE_MS) start_phase(glitch_fall, now);
@@ -232,35 +240,35 @@ void glitch_render(SDL_Renderer *renderer) {
     const uint32_t now = SDL_GetTicks();
     const int w = mod.base.screen_w;
     const int h = mod.base.screen_h;
-    const int count = GLITCH_COLS * mod.rows;
+    const int count = mod.cols * mod.rows;
     const int tremble = mod.phase == glitch_tremble;
     const int empty = mod.phase == glitch_empty;
     unsigned draw_calls = 0;
 
     if (empty) {
         SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-        for (int c = 1; c < GLITCH_COLS; c++)
-            SDL_RenderDrawLine(renderer, w * c / GLITCH_COLS, 0, w * c / GLITCH_COLS, h);
+        for (int c = 1; c < mod.cols; c++)
+            SDL_RenderDrawLine(renderer, w * c / mod.cols, 0, w * c / mod.cols, h);
         for (int r = 1; r < mod.rows; r++)
             SDL_RenderDrawLine(renderer, 0, h * r / mod.rows, w, h * r / mod.rows);
-        saver_perf_note_draw_calls((unsigned) (GLITCH_COLS + mod.rows));
+        saver_perf_note_draw_calls((unsigned) (mod.cols + mod.rows));
         return;
     }
 
     for (int i = 0; i < count; i++) {
         const glitch_tile_t *t = &mod.tile[i];
-        const int col = i % GLITCH_COLS;
-        const int row = i / GLITCH_COLS;
-        const int src_col = t->source % GLITCH_COLS;
-        const int src_row = t->source / GLITCH_COLS;
+        const int col = i % mod.cols;
+        const int row = i / mod.cols;
+        const int src_col = t->source % mod.cols;
+        const int src_row = t->source / mod.cols;
 
         SDL_Rect src = {
-            mod.snapshot.w * src_col / GLITCH_COLS, mod.snapshot.h * src_row / mod.rows,
-            mod.snapshot.w * (src_col + 1) / GLITCH_COLS - mod.snapshot.w * src_col / GLITCH_COLS,
+            mod.snapshot.w * src_col / mod.cols, mod.snapshot.h * src_row / mod.rows,
+            mod.snapshot.w * (src_col + 1) / mod.cols - mod.snapshot.w * src_col / mod.cols,
             mod.snapshot.h * (src_row + 1) / mod.rows - mod.snapshot.h * src_row / mod.rows
         };
         SDL_Rect dst = {
-            w * col / GLITCH_COLS, h * row / mod.rows, w * (col + 1) / GLITCH_COLS - w * col / GLITCH_COLS,
+            w * col / mod.cols, h * row / mod.rows, w * (col + 1) / mod.cols - w * col / mod.cols,
             h * (row + 1) / mod.rows - h * row / mod.rows
         };
         dst.y += (int) t->y;

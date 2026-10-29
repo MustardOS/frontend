@@ -12,6 +12,7 @@ typedef enum {
     video_ui_action_switch_content,
     video_ui_action_restart,
     video_ui_action_stop,
+    video_ui_action_background,
 } video_ui_action;
 
 int video_playback_ui_init(

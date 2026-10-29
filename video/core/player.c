@@ -3,11 +3,13 @@
 #include "audio_transition.h"
 #include "audio_source.h"
 #include "remote.h"
+#include "background.h"
 #include "equaliser.h"
 #include "../ui/ui_loading.h"
 #include "../ui/ui_audio.h"
 #include "ui_pause.h"
 #include "video.h"
+#include "subtitle.h"
 #include "state.h"
 #include "../settings/assets.h"
 #include "../settings/session.h"
@@ -70,6 +72,7 @@
 #define LIVE_AUDIO_CLOCK_CORRECTION_FACTOR 0.125
 #define HLS_MANIFEST_LIMIT                 ((size_t) 512U * 1024U)
 #define LIVE_BUFFER_FAILURE_MS             15000U
+#define DEGAUSS_HOLD_MS                    2000U
 #define LIVE_AUTOMATIC_BITRATE_LIMIT       4000000LL
 #define PACKET_CACHE_LIMIT                 256
 
@@ -208,6 +211,8 @@ typedef struct {
     uint32_t channel_switch_deadline;
     int channel_switch_pending;
     uint32_t quit_deadline;
+    uint32_t degauss_hold_started;
+    int degauss_hold_fired;
     int voice_mute_mask;
     int content_switch_requested;
     int buffering_visible;
@@ -229,6 +234,8 @@ typedef struct {
     double transition_resume_origin;
     wasabi_audio_info audio_information;
     Mix_Music *sequenced_audio;
+    int background_requested;
+    int explicit_stop;
 } video_player;
 
 static video_player player;
@@ -1350,6 +1357,16 @@ int video_player_tracker_loop_available(void) {
     return player.audio_only && player.tracker_audio;
 }
 
+int video_player_subtitles_available(void) {
+    return !player.live && !player.audio_only && player.video_decoder && subtitle_track_count() > 0;
+}
+
+void video_player_subtitle_select(const int index) {
+    if (subtitle_select(index) && player.format) request_seek_to_mode(player.position, 0);
+    player.present_dirty = 1;
+    display_composite_frame();
+}
+
 int video_player_seek_available(void) {
     return !player.live && player.duration > 0.0;
 }
@@ -1799,6 +1816,7 @@ static void perform_seek(const double target) {
 
     if (player.video_decoder) avcodec_flush_buffers(player.video_decoder);
     if (player.audio_decoder) avcodec_flush_buffers(player.audio_decoder);
+    subtitle_flush();
     swr_free(&player.resample);
     avfilter_graph_free(&player.filter_graph);
     player.filter_source = NULL;
@@ -1880,6 +1898,8 @@ static int decode_thread(void *unused __attribute__((unused))) {
             decode_video(player.packet);
         else if (player.packet->stream_index == player.audio_stream && !previewing)
             decode_audio(player.packet);
+        else if (player.packet->stream_index == subtitle_stream())
+            subtitle_packet(player.packet);
         av_packet_unref(player.packet);
     }
     if (player.live && !SDL_AtomicGet(&player.stop)) flush_decoders();
@@ -2133,6 +2153,20 @@ static void update_audio_transport(void) {
 static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     if (SDL_AtomicGet(&player.stop)) return;
     const uint32_t now = SDL_GetTicks();
+    const uint64_t degauss_mask = BIT(mux_input_start) | BIT(mux_input_select);
+    const int degauss_held = (mux_input_source_pressed_mask(0) & degauss_mask) == degauss_mask;
+    if (!degauss_held || video_playback_ui_menu_active() || video_playback_ui_naming_active()
+        || video_playback_ui_modal_active()) {
+        player.degauss_hold_started = 0;
+        player.degauss_hold_fired = 0;
+    } else if (!player.degauss_hold_started) {
+        player.degauss_hold_started = now;
+    } else if (!player.degauss_hold_fired && now - player.degauss_hold_started >= DEGAUSS_HOLD_MS) {
+        player.degauss_hold_fired = 1;
+        video_render_crt_degauss();
+        mux_input_swallow(mux_input_start);
+        mux_input_swallow(mux_input_select);
+    }
     if (player.quit_deadline) {
         if (SDL_TICKS_PASSED(now, player.quit_deadline)) {
             player.quit_deadline = 0;
@@ -2307,6 +2341,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     }
     if (video_render_seek_tick()) player.present_dirty = 1;
     if (video_render_crt_tick()) player.present_dirty = 1;
+    if (player.video_decoder && subtitle_set_position(player.position)) player.present_dirty = 1;
     if (present_due && player.present_dirty) {
         display_composite_frame();
         player.present_dirty = 0;
@@ -2754,7 +2789,12 @@ static void apply_ui_action(const video_ui_action action) {
             }
             break;
         case video_ui_action_stop:
+            player.explicit_stop = 1;
             quit_playback();
+            break;
+        case video_ui_action_background:
+            player.background_requested = 1;
+            stop_playback();
             break;
         default:
             break;
@@ -3247,6 +3287,7 @@ static void player_cleanup(void) {
     player.decode_thread = NULL;
     if (player.present_timer) lv_timer_del(player.present_timer);
     player.present_timer = NULL;
+    subtitle_close();
     if (!preserve_transition && Mix_GetMusicHookData() == &audio_hook_owner) Mix_HookMusic(NULL, NULL);
     if (!preserve_transition) audio_transition_cancel();
     if (player.sequenced_audio) {
@@ -3613,6 +3654,10 @@ static int player_open(const char *uri, const char *title, const video_player_op
         player.audio_time_base = player.format->streams[player.audio_stream]->time_base;
         player.audio_decoder = open_decoder(player.audio_stream, 0);
     }
+    if (!player.live && player.video_decoder) {
+        const AVCodecParameters *video = player.format->streams[player.video_stream]->codecpar;
+        subtitle_open(player.format, player.uri, video->width, video->height);
+    }
     player.video_queue_limit = live_video_queue_limit();
 
     player.packet = av_packet_alloc();
@@ -3841,6 +3886,18 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
         const int subsong_switch = switched && !player.folder_switch_requested && subsongs.entries
                                    && player.playlist == subsongs.entries && subsongs.selected < subsongs.count;
         const int quitting = !restart && !subsong_switch && !switched && !content_switched;
+        const int background = quitting && player.audio_only && !player.live
+                               && (player.background_requested
+                                   || (config.video.background_play && !player.explicit_stop && !player.completed));
+        char background_source[PATH_MAX];
+        char background_track[PATH_MAX];
+        const size_t background_index = player.playlist_index;
+        const double background_position = player.completed ? 0.0 : player.position;
+        snprintf(
+            background_source, sizeof(background_source), "%s",
+            player.container_uri[0] ? player.container_uri : player.uri
+        );
+        snprintf(background_track, sizeof(background_track), "%s", player.uri);
         if (quitting) {
             const int ui_was_hidden = display_ui_is_hidden();
             display_set_ui_hidden(1);
@@ -3861,6 +3918,9 @@ int video_player_run(const char *uri, const char *title, const video_player_opti
         }
         display_set_composite_suppressed(1);
         player_cleanup();
+        if (background
+            && !wasabi_background_launch(background_source, background_index, background_track, background_position))
+            LOG_ERROR("muxmedia", "Unable to continue '%s' in the background", background_track);
         if (restart) continue;
         if (subsong_switch) {
             current_uri = subsongs.entries[subsongs.selected].uri;

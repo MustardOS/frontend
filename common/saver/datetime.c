@@ -175,6 +175,10 @@ int datetime_init(
         &mod.base, screen_w, screen_h, "DateTime", mod.col_r, mod.col_g, mod.col_b, dt_on_speed_changed,
         dt_on_idle_enter, &mod
     );
+    saver_apply_colour(&mod.base, config.settings.saver.datetime_colour);
+    mod.col_r = mod.base.colour_r;
+    mod.col_g = mod.base.colour_g;
+    mod.col_b = mod.base.colour_b;
 
     mod.reposition_pending = 1;
     mod.fade_state = DT_FADE_IN;
@@ -265,10 +269,11 @@ static void dt_blit(SDL_Renderer *renderer, SDL_Texture *tex, int x, int y, uint
 }
 
 static void dt_format_strings(const struct tm *tm, char time_str[32], char date_str[64]) {
+    const int seconds = saver_option(config.settings.saver.datetime_seconds, 2, 0);
     if (config.clock.notation == 0)
-        strftime(time_str, 32, "%I:%M %p", tm);
+        strftime(time_str, 32, seconds ? "%I:%M:%S %p" : "%I:%M %p", tm);
     else
-        strftime(time_str, 32, "%H:%M", tm);
+        strftime(time_str, 32, seconds ? "%H:%M:%S" : "%H:%M", tm);
 
     char wday[16], mon[16];
     strftime(wday, sizeof(wday), "%a", tm);
@@ -318,6 +323,13 @@ static void dt_refresh_time_texture(SDL_Renderer *renderer, const char *time_str
 }
 
 static void dt_refresh_date_texture(SDL_Renderer *renderer, const char *date_str) {
+    if (!saver_option(config.settings.saver.datetime_date, 2, 1)) {
+        dt_destroy_texture(&mod.tex_date);
+        mod.date_w = 0;
+        mod.date_h = 0;
+        mod.cached_date[0] = '\0';
+        return;
+    }
     if (strcmp(mod.cached_date, date_str) == 0) return;
 
     dt_destroy_texture(&mod.tex_date);
@@ -328,7 +340,7 @@ static void dt_refresh_date_texture(SDL_Renderer *renderer, const char *date_str
 
 static void dt_update_block_size(void) {
     mod.block_w = mod.time_w > mod.date_w ? mod.time_w : mod.date_w;
-    mod.gap = mod.time_h / 8;
+    mod.gap = mod.tex_date ? mod.time_h / 8 : 0;
     mod.block_h = mod.time_h + mod.gap + mod.date_h;
 }
 

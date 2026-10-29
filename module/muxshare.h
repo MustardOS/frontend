@@ -349,6 +349,8 @@ int muxplore_main(int index, char *dir);
 
 int muxpower_main(void);
 
+int muxsaver_main(void);
+
 void muxraopt_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxrgb_main(void);

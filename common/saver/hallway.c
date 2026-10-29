@@ -5,6 +5,7 @@
 #include <SDL2/SDL_image.h>
 #include <common/base/options.h>
 #include <common/runtime/log.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/saver/hallway.h>
 #include <common/saver/boxart.h>
@@ -156,6 +157,7 @@ static int load_art(uint8_t pixels[HALL_ART_H][HALL_ART_W][3], const char *path)
 }
 
 static void load_next_art(void) {
+    if (!saver_option(config.settings.saver.hallway_paintings, 2, 1)) return;
     if (!mod.art_path_count || mod.art_loaded >= HALL_ART_COUNT || mod.art_attempts >= HALL_ART_COUNT * 3) return;
 
     mod.art_attempts++;
@@ -342,7 +344,7 @@ static void plan_figure(const float dt) {
         return;
     }
 
-    if (mod.figure_checked || mod.turning) return;
+    if (mod.figure_checked || mod.turning || !saver_option(config.settings.saver.hallway_visitors, 2, 1)) return;
 
     const float ahead = mod.leg.len - mod.walk_z;
     if (ahead > 7.5f || ahead < 6.0f) return;
@@ -609,8 +611,10 @@ static float ceiling_colour(uint8_t *rgb, const float x, const float z, const ui
 static int ensure_buffer(SDL_Renderer *renderer) {
     if (mod.pixels && mod.texture) return 1;
 
-    mod.lw = mod.base.screen_w / HALL_PIXEL;
-    mod.lh = mod.base.screen_h / HALL_PIXEL;
+    static const int pixels[] = {2, HALL_PIXEL, 6};
+    const int pixel = pixels[saver_option(config.settings.saver.hallway_pixel, 3, 1)];
+    mod.lw = mod.base.screen_w / pixel;
+    mod.lh = mod.base.screen_h / pixel;
     if (mod.lw < 120) mod.lw = 120;
     if (mod.lh < 90) mod.lh = 90;
 

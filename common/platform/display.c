@@ -267,6 +267,9 @@ static void reload_background(const char *active_theme) {
 }
 
 static char video_saver_path[MAX_BUFFER_SIZE];
+static char video_saver_theme[MAX_BUFFER_SIZE];
+
+static void shuffle_saver_video(const char *theme_video);
 static char video_saver_prev_path[MAX_BUFFER_SIZE];
 static display_overlay_fn video_saver_prev_bg = NULL;
 static int video_saver_prev_bg_opaque = 0;
@@ -317,6 +320,7 @@ static void saver_update(void) {
             );
             video_saver_prev_bg = video_bg_fn_ptr;
             video_saver_prev_bg_opaque = video_bg_opaque;
+            if (saver_option(config.settings.saver.video_shuffle, 2, 0)) shuffle_saver_video(video_saver_theme);
             if (video_saver_path[0])
                 video_wallpaper_play(video_saver_path);
             else
@@ -507,6 +511,42 @@ static int find_video_in_directory(const char *directory, char *path, const size
     return 1;
 }
 
+static void add_video_choices(const char *directory, char choices[][MAX_BUFFER_SIZE], int *count, const int max) {
+    DIR *dir = directory && directory[0] ? opendir(directory) : NULL;
+    if (!dir) return;
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL && *count < max) {
+        if (entry->d_name[0] == '.') continue;
+        const size_t name_length = strlen(entry->d_name);
+        if (name_length < 5 || strcasecmp(entry->d_name + name_length - 4, ".mp4") != 0) continue;
+        const int written = snprintf(choices[*count], MAX_BUFFER_SIZE, "%s/%s", directory, entry->d_name);
+        if (written > 0 && written < MAX_BUFFER_SIZE && file_exist(choices[*count])) (*count)++;
+    }
+
+    closedir(dir);
+}
+
+static void shuffle_saver_video(const char *theme_video) {
+    enum { choice_max = 64 };
+    static char choices[choice_max][MAX_BUFFER_SIZE];
+    int count = 0;
+
+    if (theme_video && theme_video[0]) snprintf(choices[count++], MAX_BUFFER_SIZE, "%s", theme_video);
+
+    char directory[MAX_BUFFER_SIZE];
+    if (device.storage.sdcard.mount[0]) {
+        snprintf(directory, sizeof(directory), "%s/MUOS/wallpaper", device.storage.sdcard.mount);
+        add_video_choices(directory, choices, &count, choice_max);
+    }
+    if (device.storage.rom.mount[0] && strcmp(device.storage.rom.mount, device.storage.sdcard.mount) != 0) {
+        snprintf(directory, sizeof(directory), "%s/MUOS/wallpaper", device.storage.rom.mount);
+        add_video_choices(directory, choices, &count, choice_max);
+    }
+
+    if (count > 0) snprintf(video_saver_path, sizeof(video_saver_path), "%s", choices[saver_rand_range(count)]);
+}
+
 static int find_user_wallpaper_video(char *path, const size_t path_size) {
     char directory[MAX_BUFFER_SIZE];
 
@@ -597,10 +637,14 @@ static void reload_saver(void) {
             saver_video[0] = '\0';
             snprintf(saver_video, sizeof(saver_video), "%s/%simage/screensaver.mp4", theme_base, mux_dim);
 
-            if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video))) {
+            video_saver_theme[0] = '\0';
+            if (file_exist_nocase(saver_video, saver_video, sizeof(saver_video))) {
+                snprintf(video_saver_theme, sizeof(video_saver_theme), "%s", saver_video);
+            } else {
                 snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
-                if (!file_exist_nocase(saver_video, saver_video, sizeof(saver_video))
-                    && !find_user_wallpaper_video(saver_video, sizeof(saver_video)))
+                if (file_exist_nocase(saver_video, saver_video, sizeof(saver_video)))
+                    snprintf(video_saver_theme, sizeof(video_saver_theme), "%s", saver_video);
+                else if (!find_user_wallpaper_video(saver_video, sizeof(saver_video)))
                     saver_video[0] = '\0';
             }
 
@@ -1102,6 +1146,13 @@ static void run_saver_loop(int preview) {
 
     SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
     mux_input_resume();
+}
+
+void display_saver_reload(void) {
+    if (!monitor.renderer) return;
+    reload_saver();
+    monitor.force_clear = 1;
+    monitor.refresh = 1;
 }
 
 void preview_saver(const int type, const int speed) {

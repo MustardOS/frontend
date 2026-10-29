@@ -6,6 +6,10 @@ void overlay_bridge_init(const char *core_path_arg, const char *content_path);
 
 void overlay_bridge_apply(void);
 
+int overlay_bridge_viewport_offset_x(void);
+
+int overlay_bridge_viewport_offset_y(void);
+
 int overlay_bridge_active(void);
 
 void overlay_bridge_set_suppressed(int suppressed);

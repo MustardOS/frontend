@@ -10,6 +10,7 @@
 #include "ui_progress.h"
 #include "../core/equaliser.h"
 #include "ui_audio.h"
+#include "subtitle.h"
 
 #include <SDL2/SDL.h>
 #include <math.h>
@@ -36,12 +37,15 @@ static int bookmarks_active;
 static int playlist_active;
 static int information_active;
 static int content_switch_active;
+static int subtitles_active;
 static wasabi_settings_page settings_page;
 static int playback_paused;
 static int live_content;
 static int bookmark_row;
 static int playlist_row;
 static int content_switch_row;
+static int subtitle_row;
+static int background_row;
 static int information_row;
 static int restart_row;
 static int settings_row;
@@ -631,6 +635,9 @@ static void apply_overlay_row_visibility(void) {
     list_frame_set_suppressed(wasabi_setting_thumbnail, wasabi_settings_audio_active());
     for (int row = wasabi_setting_gapless; row <= wasabi_setting_tracker_loop; row++)
         list_frame_set_suppressed(row, !wasabi_settings_audio_active());
+    list_frame_set_suppressed(wasabi_setting_background_play, !wasabi_settings_audio_active() || live_content);
+    for (int row = wasabi_setting_subtitle_size; row <= wasabi_setting_subtitle_delay; row++)
+        list_frame_set_suppressed(row, wasabi_settings_audio_active() || !video_player_subtitles_available());
     for (int row = wasabi_setting_fast_forward_mode; row <= wasabi_setting_slow_motion_speed; row++)
         list_frame_set_suppressed(row, !video_player_speed_available());
     list_frame_set_suppressed(wasabi_setting_hotkey_fast_forward, !video_player_speed_available());
@@ -664,6 +671,7 @@ static void show_nav(void) {
         {ui_lbl_nav_b_glyph, "", 0},
         {ui_lbl_nav_b,
          settings_active || bookmarks_active || playlist_active || information_active || content_switch_active
+                 || subtitles_active
              ? lang.generic.back
              : lang.muxmedia.continue_playback,
          0},
@@ -741,6 +749,7 @@ static void build_pause_at(const int focus_row) {
     playlist_active = 0;
     information_active = 0;
     content_switch_active = 0;
+    subtitles_active = 0;
     content_switch_free(&content_switch_items);
     content_switch_load(&content_switch_items, playback_content_uri);
     lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
@@ -769,6 +778,16 @@ static void build_pause_at(const int focus_row) {
             : playback_playlist_audio  ? lang.muxmedia.tracks
                                        : lang.muxmedia.episodes
         );
+    }
+    subtitle_row = -1;
+    if (!live_content && !wasabi_settings_audio_active() && video_player_subtitles_available()) {
+        subtitle_row = ui_count_static;
+        add_row("subtitle", lang.muxmedia.subtitles);
+    }
+    background_row = -1;
+    if (!live_content && wasabi_settings_audio_active()) {
+        background_row = ui_count_static;
+        add_row("background", lang.muxmedia.play_in_background);
     }
     content_switch_row = ui_count_static;
     add_row("switch", lang.content_switch.title);
@@ -811,6 +830,32 @@ static void build_content_switch(void) {
     lv_label_set_text(ui_lbl_screen_message, content_switch_items.count ? "" : lang.content_switch.empty);
     show_nav();
     if (content_switch_items.count) gen_step_movement((int) content_switch_items.selected, 1, 1, 0, 0);
+}
+
+static void build_subtitles(void) {
+    settings_active = 0;
+    bookmarks_active = 0;
+    playlist_active = 0;
+    information_active = 0;
+    content_switch_active = 0;
+    subtitles_active = 1;
+    lv_obj_add_flag(ui_lbl_counter_explore, LV_OBJ_FLAG_HIDDEN);
+    hide_bookmark_preview();
+    list_frame_reset();
+    lv_obj_clean(ui_pnl_content);
+    reset_ui_groups();
+    ui_count_static = 0;
+    current_item_index = 0;
+    first_open = 0;
+
+    const int chosen = subtitle_track_selected();
+    add_row(chosen < 0 ? "star" : "subtitle", lang.muxmedia.subtitle_off);
+    for (int index = 0; index < subtitle_track_count(); index++)
+        add_row(index == chosen ? "star" : "subtitle", subtitle_track_label(index));
+    lv_label_set_text(ui_lbl_title, lang.muxmedia.subtitles);
+    lv_label_set_text(ui_lbl_screen_message, "");
+    show_nav();
+    if (chosen >= 0) gen_step_movement(chosen + 1, 1, 1, 0, 0);
 }
 
 static void build_pause(void) {
@@ -1610,6 +1655,10 @@ static void change_setting(const int direction) {
     } else if ((row >= wasabi_setting_scaling && row <= wasabi_setting_border)
                || (row >= wasabi_setting_overlay_pattern && row <= wasabi_setting_overlay_opacity))
         video_render_settings_changed();
+    else if (row >= wasabi_setting_subtitle_size && row <= wasabi_setting_subtitle_delay) {
+        subtitle_settings_changed();
+        video_render_settings_changed();
+    }
     if (row >= wasabi_setting_volume && row <= wasabi_setting_slow_motion_speed) video_player_audio_settings_changed();
     if (row == wasabi_setting_artwork_position)
         video_player_audio_ui_changed();
@@ -1766,6 +1815,7 @@ int video_playback_ui_init(
     playlist_active = 0;
     information_active = 0;
     content_switch_active = 0;
+    subtitles_active = 0;
     playback_playlist = playlist;
     playback_playlist_count = playlist_count;
     playback_playlist_index = playlist_index < playlist_count ? playlist_index : 0;
@@ -2053,7 +2103,8 @@ video_ui_action video_playback_ui_toggle_menu(void) {
         display_composite_frame();
         return video_ui_action_none;
     }
-    if (settings_active || bookmarks_active || playlist_active || information_active || content_switch_active) {
+    if (settings_active || bookmarks_active || playlist_active || information_active || content_switch_active
+        || subtitles_active) {
         if (settings_active && settings_page == wasabi_page_root && guard_settings_exit()) return video_ui_action_none;
         if (settings_active && settings_page == wasabi_page_root)
             list_frame_remember_section_key("muxmedia_settings");
@@ -2063,6 +2114,7 @@ video_ui_action video_playback_ui_toggle_menu(void) {
                           : bookmarks_active      ? bookmark_row
                           : playlist_active       ? playlist_row
                           : content_switch_active ? content_switch_row
+                          : subtitles_active      ? subtitle_row
                                                   : information_row;
         build_pause_at(focus);
         display_composite_frame();
@@ -2080,6 +2132,12 @@ video_ui_action video_playback_ui_confirm(void) {
         if (live_content) return video_ui_action_none;
         video_player_toggle_menu_playback();
         show_nav();
+        display_composite_frame();
+        return video_ui_action_none;
+    }
+    if (subtitles_active) {
+        video_player_subtitle_select(current_item_index - 1);
+        build_pause_at(subtitle_row);
         display_composite_frame();
         return video_ui_action_none;
     }
@@ -2225,6 +2283,13 @@ video_ui_action video_playback_ui_confirm(void) {
         display_composite_frame();
         return video_ui_action_none;
     }
+    if (subtitle_row >= 0 && current_item_index == subtitle_row) {
+        remembered_row = &subtitle_row;
+        build_subtitles();
+        display_composite_frame();
+        return video_ui_action_none;
+    }
+    if (background_row >= 0 && current_item_index == background_row) return video_ui_action_background;
     if (current_item_index == content_switch_row) {
         remembered_row = &content_switch_row;
         build_content_switch();
@@ -2263,7 +2328,8 @@ video_ui_action video_playback_ui_confirm(void) {
 
 video_ui_action video_playback_ui_back(void) {
     if (!menu_active) return video_ui_action_none;
-    if (settings_active || bookmarks_active || playlist_active || information_active || content_switch_active) {
+    if (settings_active || bookmarks_active || playlist_active || information_active || content_switch_active
+        || subtitles_active) {
         if (settings_active && settings_page == wasabi_page_equaliser) {
             leave_equaliser();
             display_composite_frame();
@@ -2306,6 +2372,7 @@ video_ui_action video_playback_ui_back(void) {
                           : bookmarks_active      ? bookmark_row
                           : playlist_active       ? playlist_row
                           : content_switch_active ? content_switch_row
+                          : subtitles_active      ? subtitle_row
                                                   : information_row;
         build_pause_at(focus);
         display_composite_frame();

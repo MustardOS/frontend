@@ -129,7 +129,7 @@ dep-terminal:
 
 dep-mugl:
 	@echo "Building GL Forwarder: mugl"
-	$(VERBOSE)OUT="$(BIN_DIR)" sh mugl/build.sh $(QUIET) || exit 1
+	$(VERBOSE)OUT="$(BIN_DIR)" MUGL_CC64="$(CROSS_COMPILE)gcc" MUGL_SYSROOT="$(SYSROOT)" sh mugl/build.sh $(QUIET) || exit 1
 
 dep-video:
 	@echo "Building Wasabi: muxmedia"

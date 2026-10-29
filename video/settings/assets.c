@@ -8,6 +8,9 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <unistd.h>
+
+#include <json/json.h>
 
 #include <module/muxshare.h>
 #include <common/base/options.h>
@@ -52,6 +55,46 @@ static const char *extension(const wasabi_asset_kind kind) {
     if (kind == wasabi_asset_filter) return ".ini";
     if (kind == wasabi_asset_shader) return ".frag";
     return ".png";
+}
+
+static int viewport_path(const char *image_path, char *output, const size_t size) {
+    if (!image_path || !output || !size || (size_t) snprintf(output, size, "%s", image_path) >= size) return 0;
+    char *extension = strrchr(output, '.');
+    if (!extension || (size_t) (extension - output) + sizeof(".json") > size) return 0;
+    snprintf(extension, size - (size_t) (extension - output), ".json");
+    return 1;
+}
+
+static int viewport_coordinate(const struct json value, int *output) {
+    if (json_type(value) != JSON_NUMBER) return 0;
+    const int parsed = json_int(value);
+    if (parsed < -4096 || parsed > 4096) return 0;
+    *output = parsed;
+    return 1;
+}
+
+static int viewport_metadata(const struct json object, int *x_offset, int *y_offset) {
+    const struct json viewport = json_object_get(object, "viewport");
+    if (json_type(viewport) == JSON_ARRAY && json_array_count(viewport) == 2)
+        return viewport_coordinate(json_array_get(viewport, 0), x_offset)
+               && viewport_coordinate(json_array_get(viewport, 1), y_offset);
+
+    // Read sidecars written by builds from before viewport arrays were introduced.
+    return viewport_coordinate(json_object_get(object, "x_offset"), x_offset)
+           && viewport_coordinate(json_object_get(object, "y_offset"), y_offset);
+}
+
+int wasabi_asset_write_viewport(const char *image_path, const int x_offset, const int y_offset) {
+    char path[PATH_MAX];
+    if (!viewport_path(image_path, path, sizeof(path))) return 0;
+    if (!x_offset && !y_offset) {
+        if (unlink(path) != 0 && errno != ENOENT) return 0;
+        return 1;
+    }
+
+    char content[64];
+    const int length = snprintf(content, sizeof(content), "{\"viewport\":[%d,%d]}\n", x_offset, y_offset);
+    return length > 0 && (size_t) length < sizeof(content) && write_text_to_file_atomic(path, CHAR, content);
 }
 
 static int compare_entries(const void *left, const void *right) {
@@ -246,6 +289,33 @@ const char *wasabi_asset_label(const wasabi_asset_kind kind, const int index) {
 const char *wasabi_asset_path(const wasabi_asset_kind kind, const int index) {
     asset_entry *entry = entry_at(kind, index);
     return entry ? entry->path : "";
+}
+
+int wasabi_asset_viewport(const wasabi_asset_kind kind, const int index, int *x_offset, int *y_offset) {
+    if (!x_offset || !y_offset) return 0;
+    *x_offset = 0;
+    *y_offset = 0;
+    const asset_entry *entry = entry_at(kind, index);
+    if (kind != wasabi_asset_overlay || !entry || !entry->path[0]) return 0;
+
+    char path[PATH_MAX];
+    if (!viewport_path(entry->path, path, sizeof(path))) return 0;
+    struct stat status;
+    if (lstat(path, &status) != 0 || !S_ISREG(status.st_mode) || status.st_size <= 0 || status.st_size > 256) return 0;
+
+    char *raw = read_all_char_from(path);
+    if (!raw || !json_valid(raw)) {
+        free(raw);
+        return 0;
+    }
+    const struct json root = json_parse(raw);
+    const int okay = json_type(root) == JSON_OBJECT && viewport_metadata(root, x_offset, y_offset);
+    free(raw);
+    if (!okay) {
+        *x_offset = 0;
+        *y_offset = 0;
+    }
+    return okay;
 }
 
 const char *wasabi_asset_display_value(const wasabi_asset_kind kind) {
@@ -608,6 +678,7 @@ int wasabi_asset_browser_delete(const int row) {
     if (unlink(path) != 0 && errno != ENOENT) return 0;
     char metadata[PATH_MAX];
     if ((size_t) snprintf(metadata, sizeof(metadata), "%s.name", path) < sizeof(metadata)) unlink(metadata);
+    if (browser.kind == wasabi_asset_overlay && viewport_path(path, metadata, sizeof(metadata))) unlink(metadata);
     if (collection_has(browser.kind, removed_key)) collection_toggle(browser.kind, removed_key);
     if (strcasecmp(selected_key(browser.kind), removed_key) == 0) wasabi_asset_select(browser.kind, 0);
     wasabi_assets_refresh(browser.kind);

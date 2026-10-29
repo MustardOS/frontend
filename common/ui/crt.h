@@ -7,6 +7,8 @@ typedef void (*crt_effect_draw_fn)(SDL_Renderer *renderer, const SDL_Rect *rect,
 
 uint32_t crt_effect_power_off_duration(void);
 
+uint32_t crt_effect_degauss_duration(void);
+
 void crt_effect_render_power_off(
     SDL_Renderer *renderer, const SDL_Rect *frame, uint32_t started, uint32_t now, crt_effect_draw_fn draw,
     void *userdata
@@ -15,4 +17,8 @@ void crt_effect_render_power_off(
 void crt_effect_render_power_on(
     SDL_Renderer *renderer, const SDL_Rect *frame, uint32_t started, uint32_t now, crt_effect_draw_fn draw,
     void *userdata
+);
+
+void crt_effect_render_degauss(
+    SDL_Renderer *renderer, const SDL_Rect *frame, uint32_t started, uint32_t now, SDL_Texture *texture
 );

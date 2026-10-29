@@ -59,6 +59,8 @@
 #include "../state/persistent.h"
 #include "../state/history.h"
 
+#include <common/platform/media.h>
+
 #define RESUME_COOLDOWN_MS  1500
 #define AUDIO_MAX_CATCHUP   3
 #define UI_TASK_INTERVAL_MS 16
@@ -683,6 +685,18 @@ static int bios_allows_start(const char *core_path) {
         lang.generic.close
     );
     return 0;
+}
+
+static void media_notice_tick(const uint32_t now) {
+    static uint32_t deadline;
+    if (deadline && !SDL_TICKS_PASSED(now, deadline)) return;
+    deadline = now + 1000;
+
+    char track[512];
+    if (!media_track_changed(track, sizeof(track)) || !config.settings.general.track_notice) return;
+    char message[MAX_BUFFER_SIZE];
+    snprintf(message, sizeof(message), "%s: %s", lang.muxmedia.now_playing, track);
+    pause_menu_show_toast_timed(message, 3000);
 }
 
 int main(const int argc, char *argv[]) {
@@ -1338,6 +1352,7 @@ int main(const int argc, char *argv[]) {
         const uint64_t ui_tick_start = perf_begin();
         pause_menu_service_tick(loop_now);
         advisory_tick(loop_now);
+        media_notice_tick(loop_now);
 
         const int paused_now = pause_menu_is_active();
         const int ui_visible = paused_now || peer_wait_visible;

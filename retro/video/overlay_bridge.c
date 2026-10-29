@@ -11,6 +11,7 @@
 #include <common/base/util.h>
 #include "overlay_bridge.h"
 #include "overlay_library.h"
+#include "../core/muxretro.h"
 #include "../settings/settings.h"
 
 static char catalogue_overlay_path[MAX_BUFFER_SIZE];
@@ -19,6 +20,8 @@ static SDL_Texture *current_overlay_tex = NULL;
 static uint8_t current_overlay_opacity = 0;
 static int current_overlay_w = 0;
 static int current_overlay_h = 0;
+static int viewport_offset_x = 0;
+static int viewport_offset_y = 0;
 
 void overlay_bridge_init(const char *core_path_arg, const char *content_path) {
     (void) core_path_arg;
@@ -48,6 +51,11 @@ void overlay_bridge_init(const char *core_path_arg, const char *content_path) {
 }
 
 void overlay_bridge_apply(void) {
+    const int previous_offset_x = viewport_offset_x;
+    const int previous_offset_y = viewport_offset_y;
+    viewport_offset_x = 0;
+    viewport_offset_y = 0;
+
     if (current_overlay_tex) {
         SDL_DestroyTexture(current_overlay_tex);
         current_overlay_tex = NULL;
@@ -70,8 +78,11 @@ void overlay_bridge_apply(void) {
             break;
         case overlay_source_downloaded: {
             char path[MAX_BUFFER_SIZE];
-            if (overlay_library_path(session_settings.overlay_image, path, sizeof(path)))
+            if (overlay_library_path(session_settings.overlay_image, path, sizeof(path))) {
                 current_overlay_tex = display_load_image_texture(path);
+                if (current_overlay_tex)
+                    overlay_library_offsets(session_settings.overlay_image, &viewport_offset_x, &viewport_offset_y);
+            }
             break;
         }
         default:
@@ -83,6 +94,16 @@ void overlay_bridge_apply(void) {
         SDL_SetTextureBlendMode(current_overlay_tex, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(current_overlay_tex, current_overlay_opacity);
     }
+
+    if (viewport_offset_x != previous_offset_x || viewport_offset_y != previous_offset_y) video_bridge_apply_scaling();
+}
+
+int overlay_bridge_viewport_offset_x(void) {
+    return viewport_offset_x;
+}
+
+int overlay_bridge_viewport_offset_y(void) {
+    return viewport_offset_y;
 }
 
 static int overlay_suppressed;

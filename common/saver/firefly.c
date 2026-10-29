@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/firefly.h>
 
-#define FIREFLY_COUNT       48
+#define FIREFLY_COUNT       96
 #define FIREFLY_SEP_RADIUS  32
 #define FIREFLY_CLASS_COUNT 3
 
@@ -36,6 +37,8 @@ typedef struct {
     saver_state_t base;
 
     firefly_t fly[FIREFLY_COUNT];
+    int count;
+    int rainbow;
 
     int32_t speed_fp_per_ms;
 } firefly_module_t;
@@ -54,7 +57,7 @@ static int32_t random_velocity_for_class(int cls) {
 }
 
 static void apply_fly_colour(firefly_t *f) {
-    if (mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) {
+    if (mod.rainbow || mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) {
         saver_pastel_pick((int) saver_rand_range(SAVER_PASTEL_COUNT), &f->r, &f->g, &f->b);
     } else {
         f->r = mod.base.colour_r;
@@ -121,7 +124,7 @@ static void firefly_reset_one(firefly_t *f, uint32_t now) {
 
 static void firefly_seed_all(void) {
     uint32_t now = SDL_GetTicks();
-    for (int i = 0; i < FIREFLY_COUNT; i++)
+    for (int i = 0; i < mod.count; i++)
         firefly_reset_one(&mod.fly[i], now);
 }
 
@@ -152,11 +155,21 @@ int firefly_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
         &mod.base, screen_w, screen_h, "Firefly", 255, 218, 153, firefly_on_speed_changed, firefly_on_idle_enter, &mod
     );
 
+    static const int counts[] = {24, 48, 96};
+    mod.count = counts[saver_option(config.settings.saver.firefly_count, 3, 1)];
+    const int colour = saver_option(config.settings.saver.firefly_colour, 3, 0);
+    mod.rainbow = colour == 2;
+    if (colour == 1) {
+        mod.base.colour_r = 150;
+        mod.base.colour_g = 220;
+        mod.base.colour_b = 255;
+    }
+
     firefly_on_speed_changed(NULL);
     firefly_seed_all();
 
     LOG_INFO(
-        "saver", "Firefly Initialised (%dx%d, count=%d, margin=%d, speed=%d)", screen_w, screen_h, FIREFLY_COUNT,
+        "saver", "Firefly Initialised (%dx%d, count=%d, margin=%d, speed=%d)", screen_w, screen_h, mod.count,
         firefly_edge_margin, mod.base.speed
     );
 
@@ -241,12 +254,12 @@ static void apply_pair_separation(int32_t step_fp) {
     const int R_sq = R * R;
     int turn_scale = step_fp >> SAVER_FRAME_SHF; /* elapsed ms */
 
-    for (int i = 0; i < FIREFLY_COUNT; i++) {
+    for (int i = 0; i < mod.count; i++) {
         firefly_t *a = &mod.fly[i];
         int ax = a->fx >> SAVER_FRAME_SHF;
         int ay = a->fy >> SAVER_FRAME_SHF;
 
-        for (int j = i + 1; j < FIREFLY_COUNT; j++) {
+        for (int j = i + 1; j < mod.count; j++) {
             firefly_t *b = &mod.fly[j];
 
             int bx = b->fx >> SAVER_FRAME_SHF;
@@ -288,7 +301,7 @@ void firefly_update(void) {
     int32_t step_fp = mod.speed_fp_per_ms * (int32_t) elapsed;
     apply_pair_separation(step_fp);
 
-    for (int i = 0; i < FIREFLY_COUNT; i++) {
+    for (int i = 0; i < mod.count; i++) {
         integrate_fly(&mod.fly[i], step_fp, now);
     }
 }
@@ -303,7 +316,7 @@ void firefly_render(SDL_Renderer *renderer) {
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    for (int i = 0; i < FIREFLY_COUNT; i++) {
+    for (int i = 0; i < mod.count; i++) {
         const firefly_t *f = &mod.fly[i];
 
         int x = f->fx >> SAVER_FRAME_SHF;
@@ -334,7 +347,7 @@ void firefly_render(SDL_Renderer *renderer) {
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-    saver_perf_note_draw_calls(FIREFLY_COUNT * 3u);
+    saver_perf_note_draw_calls((unsigned) mod.count * 3u);
 }
 
 int firefly_active(void) {

@@ -18,6 +18,10 @@
       "title": "Power"
     },
     {
+      "id": "saver",
+      "title": "Screensaver"
+    },
+    {
       "id": "hotkey",
       "title": "Hotkeys"
     },
@@ -11374,6 +11378,25 @@
       "help": "The region your device keeps time for. Setting this lets the clock correct itself from the internet, and handles daylight saving for you."
     },
     {
+      "key": "settings/general/track_notice",
+      "group": "general",
+      "type": "int",
+      "default": "1",
+      "label": "Track Change Notice",
+      "module": "muxcustom",
+      "help": "Whether a short notice shows the new track when Wasabi is playing music in the background, both in the frontend and in Pickles.",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ]
+    },
+    {
       "key": "settings/general/volume",
       "group": "general",
       "type": "int",
@@ -14737,6 +14760,1163 @@
         }
       ],
       "help": "What a short press of the power button does, whether that is sleeping, shutting down, or nothing at all.\n\nHolding the button down shuts the device off regardless."
+    },
+    {
+      "key": "settings/saver/blockfall_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Block Fall Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "White"
+        },
+        {
+          "value": "2",
+          "label": "Red"
+        },
+        {
+          "value": "3",
+          "label": "Orange"
+        },
+        {
+          "value": "4",
+          "label": "Amber"
+        },
+        {
+          "value": "5",
+          "label": "Green"
+        },
+        {
+          "value": "6",
+          "label": "Cyan"
+        },
+        {
+          "value": "7",
+          "label": "Blue"
+        },
+        {
+          "value": "8",
+          "label": "Purple"
+        },
+        {
+          "value": "9",
+          "label": "Pink"
+        }
+      ],
+      "help": "The colour of the blocks and the board.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/blockfall_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Block Fall Block Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large the falling blocks are.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/boxart_count",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Flying Box Art Box Count",
+      "options": [
+        {
+          "value": "0",
+          "label": "4"
+        },
+        {
+          "value": "1",
+          "label": "8"
+        },
+        {
+          "value": "2",
+          "label": "12"
+        }
+      ],
+      "help": "How many boxes can fly across the screen at once.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/boxart_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Flying Box Art Box Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large the flying boxes are.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/bsod_background",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Blue Screen Background",
+      "options": [
+        {
+          "value": "0",
+          "label": "Blue"
+        },
+        {
+          "value": "1",
+          "label": "Black"
+        }
+      ],
+      "help": "The colour behind the crash message.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/bsod_screens",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Blue Screen Screens",
+      "options": [
+        {
+          "value": "0",
+          "label": "Crash and Reboot"
+        },
+        {
+          "value": "1",
+          "label": "Crash Only"
+        },
+        {
+          "value": "2",
+          "label": "Reboot Only"
+        }
+      ],
+      "help": "Which screens are shown. Crash and Reboot takes turns between the two.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/constellation_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Constellation Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "White"
+        },
+        {
+          "value": "2",
+          "label": "Red"
+        },
+        {
+          "value": "3",
+          "label": "Orange"
+        },
+        {
+          "value": "4",
+          "label": "Amber"
+        },
+        {
+          "value": "5",
+          "label": "Green"
+        },
+        {
+          "value": "6",
+          "label": "Cyan"
+        },
+        {
+          "value": "7",
+          "label": "Blue"
+        },
+        {
+          "value": "8",
+          "label": "Purple"
+        },
+        {
+          "value": "9",
+          "label": "Pink"
+        }
+      ],
+      "help": "The colour of the stars and the lines joining them.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/constellation_count",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Constellation Star Count",
+      "options": [
+        {
+          "value": "0",
+          "label": "32"
+        },
+        {
+          "value": "1",
+          "label": "64"
+        },
+        {
+          "value": "2",
+          "label": "128"
+        }
+      ],
+      "help": "How many stars float about the screen.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/constellation_link",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Constellation Link Distance",
+      "options": [
+        {
+          "value": "0",
+          "label": "Short"
+        },
+        {
+          "value": "1",
+          "label": "Normal"
+        },
+        {
+          "value": "2",
+          "label": "Long"
+        }
+      ],
+      "help": "How close two stars need to be before a line joins them.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/datetime_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Date and Time Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "White"
+        },
+        {
+          "value": "2",
+          "label": "Red"
+        },
+        {
+          "value": "3",
+          "label": "Orange"
+        },
+        {
+          "value": "4",
+          "label": "Amber"
+        },
+        {
+          "value": "5",
+          "label": "Green"
+        },
+        {
+          "value": "6",
+          "label": "Cyan"
+        },
+        {
+          "value": "7",
+          "label": "Blue"
+        },
+        {
+          "value": "8",
+          "label": "Purple"
+        },
+        {
+          "value": "9",
+          "label": "Pink"
+        }
+      ],
+      "help": "The colour of the time and date. Default uses the text colour of the active theme.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/datetime_date",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Date and Time Show Date",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Whether the date appears below the time.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/datetime_seconds",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Date and Time Show Seconds",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Whether the time includes seconds.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/dvd_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "DVD Bounce Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "Cycle on Bounce"
+        },
+        {
+          "value": "2",
+          "label": "Rainbow"
+        }
+      ],
+      "help": "How the logo is coloured. Default stays white and only changes colour on each bounce at the very top speed, Cycle on Bounce changes colour on every bounce, and Rainbow drifts slowly through every colour.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/dvd_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "DVD Bounce Logo Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large the bouncing logo is drawn.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/firefly_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Fireflies Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Warm"
+        },
+        {
+          "value": "1",
+          "label": "Cool"
+        },
+        {
+          "value": "2",
+          "label": "Rainbow"
+        }
+      ],
+      "help": "Warm gives a soft golden glow, Cool a pale blue, and Rainbow gives each firefly its own colour.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/firefly_count",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Fireflies Firefly Count",
+      "options": [
+        {
+          "value": "0",
+          "label": "24"
+        },
+        {
+          "value": "1",
+          "label": "48"
+        },
+        {
+          "value": "2",
+          "label": "96"
+        }
+      ],
+      "help": "How many fireflies drift about the screen.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/glitch_hold",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Gravity Glitch Hold Time",
+      "options": [
+        {
+          "value": "0",
+          "label": "Short"
+        },
+        {
+          "value": "1",
+          "label": "Normal"
+        },
+        {
+          "value": "2",
+          "label": "Long"
+        }
+      ],
+      "help": "How long the screen stays whole before it starts to fall apart.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/glitch_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Gravity Glitch Tile Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large the falling pieces of the screen are.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/hallway_paintings",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Endless Hallway Paintings",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Whether box art from your content hangs on the walls as paintings.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/hallway_pixel",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Endless Hallway Pixel Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Fine"
+        },
+        {
+          "value": "1",
+          "label": "Normal"
+        },
+        {
+          "value": "2",
+          "label": "Chunky"
+        }
+      ],
+      "help": "How chunky the hallway looks. Fine shows the most detail.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/hallway_visitors",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Endless Hallway Visitors",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Whether someone occasionally crosses the hallway ahead.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/lavalamp_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Lava Lamp Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Random"
+        },
+        {
+          "value": "1",
+          "label": "Amber"
+        },
+        {
+          "value": "2",
+          "label": "Ocean"
+        },
+        {
+          "value": "3",
+          "label": "Lime"
+        },
+        {
+          "value": "4",
+          "label": "Magenta"
+        }
+      ],
+      "help": "The colour of the lamp. Random picks a new colour each time.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/lavalamp_count",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Lava Lamp Blob Count",
+      "options": [
+        {
+          "value": "0",
+          "label": "Random"
+        },
+        {
+          "value": "1",
+          "label": "6"
+        },
+        {
+          "value": "2",
+          "label": "9"
+        },
+        {
+          "value": "3",
+          "label": "12"
+        }
+      ],
+      "help": "How many blobs float in the lamp. Random picks a new number each time.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/matrix_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Digital Rain Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "White"
+        },
+        {
+          "value": "2",
+          "label": "Red"
+        },
+        {
+          "value": "3",
+          "label": "Orange"
+        },
+        {
+          "value": "4",
+          "label": "Amber"
+        },
+        {
+          "value": "5",
+          "label": "Green"
+        },
+        {
+          "value": "6",
+          "label": "Cyan"
+        },
+        {
+          "value": "7",
+          "label": "Blue"
+        },
+        {
+          "value": "8",
+          "label": "Purple"
+        },
+        {
+          "value": "9",
+          "label": "Pink"
+        }
+      ],
+      "help": "The colour of the falling characters. Default is the familiar soft green.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/matrix_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Digital Rain Character Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large each falling character is. Smaller characters fill the screen with more columns.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/maze_radar",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Maze Runner Radar",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Whether the hunter sends out radar rings while it chases the runner.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/maze_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Maze Runner Cell Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large each part of the maze is. Smaller cells make a bigger maze.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/moss_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Pixel Moss Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Random"
+        },
+        {
+          "value": "1",
+          "label": "Moss"
+        },
+        {
+          "value": "2",
+          "label": "Lichen"
+        },
+        {
+          "value": "3",
+          "label": "Autumn"
+        },
+        {
+          "value": "4",
+          "label": "Frost"
+        }
+      ],
+      "help": "The colour of the moss. Random picks a new colour each time.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/moss_flowers",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Pixel Moss Flowers",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Whether the moss flowers once it has covered the screen.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/moss_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Pixel Moss Cell Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large each patch of moss is.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/mystify_shapes",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Mystify Shapes",
+      "options": [
+        {
+          "value": "0",
+          "label": "Automatic"
+        },
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ],
+      "help": "How many shapes twist across the screen. Automatic shows two, or four at the very top speed.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/mystify_trail",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Mystify Trail Length",
+      "options": [
+        {
+          "value": "0",
+          "label": "Short"
+        },
+        {
+          "value": "1",
+          "label": "Normal"
+        },
+        {
+          "value": "2",
+          "label": "Long"
+        }
+      ],
+      "help": "How many echoes each shape leaves behind it.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/pulse_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Pulse Grid Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "White"
+        },
+        {
+          "value": "2",
+          "label": "Red"
+        },
+        {
+          "value": "3",
+          "label": "Orange"
+        },
+        {
+          "value": "4",
+          "label": "Amber"
+        },
+        {
+          "value": "5",
+          "label": "Green"
+        },
+        {
+          "value": "6",
+          "label": "Cyan"
+        },
+        {
+          "value": "7",
+          "label": "Blue"
+        },
+        {
+          "value": "8",
+          "label": "Purple"
+        },
+        {
+          "value": "9",
+          "label": "Pink"
+        }
+      ],
+      "help": "The colour of the grid and its pulses.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/pulse_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Pulse Grid Cell Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How large each square of the grid is.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/slideshow_order",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Image Slideshow Order",
+      "options": [
+        {
+          "value": "0",
+          "label": "Name"
+        },
+        {
+          "value": "1",
+          "label": "Random"
+        }
+      ],
+      "help": "Name shows the images in order, starting from a random one. Random picks any image each time.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/slideshow_time",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Image Slideshow Image Time",
+      "options": [
+        {
+          "value": "0",
+          "label": "Follow Speed"
+        },
+        {
+          "value": "1",
+          "label": "5 Seconds"
+        },
+        {
+          "value": "2",
+          "label": "10 Seconds"
+        },
+        {
+          "value": "3",
+          "label": "20 Seconds"
+        },
+        {
+          "value": "4",
+          "label": "30 Seconds"
+        },
+        {
+          "value": "5",
+          "label": "60 Seconds"
+        }
+      ],
+      "help": "How long each image stays on the screen. Follow Speed uses the Screensaver Speed setting.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/slideshow_transition",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Image Slideshow Transition",
+      "options": [
+        {
+          "value": "0",
+          "label": "Crossfade"
+        },
+        {
+          "value": "1",
+          "label": "Cut"
+        }
+      ],
+      "help": "How one image changes to the next.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/star_count",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Starfield Star Count",
+      "options": [
+        {
+          "value": "0",
+          "label": "Few"
+        },
+        {
+          "value": "1",
+          "label": "Normal"
+        },
+        {
+          "value": "2",
+          "label": "Many"
+        }
+      ],
+      "help": "How many stars fly past at once.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/star_trails",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Starfield Trails",
+      "options": [
+        {
+          "value": "0",
+          "label": "Automatic"
+        },
+        {
+          "value": "1",
+          "label": "Always"
+        },
+        {
+          "value": "2",
+          "label": "Never"
+        }
+      ],
+      "help": "Whether stars leave streaks behind them. Automatic only draws them at the very top speed.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/trace_colour",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Circuit Trace Colour",
+      "options": [
+        {
+          "value": "0",
+          "label": "Default"
+        },
+        {
+          "value": "1",
+          "label": "White"
+        },
+        {
+          "value": "2",
+          "label": "Red"
+        },
+        {
+          "value": "3",
+          "label": "Orange"
+        },
+        {
+          "value": "4",
+          "label": "Amber"
+        },
+        {
+          "value": "5",
+          "label": "Green"
+        },
+        {
+          "value": "6",
+          "label": "Cyan"
+        },
+        {
+          "value": "7",
+          "label": "Blue"
+        },
+        {
+          "value": "8",
+          "label": "Purple"
+        },
+        {
+          "value": "9",
+          "label": "Pink"
+        }
+      ],
+      "help": "The colour of the circuit traces.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/trace_count",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Circuit Trace Trace Count",
+      "options": [
+        {
+          "value": "0",
+          "label": "6"
+        },
+        {
+          "value": "1",
+          "label": "12"
+        },
+        {
+          "value": "2",
+          "label": "24"
+        }
+      ],
+      "help": "How many traces can be drawing at the same time.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/trace_size",
+      "group": "saver",
+      "type": "int",
+      "default": "1",
+      "label": "Circuit Trace Grid Size",
+      "options": [
+        {
+          "value": "0",
+          "label": "Small"
+        },
+        {
+          "value": "1",
+          "label": "Medium"
+        },
+        {
+          "value": "2",
+          "label": "Large"
+        }
+      ],
+      "help": "How far apart the circuit lines are.",
+      "module": "muxsaver"
+    },
+    {
+      "key": "settings/saver/video_shuffle",
+      "group": "saver",
+      "type": "int",
+      "default": "0",
+      "label": "Video Wallpaper Shuffle",
+      "options": [
+        {
+          "value": "0",
+          "label": "Disabled"
+        },
+        {
+          "value": "1",
+          "label": "Enabled"
+        }
+      ],
+      "help": "Play a different video each time the screensaver starts, chosen from the theme video and the videos in your MUOS/wallpaper folder.",
+      "module": "muxsaver"
     },
     {
       "key": "settings/theme/content_item_count",

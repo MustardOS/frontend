@@ -51,6 +51,8 @@ void set_bgm_volume(int volume);
 
 void play_random_bgm(void);
 
+void bgm_media_tick(void);
+
 void play_silence_bgm(void);
 
 int init_audio_backend(void);

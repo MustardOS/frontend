@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <common/runtime/log.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/base/options.h>
 #include <common/saver/bsod.h>
@@ -292,13 +293,32 @@ static void bsod_on_speed_changed(void *user) {
     (void) user;
 }
 
+static int bsod_screens(void) {
+    return saver_option(config.settings.saver.bsod_screens, 3, 0);
+}
+
+static void bsod_start_crash(const uint32_t now) {
+    mod.state = bsod_state_crash;
+    mod.phase_start = now;
+    mod.hold_ms = bsod_random_hold_ms(BSOD_CRASH_MAX_HOLD_MS);
+    bsod_build_crash_content(mod.renderer);
+}
+
+static void bsod_start_reboot(const uint32_t now) {
+    mod.state = bsod_state_reboot;
+    mod.phase_start = now;
+    mod.hold_ms = bsod_random_hold_ms(BSOD_REBOOT_MAX_HOLD_MS);
+    mod.cursor_on = 1;
+    mod.last_cursor_toggle = now;
+}
+
 static void bsod_on_idle_enter(void *user) {
     (void) user;
 
-    mod.state = bsod_state_crash;
-    mod.phase_start = SDL_GetTicks();
-    mod.hold_ms = bsod_random_hold_ms(BSOD_CRASH_MAX_HOLD_MS);
-    bsod_build_crash_content(mod.renderer);
+    if (bsod_screens() == 2)
+        bsod_start_reboot(SDL_GetTicks());
+    else
+        bsod_start_crash(SDL_GetTicks());
 }
 
 int bsod_init(SDL_Renderer *renderer, const int screen_w, const int screen_h) {
@@ -343,11 +363,10 @@ void bsod_update(void) {
 
     if (mod.state == bsod_state_crash) {
         if (elapsed >= mod.hold_ms) {
-            mod.state = bsod_state_reboot;
-            mod.phase_start = now;
-            mod.hold_ms = bsod_random_hold_ms(BSOD_REBOOT_MAX_HOLD_MS);
-            mod.cursor_on = 1;
-            mod.last_cursor_toggle = now;
+            if (bsod_screens() == 1)
+                bsod_start_crash(now);
+            else
+                bsod_start_reboot(now);
         }
         return;
     }
@@ -358,10 +377,10 @@ void bsod_update(void) {
     }
 
     if (elapsed >= mod.hold_ms) {
-        mod.state = bsod_state_crash;
-        mod.phase_start = now;
-        mod.hold_ms = bsod_random_hold_ms(BSOD_CRASH_MAX_HOLD_MS);
-        bsod_build_crash_content(mod.renderer);
+        if (bsod_screens() == 2)
+            bsod_start_reboot(now);
+        else
+            bsod_start_crash(now);
     }
 }
 
@@ -370,7 +389,10 @@ void bsod_render(SDL_Renderer *renderer) {
 
     if (mod.state == bsod_state_crash) {
         unsigned draw_calls = 3;
-        SDL_SetRenderDrawColor(renderer, BSOD_BG_R, BSOD_BG_G, BSOD_BG_B, 255);
+        if (saver_option(config.settings.saver.bsod_background, 2, 0))
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        else
+            SDL_SetRenderDrawColor(renderer, BSOD_BG_R, BSOD_BG_G, BSOD_BG_B, 255);
         SDL_RenderFillRect(renderer, NULL);
 
         const SDL_Rect title_rect = {mod.title_x, mod.title_y, mod.title_box_w, mod.title_box_h};

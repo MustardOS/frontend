@@ -78,4 +78,6 @@ int video_player_live_quality_available(void);
 int video_player_tracker_loop_available(void);
 int video_player_speed_available(void);
 int video_player_seek_available(void);
+int video_player_subtitles_available(void);
+void video_player_subtitle_select(int index);
 void video_player_live_quality_value(char *buffer, size_t size);

@@ -628,6 +628,7 @@ static const module_entry modules[] = {
     {"storage", "config", "muxstorage", muxstorage_main, NULL},
     {"backup", "config", "muxbackup", muxbackup_main, NULL},
     {"power", "config", "muxpower", muxpower_main, NULL},
+    {"saver", "power", "muxsaver", muxsaver_main, NULL},
     {"sort", "custom", "muxsort", muxsort_main, NULL},
     {"order", "explore", "muxorder", muxorder_main, NULL},
     {"kiosk", "launcher", "muxkiosk", muxkiosk_main, NULL},

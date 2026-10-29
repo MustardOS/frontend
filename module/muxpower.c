@@ -8,6 +8,8 @@ static mux_dialogue save_dlg;
 
 static mux_dialogue wr_dlg;
 
+static int options_pending;
+
 #define POWER(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(POWER_ELEMENTS) };
 #undef POWER
@@ -114,6 +116,16 @@ static int saver_preview_focus_active(void) {
     return saver_type_enabled() && (focused == ui_lbl_saver_type_power || focused == ui_lbl_saver_speed_power);
 }
 
+static int saver_options_focus(void) {
+    return saver_speed_enabled() && lv_group_get_focused(ui_group) == ui_lbl_saver_type_power;
+}
+
+static void open_saver_options(void) {
+    write_text_to_file(SAVER_OPTIONS_TYPE, "w", INT, get_selected_saver_type());
+    load_mux("saver");
+    mux_input_stop();
+}
+
 static void check_focus(void) {
     if (saver_speed_enabled()) {
         lv_obj_clear_flag(ui_pnl_saver_speed_power, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -127,6 +139,14 @@ static void check_focus(void) {
     } else {
         lv_obj_add_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (saver_options_focus()) {
+        lv_obj_clear_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 
@@ -415,8 +435,15 @@ static void handle_a(void) {
 
         if (opt == mux_unsaved_save) {
             if (!save_power_options()) {
+                options_pending = 0;
                 return;
             }
+        }
+
+        if (options_pending) {
+            options_pending = 0;
+            open_saver_options();
+            return;
         }
 
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
@@ -432,6 +459,7 @@ static void handle_b(void) {
     if (hold_call) return;
 
     if (dialogue_active(&save_dlg)) {
+        options_pending = 0;
         dialogue_mark_cancelled(&save_dlg);
         dialogue_dismiss(&save_dlg);
         return;
@@ -509,7 +537,21 @@ static void handle_x(void) {
 static void handle_y(void) {
     if (msgbox_active || hold_call || dialogue_active(&save_dlg)) return;
 
-    if (lv_group_get_focused(ui_group_value) == ui_dro_saver_speed_power) set_saver();
+    if (lv_group_get_focused(ui_group_value) == ui_dro_saver_speed_power) {
+        set_saver();
+        return;
+    }
+
+    if (!saver_options_focus()) return;
+
+    play_sound(snd_confirm);
+    if (any_power_modified()) {
+        options_pending = 1;
+        dialogue_guard_unsaved(&save_dlg, &theme, 1);
+        return;
+    }
+
+    open_saver_options();
 }
 
 static void handle_help(void) {
@@ -528,6 +570,8 @@ static void init_elements(void) {
                                   {ui_lbl_nav_b, lang.generic.back, 0},
                                   {ui_lbl_nav_x_glyph, "", 0},
                                   {ui_lbl_nav_x, lang.generic.preview, 0},
+                                  {ui_lbl_nav_y_glyph, "", 0},
+                                  {ui_lbl_nav_y, lang.generic.option, 0},
                                   {NULL, NULL, 0}});
 
     check_focus();
@@ -565,6 +609,17 @@ int muxpower_main(void) {
 
     init_timer(ui_gen_refresh_task, NULL);
     list_nav_next(0);
+
+    char *returning = file_exist(MUOS_PDI_LOAD) ? read_line_char_from(MUOS_PDI_LOAD, 1) : NULL;
+    if (returning && strcmp(returning, "saver") == 0) {
+        remove(MUOS_PDI_LOAD);
+        const int row = (int) lv_obj_get_index(ui_pnl_saver_type_power);
+        if (row > 0) {
+            gen_step_movement(row, +1, 2, 0, 0);
+            check_focus();
+        }
+    }
+    free(returning);
 
     mux_input_options input_opts = {
         .swap_axis = theme.misc.navigation_type == 1,

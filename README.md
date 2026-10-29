@@ -18,8 +18,7 @@ Everything else depends on which target you are building for.
 
 **Cross-compiling for ARM devices (normal workflow)**
 
-A pre-built aarch64 toolchain is expected at `$HOME/x-tools/aarch64-buildroot-linux-gnu/`. Other toolchain roots can be pointed to by setting the `XTOOL`
-environment variable. The toolchain must include `gcc`, `g++`, `ar`, `ld`, and `strip` for the target host tuple.
+A pre-built aarch64 toolchain is expected in a child directory of `XTOOL`, which defaults to `$HOME/x-tools`. The directory name is not significant: the build probes each compiler for its target tuple. Set `XDIR` to select a particular child directory when more than one compatible toolchain is present. The toolchain must include `gcc`, `g++`, `ar`, `ld`, and `strip` for the target host tuple.
 
 **Native builds for x86 / x86-64**
 

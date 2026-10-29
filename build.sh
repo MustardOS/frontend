@@ -1273,7 +1273,7 @@ DETECT_TOOLCHAIN
 if [ -z "${CROSS_COMPILE-}" ]; then
 	printf "%s%sError:%s no usable %s toolchain found under %s\n\n" "$C_BOLD" "$C_RED" "$C_RESET" "$DEVICE" "$XTOOL" 1>&2
 	printf "  A cross toolchain is expected at %s/<name>/bin/<tuple>-gcc,\n" "$XTOOL" 1>&2
-	printf "  for example %s/aarch64-buildroot-linux-gnu for H700 and A133P devices.\n\n" "$XTOOL" 1>&2
+	printf "  and is selected by its compiler target rather than its directory name.\n\n" 1>&2
 	printf "  Set XTOOL to another toolchain root, or XDIR to pick one directory inside it.\n" 1>&2
 	printf "  DEVICE=NATIVE builds for this machine with the system gcc instead.\n" 1>&2
 	printf "  README.md describes the prerequisites for each target.\n" 1>&2

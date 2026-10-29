@@ -23,6 +23,8 @@ int wasabi_assets_count(wasabi_asset_kind kind);
 const char *wasabi_asset_key(wasabi_asset_kind kind, int index);
 const char *wasabi_asset_label(wasabi_asset_kind kind, int index);
 const char *wasabi_asset_path(wasabi_asset_kind kind, int index);
+int wasabi_asset_viewport(wasabi_asset_kind kind, int index, int *x_offset, int *y_offset);
+int wasabi_asset_write_viewport(const char *image_path, int x_offset, int y_offset);
 const char *wasabi_asset_display_value(wasabi_asset_kind kind);
 int wasabi_asset_selected(wasabi_asset_kind kind);
 int wasabi_asset_find(wasabi_asset_kind kind, const char *key);

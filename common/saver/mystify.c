@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/mystify.h>
 
 #define MYST_VERT_COUNT   4
-#define MYST_TRAIL_LEN    24
+#define MYST_TRAIL_LEN    48
 #define MYST_POLY_MAX     4
 #define MYST_POLY_NORMAL  2
 #define MYST_VEL_BASE_DEN 90
@@ -42,6 +43,8 @@ typedef struct {
 
     myst_poly_t poly[MYST_POLY_MAX];
     int poly_count;
+    int shapes;
+    int trail_len;
 
     int32_t vel_fp_per_ms;
 
@@ -120,6 +123,7 @@ static void poly_spawn(myst_poly_t *p, int colour_offset) {
 
 static void seed_all(void) {
     int count = (mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) ? MYST_POLY_MAX : MYST_POLY_NORMAL;
+    if (mod.shapes > 0) count = mod.shapes;
     mod.poly_count = count;
 
     for (int i = 0; i < MYST_POLY_MAX; i++)
@@ -154,6 +158,10 @@ int mystify_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     (void) renderer;
 
     saver_init_base(&mod.base, screen_w, screen_h, "Mystify", 255, 255, 255, on_speed_changed, on_idle_enter, &mod);
+
+    static const int trails[] = {12, 24, 48};
+    mod.shapes = saver_option(config.settings.saver.mystify_shapes, MYST_POLY_MAX + 1, 0);
+    mod.trail_len = trails[saver_option(config.settings.saver.mystify_trail, 3, 1)];
 
     on_speed_changed(NULL);
     seed_all();
@@ -202,7 +210,7 @@ static void integrate_poly(myst_poly_t *p, uint32_t elapsed, int push_snapshot) 
     }
 
     if (push_snapshot) {
-        p->trail_head = (uint8_t) ((p->trail_head + 1) % MYST_TRAIL_LEN);
+        p->trail_head = (uint8_t) ((p->trail_head + 1) % mod.trail_len);
 
         for (int i = 0; i < MYST_VERT_COUNT; i++) {
             p->trail_x[p->trail_head][i] = (int16_t) (p->vert[i].fx >> SAVER_FRAME_SHF);
@@ -213,7 +221,7 @@ static void integrate_poly(myst_poly_t *p, uint32_t elapsed, int push_snapshot) 
         p->trail_g[p->trail_head] = p->g;
         p->trail_b[p->trail_head] = p->b;
 
-        if (p->trail_count < MYST_TRAIL_LEN) p->trail_count++;
+        if (p->trail_count < mod.trail_len) p->trail_count++;
     }
 
     p->colour_remaining_ms -= (int32_t) elapsed;
@@ -271,14 +279,14 @@ void mystify_render(SDL_Renderer *renderer) {
         int count = p->trail_count;
         int oldest_idx;
 
-        if (count == MYST_TRAIL_LEN) {
-            oldest_idx = (p->trail_head + 1) % MYST_TRAIL_LEN;
+        if (count == mod.trail_len) {
+            oldest_idx = (p->trail_head + 1) % mod.trail_len;
         } else {
             oldest_idx = 0;
         }
 
         for (int t = 0; t < count; t++) {
-            int idx = (oldest_idx + t) % MYST_TRAIL_LEN;
+            int idx = (oldest_idx + t) % mod.trail_len;
 
             int factor = (t * 1024) / count;
             int alpha = 80 + (factor * 150) / 1024;

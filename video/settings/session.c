@@ -107,6 +107,11 @@ static const wasabi_video_config defaults = {
     .sleep = 0,
     .idle_screensaver = 0,
     .auto_play = 1,
+    .subtitle_size = 1,
+    .subtitle_style = 0,
+    .subtitle_position = 0,
+    .subtitle_delay = 0,
+    .background_play = 0,
     .hotkey_direct_mask = WASABI_HOTKEY_DIRECT_DEFAULT,
     .hotkey_pause = mux_input_a,
     .hotkey_save_bookmark = mux_input_r2,
@@ -201,6 +206,11 @@ static const session_field fields[] = {
     SESSION_I16(sleep),
     SESSION_I16(idle_screensaver),
     SESSION_I16(auto_play),
+    SESSION_I16(subtitle_size),
+    SESSION_I16(subtitle_style),
+    SESSION_I16(subtitle_position),
+    SESSION_I16(subtitle_delay),
+    SESSION_I16(background_play),
     SESSION_I16(hotkey_direct_mask),
     SESSION_I16(hotkey_pause),
     SESSION_I16(hotkey_save_bookmark),
@@ -361,6 +371,11 @@ static void validate_settings(void) {
     VALIDATE(sleep, 0, 1);
     VALIDATE(idle_screensaver, 0, 1);
     VALIDATE(auto_play, 0, 1);
+    VALIDATE(subtitle_size, 0, 2);
+    VALIDATE(subtitle_style, 0, 1);
+    VALIDATE(subtitle_position, 0, 1);
+    VALIDATE(subtitle_delay, -600, 600);
+    VALIDATE(background_play, 0, 1);
     VALIDATE(hotkey_direct_mask, 0, (1 << wasabi_hotkey_count) - 1);
     if (config.wasabi.live_quality < 0 || config.wasabi.live_quality > 3)
         config.wasabi.live_quality = base_live_quality;

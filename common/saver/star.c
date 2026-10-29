@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/star.h>
@@ -11,7 +12,7 @@
 
 #define STAR_MAX_SIZE  6
 #define STAR_TRAIL_LEN 8
-#define STAR_COUNT     192
+#define STAR_COUNT     384
 #define STAR_SPREAD    256
 
 #define STAR_DRIFTER_COUNT 1024
@@ -38,6 +39,8 @@ typedef struct {
     saver_state_t base;
     star_t stars[STAR_COUNT];
     drifter_t drifter[STAR_DRIFTER_COUNT];
+    int star_count;
+    int trails;
     int focal;
     int32_t z_step_per_ms;
     int32_t drifter_speed_fp_per_ms;
@@ -199,7 +202,7 @@ static void seed_drifters(void) {
 }
 
 static void seed_all(void) {
-    for (int i = 0; i < STAR_COUNT; i++)
+    for (int i = 0; i < mod.star_count; i++)
         star_reset(&mod.stars[i], 1);
     seed_drifters();
 }
@@ -230,6 +233,10 @@ int star_init(const SDL_Renderer *renderer, const int screen_w, const int screen
 
     saver_init_base(&mod.base, screen_w, screen_h, "Starfield", 255, 255, 255, on_speed_changed, on_idle_enter, &mod);
 
+    static const int counts[] = {96, 192, 384};
+    mod.star_count = counts[saver_option(config.settings.saver.star_count, 3, 1)];
+    mod.trails = saver_option(config.settings.saver.star_trails, 3, 0);
+
     on_speed_changed(NULL);
     seed_all();
 
@@ -255,7 +262,7 @@ void star_update(void) {
     const int half_w = mod.base.screen_w / 2;
     const int half_h = mod.base.screen_h / 2;
 
-    for (int i = 0; i < STAR_COUNT; i++) {
+    for (int i = 0; i < mod.star_count; i++) {
         star_t *s = &mod.stars[i];
 
         s->z -= dz;
@@ -332,9 +339,9 @@ void star_render(SDL_Renderer *renderer) {
     int32_t z_span_fp = z_far_fp - z_near_fp;
     if (z_span_fp <= 0) z_span_fp = 1;
 
-    const int draw_trails = mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD;
+    const int draw_trails = mod.trails == 1 || (!mod.trails && mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD);
 
-    for (int i = 0; i < STAR_COUNT; i++) {
+    for (int i = 0; i < mod.star_count; i++) {
         const star_t *s = &mod.stars[i];
         if (s->trail_count == 0) continue;
 

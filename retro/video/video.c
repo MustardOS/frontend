@@ -76,6 +76,7 @@ static int output_canvas_h = 0;
 static SDL_Texture *crt_snapshot_tex = NULL;
 static uint32_t crt_power_off_start = 0;
 static uint32_t crt_power_on_start = 0;
+static uint32_t crt_degauss_start = 0;
 
 static int frame_dirty = 0;
 static int frame_skip = 0;
@@ -629,11 +630,21 @@ static void draw_video_content(SDL_Renderer *renderer, const int physical_output
 }
 
 static void draw_video_background_logical(SDL_Renderer *renderer, const int physical_output) {
-    if ((crt_power_off_start || crt_power_on_start) && crt_snapshot_tex) {
+    if ((crt_power_off_start || crt_power_on_start || crt_degauss_start) && crt_snapshot_tex) {
         SDL_Rect frame = {0, 0, device.mux.width, device.mux.height};
         if (physical_output) {
             const SDL_Rect logical_frame = frame;
             display_map_logical_rect(&logical_frame, &frame);
+        }
+        if (crt_degauss_start) {
+            const uint32_t now = SDL_GetTicks();
+            if (now - crt_degauss_start < crt_effect_degauss_duration()) {
+                crt_effect_render_degauss(renderer, &frame, crt_degauss_start, now, crt_snapshot_tex);
+                return;
+            }
+            crt_degauss_start = 0;
+            draw_crt_snapshot(renderer, &frame, crt_snapshot_tex);
+            return;
         }
         if (crt_power_on_start) {
             crt_effect_render_power_on(
@@ -833,8 +844,10 @@ static void recompute_dest_rect(void) {
     if (dest_rect.w < 1) dest_rect.w = 1;
     if (dest_rect.h < 1) dest_rect.h = 1;
 
-    dest_rect.x = (canvas_w - dest_rect.w) / 2 + session_settings.viewport_offset_x;
-    dest_rect.y = (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y;
+    dest_rect.x =
+        (canvas_w - dest_rect.w) / 2 + session_settings.viewport_offset_x + overlay_bridge_viewport_offset_x();
+    dest_rect.y =
+        (canvas_h - dest_rect.h) / 2 + session_settings.viewport_offset_y + overlay_bridge_viewport_offset_y();
 
     apply_viewport_crop(canvas_w, canvas_h);
 }
@@ -1085,6 +1098,20 @@ int video_bridge_power_off(void) {
     return 1;
 }
 
+int video_bridge_degauss(void) {
+    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start || crt_power_on_start
+        || crt_degauss_start)
+        return 0;
+    if (!frame_tex && !hw_render_bridge_active()) return 0;
+
+    SDL_Renderer *renderer = display_get_renderer();
+    if (!renderer || !capture_crt_snapshot(renderer)) return 0;
+
+    crt_degauss_start = SDL_GetTicks();
+    if (!crt_degauss_start) crt_degauss_start = 1;
+    return 1;
+}
+
 void video_bridge_set_core_aspect(const double aspect_ratio) {
     core_aspect_ratio = aspect_ratio;
     recompute_dest_rect();
@@ -1143,6 +1170,8 @@ void video_bridge_shutdown(void) {
         crt_snapshot_tex = NULL;
     }
     crt_power_off_start = 0;
+    crt_power_on_start = 0;
+    crt_degauss_start = 0;
 
     free(raw_frame_buf);
     raw_frame_buf = NULL;

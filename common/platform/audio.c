@@ -4,6 +4,7 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include <common/platform/media.h>
 #include <common/platform/audio.h>
 #include <common/config/config.h>
 #include <common/display/theme.h>
@@ -122,8 +123,14 @@ void set_bgm_volume(int volume) {
     }
 }
 
+static int bgm_held;
+
 void play_random_bgm(void) {
     if (!fe_bgm || bgm_file_count == 0) return;
+    if (media_background_active()) {
+        bgm_held = 1;
+        return;
+    }
 
     static int seeded = 0;
     if (!seeded) {
@@ -153,6 +160,24 @@ void play_random_bgm(void) {
         is_silence_playing = 0;
         Mix_VolumeMusic(config.settings.general.bgmvol * MIX_MAX_VOLUME / 100);
         Mix_PlayMusic(current_bgm, 1);
+    }
+}
+
+void bgm_media_tick(void) {
+    if (!fe_bgm) {
+        bgm_held = 0;
+        return;
+    }
+    if (media_background_active()) {
+        if (current_bgm) {
+            bgm_held = 1;
+            free_bgm();
+        }
+        return;
+    }
+    if (bgm_held && !Mix_PlayingMusic()) {
+        bgm_held = 0;
+        play_random_bgm();
     }
 }
 

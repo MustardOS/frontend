@@ -242,7 +242,8 @@
     CUSTOM(music_volume, "musicvolume")                                                                                \
     CUSTOM(sound, "sound")                                                                                             \
     CUSTOM(sound_volume, "soundvolume")                                                                                \
-    CUSTOM(chime, "chime")
+    CUSTOM(chime, "chime")                                                                                             \
+    CUSTOM(track_notice, "tracknotice")
 
 #define DANGER_ELEMENTS                                                                                                \
     DANGER(kernel_log, "kernellog")                                                                                    \

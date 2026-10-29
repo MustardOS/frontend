@@ -10,6 +10,7 @@
 #include <common/runtime/log.h>
 #include <common/runtime/perf.h>
 #include <common/base/options.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/display/language.h>
 #include <common/saver/slideshow.h>
@@ -46,12 +47,29 @@ static float randf01(void) {
     return (float) saver_rand_range(10000) / 10000.0f;
 }
 
+static uint32_t fade_ms(void) {
+    return saver_option(config.settings.saver.slideshow_transition, 2, 0) ? 1u : CROSSFADE_MS;
+}
+
 static uint32_t compute_slide_ms(void) {
-    int speed = mod.base.speed;
-    if (speed <= 0) speed = SAVER_SPEED_DEFAULT;
-    const uint32_t ms = 900000u / (uint32_t) speed;
-    const uint32_t min_ms = CROSSFADE_MS + 1000u;
+    static const uint32_t seconds[] = {0, 5, 10, 20, 30, 60};
+    const int choice = saver_option(config.settings.saver.slideshow_time, 6, 0);
+    uint32_t ms = seconds[choice] * 1000u;
+    if (!choice) {
+        int speed = mod.base.speed;
+        if (speed <= 0) speed = SAVER_SPEED_DEFAULT;
+        ms = 900000u / (uint32_t) speed;
+    }
+    const uint32_t min_ms = fade_ms() + 1000u;
     return ms > min_ms ? ms : min_ms;
+}
+
+static int following_index(void) {
+    if (mod.path_count < 2) return 0;
+    if (!saver_option(config.settings.saver.slideshow_order, 2, 0)) return (mod.current_idx + 1) % mod.path_count;
+    int next = (int) saver_rand_range(mod.path_count - 1);
+    if (next >= mod.current_idx) next++;
+    return next;
 }
 
 static void setup_kb(slide_t *s, const int screen_w, const int screen_h) {
@@ -267,10 +285,10 @@ void slideshow_update(void) {
     if (mod.path_count == 0 || !mod.current.tex) return;
 
     const uint32_t elapsed = now - mod.current.start_ms;
-    const uint32_t fade_start = mod.slide_display_ms > CROSSFADE_MS ? mod.slide_display_ms - CROSSFADE_MS : 0;
+    const uint32_t fade_start = mod.slide_display_ms > fade_ms() ? mod.slide_display_ms - fade_ms() : 0;
 
     if (!mod.fading && elapsed >= fade_start) {
-        mod.next_idx = (mod.current_idx + 1) % mod.path_count;
+        mod.next_idx = following_index();
         load_slide(&mod.next, mod.renderer, mod.paths[mod.next_idx], mod.base.screen_w, mod.base.screen_h);
         mod.fading = 1;
         mod.fade_t = 0.0f;
@@ -278,7 +296,7 @@ void slideshow_update(void) {
 
     if (mod.fading) {
         const uint32_t fade_elapsed = elapsed > fade_start ? elapsed - fade_start : 0;
-        mod.fade_t = (float) fade_elapsed / (float) CROSSFADE_MS;
+        mod.fade_t = (float) fade_elapsed / (float) fade_ms();
 
         if (mod.fade_t >= 1.0f) {
             free_slide(&mod.current);

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/pulse.h>
@@ -112,6 +113,8 @@ static void rebuild_grid(void) {
 
     if (mod.cell < PULSE_MIN_CELL) mod.cell = PULSE_MIN_CELL;
     if (mod.cell > PULSE_MAX_CELL) mod.cell = PULSE_MAX_CELL;
+    mod.cell = saver_option_scale(mod.cell, config.settings.saver.pulse_size);
+    if (mod.cell < 6) mod.cell = 6;
 
     mod.cols = (mod.base.screen_w + mod.cell - 1) / mod.cell;
     mod.rows = (mod.base.screen_h + mod.cell - 1) / mod.cell;
@@ -145,6 +148,7 @@ int pulse_init(const SDL_Renderer *renderer, const int screen_w, const int scree
     (void) renderer;
 
     saver_init_base(&mod.base, screen_w, screen_h, "Pulse Grid", 153, 255, 220, on_speed_changed, on_idle_enter, &mod);
+    saver_apply_colour(&mod.base, config.settings.saver.pulse_colour);
 
     rebuild_grid();
     seed_all();

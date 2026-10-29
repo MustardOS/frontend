@@ -115,3 +115,11 @@ int saver_snapshot_luma(const saver_snapshot_t *snapshot, int x0, int y0, int x1
 int saver_speed_scale_q8(const saver_state_t *s);
 
 void saver_hsv(float hue, float sat, float val, uint8_t *out);
+
+#define SAVER_COLOUR_COUNT 10
+
+int saver_option(int value, int count, int fallback);
+
+int saver_option_scale(int value, int index);
+
+void saver_apply_colour(saver_state_t *s, int index);

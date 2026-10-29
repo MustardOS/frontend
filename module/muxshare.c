@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/platform/media.h>
 #include <common/platform/cpu_profile.h>
 #include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
@@ -784,7 +785,23 @@ void adjust_gen_panel(void) {
     if (config.visual.box_art == 3) lv_obj_move_foreground(ui_pnl_box);
 }
 
+static void media_background_tick(void) {
+    static uint32_t deadline;
+    const uint32_t now = SDL_GetTicks();
+    if (deadline && !SDL_TICKS_PASSED(now, deadline)) return;
+    deadline = now + 1000;
+
+    bgm_media_tick();
+    char track[512];
+    if (media_track_changed(track, sizeof(track)) && config.settings.general.track_notice) {
+        char message[MAX_BUFFER_SIZE];
+        snprintf(message, sizeof(message), "%s: %s", lang.muxmedia.now_playing, track);
+        toast_message(message, tst_wait_l);
+    }
+}
+
 void ui_gen_refresh_task(lv_timer_t *timer __attribute__((unused))) {
+    media_background_tick();
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, wall_general);
         adjust_gen_panel();

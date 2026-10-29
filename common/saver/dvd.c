@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/dvd.h>
@@ -18,6 +19,8 @@ typedef struct {
 
     int32_t max_fx;
     int32_t max_fy;
+
+    int colour_mode;
 } dvd_module_t;
 
 static dvd_module_t mod = {0};
@@ -122,6 +125,12 @@ int dvd_init(SDL_Renderer *renderer, const char *png_path, int screen_w, int scr
 
     SDL_QueryTexture(mod.tex, NULL, NULL, &mod.rect.w, &mod.rect.h);
 
+    mod.colour_mode = saver_option(config.settings.saver.dvd_colour, 3, 0);
+    mod.rect.w = saver_option_scale(mod.rect.w, config.settings.saver.dvd_size);
+    mod.rect.h = saver_option_scale(mod.rect.h, config.settings.saver.dvd_size);
+    if (mod.rect.w < 1) mod.rect.w = 1;
+    if (mod.rect.h < 1) mod.rect.h = 1;
+
     saver_init_base(
         &mod.base, screen_w, screen_h, "DVD Bounce", 255, 255, 255, dvd_on_speed_changed, dvd_on_idle_enter, &mod
     );
@@ -163,7 +172,14 @@ void dvd_update(void) {
     const int bounced_y = dvd_advance_axis(&mod.fy, &mod.vy, mod.max_fy, step);
     const int bounced = bounced_x || bounced_y;
 
-    if (bounced && mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD) dvd_bounce_colour();
+    if (bounced && (mod.colour_mode == 1 || (!mod.colour_mode && mod.base.speed >= SAVER_SPEED_COLOUR_THRESHOLD)))
+        dvd_bounce_colour();
+
+    if (mod.colour_mode == 2 && mod.tex) {
+        uint8_t rgb[3];
+        saver_hsv((float) (now % 12000u) / 12000.0f, 0.45f, 1.0f, rgb);
+        SDL_SetTextureColorMod(mod.tex, rgb[0], rgb[1], rgb[2]);
+    }
 
     int x = mod.fx >> SAVER_FRAME_SHF;
     int y = mod.fy >> SAVER_FRAME_SHF;

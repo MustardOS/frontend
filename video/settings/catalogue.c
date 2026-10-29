@@ -42,6 +42,8 @@ typedef struct {
     char url[MAX_BUFFER_SIZE];
     char sha256[SHA256_DIGEST_LENGTH * 2 + 1];
     char target[PATH_MAX];
+    int x_offset;
+    int y_offset;
 } catalogue_variant;
 
 typedef struct {
@@ -249,6 +251,9 @@ static int parse_manifest(void) {
         if (active_kind == wasabi_asset_overlay) {
             const struct json images = json_object_get(node, "images");
             const size_t image_count = json_type(images) == JSON_ARRAY ? json_array_count(images) : 0;
+            int default_x_offset;
+            int default_y_offset;
+            if (!manifest_json_viewport(node, 0, 0, &default_x_offset, &default_y_offset)) goto failed;
             char wanted[32];
             snprintf(wanted, sizeof(wanted), "%dx%d", device.screen.width, device.screen.height);
             int found = 0;
@@ -259,6 +264,9 @@ static int parse_manifest(void) {
                     && manifest_json_string(candidate, "resolution", variant->resolution, sizeof(variant->resolution))
                     && manifest_json_string(candidate, "url", variant->url, sizeof(variant->url))
                     && manifest_json_string(candidate, "sha256", variant->sha256, sizeof(variant->sha256))
+                    && manifest_json_viewport(
+                        candidate, default_x_offset, default_y_offset, &variant->x_offset, &variant->y_offset
+                    )
                     && manifest_https_url(variant->url) && manifest_sha256_valid(variant->sha256)) {
                     item->variant_count++;
                     if (strcmp(variant->resolution, wanted) == 0) {
@@ -360,6 +368,10 @@ static void package_complete(const int result) {
     if (valid) {
         create_directories(target, 1);
         valid = rename(package_path, target) == 0;
+        if (valid && active_kind == wasabi_asset_overlay && package_variant >= 0) {
+            const catalogue_variant *variant = &item->variants[package_variant];
+            valid = wasabi_asset_write_viewport(target, variant->x_offset, variant->y_offset);
+        }
         if (valid) {
             char directory[PATH_MAX];
             snprintf(directory, sizeof(directory), "%s", target);

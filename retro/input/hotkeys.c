@@ -17,8 +17,9 @@
 #include "nav_repeat.h"
 #include "../settings/settings.h"
 
-#define TOAST_FOCUS_MS 1200
-#define SPEED_RAMP_MS  350.0
+#define TOAST_FOCUS_MS  1200
+#define SPEED_RAMP_MS   350.0
+#define DEGAUSS_HOLD_MS 2000
 
 static int menu_held = 0;
 static int menu_combo_consumed = 0;
@@ -32,6 +33,8 @@ static int content_paused = 0;
 static int quit_requested = 0;
 static int manual_requested = 0;
 static int held_speed = 0;
+static uint32_t degauss_hold_started = 0;
+static int degauss_hold_fired = 0;
 static double speed_current = 1.0;
 static double speed_start = 1.0;
 static double speed_target = 1.0;
@@ -276,6 +279,8 @@ void hotkeys_pause_menu_opened(const int preserve_speed) {
         slow_motion_active = 0;
     }
     held_speed = 0;
+    degauss_hold_started = 0;
+    degauss_hold_fired = 0;
     content_paused = 0;
     const double target = fast_forward_active  ? session_settings_ff_speed_value(session_settings.ff_speed)
                           : slow_motion_active ? session_settings_slowmo_speed_value(session_settings.slowmo_speed)
@@ -297,6 +302,22 @@ int hotkeys_task(void) {
     const uint64_t primary_mask = input_bridge_primary_pressed_mask();
     const int menu_now = (primary_mask & BIT(mux_input_menu)) != 0;
     const int a_now = (primary_mask & BIT(mux_input_a)) != 0;
+    const int degauss_held = (primary_mask & (BIT(mux_input_start) | BIT(mux_input_select)))
+                             == (BIT(mux_input_start) | BIT(mux_input_select));
+
+    if (!degauss_held) {
+        degauss_hold_started = 0;
+        degauss_hold_fired = 0;
+    } else if (!degauss_hold_started) {
+        degauss_hold_started = SDL_GetTicks();
+    } else if (!degauss_hold_fired && SDL_GetTicks() - degauss_hold_started >= DEGAUSS_HOLD_MS) {
+        degauss_hold_fired = 1;
+        video_bridge_degauss();
+    }
+    if (degauss_hold_fired) {
+        input_bridge_suppress(mux_input_start);
+        input_bridge_suppress(mux_input_select);
+    }
 
     int hotkey_now[hotkey_binding_count];
     for (int binding = 0; binding < hotkey_binding_count; binding++) {

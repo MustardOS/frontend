@@ -3,6 +3,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <common/runtime/log.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/saver/moss.h>
 
@@ -75,7 +76,9 @@ static void measure_food(void) {
 }
 
 static void pick_colours(void) {
-    const float hue = (float) saver_rand_range(1000) / 1000.0f;
+    static const float hues[] = {0.0f, 0.30f, 0.18f, 0.07f, 0.55f};
+    const int colour = saver_option(config.settings.saver.moss_colour, 5, 0);
+    const float hue = colour ? hues[colour] : (float) saver_rand_range(1000) / 1000.0f;
     for (int s = 0; s < MOSS_SHADES; s++) {
         const float step = (float) s / (float) (MOSS_SHADES - 1);
         saver_hsv(hue, 0.75f - step * 0.15f, 0.32f + step * 0.38f, mod.live[s]);
@@ -117,7 +120,7 @@ int moss_init(SDL_Renderer *renderer, const int screen_w, const int screen_h) {
     mod.renderer = renderer;
     saver_init_base(&mod.base, screen_w, screen_h, "Pixel Moss", 80, 150, 60, NULL, on_idle_enter, &mod);
 
-    mod.cell = screen_w / 64;
+    mod.cell = saver_option_scale(screen_w / 64, config.settings.saver.moss_size);
     if (mod.cell < 4) mod.cell = 4;
     mod.cols = (screen_w + mod.cell - 1) / mod.cell;
     mod.rows = (screen_h + mod.cell - 1) / mod.cell;
@@ -299,7 +302,7 @@ void moss_render(SDL_Renderer *renderer) {
         }
     }
 
-    if (mod.phase == moss_bloom) {
+    if (mod.phase == moss_bloom && saver_option(config.settings.saver.moss_flowers, 2, 1)) {
         const int count = mod.cols * mod.rows;
         const int dot = mod.cell / 2 > 2 ? mod.cell / 2 : 2;
         for (int f = 0; f < MOSS_FLOWERS; f++) {

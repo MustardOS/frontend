@@ -3,6 +3,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <common/display/theme.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/blockfall.h>
@@ -190,7 +191,7 @@ static void ai_step(void) {
 }
 
 static void recompute_layout(void) {
-    int cell = BLOCKFALL_TARGET_CELL;
+    int cell = saver_option_scale(BLOCKFALL_TARGET_CELL, config.settings.saver.blockfall_size);
 
     int cols = mod.base.screen_w / cell;
     int rows = mod.base.screen_h / cell;
@@ -239,6 +240,7 @@ static void on_idle_enter(void *user) {
 
 int blockfall_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     saver_init_base(&mod.base, screen_w, screen_h, "Block Fall", 153, 255, 220, on_speed_changed, on_idle_enter, &mod);
+    saver_apply_colour(&mod.base, config.settings.saver.blockfall_colour);
 
     refresh_speed_factor();
     recompute_layout();

@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <SDL2/SDL.h>
 #include <common/display/theme.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/maze.h>
@@ -350,6 +351,8 @@ static int maze_alloc(void) {
 
     if (mod.cell_size < MAZE_MIN_CELL) mod.cell_size = MAZE_MIN_CELL;
     if (mod.cell_size > MAZE_MAX_CELL) mod.cell_size = MAZE_MAX_CELL;
+    mod.cell_size = saver_option_scale(mod.cell_size, config.settings.saver.maze_size);
+    if (mod.cell_size < 6) mod.cell_size = 6;
 
     mod.cols = mod.base.screen_w / mod.cell_size;
     mod.rows = mod.base.screen_h / mod.cell_size;
@@ -1360,7 +1363,7 @@ void maze_render(SDL_Renderer *renderer) {
     maze_render_trail(renderer, &mod.runner, MAZE_RUNNER_R, MAZE_RUNNER_G, MAZE_RUNNER_B);
     maze_render_trail(renderer, &mod.hunter, MAZE_HUNTER_R, MAZE_HUNTER_G, MAZE_HUNTER_B);
 
-    if (mod.chase_active) maze_render_hunter_radar(renderer);
+    if (mod.chase_active && saver_option(config.settings.saver.maze_radar, 2, 1)) maze_render_hunter_radar(renderer);
 
     if (mod.runner_panicking) {
         int panic_x;

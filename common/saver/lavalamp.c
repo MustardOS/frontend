@@ -2,10 +2,11 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <common/runtime/log.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/saver/lavalamp.h>
 
-#define LAVA_BLOBS       9
+#define LAVA_BLOBS       12
 #define LAVA_COLOURS     3
 #define LAVA_SHADES      3
 #define LAVA_MAX_CELLS   12000
@@ -48,9 +49,11 @@ static void seed_blobs(void) {
     const float h = (float) mod.base.screen_h;
     const float base = (w < h ? w : h) / 9.0f;
 
-    const float hue = frand(0.0f, 1.0f);
+    static const float hues[] = {0.0f, 0.1f, 0.55f, 0.27f, 0.85f};
+    const int colour = saver_option(config.settings.saver.lavalamp_colour, 5, 0);
+    const float hue = colour ? hues[colour] : frand(0.0f, 1.0f);
     for (int c = 0; c < LAVA_COLOURS; c++) {
-        const float shift = frand(0.08f, 0.33f) * (float) c;
+        const float shift = (colour ? frand(0.02f, 0.06f) : frand(0.08f, 0.33f)) * (float) c;
         float tone = hue + shift;
         if (tone >= 1.0f) tone -= 1.0f;
         saver_hsv(tone, frand(0.6f, 0.95f), frand(0.75f, 0.95f), mod.palette[c]);
@@ -59,7 +62,9 @@ static void seed_blobs(void) {
     if (glow >= 1.0f) glow -= 1.0f;
     saver_hsv(glow, 0.6f, 0.18f, mod.glow);
 
-    mod.blobs = 5 + (int) saver_rand_range(LAVA_BLOBS - 4);
+    static const int counts[] = {0, 6, 9, 12};
+    const int count = saver_option(config.settings.saver.lavalamp_count, 4, 0);
+    mod.blobs = count ? counts[count] : 5 + (int) saver_rand_range(5);
     for (int i = 0; i < mod.blobs; i++) {
         lava_blob_t *b = &mod.blob[i];
         b->x = frand(w * 0.15f, w * 0.85f);

@@ -19,6 +19,7 @@ void video_render_set_static(int active);
 int video_render_static_tick(void);
 void video_render_seek_effect(int direction);
 int video_render_crt_power_off(void);
+int video_render_crt_degauss(void);
 int video_render_crt_tick(void);
 void video_render_seek_hold(int direction);
 void video_render_seek_release(void);

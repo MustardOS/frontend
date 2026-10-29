@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -263,6 +264,16 @@ const char *wasabi_setting_label(const wasabi_setting setting) {
             return lang.muxretro.settings_screen.audio_filter;
         case wasabi_setting_rate_control:
             return lang.muxretro.settings_screen.audio_rate_control;
+        case wasabi_setting_subtitle_size:
+            return lang.muxmedia.subtitle_size;
+        case wasabi_setting_subtitle_style:
+            return lang.muxmedia.subtitle_style;
+        case wasabi_setting_subtitle_position:
+            return lang.muxmedia.subtitle_position;
+        case wasabi_setting_subtitle_delay:
+            return lang.muxmedia.subtitle_delay;
+        case wasabi_setting_background_play:
+            return lang.muxmedia.keep_playing;
         case wasabi_setting_gapless:
             return lang.muxmedia.gapless;
         case wasabi_setting_crossfade:
@@ -335,6 +346,10 @@ const char *wasabi_setting_glyph(const wasabi_setting setting) {
         "integerscale",
         "texturefilter",
         "border",
+        "subtitle",
+        "subtitle",
+        "subtitle",
+        "subtitle",
         "border",
         "filter",
         "shader",
@@ -370,6 +385,7 @@ const char *wasabi_setting_glyph(const wasabi_setting setting) {
         "audio",
         "playtime",
         "repeat",
+        "background",
         "fastforward",
         "fastforward",
         "slowmotion",
@@ -463,6 +479,35 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
             snprintf(value, size, "%s", names[config.video.border_colour]);
             break;
         }
+        case wasabi_setting_subtitle_size: {
+            const char *names[] = {lang.muxmedia.subtitle_small, lang.generic.medium, lang.muxmedia.subtitle_large};
+            snprintf(value, size, "%s", names[config.video.subtitle_size]);
+            break;
+        }
+        case wasabi_setting_subtitle_style:
+            snprintf(
+                value, size, "%s",
+                config.video.subtitle_style ? lang.muxmedia.subtitle_box : lang.muxmedia.subtitle_outline
+            );
+            break;
+        case wasabi_setting_subtitle_position:
+            snprintf(
+                value, size, "%s",
+                config.video.subtitle_position ? lang.muxmedia.subtitle_screen : lang.muxmedia.subtitle_picture
+            );
+            break;
+        case wasabi_setting_subtitle_delay:
+            snprintf(
+                value, size, "%s%d.%d s",
+                config.video.subtitle_delay > 0   ? "+"
+                : config.video.subtitle_delay < 0 ? "-"
+                                                  : "",
+                abs(config.video.subtitle_delay) / 10, abs(config.video.subtitle_delay) % 10
+            );
+            break;
+        case wasabi_setting_background_play:
+            snprintf(value, size, "%s", config.video.background_play ? lang.generic.enabled : lang.generic.disabled);
+            break;
         case wasabi_setting_colour_filter:
             snprintf(value, size, "%s", wasabi_asset_display_value(wasabi_asset_filter));
             break;
@@ -668,7 +713,7 @@ void wasabi_setting_value(const wasabi_setting setting, char *value, const size_
 }
 
 int wasabi_setting_can_change(const wasabi_setting setting) {
-    if (setting >= wasabi_setting_scaling && setting <= wasabi_setting_border) return 1;
+    if (setting >= wasabi_setting_scaling && setting <= wasabi_setting_subtitle_delay) return 1;
     if (setting >= wasabi_setting_brightness && setting <= wasabi_setting_gamma) return 1;
     if (setting == wasabi_setting_overlay_source || setting == wasabi_setting_overlay_pattern
         || setting == wasabi_setting_overlay_opacity)
@@ -773,6 +818,21 @@ int wasabi_setting_cycle(const wasabi_setting setting, const int direction) {
             break;
         case wasabi_setting_border:
             SETTING(border_colour, "border_colour", cycle(config.video.border_colour, direction, wasabi_border_count));
+            break;
+        case wasabi_setting_subtitle_size:
+            SETTING(subtitle_size, "subtitle_size", cycle(config.video.subtitle_size, direction, 3));
+            break;
+        case wasabi_setting_subtitle_style:
+            SETTING(subtitle_style, "subtitle_style", !config.video.subtitle_style);
+            break;
+        case wasabi_setting_subtitle_position:
+            SETTING(subtitle_position, "subtitle_position", !config.video.subtitle_position);
+            break;
+        case wasabi_setting_subtitle_delay:
+            SETTING(subtitle_delay, "subtitle_delay", step(config.video.subtitle_delay, direction, 1, -600, 600));
+            break;
+        case wasabi_setting_background_play:
+            SETTING(background_play, "background_play", !config.video.background_play);
             break;
         case wasabi_setting_brightness:
             SETTING(brightness, "brightness", step(config.video.brightness, direction, 5, -100, 100));

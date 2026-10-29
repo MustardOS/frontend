@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
+#include <common/config/config.h>
 #include <common/runtime/log.h>
 #include <common/saver/saver.h>
 #include <common/saver/matrix.h>
@@ -79,6 +80,8 @@ static void rebuild_columns(void) {
 
     if (mod.cell < MATRIX_MIN_CELL) mod.cell = MATRIX_MIN_CELL;
     if (mod.cell > MATRIX_MAX_CELL) mod.cell = MATRIX_MAX_CELL;
+    mod.cell = saver_option_scale(mod.cell, config.settings.saver.matrix_size);
+    if (mod.cell < 4) mod.cell = 4;
 
     mod.columns = (mod.base.screen_w + mod.cell - 1) / mod.cell;
     if (mod.columns < 1) mod.columns = 1;
@@ -94,7 +97,8 @@ static void rebuild_columns(void) {
     }
 
     free(mod.rect_batch);
-    mod.batch_capacity = (size_t) mod.columns * 32u;
+    const int rows = mod.base.screen_h / mod.cell + 2;
+    mod.batch_capacity = (size_t) mod.columns * (size_t) (rows > 32 ? rows : 32);
     mod.rect_batch = malloc(mod.batch_capacity * 12u * sizeof(*mod.rect_batch));
 
     seed_all();
@@ -113,6 +117,7 @@ int matrix_init(SDL_Renderer *renderer, int screen_w, int screen_h) {
     (void) renderer;
 
     saver_init_base(&mod.base, screen_w, screen_h, "Matrix", 153, 255, 220, on_speed_changed, on_idle_enter, &mod);
+    saver_apply_colour(&mod.base, config.settings.saver.matrix_colour);
 
     rebuild_columns();
 

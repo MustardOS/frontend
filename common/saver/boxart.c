@@ -9,11 +9,12 @@
 #include <common/display/image.h>
 #include <common/runtime/log.h>
 #include <common/runtime/perf.h>
+#include <common/config/config.h>
 #include <common/saver/saver.h>
 #include <common/saver/boxart.h>
 #include <common/display/language.h>
 
-#define BOX_PARTICLE_COUNT     8
+#define BOX_PARTICLE_COUNT     12
 #define BOX_PATH_MAX           4096
 #define BOX_CACHE_COUNT        24
 #define BOX_LOAD_RETRIES       8
@@ -51,6 +52,7 @@ typedef struct {
     int initial_fill;
     uint32_t use_serial;
     box_particle_t particles[BOX_PARTICLE_COUNT];
+    int particle_count;
     box_cache_entry_t cache[BOX_CACHE_COUNT];
     SDL_Renderer *renderer;
     saver_message_t empty;
@@ -278,13 +280,13 @@ static void release_particle(box_particle_t *p) {
 }
 
 static void release_particles(void) {
-    for (int i = 0; i < BOX_PARTICLE_COUNT; i++) {
+    for (int i = 0; i < mod.particle_count; i++) {
         release_particle(&mod.particles[i]);
     }
 }
 
 static int particles_ready(void) {
-    for (int i = 0; i < BOX_PARTICLE_COUNT; i++) {
+    for (int i = 0; i < mod.particle_count; i++) {
         if (!mod.particles[i].cache) return 0;
     }
 
@@ -303,7 +305,7 @@ static int spawn_particle(box_particle_t *p, const int initial, const int allow_
     p->cache->ref_count++;
 
     const float scale = 0.12f + randf01() * 0.33f;
-    p->display_h = (float) sh * scale;
+    p->display_h = (float) saver_option_scale(sh, config.settings.saver.boxart_size) * scale;
     p->x = randf01() * (float) sw;
 
     const float size_factor = (scale - 0.12f) / 0.33f;
@@ -322,7 +324,7 @@ static void spawn_missing_particles(void) {
     int spawns_left = BOX_SPAWNS_PER_UPDATE;
     int loads_left = BOX_LOADS_PER_UPDATE;
 
-    for (int i = 0; i < BOX_PARTICLE_COUNT && spawns_left > 0; i++) {
+    for (int i = 0; i < mod.particle_count && spawns_left > 0; i++) {
         box_particle_t *p = &mod.particles[i];
         int loaded_new = 0;
 
@@ -441,6 +443,9 @@ int boxart_init(SDL_Renderer *renderer, const char *catalogue_path, const int sc
 
     saver_init_base(&mod.base, screen_w, screen_h, "Flying Box Art", 0, 0, 0, NULL, on_idle_enter, &mod);
 
+    static const int counts[] = {4, 8, 12};
+    mod.particle_count = counts[saver_option(config.settings.saver.boxart_count, 3, 1)];
+
     LOG_INFO("saver", "Box Art: found %d image%s", count, count == 1 ? "" : "s");
 
     return 1;
@@ -456,7 +461,7 @@ void boxart_update(void) {
     if (!elapsed) return;
     mod.base.last_tick = now;
 
-    for (int i = 0; i < BOX_PARTICLE_COUNT; i++) {
+    for (int i = 0; i < mod.particle_count; i++) {
         box_particle_t *p = &mod.particles[i];
 
         if (!p->cache) continue;
@@ -481,12 +486,12 @@ void boxart_render(SDL_Renderer *renderer) {
 
     int order[BOX_PARTICLE_COUNT];
     unsigned draw_calls = 0;
-    for (int i = 0; i < BOX_PARTICLE_COUNT; i++) {
+    for (int i = 0; i < mod.particle_count; i++) {
         order[i] = i;
     }
 
-    for (int i = 0; i < BOX_PARTICLE_COUNT - 1; i++) {
-        for (int j = i + 1; j < BOX_PARTICLE_COUNT; j++) {
+    for (int i = 0; i < mod.particle_count - 1; i++) {
+        for (int j = i + 1; j < mod.particle_count; j++) {
             if (mod.particles[order[j]].display_h < mod.particles[order[i]].display_h) {
                 const int t = order[i];
                 order[i] = order[j];
@@ -497,7 +502,7 @@ void boxart_render(SDL_Renderer *renderer) {
 
     const int sh = mod.base.screen_h;
 
-    for (int i = 0; i < BOX_PARTICLE_COUNT; i++) {
+    for (int i = 0; i < mod.particle_count; i++) {
         const box_particle_t *p = &mod.particles[order[i]];
         const box_cache_entry_t *entry = p->cache;
 
