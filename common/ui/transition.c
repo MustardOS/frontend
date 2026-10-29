@@ -210,11 +210,13 @@ static void panel_in_opa_cb(void *var, const int32_t value) {
 }
 
 void transition_panel_play_in(lv_obj_t *panel, const int type) {
-    if (!panel || !lv_obj_is_valid(panel) || type == TSN_DISABLED) return;
+    if (!panel || !lv_obj_is_valid(panel)) return;
 
     lv_obj_set_style_translate_x(panel, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_translate_y(panel, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_opa(panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+
+    if (type < TSN_FADE_IN || type >= TSN_DISABLED) return;
 
     lv_anim_path_cb_t path;
     uint32_t duration;
@@ -273,11 +275,13 @@ void transition_panel_play_in(lv_obj_t *panel, const int type) {
             lv_anim_set_exec_cb(&ap, panel_in_y_cb);
             lv_anim_set_values(&ap, -LV_VER_RES, 0);
             break;
-        default:
+        case TSN_FADE_IN:
             lv_obj_set_style_opa(panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
             lv_anim_set_exec_cb(&ap, panel_in_opa_cb);
             lv_anim_set_values(&ap, LV_OPA_TRANSP, LV_OPA_COVER);
             break;
+        default:
+            return;
     }
 
     lv_anim_set_path_cb(&ap, path);

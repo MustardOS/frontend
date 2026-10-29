@@ -262,7 +262,7 @@ void show_info_box(const char *title, const char *content, const int is_content)
                 break;
         }
 
-        if (trans == TSN_DISABLED) {
+        if (trans < TSN_FADE_IN || trans >= TSN_DISABLED) {
             lv_obj_set_style_bg_opa(ui_pnl_help, 155, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_style_opa(ui_pnl_help_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             return;
@@ -313,11 +313,15 @@ void show_info_box(const char *title, const char *content, const int is_content)
                 lv_anim_set_exec_cb(&ap, help_panel_y_cb);
                 lv_anim_set_values(&ap, -h, 0);
                 break;
-            default:
+            case TSN_SLIDE_UP:
+            case TSN_BOUNCE_UP:
+            case TSN_SHOOT_UP:
                 lv_obj_set_style_translate_y(ui_pnl_help_message, h, MU_OBJ_MAIN_DEFAULT);
                 lv_anim_set_exec_cb(&ap, help_panel_y_cb);
                 lv_anim_set_values(&ap, h, 0);
                 break;
+            default:
+                return;
         }
 
         lv_anim_start(&ap);
@@ -334,7 +338,8 @@ void hide_info_box(void) {
     lv_anim_del(ui_pnl_help_message, help_panel_x_cb);
     lv_anim_del(ui_pnl_help_message, help_panel_opa_cb);
 
-    if (config.visual.element_transition == TSN_DISABLED) {
+    const int trans = config.visual.element_transition;
+    if (trans < TSN_FADE_IN || trans >= TSN_DISABLED) {
         help_hide_ready_cb(NULL);
         return;
     }

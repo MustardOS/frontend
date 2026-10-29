@@ -667,11 +667,14 @@ void dialogue_show(mux_dialogue *dlg) {
             lv_anim_set_values(&ap, -panel_h, target_y);
             break;
         case TSN_DISABLED:
+        default:
             lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, target_y);
             dialogue_force_redraw(dlg);
             goto skip_panel_anim;
-        default:
+        case TSN_SLIDE_UP:
+        case TSN_BOUNCE_UP:
+        case TSN_SHOOT_UP:
             lv_obj_set_style_opa(dlg->panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_y(dlg->panel, LV_VER_RES);
             lv_anim_set_exec_cb(&ap, panel_anim_y_cb);
