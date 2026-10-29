@@ -28,6 +28,8 @@
 #define DURATION_FINISH (-1)
 #define DURATION_PRESS  (-2)
 
+#define FINISH_STILL_SECONDS 2
+
 typedef enum { scale_original = 0, scale_keep = 1, scale_stretch = 2, scale_fill = 3 } scale_mode_t;
 
 typedef struct {
@@ -194,8 +196,8 @@ static void print_usage(const char *name) {
         "Options:\n"
         "  -i, --image <path>          Image, animation or video path\n"
         "  -p, --play                  Play animations and videos through, any button skips\n"
-        "  -d, --duration <value>      Seconds to keep the image up, finish (animations play through,\n"
-        "                              stills wait for a button) or press (wait for a button)\n"
+        "  -d, --duration <value>      Seconds to keep the image up, finish (animated media plays once,\n"
+        "                              stills show for two seconds) or press (wait for a button)\n"
         "  -F, --fade <ms>             Fade in from black and out to black over this many milliseconds\n"
         "  -f, --fb <path>             Framebuffer device, default: /dev/fb0\n"
         "  -r, --rotate <0|90|180|270> Rotation, default: 0\n"
@@ -2015,12 +2017,17 @@ static int run_draw(const options_t *opts) {
         }
     }
 
+    const int playing = opts->play && kind != media_still;
+    const int accepts_input = playing || opts->duration != 0;
+    if (accepts_input) input_open();
+
     const int fading = opts->fade > 0 && !opts->wait && fb.page_size > 0;
     const int shown = fading ? fade_in_image(&fb, &img, opts) : present_image(&fb, &img, opts);
 
     if (shown != 0) {
         log_msg(opts, "Failed to flush framebuffer");
         trace("failed to flush framebuffer");
+        if (accepts_input) input_close();
         trace_close();
         close_fb(&fb);
         free_image(&img);
@@ -2035,6 +2042,7 @@ static int run_draw(const options_t *opts) {
     if (notify_ready(opts->ready_path) != 0) {
         log_value(opts, "Failed to create ready file: ", opts->ready_path);
         trace("failed to create ready file %s", opts->ready_path);
+        if (accepts_input) input_close();
         trace_close();
         close_fb(&fb);
         free_image(&img);
@@ -2042,17 +2050,16 @@ static int run_draw(const options_t *opts) {
     }
 
     const double shown_at = now_seconds();
-    const int playing = opts->play && kind != media_still;
 
-    if (playing || opts->duration != 0) {
-        input_open();
-
+    if (accepts_input) {
         int skipped = 0;
         if (playing) skipped = kind == media_animation ? play_animation(&fb, opts, &img) : play_video(&fb, opts, &img);
 
         if (!skipped) {
-            if (opts->duration == DURATION_PRESS || (opts->duration == DURATION_FINISH && !playing)) {
+            if (opts->duration == DURATION_PRESS) {
                 wait_until(shown_at + 86400.0);
+            } else if (opts->duration == DURATION_FINISH && !playing) {
+                wait_until(shown_at + FINISH_STILL_SECONDS);
             } else if (opts->duration > 0) {
                 wait_until(shown_at + opts->duration);
             }
