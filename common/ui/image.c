@@ -549,16 +549,14 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
         const char *ad_dims[] = {mux_dim, ""};
         for (size_t dim_idx = 0; dim_idx < 2; dim_idx++) {
             int mp4_w;
-            if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
-                mp4_w = snprintf(
-                    wall_image_path, sizeof(wall_image_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[dim_idx],
-                    program
-                );
-                if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path)
-                    && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
-                    TRY_EMBED(wall_image_path);
-                    return wall_image_embed;
-                }
+            mp4_w = snprintf(
+                wall_image_path, sizeof(wall_image_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[dim_idx],
+                program
+            );
+            if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path)
+                && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
+                TRY_EMBED(wall_image_path);
+                return wall_image_embed;
             }
             mp4_w = snprintf(
                 wall_image_path, sizeof(wall_image_path), "%s/%simage/background.mp4", theme_base, ad_dims[dim_idx]
