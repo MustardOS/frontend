@@ -445,10 +445,6 @@ static lv_font_t *create_language_font(const int size) {
     return NULL;
 }
 
-lv_font_t *get_language_font(void) {
-    return create_language_font(get_font_size());
-}
-
 static lv_font_t *guaranteed_font(const int size) {
     lv_font_t *font = create_language_font(size);
     if (font) return font;

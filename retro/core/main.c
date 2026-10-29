@@ -689,11 +689,12 @@ static int bios_allows_start(const char *core_path) {
 
 static void media_notice_tick(const uint32_t now) {
     static uint32_t deadline;
+    if (!config.settings.general.track_notice) return;
     if (deadline && !SDL_TICKS_PASSED(now, deadline)) return;
     deadline = now + 1000;
 
     char track[512];
-    if (!media_track_changed(track, sizeof(track)) || !config.settings.general.track_notice) return;
+    if (!media_track_changed(track, sizeof(track))) return;
     char message[MAX_BUFFER_SIZE];
     snprintf(message, sizeof(message), "%s: %s", lang.muxmedia.now_playing, track);
     pause_menu_show_toast_timed(message, 3000);
@@ -1140,9 +1141,10 @@ int main(const int argc, char *argv[]) {
 
         const int content_paused =
             network_menu_paused || game_link_paused || (paused && !netplay_is_playing() && !link_is_engaged());
+        const int hotkey_paused = hotkeys_is_content_paused();
 
-        if (!netplay_active && (content_paused || hotkeys_is_content_paused())) governor_boost_gameplay_idle();
-        set_children_frozen(content_paused || hotkeys_is_content_paused());
+        if (!netplay_active && (content_paused || hotkey_paused)) governor_boost_gameplay_idle();
+        set_children_frozen(content_paused || hotkey_paused);
         if (prev_paused && !content_paused) {
             core_prime_audio();
             video_bridge_reset_temporal();
@@ -1157,7 +1159,7 @@ int main(const int argc, char *argv[]) {
             timeline_deadline = timeline_ms > 0 ? loop_now + (uint32_t) timeline_ms : 0;
         }
 
-        const int timeline_interrupted = paused || hotkeys_is_content_paused();
+        const int timeline_interrupted = paused || hotkey_paused;
         const int timeline_allowed = timeline_ms > 0 && state_saves_allowed();
 
         if (timeline_ms > 0) {

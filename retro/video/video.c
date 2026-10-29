@@ -38,6 +38,7 @@ static void *raw_frame_buf = NULL;
 static size_t raw_frame_buf_cap = 0;
 static size_t raw_frame_pitch = 0;
 static unsigned raw_frame_bpp = 0;
+static enum retro_pixel_format raw_frame_format = RETRO_PIXEL_FORMAT_0RGB1555;
 static int raw_frame_valid = 0;
 static uint64_t direct_upload_frames = 0;
 static uint64_t staged_upload_frames = 0;
@@ -246,8 +247,8 @@ static Uint32 sdl_format_for_pixel_format(const enum retro_pixel_format fmt) {
     }
 }
 
-static unsigned bpp_for_pixel_format(void) {
-    return mux_retro_get_pixel_format() == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
+static unsigned bpp_for_pixel_format(const enum retro_pixel_format format) {
+    return format == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2;
 }
 
 static const SDL_Color border_colours[border_colour_count] = {
@@ -998,7 +999,7 @@ static void upload_frame(void) {
     int want_w, want_h;
     compute_target_tex_size(&want_w, &want_h);
 
-    if (!ensure_frame_tex(want_w, want_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format()))) return;
+    if (!ensure_frame_tex(want_w, want_h, sdl_format_for_pixel_format(raw_frame_format))) return;
 
     if (!cpu_filter_active) {
         SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
@@ -1019,7 +1020,7 @@ static void upload_frame(void) {
     const uint64_t filter_start = perf_begin();
     texture_filter_apply(
         session_settings.texture_filter, raw_frame_buf, scaled_buf, frame_w, frame_h, src_pitch_px, want_w,
-        raw_frame_bpp, mux_retro_get_pixel_format()
+        raw_frame_bpp, raw_frame_format
     );
     perf_end(perf_stage_texture_filter, filter_start);
 
@@ -1338,8 +1339,10 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
     if (!data || width == 0 || height == 0) return;
 
     const enum retro_pixel_format pixel_format = mux_retro_get_pixel_format();
-    raw_frame_bpp = bpp_for_pixel_format();
-    if (pitch > INT_MAX || pitch < (size_t) width * raw_frame_bpp || (pitch > 0 && height > SIZE_MAX / pitch)) return;
+    const unsigned bytes_per_pixel = bpp_for_pixel_format(pixel_format);
+    if (pitch > INT_MAX || pitch < (size_t) width * bytes_per_pixel || (pitch > 0 && height > SIZE_MAX / pitch)) return;
+    raw_frame_bpp = bytes_per_pixel;
+    raw_frame_format = pixel_format;
     raw_frame_pitch = pitch;
     const int size_changed = (int) width != frame_w || (int) height != frame_h;
     frame_w = (int) width;
@@ -1392,7 +1395,7 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
         return;
     }
 
-    if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(mux_retro_get_pixel_format())))
+    if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(pixel_format)))
         SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
 
     perf_end(perf_stage_video_upload, upload_start);

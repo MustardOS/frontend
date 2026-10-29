@@ -296,7 +296,6 @@ static void update_geometry(void) {
     int overlay_viewport_x = 0;
     int overlay_viewport_y = 0;
     if (config.video.overlay_mode == 3) {
-        wasabi_assets_refresh(wasabi_asset_overlay);
         const int selected = wasabi_asset_selected(wasabi_asset_overlay);
         wasabi_asset_viewport(wasabi_asset_overlay, selected, &overlay_viewport_x, &overlay_viewport_y);
     }
@@ -399,7 +398,7 @@ static void update_overlay(void) {
         return;
     }
     const char *selected_key = mode == 100 ? catalogue_overlay_path : mode == 101 ? config.video.overlay_image : "";
-    if (overlay_texture && overlay_mode == mode && overlay_opacity == opacity && overlay_canvas_width == width
+    if (overlay_mode == mode && overlay_opacity == opacity && overlay_canvas_width == width
         && overlay_canvas_height == height && strcmp(overlay_key, selected_key) == 0)
         return;
 

@@ -879,11 +879,7 @@ int main(void) {
         screen_switch_start = lv_tick_get();
         module_refresh();
 
-        if (file_exist(MUOS_ACT_LOAD)) {
-            if (!module_dispatch()) module_start();
-        } else {
-            module_start();
-        }
+        if (!module_dispatch()) module_start();
 
         cleanup_screen();
     }

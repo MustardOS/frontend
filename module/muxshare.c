@@ -792,8 +792,10 @@ static void media_background_tick(void) {
     deadline = now + 1000;
 
     bgm_media_tick();
+    if (!config.settings.general.track_notice) return;
+
     char track[512];
-    if (media_track_changed(track, sizeof(track)) && config.settings.general.track_notice) {
+    if (media_track_changed(track, sizeof(track))) {
         char message[MAX_BUFFER_SIZE];
         snprintf(message, sizeof(message), "%s: %s", lang.muxmedia.now_playing, track);
         toast_message(message, tst_wait_l);

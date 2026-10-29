@@ -198,12 +198,12 @@ static void ring_write(const float *samples, int frames) {
     SDL_LockAudio();
     const int space = ring_space();
     if (frames > space) frames = space;
-    for (int frame = 0; frame < frames; frame++) {
-        memcpy(
-            output.ring + (size_t) output.write * output.channels, samples + (size_t) frame * output.channels,
-            (size_t) output.channels * sizeof(float)
-        );
-        output.write = (output.write + 1) % output.capacity;
+    if (frames > 0) {
+        const size_t frame_bytes = (size_t) output.channels * sizeof(float);
+        const int first = frames < output.capacity - output.write ? frames : output.capacity - output.write;
+        memcpy(output.ring + (size_t) output.write * output.channels, samples, (size_t) first * frame_bytes);
+        memcpy(output.ring, samples + (size_t) first * output.channels, (size_t) (frames - first) * frame_bytes);
+        output.write = (output.write + frames) % output.capacity;
     }
     SDL_UnlockAudio();
 }
@@ -245,12 +245,16 @@ static void background_callback(void *unused __attribute__((unused)), Uint8 *str
     int available = ring_available();
     if (available > requested) available = requested;
     float *samples = (float *) stream;
-    for (int frame = 0; frame < available; frame++) {
+    if (available > 0) {
+        const int first = available < output.capacity - output.read ? available : output.capacity - output.read;
         memcpy(
-            samples + (size_t) frame * output.channels, output.ring + (size_t) output.read * output.channels,
-            (size_t) bytes_per_frame
+            samples, output.ring + (size_t) output.read * output.channels, (size_t) first * (size_t) bytes_per_frame
         );
-        output.read = (output.read + 1) % output.capacity;
+        memcpy(
+            samples + (size_t) first * output.channels, output.ring,
+            (size_t) (available - first) * (size_t) bytes_per_frame
+        );
+        output.read = (output.read + available) % output.capacity;
     }
     output.played += available;
     if (available > 0) apply_output_effects(samples, available);
@@ -665,7 +669,11 @@ static int load_entries(const char *source, const size_t index, const char *trac
     entries[0].uri = strdup(file);
     char title[PATH_MAX];
     entries[0].title = strdup(video_title_from_uri(file, title, sizeof(title)));
-    if (!entries[0].uri || !entries[0].title) return 0;
+    if (!entries[0].uri || !entries[0].title) {
+        video_library_free(entries, 1);
+        entries = NULL;
+        return 0;
+    }
     entry_count = 1;
     current = 0;
     return 1;
@@ -710,8 +718,12 @@ int wasabi_background_run(const char *source, const size_t index, const char *tr
     write_text_to_file(IDLE_SLEEP_INHIBIT, "w", INT, (int) getpid());
     wasabi_eq_changed();
     if (!open_output()) {
+        Mix_CloseAudio();
         remove(WASABI_BACKGROUND_PID);
         wasabi_session_end();
+        video_library_free(entries, entry_count);
+        entries = NULL;
+        entry_count = 0;
         return EXIT_FAILURE;
     }
     wasabi_remote_open();

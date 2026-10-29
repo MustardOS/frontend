@@ -83,6 +83,7 @@ static int cue_count;
 static int cue_capacity;
 static unsigned next_serial = 1;
 static double position_now = -1.0;
+static double active_until = -1.0;
 static uint64_t active_signature;
 static int rebuild;
 
@@ -118,6 +119,7 @@ static void cues_clear_locked(void) {
     for (int index = 0; index < cue_count; index++)
         cue_free(&cues[index]);
     cue_count = 0;
+    active_until = -1.0;
     active_signature = 0;
     rebuild = 1;
 }
@@ -867,15 +869,28 @@ void subtitle_flush(void) {
 int subtitle_set_position(const double playback) {
     if (!lock || selected < 0) return 0;
     const double position = playback - config.video.subtitle_delay / 10.0;
+    SDL_LockMutex(lock);
+    // A sorted cue set cannot change between its next start or active end.
+    if (!rebuild && position >= position_now && (active_until < 0.0 || position < active_until)) {
+        position_now = position;
+        SDL_UnlockMutex(lock);
+        return 0;
+    }
+
     position_now = position;
     uint64_t signature = 0;
-    SDL_LockMutex(lock);
+    double next_change = -1.0;
     for (int index = 0; index < cue_count; index++) {
-        if (cues[index].start > position) break;
+        if (cues[index].start > position) {
+            if (next_change < 0.0 || cues[index].start < next_change) next_change = cues[index].start;
+            break;
+        }
         if (cues[index].end <= position) continue;
         signature = signature * UINT64_C(1099511628211) + cues[index].serial;
+        if (next_change < 0.0 || cues[index].end < next_change) next_change = cues[index].end;
     }
     const int changed = signature != active_signature || rebuild;
+    active_until = next_change;
     active_signature = signature;
     if (changed) rebuild = 1;
     SDL_UnlockMutex(lock);

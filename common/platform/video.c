@@ -273,6 +273,23 @@ static void reset_playback_timing(const uint32_t ticks) {
     wallpaper_next_ticks = is_wallpaper ? ticks : 0;
 }
 
+static int wallpaper_pop_due_locked(const uint32_t ticks) {
+    if (stall_last_ticks > 0 && ticks - stall_last_ticks > WALLPAPER_STALL_MS) wallpaper_next_ticks = ticks;
+
+    stall_last_ticks = ticks;
+    if (wallpaper_next_ticks == 0) wallpaper_next_ticks = ticks;
+    if (vq_count <= 0 || ticks + DISPLAY_SLACK < wallpaper_next_ticks) return 0;
+
+    const int64_t moved_pts = frame_pts_ms(vq_at(0));
+    const int moved = vq_pop_into(present_frame);
+    if (moved) last_pts = moved_pts;
+    SDL_CondSignal(vq_cond);
+
+    wallpaper_next_ticks += wallpaper_frame_ms;
+    if (ticks > wallpaper_next_ticks + WALLPAPER_STALL_MS) wallpaper_next_ticks = ticks + wallpaper_frame_ms;
+    return moved;
+}
+
 static int ring_avail(void) {
     return (ring_w - ring_r + ring_frames) % ring_frames;
 }
@@ -791,28 +808,7 @@ static void present_cb(lv_timer_t *t __attribute__((unused))) {
     SDL_LockMutex(vq_lock);
 
     if (is_wallpaper) {
-        if (stall_last_ticks > 0) {
-            const uint32_t delta = ticks - stall_last_ticks;
-
-            if (delta > WALLPAPER_STALL_MS) {
-                wallpaper_next_ticks = ticks;
-            }
-        }
-
-        stall_last_ticks = ticks;
-        if (wallpaper_next_ticks == 0) wallpaper_next_ticks = ticks;
-
-        if (vq_count > 0 && ticks + DISPLAY_SLACK >= wallpaper_next_ticks) {
-            moved_pts = frame_pts_ms(vq_at(0));
-            moved_frame = vq_pop_into(present_frame);
-            if (moved_frame) last_pts = moved_pts;
-            SDL_CondSignal(vq_cond);
-
-            wallpaper_next_ticks += wallpaper_frame_ms;
-            if (ticks > wallpaper_next_ticks + WALLPAPER_STALL_MS) {
-                wallpaper_next_ticks = ticks + wallpaper_frame_ms;
-            }
-        }
+        moved_frame = wallpaper_pop_due_locked(ticks);
     } else {
         if (vq_count > 0) {
             const int64_t head_pts = frame_pts_ms(vq_at(0));
@@ -1393,29 +1389,9 @@ void video_wallpaper_render_frame(SDL_Renderer *r) {
     if (!is_wallpaper || !fmt_ctx || !present_frame || !vq_lock) return;
 
     const uint32_t ticks = SDL_GetTicks();
-    int moved_frame = 0;
 
     SDL_LockMutex(vq_lock);
-
-    if (stall_last_ticks > 0 && ticks - stall_last_ticks > WALLPAPER_STALL_MS) {
-        wallpaper_next_ticks = ticks;
-    }
-
-    stall_last_ticks = ticks;
-    if (wallpaper_next_ticks == 0) wallpaper_next_ticks = ticks;
-
-    if (vq_count > 0 && ticks + DISPLAY_SLACK >= wallpaper_next_ticks) {
-        const int64_t moved_pts = frame_pts_ms(vq_at(0));
-        moved_frame = vq_pop_into(present_frame);
-        if (moved_frame) last_pts = moved_pts;
-        SDL_CondSignal(vq_cond);
-
-        wallpaper_next_ticks += wallpaper_frame_ms;
-        if (ticks > wallpaper_next_ticks + WALLPAPER_STALL_MS) {
-            wallpaper_next_ticks = ticks + wallpaper_frame_ms;
-        }
-    }
-
+    const int moved_frame = wallpaper_pop_due_locked(ticks);
     SDL_UnlockMutex(vq_lock);
 
     if (moved_frame) video_upload(present_frame);
