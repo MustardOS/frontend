@@ -182,8 +182,11 @@ static int append_mux_app(char ***arr, size_t *count, size_t *cap, const char *n
 static void apply_muxapp_glyph(const size_t index, lv_obj_t *glyph) {
     apply_theme_list_glyph(&theme, glyph, mux_module, items[index].glyph_icon);
 
+    const int16_t glyph_hidden =
+        !config.visual.list_glyph || (theme.list_default.glyph_alpha == 0 && theme.list_focus.glyph_alpha == 0);
+    if (glyph_hidden) return;   
     const void *source = lv_img_get_src(glyph);
-    if (config.visual.list_glyph && (!source || source == &ui_img_blank))
+    if (!source || source == &ui_img_blank)
         apply_app_glyph(items[index].extra_data, items[index].glyph_icon, glyph);
 }
 
