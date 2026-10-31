@@ -574,7 +574,7 @@ This folder is empty.
 Upload Files
 Upload Folders
 Uploading...
-Uploading... %s%%
+Uploading... %s%
 Upload cancelled
 Network error while uploading
 Global
