@@ -11,8 +11,10 @@
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
 #include <libavutil/channel_layout.h>
+#include <common/platform/sysinfo.h>
 #include <common/platform/video.h>
 #include <common/platform/audio.h>
+#include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include <common/platform/display.h>
 #include <common/config/config.h>
@@ -487,14 +489,16 @@ static int ensure_texture(const AVFrame *f) {
 
     const enum AVPixelFormat fmt = (enum AVPixelFormat) f->format;
 
-    const int dw = lv_disp_get_hor_res(NULL);
-    const int dh = lv_disp_get_ver_res(NULL);
+    // Theme scaling causes LVGL to return theme resolution instead of actual device resolution
+    const struct screen_dimension dims = get_device_dimensions();
+    const int16_t dw = dims.width;
+    const int16_t dh = dims.height;
 
     if (is_wallpaper) {
         int tex_w = w, tex_h = h;
 
         switch (config.visual.background_scale) {
-            case 1:
+            case 1: //Scale to fit width
                 tex_w = dw;
                 tex_h = h * dw / w;
                 if (tex_h > dh) {
@@ -502,7 +506,7 @@ static int ensure_texture(const AVFrame *f) {
                     tex_w = w * dh / h;
                 }
                 break;
-            case 2:
+            case 2: //Stretch to fit both width and height
                 tex_w = dw;
                 tex_h = dh;
                 break;
