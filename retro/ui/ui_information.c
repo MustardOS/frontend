@@ -18,6 +18,7 @@
 #include "../settings/settings.h"
 #include "../state/bios_check.h"
 #include "../state/content_hash.h"
+#include "../state/optimised.h"
 #include "../video/hw_render.h"
 
 #define INFORMATION_ROW_MAX   96
@@ -190,6 +191,18 @@ static void build_checklist_rows(void) {
         settings_recovered ? lang.muxretro.information_screen.recovery_restored
                            : lang.muxretro.information_screen.recovery_not_needed,
         settings_recovered ? "settings" : "valid", 0
+    );
+
+    const enum optimised_state optimised = optimised_status();
+    build_info_row(
+        lang.muxretro.information_screen.optimised_profile,
+        optimised == optimised_state_applied   ? lang.muxretro.information_screen.optimised_applied
+        : optimised == optimised_state_invalid ? lang.muxretro.information_screen.optimised_invalid
+                                               : lang.muxretro.information_screen.optimised_none,
+        optimised == optimised_state_applied   ? "valid"
+        : optimised == optimised_state_invalid ? "missing"
+                                               : "info",
+        0
     );
 }
 

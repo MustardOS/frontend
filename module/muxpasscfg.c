@@ -99,26 +99,30 @@ static void open_entry(const int idx) {
     osk_show(ui_pnl_entry_passcfg);
 }
 
-static void validate_and_save(void) {
+static int validate_and_save(void) {
     const char *raw = lv_textarea_get_text(ui_txt_entry_passcfg);
 
     if (is_code_field(edit_field)) {
         const size_t len = strlen(raw);
+        if (len != 0 && len != 6) {
+            play_sound(snd_error);
+            toast_message(lang.muxpasscfg.invalid, tst_wait_s);
+            return 0;
+        }
+
         for (size_t i = 0; i < len; i++) {
             const char c = (char) toupper((unsigned char) raw[i]);
             if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F'))) {
                 play_sound(snd_error);
                 toast_message(lang.muxpasscfg.invalid, tst_wait_s);
-                return;
+                return 0;
             }
         }
 
         char code[7] = "000000";
-        if (len > 0 && len <= 6) {
-            const int pad = 6 - (int) len;
-            for (int i = 0; i < pad; i++)
-                code[i] = '0';
-            memcpy(code + pad, raw, len);
+        if (len == 6) {
+            for (size_t i = 0; i < len; i++)
+                code[i] = (char) toupper((unsigned char) raw[i]);
             code[6] = '\0';
         }
 
@@ -158,10 +162,11 @@ static void validate_and_save(void) {
     update_value_labels();
     play_sound(snd_confirm);
     toast_message(lang.muxpasscfg.saved, tst_wait_s);
+    return 1;
 }
 
 static void handle_keyboard_ok_press(void) {
-    validate_and_save();
+    if (!validate_and_save()) return;
 
     const int was_code = is_code_field(edit_field);
     key_show = 0;
@@ -285,15 +290,27 @@ static void handle_start(void) {
 }
 
 static void handle_l1(void) {
+    if (key_show == 1) {
+        key_swap_back();
+        return;
+    }
     if (key_show) return;
 
     handle_list_nav_page_up();
 }
 
 static void handle_r1(void) {
+    if (key_show == 1) {
+        key_swap();
+        return;
+    }
     if (key_show) return;
 
     handle_list_nav_page_down();
+}
+
+static void handle_y(void) {
+    if (key_show == 1) key_space(ui_txt_entry_passcfg);
 }
 
 static void init_navigation_group(void) {
@@ -366,7 +383,7 @@ int muxpasscfg_main(void) {
     init_fonts();
     init_navigation_group();
 
-    init_osk(ui_pnl_entry_passcfg, ui_txt_entry_passcfg, 2, 0, 6);
+    init_osk(ui_pnl_entry_passcfg, ui_txt_entry_passcfg, 2, 0, OSK_MAX);
     if (hex_entry && lv_obj_is_valid(hex_entry)) {
         lv_obj_add_flag(hex_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_state(hex_entry, LV_STATE_DISABLED);
@@ -386,6 +403,7 @@ int muxpasscfg_main(void) {
                 [mux_input_dpad_down] = handle_down,
                 [mux_input_dpad_left] = handle_left,
                 [mux_input_dpad_right] = handle_right,
+                [mux_input_y] = handle_y,
                 [mux_input_l1] = handle_l1,
                 [mux_input_r1] = handle_r1,
                 [mux_input_select] = handle_select,

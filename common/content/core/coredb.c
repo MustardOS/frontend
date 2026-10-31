@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +37,8 @@
 // TODO: Fix this up - I think it's the java core that has this
 #define COREDB_SUFFIX_STANDALONE " - standalone"
 
-#define COREDB_FILE "core.json"
+#define COREDB_DIR "core"
+#define COREDB_EXT ".json"
 
 static const char *const runtime_group[core_runtime_count] = {"libretro", "libretro", "external"};
 
@@ -46,12 +48,17 @@ static const char *const runtime_prefix[core_runtime_count] = {
 
 static const char *const runtime_name[core_runtime_count] = {"pickles", "retroarch", "external"};
 
-static char *raw;
-static struct json root;
+struct coredb_entry {
+    char id[COREDB_NAME_MAX];
+    char name_space[COREDB_NAME_MAX];
+    char *raw;
+    struct json node;
+};
+
+static struct coredb_entry *entries;
+static int entry_count;
 static int loaded;
-static char loaded_path[COREDB_PATH_MAX];
-static time_t loaded_mtime;
-static time_t loaded_user_mtime;
+static long long loaded_signature;
 
 static time_t file_mtime(const char *path) {
     struct stat info;
@@ -214,17 +221,12 @@ static void collect_namespaces(void) {
     namespace_count = 0;
     namespace_extra = extra_shown();
 
-    for (struct json key = json_first(root); json_exists(key); key = json_next(json_next(key))) {
-        const struct json system = json_next(key);
-
-        char id[COREDB_NAME_MAX];
-        json_string_copy(key, id, sizeof(id));
+    for (int e = 0; e < entry_count; e++) {
+        const char *id = entries[e].id;
+        const struct json system = entries[e].node;
         if (!system_listed(id, system)) continue;
 
-        char name[COREDB_NAME_MAX];
-        json_string_copy(json_object_get(system, "namespace"), name, sizeof(name));
-        if (!name[0]) snprintf(name, sizeof(name), "%s", "Other");
-
+        const char *name = entries[e].name_space;
         if (namespace_known(name) || namespace_count >= COREDB_NAMESPACE_MAX) continue;
         snprintf(namespaces[namespace_count++], COREDB_NAME_MAX, "%s", name);
     }
@@ -242,42 +244,124 @@ static char *read_manifest(const char *path) {
     return data;
 }
 
-static int load_from(const char *path) {
-    raw = read_manifest(path);
-    if (!raw) return 0;
+static int entry_known(const char *id) {
+    for (int e = 0; e < entry_count; e++)
+        if (strcmp(entries[e].id, id) == 0) return 1;
 
-    snprintf(loaded_path, sizeof(loaded_path), "%s", path);
-    loaded_mtime = file_mtime(path);
+    return 0;
+}
+
+static int definition_id(const char *file, char *out, const size_t out_size) {
+    const size_t len = strlen(file);
+    const size_t ext = strlen(COREDB_EXT);
+
+    if (file[0] == '.' || len <= ext || strcmp(file + len - ext, COREDB_EXT) != 0) return 0;
+    if (len - ext >= out_size) return 0;
+
+    snprintf(out, out_size, "%.*s", (int) (len - ext), file);
     return 1;
 }
 
-static time_t user_file_mtime(void) {
-    char user[COREDB_PATH_MAX];
-    snprintf(user, sizeof(user), "%s/" COREDB_FILE, INFO_MNF_PATH);
-    return file_mtime(user);
+static void load_namespace(const char *dir, const char *name_space) {
+    DIR *handle = opendir(dir);
+    if (!handle) return;
+
+    const struct dirent *item;
+    while ((item = readdir(handle))) {
+        char id[COREDB_NAME_MAX];
+        if (!definition_id(item->d_name, id, sizeof(id)) || entry_known(id)) continue;
+
+        char path[COREDB_PATH_MAX * 3];
+        snprintf(path, sizeof(path), "%s/%s", dir, item->d_name);
+
+        char *data = read_manifest(path);
+        if (!data) {
+            LOG_WARN(mux_module, "coredb: skipping unreadable definition %s", path);
+            continue;
+        }
+
+        struct coredb_entry *grown = realloc(entries, sizeof(*entries) * (size_t) (entry_count + 1));
+        if (!grown) {
+            free(data);
+            break;
+        }
+
+        entries = grown;
+        snprintf(entries[entry_count].id, sizeof(entries[entry_count].id), "%s", id);
+        snprintf(entries[entry_count].name_space, sizeof(entries[entry_count].name_space), "%s", name_space);
+        entries[entry_count].raw = data;
+        entries[entry_count].node = json_parse(data);
+        entry_count++;
+    }
+
+    closedir(handle);
 }
 
-static int source_changed(void) {
-    return user_file_mtime() != loaded_user_mtime || file_mtime(loaded_path) != loaded_mtime;
+static int namespace_dir(const char *dir, const struct dirent *item, char *path, const size_t path_size) {
+    if (item->d_name[0] == '.' || strlen(item->d_name) >= COREDB_NAME_MAX) return 0;
+
+    snprintf(path, path_size, "%s/%s", dir, item->d_name);
+
+    struct stat info;
+    return stat(path, &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+static void load_dir(const char *dir) {
+    DIR *handle = opendir(dir);
+    if (!handle) return;
+
+    const struct dirent *item;
+    while ((item = readdir(handle))) {
+        char path[COREDB_PATH_MAX * 2];
+        if (namespace_dir(dir, item, path, sizeof(path))) load_namespace(path, item->d_name);
+    }
+
+    closedir(handle);
+}
+
+static long long dir_signature(const char *dir, const int depth) {
+    long long signature = (long long) file_mtime(dir);
+    if (!depth) return signature;
+
+    DIR *handle = opendir(dir);
+    if (!handle) return signature;
+
+    const struct dirent *item;
+    while ((item = readdir(handle))) {
+        if (item->d_name[0] == '.') continue;
+
+        char path[COREDB_PATH_MAX * 3];
+        snprintf(path, sizeof(path), "%s/%s", dir, item->d_name);
+        signature = signature * 31 + dir_signature(path, depth - 1) + 1;
+    }
+
+    closedir(handle);
+    return signature;
+}
+
+static long long source_signature(void) {
+    return dir_signature(INFO_MNF_PATH "/" COREDB_DIR, 2) * 31 + dir_signature(STORE_LOC_MANIFEST "/" COREDB_DIR, 1);
+}
+
+static int entry_compare(const void *a, const void *b) {
+    return strcmp(((const struct coredb_entry *) a)->id, ((const struct coredb_entry *) b)->id);
 }
 
 int coredb_load(void) {
-    if (loaded && !source_changed()) return 1;
+    const long long signature = source_signature();
+    if (loaded && signature == loaded_signature) return 1;
     if (loaded) coredb_free();
 
-    char path[COREDB_PATH_MAX];
-    snprintf(path, sizeof(path), "%s/" COREDB_FILE, INFO_MNF_PATH);
+    load_dir(INFO_MNF_PATH "/" COREDB_DIR);
+    load_dir(STORE_LOC_MANIFEST "/" COREDB_DIR);
 
-    if (!load_from(path)) {
-        snprintf(path, sizeof(path), "%s/" COREDB_FILE, STORE_LOC_MANIFEST);
-        if (!load_from(path)) {
-            LOG_WARN(mux_module, "coredb: no usable definitions at %s", path);
-            return 0;
-        }
+    if (!entry_count) {
+        LOG_WARN(mux_module, "coredb: no usable definitions at %s", STORE_LOC_MANIFEST "/" COREDB_DIR);
+        return 0;
     }
 
-    root = json_parse(raw);
-    loaded_user_mtime = user_file_mtime();
+    qsort(entries, (size_t) entry_count, sizeof(*entries), entry_compare);
+    loaded_signature = signature;
 
     collect_namespaces();
     loaded = 1;
@@ -285,12 +369,13 @@ int coredb_load(void) {
 }
 
 void coredb_free(void) {
-    free(raw);
-    raw = NULL;
-    root = (struct json) {0};
-    loaded_path[0] = '\0';
-    loaded_mtime = 0;
-    loaded_user_mtime = 0;
+    for (int e = 0; e < entry_count; e++)
+        free(entries[e].raw);
+
+    free(entries);
+    entries = NULL;
+    entry_count = 0;
+    loaded_signature = 0;
     system_cache_count = -1;
 
     namespace_count = 0;
@@ -311,29 +396,19 @@ const char *coredb_namespace_at(const int index) {
     return index >= 0 && index < namespace_count ? namespaces[index] : "";
 }
 
-static int system_in_namespace(const struct json system, const char *name_space) {
-    char value[COREDB_NAME_MAX];
-    json_string_copy(json_object_get(system, "namespace"), value, sizeof(value));
-    if (!value[0]) snprintf(value, sizeof(value), "%s", "Other");
-
-    return strcmp(value, name_space) == 0;
-}
-
 static int gather_systems(const char *name_space, struct coredb_system *out, const int limit) {
     int count = 0;
 
-    for (struct json key = json_first(root); json_exists(key) && count < limit; key = json_next(json_next(key))) {
-        const struct json system = json_next(key);
-
-        char id[COREDB_NAME_MAX];
-        json_string_copy(key, id, sizeof(id));
-        if (name_space && !system_in_namespace(system, name_space)) continue;
+    for (int e = 0; e < entry_count && count < limit; e++) {
+        const char *id = entries[e].id;
+        const struct json system = entries[e].node;
+        if (name_space && strcmp(entries[e].name_space, name_space) != 0) continue;
         if (!system_listed(id, system)) continue;
 
         snprintf(out[count].id, COREDB_NAME_MAX, "%s", id);
-        json_string_copy(json_object_get(system, "name"), out[count].name, COREDB_NAME_MAX);
+        json_string_copy(json_object_get(system, "catalogue"), out[count].name, COREDB_NAME_MAX);
         if (!out[count].name[0]) snprintf(out[count].name, COREDB_NAME_MAX, "%s", id);
-        json_string_copy(json_object_get(system, "namespace"), out[count].name_space, COREDB_NAME_MAX);
+        snprintf(out[count].name_space, COREDB_NAME_MAX, "%s", entries[e].name_space);
         count++;
     }
 
@@ -369,8 +444,18 @@ int coredb_system_at(const char *name_space, const int index, struct coredb_syst
     return 1;
 }
 
+static const struct coredb_entry *system_entry(const char *system) {
+    if (!system) return NULL;
+
+    for (int e = 0; e < entry_count; e++)
+        if (strcmp(entries[e].id, system) == 0) return &entries[e];
+
+    return NULL;
+}
+
 static struct json system_node(const char *system) {
-    return json_exists(root) ? json_object_get(root, system) : (struct json) {0};
+    const struct coredb_entry *entry = system_entry(system);
+    return entry ? entry->node : (struct json) {0};
 }
 
 static struct json group_node(const char *system, const enum core_runtime runtime) {
@@ -391,9 +476,10 @@ static int system_field(const char *system, const char *key, char *out, const si
 }
 
 int coredb_system_namespace(const char *system, char *out, const size_t out_size) {
-    if (!json_exists(system_node(system))) return 0;
+    const struct coredb_entry *entry = system_entry(system);
+    if (!entry) return 0;
 
-    if (!system_field(system, "namespace", out, out_size)) snprintf(out, out_size, "%s", "Other");
+    snprintf(out, out_size, "%s", entry->name_space);
     return 1;
 }
 
@@ -527,8 +613,8 @@ int coredb_core_file_hidden(const char *core_file) {
     if (extra_shown() || !core_file || !*core_file || !coredb_load()) return 0;
 
     int referenced = 0;
-    for (struct json key = json_first(root); json_exists(key); key = json_next(json_next(key))) {
-        const struct json system = json_next(key);
+    for (int e = 0; e < entry_count; e++) {
+        const struct json system = entries[e].node;
         const struct json cores = json_object_get(system, "libretro");
         if (!json_exists(cores)) continue;
 

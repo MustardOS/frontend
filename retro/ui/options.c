@@ -10,6 +10,7 @@
 #include <common/base/strutil.h>
 #include "../core/core.h"
 #include "../coredef/coredef.h"
+#include "../state/optimised.h"
 #include "options.h"
 #include "../core/paths.h"
 
@@ -114,6 +115,12 @@ static void apply_value(struct core_option_entry *e, const char *value) {
 
 static void apply_override(struct core_option_entry *e) {
     apply_value(e, coredef_lookup(active_core_name, e->key));
+    const char *optimised = optimised_option(e->key);
+    if (optimised) {
+        const int found = value_index(e, optimised);
+        if (found >= 0) e->current_index = found;
+        optimised_option_result(e->key, found >= 0);
+    }
     e->default_index = e->current_index;
     mini_t *inis[] = {ovr_core, ovr_directory, ovr_content};
 
@@ -339,17 +346,19 @@ static int tier_index(const struct core_option_entry *e, mini_t *core_ini, mini_
     return index;
 }
 
-static int options_save(const char *path, const int with_core, const int with_directory) {
+static int options_save(const char *path, const int with_core, const int with_directory, const int changes_only) {
     if (!path || !*path) return 0;
 
     mini_t *core_ini = with_core && core_ini_path[0] ? mini_try_load(core_ini_path) : NULL;
     mini_t *directory_ini = with_directory && directory_ini_path[0] ? mini_try_load(directory_ini_path) : NULL;
+    mini_t *own_ini = changes_only ? mini_try_load(path) : NULL;
 
     mini_t *ini = mini_create(path);
     if (!ini) {
         LOG_ERROR(mux_module, "Could not create core-options document: %s", path);
         if (core_ini) mini_free(core_ini);
         if (directory_ini) mini_free(directory_ini);
+        if (own_ini) mini_free(own_ini);
         return 0;
     }
 
@@ -357,14 +366,22 @@ static int options_save(const char *path, const int with_core, const int with_di
     for (int i = 0; i < options_count; i++) {
         const struct core_option_entry *e = &options_list[i];
         if (e->value_count == 0) continue;
-        if (e->current_index == tier_index(e, core_ini, directory_ini)) continue;
 
-        mini_set_string(ini, "options", e->key, e->values[e->current_index]);
+        const int below = tier_index(e, core_ini, directory_ini);
+        int value = e->current_index;
+        if (changes_only && value == baseline_indices[i]) {
+            const int kept = own_ini ? value_index(e, get_ini_string(own_ini, "options", e->key, "")) : -1;
+            value = kept >= 0 ? kept : below;
+        }
+        if (value == below) continue;
+
+        mini_set_string(ini, "options", e->key, e->values[value]);
         changed++;
     }
 
     if (core_ini) mini_free(core_ini);
     if (directory_ini) mini_free(directory_ini);
+    if (own_ini) mini_free(own_ini);
 
     if (!changed) {
         mini_free(ini);
@@ -517,15 +534,15 @@ void options_discard(void) {
 }
 
 void options_save_content(void) {
-    if (options_save(content_ini_path, 1, 1)) snapshot_baseline();
+    if (options_save(content_ini_path, 1, 1, 0)) snapshot_baseline();
 }
 
 void options_save_core(void) {
-    if (options_save(core_ini_path, 0, 0)) snapshot_baseline();
+    if (options_save(core_ini_path, 0, 0, 1)) snapshot_baseline();
 }
 
 void options_save_directory(void) {
-    if (options_save(directory_ini_path, 1, 0)) snapshot_baseline();
+    if (options_save(directory_ini_path, 1, 0, 1)) snapshot_baseline();
 }
 
 void options_keep_session(void) {

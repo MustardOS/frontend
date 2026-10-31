@@ -1254,6 +1254,8 @@ static unsigned ready_w;
 static unsigned ready_h;
 static size_t ready_pitch;
 
+static void video_refresh_apply(const void *data, unsigned width, unsigned height, size_t pitch);
+
 void video_bridge_set_staging(const int staging) {
     stage_active = staging;
 
@@ -1263,6 +1265,12 @@ void video_bridge_set_staging(const int staging) {
     }
 
     if (!stage_state) return;
+
+    if (stage_state == 3) {
+        stage_state = 0;
+        video_refresh_apply(RETRO_HW_FRAME_BUFFER_VALID, stage_w, stage_h, 0);
+        return;
+    }
 
     void *buf = ready_buf;
     const size_t cap = ready_cap;
@@ -1277,8 +1285,6 @@ void video_bridge_set_staging(const int staging) {
     ready_pitch = stage_pitch;
     stage_state = 0;
 }
-
-static void video_refresh_apply(const void *data, unsigned width, unsigned height, size_t pitch);
 
 void video_bridge_commit_staged(void) {
     if (!ready_state) return;
@@ -1299,7 +1305,7 @@ void mux_retro_video_refresh_cb(const void *data, const unsigned width, const un
     stage_pitch = pitch;
 
     if (!data || data == RETRO_HW_FRAME_BUFFER_VALID || width == 0 || height == 0 || pitch > SIZE_MAX / height) {
-        stage_state = data == RETRO_HW_FRAME_BUFFER_VALID ? 0 : 2;
+        stage_state = data == RETRO_HW_FRAME_BUFFER_VALID ? (width && height ? 3 : 0) : 2;
         return;
     }
 

@@ -33,6 +33,7 @@
 #include "../link/link.h"
 #include "subsystem.h"
 #include "../state/manual.h"
+#include "../state/optimised.h"
 #include "../state/patch.h"
 #include "../input/deck.h"
 #include "../input/hotkeys.h"
@@ -452,7 +453,14 @@ static void core_async_finish(void) {
 
 static int core_async_eligible(const unsigned frames) {
     return active_core_threaded_run && frames == 1 && !netplay_is_active() && !link_is_engaged()
-           && !hw_render_bridge_active() && !environment_av_info_pending() && !session_settings.run_ahead;
+           && (!hw_render_bridge_active() || hw_render_bridge_threadable()) && !environment_av_info_pending()
+           && !session_settings.run_ahead;
+}
+
+static void core_run_hw_worker(void) {
+    hw_render_bridge_worker_begin();
+    current_core.retro_run();
+    hw_render_bridge_worker_end();
 }
 
 static void core_async_kick(void) {
@@ -467,6 +475,13 @@ static void core_async_kick(void) {
     video_bridge_set_staging(1);
     audio_bridge_set_staging(1);
     async_run_pending = 1;
+
+    if (hw_render_bridge_active()) {
+        hw_render_bridge_threaded_prepare();
+        run_thread_kick(core_run_hw_worker);
+        return;
+    }
+
     run_thread_kick(current_core.retro_run);
 }
 
@@ -763,6 +778,10 @@ int main(const int argc, char *argv[]) {
     if (overlay_library_dir(overlay_dir, sizeof(overlay_dir))) create_directories(overlay_dir, 1);
     options_init_paths(core_path_arg, content_path);
 
+    char optimised_core[MAX_BUFFER_SIZE];
+    if (core_get_name(core_path_arg, optimised_core, sizeof(optimised_core)))
+        optimised_init(optimised_core, content_path);
+
     governor_boost_begin("content startup");
     loading_startup_progress(startup_message, show_startup_messages);
 
@@ -887,7 +906,7 @@ int main(const int argc, char *argv[]) {
     active_core_is_ppsspp = core_name_available && strcmp(loaded_core_name, "ppsspp") == 0;
     active_core_freezes_children = core_name_available && coredef_freeze_children(loaded_core_name);
     active_core_threaded_run = core_name_available && coredef_threaded_run(loaded_core_name)
-                               && !hw_render_bridge_active() && run_thread_start();
+                               && (!hw_render_bridge_active() || hw_render_bridge_threadable()) && run_thread_start();
     if (active_core_threaded_run) LOG_INFO(mux_module, "Core runs on its own thread, overlapped with presenting");
 
     audio_bridge_set_latency_floor(active_core_is_ppsspp ? PPSSPP_AUDIO_LATENCY_FLOOR_MS : 0);
@@ -1011,8 +1030,11 @@ int main(const int argc, char *argv[]) {
     }
 
     session_settings_launch_ready();
-    if (session_settings_launch_recovered())
+    if (session_settings_launch_recovered()) {
         pause_menu_show_toast_timed(lang.muxretro.settings_screen.launch_recovered, tst_wait_s);
+    } else if (show_startup_messages && optimised_status() == optimised_state_applied) {
+        pause_menu_show_toast_timed(lang.muxretro.settings_screen.optimised_applied, tst_wait_s);
+    }
 
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", target_fps, av_info.timing.sample_rate);
     LOG_INFO(mux_module, "Startup: ready in %.2f ms total", startup_elapsed_ms(startup_start));

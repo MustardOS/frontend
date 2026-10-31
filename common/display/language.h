@@ -2572,6 +2572,7 @@ struct mux_lang {
             char reset_confirm_both[MAX_BUFFER_SIZE];
             char reset_failed[MAX_BUFFER_SIZE];
             char launch_recovered[MAX_BUFFER_SIZE];
+            char optimised_applied[MAX_BUFFER_SIZE];
             char performance_capture[MAX_BUFFER_SIZE];
             char export_diagnostics[MAX_BUFFER_SIZE];
             char export_diagnostics_done[MAX_BUFFER_SIZE];
@@ -2858,6 +2859,10 @@ struct mux_lang {
             char settings_recovery[MAX_BUFFER_SIZE];
             char recovery_restored[MAX_BUFFER_SIZE];
             char recovery_not_needed[MAX_BUFFER_SIZE];
+            char optimised_profile[MAX_BUFFER_SIZE];
+            char optimised_none[MAX_BUFFER_SIZE];
+            char optimised_applied[MAX_BUFFER_SIZE];
+            char optimised_invalid[MAX_BUFFER_SIZE];
             char capability_packaged[MAX_BUFFER_SIZE];
             char capability_core_unsupported[MAX_BUFFER_SIZE];
             char capability_states_required[MAX_BUFFER_SIZE];
@@ -3674,6 +3679,7 @@ struct mux_lang {
         char retrowait[MAX_BUFFER_SIZE];
         char retrocache[MAX_BUFFER_SIZE];
         char extracores[MAX_BUFFER_SIZE];
+        char optimised[MAX_BUFFER_SIZE];
         char activity[MAX_BUFFER_SIZE];
         char verbose[MAX_BUFFER_SIZE];
         char debuglog[MAX_BUFFER_SIZE];
@@ -3747,6 +3753,7 @@ struct mux_lang {
             char retro_wait[MAX_BUFFER_SIZE];
             char retro_cache[MAX_BUFFER_SIZE];
             char extra_cores[MAX_BUFFER_SIZE];
+            char optimised[MAX_BUFFER_SIZE];
             char activity[MAX_BUFFER_SIZE];
             char verbose[MAX_BUFFER_SIZE];
             char debug_log[MAX_BUFFER_SIZE];

@@ -41,7 +41,7 @@ static const char *cache_section(const enum content_hash_kind kind) {
     }
 }
 
-static void set_cache_path(const char *content_path) {
+static void build_cache_path(const char *content_path, char *out, const size_t out_size) {
     const char *name = strrchr(content_path, '/');
     name = name ? name + 1 : content_path;
 
@@ -50,12 +50,18 @@ static void set_cache_path(const char *content_path) {
     char *dot = strrchr(stem, '.');
     if (dot) *dot = '\0';
 
-    snprintf(cache_path, sizeof(cache_path), "%s/%s.ini", RETRO_HSH_PATH, stem);
-    create_directories(cache_path, 1);
+    snprintf(out, out_size, "%s/%s.ini", RETRO_HSH_PATH, stem);
+    create_directories(out, 1);
 }
 
-static int cache_read(const enum content_hash_kind kind, const long long size, const long long mtime, char *out) {
-    mini_t *ini = mini_try_load(cache_path);
+static void set_cache_path(const char *content_path) {
+    build_cache_path(content_path, cache_path, sizeof(cache_path));
+}
+
+static int cache_read(
+    const char *path, const enum content_hash_kind kind, const long long size, const long long mtime, char *out
+) {
+    mini_t *ini = mini_try_load(path);
     if (!ini) return 0;
 
     const char *section = cache_section(kind);
@@ -73,10 +79,11 @@ static int cache_read(const enum content_hash_kind kind, const long long size, c
     return ok;
 }
 
-static void
-cache_write(const enum content_hash_kind kind, const long long size, const long long mtime, const char *value) {
-    mini_t *ini = mini_try_load(cache_path);
-    if (!ini) ini = mini_create(cache_path);
+static void cache_write(
+    const char *path, const enum content_hash_kind kind, const long long size, const long long mtime, const char *value
+) {
+    mini_t *ini = mini_try_load(path);
+    if (!ini) ini = mini_create(path);
     if (!ini) return;
 
     const char *section = cache_section(kind);
@@ -84,8 +91,7 @@ cache_write(const enum content_hash_kind kind, const long long size, const long 
     mini_set_int(ini, section, "mtime", mtime);
     mini_set_string(ini, section, "value", value);
 
-    if (mini_save(ini, 0) != MINI_OK)
-        LOG_WARN(mux_module, "Could not safely update content hash cache: %s", cache_path);
+    if (mini_save(ini, 0) != MINI_OK) LOG_WARN(mux_module, "Could not safely update content hash cache: %s", path);
     mini_free(ini);
 }
 
@@ -134,6 +140,16 @@ static int stat_for_kind(const char *path, struct stat *st) {
     return stat(container, st);
 }
 
+static int compute_value(const enum content_hash_kind kind, const char *path, char *value) {
+    if (kind != content_hash_cheevo) return crc32_file(path, value);
+
+    char md5[33];
+    if (!cheevo_hash_content(path, md5)) return -1;
+
+    snprintf(value, HASH_VALUE_CAP, "%s", md5);
+    return 0;
+}
+
 static void compute_one(const enum content_hash_kind kind, const char *path) {
     struct stat st;
     if (!path[0] || stat_for_kind(path, &st) != 0) {
@@ -142,26 +158,17 @@ static void compute_one(const enum content_hash_kind kind, const char *path) {
     }
 
     char value[HASH_VALUE_CAP];
-    if (cache_read(kind, st.st_size, st.st_mtime, value)) {
+    if (cache_read(cache_path, kind, st.st_size, st.st_mtime, value)) {
         publish(kind, value);
         return;
     }
 
-    int ok;
-    if (kind == content_hash_cheevo) {
-        char md5[33];
-        ok = cheevo_hash_content(path, md5) ? 0 : -1;
-        if (ok == 0) snprintf(value, sizeof(value), "%s", md5);
-    } else {
-        ok = crc32_file(path, value);
-    }
-
-    if (ok != 0) {
+    if (compute_value(kind, path, value) != 0) {
         publish(kind, lang.generic.unknown);
         return;
     }
 
-    cache_write(kind, st.st_size, st.st_mtime, value);
+    cache_write(cache_path, kind, st.st_size, st.st_mtime, value);
     publish(kind, value);
 }
 
@@ -231,4 +238,54 @@ int content_hash_is_ready(const enum content_hash_kind kind) {
 
 const char *content_hash_get(const enum content_hash_kind kind) {
     return hash_result[kind];
+}
+
+int content_hash_resolve(
+    const enum content_hash_kind kind, const char *archive_path, const char *path, const long long compute_limit,
+    char *out, const size_t out_size
+) {
+    if (!out || out_size == 0) return 0;
+    out[0] = '\0';
+    if (!archive_path || !archive_path[0] || !path || !path[0]) return 0;
+
+    struct stat st;
+    if (stat_for_kind(path, &st) != 0) return 0;
+
+    char resolve_cache[MAX_BUFFER_SIZE];
+    build_cache_path(archive_path, resolve_cache, sizeof(resolve_cache));
+
+    char value[HASH_VALUE_CAP];
+    if (!cache_read(resolve_cache, kind, st.st_size, st.st_mtime, value)) {
+        if (compute_limit >= 0 && st.st_size > compute_limit) return 0;
+        if (compute_value(kind, path, value) != 0) return 0;
+
+        cache_write(resolve_cache, kind, st.st_size, st.st_mtime, value);
+    }
+
+    snprintf(out, out_size, "%s", value);
+    return 1;
+}
+
+int content_hash_archive_cached(
+    const enum content_hash_kind kind, const char *archive_path, char *out, const size_t out_size
+) {
+    if (!out || out_size == 0) return 0;
+    out[0] = '\0';
+    if (!archive_path || !archive_path[0]) return 0;
+
+    struct stat st;
+    if (stat(archive_path, &st) != 0) return 0;
+
+    char resolve_cache[MAX_BUFFER_SIZE];
+    build_cache_path(archive_path, resolve_cache, sizeof(resolve_cache));
+
+    char archive_value[HASH_VALUE_CAP];
+    if (!cache_read(resolve_cache, content_hash_archive, st.st_size, st.st_mtime, archive_value)) return 0;
+
+    mini_t *ini = mini_try_load(resolve_cache);
+    if (!ini) return 0;
+
+    snprintf(out, out_size, "%s", mini_get_string(ini, cache_section(kind), "value", ""));
+    mini_free(ini);
+    return out[0] != '\0';
 }

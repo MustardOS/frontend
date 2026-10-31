@@ -121,6 +121,7 @@ const gl_dispatch_t *gl_dispatch_acquire(const char *consumer, const unsigned ca
         LOAD_REQUIRED(IsTexture);
         LOAD_REQUIRED(GetString);
         LOAD_REQUIRED(Flush);
+        LOAD_REQUIRED(Finish);
         dispatch_capabilities |= gl_dispatch_hardware;
     }
 

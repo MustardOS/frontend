@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <time.h>
 #include "muxretro.h"
+#include "../video/hw_render.h"
 
 static pthread_t worker;
 static int worker_started;
@@ -149,6 +150,8 @@ static int environment_safe_on_worker(const unsigned cmd) {
 int run_thread_marshal(const unsigned cmd, void *data, bool *result) {
     if (!on_worker() || environment_safe_on_worker(cmd)) return 0;
 
+    hw_render_bridge_worker_suspend();
+
     pthread_mutex_lock(&lock);
     env_cmd = cmd;
     env_data = data;
@@ -158,6 +161,8 @@ int run_thread_marshal(const unsigned cmd, void *data, bool *result) {
         pthread_cond_wait(&cond, &lock);
     *result = env_result;
     pthread_mutex_unlock(&lock);
+
+    hw_render_bridge_worker_resume();
 
     return 1;
 }

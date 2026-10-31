@@ -137,6 +137,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/advanced", "retrowait", CFG_OFF(settings.advanced.retro_wait), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/advanced", "retrocache", CFG_OFF(settings.advanced.retro_cache), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/advanced", "extracores", CFG_OFF(settings.advanced.extra_cores), 0, {.i = 0}, 1, 0, 1},
+    {CONF_CONFIG_PATH "settings/advanced", "optimised", CFG_OFF(settings.advanced.optimised), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/advanced", "activity", CFG_OFF(settings.advanced.activity), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/advanced", "usb_function", CFG_OFF(settings.advanced.usb_function), 0, {.i = 0}, 1, 0, 2},
     {CONF_CONFIG_PATH "settings/advanced", "verbose", CFG_OFF(settings.advanced.verbose), 0, {.i = 0}, 1, 0, 1},

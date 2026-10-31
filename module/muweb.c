@@ -6048,12 +6048,36 @@ static int json_object_text(const char *text, const size_t length) {
     return i < length && text[i] == '{';
 }
 
-static int core_user_path(char *out, const size_t out_size) {
-    return storage_root[0] && join_path(out, out_size, storage_root, "info/manifest/core.json");
+#define CORE_TOOL_DIR "info/manifest/core"
+#define CORE_TOOL_EXT ".json"
+
+struct core_item {
+    char name_space[NAME_MAX + 1];
+    char file[NAME_MAX + 1];
+    char path[PATH_MAX];
+};
+
+static int core_tool_dir(const char *root, char *out, const size_t out_size) {
+    return root[0] && join_path(out, out_size, root, CORE_TOOL_DIR);
 }
 
-static int core_bundled_path(char *out, const size_t out_size) {
-    return share_root[0] && join_path(out, out_size, share_root, "info/manifest/core.json");
+static int core_file_name(const char *name) {
+    const size_t length = strlen(name);
+    const size_t ext = strlen(CORE_TOOL_EXT);
+    return length > ext && name[0] != '.' && !strchr(name, '/') && strcmp(name + length - ext, CORE_TOOL_EXT) == 0
+           && strcmp(name, "core.json") != 0;
+}
+
+static int core_namespace_name(const char *name) {
+    return name[0] && name[0] != '.' && !strchr(name, '/') && strlen(name) <= NAME_MAX;
+}
+
+static int core_entry_filter(const struct dirent *entry) {
+    return core_file_name(entry->d_name);
+}
+
+static int core_namespace_filter(const struct dirent *entry) {
+    return core_namespace_name(entry->d_name);
 }
 
 static int core_user_valid(const char *path) {
@@ -6066,31 +6090,173 @@ static int core_user_valid(const char *path) {
     return json_object_text(head, length);
 }
 
+static void core_free_entries(struct dirent **entries, const int count) {
+    for (int i = 0; i < count; ++i)
+        free(entries[i]);
+    free(entries);
+}
+
+static int core_collect(const char *root, struct core_item **out) {
+    *out = NULL;
+
+    struct dirent **folders = NULL;
+    const int folder_count = scandir(root, &folders, core_namespace_filter, file_name_compare);
+    if (folder_count < 0) return 0;
+
+    int count = 0;
+    for (int f = 0; f < folder_count; ++f) {
+        char folder[PATH_MAX];
+        struct stat info;
+        if (!join_path(folder, sizeof(folder), root, folders[f]->d_name) || stat(folder, &info) < 0
+            || !S_ISDIR(info.st_mode))
+            continue;
+
+        struct dirent **files = NULL;
+        const int file_count = scandir(folder, &files, core_entry_filter, file_name_compare);
+        for (int i = 0; i < file_count; ++i) {
+            struct core_item *grown = realloc(*out, sizeof(**out) * (size_t) (count + 1));
+            if (!grown) break;
+            *out = grown;
+
+            struct core_item *item = &(*out)[count];
+            snprintf(item->name_space, sizeof(item->name_space), "%s", folders[f]->d_name);
+            snprintf(item->file, sizeof(item->file), "%s", files[i]->d_name);
+            if (join_path(item->path, sizeof(item->path), folder, files[i]->d_name)) count++;
+        }
+        if (file_count > 0) core_free_entries(files, file_count);
+    }
+
+    core_free_entries(folders, folder_count);
+    return count;
+}
+
+static const struct core_item *
+core_find(const struct core_item *items, const int count, const char *file, const int valid) {
+    for (int i = 0; i < count; ++i)
+        if (strcmp(items[i].file, file) == 0 && (!valid || core_user_valid(items[i].path))) return &items[i];
+
+    return NULL;
+}
+
+static int core_member_key(struct buffer *out, const char *name) {
+    char key[PATH_MAX];
+    const int written = snprintf(key, sizeof(key), "%.*s", (int) (strlen(name) - strlen(CORE_TOOL_EXT)), name);
+    if (written < 0 || (size_t) written >= sizeof(key)) return 0;
+
+    if (out->length && out->data[out->length - 1] != '{' && !buffer_puts(out, ",")) return 0;
+    return json_string(out, key) && buffer_puts(out, ":");
+}
+
+static int core_visit_source(struct buffer *out, const struct core_item *item, const int user) {
+    return core_member_key(out, item->file) && json_string(out, user ? "user" : "bundled");
+}
+
+static int core_visit_data(struct buffer *out, const struct core_item *item, const int user) {
+    (void) user;
+
+    struct buffer data = {0};
+    if (!read_whole_file(item->path, &data) || !json_object_text(data.data ? data.data : "", data.length)) {
+        buffer_free(&data);
+        return 1;
+    }
+
+    size_t open = 0;
+    while (open < data.length && data.data[open] != '{')
+        open++;
+
+    size_t next = open + 1;
+    while (next < data.length && isspace((unsigned char) data.data[next]))
+        next++;
+    const int empty = next < data.length && data.data[next] == '}';
+
+    const int ok = core_member_key(out, item->file) && buffer_puts(out, "{") && json_string(out, "namespace")
+                   && buffer_puts(out, ":") && json_string(out, item->name_space) && (empty || buffer_puts(out, ","))
+                   && buffer_append(out, data.data + open + 1, data.length - open - 1);
+    buffer_free(&data);
+    return ok;
+}
+
+static int core_walk(
+    struct buffer *out, const char *user_dir, const char *bundled_dir,
+    int (*visit)(struct buffer *, const struct core_item *, int)
+) {
+    struct core_item *bundled = NULL;
+    const int bundled_count = core_collect(bundled_dir, &bundled);
+
+    struct core_item *user = NULL;
+    const int user_count = core_collect(user_dir, &user);
+
+    int ok = 1;
+    for (int i = 0; ok && i < bundled_count; ++i) {
+        if (core_find(bundled, i, bundled[i].file, 0)) continue;
+
+        const struct core_item *mine = core_find(user, user_count, bundled[i].file, 1);
+        ok = visit(out, mine ? mine : &bundled[i], mine != NULL);
+    }
+
+    for (int i = 0; ok && i < user_count; ++i) {
+        if (core_find(bundled, bundled_count, user[i].file, 0)) continue;
+        if (core_find(user, user_count, user[i].file, 1) != &user[i]) continue;
+        ok = visit(out, &user[i], 1);
+    }
+
+    free(bundled);
+    free(user);
+    return ok;
+}
+
+static int
+core_split_target(const char *rest, char *name_space, const size_t ns_size, char *file, const size_t file_size) {
+    const char *slash = strchr(rest, '/');
+    if (!slash) {
+        name_space[0] = '\0';
+        if (!core_file_name(rest)) return 0;
+        snprintf(file, file_size, "%s", rest);
+        return 1;
+    }
+
+    const size_t ns_length = (size_t) (slash - rest);
+    if (ns_length >= ns_size) return 0;
+    memcpy(name_space, rest, ns_length);
+    name_space[ns_length] = '\0';
+    snprintf(file, file_size, "%s", slash + 1);
+
+    return core_namespace_name(name_space) && core_file_name(file);
+}
+
+static int core_remove_user(const char *user_dir, const char *file, const char *keep) {
+    struct core_item *user = NULL;
+    const int user_count = core_collect(user_dir, &user);
+
+    int ok = 1;
+    for (int i = 0; ok && i < user_count; ++i) {
+        if (file && strcmp(user[i].file, file) != 0) continue;
+        if (keep && strcmp(user[i].path, keep) == 0) continue;
+        ok = copy_to_backup(user[i].path) && unlink(user[i].path) == 0;
+    }
+
+    free(user);
+    return ok;
+}
+
 static void handle_core_tool(
     struct connection *connection, const char *method, const char *rest, const char *body, const size_t body_length
 ) {
-    char user[PATH_MAX];
-    char bundled[PATH_MAX];
-    if (!core_user_path(user, sizeof(user)) || !core_bundled_path(bundled, sizeof(bundled))) {
+    char user_dir[PATH_MAX];
+    char bundled_dir[PATH_MAX];
+    if (!core_tool_dir(storage_root, user_dir, sizeof(user_dir))
+        || !core_tool_dir(share_root, bundled_dir, sizeof(bundled_dir))) {
         send_error(connection, 404, "Core assignments are not configured");
         return;
     }
 
-    const int has_user = core_user_valid(user);
-
-    if (strcmp(method, "GET") == 0) {
-        if (strcmp(rest, "core.json") == 0) {
-            send_file(connection, has_user ? user : bundled, NULL);
-            return;
-        }
-        if (*rest) {
-            send_error(connection, 404, "Not found");
-            return;
-        }
+    if (strcmp(method, "GET") == 0 && (!*rest || strcmp(rest, "core.json") == 0)) {
+        const int listing = !*rest;
 
         struct buffer out = {0};
-        if (buffer_puts(&out, "{") && json_field(&out, "source", has_user ? "user" : "bundled")
-            && buffer_puts(&out, "}"))
+        if (buffer_puts(&out, listing ? "{\"systems\":{" : "{")
+            && core_walk(&out, user_dir, bundled_dir, listing ? core_visit_source : core_visit_data)
+            && buffer_puts(&out, listing ? "}}" : "}"))
             send_json(connection, &out);
         else
             send_error(connection, 500, "Could not read core assignments");
@@ -6098,40 +6264,74 @@ static void handle_core_tool(
         return;
     }
 
-    if (*rest) {
+    char name_space[NAME_MAX + 1];
+    char file[NAME_MAX + 1];
+    if (*rest && !core_split_target(rest, name_space, sizeof(name_space), file, sizeof(file))) {
         send_error(connection, 404, "Not found");
+        return;
+    }
+
+    if (strcmp(method, "GET") == 0) {
+        struct core_item *user = NULL;
+        const int user_count = core_collect(user_dir, &user);
+        struct core_item *bundled = NULL;
+        const int bundled_count = core_collect(bundled_dir, &bundled);
+
+        const struct core_item *found = core_find(user, user_count, file, 1);
+        if (!found) found = core_find(bundled, bundled_count, file, 0);
+
+        if (found)
+            send_file(connection, found->path, NULL);
+        else
+            send_error(connection, 404, "Not found");
+
+        free(user);
+        free(bundled);
         return;
     }
 
     if (!write_allowed(connection)) return;
 
-    if (strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0) {
+    if (*rest && (strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0)) {
+        if (!name_space[0]) {
+            send_error(connection, 400, "Save a system as {namespace}/{system}.json");
+            return;
+        }
         if (!json_object_text(body, body_length)) {
-            send_error(connection, 400, "core.json must be a JSON object");
+            send_error(connection, 400, "A system definition must be a JSON object");
             return;
         }
 
+        char relative[PATH_MAX];
         char target[PATH_MAX];
-        if (!resolve_target(storage_root, "info/manifest/core.json", 1, target, sizeof(target))) {
+        if ((size_t) snprintf(relative, sizeof(relative), "%s/%s/%s", CORE_TOOL_DIR, name_space, file)
+                >= sizeof(relative)
+            || !resolve_target(storage_root, relative, 1, target, sizeof(target))) {
             send_error(connection, 400, "Invalid destination");
             return;
         }
         if (!tool_write(connection, target, body, body_length)) return;
 
-        log_verbose("stored core.json (%zu bytes)", body_length);
+        if (!core_remove_user(user_dir, file, target)) {
+            send_error(connection, 500, "Saved, but an older copy in another namespace could not be removed");
+            return;
+        }
+
+        log_verbose("stored core definition %s/%s (%zu bytes)", name_space, file, body_length);
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
 
     if (strcmp(method, "DELETE") == 0) {
-        if (access(user, F_OK) == 0) {
-            if (!copy_to_backup(user) || unlink(user) < 0) {
-                send_error(connection, 500, "Could not reset core assignments");
-                return;
-            }
+        if (!core_remove_user(user_dir, *rest ? file : NULL, NULL)) {
+            send_error(connection, 500, "Could not reset core assignments");
+            return;
         }
 
-        log_verbose("reset core.json to the bundled file");
+        if (*rest)
+            log_verbose("reset core definition %s to the bundled file", file);
+        else
+            log_verbose("reset every core definition to the bundled files");
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }

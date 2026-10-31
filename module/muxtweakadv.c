@@ -153,6 +153,7 @@ static void save_tweak_options(void) {
 
     CHECK_AND_SAVE_STD(tweakadv, remember_section, "settings/advanced/remember_section", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, extra_cores, "settings/advanced/extracores", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, optimised, "settings/advanced/optimised", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_modify, "settings/advanced/trust_modify", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_power, "settings/advanced/trust_power", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, trust_remove, "settings/advanced/trust_remove", INT, 0);
@@ -253,6 +254,7 @@ static void init_navigation_group(void) {
         -1, tweakadv, remember_section, lang.muxtweakadv.remembersection, "remembersection", disabled_enabled, 2
     );
     INIT_OPTION_ITEM(-1, tweakadv, extra_cores, lang.muxtweakadv.extracores, "extracores", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, optimised, lang.muxtweakadv.optimised, "optimised", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_modify, lang.muxtweakadv.trustmodify, "trustmodify", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_power, lang.muxtweakadv.trustpower, "trustpower", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, trust_remove, lang.muxtweakadv.trustremove, "trustremove", disabled_enabled, 2);

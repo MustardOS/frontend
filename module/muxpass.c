@@ -170,8 +170,9 @@ int muxpass_main(const int auth_type) {
     init_theme(0, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.muxpass.title);
-    init_muxpass(ui_pnl_content, load_font_pass_roller());
     init_elements();
+    init_fonts();
+    init_muxpass(ui_pnl_content, load_font_pass_roller());
 
     if (strlen(p_msg) > 1) toast_message(p_msg, tst_wait_f);
 
@@ -184,7 +185,6 @@ int muxpass_main(const int auth_type) {
 
     load_wallpaper(ui_screen, NULL, ui_img_wall, wall_general);
 
-    init_fonts();
     init_navigation_group();
 
     init_timer(NULL, NULL);

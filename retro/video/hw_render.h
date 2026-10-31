@@ -34,6 +34,20 @@ void hw_render_bridge_enter_core_call(void);
 
 void hw_render_bridge_exit_core_call(void);
 
+int hw_render_bridge_threadable(void);
+
+void hw_render_bridge_worker_begin(void);
+
+void hw_render_bridge_worker_end(void);
+
+void hw_render_bridge_before_present(void);
+
+void hw_render_bridge_threaded_prepare(void);
+
+void hw_render_bridge_worker_suspend(void);
+
+void hw_render_bridge_worker_resume(void);
+
 void hw_render_bridge_prepare_core_unload(void);
 
 void hw_render_bridge_draw(SDL_Renderer *renderer, const SDL_Rect *dest_rect, const SDL_Rect *src_rect);

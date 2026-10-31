@@ -515,6 +515,14 @@ The copy from %s will replace the current save.
 The %s for %s will be deleted.
 This Folder
 %s files uploaded
+Replace %s?
+A file with this name already exists.
+A file with this name already exists. %s more files being uploaded also already exist.
+A file with this name already exists. One more file being uploaded also already exists.
+Skip
+Skip All
+Replace All
+No files were uploaded
 %s free
 %s selected
 Changes here can stop MustardOS from starting or working correctly.

@@ -638,7 +638,8 @@
     TWEAKADV(debug_log, "debuglog")                                                                                    \
     TWEAKADV(user_init, "userinit")                                                                                    \
     TWEAKADV(remember_section, "remembersection")                                                                      \
-    TWEAKADV(extra_cores, "extracores")
+    TWEAKADV(extra_cores, "extracores")                                                                                \
+    TWEAKADV(optimised, "optimised")
 
 #define TWEAKADV_CONFIRMATIONS_ELEMENTS                                                                                \
     TWEAKADV(trust_modify, "trustmodify")                                                                              \

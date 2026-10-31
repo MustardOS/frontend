@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <dlfcn.h>
+#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <common/platform/display.h>
 #include <common/base/function_pointer.h>
@@ -481,9 +483,12 @@ static void destroy_target(void) {
     target_h = 0;
 }
 
+static int threaded_started = 0;
+static int fresh_targets_needed = 0;
+
 void hw_render_bridge_configure(const unsigned max_width, const unsigned max_height) {
     if (!active || max_width == 0 || max_height == 0) return;
-    if ((int) max_width == target_w && (int) max_height == target_h) return;
+    if (!fresh_targets_needed && (int) max_width == target_w && (int) max_height == target_h) return;
 
     const int first_time = fbo[0] == 0;
     hw_render_bridge_context_save();
@@ -603,6 +608,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
 
     // Tell the core to rebuild against the new framebuffer, not just the first time we make one!
     context_ready = 1;
+    fresh_targets_needed = 0;
     if (core_context_reset) {
         governor_boost_begin("GL context reset");
         const Uint64 reset_started = SDL_GetPerformanceCounter();
@@ -616,6 +622,7 @@ void hw_render_bridge_configure(const unsigned max_width, const unsigned max_hei
     }
 
     hw_render_bridge_context_restore();
+    fresh_targets_needed = 0;
 }
 
 void hw_render_bridge_apply_filter(void) {
@@ -863,6 +870,7 @@ void hw_render_bridge_flush_core_commands(void) {
 
 void hw_render_bridge_context_save(void) {
     if (!active || !gl) return;
+    if (threaded_started) fresh_targets_needed = 1;
     if (context_scope_depth++ > 0) return;
 
     const uint64_t start = perf_begin();
@@ -894,6 +902,86 @@ void hw_render_bridge_exit_core_call(void) {
     if (!owns_context() && !sdl_state.valid) return;
 
     leave_core_gl();
+}
+
+typedef EGLDisplay (*egl_get_current_display_fn)(void);
+typedef EGLBoolean (*egl_make_current_fn)(EGLDisplay, EGLSurface, EGLSurface, EGLContext);
+
+static egl_make_current_fn egl_make_current = NULL;
+static EGLDisplay egl_display = EGL_NO_DISPLAY;
+static int surfaceless_probed = 0;
+static int surfaceless_ok = 0;
+static _Thread_local int worker_bound = 0;
+
+static void *egl_symbol(const char *name) {
+    static void *lib = NULL;
+    if (!lib) lib = dlopen("libEGL.so.1", RTLD_NOW | RTLD_NOLOAD);
+    if (!lib) lib = dlopen("libEGL.so.1", RTLD_NOW);
+    if (!lib) lib = dlopen("libEGL.so", RTLD_NOW);
+
+    void *sym = lib ? dlsym(lib, name) : NULL;
+    return sym ? sym : dlsym(RTLD_DEFAULT, name);
+}
+
+static void probe_surfaceless(void) {
+    if (surfaceless_probed) return;
+    surfaceless_probed = 1;
+    surfaceless_ok = 0;
+
+    egl_get_current_display_fn get_display = NULL;
+    MUOS_FUNCTION_ASSIGN(get_display, egl_symbol("eglGetCurrentDisplay"));
+    MUOS_FUNCTION_ASSIGN(egl_make_current, egl_symbol("eglMakeCurrent"));
+    if (!get_display || !egl_make_current || !gl_window || !sdl_ctx || !core_ctx) return;
+
+    egl_display = get_display();
+    if (egl_display == EGL_NO_DISPLAY) return;
+
+    surfaceless_ok = egl_make_current(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, (EGLContext) core_ctx) == EGL_TRUE;
+    SDL_GL_MakeCurrent(gl_window, sdl_ctx);
+
+    LOG_INFO(
+        mux_module, "hw_render: surfaceless core context %s for threaded run",
+        surfaceless_ok ? "available" : "unavailable"
+    );
+}
+
+int hw_render_bridge_threadable(void) {
+    if (!active || !context_ready || !gl || !owns_context() || target_count < 2) return 0;
+    probe_surfaceless();
+    return surfaceless_ok;
+}
+
+void hw_render_bridge_threaded_prepare(void) {
+    if (!active || target_w <= 0 || target_h <= 0) return;
+    if (threaded_started && !fresh_targets_needed) return;
+
+    threaded_started = 1;
+    fresh_targets_needed = 1;
+    hw_render_bridge_configure((unsigned) target_w, (unsigned) target_h);
+}
+
+void hw_render_bridge_worker_begin(void) {
+    if (!surfaceless_ok) return;
+    worker_bound = egl_make_current(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, (EGLContext) core_ctx) == EGL_TRUE;
+}
+
+void hw_render_bridge_worker_suspend(void) {
+    if (!worker_bound) return;
+    egl_make_current(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
+void hw_render_bridge_worker_resume(void) {
+    if (!worker_bound) return;
+    egl_make_current(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, (EGLContext) core_ctx);
+}
+
+void hw_render_bridge_worker_end(void) {
+    if (!worker_bound) return;
+    const uint64_t start = perf_begin();
+    gl->Finish();
+    perf_end(perf_stage_gl_submit, start);
+    egl_make_current(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    worker_bound = 0;
 }
 
 static void capture_quad_restore_state(quad_restore_state_t *state) {
@@ -1188,6 +1276,11 @@ void hw_render_bridge_shutdown(void) {
     destroy_shared_context();
 
     backend_desc[0] = '\0';
+    surfaceless_probed = 0;
+    surfaceless_ok = 0;
+    threaded_started = 0;
+    fresh_targets_needed = 0;
+    egl_display = EGL_NO_DISPLAY;
     es3_available = 0;
     active = 0;
     context_ready = 0;

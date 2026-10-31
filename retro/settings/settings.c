@@ -28,6 +28,7 @@
 #include "../macro/macro.h"
 #include "../state/gamestate.h"
 #include "../state/history.h"
+#include "../state/optimised.h"
 #include "../ui/options.h"
 #include "../video/overlay_bridge.h"
 #include "../video/overlay_library.h"
@@ -170,6 +171,8 @@ _Static_assert(COREDEF_SOURCE_COUNT == PORT_SOURCE_COUNT, "coredef control maps 
 // a handheld can supply its own, see coredef_source_target()
 static const int *active_source_target = default_source_target;
 
+static void apply_optimised_settings(struct session_settings_t *settings);
+
 static struct session_settings_t default_settings(void) {
     struct session_settings_t out = defaults;
     out.speed_limiter = board_is(board_special_pixel_2);
@@ -184,6 +187,7 @@ static struct session_settings_t default_settings(void) {
         }
     }
 
+    apply_optimised_settings(&out);
     return out;
 }
 
@@ -988,6 +992,43 @@ static int *setting_field(struct session_settings_t *settings, const struct sett
     return (int *) ((unsigned char *) settings + descriptor->offset);
 }
 
+static const char *optimised_setting_keys[] = {
+    "rotate",
+    "fps_limit",
+    "frame_delay_ms",
+    "run_ahead",
+    "gpu_hard_sync",
+    "game_renderer",
+    "audio_latency_profile",
+    "audio_period_frames",
+    "audio_rate_control",
+    "sample_rate",
+    "content_precache",
+};
+
+static void apply_optimised_settings(struct session_settings_t *settings) {
+    if (!optimised_active()) return;
+
+    for (size_t k = 0; k < A_SIZE(optimised_setting_keys); k++) {
+        int value = 0;
+        if (!optimised_setting(optimised_setting_keys[k], &value)) continue;
+
+        for (size_t i = 0; i < A_SIZE(setting_descriptors); i++) {
+            const struct setting_descriptor *descriptor = &setting_descriptors[i];
+            if (strcmp(descriptor->key, optimised_setting_keys[k]) != 0) continue;
+
+            const int valid = setting_value_valid(descriptor, value);
+            if (valid) {
+                *setting_field(settings, descriptor) = value;
+            } else {
+                LOG_WARN(mux_module, "Ignoring invalid optimised setting '%s'", descriptor->key);
+            }
+            optimised_setting_result(descriptor->key, valid);
+            break;
+        }
+    }
+}
+
 static const int *
 setting_field_const(const struct session_settings_t *settings, const struct setting_descriptor *descriptor) {
     return (const int *) ((const unsigned char *) settings + descriptor->offset);
@@ -1735,8 +1776,9 @@ static struct session_settings_t tier_base(const int with_core, const int with_d
     return base;
 }
 
-static int write_ini_delta(const char *path, const struct session_settings_t *base) {
-    if (memcmp(&session_settings, base, sizeof(session_settings)) == 0) {
+static int
+write_ini_delta(const char *path, const struct session_settings_t *values, const struct session_settings_t *base) {
+    if (memcmp(values, base, sizeof(*values)) == 0) {
         if (unlink(path) == 0 || errno == ENOENT) return 1;
         LOG_ERROR(mux_module, "Could not remove redundant settings '%s': %s", path, strerror(errno));
         return 0;
@@ -1750,67 +1792,65 @@ static int write_ini_delta(const char *path, const struct session_settings_t *ba
 
     for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
         const struct setting_descriptor *descriptor = &setting_descriptors[i];
-        const int value = *setting_field_const(&session_settings, descriptor);
+        const int value = *setting_field_const(values, descriptor);
         if (value != *setting_field_const(base, descriptor)) mini_set_int(ini, "settings", descriptor->key, value);
     }
 
-    if (session_settings.colour_filter != base->colour_filter)
-        mini_set_string(
-            ini, "settings", "colour_filter_name", colour_filter_preset_key(session_settings.colour_filter)
-        );
-    if (session_settings.colour_shader != base->colour_shader)
-        mini_set_string(ini, "settings", "colour_shader_name", colour_shader_key(session_settings.colour_shader));
-    if (session_settings.overlay_image != base->overlay_image)
-        mini_set_string(ini, "settings", "overlay_image_name", overlay_library_key(session_settings.overlay_image));
-    if (shader_params_differ(&session_settings, base)) write_shader_params(ini, &session_settings);
+    if (values->colour_filter != base->colour_filter)
+        mini_set_string(ini, "settings", "colour_filter_name", colour_filter_preset_key(values->colour_filter));
+    if (values->colour_shader != base->colour_shader)
+        mini_set_string(ini, "settings", "colour_shader_name", colour_shader_key(values->colour_shader));
+    if (values->overlay_image != base->overlay_image)
+        mini_set_string(ini, "settings", "overlay_image_name", overlay_library_key(values->overlay_image));
+    if (shader_params_differ(values, base)) write_shader_params(ini, values);
 
     for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
         char key[32];
 
-        if (session_settings.port_assignment[i] != base->port_assignment[i]) {
+        if (values->port_assignment[i] != base->port_assignment[i]) {
             snprintf(key, sizeof(key), "port%d_assignment", i);
-            mini_set_int(ini, "settings", key, session_settings.port_assignment[i]);
+            mini_set_int(ini, "settings", key, values->port_assignment[i]);
         }
 
-        if (strcmp(session_settings.port_device_key[i], base->port_device_key[i]) != 0) {
+        if (strcmp(values->port_device_key[i], base->port_device_key[i]) != 0) {
             snprintf(key, sizeof(key), "port%d_device_key", i);
-            mini_set_string(ini, "settings", key, session_settings.port_device_key[i]);
+            mini_set_string(ini, "settings", key, values->port_device_key[i]);
         }
 
-        if (session_settings.port_device_id[i] != base->port_device_id[i]) {
+        if (values->port_device_id[i] != base->port_device_id[i]) {
             snprintf(key, sizeof(key), "port%d_device_id", i);
-            mini_set_int(ini, "settings", key, session_settings.port_device_id[i]);
+            mini_set_int(ini, "settings", key, values->port_device_id[i]);
         }
 
-        if (session_settings.port_role[i] != base->port_role[i]) {
+        if (values->port_role[i] != base->port_role[i]) {
             snprintf(key, sizeof(key), "port%d_role", i);
-            mini_set_int(ini, "settings", key, session_settings.port_role[i]);
+            mini_set_int(ini, "settings", key, values->port_role[i]);
         }
 
-        if (session_settings.port_deck[i] != base->port_deck[i]) {
+        if (values->port_deck[i] != base->port_deck[i]) {
             snprintf(key, sizeof(key), "port%d_deck", i);
-            mini_set_int(ini, "settings", key, session_settings.port_deck[i]);
+            mini_set_int(ini, "settings", key, values->port_deck[i]);
         }
 
-        if (session_settings.port_stick_forced[i] != base->port_stick_forced[i]) {
+        if (values->port_stick_forced[i] != base->port_stick_forced[i]) {
             snprintf(key, sizeof(key), "port%d_stick_forced", i);
-            mini_set_int(ini, "settings", key, session_settings.port_stick_forced[i]);
+            mini_set_int(ini, "settings", key, values->port_stick_forced[i]);
         }
 
         for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
-            if (session_settings.port_source_target[i][s] != base->port_source_target[i][s]) {
+            if (values->port_source_target[i][s] != base->port_source_target[i][s]) {
                 snprintf(key, sizeof(key), "port%d_src_%d", i, s);
-                mini_set_int(ini, "settings", key, session_settings.port_source_target[i][s]);
+                mini_set_int(ini, "settings", key, values->port_source_target[i][s]);
             }
 
-            if (session_settings.port_source_turbo[i][s] != base->port_source_turbo[i][s]) {
+            if (values->port_source_turbo[i][s] != base->port_source_turbo[i][s]) {
                 snprintf(key, sizeof(key), "port%d_srcms_%d", i, s);
-                mini_set_int(ini, "settings", key, session_settings.port_source_turbo[i][s]);
+                mini_set_int(ini, "settings", key, values->port_source_turbo[i][s]);
             }
 
-            if (session_settings.port_source_macro[i][s] != base->port_source_macro[i][s]) {
+            if (values->port_source_macro[i][s] != base->port_source_macro[i][s]) {
                 snprintf(key, sizeof(key), "port%d_macro_%d", i, s);
-                mini_set_int(ini, "settings", key, session_settings.port_source_macro[i][s]);
+                mini_set_int(ini, "settings", key, values->port_source_macro[i][s]);
             }
         }
     }
@@ -1819,6 +1859,45 @@ static int write_ini_delta(const char *path, const struct session_settings_t *ba
     mini_free(ini);
     if (!saved) LOG_ERROR(mux_module, "Could not safely write settings: %s", path);
     return saved;
+}
+
+static void apply_session_changes(struct session_settings_t *layer) {
+    const struct session_settings_t *now = &session_settings;
+    const struct session_settings_t *was = &baseline_settings;
+
+    for (size_t i = 0; i < sizeof(setting_descriptors) / sizeof(setting_descriptors[0]); i++) {
+        const struct setting_descriptor *descriptor = &setting_descriptors[i];
+        const int value = *setting_field_const(now, descriptor);
+        if (value != *setting_field_const(was, descriptor)) *setting_field(layer, descriptor) = value;
+    }
+
+    if (now->colour_filter != was->colour_filter) layer->colour_filter = now->colour_filter;
+    if (now->colour_shader != was->colour_shader) layer->colour_shader = now->colour_shader;
+    if (now->overlay_image != was->overlay_image) layer->overlay_image = now->overlay_image;
+    if (shader_params_differ(now, was)) {
+        memcpy(layer->shader_params_for, now->shader_params_for, sizeof(layer->shader_params_for));
+        memcpy(layer->shader_params, now->shader_params, sizeof(layer->shader_params));
+    }
+
+    for (int i = 0; i < MUX_INPUT_PORT_COUNT; i++) {
+        if (now->port_assignment[i] != was->port_assignment[i]) layer->port_assignment[i] = now->port_assignment[i];
+        if (strcmp(now->port_device_key[i], was->port_device_key[i]) != 0)
+            memcpy(layer->port_device_key[i], now->port_device_key[i], sizeof(layer->port_device_key[i]));
+        if (now->port_device_id[i] != was->port_device_id[i]) layer->port_device_id[i] = now->port_device_id[i];
+        if (now->port_role[i] != was->port_role[i]) layer->port_role[i] = now->port_role[i];
+        if (now->port_deck[i] != was->port_deck[i]) layer->port_deck[i] = now->port_deck[i];
+        if (now->port_stick_forced[i] != was->port_stick_forced[i])
+            layer->port_stick_forced[i] = now->port_stick_forced[i];
+
+        for (int s = 0; s < PORT_SOURCE_COUNT; s++) {
+            if (now->port_source_target[i][s] != was->port_source_target[i][s])
+                layer->port_source_target[i][s] = now->port_source_target[i][s];
+            if (now->port_source_turbo[i][s] != was->port_source_turbo[i][s])
+                layer->port_source_turbo[i][s] = now->port_source_turbo[i][s];
+            if (now->port_source_macro[i][s] != was->port_source_macro[i][s])
+                layer->port_source_macro[i][s] = now->port_source_macro[i][s];
+        }
+    }
 }
 
 void session_settings_init(const char *core_path_arg, const char *content_path) {
@@ -3717,12 +3796,14 @@ void session_settings_discard(void) {
 
 void session_settings_save_content(void) {
     const struct session_settings_t base = tier_base(1, 1);
-    if (write_ini_delta(content_ini_path, &base)) baseline_settings = session_settings;
+    if (write_ini_delta(content_ini_path, &session_settings, &base)) baseline_settings = session_settings;
 }
 
 void session_settings_save_core(void) {
     const struct session_settings_t base = tier_base(0, 0);
-    if (write_ini_delta(core_ini_path, &base)) baseline_settings = session_settings;
+    struct session_settings_t layer = tier_base(1, 0);
+    apply_session_changes(&layer);
+    if (write_ini_delta(core_ini_path, &layer, &base)) baseline_settings = session_settings;
 }
 
 static int delete_saved_settings_file(const char *path) {
@@ -3763,5 +3844,7 @@ int session_settings_delete_saved_overrides(void) {
 
 void session_settings_save_directory(void) {
     const struct session_settings_t base = tier_base(1, 0);
-    if (write_ini_delta(directory_ini_path, &base)) baseline_settings = session_settings;
+    struct session_settings_t layer = tier_base(1, 1);
+    apply_session_changes(&layer);
+    if (write_ini_delta(directory_ini_path, &layer, &base)) baseline_settings = session_settings;
 }

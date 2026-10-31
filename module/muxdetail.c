@@ -171,18 +171,30 @@ static const char *get_cpu_model(void) {
 static const char *get_current_frequency(void) {
     static char buffer[UI_BUFFER];
 
-    const char *paths[] = {
-        "/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq",
-        "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq",
+    const char *patterns[] = {
+        "/sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq",
+        "/sys/devices/system/cpu/cpufreq/policy*/cpuinfo_cur_freq",
+    };
+    const char *fallbacks[] = {
         "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq",
         "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq",
     };
 
     unsigned long long khz = 0;
 
-    for (size_t i = 0; i < A_SIZE(paths); i++) {
-        if (read_ll_from_file(paths[i], &khz) == 0 && khz > 0) break;
+    for (size_t i = 0; i < A_SIZE(patterns) && khz == 0; i++) {
+        glob_t found;
+        if (glob(patterns[i], 0, NULL, &found) != 0) continue;
+
+        for (size_t j = 0; j < found.gl_pathc; j++) {
+            unsigned long long value = 0;
+            if (read_ll_from_file(found.gl_pathv[j], &value) == 0 && value > khz) khz = value;
+        }
+        globfree(&found);
     }
+
+    for (size_t i = 0; i < A_SIZE(fallbacks) && khz == 0; i++)
+        if (read_ll_from_file(fallbacks[i], &khz) == 0 && khz > 0) break;
 
     if (khz == 0) {
         snprintf(buffer, sizeof(buffer), "%s", lang.generic.unknown);
@@ -1181,22 +1193,32 @@ static const char *get_speed_range(void) {
 
     unsigned long long min_khz = 0, max_khz = 0;
 
-    const char *min_paths[] = {
-        "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq",
-        "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq"
-    };
-    const char *max_paths[] = {
-        "/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq",
-        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq",
-        "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq",
-        "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
-    };
+    glob_t found;
+    if (glob("/sys/devices/system/cpu/cpufreq/policy*/cpuinfo_min_freq", 0, NULL, &found) == 0) {
+        for (size_t i = 0; i < found.gl_pathc; i++) {
+            unsigned long long value = 0;
+            if (read_ll_from_file(found.gl_pathv[i], &value) == 0 && value > 0 && (min_khz == 0 || value < min_khz))
+                min_khz = value;
+        }
+        globfree(&found);
+    }
 
-    for (size_t i = 0; i < A_SIZE(min_paths); i++)
-        if (read_ll_from_file(min_paths[i], &min_khz) == 0 && min_khz > 0) break;
+    const char *max_patterns[] = {
+        "/sys/devices/system/cpu/cpufreq/policy*/scaling_max_freq",
+        "/sys/devices/system/cpu/cpufreq/policy*/cpuinfo_max_freq",
+    };
+    for (size_t i = 0; i < A_SIZE(max_patterns) && max_khz == 0; i++) {
+        if (glob(max_patterns[i], 0, NULL, &found) != 0) continue;
+        for (size_t j = 0; j < found.gl_pathc; j++) {
+            unsigned long long value = 0;
+            if (read_ll_from_file(found.gl_pathv[j], &value) == 0 && value > max_khz) max_khz = value;
+        }
+        globfree(&found);
+    }
 
-    for (size_t i = 0; i < A_SIZE(max_paths); i++)
-        if (read_ll_from_file(max_paths[i], &max_khz) == 0 && max_khz > 0) break;
+    if (min_khz == 0) read_ll_from_file("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq", &min_khz);
+    if (max_khz == 0 && read_ll_from_file("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq", &max_khz) != 0)
+        read_ll_from_file("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", &max_khz);
 
     if (min_khz == 0 || max_khz == 0) return lang.generic.unknown;
 

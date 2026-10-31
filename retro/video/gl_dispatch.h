@@ -74,6 +74,7 @@ typedef struct gl_dispatch {
     GLboolean(GL_APIENTRY *IsTexture)(GLuint texture);
     const GLubyte *(GL_APIENTRY *GetString)(GLenum name);
     void(GL_APIENTRY *Flush)(void);
+    void(GL_APIENTRY *Finish)(void);
     void(GL_APIENTRY *BindVertexArray)(GLuint array);
     void(GL_APIENTRY *BindSampler)(GLuint unit, GLuint sampler);
     void(GL_APIENTRY *BindTransformFeedback)(GLenum target, GLuint id);

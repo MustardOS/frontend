@@ -533,7 +533,10 @@ void init_osk(
     nav_hint_y = (osk_nav_hint_t) {NULL, NULL, NULL};
 
     osk_max_len = max_len;
+    key_map = osk_map_lower;
     shift_once = 0;
+    shift_pressed = 0;
+    caps_lock_active = 0;
     last_letter_btn = -1;
 
     lv_textarea_set_password_mode(ui_txt_entry, is_password);

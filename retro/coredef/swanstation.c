@@ -20,4 +20,4 @@ static const struct coredef_option options[] = {
     {.key = "swanstation_Audio_FastHook", .value = "true"},
 };
 
-COREDEF_CORE(swanstation, "swanstation", options);
+COREDEF_CORE_THREADED(swanstation, "swanstation", options);
