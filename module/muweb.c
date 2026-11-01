@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/prctl.h>
 #include <sys/statvfs.h>
+#include <sys/vfs.h>
 #include <sys/un.h>
 #include <time.h>
 #include <unistd.h>
@@ -2985,6 +2986,26 @@ static int file_root_available(const struct file_root *root) {
     return file_root_mounted(root) && stat(root->path, &info) == 0 && S_ISDIR(info.st_mode);
 }
 
+static int file_permissions_supported(const char *path) {
+    struct statfs filesystem;
+    if (!path || statfs(path, &filesystem) < 0) return 0;
+
+    switch ((unsigned long) filesystem.f_type) {
+        case 0x0000EF53UL: /* ext2, ext3, ext4 */
+        case 0x01021994UL: /* tmpfs */
+        case 0x24051905UL: /* UBIFS */
+        case 0x58465342UL: /* XFS */
+        case 0x72B6UL:     /* JFFS2 */
+        case 0x794C7630UL: /* OverlayFS */
+        case 0x858458F6UL: /* ramfs */
+        case 0x9123683EUL: /* Btrfs */
+        case 0xF2F52010UL: /* F2FS */
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 static int file_relative_path(const char *relative, const int empty_ok) {
     if (!relative || !*relative) return empty_ok;
     if (*relative == '/' || strlen(relative) >= PATH_MAX - 1) return 0;
@@ -3384,6 +3405,8 @@ static void file_roots_json(struct connection *connection) {
         json_field(&out, "path", root->path);
         buffer_puts(&out, ",");
         json_number(&out, "protected", root->protected);
+        buffer_puts(&out, ",");
+        json_number(&out, "permissions", file_permissions_supported(root->path));
         buffer_puts(&out, "}");
     }
     buffer_puts(&out, "]}");
@@ -3414,6 +3437,8 @@ static void file_directory_json(
     json_field(&out, "path", relative ? relative : "");
     buffer_puts(&out, ",");
     json_number(&out, "protected", root->protected);
+    buffer_puts(&out, ",");
+    json_number(&out, "permissions", file_permissions_supported(directory));
 
     struct statvfs space;
     if (statvfs(directory, &space) == 0) {
@@ -3466,6 +3491,10 @@ static void file_directory_json(
         json_number(&out, "bytes", S_ISREG(info.st_mode) ? (long long) info.st_size : 0);
         buffer_puts(&out, ",");
         json_number(&out, "modified", (long long) info.st_mtime);
+        buffer_puts(&out, ",");
+        json_number(&out, "mode", (long long) (info.st_mode & 0777));
+        buffer_puts(&out, ",");
+        json_number(&out, "permissions", S_ISREG(info.st_mode) || S_ISDIR(info.st_mode));
         buffer_puts(&out, "}");
         free(entry);
     }
@@ -3578,6 +3607,21 @@ static int file_copy_tree(const char *source, const char *target) {
 static int file_path_within(const char *parent, const char *path) {
     const size_t length = strlen(parent);
     return strncmp(parent, path, length) == 0 && (!path[length] || path[length] == '/');
+}
+
+static int file_change_mode(const char *path, const mode_t mode) {
+    struct stat info;
+    if (lstat(path, &info) < 0 || S_ISLNK(info.st_mode) || (!S_ISREG(info.st_mode) && !S_ISDIR(info.st_mode)))
+        return 0;
+
+    int flags = O_RDONLY | O_CLOEXEC | O_NOFOLLOW;
+    if (S_ISDIR(info.st_mode)) flags |= O_DIRECTORY;
+    const int descriptor = open(path, flags);
+    if (descriptor < 0) return 0;
+
+    const int changed = fchmod(descriptor, mode) == 0;
+    close(descriptor);
+    return changed;
 }
 
 static int file_route(char *path, struct file_root **root, char **action, char **relative) {
@@ -3718,6 +3762,38 @@ static void handle_files_api(
             return;
         }
         cache_drop();
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (strcmp(action, "chmod") == 0 && strcmp(method, "POST") == 0) {
+        char mode_text[8];
+        if (!body_text(body, body_length, mode_text, sizeof(mode_text)) || strlen(mode_text) != 3) {
+            send_error(connection, 400, "Use a three-digit permission mode");
+            return;
+        }
+        for (const char *digit = mode_text; *digit; ++digit) {
+            if (*digit < '0' || *digit > '7') {
+                send_error(connection, 400, "Permission mode must contain only digits from 0 to 7");
+                return;
+            }
+        }
+
+        char target[PATH_MAX];
+        if (!file_resolve_entry(root, relative, target, sizeof(target)) || !*relative) {
+            send_error(connection, 404, "Item not found");
+            return;
+        }
+        if (!file_permissions_supported(target)) {
+            send_error(connection, 409, "This filesystem does not support Unix permissions");
+            return;
+        }
+
+        const mode_t mode = (mode_t) strtoul(mode_text, NULL, 8);
+        if (!file_change_mode(target, mode)) {
+            send_error(connection, 500, "Could not change permissions");
+            return;
+        }
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
