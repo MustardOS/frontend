@@ -172,6 +172,7 @@ static void strip_paren_suffix(const char *s) {
 
 static int read_msd_info(const char *dev_path, msd_info *out) {
     memset(out, 0, sizeof(*out));
+    int is_mmc = 0;
 
     if (!*dev_path) return 0;
 
@@ -206,6 +207,12 @@ static int read_msd_info(const char *dev_path, msd_info *out) {
     }
 
     while (fgets(line, sizeof(line), fp)) {
+        char card_type[16];
+        if (extract_kv(line, "Card type", card_type, sizeof(card_type))) {
+            is_mmc = strcmp(card_type, "MMC") == 0;
+            continue;
+        }
+
         if (!out->manufacturer[0] && extract_kv(line, "Manufacturer", out->manufacturer, sizeof(out->manufacturer))) {
             strip_paren_suffix(out->manufacturer);
             continue;
@@ -220,6 +227,7 @@ static int read_msd_info(const char *dev_path, msd_info *out) {
     }
 
     fclose(fp);
+    if (is_mmc) snprintf(out->model, sizeof(out->model), "eMMC");
     return out->has_verdict;
 }
 
@@ -347,8 +355,13 @@ typedef struct {
 
 static storage_entry *storage_table(void) {
     static storage_entry table[4];
-    const char *secondary_device =
-        config.danger.emmc && str_startswith(device.board.name, "tui-") ? "mmcblk2" : device.storage.sdcard.device;
+    const char *secondary_device = device.storage.sdcard.device;
+    if (config.danger.emmc) {
+        if (strcmp(device.board.name, "rg-vita-pro") == 0)
+            secondary_device = "mmcblk0";
+        else if (str_startswith(device.board.name, "tui-"))
+            secondary_device = "mmcblk2";
+    }
 
     table[0] = (storage_entry) {ui_pnl_primary_space,
                                 ui_pnl_primary_bar_space,

@@ -26,7 +26,7 @@ static frequency_list gpu_frequencies;
 static mux_dialogue emmc_dlg;
 
 static int emmc_supported(void) {
-    return str_startswith(device.board.name, "tui-");
+    return str_startswith(device.board.name, "tui-") || strcmp(device.board.name, "rg-vita-pro") == 0;
 }
 
 static int emmc_focused(void) {
