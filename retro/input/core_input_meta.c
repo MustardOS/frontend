@@ -30,11 +30,6 @@ typedef struct {
 static core_input_descriptor_entry descriptors[CORE_INPUT_META_MAX_DESCRIPTORS];
 static int descriptor_count = 0;
 
-static const char *const joypad_fallback_labels[16] = {
-    "B", "Y", "Select", "Start", "D-Pad Up", "D-Pad Down", "D-Pad Left", "D-Pad Right",
-    "A", "X", "L1",     "R1",    "L2",       "R2",         "L3",         "R3",
-};
-
 void core_input_meta_set_controller_info(const struct retro_controller_info *info) {
     for (int port = 0; port < CORE_INPUT_META_PORT_COUNT; port++)
         port_info[port].type_count = 0;
@@ -106,15 +101,21 @@ unsigned core_input_meta_preferred_device(const int port) {
     return 0;
 }
 
-const char *core_input_meta_label(const unsigned port, const unsigned device, const unsigned index, const unsigned id) {
+static const char *
+descriptor_find(const unsigned port, const unsigned device, const unsigned index, const unsigned id) {
     for (int i = 0; i < descriptor_count; i++) {
         if (descriptors[i].port == port && descriptors[i].device == device && descriptors[i].index == index
-            && descriptors[i].id == id) {
+            && descriptors[i].id == id && descriptors[i].description[0]) {
             return descriptors[i].description;
         }
     }
 
-    if (device == RETRO_DEVICE_JOYPAD && index == 0 && id < 16) return joypad_fallback_labels[id];
-
     return NULL;
+}
+
+const char *core_input_meta_label(const unsigned port, const unsigned device, const unsigned index, const unsigned id) {
+    const char *label = descriptor_find(port, device, index, id);
+    if (!label && port != 0) label = descriptor_find(0, device, index, id);
+
+    return label;
 }

@@ -39,12 +39,14 @@ static const int grid_cells[] = {
 };
 
 #define GRID_CELL_COUNT ((int) (sizeof(grid_cells) / sizeof(grid_cells[0])))
-#define GRID_FULL_ROWS  (PORT_TARGET_COUNT / GRID_COLS)
-#define GRID_LAST_COUNT (GRID_CELL_COUNT - PORT_TARGET_COUNT)
-#define GRID_ROWS       (GRID_FULL_ROWS + 1)
-#define GRID_MAP_SIZE   (GRID_CELL_COUNT + GRID_ROWS + 1)
+#define GRID_ROWS_MAX   (PORT_TARGET_COUNT / GRID_COLS + 1)
+#define GRID_MAP_SIZE   (GRID_CELL_COUNT + GRID_ROWS_MAX + 1)
 
 static const char *grid_map[GRID_MAP_SIZE];
+static int picker_cells[GRID_CELL_COUNT];
+static int picker_cell_count = 0;
+static int picker_full_count = 0;
+static int picker_core = 0;
 static lv_obj_t *picker_grid = NULL;
 static int grid_index = 0;
 
@@ -58,6 +60,14 @@ static nav_repeat_t rpt_pick_left = {0};
 static nav_repeat_t rpt_pick_right = {0};
 
 static int active_port = 0;
+static int device_row_count = PORT_SOURCE_COUNT;
+static int core_row_count = 0;
+
+static const char *bm_labels[PORT_SOURCE_COUNT + PORT_TARGET_COUNT];
+static const char *bm_glyphs[PORT_SOURCE_COUNT + PORT_TARGET_COUNT];
+static char core_labels[PORT_TARGET_COUNT][MAX_BUFFER_SIZE];
+static int core_row_target[PORT_TARGET_COUNT];
+static list_frame bm_frames[2];
 
 static nav_repeat_t rpt_turbo_left = {0};
 static nav_repeat_t rpt_turbo_right = {0};
@@ -65,19 +75,109 @@ static uint64_t turbo_cycle_prev_mask = 0;
 
 static submenu bm_self[MUX_INPUT_PORT_COUNT];
 
+static int is_device_row(const int index) {
+    return index >= 0 && index < device_row_count;
+}
+
+static int is_core_row(const int index) {
+    return index >= device_row_count && index < device_row_count + core_row_count;
+}
+
+static int core_row_target_of(const int index) {
+    return is_core_row(index) ? core_row_target[index - device_row_count] : -1;
+}
+
+static int core_bound(const int source, const int target) {
+    return session_settings_source_macro(active_port)[source] < 0
+           && session_settings_source_target(active_port)[source] == target;
+}
+
+static int core_first_bound(const int target) {
+    for (int source = 0; source < device_row_count; source++) {
+        if (core_bound(source, target)) return source;
+    }
+
+    return -1;
+}
+
+static void core_sync_turbo(const int target, const int from) {
+    const int rate = session_settings_source_turbo(active_port)[from];
+
+    for (int source = 0; source < device_row_count; source++) {
+        if (source != from && core_bound(source, target)) session_settings_set_source_turbo(active_port, source, rate);
+    }
+}
+
+static void core_row_value(const int index, char *buf, const size_t buf_len) {
+    const int target = core_row_target[index - device_row_count];
+    const int *turbo = session_settings_source_turbo(active_port);
+
+    size_t used = 0;
+    buf[0] = '\0';
+
+    for (int source = 0; source < device_row_count && used < buf_len; source++) {
+        if (!core_bound(source, target)) continue;
+
+        const char *gap = used ? ", " : "";
+        const int written = turbo[source] > 0 ? snprintf(
+                                                    buf + used, buf_len - used, "%s%s (%s)", gap, row_labels[source],
+                                                    session_settings_turbo_rate_name(turbo[source])
+                                                )
+                                              : snprintf(buf + used, buf_len - used, "%s%s", gap, row_labels[source]);
+        if (written < 0) break;
+        used += (size_t) written;
+    }
+
+    if (!used) snprintf(buf, buf_len, "%s", lang.muxretro.settings_screen.unbound);
+}
+
 static void row_value_text(const int index, char *buf, const size_t buf_len) {
-    session_settings_source_value(active_port, index, buf, buf_len);
+    if (is_device_row(index)) {
+        session_settings_source_value(active_port, index, buf, buf_len);
+    } else if (index >= device_row_count && index < device_row_count + core_row_count) {
+        core_row_value(index, buf, buf_len);
+    } else if (buf_len) {
+        buf[0] = '\0';
+    }
 }
 
 static int row_is_action(const int index) {
-    (void) index;
-    return 1;
+    return is_device_row(index) || is_core_row(index);
 }
 
 static void picker_open(int row);
 
+static int turbo_style_source(const int index) {
+    if (is_core_row(index)) return core_first_bound(core_row_target_of(index));
+    if (!is_device_row(index)) return -1;
+    if (session_settings_source_macro(active_port)[index] >= 0) return -1;
+
+    return session_settings_source_target(active_port)[index] >= 0 ? index : -1;
+}
+
+static int turbo_style_available(const int index) {
+    return turbo_style_source(index) >= 0;
+}
+
+static const char *row_y_label(const int index) {
+    return turbo_style_available(index) ? lang.muxretro.settings_screen.turbo_style : NULL;
+}
+
+static void row_y_action(const int index) {
+    if (!turbo_style_available(index)) return;
+
+    const int source = turbo_style_source(index);
+    const int frames = session_settings_switch_source_turbo_style(active_port, source);
+    if (is_core_row(index)) core_sync_turbo(core_row_target_of(index), source);
+
+    pause_menu_show_toast(
+        frames ? lang.muxretro.settings_screen.turbo_style_frames : lang.muxretro.settings_screen.turbo_style_time
+    );
+    submenu_refresh_values(&bm_self[active_port]);
+}
+
 static void row_action(const int index) {
-    if (index < 0 || index >= PORT_SOURCE_COUNT) return;
+    if (!row_is_action(index)) return;
 
     picker_open(index);
 }
@@ -92,32 +192,81 @@ static void closed(void) {
 }
 
 static submenu_def bm_def = {
-    .labels = row_labels,
-    .glyphs = row_glyphs,
+    .labels = bm_labels,
+    .glyphs = bm_glyphs,
     .help_title = lang.muxretro.settings_screen.button_mapping,
     .help_all = lang.muxretro.help.screen.button_mapping,
     .row_count = PORT_SOURCE_COUNT,
+    .frames = bm_frames,
     .value_text = row_value_text,
     .row_is_action = row_is_action,
     .action = row_action,
+    .y_label = row_y_label,
+    .y_action = row_y_action,
     .closed = closed,
     .save_title = lang.muxretro.save.button_mapping_title,
     .save_desc = lang.muxretro.save.button_mapping_desc,
 };
 
-static int turbo_available(void) {
-    if (current_item_index < 0 || current_item_index >= bm_def.row_count) return 0;
-    if (session_settings_source_macro(active_port)[current_item_index] >= 0) return 1;
+static void build_rows(void) {
+    for (int source = 0; source < device_row_count; source++) {
+        bm_labels[source] = row_labels[source];
+        bm_glyphs[source] = row_glyphs[source];
+    }
 
-    return session_settings_source_target(active_port)[current_item_index] >= 0;
+    core_row_count = 0;
+
+    for (int position = 0; position < PORT_TARGET_COUNT; position++) {
+        const int target = session_settings_target_at_position(position);
+        const char *label = session_settings_core_target_label(active_port, target);
+        if (!label) continue;
+
+        const int row = device_row_count + core_row_count;
+        snprintf(core_labels[core_row_count], sizeof(core_labels[core_row_count]), "%s", label);
+        core_row_target[core_row_count] = target;
+        bm_labels[row] = core_labels[core_row_count];
+        bm_glyphs[row] = "controller";
+        core_row_count++;
+    }
+
+    bm_frames[0] = (list_frame) {lang.muxretro.settings_screen.core_mapping, device_row_count, core_row_count};
+    bm_frames[1] = (list_frame) {lang.muxretro.settings_screen.device_mapping, 0, device_row_count};
+
+    bm_def.row_count = device_row_count + core_row_count;
+    bm_def.frame_count = core_row_count > 0 ? 2 : 0;
 }
 
-static int nav_turbo_shown = -1;
+static int focused_row(void) {
+    if (bm_def.frame_count > 0) return list_frame_current_row();
+    return current_item_index;
+}
+
+static int turbo_available(void) {
+    const int row = focused_row();
+    if (is_core_row(row)) return core_first_bound(core_row_target_of(row)) >= 0;
+    if (!is_device_row(row)) return 0;
+    if (session_settings_source_macro(active_port)[row] >= 0) return 1;
+
+    return session_settings_source_target(active_port)[row] >= 0;
+}
+
+static int nav_state(void) {
+    if (focused_row() < 0) return -1;
+
+    return turbo_available() ? 2 : 1;
+}
+
+static int nav_state_shown = -2;
 
 static void apply_nav_bar(void) {
-    nav_turbo_shown = turbo_available();
+    nav_state_shown = nav_state();
 
-    if (nav_turbo_shown) {
+    if (nav_state_shown < 0) {
+        submenu_refresh_nav(&bm_self[active_port]);
+        return;
+    }
+
+    if (nav_state_shown == 2) {
         setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
                                       {ui_lbl_nav_lr, lang.muxretro.settings_screen.turbo_modes, 0},
                                       {ui_lbl_nav_a_glyph, "", 0},
@@ -144,31 +293,56 @@ static const char *cell_label(const int cell) {
         case CELL_UNBOUND:
             return lang.muxretro.settings_screen.unbound;
         default:
+            if (picker_core) return row_labels[cell];
             return session_settings_target_label(session_settings_target_at_position(cell));
     }
 }
 
+static int picker_last_count(void) {
+    return picker_cell_count - picker_full_count;
+}
+
+static int picker_full_rows(void) {
+    return picker_full_count / GRID_COLS;
+}
+
 static int cell_row(const int index) {
-    return index < PORT_TARGET_COUNT ? index / GRID_COLS : GRID_FULL_ROWS;
+    return index < picker_full_count ? index / GRID_COLS : picker_full_rows();
 }
 
 static int cell_col(const int index) {
-    return index < PORT_TARGET_COUNT ? index % GRID_COLS : index - PORT_TARGET_COUNT;
+    return index < picker_full_count ? index % GRID_COLS : index - picker_full_count;
+}
+
+static void picker_build_cells(void) {
+    picker_cell_count = 0;
+
+    for (int index = 0; index < GRID_CELL_COUNT; index++) {
+        const int cell = grid_cells[index];
+
+        if (picker_core && cell >= device_row_count) continue;
+
+        picker_cells[picker_cell_count++] = cell;
+    }
+
+    picker_full_count = 0;
+    while (picker_full_count < picker_cell_count && picker_cells[picker_full_count] >= 0)
+        picker_full_count++;
 }
 
 static void picker_build_map(void) {
     int slot = 0;
 
-    for (int index = 0; index < GRID_CELL_COUNT; index++) {
-        grid_map[slot++] = cell_label(grid_cells[index]);
-        if (index < PORT_TARGET_COUNT && (index + 1) % GRID_COLS == 0) grid_map[slot++] = "\n";
+    for (int index = 0; index < picker_cell_count; index++) {
+        grid_map[slot++] = cell_label(picker_cells[index]);
+        if (index < picker_full_count && (index + 1) % GRID_COLS == 0) grid_map[slot++] = "\n";
     }
 
     grid_map[slot] = "";
 }
 
 static void picker_select(const int index) {
-    if (index < 0 || index >= GRID_CELL_COUNT) return;
+    if (index < 0 || index >= picker_cell_count) return;
 
     grid_index = index;
 
@@ -179,27 +353,30 @@ static void picker_select(const int index) {
 }
 
 static void picker_move(const int dx, const int dy) {
+    const int full_rows = picker_full_rows();
+    const int last_count = picker_last_count();
+    const int rows = full_rows + 1;
     const int row = cell_row(grid_index);
     const int col = cell_col(grid_index);
-    const int in_last = row == GRID_FULL_ROWS;
-    const int width = in_last ? GRID_LAST_COUNT : GRID_COLS;
+    const int in_last = row == full_rows;
+    const int width = in_last ? last_count : GRID_COLS;
 
     if (dx) {
         const int next = ((col + dx) % width + width) % width;
-        picker_select(in_last ? PORT_TARGET_COUNT + next : row * GRID_COLS + next);
+        picker_select(in_last ? picker_full_count + next : row * GRID_COLS + next);
         return;
     }
 
     if (!dy) return;
 
-    const int next_row = ((row + dy) % GRID_ROWS + GRID_ROWS) % GRID_ROWS;
+    const int next_row = ((row + dy) % rows + rows) % rows;
 
-    if (next_row == GRID_FULL_ROWS) {
-        picker_select(PORT_TARGET_COUNT + col / 2);
+    if (next_row == full_rows) {
+        picker_select(picker_full_count + col * last_count / GRID_COLS);
         return;
     }
 
-    picker_select(next_row * GRID_COLS + (in_last ? col * 2 : col));
+    picker_select(next_row * GRID_COLS + (in_last ? col * GRID_COLS / last_count : col));
 }
 
 static void picker_nav_bar(void) {
@@ -218,8 +395,32 @@ static void picker_nav_bar(void) {
     pause_menu_fix_nav_order();
 }
 
+static int core_picker_focus(const int target) {
+    const int *targets = session_settings_source_target(active_port);
+    const int *macros = session_settings_source_macro(active_port);
+
+    for (int index = 0; index < picker_cell_count; index++) {
+        const int source = picker_cells[index];
+        if (source >= 0 && macros[source] < 0 && targets[source] == target) return index;
+    }
+
+    return 0;
+}
+
+static int device_picker_focus(const int row) {
+    const int position = session_settings_target_position(session_settings_source_target(active_port)[row]);
+    const int wanted = position < 0 ? CELL_UNBOUND : position;
+
+    for (int index = 0; index < picker_cell_count; index++) {
+        if (picker_cells[index] == wanted) return index;
+    }
+
+    return 0;
+}
+
 static void picker_open(const int row) {
     picker_row = row;
+    picker_core = is_core_row(row);
     picker_active = 1;
 
     lv_obj_clean(ui_pnl_content);
@@ -229,6 +430,7 @@ static void picker_open(const int row) {
     current_item_index = 0;
     first_open = 0;
 
+    picker_build_cells();
     picker_build_map();
 
     picker_grid = lv_btnmatrix_create(ui_pnl_content);
@@ -252,17 +454,7 @@ static void picker_open(const int row) {
         (int8_t) theme.osk.item.shadow_x_offset_focus, (int8_t) theme.osk.item.shadow_y_offset_focus
     );
 
-    const int position = session_settings_target_position(session_settings_source_target(active_port)[row]);
-
-    grid_index = 0;
-    for (int index = 0; index < GRID_CELL_COUNT; index++) {
-        const int wanted = position < 0 ? CELL_UNBOUND : position;
-        if (grid_cells[index] == wanted) {
-            grid_index = index;
-            break;
-        }
-    }
-
+    grid_index = picker_core ? core_picker_focus(core_row_target_of(row)) : device_picker_focus(row);
     picker_select(grid_index);
 
     picker_prev_mask = nav_mask_standard();
@@ -279,6 +471,31 @@ static void picker_close(void) {
     apply_nav_bar();
 
     turbo_cycle_prev_mask = nav_mask_standard();
+}
+
+static void core_picker_choose(const int cell) {
+    const int target = core_row_target_of(picker_row);
+
+    if (cell >= 0) {
+        const int group = core_first_bound(target);
+        if (core_bound(cell, target)) return;
+
+        session_settings_set_source_target(active_port, cell, target);
+        session_settings_set_source_turbo(
+            active_port, cell, group >= 0 ? session_settings_source_turbo(active_port)[group] : 0
+        );
+        return;
+    }
+
+    for (int source = 0; source < device_row_count; source++) {
+        const int is_default = session_settings_default_source_target(source) == target;
+
+        if (cell == CELL_RESET && is_default) {
+            session_settings_reset_source(active_port, source);
+        } else if (core_bound(source, target)) {
+            session_settings_unbind_source(active_port, source);
+        }
+    }
 }
 
 static void picker_tick(void) {
@@ -298,9 +515,12 @@ static void picker_tick(void) {
         play_sound(snd_navigate);
         picker_move(do_right - do_left, do_down - do_up);
     } else if (edge & BIT(4)) {
-        const int cell = grid_cells[grid_index];
+        const int cell = picker_cells[grid_index];
 
-        if (cell == CELL_RESET) {
+        if (picker_core) {
+            play_sound(snd_confirm);
+            core_picker_choose(cell);
+        } else if (cell == CELL_RESET) {
             play_sound(snd_option);
             session_settings_reset_source(active_port, picker_row);
         } else {
@@ -326,19 +546,24 @@ static void check_turbo_cycle(void) {
     const int do_left = nav_repeat_step(&rpt_turbo_left, nav_edge & BIT(2), nav_mask & BIT(2), 1, now);
     const int do_right = nav_repeat_step(&rpt_turbo_right, nav_edge & BIT(3), nav_mask & BIT(3), 1, now);
 
-    if (current_item_index < 0 || current_item_index >= bm_def.row_count) return;
+    const int row = focused_row();
+    if (row < 0 || !(do_left || do_right) || !turbo_available()) return;
 
-    if (do_left || do_right) {
-        if (!turbo_available()) return;
+    if (is_core_row(row)) {
+        const int target = core_row_target_of(row);
+        const int source = core_first_bound(target);
 
-        if (session_settings_source_macro(active_port)[current_item_index] >= 0) {
-            play_sound(snd_error);
-            pause_menu_show_toast(lang.muxretro.settings_screen.macro_turbo_blocked);
-        } else {
-            play_sound(snd_option);
-            session_settings_cycle_source_turbo(active_port, current_item_index, do_right ? 1 : -1);
-            submenu_refresh_values(&bm_self[active_port]);
-        }
+        play_sound(snd_option);
+        session_settings_cycle_source_turbo(active_port, source, do_right ? 1 : -1);
+        core_sync_turbo(target, source);
+        submenu_refresh_values(&bm_self[active_port]);
+    } else if (session_settings_source_macro(active_port)[row] >= 0) {
+        play_sound(snd_error);
+        pause_menu_show_toast(lang.muxretro.settings_screen.macro_turbo_blocked);
+    } else {
+        play_sound(snd_option);
+        session_settings_cycle_source_turbo(active_port, row, do_right ? 1 : -1);
+        submenu_refresh_values(&bm_self[active_port]);
     }
 }
 
@@ -353,7 +578,8 @@ void button_mapping_menu_open(const int port) {
 
     const int source = session_settings_resolve_port_source(port);
     const int sticks = source >= 0 ? mux_input_source_stick_count(source) : 0;
-    bm_def.row_count = 16 + sticks * 4;
+    device_row_count = PORT_DIGITAL_COUNT + sticks * 4;
+    build_rows();
 
     submenu_open(&bm_self[port]);
     apply_nav_bar();
@@ -379,7 +605,7 @@ void button_mapping_menu_tick(void) {
 
         submenu_tick(&bm_self[i]);
 
-        if (!picker_active && submenu_is_active(&bm_self[i]) && turbo_available() != nav_turbo_shown) apply_nav_bar();
+        if (!picker_active && submenu_is_active(&bm_self[i]) && nav_state() != nav_state_shown) apply_nav_bar();
         return;
     }
 }

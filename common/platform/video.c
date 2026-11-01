@@ -574,9 +574,9 @@ static int ensure_texture(const AVFrame *f) {
                     SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO,
                     SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDOPERATION_ADD
                 );
-                SDL_SetTextureBlendMode(corner_mask, mask_blend);
-                use_round = 1;
-            } else {
+                use_round = SDL_SetTextureBlendMode(corner_mask, mask_blend) == 0;
+            }
+            if (!use_round) {
                 if (round_target) {
                     SDL_DestroyTexture(round_target);
                     round_target = NULL;

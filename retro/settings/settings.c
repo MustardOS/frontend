@@ -3430,6 +3430,53 @@ const char *session_settings_target_label(const int target_id) {
     return mux_input_label((mux_input_type) default_button_map[target_id]);
 }
 
+static void strip_axis_suffix(char *text) {
+    const size_t len = strlen(text);
+    if (len < 3) return;
+
+    const char axis = text[len - 1];
+    const char gap = text[len - 2];
+    if ((axis == 'X' || axis == 'Y' || axis == 'x' || axis == 'y') && (gap == ' ' || gap == '-' || gap == '_'))
+        text[len - 2] = '\0';
+}
+
+const char *session_settings_core_target_label(const int port, const int target_id) {
+    static char labels[PORT_TARGET_COUNT][MAX_BUFFER_SIZE];
+
+    if (port < 0 || target_id < 0 || target_id >= PORT_TARGET_COUNT) return NULL;
+
+    if (target_id < PORT_DIGITAL_COUNT) {
+        const char *described = core_input_meta_label((unsigned) port, RETRO_DEVICE_JOYPAD, 0, (unsigned) target_id);
+        if (!described) return NULL;
+
+        snprintf(labels[target_id], sizeof(labels[target_id]), "%s", described);
+        return labels[target_id];
+    }
+
+    int stick = 0;
+    int axis_x = 0;
+    int axis_y = 0;
+    session_settings_target_stick(target_id, &stick, &axis_x, &axis_y);
+
+    const char *described = core_input_meta_label(
+        (unsigned) port, RETRO_DEVICE_ANALOG, (unsigned) stick,
+        axis_x ? RETRO_DEVICE_ID_ANALOG_X : RETRO_DEVICE_ID_ANALOG_Y
+    );
+    if (!described) return NULL;
+
+    char base[MAX_BUFFER_SIZE];
+    snprintf(base, sizeof(base), "%s", described);
+    strip_axis_suffix(base);
+
+    const char *direction = axis_y < 0   ? lang.generic.up
+                            : axis_y > 0 ? lang.generic.down
+                            : axis_x < 0 ? lang.generic.left
+                                         : lang.generic.right;
+
+    snprintf(labels[target_id], sizeof(labels[target_id]), "%s %s", base, direction);
+    return labels[target_id];
+}
+
 int session_settings_mux_type_for_target(const int target_id) {
     if (target_id < 0 || target_id >= PORT_DIGITAL_COUNT) return -1;
     return default_button_map[target_id];
@@ -3619,25 +3666,105 @@ int session_settings_set_source_by_button(const int port, const int source, cons
 static const int turbo_ms_table[] = {48, 96, 192, 384, 768, 1536, 3072, 6144};
 #define TURBO_MS_TABLE_COUNT ((int) (sizeof(turbo_ms_table) / sizeof(turbo_ms_table[0])))
 
+static const int turbo_frames_table[] = {
+    PORT_TURBO_FRAMES_RATE(1, 1), PORT_TURBO_FRAMES_RATE(1, 2), PORT_TURBO_FRAMES_RATE(2, 1),
+    PORT_TURBO_FRAMES_RATE(2, 2), PORT_TURBO_FRAMES_RATE(2, 3), PORT_TURBO_FRAMES_RATE(3, 3),
+    PORT_TURBO_FRAMES_RATE(4, 4), PORT_TURBO_FRAMES_RATE(8, 8),
+};
+#define TURBO_FRAMES_TABLE_COUNT ((int) (sizeof(turbo_frames_table) / sizeof(turbo_frames_table[0])))
+
+static int turbo_style_frames = 0;
+
+int session_settings_turbo_is_frames(const int rate) {
+    return rate > 0 && (rate & PORT_TURBO_FRAMES) && PORT_TURBO_FRAMES_ON(rate) > 0 && PORT_TURBO_FRAMES_OFF(rate) > 0;
+}
+
 void session_settings_cycle_source_turbo(const int port, const int source, const int direction) {
     if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
 
     const int current = session_settings_source_turbo(port)[source];
+    const int frames = current > 0 ? session_settings_turbo_is_frames(current) : turbo_style_frames;
+    const int *table = frames ? turbo_frames_table : turbo_ms_table;
+    const int count = frames ? TURBO_FRAMES_TABLE_COUNT : TURBO_MS_TABLE_COUNT;
 
     int idx = -1;
-    for (int i = 0; i < TURBO_MS_TABLE_COUNT; i++) {
-        if (turbo_ms_table[i] == current) {
+    for (int i = 0; i < count; i++) {
+        if (table[i] == current) {
             idx = i;
             break;
         }
     }
 
     idx += direction > 0 ? 1 : -1;
-    if (idx < -1) idx = TURBO_MS_TABLE_COUNT - 1;
-    if (idx >= TURBO_MS_TABLE_COUNT) idx = -1;
+    if (idx < -1) idx = count - 1;
+    if (idx >= count) idx = -1;
 
-    session_settings_source_turbo(port)[source] = idx < 0 ? 0 : turbo_ms_table[idx];
+    session_settings_source_turbo(port)[source] = idx < 0 ? 0 : table[idx];
     deck_touched(port);
+}
+
+void session_settings_set_source_turbo(const int port, const int source, const int rate) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT) return;
+    if (session_settings_source_turbo(port)[source] == rate) return;
+
+    session_settings_source_turbo(port)[source] = rate < 0 ? 0 : rate;
+    deck_touched(port);
+}
+
+static int turbo_frames_from_ms(const int ms, const double fps) {
+    int period = (int) (fps > 0.0 ? (double) ms / 1000.0 * fps + 0.5 : 6);
+    if (period < 2) period = 2;
+
+    int on = period / 2;
+    int off = period - on;
+    if (on > 0x7f) on = 0x7f;
+    if (off > 0xff) off = 0xff;
+
+    return PORT_TURBO_FRAMES_RATE(on, off);
+}
+
+static int turbo_ms_from_frames(const int rate, const double fps) {
+    const int period = PORT_TURBO_FRAMES_ON(rate) + PORT_TURBO_FRAMES_OFF(rate);
+    const double ms = (double) period * 1000.0 / (fps > 0.0 ? fps : 60.0);
+
+    int best = turbo_ms_table[0];
+    double best_gap = ms > best ? ms - best : best - ms;
+
+    for (int i = 1; i < TURBO_MS_TABLE_COUNT; i++) {
+        const double gap = ms > turbo_ms_table[i] ? ms - turbo_ms_table[i] : turbo_ms_table[i] - ms;
+        if (gap < best_gap) {
+            best = turbo_ms_table[i];
+            best_gap = gap;
+        }
+    }
+
+    return best;
+}
+
+int session_settings_switch_source_turbo_style(const int port, const int source) {
+    if (port < 0 || port >= MUX_INPUT_PORT_COUNT || source < 0 || source >= PORT_SOURCE_COUNT)
+        return turbo_style_frames;
+
+    int *turbo = session_settings_source_turbo(port);
+    const int current = turbo[source];
+
+    if (current <= 0) {
+        turbo_style_frames = !turbo_style_frames;
+        return turbo_style_frames;
+    }
+
+    const double fps = core_get_target_fps();
+
+    if (session_settings_turbo_is_frames(current)) {
+        turbo[source] = turbo_ms_from_frames(current, fps);
+        turbo_style_frames = 0;
+    } else {
+        turbo[source] = turbo_frames_from_ms(current, fps);
+        turbo_style_frames = 1;
+    }
+
+    deck_touched(port);
+    return turbo_style_frames;
 }
 
 void session_settings_reset_source(const int port, const int source) {
@@ -3690,9 +3817,26 @@ static void reset_button_map(const int port) {
 }
 
 const char *session_settings_turbo_rate_name(const int rate) {
-    static char buf[16];
+    static char buf[32];
 
     if (rate <= 0) return lang.muxretro.settings_screen.turbo_off;
+
+    if (session_settings_turbo_is_frames(rate)) {
+        const int on = PORT_TURBO_FRAMES_ON(rate);
+        const int off = PORT_TURBO_FRAMES_OFF(rate);
+        const double fps = core_get_target_fps();
+
+        char hz[16];
+        snprintf(hz, sizeof(hz), "%.1f", (fps > 0.0 ? fps : 60.0) / (double) (on + off));
+
+        const size_t hz_len = strlen(hz);
+        if (hz_len > 2 && strcmp(hz + hz_len - 2, ".0") == 0) hz[hz_len - 2] = '\0';
+
+        snprintf(buf, sizeof(buf), "%d/%d %s Hz", on, off, hz);
+        return buf;
+    }
+
+    if (rate & PORT_TURBO_FRAMES) return lang.muxretro.settings_screen.turbo_off;
 
     if (rate >= 1000 && rate % 1000 == 0) {
         snprintf(buf, sizeof(buf), "%ds", rate / 1000);

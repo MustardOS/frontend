@@ -100,6 +100,7 @@ static double last_flip_ms = 0.0;
 static int flip_pending = 0;
 static uint64_t present_serial = 0;
 static int monitor_blend_configured = 0;
+static int renderer_software = 0;
 static double panel_refresh_hz = 0.0;
 static SDL_Texture *startup_splash = NULL;
 static uint8_t startup_splash_alpha = 255;
@@ -858,6 +859,12 @@ void sdl_init(void) {
 
     monitor.renderer = SDL_CreateRenderer(monitor.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!monitor.renderer) {
+        LOG_WARN("video", "Accelerated Renderer Creation Failed: %s", SDL_GetError());
+        monitor.renderer = SDL_CreateRenderer(monitor.window, -1, SDL_RENDERER_SOFTWARE);
+        renderer_software = monitor.renderer != NULL;
+        if (renderer_software) LOG_WARN("video", "Falling back to the software renderer");
+    }
+    if (!monitor.renderer) {
         LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
@@ -1310,7 +1317,7 @@ static void finish_present(const uint64_t timing_start, const uint64_t draw_done
 
     mark_first_paint();
 
-    if (hard_sync_query_fn && hard_sync_query_fn()) {
+    if (!renderer_software && hard_sync_query_fn && hard_sync_query_fn()) {
         static void (*p_gl_finish)(void) = NULL;
         if (!p_gl_finish) MUOS_FUNCTION_ASSIGN(p_gl_finish, SDL_GL_GetProcAddress("glFinish"));
         if (p_gl_finish) p_gl_finish();
@@ -1389,12 +1396,15 @@ static void composite_to(SDL_Texture *target, const int present) {
         }
 
         if (!monitor_blend_configured) {
-            SDL_SetTextureBlendMode(
-                monitor.texture, SDL_ComposeCustomBlendMode(
-                                     SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
-                                     SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
-                                 )
-            );
+            if (SDL_SetTextureBlendMode(
+                    monitor.texture,
+                    SDL_ComposeCustomBlendMode(
+                        SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD,
+                        SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD
+                    )
+                )
+                != 0)
+                SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
             monitor_blend_configured = 1;
         }
 
@@ -1574,8 +1584,10 @@ int display_mirror_to_fb(void) {
         return -1;
     }
 
-    if ((int) var.xres != width || (int) var.yres != height || var.bits_per_pixel != 32
-        || fix.line_length < (uint32_t) width * 4) {
+    const int direct = (int) var.xres == width && (int) var.yres == height;
+    const int rotate_270 =
+        strcmp(device.board.name, "rg-vita-pro") == 0 && (int) var.xres == height && (int) var.yres == width;
+    if ((!direct && !rotate_270) || var.bits_per_pixel != 32 || fix.line_length < var.xres * 4) {
         LOG_INFO(
             "video", "Exit frame not mirrored, framebuffer is %ux%u at %u bpp", var.xres, var.yres, var.bits_per_pixel
         );
@@ -1584,7 +1596,7 @@ int display_mirror_to_fb(void) {
     }
 
     uint8_t *rgb = malloc((size_t) width * (size_t) height * 3);
-    uint32_t *row = malloc((size_t) width * 4);
+    uint32_t *row = malloc((size_t) var.xres * 4);
     if (!rgb || !row) {
         free(rgb);
         free(row);
@@ -1596,18 +1608,23 @@ int display_mirror_to_fb(void) {
     if (capture_target() && SDL_RenderReadPixels(monitor.renderer, NULL, SDL_PIXELFORMAT_RGB24, rgb, width * 3) == 0) {
         ret = 0;
 
-        for (int y = 0; y < height && ret == 0; y++) {
-            for (int x = 0; x < width; x++) {
-                const uint8_t *pixel = rgb + ((size_t) y * (size_t) width + (size_t) x) * 3;
+        for (uint32_t y = 0; y < var.yres && ret == 0; y++) {
+            for (uint32_t x = 0; x < var.xres; x++) {
+                const uint32_t source_x = rotate_270 ? (uint32_t) width - 1 - y : x;
+                const uint32_t source_y = rotate_270 ? x : y;
+                const uint8_t *pixel = rgb + ((size_t) source_y * (size_t) width + (size_t) source_x) * 3;
                 row[x] = ((uint32_t) pixel[0] << var.red.offset) | ((uint32_t) pixel[1] << var.green.offset)
                          | ((uint32_t) pixel[2] << var.blue.offset)
                          | (var.transp.length ? 0xFFu << var.transp.offset : 0);
             }
 
-            const off_t offset = (off_t) (var.yoffset + (uint32_t) y) * fix.line_length + (off_t) var.xoffset * 4;
-            if (pwrite(fd, row, (size_t) width * 4, offset) != (ssize_t) width * 4) ret = -1;
+            const size_t row_bytes = (size_t) var.xres * 4;
+            const off_t offset = (off_t) (var.yoffset + y) * fix.line_length + (off_t) var.xoffset * 4;
+            if (pwrite(fd, row, row_bytes, offset) != (ssize_t) row_bytes) ret = -1;
         }
     }
+
+    if (ret == 0 && fsync(fd) != 0) ret = -1;
 
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
     free(rgb);

@@ -275,6 +275,11 @@ struct session_settings_t {
 #define PORT_TARGET_COUNT  24
 #define PORT_STICK_FULL    32767
 
+#define PORT_TURBO_FRAMES               0x8000
+#define PORT_TURBO_FRAMES_ON(rate)      (((rate) >> 8) & 0x7f)
+#define PORT_TURBO_FRAMES_OFF(rate)     ((rate) & 0xff)
+#define PORT_TURBO_FRAMES_RATE(on, off) (PORT_TURBO_FRAMES | (on) << 8 | (off))
+
 enum hotkey_activation_mode {
     hotkey_activation_disabled = 0,
     hotkey_activation_press,
@@ -737,6 +742,8 @@ int session_settings_resolve_port_source(int port);
 
 const char *session_settings_target_label(int target_id);
 
+const char *session_settings_core_target_label(int port, int target_id);
+
 int session_settings_mux_type_for_target(int target_id);
 
 int session_settings_target_stick(int target_id, int *stick, int *axis_x, int *axis_y);
@@ -760,6 +767,12 @@ void session_settings_stick_dpad_summary(int port, char *buf, size_t len);
 int session_settings_stick_forced(int port, int index);
 
 void session_settings_cycle_source_turbo(int port, int source, int direction);
+
+void session_settings_set_source_turbo(int port, int source, int rate);
+
+int session_settings_turbo_is_frames(int rate);
+
+int session_settings_switch_source_turbo_style(int port, int source);
 
 void session_settings_unbind_source(int port, int source);
 

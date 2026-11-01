@@ -24,7 +24,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        input/input_bridge.c input/rumble.c input/hotkeys.c input/ui_hotkeys.c \
        input/ui_inputsettings.c input/ui_controlleroptions.c input/ui_inputport.c \
        input/ui_buttonmapping.c input/nav_repeat.c input/core_input_meta.c \
-       input/deck.c \
+       input/deck.c input/kbm.c \
        macro/macro.c macro/relish.c macro/runtime.c macro/ui_macros.c \
        core/subsystem.c \
        state/core_state.c state/state_writer.c state/state.c state/gamestate.c state/ui_gamestate.c state/vfs.c \

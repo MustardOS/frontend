@@ -8,6 +8,7 @@
 #include "../netplay/netplay.h"
 #include "../settings/settings.h"
 #include "../video/hw_render.h"
+#include "kbm.h"
 
 #define MUX_RETRO_PORT_COUNT (1 + MUX_INPUT_MAX_EXTRA_PLAYERS)
 
@@ -43,7 +44,8 @@ typedef struct {
     int axis_x;
     int axis_y;
     uint32_t turbo_period;
-    int turbo_ms;
+    uint32_t turbo_on;
+    int turbo_rate;
 } input_route_t;
 
 typedef struct {
@@ -110,8 +112,18 @@ static void refresh_route_periods(const int port, const double fps) {
 
     for (int index = 0; index < input_route_count[port]; index++) {
         input_route_t *route = &input_routes[port][index];
-        route->turbo_period = route->turbo_ms > 0 ? ms_to_frames(route->turbo_ms, fps) : 0;
+
+        if (session_settings_turbo_is_frames(route->turbo_rate)) {
+            route->turbo_on = PORT_TURBO_FRAMES_ON(route->turbo_rate);
+            route->turbo_period = route->turbo_on + PORT_TURBO_FRAMES_OFF(route->turbo_rate);
+            continue;
+        }
+
+        route->turbo_period = route->turbo_rate > 0 && !(route->turbo_rate & PORT_TURBO_FRAMES)
+                                  ? ms_to_frames(route->turbo_rate, fps)
+                                  : 0;
         if (route->turbo_period > 0 && route->turbo_period < 2) route->turbo_period = 2;
+        route->turbo_on = route->turbo_period / 2;
     }
 }
 
@@ -144,7 +156,7 @@ static void compile_input_routes(const int port, const double fps) {
             .target = target[source],
             .macro = macro[source],
             .stick = -1,
-            .turbo_ms = turbo[source],
+            .turbo_rate = turbo[source],
         };
         if (route->target >= PORT_DIGITAL_COUNT)
             session_settings_target_stick(route->target, &route->stick, &route->axis_x, &route->axis_y);
@@ -210,7 +222,7 @@ static uint16_t build_retropad_mask(const int port, const uint64_t mask, const i
                     turbo_phase[port][source]++;
                 }
 
-                held = turbo_phase[port][source] % route->turbo_period < route->turbo_period / 2;
+                held = turbo_phase[port][source] % route->turbo_period < route->turbo_on;
             } else {
                 turbo_phase[port][source] = 0;
             }
@@ -505,6 +517,7 @@ void input_bridge_begin_run(void) {
 
     perf_note_poll();
     mux_input_poll();
+    kbm_begin_frame();
     input_bridge_build_snapshot();
     input_polled_epoch = input_epoch;
 }
@@ -513,6 +526,7 @@ void mux_retro_input_poll_cb(void) {
     if (input_polled_epoch == input_epoch) return;
 
     mux_input_poll();
+    kbm_begin_frame();
     input_bridge_build_snapshot();
     input_polled_epoch = input_epoch;
 }
@@ -545,6 +559,7 @@ void input_bridge_suppress(const mux_input_type type) {
 int16_t mux_retro_input_state_cb(unsigned port, const unsigned device, const unsigned index, const unsigned id) {
     if (port >= MUX_RETRO_PORT_COUNT) return 0;
     if (pause_menu_is_active()) return 0;
+    if (kbm_handles(device)) return kbm_state(port, device, index, id);
 
     if (link_local_active()) {
         if (port != (unsigned) link_get_focus()) return 0;

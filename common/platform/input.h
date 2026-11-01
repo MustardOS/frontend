@@ -196,6 +196,10 @@ void mux_input_poll(void);
 
 void mux_input_poll_raw(mux_raw_event_handler raw_handler);
 
+void mux_input_set_poll_hook(mux_raw_event_handler hook);
+
+void mux_input_set_key_mapping(int enabled);
+
 void mux_input_poll_raw_unmapped(mux_raw_event_handler raw_handler);
 
 void mux_input_stop(void);

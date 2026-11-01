@@ -839,8 +839,20 @@ static void process_sdl_joy_axis(const SDL_JoystickID which, const uint8_t axis,
     apply_axis_motion(raw_joystick_axis_map(axis), value);
 }
 
+static int key_mapping_enabled = 1;
+static mux_raw_event_handler poll_hook = NULL;
+
+void mux_input_set_key_mapping(const int enabled) {
+    key_mapping_enabled = enabled;
+}
+
+void mux_input_set_poll_hook(const mux_raw_event_handler hook) {
+    poll_hook = hook;
+}
+
 static void process_sdl_key(const SDL_KeyboardEvent *key, const int down) {
     if (input_is_suppressed()) return;
+    if (down && !key_mapping_enabled) return;
 
     const SDL_Scancode sc = key->keysym.scancode;
     if (sc >= SDL_NUM_SCANCODES) return;
@@ -1731,7 +1743,7 @@ void mux_input_close(void) {
 }
 
 void mux_input_poll(void) {
-    mux_input_poll_raw(NULL);
+    mux_input_poll_raw(poll_hook);
 }
 
 void mux_input_poll_raw(const mux_raw_event_handler raw_handler) {

@@ -70,7 +70,14 @@ static void sync_gpu_frequency(const char *governor) {
         snprintf(maximum, sizeof(maximum), "%s/max_freq", directory);
 
         const long long target = strcmp(governor, "performance") == 0 ? ceiling : floor;
-        const long long maximum_target = strcmp(governor, "powersave") == 0 ? floor : ceiling;
+
+        // The Vita Pro's 1080x1920 DRM scanout underflows irrecoverably when
+        // the idle profile hard-caps Mali at its 300 MHz floor. Keep the floor
+        // available for idle power savings, but allow the renderer to boost
+        // when its animated saver needs to produce the next scanout buffer.
+        const int hard_cap_powersave =
+            strcmp(governor, "powersave") == 0 && strcmp(device.board.name, "rg-vita-pro") != 0;
+        const long long maximum_target = hard_cap_powersave ? floor : ceiling;
 
         write_frequency(minimum, floor);
         write_frequency(maximum, maximum_target);

@@ -2653,6 +2653,11 @@ struct mux_lang {
             char assign_control[MAX_BUFFER_SIZE];
             char macro_label[MAX_BUFFER_SIZE];
             char macro_turbo_blocked[MAX_BUFFER_SIZE];
+            char turbo_style[MAX_BUFFER_SIZE];
+            char turbo_style_time[MAX_BUFFER_SIZE];
+            char turbo_style_frames[MAX_BUFFER_SIZE];
+            char device_mapping[MAX_BUFFER_SIZE];
+            char core_mapping[MAX_BUFFER_SIZE];
         } settings_screen;
         struct {
             char button_assignments[MAX_BUFFER_SIZE];

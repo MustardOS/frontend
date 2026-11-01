@@ -37,6 +37,7 @@
 #include "../state/patch.h"
 #include "../input/deck.h"
 #include "../input/hotkeys.h"
+#include "../input/kbm.h"
 #include "remote.h"
 #include "muxretro.h"
 #include "../ui/options.h"
@@ -767,6 +768,7 @@ int main(const int argc, char *argv[]) {
 
     board_init(device.board.name);
     mux_input_open();
+    kbm_init();
     LOG_DEBUG(mux_module, "board_init/mux_input_open done");
 
     create_directories(RETRO_SRM_PATH "/", 1);
