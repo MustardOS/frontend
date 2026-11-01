@@ -575,6 +575,11 @@ int load_image_specifics(
     const char *mux_dim, const char *program, const char *image_type, const char *image_extension, char *image_path,
     const size_t path_size
 ) {
+    if (theme.misc.random_background == 1 && strcmp(current_wall, "") != 0) {
+        snprintf(image_path, path_size, "%s", current_wall);
+        LOG_INFO(mux_module, "Random background wallpaper already displayed for current screen.");
+        return 1;
+    }
     if (theme.misc.random_background == 1 && get_random_wallpaper_path(
             mux_dim, program, image_type, image_extension, image_path, path_size)) {
         LOG_INFO(mux_module, "Random Wallpaper chosen: %s", image_path);
@@ -668,8 +673,14 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
 
 #define TRY_EMBED(path_buf)                                                                                            \
     do {                                                                                                               \
-        int embed_len = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", (path_buf));                      \
-        if (embed_len < 0 || (size_t) embed_len >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0';               \
+        const char *embed_path = (path_buf);                                                                           \
+        if (strncmp(embed_path, "M:", 2) != 0) {                                                                       \
+            int embed_len = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", embed_path);                  \
+            if (embed_len < 0 || (size_t) embed_len >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0';           \
+        } else {                                                                                                       \
+            int embed_len = snprintf(wall_image_embed, sizeof(wall_image_embed), "%s", embed_path);                    \
+            if (embed_len < 0 || (size_t) embed_len >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0';           \
+        }                                                                                                              \
     } while (0)
 
     if (config.visual.video_wallpaper) {
