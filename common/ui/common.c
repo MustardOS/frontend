@@ -2357,7 +2357,10 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
 
     lv_obj_set_width(ui_lbl_grid_current_item, fit_width ? LV_SIZE_CONTENT : LV_PCT(100));
     lv_obj_set_height(ui_lbl_grid_current_item, LV_SIZE_CONTENT);
-    lv_obj_align(ui_lbl_grid_current_item, LV_ALIGN_CENTER, 0, -2);
+
+    if (!fit_height) {
+        lv_obj_align(ui_lbl_grid_current_item, LV_ALIGN_CENTER, 0, -2);
+    }
 
     if (fit_width) {
         const lv_coord_t pad_hor =
