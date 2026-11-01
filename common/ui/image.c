@@ -449,10 +449,137 @@ int load_element_image_specifics(
     return found;
 }
 
+static int get_random_wallpaper_from_directory(
+    const char *directory,
+    const char *filename_prefix,
+    const char *image_extension,
+    char *image_path,
+    const size_t path_size
+) {
+    DIR *dir = opendir(directory);
+
+    if (dir == NULL) {
+        return 0;
+    }
+
+    struct dirent *entry;
+    size_t count = 0;
+    char selected_file[NAME_MAX] = {0};
+
+    char expected_prefix[256];
+    char expected_suffix[256];
+
+    snprintf(expected_prefix, sizeof(expected_prefix), "%s.", filename_prefix);
+    snprintf(expected_suffix, sizeof(expected_suffix), ".%s", image_extension);
+
+    const size_t prefix_length = strlen(expected_prefix);
+    const size_t suffix_length = strlen(expected_suffix);
+
+    while ((entry = readdir(dir)) != NULL) {
+        const char *filename = entry->d_name;
+        const size_t filename_length = strlen(filename);
+
+        // Check prefix
+        if (strncmp(filename, expected_prefix, prefix_length) != 0) {
+            continue;
+        }
+
+        // Check suffix
+        if (filename_length <= prefix_length + suffix_length ||
+            strcmp(filename + filename_length - suffix_length, expected_suffix) != 0) {
+            continue;
+        }
+
+        // Ensure the middle portion contains only digits
+        const char *number = filename + prefix_length;
+        const size_t number_length = filename_length - prefix_length - suffix_length;
+
+        int valid = number_length > 0;
+
+        for (size_t i = 0; i < number_length; i++) {
+            if (number[i] < '0' || number[i] > '9') {
+                valid = 0;
+                break;
+            }
+        }
+
+        if (!valid) {
+            continue;
+        }
+
+        // Reservoir sampling: randomly select one matching file
+        count++;
+
+        if ((size_t)rand() % count == 0) {
+            snprintf(selected_file, sizeof(selected_file), "%s", filename);
+        }
+    }
+
+    closedir(dir);
+
+    if (count == 0) {
+        return 0;
+    }
+
+    int written = snprintf(image_path, path_size, "%s/%s", directory, selected_file);
+
+    return written >= 0 && (size_t)written < path_size;
+}
+
+static int get_random_wallpaper_path(
+    const char *mux_dim,
+    const char *program,
+    const char *image_type,
+    const char *image_extension,
+    char *image_path,
+    const size_t path_size
+) {
+    if (strcmp(image_type, "wall") != 0) {
+        return 0;
+    }
+
+    char directory[512];
+
+    // Priority 1: dimension-specific mux program wallpapers
+    snprintf(directory, sizeof(directory), "%s/%simage/%s", theme_base, mux_dim, image_type);
+
+    if (get_random_wallpaper_from_directory(
+            directory, program, image_extension, image_path, path_size)) {
+        return 1;
+    }
+
+    // Priority 2: dimension-specific default wallpapers
+    if (get_random_wallpaper_from_directory(
+            directory, "default", image_extension, image_path, path_size)) {
+        return 1;
+    }
+
+    // Priority 3: mux program wallpapers
+    snprintf(directory, sizeof(directory), "%s/image/%s", theme_base, image_type);
+
+    if (get_random_wallpaper_from_directory(
+            directory, program, image_extension, image_path, path_size)) {
+        return 1;
+    }
+
+    // Priority 4: default wallpapers
+    if (get_random_wallpaper_from_directory(
+            directory, "default", image_extension, image_path, path_size)) {
+        return 1;
+    }
+
+    return 0;
+}
+
 int load_image_specifics(
     const char *mux_dim, const char *program, const char *image_type, const char *image_extension, char *image_path,
     const size_t path_size
 ) {
+    if (theme.misc.random_background == 1 && get_random_wallpaper_path(
+            mux_dim, program, image_type, image_extension, image_path, path_size)) {
+        LOG_INFO(mux_module, "Random Wallpaper chosen: %s", image_path);
+        return 1;
+    }
     const char *curr_lang = config.settings.general.language;
 
     char cache_key[MAX_BUFFER_SIZE];
