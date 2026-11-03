@@ -1,5 +1,5 @@
 #include <ctype.h>
-#include <common/ui/navigation/list_nav.h>
+#include <common/ui/nav/list_nav.h>
 #include <common/config/config.h>
 #include <common/display/language.h>
 #include <common/runtime/init.h>

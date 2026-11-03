@@ -237,6 +237,13 @@ struct theme_config {
     } list_disabled;
 
     struct {
+        int16_t rotate_x;
+        int16_t rotate_y;
+        int16_t perspective;
+        int16_t fade;
+    } list_3d;
+
+    struct {
         int16_t navigation_type;
         int enabled;
         int16_t alignment;
@@ -252,6 +259,9 @@ struct theme_config {
         int16_t row_count;
         int16_t row_height;
         int16_t row_padding;
+        int16_t carousel_fade;
+        int16_t layout_slot_gap;
+        int16_t animation_time;
         struct {
             int16_t alignment;
             int16_t width;
@@ -327,6 +337,9 @@ struct theme_config {
             int16_t image_alpha;
             uint32_t image_recolour;
             int16_t image_recolour_alpha;
+            uint32_t glow;
+            int16_t glow_width;
+            int16_t glow_pulse;
         } cell_focus;
     } grid;
 
@@ -511,6 +524,12 @@ struct theme_config {
 };
 
 int load_scheme(const char *theme_base, const char *mux_dim, const char *file_name, char *scheme, size_t scheme_size);
+
+int get_active_alternate(char *name, size_t name_size);
+
+void reset_active_alternate(void);
+
+int get_alt_base_path(char *alt_base, size_t alt_base_size);
 
 void load_theme(struct theme_config *theme, const struct mux_config *config, struct mux_device *device);
 

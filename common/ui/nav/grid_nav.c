@@ -1,8 +1,8 @@
-#include <common/ui/navigation/grid_nav.h>
+#include <common/ui/nav/grid_nav.h>
 #include <lvgl/lvgl.h>
 #include <common/display/theme.h>
 #include <common/ui/grid.h>
-#include <common/ui/navigation/list_nav.h>
+#include <common/ui/nav/list_nav.h>
 
 extern int current_item_index;
 

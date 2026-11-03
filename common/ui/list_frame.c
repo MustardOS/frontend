@@ -94,6 +94,7 @@ static void build_bar(lv_obj_t *parent) {
     apply_theme_list_panel(bar);
 
     lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(bar, LV_OBJ_FLAG_FLAT_3D);
 
     bar_glyph = build_arrow(bar, "left");
     bar_label = lv_label_create(bar);

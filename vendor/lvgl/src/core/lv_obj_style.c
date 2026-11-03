@@ -880,6 +880,7 @@ static void trans_anim_ready_cb(lv_anim_t *a) {
 }
 
 static lv_layer_type_t calculate_layer_type(lv_obj_t *obj) {
+    if (lv_obj_has_transform_3d(obj)) return LV_LAYER_TYPE_TRANSFORM;
     if (lv_obj_get_style_transform_angle(obj, 0) != 0) return LV_LAYER_TYPE_TRANSFORM;
     if (lv_obj_get_style_transform_zoom(obj, 0) != 256) return LV_LAYER_TYPE_TRANSFORM;
     if (lv_obj_get_style_opa_layered(obj, 0) != LV_OPA_COVER) return LV_LAYER_TYPE_SIMPLE;

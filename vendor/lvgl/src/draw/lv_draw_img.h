@@ -49,6 +49,15 @@ typedef struct {
     lv_opa_t effect_opa;
     int8_t effect_x_offset;
     int8_t effect_y_offset;
+
+    int16_t rotate_x;
+    int16_t rotate_y;
+    int16_t depth;
+    int16_t perspective;
+    lv_opa_t reflect;
+    uint8_t anchor_3d;
+    lv_coord_t flat_top_3d; /**< Rows of the layer above this are drawn flat*/
+    lv_area_t coords_3d; /**< The object's own area inside the layer, used by the perspective transform*/
 } lv_draw_img_dsc_t;
 
 struct _lv_draw_ctx_t;

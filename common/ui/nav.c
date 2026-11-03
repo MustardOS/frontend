@@ -10,6 +10,7 @@
 #include <common/ui/modal.h>
 #include <common/ui/orientation.h>
 #include <common/ui/grid.h>
+#include <common/ui/nav/grid_motion.h>
 #include <common/ui/transition.h>
 #include <common/ui/rich_text.h>
 #include <common/platform/audio.h>
@@ -502,7 +503,7 @@ void update_grid_scroll_position(
         y_offset = cell_row_index * row_height;
     }
 
-    lv_obj_scroll_to_y(ui_pnl_grid, y_offset, LV_ANIM_OFF);
+    lv_obj_scroll_to_y(ui_pnl_grid, y_offset, theme.grid.animation_time > 0 ? LV_ANIM_ON : LV_ANIM_OFF);
 }
 
 void scroll_object_to_middle(lv_obj_t *container, const lv_obj_t *obj) {
@@ -544,6 +545,30 @@ static void blank_overflow_rows(const lv_obj_t *panel) {
     lv_obj_get_coords(panel, &panel_area);
 
     const uint32_t child_count = lv_obj_get_child_cnt(panel);
+
+    int fade_active = 0;
+    int fade_row = -1;
+    if (theme.list_3d.fade > 0 && ui_group) {
+        lv_obj_t *focused = lv_group_get_focused(ui_group);
+        while (focused && lv_obj_get_parent(focused) != panel)
+            focused = lv_obj_get_parent(focused);
+
+        if (focused) {
+            fade_active = 1;
+            int ordinal = 0;
+            for (uint32_t i = 0; i < child_count; i++) {
+                lv_obj_t *child = lv_obj_get_child(panel, (int32_t) i);
+                if (!child || lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN)) continue;
+                if (child == focused) {
+                    fade_row = ordinal;
+                    break;
+                }
+                ordinal++;
+            }
+        }
+    }
+
+    int fade_ordinal = 0;
     for (uint32_t i = 0; i < child_count; i++) {
         lv_obj_t *child = lv_obj_get_child(panel, (int32_t) i);
         if (!child) continue;
@@ -567,6 +592,15 @@ static void blank_overflow_rows(const lv_obj_t *panel) {
         }
 
         if (row_dim_active && want != LV_OPA_TRANSP && (int) i != row_dim_index) want = (lv_opa_t) (want / 2);
+
+        if (fade_active && !lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN)) {
+            if (want != LV_OPA_TRANSP) {
+                int keep = 100 - theme.list_3d.fade * abs(fade_ordinal - fade_row);
+                if (keep < 0) keep = 0;
+                want = (lv_opa_t) (want * keep / 100);
+            }
+            fade_ordinal++;
+        }
 
         lv_style_value_t normal_opa;
         const lv_style_res_t normal_opa_result =
@@ -1084,6 +1118,7 @@ static uint32_t hoist_index = 0;
 
 static lv_obj_t *focus_scroll_label = NULL;
 static lv_obj_t *focus_scroll_value = NULL;
+static lv_obj_t *fade_focus = NULL;
 
 static lv_obj_t *focus_scroll_track(lv_obj_t *previous, lv_group_t *group) {
     lv_obj_t *focused = group ? lv_group_get_focused(group) : NULL;
@@ -1107,6 +1142,14 @@ void focus_scroll_tick(void) {
 
     focus_scroll_label = focus_scroll_track(focus_scroll_label, ui_group);
     focus_scroll_value = focus_scroll_track(focus_scroll_value, ui_group_value);
+
+    if (theme.list_3d.fade > 0 && ui_group && ui_pnl_content && lv_obj_is_valid(ui_pnl_content)) {
+        lv_obj_t *focused = lv_group_get_focused(ui_group);
+        if (focused != fade_focus) {
+            fade_focus = focused;
+            blank_overflow_rows(ui_pnl_content);
+        }
+    }
 }
 
 void nav_screen_reset(void) {
@@ -1114,6 +1157,7 @@ void nav_screen_reset(void) {
 
     focus_scroll_label = NULL;
     focus_scroll_value = NULL;
+    fade_focus = NULL;
 
     raise_row = NULL;
     hoist_panel = NULL;
@@ -1158,6 +1202,7 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
     const int level = config.visual.selection_animation;
     if (level <= 0 || level > 6) return NULL;
     if (!obj || !lv_obj_is_valid(obj)) return NULL;
+    if (grid_motion_owns(obj)) return NULL;
 
     int dir = config.visual.selection_style;
     if (dir == sel_dir_all) {
@@ -1257,7 +1302,7 @@ static lv_anim_exec_xcb_t play_shake(lv_obj_t *obj, const enum nav_direction hin
 }
 
 void nav_focus_shake_cb(const lv_group_t *group) {
-    if (shake_prev_focused && lv_obj_is_valid(shake_prev_focused)) {
+    if (shake_prev_focused && lv_obj_is_valid(shake_prev_focused) && !grid_motion_owns(shake_prev_focused)) {
         lv_anim_del(shake_prev_focused, shake_prev_exec_cb);
         reset_shake_styles(shake_prev_focused);
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <common/base/architecture.h>
 
 #ifndef TEST_IMAGE
 #define TEST_IMAGE 1
@@ -195,11 +196,19 @@
 #define STORE_LOC_INIT MUOS_BASE_PATH "/init"
 #define STORE_LOC_TRAK MUOS_BASE_PATH "/info/track"
 
-#define STORE_LOC_MANIFEST   OPT_SHARE_PATH "info/manifest"
-#define CORE_ASSIGN_INDEX    INFO_MNF_PATH "/assign.json"
-#define CORE_MANIFEST_LOCAL  STORE_LOC_MANIFEST "/manifest.json"
-#define CORE_MANIFEST_REMOTE "core-manifest.json"
-#define CORE_MANIFEST_SIG    ".sig"
+#define STORE_LOC_MANIFEST       OPT_SHARE_PATH "info/manifest"
+#define CORE_ASSIGN_INDEX        INFO_MNF_PATH "/assign.json"
+#define CORE_MANIFEST_LOCAL      STORE_LOC_MANIFEST "/manifest.json"
+#define CORE_MANIFEST_REMOTE     "core-manifest.json"
+#define CORE_MANIFEST_ARCH_LOCAL STORE_LOC_MANIFEST "/manifest-" MUOS_ARCHITECTURE ".json"
+#if defined(__aarch64__)
+#define CORE_MANIFEST_ARCH_REMOTE CORE_MANIFEST_REMOTE
+#else
+#define CORE_MANIFEST_ARCH_REMOTE "core-manifest-" MUOS_ARCHITECTURE ".json"
+#endif
+#define CORE_MANIFEST_SIG       ".sig"
+#define CORE_DEFINITIONS_REMOTE "core-definitions.zip"
+#define CORE_DEFINITIONS_SYNC   OPT_PATH "script/system/coresync.sh"
 
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_MUSI MUOS_BASE_PATH "/music"

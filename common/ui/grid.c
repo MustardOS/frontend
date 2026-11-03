@@ -8,9 +8,13 @@
 #include <common/display/language.h>
 #include <common/display/theme.h>
 #include <common/config/config.h>
-#include <common/ui/navigation/list_nav.h>
+#include <common/ui/nav/list_nav.h>
+#include <common/ui/nav/grid_layout.h>
+#include <common/ui/nav/grid_motion.h>
 #include <common/content/core/common.h>
 #include <module/muxshare.h>
+#include <common/storage/fileio.h>
+#include <json/json.h>
 
 struct grid_info grid_info;
 
@@ -197,8 +201,18 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         return;
     }
 
+    const struct theme_config *glyph_theme = &theme;
+    static struct theme_config sized_theme;
+    lv_obj_t *panel = lv_obj_get_parent(cell);
+    if (panel && lv_obj_has_flag(panel, LV_OBJ_FLAG_IGNORE_LAYOUT)) {
+        sized_theme = theme;
+        sized_theme.grid.cell.width = (int16_t) lv_obj_get_style_width(panel, LV_PART_MAIN);
+        sized_theme.grid.cell.height = (int16_t) lv_obj_get_style_height(panel, LV_PART_MAIN);
+        glyph_theme = &sized_theme;
+    }
+
     int grid_hint_w, grid_hint_h, grid_box_w, grid_box_h;
-    resolve_grid_glyph_hint(&theme, &grid_hint_w, &grid_hint_h, &grid_box_w, &grid_box_h);
+    resolve_grid_glyph_hint(glyph_theme, &grid_hint_w, &grid_hint_h, &grid_box_w, &grid_box_h);
 
     char grid_image[MAX_BUFFER_SIZE];
     build_embed_path(grid_image, sizeof(grid_image), image_path, grid_hint_w, grid_hint_h);
@@ -315,9 +329,15 @@ static int get_grid_item_index(const int index) {
 
 void update_grid(const int direction) {
     if (is_carousel_grid_mode()) {
+        const int animate = grid_motion_carousel_prepare(get_carousel_item_count());
+
         update_grid_items(1);
+
+        if (animate) grid_motion_carousel_step(direction);
         return;
     }
+
+    grid_motion_pop_focused();
 
     const int row_pitch = theme.grid.row_height + theme.grid.row_padding;
 
@@ -384,15 +404,37 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
 
     if (cell_label && items[item_index].glyph_icon) lv_obj_set_user_data(cell_label, items[item_index].glyph_icon);
 
+    static struct theme_config layout_theme;
+    const grid_layout_entry layout = find_grid_layout(item_index, panel_index);
+    const struct theme_config *cell_theme = &theme;
+    if (layout.found) {
+        layout_theme = theme;
+        layout_theme.grid.cell.width = (int16_t) layout.w;
+        layout_theme.grid.cell.height = (int16_t) layout.h;
+        layout_theme.grid.cell.radius = (int16_t) layout.radius;
+        cell_theme = &layout_theme;
+    }
+
     create_grid_item(
-        &theme, cell_panel, cell_label, cell_image, col, row, items[item_index].grid_image,
+        cell_theme, cell_panel, cell_label, cell_image, col, row, items[item_index].grid_image,
         items[item_index].grid_image_focused, items[item_index].display_name
     );
+
+    if (layout.found) place_grid_layout(cell_panel, &layout, panel_index - focus_index);
 
     if (cell_label) lv_group_add_obj(ui_group, cell_label);
     if (cell_image) lv_group_add_obj(ui_group_glyph, cell_image);
 
     lv_group_add_obj(ui_group_panel, cell_panel);
+
+    if (is_carousel_grid_mode() && focus_index != panel_index && theme.grid.carousel_fade > 0) {
+        const int distance = abs(panel_index - focus_index);
+        int keep = 100 - theme.grid.carousel_fade * distance;
+        if (keep < 0) keep = 0;
+
+        const lv_opa_t base = lv_obj_get_style_opa_layered(cell_panel, LV_PART_MAIN);
+        lv_obj_set_style_opa_layered(cell_panel, (lv_opa_t) (base * keep / 100), MU_OBJ_MAIN_DEFAULT);
+    }
 
     if (is_carousel_grid_mode() && focus_index == panel_index) {
         lv_group_focus_obj(cell_panel);
@@ -418,6 +460,7 @@ int disable_grid_file_exists(char *item_curr_dir) {
 }
 
 void create_carousel_grid(void) {
+    grid_motion_reset();
     if (item_count == 0) return;
 
     const int carousel_item_count = get_carousel_item_count();

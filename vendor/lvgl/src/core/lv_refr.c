@@ -883,7 +883,18 @@ layer_get_area(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj, lv_layer_type_t layer_typ
     lv_obj_get_coords(obj, &obj_coords_ext);
     lv_area_increase(&obj_coords_ext, ext_draw_size, ext_draw_size);
 
-    if (layer_type == LV_LAYER_TYPE_TRANSFORM) {
+    if (layer_type == LV_LAYER_TYPE_TRANSFORM && lv_obj_has_transform_3d(obj)) {
+        /*A perspective transform needs the whole object, and its projection stays inside the object's own area*/
+        const lv_coord_t zoom = lv_obj_get_style_transform_zoom(obj, 0);
+        if (zoom > LV_IMG_ZOOM_NONE) {
+            const lv_coord_t side = LV_MAX(lv_area_get_width(&obj_coords_ext), lv_area_get_height(&obj_coords_ext));
+            const lv_coord_t grow = (lv_coord_t) ((side * (zoom - LV_IMG_ZOOM_NONE)) / (LV_IMG_ZOOM_NONE * 2) + 1);
+            lv_area_increase(&obj_coords_ext, grow, grow);
+        }
+        lv_area_t clip_coords_for_obj;
+        if (!_lv_area_intersect(&clip_coords_for_obj, draw_ctx->clip_area, &obj_coords_ext)) return LV_RES_INV;
+        *layer_area_out = obj_coords_ext;
+    } else if (layer_type == LV_LAYER_TYPE_TRANSFORM) {
         /*Get the transformed area and clip it to the current clip area.
          *This area needs to be updated on the screen.*/
         lv_area_t clip_coords_for_obj;
@@ -998,6 +1009,40 @@ void refr_obj(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj) {
         draw_dsc.zoom = lv_obj_get_style_transform_zoom(obj, 0);
         draw_dsc.blend_mode = lv_obj_get_style_blend_mode(obj, 0);
         draw_dsc.antialias = disp_refr->driver->antialiasing;
+
+        if (lv_obj_has_transform_3d(obj)) {
+            draw_dsc.rotate_x = obj->spec_attr->rotate_x;
+            draw_dsc.rotate_y = obj->spec_attr->rotate_y;
+            draw_dsc.depth = obj->spec_attr->depth;
+            draw_dsc.perspective = obj->spec_attr->perspective;
+            draw_dsc.reflect = obj->spec_attr->reflect;
+            draw_dsc.anchor_3d = obj->spec_attr->anchor_3d;
+
+            const uint32_t child_cnt = lv_obj_get_child_cnt(obj);
+            lv_coord_t flat_y = LV_COORD_MIN;
+            for (uint32_t i = 0; i < child_cnt; i++) {
+                const lv_obj_t *child = obj->spec_attr->children[i];
+                if (!lv_obj_has_flag(child, LV_OBJ_FLAG_FLAT_3D) || lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN)) continue;
+                if (child->coords.y2 < obj->coords.y1) continue;
+                if (child->coords.y2 + 1 > flat_y) flat_y = (lv_coord_t) (child->coords.y2 + 1);
+            }
+
+            /*End the flat band where the next turned child starts, so no sliver of it is drawn flat*/
+            if (flat_y != LV_COORD_MIN) {
+                for (uint32_t i = 0; i < child_cnt; i++) {
+                    const lv_obj_t *child = obj->spec_attr->children[i];
+                    if (lv_obj_has_flag(child, LV_OBJ_FLAG_FLAT_3D) || lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN)) continue;
+                    if (child->coords.y1 < flat_y && child->coords.y2 >= flat_y) flat_y = child->coords.y1;
+                }
+
+                lv_coord_t flat = (lv_coord_t) (flat_y - layer_area_full.y1);
+                if (flat < 0) flat = 0;
+                if (flat > lv_area_get_height(&layer_area_full)) flat = lv_area_get_height(&layer_area_full);
+                draw_dsc.flat_top_3d = flat;
+            }
+            draw_dsc.coords_3d = obj->coords;
+            lv_area_move(&draw_dsc.coords_3d, -layer_area_full.x1, -layer_area_full.y1);
+        }
 
         if (flags & LV_DRAW_LAYER_FLAG_CAN_SUBDIVIDE) {
             layer_ctx->area_act = layer_ctx->area_full;

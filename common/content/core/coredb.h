@@ -12,10 +12,12 @@ struct coredb_core {
     char name[COREDB_NAME_MAX];
     char core[COREDB_NAME_MAX];
     char launcher[COREDB_NAME_MAX];
+    char config[COREDB_NAME_MAX];
     char governor[COREDB_NAME_MAX];
     char control[COREDB_NAME_MAX];
     enum core_runtime runtime;
     int bios_required;
+    int stage_overlay;
 };
 
 struct coredb_system {
@@ -71,6 +73,8 @@ int coredb_core_at(const char *system, enum core_runtime runtime, int index, str
 int coredb_core_find(const char *system, enum core_runtime runtime, const char *id, struct coredb_core *out);
 
 int coredb_core_find_file(const char *core_file, enum core_runtime runtime, struct coredb_core *out);
+
+int coredb_core_config(const char *core_file, char *out, size_t out_size);
 
 int coredb_runtime_available(const char *system, enum core_runtime runtime);
 

@@ -345,6 +345,53 @@ void *lv_obj_get_group(const lv_obj_t *obj) {
  * OTHER FUNCTIONS
  *------------------*/
 
+void lv_obj_set_transform_3d(
+    lv_obj_t *obj, int16_t rotate_x, int16_t rotate_y, int16_t depth, int16_t perspective, lv_opa_t reflect
+) {
+    LV_ASSERT_OBJ(obj, MY_CLASS);
+
+    if (obj->spec_attr == NULL) {
+        if (!rotate_x && !rotate_y && !depth && !reflect) return;
+        lv_obj_allocate_spec_attr(obj);
+        if (obj->spec_attr == NULL) return;
+    }
+
+    _lv_obj_spec_attr_t *attr = obj->spec_attr;
+    if (attr->rotate_x == rotate_x && attr->rotate_y == rotate_y && attr->depth == depth &&
+        attr->perspective == perspective && attr->reflect == reflect)
+        return;
+
+    lv_obj_invalidate(obj);
+    attr->rotate_x = rotate_x;
+    attr->rotate_y = rotate_y;
+    attr->depth = depth;
+    attr->perspective = perspective;
+    attr->reflect = reflect;
+    lv_obj_refresh_style(obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ANGLE);
+    lv_obj_invalidate(obj);
+}
+
+void lv_obj_set_transform_3d_anchor(lv_obj_t *obj, int anchor) {
+    LV_ASSERT_OBJ(obj, MY_CLASS);
+
+    if (obj->spec_attr == NULL) {
+        if (!anchor) return;
+        lv_obj_allocate_spec_attr(obj);
+        if (obj->spec_attr == NULL) return;
+    }
+
+    if (anchor < 0 || anchor > 2) anchor = 0;
+    if (obj->spec_attr->anchor_3d == anchor) return;
+    obj->spec_attr->anchor_3d = (uint8_t) anchor;
+    lv_obj_invalidate(obj);
+}
+
+int lv_obj_has_transform_3d(const lv_obj_t *obj) {
+    if (obj == NULL || obj->spec_attr == NULL) return 0;
+    const _lv_obj_spec_attr_t *attr = obj->spec_attr;
+    return attr->rotate_x != 0 || attr->rotate_y != 0 || attr->depth != 0 || attr->reflect != 0;
+}
+
 void lv_obj_allocate_spec_attr(lv_obj_t *obj) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
@@ -802,6 +849,7 @@ static void lv_obj_event(const lv_obj_class_t *class_p, lv_event_t *e) {
     } else if (code == LV_EVENT_DEFOCUSED) {
         lv_obj_clear_state(obj, LV_STATE_FOCUSED | LV_STATE_EDITED | LV_STATE_FOCUS_KEY);
     } else if (code == LV_EVENT_SIZE_CHANGED) {
+        if (obj->spec_attr && obj->spec_attr->reflect) lv_obj_refresh_ext_draw_size(obj);
         lv_coord_t align = lv_obj_get_style_align(obj, LV_PART_MAIN);
         uint16_t layout = lv_obj_get_style_layout(obj, LV_PART_MAIN);
         if (layout || align) {
@@ -828,6 +876,9 @@ static void lv_obj_event(const lv_obj_class_t *class_p, lv_event_t *e) {
     } else if (code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
         lv_coord_t d = lv_obj_calculate_ext_draw_size(obj, LV_PART_MAIN);
         lv_event_set_ext_draw_size(e, d);
+        if (obj->spec_attr && obj->spec_attr->reflect) {
+            lv_event_set_ext_draw_size(e, (lv_coord_t) (lv_obj_get_height(obj) * 2 / 5 + 2));
+        }
     } else if (code == LV_EVENT_DRAW_MAIN || code == LV_EVENT_DRAW_POST || code == LV_EVENT_COVER_CHECK) {
         lv_obj_draw(e);
     }

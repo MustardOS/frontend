@@ -794,6 +794,25 @@ void lv_obj_invalidate_area(const lv_obj_t *obj, const lv_area_t *area) {
     lv_area_copy(&area_tmp, area);
     if (!lv_obj_area_is_visible(obj, &area_tmp)) return;
 
+    const lv_obj_t *projected = NULL;
+    for (const lv_obj_t *parent = lv_obj_get_parent(obj); parent; parent = lv_obj_get_parent(parent)) {
+        if (lv_obj_has_transform_3d(parent)) projected = parent;
+    }
+
+    if (projected) {
+        lv_area_t projected_area;
+        const lv_coord_t ext_size = _lv_obj_get_ext_draw_size(projected);
+        lv_area_copy(&projected_area, &projected->coords);
+        projected_area.x1 -= ext_size;
+        projected_area.y1 -= ext_size;
+        projected_area.x2 += ext_size;
+        projected_area.y2 += ext_size;
+
+        if (lv_obj_area_is_visible(projected, &projected_area)) {
+            _lv_inv_area(lv_obj_get_disp(obj), &projected_area);
+        }
+    }
+
     _lv_inv_area(lv_obj_get_disp(obj), &area_tmp);
 }
 

@@ -14,7 +14,7 @@
 #include <common/config/config.h>
 #include <common/platform/device.h>
 #include <common/base/strutil.h>
-#include <common/ui/navigation/list_nav.h>
+#include <common/ui/nav/list_nav.h>
 #include <harfbuzz/hb.h>
 
 #define DEFAULT_NAME DEFAULT_FONT_NAME
@@ -291,18 +291,6 @@ int get_font_size(void) {
         default:
             return 20;
     }
-}
-
-static int get_ttf_size(void) {
-    return theme.font.font_list_size > 0 ? (int) theme.font.font_list_size : get_font_size();
-}
-
-static int get_section_ttf_size(const char *section) {
-    if (strcmp(section, FONT_HEADER_DIR) == 0 && theme.font.font_header_size > 0) return theme.font.font_header_size;
-    if (strcmp(section, FONT_FOOTER_DIR) == 0 && theme.font.font_footer_size > 0) return theme.font.font_footer_size;
-    if (strcmp(section, FONT_PANEL_DIR) == 0 && grid_mode_enabled && theme.font.font_panel_size > 0)
-        return theme.font.font_panel_size;
-    return get_font_size();
 }
 
 static int scale_font_size(const int size) {
@@ -1260,7 +1248,7 @@ static void load_font_text_inner(lv_obj_t *screen) {
 
     if (eff_type == 1) {
         const char *curr_lang = config.settings.general.language;
-        const int size = get_ttf_size();
+        const int size = get_custom_section_size("");
 
         char resolved[MAX_BUFFER_SIZE];
         lv_font_t *font = NULL;
@@ -1332,7 +1320,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
     }
 
     const char *curr_lang = config.settings.general.language;
-    const int size = get_section_ttf_size(section);
+    const int size = get_custom_section_size(section);
 
     char resolved[MAX_BUFFER_SIZE];
     lv_font_t *font = NULL;
@@ -1347,7 +1335,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
     }
 
     if (strcmp(section, FONT_PANEL_DIR) != 0 || grid_mode_enabled) {
-        apply_font(element, guaranteed_font(get_section_ttf_size(section)));
+        apply_font(element, guaranteed_font(get_custom_section_size(section)));
     } else {
         lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
     }

@@ -577,6 +577,14 @@ Uploading...
 Uploading... %s%
 Upload cancelled
 Network error while uploading
+Drop files or folders here to upload
+Transfers
+%s to %s
+Verifying...
+Upload could not be verified
+Retrying upload... attempt %s of 3
+Could not finish that upload
+Permissions for %s
 Global
 Override
 User Storage
@@ -618,3 +626,78 @@ Formatted preview
 Import
 Import save game
 Refreshing...
+MustardOS Dashboard
+Editors and Tools
+All Editors and Tools
+MustardOS Device Dashboard
+Overall activity
+The editors and tools from the MustardOS website, set up to open and save files on this device directly, so they work without an internet connection. Saving needs the dashboard unlocked, and the previous copy of a file is kept beside it as a .bak file.
+The tools are not installed on this device.
+0 selected
+New Collection
+Sound
+Left stick
+Right stick
+Refresh
+Import Save Game
+Edit Image
+Drag to position the selected layer. Use the corner handles to resize the output area.
+Image layers
+Layer
+Scale
+Opacity
+Transform
+Choose...
+Rotate Left
+Rotate Right
+Flip Horizontal
+Flip Vertical
+Layer actions
+Add Layer
+Raise
+Lower
+Remove Layer
+Edit Video
+seconds
+End
+Fade In
+Fade Out
+Set Start to Current Frame
+Set End to Current Frame
+Mute audio
+Edits are non-destructive and are applied during playback.
+Edit Text
+Text formatting
+Bold
+Italic
+Underline
+Strike
+Colour
+Black
+Dark Blue
+Dark Green
+Dark Aqua
+Dark Red
+Dark Purple
+Gold
+Grey
+Dark Grey
+Blue
+Green
+Aqua
+Red
+Light Purple
+Yellow
+White
+Clear Formatting
+Permissions
+Warning:
+Incorrect permissions can stop files, scripts, or folders from working. Execute permission allows code to run.
+Unix permissions
+Read
+Write
+Execute
+Owner
+Group
+Other
+Mode

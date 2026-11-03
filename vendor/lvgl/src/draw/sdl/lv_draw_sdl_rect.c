@@ -433,20 +433,24 @@ static void draw_bg_grad_simple(
         srcrect.y = (draw_area->y1 - coords->y1) * 255 / coords_h;
         srcrect.w = 1;
         srcrect.h = dstrect.h * 256 / coords_h;
+        if (srcrect.h < 1) srcrect.h = 1;
 
         if (srcrect.y < 0 || srcrect.y > 255) {
             return;
         }
+        if (srcrect.y + srcrect.h > 256) srcrect.h = 256 - srcrect.y;
     } else {
         lv_coord_t coords_w = lv_area_get_width(coords);
         srcrect.x = (draw_area->x1 - coords->x1) * 255 / coords_w;
         srcrect.y = 0;
         srcrect.w = dstrect.w * 256 / coords_w;
         srcrect.h = 1;
+        if (srcrect.w < 1) srcrect.w = 1;
 
         if (srcrect.x < 0 || srcrect.x > 255) {
             return;
         }
+        if (srcrect.x + srcrect.w > 256) srcrect.w = 256 - srcrect.x;
     }
 
     int grad_texture_in_cache = 0;

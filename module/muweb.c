@@ -3611,8 +3611,7 @@ static int file_path_within(const char *parent, const char *path) {
 
 static int file_change_mode(const char *path, const mode_t mode) {
     struct stat info;
-    if (lstat(path, &info) < 0 || S_ISLNK(info.st_mode) || (!S_ISREG(info.st_mode) && !S_ISDIR(info.st_mode)))
-        return 0;
+    if (lstat(path, &info) < 0 || S_ISLNK(info.st_mode) || (!S_ISREG(info.st_mode) && !S_ISDIR(info.st_mode))) return 0;
 
     int flags = O_RDONLY | O_CLOEXEC | O_NOFOLLOW;
     if (S_ISDIR(info.st_mode)) flags |= O_DIRECTORY;
@@ -6124,8 +6123,9 @@ static int json_object_text(const char *text, const size_t length) {
     return i < length && text[i] == '{';
 }
 
-#define CORE_TOOL_DIR "info/manifest/core"
-#define CORE_TOOL_EXT ".json"
+#define CORE_TOOL_DIR      "info/manifest/core"
+#define CORE_TOOL_SYNC_DIR "info/manifest/coresync"
+#define CORE_TOOL_EXT      ".json"
 
 struct core_item {
     char name_space[NAME_MAX + 1];
@@ -6224,7 +6224,7 @@ static int core_member_key(struct buffer *out, const char *name) {
 }
 
 static int core_visit_source(struct buffer *out, const struct core_item *item, const int user) {
-    return core_member_key(out, item->file) && json_string(out, user ? "user" : "bundled");
+    return core_member_key(out, item->file) && json_string(out, user ? "user" : "standard");
 }
 
 static int core_visit_data(struct buffer *out, const struct core_item *item, const int user) {
@@ -6253,11 +6253,14 @@ static int core_visit_data(struct buffer *out, const struct core_item *item, con
 }
 
 static int core_walk(
-    struct buffer *out, const char *user_dir, const char *bundled_dir,
+    struct buffer *out, const char *user_dir, const char *synced_dir, const char *bundled_dir,
     int (*visit)(struct buffer *, const struct core_item *, int)
 ) {
     struct core_item *bundled = NULL;
     const int bundled_count = core_collect(bundled_dir, &bundled);
+
+    struct core_item *synced = NULL;
+    const int synced_count = core_collect(synced_dir, &synced);
 
     struct core_item *user = NULL;
     const int user_count = core_collect(user_dir, &user);
@@ -6267,16 +6270,27 @@ static int core_walk(
         if (core_find(bundled, i, bundled[i].file, 0)) continue;
 
         const struct core_item *mine = core_find(user, user_count, bundled[i].file, 1);
-        ok = visit(out, mine ? mine : &bundled[i], mine != NULL);
+        const struct core_item *current = core_find(synced, synced_count, bundled[i].file, 1);
+        ok = visit(out, mine ? mine : (current ? current : &bundled[i]), mine != NULL);
+    }
+
+    for (int i = 0; ok && i < synced_count; ++i) {
+        if (core_find(bundled, bundled_count, synced[i].file, 0)) continue;
+        if (core_find(synced, i, synced[i].file, 0)) continue;
+
+        const struct core_item *mine = core_find(user, user_count, synced[i].file, 1);
+        ok = visit(out, mine ? mine : &synced[i], mine != NULL);
     }
 
     for (int i = 0; ok && i < user_count; ++i) {
         if (core_find(bundled, bundled_count, user[i].file, 0)) continue;
+        if (core_find(synced, synced_count, user[i].file, 0)) continue;
         if (core_find(user, user_count, user[i].file, 1) != &user[i]) continue;
         ok = visit(out, &user[i], 1);
     }
 
     free(bundled);
+    free(synced);
     free(user);
     return ok;
 }
@@ -6319,8 +6333,10 @@ static void handle_core_tool(
     struct connection *connection, const char *method, const char *rest, const char *body, const size_t body_length
 ) {
     char user_dir[PATH_MAX];
+    char synced_dir[PATH_MAX];
     char bundled_dir[PATH_MAX];
     if (!core_tool_dir(storage_root, user_dir, sizeof(user_dir))
+        || !join_path(synced_dir, sizeof(synced_dir), storage_root, CORE_TOOL_SYNC_DIR)
         || !core_tool_dir(share_root, bundled_dir, sizeof(bundled_dir))) {
         send_error(connection, 404, "Core assignments are not configured");
         return;
@@ -6331,7 +6347,7 @@ static void handle_core_tool(
 
         struct buffer out = {0};
         if (buffer_puts(&out, listing ? "{\"systems\":{" : "{")
-            && core_walk(&out, user_dir, bundled_dir, listing ? core_visit_source : core_visit_data)
+            && core_walk(&out, user_dir, synced_dir, bundled_dir, listing ? core_visit_source : core_visit_data)
             && buffer_puts(&out, listing ? "}}" : "}"))
             send_json(connection, &out);
         else
@@ -6350,10 +6366,13 @@ static void handle_core_tool(
     if (strcmp(method, "GET") == 0) {
         struct core_item *user = NULL;
         const int user_count = core_collect(user_dir, &user);
+        struct core_item *synced = NULL;
+        const int synced_count = core_collect(synced_dir, &synced);
         struct core_item *bundled = NULL;
         const int bundled_count = core_collect(bundled_dir, &bundled);
 
         const struct core_item *found = core_find(user, user_count, file, 1);
+        if (!found) found = core_find(synced, synced_count, file, 1);
         if (!found) found = core_find(bundled, bundled_count, file, 0);
 
         if (found)
@@ -6362,6 +6381,7 @@ static void handle_core_tool(
             send_error(connection, 404, "Not found");
 
         free(user);
+        free(synced);
         free(bundled);
         return;
     }
@@ -6405,9 +6425,9 @@ static void handle_core_tool(
         }
 
         if (*rest)
-            log_verbose("reset core definition %s to the bundled file", file);
+            log_verbose("reset core definition %s to the standard file", file);
         else
-            log_verbose("reset every core definition to the bundled files");
+            log_verbose("reset every core definition to the standard files");
         send_text(connection, 200, "application/json", "{\"ok\":true}");
         return;
     }
@@ -6698,6 +6718,22 @@ static int file_upload_write(struct connection *connection, const char *data, si
     return 1;
 }
 
+static int file_upload_sync(const int descriptor) {
+    int result;
+    do {
+        result = fsync(descriptor);
+    } while (result < 0 && errno == EINTR);
+    return result;
+}
+
+static int file_upload_rename(const char *source, const char *target) {
+    int result;
+    do {
+        result = rename(source, target);
+    } while (result < 0 && errno == EINTR);
+    return result;
+}
+
 static int file_upload_finish(struct connection *connection) {
     if (connection->upload_remaining) return 1;
 
@@ -6705,9 +6741,23 @@ static int file_upload_finish(struct connection *connection) {
     connection->upload_descriptor = -1;
     if (connection->upload_active && file_upload_count) file_upload_count--;
     connection->upload_active = 0;
-    const int synced = fsync(descriptor);
+    const int synced = file_upload_sync(descriptor);
+    const int sync_error = synced < 0 ? errno : 0;
     const int closed = close(descriptor);
-    if (synced < 0 || closed < 0 || rename(connection->upload_temporary, connection->upload_target) < 0) {
+    const int close_error = closed < 0 && errno != EINTR ? errno : 0;
+    int renamed = -1;
+    int rename_error = 0;
+    if (!sync_error && !close_error) {
+        renamed = file_upload_rename(connection->upload_temporary, connection->upload_target);
+        if (renamed < 0) rename_error = errno;
+    }
+    if (sync_error || close_error || renamed < 0) {
+        if (sync_error)
+            log_verbose("upload fsync failed for %s: %s", connection->upload_target, strerror(sync_error));
+        else if (close_error)
+            log_verbose("upload close failed for %s: %s", connection->upload_target, strerror(close_error));
+        else
+            log_verbose("upload rename failed for %s: %s", connection->upload_target, strerror(rename_error));
         unlink(connection->upload_temporary);
         connection->upload_temporary[0] = '\0';
         connection->upload_target[0] = '\0';
@@ -7199,7 +7249,7 @@ static void print_usage(FILE *stream) {
                 "  -D, --storage DIR      the MustardOS storage directory, for the tools to\n"
                 "                         open and save names, profiles, equaliser profiles,\n"
                 "                         activity and core assignments\n"
-                "  -E, --share DIR        the MustardOS share directory, for the bundled core\n"
+                "  -E, --share DIR        the MustardOS share directory, for image core definitions\n"
                 "                         assignments and built-in profiles\n"
                 "      --file-root ID=DIR storage location for Dashboard file management,\n"
                 "                         using boot, mmc, sdcard, usb or system (max 5)\n"

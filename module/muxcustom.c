@@ -1884,6 +1884,7 @@ static int save_custom_options(void) {
             char theme_active_txt_path[MAX_BUFFER_SIZE];
             snprintf(theme_active_txt_path, sizeof(theme_active_txt_path), "%s/active.txt", theme_base);
             if (!write_text_to_file(theme_active_txt_path, "w", CHAR, theme_alt)) save_failed++;
+            reset_active_alternate();
 
             char theme_alt_archive[MAX_BUFFER_SIZE];
             snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxalt", theme_base, theme_alt);

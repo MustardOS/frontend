@@ -27,7 +27,7 @@ STORAGE_SRCS = \
 
 CONTENT_SRCS = \
     content/catalogue.c content/content.c content/launch.c content/lookup.c content/manifest.c content/switcher.c \
-    content/core/common.c content/core/coredb.c content/core/external.c content/core/retroarch.c \
+    content/core/common.c content/core/coredb.c \
     content/core/state_preview.c \
     content/collection/common.c content/collection/order.c \
     content/collection/tag.c content/collection/theme.c
@@ -42,7 +42,8 @@ UI_SRCS = \
     ui/fs_choice.c ui/glyph.c ui/grid.c ui/image.c ui/list_frame.c \
     ui/modal.c ui/more.c ui/nav.c ui/notify.c ui/orientation.c ui/osk.c ui/rich_text.c \
     ui/crt.c ui/task_progress.c ui/task_prompt.c ui/transition.c \
-    ui/navigation/grid_nav.c ui/navigation/list_nav.c
+    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/grid_nav.c \
+    ui/nav/list_nav.c
 
 SAVER_SRCS = \
     saver/saver.c saver/blank.c saver/blockfall.c saver/boxart.c saver/bsod.c saver/constellation.c \

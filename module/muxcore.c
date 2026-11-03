@@ -1,8 +1,10 @@
 #include "muxshare.h"
+#include <ctype.h>
+#include <strings.h>
 #include <sys/wait.h>
+#include <common/base/architecture.h>
 #include <common/content/core/coredb.h>
 #include <common/ui/list_frame.h>
-#include <common/content/core/retroarch.h>
 #include <common/content/manifest.h>
 #include <common/ui/notify.h>
 #include <common/ui/orientation.h>
@@ -11,6 +13,8 @@
 
 static char remote_manifest_path[MAX_BUFFER_SIZE];
 static char remote_signature_path[MAX_BUFFER_SIZE];
+static char definitions_path[MAX_BUFFER_SIZE];
+static char definitions_signature_path[MAX_BUFFER_SIZE];
 
 static int starter_image = 0;
 static int extract_pending = 0;
@@ -21,6 +25,96 @@ static struct json local_manifest;
 static struct json remote_manifest;
 static char *local_manifest_raw = NULL;
 static char *remote_manifest_raw = NULL;
+
+static void manifest_field(struct json manifest, const char *zip, const char *key, char *out, size_t out_size);
+static void core_asset_name(const char *zip, char *out, size_t out_size);
+
+static void core_install_marker(const char *zip, char *out, const size_t out_size) {
+    char asset[MAX_BUFFER_SIZE];
+    core_asset_name(zip, asset, sizeof(asset));
+    snprintf(out, out_size, OPT_PATH "update/installed/Core - %s.muxzip.done", asset);
+}
+
+typedef struct {
+    char *zip;
+    char sha[65];
+} core_receipt;
+
+static core_receipt *receipts = NULL;
+static int receipt_count = 0;
+static int receipt_capacity = 0;
+
+static void receipts_clear(void) {
+    for (int i = 0; i < receipt_count; i++)
+        free(receipts[i].zip);
+    free(receipts);
+    receipts = NULL;
+    receipt_count = 0;
+    receipt_capacity = 0;
+}
+
+static core_receipt *receipt_for(const char *zip) {
+    for (int i = 0; i < receipt_count; i++) {
+        if (strcmp(receipts[i].zip, zip) == 0) return &receipts[i];
+    }
+
+    if (receipt_count == receipt_capacity) {
+        const int capacity = receipt_capacity ? receipt_capacity * 2 : 64;
+        core_receipt *grown = realloc(receipts, (size_t) capacity * sizeof(*grown));
+        if (!grown) return NULL;
+        receipts = grown;
+        receipt_capacity = capacity;
+    }
+
+    char *key = strdup(zip);
+    if (!key) return NULL;
+
+    core_receipt *receipt = &receipts[receipt_count++];
+    receipt->zip = key;
+    receipt->sha[0] = '\0';
+
+    char marker[MAX_BUFFER_SIZE];
+    core_install_marker(zip, marker, sizeof(marker));
+
+    FILE *file = fopen(marker, "r");
+    if (file) {
+        if (fscanf(file, "%64s", receipt->sha) != 1) receipt->sha[0] = '\0';
+        fclose(file);
+    }
+
+    return receipt;
+}
+
+static void receipt_set(const char *zip, const char *sha) {
+    core_receipt *receipt = receipt_for(zip);
+    if (receipt) snprintf(receipt->sha, sizeof(receipt->sha), "%s", sha);
+}
+
+static int core_receipt_matches(const char *zip, const char *archive_sha) {
+    if (!manifest_sha256_valid(archive_sha)) return 0;
+
+    const core_receipt *receipt = receipt_for(zip);
+    return receipt && strcmp(receipt->sha, archive_sha) == 0;
+}
+
+static void core_write_receipt(const char *zip) {
+    char archive_sha[MAX_BUFFER_SIZE];
+    manifest_field(remote_manifest, zip, "archive_sha256", archive_sha, sizeof(archive_sha));
+    if (!manifest_sha256_valid(archive_sha)) return;
+
+    char marker[MAX_BUFFER_SIZE];
+    core_install_marker(zip, marker, sizeof(marker));
+
+    FILE *file = fopen(marker, "w");
+    if (!file) {
+        LOG_WARN(mux_module, "Could not record installed core version: %s", marker);
+        return;
+    }
+    fprintf(file, "%s\n", archive_sha);
+    fclose(file);
+
+    receipt_set(zip, archive_sha);
+}
 
 static int run_verify(const char *mode, const char *first, const char *second) {
     const pid_t pid = fork();
@@ -37,6 +131,49 @@ static int run_verify(const char *mode, const char *first, const char *second) {
     }
 
     return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
+static int run_definition_sync(const char *archive) {
+    const pid_t pid = fork();
+    if (pid < 0) return 0;
+
+    if (pid == 0) {
+        execl(CORE_DEFINITIONS_SYNC, CORE_DEFINITIONS_SYNC, archive, (char *) NULL);
+        _exit(127);
+    }
+
+    int status = 0;
+    while (waitpid(pid, &status, 0) < 0) {
+        if (errno != EINTR) return 0;
+    }
+
+    return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
+static int sibling_url(const char *source, const char *name, char *out, const size_t out_size) {
+    const char *slash = strrchr(source, '/');
+    if (!slash) return 0;
+
+    const size_t prefix = (size_t) (slash - source + 1);
+    if (prefix + strlen(name) >= out_size) return 0;
+
+    snprintf(out, out_size, "%.*s%s", (int) prefix, source, name);
+    return 1;
+}
+
+static int core_manifest_url(char *out, const size_t out_size) {
+    if (strcmp(CORE_MANIFEST_ARCH_REMOTE, CORE_MANIFEST_REMOTE) == 0) {
+        const int written = snprintf(out, out_size, "%s", config.extra.core.data);
+        return written > 0 && (size_t) written < out_size;
+    }
+    return sibling_url(config.extra.core.data, CORE_MANIFEST_ARCH_REMOTE, out, out_size);
+}
+
+static int release_asset_name_valid(const char *name) {
+    if (!name || !*name || name[0] == '.') return 0;
+    for (const unsigned char *cursor = (const unsigned char *) name; *cursor; cursor++)
+        if (!isalnum(*cursor) && *cursor != '-' && *cursor != '_' && *cursor != '.') return 0;
+    return 1;
 }
 
 static struct json manifest_load(const char *path, const char *signature, char **raw) {
@@ -71,13 +208,39 @@ static void manifest_field(const struct json manifest, const char *zip, const ch
     json_string_copy(value, out, out_size);
 }
 
+static int manifest_architecture_matches(const struct json manifest, const char *zip) {
+    char architecture[32];
+    manifest_field(manifest, zip, "architecture", architecture, sizeof(architecture));
+    if (!architecture[0]) return 1;
+    if (strcasecmp(architecture, MUOS_ARCHITECTURE) == 0) return 1;
+    if (strcmp(MUOS_ARCHITECTURE, "armhf") == 0 && strcasecmp(architecture, "arm32") == 0) return 1;
+    return strcmp(MUOS_ARCHITECTURE, "x86_64") == 0 && strcasecmp(architecture, "x64") == 0;
+}
+
+static int core_download_url(const char *zip, char *out, const size_t out_size) {
+    char release_asset[MAX_BUFFER_SIZE];
+    manifest_field(remote_manifest, zip, "asset", release_asset, sizeof(release_asset));
+    if (release_asset[0])
+        return release_asset_name_valid(release_asset)
+               && sibling_url(config.extra.core.data, release_asset, out, out_size);
+
+    char asset[MAX_BUFFER_SIZE];
+    core_asset_name(zip, asset, sizeof(asset));
+    const int written =
+        snprintf(out, out_size, "https://github.com/MustardOS/extra/releases/latest/download/Core.-.%s.muxzip", asset);
+    return written > 0 && (size_t) written < out_size;
+}
+
 static core_state core_state_of(const char *zip) {
     char local_sha[MAX_BUFFER_SIZE];
     char remote_sha[MAX_BUFFER_SIZE];
+    char remote_archive_sha[MAX_BUFFER_SIZE];
 
     manifest_field(local_manifest, zip, "sha256", local_sha, sizeof(local_sha));
     manifest_field(remote_manifest, zip, "sha256", remote_sha, sizeof(remote_sha));
+    manifest_field(remote_manifest, zip, "archive_sha256", remote_archive_sha, sizeof(remote_archive_sha));
 
+    if (core_receipt_matches(zip, remote_archive_sha)) return core_state_current;
     if (!local_sha[0]) return core_state_absent;
     if (!remote_sha[0] || strcmp(local_sha, remote_sha) == 0) return core_state_current;
 
@@ -96,21 +259,21 @@ static const char *core_state_glyph(const core_state state) {
 }
 
 static void core_display_name(const char *zip, const char *fallback, char *out, const size_t out_size) {
-    char key[MAX_BUFFER_SIZE];
-    snprintf(key, sizeof(key), "%s", zip);
+    char core_file[MAX_BUFFER_SIZE];
+    snprintf(core_file, sizeof(core_file), "%s", zip);
+    const size_t length = strlen(core_file);
+    if (length > 4 && strcmp(core_file + length - 4, ".zip") == 0) core_file[length - 4] = '\0';
 
-    char *so = strstr(key, "_libretro.so");
-    if (so) *so = '\0';
-
-    for (int i = 0; ra_core_names[i].core; i++) {
-        if (strcmp(key, ra_core_names[i].core) == 0) {
-            snprintf(out, out_size, "%s", ra_core_names[i].name);
-            return;
-        }
+    struct coredb_core definition;
+    if (coredb_core_find_file(core_file, core_runtime_retroarch, &definition)) {
+        snprintf(out, out_size, "%s", definition.name);
+        return;
     }
 
     char name[MAX_BUFFER_SIZE];
-    manifest_field(remote_manifest, zip, "core", name, sizeof(name));
+    manifest_field(remote_manifest, zip, "name", name, sizeof(name));
+    if (!name[0]) manifest_field(local_manifest, zip, "name", name, sizeof(name));
+    if (!name[0]) manifest_field(remote_manifest, zip, "core", name, sizeof(name));
     if (!name[0]) manifest_field(local_manifest, zip, "core", name, sizeof(name));
 
     snprintf(out, out_size, "%s", name[0] ? name : fallback);
@@ -175,7 +338,8 @@ static void add_core_row(const int index, const int grouped) {
 }
 
 static void create_content_items(void) {
-    local_manifest = manifest_load(CORE_MANIFEST_LOCAL, NULL, &local_manifest_raw);
+    const char *local_path = file_exist(CORE_MANIFEST_ARCH_LOCAL) ? CORE_MANIFEST_ARCH_LOCAL : CORE_MANIFEST_LOCAL;
+    local_manifest = manifest_load(local_path, NULL, &local_manifest_raw);
     remote_manifest = manifest_load(remote_manifest_path, remote_signature_path, &remote_manifest_raw);
 
     const struct json sources[] = {local_manifest, remote_manifest};
@@ -186,6 +350,7 @@ static void create_content_items(void) {
         for (struct json key = json_first(sources[s]); json_exists(key); key = json_next(json_next(key))) {
             char zip[MAX_BUFFER_SIZE];
             json_string_copy(key, zip, sizeof(zip));
+            if (!manifest_architecture_matches(sources[s], zip)) continue;
 
             char core_file[MAX_BUFFER_SIZE];
             snprintf(core_file, sizeof(core_file), "%s", zip);
@@ -299,6 +464,10 @@ static void list_nav_next(const int steps) {
 static void finish_extract(void) {
     extract_pending = 0;
 
+    char marker[MAX_BUFFER_SIZE];
+    core_install_marker(items[current_item_index].name, marker, sizeof(marker));
+    if (file_exist(marker)) core_write_receipt(items[current_item_index].name);
+
     load_mux("core");
     mux_input_stop();
 }
@@ -325,6 +494,11 @@ static void download_finished(const int result) {
         return;
     }
 
+    char marker[MAX_BUFFER_SIZE];
+    core_install_marker(items[current_item_index].name, marker, sizeof(marker));
+    remove(marker);
+    receipt_set(items[current_item_index].name, "");
+
     if (extract_archive(file_path, "core", lang.muxcore.title) != 0) {
         play_sound(snd_error);
         notify_send(notify_warning, lang.generic.failed);
@@ -341,6 +515,56 @@ static void refresh_manifest_failed(const int result) {
     toast_message(storage_message ? storage_message : lang.muxcore.error_get_data, tst_wait_f);
 }
 
+static void refresh_reload(void) {
+    coredb_free();
+    load_mux("core");
+    mux_input_stop();
+}
+
+static void refresh_definitions_skipped(const char *reason) {
+    LOG_WARN(mux_module, "Core definitions not updated: %s", reason);
+    remove(definitions_path);
+    remove(definitions_signature_path);
+    refresh_reload();
+}
+
+static void refresh_definitions_signature_finished(const int result) {
+    if (result != 0) {
+        refresh_definitions_skipped("signature download failed");
+        return;
+    }
+
+    if (!run_verify("--core", definitions_path, definitions_signature_path)) {
+        LOG_ERROR(mux_module, "Downloaded core definitions failed signature verification");
+        refresh_definitions_skipped("signature verification failed");
+        return;
+    }
+
+    if (!run_definition_sync(definitions_path)) {
+        LOG_ERROR(mux_module, "Could not install downloaded core definitions");
+        refresh_definitions_skipped("sync failed");
+        return;
+    }
+
+    refresh_reload();
+}
+
+static void refresh_definitions_finished(const int result) {
+    if (result != 0) {
+        refresh_definitions_skipped("archive download failed");
+        return;
+    }
+
+    char url[MAX_BUFFER_SIZE];
+    if (!sibling_url(config.extra.core.data, CORE_DEFINITIONS_REMOTE CORE_MANIFEST_SIG, url, sizeof(url))) {
+        refresh_definitions_skipped("no signature address");
+        return;
+    }
+
+    set_download_callbacks(refresh_definitions_signature_finished);
+    initiate_download(url, definitions_signature_path, 1, lang.muxcore.down.data);
+}
+
 static void refresh_signature_finished(const int result) {
     if (result != 0) {
         refresh_manifest_failed(result);
@@ -353,8 +577,14 @@ static void refresh_signature_finished(const int result) {
         return;
     }
 
-    load_mux("core");
-    mux_input_stop();
+    char url[MAX_BUFFER_SIZE];
+    if (!sibling_url(config.extra.core.data, CORE_DEFINITIONS_REMOTE, url, sizeof(url))) {
+        refresh_definitions_skipped("no archive address");
+        return;
+    }
+
+    set_download_callbacks(refresh_definitions_finished);
+    initiate_download(url, definitions_path, 1, lang.muxcore.down.data);
 }
 
 static void refresh_manifest_finished(const int result) {
@@ -363,16 +593,27 @@ static void refresh_manifest_finished(const int result) {
         return;
     }
 
+    char manifest_url[MAX_BUFFER_SIZE];
     char url[MAX_BUFFER_SIZE];
-    snprintf(url, sizeof(url), "%s" CORE_MANIFEST_SIG, config.extra.core.data);
+    if (!core_manifest_url(manifest_url, sizeof(manifest_url))
+        || (size_t) snprintf(url, sizeof(url), "%s" CORE_MANIFEST_SIG, manifest_url) >= sizeof(url)) {
+        refresh_manifest_failed(-1);
+        return;
+    }
 
     set_download_callbacks(refresh_signature_finished);
     initiate_download(url, remote_signature_path, 1, lang.muxcore.down.data);
 }
 
 static void refresh_manifest(void) {
+    char url[MAX_BUFFER_SIZE];
+    if (!core_manifest_url(url, sizeof(url))) {
+        refresh_manifest_failed(-1);
+        return;
+    }
+
     set_download_callbacks(refresh_manifest_finished);
-    initiate_download(config.extra.core.data, remote_manifest_path, 1, lang.muxcore.down.data);
+    initiate_download(url, remote_manifest_path, 1, lang.muxcore.down.data);
 }
 
 static void handle_a(void) {
@@ -409,11 +650,12 @@ static void handle_a(void) {
     char file_path[MAX_BUFFER_SIZE];
     resolve_muxzip_path(items[current_item_index].name, file_path);
 
-    char asset[MAX_BUFFER_SIZE];
-    core_asset_name(items[current_item_index].name, asset, sizeof(asset));
-
     char url[MAX_BUFFER_SIZE];
-    snprintf(url, sizeof(url), "https://github.com/MustardOS/extra/releases/latest/download/Core.-.%s.muxzip", asset);
+    if (!core_download_url(items[current_item_index].name, url, sizeof(url))) {
+        play_sound(snd_error);
+        toast_message(lang.muxcore.not_published, tst_wait_m);
+        return;
+    }
 
     set_download_callbacks(download_finished);
     initiate_download(url, file_path, 1, lang.muxcore.down.core);
@@ -517,12 +759,18 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
 int muxcore_main(void) {
     starter_image = 0;
     extract_pending = 0;
+    receipts_clear();
 
     snprintf(
         remote_manifest_path, sizeof(remote_manifest_path), "%s/%s", device.storage.rom.mount,
-        MUOS_INFO_PATH "/" CORE_MANIFEST_REMOTE
+        MUOS_INFO_PATH "/" CORE_MANIFEST_ARCH_REMOTE
     );
     snprintf(remote_signature_path, sizeof(remote_signature_path), "%s" CORE_MANIFEST_SIG, remote_manifest_path);
+    snprintf(
+        definitions_path, sizeof(definitions_path), "%s/%s", device.storage.rom.mount,
+        MUOS_INFO_PATH "/" CORE_DEFINITIONS_REMOTE
+    );
+    snprintf(definitions_signature_path, sizeof(definitions_signature_path), "%s" CORE_MANIFEST_SIG, definitions_path);
 
     init_module(__func__);
     init_theme(1, 1);
@@ -603,6 +851,7 @@ int muxcore_main(void) {
 
     mux_input_task(&input_opts);
 
+    receipts_clear();
     if (ui_count_static > 0) free_items(&items, &item_count);
 
     free(local_manifest_raw);

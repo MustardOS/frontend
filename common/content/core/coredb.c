@@ -4,7 +4,9 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <json/json.h>
+#include <common/base/architecture.h>
 #include <common/base/options.h>
 #include <common/base/strutil.h>
 #include <common/config/config.h>
@@ -14,18 +16,6 @@
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include <common/storage/fileio.h>
-
-#if defined(__aarch64__)
-#define COREDB_ARCH "aarch64"
-#elif defined(__arm__)
-#define COREDB_ARCH "arm32"
-#elif defined(__x86_64__)
-#define COREDB_ARCH "x64"
-#elif defined(__i386__)
-#define COREDB_ARCH "x86"
-#else
-#define COREDB_ARCH "unknown"
-#endif
 
 #define COREDB_NAMESPACE_MAX 64
 #define COREDB_SYSTEM_MAX    256
@@ -37,8 +27,9 @@
 // TODO: Fix this up - I think it's the java core that has this
 #define COREDB_SUFFIX_STANDALONE " - standalone"
 
-#define COREDB_DIR "core"
-#define COREDB_EXT ".json"
+#define COREDB_DIR      "core"
+#define COREDB_SYNC_DIR "coresync"
+#define COREDB_EXT      ".json"
 
 static const char *const runtime_group[core_runtime_count] = {"libretro", "libretro", "external"};
 
@@ -59,6 +50,9 @@ static struct coredb_entry *entries;
 static int entry_count;
 static int loaded;
 static long long loaded_signature;
+static long long signature_checked_ms;
+
+#define COREDB_SIGNATURE_INTERVAL_MS 1000
 
 static time_t file_mtime(const char *path) {
     struct stat info;
@@ -166,7 +160,7 @@ int coredb_assign_resolve(
 // Check 'em - since eventually we'll do x86 and maybe armhf once again
 static const char *device_fact(const char *key) {
     if (strcmp(key, "device") == 0) return device.board.name;
-    if (strcmp(key, "arch") == 0) return COREDB_ARCH;
+    if (strcmp(key, "arch") == 0) return MUOS_ARCHITECTURE;
 
     return NULL;
 }
@@ -178,6 +172,8 @@ static int value_in_array(const struct json array, const char *wanted) {
         char value[COREDB_NAME_MAX];
         json_string_copy(item, value, sizeof(value));
         if (strcasecmp(value, wanted) == 0) return 1;
+        if (strcasecmp(wanted, "x86_64") == 0 && strcasecmp(value, "x64") == 0) return 1;
+        if (strcasecmp(wanted, "armhf") == 0 && strcasecmp(value, "arm32") == 0) return 1;
     }
 
     return 0;
@@ -340,19 +336,32 @@ static long long dir_signature(const char *dir, const int depth) {
 }
 
 static long long source_signature(void) {
-    return dir_signature(INFO_MNF_PATH "/" COREDB_DIR, 2) * 31 + dir_signature(STORE_LOC_MANIFEST "/" COREDB_DIR, 1);
+    long long signature = dir_signature(INFO_MNF_PATH "/" COREDB_DIR, 2);
+    signature = signature * 31 + dir_signature(INFO_MNF_PATH "/" COREDB_SYNC_DIR, 2);
+    return signature * 31 + dir_signature(STORE_LOC_MANIFEST "/" COREDB_DIR, 2);
 }
 
 static int entry_compare(const void *a, const void *b) {
     return strcmp(((const struct coredb_entry *) a)->id, ((const struct coredb_entry *) b)->id);
 }
 
+static long long monotonic_ms(void) {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (long long) now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
+
 int coredb_load(void) {
+    const long long now = monotonic_ms();
+    if (loaded && now - signature_checked_ms < COREDB_SIGNATURE_INTERVAL_MS) return 1;
+
     const long long signature = source_signature();
+    signature_checked_ms = now;
     if (loaded && signature == loaded_signature) return 1;
     if (loaded) coredb_free();
 
     load_dir(INFO_MNF_PATH "/" COREDB_DIR);
+    load_dir(INFO_MNF_PATH "/" COREDB_SYNC_DIR);
     load_dir(STORE_LOC_MANIFEST "/" COREDB_DIR);
 
     if (!entry_count) {
@@ -560,6 +569,7 @@ fill_core(const struct json key, const struct json entry, const enum core_runtim
     if (!out->name[0]) snprintf(out->name, sizeof(out->name), "%s", out->id);
     json_string_copy(json_object_get(entry, "core"), out->core, sizeof(out->core));
     json_string_copy(json_object_get(entry, "launcher"), out->launcher, sizeof(out->launcher));
+    json_string_copy(json_object_get(entry, "config"), out->config, sizeof(out->config));
     json_string_copy(json_object_get(entry, "governor"), out->governor, sizeof(out->governor));
     json_string_copy(json_object_get(entry, "control"), out->control, sizeof(out->control));
 
@@ -574,6 +584,9 @@ fill_core(const struct json key, const struct json entry, const enum core_runtim
 
     const struct json bios = json_object_get(entry, "bios_required");
     out->bios_required = json_exists(bios) ? json_int(bios) : 0;
+
+    const struct json stage_overlay = json_object_get(entry, "stage_overlay");
+    out->stage_overlay = json_exists(stage_overlay) ? json_int(stage_overlay) : 0;
 }
 
 static int walk_cores(
@@ -621,6 +634,7 @@ int coredb_core_file_hidden(const char *core_file) {
         const int system_extra = marked_extra(system);
         for (struct json core = json_first(cores); json_exists(core); core = json_next(json_next(core))) {
             const struct json entry = json_next(core);
+            if (!requirements_met(entry)) continue;
 
             char file[COREDB_NAME_MAX];
             json_string_copy(json_object_get(entry, "core"), file, sizeof(file));
@@ -647,26 +661,101 @@ int coredb_core_find(const char *system, const enum core_runtime runtime, const 
 }
 
 int coredb_core_find_file(const char *core_file, const enum core_runtime runtime, struct coredb_core *out) {
-    if (!core_file || !*core_file || !coredb_load()) return 0;
+    if (!core_file || !*core_file || runtime < 0 || runtime >= core_runtime_count || !coredb_load()) return 0;
 
-    for (int n = 0; n < coredb_namespace_count(); n++) {
-        const char *name_space = coredb_namespace_at(n);
+    for (int e = 0; e < entry_count; e++) {
+        const struct json cores = json_object_get(entries[e].node, runtime_group[runtime]);
+        if (!json_exists(cores)) continue;
 
-        for (int s = 0; s < coredb_system_count(name_space); s++) {
-            struct coredb_system system;
-            if (!coredb_system_at(name_space, s, &system)) continue;
+        for (struct json key = json_first(cores); json_exists(key); key = json_next(json_next(key))) {
+            const struct json entry = json_next(key);
+            if (!requirements_met(entry)) continue;
 
-            for (int c = 0; c < coredb_core_count(system.id, runtime); c++) {
-                struct coredb_core core;
-                if (!coredb_core_at(system.id, runtime, c, &core)) continue;
-                if (strcmp(core.core, core_file) != 0) continue;
+            char file[COREDB_NAME_MAX];
+            json_string_copy(json_object_get(entry, "core"), file, sizeof(file));
+            if (strcmp(file, core_file) != 0) continue;
 
-                if (out) *out = core;
-                return 1;
-            }
+            if (out) fill_core(key, entry, runtime, out);
+            return 1;
         }
     }
 
+    return 0;
+}
+
+static int entry_core_config(const struct json node, const char *core_file, char *out, const size_t out_size) {
+    const struct json cores = json_object_get(node, runtime_group[core_runtime_retroarch]);
+    if (!json_exists(cores)) return 0;
+
+    for (struct json key = json_first(cores); json_exists(key); key = json_next(json_next(key))) {
+        const struct json entry = json_next(key);
+
+        char file[COREDB_NAME_MAX];
+        json_string_copy(json_object_get(entry, "core"), file, sizeof(file));
+        if (strcmp(file, core_file) != 0) continue;
+
+        json_string_copy(json_object_get(entry, "config"), out, out_size);
+        if (out[0]) return 1;
+    }
+
+    return 0;
+}
+
+static int
+source_core_config(const char *dir, const char *id, const char *core_file, char *out, const size_t out_size) {
+    DIR *handle = opendir(dir);
+    if (!handle) return 0;
+
+    int found = 0;
+    const struct dirent *item;
+    while (!found && (item = readdir(handle))) {
+        char path[COREDB_PATH_MAX * 2];
+        if (!namespace_dir(dir, item, path, sizeof(path))) continue;
+
+        char file[COREDB_PATH_MAX * 3];
+        snprintf(file, sizeof(file), "%s/%s" COREDB_EXT, path, id);
+        if (!file_exist(file)) continue;
+
+        char *data = read_manifest(file);
+        if (!data) continue;
+
+        found = entry_core_config(json_parse(data), core_file, out, out_size);
+        free(data);
+    }
+
+    closedir(handle);
+    return found;
+}
+
+int coredb_core_config(const char *core_file, char *out, const size_t out_size) {
+    if (!core_file || !*core_file || !out || !out_size || !coredb_load()) return 0;
+
+    static const char *const sources[] = {
+        INFO_MNF_PATH "/" COREDB_DIR, INFO_MNF_PATH "/" COREDB_SYNC_DIR, STORE_LOC_MANIFEST "/" COREDB_DIR
+    };
+
+    for (int e = 0; e < entry_count; e++) {
+        if (entry_core_config(entries[e].node, core_file, out, out_size)) return 1;
+    }
+
+    for (int e = 0; e < entry_count; e++) {
+        char file[COREDB_NAME_MAX];
+        const struct json cores = json_object_get(entries[e].node, runtime_group[core_runtime_retroarch]);
+        if (!json_exists(cores)) continue;
+
+        int uses_core = 0;
+        for (struct json key = json_first(cores); json_exists(key) && !uses_core; key = json_next(json_next(key))) {
+            json_string_copy(json_object_get(json_next(key), "core"), file, sizeof(file));
+            uses_core = strcmp(file, core_file) == 0;
+        }
+        if (!uses_core) continue;
+
+        for (size_t s = 0; s < A_SIZE(sources); s++) {
+            if (source_core_config(sources[s], entries[e].id, core_file, out, out_size)) return 1;
+        }
+    }
+
+    out[0] = '\0';
     return 0;
 }
 

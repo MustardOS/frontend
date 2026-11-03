@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <common/content/core/common.h>
 #include <common/runtime/init.h>
-#include <common/content/core/retroarch.h>
-#include <common/content/core/external.h>
 #include <json/json.h>
 #include <common/content/core/coredb.h>
 #include <common/content/core/state_preview.h>
@@ -492,23 +490,14 @@ int system_uses_pico8_core(char *rom_dir) {
 int core_external_uses_stage_overlay(const char *core) {
     if (!core || !*core) return 0;
 
-    const char *key;
-
-    if (strcmp(core, "external") == 0) {
-        key = core;
-    } else if (strncmp(core, "ext-", 4) == 0) {
-        key = core + 4;
-    } else {
+    if (strcmp(core, "external") != 0 && strncmp(core, "ext-", 4) != 0) {
         // Pickles and RetroArch don't bother with stage overlay anymore
         // Well I mean RetroArch probably should but I'm not too bothered
         return 0;
     }
 
-    for (int i = 0; ext_core_names[i].core; i++) {
-        if (strcmp(key, ext_core_names[i].core) == 0) return ext_core_names[i].stage_overlay == stage_overlay_enabled;
-    }
-
-    return 0;
+    struct coredb_core definition;
+    return coredb_core_find_file(core, core_runtime_external, &definition) && definition.stage_overlay;
 }
 
 int core_uses_muxretro(const char *item_name) {
@@ -521,17 +510,16 @@ static const char *format_retroarch_core(const char *ra_core) {
 
     if (!ra_core || !*ra_core) return NULL;
 
+    struct coredb_core definition;
+    if (coredb_core_find_file(ra_core, core_runtime_retroarch, &definition)) {
+        snprintf(out, sizeof(out), "%s", definition.name);
+        return out;
+    }
+
     snprintf(tmp, sizeof(tmp), "%s", ra_core);
 
     char *ra_so = strstr(tmp, "_libretro.so");
     if (ra_so) *ra_so = 0;
-
-    for (int i = 0; ra_core_names[i].core; i++) {
-        if (!strcmp(tmp, ra_core_names[i].core)) {
-            snprintf(out, sizeof(out), "%s", ra_core_names[i].name);
-            return out;
-        }
-    }
 
     for (ra_so = tmp; *ra_so; ra_so++)
         if (*ra_so == '_') *ra_so = ' ';
@@ -542,18 +530,23 @@ static const char *format_retroarch_core(const char *ra_core) {
 }
 
 static const char *format_external_core(const char *ext_core) {
+    static char out[CORE_BUFFER];
+
     if (!ext_core || !*ext_core) return NULL;
 
-    if (strcmp(ext_core, "external") == 0) return "Portmaster";
-    if (strncmp(ext_core, "ext-", 4) != 0) return NULL;
+    if (strcmp(ext_core, "external") != 0 && strncmp(ext_core, "ext-", 4) != 0) return NULL;
 
-    const char *key = ext_core + 4;
-
-    for (int i = 0; ext_core_names[i].core; i++) {
-        if (strcmp(key, ext_core_names[i].core) == 0) return ext_core_names[i].name;
+    struct coredb_core definition;
+    if (coredb_core_find_file(ext_core, core_runtime_external, &definition)) {
+        snprintf(out, sizeof(out), "%s", definition.name);
+        return out;
     }
 
-    return NULL;
+    snprintf(out, sizeof(out), "%s", strcmp(ext_core, "external") == 0 ? "PortMaster" : ext_core + 4);
+    for (char *p = out; *p; p++)
+        if (*p == '-') *p = ' ';
+    out[0] = toupper((unsigned char) out[0]);
+    return out;
 }
 
 const char *format_core_name(const char *core, const int use_lang, const int is_muxretro) {
@@ -608,16 +601,12 @@ static const char *get_ra_config_dir(const char *core) {
 
     if (!core || !*core) return core;
 
+    if (coredb_core_config(core, core_id, sizeof(core_id))) return core_id;
+
     snprintf(core_id, sizeof(core_id), "%s", core);
 
     char *so = strstr(core_id, "_libretro.so");
     if (so) *so = '\0';
-
-    for (int i = 0; ra_core_names[i].core; i++) {
-        if (strcmp(core_id, ra_core_names[i].core) == 0) {
-            return ra_core_names[i].config ? ra_core_names[i].config : core_id;
-        }
-    }
 
     return core_id;
 }

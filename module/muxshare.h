@@ -70,8 +70,8 @@
 #include <common/platform/timezone.h>
 #include <common/platform/bluetooth.h>
 #include <common/content/core/common.h>
-#include <common/ui/navigation/list_nav.h>
-#include <common/ui/navigation/grid_nav.h>
+#include <common/ui/nav/list_nav.h>
+#include <common/ui/nav/grid_nav.h>
 #include <json/json.h>
 #include <common/content/lookup.h>
 // IWYU pragma: end_exports

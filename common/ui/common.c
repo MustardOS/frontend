@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <common/runtime/exec.h>
 #include <common/ui/common.h>
+#include <module/muxshare.h>
 #include <common/ui/notify.h>
 #include <common/ui/empty_state.h>
 #include <common/ui/list_frame.h>
@@ -17,7 +18,7 @@
 #include <common/ui/image.h>
 #include <common/platform/sysinfo.h>
 #include <common/display/anim.h>
-#include <common/ui/navigation/list_nav.h>
+#include <common/ui/nav/list_nav.h>
 #include <common/base/strutil.h>
 #include <common/storage/fileio.h>
 #include <common/platform/audio.h>
@@ -137,6 +138,60 @@ static lv_obj_t *canvas;
 
 static lv_style_t grid_cell_shadow_style;
 static int grid_cell_shadow_style_ready = 0;
+static lv_style_t grid_focus_glow_style;
+static int grid_focus_glow_style_ready = 0;
+
+static void grid_focus_glow_pulse_cb(void *var, const int32_t value) {
+    lv_style_set_shadow_opa((lv_style_t *) var, (lv_opa_t) value);
+
+    lv_obj_t *focused = ui_group_panel ? lv_group_get_focused(ui_group_panel) : NULL;
+    if (focused && ui_pnl_grid && lv_obj_get_parent(focused) == ui_pnl_grid) lv_obj_invalidate(focused);
+}
+
+static void grid_focus_glow_stop(void) {
+    lv_anim_del(&grid_focus_glow_style, grid_focus_glow_pulse_cb);
+    if (grid_focus_glow_style_ready) lv_style_set_shadow_opa(&grid_focus_glow_style, LV_OPA_COVER);
+}
+
+static void apply_grid_focus_glow(const struct theme_config *theme, lv_obj_t *cell_pnl) {
+    if (theme->grid.cell_focus.glow_width <= 0) {
+        grid_focus_glow_stop();
+        return;
+    }
+
+    if (!grid_focus_glow_style_ready) {
+        lv_style_init(&grid_focus_glow_style);
+        grid_focus_glow_style_ready = 1;
+    }
+
+    lv_style_set_shadow_color(&grid_focus_glow_style, lv_color_hex(theme->grid.cell_focus.glow));
+    lv_style_set_shadow_width(&grid_focus_glow_style, theme->grid.cell_focus.glow_width);
+    lv_style_set_shadow_spread(&grid_focus_glow_style, (lv_coord_t) (theme->grid.cell_focus.glow_width / 4));
+    lv_style_set_shadow_ofs_x(&grid_focus_glow_style, 0);
+    lv_style_set_shadow_ofs_y(&grid_focus_glow_style, 0);
+    lv_obj_add_style(cell_pnl, &grid_focus_glow_style, MU_OBJ_MAIN_FOCUS);
+
+    const int pulse = theme->grid.cell_focus.glow_pulse;
+    if (pulse <= 0 || config.visual.reduce_motion) {
+        grid_focus_glow_stop();
+        return;
+    }
+
+    const lv_anim_t *running = lv_anim_get(&grid_focus_glow_style, grid_focus_glow_pulse_cb);
+    if (running && running->time == (int32_t) (pulse / 2)) return;
+    if (running) grid_focus_glow_stop();
+
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, &grid_focus_glow_style);
+    lv_anim_set_exec_cb(&anim, grid_focus_glow_pulse_cb);
+    lv_anim_set_values(&anim, LV_OPA_30, LV_OPA_COVER);
+    lv_anim_set_time(&anim, (uint32_t) pulse / 2);
+    lv_anim_set_playback_time(&anim, (uint32_t) pulse / 2);
+    lv_anim_set_repeat_count(&anim, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_set_path_cb(&anim, lv_anim_path_ease_in_out);
+    lv_anim_start(&anim);
+}
 
 static lv_coord_t *grid_col_dsc = NULL;
 static lv_coord_t *grid_row_dsc = NULL;
@@ -420,6 +475,7 @@ void ui_common_get_gradient_buffer(void **buf, int *w, int *h) {
 // Every module runs in the same process, so anything holding on to a
 // screen object has to let go of it before that screen is thrown away!
 void ui_screen_teardown(void) {
+    grid_focus_glow_stop();
     notify_screen_reset();
     empty_state_reset();
     task_progress_reset();
@@ -784,6 +840,12 @@ void init_ui_common_screen(
 
     lv_obj_set_style_bg_color(ui_pnl_content, lv_color_hex(0x0D0803), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnl_content, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_transform_3d(
+        ui_pnl_content, (int16_t) (theme->list_3d.rotate_x * 10), (int16_t) (theme->list_3d.rotate_y * 10), 0,
+        theme->list_3d.perspective < 0 ? 0 : theme->list_3d.perspective, 0
+    );
+    lv_obj_set_transform_3d_anchor(ui_pnl_content, 1);
 
     lv_obj_set_style_border_width(ui_pnl_content, 0, MU_OBJ_MAIN_DEFAULT);
 
@@ -2408,6 +2470,31 @@ void grid_item_focus_event_cb(lv_event_t *e) {
     }
 }
 
+static const lv_style_prop_t grid_focus_props[] = {
+    LV_STYLE_BG_COLOR,
+    LV_STYLE_BG_OPA,
+    LV_STYLE_BG_GRAD_COLOR,
+    LV_STYLE_BORDER_COLOR,
+    LV_STYLE_BORDER_OPA,
+    LV_STYLE_TEXT_COLOR,
+    LV_STYLE_TEXT_OPA,
+    LV_STYLE_IMG_RECOLOR,
+    LV_STYLE_IMG_RECOLOR_OPA,
+    LV_STYLE_IMG_OPA,
+    0
+};
+static lv_style_transition_dsc_t grid_focus_transition;
+
+static void apply_grid_focus_transition(const struct theme_config *theme, lv_obj_t *obj) {
+    if (!obj || theme->grid.animation_time <= 0) return;
+
+    lv_style_transition_dsc_init(
+        &grid_focus_transition, grid_focus_props, lv_anim_path_ease_out, (uint32_t) theme->grid.animation_time, 0, NULL
+    );
+    lv_obj_set_style_transition(obj, &grid_focus_transition, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_transition(obj, &grid_focus_transition, MU_OBJ_MAIN_FOCUS);
+}
+
 void create_grid_item(
     const struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image, const int16_t col,
     const int16_t row, const char *item_image_path, const char *item_image_focused_path, const char *item_text
@@ -2428,7 +2515,12 @@ void create_grid_item(
     lv_obj_set_height(cell_pnl, theme->grid.cell.height == 0 ? LV_SIZE_CONTENT : theme->grid.cell.height);
 
     lv_obj_set_style_radius(cell_pnl, theme->grid.cell.radius, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_clip_corner(cell_pnl, 1, MU_OBJ_MAIN_DEFAULT);
+
+    const int cell_side =
+        theme->grid.cell.width < theme->grid.cell.height ? theme->grid.cell.width : theme->grid.cell.height;
+    lv_obj_set_style_clip_corner(
+        cell_pnl, cell_side <= 0 || theme->grid.cell.radius * 5 < cell_side * 2, MU_OBJ_MAIN_DEFAULT
+    );
     lv_obj_set_style_border_width(cell_pnl, theme->grid.cell.border_width, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_style(cell_pnl, &grid_cell_shadow_style, 0);
 
@@ -2487,6 +2579,11 @@ void create_grid_item(
     lv_obj_set_style_img_opa(cell_image, theme->grid.cell_focus.image_alpha, MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->grid.cell_focus.image_recolour), MU_OBJ_MAIN_FOCUS);
     lv_obj_set_style_img_recolor_opa(cell_image, theme->grid.cell_focus.image_recolour_alpha, MU_OBJ_MAIN_FOCUS);
+
+    apply_grid_focus_glow(theme, cell_pnl);
+    apply_grid_focus_transition(theme, cell_pnl);
+    apply_grid_focus_transition(theme, cell_label);
+    apply_grid_focus_transition(theme, cell_image);
 
     lv_obj_set_grid_cell(cell_pnl, theme->grid.cell.column_align, col, 1, theme->grid.cell.row_align, row, 1);
 

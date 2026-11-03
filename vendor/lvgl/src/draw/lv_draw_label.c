@@ -203,12 +203,8 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
 
     uint32_t trim_line_end = line_end;
 
-    /* Only trim if the line didn't end with explicit newline */
-    if (txt[trim_line_end] != '\n' && txt[trim_line_end] != '\r') {
-        while (trim_line_end > line_start && txt[trim_line_end - 1] == ' ') {
-            trim_line_end--;
-        }
-    }
+    while (trim_line_end > line_start && txt[trim_line_end - 1] == ' ')
+        trim_line_end--;
 
     /*Align to middle*/
     if (align == LV_TEXT_ALIGN_CENTER) {
@@ -370,7 +366,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
             if (dsc->effect_type > 0) {
                 lv_draw_label_dsc_t eff = dsc_mod;
                 eff.color = dsc->effect_color;
-                eff.opa = dsc->effect_opa;
+                eff.opa = (lv_opa_t) ((dsc->effect_opa * dsc->opa) >> 8);
                 lv_point_t sp = {pos.x + dsc->effect_x_offset, pos.y + dsc->effect_y_offset};
                 lv_draw_letter(draw_ctx, &eff, &sp, letter);
             }
@@ -416,17 +412,23 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(
         line_start = line_end;
         line_end += _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w, NULL, dsc->flag);
 
+        uint32_t align_line_end = line_end;
+        while (align_line_end > line_start && txt[align_line_end - 1] == ' ')
+            align_line_end--;
+
         pos.x = coords->x1;
         /*Align to middle*/
         if (align == LV_TEXT_ALIGN_CENTER) {
-            line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
+            line_width =
+                lv_txt_get_width(&txt[line_start], align_line_end - line_start, font, dsc->letter_space, dsc->flag);
 
             pos.x += (lv_area_get_width(coords) - line_width) / 2;
 
         }
         /*Align to the right*/
         else if (align == LV_TEXT_ALIGN_RIGHT) {
-            line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
+            line_width =
+                lv_txt_get_width(&txt[line_start], align_line_end - line_start, font, dsc->letter_space, dsc->flag);
             pos.x += lv_area_get_width(coords) - line_width;
         }
 

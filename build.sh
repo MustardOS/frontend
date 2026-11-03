@@ -489,6 +489,19 @@ GEN_CHECK_WEB() {
 		grep -qxF -- "$GEN_STRING" "$GEN_WEB" ||
 			printf 'Warning: dashboard string missing from %s: %s\n' "$GEN_WEB" "$GEN_STRING" 1>&2
 	done
+
+	GEN_WEB_PAGE="$GEN_WEB_DIR/index.html"
+	[ -f "$GEN_WEB_PAGE" ] || return 0
+
+	command -v python3 >/dev/null 2>&1 || {
+		printf '%s\n' "Warning: python3 is required to check dashboard page strings" 1>&2
+		return 0
+	}
+
+	python3 -I "$FRONTEND_DIR/tooling/web_strings.py" "$GEN_WEB_PAGE" | while IFS= read -r GEN_STRING; do
+		grep -qxF -- "$GEN_STRING" "$GEN_WEB" ||
+			printf 'Warning: dashboard page string missing from %s: %s\n' "$GEN_WEB" "$GEN_STRING" 1>&2
+	done
 }
 
 GEN_EXTERNAL_VERSION() {

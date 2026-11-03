@@ -525,12 +525,18 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
     static int cached_video_wallpaper = -1;
     static char cached_program[MAX_BUFFER_SIZE];
     static char cached_element[MAX_BUFFER_SIZE];
+    static char cached_alternate[MAX_BUFFER_SIZE];
+
+    char alternate[MAX_BUFFER_SIZE];
+    if (!get_active_alternate(alternate, sizeof(alternate))) alternate[0] = '\0';
 
     if (strcmp(theme_base, cached_theme_base) == 0 && wall_type == cached_wall_type
         && config.visual.video_wallpaper == cached_video_wallpaper && strcmp(program, cached_program) == 0
-        && strcmp(element, cached_element) == 0) {
+        && strcmp(element, cached_element) == 0 && strcmp(alternate, cached_alternate) == 0) {
         return wall_image_embed;
     }
+
+    snprintf(cached_alternate, sizeof(cached_alternate), "%s", alternate);
 
     snprintf(cached_theme_base, sizeof(cached_theme_base), "%s", theme_base);
     cached_wall_type = wall_type;
@@ -547,6 +553,25 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
 
     if (config.visual.video_wallpaper) {
         const char *ad_dims[] = {mux_dim, ""};
+
+        char alt_base[MAX_BUFFER_SIZE];
+        if (get_alt_base_path(alt_base, sizeof(alt_base))) {
+            const char *alt_files[] = {"image/wall/%s.mp4", "image/background.mp4"};
+            for (size_t dim_idx = 0; dim_idx < 2; dim_idx++) {
+                for (size_t f = 0; f < A_SIZE(alt_files); f++) {
+                    char leaf[MAX_BUFFER_SIZE];
+                    snprintf(leaf, sizeof(leaf), alt_files[f], program);
+                    const int alt_w =
+                        snprintf(wall_image_path, sizeof(wall_image_path), "%s/%s%s", alt_base, ad_dims[dim_idx], leaf);
+                    if (alt_w > 0 && (size_t) alt_w < sizeof(wall_image_path)
+                        && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
+                        TRY_EMBED(wall_image_path);
+                        return wall_image_embed;
+                    }
+                }
+            }
+        }
+
         for (size_t dim_idx = 0; dim_idx < 2; dim_idx++) {
             int mp4_w;
             mp4_w = snprintf(

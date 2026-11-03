@@ -123,6 +123,9 @@ enum {
 
 typedef uint32_t lv_obj_flag_t;
 
+/** A child with this flag is drawn flat, with everything above it, inside a parent that has a perspective transform*/
+#define LV_OBJ_FLAG_FLAT_3D LV_OBJ_FLAG_USER_4
+
 /**
  * `type` field in `lv_obj_draw_part_dsc_t` if `class_p = lv_obj_class`
  * Used in `LV_EVENT_DRAW_PART_BEGIN` and `LV_EVENT_DRAW_PART_END`
@@ -168,6 +171,12 @@ typedef struct {
     lv_dir_t scroll_dir : 4;                /**< The allowed scroll direction(s)*/
     uint8_t event_dsc_cnt : 6;              /**< Number of event callbacks stored in `event_dsc` array*/
     uint8_t layer_type : 2;                 /**< Cache the layer type here. Element of @lv_intermediate_layer_type_t */
+    int16_t rotate_x;                       /**< Tilt around the horizontal axis in 0.1 degree units*/
+    int16_t rotate_y;                       /**< Turn around the vertical axis in 0.1 degree units*/
+    int16_t depth;                          /**< Push back (positive) or forward (negative) in pixels*/
+    int16_t perspective;                    /**< Camera distance in pixels, 0 for automatic*/
+    lv_opa_t reflect;                       /**< Opacity of the floor reflection, 0 for none*/
+    uint8_t anchor_3d;                      /**< 0 turn around the centre, 1 keep the nearest edge, 2 fold in half*/
 } _lv_obj_spec_attr_t;
 
 typedef struct _lv_obj_t {
@@ -330,6 +339,36 @@ static inline void *lv_obj_get_user_data(lv_obj_t *obj) {
  * @param obj   pointer to an object
  */
 void lv_obj_allocate_spec_attr(lv_obj_t *obj);
+
+/**
+ * Give an object a perspective transform. It is drawn into a layer and projected in 3D by renderers that support it.
+ * All values 0 removes the transform.
+ * @param obj           pointer to an object
+ * @param rotate_x      tilt around the horizontal axis in 0.1 degree units, positive moves the top edge away
+ * @param rotate_y      turn around the vertical axis in 0.1 degree units, positive moves the right edge away
+ * @param depth         push back (positive) or forward (negative) in pixels
+ * @param perspective   camera distance in pixels, 0 for twice the object size
+ * @param reflect       opacity of a fading floor reflection under the object, 0 for none
+ */
+void lv_obj_set_transform_3d(
+    lv_obj_t *obj, int16_t rotate_x, int16_t rotate_y, int16_t depth, int16_t perspective, lv_opa_t reflect
+);
+
+/**
+ * Check whether an object has a perspective transform.
+ * @param obj   pointer to an object
+ * @return      1 when a perspective transform or reflection is set
+ */
+int lv_obj_has_transform_3d(const lv_obj_t *obj);
+
+/**
+ * Choose how a perspective transform turns the object.
+ * 0 turns it around its centre. 1 keeps the nearest edge in place, so only the far side recedes.
+ * 2 folds it down the middle, keeping both side edges in place while the centre recedes by the turn angle.
+ * @param obj       pointer to an object
+ * @param anchor    0, 1 or 2 as above
+ */
+void lv_obj_set_transform_3d_anchor(lv_obj_t *obj, int anchor);
 
 /**
  * Check the type of obj.

@@ -258,6 +258,9 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->grid.current_item_label.text_padding_top = 0;
 
     theme->grid.row_height = 0;
+    theme->grid.carousel_fade = 0;
+    theme->grid.layout_slot_gap = 0;
+    theme->grid.animation_time = 0;
     theme->grid.column_width = 0;
 
     theme->grid.cell.column_align = LV_GRID_ALIGN_CENTER;
@@ -302,6 +305,9 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->grid.cell_focus.image_recolour_alpha = 0;
     theme->grid.cell_focus.text = 0x100808;
     theme->grid.cell_focus.text_alpha = 255;
+    theme->grid.cell_focus.glow = 0xFFFFFF;
+    theme->grid.cell_focus.glow_width = 0;
+    theme->grid.cell_focus.glow_pulse = 0;
 
     theme->list_default.radius = 0;
     theme->list_default.background = 0xC69200;
@@ -464,6 +470,11 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->misc.static_alignment = 255;
     theme->mux.item.count = 11;
     theme->mux.item.height = 0;
+    theme->list_3d.rotate_x = 0;
+    theme->list_3d.rotate_y = 0;
+    theme->list_3d.perspective = 0;
+    theme->list_3d.fade = 0;
+
     theme->misc.content.size_to_content = 0;
     theme->misc.content.alignment = 0;
     theme->misc.content.padding_left = 0;
@@ -698,6 +709,9 @@ static const theme_field theme_fields[] = {
     {"grid", "COLUMN_COUNT", THEME_OFF(grid.column_count), theme_int},
     {"grid", "COLUMN_PADDING", THEME_OFF(grid.column_padding), theme_int},
     {"grid", "ROW_COUNT", THEME_OFF(grid.row_count), theme_int},
+    {"grid", "CAROUSEL_FADE", THEME_OFF(grid.carousel_fade), theme_int},
+    {"grid", "LAYOUT_SLOT_GAP", THEME_OFF(grid.layout_slot_gap), theme_int},
+    {"grid", "CELL_ANIMATION_TIME", THEME_OFF(grid.animation_time), theme_int},
     {"grid", "ROW_PADDING", THEME_OFF(grid.row_padding), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_ALIGNMENT", THEME_OFF(grid.current_item_label.alignment), theme_int},
     {"grid", "CURRENT_ITEM_LABEL_WIDTH", THEME_OFF(grid.current_item_label.width), theme_int},
@@ -769,9 +783,16 @@ static const theme_field theme_fields[] = {
     {"grid", "CELL_FOCUS_IMAGE_RECOLOUR_ALPHA", THEME_OFF(grid.cell_focus.image_recolour_alpha), theme_int},
     {"grid", "CELL_FOCUS_TEXT", THEME_OFF(grid.cell_focus.text), theme_hex},
     {"grid", "CELL_FOCUS_TEXT_ALPHA", THEME_OFF(grid.cell_focus.text_alpha), theme_int},
+    {"grid", "CELL_FOCUS_GLOW", THEME_OFF(grid.cell_focus.glow), theme_hex},
+    {"grid", "CELL_FOCUS_GLOW_WIDTH", THEME_OFF(grid.cell_focus.glow_width), theme_int},
+    {"grid", "CELL_FOCUS_GLOW_PULSE", THEME_OFF(grid.cell_focus.glow_pulse), theme_int},
 
     // list
     {"list", "LIST_DEFAULT_RADIUS", THEME_OFF(list_default.radius), theme_int},
+    {"list", "LIST_ROTATE_X", THEME_OFF(list_3d.rotate_x), theme_int},
+    {"list", "LIST_ROTATE_Y", THEME_OFF(list_3d.rotate_y), theme_int},
+    {"list", "LIST_PERSPECTIVE", THEME_OFF(list_3d.perspective), theme_int},
+    {"list", "LIST_FADE", THEME_OFF(list_3d.fade), theme_int},
     {"list", "LIST_DEFAULT_BACKGROUND", THEME_OFF(list_default.background), theme_hex},
     {"list", "LIST_DEFAULT_BACKGROUND_ALPHA", THEME_OFF(list_default.background_alpha), theme_int},
     {"list", "LIST_DEFAULT_GRADIENT_START", THEME_OFF(list_default.gradient_start), theme_int},
@@ -1052,22 +1073,51 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, cons
     );
 }
 
-int get_alt_scheme_path(char *alt_scheme_path, const size_t alt_scheme_path_size) {
-    char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
-    if (file_exist(active_path)) {
-        char *active = read_line_char_from(active_path, 1);
-        char *cleaned = active ? str_replace(active, "\r", "") : NULL;
+static char active_alternate_base[MAX_BUFFER_SIZE];
+static char active_alternate_name[MAX_BUFFER_SIZE];
+static int active_alternate_cached = 0;
 
-        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_base, cleaned ? cleaned : "");
+void reset_active_alternate(void) {
+    active_alternate_cached = 0;
+}
 
-        free(cleaned);
-        free(active);
+int get_active_alternate(char *name, const size_t name_size) {
+    const char *base = theme_base ? theme_base : "";
 
-        return file_exist_nocase(alt_scheme_path, alt_scheme_path, alt_scheme_path_size);
+    if (!active_alternate_cached || strcmp(base, active_alternate_base) != 0) {
+        snprintf(active_alternate_base, sizeof(active_alternate_base), "%s", base);
+        active_alternate_name[0] = '\0';
+        active_alternate_cached = 1;
+
+        char active_path[MAX_BUFFER_SIZE];
+        snprintf(active_path, sizeof(active_path), "%s/active.txt", base);
+        if (file_exist(active_path)) {
+            char *active = read_line_char_from(active_path, 1);
+            char *cleaned = active ? str_replace(active, "\r", "") : NULL;
+            snprintf(active_alternate_name, sizeof(active_alternate_name), "%s", cleaned ? cleaned : "");
+            free(cleaned);
+            free(active);
+        }
     }
 
-    return 0;
+    snprintf(name, name_size, "%s", active_alternate_name);
+    return name[0] != '\0';
+}
+
+int get_alt_base_path(char *alt_base, const size_t alt_base_size) {
+    char alt_name[MAX_BUFFER_SIZE];
+    if (!get_active_alternate(alt_name, sizeof(alt_name))) return 0;
+
+    snprintf(alt_base, alt_base_size, "%s/alternate/%s", theme_base, alt_name);
+    return dir_exist(alt_base);
+}
+
+int get_alt_scheme_path(char *alt_scheme_path, const size_t alt_scheme_path_size) {
+    char alt_name[MAX_BUFFER_SIZE];
+    if (!get_active_alternate(alt_name, sizeof(alt_name))) return 0;
+
+    snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_base, alt_name);
+    return file_exist_nocase(alt_scheme_path, alt_scheme_path, alt_scheme_path_size);
 }
 
 void scale_theme(struct mux_device *device) {
@@ -1188,6 +1238,8 @@ static void apply_accessibility(struct theme_config *theme) {
 }
 
 void load_theme(struct theme_config *theme, const struct mux_config *config, struct mux_device *device) {
+    reset_active_alternate();
+
     char scheme[MAX_BUFFER_SIZE];
     snprintf(mux_dim, sizeof(mux_dim), "%dx%d/", device->mux.width, device->mux.height);
 
@@ -1241,6 +1293,16 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         char alternate_scheme_path[MAX_BUFFER_SIZE];
         if (get_alt_scheme_path(alternate_scheme_path, sizeof(alternate_scheme_path))) {
             load_theme_from_scheme(alternate_scheme_path, theme, device);
+        }
+
+        char alternate_base[MAX_BUFFER_SIZE];
+        if (get_alt_base_path(alternate_base, sizeof(alternate_base))) {
+            for (size_t i = 0; i < A_SIZE(schemes); i++) {
+                if (load_scheme(alternate_base, mux_dim, schemes[i], scheme, sizeof(scheme))) {
+                    load_theme_from_scheme(scheme, theme, device);
+                    LOG_INFO("muxfrontend", "Loading Alternative Scheme: %s", scheme);
+                }
+            }
         }
     }
 
@@ -1505,7 +1567,17 @@ void set_option_value_scroll_mode(lv_obj_t *ui_value_item) {
     lv_label_set_long_mode(ui_value_item, wanted);
 }
 
+static void list_3d_face_values(lv_obj_t *value) {
+    for (lv_obj_t *parent = value ? lv_obj_get_parent(value) : NULL; parent; parent = lv_obj_get_parent(parent)) {
+        if (!lv_obj_has_transform_3d(parent)) continue;
+
+        if (parent->spec_attr->rotate_y) lv_obj_set_transform_3d_anchor(parent, 2);
+        return;
+    }
+}
+
 void apply_theme_list_value(const struct theme_config *lv_theme, lv_obj_t *ui_lbl_item_value, const char *item_text) {
+    list_3d_face_values(ui_lbl_item_value);
     lv_label_set_text(ui_lbl_item_value, item_text);
 
     lv_obj_set_width(ui_lbl_item_value, option_label_max_width(lv_theme));
@@ -1535,6 +1607,7 @@ void apply_theme_list_value(const struct theme_config *lv_theme, lv_obj_t *ui_lb
 void apply_theme_list_drop_down(
     const struct theme_config *d_theme, lv_obj_t *ui_lbl_item, lv_obj_t *ui_lbl_item_value, const char *options
 ) {
+    list_3d_face_values(ui_lbl_item_value);
     lv_dropdown_set_dir(ui_lbl_item_value, LV_DIR_LEFT);
     if (options != NULL) lv_dropdown_set_options(ui_lbl_item_value, options);
     lv_dropdown_set_selected_highlight(ui_lbl_item_value, 0);
