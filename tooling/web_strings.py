@@ -5,7 +5,8 @@ from html.parser import HTMLParser
 ATTRIBUTES = {"placeholder", "aria-label", "title", "alt"}
 SKIPPED_TAGS = {"script", "style", "code", "pre", "kbd", "samp"}
 BUTTONS = re.compile(r"^(A|B|X|Y|[LR][1-3])$")
-NAMES = {"MustardOS", "Pickles", "Wasabi", "Discord", "IRC", "Syncthing", "muos.local"}
+NAMES = {"MustardOS", "Pickles", "Wasabi", "RetroArch", "Discord", "IRC", "Syncthing", "muos.local"}
+HELPERS = re.compile(r'(?:\b(?:showToast|action)\(|\blabel: )"([^"]*)"')
 
 
 class PageStrings(HTMLParser):
@@ -44,13 +45,27 @@ class PageStrings(HTMLParser):
             self.add(data)
 
 
+def script_strings(source):
+    found = []
+    for text in HELPERS.findall(source):
+        text = text.strip()
+        if text and any(c.isalpha() for c in text) and not BUTTONS.match(text) and text not in NAMES:
+            found.append(text)
+    return found
+
+
 def main():
     seen = set()
     for path in sys.argv[1:]:
-        parser = PageStrings()
         with open(path, encoding="utf-8") as handle:
-            parser.feed(handle.read())
-        for text in parser.found:
+            source = handle.read()
+        if path.endswith(".js"):
+            found = script_strings(source)
+        else:
+            parser = PageStrings()
+            parser.feed(source)
+            found = parser.found
+        for text in found:
             if text not in seen:
                 seen.add(text)
                 print(text)

@@ -701,3 +701,20 @@ Owner
 Group
 Other
 Mode
+More Options
+Permissions changed
+File saved
+Save game imported
+Save game replaced
+Save game restored
+Save state removed
+The end must be after the start
+Adjust
+Edit
+Open
+File
+Missing
+Crop size
+640px output
+480px output
+320px output

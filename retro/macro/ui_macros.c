@@ -66,8 +66,31 @@ static capture_state_t capture_state = capture_none;
 static capture_purpose_t capture_purpose = capture_purpose_none;
 static int capture_source = -1;
 static uint64_t capture_prev_mask = 0;
-static int capture_prev_b = 0;
 static uint16_t chord_mask = 0;
+
+static void nav_show_b(const int show, const char *text) {
+    if (show) {
+        lv_label_set_text(ui_lbl_nav_b, text);
+        lv_obj_clear_flag(ui_lbl_nav_b, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_b_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_b, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_b_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
+static void nav_show_menu(const int show, const char *text) {
+    if (show) {
+        lv_label_set_text(ui_lbl_nav_menu, text);
+        lv_obj_clear_flag(ui_lbl_nav_menu, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lbl_nav_menu_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_move_foreground(ui_lbl_nav_menu_glyph);
+        lv_obj_move_foreground(ui_lbl_nav_menu);
+    } else {
+        lv_obj_add_flag(ui_lbl_nav_menu, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lbl_nav_menu_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
 
 static void nav_show_x(const int show, const char *text) {
     if (show) {
@@ -249,27 +272,42 @@ static void rebuild_editor_rows(void) {
 
 static void apply_list_nav(void) {
     nav_show_a(1, lang.generic.select);
+    nav_show_b(1, lang.generic.back);
     nav_show_x(macro_count > 0, lang.muxretro.macros.delete);
     nav_show_y(macro_count < MACRO_MAX, lang.generic.add);
+    nav_show_menu(0, NULL);
     nav_show_lr(0);
     pause_menu_fix_nav_order();
 }
 
 static void apply_editor_nav(void) {
     nav_show_a(ui_count_static > 0, lang.muxretro.macros.timing);
+    nav_show_b(1, lang.generic.back);
     nav_show_x(ui_count_static > 0, lang.muxretro.macros.delete);
     nav_show_y(macro_list[editing_position].step_count < MACRO_STEP_MAX, lang.generic.add);
+    nav_show_menu(0, NULL);
     nav_show_lr(0);
     pause_menu_fix_nav_order();
 }
 
 static void apply_field_nav(void) {
     nav_show_a(1, lang.muxretro.macros.custom);
+    nav_show_b(1, lang.generic.back);
     nav_show_x(0, NULL);
     nav_show_y(0, NULL);
+    nav_show_menu(0, NULL);
     nav_show_lr(1);
     lv_label_set_text(ui_lbl_nav_lr, lang.generic.change);
     pause_menu_fix_nav_order();
+}
+
+static void apply_capture_nav(void) {
+    nav_show_a(0, NULL);
+    nav_show_b(0, NULL);
+    nav_show_x(0, NULL);
+    nav_show_y(0, NULL);
+    nav_show_lr(0);
+    nav_show_menu(1, lang.generic.cancel);
 }
 
 static void close_editor(void) {
@@ -354,9 +392,9 @@ static void begin_capture(const capture_purpose_t purpose) {
 
     capture_purpose = purpose;
     capture_prev_mask = mux_input_source_pressed_mask(capture_source);
-    capture_prev_b = mux_input_pressed(mux_input_b);
     capture_state = capture_waiting_press;
     chord_mask = 0;
+    apply_capture_nav();
 
     if (purpose == capture_purpose_assign) {
         refresh_row_value(current_item_index, lang.muxretro.settings_screen.assign_control);
@@ -366,8 +404,16 @@ static void begin_capture(const capture_purpose_t purpose) {
 }
 
 static void end_capture(void) {
+    const capture_purpose_t purpose = capture_purpose;
+
     capture_state = capture_none;
     capture_purpose = capture_purpose_none;
+
+    if (purpose == capture_purpose_add_step)
+        apply_editor_nav();
+    else
+        apply_list_nav();
+
     prev_nav_mask = current_nav_mask();
 }
 
@@ -458,6 +504,16 @@ static void start_pause_edit(void) {
 }
 
 static void capture_tick(void) {
+    if (pause_menu_take_menu_tap()) {
+        if (capture_purpose == capture_purpose_add_step)
+            cancel_add_step();
+        else
+            cancel_assign();
+
+        end_capture();
+        return;
+    }
+
     const uint64_t mask = mux_input_source_pressed_mask(capture_source);
 
     if (capture_purpose == capture_purpose_add_step) {
@@ -468,7 +524,6 @@ static void capture_tick(void) {
         for (int i = 0; i < PORT_DIGITAL_COUNT; i++) {
             const mux_input_type type = (mux_input_type) session_settings_source_types[i];
 
-            if (capture_state == capture_waiting_press && type == mux_input_b) continue;
             candidate_mask |= BIT(type);
 
             if (new_bits & BIT(type)) {
@@ -486,17 +541,6 @@ static void capture_tick(void) {
             return;
         }
 
-        if (capture_state == capture_waiting_press) {
-            const int b_now = mux_input_pressed(mux_input_b);
-            const int b_edge = b_now && !capture_prev_b;
-            capture_prev_b = b_now;
-
-            if (b_edge) {
-                cancel_add_step();
-                end_capture();
-            }
-        }
-
         return;
     }
 
@@ -506,22 +550,12 @@ static void capture_tick(void) {
 
         for (int i = 0; i < PORT_SOURCE_COUNT; i++) {
             const mux_input_type pressed = (mux_input_type) session_settings_source_types[i];
-            if (pressed == mux_input_b) continue;
 
             if (new_bits & BIT(pressed)) {
                 end_capture();
                 finish_assign(pressed);
                 return;
             }
-        }
-
-        const int b_now = mux_input_pressed(mux_input_b);
-        const int b_edge = b_now && !capture_prev_b;
-        capture_prev_b = b_now;
-
-        if (b_edge) {
-            cancel_assign();
-            end_capture();
         }
     }
 }
