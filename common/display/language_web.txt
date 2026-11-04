@@ -593,6 +593,11 @@ Preparing archive...
 Adding %s (%s of %s)
 Archive ready. Download starting...
 Could not prepare that archive
+Download Archive
+Choose an archive format
+ZIP (.zip)
+Gzip Tarball (.tar.gz)
+XZ Tarball (.tar.xz)
 %s items
 Listening in Wasabi
 Watching in Wasabi

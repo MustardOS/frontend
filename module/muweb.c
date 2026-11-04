@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/prctl.h>
 #include <sys/statvfs.h>
+#include <sys/wait.h>
 #include <sys/vfs.h>
 #include <sys/un.h>
 #include <time.h>
@@ -158,11 +159,13 @@ struct session {
 
 static struct session sessions[MUWEB_SESSION_SLOTS];
 
-#define MUWEB_LIMIT_SLOTS    32
-#define MUWEB_LIMIT_FAILURES 5
-#define MUWEB_LIMIT_GLOBAL   30
-#define MUWEB_LIMIT_WINDOW   60
-#define MUWEB_LIMIT_LOCK_MAX 900
+#define MUWEB_LIMIT_SLOTS     32
+#define MUWEB_LIMIT_FAILURES  5
+#define MUWEB_LIMIT_GLOBAL    30
+#define MUWEB_LIMIT_WINDOW    60
+#define MUWEB_LIMIT_LOCK_MAX  900
+#define MUWEB_LIMIT_BOOT      50
+#define MUWEB_LIMIT_BOOT_PATH "/run/muos/muweb_code_failures"
 
 struct code_limit {
     unsigned char address[16];
@@ -176,6 +179,7 @@ struct code_limit {
 static struct code_limit code_limits[MUWEB_LIMIT_SLOTS];
 static int code_global_failures = 0;
 static time_t code_global_window = 0;
+static long code_boot_failures = -1;
 
 static void signal_handler(const int signal_number) {
     (void) signal_number;
@@ -668,6 +672,8 @@ static struct content_folder *content_folders = NULL;
 static size_t content_folder_count = 0;
 static size_t content_folder_capacity = 0;
 static time_t content_made = 0;
+static const struct content_item **content_lookup = NULL;
+static size_t content_lookup_count = 0;
 
 struct assign_entry {
     char key[NAME_MAX + 1];
@@ -878,6 +884,9 @@ static void content_free(void) {
 
     free(content_folders);
     content_folders = NULL;
+    free(content_lookup);
+    content_lookup = NULL;
+    content_lookup_count = 0;
     content_folder_count = 0;
     content_folder_capacity = 0;
     content_made = 0;
@@ -1084,6 +1093,29 @@ static void content_walk(
     closedir(directory);
 }
 
+static int content_lookup_order(const struct content_item *item, const char *catalogue, const char *stem) {
+    const int order = strcmp(item->catalogue, catalogue);
+    return order ? order : strcmp(item->stem, stem);
+}
+
+static int content_lookup_compare(const void *left, const void *right) {
+    const struct content_item *b = *(const struct content_item *const *) right;
+    return content_lookup_order(*(const struct content_item *const *) left, b->catalogue, b->stem);
+}
+
+static size_t content_lookup_lower(const char *catalogue, const char *stem) {
+    size_t low = 0;
+    size_t high = content_lookup_count;
+    while (low < high) {
+        const size_t middle = low + (high - low) / 2;
+        if (content_lookup_order(content_lookup[middle], catalogue, stem) < 0)
+            low = middle + 1;
+        else
+            high = middle;
+    }
+    return low;
+}
+
 static int content_item_compare(const void *left, const void *right) {
     const struct content_item *a = left;
     const struct content_item *b = right;
@@ -1154,6 +1186,12 @@ static void content_index_build(void) {
         total += content_folders[i].count;
     }
 
+    content_lookup = total ? malloc(total * sizeof(*content_lookup)) : NULL;
+    for (size_t i = 0; content_lookup && i < content_folder_count; ++i)
+        for (size_t j = 0; j < content_folders[i].count; ++j)
+            content_lookup[content_lookup_count++] = &content_folders[i].items[j];
+    qsort(content_lookup, content_lookup_count, sizeof(*content_lookup), content_lookup_compare);
+
     content_made = time(NULL);
     log_verbose("content: %zu items across %zu folders", total, content_folder_count);
 }
@@ -1161,24 +1199,18 @@ static void content_index_build(void) {
 static int content_holds(const char *catalogue, const char *stem) {
     content_index_build();
 
-    for (size_t i = 0; i < content_folder_count; ++i)
-        for (size_t j = 0; j < content_folders[i].count; ++j)
-            if (strcmp(content_folders[i].items[j].catalogue, catalogue) == 0
-                && strcmp(content_folders[i].items[j].stem, stem) == 0)
-                return 1;
-
-    return 0;
+    const size_t found = content_lookup_lower(catalogue, stem);
+    return found < content_lookup_count && content_lookup_order(content_lookup[found], catalogue, stem) == 0;
 }
 
 static size_t content_count_for(const char *catalogue) {
-    size_t count = 0;
-
     content_index_build();
-    for (size_t i = 0; i < content_folder_count; ++i)
-        for (size_t j = 0; j < content_folders[i].count; ++j)
-            if (strcmp(content_folders[i].items[j].catalogue, catalogue) == 0) count += 1;
 
-    return count;
+    const size_t start = content_lookup_lower(catalogue, "");
+    size_t end = start;
+    while (end < content_lookup_count && strcmp(content_lookup[end]->catalogue, catalogue) == 0)
+        end += 1;
+    return end - start;
 }
 
 struct catalogue_file {
@@ -1216,6 +1248,26 @@ catalogue_scan_add(struct catalogue_scan *scan, const char *relative, const char
     scan->bytes += file->bytes;
     scan->count += 1;
     return 1;
+}
+
+static int catalogue_file_compare(const void *left, const void *right) {
+    const struct catalogue_file *a = left;
+    const struct catalogue_file *b = right;
+    const int order = strcmp(a->stem, b->stem);
+    return order ? order : strcmp(a->relative, b->relative);
+}
+
+static const struct catalogue_file *catalogue_scan_find(const struct catalogue_scan *scan, const char *stem) {
+    size_t low = 0;
+    size_t high = scan->count;
+    while (low < high) {
+        const size_t middle = low + (high - low) / 2;
+        if (strcmp(scan->files[middle].stem, stem) < 0)
+            low = middle + 1;
+        else
+            high = middle;
+    }
+    return low < scan->count && strcmp(scan->files[low].stem, stem) == 0 ? &scan->files[low] : NULL;
 }
 
 static void catalogue_scan_type(const char *type_path, struct catalogue_scan *scan, const int want_sizes) {
@@ -1273,6 +1325,7 @@ static void catalogue_scan_type(const char *type_path, struct catalogue_scan *sc
         closedir(nested);
     }
     closedir(directory);
+    qsort(scan->files, scan->count, sizeof(*scan->files), catalogue_file_compare);
 }
 
 static void catalogue_scan_free(struct catalogue_scan *scan) {
@@ -1357,11 +1410,37 @@ static int catalogue_index_json(struct buffer *out) {
     return buffer_puts(out, "]}");
 }
 
+struct catalogue_view {
+    struct catalogue_scan scans[CATALOGUE_TYPE_COUNT];
+    int loaded;
+};
+
+static int catalogue_files_object_json(
+    struct buffer *out, const struct catalogue_view *view, const char *stem, long long *bytes, long long *modified
+) {
+    int ok = buffer_puts(out, "{");
+    int first = 1;
+
+    for (size_t type = 0; ok && type < CATALOGUE_TYPE_COUNT; ++type) {
+        const struct catalogue_file *held = catalogue_scan_find(&view->scans[type], stem);
+        if (!held) continue;
+
+        if (!first && !((ok = buffer_puts(out, ",")))) break;
+        ok = json_string(out, catalogue_types[type]) && buffer_puts(out, ":") && json_string(out, held->relative);
+
+        if (bytes) *bytes += held->bytes;
+        if (modified && held->modified > *modified) *modified = held->modified;
+        first = 0;
+    }
+
+    return ok && buffer_puts(out, "}");
+}
+
 static int catalogue_system_json(struct buffer *out, const char *system) {
     char system_path[PATH_MAX];
     if (!resolve_within(catalogue_root, system, system_path, sizeof(system_path))) return 0;
 
-    struct catalogue_scan scans[CATALOGUE_TYPE_COUNT] = {0};
+    struct catalogue_view view = {0};
 
     char **stems = NULL;
     size_t stem_count = 0;
@@ -1376,9 +1455,9 @@ static int catalogue_system_json(struct buffer *out, const char *system) {
             continue;
         if (!resolve_within(catalogue_root, type_relative, type_path, sizeof(type_path))) continue;
 
-        catalogue_scan_type(type_path, &scans[type], 1);
-        for (size_t file = 0; file < scans[type].count; ++file)
-            string_array_add(&stems, &stem_count, &stem_capacity, scans[type].files[file].stem);
+        catalogue_scan_type(type_path, &view.scans[type], 1);
+        for (size_t file = 0; file < view.scans[type].count; ++file)
+            string_array_add(&stems, &stem_count, &stem_capacity, view.scans[type].files[file].stem);
     }
 
     const size_t held_count = string_array_dedupe(stems, stem_count);
@@ -1404,33 +1483,18 @@ static int catalogue_system_json(struct buffer *out, const char *system) {
         long long modified = 0;
 
         if (i && !((ok = buffer_puts(out, ",")))) break;
-        ok = buffer_puts(out, "{") && json_field(out, "stem", stems[i]) && buffer_puts(out, ",\"files\":{");
-
-        int first = 1;
-        for (size_t type = 0; ok && type < CATALOGUE_TYPE_COUNT; ++type) {
-            for (size_t file = 0; file < scans[type].count; ++file) {
-                if (strcmp(scans[type].files[file].stem, stems[i]) != 0) continue;
-
-                if (!first && !((ok = buffer_puts(out, ",")))) break;
-                ok = json_string(out, catalogue_types[type]) && buffer_puts(out, ":")
-                     && json_string(out, scans[type].files[file].relative);
-
-                bytes += scans[type].files[file].bytes;
-                if (scans[type].files[file].modified > modified) modified = scans[type].files[file].modified;
-                first = 0;
-                break;
-            }
-        }
+        ok = buffer_puts(out, "{") && json_field(out, "stem", stems[i]) && buffer_puts(out, ",\"files\":")
+             && catalogue_files_object_json(out, &view, stems[i], &bytes, &modified);
 
         const int on_card = !assigned || content_holds(system, stems[i]);
 
-        ok = ok && buffer_puts(out, "},") && json_number(out, "bytes", bytes) && buffer_puts(out, ",")
+        ok = ok && buffer_puts(out, ",") && json_number(out, "bytes", bytes) && buffer_puts(out, ",")
              && json_number(out, "modified", modified) && (on_card || buffer_puts(out, ",\"orphan\":true"))
              && buffer_puts(out, "}");
     }
 
     for (size_t type = 0; type < CATALOGUE_TYPE_COUNT; ++type)
-        catalogue_scan_free(&scans[type]);
+        catalogue_scan_free(&view.scans[type]);
     string_array_free(stems, stem_count);
 
     return ok && buffer_puts(out, "]}");
@@ -1559,11 +1623,6 @@ static const char *friendly_folder_name(const char *folder) {
     return known && strcmp(known, folder) != 0 ? known : NULL;
 }
 
-struct catalogue_view {
-    struct catalogue_scan scans[CATALOGUE_TYPE_COUNT];
-    int loaded;
-};
-
 static void catalogue_view_load(struct catalogue_view *view, const char *system) {
     memset(view, 0, sizeof(*view));
     if (!system || !*system || !safe_relative_path(system)) return;
@@ -1588,31 +1647,6 @@ static void catalogue_view_free(struct catalogue_view *view) {
     view->loaded = 0;
 }
 
-static int catalogue_files_object_json(
-    struct buffer *out, const struct catalogue_view *view, const char *stem, long long *bytes, long long *modified
-) {
-    int ok = buffer_puts(out, "{");
-    int first = 1;
-
-    for (size_t type = 0; ok && type < CATALOGUE_TYPE_COUNT; ++type) {
-        for (size_t file = 0; file < view->scans[type].count; ++file) {
-            if (strcmp(view->scans[type].files[file].stem, stem) != 0) continue;
-
-            if (!first && !((ok = buffer_puts(out, ",")))) break;
-            ok = json_string(out, catalogue_types[type]) && buffer_puts(out, ":")
-                 && json_string(out, view->scans[type].files[file].relative);
-
-            if (bytes) *bytes += view->scans[type].files[file].bytes;
-            if (modified && view->scans[type].files[file].modified > *modified)
-                *modified = view->scans[type].files[file].modified;
-            first = 0;
-            break;
-        }
-    }
-
-    return ok && buffer_puts(out, "}");
-}
-
 static int catalogue_files_json(
     struct buffer *out, const struct catalogue_view *view, const char *stem, long long *bytes, long long *modified
 ) {
@@ -1625,22 +1659,9 @@ static size_t catalogue_files_held(const struct catalogue_view *view, const char
     for (size_t type = 0; type < CATALOGUE_TYPE_COUNT; ++type) {
         if (overlay_is_stepped(catalogue_types[type])) continue;
 
-        int found = 0;
-        for (size_t file = 0; file < view->scans[type].count; ++file) {
-            if (strcmp(view->scans[type].files[file].stem, stem) != 0) continue;
-            found = 1;
-            break;
-        }
-        if (!found
-            && (strcmp(catalogue_types[type], "splash") == 0 || strcmp(catalogue_types[type], "overlay/base") == 0)) {
-            for (size_t file = 0; file < view->scans[type].count; ++file) {
-                if (strcmp(view->scans[type].files[file].stem, "default") == 0) {
-                    found = 1;
-                    break;
-                }
-            }
-        }
-        held += (size_t) found;
+        held += catalogue_scan_find(&view->scans[type], stem)
+                || ((strcmp(catalogue_types[type], "splash") == 0 || strcmp(catalogue_types[type], "overlay/base") == 0)
+                    && catalogue_scan_find(&view->scans[type], "default"));
     }
 
     return held;
@@ -1998,11 +2019,9 @@ static int content_folder_json(struct buffer *out, const char *relative) {
             int known = content_holds(catalogue, stem);
 
             for (size_t earlier = 0; !known && earlier < type; ++earlier)
-                for (size_t seen = 0; !known && seen < system.scans[earlier].count; ++seen)
-                    known = strcmp(system.scans[earlier].files[seen].stem, stem) == 0;
+                known = catalogue_scan_find(&system.scans[earlier], stem) != NULL;
 
-            for (size_t seen = 0; !known && seen < file; ++seen)
-                known = strcmp(system.scans[type].files[seen].stem, stem) == 0;
+            if (file && strcmp(system.scans[type].files[file - 1].stem, stem) == 0) known = 1;
 
             if (known) continue;
 
@@ -2580,11 +2599,13 @@ struct connection {
     char upload_target[PATH_MAX];
     int head_only;
     int revalidate;
+    int attachment;
     const char *cache_header;
     char if_modified[64];
     char auth_code[16];
     char auth_session[MUWEB_TOKEN_TEXT];
     char system_write[16];
+    char archive_format[16];
     unsigned char peer[16];
 };
 
@@ -2769,8 +2790,9 @@ static void send_file(struct connection *connection, const char *path, const cha
         return;
     }
 
-    char extra[224] = "";
+    char extra[256] = "";
     if (modified[0]) snprintf(extra, sizeof(extra), "Last-Modified: %s\r\n", modified);
+    if (connection->attachment) strcat(extra, "Content-Disposition: attachment\r\n");
 
     const size_t used = strlen(extra);
     if (partial)
@@ -2906,8 +2928,23 @@ static struct code_limit *code_limit_find(const unsigned char *address, const in
     return oldest;
 }
 
+static long code_boot_count(void) {
+    if (code_boot_failures >= 0) return code_boot_failures;
+
+    char text[32] = "";
+    FILE *file = fopen(MUWEB_LIMIT_BOOT_PATH, "r");
+    if (file) {
+        if (!fgets(text, sizeof(text), file)) text[0] = '\0';
+        fclose(file);
+    }
+    code_boot_failures = strtol(text, NULL, 10);
+    if (code_boot_failures < 0) code_boot_failures = 0;
+    return code_boot_failures;
+}
+
 static int code_check(struct connection *connection) {
     if (!connection->auth_code[0]) return 0;
+    if (code_boot_count() >= MUWEB_LIMIT_BOOT) return -2;
 
     const time_t now = time(NULL);
     if (now - code_global_window >= MUWEB_LIMIT_WINDOW) {
@@ -2925,6 +2962,11 @@ static int code_check(struct connection *connection) {
     }
 
     code_global_failures++;
+
+    char failures[32];
+    const int failures_length = snprintf(failures, sizeof(failures), "%ld\n", ++code_boot_failures);
+    write_file_atomic(MUWEB_LIMIT_BOOT_PATH, failures, (size_t) failures_length);
+    if (code_boot_failures >= MUWEB_LIMIT_BOOT) log_verbose("too many wrong codes since boot, code unlock disabled");
 
     limit = code_limit_find(connection->peer, 1);
     limit->last_seen = now;
@@ -2948,7 +2990,11 @@ static int code_check(struct connection *connection) {
 
 static int code_refused(struct connection *connection, const int result) {
     if (result >= 0) return 0;
-    send_error(connection, 429, "Too many wrong codes. Wait a minute and try again");
+    send_error(
+        connection, 429,
+        result == -2 ? "Too many wrong codes. Restart the device to unlock the dashboard"
+                     : "Too many wrong codes. Wait a minute and try again"
+    );
     return 1;
 }
 
@@ -3024,11 +3070,18 @@ static int file_relative_path(const char *relative, const int empty_ok) {
     return 1;
 }
 
+static int path_at_or_below(const char *relative, const char *prefix) {
+    const size_t length = strlen(prefix);
+    return strncasecmp(relative, prefix, length) == 0 && (relative[length] == '\0' || relative[length] == '/');
+}
+
 static int file_sensitive(const struct file_root *root, const char *relative) {
-    if (strcmp(root->id, "system") != 0 || !relative) return 0;
-    return strcmp(relative, "config/system/landing_secret") == 0 || strncmp(relative, "config/network/", 15) == 0
-           || strcmp(relative, "config/network") == 0 || strncmp(relative, "config/terminal/", 16) == 0
-           || strcmp(relative, "config/terminal") == 0;
+    if (!relative) return 0;
+    if (strcmp(root->id, "system") == 0)
+        return path_at_or_below(relative, "config/system/landing_secret")
+               || path_at_or_below(relative, "config/web/ttyd_pass") || path_at_or_below(relative, "config/network")
+               || path_at_or_below(relative, "config/terminal");
+    return path_at_or_below(relative, "MUOS/network") || path_at_or_below(relative, "MUOS/syncthing");
 }
 
 static int file_resolve_existing(const struct file_root *root, const char *relative, char *out, const size_t out_size) {
@@ -3081,22 +3134,18 @@ static int file_resolve_target(const struct file_root *root, const char *relativ
     return resolve_target(root->path, relative, 1, out, out_size);
 }
 
-static int file_zip_tree(
-    mz_zip_archive *zip, const struct file_root *root, const char *path, const char *relative,
-    const char *source_relative
+typedef int (*file_tree_visit)(void *context, const char *path, const char *archived, const struct stat *info);
+
+static int file_walk_tree(
+    const struct file_root *root, const char *path, const char *archived, const char *source_relative,
+    const file_tree_visit visit, void *context
 ) {
     if (root && file_sensitive(root, source_relative)) return 1;
     struct stat info;
     if (lstat(path, &info) < 0) return 0;
-    if (S_ISLNK(info.st_mode)) return 1;
-    if (S_ISREG(info.st_mode)) return mz_zip_writer_add_file(zip, relative, path, NULL, 0, MZ_NO_COMPRESSION) != 0;
+    if (!S_ISREG(info.st_mode) && !S_ISDIR(info.st_mode)) return 1;
+    if (!visit(context, path, archived, &info)) return 0;
     if (!S_ISDIR(info.st_mode)) return 1;
-
-    char directory_name[PATH_MAX];
-    const int directory_length = snprintf(directory_name, sizeof(directory_name), "%s/", relative);
-    if (directory_length < 1 || (size_t) directory_length >= sizeof(directory_name)
-        || !mz_zip_writer_add_mem(zip, directory_name, NULL, 0, MZ_NO_COMPRESSION))
-        return 0;
 
     DIR *directory = opendir(path);
     if (!directory) return 0;
@@ -3105,41 +3154,62 @@ static int file_zip_tree(
     while (ok && (entry = readdir(directory))) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
         char child[PATH_MAX];
-        char archived[PATH_MAX];
+        char child_archived[PATH_MAX];
         char child_relative[PATH_MAX];
         if ((size_t) snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >= sizeof(child)
-            || (size_t) snprintf(archived, sizeof(archived), "%s/%s", relative, entry->d_name) >= sizeof(archived)
+            || (size_t) snprintf(child_archived, sizeof(child_archived), "%s/%s", archived, entry->d_name)
+                   >= sizeof(child_archived)
             || (size_t) snprintf(child_relative, sizeof(child_relative), "%s/%s", source_relative, entry->d_name)
                    >= sizeof(child_relative)) {
             ok = 0;
             break;
         }
-        ok = file_zip_tree(zip, root, child, archived, child_relative);
+        ok = file_walk_tree(root, child, child_archived, child_relative, visit, context);
     }
     closedir(directory);
     return ok;
 }
 
-static int file_zip_directory(
-    const struct file_root *root, const char *relative, const char *path, char *archive, const size_t archive_size
-) {
-    if (archive_size < sizeof("/tmp/muweb-folder-XXXXXX.zip")) return 0;
-    snprintf(archive, archive_size, "/tmp/muweb-folder-XXXXXX.zip");
-    const int descriptor = mkstemps(archive, 4);
-    if (descriptor < 0) return 0;
-    close(descriptor);
-    unlink(archive);
+static int file_visit_size(void *context, const char *path, const char *archived, const struct stat *info) {
+    (void) path;
+    (void) archived;
+    *(long long *) context += (S_ISREG(info->st_mode) ? (long long) info->st_size : 0) + 1024;
+    return 1;
+}
 
-    const char *name = strrchr(path, '/');
-    name = name && name[1] ? name + 1 : "folder";
+static int file_visit_zip(void *context, const char *path, const char *archived, const struct stat *info) {
+    mz_zip_archive *zip = context;
+    if (S_ISREG(info->st_mode)) return mz_zip_writer_add_file(zip, archived, path, NULL, 0, MZ_NO_COMPRESSION) != 0;
 
-    mz_zip_archive zip;
-    mz_zip_zero_struct(&zip);
-    if (!mz_zip_writer_init_file(&zip, archive, 0)) return 0;
-    const int ok = file_zip_tree(&zip, root, path, name, relative) && mz_zip_writer_finalize_archive(&zip);
-    mz_zip_writer_end(&zip);
-    if (!ok) unlink(archive);
-    return ok;
+    char directory_name[PATH_MAX];
+    const int length = snprintf(directory_name, sizeof(directory_name), "%s/", archived);
+    return length > 0 && (size_t) length < sizeof(directory_name)
+           && mz_zip_writer_add_mem(zip, directory_name, NULL, 0, MZ_NO_COMPRESSION);
+}
+
+static int file_visit_list(void *context, const char *path, const char *archived, const struct stat *info) {
+    (void) path;
+    (void) info;
+    return !strchr(archived, '\n') && fprintf(context, "%s\n", archived) > 0;
+}
+
+static const struct {
+    const char *name;
+    const char *suffix;
+    const char *compressor;
+} file_archive_formats[] = {
+    {"zip", ".zip", NULL},
+    {"tar.gz", ".tar.gz", "gzip"},
+    {"tar.xz", ".tar.xz", "xz"},
+};
+
+#define FILE_ARCHIVE_FORMATS (sizeof(file_archive_formats) / sizeof(file_archive_formats[0]))
+
+static int file_archive_format(const char *name) {
+    if (!name || !*name) return 0;
+    for (size_t i = 0; i < FILE_ARCHIVE_FORMATS; ++i)
+        if (strcmp(file_archive_formats[i].name, name) == 0) return (int) i;
+    return -1;
 }
 
 struct file_archive_item {
@@ -3224,29 +3294,93 @@ static int file_archive_status(
     return ok;
 }
 
-static void file_archive_build(
-    const char *token, const struct file_root *root, struct file_archive_item *items, const size_t count
+static int file_archive_zip(
+    const char *token, const struct file_root *root, const struct file_archive_item *items, const size_t count,
+    const char *pending
 ) {
-    char pending[PATH_MAX];
-    char archive[PATH_MAX];
-    char working[PATH_MAX];
-    if (!file_archive_path(pending, sizeof(pending), token, ".pending")
-        || !file_archive_path(archive, sizeof(archive), token, ".zip")
-        || !file_archive_path(working, sizeof(working), token, ".work"))
-        _exit(1);
-
-    for (int descriptor = 3; descriptor < 1024; ++descriptor)
-        close(descriptor);
-
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
     int ok = mz_zip_writer_init_file(&zip, pending, 0) != 0;
     for (size_t i = 0; ok && i < count; ++i) {
         file_archive_status(token, "working", items[i].name, i, count, 0, NULL);
-        ok = file_zip_tree(&zip, root, items[i].source, items[i].name, items[i].relative);
+        ok = file_walk_tree(root, items[i].source, items[i].name, items[i].relative, file_visit_zip, &zip);
     }
     if (ok) ok = mz_zip_writer_finalize_archive(&zip) != 0;
     mz_zip_writer_end(&zip);
+    return ok;
+}
+
+static int file_archive_tar(
+    const char *token, const struct file_root *root, const struct file_archive_item *items, const size_t count,
+    const char *compressor, const char *pending
+) {
+    char list_path[PATH_MAX];
+    char parent[PATH_MAX];
+    if (!file_archive_path(list_path, sizeof(list_path), token, ".list")
+        || (size_t) snprintf(parent, sizeof(parent), "%s", items[0].source) >= sizeof(parent))
+        return 0;
+    char *leaf = strrchr(parent, '/');
+    if (!leaf) return 0;
+    *leaf = '\0';
+
+    FILE *list = fopen(list_path, "w");
+    if (!list) return 0;
+    int ok = 1;
+    for (size_t i = 0; ok && i < count; ++i)
+        ok = file_walk_tree(root, items[i].source, items[i].name, items[i].relative, file_visit_list, list);
+    if (fclose(list) != 0) ok = 0;
+
+    file_archive_status(token, "working", "", 0, count, 0, NULL);
+    const pid_t child = ok ? fork() : -1;
+    if (child == 0) {
+        execl(
+            "/bin/sh", "sh", "-c",
+            "set -o pipefail; nice -n 10 tar -c --no-recursion -C \"$1\" -T \"$2\" -f - | nice -n 10 \"$3\" -c >\"$4\"",
+            "sh", parent, list_path, compressor, pending, (char *) NULL
+        );
+        _exit(127);
+    }
+
+    int status = 0;
+    if (child < 0) ok = 0;
+    while (ok && waitpid(child, &status, 0) < 0)
+        if (errno != EINTR) ok = 0;
+    unlink(list_path);
+    return ok && WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
+static void file_archive_build(
+    const char *token, const struct file_root *root, struct file_archive_item *items, const size_t count,
+    const int format
+) {
+    char pending[PATH_MAX];
+    char archive[PATH_MAX];
+    char working[PATH_MAX];
+    if (!file_archive_path(pending, sizeof(pending), token, ".pending")
+        || !file_archive_path(archive, sizeof(archive), token, file_archive_formats[format].suffix)
+        || !file_archive_path(working, sizeof(working), token, ".work"))
+        _exit(1);
+
+    for (int descriptor = 3; descriptor < 1024; ++descriptor)
+        close(descriptor);
+    signal(SIGCHLD, SIG_DFL);
+
+    long long needed = 32LL * 1024 * 1024;
+    for (size_t i = 0; i < count; ++i)
+        file_walk_tree(root, items[i].source, items[i].name, items[i].relative, file_visit_size, &needed);
+
+    struct statvfs space;
+    const char *error = "Could not prepare that archive";
+    int ok = statvfs("/tmp", &space) == 0;
+    if (ok && (unsigned long long) needed > (unsigned long long) space.f_bavail * space.f_frsize) {
+        error = "Not enough free memory to prepare that archive, download fewer items";
+        ok = 0;
+    }
+
+    if (ok)
+        ok = file_archive_formats[format].compressor
+                 ? file_archive_tar(token, root, items, count, file_archive_formats[format].compressor, pending)
+                 : file_archive_zip(token, root, items, count, pending);
 
     struct stat info;
     if (ok) ok = rename(pending, archive) == 0 && stat(archive, &info) == 0;
@@ -3255,7 +3389,7 @@ static void file_archive_build(
     else {
         unlink(pending);
         unlink(archive);
-        file_archive_status(token, "failed", "", 0, count, 0, "Could not prepare that archive");
+        file_archive_status(token, "failed", "", 0, count, 0, error);
     }
     unlink(working);
     file_archive_items_free(items, count);
@@ -3268,7 +3402,13 @@ static int file_archive_start(
 ) {
     if (!write_allowed(connection)) return 0;
     if (!body || !body_length || body_length > MUWEB_UPLOAD_LIMIT) {
-        send_error(connection, 400, "Select at least two items");
+        send_error(connection, 400, "Select at least one item");
+        return 0;
+    }
+
+    const int format = file_archive_format(connection->archive_format);
+    if (format < 0) {
+        send_error(connection, 400, "Unknown archive format");
         return 0;
     }
 
@@ -3342,9 +3482,9 @@ static int file_archive_start(
     if (name) valid = 0;
     free(names);
 
-    if (!valid || count < 2) {
+    if (!valid || !count) {
         file_archive_items_free(items, count);
-        send_error(connection, 400, count < 2 ? "Select at least two items" : "Invalid archive selection");
+        send_error(connection, 400, count ? "Invalid archive selection" : "Select at least one item");
         return 0;
     }
 
@@ -3369,7 +3509,7 @@ static int file_archive_start(
         send_error(connection, 500, "Could not prepare that archive");
         return 0;
     }
-    if (child == 0) file_archive_build(token, root, items, count);
+    if (child == 0) file_archive_build(token, root, items, count, format);
 
     file_archive_items_free(items, count);
     struct buffer out = {0};
@@ -3694,10 +3834,13 @@ static void handle_files_api(
     }
 
     if (strcmp(action, "archive-download") == 0 && strcmp(method, "GET") == 0) {
-        char archive[PATH_MAX];
+        char archive[PATH_MAX] = "";
         char status_path[PATH_MAX];
-        if (!file_archive_path(archive, sizeof(archive), relative, ".zip")
-            || !file_archive_path(status_path, sizeof(status_path), relative, ".json") || access(archive, R_OK) < 0) {
+        int found = 0;
+        for (size_t i = 0; !found && i < FILE_ARCHIVE_FORMATS; ++i)
+            found = file_archive_path(archive, sizeof(archive), relative, file_archive_formats[i].suffix)
+                    && access(archive, R_OK) == 0;
+        if (!found || !file_archive_path(status_path, sizeof(status_path), relative, ".json")) {
             send_error(connection, 404, "Archive not found");
             return;
         }
@@ -3715,16 +3858,11 @@ static void handle_files_api(
         }
         struct stat info;
         if (stat(target, &info) == 0 && S_ISDIR(info.st_mode)) {
-            char archive[PATH_MAX];
-            if (!file_zip_directory(root, relative, target, archive, sizeof(archive))) {
-                send_error(connection, 500, "Could not prepare that folder");
-                return;
-            }
-            send_file(connection, archive, NULL);
-            unlink(archive);
-        } else {
-            send_file(connection, target, range_header);
+            send_error(connection, 400, "Download folders as an archive");
+            return;
         }
+        connection->attachment = 1;
+        send_file(connection, target, range_header);
         return;
     }
 
@@ -6536,8 +6674,8 @@ static void handle_content_tool(
         return;
     }
 
-    if (!extension_listed("m3u|m3u8", relative)) {
-        send_error(connection, 400, "Only playlists can be opened or saved here");
+    if (!extension_listed("m3u|m3u8|cue|gdi", relative)) {
+        send_error(connection, 400, "Only playlists and disc sheets can be opened here");
         return;
     }
 
@@ -6553,6 +6691,10 @@ static void handle_content_tool(
 
     if (strcmp(method, "POST") != 0 && strcmp(method, "PUT") != 0) {
         send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!extension_listed("m3u|m3u8", relative)) {
+        send_error(connection, 400, "Only playlists can be saved here");
         return;
     }
     if (!write_allowed(connection)) return;
@@ -6692,6 +6834,23 @@ static void handle_tools_api(
     send_text(connection, 200, "application/json", "{\"ok\":true}");
 }
 
+static int local_host(const char *headers) {
+    char host[256];
+    if (!headers || !header_value(headers, "Host", host, sizeof(host)) || host[0] == '[') return 1;
+
+    char *port = strchr(host, ':');
+    if (port) *port = '\0';
+    if (!strchr(host, '.') || strspn(host, "0123456789.") == strlen(host)) return 1;
+
+    static const char *const suffixes[] = {".local", ".lan", ".home", ".internal", ".home.arpa"};
+    const size_t length = strlen(host);
+    for (size_t i = 0; i < sizeof(suffixes) / sizeof(suffixes[0]); ++i) {
+        const size_t suffix = strlen(suffixes[i]);
+        if (length > suffix && strcasecmp(host + length - suffix, suffixes[i]) == 0) return 1;
+    }
+    return 0;
+}
+
 static int same_origin(const char *headers) {
     char origin[256];
     char host[256];
@@ -6798,7 +6957,7 @@ connection_prepare_file_upload(struct connection *connection, const unsigned lon
     header_value(headers, "X-muOS-Session", connection->auth_session, sizeof(connection->auth_session));
     header_value(headers, "X-muOS-System-Write", connection->system_write, sizeof(connection->system_write));
 
-    if (!same_origin(headers)) {
+    if (!local_host(headers) || !same_origin(headers)) {
         send_error(connection, 403, "Changes are only accepted from the dashboard itself");
         return 0;
     }
@@ -6917,10 +7076,18 @@ static void handle_request(struct connection *connection) {
         header_value(headers + 2, "X-muOS-Code", connection->auth_code, sizeof(connection->auth_code));
         header_value(headers + 2, "X-muOS-Session", connection->auth_session, sizeof(connection->auth_session));
         header_value(headers + 2, "X-muOS-System-Write", connection->system_write, sizeof(connection->system_write));
+        header_value(
+            headers + 2, "X-muOS-Archive-Format", connection->archive_format, sizeof(connection->archive_format)
+        );
         header_value(headers + 2, "If-Modified-Since", connection->if_modified, sizeof(connection->if_modified));
     }
 
     log_verbose("%s %s", method, target);
+
+    if (!local_host(headers ? headers + 2 : NULL)) {
+        send_error(connection, 403, "Open the dashboard by the device name or address");
+        return;
+    }
 
     if (strcmp(method, "GET") != 0 && !same_origin(headers ? headers + 2 : NULL)) {
         send_error(connection, 403, "Changes are only accepted from the dashboard itself");
