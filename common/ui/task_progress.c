@@ -338,12 +338,12 @@ void task_progress_tick(void) {
         return;
     }
 
-    const long travel = 100 - BOUNCE_WIDTH;
-    bounce_pos = (int) (travel * (long) (st->elapsed_ms % BOUNCE_CYCLE_MS) / BOUNCE_CYCLE_MS);
+    const long head = (100 + BOUNCE_WIDTH) * (long) (st->elapsed_ms % BOUNCE_CYCLE_MS) / BOUNCE_CYCLE_MS;
+    bounce_pos = (int) (head > BOUNCE_WIDTH ? head - BOUNCE_WIDTH : 0);
 
     lv_bar_set_mode(bar, LV_BAR_MODE_RANGE);
     lv_bar_set_start_value(bar, bounce_pos, LV_ANIM_OFF);
-    lv_bar_set_value(bar, bounce_pos + BOUNCE_WIDTH, LV_ANIM_OFF);
+    lv_bar_set_value(bar, (int32_t) (head < 100 ? head : 100), LV_ANIM_OFF);
 }
 
 int task_progress_handle_a(void) {
