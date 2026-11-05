@@ -6,7 +6,7 @@ LDFLAGS = $(COMMON_LIBS) $(LIB_LDFLAGS) $(SHARED_PIC) \
           -L../bin/lib -lui -lmuxcom -lplutosvg
 
 MODULES = muxactivity muxapp muxappcon muxprofile muxdetail muxarchive muxarc muxassign muxbackup muxbtall \
-          muxbtcon muxbtdev muxcolfilter muxcollect muxconfig muxconnect \
+          muxbtcon muxbtdev muxcolfilter muxcollect muxcolour muxconfig muxconnect \
           muxcontrol muxcore muxcustom muxdanger muxdevice muxdistemp \
           muxgov muxhdmi muxhistory muxinfo muxinstall muxkiosk \
           muxlanguage muxlaunch muxlink muxlogo muxnetadv muxnetprofile muxnetproxy muxnetscan \

@@ -221,12 +221,14 @@
     CUSTOM(catalogue, "catalogue")                                                                                     \
     CUSTOM(config, "config")                                                                                           \
     CUSTOM(logo, "logo")                                                                                               \
+    CUSTOM(colours, "customcolour")                                                                                    \
     CUSTOM(sort, "sort")                                                                                               \
     CUSTOM(theme, "theme")                                                                                             \
     CUSTOM(theme_resolution, "resolution")                                                                             \
     CUSTOM(theme_scaling, "scaling")                                                                                   \
     CUSTOM(theme_alternate, "alternate")                                                                               \
     CUSTOM(random_theme, "randomtheme")                                                                                \
+    CUSTOM(menu_style, "menustyle")                                                                                    \
     CUSTOM(header_height, "headerheight")                                                                              \
     CUSTOM(footer_height, "footerheight")                                                                              \
     CUSTOM(content_item_count, "count")                                                                                \
@@ -495,6 +497,54 @@
     RGB(zone_shl2, "zone_shl2")                                                                                        \
     RGB(zone_shr2, "zone_shr2")                                                                                        \
     RGB(zone_shr1, "zone_shr1")
+
+#define COLOUR_ROLE_ROWS(ROLE)                                                                                         \
+    COLOUR(ROLE##_mode, "mode")                                                                                        \
+    COLOUR(ROLE##_red, "red")                                                                                          \
+    COLOUR(ROLE##_green, "green")                                                                                      \
+    COLOUR(ROLE##_blue, "blue")                                                                                        \
+    COLOUR(ROLE##_light, "light")
+
+#define COLOUR_SCHEME_ROWS(GROUP)                                                                                      \
+    COLOUR(scheme_##GROUP##0, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##1, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##2, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##3, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##4, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##5, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##6, "scheme")                                                                                \
+    COLOUR(scheme_##GROUP##7, "scheme")
+
+#define COLOUR_ELEMENTS                                                                                                \
+    COLOUR(scheme_reset, "schemereset")                                                                                \
+    COLOUR_SCHEME_ROWS(a)                                                                                              \
+    COLOUR_SCHEME_ROWS(b)                                                                                              \
+    COLOUR_SCHEME_ROWS(c)                                                                                              \
+    COLOUR_SCHEME_ROWS(d)                                                                                              \
+    COLOUR_ROLE_ROWS(highlight)                                                                                        \
+    COLOUR_ROLE_ROWS(highlight_text)                                                                                   \
+    COLOUR_ROLE_ROWS(highlight_shadow)                                                                                 \
+    COLOUR_ROLE_ROWS(background)                                                                                       \
+    COLOUR(background_gradient_red, "gradient_red")                                                                    \
+    COLOUR(background_gradient_green, "gradient_green")                                                                \
+    COLOUR(background_gradient_blue, "gradient_blue")                                                                  \
+    COLOUR(background_gradient_light, "gradient_light")                                                                \
+    COLOUR_ROLE_ROWS(text)                                                                                             \
+    COLOUR_ROLE_ROWS(text_shadow)                                                                                      \
+    COLOUR_ROLE_ROWS(glyphs)                                                                                           \
+    COLOUR_ROLE_ROWS(border)                                                                                           \
+    COLOUR_ROLE_ROWS(header_background)                                                                                \
+    COLOUR_ROLE_ROWS(header_text)                                                                                      \
+    COLOUR_ROLE_ROWS(status_icons)                                                                                     \
+    COLOUR_ROLE_ROWS(footer_background)                                                                                \
+    COLOUR_ROLE_ROWS(footer_text)                                                                                      \
+    COLOUR_ROLE_ROWS(dialogue_background)                                                                              \
+    COLOUR_ROLE_ROWS(dialogue_text)                                                                                    \
+    COLOUR_ROLE_ROWS(help_background)                                                                                  \
+    COLOUR_ROLE_ROWS(help_text)                                                                                        \
+    COLOUR_ROLE_ROWS(keyboard_background)                                                                              \
+    COLOUR_ROLE_ROWS(keyboard_text)                                                                                    \
+    COLOUR_ROLE_ROWS(progress_bar)
 
 #define RGBZONE_ELEMENTS                                                                                               \
     RGBZONE(colour, "colour")                                                                                          \

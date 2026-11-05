@@ -66,6 +66,8 @@ void init_fonts_preview(void);
 
 void init_theme(int panel_init, int long_mode);
 
+void apply_list_shadows(void);
+
 void status_task(const lv_timer_t *timer);
 
 void status_poll(void);

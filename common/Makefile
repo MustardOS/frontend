@@ -42,7 +42,7 @@ UI_SRCS = \
     ui/fs_choice.c ui/glyph.c ui/grid.c ui/image.c ui/list_frame.c \
     ui/modal.c ui/more.c ui/nav.c ui/notify.c ui/orientation.c ui/osk.c ui/rich_text.c \
     ui/crt.c ui/task_progress.c ui/task_prompt.c ui/transition.c \
-    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/grid_nav.c \
+    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/grid_nav.c ui/nav/menu_style.c \
     ui/nav/list_nav.c
 
 SAVER_SRCS = \

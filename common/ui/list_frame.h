@@ -3,7 +3,7 @@
 #include <lvgl/lvgl.h>
 #include <common/display/theme.h>
 
-#define LIST_FRAME_MAX 16
+#define LIST_FRAME_MAX 32
 
 typedef struct {
     const char *label;
@@ -19,6 +19,8 @@ int list_frame_init(
 int list_frame_active(void);
 
 int list_frame_focused(void);
+
+void list_frame_set_bar_hidden(int hidden);
 
 void list_frame_help(void);
 

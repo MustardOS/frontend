@@ -1881,8 +1881,11 @@ void resolve_grid_item_images(
     const char *mux_dim, const char *mux_module, const char *glyph_name, char *grid_img, const size_t img_size,
     char *grid_img_foc, const size_t foc_size
 ) {
-    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)) {
-        load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size);
+    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)
+        && !load_element_image_specifics(
+            mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size
+        )) {
+        load_glyph_icon(mux_dim, mux_module, glyph_name, grid_img, img_size);
     }
 
     char glyph_name_focused[MAX_BUFFER_SIZE];

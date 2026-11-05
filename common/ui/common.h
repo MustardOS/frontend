@@ -28,6 +28,8 @@ void apply_gradient_to_ui_screen(
     lv_obj_t *ui_screen, const struct theme_config *theme, const struct mux_device *device
 );
 
+void refresh_screen_gradient(const struct theme_config *theme, const struct mux_device *device);
+
 void set_gradient_visible(int visible);
 
 void set_video_wallpaper_background(int playing);
@@ -51,6 +53,8 @@ void fade_out_screen_forced(void);
 void init_ui_common_screen(
     const struct theme_config *theme, const struct mux_device *device, const struct mux_lang *lang, const char *title
 );
+
+void apply_counter_shadow(lv_obj_t *counter, const struct theme_config *theme);
 
 void init_ui_item_counter(const struct theme_config *theme);
 
@@ -77,6 +81,10 @@ lv_obj_t *create_footer_glyph(
 
 lv_obj_t *create_footer_text(
     lv_obj_t *parent, const struct theme_config *theme, uint32_t text_color, int16_t text_alpha, int16_t add_hide_flag
+);
+
+int load_glyph_icon(
+    const char *mux_dim, const char *glyph_folder, const char *glyph_name, char *image_path, size_t image_size
 );
 
 int generate_image_embed(

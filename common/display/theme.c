@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stddef.h>
 #include <common/ui/rich_text.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@
 #include <common/config/ini.h>
 #include <common/ui/common.h>
 #include <common/ui/glyph.h>
+#include <common/ui/nav/menu_style.h>
 
 static int ini_cache_count = 0;
 static int ini_cache_capacity = 0;
@@ -466,6 +468,8 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->counter.text_alpha = 0;
     theme->counter.text_fade_time = 0;
     snprintf(theme->counter.text_separator, MAX_BUFFER_SIZE, "%s", " / ");
+    theme->counter.shadow_colour = 0x000000;
+    theme->counter.shadow_override = 0;
 
     theme->misc.static_alignment = 255;
     theme->mux.item.count = 11;
@@ -1180,6 +1184,342 @@ void scale_theme(struct mux_device *device) {
     }
 }
 
+void colour_to_hsl(const uint32_t colour, double *hue, double *saturation, double *light) {
+    const double r = (double) (colour >> 16 & 0xFF) / 255.0;
+    const double g = (double) (colour >> 8 & 0xFF) / 255.0;
+    const double b = (double) (colour & 0xFF) / 255.0;
+    const double high = fmax(r, fmax(g, b));
+    const double low = fmin(r, fmin(g, b));
+    const double range = high - low;
+
+    *light = (high + low) / 2.0;
+    *hue = 0;
+    *saturation = 0;
+    if (range <= 0) return;
+
+    *saturation = range / (1.0 - fabs(2.0 * *light - 1.0));
+    double h = high == r ? fmod((g - b) / range, 6.0) : high == g ? (b - r) / range + 2.0 : (r - g) / range + 4.0;
+    if (h < 0) h += 6.0;
+    *hue = h * 60.0;
+}
+
+uint32_t colour_from_hsl(const double hue, const double saturation, const double light) {
+    const double c = (1 - fabs(2 * light - 1)) * saturation;
+    const double h = fmod(hue, 360.0) / 60.0;
+    const double x = c * (1 - fabs(fmod(h, 2) - 1));
+    const double m = light - c / 2;
+    const double rgb[6][3] = {{c, x, 0}, {x, c, 0}, {0, c, x}, {0, x, c}, {x, 0, c}, {c, 0, x}};
+    const double *pick = rgb[(int) h % 6];
+
+    return (uint32_t) lround((pick[0] + m) * 255) << 16 | (uint32_t) lround((pick[1] + m) * 255) << 8
+           | (uint32_t) lround((pick[2] + m) * 255);
+}
+
+static double colour_luminance(const uint32_t colour) {
+    double total = 0;
+    const double weights[3] = {0.2126, 0.7152, 0.0722};
+    for (int i = 0; i < 3; i++) {
+        const double c = (double) (colour >> (16 - i * 8) & 0xFF) / 255.0;
+        total += weights[i] * (c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4));
+    }
+    return total;
+}
+
+double colour_contrast(const uint32_t a, const uint32_t b) {
+    const double la = colour_luminance(a);
+    const double lb = colour_luminance(b);
+    return (fmax(la, lb) + 0.05) / (fmin(la, lb) + 0.05);
+}
+
+uint32_t readable_text_colour_between(const uint32_t top, const uint32_t bottom) {
+    const double white = fmin(colour_contrast(top, 0xFFFFFF), colour_contrast(bottom, 0xFFFFFF));
+    const double black = fmin(colour_contrast(top, 0x000000), colour_contrast(bottom, 0x000000));
+    return white >= black ? 0xFFFFFF : 0x000000;
+}
+
+uint32_t shadow_colour_for(const uint32_t text, const uint32_t background) {
+    double hue, saturation, light;
+    colour_to_hsl(background, &hue, &saturation, &light);
+    light = colour_luminance(text) > colour_luminance(background) ? light * 0.45 : light + (1.0 - light) * 0.5;
+    return colour_from_hsl(hue, saturation, light);
+}
+
+uint32_t readable_text_colour(const uint32_t background) {
+    return readable_text_colour_between(background, background);
+}
+
+int custom_colour_value(const char *value, uint32_t *colour) {
+    if (!value || strlen(value) != 6 || strspn(value, "0123456789abcdefABCDEF") != 6) return 0;
+    *colour = (uint32_t) strtoul(value, NULL, 16);
+    return 1;
+}
+
+int custom_gradient_value(const char *value, uint32_t *top, uint32_t *bottom) {
+    char first[7];
+    if (!value || strlen(value) != 13 || value[6] != ':') return 0;
+    snprintf(first, sizeof(first), "%.6s", value);
+    return custom_colour_value(first, top) && custom_colour_value(value + 7, bottom);
+}
+
+static int custom_colour_role(const char *value, const uint32_t automatic, uint32_t *colour) {
+    if (strcmp(value, CUSTOM_COLOUR_AUTO) == 0) {
+        *colour = automatic;
+        return 1;
+    }
+    return custom_colour_value(value, colour);
+}
+
+static uint32_t role_theme_colours[colour_role_count];
+static uint32_t theme_gradient_colour;
+static struct theme_config theme_before_colours;
+
+uint32_t theme_role_colour(const int role) {
+    return role >= 0 && role < colour_role_count ? role_theme_colours[role] : 0;
+}
+
+uint32_t theme_background_gradient(void) {
+    return theme_gradient_colour;
+}
+
+static uint32_t background_bottom(const struct theme_config *theme) {
+    return theme->system.background_gradient_direction ? theme->system.background_gradient_color
+                                                       : theme->system.background;
+}
+
+static uint32_t shown_colour(const uint32_t colour, const int16_t alpha, const uint32_t behind) {
+    return alpha >= 128 ? colour : behind;
+}
+
+static void apply_footer_colour(struct theme_config *theme, const uint32_t colour) {
+    struct footer_glyph *nav[] = {&theme->nav.lr, &theme->nav.ud, &theme->nav.a, &theme->nav.b,   &theme->nav.c,
+                                  &theme->nav.x,  &theme->nav.y,  &theme->nav.z, &theme->nav.menu};
+    theme->footer.text = colour;
+    for (size_t i = 0; i < A_SIZE(nav); i++) {
+        nav[i]->glyph = colour;
+        nav[i]->text = colour;
+    }
+}
+
+static void apply_background_colours(struct theme_config *theme, const uint32_t top, const uint32_t bottom) {
+    theme->system.background = top;
+    theme->system.background_gradient_color = bottom;
+    theme->list_default.background = top;
+    theme->list_default.background_gradient = top;
+    theme->grid.background = top;
+    theme->charger.background = top;
+    theme->verbose_boot.background = top;
+
+    if (top == bottom) return;
+
+    theme->system.background_gradient_direction = LV_GRAD_DIR_VER;
+    theme->system.background_gradient_dither = 1;
+    theme->system.background_gradient_start = 0;
+    theme->system.background_gradient_stop = 255;
+    theme->system.background_gradient_blur = 0;
+}
+
+static void apply_custom_colours(struct theme_config *theme) {
+    const char *highlight = config.settings.themeopt.colour_highlight;
+    const char *highlight_text = config.settings.themeopt.colour_highlight_text;
+    const char *highlight_shadow = config.settings.themeopt.colour_highlight_shadow;
+    const char *background = config.settings.themeopt.colour_background;
+    const char *text = config.settings.themeopt.colour_text;
+    const char *text_shadow = config.settings.themeopt.colour_text_shadow;
+    const char *glyphs = config.settings.themeopt.colour_glyphs;
+    const char *border = config.settings.themeopt.colour_border;
+    const char *header_background = config.settings.themeopt.colour_header_background;
+    const char *header_text = config.settings.themeopt.colour_header_text;
+    const char *footer_background = config.settings.themeopt.colour_footer_background;
+    const char *footer_text = config.settings.themeopt.colour_footer_text;
+    const char *dialogue_background = config.settings.themeopt.colour_dialogue_background;
+    const char *dialogue_text = config.settings.themeopt.colour_dialogue_text;
+    const char *help_background = config.settings.themeopt.colour_help_background;
+    const char *help_text = config.settings.themeopt.colour_help_text;
+    const char *keyboard_background = config.settings.themeopt.colour_keyboard_background;
+    const char *keyboard_text = config.settings.themeopt.colour_keyboard_text;
+    const char *status_icons = config.settings.themeopt.colour_status_icons;
+    const char *progress_bar = config.settings.themeopt.colour_progress_bar;
+    uint32_t colour, bottom;
+
+    theme_gradient_colour = background_bottom(theme);
+    role_theme_colours[colour_role_highlight] =
+        shown_colour(theme->list_focus.background, theme->list_focus.background_alpha, theme->system.background);
+    role_theme_colours[colour_role_highlight_text] = theme->list_focus.text;
+    role_theme_colours[colour_role_highlight_shadow] = theme->list_focus.shadow_colour;
+    role_theme_colours[colour_role_background] = theme->system.background;
+    role_theme_colours[colour_role_text] = theme->list_default.text;
+    role_theme_colours[colour_role_text_shadow] = theme->list_default.shadow_colour;
+    role_theme_colours[colour_role_glyphs] = theme->list_default.glyph_recolour;
+    role_theme_colours[colour_role_border] = theme->dialogue.border;
+    role_theme_colours[colour_role_header_background] =
+        shown_colour(theme->header.background, theme->header.background_alpha, theme->system.background);
+    role_theme_colours[colour_role_header_text] = theme->header.text;
+    role_theme_colours[colour_role_footer_background] =
+        shown_colour(theme->footer.background, theme->footer.background_alpha, theme_gradient_colour);
+    role_theme_colours[colour_role_footer_text] = theme->footer.text;
+    role_theme_colours[colour_role_dialogue_background] = theme->dialogue.background;
+    role_theme_colours[colour_role_dialogue_text] = theme->dialogue.content;
+    role_theme_colours[colour_role_help_background] = theme->help.background;
+    role_theme_colours[colour_role_help_text] = theme->help.content;
+    role_theme_colours[colour_role_keyboard_background] = theme->osk.item.background;
+    role_theme_colours[colour_role_keyboard_text] = theme->osk.text;
+    role_theme_colours[colour_role_status_icons] = theme->status.battery.normal;
+    role_theme_colours[colour_role_progress_bar] = theme->bar.progress_active_background;
+
+    if (custom_colour_value(background, &colour)) {
+        apply_background_colours(theme, colour, colour);
+    } else if (custom_gradient_value(background, &colour, &bottom)) {
+        apply_background_colours(theme, colour, bottom);
+    }
+
+    if (custom_colour_role(
+            text, readable_text_colour_between(theme->system.background, background_bottom(theme)), &colour
+        )) {
+        theme->list_default.text = colour;
+        theme->charger.text = colour;
+        theme->verbose_boot.text = colour;
+        theme->grid.cell_default.text = colour;
+    }
+
+    if (custom_colour_role(text_shadow, shadow_colour_for(theme->list_default.text, theme->system.background), &colour))
+        theme->list_default.shadow_colour = colour;
+
+    if (custom_colour_role(
+            glyphs, readable_text_colour_between(theme->system.background, background_bottom(theme)), &colour
+        )) {
+        theme->list_default.glyph_recolour = colour;
+        theme->list_default.glyph_recolour_alpha = 255;
+        theme->grid.cell_default.image_recolour = colour;
+    }
+
+    if (custom_colour_value(dialogue_background, &colour)) {
+        theme->dialogue.background = colour;
+        theme->message.background = colour;
+        theme->bar.panel_background = colour;
+    }
+
+    if (custom_colour_role(dialogue_text, readable_text_colour(theme->dialogue.background), &colour)) {
+        theme->dialogue.content = colour;
+        theme->message.text = colour;
+    }
+
+    if (custom_colour_value(help_background, &colour)) theme->help.background = colour;
+
+    if (custom_colour_role(help_text, readable_text_colour(theme->help.background), &colour))
+        theme->help.content = colour;
+
+    if (custom_colour_value(keyboard_background, &colour)) {
+        theme->osk.background = colour;
+        theme->osk.item.background = colour;
+    }
+
+    if (custom_colour_role(keyboard_text, readable_text_colour(theme->osk.item.background), &colour))
+        theme->osk.text = colour;
+
+    if (custom_colour_value(border, &colour)) {
+        theme->dialogue.border = colour;
+        theme->help.border = colour;
+        theme->message.border = colour;
+        theme->osk.border = colour;
+        theme->osk.item.border = colour;
+        theme->bar.panel_border = colour;
+        theme->roll.border_colour = colour;
+        theme->counter.border_colour = colour;
+        if (colour_contrast(colour, theme->dialogue.background) >= 3.0) theme->dialogue.title = colour;
+        if (colour_contrast(colour, theme->help.background) >= 3.0) theme->help.title = colour;
+    }
+
+    if (strcmp(highlight, CUSTOM_COLOUR_NONE) == 0) {
+        theme->list_focus.background_alpha = 0;
+    } else if (custom_colour_value(highlight, &colour)) {
+        theme->list_focus.background = colour;
+        theme->list_focus.background_gradient = colour;
+        if (theme->list_focus.background_alpha < 128) theme->list_focus.background_alpha = 255;
+        theme->list_focus.indicator = colour;
+        theme->dialogue.selection = colour;
+        theme->grid.cell_focus.background = colour;
+        theme->grid.cell_focus.background_gradient_color = colour;
+        theme->grid.cell_focus.border = colour;
+        theme->grid.cell_focus.glow = colour;
+        theme->osk.item.background_focus = colour;
+        theme->osk.item.border_focus = colour;
+        theme->roll.select_background = colour;
+        theme->counter.background = colour;
+        theme->counter.background_gradient = colour;
+    }
+
+    const uint32_t focus_shown =
+        shown_colour(theme->list_focus.background, theme->list_focus.background_alpha, theme->system.background);
+    if (custom_colour_role(highlight_text, readable_text_colour(focus_shown), &colour)) {
+        theme->list_focus.text = colour;
+        theme->list_focus.glyph_recolour = colour;
+        theme->dialogue.option = colour;
+        theme->grid.cell_focus.text = colour;
+        theme->grid.cell_focus.image_recolour = colour;
+        theme->osk.text_focus = colour;
+        theme->roll.select_text = colour;
+        theme->counter.text = colour;
+    }
+
+    if (custom_colour_role(highlight_shadow, shadow_colour_for(theme->list_focus.text, focus_shown), &colour))
+        theme->list_focus.shadow_colour = colour;
+
+    if (keyboard_background[0] || keyboard_text[0]) {
+        const uint32_t key =
+            shown_colour(theme->osk.item.background, theme->osk.item.background_alpha, theme->osk.background);
+        theme->osk.item.shadow_colour = shadow_colour_for(theme->osk.text, key);
+    }
+
+    if (highlight[0] || highlight_text[0]) {
+        const uint32_t key = shown_colour(
+            theme->osk.item.background_focus, theme->osk.item.background_focus_alpha, theme->osk.background
+        );
+        theme->osk.item.shadow_colour_focus = shadow_colour_for(theme->osk.text_focus, key);
+        theme->counter.shadow_colour = shadow_colour_for(
+            theme->counter.text,
+            shown_colour(theme->counter.background, theme->counter.background_alpha, theme->system.background)
+        );
+        theme->counter.shadow_override = 1;
+    }
+
+    if (strcmp(header_background, CUSTOM_COLOUR_NONE) == 0) {
+        theme->header.background_alpha = 0;
+    } else if (custom_colour_value(header_background, &colour)) {
+        theme->header.background = colour;
+        theme->header.background_alpha = 255;
+    }
+
+    if (strcmp(footer_background, CUSTOM_COLOUR_NONE) == 0) {
+        theme->footer.background_alpha = 0;
+    } else if (custom_colour_value(footer_background, &colour)) {
+        theme->footer.background = colour;
+        theme->footer.background_alpha = 255;
+    }
+
+    const uint32_t header_shown =
+        shown_colour(theme->header.background, theme->header.background_alpha, theme->system.background);
+    if (custom_colour_role(header_text, readable_text_colour(header_shown), &colour)) {
+        theme->header.text = colour;
+        theme->datetime.text = colour;
+    }
+
+    if (custom_colour_role(status_icons, readable_text_colour(header_shown), &colour)) {
+        const uint32_t dim = ((colour >> 1) & 0x7F7F7F) + ((header_shown >> 1) & 0x7F7F7F);
+        theme->status.battery.normal = colour;
+        theme->status.network.active = colour;
+        theme->status.network.normal = dim;
+        theme->status.bluetooth.active = colour;
+        theme->status.bluetooth.normal = dim;
+    }
+
+    if (custom_colour_value(progress_bar, &colour)) theme->bar.progress_active_background = colour;
+
+    const uint32_t footer_shown =
+        shown_colour(theme->footer.background, theme->footer.background_alpha, background_bottom(theme));
+    if (custom_colour_role(footer_text, readable_text_colour(footer_shown), &colour))
+        apply_footer_colour(theme, colour);
+}
+
 static void apply_accessibility(struct theme_config *theme) {
     if (config.visual.high_contrast) {
         theme->list_default.text = 0xFFFFFF;
@@ -1310,6 +1650,7 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     snprintf(scheme_override, sizeof(scheme_override), RUN_STORAGE_PATH "theme/override/%s.ini", mux_module);
     if (file_exist(scheme_override)) load_theme_from_scheme(scheme_override, theme, device);
 
+    menu_style_apply(theme, device->mux.width, device->mux.height);
     theme->grid.enabled = theme->grid.column_count > 0 && theme->grid.row_count > 0;
     if (theme->misc.content.width == 0) theme->misc.content.width = device->mux.width;
     if (theme->misc.content.height > device->mux.height) theme->misc.content.height = device->mux.height;
@@ -1386,7 +1727,30 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     if (theme->list_focus.background_gradient < 0 || theme->list_focus.background_gradient > LV_GRAD_DIR_HOR)
         theme->list_focus.background_gradient = 0;
 
+    theme_before_colours = *theme;
+    apply_custom_colours(theme);
     apply_accessibility(theme);
+}
+
+void preview_custom_colours(struct theme_config *theme) {
+    *theme = theme_before_colours;
+    apply_custom_colours(theme);
+    apply_accessibility(theme);
+
+    lv_style_set_bg_color(&style_list_panel_default, lv_color_hex(theme->list_default.background));
+    lv_style_set_bg_opa(&style_list_panel_default, theme->list_default.background_alpha);
+    lv_style_set_bg_grad_color(&style_list_panel_default, lv_color_hex(theme->list_default.background_gradient));
+    lv_style_set_border_color(&style_list_panel_default, lv_color_hex(theme->list_default.indicator));
+    lv_style_set_bg_color(&style_list_panel_focused, lv_color_hex(theme->list_focus.background));
+    lv_style_set_bg_opa(&style_list_panel_focused, theme->list_focus.background_alpha);
+    lv_style_set_bg_grad_color(&style_list_panel_focused, lv_color_hex(theme->list_focus.background_gradient));
+    lv_style_set_border_color(&style_list_panel_focused, lv_color_hex(theme->list_focus.indicator));
+    lv_style_set_text_color(&style_list_item_default, lv_color_hex(theme->list_default.text));
+    lv_style_set_text_color(&style_list_item_focused, lv_color_hex(theme->list_focus.text));
+    lv_style_set_img_recolor(&style_list_glyph_default, lv_color_hex(theme->list_default.glyph_recolour));
+    lv_style_set_img_recolor_opa(&style_list_glyph_default, theme->list_default.glyph_recolour_alpha);
+    lv_style_set_img_recolor(&style_list_glyph_focused, lv_color_hex(theme->list_focus.glyph_recolour));
+    lv_obj_report_style_change(NULL);
 }
 
 static void apply_label_scroll_speed(lv_obj_t *ui_lbl_item, const int is_bounce) {

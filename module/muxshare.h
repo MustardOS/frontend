@@ -357,6 +357,8 @@ int muxrgb_main(void);
 
 int muxrgbzone_main(void);
 
+int muxcolour_main(void);
+
 int muxrtc_main(void);
 
 int muxsearch_main(char *dir);

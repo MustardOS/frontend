@@ -1073,6 +1073,11 @@ static void init_navigation_group(void) {
         lang.muxcustom.scaling.no_scale, lang.muxcustom.scaling.scale, lang.muxcustom.scaling.stretch
     };
 
+    char *menu_style_options[] = {lang.muxcustom.menu_style.theme,     lang.muxcustom.menu_style.list,
+                                  lang.muxcustom.menu_style.grid,      lang.muxcustom.menu_style.carousel,
+                                  lang.muxcustom.menu_style.coverflow, lang.muxcustom.menu_style.bubbles,
+                                  lang.muxcustom.menu_style.orbit};
+
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_value[ui_count_dynamic];
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
@@ -1276,11 +1281,16 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, catalogue, lang.muxcustom.catalogue, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, config, lang.muxcustom.config, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, logo, lang.muxcustom.logo, "logo", NULL, 0);
+    INIT_OPTION_ITEM(-1, custom, colours, lang.muxcustom.customcolours, "customcolour", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, theme, lang.muxcustom.theme, "theme", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, theme_resolution, lang.muxcustom.themeresolution, "resolution", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, theme_scaling, lang.muxcustom.themescaling, "scaling", theme_scaling_options, 3);
     INIT_OPTION_ITEM(-1, custom, theme_alternate, lang.muxcustom.themealternate, "alternate", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, random_theme, lang.muxcustom.randomtheme, "randomtheme", disabled_enabled, 2);
+    INIT_OPTION_ITEM(
+        -1, custom, menu_style, lang.muxcustom.menu_style.title, "menustyle", menu_style_options,
+        A_SIZE(menu_style_options)
+    );
     INIT_OPTION_ITEM(-1, custom, header_height, lang.muxthemeopt.header_height, "headerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, footer_height, lang.muxthemeopt.footer_height, "footerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, content_item_count, lang.muxthemeopt.content_item_count, "count", NULL, 0);
@@ -1404,8 +1414,6 @@ static void init_navigation_group(void) {
     apply_font_name_visibility();
     apply_font_axis_visibility();
     apply_font_size_visibility();
-
-    list_nav_move(list_frame_restore(), +1);
 }
 
 static void check_focus(void) {
@@ -1659,6 +1667,7 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_dro_track_notice_custom, config.settings.general.track_notice);
     lv_dropdown_set_selected(ui_dro_theme_scaling_custom, config.settings.general.theme_scaling);
     lv_dropdown_set_selected(ui_dro_random_theme_custom, config.settings.advanced.random_theme);
+    lv_dropdown_set_selected(ui_dro_menu_style_custom, config.settings.themeopt.menu_style);
 
     lv_dropdown_set_selected(ui_dro_header_height_custom, (uint32_t) (config.settings.themeopt.header_height + 1));
     lv_dropdown_set_selected(ui_dro_footer_height_custom, (uint32_t) (config.settings.themeopt.footer_height + 1));
@@ -1829,6 +1838,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, track_notice, "settings/general/track_notice", INT, 0);
     CHECK_AND_SAVE_STD(custom, theme_scaling, "settings/general/theme_scaling", INT, 0);
     CHECK_AND_SAVE_STD(custom, random_theme, "settings/advanced/random_theme", INT, 0);
+    CHECK_AND_SAVE_STD(custom, menu_style, "settings/theme/menu_style", INT, 0);
     CHECK_AND_SAVE_STD(custom, header_height, "settings/theme/header_height", INT, -1);
     CHECK_AND_SAVE_STD(custom, footer_height, "settings/theme/footer_height", INT, -1);
     save_count_dropdown(
@@ -1957,6 +1967,7 @@ typedef enum {
     menu_music_volume,
     menu_sound_volume,
     menu_theme_alternate,
+    menu_colours,
 } menu_action;
 
 typedef enum {
@@ -2084,12 +2095,14 @@ static int16_t kiosk_pass = 0;
     ROW(custom, config, "config", packages, menu_config, "config", "package/config", &kiosk.custom.raconfig, NULL,     \
         select)                                                                                                        \
     ROW(custom, logo, "logo", theme, menu_logo, "logo", NULL, &kiosk_pass, NULL, select)                               \
+    ROW(custom, colours, "customcolour", theme, menu_colours, "colour", NULL, &kiosk_pass, NULL, select)               \
     ROW(custom, theme, "theme", theme, menu_theme, "theme", "/theme", &kiosk.custom.theme, NULL, select)               \
     ROW(custom, theme_resolution, "resolution", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, theme_scaling, "scaling", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                   \
     ROW(custom, theme_alternate, "alternate", theme, menu_theme_alternate, NULL, NULL, &kiosk_pass,                    \
         visible_theme_alternate, change_set)                                                                           \
     ROW(custom, random_theme, "randomtheme", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
+    ROW(custom, menu_style, "menustyle", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
     ROW(custom, header_height, "headerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, footer_height, "footerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, content_item_count, "count", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
@@ -2322,6 +2335,10 @@ static void handle_a(void) {
             navigate_to_submenu(entry, "logo");
             break;
 
+        case menu_colours:
+            navigate_to_submenu(entry, "colour");
+            break;
+
         case menu_sort:
             navigate_to_submenu(entry, "sort");
             break;
@@ -2498,6 +2515,7 @@ int muxcustom_main(void) {
 
     restore_custom_options();
     init_dropdown_settings();
+    list_nav_move(list_frame_restore(), +1);
 
     dialogue_init_unsaved(
         &save_dlg, &theme, ui_screen, lang.generic.unsaved, NULL, lang.generic.save, lang.generic.discard,

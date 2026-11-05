@@ -774,6 +774,17 @@ struct mux_lang {
         char screen[MAX_BUFFER_SIZE];
         char themealternate[MAX_BUFFER_SIZE];
         char randomtheme[MAX_BUFFER_SIZE];
+        char customcolours[MAX_BUFFER_SIZE];
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char theme[MAX_BUFFER_SIZE];
+            char list[MAX_BUFFER_SIZE];
+            char grid[MAX_BUFFER_SIZE];
+            char carousel[MAX_BUFFER_SIZE];
+            char coverflow[MAX_BUFFER_SIZE];
+            char bubbles[MAX_BUFFER_SIZE];
+            char orbit[MAX_BUFFER_SIZE];
+        } menu_style;
         char title[MAX_BUFFER_SIZE];
         struct {
             char content[MAX_BUFFER_SIZE];
@@ -853,6 +864,8 @@ struct mux_lang {
             char theme_resolution[MAX_BUFFER_SIZE];
             char theme_alternate[MAX_BUFFER_SIZE];
             char random_theme[MAX_BUFFER_SIZE];
+            char menu_style[MAX_BUFFER_SIZE];
+            char colours[MAX_BUFFER_SIZE];
             char video_wallpaper[MAX_BUFFER_SIZE];
             char background_scale[MAX_BUFFER_SIZE];
             char boxartimage[MAX_BUFFER_SIZE];
@@ -1523,6 +1536,75 @@ struct mux_lang {
             char reset[MAX_BUFFER_SIZE];
         } task;
     } muxlogo;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char colour[MAX_BUFFER_SIZE];
+        char red[MAX_BUFFER_SIZE];
+        char green[MAX_BUFFER_SIZE];
+        char blue[MAX_BUFFER_SIZE];
+        char light[MAX_BUFFER_SIZE];
+        char theme[MAX_BUFFER_SIZE];
+        char custom[MAX_BUFFER_SIZE];
+        char automatic[MAX_BUFFER_SIZE];
+        char gradient[MAX_BUFFER_SIZE];
+        char none[MAX_BUFFER_SIZE];
+        char scheme[MAX_BUFFER_SIZE];
+        char scheme_reset[MAX_BUFFER_SIZE];
+        char scheme_loaded[MAX_BUFFER_SIZE];
+        char scheme_saved[MAX_BUFFER_SIZE];
+        char scheme_removed[MAX_BUFFER_SIZE];
+        char scheme_failed[MAX_BUFFER_SIZE];
+        char scheme_empty[MAX_BUFFER_SIZE];
+        char scheme_builtin[MAX_BUFFER_SIZE];
+        char reset_done[MAX_BUFFER_SIZE];
+        char reset_title[MAX_BUFFER_SIZE];
+        char reset_desc[MAX_BUFFER_SIZE];
+        char delete_title[MAX_BUFFER_SIZE];
+        char delete_desc[MAX_BUFFER_SIZE];
+        char name_prompt[MAX_BUFFER_SIZE];
+        char default_name[MAX_BUFFER_SIZE];
+        char gradient_red[MAX_BUFFER_SIZE];
+        char gradient_green[MAX_BUFFER_SIZE];
+        char gradient_blue[MAX_BUFFER_SIZE];
+        char gradient_light[MAX_BUFFER_SIZE];
+        struct {
+            char presets[MAX_BUFFER_SIZE];
+            char highlight[MAX_BUFFER_SIZE];
+            char highlight_text[MAX_BUFFER_SIZE];
+            char highlight_shadow[MAX_BUFFER_SIZE];
+            char background[MAX_BUFFER_SIZE];
+            char text[MAX_BUFFER_SIZE];
+            char text_shadow[MAX_BUFFER_SIZE];
+            char glyphs[MAX_BUFFER_SIZE];
+            char border[MAX_BUFFER_SIZE];
+            char header_background[MAX_BUFFER_SIZE];
+            char header_text[MAX_BUFFER_SIZE];
+            char status_icons[MAX_BUFFER_SIZE];
+            char footer_background[MAX_BUFFER_SIZE];
+            char footer_text[MAX_BUFFER_SIZE];
+            char dialogue_background[MAX_BUFFER_SIZE];
+            char dialogue_text[MAX_BUFFER_SIZE];
+            char help_background[MAX_BUFFER_SIZE];
+            char help_text[MAX_BUFFER_SIZE];
+            char keyboard_background[MAX_BUFFER_SIZE];
+            char keyboard_text[MAX_BUFFER_SIZE];
+            char progress_bar[MAX_BUFFER_SIZE];
+        } section;
+        char hard_to_read[MAX_BUFFER_SIZE];
+        char save_warning[MAX_BUFFER_SIZE];
+        struct {
+            char mode[MAX_BUFFER_SIZE];
+            char red[MAX_BUFFER_SIZE];
+            char green[MAX_BUFFER_SIZE];
+            char blue[MAX_BUFFER_SIZE];
+            char light[MAX_BUFFER_SIZE];
+            char gradient[MAX_BUFFER_SIZE];
+            char scheme[MAX_BUFFER_SIZE];
+            char scheme_reset[MAX_BUFFER_SIZE];
+        } help;
+    } muxcolour;
 
     struct {
         char title[MAX_BUFFER_SIZE];

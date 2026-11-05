@@ -5,7 +5,7 @@
 #include <common/ui/nav.h>
 
 // Room for every row a paged screen might hold
-#define LIST_FRAME_ROWS_MAX 96
+#define LIST_FRAME_ROWS_MAX 192
 
 static struct theme_config *theme_ref = NULL;
 
@@ -29,9 +29,11 @@ static lv_obj_t *bar_label = NULL;
 static lv_obj_t *bar_glyph = NULL;
 static lv_obj_t *bar_glyph_right = NULL;
 static lv_obj_t *bar_value = NULL;
+static int bar_hidden = 0;
 
 void list_frame_reset(void) {
     frame_count = 0;
+    bar_hidden = 0;
     current = 0;
     row_total = 0;
     content = NULL;
@@ -193,7 +195,13 @@ void list_frame_apply(void) {
 
     ui_count_static = 0;
 
-    if (bar) {
+    if (bar && bar_hidden) {
+        lv_obj_add_flag(bar, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else if (bar) {
+        lv_obj_clear_flag(bar, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (bar && !bar_hidden) {
         lv_group_add_obj(ui_group, bar_label);
         lv_group_add_obj(ui_group_value, bar_value);
         lv_group_add_obj(ui_group_glyph, bar_glyph);
@@ -273,7 +281,11 @@ void list_frame_refresh_text_geometry(void) {
 }
 
 int list_frame_focused(void) {
-    return list_frame_active() && current_item_index == 0;
+    return list_frame_active() && !bar_hidden && current_item_index == 0;
+}
+
+void list_frame_set_bar_hidden(const int hidden) {
+    bar_hidden = hidden;
 }
 
 void list_frame_help(void) {
@@ -330,7 +342,7 @@ int list_frame_steps_to_row(const int row) {
     if (row < f->first || row >= f->first + f->count) return 0;
     if (suppressed[row] || inert[row]) return 0;
 
-    int steps = 1;
+    int steps = bar_hidden ? 0 : 1;
     for (int i = f->first; i < row; i++)
         if (!suppressed[i] && !inert[i]) steps++;
 
@@ -403,11 +415,11 @@ int list_frame_current(void) {
 }
 
 int list_frame_current_row(void) {
-    if (!list_frame_active() || current_item_index <= 0) return -1;
+    if (!list_frame_active() || current_item_index < (bar_hidden ? 0 : 1)) return -1;
 
     const list_frame *f = &frames[current];
 
-    int seen = 0;
+    int seen = bar_hidden ? -1 : 0;
     for (int i = f->first; i < f->first + f->count && i < row_total; i++) {
         if (suppressed[i] || inert[i]) continue;
         if (++seen == current_item_index) return i;
@@ -417,7 +429,7 @@ int list_frame_current_row(void) {
 }
 
 int list_frame_go(const int index) {
-    if (!list_frame_active() || index < 0 || index >= frame_count) return 0;
+    if (!list_frame_active() || bar_hidden || index < 0 || index >= frame_count) return 0;
     if (index == current || !frame_has_rows(index)) return 0;
 
     current = index;
@@ -427,7 +439,7 @@ int list_frame_go(const int index) {
 }
 
 int list_frame_move(const int direction) {
-    if (!list_frame_active() || direction == 0) return 0;
+    if (!list_frame_active() || bar_hidden || direction == 0) return 0;
 
     const int step = direction < 0 ? -1 : 1;
     int next = current;

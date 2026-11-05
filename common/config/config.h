@@ -477,6 +477,27 @@ struct mux_config {
             int16_t glyph_size_header;
             int16_t glyph_size_grid;
             int16_t label_width;
+            int16_t menu_style;
+            char colour_highlight[MAX_BUFFER_SIZE];
+            char colour_highlight_text[MAX_BUFFER_SIZE];
+            char colour_highlight_shadow[MAX_BUFFER_SIZE];
+            char colour_background[MAX_BUFFER_SIZE];
+            char colour_text[MAX_BUFFER_SIZE];
+            char colour_text_shadow[MAX_BUFFER_SIZE];
+            char colour_glyphs[MAX_BUFFER_SIZE];
+            char colour_border[MAX_BUFFER_SIZE];
+            char colour_header_background[MAX_BUFFER_SIZE];
+            char colour_header_text[MAX_BUFFER_SIZE];
+            char colour_status_icons[MAX_BUFFER_SIZE];
+            char colour_footer_background[MAX_BUFFER_SIZE];
+            char colour_footer_text[MAX_BUFFER_SIZE];
+            char colour_dialogue_background[MAX_BUFFER_SIZE];
+            char colour_dialogue_text[MAX_BUFFER_SIZE];
+            char colour_help_background[MAX_BUFFER_SIZE];
+            char colour_help_text[MAX_BUFFER_SIZE];
+            char colour_keyboard_background[MAX_BUFFER_SIZE];
+            char colour_keyboard_text[MAX_BUFFER_SIZE];
+            char colour_progress_bar[MAX_BUFFER_SIZE];
         } themeopt;
         struct {
             int16_t layout;

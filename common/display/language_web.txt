@@ -598,6 +598,22 @@ Choose an archive format
 ZIP (.zip)
 Gzip Tarball (.tar.gz)
 XZ Tarball (.tar.xz)
+File Log
+The last 256 changes made to files from the dashboard, newest first.
+Reading the file log...
+No files have been changed yet.
+Action
+Item
+Result
+From
+Done
+Upload
+Clear the file log
+Every entry in the file log will be removed.
+All actions
+All results
+Failed
+No entries match that filter.
 %s items
 Listening in Wasabi
 Watching in Wasabi

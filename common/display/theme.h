@@ -473,6 +473,8 @@ struct theme_config {
         int16_t text_alpha;
         int16_t text_fade_time;
         char text_separator[MAX_BUFFER_SIZE];
+        uint32_t shadow_colour;
+        int16_t shadow_override;
     } counter;
 
     struct {
@@ -526,6 +528,55 @@ struct theme_config {
 int load_scheme(const char *theme_base, const char *mux_dim, const char *file_name, char *scheme, size_t scheme_size);
 
 int get_active_alternate(char *name, size_t name_size);
+
+#define CUSTOM_COLOUR_AUTO "auto"
+#define CUSTOM_COLOUR_NONE "none"
+
+enum colour_role {
+    colour_role_highlight = 0,
+    colour_role_highlight_text,
+    colour_role_highlight_shadow,
+    colour_role_background,
+    colour_role_text,
+    colour_role_text_shadow,
+    colour_role_glyphs,
+    colour_role_border,
+    colour_role_header_background,
+    colour_role_header_text,
+    colour_role_status_icons,
+    colour_role_footer_background,
+    colour_role_footer_text,
+    colour_role_dialogue_background,
+    colour_role_dialogue_text,
+    colour_role_help_background,
+    colour_role_help_text,
+    colour_role_keyboard_background,
+    colour_role_keyboard_text,
+    colour_role_progress_bar,
+    colour_role_count
+};
+
+double colour_contrast(uint32_t a, uint32_t b);
+
+uint32_t theme_role_colour(int role);
+
+uint32_t theme_background_gradient(void);
+
+void colour_to_hsl(uint32_t colour, double *hue, double *saturation, double *light);
+
+uint32_t colour_from_hsl(double hue, double saturation, double light);
+
+uint32_t readable_text_colour(uint32_t background);
+
+uint32_t readable_text_colour_between(uint32_t top, uint32_t bottom);
+
+uint32_t shadow_colour_for(uint32_t text, uint32_t background);
+
+int custom_colour_value(const char *value, uint32_t *colour);
+
+int custom_gradient_value(const char *value, uint32_t *top, uint32_t *bottom);
+
+void preview_custom_colours(struct theme_config *theme);
 
 void reset_active_alternate(void);
 

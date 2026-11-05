@@ -435,6 +435,22 @@ void apply_gradient_to_ui_screen(
     lv_obj_invalidate(canvas);
 }
 
+void refresh_screen_gradient(const struct theme_config *theme, const struct mux_device *device) {
+    if (lv_obj_is_valid(canvas) && lv_obj_get_parent(canvas) == ui_screen_container) {
+        canvas_invalidate_gpu_texture(canvas);
+        lv_obj_del(canvas);
+    }
+    canvas = NULL;
+
+    apply_gradient_to_ui_screen(ui_screen_container, theme, device);
+    if (lv_obj_is_valid(canvas)) lv_obj_move_to_index(canvas, 0);
+
+    lv_obj_set_style_bg_opa(
+        ui_screen, theme->system.background_gradient_direction == 0 ? theme->system.background_alpha : LV_OPA_TRANSP,
+        MU_OBJ_MAIN_DEFAULT
+    );
+}
+
 void set_gradient_visible(const int visible) {
     if (!lv_obj_is_valid(canvas)) return;
 
@@ -1495,6 +1511,16 @@ int ui_common_check(const int mode) {
     return 1;
 }
 
+void apply_counter_shadow(lv_obj_t *counter, const struct theme_config *theme) {
+    if (!theme->counter.shadow_override) return;
+
+    const lv_color_t colour = lv_color_hex(theme->counter.shadow_colour);
+    const lv_opa_t alpha = (lv_opa_t) theme->list_focus.shadow_alpha;
+    const int8_t x = (int8_t) theme->list_focus.shadow_x_offset;
+    const int8_t y = (int8_t) theme->list_focus.shadow_y_offset;
+    lv_shadow_zone_register(counter, colour, alpha, x, y, colour, alpha, x, y);
+}
+
 void init_ui_item_counter(const struct theme_config *theme) {
     ui_lbl_counter_explore = lv_label_create(ui_screen);
     lv_label_set_text(ui_lbl_counter_explore, "");
@@ -1527,6 +1553,7 @@ void init_ui_item_counter(const struct theme_config *theme) {
 
     lv_obj_set_style_radius(ui_lbl_counter_explore, theme->counter.radius, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_y(ui_lbl_counter_explore, theme->counter.padding_top);
+    apply_counter_shadow(ui_lbl_counter_explore, theme);
 
     switch (theme->counter.alignment) {
         case 1:

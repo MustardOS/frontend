@@ -6,17 +6,26 @@
 #include <common/runtime/init.h>
 #include <common/base/options.h>
 #include <common/display/language.h>
+#include <common/display/theme_base.h>
 #include <common/config/config.h>
 #include <json/json.h>
 #include <common/storage/fileio.h>
 #include <common/base/util.h>
 #include <common/runtime/log.h>
 
-static char lang_loaded_path[MAX_BUFFER_SIZE];
-static time_t lang_loaded_mtime;
-static off_t lang_loaded_size;
+struct lang_stamp {
+    char path[MAX_BUFFER_SIZE];
+    time_t mtime;
+    off_t size;
+};
+
+static struct lang_stamp lang_loaded_base;
+static struct lang_stamp lang_loaded_theme;
+static int lang_loaded;
 static char *language_json;
+static char *theme_language_json;
 static struct json translation_specific;
+static struct json translation_theme;
 
 #define TRANSLATION_CACHE_MAX 64
 
@@ -39,6 +48,8 @@ static void clear_translation_cache(void) {
 static void select_translation_section(void) {
     clear_translation_cache();
     translation_specific = language_json ? json_object_get(json_parse(language_json), mux_module) : (struct json) {0};
+    translation_theme =
+        theme_language_json ? json_object_get(json_parse(theme_language_json), mux_module) : (struct json) {0};
 }
 
 char *translate_specific(char *key) {
@@ -48,7 +59,8 @@ char *translate_specific(char *key) {
         if (strcmp(translation_cache[i].key, key) == 0) return translation_cache[i].value;
     }
 
-    const struct json found = json_object_get(translation_specific, key);
+    struct json found = json_object_get(translation_theme, key);
+    if (!json_exists(found) || json_type(found) != JSON_STRING) found = json_object_get(translation_specific, key);
     if (!json_exists(found) || json_type(found) != JSON_STRING) return key;
 
     char translation[MAX_BUFFER_SIZE];
@@ -818,6 +830,15 @@ static const lang_field lang_fields[] = {
     {"muxcustom", LANG_OFF(muxcustom.screen), lang_specific, "Screen"},
     {"muxcustom", LANG_OFF(muxcustom.themealternate), lang_specific, "Alternative Theme"},
     {"muxcustom", LANG_OFF(muxcustom.randomtheme), lang_specific, "Random Theme on Boot"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.title), lang_specific, "Main Menu Style"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.theme), lang_specific, "Theme Default"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.list), lang_specific, "List"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.grid), lang_specific, "Grid"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.carousel), lang_specific, "Carousel"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.coverflow), lang_specific, "Coverflow"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.bubbles), lang_specific, "Bubbles"},
+    {"muxcustom", LANG_OFF(muxcustom.menu_style.orbit), lang_specific, "Orbit"},
+    {"muxcustom", LANG_OFF(muxcustom.customcolours), lang_specific, "Custom Colours"},
     {"muxcustom", LANG_OFF(muxcustom.pickles_startup_messages), lang_specific, "Startup Messages"},
     {"muxcustom", LANG_OFF(muxcustom.power_off), lang_specific, "Power Effects"},
     {"muxcustom", LANG_OFF(muxcustom.blackfade), lang_specific, "Black Fade Animation"},
@@ -870,6 +891,8 @@ static const lang_field lang_fields[] = {
     {"muxcustom", LANG_OFF(muxcustom.help.theme_resolution), lang_specific, "Draws the theme as though the screen were a different size.\n\nUseful for trying a theme built for other hardware."},
     {"muxcustom", LANG_OFF(muxcustom.help.theme_scaling), lang_specific, "How a theme built for another resolution is stretched or fitted to this screen.\n\nOnly comes into play once Theme Resolution has been changed."},
     {"muxcustom", LANG_OFF(muxcustom.help.theme_alternate), lang_specific, "Some themes ship more than one look. This picks between them."},
+    {"muxcustom", LANG_OFF(muxcustom.help.menu_style), lang_specific, "How the Main Menu is laid out, whichever theme is in use.\n\nTheme Default keeps the layout the theme was made with."},
+    {"muxcustom", LANG_OFF(muxcustom.help.colours), lang_specific, "Choose your own colours for the highlight background, its text and shadow, the background, text, glyphs, borders, header, status icons, footer, dialogues, help, the keyboard and the progress bar, whichever theme is in use."},
     {"muxcustom", LANG_OFF(muxcustom.help.random_theme), lang_specific, "Picks a different theme each time the device starts, chosen from the ones you have installed.\n\nLeave it off if you would rather the theme you chose stayed put."},
     {"muxcustom", LANG_OFF(muxcustom.help.black_fade), lang_specific, "Whether the screen fades out to black as content launches, rather than cutting straight across."},
     {"muxcustom", LANG_OFF(muxcustom.help.video_wallpaper), lang_specific, "Plays the theme's video wallpaper behind the menus, where the theme provides one.\n\nIt costs a little battery, so turn it off if you would rather keep that."},
@@ -1436,6 +1459,70 @@ static const lang_field lang_fields[] = {
     {"muxlink", LANG_OFF(muxlink.help.mac), lang_specific, "The hardware identifier of this device's adapter, handy for comparing it with the device at the other end."},
     {"muxlink", LANG_OFF(muxlink.help.peer_address), lang_specific, "The address of the device at the other end of the cable."},
     {"muxlink", LANG_OFF(muxlink.help.peer_mac), lang_specific, "The hardware identifier of the adapter at the other end, handy for telling two devices apart."},
+
+    // muxcolour
+    {"muxcolour", LANG_OFF(muxcolour.title), lang_specific, "Custom Colours"},
+    {"muxcolour", LANG_OFF(muxcolour.overview), lang_specific, "Set your own colours over the theme. Anything left on Theme keeps the theme's colour."},
+    {"muxcolour", LANG_OFF(muxcolour.colour), lang_specific, "Colour"},
+    {"muxcolour", LANG_OFF(muxcolour.red), lang_specific, "Red"},
+    {"muxcolour", LANG_OFF(muxcolour.green), lang_specific, "Green"},
+    {"muxcolour", LANG_OFF(muxcolour.blue), lang_specific, "Blue"},
+    {"muxcolour", LANG_OFF(muxcolour.light), lang_specific, "Lightness"},
+    {"muxcolour", LANG_OFF(muxcolour.theme), lang_specific, "Theme"},
+    {"muxcolour", LANG_OFF(muxcolour.custom), lang_specific, "Custom"},
+    {"muxcolour", LANG_OFF(muxcolour.automatic), lang_specific, "Automatic"},
+    {"muxcolour", LANG_OFF(muxcolour.gradient), lang_specific, "Gradient"},
+    {"muxcolour", LANG_OFF(muxcolour.none), lang_specific, "None"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme), lang_specific, "Scheme"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_reset), lang_specific, "Reset to Default Scheme"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_loaded), lang_specific, "Scheme loaded"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_saved), lang_specific, "Scheme saved"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_removed), lang_specific, "Scheme removed"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_failed), lang_specific, "The scheme could not be saved"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_empty), lang_specific, "Nothing to save, every section is set to Theme"},
+    {"muxcolour", LANG_OFF(muxcolour.scheme_builtin), lang_specific, "Only saved schemes can be removed"},
+    {"muxcolour", LANG_OFF(muxcolour.reset_done), lang_specific, "Every section is back to Theme"},
+    {"muxcolour", LANG_OFF(muxcolour.reset_title), lang_specific, "Reset to Default"},
+    {"muxcolour", LANG_OFF(muxcolour.reset_desc), lang_specific, "Put every section back to Theme?"},
+    {"muxcolour", LANG_OFF(muxcolour.delete_title), lang_specific, "Remove Scheme"},
+    {"muxcolour", LANG_OFF(muxcolour.delete_desc), lang_specific, "Remove this saved scheme from your storage?"},
+    {"muxcolour", LANG_OFF(muxcolour.name_prompt), lang_specific, "Scheme name"},
+    {"muxcolour", LANG_OFF(muxcolour.default_name), lang_specific, "My Scheme"},
+    {"muxcolour", LANG_OFF(muxcolour.section.presets), lang_specific, "Preset Schemes"},
+    {"muxcolour", LANG_OFF(muxcolour.gradient_red), lang_specific, "Gradient Red"},
+    {"muxcolour", LANG_OFF(muxcolour.gradient_green), lang_specific, "Gradient Green"},
+    {"muxcolour", LANG_OFF(muxcolour.gradient_blue), lang_specific, "Gradient Blue"},
+    {"muxcolour", LANG_OFF(muxcolour.gradient_light), lang_specific, "Gradient Lightness"},
+    {"muxcolour", LANG_OFF(muxcolour.section.highlight), lang_specific, "Highlight Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.highlight_text), lang_specific, "Highlight Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.highlight_shadow), lang_specific, "Highlight Shadow"},
+    {"muxcolour", LANG_OFF(muxcolour.section.background), lang_specific, "Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.text), lang_specific, "Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.text_shadow), lang_specific, "Text Shadow"},
+    {"muxcolour", LANG_OFF(muxcolour.section.glyphs), lang_specific, "Glyphs"},
+    {"muxcolour", LANG_OFF(muxcolour.section.border), lang_specific, "Borders"},
+    {"muxcolour", LANG_OFF(muxcolour.section.header_background), lang_specific, "Header Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.header_text), lang_specific, "Header Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.status_icons), lang_specific, "Status Icons"},
+    {"muxcolour", LANG_OFF(muxcolour.section.footer_background), lang_specific, "Footer Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.footer_text), lang_specific, "Footer Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.dialogue_background), lang_specific, "Dialogue Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.dialogue_text), lang_specific, "Dialogue Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.help_background), lang_specific, "Help Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.help_text), lang_specific, "Help Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.keyboard_background), lang_specific, "Keyboard Background"},
+    {"muxcolour", LANG_OFF(muxcolour.section.keyboard_text), lang_specific, "Keyboard Text"},
+    {"muxcolour", LANG_OFF(muxcolour.section.progress_bar), lang_specific, "Progress Bar"},
+    {"muxcolour", LANG_OFF(muxcolour.hard_to_read), lang_specific, "%s will be hard to read on %s"},
+    {"muxcolour", LANG_OFF(muxcolour.save_warning), lang_specific, "Some of these colours will be hard to read together. Save them anyway?"},
+    {"muxcolour", LANG_OFF(muxcolour.help.mode), lang_specific, "Theme keeps the theme's colour. Custom uses the red, green and blue below. Automatic, where offered, picks black or white so the text stays easy to read.\n\nGradient fades from the colour at the top of the screen to the gradient colour at the bottom. None removes the background altogether."},
+    {"muxcolour", LANG_OFF(muxcolour.help.red), lang_specific, "How much red is in the colour. Hold left or right to move faster."},
+    {"muxcolour", LANG_OFF(muxcolour.help.green), lang_specific, "How much green is in the colour. Hold left or right to move faster."},
+    {"muxcolour", LANG_OFF(muxcolour.help.blue), lang_specific, "How much blue is in the colour. Hold left or right to move faster."},
+    {"muxcolour", LANG_OFF(muxcolour.help.light), lang_specific, "Makes the colour lighter or darker while keeping its shade."},
+    {"muxcolour", LANG_OFF(muxcolour.help.scheme), lang_specific, "Press A to load this scheme into every section.\n\nPress X to remove one of your own schemes, or Y to save the current colours as a new scheme."},
+    {"muxcolour", LANG_OFF(muxcolour.help.scheme_reset), lang_specific, "Puts every section back to Theme.\n\nNothing is kept until you leave this screen and save."},
+    {"muxcolour", LANG_OFF(muxcolour.help.gradient), lang_specific, "The colour the background fades to at the bottom of the screen. Hold left or right to move faster."},
 
     // muxlogo
     {"muxlogo", LANG_OFF(muxlogo.title), lang_specific, "Boot Logo"},
@@ -3952,36 +4039,31 @@ static void apply_lang_section(struct mux_lang *lang, const char *section, const
     }
 }
 
-void load_lang(struct mux_lang *lang) {
-    char path[MAX_BUFFER_SIZE];
-    snprintf(path, sizeof(path), STORAGE_LANG "/%s.json", config.settings.general.language);
+static int lang_stamp_read(const char *path, struct lang_stamp *stamp) {
+    snprintf(stamp->path, sizeof(stamp->path), "%s", path);
 
     struct stat info;
-    const int found = stat(path, &info) == 0;
-    if (found && strcmp(path, lang_loaded_path) == 0 && info.st_mtime == lang_loaded_mtime
-        && info.st_size == lang_loaded_size) {
-        select_translation_section();
-        return;
+    if (stat(path, &info) != 0) {
+        stamp->mtime = 0;
+        stamp->size = -1;
+        return 0;
     }
 
-    build_lang_index();
-    lang_loaded_path[0] = '\0';
+    stamp->mtime = info.st_mtime;
+    stamp->size = info.st_size;
+    return 1;
+}
 
-    for (size_t i = 0; i < LANG_FIELD_COUNT; i++) {
-        const lang_field *f = &lang_fields[i];
-        snprintf((char *) lang + f->offset, MAX_BUFFER_SIZE, "%s", f->default_str);
-    }
+static int lang_stamp_same(const struct lang_stamp *a, const struct lang_stamp *b) {
+    return strcmp(a->path, b->path) == 0 && a->mtime == b->mtime && a->size == b->size;
+}
 
-    free(language_json);
-    language_json = NULL;
-    select_translation_section();
-
-    if (!found) return;
-
+static char *apply_lang_file(struct mux_lang *lang, const char *path) {
     char *content = read_all_char_from(path);
     if (!json_valid(content)) {
+        LOG_WARN(mux_module, "Ignoring invalid language file: %s", path);
         free(content);
-        return;
+        return NULL;
     }
 
     char section[MAX_BUFFER_SIZE];
@@ -3996,10 +4078,40 @@ void load_lang(struct mux_lang *lang) {
         apply_lang_section(lang, section, object);
     }
 
-    language_json = content;
+    return content;
+}
+
+void load_lang(struct mux_lang *lang) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), STORAGE_LANG "/%s.json", config.settings.general.language);
+
+    char theme_path[MAX_BUFFER_SIZE];
+    snprintf(theme_path, sizeof(theme_path), "%s/language/%s.json", get_theme_base(), config.settings.general.language);
+
+    struct lang_stamp base;
+    struct lang_stamp themed;
+    const int found = lang_stamp_read(path, &base);
+    const int theme_found = lang_stamp_read(theme_path, &themed);
+
+    if (lang_loaded && lang_stamp_same(&base, &lang_loaded_base) && lang_stamp_same(&themed, &lang_loaded_theme)) {
+        select_translation_section();
+        return;
+    }
+
+    build_lang_index();
+
+    for (size_t i = 0; i < LANG_FIELD_COUNT; i++) {
+        const lang_field *f = &lang_fields[i];
+        snprintf((char *) lang + f->offset, MAX_BUFFER_SIZE, "%s", f->default_str);
+    }
+
+    free(language_json);
+    free(theme_language_json);
+    language_json = found ? apply_lang_file(lang, path) : NULL;
+    theme_language_json = theme_found ? apply_lang_file(lang, theme_path) : NULL;
     select_translation_section();
 
-    snprintf(lang_loaded_path, sizeof(lang_loaded_path), "%s", path);
-    lang_loaded_mtime = info.st_mtime;
-    lang_loaded_size = info.st_size;
+    lang_loaded_base = base;
+    lang_loaded_theme = themed;
+    lang_loaded = 1;
 }

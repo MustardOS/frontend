@@ -1,4 +1,5 @@
 #include "ui_muxactivity.h"
+#include <common/ui/common.h>
 
 lv_obj_t *ui_lbl_counter_activity;
 
@@ -27,6 +28,7 @@ void init_muxactivity(lv_obj_t *ui_screen, const struct theme_config *theme) {
     lv_obj_set_style_pad_bottom(ui_lbl_counter_activity, theme->counter.padding_around, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_radius(ui_lbl_counter_activity, theme->counter.radius, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_y(ui_lbl_counter_activity, theme->counter.padding_top);
+    apply_counter_shadow(ui_lbl_counter_activity, theme);
     switch (theme->counter.alignment) {
         case 1:
             lv_obj_set_align(ui_lbl_counter_activity, LV_ALIGN_TOP_MID);

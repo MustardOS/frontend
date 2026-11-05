@@ -217,8 +217,13 @@ static int publish_download(download_target *target) {
 }
 
 static int progress_shown;
+static int progress_bounce;
 static int progress_span_index;
 static int progress_span_total = 1;
+
+void set_download_progress_bounce(void) {
+    progress_bounce = 1;
+}
 
 void set_download_progress_span(const int index, const int total) {
     progress_span_total = total > 0 ? total : 1;
@@ -247,15 +252,27 @@ void download_poll(void) {
     atomic_store_explicit(&cancel_download, 0, memory_order_release);
     pthread_mutex_unlock(&control.mutex);
 
-    if (result == 0 && progress_span_index + 1 >= progress_span_total)
+    if (result == 0 && !progress_bounce && progress_span_index + 1 >= progress_span_total)
         atomic_store_explicit(&progress_bar_value, 100, memory_order_relaxed);
 
-    if (progress_shown) {
+    if (progress_shown && !progress_bounce) {
         progress_shown = 0;
         hide_progress_bar();
     }
 
     if (cb) cb(result);
+
+    pthread_mutex_lock(&control.mutex);
+    const int chained = control.state != download_idle;
+    pthread_mutex_unlock(&control.mutex);
+
+    if (progress_bounce && !chained) {
+        progress_bounce = 0;
+        if (progress_shown) {
+            progress_shown = 0;
+            hide_progress_bar();
+        }
+    }
 }
 
 static int progress_callback(
@@ -286,6 +303,8 @@ static int progress_callback(
             return 1;
         }
     }
+
+    if (progress_bounce) return 0;
 
     if (dltotal > 0) {
         const int percent = (int) ((dlnow * 100) / dltotal);
@@ -471,10 +490,11 @@ int initiate_download_limited(
     pthread_detach(thread);
     pthread_mutex_unlock(&control.mutex);
 
-    if (show_progress) {
+    if (show_progress && !progress_shown) {
         progress_shown = 1;
         show_progress_bar(message);
     }
+    if (progress_bounce) atomic_store_explicit(&progress_bar_value, PROGRESS_INDETERMINATE, memory_order_relaxed);
     return 0;
 }
 

@@ -527,6 +527,22 @@ void timer_destroy_all(void) {
 static char last_theme_name[MAX_BUFFER_SIZE] = "";
 static int init_fonts_first_call = 1;
 
+void apply_list_shadows(void) {
+    const int new_shadow = config.visual.render_shadows;
+    lv_shadow_set(
+        new_shadow, lv_color_hex(theme.list_default.shadow_colour), (lv_opa_t) theme.list_default.shadow_alpha,
+        theme.list_default.shadow_x_offset, theme.list_default.shadow_y_offset,
+        lv_color_hex(theme.list_focus.shadow_colour), (lv_opa_t) theme.list_focus.shadow_alpha,
+        theme.list_focus.shadow_x_offset, theme.list_focus.shadow_y_offset
+    );
+    lv_glyph_shadow_set(
+        new_shadow, lv_color_hex(theme.list_default.shadow_colour), (lv_opa_t) theme.list_default.shadow_alpha,
+        theme.list_default.shadow_x_offset, theme.list_default.shadow_y_offset,
+        lv_color_hex(theme.list_focus.shadow_colour), (lv_opa_t) theme.list_focus.shadow_alpha,
+        theme.list_focus.shadow_x_offset, theme.list_focus.shadow_y_offset
+    );
+}
+
 static void init_fonts_ex(const int allow_clear) {
     if (strcmp(last_theme_name, config.theme.active) != 0) {
         snprintf(last_theme_name, sizeof(last_theme_name), "%s", config.theme.active);
@@ -542,18 +558,7 @@ static void init_fonts_ex(const int allow_clear) {
 
     static int prev_shadow = -1;
     const int new_shadow = config.visual.render_shadows;
-    lv_shadow_set(
-        new_shadow, lv_color_hex(theme.list_default.shadow_colour), (lv_opa_t) theme.list_default.shadow_alpha,
-        theme.list_default.shadow_x_offset, theme.list_default.shadow_y_offset,
-        lv_color_hex(theme.list_focus.shadow_colour), (lv_opa_t) theme.list_focus.shadow_alpha,
-        theme.list_focus.shadow_x_offset, theme.list_focus.shadow_y_offset
-    );
-    lv_glyph_shadow_set(
-        new_shadow, lv_color_hex(theme.list_default.shadow_colour), (lv_opa_t) theme.list_default.shadow_alpha,
-        theme.list_default.shadow_x_offset, theme.list_default.shadow_y_offset,
-        lv_color_hex(theme.list_focus.shadow_colour), (lv_opa_t) theme.list_focus.shadow_alpha,
-        theme.list_focus.shadow_x_offset, theme.list_focus.shadow_y_offset
-    );
+    apply_list_shadows();
 
     const int font_context = font_context_changed();
     if (font_context && allow_clear) font_cache_clear();

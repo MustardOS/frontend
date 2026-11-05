@@ -14,11 +14,14 @@
 #include <common/storage/fileio.h>
 #include <json/json.h>
 #include <common/ui/nav/grid_layout.h>
+#include <common/ui/nav/menu_style.h>
 
 static char layout_key[MAX_BUFFER_SIZE];
 static char *layout_json = NULL;
 
 const char *grid_layout_json(void) {
+    if (menu_style_active()) return menu_style_layout_json();
+
     char key[MAX_BUFFER_SIZE];
     char alt_base[MAX_BUFFER_SIZE];
     const int has_alt = get_alt_base_path(alt_base, sizeof(alt_base));

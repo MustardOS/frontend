@@ -328,6 +328,8 @@ void lv_obj_init_draw_label_dsc(lv_obj_t *obj, uint32_t part, lv_draw_label_dsc_
             draw_dsc->effect_y_offset = zone->y_offset;
         }
     }
+
+    if (lv_obj_has_flag(obj, LV_OBJ_FLAG_USER_1)) draw_dsc->effect_type = 0;
 }
 
 void lv_obj_init_draw_img_dsc(lv_obj_t *obj, uint32_t part, lv_draw_img_dsc_t *draw_dsc) {

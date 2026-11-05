@@ -613,6 +613,7 @@ static void refresh_manifest(void) {
     }
 
     set_download_callbacks(refresh_manifest_finished);
+    set_download_progress_bounce();
     initiate_download(url, remote_manifest_path, 1, lang.muxcore.down.data);
 }
 

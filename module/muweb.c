@@ -2579,6 +2579,27 @@ static int pickles_content_json(struct buffer *out, const char *relative) {
     return ok && buffer_puts(out, "]}");
 }
 
+#define MUWEB_FILE_LOG      256
+#define MUWEB_FILE_LOG_DIR  "/opt/muos/log"
+#define MUWEB_FILE_LOG_PATH MUWEB_FILE_LOG_DIR "/web_files.tsv"
+
+struct file_log_entry {
+    time_t time;
+    int status;
+    long long size;
+    char action[8];
+    char root[16];
+    char *path;
+    char *value;
+    char *error;
+    char client[INET6_ADDRSTRLEN];
+};
+
+static struct file_log_entry file_log[MUWEB_FILE_LOG];
+static size_t file_log_next = 0;
+static size_t file_log_count = 0;
+static size_t file_log_lines = 0;
+
 struct connection {
     int socket;
     time_t deadline;
@@ -2597,6 +2618,11 @@ struct connection {
     unsigned long long upload_remaining;
     char upload_temporary[PATH_MAX];
     char upload_target[PATH_MAX];
+    char upload_route[2048];
+    unsigned long long upload_size;
+    int upload_replace;
+    int status;
+    char message[160];
     int head_only;
     int revalidate;
     int attachment;
@@ -2654,7 +2680,187 @@ static void connection_reset_body(struct connection *connection) {
     connection->body_remaining = 0;
 }
 
+static struct file_log_entry *file_log_slot(void) {
+    struct file_log_entry *entry = &file_log[file_log_next];
+    free(entry->path);
+    free(entry->value);
+    free(entry->error);
+    memset(entry, 0, sizeof(*entry));
+
+    file_log_next = (file_log_next + 1) % MUWEB_FILE_LOG;
+    if (file_log_count < MUWEB_FILE_LOG) file_log_count++;
+    return entry;
+}
+
+static void file_log_field_write(FILE *file, const char *value, const char end) {
+    for (const char *p = value ? value : ""; *p; ++p) {
+        if (*p == '\\' || *p == '\t' || *p == '\n' || *p == '\r') {
+            fputc('\\', file);
+            fputc(*p == '\t' ? 't' : *p == '\n' ? 'n' : *p == '\r' ? 'r' : '\\', file);
+        } else {
+            fputc(*p, file);
+        }
+    }
+    fputc(end, file);
+}
+
+static char *file_log_field_read(char **cursor) {
+    char *start = *cursor;
+    char *out = start;
+    char *p = start;
+    for (; *p && *p != '\t' && *p != '\n'; ++p) {
+        if (*p == '\\' && p[1]) {
+            ++p;
+            *out++ = *p == 't' ? '\t' : *p == 'n' ? '\n' : *p == 'r' ? '\r' : *p;
+        } else {
+            *out++ = *p;
+        }
+    }
+    *cursor = *p == '\t' ? p + 1 : p;
+    *out = '\0';
+    return start;
+}
+
+static void file_log_entry_write(FILE *file, const struct file_log_entry *entry) {
+    fprintf(file, "%lld\t%d\t%lld\t", (long long) entry->time, entry->status, entry->size);
+    file_log_field_write(file, entry->action, '\t');
+    file_log_field_write(file, entry->root, '\t');
+    file_log_field_write(file, entry->client, '\t');
+    file_log_field_write(file, entry->path, '\t');
+    file_log_field_write(file, entry->value, '\t');
+    file_log_field_write(file, entry->error, '\n');
+}
+
+static FILE *file_log_open(const char *path, const char *mode) {
+    mkdir(MUWEB_FILE_LOG_DIR, 0755);
+    const int descriptor = open(path, O_WRONLY | O_CREAT | O_CLOEXEC | (*mode == 'a' ? O_APPEND : O_TRUNC), 0600);
+    if (descriptor < 0) return NULL;
+    FILE *file = fdopen(descriptor, mode);
+    if (!file) close(descriptor);
+    return file;
+}
+
+static void file_log_close(FILE *file) {
+    fflush(file);
+    fsync(fileno(file));
+    fclose(file);
+}
+
+static void file_log_rewrite(void) {
+    const char *temporary = MUWEB_FILE_LOG_PATH ".tmp";
+    FILE *file = file_log_open(temporary, "w");
+    if (!file) return;
+    for (size_t i = file_log_count; i > 0; --i)
+        file_log_entry_write(file, &file_log[(file_log_next + MUWEB_FILE_LOG - i) % MUWEB_FILE_LOG]);
+    file_log_close(file);
+    if (rename(temporary, MUWEB_FILE_LOG_PATH) == 0)
+        file_log_lines = file_log_count;
+    else
+        unlink(temporary);
+}
+
+static void file_log_save(const struct file_log_entry *entry) {
+    if (file_log_lines >= MUWEB_FILE_LOG * 2) {
+        file_log_rewrite();
+        return;
+    }
+    FILE *file = file_log_open(MUWEB_FILE_LOG_PATH, "a");
+    if (!file) {
+        log_verbose("could not write %s: %s", MUWEB_FILE_LOG_PATH, strerror(errno));
+        return;
+    }
+    file_log_entry_write(file, entry);
+    file_log_close(file);
+    file_log_lines++;
+}
+
+static void file_log_load(void) {
+    FILE *file = fopen(MUWEB_FILE_LOG_PATH, "re");
+    if (!file) return;
+
+    char *line = NULL;
+    size_t capacity = 0;
+    while (getline(&line, &capacity, file) > 0) {
+        char *cursor = line;
+        char *fields[9];
+        for (size_t i = 0; i < 9; ++i)
+            fields[i] = file_log_field_read(&cursor);
+        if (!*fields[0] || !*fields[3]) continue;
+
+        struct file_log_entry *entry = file_log_slot();
+        entry->time = (time_t) strtoll(fields[0], NULL, 10);
+        entry->status = (int) strtol(fields[1], NULL, 10);
+        entry->size = strtoll(fields[2], NULL, 10);
+        snprintf(entry->action, sizeof(entry->action), "%.*s", (int) sizeof(entry->action) - 1, fields[3]);
+        snprintf(entry->root, sizeof(entry->root), "%.*s", (int) sizeof(entry->root) - 1, fields[4]);
+        snprintf(entry->client, sizeof(entry->client), "%.*s", (int) sizeof(entry->client) - 1, fields[5]);
+        entry->path = strdup(fields[6]);
+        entry->value = *fields[7] ? strdup(fields[7]) : NULL;
+        entry->error = *fields[8] ? strdup(fields[8]) : NULL;
+        file_log_lines++;
+    }
+    free(line);
+    fclose(file);
+}
+
+static void file_log_add(
+    const struct connection *connection, const char *action, const char *root, const char *path, const char *value
+) {
+    struct file_log_entry *entry = file_log_slot();
+
+    const int ok = connection->status >= 200 && connection->status < 300;
+    entry->time = time(NULL);
+    entry->status = connection->status;
+    entry->size = connection->upload_route[0] ? (long long) connection->upload_size : -1;
+    snprintf(entry->action, sizeof(entry->action), "%s", action);
+    snprintf(entry->root, sizeof(entry->root), "%.*s", (int) sizeof(entry->root) - 1, root);
+    entry->path = strdup(path);
+    entry->value = value && *value ? strdup(value) : NULL;
+    entry->error = ok ? NULL : strdup(connection->message[0] ? connection->message : "Request failed");
+
+    const unsigned char *peer = connection->peer;
+    if (IN6_IS_ADDR_V4MAPPED((const struct in6_addr *) peer))
+        inet_ntop(AF_INET, peer + 12, entry->client, sizeof(entry->client));
+    else
+        inet_ntop(AF_INET6, peer, entry->client, sizeof(entry->client));
+
+    file_log_save(entry);
+}
+
+static void file_log_route(const struct connection *connection, const char *route, const char *value) {
+    static const char *const logged[] = {"mkdir", "remove", "chmod", "move", "copy", "upload"};
+
+    char copy[2048];
+    snprintf(copy, sizeof(copy), "%s", route);
+    char *action = strchr(copy, '/');
+    if (!action) return;
+    *action++ = '\0';
+    char *relative = strchr(action, '/');
+    if (relative)
+        *relative++ = '\0';
+    else
+        relative = "";
+
+    for (size_t i = 0; i < sizeof(logged) / sizeof(logged[0]); ++i) {
+        if (strcmp(action, logged[i]) != 0) continue;
+        if (strcmp(action, "upload") == 0 && connection->upload_replace) action = "replace";
+        file_log_add(connection, action, copy, relative, value);
+        return;
+    }
+}
+
+static void file_log_upload(struct connection *connection) {
+    if (!connection->upload_route[0]) return;
+    file_log_route(connection, connection->upload_route, NULL);
+    connection->upload_route[0] = '\0';
+}
+
 static void connection_reset_upload(struct connection *connection) {
+    if (connection->upload_active) {
+        connection->status = 500;
+        snprintf(connection->message, sizeof(connection->message), "%s", "The upload stopped before it finished");
+        file_log_upload(connection);
+    }
     if (connection->upload_descriptor >= 0) close(connection->upload_descriptor);
     connection->upload_descriptor = -1;
     if (connection->upload_active && file_upload_count) file_upload_count--;
@@ -2691,6 +2897,7 @@ static int response_headers(
 
 static void send_text(struct connection *connection, const int status, const char *content_type, const char *body) {
     const size_t length = strlen(body);
+    connection->status = status;
     connection->response.length = 0;
     connection_reset_body(connection);
 
@@ -2699,6 +2906,7 @@ static void send_text(struct connection *connection, const int status, const cha
 }
 
 static void send_error(struct connection *connection, const int status, const char *message) {
+    snprintf(connection->message, sizeof(connection->message), "%s", message);
     struct buffer body = {0};
     buffer_puts(&body, "{\"error\":");
     json_string(&body, message);
@@ -2998,13 +3206,7 @@ static int code_refused(struct connection *connection, const int result) {
     return 1;
 }
 
-static int write_allowed(struct connection *connection) {
-    if (read_only) {
-        send_error(connection, 403, "The dashboard is running read only");
-        return 0;
-    }
-    if (!code_required) return 1;
-
+static int unlocked(struct connection *connection) {
     if (session_valid(connection->auth_session)) return 1;
 
     const int code = code_check(connection);
@@ -3013,6 +3215,14 @@ static int write_allowed(struct connection *connection) {
 
     send_error(connection, 401, "Unlock the dashboard with the code from Web Dashboard Code on the device");
     return 0;
+}
+
+static int write_allowed(struct connection *connection) {
+    if (read_only) {
+        send_error(connection, 403, "The dashboard is running read only");
+        return 0;
+    }
+    return !code_required || unlocked(connection);
 }
 
 static int body_text(const char *body, size_t length, char *out, size_t size);
@@ -3080,7 +3290,7 @@ static int file_sensitive(const struct file_root *root, const char *relative) {
     if (strcmp(root->id, "system") == 0)
         return path_at_or_below(relative, "config/system/landing_secret")
                || path_at_or_below(relative, "config/web/ttyd_pass") || path_at_or_below(relative, "config/network")
-               || path_at_or_below(relative, "config/terminal");
+               || path_at_or_below(relative, "config/terminal") || path_at_or_below(relative, "log/web_files.tsv");
     return path_at_or_below(relative, "MUOS/network") || path_at_or_below(relative, "MUOS/syncthing");
 }
 
@@ -3782,10 +3992,78 @@ static int file_route(char *path, struct file_root **root, char **action, char *
     return 1;
 }
 
-static void handle_files_api(
+static void file_log_json(struct connection *connection) {
+    struct buffer out = {0};
+    buffer_puts(&out, "{\"entries\":[");
+    for (size_t i = 0; i < file_log_count; ++i) {
+        const struct file_log_entry *entry = &file_log[(file_log_next + MUWEB_FILE_LOG - 1 - i) % MUWEB_FILE_LOG];
+        const struct file_root *root = file_root_find(entry->root);
+        if (i) buffer_puts(&out, ",");
+        buffer_puts(&out, "{");
+        json_number(&out, "time", (long long) entry->time);
+        buffer_puts(&out, ",");
+        json_field(&out, "action", entry->action);
+        buffer_puts(&out, ",");
+        buffer_printf(&out, "\"ok\":%s", entry->error ? "false" : "true");
+        buffer_puts(&out, ",");
+        json_number(&out, "status", entry->status);
+        buffer_puts(&out, ",");
+        json_field(&out, "root", entry->root);
+        buffer_puts(&out, ",");
+        json_field(&out, "label", root ? root->label : entry->root);
+        buffer_puts(&out, ",");
+        json_field(&out, "path", entry->path);
+        if (entry->value) {
+            buffer_puts(&out, ",");
+            json_field(&out, strcmp(entry->action, "chmod") == 0 ? "mode" : "target", entry->value);
+        }
+        if (entry->size >= 0) {
+            buffer_puts(&out, ",");
+            json_number(&out, "size", entry->size);
+        }
+        if (entry->error) {
+            buffer_puts(&out, ",");
+            json_field(&out, "error", entry->error);
+        }
+        buffer_puts(&out, ",");
+        json_field(&out, "client", entry->client);
+        buffer_puts(&out, "}");
+    }
+    buffer_puts(&out, "]}");
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static void file_log_clear(void) {
+    for (size_t i = 0; i < MUWEB_FILE_LOG; ++i) {
+        free(file_log[i].path);
+        free(file_log[i].value);
+        free(file_log[i].error);
+    }
+    memset(file_log, 0, sizeof(file_log));
+    file_log_next = 0;
+    file_log_count = 0;
+    file_log_lines = 0;
+    unlink(MUWEB_FILE_LOG_PATH);
+}
+
+static void file_api(
     struct connection *connection, const char *method, char *path, const char *body, const size_t body_length,
     const char *range_header
 ) {
+    if (path && strcmp(path, "log") == 0) {
+        if (strcmp(method, "GET") == 0) {
+            if (!code_required || unlocked(connection)) file_log_json(connection);
+        } else if (strcmp(method, "DELETE") == 0) {
+            if (!write_allowed(connection)) return;
+            file_log_clear();
+            send_text(connection, 200, "application/json", "{\"ok\":true}");
+        } else {
+            send_error(connection, 405, "Method not allowed");
+        }
+        return;
+    }
+
     if (!path || !*path) {
         if (strcmp(method, "GET") != 0) {
             send_error(connection, 405, "Method not allowed");
@@ -3965,6 +4243,20 @@ static void handle_files_api(
     }
 
     send_error(connection, 405, "Method not allowed");
+}
+
+static void handle_files_api(
+    struct connection *connection, const char *method, char *path, const char *body, const size_t body_length,
+    const char *range_header
+) {
+    char route[2048];
+    snprintf(route, sizeof(route), "%s", path ? path : "");
+    file_api(connection, method, path, body, body_length, range_header);
+    if (strcmp(method, "GET") == 0) return;
+
+    char value[PATH_MAX];
+    if (!body_text(body, body_length, value, sizeof(value))) value[0] = '\0';
+    file_log_route(connection, route, value);
 }
 
 static void handle_catalogue_api(
@@ -5328,14 +5620,7 @@ static int screen_allowed(struct connection *connection) {
         send_error(connection, 403, "Remote View needs Authentication enabled on the device");
         return 0;
     }
-    if (session_valid(connection->auth_session)) return 1;
-
-    const int code = code_check(connection);
-    if (code > 0) return 1;
-    if (code_refused(connection, code)) return 0;
-
-    send_error(connection, 401, "Unlock the dashboard with the code from Web Dashboard Code on the device");
-    return 0;
+    return unlocked(connection);
 }
 
 static double seconds_since(const struct timespec *then) {
@@ -6921,6 +7206,7 @@ static int file_upload_finish(struct connection *connection) {
         connection->upload_temporary[0] = '\0';
         connection->upload_target[0] = '\0';
         send_error(connection, 500, "Could not finish that upload");
+        file_log_upload(connection);
         return 0;
     }
 
@@ -6928,6 +7214,7 @@ static int file_upload_finish(struct connection *connection) {
     connection->upload_target[0] = '\0';
     cache_drop();
     send_text(connection, 200, "application/json", "{\"ok\":true}");
+    file_log_upload(connection);
     return 1;
 }
 
@@ -6949,6 +7236,8 @@ connection_prepare_file_upload(struct connection *connection, const unsigned lon
     char *action;
     char *relative;
     if (!file_route(route, &root, &action, &relative) || strcmp(action, "upload") != 0) return -1;
+    snprintf(connection->upload_route, sizeof(connection->upload_route), "%s", target + 11);
+    connection->upload_size = length;
 
     connection->auth_code[0] = '\0';
     connection->auth_session[0] = '\0';
@@ -6972,7 +7261,8 @@ connection_prepare_file_upload(struct connection *connection, const unsigned lon
     }
 
     struct stat existing;
-    if (lstat(connection->upload_target, &existing) == 0 && S_ISDIR(existing.st_mode)) {
+    connection->upload_replace = lstat(connection->upload_target, &existing) == 0;
+    if (connection->upload_replace && S_ISDIR(existing.st_mode)) {
         send_error(connection, 409, "A folder already uses that name");
         return 0;
     }
@@ -7010,7 +7300,7 @@ connection_prepare_file_upload(struct connection *connection, const unsigned lon
     }
     fcntl(connection->upload_descriptor, F_SETFD, FD_CLOEXEC);
     mode_t mode = 0644;
-    if (lstat(connection->upload_target, &existing) == 0 && S_ISREG(existing.st_mode)) mode = existing.st_mode & 0777;
+    if (connection->upload_replace && S_ISREG(existing.st_mode)) mode = existing.st_mode & 0777;
     if (fchmod(connection->upload_descriptor, mode) < 0) {
         close(connection->upload_descriptor);
         connection->upload_descriptor = -1;
@@ -7276,6 +7566,7 @@ static int connection_ready_to_dispatch(struct connection *connection) {
         }
 
         const int upload = connection_prepare_file_upload(connection, parsed, headers ? headers + 2 : "");
+        if (upload == 0) file_log_upload(connection);
         if (upload >= 0) return connection->response.length > 0;
 
         connection->content_length = parsed > MUWEB_UPLOAD_LIMIT ? (size_t) MUWEB_UPLOAD_LIMIT + 1 : (size_t) parsed;
@@ -7732,6 +8023,7 @@ int main(const int argc, char **argv) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGPIPE, SIG_IGN);
+    file_log_load();
     signal(SIGCHLD, SIG_IGN);
 
     const int listener = listen_socket((uint16_t) port);

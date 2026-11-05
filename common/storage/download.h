@@ -27,6 +27,8 @@ void set_download_callbacks(void (*callback)(int));
 
 void set_download_progress_span(int index, int total);
 
+void set_download_progress_bounce(void);
+
 int initiate_download(const char *url, const char *output_path, int show_progress, char *message);
 
 int initiate_download_limited(
