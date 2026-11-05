@@ -92,6 +92,7 @@ struct theme_config {
             int16_t normal_alpha;
             int16_t active_alpha;
             int16_t low_alpha;
+            int16_t percentage_alpha;
         } battery;
         struct {
             uint32_t normal;

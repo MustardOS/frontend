@@ -98,6 +98,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->status.battery.normal_alpha = 255;
     theme->status.battery.active_alpha = 255;
     theme->status.battery.low_alpha = 255;
+    theme->status.battery.percentage_alpha = 255;
 
     theme->status.network.normal = 0x282525;
     theme->status.network.active = 0xF7E318;
@@ -584,6 +585,7 @@ static const theme_field theme_fields[] = {
     {"battery", "BATTERY_NORMAL_ALPHA", THEME_OFF(status.battery.normal_alpha), theme_int},
     {"battery", "BATTERY_ACTIVE_ALPHA", THEME_OFF(status.battery.active_alpha), theme_int},
     {"battery", "BATTERY_LOW_ALPHA", THEME_OFF(status.battery.low_alpha), theme_int},
+    {"battery", "BATTERY_PERCENTAGE_ALPHA", THEME_OFF(status.battery.percentage_alpha), theme_int},
 
     // network
     {"network", "NETWORK_NORMAL", THEME_OFF(status.network.normal), theme_hex},

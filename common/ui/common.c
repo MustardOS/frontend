@@ -1032,7 +1032,7 @@ void init_ui_common_screen(
     lv_obj_set_style_text_color(
         ui_lbl_battery_percent, lv_color_hex(theme->status.battery.normal), MU_OBJ_MAIN_DEFAULT
     );
-    lv_obj_set_style_text_opa(ui_lbl_battery_percent, theme->status.battery.normal_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_battery_percent, theme->status.battery.percentage_alpha, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_left(ui_lbl_battery_percent, 4, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_lbl_battery_percent, 2, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_flag(ui_lbl_battery_percent, LV_OBJ_FLAG_HIDDEN);
@@ -2015,7 +2015,7 @@ void update_battery_percent_label(lv_obj_t *ui_label, const struct theme_config 
         lv_obj_set_style_text_opa(ui_label, theme->status.battery.low_alpha, MU_OBJ_MAIN_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->status.battery.normal), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_text_opa(ui_label, theme->status.battery.normal_alpha, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_opa(ui_label, theme->status.battery.percentage_alpha, MU_OBJ_MAIN_DEFAULT);
     }
 }
 
