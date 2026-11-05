@@ -1288,6 +1288,15 @@ static uint32_t background_bottom(const struct theme_config *theme) {
                                                        : theme->system.background;
 }
 
+static uint32_t colour_mix(const uint32_t a, const uint32_t b, const int weight) {
+    uint32_t mixed = 0;
+    for (int shift = 0; shift <= 16; shift += 8) {
+        const int channel = ((int) (a >> shift & 0xFF) * weight + (int) (b >> shift & 0xFF) * (100 - weight)) / 100;
+        mixed |= (uint32_t) channel << shift;
+    }
+    return mixed;
+}
+
 static uint32_t shown_colour(const uint32_t colour, const int16_t alpha, const uint32_t behind) {
     return alpha >= 128 ? colour : behind;
 }
@@ -1402,13 +1411,16 @@ static void apply_custom_colours(struct theme_config *theme) {
 
     if (custom_colour_role(dialogue_text, readable_text_colour(theme->dialogue.background), &colour)) {
         theme->dialogue.content = colour;
+        theme->dialogue.title = colour;
         theme->message.text = colour;
     }
 
     if (custom_colour_value(help_background, &colour)) theme->help.background = colour;
 
-    if (custom_colour_role(help_text, readable_text_colour(theme->help.background), &colour))
+    if (custom_colour_role(help_text, readable_text_colour(theme->help.background), &colour)) {
         theme->help.content = colour;
+        theme->help.title = colour;
+    }
 
     if (custom_colour_value(keyboard_background, &colour)) {
         theme->osk.background = colour;
@@ -1506,7 +1518,7 @@ static void apply_custom_colours(struct theme_config *theme) {
     }
 
     if (custom_colour_role(status_icons, readable_text_colour(header_shown), &colour)) {
-        const uint32_t dim = ((colour >> 1) & 0x7F7F7F) + ((header_shown >> 1) & 0x7F7F7F);
+        const uint32_t dim = colour_mix(colour, header_shown, 50);
         theme->status.battery.normal = colour;
         theme->status.network.active = colour;
         theme->status.network.normal = dim;
@@ -1514,7 +1526,10 @@ static void apply_custom_colours(struct theme_config *theme) {
         theme->status.bluetooth.normal = dim;
     }
 
-    if (custom_colour_value(progress_bar, &colour)) theme->bar.progress_active_background = colour;
+    if (custom_colour_value(progress_bar, &colour)) {
+        theme->bar.progress_active_background = colour;
+        theme->bar.progress_main_background = colour_mix(colour, theme->help.background, 30);
+    }
 
     const uint32_t footer_shown =
         shown_colour(theme->footer.background, theme->footer.background_alpha, background_bottom(theme));
