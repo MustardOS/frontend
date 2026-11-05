@@ -720,10 +720,12 @@ static int load_scheme_list(const char *select) {
 static void reload_schemes(const char *select, const int fallback) {
     const int focus = load_scheme_list(select);
 
+    nav_suppress_next_shake();
     list_frame_apply();
     const int steps = list_frame_steps_to_row(focus >= 0 ? focus : fallback);
     if (steps > 0) gen_step_movement(steps, +1, 2, 0, 0);
     check_focus();
+    nav_unsuppress_shake();
 }
 
 static void open_scheme_folder(const int index) {
