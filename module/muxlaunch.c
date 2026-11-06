@@ -1,5 +1,7 @@
 #include "muxshare.h"
 #include <common/ui/orientation.h>
+#include <common/ui/nav/menu_style.h>
+#include <common/ui/nav/grid_layout.h>
 #include "ui/ui_muxlaunch.h"
 
 static mux_dialogue confirm_dlg;
@@ -35,7 +37,20 @@ static void answer_tour_offer(const int accepted) {
 enum { ui_count_dynamic = E_SIZE(LAUNCH_ELEMENTS) };
 #undef LAUNCH
 
+#define LAUNCH(NAME, UDATA) launch_item_##NAME,
+enum { LAUNCH_ELEMENTS };
+#undef LAUNCH
+
+static const int *order;
+static char *shown_labels[ui_count_dynamic];
+static char *shown_glyphs[ui_count_dynamic];
+static int moving = -1;
+
 static void list_nav_move(int steps, int direction);
+
+static void place_item(void);
+
+static void update_nav(void);
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
@@ -61,28 +76,120 @@ static void init_navigation_group(void) {
                                  lang.muxlaunch.abbr.info,    lang.muxlaunch.abbr.config,
                                  lang.muxlaunch.abbr.reboot,  lang.muxlaunch.abbr.shutdown};
 
-    char *glyph_names[] = {"explore", "collection", "history", "apps", "info", "config", "reboot", "shutdown"};
+    static char *glyph_names[] = {"explore", "collection", "history", "apps", "info", "config", "reboot", "shutdown"};
+
+    order = menu_item_order();
+    char *shown_short[ui_count_dynamic];
+    for (int i = 0; i < ui_count_dynamic; i++) {
+        shown_labels[i] = item_labels[order[i]];
+        shown_short[i] = item_labels_short[order[i]];
+        shown_glyphs[i] = glyph_names[order[i]];
+    }
 
     reset_ui_groups();
 
     if (theme.grid.enabled) {
-        list_nav_move(init_grid_static(ui_count_dynamic, item_labels, item_labels_short, glyph_names), +1);
+        const int steps = init_grid_static(ui_count_dynamic, shown_labels, shown_short, shown_glyphs);
+        if (!config.settings.themeopt.menu_label) lv_obj_add_flag(ui_pnl_grid_current_item, LV_OBJ_FLAG_HIDDEN);
+        list_nav_move(steps, +1);
     } else {
-        INIT_STATIC_ITEM(-1, launch, explore, item_labels[0], glyph_names[0], 0);
-        INIT_STATIC_ITEM(-1, launch, collection, item_labels[1], glyph_names[1], 0);
-        INIT_STATIC_ITEM(-1, launch, history, item_labels[2], glyph_names[2], 0);
-        INIT_STATIC_ITEM(-1, launch, apps, item_labels[3], glyph_names[3], 0);
-        INIT_STATIC_ITEM(-1, launch, info, item_labels[4], glyph_names[4], 0);
-        INIT_STATIC_ITEM(-1, launch, config, item_labels[5], glyph_names[5], 0);
-        INIT_STATIC_ITEM(-1, launch, reboot, item_labels[6], glyph_names[6], 0);
-        INIT_STATIC_ITEM(-1, launch, shutdown, item_labels[7], glyph_names[7], 0);
+        for (int i = 0; i < ui_count_dynamic; i++) {
+            switch (order[i]) {
+#define LAUNCH(NAME, UDATA)                                                                                            \
+    case launch_item_##NAME:                                                                                           \
+        INIT_STATIC_ITEM(-1, launch, NAME, shown_labels[i], shown_glyphs[i], 0);                                       \
+        break;
+                LAUNCH_ELEMENTS
+#undef LAUNCH
+                default:
+                    break;
+            }
+            lv_obj_move_to_index(ui_objects_panel[i], i);
+        }
 
         add_ui_groups(ui_objects, NULL, ui_objects_glyph, ui_objects_panel, 0);
         list_nav_move(direct_to_previous(ui_objects, ui_count_dynamic, &nav_moved), +1);
     }
 }
 
+#define WIGGLE_MAX 16
+
+static lv_obj_t *wiggle_panel[WIGGLE_MAX];
+static int wiggle_angle[WIGGLE_MAX];
+
+static void wiggle_exec(void *var, const int32_t v) {
+    for (int i = 0; i < WIGGLE_MAX; i++) {
+        if (wiggle_panel[i] != var) continue;
+        lv_obj_set_style_transform_angle(var, (lv_coord_t) (wiggle_angle[i] + v), MU_OBJ_MAIN_DEFAULT);
+        return;
+    }
+}
+
+static lv_obj_t *wiggle_container(void) {
+    return grid_mode_enabled ? ui_pnl_grid : ui_pnl_content;
+}
+
+static int wiggle_item(lv_obj_t *panel, const int index) {
+    return grid_mode_enabled ? (int) IFU(lv_obj_get_user_data(panel)) : index;
+}
+
+static int wiggle_base(lv_obj_t *panel, const int index) {
+    if (!grid_mode_enabled) return 0;
+
+    const grid_layout_entry layout = find_grid_layout(wiggle_item(panel, index), index);
+    return layout.found ? layout.angle * 10 : 0;
+}
+
+static void wiggle_stop(void) {
+    lv_obj_t *container = wiggle_container();
+    const int count = (int) lv_obj_get_child_cnt(container);
+
+    for (int i = 0; i < count; i++) {
+        lv_obj_t *panel = lv_obj_get_child(container, i);
+        if (!lv_anim_del(panel, wiggle_exec)) continue;
+        lv_obj_set_style_transform_angle(panel, (lv_coord_t) wiggle_base(panel, i), MU_OBJ_MAIN_DEFAULT);
+    }
+}
+
+static void wiggle_start(void) {
+    if (config.visual.reduce_motion) return;
+
+    lv_obj_t *container = wiggle_container();
+    lv_obj_update_layout(container);
+    const int count = (int) lv_obj_get_child_cnt(container);
+
+    for (int i = 0; i < count && i < WIGGLE_MAX; i++) {
+        lv_obj_t *panel = lv_obj_get_child(container, i);
+        wiggle_panel[i] = panel;
+        wiggle_angle[i] = wiggle_base(panel, i);
+        if (wiggle_item(panel, i) == moving || lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN)) continue;
+
+        const int width = lv_obj_get_width(panel);
+        const int swing = LV_CLAMP(5, 1700 / (width > 0 ? width : 1), 25);
+        const int side = i % 2 ? 1 : -1;
+
+        lv_obj_set_style_transform_pivot_x(panel, (lv_coord_t) (width / 2), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_transform_pivot_y(panel, (lv_coord_t) (lv_obj_get_height(panel) / 2), MU_OBJ_MAIN_DEFAULT);
+
+        lv_anim_t anim;
+        lv_anim_init(&anim);
+        lv_anim_set_var(&anim, panel);
+        lv_anim_set_exec_cb(&anim, wiggle_exec);
+        lv_anim_set_values(&anim, -swing * side, swing * side);
+        lv_anim_set_time(&anim, 140);
+        lv_anim_set_playback_time(&anim, 140);
+        lv_anim_set_repeat_count(&anim, LV_ANIM_REPEAT_INFINITE);
+        lv_anim_set_delay(&anim, (uint32_t) (i * 37 % 140));
+        lv_anim_set_path_cb(&anim, lv_anim_path_ease_in_out);
+        lv_anim_start(&anim);
+    }
+}
+
 static void list_nav_move(const int steps, const int direction) {
+    if (moving >= 0) wiggle_stop();
+
+    const int restore = first_open && is_carousel_grid_mode();
+
     if (first_open) {
         first_open = 0;
     } else {
@@ -105,8 +212,11 @@ static void list_nav_move(const int steps, const int direction) {
             nav_move(ui_group_panel, direction);
         }
 
-        if (grid_mode_enabled) update_grid(direction);
+        const int passing = menu_style_active() && !is_carousel_grid_mode() && step < steps - 1;
+        if (grid_mode_enabled && !restore && !passing) update_grid(direction);
     }
+
+    if (restore) update_grid_items(1);
 
     if (!grid_mode_enabled) {
         update_scroll_position(
@@ -117,6 +227,7 @@ static void list_nav_move(const int steps, const int direction) {
         lv_label_set_text(ui_lbl_grid_current_item, items[current_item_index].name);
     }
 
+    if (moving >= 0) wiggle_start();
     nav_moved = 1;
 }
 
@@ -128,6 +239,16 @@ static void list_nav_next(const int steps) {
     list_nav_move(steps, +1);
 }
 
+static int spatial_move(const int dx, const int dy) {
+    if (!menu_style_spatial()) return 0;
+
+    const int target = grid_spatial_target(dx, dy);
+    if (target > current_item_index) list_nav_next(target - current_item_index);
+    if (target >= 0 && target < current_item_index) list_nav_prev(current_item_index - target);
+
+    return 1;
+}
+
 static void handle_a(void) {
     if (dialogue_active(&tour_dlg)) {
         play_sound(snd_confirm);
@@ -136,6 +257,11 @@ static void handle_a(void) {
     }
 
     if (msgbox_active || hold_call) return;
+
+    if (moving >= 0) {
+        place_item();
+        return;
+    }
 
     if (dialogue_active(&confirm_dlg)) {
         const mux_confirm_opt opt = (mux_confirm_opt) confirm_dlg.selected;
@@ -183,7 +309,7 @@ static void handle_a(void) {
     };
 
     if ((unsigned) current_item_index >= ui_count_dynamic) return;
-    const menu_entry *entry = &entries[current_item_index];
+    const menu_entry *entry = &entries[order[current_item_index]];
 
     if (is_ksk(*entry->kiosk_flag)) {
         kiosk_denied();
@@ -238,7 +364,64 @@ static void handle_b(void) {
         return;
     }
 
+    if (moving >= 0) {
+        wiggle_stop();
+        moving = -1;
+        update_nav();
+        play_sound(snd_back);
+        toast_message(lang.muxlaunch.move_cancel, tst_wait_s);
+        return;
+    }
+
     if (current_item_index != 0) list_nav_move(current_item_index, -1);
+}
+
+static int move_blocked(void) {
+    if (dialogue_active(&tour_dlg) || dialogue_active(&confirm_dlg) || msgbox_active || hold_call) return 1;
+    if (!is_ksk(kiosk.config.customisation)) return 0;
+
+    kiosk_denied();
+    return 1;
+}
+
+static void place_item(void) {
+    wiggle_stop();
+
+    if (moving == current_item_index) {
+        moving = -1;
+        update_nav();
+        play_sound(snd_back);
+        toast_message(lang.muxlaunch.move_cancel, tst_wait_s);
+        return;
+    }
+
+    char saved[ui_count_dynamic + 1];
+    for (int i = 0; i < ui_count_dynamic; i++) {
+        const int at = i == moving ? current_item_index : i == current_item_index ? moving : i;
+        saved[i] = (char) ('0' + order[at]);
+    }
+    saved[ui_count_dynamic] = '\0';
+
+    play_sound(snd_confirm);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/theme/menu_order", CHAR, saved);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, shown_glyphs[moving]);
+    refresh_config = 1;
+
+    load_mux("launcher");
+    mux_input_stop();
+}
+
+static void handle_y_hold(void) {
+    if (moving >= 0 || move_blocked()) return;
+
+    moving = current_item_index;
+    play_sound(snd_confirm);
+    wiggle_start();
+    update_nav();
+
+    char message[MAX_BUFFER_SIZE];
+    snprintf(message, sizeof(message), lang.muxlaunch.move_pick, shown_labels[moving]);
+    toast_message(message, tst_wait_l);
 }
 
 static void handle_x_press(void) {
@@ -308,6 +491,7 @@ static void handle_up(void) {
     }
 
     set_nav_input_dir(nav_dir_up);
+    if (spatial_move(0, -1)) return;
 
     const int grid_steps = theme.grid.enabled ? grid_row_wrap_up_steps() : -1;
     const int misc_steps = !theme.grid.enabled ? misc_even_row_wrap_up_steps(ui_count_dynamic) : -1;
@@ -339,6 +523,7 @@ static void handle_down(void) {
     }
 
     set_nav_input_dir(nav_dir_down);
+    if (spatial_move(0, 1)) return;
 
     const int grid_steps = theme.grid.enabled ? grid_row_wrap_down_steps() : -1;
     const int misc_steps = !theme.grid.enabled ? misc_even_row_wrap_down_steps(ui_count_dynamic) : -1;
@@ -376,7 +561,8 @@ static void handle_up_hold(void) { // prev
     // Don't wrap around when scrolling on hold.
     if (grid_hold_ok || misc_hold_ok || regular_ok
         || (theme.misc.navigation_type == nav_split_rows_full && current_item_index > 0 && current_item_index <= 2)
-        || (theme.misc.navigation_type == nav_split_rows_full && current_item_index > 3) || is_carousel_grid_mode()) {
+        || (theme.misc.navigation_type == nav_split_rows_full && current_item_index > 3) || is_carousel_grid_mode()
+        || menu_style_spatial()) {
         handle_up();
     }
 }
@@ -402,7 +588,8 @@ static void handle_down_hold(void) { // next
     if (grid_hold_ok || misc_hold_ok || regular_ok
         || (theme.misc.navigation_type == nav_split_rows_full && current_item_index < ui_count_dynamic - 1
             && current_item_index > 2)
-        || (theme.misc.navigation_type == nav_split_rows_full && current_item_index < 2) || is_carousel_grid_mode()) {
+        || (theme.misc.navigation_type == nav_split_rows_full && current_item_index < 2) || is_carousel_grid_mode()
+        || menu_style_spatial()) {
         handle_down();
     }
 }
@@ -421,7 +608,8 @@ static void handle_left(void) {
     }
 
     set_nav_input_dir(nav_dir_left);
-    if (is_carousel_grid_mode() && theme.grid.row_count == 1) {
+    if (spatial_move(-1, 0)) return;
+    if ((is_carousel_grid_mode() && theme.grid.row_count == 1) || menu_style_any_direction()) {
         list_nav_prev(1);
         return;
     }
@@ -465,7 +653,8 @@ static void handle_right(void) {
     }
 
     set_nav_input_dir(nav_dir_right);
-    if (is_carousel_grid_mode() && theme.grid.row_count == 1) {
+    if (spatial_move(1, 0)) return;
+    if ((is_carousel_grid_mode() && theme.grid.row_count == 1) || menu_style_any_direction()) {
         list_nav_next(1);
         return;
     }
@@ -496,21 +685,36 @@ static void handle_right(void) {
 static void handle_left_hold(void) {
     if (dialogue_active(&tour_dlg) || msgbox_active || dialogue_active(&confirm_dlg)) return;
 
-    if (grid_row_hold_left_ok()) handle_left();
+    if (grid_row_hold_left_ok() || menu_style_any_direction() || menu_style_spatial()) handle_left();
 }
 
 static void handle_right_hold(void) {
     if (dialogue_active(&tour_dlg) || msgbox_active || dialogue_active(&confirm_dlg)) return;
 
-    if (grid_row_hold_right_ok()) handle_right();
+    if (grid_row_hold_right_ok() || menu_style_any_direction() || menu_style_spatial()) handle_right();
+}
+
+static void update_nav(void) {
+    nav_hide_all();
+
+    if (moving < 0) {
+        setup_nav(
+            (struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0}, {ui_lbl_nav_a, lang.generic.select, 0}, {NULL, NULL, 0}}
+        );
+        return;
+    }
+
+    setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                  {ui_lbl_nav_a, lang.muxlaunch.move_swap, 0},
+                                  {ui_lbl_nav_b_glyph, "", 0},
+                                  {ui_lbl_nav_b, lang.generic.cancel, 0},
+                                  {NULL, NULL, 0}});
 }
 
 static void init_elements(void) {
     header_and_footer_setup();
 
-    setup_nav(
-        (struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0}, {ui_lbl_nav_a, lang.generic.select, 0}, {NULL, NULL, 0}}
-    );
+    update_nav();
 
 #define LAUNCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl_##NAME##_launch, UDATA);
     LAUNCH_ELEMENTS
@@ -520,6 +724,7 @@ static void init_elements(void) {
 }
 
 int muxlaunch_main(void) {
+    moving = -1;
     init_module(__func__);
     init_theme(1, 1);
 
@@ -575,6 +780,7 @@ int muxlaunch_main(void) {
             },
         .hold_handler = {
             [mux_input_x] = handle_x,
+            [mux_input_y] = handle_y_hold,
             [mux_input_dpad_up] = handle_up_hold,
             [mux_input_dpad_down] = handle_down_hold,
             [mux_input_dpad_left] = handle_left_hold,

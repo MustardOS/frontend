@@ -362,13 +362,18 @@ void lv_draw_sdl_layer_blend(
         return;
     }
 
+    SDL_ScaleMode scale_mode = SDL_ScaleModeNearest;
+    SDL_GetTextureScaleMode(transform_ctx->target, &scale_mode);
+    SDL_SetTextureScaleMode(transform_ctx->target, SDL_ScaleModeLinear);
+
     SDL_RenderSetClipRect(renderer, &clip_rect);
     SDL_SetTextureAlphaMod(transform_ctx->target, draw_dsc->opa);
     SDL_RenderCopyEx(
-        renderer, transform_ctx->target, &transform_ctx->target_rect, &trans_rect, draw_dsc->angle, &center,
+        renderer, transform_ctx->target, &transform_ctx->target_rect, &trans_rect, draw_dsc->angle / 10.0, &center,
         SDL_FLIP_NONE
     );
     SDL_RenderSetClipRect(renderer, NULL);
+    SDL_SetTextureScaleMode(transform_ctx->target, scale_mode);
 }
 
 void lv_draw_sdl_layer_destroy(lv_draw_ctx_t *draw_ctx, lv_draw_layer_ctx_t *layer_ctx) {

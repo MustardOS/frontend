@@ -1073,10 +1073,16 @@ static void init_navigation_group(void) {
         lang.muxcustom.scaling.no_scale, lang.muxcustom.scaling.scale, lang.muxcustom.scaling.stretch
     };
 
-    char *menu_style_options[] = {lang.muxcustom.menu_style.theme,     lang.muxcustom.menu_style.list,
-                                  lang.muxcustom.menu_style.grid,      lang.muxcustom.menu_style.carousel,
-                                  lang.muxcustom.menu_style.coverflow, lang.muxcustom.menu_style.bubbles,
-                                  lang.muxcustom.menu_style.orbit};
+    char *menu_style_options[] = {
+        lang.muxcustom.menu_style.theme,    lang.muxcustom.menu_style.list,      lang.muxcustom.menu_style.grid,
+        lang.muxcustom.menu_style.carousel, lang.muxcustom.menu_style.coverflow, lang.muxcustom.menu_style.bubbles,
+        lang.muxcustom.menu_style.orbit,    lang.muxcustom.menu_style.dial,      lang.muxcustom.menu_style.stack,
+        lang.muxcustom.menu_style.clock,    lang.muxcustom.menu_style.rolodex,   lang.muxcustom.menu_style.dock,
+        lang.muxcustom.menu_style.fan,      lang.muxcustom.menu_style.honeycomb, lang.muxcustom.menu_style.tiles,
+        lang.muxcustom.menu_style.sidebar,  lang.muxcustom.menu_style.fluent,    lang.muxcustom.menu_style.spotlight,
+        lang.muxcustom.menu_style.banners,  lang.muxcustom.menu_style.crossbar,  lang.muxcustom.menu_style.desktop,
+        lang.muxcustom.menu_style.tabbar,   lang.muxcustom.menu_style.blades
+    };
 
     static lv_obj_t *ui_objects[ui_count_dynamic];
     static lv_obj_t *ui_objects_value[ui_count_dynamic];
@@ -1290,6 +1296,13 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(
         -1, custom, menu_style, lang.muxcustom.menu_style.title, "menustyle", menu_style_options,
         A_SIZE(menu_style_options)
+    );
+    INIT_OPTION_ITEM(-1, custom, menu_label, lang.muxcustom.menulabel, "menulabel", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, menu_random, lang.muxcustom.menurandom, "menurandom", disabled_enabled, 2);
+    char *menu_order_options[] = {lang.muxcustom.menu_order.standard, lang.muxcustom.menu_order.custom};
+    INIT_OPTION_ITEM(
+        -1, custom, menu_order, lang.muxcustom.menu_order.title, "menuorder", menu_order_options,
+        A_SIZE(menu_order_options)
     );
     INIT_OPTION_ITEM(-1, custom, header_height, lang.muxthemeopt.header_height, "headerheight", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, footer_height, lang.muxthemeopt.footer_height, "footerheight", NULL, 0);
@@ -1668,6 +1681,9 @@ static void restore_custom_options(void) {
     lv_dropdown_set_selected(ui_dro_theme_scaling_custom, config.settings.general.theme_scaling);
     lv_dropdown_set_selected(ui_dro_random_theme_custom, config.settings.advanced.random_theme);
     lv_dropdown_set_selected(ui_dro_menu_style_custom, config.settings.themeopt.menu_style);
+    lv_dropdown_set_selected(ui_dro_menu_label_custom, config.settings.themeopt.menu_label);
+    lv_dropdown_set_selected(ui_dro_menu_random_custom, config.settings.themeopt.menu_random);
+    lv_dropdown_set_selected(ui_dro_menu_order_custom, config.settings.themeopt.menu_order[0] != '\0');
 
     lv_dropdown_set_selected(ui_dro_header_height_custom, (uint32_t) (config.settings.themeopt.header_height + 1));
     lv_dropdown_set_selected(ui_dro_footer_height_custom, (uint32_t) (config.settings.themeopt.footer_height + 1));
@@ -1839,6 +1855,12 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(custom, theme_scaling, "settings/general/theme_scaling", INT, 0);
     CHECK_AND_SAVE_STD(custom, random_theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(custom, menu_style, "settings/theme/menu_style", INT, 0);
+    CHECK_AND_SAVE_STD(custom, menu_label, "settings/theme/menu_label", INT, 0);
+    CHECK_AND_SAVE_STD(custom, menu_random, "settings/theme/menu_random", INT, 0);
+    if (!lv_dropdown_get_selected(ui_dro_menu_order_custom) && menu_order_original) {
+        is_modified++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/theme/menu_order", CHAR, "")) save_failed++;
+    }
     CHECK_AND_SAVE_STD(custom, header_height, "settings/theme/header_height", INT, -1);
     CHECK_AND_SAVE_STD(custom, footer_height, "settings/theme/footer_height", INT, -1);
     save_count_dropdown(
@@ -1982,6 +2004,7 @@ typedef enum {
     menu_section_launching,
     menu_section_packages,
     menu_section_theme,
+    menu_section_main_menu,
     menu_section_layout,
     menu_section_glyphs,
     menu_section_background,
@@ -2102,7 +2125,10 @@ static int16_t kiosk_pass = 0;
     ROW(custom, theme_alternate, "alternate", theme, menu_theme_alternate, NULL, NULL, &kiosk_pass,                    \
         visible_theme_alternate, change_set)                                                                           \
     ROW(custom, random_theme, "randomtheme", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
-    ROW(custom, menu_style, "menustyle", theme, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                    \
+    ROW(custom, menu_style, "menustyle", main_menu, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
+    ROW(custom, menu_label, "menulabel", main_menu, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
+    ROW(custom, menu_random, "menurandom", main_menu, menu_option, NULL, NULL, &kiosk_pass, NULL, change)              \
+    ROW(custom, menu_order, "menuorder", main_menu, menu_option, NULL, NULL, &kiosk_pass, NULL, change)                \
     ROW(custom, header_height, "headerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, footer_height, "footerheight", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)             \
     ROW(custom, content_item_count, "count", layout, menu_option, NULL, NULL, &kiosk_pass, NULL, change)               \
@@ -2160,6 +2186,8 @@ static const char *custom_menu_section_label(const menu_section section) {
             return lang.muxcustom.section.packages;
         case menu_section_theme:
             return lang.muxcustom.section.theme;
+        case menu_section_main_menu:
+            return lang.muxcustom.section.main_menu;
         case menu_section_layout:
             return lang.muxcustom.section.layout;
         case menu_section_glyphs:

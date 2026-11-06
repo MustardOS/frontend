@@ -4,9 +4,9 @@
 
 typedef struct {
     int found;
-    int x, y, w, h, radius, opacity, angle;
+    int x, y, w, h, radius, opacity, angle, glyph;
     int rotate_x, rotate_y, depth, perspective, reflect;
-    int label_below, label_width, label_gap;
+    int label_below, label_none, label_beside, label_width, label_gap;
 } grid_layout_entry;
 
 const char *grid_layout_json(void);

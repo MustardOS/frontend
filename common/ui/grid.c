@@ -205,9 +205,14 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
     static struct theme_config sized_theme;
     lv_obj_t *panel = lv_obj_get_parent(cell);
     if (panel && lv_obj_has_flag(panel, LV_OBJ_FLAG_IGNORE_LAYOUT)) {
+        const grid_layout_entry layout =
+            find_grid_layout((int) IFU(lv_obj_get_user_data(panel)), (int) lv_obj_get_index(panel));
         sized_theme = theme;
-        sized_theme.grid.cell.width = (int16_t) lv_obj_get_style_width(panel, LV_PART_MAIN);
-        sized_theme.grid.cell.height = (int16_t) lv_obj_get_style_height(panel, LV_PART_MAIN);
+        sized_theme.grid.cell.width =
+            (int16_t) (layout.found ? layout.w : lv_obj_get_style_width(panel, LV_PART_MAIN));
+        sized_theme.grid.cell.height =
+            (int16_t) (layout.found ? layout.h : lv_obj_get_style_height(panel, LV_PART_MAIN));
+        if (layout.found && layout.glyph > 0) sized_theme.glyph.grid = (int16_t) layout.glyph;
         glyph_theme = &sized_theme;
     }
 
@@ -412,6 +417,7 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
         layout_theme.grid.cell.width = (int16_t) layout.w;
         layout_theme.grid.cell.height = (int16_t) layout.h;
         layout_theme.grid.cell.radius = (int16_t) layout.radius;
+        if (layout.glyph > 0) layout_theme.glyph.grid = (int16_t) layout.glyph;
         cell_theme = &layout_theme;
     }
 
@@ -422,11 +428,6 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
 
     if (layout.found) place_grid_layout(cell_panel, &layout, panel_index - focus_index);
 
-    if (cell_label) lv_group_add_obj(ui_group, cell_label);
-    if (cell_image) lv_group_add_obj(ui_group_glyph, cell_image);
-
-    lv_group_add_obj(ui_group_panel, cell_panel);
-
     if (is_carousel_grid_mode() && focus_index != panel_index && theme.grid.carousel_fade > 0) {
         const int distance = abs(panel_index - focus_index);
         int keep = 100 - theme.grid.carousel_fade * distance;
@@ -435,6 +436,11 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
         const lv_opa_t base = lv_obj_get_style_opa_layered(cell_panel, LV_PART_MAIN);
         lv_obj_set_style_opa_layered(cell_panel, (lv_opa_t) (base * keep / 100), MU_OBJ_MAIN_DEFAULT);
     }
+
+    if (cell_label) lv_group_add_obj(ui_group, cell_label);
+    if (cell_image) lv_group_add_obj(ui_group_glyph, cell_image);
+
+    lv_group_add_obj(ui_group_panel, cell_panel);
 
     if (is_carousel_grid_mode() && focus_index == panel_index) {
         lv_group_focus_obj(cell_panel);
@@ -486,6 +492,7 @@ int is_carousel_grid_mode(void) {
 
 static void init_grid_common(const int count) {
     grid_mode_enabled = 1;
+    grid_motion_reset();
 
     init_grid_info(count, theme.grid.column_count);
     create_grid_panel(&theme, count);
@@ -550,6 +557,7 @@ int init_grid_static(const int count, char *item_labels[], char *item_grid_label
         for (int i = 0; i < (int) item_count; i++) {
             if (i < theme.grid.column_count * theme.grid.row_count) gen_grid_item(i);
         }
+        grid_motion_swell_focused();
     }
 
     return steps;

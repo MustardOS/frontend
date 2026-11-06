@@ -229,6 +229,9 @@
     CUSTOM(theme_alternate, "alternate")                                                                               \
     CUSTOM(random_theme, "randomtheme")                                                                                \
     CUSTOM(menu_style, "menustyle")                                                                                    \
+    CUSTOM(menu_label, "menulabel")                                                                                    \
+    CUSTOM(menu_random, "menurandom")                                                                                  \
+    CUSTOM(menu_order, "menuorder")                                                                                    \
     CUSTOM(header_height, "headerheight")                                                                              \
     CUSTOM(footer_height, "footerheight")                                                                              \
     CUSTOM(content_item_count, "count")                                                                                \

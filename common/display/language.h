@@ -774,6 +774,8 @@ struct mux_lang {
         char screen[MAX_BUFFER_SIZE];
         char themealternate[MAX_BUFFER_SIZE];
         char randomtheme[MAX_BUFFER_SIZE];
+        char menulabel[MAX_BUFFER_SIZE];
+        char menurandom[MAX_BUFFER_SIZE];
         char customcolours[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
@@ -784,11 +786,33 @@ struct mux_lang {
             char coverflow[MAX_BUFFER_SIZE];
             char bubbles[MAX_BUFFER_SIZE];
             char orbit[MAX_BUFFER_SIZE];
+            char dial[MAX_BUFFER_SIZE];
+            char stack[MAX_BUFFER_SIZE];
+            char clock[MAX_BUFFER_SIZE];
+            char rolodex[MAX_BUFFER_SIZE];
+            char dock[MAX_BUFFER_SIZE];
+            char fan[MAX_BUFFER_SIZE];
+            char honeycomb[MAX_BUFFER_SIZE];
+            char tiles[MAX_BUFFER_SIZE];
+            char sidebar[MAX_BUFFER_SIZE];
+            char fluent[MAX_BUFFER_SIZE];
+            char spotlight[MAX_BUFFER_SIZE];
+            char banners[MAX_BUFFER_SIZE];
+            char crossbar[MAX_BUFFER_SIZE];
+            char desktop[MAX_BUFFER_SIZE];
+            char tabbar[MAX_BUFFER_SIZE];
+            char blades[MAX_BUFFER_SIZE];
         } menu_style;
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char standard[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
+        } menu_order;
         char title[MAX_BUFFER_SIZE];
         struct {
             char content[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
+            char main_menu[MAX_BUFFER_SIZE];
             char packages[MAX_BUFFER_SIZE];
             char layout[MAX_BUFFER_SIZE];
             char glyphs[MAX_BUFFER_SIZE];
@@ -865,6 +889,9 @@ struct mux_lang {
             char theme_alternate[MAX_BUFFER_SIZE];
             char random_theme[MAX_BUFFER_SIZE];
             char menu_style[MAX_BUFFER_SIZE];
+            char menu_label[MAX_BUFFER_SIZE];
+            char menu_random[MAX_BUFFER_SIZE];
+            char menu_order[MAX_BUFFER_SIZE];
             char colours[MAX_BUFFER_SIZE];
             char video_wallpaper[MAX_BUFFER_SIZE];
             char background_scale[MAX_BUFFER_SIZE];
@@ -1455,6 +1482,9 @@ struct mux_lang {
         char reboot[MAX_BUFFER_SIZE];
         char confirm_reboot[MAX_BUFFER_SIZE];
         char confirm_shutdown[MAX_BUFFER_SIZE];
+        char move_pick[MAX_BUFFER_SIZE];
+        char move_cancel[MAX_BUFFER_SIZE];
+        char move_swap[MAX_BUFFER_SIZE];
         struct {
             char app[MAX_BUFFER_SIZE];
             char config[MAX_BUFFER_SIZE];

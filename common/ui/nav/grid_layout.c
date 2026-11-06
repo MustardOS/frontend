@@ -80,6 +80,7 @@ grid_layout_entry find_grid_layout(const int item_index, const int panel_index) 
     out.w = layout_value(entry, "w", theme.grid.cell.width);
     out.h = layout_value(entry, "h", theme.grid.cell.height);
     out.radius = layout_value(entry, "radius", theme.grid.cell.radius);
+    out.glyph = layout_value(entry, "glyph", 0);
     out.opacity = layout_value(entry, "opacity", 255);
     out.angle = layout_value(entry, "angle", 0);
     out.rotate_x = layout_value(entry, "rotate_x", 0);
@@ -91,6 +92,8 @@ grid_layout_entry find_grid_layout(const int item_index, const int panel_index) 
     struct json label = json_object_get(entry, "label");
     if (!json_exists(label)) label = json_object_get(root, "label");
     out.label_below = json_string_compare(label, "below") == 0;
+    out.label_none = json_string_compare(label, "none") == 0;
+    out.label_beside = json_string_compare(label, "beside") == 0;
     out.label_width = layout_value(entry, "label_width", layout_value(root, "label_width", out.w * 7 / 4));
     out.label_gap = layout_value(entry, "label_gap", layout_value(root, "label_gap", out.h / 12));
     return out;
@@ -111,7 +114,7 @@ void place_grid_layout(lv_obj_t *cell_panel, const grid_layout_entry *entry, con
     if (entry->angle != 0) {
         lv_obj_set_style_transform_pivot_x(cell_panel, (lv_coord_t) (entry->w / 2), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_transform_pivot_y(cell_panel, (lv_coord_t) (entry->h / 2), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_transform_angle(cell_panel, (lv_coord_t) entry->angle, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_transform_angle(cell_panel, (lv_coord_t) (entry->angle * 10), MU_OBJ_MAIN_DEFAULT);
     }
 
     const int reflect = entry->reflect < 0 ? 0 : entry->reflect > 255 ? 255 : entry->reflect;
@@ -119,6 +122,37 @@ void place_grid_layout(lv_obj_t *cell_panel, const grid_layout_entry *entry, con
         cell_panel, (int16_t) (entry->rotate_x * 10), (int16_t) (entry->rotate_y * 10), (int16_t) entry->depth,
         (int16_t) (entry->perspective < 0 ? 0 : entry->perspective), (lv_opa_t) reflect
     );
+
+    if (entry->label_none) {
+        lv_obj_t *cell_image = lv_obj_get_child(cell_panel, 0);
+        lv_obj_t *cell_label = lv_obj_get_child(cell_panel, 1);
+        lv_obj_t *cell_image_focused = lv_obj_get_child(cell_panel, 2);
+
+        if (cell_label) {
+            lv_obj_set_style_text_opa(cell_label, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_set_style_text_opa(cell_label, LV_OPA_TRANSP, MU_OBJ_MAIN_FOCUS);
+        }
+        if (cell_image) lv_obj_align(cell_image, LV_ALIGN_CENTER, 0, 0);
+        if (cell_image_focused) lv_obj_align(cell_image_focused, LV_ALIGN_CENTER, 0, 0);
+    }
+
+    if (entry->label_beside) {
+        lv_obj_t *cell_image = lv_obj_get_child(cell_panel, 0);
+        lv_obj_t *cell_label = lv_obj_get_child(cell_panel, 1);
+        lv_obj_t *cell_image_focused = lv_obj_get_child(cell_panel, 2);
+
+        const int pad = entry->h / 6;
+        const int glyph = entry->glyph > 0 ? entry->glyph : entry->h * 3 / 5;
+        if (cell_image) lv_obj_align(cell_image, LV_ALIGN_LEFT_MID, (lv_coord_t) pad, 0);
+        if (cell_image_focused) lv_obj_align(cell_image_focused, LV_ALIGN_LEFT_MID, (lv_coord_t) pad, 0);
+
+        if (cell_label && lv_obj_get_style_width(cell_label, LV_PART_MAIN) > 0) {
+            lv_obj_set_width(cell_label, (lv_coord_t) (entry->w - glyph - pad * 3));
+            lv_label_set_long_mode(cell_label, LV_LABEL_LONG_DOT);
+            lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_LEFT, MU_OBJ_MAIN_DEFAULT);
+            lv_obj_align(cell_label, LV_ALIGN_LEFT_MID, (lv_coord_t) (glyph + pad * 2), 0);
+        }
+    }
 
     if (entry->label_below) {
         lv_obj_t *cell_image = lv_obj_get_child(cell_panel, 0);

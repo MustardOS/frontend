@@ -21,6 +21,7 @@
 #include <common/base/image_ext.h>
 #include <module/muxshare.h>
 #include <lvgl/src/draw/sdl/lv_draw_sdl_texture_cache.h>
+#include <common/ui/nav/menu_style.h>
 
 char current_wall[MAX_BUFFER_SIZE];
 
@@ -637,6 +638,10 @@ int load_image_specifics(
     return found;
 }
 
+static const char *launch_art_element(const char *program, const char *element) {
+    return strcmp(program, "muxlaunch") == 0 && !menu_style_active() ? element : "default";
+}
+
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wall_type) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
@@ -756,7 +761,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
         }
 
         if (load_element_image_specifics(
-                mux_dim, program, "wall", strcmp(program, "muxlaunch") == 0 ? element : "default", "default", "png",
+                mux_dim, program, "wall", launch_art_element(program, element), "default", "png",
                 wall_image_path, sizeof(wall_image_path)
             )) {
             TRY_EMBED(wall_image_path);
@@ -879,9 +884,10 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wal
                 break;
             case wall_general:
             default:
+                if (menu_style_active()) break;
                 if (load_element_image_specifics(
-                        mux_dim, program, "static", strcmp(program, "muxlaunch") == 0 ? element : "default", "default",
-                        "png", static_image_path, sizeof(static_image_path)
+                        mux_dim, program, "static", launch_art_element(program, element), "default", "png",
+                        static_image_path, sizeof(static_image_path)
                     )) {
 
                     const int written =

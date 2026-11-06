@@ -478,6 +478,9 @@ struct mux_config {
             int16_t glyph_size_grid;
             int16_t label_width;
             int16_t menu_style;
+            int16_t menu_label;
+            int16_t menu_random;
+            char menu_order[MAX_BUFFER_SIZE];
             char colour_highlight[MAX_BUFFER_SIZE];
             char colour_highlight_text[MAX_BUFFER_SIZE];
             char colour_highlight_shadow[MAX_BUFFER_SIZE];

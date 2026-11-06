@@ -496,6 +496,7 @@ struct theme_config {
         int16_t antialiasing;
         int16_t label_width;
         int16_t peek_opacity;
+        int16_t menu_style;
     } misc;
 
     struct {

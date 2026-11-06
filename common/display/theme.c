@@ -493,6 +493,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->misc.random_background = 0;
     theme->misc.image_overlay = 0;
     theme->misc.navigation_type = 0;
+    theme->misc.menu_style = -1;
     theme->misc.antialiasing = 1;
     theme->misc.label_width = 57;
     theme->misc.peek_opacity = 48;
@@ -974,6 +975,7 @@ static const theme_field theme_fields[] = {
     {"misc", "RANDOM_BACKGROUND", THEME_OFF(misc.random_background), theme_int},
     {"misc", "IMAGE_OVERLAY", THEME_OFF(misc.image_overlay), theme_int},
     {"misc", "NAVIGATION_TYPE", THEME_OFF(misc.navigation_type), theme_int},
+    {"misc", "MENU_STYLE", THEME_OFF(misc.menu_style), theme_int},
     {"misc", "ANTIALIASING", THEME_OFF(misc.antialiasing), theme_int},
     {"misc", "LABEL_WIDTH", THEME_OFF(misc.label_width), theme_int},
     {"misc", "PEEK_OPACITY", THEME_OFF(misc.peek_opacity), theme_int},

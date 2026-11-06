@@ -45,6 +45,13 @@ UI_SRCS = \
     ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/grid_nav.c ui/nav/menu_style.c \
     ui/nav/list_nav.c
 
+STYLE_SRCS = \
+    ui/nav/style/shared.c ui/nav/style/bubbles.c ui/nav/style/carousel.c ui/nav/style/clock.c \
+    ui/nav/style/coverflow.c ui/nav/style/dial.c ui/nav/style/dock.c ui/nav/style/fan.c ui/nav/style/grid.c \
+    ui/nav/style/honeycomb.c ui/nav/style/orbit.c ui/nav/style/rolodex.c ui/nav/style/sidebar.c ui/nav/style/stack.c \
+    ui/nav/style/tiles.c ui/nav/style/fluent.c ui/nav/style/spotlight.c ui/nav/style/banners.c \
+    ui/nav/style/crossbar.c ui/nav/style/desktop.c ui/nav/style/tabbar.c ui/nav/style/blades.c
+
 SAVER_SRCS = \
     saver/saver.c saver/blank.c saver/blockfall.c saver/boxart.c saver/bsod.c saver/constellation.c \
     saver/datetime.c saver/dvd.c saver/firefly.c saver/matrix.c saver/maze.c \
@@ -69,7 +76,7 @@ endif
 SRCS = \
     $(BASE_SRCS) $(RUNTIME_SRCS) $(CRASH_SRC) $(CONFIG_SRCS) \
     $(PLATFORM_SRCS) $(STORAGE_SRCS) $(CONTENT_SRCS) $(DISPLAY_SRCS) \
-    $(UI_SRCS) $(SAVER_SRCS) $(TOOLING_SRCS) $(COMPAT_SRCS) $(VENDOR_SRCS)
+    $(UI_SRCS) $(STYLE_SRCS) $(SAVER_SRCS) $(TOOLING_SRCS) $(COMPAT_SRCS) $(VENDOR_SRCS)
 OBJS     = $(SRCS:.c=.o)
 
 ../vendor/miniz/miniz.o: CFLAGS += -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES

@@ -11,6 +11,8 @@ enum nav_type {
 
 int is_horizontal_grid_nav(void);
 
+int grid_spatial_target(int dx, int dy);
+
 int is_horizontal_misc_nav(void);
 
 int is_split_row_misc_nav(void);

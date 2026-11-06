@@ -3,6 +3,7 @@
 #include <common/platform/cpu_profile.h>
 #include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
+#include <common/ui/nav/menu_style.h>
 
 size_t item_count = 0;
 content_item *items = NULL;
@@ -1884,7 +1885,8 @@ void resolve_grid_item_images(
     if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)
         && !load_element_image_specifics(
             mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size
-        )) {
+        )
+        && menu_style_active()) {
         load_glyph_icon(mux_dim, mux_module, glyph_name, grid_img, img_size);
     }
 

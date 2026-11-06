@@ -21,7 +21,7 @@
 #define GRID_ANIM_STEPS 1024
 
 typedef struct {
-    int cx, cy, w, h, rx, ry, opa;
+    int cx, cy, w, h, rx, ry, angle, opa;
 } grid_slot_pose;
 
 static grid_slot_pose slot_rest[GRID_ANIM_SLOTS];
@@ -30,6 +30,7 @@ static grid_slot_pose slot_now[GRID_ANIM_SLOTS];
 static int slot_rest_count = 0;
 static int32_t slot_last_v = GRID_ANIM_STEPS;
 static int slot_orbit = 0;
+static int slot_swing = 0;
 static float slot_orbit_cx, slot_orbit_cy, slot_orbit_rx, slot_orbit_ry;
 
 static int lerp(const int from, const int to, const int32_t v) {
@@ -69,6 +70,7 @@ static grid_slot_pose slot_pose_at(const grid_slot_pose *from, const grid_slot_p
     pose.h = lerp(from->h, rest->h, v);
     pose.rx = lerp(from->rx, rest->rx, v);
     pose.ry = lerp(from->ry, rest->ry, v);
+    pose.angle = lerp(from->angle, rest->angle, v);
 
     const int opa = lerp(from->opa, rest->opa, v);
     pose.opa = opa < 0 ? 0 : opa > 255 ? 255 : opa;
@@ -82,6 +84,9 @@ static void slot_pose_apply(lv_obj_t *panel, const grid_slot_pose *rest, const g
     const int zoom = rest->w > 0 ? pose->w * LV_IMG_ZOOM_NONE / rest->w : LV_IMG_ZOOM_NONE;
     lv_obj_set_style_transform_zoom(panel, (lv_coord_t) (zoom > 0 ? zoom : 1), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_opa_layered(panel, (lv_opa_t) pose->opa, MU_OBJ_MAIN_DEFAULT);
+    if (rest->angle || pose->angle) {
+        lv_obj_set_style_transform_angle(panel, (lv_coord_t) pose->angle, MU_OBJ_MAIN_DEFAULT);
+    }
 
     const _lv_obj_spec_attr_t *attr = panel->spec_attr;
     if (attr && (attr->rotate_x != pose->rx || attr->rotate_y != pose->ry)) {
@@ -122,6 +127,11 @@ static void slot_anim_settle(void) {
     slot_anim_exec(ui_pnl_grid, GRID_ANIM_STEPS);
 }
 
+static float orbit_value(const struct json root, const char *key, const float fallback) {
+    const struct json value = json_object_get(root, key);
+    return json_exists(value) ? (float) json_int(value) : fallback;
+}
+
 static void slot_capture_rest(const int count) {
     lv_obj_update_layout(ui_pnl_grid);
     slot_rest_count = 0;
@@ -137,6 +147,7 @@ static void slot_capture_rest(const int count) {
         pose->cy = lv_obj_get_y(panel) + pose->h / 2;
         pose->rx = panel->spec_attr ? panel->spec_attr->rotate_x : 0;
         pose->ry = panel->spec_attr ? panel->spec_attr->rotate_y : 0;
+        pose->angle = lv_obj_get_style_transform_angle(panel, LV_PART_MAIN);
         pose->opa = lv_obj_get_style_opa_layered(panel, LV_PART_MAIN);
 
         lv_obj_set_style_transform_pivot_x(panel, (lv_coord_t) (pose->w / 2), MU_OBJ_MAIN_DEFAULT);
@@ -145,9 +156,13 @@ static void slot_capture_rest(const int count) {
     }
 
     slot_orbit = 0;
+    slot_swing = 0;
     const char *data = grid_layout_json();
     if (!data || slot_rest_count < 3) return;
-    if (json_string_compare(json_object_get(json_parse(data), "motion"), "orbit") != 0) return;
+    const struct json root = json_parse(data);
+    const struct json motion = json_object_get(root, "motion");
+    slot_swing = json_string_compare(motion, "swing") == 0;
+    if (json_string_compare(motion, "orbit") != 0) return;
 
     int min_x = slot_rest[0].cx, max_x = min_x, min_y = slot_rest[0].cy, max_y = min_y;
     for (int i = 1; i < slot_rest_count; i++) {
@@ -158,11 +173,12 @@ static void slot_capture_rest(const int count) {
     }
     if (max_x - min_x < 2 || max_y - min_y < 2) return;
 
-    slot_orbit_cx = (float) (min_x + max_x) / 2.0f;
-    slot_orbit_cy = (float) (min_y + max_y) / 2.0f;
-    slot_orbit_rx = (float) (max_x - min_x) / 2.0f;
-    slot_orbit_ry = (float) (max_y - min_y) / 2.0f;
+    slot_orbit_cx = orbit_value(root, "centre_x", (float) (min_x + max_x) / 2.0f);
+    slot_orbit_cy = orbit_value(root, "centre_y", (float) (min_y + max_y) / 2.0f);
+    slot_orbit_rx = orbit_value(root, "radius_x", (float) (max_x - min_x) / 2.0f);
+    slot_orbit_ry = orbit_value(root, "radius_y", (float) (max_y - min_y) / 2.0f);
     slot_orbit = 1;
+    slot_swing = 1;
 }
 
 static void label_fade_exec(void *var, const int32_t v) {
@@ -215,7 +231,7 @@ static void animate_carousel_step(const int direction) {
     lv_anim_set_exec_cb(&anim, slot_anim_exec);
     lv_anim_set_values(&anim, 0, GRID_ANIM_STEPS);
     lv_anim_set_time(&anim, (uint32_t) theme.grid.animation_time);
-    lv_anim_set_path_cb(&anim, slot_orbit ? slot_path_swing : lv_anim_path_ease_out);
+    lv_anim_set_path_cb(&anim, slot_swing ? slot_path_swing : lv_anim_path_ease_out);
     lv_anim_start(&anim);
 }
 
@@ -248,7 +264,85 @@ static void pop_focused_cell(void) {
     pop_glyph(lv_obj_get_child(panel, 2));
 }
 
+typedef struct {
+    lv_obj_t *panel;
+    lv_coord_t x, y, w, h, radius;
+} swell_rest;
+
+static swell_rest swell_cells[GRID_ANIM_SLOTS];
+static int swell_count = 0;
+
+static const swell_rest *swell_find(const lv_obj_t *panel) {
+    for (int i = 0; i < swell_count; i++) {
+        if (swell_cells[i].panel == panel) return &swell_cells[i];
+    }
+    return NULL;
+}
+
+static void swell_exec(void *var, const int32_t v) {
+    const swell_rest *rest = swell_find(var);
+    if (!rest) return;
+
+    const lv_coord_t w = (lv_coord_t) (rest->w * v / LV_IMG_ZOOM_NONE);
+    const lv_coord_t h = (lv_coord_t) (rest->h * v / LV_IMG_ZOOM_NONE);
+    lv_obj_set_size(var, w, h);
+    lv_obj_set_pos(var, (lv_coord_t) (rest->x - (w - rest->w) / 2), (lv_coord_t) (rest->y - (h - rest->h) / 2));
+    lv_obj_set_style_radius(var, (lv_coord_t) (rest->radius * v / LV_IMG_ZOOM_NONE), MU_OBJ_MAIN_DEFAULT);
+}
+
+static int32_t swell_now(const lv_obj_t *panel, const swell_rest *rest) {
+    return rest->w > 0 ? lv_obj_get_width(panel) * LV_IMG_ZOOM_NONE / rest->w : LV_IMG_ZOOM_NONE;
+}
+
+static void swell_panel(lv_obj_t *panel, const int32_t target, const uint32_t time, const lv_anim_path_cb_t path) {
+    const swell_rest *rest = swell_find(panel);
+    if (!rest) return;
+
+    const int32_t current = swell_now(panel, rest);
+    if (current == target && !lv_anim_get(panel, swell_exec)) return;
+
+    lv_anim_del(panel, swell_exec);
+    if (!time) {
+        swell_exec(panel, target);
+        return;
+    }
+
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, panel);
+    lv_anim_set_exec_cb(&anim, swell_exec);
+    lv_anim_set_values(&anim, current, target);
+    lv_anim_set_time(&anim, time);
+    lv_anim_set_path_cb(&anim, path);
+    lv_anim_start(&anim);
+}
+
+static void swell_capture(void) {
+    lv_obj_update_layout(ui_pnl_grid);
+    const uint32_t count = lv_obj_get_child_cnt(ui_pnl_grid);
+
+    swell_count = 0;
+    for (uint32_t i = 0; i < count && swell_count < GRID_ANIM_SLOTS; i++) {
+        lv_obj_t *panel = lv_obj_get_child(ui_pnl_grid, (int32_t) i);
+        swell_cells[swell_count++] = (swell_rest) {panel,
+                                                   lv_obj_get_x(panel),
+                                                   lv_obj_get_y(panel),
+                                                   lv_obj_get_width(panel),
+                                                   lv_obj_get_height(panel),
+                                                   lv_obj_get_style_radius(panel, LV_PART_MAIN)};
+    }
+}
+
+static int focus_zoom(void) {
+    const char *data = grid_layout_json();
+    if (!data) return 0;
+
+    const struct json value = json_object_get(json_parse(data), "focus_zoom");
+    return json_exists(value) ? json_int(value) : 0;
+}
+
 void grid_motion_reset(void) {
+    swell_count = 0;
     slot_rest_count = 0;
     slot_last_v = GRID_ANIM_STEPS;
 }
@@ -280,6 +374,26 @@ void grid_motion_carousel_step(const int direction) {
     fade_in_current_label();
 }
 
+void grid_motion_swell_focused(void) {
+    const int zoom = focus_zoom();
+    if (zoom <= 0 || !ui_pnl_grid || is_carousel_grid_mode()) return;
+
+    if (!swell_count) swell_capture();
+    const lv_obj_t *focused = lv_group_get_focused(ui_group_panel);
+    const uint32_t time = grid_motion_enabled() ? (uint32_t) theme.grid.animation_time : 0;
+    const uint32_t count = lv_obj_get_child_cnt(ui_pnl_grid);
+
+    for (uint32_t i = 0; i < count; i++) {
+        lv_obj_t *panel = lv_obj_get_child(ui_pnl_grid, (int32_t) i);
+        if (panel == focused) {
+            swell_panel(panel, LV_IMG_ZOOM_NONE * zoom / 100, time, lv_anim_path_overshoot);
+        } else {
+            swell_panel(panel, LV_IMG_ZOOM_NONE, time, lv_anim_path_ease_out);
+        }
+    }
+}
+
 void grid_motion_pop_focused(void) {
     if (grid_motion_enabled()) pop_focused_cell();
+    grid_motion_swell_focused();
 }

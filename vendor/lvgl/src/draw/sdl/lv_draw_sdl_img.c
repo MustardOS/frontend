@@ -359,7 +359,7 @@ static void draw_img_simple(
                 lv_area_to_sdl_rect(clip, &clip_rect);
                 SDL_RenderSetClipRect(ctx->renderer, &clip_rect);
             }
-            SDL_RenderCopyEx(ctx->renderer, temp, &recolor_rect, &dst_rect, draw_dsc->angle, &pivot, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(ctx->renderer, temp, &recolor_rect, &dst_rect, draw_dsc->angle / 10.0, &pivot, SDL_FLIP_NONE);
             SDL_SetTextureAlphaMod(temp, 0xFF);
 
             if (!temp_in_cache) {
@@ -380,7 +380,7 @@ static void draw_img_simple(
         SDL_RenderSetClipRect(ctx->renderer, &clip_rect);
     }
     apply_recolor_opa(texture, draw_dsc);
-    SDL_RenderCopyEx(ctx->renderer, texture, &src_rect, &dst_rect, draw_dsc->angle, &pivot, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(ctx->renderer, texture, &src_rect, &dst_rect, draw_dsc->angle / 10.0, &pivot, SDL_FLIP_NONE);
     if (draw_dsc->angle != 0) {
         SDL_RenderSetClipRect(ctx->renderer, NULL);
     }
