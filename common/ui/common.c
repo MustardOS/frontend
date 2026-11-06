@@ -942,26 +942,6 @@ void init_ui_common_screen(
     lv_obj_set_style_pad_top(ui_pnl_header, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnl_header, 0, MU_OBJ_MAIN_DEFAULT);
 
-    ui_lbl_datetime = lv_label_create(ui_pnl_header);
-    lv_obj_set_width(ui_lbl_datetime, device->mux.width);
-    lv_obj_set_height(ui_lbl_datetime, LV_SIZE_CONTENT);
-
-    lv_label_set_long_mode(ui_lbl_datetime, LV_LABEL_LONG_DOT);
-    lv_label_set_text(ui_lbl_datetime, "");
-    lv_obj_clear_flag(ui_lbl_datetime, LV_OBJ_FLAG_SCROLLABLE);
-    if (!config.visual.clock) lv_obj_add_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
-
-    lv_obj_set_style_text_align(ui_lbl_datetime, theme->datetime.align, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lbl_datetime, lv_color_hex(theme->datetime.text), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lbl_datetime, theme->datetime.alpha, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_border_width(ui_lbl_datetime, 0, MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_pad_left(ui_lbl_datetime, theme->datetime.padding_left, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lbl_datetime, theme->datetime.padding_right, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lbl_datetime, theme->font.header_pad_top * 2, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lbl_datetime, theme->font.header_pad_bottom * 2, MU_OBJ_MAIN_DEFAULT);
-
     ui_lbl_title = lv_label_create(ui_pnl_header);
     lv_obj_set_width(ui_lbl_title, device->mux.width);
     lv_obj_set_height(ui_lbl_title, LV_SIZE_CONTENT);
@@ -1020,7 +1000,7 @@ void init_ui_common_screen(
     ui_sta_bluetooth = create_header_glyph(ui_con_glyphs, theme);
     update_bluetooth_status(ui_sta_bluetooth, theme);
     if (!config.visual.bluetooth) lv_obj_add_flag(ui_sta_bluetooth, LV_OBJ_FLAG_HIDDEN);
-
+   
     ui_sta_network = create_header_glyph(ui_con_glyphs, theme);
     update_network_status(ui_sta_network, theme, 0);
     if (!config.visual.network) lv_obj_add_flag(ui_sta_network, LV_OBJ_FLAG_HIDDEN);
@@ -1052,6 +1032,34 @@ void init_ui_common_screen(
             lv_obj_add_flag(ui_sta_capacity, LV_OBJ_FLAG_HIDDEN);
         }
     }
+
+    if (theme->datetime.status_position > -1) {
+        ui_lbl_datetime = lv_label_create(ui_con_glyphs);
+        lv_obj_set_width(ui_lbl_datetime, LV_SIZE_CONTENT);
+        uint32_t child_count = lv_obj_get_child_cnt(ui_con_glyphs);
+        lv_obj_move_to_index(ui_lbl_datetime, LV_MIN(theme->datetime.status_position, child_count - 1));
+    } else {
+        ui_lbl_datetime = lv_label_create(ui_pnl_header);
+        lv_obj_set_width(ui_lbl_datetime, device->mux.width);
+        lv_obj_set_style_pad_top(ui_lbl_datetime, theme->font.header_pad_top * 2, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_lbl_datetime, theme->font.header_pad_bottom * 2, MU_OBJ_MAIN_DEFAULT);
+    }
+
+    lv_obj_set_height(ui_lbl_datetime, LV_SIZE_CONTENT);
+
+    lv_label_set_long_mode(ui_lbl_datetime, LV_LABEL_LONG_DOT);
+    lv_label_set_text(ui_lbl_datetime, "");
+    lv_obj_clear_flag(ui_lbl_datetime, LV_OBJ_FLAG_SCROLLABLE);
+    if (!config.visual.clock) lv_obj_add_flag(ui_lbl_datetime, LV_OBJ_FLAG_HIDDEN);
+
+    lv_obj_set_style_text_align(ui_lbl_datetime, theme->datetime.align, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lbl_datetime, lv_color_hex(theme->datetime.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lbl_datetime, theme->datetime.alpha, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_border_width(ui_lbl_datetime, 0, MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_pad_left(ui_lbl_datetime, theme->datetime.padding_left, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lbl_datetime, theme->datetime.padding_right, MU_OBJ_MAIN_DEFAULT);
 
     ui_pnl_footer = lv_obj_create(ui_screen);
 
@@ -2009,13 +2017,10 @@ void update_battery_percent_label(lv_obj_t *ui_label, const struct theme_config 
 
     if (battery_is_charging()) {
         lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->status.battery.active), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_text_opa(ui_label, theme->status.battery.active_alpha, MU_OBJ_MAIN_DEFAULT);
     } else if (battery_is_low()) {
         lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->status.battery.low), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_text_opa(ui_label, theme->status.battery.low_alpha, MU_OBJ_MAIN_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_label, lv_color_hex(theme->status.battery.normal), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_text_opa(ui_label, theme->status.battery.percentage_alpha, MU_OBJ_MAIN_DEFAULT);
     }
 }
 

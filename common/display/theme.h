@@ -114,6 +114,7 @@ struct theme_config {
         int16_t align;
         int16_t padding_left;
         int16_t padding_right;
+        int16_t status_position;
     } datetime;
 
     struct {
