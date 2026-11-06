@@ -1670,6 +1670,10 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     menu_style_apply(theme, device->mux.width, device->mux.height);
     theme->grid.enabled = theme->grid.column_count > 0 && theme->grid.row_count > 0;
     if (theme->misc.content.width == 0) theme->misc.content.width = device->mux.width;
+    if (config->settings.themeopt.label_width > 0 && 
+            (strcmp(mux_module, "muxplore") == 0 || strcmp(mux_module, "muxcollect") == 0 || strcmp(mux_module, "muxhistory") == 0)) {
+        theme->misc.content.width = (int16_t) (device->mux.width * config->settings.themeopt.label_width / 100);
+    }
     if (theme->misc.content.height > device->mux.height) theme->misc.content.height = device->mux.height;
     if (theme->mux.item.count < 1) theme->mux.item.count = 1;
     if (theme->mux.item.height > 0) {
