@@ -115,6 +115,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->datetime.align = 1;
     theme->datetime.padding_left = 0;
     theme->datetime.padding_right = 0;
+    theme->datetime.status_position = -1;
 
     theme->footer.height = 42;
     theme->footer.background = 0x100808;
@@ -605,6 +606,7 @@ static const theme_field theme_fields[] = {
     {"date", "DATETIME_ALIGN", THEME_OFF(datetime.align), theme_int},
     {"date", "PADDING_LEFT", THEME_OFF(datetime.padding_left), theme_int},
     {"date", "PADDING_RIGHT", THEME_OFF(datetime.padding_right), theme_int},
+    {"date", "DATETIME_STATUS_POSITION", THEME_OFF(datetime.status_position), theme_int},
 
     // footer
     {"footer", "FOOTER_HEIGHT", THEME_OFF(footer.height), theme_int},
