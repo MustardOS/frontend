@@ -9,8 +9,8 @@ void style_sidebar_apply(struct theme_config *theme, const int width, const int 
     const int top = theme->header.height;
     const int area = height - top - theme->footer.height;
     const double row = area / (double) SIDEBAR_SLOTS;
-    const int small = (int) (row * 0.8);
-    const int big = (int) fmin(area * 0.5, width * 0.4);
+    const int small = (int) (row * 0.8 * fmin(style_size(), 1.0));
+    const int big = (int) (fmin(area * 0.5, width * 0.4) * style_size());
     const double centre_y = top + area / 2.0;
     const double big_x = width * 0.62;
     const double big_y = centre_y - area * 0.08;

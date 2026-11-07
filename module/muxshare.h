@@ -317,6 +317,8 @@ int muxsoundfont_main(void);
 
 int muxlaunch_main(void);
 
+int muxlaunch_layout_main(void);
+
 int muxlogo_main(void);
 
 int muxnetadv_main(void);

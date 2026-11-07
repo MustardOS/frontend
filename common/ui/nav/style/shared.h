@@ -12,6 +12,45 @@ typedef struct {
     const char *label;
 } style_slot;
 
+void style_layout_set(const int *values, int mirror, int width, int height);
+
+void style_json_root(const char *fields);
+
+int style_slots_written(void);
+
+int style_items_written(void);
+
+#define SLICE_FOCUS 55
+#define SLICE_SLANT 11
+
+int style_number_default(int id);
+
+int style_number_value(int id);
+
+double style_size(void);
+
+double style_spacing(void);
+
+double style_tilt(void);
+
+int style_swell(int base);
+
+int style_position(void);
+
+int style_perch(void);
+
+int style_slice_text(void);
+
+int style_bounce_height(void);
+
+int style_bounce_speed(void);
+
+int style_names(void);
+
+int style_pile(void);
+
+int style_large(void);
+
 void style_json_reset(void);
 
 const char *style_json(void);

@@ -42,8 +42,8 @@ int grid_spatial_target(const int dx, const int dy) {
             continue;
         }
 
-        const long score = along + 2 * across;
-        if (across * 2 <= along && (ahead < 0 || score < ahead_score)) {
+        const long score = along + across;
+        if (across * 20 <= along * 13 && (ahead < 0 || score < ahead_score)) {
             ahead = index;
             ahead_score = score;
         }

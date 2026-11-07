@@ -328,8 +328,10 @@ static int get_unscaled_section_size(const char *section) {
     return get_font_size();
 }
 
+static int section_percent = 100;
+
 static int get_custom_section_size(const char *section) {
-    return scale_font_size(get_unscaled_section_size(section));
+    return scale_font_size(get_unscaled_section_size(section)) * section_percent / 100;
 }
 
 static lv_font_t *load_font_cached_ttf_lang(const char *path, int size);
@@ -1339,6 +1341,12 @@ void load_font_section(const char *section, lv_obj_t *element) {
     } else {
         lv_obj_remove_local_style_prop(element, LV_STYLE_TEXT_FONT, MU_OBJ_MAIN_DEFAULT);
     }
+}
+
+void load_font_section_scaled(const char *section, lv_obj_t *element, const int percent) {
+    section_percent = percent;
+    load_font_section(section, element);
+    section_percent = 100;
 }
 
 int font_context_changed(void) {

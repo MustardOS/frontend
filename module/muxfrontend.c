@@ -608,6 +608,7 @@ static const module_entry modules[] = {
     {"custom", "config", "muxcustom", muxcustom_main, NULL},
     {"logo", "custom", "muxlogo", muxlogo_main, NULL},
     {"colour", "custom", "muxcolour", muxcolour_main, NULL},
+    {"layout", "custom", "muxlaunch", muxlaunch_layout_main, NULL},
     {"core", "config", "muxcore", muxcore_main, NULL},
     {"language", "tweakgen", "muxlanguage", muxlanguage_main, NULL},
     {"soundfont", "tweakgen", "muxsoundfont", muxsoundfont_main, NULL},

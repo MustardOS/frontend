@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <common/ui/nav/cell_art.h>
 #include <common/runtime/init.h>
 #include <common/ui/common.h>
 #include <common/ui/grid.h>
@@ -78,12 +79,21 @@ static grid_slot_pose slot_pose_at(const grid_slot_pose *from, const grid_slot_p
 }
 
 static void slot_pose_apply(lv_obj_t *panel, const grid_slot_pose *rest, const grid_slot_pose *pose) {
-    lv_obj_set_style_translate_x(panel, (lv_coord_t) (pose->cx - rest->cx), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_translate_y(panel, (lv_coord_t) (pose->cy - rest->cy), MU_OBJ_MAIN_DEFAULT);
+    const int side = rest->w > rest->h ? rest->w : rest->h;
+    const int reshaped = abs(pose->w * rest->h - pose->h * rest->w) > side;
+    const int w = reshaped ? pose->w : rest->w;
+    const int h = reshaped ? pose->h : rest->h;
+    if (lv_obj_get_width(panel) != w || lv_obj_get_height(panel) != h) {
+        lv_obj_set_size(panel, (lv_coord_t) w, (lv_coord_t) h);
+        cell_art_resize(panel, w, h);
+    }
 
-    const int zoom = rest->w > 0 ? pose->w * LV_IMG_ZOOM_NONE / rest->w : LV_IMG_ZOOM_NONE;
+    lv_obj_set_style_translate_x(panel, (lv_coord_t) (pose->cx - rest->cx - (w - rest->w) / 2), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_translate_y(panel, (lv_coord_t) (pose->cy - rest->cy - (h - rest->h) / 2), MU_OBJ_MAIN_DEFAULT);
+
+    const int zoom = reshaped || rest->w <= 0 ? LV_IMG_ZOOM_NONE : pose->w * LV_IMG_ZOOM_NONE / rest->w;
     lv_obj_set_style_transform_zoom(panel, (lv_coord_t) (zoom > 0 ? zoom : 1), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_opa_layered(panel, (lv_opa_t) pose->opa, MU_OBJ_MAIN_DEFAULT);
+    cell_set_opa(panel, (lv_opa_t) pose->opa);
     if (rest->angle || pose->angle) {
         lv_obj_set_style_transform_angle(panel, (lv_coord_t) pose->angle, MU_OBJ_MAIN_DEFAULT);
     }
@@ -148,7 +158,7 @@ static void slot_capture_rest(const int count) {
         pose->rx = panel->spec_attr ? panel->spec_attr->rotate_x : 0;
         pose->ry = panel->spec_attr ? panel->spec_attr->rotate_y : 0;
         pose->angle = lv_obj_get_style_transform_angle(panel, LV_PART_MAIN);
-        pose->opa = lv_obj_get_style_opa_layered(panel, LV_PART_MAIN);
+        pose->opa = cell_opa(panel);
 
         lv_obj_set_style_transform_pivot_x(panel, (lv_coord_t) (pose->w / 2), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_transform_pivot_y(panel, (lv_coord_t) (pose->h / 2), MU_OBJ_MAIN_DEFAULT);
@@ -394,6 +404,7 @@ void grid_motion_swell_focused(void) {
 }
 
 void grid_motion_pop_focused(void) {
-    if (grid_motion_enabled()) pop_focused_cell();
+    const int zoom_allowed = config.settings.themeopt.menu_glyph_zoom || strcmp(mux_module, "muxlaunch") != 0;
+    if (grid_motion_enabled() && zoom_allowed) pop_focused_cell();
     grid_motion_swell_focused();
 }

@@ -4,6 +4,35 @@
 
 #define MENU_ITEM_COUNT 8
 
+enum menu_layout_option {
+    layout_size,
+    layout_spacing,
+    layout_tilt,
+    layout_swell,
+    layout_position,
+    layout_pile,
+    layout_names,
+    layout_large,
+    layout_fit,
+    layout_glyph,
+    layout_text,
+    layout_focus,
+    layout_perch,
+    layout_slicetext,
+    layout_bounce,
+    layout_gap,
+    layout_slant,
+    layout_textx,
+    layout_textbg,
+    layout_texty,
+    layout_textangle,
+    layout_namex,
+    layout_namey,
+    layout_nameangle,
+    layout_namebg,
+    LAYOUT_OPTION_COUNT
+};
+
 enum menu_style {
     menu_style_theme = 0,
     menu_style_list,
@@ -27,16 +56,42 @@ enum menu_style {
     menu_style_crossbar,
     menu_style_desktop,
     menu_style_tabbar,
-    menu_style_blades,
+    menu_style_paged,
+    menu_style_slices,
+    menu_style_mascot,
 };
 
 int menu_style_active(void);
+
+int menu_name_angle(void);
+
+int menu_style_current(void);
 
 const int *menu_item_order(void);
 
 int menu_style_any_direction(void);
 
 int menu_style_spatial(void);
+
+int menu_style_blocks(int vertical);
+
+int menu_layout_options(void);
+
+int menu_style_paged_active(void);
+
+int menu_layout_value(int option);
+
+void menu_layout_edit(int editing);
+
+void menu_layout_step(int option, int direction);
+
+int menu_layout_save(int target);
+
+const char *menu_style_key(int style);
+
+void menu_layout_default(int option);
+
+int menu_layout_reset_all(void);
 
 void menu_style_apply(struct theme_config *theme, int width, int height);
 

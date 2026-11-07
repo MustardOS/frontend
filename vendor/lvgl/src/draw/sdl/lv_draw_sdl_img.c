@@ -295,7 +295,7 @@ static int check_mask_simple_radius(const lv_area_t *coords, lv_coord_t *radius)
     if (lv_draw_mask_get_cnt() != 1) return 0;
     for (uint8_t i = 0; i < _LV_MASK_MAX_NUM; i++) {
         _lv_draw_mask_common_dsc_t *param = LV_GC_ROOT(_lv_draw_mask_list[i]).param;
-        if (param->type == LV_DRAW_MASK_TYPE_RADIUS) {
+        if (param && param->type == LV_DRAW_MASK_TYPE_RADIUS) {
             lv_draw_mask_radius_param_t *rparam = (lv_draw_mask_radius_param_t *) param;
             if (rparam->cfg.outer) return 0;
             if (!_lv_area_is_equal(&rparam->cfg.rect, coords)) return 0;

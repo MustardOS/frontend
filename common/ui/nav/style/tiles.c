@@ -8,7 +8,7 @@ void style_tiles_apply(struct theme_config *theme, const int width, const int he
                                                    {0, 2, 1, 1}, {1, 2, 1, 1}, {2, 2, 1, 1}, {3, 2, 1, 1}};
     const int top = theme->header.height;
     const int area = style_content_bottom(theme, height) - top;
-    const double gap = width * 0.015;
+    const double gap = width * 0.015 * style_spacing() * style_spacing();
     const double left = width * 0.06;
     const double unit_w = (width - left * 2 - gap * 3) / 4;
     const double unit_h = (area - gap * 4) / 3;

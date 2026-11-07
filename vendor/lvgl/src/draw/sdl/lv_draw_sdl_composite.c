@@ -228,6 +228,7 @@ SDL_Texture *lv_draw_sdl_composite_texture_obtain(
             access = SDL_TEXTUREACCESS_TARGET;
         }
         result = SDL_CreateTexture(ctx->renderer, LV_DRAW_SDL_TEXTURE_FORMAT, access, tw, th);
+        if (id >= LV_DRAW_SDL_COMPOSITE_TEXTURE_ID_TRANSFORM0) SDL_SetTextureScaleMode(result, SDL_ScaleModeLinear);
         tex_size = lv_mem_alloc(sizeof(lv_point_t));
         tex_size->x = tw;
         tex_size->y = th;

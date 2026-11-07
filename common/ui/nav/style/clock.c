@@ -6,8 +6,8 @@
 void style_clock_apply(struct theme_config *theme, const int width, const int height) {
     const int top = theme->header.height;
     const int area = height - top - theme->footer.height;
-    const int diameter = (int) fmin(area * 0.2, width * 0.13);
-    const double radius = (area - diameter) / 2.0 - area * 0.02;
+    const int diameter = (int) (fmin(area * 0.2, width * 0.13) * style_size());
+    const double radius = ((area - diameter) / 2.0 - area * 0.02) * fmin(style_spacing(), 1.0);
     const double reach = fmin(radius * 1.3, (width - diameter) / 2.0 - width * 0.03);
     const double middle_y = top + area / 2.0;
 
@@ -21,5 +21,5 @@ void style_clock_apply(struct theme_config *theme, const int width, const int he
         centre_x[index] = width / 2.0 + reach * sin(angle);
         centre_y[index] = middle_y - radius * cos(angle);
     }
-    style_add_circles(centre_x, centre_y, diameter, 115);
+    style_add_circles(centre_x, centre_y, diameter, style_swell(115));
 }

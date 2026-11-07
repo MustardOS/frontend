@@ -7,8 +7,8 @@
 
 void style_dock_apply(struct theme_config *theme, const int width, const int height) {
     static const double sizes[] = {1.0, 0.7, 0.55, 0.45};
-    const double front = fmin(height * 0.22, width * 0.19);
-    const double gap = front * 0.1;
+    const double front = fmin(height * 0.22, width * 0.19) * style_size();
+    const double gap = front * 0.1 * style_spacing() + front * 0.1 * (style_spacing() - 1) * 2;
     const double base = height - theme->footer.height - height * 0.04;
     const int middle = DOCK_SLOTS / 2;
 

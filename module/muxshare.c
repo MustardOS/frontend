@@ -1849,18 +1849,110 @@ void resolve_content_artwork_names(
     if (dot) *dot = '\0';
 }
 
+#define PREVIEW_FADE_MS 250
+#define PREVIEW_WAIT_MS 1500
+
+static lv_obj_t *preview_ghost = NULL;
+static lv_timer_t *preview_timer = NULL;
+static uint32_t preview_since = 0;
+
+static void preview_ghost_deleted(lv_event_t *e) {
+    lv_obj_t *ghost = lv_event_get_target(e);
+    lv_anim_del(ghost, NULL);
+    image_release_raster(ghost);
+    if (preview_ghost == ghost) preview_ghost = NULL;
+}
+
+static void preview_fade_exec(void *var, const int32_t value) {
+    LV_UNUSED(var);
+    if (preview_ghost) lv_obj_set_style_img_opa(preview_ghost, (lv_opa_t) (255 - value), MU_OBJ_MAIN_DEFAULT);
+    if (lv_obj_is_valid(ui_img_box)) lv_obj_set_style_img_opa(ui_img_box, (lv_opa_t) value, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void preview_fade_done(lv_anim_t *anim) {
+    LV_UNUSED(anim);
+    if (preview_ghost) lv_obj_del(preview_ghost);
+}
+
+static void preview_fade_start(void) {
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, ui_img_box);
+    lv_anim_set_exec_cb(&anim, preview_fade_exec);
+    lv_anim_set_values(&anim, 0, 255);
+    lv_anim_set_time(&anim, PREVIEW_FADE_MS);
+    lv_anim_set_ready_cb(&anim, preview_fade_done);
+    lv_anim_start(&anim);
+}
+
+static void preview_wait(lv_timer_t *timer) {
+    if (!lv_obj_is_valid(ui_img_box)) {
+        lv_timer_del(timer);
+        preview_timer = NULL;
+        return;
+    }
+
+    const int loaded = lv_img_get_src(ui_img_box) != &ui_img_blank;
+    if (!loaded && lv_tick_elaps(preview_since) < PREVIEW_WAIT_MS) return;
+
+    lv_timer_del(timer);
+    preview_timer = NULL;
+    preview_fade_start();
+}
+
+static void preview_hold(void) {
+    lv_anim_del(ui_img_box, preview_fade_exec);
+
+    const int shown = lv_img_get_src(ui_img_box) != &ui_img_blank;
+    if (preview_ghost && shown) lv_obj_del(preview_ghost);
+
+    if (!preview_ghost && shown) {
+        preview_ghost = lv_img_create(lv_obj_get_parent(ui_img_box));
+        lv_obj_add_event_cb(preview_ghost, preview_ghost_deleted, LV_EVENT_DELETE, NULL);
+        lv_obj_set_align(preview_ghost, lv_obj_get_style_align(ui_img_box, LV_PART_MAIN));
+        lv_obj_set_pos(
+            preview_ghost, lv_obj_get_style_x(ui_img_box, LV_PART_MAIN), lv_obj_get_style_y(ui_img_box, LV_PART_MAIN)
+        );
+        lv_obj_set_style_pad_left(
+            preview_ghost, lv_obj_get_style_pad_left(ui_img_box, LV_PART_MAIN), MU_OBJ_MAIN_DEFAULT
+        );
+        lv_obj_set_style_pad_right(
+            preview_ghost, lv_obj_get_style_pad_right(ui_img_box, LV_PART_MAIN), MU_OBJ_MAIN_DEFAULT
+        );
+        lv_obj_set_style_pad_top(
+            preview_ghost, lv_obj_get_style_pad_top(ui_img_box, LV_PART_MAIN), MU_OBJ_MAIN_DEFAULT
+        );
+        lv_obj_set_style_pad_bottom(
+            preview_ghost, lv_obj_get_style_pad_bottom(ui_img_box, LV_PART_MAIN), MU_OBJ_MAIN_DEFAULT
+        );
+        lv_img_set_size_mode(preview_ghost, lv_img_get_size_mode(ui_img_box));
+        lv_img_set_zoom(preview_ghost, lv_img_get_zoom(ui_img_box));
+        lv_obj_clear_flag(preview_ghost, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+        image_take_raster(ui_img_box, preview_ghost);
+        lv_obj_move_to_index(preview_ghost, lv_obj_get_index(ui_img_box) + 1);
+    }
+
+    if (preview_ghost) lv_obj_set_style_img_opa(preview_ghost, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_img_opa(ui_img_box, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+}
+
+static void preview_await(void) {
+    preview_since = lv_tick_get();
+    if (!preview_timer) preview_timer = lv_timer_create(preview_wait, 20, NULL);
+}
+
 void refresh_theme_preview_image(char *base_path, char *name, int *preview_index) {
     char preview_path[MAX_BUFFER_SIZE];
     if (get_theme_preview_path(base_path, name, preview_path, sizeof(preview_path), *preview_index) != 0) {
         *preview_index = -1;
     }
 
-    lv_img_cache_invalidate_src(lv_img_get_src(ui_img_box));
-
     if (strcasecmp(box_image_previous_path, preview_path) != 0) {
+        preview_hold();
         if (!file_exist(preview_path)) {
-            lv_img_set_src(ui_img_box, &ui_img_blank);
+            clear_image(ui_img_box);
             snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+            preview_fade_start();
         } else {
             const struct image_settings image_settings = {
                 preview_path,
@@ -1874,6 +1966,7 @@ void refresh_theme_preview_image(char *base_path, char *name, int *preview_index
             };
             update_image(ui_img_box, image_settings);
             snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", preview_path);
+            preview_await();
         }
     }
 }
@@ -1883,9 +1976,7 @@ void resolve_grid_item_images(
     char *grid_img_foc, const size_t foc_size
 ) {
     if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)
-        && !load_element_image_specifics(
-            mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size
-        )
+        && !load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size)
         && menu_style_active()) {
         load_glyph_icon(mux_dim, mux_module, glyph_name, grid_img, img_size);
     }

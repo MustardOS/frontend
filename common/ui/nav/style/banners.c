@@ -9,8 +9,8 @@ void style_banners_apply(struct theme_config *theme, const int width, const int 
     const int top = theme->header.height;
     const int area = height - top - theme->footer.height;
     const double row = area / 5.5;
-    const double banner_h = row * 0.78;
-    const double banner_w = width * 0.46;
+    const double banner_h = row * 0.78 * fmin(style_size(), 1.1);
+    const double banner_w = width * 0.46 * style_size();
     const double centre_y = top + area / 2.0;
     const int middle = BANNER_SLOTS / 2;
 
@@ -25,10 +25,20 @@ void style_banners_apply(struct theme_config *theme, const int width, const int 
         const int w = (int) (banner_w * grow);
         const int h = (int) (banner_h * grow);
         const double left = offset ? width * 0.01 : width * 0.05;
-        style_add_slot(
-            index, &(style_slot) {left + w / 2.0, centre_y + offset * row, w, h, (int) (h * 0.2), 0, 0, -3,
-                                  abs(offset) == middle ? 0 : 255, (int) (h * 0.6), "beside"}
-        );
+        const style_slot slot = {
+            left + w / 2.0,
+            centre_y + offset * row,
+            w,
+            h,
+            (int) (h * 0.2),
+            0,
+            0,
+            (int) lround(-3 * style_tilt()),
+            abs(offset) == middle ? 0 : 255,
+            (int) (h * 0.6),
+            "beside"
+        };
+        style_add_slot(index, &slot);
     }
     style_json_add("]}");
 }

@@ -35,14 +35,15 @@ CONTENT_SRCS = \
 DISPLAY_SRCS = \
     display/anim.c display/colour.c display/datetime.c display/image.c \
     display/language.c display/overlay.c display/screenshot.c display/svg.c \
-    display/scale2x.c display/super_eagle.c display/text.c display/theme.c display/theme_base.c
+    display/scale2x.c display/super_eagle.c display/text.c display/theme.c display/theme_base.c \
+    display/theme_json.c
 
 UI_SRCS = \
     ui/cache.c ui/common.c ui/dialogue.c ui/empty_state.c ui/font.c ui/font_info.c \
     ui/fs_choice.c ui/glyph.c ui/grid.c ui/image.c ui/list_frame.c \
     ui/modal.c ui/more.c ui/nav.c ui/notify.c ui/orientation.c ui/osk.c ui/rich_text.c \
     ui/crt.c ui/task_progress.c ui/task_prompt.c ui/transition.c \
-    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/grid_nav.c ui/nav/menu_style.c \
+    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/cell_art.c ui/nav/mascot.c ui/nav/grid_nav.c ui/nav/menu_style.c \
     ui/nav/list_nav.c
 
 STYLE_SRCS = \
@@ -50,7 +51,8 @@ STYLE_SRCS = \
     ui/nav/style/coverflow.c ui/nav/style/dial.c ui/nav/style/dock.c ui/nav/style/fan.c ui/nav/style/grid.c \
     ui/nav/style/honeycomb.c ui/nav/style/orbit.c ui/nav/style/rolodex.c ui/nav/style/sidebar.c ui/nav/style/stack.c \
     ui/nav/style/tiles.c ui/nav/style/fluent.c ui/nav/style/spotlight.c ui/nav/style/banners.c \
-    ui/nav/style/crossbar.c ui/nav/style/desktop.c ui/nav/style/tabbar.c ui/nav/style/blades.c
+    ui/nav/style/crossbar.c ui/nav/style/desktop.c ui/nav/style/tabbar.c ui/nav/style/slices.c ui/nav/style/mascot.c \
+    ui/nav/style/paged.c ui/nav/style/tweak.c
 
 SAVER_SRCS = \
     saver/saver.c saver/blank.c saver/blockfall.c saver/boxart.c saver/bsod.c saver/constellation.c \

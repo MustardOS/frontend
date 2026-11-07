@@ -1810,6 +1810,12 @@ void mux_input_task(const mux_input_options *opts) {
         }
 
         if (anim_is_active() && timeout > IDLE_MS) timeout = IDLE_MS;
+        const lv_timer_t *refresh = mux_get_refresh_timer();
+        if (refresh && lv_anim_count_running()) {
+            const uint32_t spent = lv_tick_elaps(refresh->last_run);
+            const int left = spent >= refresh->period ? 0 : (int) (refresh->period - spent);
+            if (timeout > left) timeout = left;
+        }
         if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         const uint64_t loop_start = fe_perf_begin();

@@ -451,10 +451,7 @@ int load_element_image_specifics(
 }
 
 static int get_random_wallpaper_from_directory(
-    const char *directory,
-    const char *filename_prefix,
-    const char *image_extension,
-    char *image_path,
+    const char *directory, const char *filename_prefix, const char *image_extension, char *image_path,
     const size_t path_size
 ) {
     DIR *dir = opendir(directory);
@@ -486,8 +483,8 @@ static int get_random_wallpaper_from_directory(
         }
 
         // Check suffix
-        if (filename_length <= prefix_length + suffix_length ||
-            strcmp(filename + filename_length - suffix_length, expected_suffix) != 0) {
+        if (filename_length <= prefix_length + suffix_length
+            || strcmp(filename + filename_length - suffix_length, expected_suffix) != 0) {
             continue;
         }
 
@@ -511,7 +508,7 @@ static int get_random_wallpaper_from_directory(
         // Reservoir sampling: randomly select one matching file
         count++;
 
-        if ((size_t)rand() % count == 0) {
+        if ((size_t) rand() % count == 0) {
             snprintf(selected_file, sizeof(selected_file), "%s", filename);
         }
     }
@@ -524,15 +521,11 @@ static int get_random_wallpaper_from_directory(
 
     int written = snprintf(image_path, path_size, "%s/%s", directory, selected_file);
 
-    return written >= 0 && (size_t)written < path_size;
+    return written >= 0 && (size_t) written < path_size;
 }
 
 static int get_random_wallpaper_path(
-    const char *mux_dim,
-    const char *program,
-    const char *image_type,
-    const char *image_extension,
-    char *image_path,
+    const char *mux_dim, const char *program, const char *image_type, const char *image_extension, char *image_path,
     const size_t path_size
 ) {
     if (strcmp(image_type, "wall") != 0) {
@@ -544,28 +537,24 @@ static int get_random_wallpaper_path(
     // Priority 1: dimension-specific mux program wallpapers
     snprintf(directory, sizeof(directory), "%s/%simage/%s", theme_base, mux_dim, image_type);
 
-    if (get_random_wallpaper_from_directory(
-            directory, program, image_extension, image_path, path_size)) {
+    if (get_random_wallpaper_from_directory(directory, program, image_extension, image_path, path_size)) {
         return 1;
     }
 
     // Priority 2: dimension-specific default wallpapers
-    if (get_random_wallpaper_from_directory(
-            directory, "default", image_extension, image_path, path_size)) {
+    if (get_random_wallpaper_from_directory(directory, "default", image_extension, image_path, path_size)) {
         return 1;
     }
 
     // Priority 3: mux program wallpapers
     snprintf(directory, sizeof(directory), "%s/image/%s", theme_base, image_type);
 
-    if (get_random_wallpaper_from_directory(
-            directory, program, image_extension, image_path, path_size)) {
+    if (get_random_wallpaper_from_directory(directory, program, image_extension, image_path, path_size)) {
         return 1;
     }
 
     // Priority 4: default wallpapers
-    if (get_random_wallpaper_from_directory(
-            directory, "default", image_extension, image_path, path_size)) {
+    if (get_random_wallpaper_from_directory(directory, "default", image_extension, image_path, path_size)) {
         return 1;
     }
 
@@ -581,8 +570,8 @@ int load_image_specifics(
         LOG_INFO(mux_module, "Random background wallpaper already displayed for current screen.");
         return 1;
     }
-    if (theme.misc.random_background == 1 && get_random_wallpaper_path(
-            mux_dim, program, image_type, image_extension, image_path, path_size)) {
+    if (theme.misc.random_background == 1
+        && get_random_wallpaper_path(mux_dim, program, image_type, image_extension, image_path, path_size)) {
         LOG_INFO(mux_module, "Random Wallpaper chosen: %s", image_path);
         return 1;
     }
@@ -642,6 +631,30 @@ static const char *launch_art_element(const char *program, const char *element) 
     return strcmp(program, "muxlaunch") == 0 && !menu_style_active() ? element : "default";
 }
 
+static int override_wallpaper(const char *program, const char *element, char *path, const size_t size) {
+    const char *dims[] = {mux_dim, ""};
+    const char *exts[] = {"mp4", "png", "svg"};
+    const char *names[] = {element, ""};
+
+    for (size_t d = 0; d < A_SIZE(dims); d++) {
+        for (size_t n = 0; n < A_SIZE(names); n++) {
+            if (!n && (!element || !*element)) continue;
+
+            for (size_t e = config.visual.video_wallpaper ? 0 : 1; e < A_SIZE(exts); e++) {
+                const int written =
+                    n ? snprintf(path, size, RUN_STORAGE_PATH "theme/override/%s%s.%s", dims[d], program, exts[e])
+                      : snprintf(
+                            path, size, RUN_STORAGE_PATH "theme/override/%s%s/%s.%s", dims[d], program, names[n],
+                            exts[e]
+                        );
+                if (written > 0 && (size_t) written < size && file_exist_nocase(path, path, size)) return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wall_type) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
@@ -693,6 +706,11 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
             if (embed_len < 0 || (size_t) embed_len >= sizeof(wall_image_embed)) wall_image_embed[0] = '\0';           \
         }                                                                                                              \
     } while (0)
+
+    if (override_wallpaper(program, element, wall_image_path, sizeof(wall_image_path))) {
+        TRY_EMBED(wall_image_path);
+        return wall_image_embed;
+    }
 
     if (config.visual.video_wallpaper) {
         const char *ad_dims[] = {mux_dim, ""};
@@ -761,8 +779,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
         }
 
         if (load_element_image_specifics(
-                mux_dim, program, "wall", launch_art_element(program, element), "default", "png",
-                wall_image_path, sizeof(wall_image_path)
+                mux_dim, program, "wall", launch_art_element(program, element), "default", "png", wall_image_path,
+                sizeof(wall_image_path)
             )) {
             TRY_EMBED(wall_image_path);
             return wall_image_embed;
@@ -1089,6 +1107,18 @@ static void free_scaled_raster(lv_obj_t *ui_img_obj) {
         lv_img_buf_free(old_dsc);
         lv_obj_set_user_data(ui_img_obj, NULL);
     }
+}
+
+void image_take_raster(lv_obj_t *from, lv_obj_t *to) {
+    lv_img_set_src(to, lv_img_get_src(from));
+    lv_obj_set_user_data(to, lv_obj_get_user_data(from));
+    lv_obj_set_user_data(from, NULL);
+    image_next_generation(from);
+    lv_img_set_src(from, &ui_img_blank);
+}
+
+void image_release_raster(lv_obj_t *ui_img_obj) {
+    free_scaled_raster(ui_img_obj);
 }
 
 void clear_image(lv_obj_t *ui_img_obj) {

@@ -12,6 +12,8 @@ void load_font_text(lv_obj_t *screen);
 
 void load_font_section(const char *section, lv_obj_t *element);
 
+void load_font_section_scaled(const char *section, lv_obj_t *element, int percent);
+
 lv_font_t *load_font_pass_roller(void);
 
 lv_font_t *font_style_variant(const lv_font_t *base, int bold, int italic);

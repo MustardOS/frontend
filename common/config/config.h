@@ -480,6 +480,7 @@ struct mux_config {
             int16_t menu_style;
             int16_t menu_label;
             int16_t menu_random;
+            int16_t menu_glyph_zoom;
             char menu_order[MAX_BUFFER_SIZE];
             char colour_highlight[MAX_BUFFER_SIZE];
             char colour_highlight_text[MAX_BUFFER_SIZE];

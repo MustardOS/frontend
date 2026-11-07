@@ -119,7 +119,7 @@ FIXED_OPTIONS = {
     "settings/theme/menu_style": [(str(index), f"lang.muxcustom.menu_style.{name}") for index, name in enumerate(
         ("theme", "list", "grid", "carousel", "coverflow", "bubbles", "orbit", "dial", "stack", "clock", "rolodex", "dock",
          "fan", "honeycomb", "tiles", "sidebar", "fluent", "spotlight", "banners", "crossbar", "desktop", "tabbar",
-         "blades"))],
+         "paged", "slices", "mascot"))],
 }
 for _glyph in ("footer", "grid", "header", "list"):
     FIXED_OPTIONS[f"settings/theme/glyph_size_{_glyph}"] = [
@@ -176,6 +176,7 @@ HELP_KEYS = {
     "settings/theme/menu_style": "muxcustom.help.menu_style",
     "settings/theme/menu_label": "muxcustom.help.menu_label",
     "settings/theme/menu_random": "muxcustom.help.menu_random",
+    "settings/theme/menu_glyph_zoom": "muxcustom.help.menu_glyph_zoom",
     "settings/theme/colour_highlight": "muxcolour.help.mode",
     "settings/theme/colour_highlight_text": "muxcolour.help.mode",
     "settings/theme/colour_highlight_shadow": "muxcolour.help.mode",

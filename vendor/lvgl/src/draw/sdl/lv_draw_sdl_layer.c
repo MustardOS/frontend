@@ -47,7 +47,7 @@
 #define LAYER_3D_FOLD_FADE 0.45f
 
 typedef struct {
-    float cos_x, sin_x, cos_y, sin_y;
+    float cos_x, sin_x, cos_y, sin_y, cos_z, sin_z;
     float cx, cy;
     float z_shift, focal;
     float ox, oy;
@@ -56,15 +56,15 @@ typedef struct {
 } layer_3d_view_t;
 
 static float layer_3d_depth(const layer_3d_view_t *view, float x, float y) {
-    const float px = x - view->cx;
-    const float py = y - view->cy;
+    const float px = (x - view->cx) * view->cos_z - (y - view->cy) * view->sin_z;
+    const float py = (x - view->cx) * view->sin_z + (y - view->cy) * view->cos_z;
     const float z1 = px * view->sin_y;
     return z1 * view->cos_x - py * view->sin_x;
 }
 
 static SDL_FPoint layer_3d_project(const layer_3d_view_t *view, float x, float y) {
-    const float px = x - view->cx;
-    const float py = y - view->cy;
+    const float px = (x - view->cx) * view->cos_z - (y - view->cy) * view->sin_z;
+    const float py = (x - view->cx) * view->sin_z + (y - view->cy) * view->cos_z;
 
     if (view->fold_half > 0.0f) {
         /* Each half is a plane hinged at its outer edge and turned away, so text keeps its true proportions */
@@ -208,6 +208,9 @@ static void layer_3d_blend(
     view.sin_x = SDL_sinf(rad_x);
     view.cos_y = SDL_cosf(rad_y);
     view.sin_y = SDL_sinf(rad_y);
+    const float rad_z = (float) draw_dsc->angle * 0.1f * (float) M_PI / 180.0f;
+    view.cos_z = SDL_cosf(rad_z);
+    view.sin_z = SDL_sinf(rad_z);
     view.cx = (obj_x1 + obj_x2) / 2.0f;
     view.cy = (obj_y1 + obj_y2) / 2.0f;
     view.ox = (float) dest->x;
@@ -362,10 +365,6 @@ void lv_draw_sdl_layer_blend(
         return;
     }
 
-    SDL_ScaleMode scale_mode = SDL_ScaleModeNearest;
-    SDL_GetTextureScaleMode(transform_ctx->target, &scale_mode);
-    SDL_SetTextureScaleMode(transform_ctx->target, SDL_ScaleModeLinear);
-
     SDL_RenderSetClipRect(renderer, &clip_rect);
     SDL_SetTextureAlphaMod(transform_ctx->target, draw_dsc->opa);
     SDL_RenderCopyEx(
@@ -373,7 +372,6 @@ void lv_draw_sdl_layer_blend(
         SDL_FLIP_NONE
     );
     SDL_RenderSetClipRect(renderer, NULL);
-    SDL_SetTextureScaleMode(transform_ctx->target, scale_mode);
 }
 
 void lv_draw_sdl_layer_destroy(lv_draw_ctx_t *draw_ctx, lv_draw_layer_ctx_t *layer_ctx) {

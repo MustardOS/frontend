@@ -8,9 +8,9 @@
 void style_crossbar_apply(struct theme_config *theme, const int width, const int height) {
     const int top = theme->header.height;
     const int area = style_content_bottom(theme, height) - top;
-    const double size = fmin(area * 0.24, width * 0.15);
-    const double step = size * 1.3;
-    const double focus_x = width * 0.25;
+    const double size = fmin(area * 0.24, width * 0.15) * style_size();
+    const double step = size * 1.3 * style_spacing();
+    const double focus_x = width * (style_position() ? 0.5 : 0.25);
     const double focus_y = top + area * 0.32;
     const int middle = CROSSBAR_SLOTS / 2;
 

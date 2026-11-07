@@ -837,16 +837,7 @@ void init_ui_common_screen(
 
     lv_obj_set_flex_flow(ui_pnl_content, LV_FLEX_FLOW_COLUMN);
 
-    if (theme->misc.content.alignment == 1) {
-        lv_obj_set_flex_align(ui_pnl_content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-        lv_obj_set_style_pad_left(ui_pnl_content, theme->misc.content.padding_left * 2, MU_OBJ_MAIN_DEFAULT);
-    } else if (theme->misc.content.alignment == 2) {
-        lv_obj_set_flex_align(ui_pnl_content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
-        lv_obj_set_style_pad_right(ui_pnl_content, -theme->misc.content.padding_left, MU_OBJ_MAIN_DEFAULT);
-    } else {
-        lv_obj_set_flex_align(ui_pnl_content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-        lv_obj_set_style_pad_left(ui_pnl_content, theme->misc.content.padding_left, MU_OBJ_MAIN_DEFAULT);
-    }
+    apply_content_alignment(theme, ui_pnl_content);
 
     lv_obj_clear_flag(ui_pnl_content, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnl_content, LV_SCROLLBAR_MODE_ON);
@@ -1000,7 +991,7 @@ void init_ui_common_screen(
     ui_sta_bluetooth = create_header_glyph(ui_con_glyphs, theme);
     update_bluetooth_status(ui_sta_bluetooth, theme);
     if (!config.visual.bluetooth) lv_obj_add_flag(ui_sta_bluetooth, LV_OBJ_FLAG_HIDDEN);
-   
+
     ui_sta_network = create_header_glyph(ui_con_glyphs, theme);
     update_network_status(ui_sta_network, theme, 0);
     if (!config.visual.network) lv_obj_add_flag(ui_sta_network, LV_OBJ_FLAG_HIDDEN);
@@ -1799,6 +1790,25 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, const struct theme_config *theme
     lv_obj_set_style_pad_bottom(ui_glyph, theme->font.header_icon_pad_bottom * 2, MU_OBJ_MAIN_DEFAULT);
 
     return ui_glyph;
+}
+
+void apply_content_alignment(const struct theme_config *theme, lv_obj_t *panel) {
+    int left = theme->misc.content.padding_left;
+    int right = 0;
+    lv_flex_align_t align = LV_FLEX_ALIGN_START;
+
+    if (theme->misc.content.alignment == 1) {
+        left = theme->misc.content.padding_left * 2;
+        align = LV_FLEX_ALIGN_CENTER;
+    } else if (theme->misc.content.alignment == 2) {
+        left = 0;
+        right = -theme->misc.content.padding_left;
+        align = LV_FLEX_ALIGN_END;
+    }
+
+    lv_obj_set_flex_align(panel, LV_FLEX_ALIGN_START, align, align);
+    lv_obj_set_style_pad_left(panel, (lv_coord_t) left, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_right(panel, (lv_coord_t) right, MU_OBJ_MAIN_DEFAULT);
 }
 
 lv_obj_t *create_footer_glyph(

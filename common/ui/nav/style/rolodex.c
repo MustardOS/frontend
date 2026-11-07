@@ -8,7 +8,7 @@
 void style_rolodex_apply(struct theme_config *theme, const int width, const int height) {
     const int top = theme->header.height;
     const int area = height - top - theme->footer.height;
-    const double front = fmin(area * 0.24, width * 0.18);
+    const double front = fmin(area * 0.24, width * 0.18) * style_size();
     const double centre_x = width * 0.30;
     const double centre_y = top + area / 2.0;
     const double radius = area * 0.47;
@@ -25,7 +25,7 @@ void style_rolodex_apply(struct theme_config *theme, const int width, const int 
         const int size = (int) (front * (0.5 + 0.5 * cos(angle)));
         style_add_slot(
             index, &(style_slot) {centre_x, centre_y + radius * sin(angle), size, size, (int) (size * 0.25),
-                                  (int) lround(-35 * sin(angle)), 0, 0, abs(offset) == middle ? 0 : 255}
+                                  (int) lround(-35 * style_tilt() * sin(angle)), 0, 0, abs(offset) == middle ? 0 : 255}
         );
     }
     style_json_add("]}");

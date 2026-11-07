@@ -74,6 +74,8 @@ void ui_common_progress_fade_out(lv_obj_t *obj);
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, const struct theme_config *theme);
 
+void apply_content_alignment(const struct theme_config *theme, lv_obj_t *panel);
+
 lv_obj_t *create_footer_glyph(
     lv_obj_t *parent, const struct theme_config *theme, const char *glyph_name, struct footer_glyph nav_footer_glyph,
     int16_t add_hide_flag

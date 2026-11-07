@@ -7,7 +7,7 @@
 #define FAN_TURN  17
 
 void style_fan_apply(struct theme_config *theme, const int width, const int height) {
-    const double card_h = height * 0.34;
+    const double card_h = height * 0.34 * style_size();
     const double card_w = card_h * 0.72;
     const double pivot_y = height * 1.6;
     const double radius = pivot_y - height * 0.47;
@@ -23,12 +23,13 @@ void style_fan_apply(struct theme_config *theme, const int width, const int heig
     );
     for (int index = 0; index < FAN_SLOTS; index++) {
         const int offset = index - middle;
-        const double angle = offset * FAN_TURN * M_PI / 180.0;
+        const double turn = FAN_TURN * style_spacing();
+        const double angle = offset * turn * M_PI / 180.0;
         const double reach = radius + (offset ? 0 : card_h * 0.2);
         style_add_slot(
-            index,
-            &(style_slot) {width / 2.0 + reach * sin(angle), pivot_y - reach * cos(angle), (int) card_w, (int) card_h,
-                           (int) (card_w * 0.1), 0, 0, offset * FAN_TURN, abs(offset) == middle ? 0 : 255}
+            index, &(style_slot) {width / 2.0 + reach * sin(angle), pivot_y - reach * cos(angle), (int) card_w,
+                                  (int) card_h, (int) (card_w * 0.1), 0, 0, (int) lround(offset * turn * style_tilt()),
+                                  abs(offset) == middle ? 0 : 255}
         );
     }
     style_json_add("]}");

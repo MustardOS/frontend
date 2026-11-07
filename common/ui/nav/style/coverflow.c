@@ -6,13 +6,13 @@
 
 void style_coverflow_apply(struct theme_config *theme, const int width, const int height) {
     static const double sizes[] = {1.25, 0.95, 0.80};
-    const double turn = 50.0;
+    const double turn = 50.0 * style_tilt();
     const double squash = cos(turn * M_PI / 180.0);
 
     int columns, column_width, cell;
     style_carousel_cells(theme, width, height, &columns, &column_width, &cell);
 
-    const double gap = cell * 0.05;
+    const double gap = cell * 0.05 * style_spacing() + cell * (style_spacing() - 1);
     const int middle = columns / 2;
 
     style_json_add("{\"mode\":\"slots\",\"motion\":\"swing\",\"reflect\":70,\"slots\":[");

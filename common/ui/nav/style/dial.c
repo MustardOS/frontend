@@ -6,10 +6,10 @@
 #define DIAL_SLOTS 7
 
 void style_dial_apply(struct theme_config *theme, const int width, const int height) {
-    const double front = fmin(height * 0.26, width * 0.16);
+    const double front = fmin(height * 0.26, width * 0.16) * style_size();
     const double centre_x = width / 2.0;
     const double centre_y = height * 0.95;
-    const double radius_x = width * 0.46;
+    const double radius_x = width * 0.46 * fmin(style_spacing(), 1.08);
     const double radius_y = height * 0.55;
     const int middle = DIAL_SLOTS / 2;
 

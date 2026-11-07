@@ -11,13 +11,13 @@ void style_bubbles_apply(struct theme_config *theme, const int width, const int 
     };
     const int top = theme->header.height;
     const int area = style_content_bottom(theme, height) - top;
-    const double unit = fmin(area, width / BUBBLE_ASPECT);
+    const double unit = fmin(area, width / BUBBLE_ASPECT) * style_size();
     const double left = (width - unit * BUBBLE_ASPECT) / 2;
     const double upper = top + (area - unit) / 2;
 
     style_set_cells(theme, 2, 4, (int) (unit * 0.46), (int) (unit * 0.46), (int) (unit * 0.46), 0, 0);
 
-    style_json_add("{\"mode\":\"items\",\"focus_zoom\":118,\"items\":{");
+    style_json_add("{\"mode\":\"items\",\"focus_zoom\":%d,\"items\":{", style_swell(118));
     for (int index = 0; index < STYLE_ITEM_COUNT; index++) {
         const int diameter = (int) (unit * bubbles[index][2]);
         style_add_item(

@@ -1,3 +1,4 @@
+#include <common/ui/nav/cell_art.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -208,8 +209,7 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
         const grid_layout_entry layout =
             find_grid_layout((int) IFU(lv_obj_get_user_data(panel)), (int) lv_obj_get_index(panel));
         sized_theme = theme;
-        sized_theme.grid.cell.width =
-            (int16_t) (layout.found ? layout.w : lv_obj_get_style_width(panel, LV_PART_MAIN));
+        sized_theme.grid.cell.width = (int16_t) (layout.found ? layout.w : lv_obj_get_style_width(panel, LV_PART_MAIN));
         sized_theme.grid.cell.height =
             (int16_t) (layout.found ? layout.h : lv_obj_get_style_height(panel, LV_PART_MAIN));
         if (layout.found && layout.glyph > 0) sized_theme.glyph.grid = (int16_t) layout.glyph;
@@ -255,6 +255,7 @@ static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {
 
     update_grid_image(cell_image, items[index].grid_image);
     update_grid_image(cell_image_focused, items[index].grid_image_focused);
+    if (items[index].glyph_icon) cell_art_item(ui_pnl_item, items[index].glyph_icon);
 
     lv_obj_clear_flag(ui_pnl_item, LV_OBJ_FLAG_HIDDEN);
 
@@ -433,8 +434,8 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
         int keep = 100 - theme.grid.carousel_fade * distance;
         if (keep < 0) keep = 0;
 
-        const lv_opa_t base = lv_obj_get_style_opa_layered(cell_panel, LV_PART_MAIN);
-        lv_obj_set_style_opa_layered(cell_panel, (lv_opa_t) (base * keep / 100), MU_OBJ_MAIN_DEFAULT);
+        const lv_opa_t base = cell_opa(cell_panel);
+        cell_set_opa(cell_panel, (lv_opa_t) (base * keep / 100));
     }
 
     if (cell_label) lv_group_add_obj(ui_group, cell_label);
@@ -493,6 +494,8 @@ int is_carousel_grid_mode(void) {
 static void init_grid_common(const int count) {
     grid_mode_enabled = 1;
     grid_motion_reset();
+    grid_layout_forget();
+    cell_art_forget();
 
     init_grid_info(count, theme.grid.column_count);
     create_grid_panel(&theme, count);

@@ -18,6 +18,7 @@
 #include <common/ui/common.h>
 #include <common/ui/glyph.h>
 #include <common/ui/nav/menu_style.h>
+#include <common/display/theme_json.h>
 
 static int ini_cache_count = 0;
 static int ini_cache_capacity = 0;
@@ -494,6 +495,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->misc.image_overlay = 0;
     theme->misc.navigation_type = 0;
     theme->misc.menu_style = -1;
+    theme->misc.menu_style_name[0] = '\0';
     theme->misc.antialiasing = 1;
     theme->misc.label_width = 57;
     theme->misc.peek_opacity = 48;
@@ -976,6 +978,7 @@ static const theme_field theme_fields[] = {
     {"misc", "IMAGE_OVERLAY", THEME_OFF(misc.image_overlay), theme_int},
     {"misc", "NAVIGATION_TYPE", THEME_OFF(misc.navigation_type), theme_int},
     {"misc", "MENU_STYLE", THEME_OFF(misc.menu_style), theme_int},
+    {"misc", "MENU_STYLE_NAME", THEME_OFF(misc.menu_style_name), theme_str},
     {"misc", "ANTIALIASING", THEME_OFF(misc.antialiasing), theme_int},
     {"misc", "LABEL_WIDTH", THEME_OFF(misc.label_width), theme_int},
     {"misc", "PEEK_OPACITY", THEME_OFF(misc.peek_opacity), theme_int},
@@ -1040,6 +1043,13 @@ static mini_t *theme_cache_load(const char *path) {
     return scheme;
 }
 
+static void finish_scheme_fields(struct theme_config *theme) {
+    theme->list_default.background_gradient =
+        theme->list_default.gradient_start == 255 ? theme->list_default.background : theme->system.background;
+    theme->list_focus.background_gradient =
+        theme->list_focus.gradient_start == 255 ? theme->list_focus.background : theme->system.background;
+}
+
 void load_theme_from_scheme(const char *scheme, struct theme_config *theme, const struct mux_device *device) {
     mini_t *muos_theme = theme_cache_load(scheme);
 
@@ -1072,15 +1082,60 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, cons
         }
     }
 
-    theme->list_default.background_gradient =
-        theme->list_default.gradient_start == 255 ? theme->list_default.background : theme->system.background;
-    theme->list_focus.background_gradient =
-        theme->list_focus.gradient_start == 255 ? theme->list_focus.background : theme->system.background;
+    finish_scheme_fields(theme);
 
     theme->misc.content.width = get_ini_int(
         muos_theme, "misc", "CONTENT_WIDTH",
         config.visual.content_width ? device->screen.width : theme->misc.content.width
     );
+}
+
+static void load_theme_from_json(const struct json scheme, struct theme_config *theme) {
+    if (json_type(scheme) != JSON_OBJECT) return;
+
+    for (size_t i = 0; i < sizeof(theme_fields) / sizeof(theme_fields[0]); i++) {
+        const theme_field *f = &theme_fields[i];
+        const struct json value = theme_json_lookup(scheme, f->section, f->key);
+        if (!json_exists(value)) continue;
+
+        void *field_ptr = (char *) theme + f->offset;
+        switch (f->type) {
+            case theme_int: {
+                long v = theme_json_number(value, 10);
+                if (f->has_min && v < f->min) v = f->min;
+                if (f->has_max && v > f->max) v = f->max;
+                *(int16_t *) field_ptr = (int16_t) v;
+                break;
+            }
+            case theme_hex:
+                *(uint32_t *) field_ptr = (uint32_t) theme_json_number(value, 16);
+                break;
+            case theme_uint:
+                *(uint16_t *) field_ptr = (uint16_t) theme_json_number(value, 10);
+                break;
+            case theme_float:
+                *(float *) field_ptr = (float) json_double(value);
+                break;
+            case theme_str:
+                json_string_copy(value, (char *) field_ptr, MAX_BUFFER_SIZE);
+                break;
+        }
+    }
+
+    finish_scheme_fields(theme);
+
+    const struct json width = theme_json_lookup(scheme, "misc", "CONTENT_WIDTH");
+    if (json_exists(width)) theme->misc.content.width = (int16_t) theme_json_number(width, 10);
+}
+
+static int load_theme_json(char *data, struct theme_config *theme) {
+    if (!data) return 0;
+
+    const struct json root = json_parse(data);
+    load_theme_from_json(json_object_get(root, "scheme"), theme);
+    load_theme_from_json(theme_json_module(root, mux_module, "scheme"), theme);
+    free(data);
+    return 1;
 }
 
 static char active_alternate_base[MAX_BUFFER_SIZE];
@@ -1650,10 +1705,19 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         }
     }
 
+    if (load_theme_json(theme_json_read(theme_base), theme)) scheme_loaded = 1;
+
     if (scheme_loaded) {
         char alternate_scheme_path[MAX_BUFFER_SIZE];
         if (get_alt_scheme_path(alternate_scheme_path, sizeof(alternate_scheme_path))) {
             load_theme_from_scheme(alternate_scheme_path, theme, device);
+        }
+
+        char alternate_name[MAX_BUFFER_SIZE];
+        if (get_active_alternate(alternate_name, sizeof(alternate_name))) {
+            char alternate_json[MAX_BUFFER_SIZE];
+            snprintf(alternate_json, sizeof(alternate_json), "%s/alternate/%s.json", theme_base, alternate_name);
+            load_theme_json(theme_json_read_file(alternate_json), theme);
         }
 
         char alternate_base[MAX_BUFFER_SIZE];
@@ -1664,6 +1728,7 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
                     LOG_INFO("muxfrontend", "Loading Alternative Scheme: %s", scheme);
                 }
             }
+            load_theme_json(theme_json_read(alternate_base), theme);
         }
     }
 
@@ -1674,8 +1739,9 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     menu_style_apply(theme, device->mux.width, device->mux.height);
     theme->grid.enabled = theme->grid.column_count > 0 && theme->grid.row_count > 0;
     if (theme->misc.content.width == 0) theme->misc.content.width = device->mux.width;
-    if (config->settings.themeopt.label_width > 0 && 
-            (strcmp(mux_module, "muxplore") == 0 || strcmp(mux_module, "muxcollect") == 0 || strcmp(mux_module, "muxhistory") == 0)) {
+    if (config->settings.themeopt.label_width > 0
+        && (strcmp(mux_module, "muxplore") == 0 || strcmp(mux_module, "muxcollect") == 0
+            || strcmp(mux_module, "muxhistory") == 0)) {
         theme->misc.content.width = (int16_t) (device->mux.width * config->settings.themeopt.label_width / 100);
     }
     if (theme->misc.content.height > device->mux.height) theme->misc.content.height = device->mux.height;

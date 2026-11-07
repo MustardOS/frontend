@@ -497,6 +497,7 @@ struct theme_config {
         int16_t label_width;
         int16_t peek_opacity;
         int16_t menu_style;
+        char menu_style_name[MAX_BUFFER_SIZE];
     } misc;
 
     struct {

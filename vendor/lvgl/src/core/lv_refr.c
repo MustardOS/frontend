@@ -883,6 +883,10 @@ layer_get_area(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj, lv_layer_type_t layer_typ
     lv_obj_get_coords(obj, &obj_coords_ext);
     lv_area_increase(&obj_coords_ext, ext_draw_size, ext_draw_size);
 
+    if (layer_type == LV_LAYER_TYPE_TRANSFORM && lv_obj_get_style_transform_angle(obj, 0) != 0) {
+        lv_area_increase(&obj_coords_ext, 2, 2);
+    }
+
     if (layer_type == LV_LAYER_TYPE_TRANSFORM && lv_obj_has_transform_3d(obj)) {
         /*A perspective transform needs the whole object, and its projection stays inside the object's own area*/
         const lv_coord_t zoom = lv_obj_get_style_transform_zoom(obj, 0);

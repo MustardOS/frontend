@@ -228,9 +228,12 @@
     CUSTOM(theme_scaling, "scaling")                                                                                   \
     CUSTOM(theme_alternate, "alternate")                                                                               \
     CUSTOM(random_theme, "randomtheme")                                                                                \
+    CUSTOM(menu_reset, "menureset")                                                                                    \
+    CUSTOM(menu_layout, "menulayout")                                                                                  \
     CUSTOM(menu_style, "menustyle")                                                                                    \
     CUSTOM(menu_label, "menulabel")                                                                                    \
     CUSTOM(menu_random, "menurandom")                                                                                  \
+    CUSTOM(menu_glyph_zoom, "menuglyphzoom")                                                                           \
     CUSTOM(menu_order, "menuorder")                                                                                    \
     CUSTOM(header_height, "headerheight")                                                                              \
     CUSTOM(footer_height, "footerheight")                                                                              \
