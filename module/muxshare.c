@@ -1975,9 +1975,13 @@ void resolve_grid_item_images(
     const char *mux_dim, const char *mux_module, const char *glyph_name, char *grid_img, const size_t img_size,
     char *grid_img_foc, const size_t foc_size
 ) {
-    if (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)
-        && !load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size)
-        && menu_style_active()) {
+    const int card_art = menu_style_card_art();
+    if (card_art
+        || (!load_element_image_specifics(mux_dim, mux_module, "grid", glyph_name, "default", "svg", grid_img, img_size)
+            && !load_element_image_specifics(
+                mux_dim, mux_module, "grid", glyph_name, "default", "png", grid_img, img_size
+            )
+            && menu_style_active())) {
         load_glyph_icon(mux_dim, mux_module, glyph_name, grid_img, img_size);
     }
 
@@ -1985,6 +1989,7 @@ void resolve_grid_item_images(
     snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);
 
     grid_img_foc[0] = '\0';
+    if (card_art) return;
     if (!load_element_image_specifics(
             mux_dim, mux_module, "grid", glyph_name_focused, "default_focused", "svg", grid_img_foc, foc_size
         )) {

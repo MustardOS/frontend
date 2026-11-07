@@ -79,7 +79,7 @@ static void draw_bg_color(
 
 static void draw_bg_grad_simple(
     lv_draw_sdl_ctx_t *ctx, const lv_area_t *coords, const lv_area_t *draw_area, const lv_grad_dsc_t *grad,
-    int blend_mod
+    int blend_mod, lv_opa_t opa
 );
 
 static void draw_bg_grad_radius(
@@ -238,22 +238,22 @@ SDL_Texture *lv_draw_sdl_rect_grad_frag_obtain(
         /* Align to top left */
         lv_area_align(&coords, &draw_area, LV_ALIGN_TOP_LEFT, 0, 0);
         lv_area_align(&coords, &blend_coords, LV_ALIGN_TOP_LEFT, 0, 0);
-        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1);
+        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1, LV_OPA_COVER);
 
         /* Align to top right */
         lv_area_align(&coords, &draw_area, LV_ALIGN_TOP_RIGHT, 0, 0);
         lv_area_align(&coords, &blend_coords, LV_ALIGN_TOP_RIGHT, 0, 0);
-        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1);
+        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1, LV_OPA_COVER);
 
         /* Align to bottom right */
         lv_area_align(&coords, &draw_area, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
         lv_area_align(&coords, &blend_coords, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1);
+        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1, LV_OPA_COVER);
 
         /* Align to bottom left */
         lv_area_align(&coords, &draw_area, LV_ALIGN_BOTTOM_LEFT, 0, 0);
         lv_area_align(&coords, &blend_coords, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1);
+        draw_bg_grad_simple(ctx, &blend_coords, &draw_area, grad, 1, LV_OPA_COVER);
 
         SDL_SetRenderTarget(ctx->renderer, target_backup);
         *in_cache = lv_draw_sdl_texture_cache_put(ctx, &key, sizeof(key), texture);
@@ -386,7 +386,7 @@ static void draw_bg_color(
         lv_color_to_sdl_color(&dsc->bg_grad.stops[0].color, &bg_color);
     } else {
         if (radius <= 0) {
-            draw_bg_grad_simple(ctx, coords, draw_area, &dsc->bg_grad, 0);
+            draw_bg_grad_simple(ctx, coords, draw_area, &dsc->bg_grad, 0, dsc->bg_opa);
         } else {
             draw_bg_grad_radius(ctx, coords, draw_area, dsc);
         }
@@ -422,7 +422,7 @@ static void draw_bg_color(
 
 static void draw_bg_grad_simple(
     lv_draw_sdl_ctx_t *ctx, const lv_area_t *coords, const lv_area_t *draw_area, const lv_grad_dsc_t *grad,
-    int blend_mod
+    int blend_mod, lv_opa_t opa
 ) {
     SDL_Rect dstrect;
     lv_area_to_sdl_rect(draw_area, &dstrect);
@@ -461,7 +461,9 @@ static void draw_bg_grad_simple(
         SDL_SetTextureBlendMode(grad_texture, SDL_BLENDMODE_BLEND);
     }
 
+    SDL_SetTextureAlphaMod(grad_texture, opa);
     SDL_RenderCopy(ctx->renderer, grad_texture, &srcrect, &dstrect);
+    SDL_SetTextureAlphaMod(grad_texture, LV_OPA_COVER);
 
     if (!grad_texture_in_cache) {
         LV_LOG_WARN("Texture is not cached, this will impact performance.");
@@ -481,7 +483,9 @@ static void draw_bg_grad_radius(
         lv_draw_sdl_rect_grad_frag_obtain(ctx, &dsc->bg_grad, bg_w, bg_h, radius, &grad_texture_in_cache);
     SDL_SetTextureBlendMode(grad_texture, SDL_BLENDMODE_BLEND);
 
+    SDL_SetTextureAlphaMod(grad_texture, dsc->bg_opa);
     lv_draw_sdl_rect_bg_frag_draw_corners(ctx, grad_texture, real_radius, coords, draw_area, 1);
+    SDL_SetTextureAlphaMod(grad_texture, LV_OPA_COVER);
     lv_area_t part_coords;
     lv_area_t part_area;
     if (bg_w > radius * 2) {
@@ -493,11 +497,11 @@ static void draw_bg_grad_radius(
 
         lv_area_align(coords, &part_coords, LV_ALIGN_LEFT_MID, 0, 0);
         _lv_area_intersect(&part_area, &part_coords, draw_area);
-        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0);
+        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0, dsc->bg_opa);
 
         lv_area_align(coords, &part_coords, LV_ALIGN_RIGHT_MID, 0, 0);
         _lv_area_intersect(&part_area, &part_coords, draw_area);
-        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0);
+        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0, dsc->bg_opa);
 
         part_coords.x1 = radius;
         part_coords.x2 = bg_w - radius - 1;
@@ -505,7 +509,7 @@ static void draw_bg_grad_radius(
         part_coords.y2 = bg_h - 1;
         lv_area_align(coords, &part_coords, LV_ALIGN_CENTER, 0, 0);
         _lv_area_intersect(&part_area, &part_coords, draw_area);
-        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0);
+        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0, dsc->bg_opa);
     } else if (bg_h > radius * 2) {
         /*Draw top, middle, bottom*/
         part_coords.x1 = radius;
@@ -515,11 +519,11 @@ static void draw_bg_grad_radius(
 
         lv_area_align(coords, &part_coords, LV_ALIGN_TOP_MID, 0, 0);
         _lv_area_intersect(&part_area, &part_coords, draw_area);
-        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0);
+        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0, dsc->bg_opa);
 
         lv_area_align(coords, &part_coords, LV_ALIGN_BOTTOM_MID, 0, 0);
         _lv_area_intersect(&part_area, &part_coords, draw_area);
-        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0);
+        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0, dsc->bg_opa);
 
         part_coords.x1 = 0;
         part_coords.x2 = bg_w - 1;
@@ -527,7 +531,7 @@ static void draw_bg_grad_radius(
         part_coords.y2 = bg_h - radius - 1;
         lv_area_align(coords, &part_coords, LV_ALIGN_CENTER, 0, 0);
         _lv_area_intersect(&part_area, &part_coords, draw_area);
-        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0);
+        draw_bg_grad_simple(ctx, coords, &part_area, &dsc->bg_grad, 0, dsc->bg_opa);
     }
 
     if (!grad_texture_in_cache) {

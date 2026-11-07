@@ -19,8 +19,9 @@ const char *const style_tweak_keys[TWEAK_FIELD_COUNT] = {
 _Static_assert(NUMBER_COUNT <= 32, "numbers outgrew the set mask");
 
 const char *const style_number_keys[NUMBER_COUNT] = {
-    "size_pct", "spacing_pct", "tilt",   "swell_pct",  "text_pct", "focus_width", "slice_gap",  "slant",
-    "text_bg",  "text_x",      "text_y", "text_angle", "name_x",   "name_y",      "name_angle", "name_bg",
+    "size_pct",   "spacing_pct", "tilt",         "swell_pct", "text_pct",   "focus_width", "slice_gap",
+    "slant",      "text_bg",     "text_x",       "text_y",    "text_angle", "name_x",      "name_y",
+    "name_angle", "name_bg",     "mascot_scale", "glyph_pct", "name_w",
 };
 
 const char *const style_cascade_keys[CASCADE_FIELD_COUNT] = {"size", "spacing", "angle", "tilt", "fade"};

@@ -48,6 +48,9 @@ enum style_number {
     number_namey,
     number_nameangle,
     number_namebg,
+    number_mascotscale,
+    number_glyphscale,
+    number_namewidth,
     NUMBER_COUNT
 };
 

@@ -30,6 +30,10 @@ enum menu_layout_option {
     layout_namey,
     layout_nameangle,
     layout_namebg,
+    layout_mascotscale,
+    layout_shape,
+    layout_glyphscale,
+    layout_namewidth,
     LAYOUT_OPTION_COUNT
 };
 
@@ -64,6 +68,14 @@ enum menu_style {
 int menu_style_active(void);
 
 int menu_name_angle(void);
+
+int menu_style_card_art(void);
+
+int menu_style_index(const char *name);
+
+int menu_style_named_for(const char *theme_path);
+
+int menu_layout_choices(int option);
 
 int menu_style_current(void);
 

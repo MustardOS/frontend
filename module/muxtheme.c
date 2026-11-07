@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include <common/ui/nav/menu_style.h>
 #include <common/ui/orientation.h>
 #include <common/ui/empty_state.h>
 #include <common/ui/more.h>
@@ -173,7 +174,7 @@ static void save_active_theme(char *path, const char *theme_path) {
         else if (config.settings.advanced.font == 1)
             font_type = 2;
         if (font_type >= 0) write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, font_type);
-        write_text_to_file_atomic(CONF_CONFIG_PATH "settings/theme/menu_style", INT, 0);
+        write_text_to_file_atomic(CONF_CONFIG_PATH "settings/theme/menu_style", INT, menu_style_named_for(theme_path));
         run_tweak_script(lang.generic.loading);
     }
 }

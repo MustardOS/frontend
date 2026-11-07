@@ -39,8 +39,13 @@ static int layout_number(const char *key, const int index) {
     return json_exists(value) && index == 0 ? json_int(value) : 0;
 }
 
+static int mascot_scale(void) {
+    const int scale = layout_number("mascot_scale", 0);
+    return scale > 0 ? scale : 100;
+}
+
 static int mascot_size(void) {
-    return layout_number("mascot", 0);
+    return layout_number("mascot", 0) * mascot_scale() / 100;
 }
 
 static int layout_side(void) {
@@ -186,9 +191,12 @@ static void create(lv_obj_t *screen, const int size) {
         lv_img_header_t header;
         lv_img_set_src(mascot, frame_paths[0]);
         if (lv_img_decoder_get_info(frame_paths[0], &header) == LV_RES_OK && header.w && header.h) {
-            sprite_w = (int) header.w;
-            sprite_h = (int) header.h;
+            sprite_w = (int) header.w * mascot_scale() / 100;
+            sprite_h = (int) header.h * mascot_scale() / 100;
         }
+        lv_img_set_antialias(mascot, false);
+        lv_img_set_pivot(mascot, 0, 0);
+        lv_img_set_zoom(mascot, (uint16_t) (LV_IMG_ZOOM_NONE * mascot_scale() / 100));
         frame_timer = lv_timer_create(frame_step, 120, NULL);
     } else {
         lv_img_set_src(mascot, pointer_image(size));

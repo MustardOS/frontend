@@ -2563,6 +2563,7 @@ void create_grid_item(
     lv_obj_set_style_clip_corner(
         cell_pnl, cell_side <= 0 || theme->grid.cell.radius * 5 < cell_side * 2, MU_OBJ_MAIN_DEFAULT
     );
+    lv_obj_clear_flag(cell_pnl, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_width(cell_pnl, theme->grid.cell.border_width, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_style(cell_pnl, &grid_cell_shadow_style, 0);
 
@@ -2604,6 +2605,7 @@ void create_grid_item(
         lv_obj_set_style_opa_layered(cell_pnl, (lv_opa_t) theme->grid.cell_focus.background_alpha, MU_OBJ_MAIN_FOCUS);
         lv_obj_set_style_bg_opa(cell_pnl, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
     } else {
+        lv_obj_set_style_opa_layered(cell_pnl, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
         lv_obj_set_style_bg_opa(cell_pnl, (lv_opa_t) theme->grid.cell_focus.background_alpha, MU_OBJ_MAIN_FOCUS);
     }
     lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->grid.cell_focus.border), MU_OBJ_MAIN_FOCUS);

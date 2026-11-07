@@ -9,6 +9,13 @@
 
 extern int current_item_index;
 
+static void panel_area(lv_obj_t *panel, long *x1, long *y1, long *x2, long *y2) {
+    *x1 = lv_obj_get_x(panel);
+    *y1 = lv_obj_get_y(panel);
+    *x2 = *x1 + lv_obj_get_width(panel);
+    *y2 = *y1 + lv_obj_get_height(panel);
+}
+
 int grid_spatial_target(const int dx, const int dy) {
     lv_obj_t *from = NULL;
     const uint32_t count = lv_obj_get_child_cnt(ui_pnl_grid);
@@ -18,44 +25,47 @@ int grid_spatial_target(const int dx, const int dy) {
     }
     if (!from) return -1;
 
-    const lv_coord_t from_x = lv_obj_get_x(from) + lv_obj_get_width(from) / 2;
-    const lv_coord_t from_y = lv_obj_get_y(from) + lv_obj_get_height(from) / 2;
-    const long row_half = lv_obj_get_height(from) / 2;
+    long fx1, fy1, fx2, fy2;
+    panel_area(from, &fx1, &fy1, &fx2, &fy2);
+    const long f_along = dx ? (fx1 + fx2) * dx : (fy1 + fy2) * dy;
+    const long f_near = dx ? (dx > 0 ? fx2 : -fx1) : (dy > 0 ? fy2 : -fy1);
+    const long f_lo = dx ? fy1 : fx1, f_hi = dx ? fy2 : fx2;
 
-    int ahead = -1, near = -1, wrap = -1;
-    long ahead_score = 0, near_score = 0, wrap_along = 0;
+    int best = -1, wrap = -1;
+    long best_tier = 0, best_score = 0, wrap_along = 0;
     for (uint32_t i = 0; i < count; i++) {
         lv_obj_t *panel = lv_obj_get_child(ui_pnl_grid, (int32_t) i);
-        if (panel == from) continue;
+        if (panel == from || lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN)) continue;
 
         const int index = (int) IFU(lv_obj_get_user_data(panel));
-        const long vx = lv_obj_get_x(panel) + lv_obj_get_width(panel) / 2 - from_x;
-        const long vy = lv_obj_get_y(panel) + lv_obj_get_height(panel) / 2 - from_y;
-        const long along = vx * dx + vy * dy;
-        const long across = labs(vx * dy - vy * dx);
+        long cx1, cy1, cx2, cy2;
+        panel_area(panel, &cx1, &cy1, &cx2, &cy2);
+        const long c_along = dx ? (cx1 + cx2) * dx : (cy1 + cy2) * dy;
+        const long c_lo = dx ? cy1 : cx1, c_hi = dx ? cy2 : cx2;
+        const long overlap = LV_MIN(f_hi, c_hi) - LV_MAX(f_lo, c_lo);
 
-        if (along <= 0) {
-            if (dx && across <= row_half && along < wrap_along) {
+        if (c_along <= f_along + 4) {
+            if (dx && overlap > 0 && (wrap < 0 || c_along < wrap_along)) {
                 wrap = index;
-                wrap_along = along;
+                wrap_along = c_along;
             }
             continue;
         }
 
-        const long score = along + across;
-        if (across * 20 <= along * 13 && (ahead < 0 || score < ahead_score)) {
-            ahead = index;
-            ahead_score = score;
-        }
-        if (near < 0 || score < near_score) {
-            near = index;
-            near_score = score;
+        const long c_near = dx ? (dx > 0 ? cx1 : -cx2) : (dy > 0 ? cy1 : -cy2);
+        const long gap = LV_MAX(0, c_near - f_near);
+        const long centre = labs((c_lo + c_hi) - (f_lo + f_hi)) / 2;
+        const long tier = overlap > 0 ? 0 : 1;
+        const long score = tier ? gap + (centre - (f_hi - f_lo) / 2) * 2 : gap * 4 + centre;
+        if (best < 0 || tier < best_tier || (tier == best_tier && score < best_score)) {
+            best = index;
+            best_tier = tier;
+            best_score = score;
         }
     }
 
-    if (ahead >= 0) return ahead;
-    if (dx && wrap >= 0) return wrap;
-    return near;
+    if (best >= 0) return best;
+    return dx ? wrap : -1;
 }
 
 int is_horizontal_grid_nav(void) {

@@ -257,6 +257,15 @@ static void paged_update(const int animate) {
         lv_obj_add_event_cb(ui_pnl_grid, paged_repaint, LV_EVENT_SCROLL_END, NULL);
     }
 
+    lv_coord_t dots_y = (lv_coord_t) (device.mux.height - theme.footer.height - 30);
+    lv_obj_t *first = lv_obj_get_child(ui_pnl_grid, 0);
+    if (first) {
+        lv_area_t cell;
+        lv_obj_update_layout(ui_pnl_grid);
+        lv_obj_get_coords(first, &cell);
+        dots_y = (lv_coord_t) (cell.y2 + 14);
+    }
+
     const int page = current_item_index / 4;
     lv_obj_scroll_to_x(ui_pnl_grid, (lv_coord_t) (page * device.mux.width), animate ? LV_ANIM_ON : LV_ANIM_OFF);
 
@@ -267,10 +276,8 @@ static void paged_update(const int animate) {
             lv_obj_set_size(page_dots[i], 10, 10);
             lv_obj_set_style_radius(page_dots[i], LV_RADIUS_CIRCLE, MU_OBJ_MAIN_DEFAULT);
             lv_obj_set_style_bg_opa(page_dots[i], LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
-            lv_obj_align(
-                page_dots[i], LV_ALIGN_BOTTOM_MID, (lv_coord_t) (i * 20 - 10), (lv_coord_t) - (theme.footer.height + 20)
-            );
         }
+        lv_obj_align(page_dots[i], LV_ALIGN_TOP_MID, (lv_coord_t) (i * 20 - 10), dots_y);
         const int active = i == page;
         lv_obj_set_style_bg_color(page_dots[i], lv_color_hex(theme.grid.cell_focus.background), MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(page_dots[i], active ? LV_OPA_COVER : LV_OPA_40, MU_OBJ_MAIN_DEFAULT);
@@ -350,21 +357,29 @@ static int spatial_move(const int dx, const int dy) {
 
 static const char *layout_name(const int option) {
     const char *names[] = {
-        lang.muxlaunch.layout.size,           lang.muxlaunch.layout.spacing,    lang.muxlaunch.layout.tilt,
-        lang.muxlaunch.layout.swell,          lang.muxlaunch.layout.position,   lang.muxlaunch.layout.pile,
-        lang.muxlaunch.layout.names,          lang.muxlaunch.layout.large,      lang.muxlaunch.layout.fit,
-        lang.muxlaunch.layout.glyph_position, lang.muxlaunch.layout.text_size,  lang.muxlaunch.layout.focus_width,
-        lang.muxlaunch.layout.perch,          lang.muxlaunch.layout.slice_text, lang.muxlaunch.layout.bounce_height,
-        lang.muxlaunch.layout.slice_gap,      lang.muxlaunch.layout.slant,      lang.muxlaunch.layout.text_x,
-        lang.muxlaunch.layout.text_back,      lang.muxlaunch.layout.text_y,     lang.muxlaunch.layout.text_angle,
-        lang.muxlaunch.layout.name_x,         lang.muxlaunch.layout.name_y,     lang.muxlaunch.layout.name_angle,
-        lang.muxlaunch.layout.name_back
+        lang.muxlaunch.layout.size,           lang.muxlaunch.layout.spacing,     lang.muxlaunch.layout.tilt,
+        lang.muxlaunch.layout.swell,          lang.muxlaunch.layout.position,    lang.muxlaunch.layout.pile,
+        lang.muxlaunch.layout.names,          lang.muxlaunch.layout.large,       lang.muxlaunch.layout.fit,
+        lang.muxlaunch.layout.glyph_position, lang.muxlaunch.layout.text_size,   lang.muxlaunch.layout.focus_width,
+        lang.muxlaunch.layout.perch,          lang.muxlaunch.layout.slice_text,  lang.muxlaunch.layout.bounce_height,
+        lang.muxlaunch.layout.slice_gap,      lang.muxlaunch.layout.slant,       lang.muxlaunch.layout.text_x,
+        lang.muxlaunch.layout.text_back,      lang.muxlaunch.layout.text_y,      lang.muxlaunch.layout.text_angle,
+        lang.muxlaunch.layout.name_x,         lang.muxlaunch.layout.name_y,      lang.muxlaunch.layout.name_angle,
+        lang.muxlaunch.layout.name_back,      lang.muxlaunch.layout.mascot_size, lang.muxlaunch.layout.shape,
+        lang.muxlaunch.layout.glyph_scale,    lang.muxlaunch.layout.name_width
     };
     if (option == layout_position && !theme.grid.enabled) return lang.muxlaunch.layout.text_position;
     return names[option];
 }
 
 static const char *layout_choice(const int option, const int value) {
+    if (option == layout_shape) {
+        const char *shapes[] = {
+            lang.muxlaunch.layout.standard, lang.muxlaunch.layout.square, lang.muxlaunch.layout.round,
+            lang.muxlaunch.layout.hexagon
+        };
+        return shapes[LV_CLAMP(0, value, 3)];
+    }
     const char *choices[][3] = {
         {lang.muxlaunch.layout.smaller, lang.muxlaunch.layout.standard, lang.muxlaunch.layout.larger},
         {lang.muxlaunch.layout.tighter, lang.muxlaunch.layout.standard, lang.muxlaunch.layout.wider},
@@ -389,6 +404,10 @@ static const char *layout_choice(const int option, const int value) {
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
+        {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
+        {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
+        {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
+        {lang.muxlaunch.layout.standard, lang.muxlaunch.layout.round, lang.muxlaunch.layout.hexagon},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
     };
@@ -429,22 +448,25 @@ typedef struct {
 } edit_number;
 
 static const edit_number numbers[NUMBER_COUNT] = {
-    [number_size] = {layout_size, 50, 150, 5, "%d%%"},
-    [number_spacing] = {layout_spacing, 50, 200, 5, "%d%%"},
-    [number_tilt] = {layout_tilt, -300, 300, 10, "%d%%"},
-    [number_swell] = {layout_swell, 0, 300, 10, "%d%%"},
-    [number_text] = {layout_text, 50, 200, 5, "%d%%"},
-    [number_focus] = {layout_focus, 30, 80, 1, "%d%%"},
-    [number_gap] = {layout_gap, 0, 60, 1, "%dpx"},
-    [number_slant] = {layout_slant, -30, 30, 1, "%d\u00B0"},
-    [number_textbg] = {layout_textbg, 0, 100, 5, "%d%%"},
-    [number_textx] = {layout_textx, -960, 960, 4, "%+dpx"},
-    [number_texty] = {layout_texty, 0, 1080, 4, "%dpx"},
+    [number_size] = {layout_size, 20, 300, 1, "%d%%"},
+    [number_spacing] = {layout_spacing, 20, 400, 1, "%d%%"},
+    [number_tilt] = {layout_tilt, -500, 500, 1, "%d%%"},
+    [number_swell] = {layout_swell, 0, 500, 1, "%d%%"},
+    [number_text] = {layout_text, 25, 400, 1, "%d%%"},
+    [number_focus] = {layout_focus, 10, 95, 1, "%d%%"},
+    [number_gap] = {layout_gap, 0, 200, 1, "%dpx"},
+    [number_slant] = {layout_slant, -60, 60, 1, "%d\u00B0"},
+    [number_textbg] = {layout_textbg, 0, 100, 1, "%d%%"},
+    [number_textx] = {layout_textx, -960, 960, 1, "%+dpx"},
+    [number_texty] = {layout_texty, 0, 1080, 1, "%dpx"},
     [number_textangle] = {layout_textangle, -180, 180, 1, "%d\u00B0"},
-    [number_namex] = {layout_namex, -960, 960, 4, "%+dpx"},
-    [number_namey] = {layout_namey, -1080, 1080, 4, "%+dpx"},
+    [number_namex] = {layout_namex, -960, 960, 1, "%+dpx"},
+    [number_namey] = {layout_namey, -1080, 1080, 1, "%+dpx"},
     [number_nameangle] = {layout_nameangle, -180, 180, 1, "%d\u00B0"},
-    [number_namebg] = {layout_namebg, 0, 100, 5, "%d%%"},
+    [number_namebg] = {layout_namebg, 0, 100, 1, "%d%%"},
+    [number_mascotscale] = {layout_mascotscale, 10, 500, 1, "%d%%"},
+    [number_glyphscale] = {layout_glyphscale, 10, 400, 1, "%d%%"},
+    [number_namewidth] = {layout_namewidth, 10, 300, 1, "%d%%"},
 };
 
 static int option_number(const int option) {
@@ -465,26 +487,25 @@ static edit_range tweak_range(const int field) {
     switch (field) {
         case tweak_dx:
         case tweak_dy:
-            return (edit_range) {-500, 500, 10, 0};
         case tweak_dw:
         case tweak_dh:
-            return (edit_range) {-400, 400, 10, 0};
+            return (edit_range) {-1000, 1000, 2, 0};
         case tweak_angle:
-            return (edit_range) {-180, 180, 1, 0};
+            return (edit_range) {-360, 360, 1, 0};
         case tweak_tilt_x:
         case tweak_tilt_y:
-            return (edit_range) {-80, 80, 1, 0};
+            return (edit_range) {-89, 89, 1, 0};
         case tweak_depth:
-            return (edit_range) {-8, 8, 1, 0};
+            return (edit_range) {-20, 20, 1, 0};
         case tweak_opacity:
-            return (edit_range) {0, 255, 13, 255};
+            return (edit_range) {0, 255, 3, 255};
         default:
-            return (edit_range) {8, 256, 4, theme.grid.cell.width / 2};
+            return (edit_range) {4, 512, 1, theme.grid.cell.width / 2};
     }
 }
 
 static const edit_range cascade_ranges[CASCADE_FIELD_COUNT] = {
-    {-30, 30, 2, 0}, {-200, 200, 10, 0}, {-45, 45, 1, 0}, {-60, 60, 1, 0}, {0, 50, 5, 0},
+    {-60, 60, 1, 0}, {-500, 500, 2, 0}, {-90, 90, 1, 0}, {-89, 89, 1, 0}, {0, 100, 1, 0},
 };
 
 static int edit_step(const int value, const int direction, const edit_range range) {
@@ -527,11 +548,13 @@ static void edit_rows_build(void) {
         return;
     }
 
-    static const int shown[] = {layout_size,   layout_spacing, layout_tilt,      layout_swell,     layout_position,
-                                layout_glyph,  layout_perch,   layout_pile,      layout_names,     layout_slicetext,
-                                layout_textx,  layout_texty,   layout_textangle, layout_textbg,    layout_text,
-                                layout_large,  layout_fit,     layout_focus,     layout_gap,       layout_slant,
-                                layout_bounce, layout_namex,   layout_namey,     layout_nameangle, layout_namebg};
+    static const int shown[] = {
+        layout_size,     layout_spacing, layout_shape,     layout_glyphscale, layout_tilt,        layout_swell,
+        layout_position, layout_glyph,   layout_perch,     layout_pile,       layout_names,       layout_slicetext,
+        layout_textx,    layout_texty,   layout_textangle, layout_textbg,     layout_text,        layout_large,
+        layout_fit,      layout_focus,   layout_gap,       layout_slant,      layout_mascotscale, layout_bounce,
+        layout_namex,    layout_namey,   layout_nameangle, layout_namebg,     layout_namewidth
+    };
     const int options = menu_layout_options();
     for (size_t i = 0; i < A_SIZE(shown); i++) {
         if (!(options & (1 << shown[i]))) continue;
@@ -539,7 +562,7 @@ static void edit_rows_build(void) {
                              || shown[i] == layout_textbg;
         if (text_row && !menu_layout_value(layout_slicetext)) continue;
         const int name_row = shown[i] == layout_namex || shown[i] == layout_namey || shown[i] == layout_nameangle
-                             || shown[i] == layout_namebg;
+                             || shown[i] == layout_namebg || shown[i] == layout_namewidth;
         const int names_off = (options & (1 << layout_names)) && menu_layout_value(layout_names) != 0;
         if (name_row && (names_off || !config.settings.themeopt.menu_label)) continue;
         if (shown[i] == layout_bounce) {
@@ -951,9 +974,22 @@ static void layout_refill(const int kind, const int field) {
     }
 }
 
+static uint32_t change_tick = 0;
+static int change_row = -1;
+static int change_streak = 0;
+
+static int layout_accel(void) {
+    const int same = change_row == layout_selected && lv_tick_elaps(change_tick) < 300;
+    change_streak = same ? change_streak + 1 : 0;
+    change_row = layout_selected;
+    change_tick = lv_tick_get();
+    return change_streak < 6 ? 1 : change_streak < 16 ? 4 : change_streak < 30 ? 10 : 25;
+}
+
 static void layout_change(const int direction) {
     if (!layout_row_count) return;
 
+    const int fast = direction * layout_accel();
     const layout_row *row = &layout_rows[layout_selected];
     style_tweaks *tweaks = style_tweaks_current();
     switch (row->kind) {
@@ -963,7 +999,7 @@ static void layout_change(const int direction) {
             break;
         case row_number: {
             const edit_number *number = &numbers[row->field];
-            const int value = style_number_value(row->field) + direction * number->step;
+            const int value = style_number_value(row->field) + fast * number->step;
             tweaks->number[row->field] = LV_CLAMP(number->min, value, number->max);
             if (row->field == number_textx) {
                 tweaks->number[row->field] = LV_CLAMP(-device.mux.width / 2, value, device.mux.width / 2);
@@ -973,19 +1009,33 @@ static void layout_change(const int direction) {
             tweaks->number_set |= 1u << row->field;
             break;
         }
+        case row_nudge: {
+            int *nudge = row->field ? &tweaks->mascot_y : &tweaks->mascot_x;
+            *nudge = LV_CLAMP(-300, *nudge + fast, 300);
+            break;
+        }
+        case row_bounce:
+            if (row->field) {
+                tweaks->bounce_speed = LV_CLAMP(100, style_bounce_speed() + fast * 10, 3000);
+                tweaks->bounce_height = style_bounce_height();
+            } else {
+                tweaks->bounce_height = LV_CLAMP(0, style_bounce_height() + fast, 100);
+                tweaks->bounce_speed = style_bounce_speed();
+            }
+            tweaks->bounce_set = 3;
+            break;
         case row_cascade:
-            tweaks->cascade[row->field] = edit_step(tweaks->cascade[row->field], direction, cascade_ranges[row->field]);
+            tweaks->cascade[row->field] = edit_step(tweaks->cascade[row->field], fast, cascade_ranges[row->field]);
             break;
         case row_motion:
             tweaks->motion = (tweaks->motion + direction + MOTION_COUNT) % MOTION_COUNT;
             break;
         case row_time:
-            tweaks->time = tweaks->time + direction * 50 < 100 ? 0 : LV_CLAMP(100, tweaks->time + direction * 50, 1500);
-            if (!tweaks->time && direction > 0) tweaks->time = 100;
+            tweaks->time = tweaks->time + fast * 10 < 50 ? 0 : LV_CLAMP(50, tweaks->time + fast * 10, 3000);
+            if (!tweaks->time && direction > 0) tweaks->time = 50;
             break;
         case row_swell:
-            tweaks->swell =
-                tweaks->swell + direction * 2 < 100 ? -1 : LV_CLAMP(100, tweaks->swell + direction * 2, 160);
+            tweaks->swell = tweaks->swell + fast < 100 ? -1 : LV_CLAMP(100, tweaks->swell + fast, 250);
             if (tweaks->swell < 0 && direction > 0) tweaks->swell = 100;
             break;
         case row_target:
@@ -996,9 +1046,7 @@ static void layout_change(const int direction) {
         default: {
             style_tweak *tweak = edit_tweak();
             const edit_range range = tweak_range(row->field);
-            style_tweak_set(
-                tweak, row->field, edit_step(style_tweak_get(tweak, row->field, range.start), direction, range)
-            );
+            style_tweak_set(tweak, row->field, edit_step(style_tweak_get(tweak, row->field, range.start), fast, range));
             break;
         }
     }
@@ -1044,6 +1092,18 @@ static void layout_reset(void) {
             tweaks->number_set = (tweaks->number_set & ~bit) | (base.number_set & bit);
             break;
         }
+        case row_nudge:
+            if (row->field) {
+                tweaks->mascot_y = base.mascot_y;
+            } else {
+                tweaks->mascot_x = base.mascot_x;
+            }
+            break;
+        case row_bounce:
+            tweaks->bounce_height = base.bounce_height;
+            tweaks->bounce_speed = base.bounce_speed;
+            tweaks->bounce_set = base.bounce_set;
+            break;
         case row_target:
             layout_target = tweak_target_override;
             break;
@@ -1112,6 +1172,14 @@ static void handle_l1(void) {
 
 static void handle_r1(void) {
     layout_turn(1);
+}
+
+static void handle_start(void) {
+    if (!layout_edit || !layout_panel) return;
+
+    layout_flush();
+    play_sound(snd_back);
+    mux_input_stop();
 }
 
 static void handle_a(void) {
@@ -1377,6 +1445,10 @@ static void handle_up(void) {
     if (menu_style_blocks(1)) return;
     set_nav_input_dir(nav_dir_up);
     if (spatial_move(0, -1)) return;
+    if (menu_style_any_direction()) {
+        list_nav_prev(1);
+        return;
+    }
 
     const int grid_steps = theme.grid.enabled ? grid_row_wrap_up_steps() : -1;
     const int misc_steps = !theme.grid.enabled ? misc_even_row_wrap_up_steps(ui_count_dynamic) : -1;
@@ -1415,6 +1487,10 @@ static void handle_down(void) {
     if (menu_style_blocks(1)) return;
     set_nav_input_dir(nav_dir_down);
     if (spatial_move(0, 1)) return;
+    if (menu_style_any_direction()) {
+        list_nav_next(1);
+        return;
+    }
 
     const int grid_steps = theme.grid.enabled ? grid_row_wrap_down_steps() : -1;
     const int misc_steps = !theme.grid.enabled ? misc_even_row_wrap_down_steps(ui_count_dynamic) : -1;
@@ -1458,7 +1534,7 @@ static void handle_up_hold(void) { // prev
     if (grid_hold_ok || misc_hold_ok || regular_ok
         || (theme.misc.navigation_type == nav_split_rows_full && current_item_index > 0 && current_item_index <= 2)
         || (theme.misc.navigation_type == nav_split_rows_full && current_item_index > 3) || is_carousel_grid_mode()
-        || menu_style_spatial()) {
+        || menu_style_spatial() || menu_style_any_direction()) {
         handle_up();
     }
 }
@@ -1490,7 +1566,7 @@ static void handle_down_hold(void) { // next
         || (theme.misc.navigation_type == nav_split_rows_full && current_item_index < ui_count_dynamic - 1
             && current_item_index > 2)
         || (theme.misc.navigation_type == nav_split_rows_full && current_item_index < 2) || is_carousel_grid_mode()
-        || menu_style_spatial()) {
+        || menu_style_spatial() || menu_style_any_direction()) {
         handle_down();
     }
 }
@@ -1623,9 +1699,11 @@ static void handle_right_hold(void) {
 
 static void layout_nav_visible(void) {
     const int swap = config.settings.remap.layout;
-    const char *names[] = {"lr", swap ? "y" : "x", swap ? "x" : "y", swap ? "a" : "b"};
-    lv_obj_t *glyphs[] = {ui_lbl_nav_lr_glyph, ui_lbl_nav_x_glyph, ui_lbl_nav_y_glyph, ui_lbl_nav_b_glyph};
-    lv_obj_t *labels[] = {ui_lbl_nav_lr, ui_lbl_nav_x, ui_lbl_nav_y, ui_lbl_nav_b};
+    const char *names[] = {"lr", swap ? "y" : "x", swap ? "x" : "y", swap ? "a" : "b", "start"};
+    lv_obj_t *glyphs[] = {
+        ui_lbl_nav_lr_glyph, ui_lbl_nav_x_glyph, ui_lbl_nav_y_glyph, ui_lbl_nav_b_glyph, ui_lbl_nav_start_glyph
+    };
+    lv_obj_t *labels[] = {ui_lbl_nav_lr, ui_lbl_nav_x, ui_lbl_nav_y, ui_lbl_nav_b, ui_lbl_nav_start};
     for (size_t i = 0; i < A_SIZE(glyphs); i++) {
         char path[MAX_BUFFER_SIZE];
         char embed[MAX_BUFFER_SIZE];
@@ -1656,6 +1734,8 @@ static void update_nav(void) {
                                       {ui_lbl_nav_y, lang.muxlaunch.layout.show, 0},
                                       {ui_lbl_nav_b_glyph, "", 0},
                                       {ui_lbl_nav_b, lang.generic.save, 0},
+                                      {ui_lbl_nav_start_glyph, "", 0},
+                                      {ui_lbl_nav_start, lang.muxlaunch.layout.discard, 0},
                                       {NULL, NULL, 0}});
         return;
     }
@@ -1669,6 +1749,8 @@ static void update_nav(void) {
                                       {ui_lbl_nav_y, lang.muxlaunch.layout.preview, 0},
                                       {ui_lbl_nav_b_glyph, "", 0},
                                       {ui_lbl_nav_b, lang.generic.save, 0},
+                                      {ui_lbl_nav_start_glyph, "", 0},
+                                      {ui_lbl_nav_start, lang.muxlaunch.layout.discard, 0},
                                       {NULL, NULL, 0}});
         return;
     }
@@ -1757,6 +1839,7 @@ int muxlaunch_main(void) {
                 [mux_input_dpad_right] = handle_right,
                 [mux_input_l1] = handle_l1,
                 [mux_input_r1] = handle_r1,
+                [mux_input_start] = handle_start,
             },
         .release_handler =
             {

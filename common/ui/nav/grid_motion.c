@@ -208,8 +208,19 @@ static void fade_in_current_label(void) {
     lv_anim_start(&anim);
 }
 
+static uint32_t step_tick = 0;
+static uint32_t step_ms = 0;
+
+static uint32_t paced_step_time(void) {
+    const uint32_t full = (uint32_t) theme.grid.animation_time;
+    const uint32_t since = lv_tick_elaps(step_tick);
+    step_tick = lv_tick_get();
+    return since < full ? LV_MAX(since, 60) : full;
+}
+
 static void animate_carousel_step(const int direction) {
     const int step = direction < 0 ? -1 : 1;
+    step_ms = paced_step_time();
 
     for (int i = 0; i < slot_rest_count; i++) {
         const int source = i + step;
@@ -240,8 +251,63 @@ static void animate_carousel_step(const int direction) {
     lv_anim_set_var(&anim, ui_pnl_grid);
     lv_anim_set_exec_cb(&anim, slot_anim_exec);
     lv_anim_set_values(&anim, 0, GRID_ANIM_STEPS);
-    lv_anim_set_time(&anim, (uint32_t) theme.grid.animation_time);
+    lv_anim_set_time(&anim, step_ms);
     lv_anim_set_path_cb(&anim, slot_swing ? slot_path_swing : lv_anim_path_ease_out);
+    lv_anim_start(&anim);
+}
+
+static lv_obj_t *ghosts[2];
+static grid_slot_pose ghost_from[2], ghost_to[2];
+static int ghost_slot[2];
+
+static void ghost_exec(void *var, const int32_t v) {
+    const int side = var == ghosts[1];
+    if (ghosts[side] != var) return;
+
+    const grid_slot_pose pose = slot_pose_at(&ghost_from[side], &ghost_to[side], v);
+    slot_pose_apply(var, &slot_rest[ghost_slot[side]], &pose);
+}
+
+static void ghost_done(lv_anim_t *anim) {
+    lv_obj_del_async(anim->var);
+}
+
+static void ghost_deleted(lv_event_t *e) {
+    const lv_obj_t *ghost = lv_event_get_target(e);
+    for (int side = 0; side < 2; side++) {
+        if (ghosts[side] == ghost) ghosts[side] = NULL;
+    }
+}
+
+void grid_motion_carousel_ghost(lv_obj_t *ghost, const int direction) {
+    const int side = direction > 0 ? 0 : 1;
+    const int leave = side ? slot_rest_count - 1 : 0;
+    const int inner = side ? leave - 1 : leave + 1;
+    if (!ghost) return;
+    if (slot_orbit || inner < 0 || inner >= slot_rest_count || slot_now[leave].opa <= LV_OPA_MIN) {
+        lv_obj_del(ghost);
+        return;
+    }
+
+    if (ghosts[side]) lv_obj_del(ghosts[side]);
+    ghosts[side] = ghost;
+    ghost_slot[side] = leave;
+    ghost_from[side] = slot_now[leave];
+    ghost_to[side] = slot_rest[leave];
+    ghost_to[side].cx += slot_rest[leave].cx - slot_rest[inner].cx;
+    ghost_to[side].cy += slot_rest[leave].cy - slot_rest[inner].cy;
+    ghost_to[side].opa = 0;
+    lv_obj_add_event_cb(ghost, ghost_deleted, LV_EVENT_DELETE, NULL);
+    ghost_exec(ghost, 0);
+
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, ghost);
+    lv_anim_set_exec_cb(&anim, ghost_exec);
+    lv_anim_set_values(&anim, 0, GRID_ANIM_STEPS);
+    lv_anim_set_time(&anim, step_ms);
+    lv_anim_set_path_cb(&anim, slot_swing ? slot_path_swing : lv_anim_path_ease_out);
+    lv_anim_set_ready_cb(&anim, ghost_done);
     lv_anim_start(&anim);
 }
 

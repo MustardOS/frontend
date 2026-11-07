@@ -1471,7 +1471,7 @@ static void reset_main_menu(void) {
     RESET_MAIN(menu_style, 0)
     RESET_MAIN(menu_label, 1)
     RESET_MAIN(menu_random, 0)
-    RESET_MAIN(menu_glyph_zoom, 1)
+    RESET_MAIN(menu_glyph_zoom, 0)
 #undef RESET_MAIN
 
     lv_dropdown_set_selected(ui_dro_menu_order_custom, 0);

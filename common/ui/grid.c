@@ -327,6 +327,8 @@ void update_grid_items(const int direction) {
     }
 }
 
+static lv_obj_t *gen_grid_item_common(int item_index, int panel_index, int focus_index, int ghost);
+
 static int get_grid_item_index(const int index) {
     lv_obj_t *panel_item = lv_obj_get_child(ui_pnl_grid, index);
     const int item_index = IFU(lv_obj_get_user_data(panel_item));
@@ -335,11 +337,16 @@ static int get_grid_item_index(const int index) {
 
 void update_grid(const int direction) {
     if (is_carousel_grid_mode()) {
-        const int animate = grid_motion_carousel_prepare(get_carousel_item_count());
+        const int count = get_carousel_item_count();
+        const int animate = grid_motion_carousel_prepare(count);
+        const int leave = direction > 0 ? 0 : count - 1;
+        const int leaving = animate && direction ? get_grid_item_index(leave) : -1;
 
         update_grid_items(1);
 
-        if (animate) grid_motion_carousel_step(direction);
+        if (!animate) return;
+        grid_motion_carousel_step(direction);
+        if (leaving >= 0) grid_motion_carousel_ghost(gen_grid_item_common(leaving, leave, count / 2, 1), direction);
         return;
     }
 
@@ -382,8 +389,9 @@ void update_grid(const int direction) {
     update_grid_scroll_position(theme.grid.row_count, row_pitch, virtual_row * theme.grid.column_count, ui_pnl_grid);
 }
 
-static void gen_grid_item_common(const int item_index, const int panel_index, const int focus_index) {
-    if (item_index < 0 || (size_t) item_index >= item_count) return;
+static lv_obj_t *
+gen_grid_item_common(const int item_index, const int panel_index, const int focus_index, const int ghost) {
+    if (item_index < 0 || (size_t) item_index >= item_count) return NULL;
 
     if (!items[item_index].grid_image || !items[item_index].grid_image_focused) {
         update_grid_image_paths(item_index);
@@ -401,7 +409,7 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
     }
 
     lv_obj_t *cell_panel = lv_obj_create(ui_pnl_grid);
-    if (!cell_panel) return;
+    if (!cell_panel) return NULL;
 
     lv_obj_set_user_data(cell_panel, UFI(item_index));
 
@@ -438,6 +446,8 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
         cell_set_opa(cell_panel, (lv_opa_t) (base * keep / 100));
     }
 
+    if (ghost) return cell_panel;
+
     if (cell_label) lv_group_add_obj(ui_group, cell_label);
     if (cell_image) lv_group_add_obj(ui_group_glyph, cell_image);
 
@@ -449,14 +459,15 @@ static void gen_grid_item_common(const int item_index, const int panel_index, co
         if (cell_label) lv_group_focus_obj(cell_label);
         if (cell_image) lv_group_focus_obj(cell_image);
     }
+    return cell_panel;
 }
 
 void gen_grid_item(const int item_index) {
-    gen_grid_item_common(item_index, 0, -1);
+    gen_grid_item_common(item_index, 0, -1, 0);
 }
 
 static void gen_carousel_grid_item(const int item_index, const int panel_index, const int focus_index) {
-    gen_grid_item_common(item_index, panel_index, focus_index);
+    gen_grid_item_common(item_index, panel_index, focus_index, 0);
 }
 
 int disable_grid_file_exists(char *item_curr_dir) {

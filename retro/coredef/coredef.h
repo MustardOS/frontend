@@ -78,6 +78,7 @@ int coredef_threaded_run(const char *core_name);
     COREDEF(np2kai)                                                                                                    \
     COREDEF(parallel_n64)                                                                                              \
     COREDEF(pcsx_rearmed)                                                                                              \
+    COREDEF(picante8)                                                                                                  \
     COREDEF(ppsspp)                                                                                                    \
     COREDEF(sameboy)                                                                                                   \
     COREDEF(scummvm)                                                                                                   \

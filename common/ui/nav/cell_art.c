@@ -9,6 +9,7 @@
 #include <common/runtime/init.h>
 #include <common/ui/image.h>
 #include <common/ui/nav/cell_art.h>
+#include <common/ui/nav/menu_style.h>
 
 #define CELL_ART_PANELS  16
 #define CELL_ART_SOURCES 12
@@ -35,7 +36,9 @@ static art_panel panels[CELL_ART_PANELS];
 
 static int find_art_path(const char *item, char *path, const size_t size) {
     const char *types[] = {"menu", "wall"};
-    for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
+    const int walls = theme.misc.menu_style_name[0] && !menu_style_card_art();
+    const size_t count = walls ? sizeof(types) / sizeof(types[0]) : 1;
+    for (size_t i = 0; i < count; i++) {
         if (load_element_image_specifics(mux_dim, mux_module, types[i], item, item, "png", path, size)) return 1;
     }
     return 0;
@@ -241,6 +244,11 @@ static void native_fit(art_panel *art) {
     if (focused_glyph) lv_obj_add_flag(focused_glyph, LV_OBJ_FLAG_HIDDEN);
 }
 
+static void art_deleted(lv_event_t *e) {
+    art_panel *art = lv_event_get_user_data(e);
+    if (art && art->panel == lv_event_get_target(e)) memset(art, 0, sizeof(*art));
+}
+
 static art_panel *find_panel(const lv_obj_t *panel) {
     for (int i = 0; i < CELL_ART_PANELS; i++) {
         if (panels[i].panel == panel) return &panels[i];
@@ -263,12 +271,14 @@ void cell_art_apply(
     }
     if (!art) return;
 
-    if (art->panel != panel) lv_obj_add_event_cb(panel, art_draw_cb, LV_EVENT_DRAW_MAIN, art);
+    if (art->panel != panel) {
+        lv_obj_add_event_cb(panel, art_draw_cb, LV_EVENT_DRAW_MAIN, art);
+        lv_obj_add_event_cb(panel, art_deleted, LV_EVENT_DELETE, art);
+    }
     art->panel = panel;
-
-    const lv_opa_t layered = lv_obj_get_style_opa_layered(panel, LV_PART_MAIN);
-    lv_obj_set_style_opa(panel, layered, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_opa_layered(panel, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_opa_layered(panel, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
+
     snprintf(art->item, sizeof(art->item), "%s", item ? item : "");
     art->w = w;
     art->h = h;
@@ -316,16 +326,11 @@ void cell_art_resize(lv_obj_t *panel, const int w, const int h) {
 }
 
 lv_opa_t cell_opa(const lv_obj_t *panel) {
-    return find_panel(panel) ? lv_obj_get_style_opa(panel, LV_PART_MAIN)
-                             : lv_obj_get_style_opa_layered(panel, LV_PART_MAIN);
+    return lv_obj_get_style_opa(panel, LV_PART_MAIN);
 }
 
 void cell_set_opa(lv_obj_t *panel, const lv_opa_t opa) {
-    if (find_panel(panel)) {
-        lv_obj_set_style_opa(panel, opa, MU_OBJ_MAIN_DEFAULT);
-    } else {
-        lv_obj_set_style_opa_layered(panel, opa, MU_OBJ_MAIN_DEFAULT);
-    }
+    lv_obj_set_style_opa(panel, opa, MU_OBJ_MAIN_DEFAULT);
 }
 
 void cell_art_forget(void) {

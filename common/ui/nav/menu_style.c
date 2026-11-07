@@ -6,6 +6,9 @@
 #include <common/runtime/init.h>
 #include <common/config/config.h>
 #include <common/display/theme.h>
+#include <common/ui/image.h>
+#include <common/display/theme_json.h>
+#include <mini/mini.h>
 #include <common/ui/nav/grid_nav.h>
 #include <common/ui/nav/menu_style.h>
 #include <common/ui/nav/style/shared.h>
@@ -63,12 +66,32 @@ static const menu_style_fn style_apply[] = {
 };
 
 static int theme_allows_styles = 1;
+static int card_art = 0;
+
+static int detect_card_art(void) {
+    char path[MAX_BUFFER_SIZE];
+    if (!load_element_image_specifics(mux_dim, "muxlaunch", "grid", "explore", "default", "png", path, sizeof(path))) {
+        return 0;
+    }
+
+    char embed[MAX_BUFFER_SIZE];
+    snprintf(embed, sizeof(embed), "M:%s", path);
+    lv_img_header_t header;
+    if (lv_img_decoder_get_info(embed, &header) != LV_RES_OK || !header.w || !header.h) return 0;
+
+    return header.w * 4 < header.h * 3 || header.h * 4 < header.w * 3;
+}
+
+int menu_style_card_art(void) {
+    return menu_style_active() && card_art;
+}
 
 #define OPT(NAME) (1 << layout_##NAME)
 
 _Static_assert(LAYOUT_OPTION_COUNT < (int) sizeof(((style_tweaks *) 0)->options), "options outgrew the saved string");
 _Static_assert(LAYOUT_OPTION_COUNT < 31, "layout options outgrew the option mask");
-#define NAME_OPTS (OPT(namex) | OPT(namey) | OPT(nameangle) | OPT(namebg))
+#define NAME_OPTS (OPT(namex) | OPT(namey) | OPT(nameangle) | OPT(namebg) | OPT(namewidth) | CELL_OPTS)
+#define CELL_OPTS (OPT(shape) | OPT(glyphscale))
 
 static const int style_options[] = {
     [menu_style_list] = OPT(position) | OPT(glyph) | OPT(fit),
@@ -86,16 +109,17 @@ static const int style_options[] = {
     [menu_style_honeycomb] = OPT(size) | OPT(spacing) | OPT(names) | OPT(text) | NAME_OPTS,
     [menu_style_tiles] = OPT(spacing) | NAME_OPTS,
     [menu_style_sidebar] = OPT(size) | OPT(position) | NAME_OPTS,
-    [menu_style_fluent] = OPT(spacing) | OPT(large),
+    [menu_style_fluent] = OPT(spacing) | OPT(large) | CELL_OPTS,
     [menu_style_spotlight] = OPT(size) | OPT(spacing) | OPT(names) | OPT(text) | NAME_OPTS,
-    [menu_style_banners] = OPT(size) | OPT(tilt) | OPT(position),
+    [menu_style_banners] = OPT(size) | OPT(tilt) | OPT(position) | CELL_OPTS,
     [menu_style_crossbar] = OPT(size) | OPT(spacing) | OPT(position) | OPT(names) | OPT(text) | NAME_OPTS,
     [menu_style_desktop] = OPT(size) | OPT(position) | OPT(names) | OPT(text) | NAME_OPTS,
     [menu_style_tabbar] = OPT(size) | NAME_OPTS,
     [menu_style_paged] = OPT(size) | OPT(spacing) | OPT(names) | OPT(text) | NAME_OPTS,
     [menu_style_slices] = OPT(focus) | OPT(gap) | OPT(slant) | OPT(slicetext) | OPT(textx) | OPT(texty) | OPT(textangle)
                           | OPT(textbg) | OPT(text),
-    [menu_style_mascot] = OPT(size) | OPT(spacing) | OPT(perch) | OPT(bounce) | OPT(names) | OPT(text) | NAME_OPTS,
+    [menu_style_mascot] =
+        OPT(size) | OPT(spacing) | OPT(perch) | OPT(mascotscale) | OPT(bounce) | OPT(names) | OPT(text) | NAME_OPTS,
 };
 
 static const char *const style_keys[] = {
@@ -125,7 +149,7 @@ const char *menu_style_key(const int style) {
 
 static void apply_options(const char *options, int *values) {
     for (int i = 0; options[i] && i < LAYOUT_OPTION_COUNT; i++) {
-        if (options[i] >= '0' && options[i] <= '2') values[i] = options[i] - '0';
+        if (options[i] >= '0' && options[i] < '0' + menu_layout_choices(i)) values[i] = options[i] - '0';
     }
 }
 
@@ -138,10 +162,11 @@ static void layout_load(const struct theme_config *theme) {
     for (int i = 0; i < LAYOUT_OPTION_COUNT; i++)
         layout_values[i] = 1;
     layout_values[layout_pile] = 0;
-    layout_values[layout_names] = style == menu_style_desktop || style == menu_style_mascot ? 1 : 0;
+    layout_values[layout_names] = style == menu_style_desktop ? 1 : 0;
     layout_values[layout_fit] = theme->misc.content.size_to_content ? 1 : 0;
     layout_values[layout_glyph] = 0;
     layout_values[layout_perch] = style == menu_style_mascot ? 1 : 0;
+    layout_values[layout_shape] = 0;
     if (style == menu_style_list) layout_values[layout_position] = LV_CLAMP(0, theme->misc.content.alignment, 2);
     if (style == menu_style_banners || style == menu_style_rolodex || style == menu_style_sidebar
         || style == menu_style_desktop || style == menu_style_crossbar) {
@@ -190,10 +215,15 @@ void menu_layout_default(const int option) {
     layout_values[option] = layout_defaults[option];
 }
 
+int menu_layout_choices(const int option) {
+    return option == layout_shape ? 4 : 3;
+}
+
 void menu_layout_step(const int option, const int direction) {
+    const int count = menu_layout_choices(option);
     int value = layout_values[option];
     do {
-        value = (value + direction + 3) % 3;
+        value = (value + direction + count) % count;
     } while (!layout_allowed(option, value));
     layout_values[option] = value;
 }
@@ -218,6 +248,15 @@ int menu_layout_reset_all(void) {
     return style_tweaks_remove_all() && removed;
 }
 
+static void cell_shape(const int style) {
+    static const char *const shapes[] = {
+        NULL, "\"shape\":\"square\",", "\"shape\":\"round\",", "\"shape\":\"hexagon\","
+    };
+    const int shape = layout_values[layout_shape];
+    if (!(style_options[style] & OPT(shape)) || shape <= 0 || shape >= (int) A_SIZE(shapes)) return;
+    style_json_root(shapes[shape]);
+}
+
 static int name_bar_shown(const int style) {
     if (!(style_options[style] & OPT(namex))) return 0;
     return !(style_options[style] & OPT(names)) || layout_values[layout_names] == 0;
@@ -228,6 +267,10 @@ static void name_bar_adjust(struct theme_config *theme) {
         (int16_t) (theme->grid.current_item_label.offset_x + style_number_value(number_namex));
     theme->grid.current_item_label.offset_y =
         (int16_t) (theme->grid.current_item_label.offset_y + style_number_value(number_namey));
+    if (style_tweaks_current()->number_set & (1u << number_namewidth)) {
+        theme->grid.current_item_label.width =
+            (int16_t) (theme->grid.current_item_label.width * style_number_value(number_namewidth) / 100);
+    }
     if (style_tweaks_current()->number_set & (1u << number_namebg)) {
         theme->grid.current_item_label.background_alpha = (int16_t) (style_number_value(number_namebg) * 255 / 100);
     }
@@ -266,9 +309,9 @@ int menu_style_paged_active(void) {
 }
 
 int menu_style_any_direction(void) {
-    if (!menu_style_active()) return 0;
+    if (!menu_style_active() || menu_style_spatial()) return 0;
 
-    return chosen_style == menu_style_clock;
+    return chosen_style == menu_style_clock || theme.grid.row_count == 1 || theme.grid.column_count == 1;
 }
 
 int menu_style_blocks(const int vertical) {
@@ -277,9 +320,6 @@ int menu_style_blocks(const int vertical) {
     const int style = chosen_style;
     if (style == menu_style_list) return !vertical;
     if (style == menu_style_paged) return vertical;
-    if (style == menu_style_clock || menu_style_spatial()) return 0;
-    if (theme.grid.row_count == 1) return vertical;
-    if (theme.grid.column_count == 1) return !vertical;
 
     return 0;
 }
@@ -306,26 +346,75 @@ const char *menu_style_layout_json(void) {
     return menu_style_active() ? style_json() : NULL;
 }
 
+int menu_style_index(const char *name) {
+    if (!name) return 0;
+    while (*name == ' ' || *name == '\t')
+        name++;
+
+    for (int i = 1; name[0] && i < (int) (sizeof(style_keys) / sizeof(style_keys[0])); i++) {
+        const size_t length = strlen(style_keys[i]);
+        if (strncasecmp(style_keys[i], name, length) == 0 && (unsigned char) name[length] <= ' ') return i;
+    }
+    return 0;
+}
+
+int menu_style_named_for(const char *theme_path) {
+    static const char *const files[] = {"global", "default", "muxlaunch"};
+    const char *dims[] = {"", mux_dim};
+    char name[64] = "";
+
+    for (size_t f = 0; f < A_SIZE(files); f++) {
+        for (size_t d = 0; d < A_SIZE(dims); d++) {
+            char path[MAX_BUFFER_SIZE];
+            snprintf(path, sizeof(path), "%s/%sscheme/%s.ini", theme_path, dims[d], files[f]);
+            mini_t *ini = mini_try_load(path);
+            if (!ini) continue;
+
+            const char *value = mini_get_string(ini, "misc", "MENU_STYLE_NAME", "");
+            if (value && *value) snprintf(name, sizeof(name), "%s", value);
+            mini_free(ini);
+        }
+    }
+
+    char *data = theme_json_read(theme_path);
+    if (data) {
+        const struct json root = json_parse(data);
+        const struct json parts[] = {json_object_get(root, "scheme"), theme_json_module(root, "muxlaunch", "scheme")};
+        for (size_t i = 0; i < A_SIZE(parts); i++) {
+            const struct json value = theme_json_lookup(parts[i], "misc", "MENU_STYLE_NAME");
+            if (json_exists(value)) json_string_copy(value, name, sizeof(name));
+        }
+        free(data);
+    }
+
+    return menu_style_index(name);
+}
+
 void menu_style_apply(struct theme_config *theme, const int width, const int height) {
     style_json_reset();
     if (strcmp(mux_module, "muxlaunch") == 0) {
         const int list_hidden = theme->list_default.text_alpha == 0 && theme->list_focus.text_alpha == 0;
         theme_allows_styles = theme->misc.menu_style >= 0 ? theme->misc.menu_style > 0 : !list_hidden;
         chosen_style = config.settings.themeopt.menu_style;
-        const char *name = theme->misc.menu_style_name;
-        while (*name == ' ' || *name == '\t')
-            name++;
-        const int named = chosen_style == menu_style_theme && name[0];
-        for (int i = 1; named && i < (int) (sizeof(style_keys) / sizeof(style_keys[0])); i++) {
-            if (strncasecmp(style_keys[i], name, strlen(style_keys[i])) != 0) continue;
-            if (name[strlen(style_keys[i])] > ' ') continue;
-            chosen_style = i;
+        const int named = chosen_style == menu_style_theme ? menu_style_index(theme->misc.menu_style_name) : 0;
+        if (named) {
+            chosen_style = named;
             theme_allows_styles = 1;
+            config.settings.themeopt.menu_style = (int16_t) named;
+            write_text_to_file_atomic(CONF_CONFIG_PATH "settings/theme/menu_style", INT, named);
         }
     }
     if (!menu_style_active()) return;
 
     const int style = chosen_style;
+    card_art = detect_card_art();
+    if (card_art) {
+        style_solid_cells(theme);
+        theme->grid.cell_default.image_recolour = theme->grid.cell_default.text;
+        theme->grid.cell_focus.image_recolour = theme->grid.cell_focus.text;
+        theme->grid.cell_default.image_recolour_alpha = LV_OPA_COVER;
+        theme->grid.cell_focus.image_recolour_alpha = LV_OPA_COVER;
+    }
     if (!layout_editing) {
         style_tweaks_load(style);
         layout_load(theme);
@@ -373,6 +462,7 @@ void menu_style_apply(struct theme_config *theme, const int width, const int hei
     }
 
     if (name_bar_shown(style)) name_bar_adjust(theme);
+    if (style_json()) cell_shape(style);
 
     if (!(style_options[style] & OPT(names)) || style == menu_style_desktop) return;
     if (layout_values[layout_names] == 1) {

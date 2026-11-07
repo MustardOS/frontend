@@ -142,7 +142,7 @@ static grid_layout_entry find_grid_layout_uncached(const int item_index, const i
     out.y = layout_value(entry, "y", 0);
     out.w = layout_value(entry, "w", theme.grid.cell.width);
     out.h = layout_value(entry, "h", theme.grid.cell.height);
-    out.radius = layout_value(entry, "radius", theme.grid.cell.radius);
+    out.radius = LV_CLAMP(0, layout_value(entry, "radius", theme.grid.cell.radius), LV_MIN(out.w, out.h) / 2);
     out.glyph = layout_value(entry, "glyph", 0);
     out.opacity = layout_value(entry, "opacity", 255);
     out.angle = layout_value(entry, "angle", 0);
@@ -161,6 +161,8 @@ static grid_layout_entry find_grid_layout_uncached(const int item_index, const i
     struct json shape = json_object_get(entry, "shape");
     if (!json_exists(shape)) shape = json_object_get(root, "shape");
     out.hexagon = json_string_compare(shape, "hexagon") == 0 ? layout_shape_hexagon : 0;
+    if (json_string_compare(shape, "round") == 0) out.radius = LV_MIN(out.w, out.h) / 2;
+    if (json_string_compare(shape, "square") == 0 || out.hexagon) out.radius = 0;
     out.text_size = layout_value(entry, "text_size", layout_value(root, "text_size", 100));
 
     struct json art = json_object_get(entry, "art");
@@ -306,9 +308,13 @@ void place_grid_layout(lv_obj_t *cell_panel, const grid_layout_entry *entry, con
     lv_obj_set_pos(cell_panel, (lv_coord_t) (entry->x + gap), (lv_coord_t) entry->y);
 
     if (entry->opacity < 255) {
-        const lv_opa_t base = lv_obj_get_style_opa_layered(cell_panel, LV_PART_MAIN);
         const int opacity = entry->opacity < 0 ? 0 : entry->opacity;
-        lv_obj_set_style_opa_layered(cell_panel, (lv_opa_t) (base * opacity / 255), MU_OBJ_MAIN_DEFAULT);
+        cell_set_opa(cell_panel, (lv_opa_t) (cell_opa(cell_panel) * opacity / 255));
+    }
+
+    if (entry->glyph > LV_MIN(entry->w, entry->h)) {
+        lv_obj_add_flag(cell_panel, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+        lv_obj_set_style_clip_corner(cell_panel, false, MU_OBJ_MAIN_DEFAULT);
     }
 
     if (entry->angle != 0) {
@@ -404,6 +410,10 @@ void place_grid_layout(lv_obj_t *cell_panel, const grid_layout_entry *entry, con
     }
 
     if (entry->hexagon) {
+        lv_obj_set_style_radius(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_clip_corner(cell_panel, false, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_outline_width(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_outline_width(cell_panel, 0, MU_OBJ_MAIN_FOCUS);
         lv_obj_set_style_bg_opa(cell_panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_bg_opa(cell_panel, LV_OPA_TRANSP, MU_OBJ_MAIN_FOCUS);
         lv_obj_set_style_border_width(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);

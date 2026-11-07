@@ -1528,6 +1528,14 @@ struct mux_lang {
             char name_y[MAX_BUFFER_SIZE];
             char name_angle[MAX_BUFFER_SIZE];
             char name_back[MAX_BUFFER_SIZE];
+            char mascot_size[MAX_BUFFER_SIZE];
+            char discard[MAX_BUFFER_SIZE];
+            char shape[MAX_BUFFER_SIZE];
+            char square[MAX_BUFFER_SIZE];
+            char round[MAX_BUFFER_SIZE];
+            char hexagon[MAX_BUFFER_SIZE];
+            char glyph_scale[MAX_BUFFER_SIZE];
+            char name_width[MAX_BUFFER_SIZE];
             char shown[MAX_BUFFER_SIZE];
             char bounce_height[MAX_BUFFER_SIZE];
             char bounce_speed[MAX_BUFFER_SIZE];

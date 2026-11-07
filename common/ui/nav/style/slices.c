@@ -20,6 +20,8 @@ void style_slices_apply(struct theme_config *theme, const int width, const int h
 
     style_set_cells(theme, 1, SLICES_SLOTS, width / SLICES_SLOTS, (int) slice_h, (int) narrow_w, 0, 0);
     theme->grid.cell.radius = 0;
+    theme->grid.cell_default.text_alpha = 0;
+    theme->grid.cell_focus.text_alpha = 0;
     style_place_label(theme, width / 2.0, height * 0.78, open_w, width, height);
 
     style_json_add(

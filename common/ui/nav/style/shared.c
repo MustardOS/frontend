@@ -60,6 +60,7 @@ int style_number_default(const int id) {
     if (id == number_gap) return (int) lround(layout_width * 0.01);
     if (id == number_textbg) return 50;
     if (id == number_textx || id == number_textangle) return 0;
+    if (id == number_mascotscale || id == number_glyphscale || id == number_namewidth) return 100;
     if (id == number_namebg) return theme.grid.current_item_label.background_alpha * 100 / 255;
     if (id == number_namex || id == number_namey || id == number_nameangle) return 0;
     if (id == number_texty) return layout_height - theme.footer.height - (int) lround(layout_height * 0.06);
@@ -170,7 +171,7 @@ void style_add_slot(const int index, const style_slot *source) {
     adjusted.rotate_x = style_tweak_get(tweak, tweak_tilt_x, adjusted.rotate_x);
     adjusted.rotate_y = style_tweak_get(tweak, tweak_tilt_y, adjusted.rotate_y);
     adjusted.opacity = style_tweak_get(tweak, tweak_opacity, adjusted.opacity);
-    adjusted.glyph = style_tweak_get(tweak, tweak_glyph, adjusted.glyph);
+    adjusted.glyph = style_tweak_get(tweak, tweak_glyph, adjusted.glyph * style_number_value(number_glyphscale) / 100);
 
     const style_slot *slot = &adjusted;
     const double cx = layout_mirror ? layout_width - slot->cx : slot->cx;
@@ -200,10 +201,10 @@ void style_add_glyph_item(
         "%s\"%s\":{\"x\":%d,\"y\":%d,\"w\":%d,\"h\":%d,\"radius\":%d,\"glyph\":%d,\"angle\":%d,\"rotate_x\":%d,"
         "\"rotate_y\":%d,\"depth\":%d,\"opacity\":%d%s%s%s}",
         index ? "," : "", item_names[item], (int) lround(left), (int) lround(cy - height / 2.0), width, height, radius,
-        style_tweak_get(tweak, tweak_glyph, glyph), style_tweak_get(tweak, tweak_angle, 0),
-        style_tweak_get(tweak, tweak_tilt_x, 0), style_tweak_get(tweak, tweak_tilt_y, 0),
-        style_tweak_get(tweak, tweak_depth, 0), style_tweak_get(tweak, tweak_opacity, 255),
-        label ? ",\"label\":\"" : "", label ? label : "", label ? "\"" : ""
+        style_tweak_get(tweak, tweak_glyph, glyph * style_number_value(number_glyphscale) / 100),
+        style_tweak_get(tweak, tweak_angle, 0), style_tweak_get(tweak, tweak_tilt_x, 0),
+        style_tweak_get(tweak, tweak_tilt_y, 0), style_tweak_get(tweak, tweak_depth, 0),
+        style_tweak_get(tweak, tweak_opacity, 255), label ? ",\"label\":\"" : "", label ? label : "", label ? "\"" : ""
     );
 }
 
