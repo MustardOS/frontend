@@ -474,17 +474,16 @@ static void draw_bg_grad_simple(
 static void draw_bg_grad_radius(
     lv_draw_sdl_ctx_t *ctx, const lv_area_t *coords, const lv_area_t *draw_area, const lv_draw_rect_dsc_t *dsc
 ) {
-    lv_coord_t radius = dsc->radius;
     /*A small texture with a quarter of the rect is enough*/
     lv_coord_t bg_w = lv_area_get_width(coords), bg_h = lv_area_get_height(coords);
-    lv_coord_t real_radius = LV_MIN3(bg_w / 2, bg_h / 2, radius);
+    lv_coord_t radius = LV_MIN3(bg_w / 2, bg_h / 2, dsc->radius);
     int grad_texture_in_cache = 0;
     SDL_Texture *grad_texture =
         lv_draw_sdl_rect_grad_frag_obtain(ctx, &dsc->bg_grad, bg_w, bg_h, radius, &grad_texture_in_cache);
     SDL_SetTextureBlendMode(grad_texture, SDL_BLENDMODE_BLEND);
 
     SDL_SetTextureAlphaMod(grad_texture, dsc->bg_opa);
-    lv_draw_sdl_rect_bg_frag_draw_corners(ctx, grad_texture, real_radius, coords, draw_area, 1);
+    lv_draw_sdl_rect_bg_frag_draw_corners(ctx, grad_texture, radius, coords, draw_area, 1);
     SDL_SetTextureAlphaMod(grad_texture, LV_OPA_COVER);
     lv_area_t part_coords;
     lv_area_t part_area;
