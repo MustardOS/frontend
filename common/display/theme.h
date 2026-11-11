@@ -300,6 +300,7 @@ struct theme_config {
             int16_t width;
             int16_t height;
             int16_t radius;
+            int16_t clip_corner;
             int16_t border_width;
             int16_t image_padding_top;
             uint32_t shadow;

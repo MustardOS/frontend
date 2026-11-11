@@ -2558,11 +2558,7 @@ void create_grid_item(
 
     lv_obj_set_style_radius(cell_pnl, theme->grid.cell.radius, MU_OBJ_MAIN_DEFAULT);
 
-    const int cell_side =
-        theme->grid.cell.width < theme->grid.cell.height ? theme->grid.cell.width : theme->grid.cell.height;
-    lv_obj_set_style_clip_corner(
-        cell_pnl, cell_side <= 0 || theme->grid.cell.radius * 5 < cell_side * 2, MU_OBJ_MAIN_DEFAULT
-    );
+    lv_obj_set_style_clip_corner(cell_pnl, theme->grid.cell.clip_corner, MU_OBJ_MAIN_DEFAULT);
     lv_obj_clear_flag(cell_pnl, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_width(cell_pnl, theme->grid.cell.border_width, MU_OBJ_MAIN_DEFAULT);
     lv_obj_add_style(cell_pnl, &grid_cell_shadow_style, 0);
