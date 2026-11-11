@@ -63,6 +63,7 @@ int style_number_default(const int id) {
     if (id == number_mascotscale || id == number_glyphscale || id == number_namewidth) return 100;
     if (id == number_namebg) return theme.grid.current_item_label.background_alpha * 100 / 255;
     if (id == number_namex || id == number_namey || id == number_nameangle) return 0;
+    if (id == number_radius) return -1;
     if (id == number_texty) return layout_height - theme.footer.height - (int) lround(layout_height * 0.06);
     return SLICE_SLANT;
 }

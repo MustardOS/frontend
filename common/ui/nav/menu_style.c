@@ -18,13 +18,12 @@
 #include <common/ui/nav/style/coverflow.h>
 #include <common/ui/nav/style/bubbles.h>
 #include <common/ui/nav/style/orbit.h>
-#include <common/ui/nav/style/dial.h>
 #include <common/ui/nav/style/stack.h>
 #include <common/ui/nav/style/clock.h>
 #include <common/ui/nav/style/rolodex.h>
 #include <common/ui/nav/style/dock.h>
 #include <common/ui/nav/style/fan.h>
-#include <common/ui/nav/style/honeycomb.h>
+#include <common/ui/nav/style/zigzag.h>
 #include <common/ui/nav/style/tiles.h>
 #include <common/ui/nav/style/sidebar.h>
 #include <common/ui/nav/style/fluent.h>
@@ -40,30 +39,57 @@
 typedef void (*menu_style_fn)(struct theme_config *theme, int width, int height);
 
 static const menu_style_fn style_apply[] = {
-    [menu_style_grid] = style_grid_apply,
-    [menu_style_carousel] = style_carousel_apply,
-    [menu_style_coverflow] = style_coverflow_apply,
-    [menu_style_bubbles] = style_bubbles_apply,
-    [menu_style_orbit] = style_orbit_apply,
-    [menu_style_dial] = style_dial_apply,
-    [menu_style_stack] = style_stack_apply,
-    [menu_style_clock] = style_clock_apply,
-    [menu_style_rolodex] = style_rolodex_apply,
-    [menu_style_dock] = style_dock_apply,
-    [menu_style_fan] = style_fan_apply,
-    [menu_style_honeycomb] = style_honeycomb_apply,
-    [menu_style_tiles] = style_tiles_apply,
-    [menu_style_sidebar] = style_sidebar_apply,
-    [menu_style_fluent] = style_fluent_apply,
-    [menu_style_spotlight] = style_spotlight_apply,
-    [menu_style_banners] = style_banners_apply,
-    [menu_style_crossbar] = style_crossbar_apply,
-    [menu_style_desktop] = style_desktop_apply,
-    [menu_style_tabbar] = style_tabbar_apply,
-    [menu_style_paged] = style_paged_apply,
-    [menu_style_slices] = style_slices_apply,
-    [menu_style_mascot] = style_mascot_apply,
+    [menu_style_grid] = style_grid_apply,           [menu_style_carousel] = style_carousel_apply,
+    [menu_style_coverflow] = style_coverflow_apply, [menu_style_bubbles] = style_bubbles_apply,
+    [menu_style_orbit] = style_orbit_apply,         [menu_style_stack] = style_stack_apply,
+    [menu_style_clock] = style_clock_apply,         [menu_style_rolodex] = style_rolodex_apply,
+    [menu_style_dock] = style_dock_apply,           [menu_style_fan] = style_fan_apply,
+    [menu_style_zigzag] = style_zigzag_apply,       [menu_style_tiles] = style_tiles_apply,
+    [menu_style_sidebar] = style_sidebar_apply,     [menu_style_fluent] = style_fluent_apply,
+    [menu_style_spotlight] = style_spotlight_apply, [menu_style_banners] = style_banners_apply,
+    [menu_style_crossbar] = style_crossbar_apply,   [menu_style_desktop] = style_desktop_apply,
+    [menu_style_tabbar] = style_tabbar_apply,       [menu_style_paged] = style_paged_apply,
+    [menu_style_slices] = style_slices_apply,       [menu_style_mascot] = style_mascot_apply,
 };
+
+static const int style_families[][MENU_ARRANGEMENT_MAX] = {
+    {menu_style_grid, menu_style_zigzag, menu_style_paged},
+    {menu_style_carousel, menu_style_coverflow, menu_style_spotlight},
+    {menu_style_dock, menu_style_crossbar, -1},
+    {menu_style_sidebar, menu_style_tabbar, -1},
+    {menu_style_fluent, menu_style_mascot, -1},
+};
+
+int menu_style_resolve(const int style) {
+    if (style == menu_style_dial) return menu_style_fan;
+    return style >= menu_style_theme && style <= menu_style_mascot ? style : menu_style_theme;
+}
+
+int menu_style_base(const int style) {
+    const int resolved = menu_style_resolve(style);
+    for (size_t family = 0; family < A_SIZE(style_families); family++) {
+        for (int i = 0; i < MENU_ARRANGEMENT_MAX; i++) {
+            if (style_families[family][i] == resolved) return style_families[family][0];
+        }
+    }
+    return resolved;
+}
+
+int menu_style_arrangements(const int base, int *styles) {
+    for (size_t family = 0; family < A_SIZE(style_families); family++) {
+        if (style_families[family][0] != base) continue;
+
+        int count = 0;
+        while (count < MENU_ARRANGEMENT_MAX && style_families[family][count] >= 0) {
+            styles[count] = style_families[family][count];
+            count++;
+        }
+        return count;
+    }
+
+    styles[0] = base;
+    return 1;
+}
 
 static int theme_allows_styles = 1;
 static int card_art = 0;
@@ -91,7 +117,7 @@ int menu_style_card_art(void) {
 _Static_assert(LAYOUT_OPTION_COUNT < (int) sizeof(((style_tweaks *) 0)->options), "options outgrew the saved string");
 _Static_assert(LAYOUT_OPTION_COUNT < 31, "layout options outgrew the option mask");
 #define NAME_OPTS (OPT(namex) | OPT(namey) | OPT(nameangle) | OPT(namebg) | OPT(namewidth) | CELL_OPTS)
-#define CELL_OPTS (OPT(shape) | OPT(glyphscale))
+#define CELL_OPTS (OPT(radius) | OPT(glyphscale))
 
 static const int style_options[] = {
     [menu_style_list] = OPT(position) | OPT(glyph) | OPT(fit),
@@ -100,13 +126,12 @@ static const int style_options[] = {
     [menu_style_coverflow] = OPT(size) | OPT(spacing) | OPT(tilt) | OPT(names) | OPT(text) | NAME_OPTS,
     [menu_style_bubbles] = OPT(size) | OPT(swell) | NAME_OPTS,
     [menu_style_orbit] = OPT(size) | OPT(spacing) | OPT(tilt) | NAME_OPTS,
-    [menu_style_dial] = OPT(size) | OPT(spacing) | NAME_OPTS,
     [menu_style_stack] = OPT(size) | OPT(position) | OPT(pile) | NAME_OPTS,
     [menu_style_clock] = OPT(size) | OPT(spacing) | OPT(swell) | NAME_OPTS,
     [menu_style_rolodex] = OPT(size) | OPT(tilt) | OPT(position) | NAME_OPTS,
     [menu_style_dock] = OPT(size) | OPT(spacing) | NAME_OPTS,
     [menu_style_fan] = OPT(size) | OPT(spacing) | OPT(tilt) | NAME_OPTS,
-    [menu_style_honeycomb] = OPT(size) | OPT(spacing) | OPT(names) | OPT(text) | NAME_OPTS,
+    [menu_style_zigzag] = OPT(size) | OPT(spacing) | OPT(names) | OPT(text) | NAME_OPTS,
     [menu_style_tiles] = OPT(spacing) | NAME_OPTS,
     [menu_style_sidebar] = OPT(size) | OPT(position) | NAME_OPTS,
     [menu_style_fluent] = OPT(spacing) | OPT(large) | CELL_OPTS,
@@ -124,7 +149,7 @@ static const int style_options[] = {
 
 static const char *const style_keys[] = {
     "theme",   "list",     "grid",    "carousel", "coverflow", "bubbles", "orbit",   "dial",   "stack",
-    "clock",   "rolodex",  "dock",    "fan",      "honeycomb", "tiles",   "sidebar", "fluent", "spotlight",
+    "clock",   "rolodex",  "dock",    "fan",      "zigzag",    "tiles",   "sidebar", "fluent", "spotlight",
     "banners", "crossbar", "desktop", "tabbar",   "paged",     "slices",  "mascot",
 };
 
@@ -153,6 +178,20 @@ static void apply_options(const char *options, int *values) {
     }
 }
 
+int menu_style_customised(const int style) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), CONF_CONFIG_PATH "settings/menu_layout/%d", style);
+    return style_tweaks_saved(style) || file_exist(path);
+}
+
+int menu_style_reset_layout(const int style) {
+    char path[MAX_BUFFER_SIZE];
+    snprintf(path, sizeof(path), CONF_CONFIG_PATH "settings/menu_layout/%d", style);
+    if (file_exist(path)) remove(path);
+    style_tweaks_remove(style);
+    return !menu_style_customised(style);
+}
+
 static void layout_path(char *path, const size_t size) {
     snprintf(path, size, CONF_CONFIG_PATH "settings/menu_layout/%d", current_style());
 }
@@ -166,7 +205,6 @@ static void layout_load(const struct theme_config *theme) {
     layout_values[layout_fit] = theme->misc.content.size_to_content ? 1 : 0;
     layout_values[layout_glyph] = 0;
     layout_values[layout_perch] = style == menu_style_mascot ? 1 : 0;
-    layout_values[layout_shape] = 0;
     if (style == menu_style_list) layout_values[layout_position] = LV_CLAMP(0, theme->misc.content.alignment, 2);
     if (style == menu_style_banners || style == menu_style_rolodex || style == menu_style_sidebar
         || style == menu_style_desktop || style == menu_style_crossbar) {
@@ -216,7 +254,8 @@ void menu_layout_default(const int option) {
 }
 
 int menu_layout_choices(const int option) {
-    return option == layout_shape ? 4 : 3;
+    (void) option;
+    return 3;
 }
 
 void menu_layout_step(const int option, const int direction) {
@@ -248,13 +287,13 @@ int menu_layout_reset_all(void) {
     return style_tweaks_remove_all() && removed;
 }
 
-static void cell_shape(const int style) {
-    static const char *const shapes[] = {
-        NULL, "\"shape\":\"square\",", "\"shape\":\"round\",", "\"shape\":\"hexagon\","
-    };
-    const int shape = layout_values[layout_shape];
-    if (!(style_options[style] & OPT(shape)) || shape <= 0 || shape >= (int) A_SIZE(shapes)) return;
-    style_json_root(shapes[shape]);
+static void cell_radius(const int style) {
+    const int radius = style_number_value(number_radius);
+    if (!(style_options[style] & OPT(radius)) || radius < 0) return;
+
+    char root[32];
+    snprintf(root, sizeof(root), "\"radius_pct\":%d,", radius);
+    style_json_root(root);
 }
 
 static int name_bar_shown(const int style) {
@@ -330,7 +369,6 @@ int menu_style_spatial(void) {
     switch (chosen_style) {
         case menu_style_grid:
         case menu_style_bubbles:
-        case menu_style_honeycomb:
         case menu_style_tiles:
         case menu_style_fluent:
         case menu_style_desktop:
@@ -395,8 +433,9 @@ void menu_style_apply(struct theme_config *theme, const int width, const int hei
     if (strcmp(mux_module, "muxlaunch") == 0) {
         const int list_hidden = theme->list_default.text_alpha == 0 && theme->list_focus.text_alpha == 0;
         theme_allows_styles = theme->misc.menu_style >= 0 ? theme->misc.menu_style > 0 : !list_hidden;
-        chosen_style = config.settings.themeopt.menu_style;
-        const int named = chosen_style == menu_style_theme ? menu_style_index(theme->misc.menu_style_name) : 0;
+        chosen_style = menu_style_resolve(config.settings.themeopt.menu_style);
+        const int named =
+            chosen_style == menu_style_theme ? menu_style_resolve(menu_style_index(theme->misc.menu_style_name)) : 0;
         if (named) {
             chosen_style = named;
             theme_allows_styles = 1;
@@ -462,7 +501,7 @@ void menu_style_apply(struct theme_config *theme, const int width, const int hei
     }
 
     if (name_bar_shown(style)) name_bar_adjust(theme);
-    if (style_json()) cell_shape(style);
+    if (style_json()) cell_radius(style);
 
     if (!(style_options[style] & OPT(names)) || style == menu_style_desktop) return;
     if (layout_values[layout_names] == 1) {

@@ -12,6 +12,4 @@ void grid_motion_carousel_step(int direction);
 
 void grid_motion_carousel_ghost(lv_obj_t *ghost, int direction);
 
-void grid_motion_pop_focused(void);
-
 void grid_motion_swell_focused(void);

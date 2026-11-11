@@ -51,6 +51,7 @@ enum style_number {
     number_mascotscale,
     number_glyphscale,
     number_namewidth,
+    number_radius,
     NUMBER_COUNT
 };
 
@@ -91,6 +92,10 @@ void style_tweaks_clear(void);
 void style_tweaks_load(int style);
 
 int style_tweaks_remove_all(void);
+
+int style_tweaks_saved(int style);
+
+void style_tweaks_remove(int style);
 
 int style_tweaks_source(void);
 

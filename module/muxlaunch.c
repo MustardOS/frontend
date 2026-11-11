@@ -365,7 +365,7 @@ static const char *layout_name(const int option) {
         lang.muxlaunch.layout.slice_gap,      lang.muxlaunch.layout.slant,       lang.muxlaunch.layout.text_x,
         lang.muxlaunch.layout.text_back,      lang.muxlaunch.layout.text_y,      lang.muxlaunch.layout.text_angle,
         lang.muxlaunch.layout.name_x,         lang.muxlaunch.layout.name_y,      lang.muxlaunch.layout.name_angle,
-        lang.muxlaunch.layout.name_back,      lang.muxlaunch.layout.mascot_size, lang.muxlaunch.layout.shape,
+        lang.muxlaunch.layout.name_back,      lang.muxlaunch.layout.mascot_size, lang.muxlaunch.layout.radius,
         lang.muxlaunch.layout.glyph_scale,    lang.muxlaunch.layout.name_width
     };
     if (option == layout_position && !theme.grid.enabled) return lang.muxlaunch.layout.text_position;
@@ -373,13 +373,6 @@ static const char *layout_name(const int option) {
 }
 
 static const char *layout_choice(const int option, const int value) {
-    if (option == layout_shape) {
-        const char *shapes[] = {
-            lang.muxlaunch.layout.standard, lang.muxlaunch.layout.square, lang.muxlaunch.layout.round,
-            lang.muxlaunch.layout.hexagon
-        };
-        return shapes[LV_CLAMP(0, value, 3)];
-    }
     const char *choices[][3] = {
         {lang.muxlaunch.layout.smaller, lang.muxlaunch.layout.standard, lang.muxlaunch.layout.larger},
         {lang.muxlaunch.layout.tighter, lang.muxlaunch.layout.standard, lang.muxlaunch.layout.wider},
@@ -407,7 +400,7 @@ static const char *layout_choice(const int option, const int value) {
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
-        {lang.muxlaunch.layout.standard, lang.muxlaunch.layout.round, lang.muxlaunch.layout.hexagon},
+        {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
         {lang.muxlaunch.layout.off, lang.muxlaunch.layout.off, lang.muxlaunch.layout.off},
     };
@@ -467,6 +460,7 @@ static const edit_number numbers[NUMBER_COUNT] = {
     [number_mascotscale] = {layout_mascotscale, 10, 500, 1, "%d%%"},
     [number_glyphscale] = {layout_glyphscale, 10, 400, 1, "%d%%"},
     [number_namewidth] = {layout_namewidth, 10, 300, 1, "%d%%"},
+    [number_radius] = {layout_radius, 0, 100, 1, "%d%%"},
 };
 
 static int option_number(const int option) {
@@ -549,7 +543,7 @@ static void edit_rows_build(void) {
     }
 
     static const int shown[] = {
-        layout_size,     layout_spacing, layout_shape,     layout_glyphscale, layout_tilt,        layout_swell,
+        layout_size,     layout_spacing, layout_radius,    layout_glyphscale, layout_tilt,        layout_swell,
         layout_position, layout_glyph,   layout_perch,     layout_pile,       layout_names,       layout_slicetext,
         layout_textx,    layout_texty,   layout_textangle, layout_textbg,     layout_text,        layout_large,
         layout_fit,      layout_focus,   layout_gap,       layout_slant,      layout_mascotscale, layout_bounce,
@@ -644,7 +638,11 @@ static void edit_row_value(char *out, const size_t size, const layout_row *row) 
             snprintf(out, size, "%s", layout_choice(row->field, menu_layout_value(row->field)));
             break;
         case row_number:
-            snprintf(out, size, numbers[row->field].unit, style_number_value(row->field));
+            if (style_number_value(row->field) < 0) {
+                snprintf(out, size, "%s", lang.muxlaunch.layout.standard);
+            } else {
+                snprintf(out, size, numbers[row->field].unit, style_number_value(row->field));
+            }
             break;
         case row_nudge:
             snprintf(out, size, "%+dpx", row->field ? tweaks->mascot_y : tweaks->mascot_x);

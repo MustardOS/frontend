@@ -158,11 +158,8 @@ static grid_layout_entry find_grid_layout_uncached(const int item_index, const i
     out.label_none = json_string_compare(label, "none") == 0;
     out.label_beside = json_string_compare(label, "beside") == 0;
 
-    struct json shape = json_object_get(entry, "shape");
-    if (!json_exists(shape)) shape = json_object_get(root, "shape");
-    out.hexagon = json_string_compare(shape, "hexagon") == 0 ? layout_shape_hexagon : 0;
-    if (json_string_compare(shape, "round") == 0) out.radius = LV_MIN(out.w, out.h) / 2;
-    if (json_string_compare(shape, "square") == 0 || out.hexagon) out.radius = 0;
+    const int radius_pct = layout_value(entry, "radius_pct", layout_value(root, "radius_pct", -1));
+    if (radius_pct >= 0) out.radius = LV_MIN(out.w, out.h) / 2 * LV_MIN(radius_pct, 100) / 100;
     out.text_size = layout_value(entry, "text_size", layout_value(root, "text_size", 100));
 
     struct json art = json_object_get(entry, "art");
@@ -184,82 +181,6 @@ static grid_layout_entry find_grid_layout_uncached(const int item_index, const i
     out.label_width = layout_value(entry, "label_width", layout_value(root, "label_width", out.w * 7 / 4));
     out.label_gap = layout_value(entry, "label_gap", layout_value(root, "label_gap", out.h / 12));
     return out;
-}
-
-#define HEXAGON_SIZES 4
-
-static lv_img_dsc_t hexagon_image[HEXAGON_SIZES];
-static uint8_t *hexagon_pixels[HEXAGON_SIZES];
-static int hexagon_next = 0;
-
-static int hexagon_shape[HEXAGON_SIZES];
-
-static int shape_inside(const int shape, const float x, const float y, const float w, const float h) {
-    const float dx = fabsf(x - w / 2) / (w / 2);
-    const float dy = fabsf(y - h / 2) / (h / 2);
-    return dx <= 1.0f && dy <= 1.0f - dx / 2;
-}
-
-static const lv_img_dsc_t *hexagon_for(const int shape, const int w, const int h) {
-    for (int i = 0; i < HEXAGON_SIZES; i++) {
-        const lv_img_header_t *header = &hexagon_image[i].header;
-        if (hexagon_pixels[i] && hexagon_shape[i] == shape && header->w == (uint32_t) w && header->h == (uint32_t) h) {
-            return &hexagon_image[i];
-        }
-    }
-
-    const int slot = hexagon_next;
-    hexagon_shape[slot] = shape;
-    hexagon_next = (hexagon_next + 1) % HEXAGON_SIZES;
-    free(hexagon_pixels[slot]);
-    uint8_t *pixels = malloc((size_t) w * (size_t) h * 4);
-    hexagon_pixels[slot] = pixels;
-    if (!pixels) return NULL;
-
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            int hits = 0;
-            for (int sy = 0; sy < 4; sy++) {
-                for (int sx = 0; sx < 4; sx++) {
-                    hits += shape_inside(
-                        shape, (float) x + (sx + 0.5f) / 4, (float) y + (sy + 0.5f) / 4, (float) w, (float) h
-                    );
-                }
-            }
-            uint8_t *pixel = pixels + ((size_t) y * (size_t) w + (size_t) x) * 4;
-            pixel[0] = pixel[1] = pixel[2] = 255;
-            pixel[3] = (uint8_t) (hits * 255 / 16);
-        }
-    }
-
-    lv_img_dsc_t *image = &hexagon_image[slot];
-    memset(image, 0, sizeof(*image));
-    image->header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
-    image->header.w = (uint32_t) w;
-    image->header.h = (uint32_t) h;
-    image->data_size = (uint32_t) (w * h * 4);
-    image->data = pixels;
-    return image;
-}
-
-static void hexagon_draw_cb(lv_event_t *e) {
-    lv_obj_t *panel = lv_event_get_target(e);
-
-    lv_area_t area;
-    lv_obj_get_coords(panel, &area);
-    const int w = lv_area_get_width(&area);
-    const int h = lv_area_get_height(&area);
-
-    const lv_img_dsc_t *image = hexagon_for((int) (intptr_t) lv_event_get_user_data(e), w, h);
-    if (!image) return;
-
-    const int focused = lv_obj_has_state(panel, LV_STATE_FOCUSED);
-    lv_draw_img_dsc_t dsc;
-    lv_draw_img_dsc_init(&dsc);
-    dsc.recolor = lv_obj_get_style_bg_color(panel, LV_PART_MAIN);
-    dsc.recolor_opa = LV_OPA_COVER;
-    dsc.opa = (lv_opa_t) (focused ? theme.grid.cell_focus.background_alpha : theme.grid.cell_default.background_alpha);
-    lv_draw_img(lv_event_get_draw_ctx(e), &dsc, &area, image);
 }
 
 static void label_below_ext_cb(lv_event_t *e) {
@@ -407,19 +328,6 @@ void place_grid_layout(lv_obj_t *cell_panel, const grid_layout_entry *entry, con
     if (!entry->shadow) {
         lv_obj_set_style_shadow_width(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
         lv_obj_set_style_shadow_width(cell_panel, 0, MU_OBJ_MAIN_FOCUS);
-    }
-
-    if (entry->hexagon) {
-        lv_obj_set_style_radius(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_clip_corner(cell_panel, false, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_outline_width(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_outline_width(cell_panel, 0, MU_OBJ_MAIN_FOCUS);
-        lv_obj_set_style_bg_opa(cell_panel, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_bg_opa(cell_panel, LV_OPA_TRANSP, MU_OBJ_MAIN_FOCUS);
-        lv_obj_set_style_border_width(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_shadow_width(cell_panel, 0, MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_shadow_width(cell_panel, 0, MU_OBJ_MAIN_FOCUS);
-        lv_obj_add_event_cb(cell_panel, hexagon_draw_cb, LV_EVENT_DRAW_MAIN, (void *) (intptr_t) entry->hexagon);
     }
 
     if (is_focus) lv_obj_move_foreground(cell_panel);

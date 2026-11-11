@@ -350,7 +350,7 @@ void update_grid(const int direction) {
         return;
     }
 
-    grid_motion_pop_focused();
+    grid_motion_swell_focused();
 
     const int row_pitch = theme.grid.row_height + theme.grid.row_padding;
 

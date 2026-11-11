@@ -31,7 +31,7 @@ enum menu_layout_option {
     layout_nameangle,
     layout_namebg,
     layout_mascotscale,
-    layout_shape,
+    layout_radius,
     layout_glyphscale,
     layout_namewidth,
     LAYOUT_OPTION_COUNT
@@ -51,7 +51,7 @@ enum menu_style {
     menu_style_rolodex,
     menu_style_dock,
     menu_style_fan,
-    menu_style_honeycomb,
+    menu_style_zigzag,
     menu_style_tiles,
     menu_style_sidebar,
     menu_style_fluent,
@@ -78,6 +78,18 @@ int menu_style_named_for(const char *theme_path);
 int menu_layout_choices(int option);
 
 int menu_style_current(void);
+
+#define MENU_ARRANGEMENT_MAX 3
+
+int menu_style_resolve(int style);
+
+int menu_style_base(int style);
+
+int menu_style_arrangements(int base, int *styles);
+
+int menu_style_customised(int style);
+
+int menu_style_reset_layout(int style);
 
 const int *menu_item_order(void);
 

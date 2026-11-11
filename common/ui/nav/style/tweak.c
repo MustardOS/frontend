@@ -21,7 +21,7 @@ _Static_assert(NUMBER_COUNT <= 32, "numbers outgrew the set mask");
 const char *const style_number_keys[NUMBER_COUNT] = {
     "size_pct",   "spacing_pct", "tilt",         "swell_pct", "text_pct",   "focus_width", "slice_gap",
     "slant",      "text_bg",     "text_x",       "text_y",    "text_angle", "name_x",      "name_y",
-    "name_angle", "name_bg",     "mascot_scale", "glyph_pct", "name_w",
+    "name_angle", "name_bg",     "mascot_scale", "glyph_pct", "name_w",     "radius_pct",
 };
 
 const char *const style_cascade_keys[CASCADE_FIELD_COUNT] = {"size", "spacing", "angle", "tilt", "fade"};
@@ -99,12 +99,28 @@ static int read_saved(const int style, const int global, style_tweaks *out) {
     return read_document(path, out);
 }
 
+int style_tweaks_saved(const int style) {
+    char path[MAX_BUFFER_SIZE];
+    for (int global = 0; global < 2; global++) {
+        tweak_path(path, sizeof(path), style, global);
+        if (file_exist(path)) return 1;
+        legacy_path(path, sizeof(path), style, global);
+        if (file_exist(path)) return 1;
+    }
+    return 0;
+}
+
 static void remove_saved(const int style, const int global) {
     char path[MAX_BUFFER_SIZE];
     legacy_path(path, sizeof(path), style, global);
     if (file_exist(path)) remove(path);
     tweak_path(path, sizeof(path), style, global);
     if (file_exist(path)) remove(path);
+}
+
+void style_tweaks_remove(const int style) {
+    remove_saved(style, 0);
+    remove_saved(style, 1);
 }
 
 static void read_entry(const struct json entry, style_tweak *tweak) {

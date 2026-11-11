@@ -777,7 +777,6 @@ struct mux_lang {
         char menulabel[MAX_BUFFER_SIZE];
         char menulayout[MAX_BUFFER_SIZE];
         char menurandom[MAX_BUFFER_SIZE];
-        char menuglyphzoom[MAX_BUFFER_SIZE];
         char menureset[MAX_BUFFER_SIZE];
         char menureset_title[MAX_BUFFER_SIZE];
         char menureset_desc[MAX_BUFFER_SIZE];
@@ -789,28 +788,38 @@ struct mux_lang {
             char list[MAX_BUFFER_SIZE];
             char grid[MAX_BUFFER_SIZE];
             char carousel[MAX_BUFFER_SIZE];
-            char coverflow[MAX_BUFFER_SIZE];
             char bubbles[MAX_BUFFER_SIZE];
             char orbit[MAX_BUFFER_SIZE];
-            char dial[MAX_BUFFER_SIZE];
             char stack[MAX_BUFFER_SIZE];
             char clock[MAX_BUFFER_SIZE];
             char rolodex[MAX_BUFFER_SIZE];
             char dock[MAX_BUFFER_SIZE];
             char fan[MAX_BUFFER_SIZE];
-            char honeycomb[MAX_BUFFER_SIZE];
             char tiles[MAX_BUFFER_SIZE];
             char sidebar[MAX_BUFFER_SIZE];
             char fluent[MAX_BUFFER_SIZE];
-            char spotlight[MAX_BUFFER_SIZE];
             char banners[MAX_BUFFER_SIZE];
-            char crossbar[MAX_BUFFER_SIZE];
             char desktop[MAX_BUFFER_SIZE];
-            char tabbar[MAX_BUFFER_SIZE];
-            char paged[MAX_BUFFER_SIZE];
             char slices[MAX_BUFFER_SIZE];
-            char mascot[MAX_BUFFER_SIZE];
         } menu_style;
+        struct {
+            char title[MAX_BUFFER_SIZE];
+            char rows[MAX_BUFFER_SIZE];
+            char staggered[MAX_BUFFER_SIZE];
+            char pages[MAX_BUFFER_SIZE];
+            char flat[MAX_BUFFER_SIZE];
+            char tilted[MAX_BUFFER_SIZE];
+            char spotlight[MAX_BUFFER_SIZE];
+            char bottom[MAX_BUFFER_SIZE];
+            char top[MAX_BUFFER_SIZE];
+            char side[MAX_BUFFER_SIZE];
+            char blocks[MAX_BUFFER_SIZE];
+            char mascot[MAX_BUFFER_SIZE];
+            char custom[MAX_BUFFER_SIZE];
+            char standard[MAX_BUFFER_SIZE];
+            char reset_title[MAX_BUFFER_SIZE];
+            char reset_desc[MAX_BUFFER_SIZE];
+        } menu_arrange;
         struct {
             char title[MAX_BUFFER_SIZE];
             char standard[MAX_BUFFER_SIZE];
@@ -897,10 +906,10 @@ struct mux_lang {
             char theme_alternate[MAX_BUFFER_SIZE];
             char random_theme[MAX_BUFFER_SIZE];
             char menu_style[MAX_BUFFER_SIZE];
+            char menu_arrange[MAX_BUFFER_SIZE];
             char menu_label[MAX_BUFFER_SIZE];
             char menu_layout[MAX_BUFFER_SIZE];
             char menu_random[MAX_BUFFER_SIZE];
-            char menu_glyph_zoom[MAX_BUFFER_SIZE];
             char menu_reset[MAX_BUFFER_SIZE];
             char menu_order[MAX_BUFFER_SIZE];
             char colours[MAX_BUFFER_SIZE];
@@ -1533,10 +1542,7 @@ struct mux_lang {
             char name_back[MAX_BUFFER_SIZE];
             char mascot_size[MAX_BUFFER_SIZE];
             char discard[MAX_BUFFER_SIZE];
-            char shape[MAX_BUFFER_SIZE];
-            char square[MAX_BUFFER_SIZE];
-            char round[MAX_BUFFER_SIZE];
-            char hexagon[MAX_BUFFER_SIZE];
+            char radius[MAX_BUFFER_SIZE];
             char glyph_scale[MAX_BUFFER_SIZE];
             char name_width[MAX_BUFFER_SIZE];
             char shown[MAX_BUFFER_SIZE];
@@ -2123,6 +2129,9 @@ struct mux_lang {
         struct {
             char title[MAX_BUFFER_SIZE];
             char instant[MAX_BUFFER_SIZE];
+            char suspend[MAX_BUFFER_SIZE];
+            char warn_title[MAX_BUFFER_SIZE];
+            char warn_desc[MAX_BUFFER_SIZE];
             char t10_s[MAX_BUFFER_SIZE];
             char t30_s[MAX_BUFFER_SIZE];
             char t60_s[MAX_BUFFER_SIZE];

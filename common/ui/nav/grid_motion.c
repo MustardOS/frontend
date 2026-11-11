@@ -311,35 +311,6 @@ void grid_motion_carousel_ghost(lv_obj_t *ghost, const int direction) {
     lv_anim_start(&anim);
 }
 
-static void glyph_pop_exec(void *var, const int32_t v) {
-    lv_img_set_zoom(var, (uint16_t) v);
-}
-
-static void pop_glyph(lv_obj_t *img) {
-    if (!img || lv_obj_has_flag(img, LV_OBJ_FLAG_HIDDEN)) return;
-
-    const lv_anim_t *running = lv_anim_get(img, glyph_pop_exec);
-    const int32_t base = running ? running->end_value : lv_img_get_zoom(img);
-    lv_anim_del(img, glyph_pop_exec);
-
-    lv_anim_t anim;
-    lv_anim_init(&anim);
-    lv_anim_set_var(&anim, img);
-    lv_anim_set_exec_cb(&anim, glyph_pop_exec);
-    lv_anim_set_values(&anim, base * 3 / 4, base);
-    lv_anim_set_time(&anim, (uint32_t) theme.grid.animation_time);
-    lv_anim_set_path_cb(&anim, lv_anim_path_overshoot);
-    lv_anim_start(&anim);
-}
-
-static void pop_focused_cell(void) {
-    lv_obj_t *panel = lv_group_get_focused(ui_group_panel);
-    if (!panel || lv_obj_get_parent(panel) != ui_pnl_grid) return;
-
-    pop_glyph(lv_obj_get_child(panel, 0));
-    pop_glyph(lv_obj_get_child(panel, 2));
-}
-
 typedef struct {
     lv_obj_t *panel;
     lv_coord_t x, y, w, h, radius;
@@ -467,10 +438,4 @@ void grid_motion_swell_focused(void) {
             swell_panel(panel, LV_IMG_ZOOM_NONE, time, lv_anim_path_ease_out);
         }
     }
-}
-
-void grid_motion_pop_focused(void) {
-    const int zoom_allowed = config.settings.themeopt.menu_glyph_zoom || strcmp(mux_module, "muxlaunch") != 0;
-    if (grid_motion_enabled() && zoom_allowed) pop_focused_cell();
-    grid_motion_swell_focused();
 }

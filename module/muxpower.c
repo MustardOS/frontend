@@ -8,6 +8,8 @@ static mux_dialogue save_dlg;
 
 static mux_dialogue wr_dlg;
 
+static mux_dialogue sleep_dlg;
+
 static int options_pending;
 
 #define POWER(NAME, UDATA) 1,
@@ -26,8 +28,8 @@ static int any_power_modified(void) {
     return 0;
 }
 
-#define SHUTDOWN_COUNT 10
-static const int shutdown_values[] = {-2, 2, 10, 30, 60, 120, 300, 600, 900, 1800};
+#define SHUTDOWN_COUNT 11
+static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800};
 
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
@@ -289,6 +291,17 @@ static int save_power_options(void) {
 
     REPORT_SAVE_FAILURE();
 
+    if (idx_shutdown == -1 && lv_dropdown_get_selected(ui_dro_shutdown_power) != shutdown_original && !save_failed) {
+        dialogue_init_accept(
+            &sleep_dlg, &theme, ui_screen, lang.muxpower.sleep.warn_title, lang.muxpower.sleep.warn_desc,
+            lang.generic.confirm
+        );
+        dialogue_open(&sleep_dlg, &theme);
+        msgbox_active = 1;
+
+        return 0;
+    }
+
     if (get_selected_saver_type() == saver_type_disabled && idx_idle_display == 300 && idx_idle_sleep == 0
         && !file_exist(WR_PATH)) {
         write_text_to_file(
@@ -305,8 +318,6 @@ static int save_power_options(void) {
         return 0;
     }
 
-    play_sound(snd_back);
-
     return 1;
 }
 
@@ -316,10 +327,10 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    char *sleep_timer[] = {lang.generic.disabled,     lang.muxpower.sleep.instant, lang.muxpower.sleep.t10_s,
-                           lang.muxpower.sleep.t30_s, lang.muxpower.sleep.t60_s,   lang.muxpower.sleep.t2_m,
-                           lang.muxpower.sleep.t5_m,  lang.muxpower.sleep.t10_m,   lang.muxpower.sleep.t15_m,
-                           lang.muxpower.sleep.t30_m};
+    char *sleep_timer[] = {lang.generic.disabled,     lang.muxpower.sleep.suspend, lang.muxpower.sleep.instant,
+                           lang.muxpower.sleep.t10_s, lang.muxpower.sleep.t30_s,   lang.muxpower.sleep.t60_s,
+                           lang.muxpower.sleep.t2_m,  lang.muxpower.sleep.t5_m,    lang.muxpower.sleep.t10_m,
+                           lang.muxpower.sleep.t15_m, lang.muxpower.sleep.t30_m};
 
     char *idle_timer[] = {lang.generic.disabled,    lang.muxpower.idle.t10_s, lang.muxpower.idle.t30_s,
                           lang.muxpower.idle.t60_s, lang.muxpower.idle.t2_m,  lang.muxpower.idle.t5_m,
@@ -420,6 +431,23 @@ static void handle_option_next(void) {
 }
 
 static void handle_a(void) {
+    if (dialogue_active(&sleep_dlg)) {
+        dialogue_mark_silent(&sleep_dlg);
+        dialogue_dismiss(&sleep_dlg);
+        play_sound(snd_back);
+        msgbox_active = 0;
+
+        if (options_pending) {
+            options_pending = 0;
+            open_saver_options();
+            return;
+        }
+
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
+        mux_input_stop();
+        return;
+    }
+
     if (dialogue_active(&wr_dlg)) {
         dialogue_dismiss(&wr_dlg);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
@@ -435,7 +463,7 @@ static void handle_a(void) {
 
         if (opt == mux_unsaved_save) {
             if (!save_power_options()) {
-                options_pending = 0;
+                if (!dialogue_active(&sleep_dlg)) options_pending = 0;
                 return;
             }
         }
@@ -465,7 +493,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (dialogue_active(&wr_dlg)) return;
+    if (dialogue_active(&wr_dlg) || dialogue_active(&sleep_dlg)) return;
 
     if (msgbox_active) {
         handle_msgbox_dismiss();
@@ -475,6 +503,7 @@ static void handle_b(void) {
     if (dialogue_guard_unsaved(&save_dlg, &theme, any_power_modified())) return;
 
     if (save_power_options()) {
+        play_sound(snd_back);
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
 
         mux_input_stop();

@@ -48,8 +48,8 @@ UI_SRCS = \
 
 STYLE_SRCS = \
     ui/nav/style/shared.c ui/nav/style/bubbles.c ui/nav/style/carousel.c ui/nav/style/clock.c \
-    ui/nav/style/coverflow.c ui/nav/style/dial.c ui/nav/style/dock.c ui/nav/style/fan.c ui/nav/style/grid.c \
-    ui/nav/style/honeycomb.c ui/nav/style/orbit.c ui/nav/style/rolodex.c ui/nav/style/sidebar.c ui/nav/style/stack.c \
+    ui/nav/style/coverflow.c ui/nav/style/dock.c ui/nav/style/fan.c ui/nav/style/grid.c \
+    ui/nav/style/zigzag.c ui/nav/style/orbit.c ui/nav/style/rolodex.c ui/nav/style/sidebar.c ui/nav/style/stack.c \
     ui/nav/style/tiles.c ui/nav/style/fluent.c ui/nav/style/spotlight.c ui/nav/style/banners.c \
     ui/nav/style/crossbar.c ui/nav/style/desktop.c ui/nav/style/tabbar.c ui/nav/style/slices.c ui/nav/style/mascot.c \
     ui/nav/style/paged.c ui/nav/style/tweak.c

@@ -349,7 +349,6 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/theme", "menu_style", CFG_OFF(settings.themeopt.menu_style), 0, {.i = 0}, 1, 0, 24},
     {CONF_CONFIG_PATH "settings/theme", "menu_label", CFG_OFF(settings.themeopt.menu_label), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/theme", "menu_random", CFG_OFF(settings.themeopt.menu_random), 0, {.i = 0}, 1, 0, 1},
-    {CONF_CONFIG_PATH "settings/theme", "menu_glyph_zoom", CFG_OFF(settings.themeopt.menu_glyph_zoom), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/theme", "menu_order", CFG_OFF(settings.themeopt.menu_order), 1, {.s = ""}},
     {CONF_CONFIG_PATH "settings/theme", "colour_highlight", CFG_OFF(settings.themeopt.colour_highlight), 1, {.s = ""}},
     {CONF_CONFIG_PATH "settings/theme", "colour_highlight_text", CFG_OFF(settings.themeopt.colour_highlight_text), 1, {.s = ""}},

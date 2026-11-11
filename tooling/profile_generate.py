@@ -116,10 +116,17 @@ FIXED_OPTIONS = {
     "settings/colour/sunset_time": [(str(i), f"{i * 15 // 60:02d}:{i * 15 % 60:02d}") for i in range(96)],
     "settings/theme/header_height": [("-1", "lang.muxthemeopt.size_default")] + [(str(v), str(v)) for v in range(65)],
     "settings/theme/footer_height": [("-1", "lang.muxthemeopt.size_default")] + [(str(v), str(v)) for v in range(65)],
-    "settings/theme/menu_style": [(str(index), f"lang.muxcustom.menu_style.{name}") for index, name in enumerate(
-        ("theme", "list", "grid", "carousel", "coverflow", "bubbles", "orbit", "dial", "stack", "clock", "rolodex", "dock",
-         "fan", "honeycomb", "tiles", "sidebar", "fluent", "spotlight", "banners", "crossbar", "desktop", "tabbar",
-         "paged", "slices", "mascot"))],
+    "settings/theme/menu_style": [(str(index), " ".join(f"{{lang.muxcustom.{key}}}" for key in keys)) for index, keys in (
+        (0, ("menu_style.theme",)), (1, ("menu_style.list",)), (2, ("menu_style.grid", "menu_arrange.rows")),
+        (3, ("menu_style.carousel", "menu_arrange.flat")), (4, ("menu_style.carousel", "menu_arrange.tilted")),
+        (5, ("menu_style.bubbles",)), (6, ("menu_style.orbit",)), (8, ("menu_style.stack",)),
+        (9, ("menu_style.clock",)), (10, ("menu_style.rolodex",)), (11, ("menu_style.dock", "menu_arrange.bottom")),
+        (12, ("menu_style.fan",)), (13, ("menu_style.grid", "menu_arrange.staggered")), (14, ("menu_style.tiles",)),
+        (15, ("menu_style.sidebar", "menu_arrange.side")), (16, ("menu_style.fluent", "menu_arrange.blocks")),
+        (17, ("menu_style.carousel", "menu_arrange.spotlight")), (18, ("menu_style.banners",)),
+        (19, ("menu_style.dock", "menu_arrange.top")), (20, ("menu_style.desktop",)),
+        (21, ("menu_style.sidebar", "menu_arrange.top")), (22, ("menu_style.grid", "menu_arrange.pages")),
+        (23, ("menu_style.slices",)), (24, ("menu_style.fluent", "menu_arrange.mascot")))],
 }
 for _glyph in ("footer", "grid", "header", "list"):
     FIXED_OPTIONS[f"settings/theme/glyph_size_{_glyph}"] = [
@@ -176,7 +183,6 @@ HELP_KEYS = {
     "settings/theme/menu_style": "muxcustom.help.menu_style",
     "settings/theme/menu_label": "muxcustom.help.menu_label",
     "settings/theme/menu_random": "muxcustom.help.menu_random",
-    "settings/theme/menu_glyph_zoom": "muxcustom.help.menu_glyph_zoom",
     "settings/theme/colour_highlight": "muxcolour.help.mode",
     "settings/theme/colour_highlight_text": "muxcolour.help.mode",
     "settings/theme/colour_highlight_shadow": "muxcolour.help.mode",
