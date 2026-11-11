@@ -52,6 +52,14 @@ void init_module(const char *module);
 
 void init_display(void);
 
+// Attach muOS display metadata/timers to an LVGL display registered by the host.
+// The host must call lv_init() and register the display before this function.
+int init_display_host(void);
+
+// Load muOS config, device and language data, then bind theme/runtime metadata
+// to the host's already registered LVGL display.
+int init_runtime_host(void);
+
 void init_input(mux_input_options *opts, int def_combo);
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(const lv_timer_t *));

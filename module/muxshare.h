@@ -260,6 +260,8 @@ int muxprofile_main(void);
 int muxactivity_main(void);
 
 int muxapp_main(void);
+int muxapp_host_start(void);
+void muxapp_host_end(void);
 
 int muxarc_main(void);
 
@@ -268,6 +270,8 @@ void muxappcon_main(int auto_assign, const char *name, const char *dir, const ch
 int muxarchive_main(void);
 
 void muxassign_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
+int muxassign_host_start(int auto_assign, const char *name, const char *dir, const char *sys, int app);
+void muxassign_host_end(void);
 
 int muxbackup_main(void);
 
@@ -280,8 +284,12 @@ int muxbtdev_main(void);
 void muxcolfilter_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxcollect_main(int add, const char *dir, int last_index);
+int muxcollect_host_start(int add, const char *dir, int last_index);
+void muxcollect_host_end(void);
 
 int muxconfig_main(void);
+int muxconfig_host_start(void);
+void muxconfig_host_end(void);
 
 int muxcore_main(void);
 
@@ -304,8 +312,12 @@ void muxgov_main(int auto_assign, const char *name, const char *dir, const char 
 int muxhdmi_main(void);
 
 int muxhistory_main(int his_index);
+int muxhistory_host_start(int his_index);
+void muxhistory_host_end(void);
 
 int muxinfo_main(void);
+int muxinfo_host_start(void);
+void muxinfo_host_end(void);
 
 int muxinstall_main(void);
 
@@ -316,6 +328,8 @@ int muxlanguage_main(void);
 int muxsoundfont_main(void);
 
 int muxlaunch_main(void);
+int muxlaunch_host_start(void);
+void muxlaunch_host_end(void);
 
 int muxlaunch_layout_main(void);
 
@@ -332,6 +346,8 @@ int muxnetscan_main(void);
 int muxnetwork_main(void);
 
 void muxoption_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
+int muxoption_host_start(int auto_assign, const char *name, const char *dir, const char *sys, int app);
+void muxoption_host_end(void);
 
 void muxoverlay_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
@@ -348,6 +364,8 @@ int muxtheme_main(char *ex_dir);
 int muxthird_main(void);
 
 int muxplore_main(int index, char *dir);
+int muxplore_host_start(int index, char *dir);
+void muxplore_host_end(void);
 
 int muxpower_main(void);
 
@@ -364,6 +382,8 @@ int muxcolour_main(void);
 int muxrtc_main(void);
 
 int muxsearch_main(char *dir);
+int muxsearch_host_start(char *dir);
+void muxsearch_host_end(void);
 
 void muxshader_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
@@ -372,6 +392,8 @@ int muxshot_main(void);
 int muxsort_main(void);
 
 int muxorder_main(void);
+int muxorder_host_start(void);
+void muxorder_host_end(void);
 
 int muxspace_main(void);
 
@@ -382,6 +404,8 @@ int muxstorage_main(void);
 int muxtext_main(void);
 
 void muxtag_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
+int muxtag_host_start(int auto_assign, const char *name, const char *dir, const char *sys, int app);
+void muxtag_host_end(void);
 
 int muxtask_main(char *ex_dir);
 

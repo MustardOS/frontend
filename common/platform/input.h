@@ -190,6 +190,12 @@ void mux_input_watch_fd(int fd);
 
 void mux_input_task(const mux_input_options *opts);
 
+// Nonblocking per-frame input path for hosts that already own input polling.
+int mux_input_host_begin(mux_input_options *opts);
+void mux_input_host_step(uint64_t pressed_mask);
+int mux_input_host_stopped(void);
+void mux_input_host_end(void);
+
 void mux_input_open(void);
 
 void mux_input_close(void);

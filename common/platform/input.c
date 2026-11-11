@@ -504,6 +504,9 @@ static void apply_face_button_layout(void) {
 }
 
 static mux_input_type apply_direction_axis_swap(mux_input_type type) {
+#ifdef MUOS_HOST_ADAPTER
+    return type;
+#endif
     if (!swap_axis || key_show) return type;
 
     switch (type) {
@@ -1561,6 +1564,55 @@ mux_nav_type get_sticknav_mask(const int sticknav_setting) {
     }
 
     return nav_map[sticknav_setting];
+}
+
+static mux_input_options host_input_opts_storage;
+static mux_input_options *host_input_opts = NULL;
+
+int mux_input_host_begin(mux_input_options *opts) {
+    if (!opts || host_input_opts) return 0;
+
+    init_input_maps();
+    host_input_opts_storage = *opts;
+    host_input_opts = &host_input_opts_storage;
+    pressed = held = 0;
+    hold_active = hold_call = 0;
+    alt_keys = 0;
+    stop_flag = 0;
+    suppress_until_tick = 0;
+    input_repeat_deadline = combo_repeat_deadline = 0;
+    swap_axis = host_input_opts->swap_axis;
+    host_input_opts->nav = get_sticknav_mask(config.settings.advanced.stick_nav);
+    opts->nav = host_input_opts->nav;
+    reset_raw_analogue();
+    return 1;
+}
+
+int mux_input_host_stopped(void) {
+    return host_input_opts && stop_flag;
+}
+
+void mux_input_host_step(const uint64_t pressed_mask) {
+    if (!host_input_opts || stop_flag) return;
+
+    tick = (uint32_t) mux_tick();
+    pressed = pressed_mask & ((UINT64_C(1) << mux_input_count) - 1);
+    update_hold_modifier(host_input_opts);
+    handle_inputs(host_input_opts);
+    handle_combos(host_input_opts);
+    if (host_input_opts->analogue_handler) host_input_opts->analogue_handler(0, 0, 0, 0);
+    if (host_input_opts->idle_handler) host_input_opts->idle_handler();
+    held = pressed;
+}
+
+void mux_input_host_end(void) {
+    if (!host_input_opts) return;
+    if (!stop_flag) mux_input_host_step(0);
+    host_input_opts = NULL;
+    pressed = held = 0;
+    hold_active = hold_call = 0;
+    alt_keys = 0;
+    stop_flag = 0;
 }
 
 void ep_wait_wake(void) {

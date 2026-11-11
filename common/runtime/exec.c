@@ -310,12 +310,15 @@ void set_process_name(const char *module) {
 
 const char *module_from_func(const char *func) {
     static char module[64];
-    const char *suffix = "_main";
-
     size_t len = strlen(func);
-    const size_t slen = strlen(suffix);
-
-    if (len > slen && strcmp(func + len - slen, suffix) == 0) len -= slen;
+    static const char *const suffixes[] = {"_main", "_setup"};
+    for (size_t i = 0; i < sizeof(suffixes) / sizeof(suffixes[0]); ++i) {
+        const size_t slen = strlen(suffixes[i]);
+        if (len > slen && strcmp(func + len - slen, suffixes[i]) == 0) {
+            len -= slen;
+            break;
+        }
+    }
     if (len >= sizeof(module)) len = sizeof(module) - 1;
 
     memcpy(module, func, len);

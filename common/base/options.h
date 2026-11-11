@@ -69,8 +69,12 @@
 
 #define LOCAL_TIME "/etc/localtime"
 
+#ifndef OPT_PATH
 #define OPT_PATH "/opt/muos/"
+#endif
+#ifndef RUN_PATH
 #define RUN_PATH "/run/muos/"
+#endif
 
 #define CONTROL_MODERN OPT_PATH "share/info/gamecontrollerdb/modern.txt"
 #define CONTROL_RETRO  OPT_PATH "share/info/gamecontrollerdb/retro.txt"

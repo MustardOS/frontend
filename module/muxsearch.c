@@ -29,6 +29,7 @@ size_t all_item_count = 0;
 content_item *all_items = NULL;
 
 static lv_obj_t *ui_viewport_objects[7];
+static int host_starting;
 
 static void show_help(void) {
     const struct help_msg help_messages[] = {
@@ -931,6 +932,7 @@ int muxsearch_main(char *dir) {
     register_key_event_callback(on_key_event);
     orientation_introduce(mux_module, lang.muxsearch.title, lang.muxsearch.overview);
 
+    if (host_starting) return mux_input_host_begin(&input_opts);
     mux_input_task(&input_opts);
 
     transition_box_art_destroy();
@@ -939,4 +941,18 @@ int muxsearch_main(char *dir) {
     free_items(&all_items, &all_item_count);
 
     return 0;
+}
+
+int muxsearch_host_start(char *dir) {
+    host_starting = 1;
+    const int result = muxsearch_main(dir);
+    host_starting = 0;
+    return result;
+}
+
+void muxsearch_host_end(void) {
+    mux_input_host_end();
+    transition_box_art_destroy();
+    video_preview_destroy();
+    free_items(&all_items, &all_item_count);
 }

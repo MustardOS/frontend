@@ -6,6 +6,8 @@
 enum { ui_count_dynamic = E_SIZE(INFO_ELEMENTS) };
 #undef INFO
 
+static mux_input_options input_opts;
+
 static void show_help(void) {
     const struct help_msg help_messages[] = {
 #define INFO(NAME, UDATA) {UDATA, lang.muxinfo.help.NAME},
@@ -135,7 +137,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxinfo_main(void) {
+static void muxinfo_setup(void) {
     init_module(__func__);
     init_theme(1, 0);
 
@@ -153,7 +155,7 @@ int muxinfo_main(void) {
 
     init_timer(ui_gen_refresh_task, NULL);
 
-    mux_input_options input_opts = {
+    input_opts = (mux_input_options) {
         .swap_axis = theme.misc.navigation_type == 1,
         .press_handler =
             {
@@ -181,7 +183,20 @@ int muxinfo_main(void) {
     init_input(&input_opts, 1);
     orientation_introduce(mux_module, lang.muxinfo.title, lang.muxinfo.overview);
 
+}
+
+int muxinfo_main(void) {
+    muxinfo_setup();
     mux_input_task(&input_opts);
 
     return 0;
+}
+
+int muxinfo_host_start(void) {
+    muxinfo_setup();
+    return mux_input_host_begin(&input_opts);
+}
+
+void muxinfo_host_end(void) {
+    mux_input_host_end();
 }

@@ -6,6 +6,8 @@ static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
 static mux_dialogue assign_dlg;
+static int host_starting;
+static int host_started;
 
 // Sort mode picks a tag to filter a list by instead of assigning one to content
 static int sort_mode = 0;
@@ -300,5 +302,19 @@ void muxtag_main(const int auto_assign, const char *name, const char *dir, const
     init_input(&input_opts, 1);
     orientation_introduce(mux_module, lang.muxtag.title, lang.muxtag.overview);
 
+    if (host_starting) {
+        host_started = mux_input_host_begin(&input_opts);
+        return;
+    }
     mux_input_task(&input_opts);
 }
+
+int muxtag_host_start(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    host_starting = 1;
+    host_started = 0;
+    muxtag_main(auto_assign, name, dir, sys, app);
+    host_starting = 0;
+    return host_started;
+}
+
+void muxtag_host_end(void) { mux_input_host_end(); }

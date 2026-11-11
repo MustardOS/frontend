@@ -7,6 +7,7 @@ static lv_obj_t *ui_objects_glyph[order_count];
 static lv_obj_t *ui_objects_panel[order_count];
 
 static char order_dir[MAX_BUFFER_SIZE];
+static int host_starting;
 
 typedef enum { scope_directory = 0, scope_global, scope_count } scope_opt;
 
@@ -296,7 +297,17 @@ int muxorder_main(void) {
     init_input(&input_opts, 1);
     orientation_introduce(mux_module, lang.muxorder.title, lang.muxorder.overview);
 
+    if (host_starting) return mux_input_host_begin(&input_opts);
     mux_input_task(&input_opts);
 
     return 0;
 }
+
+int muxorder_host_start(void) {
+    host_starting = 1;
+    const int result = muxorder_main();
+    host_starting = 0;
+    return result;
+}
+
+void muxorder_host_end(void) { mux_input_host_end(); }

@@ -1781,7 +1781,9 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxlaunch_main(void) {
+static mux_input_options launch_input_opts;
+
+static void muxlaunch_setup(void) {
     moving = -1;
     page_dots[0] = page_dots[1] = NULL;
     init_module(__func__);
@@ -1824,7 +1826,7 @@ int muxlaunch_main(void) {
 
     if (file_exist(MUOS_SYS_LOAD)) remove(MUOS_SYS_LOAD);
 
-    mux_input_options input_opts = {
+    launch_input_opts = (mux_input_options) {
         .swap_axis = (theme.grid.enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5)
                      || (!theme.grid.enabled && theme.misc.navigation_type >= 1 && theme.misc.navigation_type <= 5),
         .press_handler =
@@ -1855,10 +1857,10 @@ int muxlaunch_main(void) {
         }
     };
 
-    init_input(&input_opts, 1);
+    init_input(&launch_input_opts, 1);
 
     append_combo(
-        &input_opts, (mux_input_combo) {
+        &launch_input_opts, (mux_input_combo) {
                          .type_mask = BIT(mux_input_start) | BIT(mux_input_x),
                          .press_handler = handle_arc_press,
                          .hold_handler = handle_arc_hold,
@@ -1871,11 +1873,25 @@ int muxlaunch_main(void) {
     else
         orientation_introduce(mux_module, lang.muxlaunch.title, lang.muxlaunch.overview);
 
-    mux_input_task(&input_opts);
+}
+
+int muxlaunch_main(void) {
+    muxlaunch_setup();
+    mux_input_task(&launch_input_opts);
 
     if (item_count > 0) free_items(&items, &item_count);
 
     return 0;
+}
+
+int muxlaunch_host_start(void) {
+    muxlaunch_setup();
+    return mux_input_host_begin(&launch_input_opts);
+}
+
+void muxlaunch_host_end(void) {
+    mux_input_host_end();
+    if (item_count > 0) free_items(&items, &item_count);
 }
 
 int muxlaunch_layout_main(void) {

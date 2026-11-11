@@ -1184,7 +1184,15 @@ static void on_key_event(const struct input_event ev) {
     }
 }
 
-int muxcollect_main(const int add, const char *dir, const int last_index) {
+static mux_input_options collect_input_opts;
+
+static void muxcollect_cleanup(void) {
+    transition_box_art_destroy();
+    video_preview_destroy();
+    free_items(&items, &item_count);
+}
+
+static void muxcollect_setup(const int add, const char *dir, const int last_index) {
     exit_status = 0;
     add_mode = add;
     remove_pending = 0;
@@ -1337,7 +1345,7 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
     update_footer_glyph();
     init_timer(ui_refresh_task, NULL);
 
-    mux_input_options input_opts = {
+    collect_input_opts = (mux_input_options) {
         .swap_axis = theme.misc.navigation_type == 1
                      || (grid_mode_enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5),
         .press_handler =
@@ -1387,13 +1395,25 @@ int muxcollect_main(const int add, const char *dir, const int last_index) {
     }
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, 1);
+    init_input(&collect_input_opts, 1);
     register_key_event_callback(on_key_event);
-    mux_input_task(&input_opts);
+}
 
-    transition_box_art_destroy();
-    video_preview_destroy();
-    free_items(&items, &item_count);
-
+int muxcollect_main(const int add, const char *dir, const int last_index) {
+    muxcollect_setup(add, dir, last_index);
+    mux_input_task(&collect_input_opts);
+    muxcollect_cleanup();
     return exit_status;
+}
+
+int muxcollect_host_start(const int add, const char *dir, const int last_index) {
+    muxcollect_setup(add, dir, last_index);
+    if (mux_input_host_begin(&collect_input_opts)) return 1;
+    muxcollect_cleanup();
+    return 0;
+}
+
+void muxcollect_host_end(void) {
+    mux_input_host_end();
+    muxcollect_cleanup();
 }

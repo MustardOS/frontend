@@ -784,14 +784,22 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     }
 }
 
-int muxhistory_main(const int his_index) {
+static mux_input_options history_input_opts;
+
+static void muxhistory_cleanup(void) {
+    transition_box_art_destroy();
+    video_preview_destroy();
+    free_items(&items, &item_count);
+}
+
+static void muxhistory_setup(const int his_index) {
     exit_status = 0;
     remove_pending = 0;
     nav_moved = 0;
     file_count = 0;
     starter_image = 0;
 
-    init_module(__func__);
+    init_module("muxhistory_main");
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, "");
@@ -889,7 +897,7 @@ int muxhistory_main(const int his_index) {
     dialogue_init_remove(&remove_dlg, &theme, ui_screen, NULL, lang.generic.select, lang.generic.cancel);
     init_timer(ui_refresh_task, NULL);
 
-    mux_input_options input_opts = {
+    history_input_opts = (mux_input_options) {
         .swap_axis = theme.misc.navigation_type == 1
                      || (grid_mode_enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5),
         .press_handler =
@@ -936,12 +944,24 @@ int muxhistory_main(const int his_index) {
     }
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, 1);
-    mux_input_task(&input_opts);
+    init_input(&history_input_opts, 1);
+}
 
-    transition_box_art_destroy();
-    video_preview_destroy();
-    free_items(&items, &item_count);
-
+int muxhistory_main(const int his_index) {
+    muxhistory_setup(his_index);
+    mux_input_task(&history_input_opts);
+    muxhistory_cleanup();
     return exit_status;
+}
+
+int muxhistory_host_start(const int his_index) {
+    muxhistory_setup(his_index);
+    if (mux_input_host_begin(&history_input_opts)) return 1;
+    muxhistory_cleanup();
+    return 0;
+}
+
+void muxhistory_host_end(void) {
+    mux_input_host_end();
+    muxhistory_cleanup();
 }

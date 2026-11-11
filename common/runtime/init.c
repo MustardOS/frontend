@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <unistd.h>
 #include <time.h>
 #include <lvgl/lvgl.h>
@@ -201,6 +202,7 @@ static void clear_cb(lv_disp_drv_t *drv, uint8_t *buf, const uint32_t size) {
 }
 
 void init_display(void) {
+#if LV_USE_GPU_SDL
     hdmi_mode = file_exist(HDMI_MODE);
     LOG_INFO("video", "HDMI in use: %s", hdmi_mode ? "yes" : "no");
 
@@ -342,6 +344,31 @@ void init_display(void) {
     }
 
     mux_set_refresh_timer(disp->refr_timer);
+#endif
+}
+
+int init_display_host(void) {
+    lv_disp_t *disp = lv_disp_get_default();
+    if (!disp || !disp->driver || disp->driver->hor_res <= 0 || disp->driver->ver_res <= 0 ||
+        disp->driver->hor_res > INT16_MAX || disp->driver->ver_res > INT16_MAX)
+        return 0;
+
+    device.mux.width = (int16_t) disp->driver->hor_res;
+    device.mux.height = (int16_t) disp->driver->ver_res;
+    svg_init();
+    mux_set_refresh_timer(disp->refr_timer);
+    return 1;
+}
+
+int init_runtime_host(void) {
+    load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
+
+    if (!init_display_host()) return 0;
+
+    init_theme(1, 1);
+    return 1;
 }
 
 void init_input(mux_input_options *opts, const int def_combo) {
@@ -587,6 +614,17 @@ void init_fonts_preview(void) {
 void init_theme(const int panel_init, const int long_mode) {
     theme_base = get_theme_base();
     load_theme(&theme, &config, &device);
+
+#ifdef MUOS_HOST_ADAPTER
+    theme.misc.navigation_type = 0;
+    theme.grid.navigation_type = 0;
+    theme.list_default.text_alpha = 255;
+    theme.list_focus.text_alpha = 255;
+    theme.list_disabled.text_alpha = 255;
+    theme.grid.cell_default.text_alpha = 255;
+    theme.grid.cell_focus.text_alpha = 255;
+    theme.grid.current_item_label.text_alpha = 255;
+#endif
 
     if (asset_cache_context_changed()) asset_cache_clear();
 

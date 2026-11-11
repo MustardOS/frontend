@@ -1799,7 +1799,16 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
     adjust_panels();
 }
 
-int muxplore_main(const int index, char *dir) {
+static mux_input_options explore_input_opts;
+
+static void muxplore_cleanup(void) {
+    transition_box_art_destroy();
+    video_preview_destroy();
+    free_items(&items, &item_count);
+    free_tag_items(&tag_items, &tag_item_count);
+}
+
+static void muxplore_setup(const int index, char *dir) {
     exit_status = 0;
     sys_index = -1;
     file_count = 0;
@@ -1913,7 +1922,7 @@ int muxplore_main(const int index, char *dir) {
 
     if (ui_count_static > 0) set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
 
-    mux_input_options input_opts = {
+    explore_input_opts = (mux_input_options) {
         .swap_axis = theme.misc.navigation_type == 1
                      || (grid_mode_enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5),
         .press_handler =
@@ -1960,13 +1969,24 @@ int muxplore_main(const int index, char *dir) {
     }
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, 1);
-    mux_input_task(&input_opts);
+    init_input(&explore_input_opts, 1);
+}
 
-    transition_box_art_destroy();
-    video_preview_destroy();
-    free_items(&items, &item_count);
-    free_tag_items(&tag_items, &tag_item_count);
-
+int muxplore_main(const int index, char *dir) {
+    muxplore_setup(index, dir);
+    mux_input_task(&explore_input_opts);
+    muxplore_cleanup();
     return exit_status;
+}
+
+int muxplore_host_start(const int index, char *dir) {
+    muxplore_setup(index, dir);
+    if (mux_input_host_begin(&explore_input_opts)) return 1;
+    muxplore_cleanup();
+    return 0;
+}
+
+void muxplore_host_end(void) {
+    mux_input_host_end();
+    muxplore_cleanup();
 }

@@ -11,6 +11,8 @@ static char rom_system[PATH_MAX];
 
 static int is_dir = 0;
 static int level_is_namespace = 0;
+static int host_starting;
+static int host_started;
 
 #define ASSIGN_NAMESPACE_TAG "namespace:"
 #define ASSIGN_CORE_MAX      64
@@ -781,5 +783,19 @@ void muxassign_main(const int auto_assign, const char *name, const char *dir, co
     init_input(&input_opts, 1);
     orientation_introduce(mux_module, lang.muxassign.title, lang.muxassign.overview);
 
+    if (host_starting) {
+        host_started = mux_input_host_begin(&input_opts);
+        return;
+    }
     mux_input_task(&input_opts);
 }
+
+int muxassign_host_start(int auto_assign, const char *name, const char *dir, const char *sys, int app) {
+    host_starting = 1;
+    host_started = 0;
+    muxassign_main(auto_assign, name, dir, sys, app);
+    host_starting = 0;
+    return host_started;
+}
+
+void muxassign_host_end(void) { mux_input_host_end(); }

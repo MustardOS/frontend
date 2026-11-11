@@ -1100,9 +1100,11 @@ static void free_scaled_raster(lv_obj_t *ui_img_obj) {
         lv_img_cache_invalidate_src(old_dsc);
 
         const lv_disp_t *disp = lv_disp_get_default();
+#if LV_USE_GPU_SDL
         if (disp && disp->driver && disp->driver->draw_ctx) {
             lv_draw_sdl_texture_cache_remove_src((lv_draw_sdl_ctx_t *) disp->driver->draw_ctx, old_dsc);
         }
+#endif
 
         lv_img_buf_free(old_dsc);
         lv_obj_set_user_data(ui_img_obj, NULL);

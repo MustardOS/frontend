@@ -35,6 +35,7 @@ static const char *app_paths[3];
 static const char *pinned[] = {"Archive Manager", "Mustard Terminal", "Task Toolkit", "vTree Gold"};
 
 static size_t pinned_shown = 0;
+static mux_input_options input_opts;
 
 static int pinned_rank(const char *name) {
     if (!name) return A_SIZE(pinned);
@@ -573,7 +574,7 @@ static void ui_refresh_task(lv_timer_t *timer __attribute__((unused))) {
     }
 }
 
-int muxapp_main(void) {
+static void muxapp_setup(void) {
     init_module(__func__);
     init_theme(1, 1);
 
@@ -611,7 +612,7 @@ int muxapp_main(void) {
     }
     init_timer(ui_refresh_task, NULL);
 
-    mux_input_options input_opts = {
+    input_opts = (mux_input_options) {
         .swap_axis = theme.misc.navigation_type == 1
                      || (grid_mode_enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5),
         .press_handler =
@@ -644,9 +645,25 @@ int muxapp_main(void) {
     init_input(&input_opts, 1);
     orientation_introduce(mux_module, lang.muxapp.title, lang.muxapp.overview);
 
+}
+
+int muxapp_main(void) {
+    muxapp_setup();
     mux_input_task(&input_opts);
 
     free_items(&items, &item_count);
 
     return 0;
+}
+
+int muxapp_host_start(void) {
+    muxapp_setup();
+    if (mux_input_host_begin(&input_opts)) return 1;
+    free_items(&items, &item_count);
+    return 0;
+}
+
+void muxapp_host_end(void) {
+    mux_input_host_end();
+    free_items(&items, &item_count);
 }

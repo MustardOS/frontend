@@ -8,6 +8,7 @@ enum { ui_count_dynamic = E_SIZE(CONFIG_ELEMENTS) };
 
 static mux_dialogue warn_dlg;
 static char warn_pending[64] = "";
+static mux_input_options input_opts;
 
 static int on_general_row(void) {
     return lv_group_get_focused(ui_group) == ui_lbl_general_config;
@@ -259,7 +260,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-int muxconfig_main(void) {
+static void muxconfig_setup(void) {
     init_module(__func__);
     init_theme(1, 1);
 
@@ -279,7 +280,7 @@ int muxconfig_main(void) {
 
     init_timer(ui_gen_refresh_task, NULL);
 
-    mux_input_options input_opts = {
+    input_opts = (mux_input_options) {
         .swap_axis = theme.misc.navigation_type == 1,
         .press_handler =
             {
@@ -310,7 +311,20 @@ int muxconfig_main(void) {
 
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, 1);
+}
+
+int muxconfig_main(void) {
+    muxconfig_setup();
     mux_input_task(&input_opts);
 
     return 0;
+}
+
+int muxconfig_host_start(void) {
+    muxconfig_setup();
+    return mux_input_host_begin(&input_opts);
+}
+
+void muxconfig_host_end(void) {
+    mux_input_host_end();
 }
