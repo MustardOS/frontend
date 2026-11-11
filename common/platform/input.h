@@ -186,6 +186,8 @@ void mux_input_reload_mappings(void);
 
 void mux_input_scan_devices(void);
 
+void mux_input_watch_fd(int fd);
+
 void mux_input_task(const mux_input_options *opts);
 
 void mux_input_open(void);

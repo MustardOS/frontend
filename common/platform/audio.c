@@ -1,4 +1,7 @@
 #include <dirent.h>
+#include <errno.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -6,6 +9,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <common/platform/media.h>
 #include <common/platform/audio.h>
+#include <common/platform/soundfont.h>
 #include <common/config/config.h>
 #include <common/display/theme.h>
 #include <common/runtime/log.h>
@@ -29,10 +33,160 @@ const char *snd_names[sound_total] = {"confirm", "back",     "keypress", "naviga
 static char **bgm_files = NULL;
 static size_t bgm_file_count = 0;
 
+#define AUDIO_IDLE_CLOSE_MS 15000U
+#define AUDIO_IDLE_CHECK_S  1
+
+static pthread_mutex_t audio_lock = PTHREAD_MUTEX_INITIALIZER;
+static sem_t audio_signal;
+static int audio_worker_live = 0;
+static int audio_open = 0;
+static int audio_holds = 0;
+static int audio_want_open = 0;
+static int audio_pending_sound = -1;
+static Uint32 audio_last_use = 0;
+static int audio_frequency = 44100;
+static int audio_samples = 2048;
+static int snd_loaded_type = 0;
+static int snd_loaded_frequency = 0;
+static Uint16 snd_loaded_format = 0;
+static int snd_loaded_channels = 0;
+
+static void load_sound_cache_locked(int snd_type);
+
+static int audio_open_locked(void) {
+    if (audio_open) return 1;
+
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+        LOG_ERROR("audio", "SDL audio init failed: %s", SDL_GetError());
+        return 0;
+    }
+
+    if (Mix_OpenAudio(audio_frequency, AUDIO_F32LSB, 2, audio_samples) < 0) {
+        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        return 0;
+    }
+
+    audio_open = 1;
+    audio_last_use = SDL_GetTicks();
+
+    int frequency = 0;
+    Uint16 format = 0;
+    int channels = 0;
+    Mix_QuerySpec(&frequency, &format, &channels);
+    if (fe_snd && snd_loaded_frequency
+        && (frequency != snd_loaded_frequency || format != snd_loaded_format || channels != snd_loaded_channels)) {
+        LOG_INFO("audio", "Audio format changed on reopen, reloading sounds");
+        load_sound_cache_locked(snd_loaded_type);
+    }
+
+    return 1;
+}
+
+static void audio_close_locked(void) {
+    if (!audio_open) return;
+
+    Mix_CloseAudio();
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    audio_open = 0;
+}
+
+static int audio_idle_locked(void) {
+    if (!audio_open || audio_holds || fe_bgm || current_bgm) return 0;
+    if (Mix_PlayingMusic() || Mix_Playing(-1) || Mix_GetMusicHookData()) return 0;
+
+    const int preview = soundfont_preview_state();
+    if (preview == soundfont_loading || preview == soundfont_playing) return 0;
+
+    return SDL_GetTicks() - audio_last_use >= AUDIO_IDLE_CLOSE_MS;
+}
+
+static void play_chunk_locked(const int sound) {
+    const cached_sound *cs = &sound_cache[sound];
+    if (cs->chunk) {
+        Mix_PlayChannel(-1, cs->chunk, 0);
+    } else {
+        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound]);
+    }
+    audio_last_use = SDL_GetTicks();
+}
+
+static void *audio_worker(void *unused __attribute__((unused))) {
+    for (;;) {
+        if (__atomic_load_n(&audio_open, __ATOMIC_ACQUIRE)) {
+            struct timespec deadline;
+            clock_gettime(CLOCK_REALTIME, &deadline);
+            deadline.tv_sec += AUDIO_IDLE_CHECK_S;
+            while (sem_timedwait(&audio_signal, &deadline) < 0 && errno == EINTR) {
+            }
+        } else {
+            while (sem_wait(&audio_signal) < 0 && errno == EINTR) {
+            }
+        }
+
+        pthread_mutex_lock(&audio_lock);
+
+        if (__atomic_exchange_n(&audio_want_open, 0, __ATOMIC_ACQ_REL)) {
+            const int sound = __atomic_exchange_n(&audio_pending_sound, -1, __ATOMIC_ACQ_REL);
+            if (audio_open_locked() && sound >= 0 && fe_snd) play_chunk_locked(sound);
+        } else if (audio_idle_locked()) {
+            audio_close_locked();
+            LOG_INFO("audio", "Audio idle, device closed");
+        }
+
+        pthread_mutex_unlock(&audio_lock);
+    }
+
+    return NULL;
+}
+
+static void audio_start_worker(void) {
+    if (audio_worker_live) return;
+    if (sem_init(&audio_signal, 0, 0) != 0) return;
+
+    pthread_t thread;
+    pthread_attr_t attr;
+    if (pthread_attr_init(&attr) != 0) return;
+    if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0) {
+        audio_worker_live = pthread_create(&thread, &attr, audio_worker, NULL) == 0;
+    }
+    pthread_attr_destroy(&attr);
+}
+
+static void audio_request_open(const int sound) {
+    if (sound >= 0) __atomic_store_n(&audio_pending_sound, sound, __ATOMIC_RELEASE);
+    __atomic_store_n(&audio_want_open, 1, __ATOMIC_RELEASE);
+    if (audio_worker_live) sem_post(&audio_signal);
+}
+
+int audio_wake(void) {
+    pthread_mutex_lock(&audio_lock);
+    const int open = audio_open_locked();
+    audio_last_use = SDL_GetTicks();
+    pthread_mutex_unlock(&audio_lock);
+
+    if (open && audio_worker_live) sem_post(&audio_signal);
+    return open;
+}
+
+void audio_hold(void) {
+    pthread_mutex_lock(&audio_lock);
+    audio_holds++;
+    pthread_mutex_unlock(&audio_lock);
+}
+
+void audio_release(void) {
+    pthread_mutex_lock(&audio_lock);
+    if (audio_holds > 0) audio_holds--;
+    audio_last_use = SDL_GetTicks();
+    pthread_mutex_unlock(&audio_lock);
+}
+
 #define SOUND_WAIT_TIMEOUT_MS 5000U
 
 int play_sound_wait(const int sound) {
     if (!fe_snd || sound < 0 || sound >= sound_total) return 0;
+    if (!audio_wake()) return 0;
 
     const cached_sound *cs = &sound_cache[sound];
     if (!cs->chunk) return 0;
@@ -63,12 +217,16 @@ int play_sound_wait(const int sound) {
 void play_sound(const int sound) {
     if (!fe_snd || sound < 0 || sound >= sound_total) return;
 
-    const cached_sound *cs = &sound_cache[sound];
-    if (cs->chunk) {
-        Mix_PlayChannel(-1, cs->chunk, 0);
-    } else {
-        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound]);
+    if (pthread_mutex_trylock(&audio_lock) == 0) {
+        if (audio_open) {
+            play_chunk_locked(sound);
+            pthread_mutex_unlock(&audio_lock);
+            return;
+        }
+        pthread_mutex_unlock(&audio_lock);
     }
+
+    audio_request_open(sound);
 }
 
 void free_sound_cache(void) {
@@ -192,20 +350,19 @@ void play_silence_bgm(void) {
 }
 
 int init_audio_backend_spec(const int frequency, const int samples) {
-    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        LOG_ERROR("audio", "SDL Init Failed");
-        return 0;
-    }
-
     const int flags = MIX_INIT_OGG | MIX_INIT_MID;
     const int inited = Mix_Init(flags);
     if (!(inited & MIX_INIT_OGG)) LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
     if (!(inited & MIX_INIT_MID)) LOG_WARN("audio", "Missing SDL_mixer support for MIDI");
 
-    if (Mix_OpenAudio(frequency, AUDIO_F32LSB, 2, samples) < 0) {
-        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());
-        return 0;
-    }
+    pthread_mutex_lock(&audio_lock);
+    audio_frequency = frequency;
+    audio_samples = samples;
+    const int open = audio_open_locked();
+    if (open) audio_start_worker();
+    pthread_mutex_unlock(&audio_lock);
+
+    if (!open) return 0;
 
     LOG_SUCCESS("audio", "SDL Init Success");
 
@@ -224,11 +381,25 @@ int init_audio_backend(void) {
     return init_audio_backend_spec(44100, 2048);
 }
 
-void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {
-    *fe_snd = 0;
-    free_sound_cache();
+void init_fe_snd(int *fe_snd_out, const int snd_type, const int re_init) {
+    *fe_snd_out = 0;
 
-    if (!snd_type && !re_init) return;
+    pthread_mutex_lock(&audio_lock);
+    free_sound_cache();
+    fe_snd = 0;
+
+    if ((snd_type || re_init) && audio_open_locked()) {
+        audio_last_use = SDL_GetTicks();
+        load_sound_cache_locked(snd_type);
+    }
+
+    *fe_snd_out = fe_snd;
+    pthread_mutex_unlock(&audio_lock);
+}
+
+static void load_sound_cache_locked(const int snd_type) {
+    fe_snd = 0;
+    free_sound_cache();
 
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
@@ -250,7 +421,9 @@ void init_fe_snd(int *fe_snd, const int snd_type, const int re_init) {
         }
     }
 
-    *fe_snd = 1;
+    snd_loaded_type = snd_type;
+    Mix_QuerySpec(&snd_loaded_frequency, &snd_loaded_format, &snd_loaded_channels);
+    fe_snd = 1;
     LOG_SUCCESS("audio", "FE Sound Started");
 }
 
@@ -259,6 +432,8 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     Mix_HookMusicFinished(NULL);
     free_bgm();
     free_bgm_files();
+
+    if (bgm_type && !audio_wake()) return;
 
     if (!bgm_type) {
         is_silence_playing = 1;

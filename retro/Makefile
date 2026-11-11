@@ -5,7 +5,7 @@ LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(BIN_DIR)/muxretro
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE -pthread
-LDFLAGS := $(COMMON_LIBS) $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread -Wl,--export-dynamic-symbol=eglGetProcAddress
+LDFLAGS := $(COMMON_LIBS) -lcurl $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread -Wl,--export-dynamic-symbol=eglGetProcAddress
 
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 

@@ -1090,7 +1090,7 @@ static void preview_open(void) {
 
     vq_head = vq_tail = vq_count = 0;
 
-    if (audio_si >= 0 && audio_dec && !clip_mute) {
+    if (audio_si >= 0 && audio_dec && !clip_mute && audio_wake()) {
         Uint16 mix_fmt;
         Mix_QuerySpec(&mix_freq, &mix_fmt, &mix_ch);
 

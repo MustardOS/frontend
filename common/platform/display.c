@@ -86,6 +86,7 @@ static monitor_t monitor;
 static uint32_t last_saver_exit = 0;
 static int (*idle_saver_suppressed_query)(void) = NULL;
 static int (*stop_requested_query)(void) = NULL;
+static void (*first_present_gate)(void) = NULL;
 static int idle_saver_was_suppressed = 0;
 static uint8_t display_fade_alpha = 0;
 static int gradient_captured = 0;
@@ -1312,6 +1313,12 @@ void display_render_logical_texture(SDL_Renderer *renderer, SDL_Texture *texture
 }
 
 static void finish_present(const uint64_t timing_start, const uint64_t draw_done) {
+    if (first_present_gate) {
+        void (*gate)(void) = first_present_gate;
+        first_present_gate = NULL;
+        gate();
+    }
+
     SDL_RenderPresent(monitor.renderer);
     present_serial++;
 
@@ -1723,6 +1730,10 @@ void display_check_idle_saver(void) {
 
 void display_set_idle_saver_suppressed_query(int (*fn)(void)) {
     idle_saver_suppressed_query = fn;
+}
+
+void display_set_first_present_gate(void (*fn)(void)) {
+    first_present_gate = fn;
 }
 
 void display_set_stop_requested_query(int (*fn)(void)) {

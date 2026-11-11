@@ -19,10 +19,10 @@ CONFIG_SRCS = \
 PLATFORM_SRCS = \
     platform/audio.c platform/battery.c platform/bluetooth.c platform/board.c \
     platform/control.c platform/cpu_profile.c platform/device.c platform/display.c platform/input.c platform/media.c \
-    platform/soundfont.c platform/sysinfo.c platform/timezone.c platform/video.c
+    platform/soundfont.c platform/stickpoll.c platform/sysinfo.c platform/timezone.c platform/video.c
 
 STORAGE_SRCS = \
-    storage/archive.c storage/download.c storage/fileio.c storage/fileio_lite.c storage/health.c storage/mount.c \
+    storage/archive.c storage/curl_api.c storage/download.c storage/fileio.c storage/fileio_lite.c storage/health.c storage/mount.c \
     storage/inotify.c storage/union.c storage/verify.c
 
 CONTENT_SRCS = \

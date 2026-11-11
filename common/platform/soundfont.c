@@ -216,6 +216,7 @@ static void *soundfont_load_thread(void *arg) {
     }
     pthread_mutex_unlock(&sf_lock);
 
+    audio_release();
     return NULL;
 }
 
@@ -263,6 +264,13 @@ void soundfont_preview_start(const char *name) {
         return;
     }
 
+    if (!audio_wake()) {
+        LOG_ERROR("soundfont", "Audio device unavailable for preview");
+        sf_state = soundfont_failed;
+        soundfont_restore_bgm();
+        return;
+    }
+
     Mix_HookMusicFinished(NULL);
     free_bgm();
     sf_bgm_yielded = 1;
@@ -280,7 +288,9 @@ void soundfont_preview_start(const char *name) {
     const int generation = sf_generation;
     pthread_mutex_unlock(&sf_lock);
 
+    audio_hold();
     if (pthread_create(&sf_thread, NULL, soundfont_load_thread, (void *) (intptr_t) generation) != 0) {
+        audio_release();
         LOG_ERROR("soundfont", "Preview thread failed to start");
         sf_state = soundfont_failed;
         soundfont_restore_bgm();

@@ -108,7 +108,8 @@
     DETAIL(serial, "serial")                                                                                           \
     DETAIL(kernel, "kernel")                                                                                           \
     DETAIL(arch, "arch")                                                                                               \
-    DETAIL(display, "display")
+    DETAIL(display, "display")                                                                                         \
+    DETAIL(renderer, "renderer")
 
 #define DETAIL_MODIFICATION_ELEMENTS                                                                                   \
     DETAIL(integrity_signature, "integritysignature")                                                                  \

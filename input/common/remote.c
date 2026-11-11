@@ -358,6 +358,27 @@ void remote_input_poll(struct remote_input *remote, const uint64_t now_ms) {
     if (changed) gamepad_sync(remote->gp);
 }
 
+int remote_input_fd(const struct remote_input *remote) {
+    return remote ? remote->fd : -1;
+}
+
+static uint64_t earliest(const uint64_t current, const uint64_t candidate) {
+    return candidate && (!current || candidate < current) ? candidate : current;
+}
+
+uint64_t remote_input_deadline(const struct remote_input *remote) {
+    if (!remote) return 0;
+
+    uint64_t deadline = remote->physical_lock_until;
+    for (size_t i = 0; i < REMOTE_BUTTON_COUNT; ++i) {
+        const struct remote_hold *hold = &remote->holds[i];
+        if (!hold->held) continue;
+        deadline = earliest(deadline, hold->expires_at);
+        if (remote_buttons[i].kind != remote_stick) deadline = earliest(deadline, hold->release_at);
+    }
+    return deadline;
+}
+
 void remote_input_close(struct remote_input *remote) {
     if (!remote) return;
 

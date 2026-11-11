@@ -6,7 +6,7 @@ TARGET  := $(BIN_DIR)/muxmedia
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) $(VIDEO_FFMPEG_CFLAGS) -I. -I.. -I../module -I../module/ui -I../vendor \
            -Icore -Icontent -Isettings -Istate -Iui -Ivideo
-LDFLAGS := $(COMMON_LIBS) $(VIDEO_FFMPEG_LIBS) $(EXTERNAL_HIDE) $(BIN_LDFLAGS)
+LDFLAGS := $(COMMON_LIBS) -lcurl $(VIDEO_FFMPEG_LIBS) $(EXTERNAL_HIDE) $(BIN_LDFLAGS)
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
 SRC := core/audio.c core/audio_source.c core/background.c core/audio_transition.c core/main.c core/player.c core/remote.c core/equaliser.c content/library.c settings/assets.c settings/catalogue.c \

@@ -22,6 +22,8 @@ void display_set_idle_saver_suppressed_query(int (*fn)(void));
 
 void display_set_stop_requested_query(int (*fn)(void));
 
+void display_set_first_present_gate(void (*fn)(void));
+
 void display_set_fade_alpha(uint8_t alpha);
 
 int display_startup_transition_active(void);

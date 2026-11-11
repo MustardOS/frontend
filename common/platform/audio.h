@@ -55,6 +55,12 @@ void bgm_media_tick(void);
 
 void play_silence_bgm(void);
 
+int audio_wake(void);
+
+void audio_hold(void);
+
+void audio_release(void);
+
 int init_audio_backend(void);
 
 int init_audio_backend_spec(int frequency, int samples);

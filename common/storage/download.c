@@ -1,4 +1,3 @@
-#include <curl/curl.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -16,6 +15,7 @@
 #include <common/storage/health.h>
 #include <common/base/util.h>
 #include <common/ui/nav.h>
+#include <common/storage/curl_api.h>
 #include <common/storage/download.h>
 #include <common/runtime/log.h>
 
@@ -318,53 +318,56 @@ static int progress_callback(
 }
 
 static int perform_download(const char *url, const char *output_path, const curl_off_t max_bytes) {
-    CURL *curl = curl_easy_init();
+    const curl_api *api = curl_api_get();
+    if (!api) return -1;
+
+    CURL *curl = api->easy_init();
     if (!curl) return -1;
 
     download_target target;
     if (open_download_target(output_path, &target) != 0) {
-        curl_easy_cleanup(curl);
+        api->easy_cleanup(curl);
         return -2;
     }
 
     download_sink sink = {.stream = target.stream, .max_bytes = max_bytes, .output_path = output_path};
 
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &sink);
-    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-    curl_easy_setopt(curl, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
+    api->easy_setopt(curl, CURLOPT_URL, url);
+    api->easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    api->easy_setopt(curl, CURLOPT_WRITEDATA, &sink);
+    api->easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+    api->easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    api->easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    api->easy_setopt(curl, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
 
 #if LIBCURL_VERSION_NUM >= 0x075500
-    curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
-    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS_STR, "https");
+    api->easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+    api->easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS_STR, "https");
 #else
-    curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-    curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
+    api->easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+    api->easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
 #endif
 
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 10000L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 300000L);
-    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 100L);
-    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 15L);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
-    curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, max_bytes);
-    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
-    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &sink);
+    api->easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 10000L);
+    api->easy_setopt(curl, CURLOPT_TIMEOUT_MS, 300000L);
+    api->easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 100L);
+    api->easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 15L);
+    api->easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    api->easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
+    api->easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, max_bytes);
+    api->easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    api->easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+    api->easy_setopt(curl, CURLOPT_XFERINFODATA, &sink);
 
-    const CURLcode result = curl_easy_perform(curl);
+    const CURLcode result = api->easy_perform(curl);
     long response_code = 0;
     curl_off_t downloaded = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-    const CURLcode size_result = curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &downloaded);
-    curl_easy_cleanup(curl);
+    api->easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    const CURLcode size_result = api->easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &downloaded);
+    api->easy_cleanup(curl);
 
     if (result != CURLE_OK) {
-        LOG_ERROR(mux_module, "cURL failure: %s", curl_easy_strerror(result));
+        LOG_ERROR(mux_module, "cURL failure: %s", api->easy_strerror(result));
         close_target(&target, 1);
         return sink.storage_result ? sink.storage_result : download_result_transport;
     }

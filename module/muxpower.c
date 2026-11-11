@@ -26,8 +26,8 @@ static int any_power_modified(void) {
     return 0;
 }
 
-#define SHUTDOWN_COUNT 12
-static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600};
+#define SHUTDOWN_COUNT 10
+static const int shutdown_values[] = {-2, 2, 10, 30, 60, 120, 300, 600, 900, 1800};
 
 #define IDLE_COUNT 9
 static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
@@ -316,10 +316,10 @@ static void init_navigation_group(void) {
     static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
     static lv_obj_t *ui_objects_panel[ui_count_dynamic];
 
-    char *sleep_timer[] = {lang.generic.disabled,     lang.muxpower.sleep.suspend, lang.muxpower.sleep.instant,
-                           lang.muxpower.sleep.t10_s, lang.muxpower.sleep.t30_s,   lang.muxpower.sleep.t60_s,
-                           lang.muxpower.sleep.t2_m,  lang.muxpower.sleep.t5_m,    lang.muxpower.sleep.t10_m,
-                           lang.muxpower.sleep.t15_m, lang.muxpower.sleep.t30_m,   lang.muxpower.sleep.t60_m};
+    char *sleep_timer[] = {lang.generic.disabled,     lang.muxpower.sleep.instant, lang.muxpower.sleep.t10_s,
+                           lang.muxpower.sleep.t30_s, lang.muxpower.sleep.t60_s,   lang.muxpower.sleep.t2_m,
+                           lang.muxpower.sleep.t5_m,  lang.muxpower.sleep.t10_m,   lang.muxpower.sleep.t15_m,
+                           lang.muxpower.sleep.t30_m};
 
     char *idle_timer[] = {lang.generic.disabled,    lang.muxpower.idle.t10_s, lang.muxpower.idle.t30_s,
                           lang.muxpower.idle.t60_s, lang.muxpower.idle.t2_m,  lang.muxpower.idle.t5_m,

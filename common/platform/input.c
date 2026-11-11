@@ -2,6 +2,11 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <unistd.h>
+#include <sys/eventfd.h>
+#include <linux/input.h>
 #include <SDL2/SDL.h>
 #include <common/runtime/init.h>
 #include <common/runtime/perf.h>
@@ -146,6 +151,26 @@ typedef struct {
 
 static tracked_device devices[MAX_INPUT_DEVICES];
 static int device_count = 0;
+
+#define INPUT_WATCH_EXTRA_MAX 4
+
+static int watch_fds[MAX_INPUT_DEVICES];
+static int watch_count = 0;
+static int watch_dirty = 1;
+static int watch_extra[INPUT_WATCH_EXTRA_MAX];
+static int watch_extra_count = 0;
+static int wake_fd = -1;
+
+static void input_wake(void) {
+    if (wake_fd < 0) return;
+    const uint64_t one = 1;
+    const ssize_t written = write(wake_fd, &one, sizeof(one));
+    (void) written;
+}
+
+void mux_input_watch_fd(const int fd) {
+    if (fd >= 0 && watch_extra_count < INPUT_WATCH_EXTRA_MAX) watch_extra[watch_extra_count++] = fd;
+}
 
 static SDL_JoystickID primary_instance = -1;
 static int mappings_loaded = 0;
@@ -885,6 +910,7 @@ static void close_device_by_instance(const SDL_JoystickID id) {
 
     devices[idx] = devices[device_count - 1];
     device_count--;
+    watch_dirty = 1;
 }
 
 static void close_all_devices(void) {
@@ -897,6 +923,7 @@ static void close_all_devices(void) {
     }
 
     device_count = 0;
+    watch_dirty = 1;
 }
 
 static void clear_input_state(void) {
@@ -977,6 +1004,8 @@ static void load_active_controller_mappings(void) {
 
 static void open_all_input_devices(void) {
     static uint32_t last_no_device_log = UINT32_MAX;
+
+    watch_dirty = 1;
 
     if (!mappings_loaded) {
         load_active_controller_mappings();
@@ -1166,6 +1195,7 @@ void mux_input_reload_mappings(void) {
     SDL_Event ev = {0};
     ev.type = SDL_USEREVENT;
     SDL_PushEvent(&ev);
+    input_wake();
 }
 
 static mux_input_type remap_stick_to_dpad(const mux_nav_type nav, const mux_input_type mux_type) {
@@ -1537,6 +1567,7 @@ void ep_wait_wake(void) {
     SDL_Event ev = {0};
     ev.type = SDL_USEREVENT;
     SDL_PushEvent(&ev);
+    input_wake();
 }
 
 void mux_input_flush_all(void) {
@@ -1763,6 +1794,69 @@ void mux_input_poll_raw_unmapped(const mux_raw_event_handler raw_handler) {
     }
 }
 
+static void close_watch_fds(void) {
+    for (int i = 0; i < watch_count; i++) {
+        if (watch_fds[i] >= 0) close(watch_fds[i]);
+    }
+    watch_count = 0;
+}
+
+static void rebuild_watch_fds(void) {
+    close_watch_fds();
+    for (int i = 0; i < device_count && watch_count < MAX_INPUT_DEVICES; i++) {
+        const char *path = devices[i].joystick ? SDL_JoystickPath(devices[i].joystick) : NULL;
+        if (!path || !*path) continue;
+
+        const int fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+        if (fd >= 0) watch_fds[watch_count++] = fd;
+    }
+    watch_dirty = 0;
+}
+
+static void drain_fd(const int fd) {
+    struct input_event events[16];
+    while (read(fd, events, sizeof(events)) > 0) {
+    }
+}
+
+static int input_wait_event(SDL_Event *ev, const int timeout) {
+    if (SDL_PollEvent(ev)) return 1;
+    if (timeout <= 0) return 0;
+    if (watch_dirty) rebuild_watch_fds();
+
+    struct pollfd fds[1 + MAX_INPUT_DEVICES + INPUT_WATCH_EXTRA_MAX];
+    int count = 0;
+    if (wake_fd >= 0) fds[count++] = (struct pollfd) {.fd = wake_fd, .events = POLLIN};
+    const int watch_start = count;
+    for (int i = 0; i < watch_count; i++) {
+        fds[count++] = (struct pollfd) {.fd = watch_fds[i], .events = POLLIN};
+    }
+    const int extra_start = count;
+    for (int i = 0; i < watch_extra_count; i++) {
+        fds[count++] = (struct pollfd) {.fd = watch_extra[i], .events = POLLIN};
+    }
+
+    if (poll(fds, (nfds_t) count, timeout) > 0) {
+        const short gone = POLLERR | POLLHUP | POLLNVAL;
+        for (int i = 0; i < count; i++) {
+            if (!fds[i].revents) continue;
+            if (i >= extra_start) {
+                if (fds[i].revents & gone) watch_extra[i - extra_start] = -1;
+                continue;
+            }
+            if (i >= watch_start && (fds[i].revents & gone)) {
+                close(watch_fds[i - watch_start]);
+                watch_fds[i - watch_start] = -1;
+                watch_dirty = 1;
+                continue;
+            }
+            drain_fd(fds[i].fd);
+        }
+    }
+
+    return SDL_PollEvent(ev);
+}
+
 void mux_input_task(const mux_input_options *opts) {
     init_input_maps();
 
@@ -1780,6 +1874,8 @@ void mux_input_task(const mux_input_options *opts) {
 
     swap_axis = opts->swap_axis;
     ((mux_input_options *) opts)->nav = get_sticknav_mask(config.settings.advanced.stick_nav);
+
+    if (wake_fd < 0) wake_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
 
     open_all_input_devices();
 
@@ -1816,7 +1912,7 @@ void mux_input_task(const mux_input_options *opts) {
             const int left = spent >= refresh->period ? 0 : (int) (refresh->period - spent);
             if (timeout > left) timeout = left;
         }
-        if (!SDL_WaitEventTimeout(&ev, timeout)) ev.type = SDL_USEREVENT;
+        if (!input_wait_event(&ev, timeout)) ev.type = SDL_USEREVENT;
 
         const uint64_t loop_start = fe_perf_begin();
         const uint64_t input_start = fe_perf_begin();
@@ -2060,4 +2156,5 @@ void mux_input_stop(void) {
     SDL_Event ev = {0};
     ev.type = SDL_QUIT;
     SDL_PushEvent(&ev);
+    input_wake();
 }

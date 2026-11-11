@@ -69,6 +69,7 @@ USAGE() {
 	printf "  RAW          1 shows the full build output on screen as well as in the log\n"
 	printf "  NO_COLOR     set to turn off coloured output\n"
 	printf "  SKIP_CHECKS  1 skips generate, formatting and the checks before building\n"
+	printf "  BUILD_JOBS   compiler job limit, defaults to the online CPU count\n"
 	printf "  XTOOL        toolchain root, default %s/x-tools\n" "$HOME"
 	printf "  XDIR         toolchain directory under XTOOL, detected when unset\n\n"
 	printf "  CLANG_FORMAT          clang-format %s binary, installed into .cache when unset\n" "$FORMAT_VERSION"
@@ -1180,7 +1181,9 @@ RUN_BUILD() {
 	BUILD_DEBUG=${DEBUG:-1}
 	[ "$BUILD_DEBUG" != "0" ] || BUILD_DEBUG=1
 
-	BUILD_JOBS=$(nproc 2>/dev/null || printf "4")
+	if [ -z "${BUILD_JOBS-}" ]; then
+		BUILD_JOBS=${MUOS_QEMU_JOBS:-$(nproc 2>/dev/null || printf "4")}
+	fi
 
 	BUILD_SUMMARY
 

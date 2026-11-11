@@ -48,6 +48,8 @@ void device_rumble_close(struct device_rumble_state *st);
 
 int device_rumble_poll(struct device_rumble_state *st, struct gamepad *gp);
 
+int device_rumble_active(const struct device_rumble_state *st);
+
 void device_rumble_set_strength(struct device_rumble_state *st, unsigned int strength_percent);
 
 const struct device_rumble_driver *rumble_a133_driver(void);

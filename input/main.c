@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -253,6 +254,35 @@ static uint64_t monotonic_milliseconds(void) {
     return (uint64_t) now.tv_sec * 1000u + (uint64_t) now.tv_nsec / 1000000u;
 }
 
+#define WAIT_FDS_MAX 8
+#define WAIT_MAX_MS  1000
+
+static void wait_for_input(
+    const struct device_backend *backend, void *device_ctx, const struct remote_input *remote, uint64_t deadline_ms
+) {
+    int fd_list[WAIT_FDS_MAX];
+    int count = backend->ops.wait_fds(device_ctx, fd_list, WAIT_FDS_MAX - 1);
+    if (count < 0) count = 0;
+
+    const int remote_fd = remote_input_fd(remote);
+    if (remote_fd >= 0) fd_list[count++] = remote_fd;
+
+    struct pollfd fds[WAIT_FDS_MAX];
+    for (int i = 0; i < count; ++i) {
+        fds[i] = (struct pollfd) {.fd = fd_list[i], .events = POLLIN};
+    }
+
+    const uint64_t remote_deadline = remote_input_deadline(remote);
+    if (remote_deadline && (!deadline_ms || remote_deadline < deadline_ms)) deadline_ms = remote_deadline;
+
+    int timeout = WAIT_MAX_MS;
+    if (deadline_ms) {
+        const uint64_t now = monotonic_milliseconds();
+        timeout = deadline_ms <= now ? 0 : deadline_ms - now < WAIT_MAX_MS ? (int) (deadline_ms - now) : WAIT_MAX_MS;
+    }
+    poll(fds, (nfds_t) count, timeout);
+}
+
 static const struct device_backend *select_backend(const char *forced_id) {
     if (forced_id && *forced_id) {
         const struct device_backend *backend = device_registry_find(forced_id);
@@ -375,7 +405,12 @@ int main(int argc, char **argv) {
             backend->ops.refresh(device_ctx);
             next_refresh_ms = now_ms + 1000u;
         }
-        pace_poll(&next_poll, poll_interval);
+        if (!tester && backend->ops.wait_fds && !(backend->ops.busy && backend->ops.busy(device_ctx))) {
+            wait_for_input(backend, device_ctx, remote, backend->ops.refresh ? next_refresh_ms : 0);
+            clock_gettime(CLOCK_MONOTONIC, &next_poll);
+        } else {
+            pace_poll(&next_poll, poll_interval);
+        }
     }
     g_running = 0;
 

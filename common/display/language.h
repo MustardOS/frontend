@@ -1047,6 +1047,7 @@ struct mux_lang {
         char report_saved[MAX_BUFFER_SIZE];
         char report_fail[MAX_BUFFER_SIZE];
         char checking[MAX_BUFFER_SIZE];
+        char renderer_software[MAX_BUFFER_SIZE];
         struct {
             char system[MAX_BUFFER_SIZE];
             char modifications[MAX_BUFFER_SIZE];
@@ -1065,6 +1066,7 @@ struct mux_lang {
             char kernel[MAX_BUFFER_SIZE];
             char arch[MAX_BUFFER_SIZE];
             char display[MAX_BUFFER_SIZE];
+            char renderer[MAX_BUFFER_SIZE];
             char integrity_signature[MAX_BUFFER_SIZE];
             char provenance[MAX_BUFFER_SIZE];
             char system_scripts[MAX_BUFFER_SIZE];
@@ -1124,6 +1126,7 @@ struct mux_lang {
             char kernel[MAX_BUFFER_SIZE];
             char arch[MAX_BUFFER_SIZE];
             char display[MAX_BUFFER_SIZE];
+            char renderer[MAX_BUFFER_SIZE];
             char integrity_signature[MAX_BUFFER_SIZE];
             char provenance[MAX_BUFFER_SIZE];
             char system_scripts[MAX_BUFFER_SIZE];
@@ -2120,7 +2123,6 @@ struct mux_lang {
         struct {
             char title[MAX_BUFFER_SIZE];
             char instant[MAX_BUFFER_SIZE];
-            char suspend[MAX_BUFFER_SIZE];
             char t10_s[MAX_BUFFER_SIZE];
             char t30_s[MAX_BUFFER_SIZE];
             char t60_s[MAX_BUFFER_SIZE];
@@ -2129,7 +2131,6 @@ struct mux_lang {
             char t10_m[MAX_BUFFER_SIZE];
             char t15_m[MAX_BUFFER_SIZE];
             char t30_m[MAX_BUFFER_SIZE];
-            char t60_m[MAX_BUFFER_SIZE];
         } sleep;
         struct {
             char dflt[MAX_BUFFER_SIZE];

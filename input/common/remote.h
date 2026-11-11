@@ -17,4 +17,8 @@ int remote_input_send(const char *message);
 
 void remote_input_poll(struct remote_input *remote, uint64_t now_ms);
 
+int remote_input_fd(const struct remote_input *remote);
+
+uint64_t remote_input_deadline(const struct remote_input *remote);
+
 void remote_input_close(struct remote_input *remote);

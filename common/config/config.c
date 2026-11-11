@@ -244,7 +244,7 @@ static const cfg_field cfg_fields[] = {
 
     // settings/power/
     {CONF_CONFIG_PATH "settings/power", "low_battery", CFG_OFF(settings.power.low_battery), 0, {.i = 0}, 1, 0, 100},
-    {CONF_CONFIG_PATH "settings/power", "shutdown", CFG_OFF(settings.power.shutdown), 0, {.i = 0}, 1, -2, 3600},
+    {CONF_CONFIG_PATH "settings/power", "shutdown", CFG_OFF(settings.power.shutdown), 0, {.i = 0}, 1, -2, 1800},
     {CONF_CONFIG_PATH "settings/power", "idle_display", CFG_OFF(settings.power.idle.display), 0, {.i = 0}, 1, 0, 1800},
     {CONF_CONFIG_PATH "settings/power", "idle_sleep", CFG_OFF(settings.power.idle.sleep), 0, {.i = 0}, 1, 0, 1800},
     {CONF_CONFIG_PATH "settings/power", "idle_mute", CFG_OFF(settings.power.idle.mute), 0, {.i = 1}, 1, 0, 1},

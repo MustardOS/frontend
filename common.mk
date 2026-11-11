@@ -96,7 +96,7 @@ STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Wformat-truncation=2 -Werror=format-truncation \
                 -Werror=unused-function
 
-COMMON_LIBS = -lcurl -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lharfbuzz -lfreetype -lpthread -lpng -lm
+COMMON_LIBS = -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lharfbuzz -lfreetype -lpthread -lpng -lm
 
 BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
                -Wl,--enable-new-dtags,-rpath,'$$ORIGIN/lib' \

@@ -1132,12 +1132,14 @@ int main(int argc, char *argv[]) {
     int volume_idx = board_volume_event_index();
     if (volume_idx >= 0) {
         vol_fd = open_raw_event_index(volume_idx, &vol_pfd, "volume");
+        mux_input_watch_fd(vol_fd);
         if (vol_fd < 0) LOG_WARN("input", "Volume input event%d could not be opened", volume_idx);
     }
 
     int power_idx = board_power_event_index();
     if (power_idx >= 0) {
         pwr_fd = open_raw_event_index(power_idx, &pwr_pfd, "power");
+        mux_input_watch_fd(pwr_fd);
         if (pwr_fd < 0) LOG_WARN("input", "Power input event%d could not be opened", power_idx);
     }
 
@@ -1179,6 +1181,7 @@ int main(int argc, char *argv[]) {
         const int lid_idx = board_lid_event_index();
         if (lid_idx >= 0) {
             lid_fd = open_raw_event_index(lid_idx, &lid_pfd, "lid");
+            mux_input_watch_fd(lid_fd);
             if (lid_fd < 0) LOG_WARN("input", "Lid input event%d could not be opened", lid_idx);
         }
     }

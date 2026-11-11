@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <glob.h>
 #include "muxshare.h"
 #include <common/ui/orientation.h>
@@ -1188,6 +1189,19 @@ static const char *get_display_mode(void) {
     return buffer;
 }
 
+static const char *get_renderer(void) {
+    SDL_Renderer *renderer = display_get_renderer();
+    SDL_RendererInfo info;
+    if (!renderer || SDL_GetRendererInfo(renderer, &info) != 0 || !info.name) return lang.generic.unknown;
+
+    if (strcmp(info.name, "software") == 0) return lang.muxdetail.renderer_software;
+    if (strcmp(info.name, "opengles2") == 0) return "OpenGL ES 2.0";
+    if (strcmp(info.name, "opengles") == 0) return "OpenGL ES 1.1";
+    if (strcmp(info.name, "opengl") == 0) return "OpenGL";
+
+    return info.name;
+}
+
 static const char *get_speed_range(void) {
     static char buffer[UI_BUFFER];
 
@@ -1228,10 +1242,50 @@ static const char *get_speed_range(void) {
 
 static const char *get_task_count(void) {
     static char buffer[UI_BUFFER];
+    DIR *proc = opendir("/proc");
+    if (!proc) return lang.generic.unknown;
 
-    if (sysinfo(&sysinfo_cache) != 0) return lang.generic.unknown;
+    unsigned int count = 0;
+    struct dirent *entry;
 
-    snprintf(buffer, sizeof(buffer), "%u", sysinfo_cache.procs);
+    while ((entry = readdir(proc)) != NULL) {
+        const char *name = entry->d_name;
+        if (!isdigit((unsigned char) *name)) continue;
+
+        int valid = 1;
+        for (const char *p = name; *p; p++) {
+            if (!isdigit((unsigned char) *p)) {
+                valid = 0;
+                break;
+            }
+        }
+        if (!valid) continue;
+
+        char path[64];
+        const int len = snprintf(path, sizeof(path), "/proc/%s/stat", name);
+        if (len < 0 || (size_t) len >= sizeof(path)) continue;
+
+        FILE *fp = fopen(path, "r");
+        if (!fp) continue;
+
+        char stat[256];
+        const int read_ok = fgets(stat, sizeof(stat), fp) != NULL;
+        fclose(fp);
+        if (!read_ok) continue;
+
+        const char *end = strrchr(stat, ')');
+        if (!end) continue;
+
+        char state;
+        unsigned long flags;
+        if (sscanf(end + 1, " %c %*d %*d %*d %*d %*d %lu", &state, &flags) != 2) continue;
+        if ((flags & 0x00200000UL) != 0 || state == 'Z' || state == 'X') continue;
+
+        count++;
+    }
+
+    closedir(proc);
+    snprintf(buffer, sizeof(buffer), "%u", count);
     return buffer;
 }
 
@@ -1270,6 +1324,7 @@ static void start_integrity_check(void) {
 }
 
 static void update_detail_info(void) {
+    (void) sysinfo(&sysinfo_cache);
     set_detail_value(ui_val_version_detail, get_version(0));
     set_detail_value(ui_val_build_detail, get_build());
     set_detail_value(ui_val_device_detail, get_device_info());
@@ -1277,6 +1332,7 @@ static void update_detail_info(void) {
     set_detail_value(ui_val_kernel_detail, get_kernel_version());
     set_detail_value(ui_val_arch_detail, get_cpu_arch());
     set_detail_value(ui_val_display_detail, get_display_mode());
+    set_detail_value(ui_val_renderer_detail, get_renderer());
 
     set_detail_value(ui_val_integrity_signature_detail, get_integrity_result("signature"));
     set_detail_value(ui_val_provenance_detail, get_integrity_result("provenance"));
@@ -1338,6 +1394,7 @@ static void update_detail_info_cb(const lv_timer_t *timer) {
 }
 
 static void export_diagnostics(void) {
+    (void) sysinfo(&sysinfo_cache);
     char path[MAX_BUFFER_SIZE];
     snprintf(path, sizeof(path), "%s/sysdiag.txt", device.storage.rom.mount);
 
@@ -1354,6 +1411,7 @@ static void export_diagnostics(void) {
     fprintf(f, "%s: %s\n", lang.muxdetail.label.kernel, get_kernel_version());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.arch, get_cpu_arch());
     fprintf(f, "%s: %s\n", lang.muxdetail.label.display, get_display_mode());
+    fprintf(f, "%s: %s\n", lang.muxdetail.label.renderer, get_renderer());
     fprintf(f, "\n[%s]\n", lang.muxdetail.section.modifications);
     fprintf(f, "%s: %s\n", lang.muxdetail.label.integrity_signature, get_integrity_result("signature"));
     fprintf(f, "%s: %s\n", lang.muxdetail.label.provenance, get_integrity_result("provenance"));

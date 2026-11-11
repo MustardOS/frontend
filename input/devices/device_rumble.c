@@ -255,6 +255,10 @@ int device_rumble_poll(struct device_rumble_state *st, struct gamepad *gp) {
     return 1;
 }
 
+int device_rumble_active(const struct device_rumble_state *st) {
+    return st && (st->active_id >= 0 || st->motor_on);
+}
+
 void device_rumble_set_strength(struct device_rumble_state *st, unsigned int strength_percent) {
     if (!st) return;
     unsigned int strength = strength_percent > 100u ? 100u : strength_percent;

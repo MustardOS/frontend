@@ -586,9 +586,49 @@ static void vs_prune(const var_store_t *vs, const var_dirs_t *dirs, const int *n
     }
 }
 
+static void prefetch_dir(char *path, const size_t path_len, const int depth) {
+    if (depth > VS_MAX_WALK_DEPTH) return;
+
+    DIR *d = opendir(path);
+    if (!d) return;
+
+    struct dirent *ent;
+    while ((ent = readdir(d)) != NULL) {
+        const char *name = ent->d_name;
+        if (name[0] == '.' && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) continue;
+
+        const size_t nlen = strlen(name);
+        if (path_len + 1 + nlen >= PATH_MAX) continue;
+
+        path[path_len] = '/';
+        memcpy(path + path_len + 1, name, nlen + 1);
+
+        if (ent->d_type == DT_DIR) {
+            prefetch_dir(path, path_len + 1 + nlen, depth + 1);
+        } else if (ent->d_type == DT_REG) {
+            const int fd = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+            if (fd >= 0) {
+                posix_fadvise(fd, 0, 0, POSIX_FADV_WILLNEED);
+                close(fd);
+            }
+        }
+    }
+
+    closedir(d);
+    path[path_len] = '\0';
+}
+
 int vs_build(var_store_t *vs, const var_dirs_t *dirs) {
     if (vs == NULL || dirs == NULL) return vs_err_inval;
     if (!vs->writable) return vs_err_inval;
+
+    for (int ns = 0; ns < vs_ns_count; ns++) {
+        if (!dirs->base[ns]) continue;
+
+        char path[PATH_MAX];
+        const int n = snprintf(path, sizeof(path), "%s", dirs->base[ns]);
+        if (n > 0 && (size_t) n < sizeof(path)) prefetch_dir(path, (size_t) n, 0);
+    }
 
     if (flock(vs->fd, LOCK_EX) != 0) return vs_err_lock;
 

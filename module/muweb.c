@@ -7328,6 +7328,13 @@ connection_prepare_file_upload(struct connection *connection, const unsigned lon
     return 1;
 }
 
+#define DASHBOARD_ACTIVE "/run/muos/landing/active"
+
+static void mark_dashboard_active(void) {
+    const int fd = open(DASHBOARD_ACTIVE, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
+    if (fd >= 0) close(fd);
+}
+
 static void handle_request(struct connection *connection) {
     const char *request = connection->request.data;
     const char *body = request + connection->header_length;
@@ -7523,7 +7530,11 @@ static void handle_request(struct connection *connection) {
         return;
     }
 
-    if (strncmp(target, "/state/", 7) != 0) connection->revalidate = 1;
+    if (strncmp(target, "/state/", 7) != 0) {
+        connection->revalidate = 1;
+    } else {
+        mark_dashboard_active();
+    }
 
     handle_static(connection, target + 1, range_header);
 }

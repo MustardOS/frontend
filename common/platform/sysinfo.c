@@ -8,7 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
-#include <curl/curl.h>
+#include <common/storage/curl_api.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include <common/platform/device.h>
@@ -164,7 +164,8 @@ static int reachability_curl_ready;
 static uint64_t reachability_next_poll_ms;
 
 static void network_reachability_curl_init(void) {
-    reachability_curl_ready = curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
+    const curl_api *api = curl_api_get();
+    reachability_curl_ready = api && api->global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
 }
 
 static size_t discard_reachability_body(void *data, size_t size, size_t count, void *unused) {
@@ -176,26 +177,27 @@ static size_t discard_reachability_body(void *data, size_t size, size_t count, v
 static void *network_reachability_worker(void *unused) {
     (void) unused;
     int state = network_reachability_unavailable;
-    CURL *curl = curl_easy_init();
+    const curl_api *api = curl_api_get();
+    CURL *curl = api->easy_init();
     if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://connectivitycheck.gstatic.com/generate_204");
-        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 2500L);
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 4000L);
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, discard_reachability_body);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "MustardOS-Connectivity-Check/1");
+        api->easy_setopt(curl, CURLOPT_URL, "http://connectivitycheck.gstatic.com/generate_204");
+        api->easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+        api->easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 2500L);
+        api->easy_setopt(curl, CURLOPT_TIMEOUT_MS, 4000L);
+        api->easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
+        api->easy_setopt(curl, CURLOPT_WRITEFUNCTION, discard_reachability_body);
+        api->easy_setopt(curl, CURLOPT_USERAGENT, "MustardOS-Connectivity-Check/1");
 
-        const CURLcode result = curl_easy_perform(curl);
+        const CURLcode result = api->easy_perform(curl);
         long status = 0;
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+        api->easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
         if (result == CURLE_OK && status == 204)
             state = network_reachability_online;
         else if (result == CURLE_OK && status >= 200 && status < 400)
             state = network_reachability_sign_in;
         else if (result == CURLE_OPERATION_TIMEDOUT)
             state = network_reachability_timeout;
-        curl_easy_cleanup(curl);
+        api->easy_cleanup(curl);
     }
 
     pthread_mutex_lock(&reachability_mutex);

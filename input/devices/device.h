@@ -28,6 +28,10 @@ struct device_ops {
     void (*set_rumble_strength)(void *ctx, unsigned int strength_percent);
 
     void (*close)(void *ctx);
+
+    int (*wait_fds)(void *ctx, int *fds, int max);
+
+    int (*busy)(void *ctx);
 };
 
 struct device_backend {

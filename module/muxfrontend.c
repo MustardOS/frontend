@@ -3,6 +3,7 @@
 
 #include "muxshare.h"
 #include <common/platform/battery.h>
+#include <common/platform/stickpoll.h>
 #include <common/storage/inotify.h>
 #include <common/storage/verify.h>
 
@@ -688,6 +689,9 @@ static int module_dispatch(void) {
             screen_clean = 0;
             free(action);
 
+            const int tester = modules[i].module && strcmp(modules[i].module, "muxtester") == 0;
+            stick_poll_set(device.board.has_stick && (config.settings.advanced.stick_nav || tester));
+
             if (modules[i].mux_func) {
                 modules[i].mux_func();
             } else {
@@ -719,17 +723,20 @@ static void reset_alert(void) {
     }
 }
 
+static int audio_settled = 0;
+
 static void *init_audio(void *unused __attribute__((unused))) {
     const useconds_t backoff[] = {10000, 25000, 50000, 100000, 200000, 400000, 800000};
     const size_t tries = sizeof(backoff) / sizeof(backoff[0]);
 
+    const int ready_wait = config.settings.advanced.audio_ready ? 500 : 100;
+    for (int i = 0; i < ready_wait && !stop_requested(); ++i) {
+        if (read_line_int_from(CONF_DEVICE_PATH "audio/ready", 1) == 1) break;
+        usleep(20000);
+    }
+
     for (size_t i = 0; i < tries; ++i) {
         if (init_audio_backend()) {
-            for (int ready_wait = 0; ready_wait < 100; ++ready_wait) {
-                if (read_line_int_from(CONF_DEVICE_PATH "audio/ready", 1) == 1) break;
-                usleep(20000);
-            }
-
             init_fe_snd(&fe_snd, config.settings.general.sound, 0);
             init_fe_bgm(&fe_bgm, config.settings.general.bgm, 0);
 
@@ -738,12 +745,40 @@ static void *init_audio(void *unused __attribute__((unused))) {
                 play_sound(snd_startup);
 
             write_text_to_file(CHIME_DONE, "w", CHAR, "");
-            return NULL;
+            break;
         }
 
         usleep(backoff[i]);
     }
+
+    __atomic_store_n(&audio_settled, 1, __ATOMIC_RELEASE);
     return NULL;
+}
+
+static void wait_for_audio(void) {
+    for (int i = 0; i < 1200 && !__atomic_load_n(&audio_settled, __ATOMIC_ACQUIRE) && !stop_requested(); ++i)
+        usleep(10000);
+}
+
+static void *verify_scripts(void *unused __attribute__((unused))) {
+    const int modified = script_hash_check();
+    __atomic_store_n(&verify_check, modified, __ATOMIC_RELEASE);
+    if (modified) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
+    return NULL;
+}
+
+static void start_detached(void *(*func)(void *) ) {
+    pthread_t thread;
+    pthread_attr_t attr;
+    int started = 0;
+
+    if (pthread_attr_init(&attr) == 0) {
+        if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0)
+            started = pthread_create(&thread, &attr, func, NULL) == 0;
+        pthread_attr_destroy(&attr);
+    }
+
+    if (!started) func(NULL);
 }
 
 static void *load_params(void *arg) {
@@ -786,7 +821,6 @@ static void parallel_load(param_loader *loaders) {
 int main(void) {
     install_signal_handlers();
     display_set_stop_requested_query(stop_requested);
-    verify_check = script_hash_check();
 
     // If parent (frontend.sh) dies, ask the kernel nicely to send us a SIGTERM hopefully
     prctl(PR_SET_PDEATHSIG, SIGTERM);
@@ -805,13 +839,13 @@ int main(void) {
     parallel_load(loaders);
     board_init(device.board.name);
 
-    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(verify_check), get_build());
-    if (verify_check) LOG_ERROR("muxfrontend", "Internal script modifications have been detected!");
+    LOG_SUCCESS("hello", "Welcome to the %s - %s (%s)", MUX_CALLER, get_version(0), get_build());
 
     // For future reference we need to initialise the theme before we do the display
     // as we call upon the theme variables for specific settings within display init
     init_theme(0, 0);
     init_display();
+    start_detached(verify_scripts);
 
     inotify_init();
     battery_init();
@@ -820,15 +854,8 @@ int main(void) {
 
     reset_alert();
 
-    pthread_t t_audio;
-    pthread_attr_t attr;
-    int audio_started = 0;
-    if (pthread_attr_init(&attr) == 0) {
-        if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0)
-            audio_started = pthread_create(&t_audio, &attr, init_audio, NULL) == 0;
-        pthread_attr_destroy(&attr);
-    }
-    if (!audio_started) init_audio(NULL);
+    start_detached(init_audio);
+    if (config.settings.advanced.audio_ready) display_set_first_present_gate(wait_for_audio);
 
     if (strcasecmp(passcode.code.boot, "000000") != 0 && !file_exist(MUX_BOOT_AUTH)) {
         int result = 0;

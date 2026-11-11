@@ -392,6 +392,20 @@ static int h700_poll(void *context) {
     return 1;
 }
 
+static int h700_wait_fds(void *context, int *fds, int max) {
+    const struct h700_state *state = context;
+    int count = 0;
+    if (count < max && state->source.fd >= 0) fds[count++] = state->source.fd;
+    const int pad = gamepad_get_fd(state->gamepad);
+    if (count < max && pad >= 0) fds[count++] = pad;
+    return count;
+}
+
+static int h700_busy(void *context) {
+    const struct h700_state *state = context;
+    return device_rumble_active(&state->rumble);
+}
+
 static void h700_close(void *context) {
     struct h700_state *state = context;
     if (!state) return;
@@ -419,7 +433,9 @@ static void h700_set_rumble_strength(void *context, unsigned int strength_percen
              .poll = h700_poll,                                                                                        \
              .refresh = NULL,                                                                                          \
              .set_rumble_strength = h700_set_rumble_strength,                                                          \
-             .close = h700_close},                                                                                     \
+             .close = h700_close,                                                                                      \
+             .wait_fds = h700_wait_fds,                                                                                \
+             .busy = h700_busy},                                                                                       \
         .poll_interval_us = 1000,                                                                                      \
     }
 
