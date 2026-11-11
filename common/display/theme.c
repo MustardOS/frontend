@@ -273,6 +273,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->grid.cell.width = 200;
     theme->grid.cell.height = 200;
     theme->grid.cell.radius = 10;
+    theme->grid.cell.clip_corner = 0;
     theme->grid.cell.border_width = 5;
     theme->grid.cell.image_padding_top = 5;
     theme->grid.cell.shadow = 0x000000;
@@ -759,6 +760,7 @@ static const theme_field theme_fields[] = {
     {"grid", "CELL_WIDTH", THEME_OFF(grid.cell.width), theme_int},
     {"grid", "CELL_HEIGHT", THEME_OFF(grid.cell.height), theme_int},
     {"grid", "CELL_RADIUS", THEME_OFF(grid.cell.radius), theme_int},
+    {"grid", "CELL_CLIP_CORNER", THEME_OFF(grid.cell.clip_corner), theme_int},
     {"grid", "CELL_BORDER_WIDTH", THEME_OFF(grid.cell.border_width), theme_int},
     {"grid", "CELL_IMAGE_PADDING_TOP", THEME_OFF(grid.cell.image_padding_top), theme_int},
     {"grid", "CELL_TEXT_PADDING_BOTTOM", THEME_OFF(grid.cell.text_padding_bottom), theme_int},
@@ -1753,6 +1755,7 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         theme->mux.item.panel = (int16_t) (theme->misc.content.height / theme->mux.item.count);
         theme->mux.item.height = (int16_t) (theme->mux.item.panel - 2);
     }
+    if (theme->grid.cell.clip_corner != 0 && theme->grid.cell.clip_corner != 1) theme->grid.cell.clip_corner = 0;
 
     // Adjusts height if user picks a height that is not evenly divisible by item count.
     // Prevents seeing a few pixels of the next item.
