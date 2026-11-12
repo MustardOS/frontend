@@ -714,13 +714,20 @@
     TWEAKADV_SYSTEM_ELEMENTS                                                                                           \
     TWEAKADV_CONFIRMATIONS_ELEMENTS
 
+#ifdef X86_64
+#define TWEAKGEN_X86_ELEMENTS TWEAKGEN(resolution, "resolution")
+#else
+#define TWEAKGEN_X86_ELEMENTS
+#endif
+
 #define TWEAKGEN_OPTIONS_ELEMENTS                                                                                      \
     TWEAKGEN(brightness, "brightness")                                                                                 \
     TWEAKGEN(volume, "volume")                                                                                         \
     TWEAKGEN(audio_sink, "audiosink")                                                                                  \
     TWEAKGEN(hk_dpad, "hkdpad")                                                                                        \
     TWEAKGEN(hk_shot, "hkshot")                                                                                        \
-    TWEAKGEN(startup, "startup")
+    TWEAKGEN(startup, "startup")                                                                                       \
+    TWEAKGEN_X86_ELEMENTS
 
 #define TWEAKGEN_SUBMENU_ELEMENTS                                                                                      \
     TWEAKGEN(rtc, "clock")                                                                                             \

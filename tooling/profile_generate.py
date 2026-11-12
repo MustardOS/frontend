@@ -105,7 +105,7 @@ FIXED_OPTIONS = {
                                ("2", "lang.muxfont.type_options.internal"), ("3", "lang.muxfont.type_options.custom")],
     "settings/general/theme_resolution": [("0", "lang.muxcustom.screen")] + [
         (str(index), size) for index, size in enumerate(
-            ("640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720", "1920x1080"), 1)],
+            ("640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720", "1920x1080", "1366x768", "320x240"), 1)],
     "settings/advanced/accelerate": [("32767", "lang.generic.disabled")] + [(str(v), str(v)) for v in range(16, 257, 16)],
     "settings/advanced/repeat_delay": [("32767", "lang.generic.disabled")] + [(str(v), str(v)) for v in range(16, 513, 16)],
     "settings/advanced/swapfile": [("0", "lang.generic.disabled")] + [(str(v), f"{v} MB") for v in range(128, 1025, 128)],

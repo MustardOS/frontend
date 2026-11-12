@@ -28,6 +28,14 @@ int video_diagnostics_menu_is_active(void);
 
 void video_diagnostics_menu_tick(void);
 
+void content_clock_menu_init(void);
+
+void content_clock_menu_open(void);
+
+int content_clock_menu_is_active(void);
+
+void content_clock_menu_tick(void);
+
 const submenu_def *cheevo_settings_definition(void);
 
 int cheevo_settings_child_tick(void);

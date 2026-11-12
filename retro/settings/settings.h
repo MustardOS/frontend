@@ -259,6 +259,12 @@ struct session_settings_t {
     int anti_flicker;
     int run_ahead;
     int gpu_hard_sync;
+    int content_clock;
+    int clock_year;
+    int clock_month;
+    int clock_day;
+    int clock_hour;
+    int clock_minute;
     int port_assignment[MUX_INPUT_PORT_COUNT];
     char port_device_key[MUX_INPUT_PORT_COUNT][64];
     int port_device_id[MUX_INPUT_PORT_COUNT];
@@ -693,6 +699,10 @@ void session_settings_cycle_anti_flicker(int direction);
 void session_settings_cycle_run_ahead(int direction);
 
 void session_settings_cycle_gpu_hard_sync(int direction);
+
+void session_settings_cycle_content_clock(int direction);
+
+void session_settings_cycle_clock_field(int *field, int minimum, int maximum, int direction);
 
 void session_settings_cycle_port_controller(int port, int direction);
 

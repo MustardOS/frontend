@@ -465,6 +465,8 @@ void settings_menu_reopen_performance(void);
 
 void settings_menu_reopen_video_diagnostics(void);
 
+void settings_menu_reopen_content_clock(void);
+
 void settings_menu_reopen_hud(void);
 
 void settings_menu_reopen_storage(void);

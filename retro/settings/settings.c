@@ -34,6 +34,7 @@
 #include "../video/overlay_library.h"
 #include "../core/paths.h"
 #include "../core/perf.h"
+#include "../core/clock.h"
 #include "settings.h"
 #include "safe_ini.h"
 
@@ -145,6 +146,12 @@ static const struct session_settings_t defaults = {
     .anti_flicker = 0,
     .run_ahead = 0,
     .gpu_hard_sync = 0,
+    .content_clock = 0,
+    .clock_year = 2000,
+    .clock_month = 1,
+    .clock_day = 1,
+    .clock_hour = 12,
+    .clock_minute = 0,
     .port_assignment = {port_assignment_remembered, port_assignment_auto, port_assignment_auto, port_assignment_auto},
     .port_device_key = {"builtin", "", "", ""},
     .port_device_id = {0, 0, 0, 0},
@@ -456,6 +463,12 @@ static const struct setting_descriptor setting_descriptors[] = {
     SETTING_RANGE(anti_flicker, 0, 1),
     SETTING_RANGE(run_ahead, 0, 1),
     SETTING_RANGE(gpu_hard_sync, 0, 1),
+    SETTING_RANGE(content_clock, 0, 1),
+    SETTING_RANGE(clock_year, 1980, 2099),
+    SETTING_RANGE(clock_month, 1, 12),
+    SETTING_RANGE(clock_day, 1, 31),
+    SETTING_RANGE(clock_hour, 0, 23),
+    SETTING_RANGE(clock_minute, 0, 59),
 };
 
 #undef SETTING_SPECIAL
@@ -2919,6 +2932,18 @@ void session_settings_cycle_run_ahead(const int direction) {
 void session_settings_cycle_gpu_hard_sync(const int direction) {
     (void) direction;
     session_settings.gpu_hard_sync = !session_settings.gpu_hard_sync;
+}
+
+void session_settings_cycle_content_clock(const int direction) {
+    (void) direction;
+    session_settings.content_clock = !session_settings.content_clock;
+    content_clock_apply();
+}
+
+void session_settings_cycle_clock_field(int *field, const int minimum, const int maximum, const int direction) {
+    const int span = maximum - minimum + 1;
+    *field = minimum + ((*field - minimum + (direction < 0 ? -1 : 1)) % span + span) % span;
+    content_clock_apply();
 }
 
 static int port_claimed_elsewhere(const char *stable_key, const int for_port) {

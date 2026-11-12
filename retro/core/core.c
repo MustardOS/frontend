@@ -15,6 +15,7 @@
 #include <common/base/strutil.h>
 #include <common/storage/union.h>
 #include "muxretro.h"
+#include "clock.h"
 #include "core.h"
 #include "perf_interface.h"
 #include "subsystem.h"
@@ -123,6 +124,7 @@ static int open_core(const char *corefile) {
         LOG_ERROR(mux_module, "Failed to load core '%s': %s", corefile, dlerror());
         return -1;
     }
+    content_clock_register_core(current_core.handle);
 
     MUOS_FUNCTION_ASSIGN(current_core.retro_init, dlsym(current_core.handle, "retro_init"));
     MUOS_FUNCTION_ASSIGN(current_core.retro_deinit, dlsym(current_core.handle, "retro_deinit"));

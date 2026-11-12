@@ -948,7 +948,8 @@ typedef struct theme_resolution {
 } theme_resolution;
 
 theme_resolution theme_resolutions[] = {
-    {"640x480", 1}, {"720x480", 2}, {"720x576", 3}, {"720x720", 4}, {"1024x768", 5}, {"1280x720", 6}, {"1920x1080", 7},
+    {"640x480", 1},  {"720x480", 2},   {"720x576", 3},  {"720x720", 4}, {"1024x768", 5},
+    {"1280x720", 6}, {"1920x1080", 7}, {"1366x768", 8}, {"320x240", 9},
 };
 
 static int get_theme_resolution_value(const char *resolution) {

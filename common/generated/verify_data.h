@@ -80,6 +80,8 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/device/speaker.sh", "9581d2de1061c1fb" },
     { "/opt/muos/script/device/storage.sh", "4ca3631ad8cd6ce1" },
     { "/opt/muos/script/device/usbaudio.sh", "75ac3a6712253bba" },
+    { "/opt/muos/script/device/x86_64-generic/display.sh", "31627c90532ee3e7" },
+    { "/opt/muos/script/device/x86_64-generic/frontend.sh", "162d31f1c62d226e" },
     { "/opt/muos/script/init/S10udev.sh", "a3890cbbaec5fb1a" },
     { "/opt/muos/script/init/S30dbus.sh", "ac0b13794b11ba1a" },
     { "/opt/muos/script/init/S75bluetooth.sh", "3b28558b3645490c" },

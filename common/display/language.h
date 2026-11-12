@@ -2768,6 +2768,14 @@ struct mux_lang {
             char audio_rate_control_off[MAX_BUFFER_SIZE];
             char speed_limiter[MAX_BUFFER_SIZE];
             char gpu_hard_sync[MAX_BUFFER_SIZE];
+            char content_clock[MAX_BUFFER_SIZE];
+            char content_clock_device[MAX_BUFFER_SIZE];
+            char content_clock_custom[MAX_BUFFER_SIZE];
+            char clock_year[MAX_BUFFER_SIZE];
+            char clock_month[MAX_BUFFER_SIZE];
+            char clock_day[MAX_BUFFER_SIZE];
+            char clock_hour[MAX_BUFFER_SIZE];
+            char clock_minute[MAX_BUFFER_SIZE];
             char play_profile[MAX_BUFFER_SIZE];
             char profile_safe[MAX_BUFFER_SIZE];
             char profile_balanced[MAX_BUFFER_SIZE];
@@ -3167,6 +3175,8 @@ struct mux_lang {
                 char frame_delay[MAX_BUFFER_SIZE];
                 char run_ahead[MAX_BUFFER_SIZE];
                 char gpu_hard_sync[MAX_BUFFER_SIZE];
+                char content_clock[MAX_BUFFER_SIZE];
+                char clock_field[MAX_BUFFER_SIZE];
                 char diagnostics[MAX_BUFFER_SIZE];
                 char capture[MAX_BUFFER_SIZE];
                 char state_thumbnail[MAX_BUFFER_SIZE];
@@ -4044,6 +4054,7 @@ struct mux_lang {
         char headphones[MAX_BUFFER_SIZE];
         char speakers[MAX_BUFFER_SIZE];
         char soundfont[MAX_BUFFER_SIZE];
+        char resolution[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char menu[MAX_BUFFER_SIZE];
@@ -4074,6 +4085,7 @@ struct mux_lang {
             char hk_shot[MAX_BUFFER_SIZE];
             char audio_sink[MAX_BUFFER_SIZE];
             char soundfont[MAX_BUFFER_SIZE];
+            char resolution[MAX_BUFFER_SIZE];
             char input_remap[MAX_BUFFER_SIZE];
             char pass_code[MAX_BUFFER_SIZE];
             char display_temp[MAX_BUFFER_SIZE];

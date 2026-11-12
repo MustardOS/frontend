@@ -6,6 +6,14 @@
 static mux_dialogue save_dlg;
 static char pending_submenu[64] = "";
 
+#ifdef X86_64
+#define X86_RESOLUTION_LIST    RUN_PATH "x86_resolutions"
+#define X86_RESOLUTION_PENDING RUN_PATH "x86_resolution_pending"
+static char **x86_resolutions = NULL;
+static int x86_resolution_count = 0;
+static char *x86_resolution_fallback[] = {"640x480"};
+#endif
+
 static void hide_save_dialog(void) {
     dialogue_dismiss(&save_dlg);
     pending_submenu[0] = '\0';
@@ -291,6 +299,14 @@ static void restore_tweak_options(void) {
                                  : strcasecmp(config.settings.general.startup, "resume") == 0     ? 5
                                                                                                   : 0
     );
+
+#ifdef X86_64
+    char *resolution = read_line_char_from(CONF_CONFIG_PATH "settings/general/x86_resolution", 1);
+    const int resolution_index =
+        lv_dropdown_get_option_index(ui_dro_resolution_tweakgen, resolution ? resolution : "640x480");
+    lv_dropdown_set_selected(ui_dro_resolution_tweakgen, resolution_index < 0 ? 0 : resolution_index);
+    free(resolution);
+#endif
 }
 
 static void save_tweak_options(void) {
@@ -302,6 +318,21 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_VAL(tweakgen, startup, "settings/general/startup", CHAR, startup_options);
     CHECK_AND_SAVE_STD(tweakgen, hk_dpad, "settings/hotkey/dpad_toggle", INT, 0);
     CHECK_AND_SAVE_STD(tweakgen, hk_shot, "settings/hotkey/screenshot", INT, 0);
+
+#ifdef X86_64
+    if (lv_dropdown_get_selected(ui_dro_resolution_tweakgen) != resolution_original) {
+        char resolution[MAX_BUFFER_SIZE];
+        lv_dropdown_get_selected_str(ui_dro_resolution_tweakgen, resolution, sizeof(resolution));
+        is_modified++;
+        if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/general/x86_resolution", CHAR, resolution)) {
+            save_failed++;
+        } else if (!write_text_to_file_atomic(X86_RESOLUTION_PENDING, CHAR, resolution)) {
+            save_failed++;
+        } else {
+            refresh_resolution = 1;
+        }
+    }
+#endif
 
     if (audio_sink_count > 0) {
         const int sink_mod = lv_dropdown_get_selected(ui_dro_audio_sink_tweakgen);
@@ -409,6 +440,16 @@ static void init_navigation_group(void) {
                                lang.muxtweakgen.startup.collection, lang.muxtweakgen.startup.history,
                                lang.muxtweakgen.startup.last,       lang.muxtweakgen.startup.resume};
 
+#ifdef X86_64
+    x86_resolutions = str_parse_file(X86_RESOLUTION_LIST, &x86_resolution_count, parse_lines);
+    char **resolution_options = x86_resolutions;
+    int resolution_count = x86_resolution_count;
+    if (!resolution_options || resolution_count <= 0) {
+        resolution_options = x86_resolution_fallback;
+        resolution_count = A_SIZE(x86_resolution_fallback);
+    }
+#endif
+
     int hk_combo_count = 0;
     char **hk_combos = NULL;
 
@@ -434,6 +475,11 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakgen, hk_dpad, lang.muxtweakgen.hkdpad, "hkdpad", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, hk_shot, lang.muxtweakgen.hkshot, "hkshot", hk_combos, hk_combo_count);
     INIT_OPTION_ITEM(-1, tweakgen, startup, lang.muxtweakgen.startup.title, "startup", startup_options, 6);
+#ifdef X86_64
+    INIT_OPTION_ITEM(
+        -1, tweakgen, resolution, lang.muxtweakgen.resolution, "resolution", resolution_options, resolution_count
+    );
+#endif
     INIT_OPTION_ITEM(-1, tweakgen, rtc, lang.muxtweakgen.rtc, "clock", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, language, lang.muxtweakgen.language, "language", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, soundfont, lang.muxtweakgen.soundfont, "soundfont", NULL, 0);
@@ -661,6 +707,9 @@ static const menu_entry tweakgen_menu_entries[ui_count_dynamic] = {
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey DPAD
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Hotkey Screenshot
     {NULL, &kiosk_pass, menu_toggle, NULL}, // Startup Mode
+#ifdef X86_64
+    {NULL, &kiosk_pass, menu_toggle, NULL},
+#endif
     {"rtc", &kiosk.datetime.clock, menu_clock, NULL},
     {"language", &kiosk.config.language, menu_clock, NULL},
     {"soundfont", &kiosk.setting.soundfont, menu_clock, NULL},

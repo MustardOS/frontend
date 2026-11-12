@@ -194,7 +194,7 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "settings/general", "rgb", CFG_OFF(settings.general.rgb), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "settings/general", "audiosink", CFG_OFF(settings.general.audiosink), 0, {.i = 0}, 1, 0, 32767},
     {CONF_CONFIG_PATH "settings/general", "orientation", CFG_OFF(settings.general.orientation), 0, {.i = 2}, 1, 0, 2},
-    {CONF_CONFIG_PATH "settings/general", "theme_resolution", CFG_OFF(settings.general.theme_resolution), 0, {.i = 0}, 1, 0, 7},
+    {CONF_CONFIG_PATH "settings/general", "theme_resolution", CFG_OFF(settings.general.theme_resolution), 0, {.i = 0}, 1, 0, 9},
     {CONF_CONFIG_PATH "settings/general", "theme_scaling", CFG_OFF(settings.general.theme_scaling), 0, {.i = 1}, 1, 0, 2},
     {CONF_CONFIG_PATH "settings/general", "startup", CFG_OFF(settings.general.startup), 1, {.s = "launcher"}},
     {CONF_CONFIG_PATH "settings/general", "language", CFG_OFF(settings.general.language), 1, {.s = "English"}},
@@ -581,6 +581,14 @@ void load_config(struct mux_config *config) {
         case 7:
             config->settings.general.theme_resolution_width = 1920;
             config->settings.general.theme_resolution_height = 1080;
+            break;
+        case 8:
+            config->settings.general.theme_resolution_width = 1366;
+            config->settings.general.theme_resolution_height = 768;
+            break;
+        case 9:
+            config->settings.general.theme_resolution_width = 320;
+            config->settings.general.theme_resolution_height = 240;
             break;
         default:
             break;

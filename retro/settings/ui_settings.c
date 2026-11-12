@@ -19,6 +19,7 @@ enum { settings_row_limit = 96, settings_frame_limit = 12 };
 typedef enum {
     settings_special_none = 0,
     settings_special_core_options,
+    settings_special_content_clock,
     settings_special_video_diagnostics,
     settings_special_reset,
     settings_special_save
@@ -661,6 +662,8 @@ static void row_action(const int index) {
 
     if (special == settings_special_core_options)
         options_menu_open();
+    else if (special == settings_special_content_clock)
+        content_clock_menu_open();
     else if (special == settings_special_video_diagnostics)
         video_diagnostics_menu_open();
     else if (special == settings_special_reset)
@@ -684,6 +687,10 @@ static int child_tick(void) {
     }
     if (video_diagnostics_menu_is_active()) {
         video_diagnostics_menu_tick();
+        return 1;
+    }
+    if (content_clock_menu_is_active()) {
+        content_clock_menu_tick();
         return 1;
     }
     if (viewport_settings_child_tick()) return 1;
@@ -826,6 +833,10 @@ static void build_rows(void) {
             settings_special_core_options, lang.muxretro.core_options, "core", lang.muxretro.help.settings.core_options
         );
     add_special_row(
+        settings_special_content_clock, lang.muxretro.settings_screen.content_clock, "clock",
+        lang.muxretro.help.performance.content_clock
+    );
+    add_special_row(
         settings_special_video_diagnostics, lang.muxretro.settings_screen.video_diagnostics, "info",
         lang.muxretro.help.performance.diagnostics
     );
@@ -886,6 +897,7 @@ void settings_menu_init(void) {
     sound_menu_init();
     input_menu_init();
     performance_menu_init();
+    content_clock_menu_init();
     hud_menu_init();
     storage_menu_init();
 
@@ -961,6 +973,12 @@ void settings_menu_reopen_input_at(const int local_index) {
 void settings_menu_reopen_performance(void) {
     build_rows();
     submenu_reopen_at(&self, row_for_definition(performance_menu_definition(), 0));
+}
+
+void settings_menu_reopen_content_clock(void) {
+    build_rows();
+    const int row = row_for_special(settings_special_content_clock);
+    if (row >= 0) submenu_reopen_at(&self, row);
 }
 
 void settings_menu_reopen_video_diagnostics(void) {

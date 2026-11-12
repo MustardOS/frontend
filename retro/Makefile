@@ -5,14 +5,16 @@ LIB_DIR := $(BIN_DIR)/lib
 TARGET  := $(BIN_DIR)/muxretro
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE -pthread
-LDFLAGS := $(COMMON_LIBS) -lcurl $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread -Wl,--export-dynamic-symbol=eglGetProcAddress
+LDFLAGS := $(COMMON_LIBS) -lcurl $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread -Wl,--export-dynamic-symbol=eglGetProcAddress \
+	-Wl,--export-dynamic-symbol=time -Wl,--export-dynamic-symbol=gettimeofday \
+	-Wl,--export-dynamic-symbol=clock_gettime
 
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
 INCLUDES := -I. -I.. -I../module -I../module/ui -I../vendor -Icore
 
 SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
-       core/main.c core/startup.c core/core.c core/environment.c core/run_thread.c core/runahead.c core/perf.c core/perf_interface.c \
+       core/main.c core/startup.c core/core.c core/clock.c core/environment.c core/run_thread.c core/runahead.c core/perf.c core/perf_interface.c \
        core/governor_boost.c core/power.c core/power_protocol.c core/remote.c \
        video/video.c video/geometry.c video/interframe_blend.c video/gl_dispatch.c video/colour.c video/preset_browser.c video/preset_catalogue.c video/overlay_bridge.c video/overlay_library.c video/frame_pacer.c \
        video/ui_display.c video/ui_colfilter.c video/ui_shader.c video/ui_shaderadjust.c video/ui_viewport.c \
@@ -34,7 +36,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        netplay/address.c netplay/wire.c netplay/netplay.c netplay/ui_netplay.c \
        link/link.c link/ui_link.c \
        settings/settings.c settings/safe_ini.c settings/submenu.c settings/ui_settings.c \
-       settings/ui_performancesettings.c settings/ui_hudsettings.c \
+       settings/ui_performancesettings.c settings/ui_clocksettings.c settings/ui_hudsettings.c \
        ui/ui_pause.c ui/ui_advisory.c ui/ui_loading.c ui/options.c ui/ui_options.c ui/ui_information.c \
        ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c ui/ui_patch.c ui/ui_manual.c
 
