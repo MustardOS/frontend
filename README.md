@@ -250,6 +250,7 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `musplash`: Standalone PNG splash screen
 * `mususpend`: Suspend and wake helper
 * `muswitch`: Launches content directly
+* `mutop`: SUSHI, a read-only process and system monitor for terminals
 * `muvarctl`: Configuration value store control
 * `muverify`: Signed manifest verification
 * `muwarn`: First Install Disclaimer Message
@@ -336,6 +337,83 @@ source groups so adding a file does not silently alter `libmuxcom.so`.
 * `muxwebserv`: Web Services
 
 ---
+
+## SUSHI
+
+SUSHI (System Usage, Statistics, and Hardware Insight) is a read-only process and system monitor for terminals.
+
+- The executable is `mutop`.
+- The frontend build places it in `bin/mutop`.
+- It installs to `/opt/muos/frontend/mutop`.
+- It is one C file with no library beyond the C library.
+- It needs a terminal, such as SSH or Mustard Terminal.
+- It does not draw to the framebuffer or the LVGL frontend.
+- It never changes settings, sends signals or writes to `/proc`, `/sys` or MustardOS state files.
+
+### Running
+
+```sh
+mutop
+mutop -s mem
+mutop -1
+mutop -e /dev/input/event3
+```
+
+- `-1` prints one plain-text snapshot without a terminal.
+- `-s cpu|mem|pid|name` sets the first sort.
+- `-e` reads a controller from an evdev node without grabbing it.
+
+### Keys
+
+- Space refreshes the counters and the process list.
+- `c`, `m`, `p` and `n` sort by CPU, memory, PID and name.
+- `r` reverses the sort.
+- Up, Down, `j` and `k` move the selection.
+- Page Up, Page Down, `g` and `G` move by a page or to the top and bottom.
+- Enter or `d` shows the selected process details.
+- `x` switches between process names and full command lines.
+- `o` switches between all processes and MustardOS processes only.
+- `t` shows more or fewer per-core CPU bars.
+- `h` opens help.
+- `q` quits.
+- Esc closes the details or help, then quits.
+
+### Controller keys
+
+- The D-pad Up and Down move the selection.
+- The D-pad Left and Right and the shoulder buttons change the sort.
+- A shows the details.
+- B goes back or quits.
+- Start refreshes.
+- Select switches the MustardOS filter.
+
+### Figures
+
+- The process count covers process leaders only.
+- Kernel threads are left out.
+- Threads are counted in a separate total.
+- 100% CPU means one fully busy core.
+- A multi-threaded process can go above 100%.
+- The first snapshot compares against a 200 ms baseline.
+- Each refresh compares against the previous snapshot.
+- RAM use is `MemTotal - MemAvailable`.
+- Process memory is RSS.
+- Shared pages mean process memory does not add up.
+- The MustardOS filter matches `/opt/muos/` programs and the `mux`, `muvar`, `muhotkey` and `pickles` names.
+
+### Status line sources
+
+- `/run/muos/is_idle` gives the idle flag.
+- `/run/muos/overlay.disable` gives the overlay flag.
+- `/run/muos/network.status` gives the network status.
+- `/run/muos/storage/theme/active` gives the active theme.
+- `/opt/muos/config/system/debug_mode` gives the debug flag.
+- `/sys/firmware/devicetree/base/model` gives the device name, with the hostname as a fallback.
+- `/sys/class/power_supply/*` gives the battery level and status.
+- `/sys/class/thermal/thermal_zone0/temp` gives the temperature of the first thermal zone.
+- `/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq` gives the CPU0 frequency.
+- Missing values show as `--`.
+- Small terminals hide some core bars and table columns.
 
 ## Third Party Libraries
 
