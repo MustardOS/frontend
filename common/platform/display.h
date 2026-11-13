@@ -44,6 +44,8 @@ double display_panel_refresh_hz(void);
 
 int display_video_fast_path_allowed(void);
 
+int display_frame_static(void);
+
 int display_video_needs_logical_target(void);
 
 void display_map_logical_rect(const SDL_Rect *logical, SDL_Rect *physical);
