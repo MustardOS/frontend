@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <common/platform/audio.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include "../core/muxretro.h"
@@ -20,8 +21,6 @@
 #define AUDIO_PERIOD_SETTLE_MS          3000
 #define AUDIO_PERIOD_UNDERRUN_TOLERANCE 8
 
-#define AUDIO_AUTO_RATE_FROM  48000
-#define AUDIO_AUTO_RATE_TO    44100
 #define AUDIO_DEVICE_MAX_RATE 48000
 
 #define AUDIO_FADE_IN_MS            8
@@ -119,6 +118,7 @@ static double drc_bias = 0.0;
 static double drc_fill_avg = -1.0;
 static double headroom_queued_avg = -1.0;
 static double drc_ratio = 1.0;
+static double drc_rate_step = 1.0;
 static double drc_limit = 0.0;
 static int pickles_burst_recovery_active = 0;
 static uint64_t pickles_burst_recovery_count = 0;
@@ -152,6 +152,113 @@ static int last_queued_ms_valid = 0;
 
 static void audio_bridge_maybe_finish_resume(void);
 
+static int16_t *ui_sound_data[sound_total];
+static uint32_t ui_sound_frames[sound_total];
+static int ui_sound_type = 0;
+static const int16_t *ui_voice = NULL;
+static uint32_t ui_voice_frames = 0;
+static uint32_t ui_voice_pos = 0;
+static volatile int ui_only = 0;
+
+static void ui_mix(int16_t *out, const uint32_t frames) {
+    if (!ui_voice) return;
+
+    uint32_t count = ui_voice_frames - ui_voice_pos;
+    if (count > frames) count = frames;
+
+    const int16_t *src = ui_voice + (size_t) ui_voice_pos * 2;
+    for (uint32_t i = 0; i < count * 2; i++) {
+        const int32_t mixed = (int32_t) out[i] + src[i];
+        out[i] = (int16_t) (mixed > INT16_MAX ? INT16_MAX : mixed < INT16_MIN ? INT16_MIN : mixed);
+    }
+
+    ui_voice_pos += count;
+    if (ui_voice_pos >= ui_voice_frames) ui_voice = NULL;
+}
+
+static void ui_sound_play(const int sound) {
+    if (!audio_dev || !ui_sound_data[sound]) return;
+
+    SDL_LockAudioDevice(audio_dev);
+    ui_voice = ui_sound_data[sound];
+    ui_voice_frames = ui_sound_frames[sound];
+    ui_voice_pos = 0;
+    SDL_UnlockAudioDevice(audio_dev);
+
+    if (device_paused && !ui_only) {
+        ui_only = 1;
+        SDL_PauseAudioDevice(audio_dev, 0);
+    }
+}
+
+static void ui_settle(void) {
+    if (!ui_only) return;
+
+    SDL_LockAudioDevice(audio_dev);
+    const int playing = ui_voice != NULL;
+    SDL_UnlockAudioDevice(audio_dev);
+    if (playing) return;
+
+    SDL_PauseAudioDevice(audio_dev, 1);
+    ui_only = 0;
+}
+
+static void ui_sounds_free(void) {
+    audio_set_sound_hook(NULL);
+    fe_snd = 0;
+
+    for (int i = 0; i < sound_total; i++) {
+        free(ui_sound_data[i]);
+        ui_sound_data[i] = NULL;
+        ui_sound_frames[i] = 0;
+    }
+}
+
+static void ui_sounds_load(void) {
+    ui_sounds_free();
+    if (!ui_sound_type || !opened_freq) return;
+
+    int loaded = 0;
+    for (int i = 0; i < sound_total; i++) {
+        char path[MAX_BUFFER_SIZE];
+        if (!sound_file_path(ui_sound_type, i, path, sizeof(path))) continue;
+
+        SDL_AudioSpec spec;
+        Uint8 *wav = NULL;
+        Uint32 wav_len = 0;
+        if (!SDL_LoadWAV(path, &spec, &wav, &wav_len)) continue;
+
+        SDL_AudioCVT cvt;
+        const int build = SDL_BuildAudioCVT(&cvt, spec.format, spec.channels, spec.freq, AUDIO_S16SYS, 2, opened_freq);
+        cvt.len = (int) wav_len;
+        cvt.buf = build >= 0 ? malloc((size_t) wav_len * (size_t) cvt.len_mult) : NULL;
+
+        if (cvt.buf) {
+            memcpy(cvt.buf, wav, wav_len);
+            if (build == 0) cvt.len_cvt = cvt.len;
+
+            if (build == 0 || SDL_ConvertAudio(&cvt) == 0) {
+                ui_sound_data[i] = (int16_t *) cvt.buf;
+                ui_sound_frames[i] = (uint32_t) cvt.len_cvt / (2 * sizeof(int16_t));
+                loaded++;
+            } else {
+                free(cvt.buf);
+            }
+        }
+
+        SDL_FreeWAV(wav);
+    }
+
+    fe_snd = loaded > 0;
+    audio_set_sound_hook(fe_snd ? ui_sound_play : NULL);
+    LOG_INFO(mux_module, "Loaded %d interface sound(s) at %d Hz", loaded, opened_freq);
+}
+
+void audio_bridge_load_ui_sounds(const int sound_type) {
+    ui_sound_type = sound_type;
+    ui_sounds_load();
+}
+
 static int16_t scale_sample(const int16_t sample) {
     const int32_t scaled = (int32_t) sample * session_settings.volume / 100;
 
@@ -184,8 +291,8 @@ static void audio_filter_recompute(void) {
             return;
     }
 
-    const int freq = opened_freq > 0 ? opened_freq : 48000;
-    const double dt = 1.0 / (double) freq;
+    const double freq = core_native_rate > 0.0 ? core_native_rate : (double) AUDIO_DEVICE_MAX_RATE;
+    const double dt = 1.0 / freq;
     const double rc = 1.0 / (2.0 * 3.14159265358979323846 * cutoff_hz);
 
     filter_coeff = (float) (session_settings.audio_filter == audio_filter_high_pass ? rc / (rc + dt) : dt / (rc + dt));
@@ -260,6 +367,13 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     (void) userdata;
 
     const uint32_t requested = (uint32_t) len / (2 * sizeof(int16_t));
+
+    if (ui_only) {
+        memset(stream, 0, (size_t) len);
+        ui_mix((int16_t *) stream, requested);
+        return;
+    }
+
     const uint32_t write_idx = ring_write_index;
     const uint32_t read_idx = ring_read_index;
     const uint32_t available = write_idx - read_idx;
@@ -334,6 +448,7 @@ static void SDLCALL audio_callback(void *userdata, Uint8 *stream, const int len)
     }
 
     ring_read_index = read_idx + to_read;
+    ui_mix(out, requested);
 }
 
 static int16_t drc_interpolate_q48(const int16_t previous, const int16_t current, const uint64_t phase) {
@@ -348,7 +463,7 @@ static void drc_write_frames(const int16_t *src, const size_t frames) {
     size_t out_count = 0;
 
     if (drc_ratio < 0.5) drc_ratio = 0.5;
-    double effective_ratio = drc_ratio * audio_speed_multiplier;
+    double effective_ratio = drc_ratio * audio_speed_multiplier * drc_rate_step;
     if (effective_ratio < 0.0625) effective_ratio = 0.0625;
     if (effective_ratio > 16.0) effective_ratio = 16.0;
     const uint64_t step_q48 = (uint64_t) (effective_ratio * (double) DRC_PHASE_ONE + 0.5);
@@ -515,16 +630,7 @@ int audio_bridge_open(const double core_sample_rate) {
         return -1;
     }
 
-    double want_rate = session_settings.sample_rate > 0 ? (double) session_settings.sample_rate : core_sample_rate;
-    if (session_settings.sample_rate <= 0) {
-        if (want_rate > (double) AUDIO_DEVICE_MAX_RATE) {
-            LOG_INFO(mux_module, "Core asked for %.0f Hz, resampling to %d Hz", want_rate, AUDIO_DEVICE_MAX_RATE);
-            want_rate = (double) AUDIO_DEVICE_MAX_RATE;
-        }
-        if ((int) want_rate == AUDIO_AUTO_RATE_FROM) want_rate = (double) AUDIO_AUTO_RATE_TO;
-    }
-
-    want.freq = (int) want_rate;
+    want.freq = session_settings.sample_rate > 0 ? session_settings.sample_rate : AUDIO_DEVICE_MAX_RATE;
     want.format = AUDIO_S16SYS;
     want.channels = 2;
 
@@ -587,7 +693,8 @@ int audio_bridge_open(const double core_sample_rate) {
     content_half_rate = 0;
 
     free_resampler();
-    if ((int) core_sample_rate != have.freq) {
+    drc_rate_step = core_sample_rate > (double) have.freq ? 1.0 : core_sample_rate / (double) have.freq;
+    if (core_sample_rate > (double) have.freq) {
         resampler = SDL_NewAudioStream(AUDIO_S16SYS, 2, (int) core_sample_rate, AUDIO_S16SYS, 2, have.freq);
         if (!resampler) {
             LOG_ERROR(
@@ -600,6 +707,8 @@ int audio_bridge_open(const double core_sample_rate) {
     SDL_PauseAudioDevice(audio_dev, 1);
     device_paused = 1;
     resume_pending = 1;
+
+    if (ui_sound_type) ui_sounds_load();
 
     LOG_SUCCESS(
         mux_module, "Audio device opened at %d Hz (core native %d Hz), period %d frames", have.freq,
@@ -614,6 +723,9 @@ static void close_device(void) {
         SDL_CloseAudioDevice(audio_dev);
         audio_dev = 0;
     }
+
+    ui_voice = NULL;
+    ui_only = 0;
 
     free_resampler();
 
@@ -665,6 +777,7 @@ void audio_bridge_close(void) {
 
     audio_bridge_discard_sample_fifo();
     close_device();
+    ui_sounds_free();
 
     if (SDL_WasInit(SDL_INIT_AUDIO)) SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
@@ -811,7 +924,7 @@ void audio_bridge_get_info(int *freq, int *channels) {
 unsigned audio_bridge_target_sample_rate(void) {
     if (opened_freq > 0) return (unsigned) opened_freq;
     if (session_settings.sample_rate > 0) return (unsigned) session_settings.sample_rate;
-    return AUDIO_AUTO_RATE_TO;
+    return AUDIO_DEVICE_MAX_RATE;
 }
 
 int audio_bridge_is_active(void) {
@@ -833,11 +946,18 @@ void audio_bridge_set_paused(const int pause) {
     if (!audio_dev) return;
 
     if (pause) {
-        if (device_paused && !resume_pending) return;
+        if (device_paused && !resume_pending) {
+            ui_settle();
+            return;
+        }
 
         resume_pending = 0;
         device_paused = 1;
-        SDL_PauseAudioDevice(audio_dev, 1);
+        if (ui_voice) {
+            ui_only = 1;
+        } else {
+            SDL_PauseAudioDevice(audio_dev, 1);
+        }
         audio_bridge_clear_queued();
 
         return;
@@ -1037,6 +1157,7 @@ static void audio_bridge_maybe_finish_resume(void) {
     last_queued_ms_sample = queued_ms;
     last_queued_ms_valid = 1;
 
+    ui_only = 0;
     SDL_PauseAudioDevice(audio_dev, 0);
     LOG_DEBUG(mux_module, "Audio resumed with %ums queued (target %ums)", queued_ms, target_ms);
 }

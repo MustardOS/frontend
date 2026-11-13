@@ -919,6 +919,10 @@ void colour_set_suppressed(const int suppressed) {
     pass_suppressed = suppressed;
 }
 
+int colour_shader_animated(void) {
+    return shader_prog && (sh_u_time >= 0 || sh_u_frame >= 0);
+}
+
 int colour_pass_needed(void) {
     if (pass_suppressed) return 0;
     if (!preset_effects_enabled()) return 0;

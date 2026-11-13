@@ -80,6 +80,7 @@ static uint32_t crt_power_on_start = 0;
 static uint32_t crt_degauss_start = 0;
 
 static int frame_dirty = 0;
+static int frame_fresh = 0;
 static int frame_skip = 0;
 static int applied_swap_interval = -2;
 static int vsync_in_effect = 0;
@@ -1339,6 +1340,7 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
         if (size_changed) recompute_dest_rect();
 
         hw_render_bridge_notify_frame(width, height);
+        frame_fresh = 1;
         return;
     }
 
@@ -1348,6 +1350,7 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
     const unsigned bytes_per_pixel = bpp_for_pixel_format(pixel_format);
     if (pitch > INT_MAX || pitch < (size_t) width * bytes_per_pixel || (pitch > 0 && height > SIZE_MAX / pitch)) return;
     raw_frame_bpp = bytes_per_pixel;
+    frame_fresh = 1;
     raw_frame_format = pixel_format;
     raw_frame_pitch = pitch;
     const int size_changed = (int) width != frame_w || (int) height != frame_h;
@@ -1405,6 +1408,29 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
         SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
 
     perf_end(perf_stage_video_upload, upload_start);
+}
+
+static int atmosphere_settled(void) {
+    if (!atmosphere_ready) return 1;
+
+    for (int side = 0; side < 4; side++) {
+        for (int segment = 0; segment < ATMOSPHERE_SEGMENTS; segment++) {
+            const atmosphere_colour *current = &atmosphere_current[side][segment];
+            const atmosphere_colour *wanted = &atmosphere_target[side][segment];
+            const float dr = wanted->r - current->r, dg = wanted->g - current->g, db = wanted->b - current->b;
+            if (dr > 0.5f || dr < -0.5f || dg > 0.5f || dg < -0.5f || db > 0.5f || db < -0.5f) return 0;
+        }
+    }
+
+    return 1;
+}
+
+int video_bridge_take_static_frame(void) {
+    const int fresh = frame_fresh;
+    frame_fresh = 0;
+
+    return !fresh && !crt_power_on_start && !crt_power_off_start && !crt_degauss_start && !colour_shader_animated()
+           && (session_settings.border_colour != border_colour_atmosphere || atmosphere_settled());
 }
 
 static int video_output_is_opaque(void) {

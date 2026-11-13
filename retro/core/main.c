@@ -576,6 +576,17 @@ static double core_reported_emulation_fps(const double core_run_hz) {
     return core_run_hz * core_nominal_emulation_fps() / locked;
 }
 
+#define PRESENT_HOLD_LIMIT 30
+
+static int present_held;
+static unsigned present_hold_count;
+static unsigned present_hold_recent;
+
+static int present_can_hold(const double speed_multiplier) {
+    return speed_multiplier > 0.9999 && speed_multiplier < 1.0001 && session_settings.fps_limit != fps_limit_none
+           && !netplay_is_active() && !link_is_engaged() && present_hold_count < PRESENT_HOLD_LIMIT;
+}
+
 static void pace_core_output(const uint64_t frame_start, const unsigned frames, const double speed_multiplier) {
     static double fps_limit_deadline = 0.0;
     static double fps_limit_target_ms = 0.0;
@@ -596,7 +607,8 @@ static void pace_core_output(const uint64_t frame_start, const unsigned frames, 
                              && !link_is_engaged();
 
     const int auto_deadline_paced =
-        core_managed_network || (auto_cadence && (core_content_needs_pacing() || !frame_pacer_vsync_effective()));
+        core_managed_network
+        || (auto_cadence && (core_content_needs_pacing() || !frame_pacer_vsync_effective() || present_hold_recent));
 
     const uint64_t audio_wait_start = perf_begin();
     audio_bridge_drc_tick();
@@ -1408,18 +1420,29 @@ int main(const int argc, char *argv[]) {
             ui_task_deadline = loop_now;
         }
 
-        const uint64_t present_start = core_ran ? perf_begin() : 0;
-        if (display_ui_is_hidden()) {
-            display_composite_frame();
-        } else {
-            const uint64_t present_before_refresh = display_present_serial();
-            lv_refr_now(NULL);
-            if (core_ran && display_present_serial() == present_before_refresh) display_composite_frame();
+        const int static_frame = core_ran && video_bridge_take_static_frame();
+        present_held = static_frame && !ui_visible && display_frame_static() && present_can_hold(speed_multiplier);
+        present_hold_count = present_held ? present_hold_count + 1 : 0;
+        if (present_held) {
+            present_hold_recent = PRESENT_HOLD_LIMIT * 2;
+        } else if (present_hold_recent) {
+            present_hold_recent--;
         }
-        perf_end(perf_stage_present, present_start);
-        if (core_ran) perf_note_present();
 
-        if (core_ran) frame_pacer_after_present();
+        if (!present_held) {
+            const uint64_t present_start = core_ran ? perf_begin() : 0;
+            if (display_ui_is_hidden()) {
+                display_composite_frame();
+            } else {
+                const uint64_t present_before_refresh = display_present_serial();
+                lv_refr_now(NULL);
+                if (core_ran && display_present_serial() == present_before_refresh) display_composite_frame();
+            }
+            perf_end(perf_stage_present, present_start);
+            if (core_ran) perf_note_present();
+
+            if (core_ran) frame_pacer_after_present();
+        }
         if (cheevo_needs_present_tick()) cheevo_present_tick();
 
         if (perf_capture_is_automatic() && loop_now >= perf_autodump_deadline) {

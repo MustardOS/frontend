@@ -1058,7 +1058,7 @@ void pause_menu_init(void) {
 
     init_fonts();
 
-    if (config.settings.general.sound && init_audio_backend()) init_fe_snd(&fe_snd, config.settings.general.sound, 0);
+    audio_bridge_load_ui_sounds(config.settings.general.sound);
 
     create_dim_overlay();
     create_fps_label();

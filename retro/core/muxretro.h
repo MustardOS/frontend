@@ -77,6 +77,8 @@ int video_bridge_vsync_active(void);
 
 void video_bridge_flush_frame(void);
 
+int video_bridge_take_static_frame(void);
+
 void video_bridge_set_frame_skip(int skip);
 
 int video_bridge_get_frame_skip(void);
@@ -114,6 +116,8 @@ void audio_bridge_reset_period_floor(void);
 void audio_bridge_reconfigure_rate(double new_core_rate);
 
 void audio_bridge_close(void);
+
+void audio_bridge_load_ui_sounds(int sound_type);
 
 void audio_bridge_set_paused(int pause);
 
