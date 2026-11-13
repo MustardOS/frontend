@@ -41,6 +41,10 @@ int play_sound_wait(int sound);
 
 void play_sound(int sound);
 
+void audio_set_sound_hook(void (*hook)(int sound));
+
+int sound_file_path(int snd_type, int sound, char *out, size_t out_size);
+
 void free_sound_cache(void);
 
 void set_nav_volume(int volume);

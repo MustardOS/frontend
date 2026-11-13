@@ -30,6 +30,8 @@ int nav_volume = 90;
 const char *snd_names[sound_total] = {"confirm", "back",     "keypress", "navigate",  "error",      "muos",
                                       "reboot",  "shutdown", "startup",  "info_open", "info_close", "option"};
 
+static void (*sound_hook)(int sound) = NULL;
+
 static char **bgm_files = NULL;
 static size_t bgm_file_count = 0;
 
@@ -214,8 +216,17 @@ int play_sound_wait(const int sound) {
     return 1;
 }
 
+void audio_set_sound_hook(void (*hook)(int sound)) {
+    sound_hook = hook;
+}
+
 void play_sound(const int sound) {
     if (!fe_snd || sound < 0 || sound >= sound_total) return;
+
+    if (sound_hook) {
+        sound_hook(sound);
+        return;
+    }
 
     if (pthread_mutex_trylock(&audio_lock) == 0) {
         if (audio_open) {
@@ -397,13 +408,28 @@ void init_fe_snd(int *fe_snd_out, const int snd_type, const int re_init) {
     pthread_mutex_unlock(&audio_lock);
 }
 
+static void sound_base_path(const int snd_type, char *out, const size_t out_size) {
+    if (snd_type == 2) {
+        snprintf(out, out_size, "%s/sound", theme_base);
+    } else {
+        snprintf(out, out_size, "%s", STORAGE_SOUND);
+    }
+}
+
+int sound_file_path(const int snd_type, const int sound, char *out, const size_t out_size) {
+    char base_path[MAX_BUFFER_SIZE];
+    sound_base_path(snd_type, base_path, sizeof(base_path));
+    snprintf(out, out_size, "%s/%s.wav", base_path, snd_names[sound]);
+
+    return file_exist_nocase(out, out, out_size);
+}
+
 static void load_sound_cache_locked(const int snd_type) {
     fe_snd = 0;
     free_sound_cache();
 
     char base_path[MAX_BUFFER_SIZE];
-    snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
-    if (snd_type == 2) snprintf(base_path, sizeof(base_path), "%s/sound", theme_base);
+    sound_base_path(snd_type, base_path, sizeof(base_path));
 
     if (!dir_exist(base_path)) {
         LOG_INFO("audio", "Sound directory not found: %s", base_path);
@@ -412,9 +438,8 @@ static void load_sound_cache_locked(const int snd_type) {
 
     for (int i = 0; i < sound_total; ++i) {
         char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), "%s/%s.wav", base_path, snd_names[i]);
 
-        if (file_exist_nocase(path, path, sizeof(path))) {
+        if (sound_file_path(snd_type, i, path, sizeof(path))) {
             sound_cache[i].chunk = Mix_LoadWAV(path);
         } else {
             sound_cache[i].chunk = NULL;
