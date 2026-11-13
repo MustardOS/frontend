@@ -184,10 +184,9 @@ static void apply_muxapp_glyph(const size_t index, lv_obj_t *glyph) {
 
     const int16_t glyph_hidden =
         !config.visual.list_glyph || (theme.list_default.glyph_alpha == 0 && theme.list_focus.glyph_alpha == 0);
-    if (glyph_hidden) return;   
+    if (glyph_hidden) return;
     const void *source = lv_img_get_src(glyph);
-    if (!source || source == &ui_img_blank)
-        apply_app_glyph(items[index].extra_data, items[index].glyph_icon, glyph);
+    if (!source || source == &ui_img_blank) apply_app_glyph(items[index].extra_data, items[index].glyph_icon, glyph);
 }
 
 static void gen_app_label(const size_t index) {
