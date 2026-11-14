@@ -1,9 +1,12 @@
 #include <fcntl.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <common/platform/stickpoll.h>
 
+#define H700_COMPATIBLE   "arm,sun50iw9p1"
+#define COMPATIBLE_PATH   "/proc/device-tree/compatible"
 #define STICK_CODE_BASE   0x405C2000UL
 #define STICK_CODE_SIZE   0x2000UL
 #define STICK_DATA_BASE   0x411BD000UL
@@ -19,6 +22,34 @@ static const struct {
     {0x11B4UL, 0x394092C0U},
     {0x11B8UL, 0x340007E0U},
 };
+
+static int h700_board(void) {
+    static int supported = -1;
+    if (supported >= 0) return supported;
+
+    supported = 0;
+    const int fd = open(COMPATIBLE_PATH, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) return supported;
+
+    char compatible[1024];
+    const ssize_t length = read(fd, compatible, sizeof(compatible));
+    close(fd);
+    if (length <= 0) return supported;
+
+    size_t offset = 0;
+    while (offset < (size_t) length) {
+        const size_t remaining = (size_t) length - offset;
+        const size_t entry_length = strnlen(compatible + offset, remaining);
+        if (entry_length == sizeof(H700_COMPATIBLE) - 1
+            && memcmp(compatible + offset, H700_COMPATIBLE, sizeof(H700_COMPATIBLE) - 1) == 0) {
+            supported = 1;
+            break;
+        }
+        offset += entry_length + 1;
+    }
+
+    return supported;
+}
 
 static int code_matches(const int fd) {
     void *code = mmap(NULL, STICK_CODE_SIZE, PROT_READ, MAP_SHARED, fd, (off_t) STICK_CODE_BASE);
@@ -36,6 +67,8 @@ static int code_matches(const int fd) {
 }
 
 static int stick_poll_access(const int write, const int on) {
+    if (!h700_board()) return stick_poll_unsupported;
+
     const int fd = open("/dev/mem", (write ? O_RDWR : O_RDONLY) | O_CLOEXEC);
     if (fd < 0) return stick_poll_unsupported;
 
