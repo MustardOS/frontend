@@ -59,11 +59,11 @@ $(shell mkdir -p $(DEPDIR))
 
 COMPILER_TARGET  := $(shell $(CC) -dumpmachine 2>/dev/null)
 COMPILER_VERSION := $(shell $(CC) -dumpfullversion -dumpversion 2>/dev/null)
-CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)|$(CROSS_COMPILE)|$(COMPILER_TARGET)|$(COMPILER_VERSION)
+CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)|$(PGO)|$(PGO_PATH)|$(PGO_GENERATE_PATH)|$(CROSS_COMPILE)|$(COMPILER_TARGET)|$(COMPILER_VERSION)
 CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
-.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard pgo-check clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal dep-video dep-mugl
 
 .DEFAULT_GOAL := all
@@ -81,7 +81,16 @@ info:
 	@echo "Tools: $(TOOLS)"
 	@echo "Dependencies: $(DEPENDENCIES)"
 
-vendor-external:
+pgo-check:
+	$(VERBOSE)if [ "$(PGO)" = "use" ]; then \
+		if [ ! -d "$(PGO_PATH)" ] || ! find "$(PGO_PATH)" -type f -name '*.gcda' -print -quit 2>/dev/null | grep -q .; then \
+			printf 'No collected PGO profiles were found in %s\n' "$(PGO_PATH)" >&2; \
+			printf 'Run ./build.sh pgo-generate and train it on the target, or set PGO=off explicitly.\n' >&2; \
+			exit 1; \
+		fi; \
+	fi
+
+vendor-external: pgo-check
 	@echo "Building External Dependencies"
 	$(VERBOSE)DEVICE="$(DEVICE)" EXT_ARCH_FLAGS="$(ARCH)" $(EXTERNAL_BUILD) $(QUIET) || exit 1
 
@@ -141,8 +150,8 @@ prebuild: dep-stage dep-retro dep-terminal dep-video $(MUGL_DEP)
 clean:
 	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build mugl/.gen \
 		common/generated/language.json common/generated/thirdparty.h
-	$(VERBOSE)find . \( -name "*.o" -o -name "*.d" \) \
-		-not -path "./.git/*" -not -path "./external/*" -exec rm -f {} +
+	$(VERBOSE)find . \( -name "*.o" -o -name "*.d" -o -name "*.gcno" -o -name "*.gcda" \) \
+		-not -path "./.git/*" -not -path "./.pgo/*" -not -path "./external/*" -exec rm -f {} +
 
 
 %.o: $(MODULE_DIR)/%.c

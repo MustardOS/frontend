@@ -146,8 +146,46 @@ component, so a rebuild only touches what actually changed.
 ./build.sh release
 ```
 
-Changing `DEVICE`, `BUILD`, `OPT_LEVEL` or `DEBUGSYM` forces a clean automatically, since objects compiled with different flags cannot be reused. Switching
-between `release` and `debug` therefore rebuilds everything. The current configuration is recorded in `.build-config`.
+Changing `DEVICE`, `BUILD`, `OPT_LEVEL`, `DEBUGSYM`, `PGO`, `PGO_DIR` or `PGO_GENERATE_DIR` forces a clean automatically, since objects compiled with different flags cannot be
+reused. Switching between `release` and `debug` therefore rebuilds everything. The current configuration is recorded in `.build-config`.
+
+### Profile-guided optimisation
+
+PGO is required by default for release builds and remains disabled by default for test and debug builds. It applies to the frontend executables, shared frontend
+libraries, LVGL, PlutoSVG and the libretro host; downloaded third-party libraries remain at their normal release settings. Profile builds bypass `ccache` so
+a changed profile cannot silently reuse stale objects.
+
+Collected host profiles are kept in `.pgo/ARM64_A53` by default and `.pgo/` is ignored by Git. Instrumented H700 builds write runtime profiles to
+`/tmp/muos-frontend-pgo/ARM64_A53` on the target. Preserve the complete generated directory tree when copying it to `.pgo/ARM64_A53`. Use a fresh directory
+for each training run and do not mix profiles from different commits, devices, compilers or build configurations.
+When that directory contains no `.gcda` files, `./build.sh release` and `BUILD=release ./build.sh make` automatically produce an instrumented release instead.
+After that build has run on the target and its profile tree has been copied back, running the same command again produces the profile-optimised release. An explicit
+`PGO=use` or `./build.sh pgo-use` still refuses to compile without profiles. Use `PGO=off ./build.sh release` only for recovery or comparison; it is no longer the
+production default.
+
+```sh
+# 1. Build the instrumented release and deploy bin/ through the normal image/update flow.
+./build.sh pgo-generate
+
+# 2. On the target, create the profile root before starting the instrumented frontend.
+mkdir -p /tmp/muos-frontend-pgo/ARM64_A53
+
+# 3. Exercise representative workloads, then exit the trained processes cleanly.
+#    Cover boot, menus, themes, settings, content browsing, launch and return,
+#    network screens, shutdown and any other production-critical paths.
+
+# 4. From the frontend repository, copy the complete target profile tree to .pgo.
+mkdir -p .pgo
+scp -r root@DEVICE:/tmp/muos-frontend-pgo/ARM64_A53 .pgo/
+
+# 5. Build the optimised release. This refuses to run when no .gcda files exist.
+./build.sh pgo-use
+```
+
+Set `PGO_DIR` to use another host collection directory and `PGO_GENERATE_DIR` to change the absolute runtime path on the target. Training data is written to
+`/tmp`, not SD storage. The generated build uses atomic profile updates because several frontend processes and threads can run concurrently.
+`-fprofile-partial-training` keeps unvisited code valid, but an under-trained workload can still regress real use; compare the PGO release against the standard
+release on target hardware before shipping it.
 
 ### Compilation database
 

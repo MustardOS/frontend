@@ -72,6 +72,42 @@ OPT_LEVEL ?= 2
 DEBUGSYM ?= 0
 
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+PGO ?= default
+ifeq ($(PGO),default)
+    override PGO := $(if $(filter release,$(BUILD)),use,off)
+endif
+PGO_DIR ?= $(REPO_ROOT)/.pgo/$(DEVICE)
+PGO_GENERATE_DIR ?= /tmp/muos-frontend-pgo/$(DEVICE)
+PGO_PATH := $(if $(filter /%,$(PGO_DIR)),$(PGO_DIR),$(abspath $(REPO_ROOT)/$(PGO_DIR)))
+PGO_GENERATE_PATH := $(if $(filter /%,$(PGO_GENERATE_DIR)),$(PGO_GENERATE_DIR),$(abspath $(REPO_ROOT)/$(PGO_GENERATE_DIR)))
+
+ifeq ($(PGO),generate)
+    PGO_CFLAGS = -fprofile-generate -fprofile-update=atomic -fprofile-dir=$(PGO_GENERATE_PATH)
+    PGO_LDFLAGS = -fprofile-generate -fprofile-update=atomic -fprofile-dir=$(PGO_GENERATE_PATH)
+else ifeq ($(PGO),use)
+    PGO_CFLAGS = -fprofile-use -fprofile-partial-training -fprofile-correction \
+                 -fprofile-dir=$(PGO_PATH) \
+                 -Wno-missing-profile
+    PGO_LDFLAGS = -fprofile-use -fprofile-partial-training -fprofile-correction \
+                  -fprofile-dir=$(PGO_PATH)
+else ifneq ($(PGO),off)
+    $(error Unsupported PGO mode: $(PGO), expected off, generate, or use)
+endif
+
+ifneq ($(PGO),off)
+    ifneq ($(words $(PGO_DIR)),1)
+        $(error PGO_DIR must not contain whitespace)
+    endif
+    ifeq ($(filter /%,$(PGO_GENERATE_DIR)),)
+        $(error PGO_GENERATE_DIR must be an absolute path when PGO is enabled)
+    endif
+    ifneq ($(words $(PGO_GENERATE_DIR)),1)
+        $(error PGO_GENERATE_DIR must not contain whitespace)
+    endif
+    export CCACHE_DISABLE := 1
+endif
+
 DEP_ROOT  := $(REPO_ROOT)/.deps
 
 # Flattened so nothing escapes its own dep directory, ./ and ../ normalised first
@@ -88,7 +124,7 @@ BASE_CFLAGS = $(ARCH) -std=c11 -O$(OPT_LEVEL) -pipe -flto=auto -MMD -MP \
               -fstack-protector-strong -fstack-clash-protection \
               -D_FORTIFY_SOURCE=3 -D_GNU_SOURCE -fPIE -fno-ident \
               $(if $(filter 1,$(DEBUGSYM)),-g) \
-              $(BUILD_FLAGS) $(EXTERNAL_CFLAGS) $(FREETYPE_CFLAGS)
+              $(BUILD_FLAGS) $(PGO_CFLAGS) $(EXTERNAL_CFLAGS) $(FREETYPE_CFLAGS)
 
 STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
                 -Werror=incompatible-pointer-types -Werror=return-type \
@@ -98,13 +134,13 @@ STRICT_CFLAGS = -Werror=implicit-function-declaration -Werror=implicit-int \
 
 COMMON_LIBS = -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -lharfbuzz -lfreetype -lpthread -lpng -lm
 
-BIN_LDFLAGS  = -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
+BIN_LDFLAGS  = $(PGO_LDFLAGS) -Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
                -Wl,--enable-new-dtags,-rpath,'$$ORIGIN/lib' \
                $(if $(filter 1,$(DEBUGSYM)),,-s)
-LIB_LDFLAGS  = -Wl,-z,relro,-z,now \
+LIB_LDFLAGS  = $(PGO_LDFLAGS) -Wl,-z,relro,-z,now \
                -Wl,--enable-new-dtags,-rpath,'$$ORIGIN'
 CLOSED_LIB_LDFLAGS = $(LIB_LDFLAGS) -Wl,-z,defs
-STAGE_LDFLAGS = -Wl,-z,relro,-z,now \
+STAGE_LDFLAGS = $(PGO_LDFLAGS) -Wl,-z,relro,-z,now \
                 -Wl,--enable-new-dtags,-rpath,'$$ORIGIN'
 
 SHARED_PIC = -shared -fPIC

@@ -6,6 +6,25 @@ DEVICE=${DEVICE:-ARM64_A53}
 PLATFORM=${PLATFORM:-unix}
 ARCH=${ARCH:-arm64}
 BUILD=${BUILD:-test}
+PGO=${PGO:-default}
+FRONTEND_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+PGO_DIR=${PGO_DIR:-"$FRONTEND_ROOT/.pgo/$DEVICE"}
+PGO_GENERATE_DIR=${PGO_GENERATE_DIR:-"/tmp/muos-frontend-pgo/$DEVICE"}
+
+case "$PGO_DIR" in
+	/*) ;;
+	*) PGO_DIR="$FRONTEND_ROOT/$PGO_DIR" ;;
+esac
+
+case "$PGO" in
+	default | off | generate | use) ;;
+	*)
+		printf "Error: PGO must be default, off, generate, or use, not '%s'\n" "$PGO" 1>&2
+		exit 1
+		;;
+esac
+
+export PGO PGO_DIR PGO_GENERATE_DIR
 
 XTOOL=${XTOOL:-"$HOME/x-tools"}
 XDIR=${XDIR:-${XHOST:-}}
@@ -42,6 +61,8 @@ USAGE() {
 	printf "  %s                  guided setup so no flags to remember\n" "$0"
 	printf "  %s release          shipping build\n" "$0"
 	printf "  %s debug            development build with debug symbols\n" "$0"
+	printf "  %s pgo-generate     instrumented shipping build for device training\n" "$0"
+	printf "  %s pgo-use          shipping build using collected device profiles\n" "$0"
 	printf "  %s make [args...]   build with BUILD from the environment, test when unset\n" "$0"
 	printf "  %s generate         refresh generated files without compiling\n" "$0"
 	printf "  %s format [--check] [files...]\n" "$0"
@@ -57,6 +78,8 @@ USAGE() {
 	printf "  %s release\n" "$0"
 	printf "  %s debug\n" "$0"
 	printf "  %s release clean\n" "$0"
+	printf "  %s pgo-generate\n" "$0"
+	printf "  %s pgo-use\n" "$0"
 	printf "  DEVICE=ARM32 %s release\n" "$0"
 	printf "  %s format retro/ui/ui_manual.c\n" "$0"
 	printf "  %s format --check\n" "$0"
@@ -70,6 +93,9 @@ USAGE() {
 	printf "  NO_COLOR     set to turn off coloured output\n"
 	printf "  SKIP_CHECKS  1 skips generate, formatting and the checks before building\n"
 	printf "  BUILD_JOBS   compiler job limit, defaults to the online CPU count\n"
+	printf "  PGO          default, off, generate, or use; release defaults to use, test to off\n"
+	printf "  PGO_DIR      collected host profiles, default .pgo/DEVICE in this repository\n"
+	printf "  PGO_GENERATE_DIR runtime profile path on the target, default /tmp/muos-frontend-pgo/DEVICE\n"
 	printf "  XTOOL        toolchain root, default %s/x-tools\n" "$HOME"
 	printf "  XDIR         toolchain directory under XTOOL, detected when unset\n\n"
 	printf "  CLANG_FORMAT          clang-format %s binary, installed into .cache when unset\n" "$FORMAT_VERSION"
@@ -1110,13 +1136,20 @@ BUILD_SUMMARY() {
 		fi
 	fi
 
-	if command -v ccache >/dev/null 2>&1; then
+	if [ "$PGO" != "off" ]; then
+		INFO_LINE "Cache" "disabled for reliable profile generation and consumption"
+	elif command -v ccache >/dev/null 2>&1; then
 		INFO_LINE "Cache" "ccache $(ccache --version 2>/dev/null | awk 'NR == 1 { print $NF }'), repeat builds reuse compiled objects"
 	else
 		NOTE_LINE "Cache" "ccache is not installed and the build needs it"
 	fi
 
 	INFO_LINE "Jobs" "$BUILD_JOBS, one per CPU core"
+	case "$PGO" in
+		generate) INFO_LINE "PGO" "generate, target training data writes to $PGO_GENERATE_DIR" ;;
+		use) INFO_LINE "PGO" "use, reading training data from $PGO_DIR" ;;
+		*) INFO_LINE "PGO" "off, standard -O2 and LTO build" ;;
+	esac
 	INFO_LINE "Log" "$BUILD_LOG"
 
 	printf "\n"
@@ -1185,13 +1218,40 @@ RUN_BUILD() {
 		BUILD_JOBS=${MUOS_QEMU_JOBS:-$(nproc 2>/dev/null || printf "4")}
 	fi
 
+	PGO_PROFILE_REQUIRED=1
+	PGO_BOOTSTRAP=0
+	if [ "$#" -gt 0 ]; then
+		PGO_PROFILE_REQUIRED=0
+		for BUILD_TARGET in "$@"; do
+			case "$BUILD_TARGET" in
+				clean | -* | *=*) ;;
+				*) PGO_PROFILE_REQUIRED=1 ;;
+			esac
+		done
+	fi
+
+	if [ "$PGO" = "use" ] && [ "$PGO_PROFILE_REQUIRED" -eq 1 ]; then
+		if [ ! -d "$PGO_DIR" ] || ! find "$PGO_DIR" -type f -name '*.gcda' -print -quit 2>/dev/null | grep -q .; then
+			if [ "$PGO_AUTOGENERATE" -eq 1 ]; then
+				PGO=generate
+				PGO_BOOTSTRAP=1
+				export PGO
+			else
+				printf "%s%sError:%s no collected PGO profiles were found in %s\n" "$C_BOLD" "$C_RED" "$C_RESET" "$PGO_DIR" 1>&2
+				printf "Build and train ./build.sh pgo-generate on the target device, then copy its profile tree here.\n" 1>&2
+				rm -f "$BUILD_STATUS"
+				exit 1
+			fi
+		fi
+	fi
+
 	BUILD_SUMMARY
 
 	BUILD_START=$(date +%s)
 
 	{
 		{
-			printf "%s %s BUILD=%s DEBUGSYM=%s DEBUG=%s make -j%s %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$DEVICE" "$BUILD" "${DEBUGSYM:-0}" "$BUILD_DEBUG" "$BUILD_JOBS" "$*"
+			printf "%s %s BUILD=%s DEBUGSYM=%s PGO=%s PGO_DIR=%s PGO_GENERATE_DIR=%s DEBUG=%s make -j%s %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$DEVICE" "$BUILD" "${DEBUGSYM:-0}" "$PGO" "$PGO_DIR" "$PGO_GENERATE_DIR" "$BUILD_DEBUG" "$BUILD_JOBS" "$*"
 
 			printf "Running Checks\n"
 			FIX_PERMISSIONS
@@ -1219,6 +1279,12 @@ RUN_BUILD() {
 
 	if [ "$BUILD_RESULT" -eq 0 ]; then
 		printf "\n%s%sBuild complete%s in %ss\n" "$C_BOLD" "$C_GREEN" "$C_RESET" "$BUILD_TIME"
+		if [ "$PGO_BOOTSTRAP" -eq 1 ]; then
+			printf "\n%s%sPGO profiles were missing.%s An instrumented release has been generated.\n" "$C_BOLD" "$C_YELLOW" "$C_RESET"
+			printf "Deploy and run this build on the target, exercise representative frontend workflows, and exit it cleanly.\n"
+			printf "Copy the complete profile tree from %s on the target into %s on this host.\n" "$PGO_GENERATE_DIR" "$PGO_DIR"
+			printf "Run ./build.sh release again to produce the profile-optimised release.\n"
+		fi
 	else
 		printf "\n%s%sBuild failed%s after %ss, the full output is in %s\n" "$C_BOLD" "$C_RED" "$C_RESET" "$BUILD_TIME" "$BUILD_LOG"
 	fi
@@ -1252,11 +1318,38 @@ case "${1-}" in
 		export DEBUGSYM
 		set -- make "$@"
 		;;
+	pgo-generate)
+		shift
+		BUILD=release
+		PGO=generate
+		export PGO
+		set -- make "$@"
+		;;
+	pgo-use)
+		shift
+		BUILD=release
+		PGO=use
+		export PGO
+		set -- make "$@"
+		;;
 esac
 
 if [ $# -eq 0 ] && [ -t 0 ] && [ -t 1 ]; then
 	WIZARD
 	set -- make
+fi
+
+if [ "$PGO" = "default" ]; then
+	if [ "$BUILD" = "release" ]; then
+		PGO=use
+		PGO_AUTOGENERATE=1
+	else
+		PGO=off
+		PGO_AUTOGENERATE=0
+	fi
+	export PGO
+else
+	PGO_AUTOGENERATE=0
 fi
 
 if [ "$DEVICE" = "NATIVE" ]; then
@@ -1280,6 +1373,9 @@ if [ "$DEVICE" = "NATIVE" ]; then
 		print)
 			printf "Device:        %s\n" "$DEVICE"
 			printf "Build:         %s\n" "$BUILD"
+			printf "PGO:           %s\n" "$PGO"
+			printf "PGO Directory: %s\n" "$PGO_DIR"
+			printf "PGO Target:    %s\n" "$PGO_GENERATE_DIR"
 			printf "CC:            ccache gcc (native host)\n"
 			;;
 		*) USAGE ;;
@@ -1366,6 +1462,9 @@ PRINT_ENV() {
 	printf "Platform:      %s\n" "$PLATFORM"
 	printf "Arch:          %s\n" "$ARCH"
 	printf "Build:         %s\n" "$BUILD"
+	printf "PGO:           %s\n" "$PGO"
+	printf "PGO Directory: %s\n" "$PGO_DIR"
+	printf "PGO Target:    %s\n" "$PGO_GENERATE_DIR"
 	printf "Cross Root:    %s\n" "$XTOOL"
 	printf "Host Tuple:    %s\n" "$XHOST"
 	printf "Bin Path:      %s\n" "$XBIN"
