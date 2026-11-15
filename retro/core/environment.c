@@ -55,6 +55,9 @@ int environment_hw_render_refused(void) {
 
 static struct retro_system_av_info pending_av_info;
 static int av_info_pending = 0;
+static char pending_message[MAX_BUFFER_SIZE];
+static uint32_t pending_message_duration = 0;
+static int message_pending = 0;
 
 static retro_frame_time_callback_t frame_time_cb = NULL;
 static retro_audio_callback_t audio_cb = NULL;
@@ -83,6 +86,9 @@ void environment_reset(void) {
     hw_render_refused = 0;
     memset(&pending_av_info, 0, sizeof(pending_av_info));
     av_info_pending = 0;
+    pending_message[0] = '\0';
+    pending_message_duration = 0;
+    message_pending = 0;
     frame_time_cb = NULL;
     frame_time_reference = 0;
     frame_time_last_counter = 0;
@@ -99,6 +105,21 @@ void environment_reset(void) {
 
 int environment_update_core_option_visibility(void) {
     return options_update_display_cb && options_update_display_cb();
+}
+
+static void environment_queue_message(const char *message, const uint32_t duration) {
+    if (!message || !message[0]) return;
+
+    snprintf(pending_message, sizeof(pending_message), "%s", message);
+    pending_message_duration = duration;
+    message_pending = 1;
+}
+
+void environment_present_pending_message(void) {
+    if (!message_pending || !ui_pnl_message || core_child_process_lost()) return;
+
+    message_pending = 0;
+    pause_menu_show_toast_timed(pending_message, pending_message_duration);
 }
 
 int mux_retro_disk_get_num_images(void) {
@@ -406,15 +427,15 @@ bool mux_retro_environment_cb(const unsigned cmd, void *data) {
 
         case RETRO_ENVIRONMENT_SET_MESSAGE: {
             const struct retro_message *msg = data;
-            if (msg && msg->msg && ui_pnl_message && !core_child_process_lost())
-                pause_menu_show_toast_timed(msg->msg, msg->frames > 0 ? (uint32_t) msg->frames * 16 : 3000);
+            if (msg && msg->msg)
+                environment_queue_message(msg->msg, msg->frames > 0 ? (uint32_t) msg->frames * 16 : 3000);
             return true;
         }
 
         case RETRO_ENVIRONMENT_SET_MESSAGE_EXT: {
             const struct retro_message_ext *msg = data;
-            if (msg && msg->msg && ui_pnl_message && !core_child_process_lost())
-                pause_menu_show_toast_timed(msg->msg, msg->duration > 0 ? (uint32_t) msg->duration : 3000);
+            if (msg && msg->msg)
+                environment_queue_message(msg->msg, msg->duration > 0 ? (uint32_t) msg->duration : 3000);
             return true;
         }
 

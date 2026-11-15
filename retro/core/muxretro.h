@@ -30,6 +30,8 @@ void environment_reset(void);
 
 int environment_update_core_option_visibility(void);
 
+void environment_present_pending_message(void);
+
 enum retro_pixel_format mux_retro_get_pixel_format(void);
 
 int mux_retro_disk_get_num_images(void);

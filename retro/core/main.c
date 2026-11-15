@@ -1388,6 +1388,7 @@ int main(const int argc, char *argv[]) {
         }
 
         const uint64_t ui_tick_start = perf_begin();
+        environment_present_pending_message();
         pause_menu_service_tick(loop_now);
         advisory_tick(loop_now);
         media_notice_tick(loop_now);

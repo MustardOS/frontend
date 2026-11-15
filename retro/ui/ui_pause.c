@@ -634,6 +634,9 @@ static void set_toast_glyph(const char *glyph) {
 void pause_menu_show_glyph_toast_timed(const char *msg, const char *glyph, const uint32_t duration_ms) {
     if (!ui_pnl_message || !ui_lbl_message) return;
 
+    const int ui_was_hidden = !active && display_ui_is_hidden();
+    if (ui_was_hidden) display_clear_ui_layer();
+
     set_toast_glyph(glyph);
     lv_label_set_text(ui_lbl_message, msg);
     lv_obj_clear_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
