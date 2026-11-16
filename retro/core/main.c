@@ -706,13 +706,24 @@ static int bios_allows_start(const char *core_path) {
     const int listed = bios_check_missing(core_path, missing, sizeof(missing));
     if (listed <= 0) return 1;
 
+    if (bios_check_ignored(core_path)) {
+        LOG_INFO(mux_module, "BIOS files needed by %s were not found, starting anyway as ignored", core_path);
+        return 1;
+    }
+
     LOG_WARN(mux_module, "BIOS files needed by %s were not found", core_path);
 
-    loading_prompt_close(
-        lang.muxretro.bios_title, listed > 1 ? lang.muxretro.bios_missing_any : lang.muxretro.bios_missing, missing,
-        lang.generic.close
+    char description[MAX_BUFFER_SIZE * 4];
+    snprintf(
+        description, sizeof(description), "%s\n\n%s\n\n%s",
+        listed > 1 ? lang.muxretro.bios_missing_any : lang.muxretro.bios_missing, missing, lang.muxretro.bios_ignore
     );
-    return 0;
+
+    if (!loading_prompt_confirm(lang.muxretro.bios_title, description)) return 0;
+
+    bios_check_ignore(core_path);
+    LOG_INFO(mux_module, "BIOS prompt ignored for %s, it will not be shown again", core_path);
+    return 1;
 }
 
 static void media_notice_tick(const uint32_t now) {

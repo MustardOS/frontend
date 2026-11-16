@@ -21,3 +21,4 @@
 #define RETRO_DEK_PATH RETRO_SHARE_PATH "deck"
 #define RETRO_SHP_PATH RETRO_SHARE_PATH "shaderopt"
 #define RETRO_CAT_PATH RETRO_SHARE_PATH "catalogue"
+#define RETRO_BIG_PATH RETRO_SHARE_PATH "biosignore"

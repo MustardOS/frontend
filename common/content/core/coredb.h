@@ -74,6 +74,10 @@ int coredb_core_find(const char *system, enum core_runtime runtime, const char *
 
 int coredb_core_find_file(const char *core_file, enum core_runtime runtime, struct coredb_core *out);
 
+int coredb_system_core_bios_required(const char *system, const char *core_file, enum core_runtime runtime);
+
+int coredb_system_bios_at(const char *system, int index, char *out, size_t out_size);
+
 int coredb_core_config(const char *core_file, char *out, size_t out_size);
 
 int coredb_runtime_available(const char *system, enum core_runtime runtime);

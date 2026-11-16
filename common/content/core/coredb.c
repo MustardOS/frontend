@@ -660,27 +660,58 @@ int coredb_core_find(const char *system, const enum core_runtime runtime, const 
     return walk_cores(system, runtime, -1, id, out);
 }
 
+static int
+node_core_key(const struct json node, const enum core_runtime runtime, const char *core_file, struct json *key_out) {
+    const struct json cores = json_object_get(node, runtime_group[runtime]);
+    if (!json_exists(cores)) return 0;
+
+    for (struct json key = json_first(cores); json_exists(key); key = json_next(json_next(key))) {
+        const struct json entry = json_next(key);
+        if (!requirements_met(entry)) continue;
+
+        char file[COREDB_NAME_MAX];
+        json_string_copy(json_object_get(entry, "core"), file, sizeof(file));
+        if (strcmp(file, core_file) != 0) continue;
+
+        if (key_out) *key_out = key;
+        return 1;
+    }
+
+    return 0;
+}
+
 int coredb_core_find_file(const char *core_file, const enum core_runtime runtime, struct coredb_core *out) {
     if (!core_file || !*core_file || runtime < 0 || runtime >= core_runtime_count || !coredb_load()) return 0;
 
     for (int e = 0; e < entry_count; e++) {
-        const struct json cores = json_object_get(entries[e].node, runtime_group[runtime]);
-        if (!json_exists(cores)) continue;
+        struct json key;
+        if (!node_core_key(entries[e].node, runtime, core_file, &key)) continue;
 
-        for (struct json key = json_first(cores); json_exists(key); key = json_next(json_next(key))) {
-            const struct json entry = json_next(key);
-            if (!requirements_met(entry)) continue;
-
-            char file[COREDB_NAME_MAX];
-            json_string_copy(json_object_get(entry, "core"), file, sizeof(file));
-            if (strcmp(file, core_file) != 0) continue;
-
-            if (out) fill_core(key, entry, runtime, out);
-            return 1;
-        }
+        if (out) fill_core(key, json_next(key), runtime, out);
+        return 1;
     }
 
     return 0;
+}
+
+int coredb_system_core_bios_required(const char *system, const char *core_file, const enum core_runtime runtime) {
+    if (!core_file || !*core_file || runtime < 0 || runtime >= core_runtime_count || !coredb_load()) return 0;
+
+    struct json key;
+    if (!node_core_key(system_node(system), runtime, core_file, &key)) return 0;
+
+    const struct json required = json_object_get(json_next(key), "bios_required");
+    return json_exists(required) && json_int(required);
+}
+
+int coredb_system_bios_at(const char *system, const int index, char *out, const size_t out_size) {
+    out[0] = '\0';
+    if (index < 0 || !coredb_load()) return 0;
+
+    const struct json bios = json_object_get(system_node(system), "bios");
+    json_string_copy(json_object_get(json_array_get(bios, (size_t) index), "file"), out, out_size);
+
+    return out[0] != '\0';
 }
 
 static int entry_core_config(const struct json node, const char *core_file, char *out, const size_t out_size) {

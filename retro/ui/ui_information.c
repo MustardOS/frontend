@@ -428,7 +428,7 @@ static void build_bios_rows(void) {
             entry->optional ? lang.muxretro.information_screen.bios_optional
                             : lang.muxretro.information_screen.bios_required
         );
-        build_info_row(entry->desc, value, entry->present ? "valid" : "missing", 0);
+        build_info_row(entry->filename, value, entry->present ? "valid" : "missing", 0);
     }
 }
 

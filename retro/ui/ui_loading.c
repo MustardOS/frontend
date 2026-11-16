@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <common/display/language.h>
 #include <common/display/theme.h>
 #include <common/ui/common.h>
 #include <common/platform/display.h>
@@ -140,34 +141,80 @@ void loading_message_hide(void) {
     }
 }
 
-void loading_prompt_close(const char *title, const char *description, const char *message, const char *nav_b) {
+static lv_obj_t *loading_prompt_parent(void) {
     if (loading_panel && lv_obj_is_valid(loading_panel)) lv_obj_del(loading_panel);
     if (loading_dim && lv_obj_is_valid(loading_dim)) lv_obj_del(loading_dim);
     loading_panel = NULL;
     loading_dim = NULL;
     loading_label = NULL;
 
-    lv_obj_t *parent = loading_parent();
+    return loading_parent();
+}
 
+static void loading_prompt_remove(mux_dialogue *prompt) {
+    dialogue_hide(prompt);
+    if (prompt->panel && lv_obj_is_valid(prompt->panel)) lv_obj_del(prompt->panel);
+    if (prompt->dim && lv_obj_is_valid(prompt->dim)) lv_obj_del(prompt->dim);
+    loading_present();
+}
+
+static uint64_t loading_prompt_buttons(void) {
+    mux_input_poll();
+
+    return (mux_input_pressed(mux_input_dpad_up) || mux_input_pressed(mux_input_dpad_left) ? BIT(0) : 0)
+           | (mux_input_pressed(mux_input_dpad_down) || mux_input_pressed(mux_input_dpad_right) ? BIT(1) : 0)
+           | (mux_input_pressed(mux_input_a) ? BIT(2) : 0) | (mux_input_pressed(mux_input_b) ? BIT(3) : 0);
+}
+
+void loading_prompt_close(const char *title, const char *description, const char *message, const char *nav_b) {
     mux_dialogue prompt = {0};
-    dialogue_init_message(&prompt, &theme, parent, title, description, message, nav_b);
+    dialogue_init_message(&prompt, &theme, loading_prompt_parent(), title, description, message, nav_b);
     dialogue_show(&prompt);
 
-    mux_input_poll();
-    int b_was = mux_input_pressed(mux_input_b);
+    uint64_t was = loading_prompt_buttons();
 
     for (;;) {
         loading_present();
         SDL_Delay(16);
 
-        mux_input_poll();
-        const int b_now = mux_input_pressed(mux_input_b);
-        if (b_now && !b_was) break;
-        b_was = b_now;
+        const uint64_t now = loading_prompt_buttons();
+        if (now & ~was & BIT(3)) break;
+        was = now;
     }
 
-    dialogue_hide(&prompt);
-    if (prompt.panel && lv_obj_is_valid(prompt.panel)) lv_obj_del(prompt.panel);
-    if (prompt.dim && lv_obj_is_valid(prompt.dim)) lv_obj_del(prompt.dim);
-    loading_present();
+    loading_prompt_remove(&prompt);
+}
+
+int loading_prompt_confirm(const char *title, const char *description) {
+    mux_dialogue prompt = {0};
+    dialogue_init_confirm(
+        &prompt, &theme, loading_prompt_parent(), title, description, lang.generic.yes, lang.generic.no,
+        lang.generic.select, lang.generic.back
+    );
+    dialogue_show(&prompt);
+
+    uint64_t was = loading_prompt_buttons();
+    int confirmed = 0;
+
+    for (;;) {
+        loading_present();
+        SDL_Delay(16);
+
+        const uint64_t now = loading_prompt_buttons();
+        const uint64_t edge = now & ~was;
+        was = now;
+
+        if (edge & (BIT(0) | BIT(1))) {
+            dialogue_handle_dpad(&prompt, &theme, edge & BIT(1) ? 1 : -1, 1);
+        } else if (edge & BIT(2)) {
+            confirmed = prompt.selected == mux_confirm_yep;
+            break;
+        } else if (edge & BIT(3)) {
+            dialogue_mark_cancelled(&prompt);
+            break;
+        }
+    }
+
+    loading_prompt_remove(&prompt);
+    return confirmed;
 }

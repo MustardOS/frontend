@@ -1,68 +1,63 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <common/storage/fileio.h>
 #include <common/base/options.h>
-#include <common/base/strutil.h>
+#include <common/content/core/coredb.h>
+#include <common/display/language.h>
+#include <common/storage/fileio.h>
+#include "../core/paths.h"
 #include "bios_check.h"
-
-#define CORE_INFO_PATH OPT_SHARE_PATH "emulator/retroarch/info/"
 
 static bios_entry_t entries[BIOS_CHECK_MAX];
 static int entry_count = 0;
+
+static const char *core_file_name(const char *core_file_path) {
+    const char *core_file = strrchr(core_file_path, '/');
+    return core_file ? core_file + 1 : core_file_path;
+}
+
+static int ignore_path(const char *core_file_path, char *out, const size_t out_size) {
+    const char *system = getenv(BIOS_CHECK_SYSTEM_ENV);
+    if (!system || !*system || !core_file_path) return 0;
+
+    snprintf(out, out_size, "%s/%s/%s", RETRO_BIG_PATH, system, core_file_name(core_file_path));
+    return 1;
+}
+
+int bios_check_ignored(const char *core_file_path) {
+    char path[MAX_BUFFER_SIZE];
+    return ignore_path(core_file_path, path, sizeof(path)) && file_exist(path);
+}
+
+void bios_check_ignore(const char *core_file_path) {
+    char path[MAX_BUFFER_SIZE];
+    if (!ignore_path(core_file_path, path, sizeof(path))) return;
+
+    create_directories(path, 1);
+    write_text_to_file(path, "w", CHAR, "");
+}
 
 int bios_check_scan(const char *core_file_path) {
     entry_count = 0;
     memset(entries, 0, sizeof(entries));
 
-    const char *base = strrchr(core_file_path, '/');
-    base = base ? base + 1 : core_file_path;
+    const char *system = getenv(BIOS_CHECK_SYSTEM_ENV);
+    if (!system || !*system || !core_file_path) return 0;
 
-    char core_name[128];
-    snprintf(core_name, sizeof(core_name), "%s", base);
-    char *ext = strstr(core_name, ".so");
-    if (ext) *ext = '\0';
+    const char *core_file = core_file_name(core_file_path);
 
-    char info_path[MAX_BUFFER_SIZE];
-    snprintf(info_path, sizeof(info_path), "%s%s.info", CORE_INFO_PATH, core_name);
+    const int required = coredb_system_core_bios_required(system, core_file, core_runtime_pickles);
 
-    FILE *f = fopen(info_path, "r");
-    if (!f) return 0;
+    while (entry_count < BIOS_CHECK_MAX) {
+        bios_entry_t *entry = &entries[entry_count];
+        if (!coredb_system_bios_at(system, entry_count, entry->filename, sizeof(entry->filename))) break;
 
-    char line[256];
-    while (fgets(line, sizeof(line), f)) {
-        char *eq = strchr(line, '=');
-        if (!eq) continue;
-        *eq = '\0';
-
-        const char *key = str_trim(line);
-        char *val = str_trim(eq + 1);
-
-        const size_t vlen = strlen(val);
-        if (vlen >= 2 && val[0] == '"' && val[vlen - 1] == '"') {
-            val[vlen - 1] = '\0';
-            val++;
-        }
-
-        int idx;
-        char field[16];
-        if (strncmp(key, "firmware", 8) != 0 || sscanf(key, "firmware%d_%15s", &idx, field) != 2) continue;
-        if (idx < 0 || idx >= BIOS_CHECK_MAX) continue;
-        if (idx >= entry_count) entry_count = idx + 1;
-
-        if (strcmp(field, "desc") == 0) {
-            snprintf(entries[idx].desc, sizeof(entries[idx].desc), "%s", val);
-        } else if (strcmp(field, "path") == 0) {
-            snprintf(entries[idx].filename, sizeof(entries[idx].filename), "%s", val);
-        } else if (strcmp(field, "opt") == 0) {
-            entries[idx].optional = strcmp(val, "true") == 0;
-        }
-    }
-    fclose(f);
-
-    for (int i = 0; i < entry_count; i++) {
         char bios_path[MAX_BUFFER_SIZE];
-        snprintf(bios_path, sizeof(bios_path), "%s/%s", STORAGE_BIOS, entries[i].filename);
-        entries[i].present = file_exist_nocase(bios_path, NULL, 0);
+        snprintf(bios_path, sizeof(bios_path), "%s/%s", STORAGE_BIOS, entry->filename);
+
+        entry->optional = !required;
+        entry->present = file_exist_nocase(bios_path, NULL, 0);
+        entry_count++;
     }
 
     return entry_count;
@@ -77,72 +72,24 @@ static void append_name(char *list, const size_t list_size, const char *name) {
     snprintf(list + used, list_size - used, "%s%s", used ? "\n" : "", name);
 }
 
-static const char *const bios_only_cores[] = {
-    "4do",
-    "cdi2015",
-    "duckstation",
-    "freechaf",
-    "freeintv",
-    "gearcoleco",
-    "geolith",
-    "kronos",
-    "mednafen_lynx",
-    "mednafen_pcfx",
-    "mednafen_psx",
-    "mednafen_psx_hw",
-    "mednafen_saturn",
-    "minivmac",
-    "mu",
-    "neocd",
-    "numero",
-    "o2em",
-    "opera",
-    "pcfx",
-    "pcsx2",
-    "px68k",
-    "retrodream",
-    "same_cdi",
-    "swanstation",
-    "yabadabadoo",
-};
-
-static int core_needs_bios(const char *core_file_path) {
-    const char *base = strrchr(core_file_path, '/');
-    base = base ? base + 1 : core_file_path;
-
-    for (size_t i = 0; i < sizeof(bios_only_cores) / sizeof(bios_only_cores[0]); i++) {
-        const size_t len = strlen(bios_only_cores[i]);
-        if (strncmp(base, bios_only_cores[i], len) == 0 && strcmp(base + len, "_libretro.so") == 0) return 1;
-    }
-
-    return 0;
-}
-
 int bios_check_missing(const char *core_file_path, char *list, const size_t list_size) {
     if (list && list_size) list[0] = '\0';
-    if (!core_needs_bios(core_file_path)) return 0;
+    if (bios_check_scan(core_file_path) <= 0 || entries[0].optional) return 0;
 
-    const int count = bios_check_scan(core_file_path);
-    if (count <= 0) return 0;
-
-    int required = 0;
-    for (int i = 0; i < count; i++)
-        if (!entries[i].optional && entries[i].filename[0]) required++;
-
-    for (int i = 0; i < count; i++) {
-        if (!entries[i].filename[0] || (required && entries[i].optional)) continue;
+    for (int i = 0; i < entry_count; i++)
         if (entries[i].present) return 0;
-    }
 
-    int listed = 0;
-    for (int i = 0; i < count; i++) {
-        if (!entries[i].filename[0] || (required && entries[i].optional)) continue;
-
+    const int shown = entry_count > BIOS_CHECK_SHOWN + 1 ? BIOS_CHECK_SHOWN : entry_count;
+    for (int i = 0; i < shown; i++)
         append_name(list, list_size, entries[i].filename);
-        listed++;
+
+    if (shown < entry_count) {
+        char others[MAX_BUFFER_SIZE];
+        snprintf(others, sizeof(others), lang.muxretro.bios_others, entry_count - shown);
+        append_name(list, list_size, others);
     }
 
-    return listed;
+    return entry_count;
 }
 
 const bios_entry_t *bios_check_get(const int index) {
