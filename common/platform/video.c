@@ -498,7 +498,7 @@ static int ensure_texture(const AVFrame *f) {
         int tex_w = w, tex_h = h;
 
         switch (config.visual.background_scale) {
-            case 1: //Scale to fit width
+            case 1: // Scale to fit width
                 tex_w = dw;
                 tex_h = h * dw / w;
                 if (tex_h > dh) {
@@ -506,7 +506,7 @@ static int ensure_texture(const AVFrame *f) {
                     tex_w = w * dh / h;
                 }
                 break;
-            case 2: //Stretch to fit both width and height
+            case 2: // Stretch to fit both width and height
                 tex_w = dw;
                 tex_h = dh;
                 break;
