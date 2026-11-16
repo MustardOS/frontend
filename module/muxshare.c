@@ -554,11 +554,15 @@ char *get_friendly_folder_name(char *folder_name, const int fn_valid, const stru
 
     if (!config.visual.friendly_folder || !fn_valid) return friendly_folder_name;
 
-    char *folder_lower = str_tolower(folder_name);
-    const struct json good_name_json = json_object_get(fn_json, folder_lower);
-    free(folder_lower);
+    for (struct json key = json_first(fn_json); json_exists(key); key = json_next(json_next(key))) {
+        char kbuf[MAX_BUFFER_SIZE];
+        json_string_copy(key, kbuf, sizeof(kbuf));
 
-    if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
+        if (strcasecmp(kbuf, folder_name) == 0) {
+            json_string_copy(json_next(key), friendly_folder_name, MAX_BUFFER_SIZE);
+            break;
+        }
+    }
 
     return friendly_folder_name;
 }
@@ -958,6 +962,9 @@ static void fn_build_table(const struct json root) {
         json_string_copy(key, kbuf, sizeof(kbuf));
         json_string_copy(val, vbuf, sizeof(vbuf));
 
+        for (char *c = kbuf; *c; c++)
+            *c = (char) tolower((unsigned char) *c);
+
         if (count >= cap) {
             cap *= 2;
             fn_entry_t *tmp = realloc(tbl, (size_t) cap * sizeof(fn_entry_t));
@@ -1017,15 +1024,16 @@ static const char *resolve_name_json_for_parent(const char *file_path) {
     snprintf(specific_rel, sizeof(specific_rel), "name/%s.json", cached_name_only);
 
     static char last_specific_rel[MAX_BUFFER_SIZE];
-    static const char *last_lookup_path = NULL;
+    static char last_lookup_path[PATH_MAX];
 
     if (strcmp(last_specific_rel, specific_rel) != 0) {
-        last_lookup_path = resolve_info_path(specific_rel);
-        if (!last_lookup_path) last_lookup_path = resolve_info_path("name/global.json");
+        const char *found = resolve_info_path(specific_rel);
+        if (!found) found = resolve_info_path("name/global.json");
+        snprintf(last_lookup_path, sizeof(last_lookup_path), "%s", found ? found : "");
         snprintf(last_specific_rel, sizeof(last_specific_rel), "%s", specific_rel);
     }
 
-    return last_lookup_path;
+    return last_lookup_path[0] ? last_lookup_path : NULL;
 }
 
 static int lookup_custom_name(const char *lookup_path, const char *lowered, char *out) {
