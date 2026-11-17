@@ -65,7 +65,7 @@ void advisory_init(const char *content_path) {
     ui_pnl_advisory = NULL;
     ui_lbl_advisory = NULL;
 
-    if (!content_path || !*content_path) return;
+    if (!content_path || !*content_path || read_line_int_from(USED_ADVISORY, 1)) return;
 
     char token[32];
     decode_pairs(advisory_token, token, sizeof(token));
@@ -133,6 +133,8 @@ void advisory_tick(const uint32_t now) {
     advisory_spent = 1;
     advisory_since = now ? now : 1;
     advisory_reveal();
+
+    write_text_to_file(USED_ADVISORY, "w", INT, 1);
 }
 
 void advisory_shutdown(void) {

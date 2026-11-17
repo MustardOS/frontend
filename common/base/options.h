@@ -94,6 +94,8 @@
 #define USED_RESET OPT_PATH "config/system/used_reset"
 #define DONE_RESET "/tmp/done_reset"
 
+#define USED_ADVISORY OPT_PATH "config/system/advisory"
+
 #define OSK_DONE "OK"
 #define OSK_MAX  192
 
