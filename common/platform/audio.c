@@ -452,6 +452,17 @@ static void load_sound_cache_locked(const int snd_type) {
     LOG_SUCCESS("audio", "FE Sound Started");
 }
 
+int bgm_supported(const char *name) {
+    static const char *const exts[] = {"ogg", "mp3", "flac", "opus", "wav"};
+    const char *dot = strrchr(name, '.');
+    if (!dot || name[0] == '.') return 0;
+
+    for (size_t i = 0; i < A_SIZE(exts); i++) {
+        if (strcasecmp(dot + 1, exts[i]) == 0) return 1;
+    }
+    return 0;
+}
+
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
     *fe_bgm = 0;
     Mix_HookMusicFinished(NULL);
@@ -491,8 +502,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
-        size_t len = strlen(entry->d_name);
-        if (len > 4 && strcmp(entry->d_name + len - 4, ".ogg") == 0) {
+        if (bgm_supported(entry->d_name)) {
             if (bgm_file_count >= capacity) {
                 capacity <<= 1;
 

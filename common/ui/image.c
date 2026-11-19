@@ -24,6 +24,7 @@
 #include <common/ui/nav/menu_style.h>
 
 char current_wall[MAX_BUFFER_SIZE];
+static int wallpaper_generation;
 
 static void read_image_dims(const char *path, int *w, int *h);
 static void free_scaled_raster(lv_obj_t *ui_img_obj);
@@ -672,6 +673,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
 
     static char cached_theme_base[MAX_BUFFER_SIZE];
     static int cached_wall_type = -1;
+    static int cached_generation = -1;
     static int cached_video_wallpaper = -1;
     static char cached_program[MAX_BUFFER_SIZE];
     static char cached_element[MAX_BUFFER_SIZE];
@@ -681,8 +683,9 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
     if (!get_active_alternate(alternate, sizeof(alternate))) alternate[0] = '\0';
 
     if (strcmp(theme_base, cached_theme_base) == 0 && wall_type == cached_wall_type
-        && config.visual.video_wallpaper == cached_video_wallpaper && strcmp(program, cached_program) == 0
-        && strcmp(element, cached_element) == 0 && strcmp(alternate, cached_alternate) == 0) {
+        && cached_generation == wallpaper_generation && config.visual.video_wallpaper == cached_video_wallpaper
+        && strcmp(program, cached_program) == 0 && strcmp(element, cached_element) == 0
+        && strcmp(alternate, cached_alternate) == 0) {
         return wall_image_embed;
     }
 
@@ -690,6 +693,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
 
     snprintf(cached_theme_base, sizeof(cached_theme_base), "%s", theme_base);
     cached_wall_type = wall_type;
+    cached_generation = wallpaper_generation;
     cached_video_wallpaper = config.visual.video_wallpaper;
     snprintf(cached_program, sizeof(cached_program), "%s", program);
     snprintf(cached_element, sizeof(cached_element), "%s", element);
@@ -1033,6 +1037,31 @@ int load_terminal_resource(const char *resource, const char *extension, char *bu
     }
 
     return 0;
+}
+
+void wallpaper_forget(const char *path) {
+    wallpaper_generation++;
+    current_wall[0] = '\0';
+    asset_cache_clear();
+    lv_img_cache_invalidate_src(NULL);
+
+    const lv_disp_t *disp = lv_disp_get_default();
+    if (!path || !disp || !disp->driver || !disp->driver->draw_ctx) return;
+
+    char source[MAX_BUFFER_SIZE];
+    snprintf(source, sizeof(source), "M:%s", path);
+    lv_draw_sdl_texture_cache_remove_src((lv_draw_sdl_ctx_t *) disp->driver->draw_ctx, source);
+}
+
+void image_caches_reset(void) {
+    wallpaper_forget(NULL);
+
+    const lv_disp_t *disp = lv_disp_get_default();
+    if (!disp || !disp->driver || !disp->driver->draw_ctx) return;
+
+    lv_draw_sdl_ctx_t *ctx = (lv_draw_sdl_ctx_t *) disp->driver->draw_ctx;
+    lv_draw_sdl_texture_cache_deinit(ctx);
+    lv_draw_sdl_texture_cache_init(ctx);
 }
 
 void unload_image_animation(void) {

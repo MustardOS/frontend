@@ -9,7 +9,8 @@ Collections
 Library
 Catalogue
 Save States
-Documentation
+On the Website
+Theme Lab
 Grand Tour
 Hotkeys
 Systems
@@ -42,7 +43,6 @@ Secure Shell
 Secure File Transfer
 None enabled.
 Activity groups
-Activity summary
 Play time
 Launches
 Titles
@@ -52,13 +52,10 @@ Content
 Search
 No content matches that search.
 Recent sessions
-Recently played
 Breadcrumb
-Trim and resize
 Largest edge
 Reset
 Cancel
-Use this
 Device code
 Open Web Dashboard Code on the device.
 Confirm
@@ -68,8 +65,6 @@ Try again
 Name
 Newest
 Largest
-Compact list
-Comfortable list
 Grid
 A new code now
 Changes in %ss
@@ -96,7 +91,6 @@ Screen
 Kernel
 Address
 MustardOS frontend
-External application
 %s average
 %s of %s
 Nothing played with %s yet.
@@ -171,7 +165,6 @@ Network
 Traffic
 System Modifications
 Boot Modifications
-%s (missing)
 Update path
 Where %s lives now. The file must already exist on the device.
 this content
@@ -214,7 +207,6 @@ Path updated
 Removed from history
 Added to collection
 Selected entries will be removed from History. The content itself is not touched.
-Selected entries will be removed from the collection. The content itself is not touched.
 Selected entries and empty collections will be removed. The content itself is not touched.
 Collection folders cannot be moved.
 Empty a collection before removing it.
@@ -307,7 +299,6 @@ Not found
 Cannot read that file
 Cannot seek that file
 The dashboard is running read only
-Unlock the dashboard with the code shown on the device
 No catalogue is configured
 Method not allowed
 Could not read the catalogue
@@ -325,7 +316,6 @@ Invalid path
 No saves for that content
 Expected a slot to remove
 No such slot
-Only .srm files can be restored
 Expected a save to restore
 Invalid backup
 No such save
@@ -463,8 +453,6 @@ Remote View needs Authentication enabled on the device
 No capture yet
 Next refresh in about %s
 Refreshing…
-Not in a collection
-No collections match that search.
 No collections yet.
 Nothing matches that search.
 This collection is empty.
@@ -632,7 +620,6 @@ Volume up
 Stop playback
 Unlock to control playback
 Position
-Wasabi volume
 Playback volume
 All Media
 Wasabi
@@ -649,11 +636,8 @@ Import save game
 Refreshing...
 MustardOS Dashboard
 Editors and Tools
-All Editors and Tools
 MustardOS Device Dashboard
 Overall activity
-The editors and tools from the MustardOS website, set up to open and save files on this device directly, so they work without an internet connection. Saving needs the dashboard unlocked, and the previous copy of a file is kept beside it as a .bak file.
-The tools are not installed on this device.
 0 selected
 New Collection
 Sound
@@ -739,3 +723,109 @@ Crop size
 640px output
 480px output
 320px output
+Device Link
+MustardOS Device Link
+Waiting for the MustardOS website...
+The MustardOS website at %s wants to use this device. It can open and save files with its editors and tools, and change your own themes in the Theme Lab.
+Allow
+Not Now
+Enter the six digit code from Configuration > Connectivity > Web Dashboard Code on the device.
+Web Dashboard Code
+Keep this window open while you use the website. Close it to disconnect.
+Connected to %s. You can go back to the website.
+This device needs its Web Dashboard Code.
+This device needs its Web Dashboard Code again.
+The website cannot use that part of the device
+The website was closed. You can close this window.
+A file with that name already exists
+A folder already uses that name
+A folder cannot be copied into itself
+A system definition must be a JSON object
+A theme is already being created
+An entry for that file name already exists
+Another upload is already in progress
+Archive not found
+Cannot read that folder
+Changes are only accepted from the dashboard itself
+Choose a screen
+Choose an existing content file
+Choose what the art is for
+Collections is open on the device, close it there to rename content
+Confirm write access for this system location
+Content can only be renamed on user storage
+Core assignments are not configured
+Could not add that content
+Could not change permissions
+Could not create the folder
+Could not finish the content rename
+Could not keep a backup of the existing file
+Could not list content roots
+Could not list that folder
+Could not list the tools
+Could not list those files
+Could not prepare the content rename
+Could not preserve file permissions
+Could not read core assignments
+Could not remove that item
+Could not rename the content file
+Could not reset core assignments
+Could not save the setting
+Could not start creating the theme
+Could not start Live Remote View
+Could not start Live Remote View sound
+Could not start that upload
+Could not update the content entries
+Could not write that upload
+Download folders as an archive
+Enter a valid file name
+File not found
+Folder not found
+History is open on the device, close it there to rename content
+Invalid source or destination
+Invalid upload path
+Item not found
+Live Remote View is already open in two places
+Live Remote View is not available
+Live Remote View sound is already playing in two places
+Live Remote View sound is not available
+Malformed request length
+No such content root
+No such tool area
+Only playlists and disc sheets can be opened here
+Only playlists can be saved here
+Open the dashboard by the device name or address
+Permission mode must contain only digits from 0 to 7
+Pickles did not accept that command
+Pickles is not running anything
+Read the settings first
+Remote controls are not available
+Remote sticks are not enabled
+Save a system as {namespace}/{system}.json
+Saved, but an older copy in another namespace could not be removed
+Select at least one item
+Send 1 to lock or 0 to unlock physical controls
+Send 1 to press or 0 to release
+Send 1 to turn it on or 0 to turn it off
+Send axis and level pairs such as lx -0.5 ly 0.25
+Storage location is not available
+That collection no longer exists
+That content is no longer available
+That file is not handled here
+That is not a folder
+That is not a supported save file
+That screen cannot be shown from the Theme Lab
+That setting cannot be changed from the Theme Lab
+The device did not accept that change
+The device input service is not running
+The device is being controlled locally
+The request could not be read
+There is not enough free space for that upload
+These files cannot be changed from the dashboard
+This filesystem does not support Unix permissions
+Too many archives are being prepared
+Unknown archive format
+Unlock the dashboard with the code from Web Dashboard Code on the device
+Upload body is longer than declared
+Upload body was not streamed
+Upload path is too long
+Use a three-digit permission mode

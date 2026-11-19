@@ -103,6 +103,8 @@ void hide_bounce_progress_bar(void);
 
 void set_nav_flags(const struct nav_flag *nav_flags, size_t count);
 
+void footer_nav_show(lv_obj_t *glyph, lv_obj_t *label, int show);
+
 void footer_nav_check_scroll(void);
 
 void footer_nav_reset_scroll(void);

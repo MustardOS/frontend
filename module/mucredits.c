@@ -7,11 +7,11 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 #include "muxshare.h"
+#include <common/base/message.h>
 #include <common/display/text.h>
 
 #define SHARE_DIR             "/opt/muos/share/"
 #define MEDIA_DIR             SHARE_DIR "media/credits"
-#define RMSG_FILE             SHARE_DIR "message.txt"
 #define FONT_FILE             SHARE_DIR "font/mucredits.ttf"
 #define FACTORY_COMPLETE_FILE "/tmp/mustardos/mucredits.complete"
 
@@ -383,72 +383,12 @@ static int random_index(const int count) {
 }
 
 static char *pick_random_quote_excluding(const char *exclude) {
-    FILE *f = fopen(RMSG_FILE, "r");
-    if (!f) return NULL;
+    message_set set;
+    if (!message_load(MESSAGE_FILE, &set)) return NULL;
 
-    char buf[4096];
-    int eligible = 0;
-    int line_no = 0;
+    char *result = strdup(set.lines[message_index(&set, random_index(set.count), exclude)]);
+    message_free(&set);
 
-    while (fgets(buf, sizeof(buf), f)) {
-        line_no++;
-        if (line_no == 1) continue;
-
-        char *p = buf;
-        while (*p)
-            ++p;
-        while (p > buf && (p[-1] == '\n' || p[-1] == '\r' || p[-1] == ' ' || p[-1] == '\t'))
-            --p;
-        *p = '\0';
-
-        const char *start = buf;
-        while (*start == ' ' || *start == '\t')
-            ++start;
-
-        if (*start == '\0') continue;
-        if (exclude && strcmp(start, exclude) == 0) continue;
-
-        ++eligible;
-    }
-
-    if (eligible == 0) {
-        fclose(f);
-        return NULL;
-    }
-
-    const int pick = random_index(eligible);
-    rewind(f);
-
-    line_no = 0;
-    int seen = 0;
-    char *result = NULL;
-
-    while (fgets(buf, sizeof(buf), f)) {
-        line_no++;
-        if (line_no == 1) continue;
-
-        char *p = buf;
-        while (*p)
-            ++p;
-        while (p > buf && (p[-1] == '\n' || p[-1] == '\r' || p[-1] == ' ' || p[-1] == '\t'))
-            --p;
-        *p = '\0';
-
-        const char *start = buf;
-        while (*start == ' ' || *start == '\t')
-            ++start;
-        if (*start == '\0') continue;
-        if (exclude && strcmp(start, exclude) == 0) continue;
-
-        if (seen == pick) {
-            result = strdup(start);
-            break;
-        }
-
-        ++seen;
-    }
-
-    fclose(f);
     return result;
 }
 

@@ -6,7 +6,7 @@ CFLAGS   = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I.. -I../vendor \
 LDFLAGS  = $(COMMON_LIBS) $(COMMON_EXTERNAL_LDFLAGS) $(LIB_LDFLAGS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
 BASE_SRCS = \
-    base/image_ext.c base/randname.c base/strpath.c base/strutil.c base/totp.c base/util.c
+    base/image_ext.c base/message.c base/randname.c base/strpath.c base/strutil.c base/totp.c base/util.c
 
 RUNTIME_SRCS = \
     runtime/debug.c runtime/exec.c runtime/init.c runtime/log.c runtime/perf.c runtime/remote.c \
@@ -36,14 +36,14 @@ DISPLAY_SRCS = \
     display/anim.c display/colour.c display/datetime.c display/image.c \
     display/language.c display/overlay.c display/screenshot.c display/svg.c \
     display/scale2x.c display/super_eagle.c display/text.c display/theme.c display/theme_base.c \
-    display/theme_json.c
+    display/theme_json.c display/theme_create.c display/theme_lab.c display/colour_scheme.c
 
 UI_SRCS = \
     ui/cache.c ui/common.c ui/dialogue.c ui/empty_state.c ui/font.c ui/font_info.c \
     ui/fs_choice.c ui/glyph.c ui/grid.c ui/image.c ui/list_frame.c \
     ui/modal.c ui/more.c ui/nav.c ui/notify.c ui/orientation.c ui/osk.c ui/rich_text.c \
     ui/crt.c ui/task_progress.c ui/task_prompt.c ui/transition.c \
-    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/cell_art.c ui/nav/mascot.c ui/nav/grid_nav.c ui/nav/menu_style.c \
+    ui/nav/grid_layout.c ui/nav/grid_motion.c ui/nav/cell_art.c ui/nav/mascot.c ui/nav/grid_nav.c ui/nav/menu_style.c ui/nav/content_layout.c ui/nav/folder_custom.c ui/nav/content_strip.c \
     ui/nav/list_nav.c
 
 STYLE_SRCS = \

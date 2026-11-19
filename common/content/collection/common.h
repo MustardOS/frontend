@@ -28,6 +28,7 @@ typedef struct {
     char *glyph_icon;
     char *grid_image;
     char *grid_image_focused;
+    int grid_cover;
     const char *use_module;
     char *string_storage;
     int sort_bucket;

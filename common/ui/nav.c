@@ -90,6 +90,16 @@ static void help_hide_ready_cb(lv_anim_t *a) {
     lv_obj_set_style_opa(ui_pnl_help_message, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
 }
 
+void footer_nav_show(lv_obj_t *glyph, lv_obj_t *label, const int show) {
+    if (show) {
+        lv_obj_clear_flag(glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(label, MU_OBJ_FLAG_HIDE_FLOAT);
+    } else {
+        lv_obj_add_flag(glyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(label, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+}
+
 void footer_nav_check_scroll(void) {
     if (!ui_pnl_footer) return;
 

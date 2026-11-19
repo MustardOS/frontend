@@ -271,7 +271,7 @@ int menu_layout_save(const int target) {
     char *saved = style_tweaks_current()->options;
     const int offered = style_options[current_style()];
     for (int i = 0; i < LAYOUT_OPTION_COUNT; i++)
-        saved[i] = offered & (1 << i) ? (char) ('0' + layout_values[i]) : '-';
+        saved[i] = offered & (1 << i) && layout_values[i] != layout_defaults[i] ? (char) ('0' + layout_values[i]) : '-';
     saved[LAYOUT_OPTION_COUNT] = '\0';
     if (target != tweak_target_global) return 1;
 

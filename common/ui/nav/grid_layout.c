@@ -16,6 +16,7 @@
 #include <json/json.h>
 #include <common/ui/nav/grid_layout.h>
 #include <common/ui/nav/menu_style.h>
+#include <common/ui/nav/content_layout.h>
 #include <common/ui/nav/cell_art.h>
 #include <common/display/theme_json.h>
 
@@ -24,6 +25,7 @@ static char *layout_json = NULL;
 
 const char *grid_layout_json(void) {
     if (menu_style_active()) return menu_style_layout_json();
+    if (content_layout_grid_forced(&config)) return NULL;
 
     char key[MAX_BUFFER_SIZE];
     char alt_name[MAX_BUFFER_SIZE];

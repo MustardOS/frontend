@@ -22,13 +22,28 @@ static void start_remove(void);
 char *theme_version_compat = "";
 static char *theme_version_buf = NULL;
 
+static int builtin_theme(const char *name) {
+    return strcasecmp(base_dir, sys_dir) == 0 && strcasecmp(name, "MustardOS") == 0;
+}
+
+static void item_path(const int index, char *out, const size_t size) {
+    if (builtin_theme(items[index].name)) {
+        snprintf(out, size, "%s", INTERNAL_THEME);
+    } else {
+        snprintf(out, size, "%s/%s", sys_dir, items[index].name);
+    }
+}
+
 static void show_help(void) {
     if (items[current_item_index].content_type == content_type_folder
         || items[current_item_index].content_type == content_type_menu)
         return;
 
-    char credits_path[MAX_BUFFER_SIZE];
-    snprintf(credits_path, sizeof(credits_path), "%s/%s/" TEMP_CREDITS, sys_dir, items[current_item_index].name);
+    char theme_folder[MAX_BUFFER_SIZE];
+    item_path(current_item_index, theme_folder, sizeof(theme_folder));
+
+    char credits_path[PATH_MAX];
+    snprintf(credits_path, sizeof(credits_path), "%s/" TEMP_CREDITS, theme_folder);
 
     char credits[MAX_BUFFER_SIZE];
     if (file_exist(credits_path)) {
@@ -43,10 +58,11 @@ static void show_help(void) {
 }
 
 static int version_check(void) {
-    char theme_version_file[MAX_BUFFER_SIZE];
-    snprintf(
-        theme_version_file, sizeof(theme_version_file), "%s/%s/" TEMP_VERSION, sys_dir, items[current_item_index].name
-    );
+    char theme_folder[MAX_BUFFER_SIZE];
+    item_path(current_item_index, theme_folder, sizeof(theme_folder));
+
+    char theme_version_file[PATH_MAX];
+    snprintf(theme_version_file, sizeof(theme_version_file), "%s/" TEMP_VERSION, theme_folder);
     if (!file_exist(theme_version_file)) return 0;
 
     char *theme_version = read_line_char_from(theme_version_file, 1);
@@ -71,7 +87,7 @@ static void image_refresh(void) {
     }
 
     char base_image_path[MAX_BUFFER_SIZE];
-    snprintf(base_image_path, sizeof(base_image_path), "%s/%s", sys_dir, items[current_item_index].name);
+    item_path(current_item_index, base_image_path, sizeof(base_image_path));
 
     refresh_theme_preview_image(base_image_path, "preview", &preview_index);
     preview_display_time = 0;
@@ -93,6 +109,7 @@ static void create_theme_items(void) {
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_DIR && strcmp(tf->d_name, ".") != 0 && strcmp(tf->d_name, "..") != 0) {
             if (strcasecmp(tf->d_name, "active") == 0 || strcasecmp(tf->d_name, "override") == 0) continue;
+            if (builtin_theme(tf->d_name)) continue;
 
             char version_path[FILENAME_MAX];
             snprintf(version_path, sizeof(version_path), "%s/%s/version.txt", sys_dir, tf->d_name);
@@ -106,6 +123,8 @@ static void create_theme_items(void) {
     }
 
     closedir(td);
+
+    if (builtin_theme("MustardOS")) add_item(&items, &item_count, "MustardOS", "MustardOS", "", content_type_item);
 
 show_dl_only:
     sort_items(items, item_count);
@@ -143,7 +162,7 @@ show_dl_only:
 }
 
 static void check_focus(void) {
-    if (current_item_index) {
+    if (current_item_index && !builtin_theme(items[current_item_index].name)) {
         lv_obj_clear_flag(ui_lbl_nav_x, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lbl_nav_x_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
@@ -297,7 +316,7 @@ static void handle_a(void) {
         }
 
         char theme_path[MAX_BUFFER_SIZE];
-        snprintf(theme_path, sizeof(theme_path), "%s/%s", sys_dir, items[current_item_index].name);
+        item_path(current_item_index, theme_path, sizeof(theme_path));
         if (!resolution_check(theme_path)) {
             play_sound(snd_error);
             toast_message(lang.muxtheme.invalid_res, tst_wait_s);
@@ -328,7 +347,8 @@ static void handle_a(void) {
 
 static int remove_allowed(void) {
     return ui_count_static > 0 && items[current_item_index].content_type != content_type_folder
-           && items[current_item_index].content_type != content_type_menu;
+           && items[current_item_index].content_type != content_type_menu
+           && !builtin_theme(items[current_item_index].name);
 }
 
 static void start_remove(void) {

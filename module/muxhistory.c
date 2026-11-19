@@ -164,6 +164,14 @@ static char *get_glyph_name(const size_t index) {
     return in_collection ? "collection" : "history";
 }
 
+static int grid_save_image(const int index, char *out, const size_t size) {
+    return content_save_image(items[index].extra_data, 2, out, size);
+}
+
+static const char *grid_glyph(const int index) {
+    return items[index].content_type == content_type_item ? get_glyph_name((size_t) index) : "unknown";
+}
+
 static void gen_item(const int file_count, char **file_names) {
     gen_item_from_files(INFO_HIS_PATH, file_count, file_names);
 
@@ -179,7 +187,7 @@ static void create_history_items(void) {
     add_file_names(INFO_HIS_PATH, &file_names);
 
     grid_mode_enabled = !disable_grid_file_exists(INFO_HIS_PATH) && theme.grid.enabled && file_count > 0
-                        && config.visual.grid_mode_content;
+                        && (config.visual.grid_mode_content || content_layout_grid_forced(&config));
 
     if (file_count > 0) {
         gen_item(file_count, file_names);
@@ -200,7 +208,10 @@ static void create_history_items(void) {
         lv_obj_update_layout(ui_pnl_content);
     }
 
-    if (grid_mode_enabled) init_grid_dynamic(NULL, NULL);
+    if (grid_mode_enabled) {
+        static const grid_content_art art = {grid_save_image, grid_glyph};
+        init_grid_dynamic(NULL, NULL, &art);
+    }
 
     free(file_names);
 
@@ -733,8 +744,8 @@ static void adjust_panels(void) {
 }
 
 static void init_elements(void) {
-    lv_obj_set_align(ui_img_box, config.visual.box_art_align);
-    lv_obj_set_align(ui_viewport_objects[0], config.visual.box_art_align);
+    lv_obj_set_align(ui_img_box, box_art_align());
+    lv_obj_set_align(ui_viewport_objects[0], box_art_align());
 
     adjust_box_art();
     adjust_panels();

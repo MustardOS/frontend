@@ -791,11 +791,14 @@ static void create_content_items(void) {
         }
     }
 
+    content_strip_split(mux_module, &sys_index);
+
     grid_mode_enabled = !disable_grid_file_exists(item_curr_dir) && theme.grid.enabled
-                        && ((file_count > 0 && config.visual.grid_mode_content) || (dir_count > 0 && file_count == 0));
+                        && ((file_count > 0 && (config.visual.grid_mode_content || content_layout_grid_forced(&config)))
+                            || (dir_count > 0 && file_count == 0));
 
     if (grid_mode_enabled) {
-        init_grid_dynamic(prev_dir, &sys_index);
+        init_grid_dynamic(prev_dir, &sys_index, NULL);
     } else {
         const size_t limit = theme.mux.item.count;
         for (size_t i = 0; i < item_count && i < limit; i++) {
@@ -1091,8 +1094,33 @@ static int fwd_hist_get(const char *dir) {
     return result;
 }
 
+static int saved_index(void) {
+    return content_strip_saved_index(current_item_index);
+}
+
+static void open_strip_folder(void) {
+    const content_item *folder = content_strip_selected();
+    if (folder_note(folder->name)) return;
+
+    char folder_path[PATH_MAX];
+    snprintf(folder_path, sizeof(folder_path), "%s", folder->extra_data);
+
+    if (folder->folder_item_count >= LARGE_CONTENT_LOAD) toast_message(lang.generic.loading, tst_wait_f);
+
+    play_sound(snd_confirm);
+    fwd_hist_set(sys_dir, saved_index());
+    navigate_to_dir(folder_path, -1);
+}
+
 static void process_load(const int from_start) {
-    if (!ui_count_static || hold_call) return;
+    if (hold_call) return;
+
+    if (content_strip_active() && !msgbox_active) {
+        open_strip_folder();
+        return;
+    }
+
+    if (!ui_count_static) return;
 
     if (msgbox_active) {
         if (!preview_hint_active()) return;
@@ -1106,7 +1134,7 @@ static void process_load(const int from_start) {
     if (items[current_item_index].content_type == content_type_menu) {
         write_text_to_file(GROUP_CONTENT_GO, "w", CHAR, items[current_item_index].name);
 
-        fwd_hist_set(sys_dir, current_item_index);
+        fwd_hist_set(sys_dir, saved_index());
         navigate_to_dir(sys_dir, 0);
 
         return;
@@ -1122,12 +1150,12 @@ static void process_load(const int from_start) {
             toast_message(lang.generic.loading, tst_wait_f);
         }
 
-        fwd_hist_set(sys_dir, current_item_index);
+        fwd_hist_set(sys_dir, saved_index());
         navigate_to_dir(folder_path, -1);
         return;
     }
 
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, saved_index());
 
     if (load_content(0, items[current_item_index].extra_data)) {
         if (strcasecmp(passcode.code.launch, "000000") != 0) {
@@ -1151,7 +1179,7 @@ static void process_load(const int from_start) {
                         if (file_exist(MUOS_SHD_LOAD)) remove(MUOS_SHD_LOAD);
                         if (file_exist(MUOS_HST_LOAD)) remove(MUOS_HST_LOAD);
 
-                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, saved_index());
                         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
 
                         goto load_end;
@@ -1180,6 +1208,43 @@ load_end:
 static void handle_random_select(void);
 static void handle_y(void);
 
+static void open_customise(void) {
+    write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, saved_index());
+
+    snprintf(adjust_folder, sizeof(adjust_folder), "%s", sys_dir);
+    adjust_screen = content_layout_explore;
+
+    load_mux("adjustfolder");
+    mux_input_stop();
+}
+
+static void explore_relayout(void) {
+    content_strip_end();
+
+    load_theme(&theme, &config, &device);
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    lv_obj_set_height(ui_pnl_content, theme.misc.content.height);
+    lv_obj_set_y(ui_pnl_content, theme.header.height + 2 + theme.misc.content.padding_top);
+    lv_obj_set_style_pad_row(ui_pnl_content, theme.mux.item.spacing, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_flag(ui_pnl_grid_current_item, MU_OBJ_FLAG_HIDE_FLOAT);
+
+    content_strip_begin();
+}
+
+static void explore_recolour(void) {
+    apply_screen_colours();
+
+    lv_obj_t *counter = ui_lbl_counter_explore;
+    lv_obj_set_style_text_color(counter, lv_color_hex(theme.counter.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_color(counter, lv_color_hex(theme.counter.background), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(counter, theme.counter.background_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_color(counter, lv_color_hex(theme.counter.border_colour), MU_OBJ_MAIN_DEFAULT);
+}
+
 static void handle_a(void) {
     if (hold_call) return;
 
@@ -1207,6 +1272,8 @@ static void handle_a(void) {
             handle_random_select();
         } else if (opt == more_collect) {
             handle_y();
+        } else if (opt == more_customise) {
+            open_customise();
         }
         return;
     }
@@ -1274,14 +1341,14 @@ static void handle_b(void) {
 
     *slash = '\0';
 
-    fwd_hist_set(sys_dir, current_item_index);
+    fwd_hist_set(sys_dir, saved_index());
     navigate_to_dir(parent, -1);
 }
 
 static void handle_x(void) {
     if (orientation_handle_skip()) return;
 
-    if (msgbox_active || !ui_count_static || hold_call || video_preview_active()) return;
+    if (msgbox_active || !ui_count_static || hold_call || video_preview_active() || content_strip_active()) return;
 
     if (items[current_item_index].content_type == content_type_menu) {
         play_sound(snd_error);
@@ -1292,8 +1359,8 @@ static void handle_x(void) {
 
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-    write_text_to_file(MUOS_CIX_LOAD, "w", INT, current_item_index);
+    write_text_to_file(MUOS_IDX_LOAD, "w", INT, saved_index());
+    write_text_to_file(MUOS_CIX_LOAD, "w", INT, saved_index());
 
     if (is_ksk(kiosk.content.option)) {
         if (!is_ksk(kiosk.content.search)) {
@@ -1320,7 +1387,7 @@ static void handle_x(void) {
 }
 
 static void handle_y(void) {
-    if (msgbox_active || !ui_count_static || hold_call || video_preview_active()) return;
+    if (msgbox_active || !ui_count_static || hold_call || video_preview_active() || content_strip_active()) return;
 
     if (items[current_item_index].content_type != content_type_item) {
         play_sound(snd_error);
@@ -1358,7 +1425,7 @@ static void show_search(void) {
 
     if (ui_count_static > 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, sys_dir);
-        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, saved_index());
     }
 
     load_mux("search");
@@ -1413,7 +1480,7 @@ static void open_launch_folder(void) {
     char folder[PATH_MAX];
     item_parent_dir(items[current_item_index].extra_data, folder, sizeof(folder));
 
-    fwd_hist_set(sys_dir, current_item_index);
+    fwd_hist_set(sys_dir, saved_index());
     navigate_to_dir(folder, -1);
 }
 
@@ -1476,6 +1543,7 @@ static void show_actions_dialog(void) {
     entries[count++] = (more_entry) {more_sort, 1};
     if (!at_root) entries[count++] = (more_entry) {more_top_level, 1};
 
+    entries[count++] = (more_entry) {more_customise, 1};
     entries[count++] = (more_entry) {more_help, 1};
 
     more_open(&more_menu, &theme, ui_screen, entries, count);
@@ -1511,11 +1579,17 @@ static void handle_help(void) {
     show_actions_dialog();
 }
 
+static void handle_menu_press(void) {
+    if (content_strip_active()) return;
+    content_menu_press();
+}
+
 static void handle_nav_up(void) {
     if (more_active(&more_menu)) {
         more_dpad(&more_menu, &theme, -1, !swap_axis);
         return;
     }
+    if (content_strip_nav(1, -1)) return;
     handle_list_nav_up();
 }
 
@@ -1524,6 +1598,7 @@ static void handle_nav_down(void) {
         more_dpad(&more_menu, &theme, +1, !swap_axis);
         return;
     }
+    if (content_strip_nav(1, +1)) return;
     handle_list_nav_down();
 }
 
@@ -1532,6 +1607,7 @@ static void handle_nav_left(void) {
         more_dpad(&more_menu, &theme, -1, swap_axis);
         return;
     }
+    if (content_strip_nav(0, -1)) return;
     handle_list_nav_left();
 }
 
@@ -1540,6 +1616,7 @@ static void handle_nav_right(void) {
         more_dpad(&more_menu, &theme, +1, swap_axis);
         return;
     }
+    if (content_strip_nav(0, +1)) return;
     handle_list_nav_right();
 }
 
@@ -1548,6 +1625,7 @@ static void handle_nav_up_hold(void) {
         more_dpad_hold(&more_menu, &theme, -1, !swap_axis);
         return;
     }
+    if (content_strip_active()) return;
     handle_list_nav_up_hold();
 }
 
@@ -1556,6 +1634,7 @@ static void handle_nav_down_hold(void) {
         more_dpad_hold(&more_menu, &theme, +1, !swap_axis);
         return;
     }
+    if (content_strip_active()) return;
     handle_list_nav_down_hold();
 }
 
@@ -1564,6 +1643,7 @@ static void handle_nav_left_hold(void) {
         more_dpad_hold(&more_menu, &theme, -1, swap_axis);
         return;
     }
+    if (content_strip_nav(0, -1)) return;
     handle_list_nav_left_hold();
 }
 
@@ -1572,20 +1652,22 @@ static void handle_nav_right_hold(void) {
         more_dpad_hold(&more_menu, &theme, +1, swap_axis);
         return;
     }
+    if (content_strip_nav(0, +1)) return;
     handle_list_nav_right_hold();
 }
 
 static void handle_nav_page_up(void) {
-    if (more_active(&more_menu)) return;
+    if (more_active(&more_menu) || content_strip_active()) return;
     handle_list_nav_page_up();
 }
 
 static void handle_nav_page_down(void) {
-    if (more_active(&more_menu)) return;
+    if (more_active(&more_menu) || content_strip_active()) return;
     handle_list_nav_page_down();
 }
 
 static void handle_random_select(void) {
+    if (content_strip_active()) return;
     if (msgbox_active || ui_count_static < 2 || hold_call || !config.visual.shuffle || video_preview_active()) return;
 
     int dir = +1;
@@ -1621,8 +1703,8 @@ static void adjust_panels(void) {
 }
 
 static void init_elements(void) {
-    lv_obj_set_align(ui_img_box, config.visual.box_art_align);
-    lv_obj_set_align(ui_viewport_objects[0], config.visual.box_art_align);
+    lv_obj_set_align(ui_img_box, box_art_align());
+    lv_obj_set_align(ui_viewport_objects[0], box_art_align());
 
     adjust_box_art();
     adjust_panels();
@@ -1648,7 +1730,17 @@ static void init_elements(void) {
 static void refresh_nav_items(void) {
     if (!ui_count_static) return;
 
-    if (items[current_item_index].content_type != content_type_item) {
+    const int strip = content_strip_active();
+    lv_obj_t *option_nav[] = {ui_lbl_nav_x_glyph, ui_lbl_nav_x};
+    for (size_t i = 0; i < A_SIZE(option_nav); i++) {
+        if (strip) {
+            lv_obj_add_flag(option_nav[i], MU_OBJ_FLAG_HIDE_FLOAT);
+        } else {
+            lv_obj_clear_flag(option_nav[i], MU_OBJ_FLAG_HIDE_FLOAT);
+        }
+    }
+
+    if (strip || items[current_item_index].content_type != content_type_item) {
         lv_obj_add_flag(ui_lbl_nav_y_glyph, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_add_flag(ui_lbl_nav_y, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
@@ -1726,6 +1818,9 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
 
     lv_obj_clean(ui_pnl_content);
     snprintf(sys_dir, sizeof(sys_dir), "%s", dest);
+    const int changed = folder_custom_load(sys_dir);
+    if (changed) explore_relayout();
+    if (changed & folder_changed_colour) explore_recolour();
 
     ui_count_static = 0;
     file_count = 0;
@@ -1766,6 +1861,7 @@ static void navigate_to_dir(const char *new_dir, const int restore_index) {
         empty_state_hide();
 
         focus_initial();
+        content_strip_sync();
         first_open = 0;
 
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), config.visual.name_scroll);
@@ -1824,10 +1920,13 @@ int muxplore_main(const int index, char *dir) {
     if (index > 0) sys_index = index;
 
     init_module(__func__);
+    folder_custom_set_scheme(NULL);
+    folder_custom_load(sys_dir);
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, "");
     init_ui_item_counter(&theme);
+    content_strip_begin();
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnl_box);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1867,6 +1966,7 @@ int muxplore_main(const int index, char *dir) {
             current_item_index = 0;
 
         focus_initial();
+        content_strip_sync();
         first_open = 0;
 
         collect_vis = items[current_item_index].content_type == content_type_item;
@@ -1918,7 +2018,7 @@ int muxplore_main(const int index, char *dir) {
                      || (grid_mode_enabled && theme.grid.navigation_type >= 1 && theme.grid.navigation_type <= 5),
         .press_handler =
             {
-                [mux_input_menu] = content_menu_press,
+                [mux_input_menu] = handle_menu_press,
                 [mux_input_b] = handle_b,
                 [mux_input_x] = handle_x,
                 [mux_input_y] = handle_y,
@@ -1965,6 +2065,7 @@ int muxplore_main(const int index, char *dir) {
 
     transition_box_art_destroy();
     video_preview_destroy();
+    content_strip_end();
     free_items(&items, &item_count);
     free_tag_items(&tag_items, &tag_item_count);
 

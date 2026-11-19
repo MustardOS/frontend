@@ -19,6 +19,7 @@
 #include <common/platform/sysinfo.h>
 #include <common/display/anim.h>
 #include <common/ui/nav/list_nav.h>
+#include <common/ui/nav/content_layout.h>
 #include <common/base/strutil.h>
 #include <common/storage/fileio.h>
 #include <common/platform/audio.h>
@@ -858,7 +859,7 @@ void init_ui_common_screen(
 
     lv_obj_set_style_pad_top(ui_pnl_content, 0, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnl_content, 0, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnl_content, 2, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnl_content, theme->mux.item.spacing, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnl_content, 0, MU_OBJ_MAIN_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnl_content, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
@@ -1765,6 +1766,22 @@ void ui_common_handle_idle(void) {
         need_update = 1;
     }
 
+    if (theme_live_exists) {
+        char *target = read_line_char_from(THEME_LIVE, 1);
+        snprintf(theme_live_target, sizeof(theme_live_target), "%s", target ? target : "");
+        free(target);
+
+        remove(THEME_LIVE);
+        theme_live_exists = 0;
+        theme_live_reload = 1;
+        mux_input_stop();
+    }
+
+    if (theme_request_exists && !theme_request_pending) {
+        theme_request_pending = 1;
+        mux_input_stop();
+    }
+
     if (!blank_exists && lv_obj_get_style_bg_opa(ui_blank, MU_OBJ_MAIN_DEFAULT) > LV_OPA_TRANSP) blank_check();
 
     anim_process();
@@ -2477,6 +2494,19 @@ void create_grid_panel(const struct theme_config *theme, const int item_count) {
         theme->grid.current_item_label.label_long_mode == LV_LABEL_LONG_WRAP || fit_height ? LV_LABEL_LONG_WRAP
                                                                                            : LV_LABEL_LONG_DOT;
     lv_label_set_long_mode(ui_lbl_grid_current_item, long_mode);
+    if (!fit_width && theme->grid.current_item_label.label_long_mode == LV_LABEL_LONG_SCROLL_CIRCULAR) {
+        set_label_scroll_always(ui_lbl_grid_current_item);
+    }
+
+    if (content_layout_name_bar_highlight()) {
+        const lv_color_t shadow = lv_color_hex(theme->list_focus.shadow_colour);
+        const lv_opa_t alpha = (lv_opa_t) theme->list_focus.shadow_alpha;
+        const int8_t x = (int8_t) theme->list_focus.shadow_x_offset;
+        const int8_t y = (int8_t) theme->list_focus.shadow_y_offset;
+        lv_shadow_zone_register(ui_pnl_grid_current_item, shadow, alpha, x, y, shadow, alpha, x, y);
+    } else {
+        lv_shadow_zone_unregister(ui_pnl_grid_current_item);
+    }
     lv_obj_set_style_text_align(
         ui_lbl_grid_current_item, theme->grid.current_item_label.text_alignment, MU_OBJ_MAIN_DEFAULT
     );
@@ -2683,10 +2713,13 @@ void create_grid_item(
         lv_obj_set_height(cell_label, 0);
         lv_label_set_text(cell_label, "");
     } else {
+        const int wrap = theme->grid.cell.label_long_mode == LV_LABEL_LONG_WRAP;
+        const lv_font_t *font = lv_obj_get_style_text_font(cell_label, MU_OBJ_MAIN_DEFAULT);
+
         lv_obj_set_width(cell_label, theme->grid.cell.width - theme->grid.cell.text_padding_side * 2);
-        lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
+        lv_obj_set_height(cell_label, wrap ? LV_SIZE_CONTENT : lv_font_get_line_height(font));
         lv_label_set_text(cell_label, item_text ? item_text : "");
-        lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
+        lv_label_set_long_mode(cell_label, theme->grid.cell.label_long_mode);
         lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, MU_OBJ_MAIN_DEFAULT);
 
         lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->grid.cell.text_padding_bottom);

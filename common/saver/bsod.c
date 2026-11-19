@@ -7,11 +7,11 @@
 #include <common/runtime/log.h>
 #include <common/config/config.h>
 #include <common/saver/saver.h>
+#include <common/base/message.h>
 #include <common/base/options.h>
 #include <common/saver/bsod.h>
 
-#define BSOD_FONT_FILE    OPT_PATH "share/font/muterm.ttf"
-#define BSOD_MESSAGE_FILE OPT_SHARE_PATH "message.txt"
+#define BSOD_FONT_FILE OPT_PATH "share/font/muterm.ttf"
 
 #define BSOD_BG_R 0
 #define BSOD_BG_G 0
@@ -101,62 +101,12 @@ static uint32_t bsod_random_hold_ms(const uint32_t max_at_cruise_ms) {
 }
 
 static char *bsod_pick_message_line(void) {
-    FILE *f = fopen(BSOD_MESSAGE_FILE, "r");
-    if (!f) return NULL;
+    message_set set;
+    if (!message_load(MESSAGE_FILE, &set)) return NULL;
 
-    char buf[512];
-    int eligible = 0;
-    int line_no = 0;
+    char *result = strdup(set.lines[message_index(&set, saver_rand_range(set.count), NULL)]);
+    message_free(&set);
 
-    while (fgets(buf, sizeof(buf), f)) {
-        line_no++;
-        if (line_no == 1) continue;
-
-        char *p = buf;
-        while (*p)
-            ++p;
-        while (p > buf && (p[-1] == '\n' || p[-1] == '\r'))
-            --p;
-        *p = '\0';
-
-        if (buf[0] == '\0') continue;
-        eligible++;
-    }
-
-    if (eligible == 0) {
-        fclose(f);
-        return NULL;
-    }
-
-    const int pick = saver_rand_range(eligible);
-    rewind(f);
-
-    line_no = 0;
-    int seen = 0;
-    char *result = NULL;
-
-    while (fgets(buf, sizeof(buf), f)) {
-        line_no++;
-        if (line_no == 1) continue;
-
-        char *p = buf;
-        while (*p)
-            ++p;
-        while (p > buf && (p[-1] == '\n' || p[-1] == '\r'))
-            --p;
-        *p = '\0';
-
-        if (buf[0] == '\0') continue;
-
-        if (seen == pick) {
-            result = strdup(buf);
-            break;
-        }
-
-        seen++;
-    }
-
-    fclose(f);
     return result;
 }
 

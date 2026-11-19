@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <common/base/options.h>
 #include <common/display/theme.h>
 #include <common/storage/fileio.h>
@@ -116,6 +117,10 @@ static void remove_saved(const int style, const int global) {
     if (file_exist(path)) remove(path);
     tweak_path(path, sizeof(path), style, global);
     if (file_exist(path)) remove(path);
+
+    snprintf(path, sizeof(path), TWEAK_PATH "/%s", global ? "global" : theme_name());
+    rmdir(path);
+    rmdir(TWEAK_PATH);
 }
 
 void style_tweaks_remove(const int style) {
@@ -244,41 +249,41 @@ static size_t write_entry(char *out, const size_t size, const style_tweak *tweak
     return used;
 }
 
-static size_t build_document(char *out, const size_t size) {
+static size_t build_document(char *out, const size_t size, const style_tweaks *source) {
     size_t used = (size_t) snprintf(out, size, "{\"cascade\":{");
     for (int field = 0; field < CASCADE_FIELD_COUNT; field++) {
         used += (size_t) snprintf(
-            out + used, size - used, "%s\"%s\":%d", field ? "," : "", style_cascade_keys[field], tweaks.cascade[field]
+            out + used, size - used, "%s\"%s\":%d", field ? "," : "", style_cascade_keys[field], source->cascade[field]
         );
     }
 
     used += (size_t) snprintf(
-        out + used, size - used, "},\"motion\":\"%s\",\"time\":%d,\"swell\":%d,", motions[tweaks.motion], tweaks.time,
-        tweaks.swell
+        out + used, size - used, "},\"motion\":\"%s\",\"time\":%d,\"swell\":%d,", motions[source->motion], source->time,
+        source->swell
     );
     for (int id = 0; id < NUMBER_COUNT; id++) {
-        if (!(tweaks.number_set & (1u << id))) continue;
-        used += (size_t) snprintf(out + used, size - used, "\"%s\":%d,", style_number_keys[id], tweaks.number[id]);
+        if (!(source->number_set & (1u << id))) continue;
+        used += (size_t) snprintf(out + used, size - used, "\"%s\":%d,", style_number_keys[id], source->number[id]);
     }
-    if (tweaks.bounce_set & 1) {
-        used += (size_t) snprintf(out + used, size - used, "\"bounce_height\":%d,", tweaks.bounce_height);
+    if (source->bounce_set & 1) {
+        used += (size_t) snprintf(out + used, size - used, "\"bounce_height\":%d,", source->bounce_height);
     }
-    if (tweaks.bounce_set & 2) {
-        used += (size_t) snprintf(out + used, size - used, "\"bounce_speed\":%d,", tweaks.bounce_speed);
+    if (source->bounce_set & 2) {
+        used += (size_t) snprintf(out + used, size - used, "\"bounce_speed\":%d,", source->bounce_speed);
     }
-    if (tweaks.mascot_x) used += (size_t) snprintf(out + used, size - used, "\"mascot_x\":%d,", tweaks.mascot_x);
-    if (tweaks.mascot_y) used += (size_t) snprintf(out + used, size - used, "\"mascot_y\":%d,", tweaks.mascot_y);
-    if (tweaks.options[0]) used += (size_t) snprintf(out + used, size - used, "\"options\":\"%s\",", tweaks.options);
+    if (source->mascot_x) used += (size_t) snprintf(out + used, size - used, "\"mascot_x\":%d,", source->mascot_x);
+    if (source->mascot_y) used += (size_t) snprintf(out + used, size - used, "\"mascot_y\":%d,", source->mascot_y);
+    if (source->options[0]) used += (size_t) snprintf(out + used, size - used, "\"options\":\"%s\",", source->options);
 
     used += (size_t) snprintf(out + used, size - used, "\"slots\":[");
     for (int i = 0; i < TWEAK_SLOTS && used < size; i++) {
         if (i) used += (size_t) snprintf(out + used, size - used, ",");
-        used += write_entry(out + used, size - used, &tweaks.slots[i]);
+        used += write_entry(out + used, size - used, &source->slots[i]);
     }
     used += (size_t) snprintf(out + used, size - used, "],\"items\":{");
     for (int i = 0; i < TWEAK_ITEMS && used < size; i++) {
         used += (size_t) snprintf(out + used, size - used, "%s\"%s\":", i ? "," : "", item_keys[i]);
-        used += write_entry(out + used, size - used, &tweaks.items[i]);
+        used += write_entry(out + used, size - used, &source->items[i]);
     }
     if (used < size) used += (size_t) snprintf(out + used, size - used, "}}");
     return used;
@@ -353,9 +358,36 @@ static int save_package(const int style, const char *document) {
     return saved;
 }
 
+int style_tweaks_document(char *out, const size_t size) {
+    return build_document(out, size, &tweaks) < size;
+}
+
+static void options_plain(style_tweaks *target) {
+    if (!strpbrk(target->options, "0123456789")) target->options[0] = '\0';
+}
+
+static int same_as_fallback(const int style, const int global) {
+    style_tweaks fallback;
+    if (!global && has_package) {
+        fallback = package;
+        fallback.options[0] = '\0';
+    } else if (global || !read_saved(style, 1, &fallback)) {
+        tweaks_reset(&fallback);
+    }
+
+    style_tweaks current = tweaks;
+    options_plain(&current);
+    options_plain(&fallback);
+
+    static char left[16384];
+    static char right[16384];
+    return build_document(left, sizeof(left), &current) < sizeof(left)
+           && build_document(right, sizeof(right), &fallback) < sizeof(right) && strcmp(left, right) == 0;
+}
+
 int style_tweaks_save(const int style, const int target) {
     static char out[16384];
-    if (build_document(out, sizeof(out)) >= sizeof(out)) return 0;
+    if (build_document(out, sizeof(out), &tweaks) >= sizeof(out)) return 0;
 
     char path[MAX_BUFFER_SIZE];
     if (target != tweak_target_override) remove_saved(style, 0);
@@ -369,6 +401,12 @@ int style_tweaks_save(const int style, const int target) {
     }
 
     const int global = target == tweak_target_global;
+    if (same_as_fallback(style, global)) {
+        remove_saved(style, global);
+        style_tweaks_load(style);
+        return 1;
+    }
+
     legacy_path(path, sizeof(path), style, global);
     if (file_exist(path)) remove(path);
     tweak_path(path, sizeof(path), style, global);

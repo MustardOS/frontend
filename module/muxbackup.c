@@ -104,6 +104,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, content, lang.muxbackup.content, "content", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, override, lang.muxbackup.override, "override", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, launch, lang.muxbackup.launch, "launch", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, layout, lang.muxbackup.layout, "layout", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, name, lang.muxbackup.name, "name", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, catalogue, lang.muxbackup.catalogue, "catalogue", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, bios, lang.muxbackup.bios, "bios", excluded_included, 2);
@@ -116,6 +117,8 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, apps, lang.muxbackup.apps, "application", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, package, lang.muxbackup.package, "package", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, theme, lang.muxbackup.theme, "theme", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, colour, lang.muxbackup.colour, "colour", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, lab, lang.muxbackup.lab, "lab", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, music, lang.muxbackup.music, "music", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, retroarch, lang.muxbackup.retroarch, "retroarch", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, target, lang.muxbackup.target, "target", NULL, 0);

@@ -18,6 +18,7 @@ typedef enum {
     more_launch_count,
     more_duration,
     more_remove,
+    more_customise,
     more_help,
     more_count
 } more_id;

@@ -25,6 +25,7 @@
 #include <common/platform/battery.h>
 #include <common/platform/board.h>
 #include <common/display/theme.h>
+#include <common/display/theme_lab.h>
 #include <common/display/svg.h>
 #include <common/runtime/crash.h>
 #include <common/display/image.h>
@@ -59,6 +60,11 @@ int idle_state_exists = 0;
 int notify_drop_exists = 0;
 unsigned notify_drop_changes = 0;
 int hdmi_refresh_exists = 0;
+int theme_live_exists = 0;
+int theme_live_reload = 0;
+char theme_live_target[32];
+int theme_request_exists = 0;
+int theme_request_pending = 0;
 int blank_exists = 0;
 unsigned idle_state_changes = 0;
 unsigned saver_type_changes = 0;
@@ -91,6 +97,8 @@ void inotify_init(void) {
     inotify_track(ino_proc, "/run/muos", "idle_state", &idle_state_exists, &idle_state_changes);
     inotify_track(ino_proc, "/run/muos", "notify", &notify_drop_exists, &notify_drop_changes);
     inotify_track(ino_proc, "/run/muos", "hdmi_refresh", &hdmi_refresh_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "theme_live", &theme_live_exists, 0);
+    inotify_track(ino_proc, "/run/muos", "theme_create", &theme_request_exists, 0);
     inotify_track(ino_proc, "/run/muos", "blank", &blank_exists, 0);
 
     static int saver_type_exists;
@@ -587,6 +595,8 @@ void init_fonts_preview(void) {
 void init_theme(const int panel_init, const int long_mode) {
     theme_base = get_theme_base();
     load_theme(&theme, &config, &device);
+    theme_export_colours();
+    lab_export_screens();
 
     if (asset_cache_context_changed()) asset_cache_clear();
 

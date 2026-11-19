@@ -51,16 +51,9 @@ static struct json find_path(const struct json node, const char *name) {
     return (struct json) {0};
 }
 
-struct json theme_json_lookup(const struct json scheme, const char *section, const char *key) {
-    const struct json group = json_object_get(scheme, section);
-    if (json_type(group) != JSON_OBJECT) return (struct json) {0};
-
-    const struct json exact = json_object_get(group, key);
-    if (json_exists(exact)) return exact;
-
-    char name[MAX_BUFFER_SIZE];
+static const char *stripped_key(const char *section, const char *key, char *name, const size_t size) {
     size_t length = 0;
-    for (; key[length] && length < sizeof(name) - 1; length++) {
+    for (; key[length] && length < size - 1; length++) {
         name[length] = (char) tolower((unsigned char) key[length]);
     }
     name[length] = '\0';
@@ -73,8 +66,106 @@ struct json theme_json_lookup(const struct json scheme, const char *section, con
     }
 
     const size_t skip = strlen(prefix);
-    const char *stripped = strncmp(name, prefix, skip) == 0 && name[skip] ? name + skip : name;
-    return find_path(group, stripped);
+    return strncmp(name, prefix, skip) == 0 && name[skip] ? name + skip : name;
+}
+
+struct json theme_json_lookup(const struct json scheme, const char *section, const char *key) {
+    const struct json group = json_object_get(scheme, section);
+    if (json_type(group) != JSON_OBJECT) return (struct json) {0};
+
+    const struct json exact = json_object_get(group, key);
+    if (json_exists(exact)) return exact;
+
+    char name[MAX_BUFFER_SIZE];
+    return find_path(group, stripped_key(section, key, name, sizeof(name)));
+}
+
+#define INDEX_NAME_MAX  80
+#define INDEX_ENTRY_MAX 512
+
+typedef struct {
+    char name[INDEX_NAME_MAX];
+    int depth;
+    struct json value;
+} index_entry;
+
+static index_entry index_entries[INDEX_ENTRY_MAX];
+static int index_count = 0;
+
+static void index_flatten(const struct json node, char *path, const size_t length, const int depth) {
+    for (struct json key = json_first(node); json_exists(key); key = json_next(json_next(key))) {
+        const struct json value = json_next(key);
+
+        const size_t at = length ? length + 1 : 0;
+        if (at >= INDEX_NAME_MAX - 1) continue;
+
+        if (length) path[length] = '_';
+        json_string_copy(key, path + at, INDEX_NAME_MAX - at);
+        const size_t end = strlen(path);
+
+        if (json_type(value) == JSON_OBJECT) {
+            index_flatten(value, path, end, depth + 1);
+        } else if (index_count < INDEX_ENTRY_MAX) {
+            index_entry *entry = &index_entries[index_count++];
+            memcpy(entry->name, path, end + 1);
+            entry->depth = depth;
+            entry->value = value;
+        }
+
+        path[length] = '\0';
+    }
+}
+
+static int index_compare(const void *left, const void *right) {
+    const index_entry *a = left;
+    const index_entry *b = right;
+    const int order = strcmp(a->name, b->name);
+    return order ? order : a->depth - b->depth;
+}
+
+static const index_entry *index_find(const char *name) {
+    int low = 0;
+    int high = index_count - 1;
+
+    while (low <= high) {
+        const int middle = (low + high) / 2;
+        const int order = strcmp(index_entries[middle].name, name);
+        if (order < 0) {
+            low = middle + 1;
+        } else if (order > 0) {
+            high = middle - 1;
+        } else {
+            int first = middle;
+            while (first > 0 && strcmp(index_entries[first - 1].name, name) == 0) {
+                first--;
+            }
+            return &index_entries[first];
+        }
+    }
+
+    return NULL;
+}
+
+int theme_json_index_group(const struct json scheme, const char *section) {
+    index_count = 0;
+
+    const struct json group = json_object_get(scheme, section);
+    if (json_type(group) != JSON_OBJECT) return 0;
+
+    char path[INDEX_NAME_MAX] = "";
+    index_flatten(group, path, 0, 0);
+    qsort(index_entries, index_count, sizeof(index_entries[0]), index_compare);
+
+    return index_count;
+}
+
+struct json theme_json_index_lookup(const char *section, const char *key) {
+    const index_entry *exact = index_find(key);
+    if (exact && exact->depth == 0) return exact->value;
+
+    char name[MAX_BUFFER_SIZE];
+    const index_entry *entry = index_find(stripped_key(section, key, name, sizeof(name)));
+    return entry ? entry->value : (struct json) {0};
 }
 
 long theme_json_number(const struct json value, const int base) {

@@ -1004,7 +1004,13 @@ static void layout_change(const int direction) {
             } else if (row->field == number_texty) {
                 tweaks->number[row->field] = LV_CLAMP(0, value, device.mux.height);
             }
-            tweaks->number_set |= 1u << row->field;
+            const unsigned bit = 1u << row->field;
+            const style_tweaks *package = style_tweaks_package();
+            tweaks->number_set |= bit;
+            if (!(package && package->number_set & bit)
+                && tweaks->number[row->field] == style_number_default(row->field)) {
+                tweaks->number_set &= ~bit;
+            }
             break;
         }
         case row_nudge: {

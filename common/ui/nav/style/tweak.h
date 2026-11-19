@@ -101,6 +101,8 @@ int style_tweaks_source(void);
 
 const style_tweaks *style_tweaks_package(void);
 
+int style_tweaks_document(char *out, size_t size);
+
 int style_tweaks_save(int style, int target);
 
 int style_tweak_get(const style_tweak *tweak, int field, int fallback);

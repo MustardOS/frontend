@@ -128,6 +128,41 @@ typedef struct {
     int16_t hotkey_slow_motion;
 } wasabi_video_config;
 
+enum { content_layout_explore, content_layout_collection, content_layout_history, content_layout_count };
+
+enum {
+    content_style_theme,
+    content_style_list,
+    content_style_grid,
+    content_style_carousel,
+    content_style_carousel_vertical,
+    content_style_grid_list,
+    content_style_carousel_list,
+    content_style_count
+};
+
+enum { content_names_bar, content_names_cell, content_names_hidden, content_names_count };
+
+enum { content_side_full, content_side_left, content_side_right, content_side_count };
+
+typedef struct {
+    int16_t style;
+    int16_t columns;
+    int16_t rows;
+    int16_t size;
+    int16_t names;
+    int16_t count;
+    int16_t spacing;
+    int16_t strip_columns;
+    int16_t strip_size;
+    int16_t side;
+    int16_t offset_x;
+    int16_t offset_y;
+    int16_t counter_align;
+    int16_t counter_x;
+    int16_t counter_y;
+} content_layout_config;
+
 struct mux_config {
     struct {
         char build[MAX_BUFFER_SIZE];
@@ -144,10 +179,13 @@ struct mux_config {
         int16_t bios;
         int16_t catalogue;
         int16_t collection;
+        int16_t colour;
         int16_t content;
         int16_t history;
         int16_t init;
+        int16_t lab;
         int16_t launch;
+        int16_t layout;
         int16_t manifest;
         int16_t merge;
         int16_t music;
@@ -502,6 +540,7 @@ struct mux_config {
             char colour_keyboard_text[MAX_BUFFER_SIZE];
             char colour_progress_bar[MAX_BUFFER_SIZE];
         } themeopt;
+        content_layout_config layout[content_layout_count];
         struct {
             int16_t layout;
         } remap;

@@ -4,6 +4,8 @@
 #include <common/ui/rich_text.h>
 #include <common/ui/orientation.h>
 #include <common/ui/nav/menu_style.h>
+#include <common/display/theme_create.h>
+#include <common/display/theme_lab.h>
 
 size_t item_count = 0;
 content_item *items = NULL;
@@ -524,14 +526,42 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, con
     return dir_count;
 }
 
+static void place_counter(lv_obj_t *counter) {
+    const content_layout_config *layout = content_layout_current(&config);
+    const int alignment = layout && layout->counter_align >= 0 ? layout->counter_align : theme.counter.alignment;
+    const int offset = layout ? layout->counter_x : 0;
+
+    switch (alignment) {
+        case 1:
+            lv_obj_set_align(counter, LV_ALIGN_TOP_MID);
+            lv_obj_set_x(counter, (lv_coord_t) offset);
+            break;
+        case 2:
+            lv_obj_set_align(counter, LV_ALIGN_TOP_RIGHT);
+            lv_obj_set_x(counter, (lv_coord_t) (offset - theme.counter.padding_side));
+            break;
+        default:
+            lv_obj_set_align(counter, LV_ALIGN_TOP_LEFT);
+            lv_obj_set_x(counter, (lv_coord_t) (offset + theme.counter.padding_side));
+            break;
+    }
+
+    lv_obj_set_y(
+        counter, (lv_coord_t) (theme.counter.padding_top + content_strip_height() + (layout ? layout->counter_y : 0))
+    );
+}
+
 void update_file_counter(lv_obj_t *counter, const int file_count) {
     if ((ui_count_static > 0 && !file_count && config.visual.menu_counter_folder)
         || (file_count > 0 && config.visual.menu_counter_file)) {
+        int position = current_item_index;
+        int total = ui_count_static;
+        if (content_strip_active()) position = content_strip_position(&total);
+
+        place_counter(counter);
+
         char counter_text[MAX_BUFFER_SIZE];
-        snprintf(
-            counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.counter.text_separator,
-            ui_count_static
-        );
+        snprintf(counter_text, sizeof(counter_text), "%d%s%d", position + 1, theme.counter.text_separator, total);
         counter_message(counter, counter_text, theme.counter.text_fade_time * 60);
     } else {
         lv_obj_add_flag(counter, LV_OBJ_FLAG_HIDDEN);
@@ -1293,8 +1323,14 @@ static void render_preview_refresh(char *image) {
     update_image(ui_img_help_preview_image, image_settings);
 }
 
+int box_art_align(void) {
+    static const int sides[content_side_count] = {0, LV_ALIGN_RIGHT_MID, LV_ALIGN_LEFT_MID};
+    const int side = content_layout_side(&config);
+    return side ? sides[side] : config.visual.box_art_align;
+}
+
 static void resolve_box_art_padding(const int box_h, int *pad_left, int *pad_right, int *pad_top, int *pad_bottom) {
-    const int explicit_align = config.visual.box_art_align > 0;
+    const int explicit_align = box_art_align() > 0;
     static const int pad_div_map[] = {50, 100, 200, 400, 600, 800};
 
     const int pad_div_idx = config.settings.advanced.box_art_pad_div;
@@ -1353,7 +1389,7 @@ static void prepare_box_video(void) {
 
     lv_img_set_size_mode(ui_img_box, LV_IMG_SIZE_MODE_VIRTUAL);
     lv_img_set_zoom(ui_img_box, LV_IMG_ZOOM_NONE);
-    lv_obj_set_align(ui_img_box, config.visual.box_art_align);
+    lv_obj_set_align(ui_img_box, box_art_align());
     lv_obj_set_style_pad_left(ui_img_box, pad_l, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_right(ui_img_box, pad_r, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_pad_top(ui_img_box, pad_t, MU_OBJ_MAIN_DEFAULT);
@@ -1367,7 +1403,7 @@ static void render_box_single(const char *image, int *starter_image) {
     }
 
     *starter_image = 1;
-    lv_obj_set_align(ui_img_box, config.visual.box_art_align);
+    lv_obj_set_align(ui_img_box, box_art_align());
 
     const int box_w = device.mux.width;
     int16_t max_w;
@@ -1550,10 +1586,9 @@ static int muxmedia_latest_image(const char *content_path, char *out, const size
     return written > 0 && (size_t) written < out_size && file_exist(out);
 }
 
-int resolve_save_screenshot(const char *content_path, const int scope, char *out, const size_t out_size) {
+int content_save_image(const char *content_path, const int scope, char *out, const size_t out_size) {
     if (!content_path || !*content_path || !out) return 0;
     if (!(config.visual.save_screenshot & scope)) return 0;
-    if (grid_mode_enabled && config.visual.box_art_hide) return 0;
 
     char resolved[PATH_MAX];
     if (!union_resolve_to_real(content_path, resolved, sizeof(resolved)))
@@ -1565,6 +1600,11 @@ int resolve_save_screenshot(const char *content_path, const int scope, char *out
     if (!content_muxretro_core(resolved, core_name, sizeof(core_name))) return 0;
 
     return muxretro_latest_state_image(resolved, core_name, out, out_size);
+}
+
+int resolve_save_screenshot(const char *content_path, const int scope, char *out, const size_t out_size) {
+    if (grid_mode_enabled && config.visual.box_art_hide && !content_layout_side(&config)) return 0;
+    return content_save_image(content_path, scope, out, out_size);
 }
 
 void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], int *starter_image) {
@@ -1594,7 +1634,7 @@ void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], 
 
     const struct image_settings image_settings = {
         image,
-        config.visual.box_art_align,
+        box_art_align(),
         validate_int16((int16_t) (device.mux.width * 42 / 100), "width"),
         validate_int16((int16_t) (panel_height * 42 / 100), "height"),
         validate_int16((int16_t) pad_l, "pad_left"),
@@ -1625,7 +1665,8 @@ void render_image_refresh(
 
     char image[MAX_BUFFER_SIZE] = {0};
 
-    if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.visual.box_art_hide) {
+    if (strcasecmp(image_type, "box") != 0 || !grid_mode_enabled || !config.visual.box_art_hide
+        || content_layout_side(&config)) {
         if (strcasecmp(image_type, "box") == 0 || is_preview)
             load_media_catalogue(h_core_artwork, h_file_name, "", "default", mux_dim, image_type, image, sizeof(image));
         else
@@ -2047,4 +2088,223 @@ char *read_shader_info(const char *shader_store, const char *key) {
 
     fclose(f);
     return NULL;
+}
+
+void theme_apply_folder(const char *folder) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s", folder);
+    if (strcasecmp(folder, "MustardOS") == 0) snprintf(path, sizeof(path), "%s", INTERNAL_THEME);
+
+    write_text_to_file_atomic(CONF_CONFIG_PATH "theme/active", CHAR, folder);
+    if (theme_path_has_font(path)) write_text_to_file_atomic(CONF_CONFIG_PATH "settings/advanced/font", INT, 1);
+    write_text_to_file_atomic(CONF_CONFIG_PATH "settings/theme/menu_style", INT, menu_style_named_for(path));
+    write_text_to_file(MUOS_BTL_LOAD, "w", INT, 1);
+
+    const char *args[] = {OPT_PATH "script/mux/tweak.sh", NULL};
+    run_exec(args, A_SIZE(args), 0, 0, NULL, NULL);
+
+    refresh_config = 1;
+    refresh_device = 1;
+    refresh_resolution = 1;
+}
+
+void theme_create_request(void) {
+    char name[MAX_BUFFER_SIZE] = "";
+    char action[32] = "create";
+    char source[MAX_BUFFER_SIZE] = "";
+    char slot[32] = "";
+    char screen[64] = "";
+    char section[64] = "";
+    char op[16] = "";
+    char dim[16] = "";
+    char key[96] = "";
+    char value[MAX_BUFFER_SIZE] = "";
+    char glyph[64] = "";
+    char kind[32] = "";
+    char type[16] = "";
+    static char tracks[LAB_FILES_MAX][LAB_NAME_SIZE];
+    int track_count = 0;
+    unsigned include = 0;
+    int apply = 0;
+
+    FILE *file = fopen(THEME_CREATE_REQ, "r");
+    if (file) {
+        static const struct {
+            const char *key;
+            unsigned flag;
+        } flags[] = {
+            {"colours", theme_include_colours},
+            {"layouts", theme_include_layouts},
+            {"menu", theme_include_menu},
+            {"font", theme_include_font},
+        };
+        const struct {
+            const char *key;
+            char *out;
+            size_t size;
+        } fields[] = {
+            {"name", name, sizeof(name)},
+            {"action", action, sizeof(action)},
+            {"source", source, sizeof(source)},
+            {"slot", slot, sizeof(slot)},
+            {"screen", screen, sizeof(screen)},
+            {"glyph", glyph, sizeof(glyph)},
+            {"kind", kind, sizeof(kind)},
+            {"section", section, sizeof(section)},
+            {"op", op, sizeof(op)},
+            {"dim", dim, sizeof(dim)},
+            {"key", key, sizeof(key)},
+            {"value", value, sizeof(value)},
+            {"type", type, sizeof(type)},
+        };
+
+        char line[MAX_BUFFER_SIZE];
+        while (fgets(line, sizeof(line), file)) {
+            line[strcspn(line, "\r\n")] = '\0';
+            char *equals = strchr(line, '=');
+            if (!equals) continue;
+            *equals++ = '\0';
+
+            for (size_t i = 0; i < A_SIZE(fields); i++) {
+                if (strcmp(line, fields[i].key) == 0) snprintf(fields[i].out, fields[i].size, "%s", equals);
+            }
+            if (strcmp(line, "track") == 0 && track_count < LAB_FILES_MAX) {
+                snprintf(tracks[track_count++], LAB_NAME_SIZE, "%s", equals);
+            }
+            if (strcmp(line, "apply") == 0) apply = atoi(equals);
+            for (size_t i = 0; i < A_SIZE(flags); i++) {
+                if (strcmp(line, flags[i].key) == 0 && atoi(equals)) include |= flags[i].flag;
+            }
+        }
+        fclose(file);
+    }
+
+    char folder[MAX_BUFFER_SIZE] = "";
+    int result = theme_create_failed;
+    lab_set_target(dim);
+    int own = 1;
+    int redraw = 0;
+    if (strcmp(action, "remix") == 0) {
+        result = theme_remix(source, folder, sizeof(folder));
+        own = 0;
+    } else if (strcmp(action, "wall") == 0) {
+        result = lab_wall_apply(config.theme.active, slot, source);
+        redraw = 1;
+    } else if (strcmp(action, "scheme") == 0) {
+        result = lab_scheme_apply(config.theme.active, screen, section, key, value);
+        if (result == theme_create_ok) {
+            write_text_to_file(THEME_LIVE, "w", CHAR, "");
+            result = lab_scheme_export(config.theme.active, screen);
+        }
+    } else if (strcmp(action, "colour") == 0) {
+        result = lab_colour_apply(config.theme.active, slot, value);
+        redraw = 1;
+    } else if (strcmp(action, "resolution") == 0) {
+        result = lab_resolution_apply(config.theme.active, op, name);
+    } else if (strcmp(action, "tojson") == 0) {
+        result = theme_lab_own(config.theme.active) && lab_scheme_to_json(config.theme.active) >= 0
+                     ? theme_create_ok
+                     : theme_create_failed;
+        redraw = 1;
+    } else if (strcmp(action, "variant") == 0) {
+        result = lab_variant_apply(config.theme.active, op, name, source);
+        redraw = 1;
+    } else if (strcmp(action, "light") == 0) {
+        result = lab_light_apply(config.theme.active, slot, value);
+    } else if (strcmp(action, "splash") == 0) {
+        result = lab_splash_apply(config.theme.active, key, value);
+    } else if (strcmp(action, "schemeread") == 0) {
+        result = lab_scheme_export(config.theme.active, screen);
+    } else if (strcmp(action, "overlay") == 0) {
+        result = lab_overlay_apply(config.theme.active, slot, source);
+        redraw = 1;
+    } else if (strcmp(action, "glyph") == 0) {
+        result = lab_glyph_apply(config.theme.active, screen, glyph, source);
+        redraw = 1;
+    } else if (strcmp(action, "rename") == 0) {
+        result = theme_rename(config.theme.active, name, folder, sizeof(folder));
+        own = 0;
+        if (result == theme_create_ok && strcmp(folder, config.theme.active) != 0) apply = 1;
+    } else if (strcmp(action, "credit") == 0) {
+        result = lab_theme_set_credit(config.theme.active, name);
+    } else if (strcmp(action, "export") == 0) {
+        result = lab_share_export(config.theme.active, folder, sizeof(folder));
+        own = 0;
+    } else if (strcmp(action, "import") == 0) {
+        result = lab_share_import(source, folder, sizeof(folder));
+        own = 0;
+    } else if (strcmp(action, "preview") == 0) {
+        result = lab_preview_apply(config.theme.active, atoi(slot), source);
+    } else if (strcmp(action, "music") == 0) {
+        result = lab_music_apply(config.theme.active, tracks, track_count);
+    } else if (strcmp(action, "media") == 0) {
+        result = lab_media_apply(config.theme.active, slot, source);
+    } else if (strcmp(action, "font") == 0) {
+        result = lab_font_apply(config.theme.active, slot, source);
+        redraw = 1;
+    } else if (strcmp(action, "art") == 0) {
+        result = lab_art_apply(config.theme.active, kind, type, glyph, source);
+        redraw = 1;
+    } else if (strcmp(action, "delete") == 0) {
+        const int active = strcmp(source, config.theme.active) == 0;
+        result = theme_delete(source);
+        snprintf(folder, sizeof(folder), "%s", active ? "MustardOS" : config.theme.active);
+        apply = active;
+        own = 0;
+    } else if (strcmp(action, "use") == 0) {
+        result = theme_lab_own(source) ? theme_create_ok : theme_create_name;
+        snprintf(folder, sizeof(folder), "%s", source);
+        own = 0;
+        apply = 1;
+    } else {
+        result = theme_create(name, include, folder, sizeof(folder));
+        own = 0;
+    }
+    if (own) snprintf(folder, sizeof(folder), "%s", config.theme.active);
+    if (redraw && result == theme_create_ok) write_text_to_file(THEME_LIVE, "w", CHAR, "");
+
+    static const char *const results[] = {
+        [theme_create_ok] = "ok",         [theme_create_name] = "name",     [theme_create_exists] = "exists",
+        [theme_create_failed] = "failed", [theme_create_unsafe] = "unsafe",
+    };
+
+    char done[MAX_BUFFER_SIZE];
+    snprintf(done, sizeof(done), "%s %s", results[result], folder);
+    write_text_to_file(THEME_CREATE_DONE, "w", CHAR, done);
+    remove(THEME_CREATE_REQ);
+
+    if (result == theme_create_ok && apply) theme_apply_folder(folder);
+}
+
+void apply_screen_colours(void) {
+    lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme.system.background), MU_OBJ_MAIN_DEFAULT);
+    refresh_screen_gradient(&theme, &device);
+
+    lv_obj_set_style_bg_color(ui_pnl_header, lv_color_hex(theme.header.background), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnl_header, theme.header.background_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lbl_title, lv_color_hex(theme.header.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_color(ui_lbl_datetime, lv_color_hex(theme.datetime.text), MU_OBJ_MAIN_DEFAULT);
+
+    lv_obj_set_style_bg_color(ui_pnl_footer, lv_color_hex(theme.footer.background), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnl_footer, theme.footer.background_alpha, MU_OBJ_MAIN_DEFAULT);
+
+    const struct {
+        lv_obj_t *glyph;
+        lv_obj_t *text;
+        const struct footer_glyph *colour;
+    } nav[] = {
+        {ui_lbl_nav_lr_glyph, ui_lbl_nav_lr, &theme.nav.lr}, {ui_lbl_nav_a_glyph, ui_lbl_nav_a, &theme.nav.a},
+        {ui_lbl_nav_b_glyph, ui_lbl_nav_b, &theme.nav.b},    {ui_lbl_nav_x_glyph, ui_lbl_nav_x, &theme.nav.x},
+        {ui_lbl_nav_y_glyph, ui_lbl_nav_y, &theme.nav.y},    {ui_lbl_nav_c_glyph, ui_lbl_nav_c, &theme.nav.c},
+        {ui_lbl_nav_z_glyph, ui_lbl_nav_z, &theme.nav.z},    {ui_lbl_nav_menu_glyph, ui_lbl_nav_menu, &theme.nav.menu},
+    };
+    for (size_t i = 0; i < A_SIZE(nav); i++) {
+        lv_obj_set_style_img_recolor(nav[i].glyph, lv_color_hex(nav[i].colour->glyph), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_text_color(nav[i].text, lv_color_hex(nav[i].colour->text), MU_OBJ_MAIN_DEFAULT);
+    }
+
+    update_battery_capacity(ui_sta_capacity, &theme);
+    update_battery_percent_label(ui_lbl_battery_percent, &theme);
+    update_network_status(ui_sta_network, &theme, 0);
+    update_bluetooth_status(ui_sta_bluetooth, &theme);
 }

@@ -7,6 +7,7 @@ SKIPPED_TAGS = {"script", "style", "code", "pre", "kbd", "samp"}
 BUTTONS = re.compile(r"^(A|B|X|Y|[LR][1-3])$")
 NAMES = {"MustardOS", "Pickles", "Wasabi", "RetroArch", "Discord", "IRC", "Syncthing", "muos.local"}
 HELPERS = re.compile(r'(?:\b(?:showToast|action)\(|\blabel: )"([^"]*)"')
+SERVER = re.compile(r'\bsend_error\([^,]+,\s*\d+,\s*"([^"]*)"')
 
 
 class PageStrings(HTMLParser):
@@ -61,6 +62,8 @@ def main():
             source = handle.read()
         if path.endswith(".js"):
             found = script_strings(source)
+        elif path.endswith(".c"):
+            found = SERVER.findall(source)
         else:
             parser = PageStrings()
             parser.feed(source)

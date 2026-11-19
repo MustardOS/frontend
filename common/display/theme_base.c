@@ -34,7 +34,7 @@ const char *get_theme_base(void) {
     const char *paths[2];
     int path_count = 0;
 
-    if (!config.boot.factory_reset) {
+    if (!config.boot.factory_reset && strcasecmp(config.theme.active, "MustardOS") != 0) {
         const int written =
             snprintf(storage_theme, sizeof(storage_theme), RUN_STORAGE_PATH "theme/%s", config.theme.active);
         if (written > 0 && (size_t) written < sizeof(storage_theme)) paths[path_count++] = storage_theme;

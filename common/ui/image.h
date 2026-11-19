@@ -7,6 +7,10 @@
 
 extern char current_wall[MAX_BUFFER_SIZE];
 
+void wallpaper_forget(const char *path);
+
+void image_caches_reset(void);
+
 enum wall_type { wall_application, wall_archive, wall_general, wall_task };
 
 struct image_settings {

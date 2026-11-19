@@ -72,6 +72,7 @@ static void update_storage_info(void) {
     add_storage(&sp, STORE_LOC_COLL, ui_val_collection_storage);
     add_storage(&sp, STORE_LOC_OVER, ui_val_override_storage);
     add_storage(&sp, STORE_LOC_LNCH, ui_val_launch_storage);
+    add_storage(&sp, STORE_LOC_LAYO, ui_val_layout_storage);
     add_storage(&sp, STORE_LOC_NAME, ui_val_name_storage);
     add_storage(&sp, STORE_LOC_CLOG, ui_val_catalogue_storage);
     add_storage(&sp, STORE_LOC_BIOS, ui_val_bios_storage);
@@ -83,6 +84,8 @@ static void update_storage_info(void) {
     add_storage(&sp, STORE_LOC_APPS, ui_val_apps_storage);
     add_storage(&sp, STORE_LOC_PACK, ui_val_package_storage);
     add_storage(&sp, STORE_LOC_THEM, ui_val_theme_storage);
+    add_storage(&sp, STORE_LOC_COLR, ui_val_colour_storage);
+    add_storage(&sp, STORE_LOC_LAB, ui_val_lab_storage);
     add_storage(&sp, STORE_LOC_MUSI, ui_val_music_storage);
 
     char dir[FILENAME_MAX];

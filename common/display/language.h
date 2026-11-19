@@ -5,6 +5,8 @@
 
 extern struct mux_lang lang;
 
+const char *lang_module_first(const char *module);
+
 extern char *disabled_enabled[];
 extern char *no_yes[];
 extern char *excluded_included[];
@@ -91,6 +93,7 @@ struct mux_lang {
         char tag_sort[MAX_BUFFER_SIZE];
         char search[MAX_BUFFER_SIZE];
         char top_level[MAX_BUFFER_SIZE];
+        char customise[MAX_BUFFER_SIZE];
         char sort_order[MAX_BUFFER_SIZE];
         char scope_content[MAX_BUFFER_SIZE];
         char scope_directory[MAX_BUFFER_SIZE];
@@ -395,6 +398,7 @@ struct mux_lang {
         char retroarch[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
+        char layout[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char profile[MAX_BUFFER_SIZE];
         char settings[MAX_BUFFER_SIZE];
@@ -407,6 +411,8 @@ struct mux_lang {
         char screenshot[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
+        char colour[MAX_BUFFER_SIZE];
+        char lab[MAX_BUFFER_SIZE];
         char track[MAX_BUFFER_SIZE];
         char target[MAX_BUFFER_SIZE];
         char merge[MAX_BUFFER_SIZE];
@@ -423,6 +429,7 @@ struct mux_lang {
             char retroarch[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
             char launch[MAX_BUFFER_SIZE];
+            char layout[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char profile[MAX_BUFFER_SIZE];
             char settings[MAX_BUFFER_SIZE];
@@ -435,6 +442,8 @@ struct mux_lang {
             char screenshot[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
+            char colour[MAX_BUFFER_SIZE];
+            char lab[MAX_BUFFER_SIZE];
             char track[MAX_BUFFER_SIZE];
             char target[MAX_BUFFER_SIZE];
             char merge[MAX_BUFFER_SIZE];
@@ -782,6 +791,8 @@ struct mux_lang {
         char menureset_desc[MAX_BUFFER_SIZE];
         char menureset_done[MAX_BUFFER_SIZE];
         char customcolours[MAX_BUFFER_SIZE];
+        char theme_adjust[MAX_BUFFER_SIZE];
+        char menu_adjust[MAX_BUFFER_SIZE];
         struct {
             char title[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
@@ -829,7 +840,6 @@ struct mux_lang {
         struct {
             char content[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
-            char main_menu[MAX_BUFFER_SIZE];
             char packages[MAX_BUFFER_SIZE];
             char layout[MAX_BUFFER_SIZE];
             char glyphs[MAX_BUFFER_SIZE];
@@ -913,6 +923,8 @@ struct mux_lang {
             char menu_reset[MAX_BUFFER_SIZE];
             char menu_order[MAX_BUFFER_SIZE];
             char colours[MAX_BUFFER_SIZE];
+            char theme_adjust[MAX_BUFFER_SIZE];
+            char menu_adjust[MAX_BUFFER_SIZE];
             char video_wallpaper[MAX_BUFFER_SIZE];
             char background_scale[MAX_BUFFER_SIZE];
             char boxartimage[MAX_BUFFER_SIZE];
@@ -1268,6 +1280,106 @@ struct mux_lang {
             char no_core[MAX_BUFFER_SIZE];
         } error;
     } muxhistory;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+        char explore[MAX_BUFFER_SIZE];
+        char collection[MAX_BUFFER_SIZE];
+        char history[MAX_BUFFER_SIZE];
+        char explore_title[MAX_BUFFER_SIZE];
+        char collection_title[MAX_BUFFER_SIZE];
+        char history_title[MAX_BUFFER_SIZE];
+        char reset[MAX_BUFFER_SIZE];
+        char reset_title[MAX_BUFFER_SIZE];
+        char reset_desc[MAX_BUFFER_SIZE];
+        char style[MAX_BUFFER_SIZE];
+        char style_theme[MAX_BUFFER_SIZE];
+        char style_list[MAX_BUFFER_SIZE];
+        char style_grid[MAX_BUFFER_SIZE];
+        char style_carousel[MAX_BUFFER_SIZE];
+        char style_carousel_vertical[MAX_BUFFER_SIZE];
+        char style_grid_list[MAX_BUFFER_SIZE];
+        char style_carousel_list[MAX_BUFFER_SIZE];
+        char columns[MAX_BUFFER_SIZE];
+        char rows[MAX_BUFFER_SIZE];
+        char cell_size[MAX_BUFFER_SIZE];
+        char names[MAX_BUFFER_SIZE];
+        char names_bar[MAX_BUFFER_SIZE];
+        char names_cell[MAX_BUFFER_SIZE];
+        char names_hidden[MAX_BUFFER_SIZE];
+        char item_count[MAX_BUFFER_SIZE];
+        char item_spacing[MAX_BUFFER_SIZE];
+        char strip_columns[MAX_BUFFER_SIZE];
+        char strip_size[MAX_BUFFER_SIZE];
+        char side[MAX_BUFFER_SIZE];
+        char side_full[MAX_BUFFER_SIZE];
+        char side_left[MAX_BUFFER_SIZE];
+        char side_right[MAX_BUFFER_SIZE];
+        char offset_x[MAX_BUFFER_SIZE];
+        char offset_y[MAX_BUFFER_SIZE];
+        char source[MAX_BUFFER_SIZE];
+        char source_screen[MAX_BUFFER_SIZE];
+        char source_folder[MAX_BUFFER_SIZE];
+        char colour[MAX_BUFFER_SIZE];
+        char colour_global[MAX_BUFFER_SIZE];
+        char folders[MAX_BUFFER_SIZE];
+        char folders_title[MAX_BUFFER_SIZE];
+        char folders_desc[MAX_BUFFER_SIZE];
+        char counter_align[MAX_BUFFER_SIZE];
+        char counter_left[MAX_BUFFER_SIZE];
+        char counter_centre[MAX_BUFFER_SIZE];
+        char counter_right[MAX_BUFFER_SIZE];
+        char counter_x[MAX_BUFFER_SIZE];
+        char counter_y[MAX_BUFFER_SIZE];
+        char sample_folder[MAX_BUFFER_SIZE];
+        char sample_item[MAX_BUFFER_SIZE];
+        char sample_long[MAX_BUFFER_SIZE];
+        struct {
+            char explore[MAX_BUFFER_SIZE];
+            char collection[MAX_BUFFER_SIZE];
+            char history[MAX_BUFFER_SIZE];
+            char reset[MAX_BUFFER_SIZE];
+            char style[MAX_BUFFER_SIZE];
+            char columns[MAX_BUFFER_SIZE];
+            char rows[MAX_BUFFER_SIZE];
+            char cell_size[MAX_BUFFER_SIZE];
+            char names[MAX_BUFFER_SIZE];
+            char item_count[MAX_BUFFER_SIZE];
+            char item_spacing[MAX_BUFFER_SIZE];
+            char strip_columns[MAX_BUFFER_SIZE];
+            char strip_size[MAX_BUFFER_SIZE];
+            char side[MAX_BUFFER_SIZE];
+            char offset_x[MAX_BUFFER_SIZE];
+            char offset_y[MAX_BUFFER_SIZE];
+            char source[MAX_BUFFER_SIZE];
+            char colour[MAX_BUFFER_SIZE];
+            char folders[MAX_BUFFER_SIZE];
+            char counter_align[MAX_BUFFER_SIZE];
+            char counter_x[MAX_BUFFER_SIZE];
+            char counter_y[MAX_BUFFER_SIZE];
+        } help;
+    } muxadjust;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char overview[MAX_BUFFER_SIZE];
+    } muxmenuadjust;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        struct {
+            char header[MAX_BUFFER_SIZE];
+            char footer[MAX_BUFFER_SIZE];
+            char bar[MAX_BUFFER_SIZE];
+            char section[MAX_BUFFER_SIZE];
+            char option[MAX_BUFFER_SIZE];
+            char picker[MAX_BUFFER_SIZE];
+            char access[MAX_BUFFER_SIZE];
+            char news[MAX_BUFFER_SIZE];
+            char rgbzone[MAX_BUFFER_SIZE];
+        } area;
+    } muxlabglyph;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -3554,6 +3666,7 @@ struct mux_lang {
         char music[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
+        char layout[MAX_BUFFER_SIZE];
         char network[MAX_BUFFER_SIZE];
         char profile[MAX_BUFFER_SIZE];
         char package[MAX_BUFFER_SIZE];
@@ -3565,6 +3678,8 @@ struct mux_lang {
         char manifest[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
+        char colour[MAX_BUFFER_SIZE];
+        char lab[MAX_BUFFER_SIZE];
         char track[MAX_BUFFER_SIZE];
         char migrate_all[MAX_BUFFER_SIZE];
         char sync_all[MAX_BUFFER_SIZE];
@@ -3579,6 +3694,7 @@ struct mux_lang {
             char music[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
             char launch[MAX_BUFFER_SIZE];
+            char layout[MAX_BUFFER_SIZE];
             char network[MAX_BUFFER_SIZE];
             char profile[MAX_BUFFER_SIZE];
             char package[MAX_BUFFER_SIZE];
@@ -3590,6 +3706,8 @@ struct mux_lang {
             char manifest[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
+            char colour[MAX_BUFFER_SIZE];
+            char lab[MAX_BUFFER_SIZE];
             char track[MAX_BUFFER_SIZE];
             char migrate_all[MAX_BUFFER_SIZE];
             char sync_all[MAX_BUFFER_SIZE];

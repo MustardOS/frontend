@@ -72,6 +72,9 @@
 #include <common/content/core/common.h>
 #include <common/ui/nav/list_nav.h>
 #include <common/ui/nav/grid_nav.h>
+#include <common/ui/nav/content_layout.h>
+#include <common/ui/nav/folder_custom.h>
+#include <common/ui/nav/content_strip.h>
 #include <json/json.h>
 #include <common/content/lookup.h>
 // IWYU pragma: end_exports
@@ -218,6 +221,8 @@ int build_safe_path(char *dst, size_t n, const char *base, const char *name);
 
 void resolve_friendly_name(const char *file_path, char *out);
 
+void apply_screen_colours(void);
+
 void resolve_content_name(const char *file_path, char *out, size_t out_size);
 
 void gen_item_from_files(const char *base_path, int file_count, char **file_names);
@@ -231,6 +236,10 @@ void render_image_refresh(
 );
 
 int resolve_save_screenshot(const char *content_path, int scope, char *out, size_t out_size);
+
+int content_save_image(const char *content_path, int scope, char *out, size_t out_size);
+
+int box_art_align(void);
 
 void render_save_screenshot(const char *image, lv_obj_t *ui_viewport_objects[], int *starter_image);
 
@@ -302,6 +311,20 @@ int muxdistemp_main(void);
 void muxgov_main(int auto_assign, const char *name, const char *dir, const char *sys, int app);
 
 int muxhdmi_main(void);
+
+int muxadjust_main(void);
+
+int muxadjustscreen_main(void);
+
+int muxmenuadjust_main(void);
+
+void theme_apply_folder(const char *folder);
+
+void theme_create_request(void);
+
+extern int adjust_screen;
+
+extern char adjust_folder[PATH_MAX];
 
 int muxhistory_main(int his_index);
 

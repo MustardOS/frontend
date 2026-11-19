@@ -24,7 +24,7 @@ RESOLUTION = re.compile(r"^\d+x\d+$")
 
 def read_fields(frontend):
     source = open(os.path.join(frontend, "common", "display", "theme.c"), encoding="utf-8").read()
-    pattern = re.compile(r'\{"([a-z]+)", "([A-Z0-9_]+)", THEME_OFF\([^)]*\), theme_([a-z]+)')
+    pattern = re.compile(r'\{"([a-z_]+)", "([A-Z0-9_]+)", THEME_OFF\([^)]*\), theme_([a-z]+)')
     fields = {(section, key): kind for section, key, kind in pattern.findall(source)}
     fields[("misc", "CONTENT_WIDTH")] = "int"
     return fields

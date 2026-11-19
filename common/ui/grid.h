@@ -1,5 +1,12 @@
 #pragma once
 
+#include <stddef.h>
+
+typedef struct {
+    int (*save_image)(int index, char *out, size_t size);
+    const char *(*glyph)(int index);
+} grid_content_art;
+
 struct grid_info {
     int item_count;
     int last_row_item_count;
@@ -31,6 +38,6 @@ void create_carousel_grid(void);
 
 int is_carousel_grid_mode(void);
 
-void init_grid_dynamic(const char *prev_dir, int *sys_index);
+void init_grid_dynamic(const char *prev_dir, int *sys_index, const grid_content_art *art);
 
 int init_grid_static(int count, char *item_labels[], char *item_grid_labels[], char *glyph_names[]);

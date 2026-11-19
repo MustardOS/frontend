@@ -10,6 +10,10 @@ struct json theme_json_module(struct json root, const char *module, const char *
 
 struct json theme_json_lookup(struct json scheme, const char *section, const char *key);
 
+int theme_json_index_group(struct json scheme, const char *section);
+
+struct json theme_json_index_lookup(const char *section, const char *key);
+
 long theme_json_number(struct json value, int base);
 
 char *theme_json_module_layout(const char *base, const char *module);

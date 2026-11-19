@@ -70,6 +70,7 @@
     BACKUP(content, "content")                                                                                         \
     BACKUP(override, "override")                                                                                       \
     BACKUP(launch, "launch")                                                                                           \
+    BACKUP(layout, "layout")                                                                                           \
     BACKUP(name, "name")                                                                                               \
     BACKUP(catalogue, "catalogue")                                                                                     \
     BACKUP(bios, "bios")
@@ -86,6 +87,8 @@
     BACKUP(apps, "application")                                                                                        \
     BACKUP(package, "package")                                                                                         \
     BACKUP(theme, "theme")                                                                                             \
+    BACKUP(colour, "colour")                                                                                           \
+    BACKUP(lab, "lab")                                                                                                 \
     BACKUP(music, "music")                                                                                             \
     BACKUP(retroarch, "retroarch")
 
@@ -218,24 +221,35 @@
     CONNECT(webcode, "webcode")                                                                                        \
     CONNECT(bluetooth, "bluetooth")
 
+#define ADJUST_ELEMENTS                                                                                                \
+    ADJUST(colours, "customcolour")                                                                                    \
+    ADJUST(menu, "menuadjust")                                                                                         \
+    ADJUST(explore, "explore")                                                                                         \
+    ADJUST(collection, "collection")                                                                                   \
+    ADJUST(history, "history")                                                                                         \
+    ADJUST(folders, "folders")                                                                                         \
+    ADJUST(reset, "reset")
+
+#define MENUADJUST_ELEMENTS                                                                                            \
+    MENUADJUST(menu_style, "menustyle")                                                                                \
+    MENUADJUST(menu_arrange, "menuarrange")                                                                            \
+    MENUADJUST(menu_layout, "menulayout")                                                                              \
+    MENUADJUST(menu_label, "menulabel")                                                                                \
+    MENUADJUST(menu_random, "menurandom")                                                                              \
+    MENUADJUST(menu_order, "menuorder")                                                                                \
+    MENUADJUST(menu_reset, "menureset")
+
 #define CUSTOM_ELEMENTS                                                                                                \
     CUSTOM(catalogue, "catalogue")                                                                                     \
     CUSTOM(config, "config")                                                                                           \
     CUSTOM(logo, "logo")                                                                                               \
-    CUSTOM(colours, "customcolour")                                                                                    \
+    CUSTOM(theme_adjust, "themeopt")                                                                                   \
     CUSTOM(sort, "sort")                                                                                               \
     CUSTOM(theme, "theme")                                                                                             \
+    CUSTOM(theme_alternate, "alternate")                                                                               \
     CUSTOM(theme_resolution, "resolution")                                                                             \
     CUSTOM(theme_scaling, "scaling")                                                                                   \
-    CUSTOM(theme_alternate, "alternate")                                                                               \
     CUSTOM(random_theme, "randomtheme")                                                                                \
-    CUSTOM(menu_reset, "menureset")                                                                                    \
-    CUSTOM(menu_layout, "menulayout")                                                                                  \
-    CUSTOM(menu_style, "menustyle")                                                                                    \
-    CUSTOM(menu_arrange, "menuarrange")                                                                                \
-    CUSTOM(menu_label, "menulabel")                                                                                    \
-    CUSTOM(menu_random, "menurandom")                                                                                  \
-    CUSTOM(menu_order, "menuorder")                                                                                    \
     CUSTOM(header_height, "headerheight")                                                                              \
     CUSTOM(footer_height, "footerheight")                                                                              \
     CUSTOM(content_item_count, "count")                                                                                \
@@ -607,6 +621,7 @@
 #define STORAGE_CONTENT_ELEMENTS                                                                                       \
     STORAGE(override, "override")                                                                                      \
     STORAGE(launch, "launch")                                                                                          \
+    STORAGE(layout, "layout")                                                                                          \
     STORAGE(name, "name")                                                                                              \
     STORAGE(catalogue, "catalogue")                                                                                    \
     STORAGE(bios, "bios")
@@ -622,6 +637,8 @@
     STORAGE(apps, "apps")                                                                                              \
     STORAGE(package, "package")                                                                                        \
     STORAGE(theme, "theme")                                                                                            \
+    STORAGE(colour, "colour")                                                                                          \
+    STORAGE(lab, "lab")                                                                                                \
     STORAGE(music, "music")
 
 #define STORAGE_BULK_ELEMENTS                                                                                          \

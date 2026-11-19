@@ -128,6 +128,7 @@ FIXED_OPTIONS = {
         (21, ("menu_style.sidebar", "menu_arrange.top")), (22, ("menu_style.grid", "menu_arrange.pages")),
         (23, ("menu_style.slices",)), (24, ("menu_style.fluent", "menu_arrange.mascot")))],
 }
+
 for _glyph in ("footer", "grid", "header", "list"):
     FIXED_OPTIONS[f"settings/theme/glyph_size_{_glyph}"] = [
         ("-2", "lang.muxthemeopt.size_default"), ("0", "lang.muxthemeopt.glyph_auto"),
@@ -327,7 +328,6 @@ LABEL_KEYS = {
     "web/syncthing": "lang.muxwebserv.syncthing",
     "web/syncthing_port": "{lang.muxwebserv.syncthing} {lang.muxwebserv.web_port}",
 }
-
 HELP_TEXT = {
     "settings/colour/sunrise_temp": (
         "The display temperature used during daytime when scheduling is enabled, or the manual display temperature "
@@ -866,9 +866,6 @@ def main():
     schema_text = json.dumps(schema, indent=2, ensure_ascii=False) + "\n"
     if write_if_changed(args.schema, schema_text):
         print(f"Wrote {args.schema}")
-    dashboard_schema = os.path.join(args.internal, "share/web/tools/assets/data/profile-schema.json")
-    if os.path.abspath(dashboard_schema) != os.path.abspath(args.schema) and write_if_changed(dashboard_schema, schema_text):
-        print(f"Wrote {dashboard_schema}")
 
 
 if __name__ == "__main__":

@@ -556,7 +556,10 @@ static void module_refresh(void) {
     if (!(refresh_kiosk | refresh_config | refresh_device)) return;
 
     if (refresh_kiosk) load_kiosk(&kiosk);
-    if (refresh_config) load_config(&config);
+    if (refresh_config) {
+        load_config(&config);
+        content_layout_load(&config);
+    }
     if (refresh_device) {
         load_device(&device);
         board_init(device.board.name);
@@ -608,8 +611,12 @@ static const module_entry modules[] = {
     {"profile", "config", "muxprofile", muxprofile_main, NULL},
     {"custom", "config", "muxcustom", muxcustom_main, NULL},
     {"logo", "custom", "muxlogo", muxlogo_main, NULL},
-    {"colour", "custom", "muxcolour", muxcolour_main, NULL},
-    {"layout", "custom", "muxlaunch", muxlaunch_layout_main, NULL},
+    {"colour", "adjust", "muxcolour", muxcolour_main, NULL},
+    {"adjust", "custom", "muxadjust", muxadjust_main, NULL},
+    {"adjustscreen", "adjust", "muxadjustscreen", muxadjustscreen_main, NULL},
+    {"adjustfolder", "explore", "muxadjustscreen", muxadjustscreen_main, NULL},
+    {"menuadjust", "adjust", "muxmenuadjust", muxmenuadjust_main, NULL},
+    {"layout", "menuadjust", "muxlaunch", muxlaunch_layout_main, NULL},
     {"core", "config", "muxcore", muxcore_main, NULL},
     {"language", "tweakgen", "muxlanguage", muxlanguage_main, NULL},
     {"soundfont", "tweakgen", "muxsoundfont", muxsoundfont_main, NULL},
@@ -672,6 +679,8 @@ static void dispatch_map_build(void) {
     dispatch_map_ready = 1;
 }
 
+static char last_action[64];
+
 static int module_dispatch(void) {
     if (!file_exist(MUOS_ACT_LOAD)) return 0;
 
@@ -687,6 +696,7 @@ static int module_dispatch(void) {
         if (strcmp(action, dispatch_map[slot].action) == 0) {
             const size_t i = dispatch_map[slot].index;
             screen_clean = 0;
+            snprintf(last_action, sizeof(last_action), "%s", action);
             free(action);
 
             const int tester = modules[i].module && strcmp(modules[i].module, "muxtester") == 0;
@@ -793,6 +803,7 @@ static void load_device_param(void *arg) {
 
 static void load_config_param(void *arg) {
     load_config(arg);
+    content_layout_load(arg);
 }
 
 static void load_kiosk_param(void *arg) {
@@ -908,9 +919,38 @@ int main(void) {
         screen_switch_start = lv_tick_get();
         module_refresh();
 
+        last_action[0] = '\0';
         if (!module_dispatch()) module_start();
 
         cleanup_screen();
+
+        if (theme_request_pending) {
+            theme_request_pending = 0;
+            theme_request_exists = 0;
+            theme_create_request();
+            theme_live_reload = !refresh_resolution;
+            if (refresh_resolution && last_action[0]) write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, last_action);
+        }
+
+        if (theme_live_reload) {
+            static const char *const targets[] = {"launcher", "explore", "collection", "history"};
+            const char *action = last_action;
+            for (size_t i = 0; i < A_SIZE(targets); i++) {
+                if (strcmp(theme_live_target, targets[i]) == 0) action = targets[i];
+            }
+
+            if (strcmp(action, last_action) != 0 && strcmp(action, "launcher") != 0) {
+                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, action);
+            }
+
+            set_nav_volume(read_line_int_from(CONF_CONFIG_PATH "settings/general/soundvol", 1));
+            set_bgm_volume(read_line_int_from(CONF_CONFIG_PATH "settings/general/bgmvol", 1));
+
+            theme_live_reload = 0;
+            theme_live_target[0] = '\0';
+            refresh_config = 1;
+            if (action[0]) write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, action);
+        }
     }
 
     cleanup_all();

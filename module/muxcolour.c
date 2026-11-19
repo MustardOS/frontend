@@ -1,7 +1,7 @@
 #include <math.h>
-#include <dirent.h>
 #include "muxshare.h"
 #include "ui/ui_muxcolour.h"
+#include <common/display/colour_scheme.h>
 #include <common/ui/list_frame.h>
 #include <common/ui/osk.h>
 
@@ -24,8 +24,6 @@ enum {
 enum { mode_theme = 0, mode_custom, mode_automatic, mode_gradient, mode_none };
 enum { preset_reset = 0, preset_first_scheme };
 
-#define SCHEME_PRESETS    OPT_SHARE_PATH "colour"
-#define SCHEME_USER       RUN_STORAGE_PATH "colour"
 #define SCHEME_MAX        32
 #define SCHEME_NAME_LIMIT 48
 
@@ -94,13 +92,6 @@ static lv_obj_t *ui_objects[ui_count_dynamic];
 static lv_obj_t *ui_objects_value[ui_count_dynamic];
 static lv_obj_t *ui_objects_glyph[ui_count_dynamic];
 static lv_obj_t *ui_objects_panel[ui_count_dynamic];
-
-typedef struct {
-    char name[SCHEME_NAME_LIMIT + 1];
-    char path[MAX_BUFFER_SIZE];
-    int user;
-    int folder;
-} colour_scheme;
 
 static colour_scheme schemes[SCHEME_MAX];
 static int scheme_count;
@@ -209,31 +200,9 @@ static void init_roles(void) {
         config.settings.themeopt.colour_keyboard_text,
         config.settings.themeopt.colour_progress_bar
     };
-    const char *keys[] = {
-        "highlight",
-        "highlight_text",
-        "highlight_shadow",
-        "background",
-        "text",
-        "text_shadow",
-        "glyphs",
-        "border",
-        "header_background",
-        "header_text",
-        "status_icons",
-        "footer_background",
-        "footer_text",
-        "dialogue_background",
-        "dialogue_text",
-        "help_background",
-        "help_text",
-        "keyboard_background",
-        "keyboard_text",
-        "progress_bar"
-    };
 
     for (int r = 0; r < colour_role_count; r++) {
-        roles[r].key = keys[r];
+        roles[r].key = colour_role_keys[r];
         roles[r].setting = settings[r];
         snprintf(roles[r].saved, sizeof(roles[r].saved), "%s", settings[r]);
         role_from_value(r, settings[r]);
@@ -508,35 +477,7 @@ static void preview_colours(void) {
     preview_custom_colours(&theme);
     apply_list_shadows();
 
-    lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme.system.background), MU_OBJ_MAIN_DEFAULT);
-    refresh_screen_gradient(&theme, &device);
-
-    lv_obj_set_style_bg_color(ui_pnl_header, lv_color_hex(theme.header.background), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnl_header, theme.header.background_alpha, MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lbl_title, lv_color_hex(theme.header.text), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_text_color(ui_lbl_datetime, lv_color_hex(theme.datetime.text), MU_OBJ_MAIN_DEFAULT);
-
-    lv_obj_set_style_bg_color(ui_pnl_footer, lv_color_hex(theme.footer.background), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnl_footer, theme.footer.background_alpha, MU_OBJ_MAIN_DEFAULT);
-
-    const struct {
-        lv_obj_t *glyph;
-        lv_obj_t *text;
-        const struct footer_glyph *colour;
-    } nav[] = {
-        {ui_lbl_nav_lr_glyph, ui_lbl_nav_lr, &theme.nav.lr}, {ui_lbl_nav_a_glyph, ui_lbl_nav_a, &theme.nav.a},
-        {ui_lbl_nav_b_glyph, ui_lbl_nav_b, &theme.nav.b},    {ui_lbl_nav_x_glyph, ui_lbl_nav_x, &theme.nav.x},
-        {ui_lbl_nav_y_glyph, ui_lbl_nav_y, &theme.nav.y},
-    };
-    for (size_t i = 0; i < A_SIZE(nav); i++) {
-        lv_obj_set_style_img_recolor(nav[i].glyph, lv_color_hex(nav[i].colour->glyph), MU_OBJ_MAIN_DEFAULT);
-        lv_obj_set_style_text_color(nav[i].text, lv_color_hex(nav[i].colour->text), MU_OBJ_MAIN_DEFAULT);
-    }
-
-    update_battery_capacity(ui_sta_capacity, &theme);
-    update_battery_percent_label(ui_lbl_battery_percent, &theme);
-    update_network_status(ui_sta_network, &theme, 0);
-    update_bluetooth_status(ui_sta_bluetooth, &theme);
+    apply_screen_colours();
 }
 
 static void save_colour_options(void) {
@@ -563,7 +504,7 @@ static void save_colour_options(void) {
 static int focused_scheme(void);
 
 static int scheme_folder_user(void) {
-    return strncmp(scheme_folder, SCHEME_USER "/", strlen(SCHEME_USER) + 1) == 0;
+    return strncmp(scheme_folder, COLOUR_SCHEME_USER "/", strlen(COLOUR_SCHEME_USER) + 1) == 0;
 }
 
 static int scheme_savable(void) {
@@ -658,35 +599,8 @@ static void roles_changed(void) {
     warn_unreadable();
 }
 
-static int compare_schemes(const void *a, const void *b) {
-    return strcasecmp(((const colour_scheme *) a)->name, ((const colour_scheme *) b)->name);
-}
-
 static void scan_schemes(const char *dir, const int user, const int folders) {
-    DIR *folder = opendir(dir);
-    if (!folder) return;
-
-    const int first = scheme_count;
-    const struct dirent *entry;
-    while ((entry = readdir(folder)) && scheme_count < SCHEME_MAX) {
-        if (entry->d_name[0] == '.') continue;
-
-        colour_scheme *scheme = &schemes[scheme_count];
-        snprintf(scheme->path, sizeof(scheme->path), "%s/%s", dir, entry->d_name);
-
-        const int is_folder = dir_exist(scheme->path);
-        const char *dot = strrchr(entry->d_name, '.');
-        if (is_folder != folders || (!is_folder && (!dot || strcasecmp(dot, ".ini") != 0))) continue;
-
-        const int length = is_folder ? (int) strlen(entry->d_name) : (int) (dot - entry->d_name);
-        snprintf(scheme->name, sizeof(scheme->name), "%.*s", length, entry->d_name);
-        scheme->user = user;
-        scheme->folder = is_folder;
-        scheme_count++;
-    }
-
-    closedir(folder);
-    qsort(schemes + first, (size_t) (scheme_count - first), sizeof(schemes[0]), compare_schemes);
+    scheme_count += colour_scheme_scan(dir, user, folders, schemes + scheme_count, SCHEME_MAX - scheme_count);
 }
 
 static int load_scheme_list(const char *select) {
@@ -694,10 +608,10 @@ static int load_scheme_list(const char *select) {
     if (scheme_folder[0]) {
         scan_schemes(scheme_folder, scheme_folder_user(), 0);
     } else {
-        scan_schemes(SCHEME_PRESETS, 0, 1);
-        scan_schemes(SCHEME_USER, 1, 1);
-        scan_schemes(SCHEME_PRESETS, 0, 0);
-        scan_schemes(SCHEME_USER, 1, 0);
+        scan_schemes(COLOUR_SCHEME_PRESETS, 0, 1);
+        scan_schemes(COLOUR_SCHEME_USER, 1, 1);
+        scan_schemes(COLOUR_SCHEME_PRESETS, 0, 0);
+        scan_schemes(COLOUR_SCHEME_USER, 1, 0);
     }
 
     list_frame_set_suppressed(preset_reset, scheme_folder[0] != '\0');
@@ -752,25 +666,11 @@ static int focused_scheme(void) {
 }
 
 static void load_colour_scheme(const int index) {
-    FILE *file = fopen(schemes[index].path, "r");
-    if (!file) {
+    char values[colour_role_count][COLOUR_VALUE_SIZE];
+    if (!colour_scheme_read(schemes[index].path, values)) {
         play_sound(snd_error);
         return;
     }
-
-    char values[colour_role_count][16] = {{0}};
-    char line[MAX_BUFFER_SIZE];
-    while (fgets(line, sizeof(line), file)) {
-        char *equals = strchr(line, '=');
-        if (!equals) continue;
-
-        *equals = '\0';
-        const char *key = str_trim(line);
-        const char *value = str_trim(equals + 1);
-        for (int r = 0; r < colour_role_count; r++)
-            if (strcmp(key, roles[r].key) == 0) snprintf(values[r], sizeof(values[r]), "%s", value);
-    }
-    fclose(file);
 
     for (int r = 0; r < colour_role_count; r++)
         role_from_value(r, values[r]);
@@ -797,7 +697,7 @@ static void save_scheme(const char *name) {
     char safe[SCHEME_NAME_LIMIT + 1];
     str_safe_filename(trimmed, safe, sizeof(safe), "Scheme");
 
-    const char *dir = scheme_folder_user() ? scheme_folder : SCHEME_USER;
+    const char *dir = scheme_folder_user() ? scheme_folder : COLOUR_SCHEME_USER;
     char saved_name[SCHEME_NAME_LIMIT + 8];
     char path[MAX_BUFFER_SIZE];
     snprintf(saved_name, sizeof(saved_name), "%s", safe);
@@ -1072,8 +972,8 @@ static void leave(void) {
         snprintf(roles[r].setting, MAX_BUFFER_SIZE, "%s", roles[r].saved);
 
     list_frame_remember_section();
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
-    load_mux("custom");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "customcolour");
+    load_mux("adjust");
     mux_input_stop();
 }
 

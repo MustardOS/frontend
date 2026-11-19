@@ -35,6 +35,8 @@ static const char *more_label(const more_id id) {
             return lang.generic.duration;
         case more_remove:
             return lang.generic.remove;
+        case more_customise:
+            return lang.generic.customise;
         case more_help:
             return lang.generic.help;
         default:

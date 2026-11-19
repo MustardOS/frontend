@@ -9017,7 +9017,7 @@
         },
         {
           "value": "explore",
-          "label": "Content Explorer"
+          "label": "Explore"
         },
         {
           "value": "collection",
@@ -17877,7 +17877,7 @@
       "min": 0,
       "max": 1,
       "label": "Main Menu Item Name",
-      "module": "muxcustom",
+      "module": "muxmenuadjust",
       "help": "Shows the name of the selected item in a bar on the Main Menu.\n\nTurn it off for a cleaner look. The menu styles use the extra space.",
       "options": [
         {
@@ -17905,7 +17905,7 @@
       "min": 0,
       "max": 1,
       "label": "Random Style on Boot",
-      "module": "muxcustom",
+      "module": "muxmenuadjust",
       "help": "Picks a different Main Menu Style each time the device starts, from Grid through to Mascot.\n\nLeave it off if you would rather the style you chose stayed put.",
       "options": [
         {
@@ -18242,7 +18242,7 @@
           "label": "Enabled"
         }
       ],
-      "help": "Whether system artwork appears in Content Explorer while grid mode is on.\n\nTurn it off if you would rather see plain names in the grid."
+      "help": "Whether system artwork appears in Explore while grid mode is on.\n\nTurn it off if you would rather see plain names in the grid."
     },
     {
       "key": "visual/boxartpadding",
@@ -19198,7 +19198,7 @@
       "max": 2,
       "label": "Collection In Content",
       "module": "muxcustom",
-      "help": "Whether your collections appear inside Content Explorer as well as on their own screen.",
+      "help": "Whether your collections appear inside Explore as well as on their own screen.",
       "options": [
         {
           "value": "0",
@@ -19223,7 +19223,7 @@
       "max": 2,
       "label": "History In Content",
       "module": "muxcustom",
-      "help": "Whether your recent history appears inside Content Explorer as well as on its own screen.",
+      "help": "Whether your recent history appears inside Explore as well as on its own screen.",
       "options": [
         {
           "value": "0",
@@ -19269,7 +19269,7 @@
       "max": 1,
       "label": "Menu Counter File",
       "module": "muxcustom",
-      "help": "Toggle the visibility of currently selected file along with total in Explore Content",
+      "help": "Toggle the visibility of currently selected file along with total in Explore",
       "options": [
         {
           "value": "0",
@@ -19290,7 +19290,7 @@
       "max": 1,
       "label": "Menu Counter Folder",
       "module": "muxcustom",
-      "help": "Toggle the visibility of currently selected folder along with total in Explore Content",
+      "help": "Toggle the visibility of currently selected folder along with total in Explore",
       "options": [
         {
           "value": "0",
@@ -19560,7 +19560,7 @@
       "max": 1,
       "label": "Show Hidden Content",
       "module": "muxcustom",
-      "help": "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it",
+      "help": "Toggle hidden content displayed in Explore - Place a '.' or '_' character at the start of a file or folder name to hide it",
       "options": [
         {
           "value": "0",
@@ -19745,7 +19745,7 @@
       "max": 1,
       "label": "Mixed Folder Content",
       "module": "muxcustom",
-      "help": "If enabled folders within content explorer will be mixed in with other content alphabetically",
+      "help": "If enabled folders within Explore will be mixed in with other content alphabetically",
       "options": [
         {
           "value": "0",
@@ -20651,7 +20651,7 @@
       "max": 1,
       "label": "Title Include Root Drive",
       "module": "muxcustom",
-      "help": "Changes the top title label in Explore Content to show current storage device along with folder name",
+      "help": "Changes the top title label in Explore to show current storage device along with folder name",
       "options": [
         {
           "value": "0",

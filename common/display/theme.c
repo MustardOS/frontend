@@ -18,6 +18,8 @@
 #include <common/ui/common.h>
 #include <common/ui/glyph.h>
 #include <common/ui/nav/menu_style.h>
+#include <common/ui/nav/content_layout.h>
+#include <common/ui/nav/folder_custom.h>
 #include <common/display/theme_json.h>
 
 static int ini_cache_count = 0;
@@ -283,6 +285,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->grid.cell.text_padding_bottom = 5;
     theme->grid.cell.text_padding_side = 5;
     theme->grid.cell.text_line_spacing = 0;
+    theme->grid.cell.label_long_mode = LV_LABEL_LONG_WRAP;
 
     theme->grid.cell_default.background = 0xC69200;
     theme->grid.cell_default.background_alpha = 255;
@@ -478,6 +481,7 @@ void init_theme_config(struct theme_config *theme, const struct mux_device *devi
     theme->misc.static_alignment = 255;
     theme->mux.item.count = 11;
     theme->mux.item.height = 0;
+    theme->mux.item.spacing = 2;
     theme->list_3d.rotate_x = 0;
     theme->list_3d.rotate_y = 0;
     theme->list_3d.perspective = 0;
@@ -766,6 +770,7 @@ static const theme_field theme_fields[] = {
     {"grid", "CELL_TEXT_PADDING_BOTTOM", THEME_OFF(grid.cell.text_padding_bottom), theme_int},
     {"grid", "CELL_TEXT_PADDING_SIDE", THEME_OFF(grid.cell.text_padding_side), theme_int},
     {"grid", "CELL_TEXT_LINE_SPACING", THEME_OFF(grid.cell.text_line_spacing), theme_int},
+    {"grid", "CELL_LABEL_LONG_MODE", THEME_OFF(grid.cell.label_long_mode), theme_int},
     {"grid", "CELL_SHADOW", THEME_OFF(grid.cell.shadow), theme_hex},
     {"grid", "CELL_SHADOW_WIDTH", THEME_OFF(grid.cell.shadow_width), theme_int},
     {"grid", "CELL_SHADOW_X_OFFSET", THEME_OFF(grid.cell.shadow_x_offset), theme_int},
@@ -970,6 +975,7 @@ static const theme_field theme_fields[] = {
     {"misc", "STATIC_ALIGNMENT", THEME_OFF(misc.static_alignment), theme_int},
     {"misc", "CONTENT_ITEM_COUNT", THEME_OFF(mux.item.count), theme_int},
     {"misc", "CONTENT_ITEM_HEIGHT", THEME_OFF(mux.item.height), theme_int},
+    {"misc", "CONTENT_ITEM_SPACING", THEME_OFF(mux.item.spacing), theme_int, 1, 0, 0, 0},
     {"misc", "CONTENT_SIZE_TO_CONTENT", THEME_OFF(misc.content.size_to_content), theme_int},
     {"misc", "CONTENT_ALIGNMENT", THEME_OFF(misc.content.alignment), theme_int},
     {"misc", "CONTENT_PADDING_LEFT", THEME_OFF(misc.content.padding_left), theme_int},
@@ -1095,9 +1101,18 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, cons
 static void load_theme_from_json(const struct json scheme, struct theme_config *theme) {
     if (json_type(scheme) != JSON_OBJECT) return;
 
+    const char *indexed = NULL;
+    int indexed_count = 0;
+
     for (size_t i = 0; i < sizeof(theme_fields) / sizeof(theme_fields[0]); i++) {
         const theme_field *f = &theme_fields[i];
-        const struct json value = theme_json_lookup(scheme, f->section, f->key);
+        if (!indexed || strcmp(indexed, f->section) != 0) {
+            indexed = f->section;
+            indexed_count = theme_json_index_group(scheme, indexed);
+        }
+        if (!indexed_count) continue;
+
+        const struct json value = theme_json_index_lookup(f->section, f->key);
         if (!json_exists(value)) continue;
 
         void *field_ptr = (char *) theme + f->offset;
@@ -1130,19 +1145,112 @@ static void load_theme_from_json(const struct json scheme, struct theme_config *
     if (json_exists(width)) theme->misc.content.width = (int16_t) theme_json_number(width, 10);
 }
 
-static int load_theme_json(char *data, struct theme_config *theme) {
+static int field_equal(const theme_field *f, const struct theme_config *left, const struct theme_config *right) {
+    const char *a = (const char *) left + f->offset;
+    const char *b = (const char *) right + f->offset;
+
+    switch (f->type) {
+        case theme_int:
+            return *(const int16_t *) a == *(const int16_t *) b;
+        case theme_hex:
+            return *(const uint32_t *) a == *(const uint32_t *) b;
+        case theme_uint:
+            return *(const uint16_t *) a == *(const uint16_t *) b;
+        case theme_float:
+            return *(const float *) a == *(const float *) b;
+        case theme_str:
+            return strcmp(a, b) == 0;
+    }
+
+    return 1;
+}
+
+static size_t field_json(const theme_field *f, const struct theme_config *theme, char *out, const size_t size) {
+    const char *value = (const char *) theme + f->offset;
+
+    switch (f->type) {
+        case theme_int:
+            return (size_t) snprintf(out, size, "%d", *(const int16_t *) value);
+        case theme_hex:
+            return (size_t) snprintf(out, size, "\"#%06X\"", *(const uint32_t *) value & 0xFFFFFF);
+        case theme_uint:
+            return (size_t) snprintf(out, size, "%u", *(const uint16_t *) value);
+        case theme_float:
+            return (size_t) snprintf(out, size, "%g", (double) *(const float *) value);
+        case theme_str: {
+            size_t used = (size_t) snprintf(out, size, "\"");
+            for (const char *c = value; *c && used + 3 < size; c++) {
+                if (*c == '"' || *c == '\\') out[used++] = '\\';
+                out[used++] = *c;
+            }
+            used += (size_t) snprintf(out + used, used < size ? size - used : 0, "\"");
+            return used;
+        }
+    }
+
+    return 0;
+}
+
+size_t theme_scheme_diff(const struct theme_config *from, const struct theme_config *to, char *out, const size_t size) {
+    size_t used = (size_t) snprintf(out, size, "{");
+    const char *section = NULL;
+
+    for (size_t i = 0; i < sizeof(theme_fields) / sizeof(theme_fields[0]) && used < size; i++) {
+        const theme_field *f = &theme_fields[i];
+        if (field_equal(f, from, to)) continue;
+
+        if (!section || strcmp(section, f->section) != 0) {
+            used += (size_t) snprintf(out + used, size - used, "%s\"%s\":{", section ? "}," : "", f->section);
+            section = f->section;
+        } else {
+            used += (size_t) snprintf(out + used, size - used, ",");
+        }
+
+        if (used >= size) break;
+        used += (size_t) snprintf(out + used, size - used, "\"%s\":", f->key);
+        if (used >= size) break;
+        used += field_json(f, to, out + used, size - used);
+    }
+
+    if (used < size) used += (size_t) snprintf(out + used, size - used, "%s}", section ? "}" : "");
+    return used;
+}
+
+void theme_scheme_overlay(struct theme_config *target, const struct theme_config *from, const struct theme_config *to) {
+    for (size_t i = 0; i < sizeof(theme_fields) / sizeof(theme_fields[0]); i++) {
+        const theme_field *f = &theme_fields[i];
+        if (field_equal(f, from, to)) continue;
+
+        const char *source = (const char *) to + f->offset;
+        const size_t width = f->type == theme_str                            ? strlen(source) + 1
+                             : f->type == theme_int || f->type == theme_uint ? sizeof(int16_t)
+                                                                             : sizeof(uint32_t);
+        memcpy((char *) target + f->offset, source, width);
+    }
+}
+
+static int load_module_json(char *data, struct theme_config *theme, const char *module) {
     if (!data) return 0;
 
     const struct json root = json_parse(data);
     load_theme_from_json(json_object_get(root, "scheme"), theme);
-    load_theme_from_json(theme_json_module(root, mux_module, "scheme"), theme);
+    if (module && *module) load_theme_from_json(theme_json_module(root, module, "scheme"), theme);
     free(data);
     return 1;
+}
+
+static int load_theme_json(char *data, struct theme_config *theme) {
+    return load_module_json(data, theme, mux_module);
 }
 
 static char active_alternate_base[MAX_BUFFER_SIZE];
 static char active_alternate_name[MAX_BUFFER_SIZE];
 static int active_alternate_cached = 0;
+static int active_alternate_disabled = 0;
+
+void theme_alternate_disable(const int disabled) {
+    active_alternate_disabled = disabled;
+}
 
 void reset_active_alternate(void) {
     active_alternate_cached = 0;
@@ -1150,6 +1258,11 @@ void reset_active_alternate(void) {
 
 int get_active_alternate(char *name, const size_t name_size) {
     const char *base = theme_base ? theme_base : "";
+
+    if (active_alternate_disabled) {
+        if (name_size) name[0] = '\0';
+        return 0;
+    }
 
     if (!active_alternate_cached || strcmp(base, active_alternate_base) != 0) {
         snprintf(active_alternate_base, sizeof(active_alternate_base), "%s", base);
@@ -1336,8 +1449,57 @@ static uint32_t role_theme_colours[colour_role_count];
 static uint32_t theme_gradient_colour;
 static struct theme_config theme_before_colours;
 
+const char *const colour_role_keys[colour_role_count] = {
+    "highlight",
+    "highlight_text",
+    "highlight_shadow",
+    "background",
+    "text",
+    "text_shadow",
+    "glyphs",
+    "border",
+    "header_background",
+    "header_text",
+    "status_icons",
+    "footer_background",
+    "footer_text",
+    "dialogue_background",
+    "dialogue_text",
+    "help_background",
+    "help_text",
+    "keyboard_background",
+    "keyboard_text",
+    "progress_bar",
+};
+
+static const char *role_value(const int role, const char *custom) {
+    const char *folder = folder_custom_colour(role);
+    return folder ? folder : custom;
+}
+
 uint32_t theme_role_colour(const int role) {
     return role >= 0 && role < colour_role_count ? role_theme_colours[role] : 0;
+}
+
+void theme_export_colours(void) {
+    static char written[2048];
+
+    char text[sizeof(written)];
+    size_t used = 0;
+    for (int role = 0; role < colour_role_count && used < sizeof(text); role++) {
+        used += (size_t) snprintf(
+            text + used, sizeof(text) - used, "%s=%06X\n", colour_role_keys[role], role_theme_colours[role]
+        );
+    }
+    if (used < sizeof(text)) {
+        snprintf(
+            text + used, sizeof(text) - used, "background_bottom=%06X\nbattery_low=%06X\nbattery_active=%06X\n",
+            theme_gradient_colour, theme.status.battery.low, theme.status.battery.active
+        );
+    }
+
+    if (strcmp(text, written) == 0) return;
+    if (write_text_to_file(THEME_COLOURS, "w", CHAR, text)) snprintf(written, sizeof(written), "%s", text);
 }
 
 uint32_t theme_background_gradient(void) {
@@ -1391,26 +1553,32 @@ static void apply_background_colours(struct theme_config *theme, const uint32_t 
 }
 
 static void apply_custom_colours(struct theme_config *theme) {
-    const char *highlight = config.settings.themeopt.colour_highlight;
-    const char *highlight_text = config.settings.themeopt.colour_highlight_text;
-    const char *highlight_shadow = config.settings.themeopt.colour_highlight_shadow;
-    const char *background = config.settings.themeopt.colour_background;
-    const char *text = config.settings.themeopt.colour_text;
-    const char *text_shadow = config.settings.themeopt.colour_text_shadow;
-    const char *glyphs = config.settings.themeopt.colour_glyphs;
-    const char *border = config.settings.themeopt.colour_border;
-    const char *header_background = config.settings.themeopt.colour_header_background;
-    const char *header_text = config.settings.themeopt.colour_header_text;
-    const char *footer_background = config.settings.themeopt.colour_footer_background;
-    const char *footer_text = config.settings.themeopt.colour_footer_text;
-    const char *dialogue_background = config.settings.themeopt.colour_dialogue_background;
-    const char *dialogue_text = config.settings.themeopt.colour_dialogue_text;
-    const char *help_background = config.settings.themeopt.colour_help_background;
-    const char *help_text = config.settings.themeopt.colour_help_text;
-    const char *keyboard_background = config.settings.themeopt.colour_keyboard_background;
-    const char *keyboard_text = config.settings.themeopt.colour_keyboard_text;
-    const char *status_icons = config.settings.themeopt.colour_status_icons;
-    const char *progress_bar = config.settings.themeopt.colour_progress_bar;
+    const char *highlight = role_value(colour_role_highlight, config.settings.themeopt.colour_highlight);
+    const char *highlight_text = role_value(colour_role_highlight_text, config.settings.themeopt.colour_highlight_text);
+    const char *highlight_shadow =
+        role_value(colour_role_highlight_shadow, config.settings.themeopt.colour_highlight_shadow);
+    const char *background = role_value(colour_role_background, config.settings.themeopt.colour_background);
+    const char *text = role_value(colour_role_text, config.settings.themeopt.colour_text);
+    const char *text_shadow = role_value(colour_role_text_shadow, config.settings.themeopt.colour_text_shadow);
+    const char *glyphs = role_value(colour_role_glyphs, config.settings.themeopt.colour_glyphs);
+    const char *border = role_value(colour_role_border, config.settings.themeopt.colour_border);
+    const char *header_background =
+        role_value(colour_role_header_background, config.settings.themeopt.colour_header_background);
+    const char *header_text = role_value(colour_role_header_text, config.settings.themeopt.colour_header_text);
+    const char *footer_background =
+        role_value(colour_role_footer_background, config.settings.themeopt.colour_footer_background);
+    const char *footer_text = role_value(colour_role_footer_text, config.settings.themeopt.colour_footer_text);
+    const char *dialogue_background =
+        role_value(colour_role_dialogue_background, config.settings.themeopt.colour_dialogue_background);
+    const char *dialogue_text = role_value(colour_role_dialogue_text, config.settings.themeopt.colour_dialogue_text);
+    const char *help_background =
+        role_value(colour_role_help_background, config.settings.themeopt.colour_help_background);
+    const char *help_text = role_value(colour_role_help_text, config.settings.themeopt.colour_help_text);
+    const char *keyboard_background =
+        role_value(colour_role_keyboard_background, config.settings.themeopt.colour_keyboard_background);
+    const char *keyboard_text = role_value(colour_role_keyboard_text, config.settings.themeopt.colour_keyboard_text);
+    const char *status_icons = role_value(colour_role_status_icons, config.settings.themeopt.colour_status_icons);
+    const char *progress_bar = role_value(colour_role_progress_bar, config.settings.themeopt.colour_progress_bar);
     uint32_t colour, bottom;
 
     theme_gradient_colour = background_bottom(theme);
@@ -1738,8 +1906,10 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     snprintf(scheme_override, sizeof(scheme_override), RUN_STORAGE_PATH "theme/override/%s.ini", mux_module);
     if (file_exist(scheme_override)) load_theme_from_scheme(scheme_override, theme, device);
 
+    snprintf(scheme_override, sizeof(scheme_override), RUN_STORAGE_PATH "theme/override/%s.json", mux_module);
+    load_theme_json(theme_json_read_file(scheme_override), theme);
+
     menu_style_apply(theme, device->mux.width, device->mux.height);
-    theme->grid.enabled = theme->grid.column_count > 0 && theme->grid.row_count > 0;
     if (theme->misc.content.width == 0) theme->misc.content.width = device->mux.width;
     if (config->settings.themeopt.label_width > 0
         && (strcmp(mux_module, "muxplore") == 0 || strcmp(mux_module, "muxcollect") == 0
@@ -1747,13 +1917,26 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         theme->misc.content.width = (int16_t) (device->mux.width * config->settings.themeopt.label_width / 100);
     }
     if (theme->misc.content.height > device->mux.height) theme->misc.content.height = device->mux.height;
+
+    const int16_t theme_spacing = theme->mux.item.spacing;
+    const int16_t item_spacing = content_layout_item_spacing(config);
+    if (item_spacing >= 0) theme->mux.item.spacing = item_spacing;
+    const int16_t item_count = content_layout_item_count(config);
+
     if (theme->mux.item.count < 1) theme->mux.item.count = 1;
     if (theme->mux.item.height > 0) {
-        theme->mux.item.panel = (int16_t) (theme->mux.item.height + 2);
+        theme->mux.item.panel = (int16_t) (theme->mux.item.height + theme->mux.item.spacing);
         theme->mux.item.count = (int16_t) (theme->misc.content.height / theme->mux.item.panel);
     } else {
         theme->mux.item.panel = (int16_t) (theme->misc.content.height / theme->mux.item.count);
-        theme->mux.item.height = (int16_t) (theme->mux.item.panel - 2);
+        theme->mux.item.height = (int16_t) (theme->mux.item.panel - theme_spacing);
+
+        if (theme->mux.item.spacing != theme_spacing) {
+            theme->mux.item.panel = (int16_t) (theme->mux.item.height + theme->mux.item.spacing);
+            if (theme->mux.item.panel > 0)
+                theme->mux.item.count = (int16_t) (theme->misc.content.height / theme->mux.item.panel);
+            if (theme->mux.item.count < 1) theme->mux.item.count = 1;
+        }
     }
     if (theme->grid.cell.clip_corner != 0 && theme->grid.cell.clip_corner != 1) theme->grid.cell.clip_corner = 0;
 
@@ -1766,21 +1949,20 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
     if (config->settings.themeopt.footer_height >= 0)
         theme->footer.height = (int16_t) config->settings.themeopt.footer_height;
 
-    const int any_theme_opt = config->settings.themeopt.header_height >= 0
-                              || config->settings.themeopt.footer_height >= 0
-                              || config->settings.themeopt.content_item_count > 0;
+    const int any_theme_opt =
+        config->settings.themeopt.header_height >= 0 || config->settings.themeopt.footer_height >= 0 || item_count > 0;
 
     if (any_theme_opt) {
         theme->misc.content.height = (int16_t) (device->mux.height - theme->header.height - theme->footer.height - 4);
         if (theme->misc.content.height < 0) theme->misc.content.height = 0;
 
-        if (config->settings.themeopt.content_item_count > 0) {
-            theme->mux.item.count = (int16_t) config->settings.themeopt.content_item_count;
+        if (item_count > 0) {
+            theme->mux.item.count = item_count;
             if (theme->mux.item.count < 1) theme->mux.item.count = 1;
             theme->mux.item.panel = (int16_t) (theme->misc.content.height / theme->mux.item.count);
-            theme->mux.item.height = (int16_t) (theme->mux.item.panel - 2);
+            theme->mux.item.height = (int16_t) (theme->mux.item.panel - theme->mux.item.spacing);
         } else {
-            theme->mux.item.panel = (int16_t) (theme->mux.item.height + 2);
+            theme->mux.item.panel = (int16_t) (theme->mux.item.height + theme->mux.item.spacing);
             if (theme->mux.item.panel > 0)
                 theme->mux.item.count = (int16_t) (theme->misc.content.height / theme->mux.item.panel);
         }
@@ -1788,6 +1970,9 @@ void load_theme(struct theme_config *theme, const struct mux_config *config, str
         if (theme->mux.item.count < 1) theme->mux.item.count = 1;
         theme->misc.content.height = (int16_t) (theme->mux.item.panel * theme->mux.item.count);
     }
+
+    content_layout_apply(theme, config, device->mux.width, device->mux.height);
+    theme->grid.enabled = theme->grid.column_count > 0 && theme->grid.row_count > 0;
 
     // When auto SVG glyph size is active we scale to 75% height for breathing room.
     // Then expand the LIST_PAD_LEFT value so there is at least 4px of gap the sides
@@ -1881,6 +2066,18 @@ void set_label_long_mode(const struct theme_config *theme, lv_obj_t *ui_lbl_item
     lv_obj_update_layout(ui_lbl_item);
     lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);
     if (!lv_label_is_text_dotted(ui_lbl_item)) return;
+
+    const int is_bounce = scroll_mode == 2;
+    apply_label_scroll_speed(ui_lbl_item, is_bounce);
+    lv_label_set_long_mode(ui_lbl_item, is_bounce ? LV_LABEL_LONG_SCROLL : LV_LABEL_LONG_SCROLL_CIRCULAR);
+}
+
+void set_label_scroll_always(lv_obj_t *ui_lbl_item) {
+    const int scroll_mode = config.visual.name_scroll;
+    if (scroll_mode == 0 || config.visual.label_scroll_speed == 0) {
+        lv_label_set_long_mode(ui_lbl_item, LV_LABEL_LONG_DOT);
+        return;
+    }
 
     const int is_bounce = scroll_mode == 2;
     apply_label_scroll_speed(ui_lbl_item, is_bounce);
@@ -2273,9 +2470,19 @@ void apply_pass_theme(
     }
 }
 
+static void style_renew(lv_style_t *style) {
+#if LV_USE_ASSERT_STYLE
+    if (style->sentinel == LV_STYLE_SENTINEL_VALUE) {
+        lv_style_reset(style);
+        return;
+    }
+#endif
+    lv_style_init(style);
+}
+
 void init_panel_style(const struct theme_config *theme) {
-    lv_style_init(&style_list_panel_default);
-    lv_style_init(&style_list_panel_focused);
+    style_renew(&style_list_panel_default);
+    style_renew(&style_list_panel_focused);
 
     // List panel default style
     lv_style_set_width(&style_list_panel_default, theme->misc.content.width);
@@ -2326,8 +2533,8 @@ void init_item_animation(void) {
 }
 
 void init_item_style(struct theme_config *theme) {
-    lv_style_init(&style_list_item_default);
-    lv_style_init(&style_list_item_focused);
+    style_renew(&style_list_item_default);
+    style_renew(&style_list_item_focused);
 
     lv_style_set_width(&style_list_item_default, theme->misc.content.width - theme->font.list_pad_right);
     lv_style_set_align(&style_list_item_default, LV_ALIGN_LEFT_MID);
@@ -2343,8 +2550,8 @@ void init_item_style(struct theme_config *theme) {
 }
 
 void init_glyph_style(const struct theme_config *theme) {
-    lv_style_init(&style_list_glyph_default);
-    lv_style_init(&style_list_glyph_focused);
+    style_renew(&style_list_glyph_default);
+    style_renew(&style_list_glyph_focused);
 
     lv_style_set_x(&style_list_glyph_default, theme->list_default.glyph_padding_left);
     lv_style_set_align(&style_list_glyph_default, LV_ALIGN_LEFT_MID);
@@ -2393,4 +2600,90 @@ int get_theme_preview_path(
         }
     }
     return -1;
+}
+
+static const char *const field_type_names[] = {"int", "hex", "uint", "float", "str"};
+static struct theme_config field_snapshot;
+
+int theme_field_count(void) {
+    return (int) A_SIZE(theme_fields);
+}
+
+int theme_field_find(const char *section, const char *key) {
+    for (size_t i = 0; i < A_SIZE(theme_fields); i++) {
+        if (strcmp(theme_fields[i].section, section) == 0 && strcmp(theme_fields[i].key, key) == 0) return (int) i;
+    }
+    return -1;
+}
+
+void theme_field_info(const int index, struct theme_field_info *info) {
+    const theme_field *f = &theme_fields[index];
+    info->section = f->section;
+    info->key = f->key;
+    info->type = field_type_names[f->type];
+    info->has_min = f->has_min;
+    info->min = f->min;
+    info->has_max = f->has_max;
+    info->max = f->max;
+}
+
+void theme_field_snapshot(const char *module, const struct mux_device *device) {
+    const char *schemes[] = {"global", "default", module && *module ? module : NULL};
+    char scheme[MAX_BUFFER_SIZE];
+    int loaded = 0;
+
+    init_theme_config(&field_snapshot, device);
+    for (size_t i = 0; i < A_SIZE(schemes); i++) {
+        if (schemes[i] && load_scheme(theme_base, mux_dim, schemes[i], scheme, sizeof(scheme))) {
+            load_theme_from_scheme(scheme, &field_snapshot, device);
+            loaded = 1;
+        }
+    }
+    if (load_module_json(theme_json_read(theme_base), &field_snapshot, module)) loaded = 1;
+    if (!loaded) return;
+
+    if (get_alt_scheme_path(scheme, sizeof(scheme))) load_theme_from_scheme(scheme, &field_snapshot, device);
+
+    char alternate_name[MAX_BUFFER_SIZE];
+    if (get_active_alternate(alternate_name, sizeof(alternate_name))) {
+        char alternate_json[MAX_BUFFER_SIZE];
+        snprintf(alternate_json, sizeof(alternate_json), "%s/alternate/%s.json", theme_base, alternate_name);
+        load_module_json(theme_json_read_file(alternate_json), &field_snapshot, module);
+    }
+
+    char alternate_base[MAX_BUFFER_SIZE];
+    if (get_alt_base_path(alternate_base, sizeof(alternate_base))) {
+        for (size_t i = 0; i < A_SIZE(schemes); i++) {
+            if (schemes[i] && load_scheme(alternate_base, mux_dim, schemes[i], scheme, sizeof(scheme))) {
+                load_theme_from_scheme(scheme, &field_snapshot, device);
+            }
+        }
+        load_module_json(theme_json_read(alternate_base), &field_snapshot, module);
+    }
+}
+
+size_t theme_field_value(const int index, char *out, const size_t size) {
+    return field_json(&theme_fields[index], &field_snapshot, out, size);
+}
+
+int theme_variant_file(const char *filename, char *name, const size_t size) {
+    static const char *const exts[] = {".json", ".ini", ".muxalt"};
+    static const char *const splashes[] = {"_bootlogo", "_reboot", "_shutdown"};
+
+    const char *dot = strrchr(filename, '.');
+    if (filename[0] == '.' || !dot || dot == filename) return 0;
+
+    int known = 0;
+    for (size_t i = 0; i < A_SIZE(exts); i++)
+        known |= strcasecmp(dot, exts[i]) == 0;
+    if (!known) return 0;
+
+    const size_t length = (size_t) (dot - filename);
+    for (size_t i = 0; strcasecmp(dot, ".json") == 0 && i < A_SIZE(splashes); i++) {
+        const size_t suffix = strlen(splashes[i]);
+        if (length > suffix && strncasecmp(filename + length - suffix, splashes[i], suffix) == 0) return 0;
+    }
+
+    snprintf(name, size, "%.*s", (int) length, filename);
+    return 1;
 }

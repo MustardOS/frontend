@@ -5,6 +5,7 @@
 #include <common/runtime/init.h>
 #include <common/ui/common.h>
 #include <common/ui/grid.h>
+#include <common/ui/glyph.h>
 #include <common/runtime/log.h>
 #include <common/display/language.h>
 #include <common/display/theme.h>
@@ -12,12 +13,16 @@
 #include <common/ui/nav/list_nav.h>
 #include <common/ui/nav/grid_layout.h>
 #include <common/ui/nav/grid_motion.h>
+#include <common/ui/nav/content_layout.h>
+#include <common/content/catalogue.h>
 #include <common/content/core/common.h>
 #include <module/muxshare.h>
 #include <common/storage/fileio.h>
 #include <json/json.h>
 
 struct grid_info grid_info;
+
+static const grid_content_art *content_art;
 
 void init_grid_info(const int item_count, const int column_count) {
     grid_info.item_count = item_count;
@@ -103,6 +108,27 @@ static void set_grid_catalogue_and_program_name(const int index, char *catalogue
     free(item_no_ext);
 }
 
+static void store_grid_images(const int index, const char *image, const char *focused, const int cover) {
+    free(items[index].grid_image);
+    free(items[index].grid_image_focused);
+
+    items[index].grid_image = strdup(image);
+    items[index].grid_image_focused = strdup(focused);
+    items[index].grid_cover = cover;
+
+    if (!items[index].grid_image || !items[index].grid_image_focused) {
+        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
+    }
+}
+
+static int grid_cover_art(const int index, const char *catalogue_name, const char *program, char *out, size_t size) {
+    if (!content_layout_grid_forced(&config) || items[index].content_type != content_type_item) return 0;
+    if (content_art && content_art->save_image && content_art->save_image(index, out, size)) return 1;
+
+    return catalogue_name[0] && program[0]
+           && load_image_catalogue(catalogue_name, program, "", "", mux_dim, "box", out, size);
+}
+
 void update_grid_image_paths(const int index) {
     if (index < 0 || (size_t) index >= item_count) return;
 
@@ -111,17 +137,14 @@ void update_grid_image_paths(const int index) {
 
     set_grid_catalogue_and_program_name(index, catalogue_name, program);
 
+    char cover[MAX_BUFFER_SIZE];
+    if (grid_cover_art(index, catalogue_name, program, cover, sizeof(cover))) {
+        store_grid_images(index, cover, "", 1);
+        return;
+    }
+
     if (!catalogue_name[0] || !program[0]) {
-        free(items[index].grid_image);
-        free(items[index].grid_image_focused);
-
-        items[index].grid_image = strdup("");
-        items[index].grid_image_focused = strdup("");
-
-        if (!items[index].grid_image || !items[index].grid_image_focused) {
-            LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
-        }
-
+        store_grid_images(index, "", "", 0);
         return;
     }
 
@@ -184,23 +207,77 @@ void update_grid_image_paths(const int index) {
         snprintf(grid_image_focused, sizeof(grid_image_focused), "%s", grid_image);
     }
 
-    free(items[index].grid_image);
-    free(items[index].grid_image_focused);
-
-    items[index].grid_image = strdup(grid_image);
-    items[index].grid_image_focused = strdup(grid_image_focused);
-
-    if (!items[index].grid_image || !items[index].grid_image_focused)
-        LOG_ERROR(mux_module, "%s", lang.system.fail_allocate_mem);
+    store_grid_images(index, grid_image, grid_image_focused, 0);
 }
 
-static void update_grid_image(lv_obj_t *cell, char *image_path) {
+static void grid_cell_size(lv_obj_t *panel, int *w, int *h) {
+    *w = theme.grid.cell.width;
+    *h = theme.grid.cell.height;
+    if (!panel || !lv_obj_has_flag(panel, LV_OBJ_FLAG_IGNORE_LAYOUT)) return;
+
+    const grid_layout_entry layout =
+        find_grid_layout((int) IFU(lv_obj_get_user_data(panel)), (int) lv_obj_get_index(panel));
+    *w = layout.found ? layout.w : lv_obj_get_style_width(panel, LV_PART_MAIN);
+    *h = layout.found ? layout.h : lv_obj_get_style_height(panel, LV_PART_MAIN);
+}
+
+static void grid_image_style(lv_obj_t *cell, const int cover, const int recolour) {
+    lv_obj_t *panel = lv_obj_get_parent(cell);
+    lv_obj_set_style_outline_width(panel, cover ? 3 : 0, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_outline_pad(panel, 2, MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_outline_color(panel, lv_color_hex(theme.grid.cell_focus.background), MU_OBJ_MAIN_FOCUS);
+    lv_obj_set_style_outline_opa(panel, LV_OPA_COVER, MU_OBJ_MAIN_FOCUS);
+
+    lv_obj_set_style_img_recolor_opa(
+        cell, recolour ? (lv_opa_t) theme.grid.cell_default.image_recolour_alpha : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT
+    );
+    lv_obj_set_style_img_recolor_opa(
+        cell, recolour ? (lv_opa_t) theme.grid.cell_focus.image_recolour_alpha : LV_OPA_TRANSP, MU_OBJ_MAIN_FOCUS
+    );
+
+    const int named = theme.grid.cell_default.text_alpha != 0 || theme.grid.cell_focus.text_alpha != 0;
+    if (cover || !named) {
+        lv_obj_align(cell, LV_ALIGN_CENTER, 0, cover ? 0 : theme.grid.cell.image_padding_top);
+    } else {
+        lv_obj_align(cell, LV_ALIGN_TOP_MID, 0, theme.grid.cell.image_padding_top);
+    }
+}
+
+static void update_grid_cover(lv_obj_t *cell, const char *image_path) {
+    char embed[MAX_BUFFER_SIZE];
+    snprintf(embed, sizeof(embed), "M:%s", image_path);
+    lv_img_set_src(cell, embed);
+    lv_img_set_antialias(cell, true);
+    grid_image_style(cell, 1, 0);
+
+    int w, h;
+    grid_cell_size(lv_obj_get_parent(cell), &w, &h);
+
+    lv_img_header_t header;
+    if (w <= 0 || h <= 0 || lv_img_decoder_get_info(embed, &header) != LV_RES_OK || !header.w || !header.h) {
+        lv_img_set_zoom(cell, LV_IMG_ZOOM_NONE);
+        return;
+    }
+
+    const long zoom_w = (long) w * LV_IMG_ZOOM_NONE / header.w + 1;
+    const long zoom_h = (long) h * LV_IMG_ZOOM_NONE / header.h + 1;
+    lv_img_set_zoom(cell, (uint16_t) LV_CLAMP(1, zoom_w > zoom_h ? zoom_w : zoom_h, 0xFFFF));
+}
+
+static void update_grid_image(lv_obj_t *cell, const char *image_path, const int cover, const int recolour) {
     if (!cell) return;
 
     if (!image_path || !image_path[0] || !file_exist(image_path)) {
         lv_img_set_src(cell, &ui_img_blank);
         return;
     }
+
+    if (cover) {
+        update_grid_cover(cell, image_path);
+        return;
+    }
+
+    if (content_layout_grid_forced(&config)) grid_image_style(cell, 0, recolour);
 
     const struct theme_config *glyph_theme = &theme;
     static struct theme_config sized_theme;
@@ -224,6 +301,31 @@ static void update_grid_image(lv_obj_t *cell, char *image_path) {
 
     lv_img_set_src(cell, grid_image);
     apply_glyph_scale(cell, grid_image, grid_box_w, grid_box_h);
+}
+
+static const char *grid_image_or_glyph(const int index, const char *image, char *glyph, const size_t size) {
+    if (image && image[0] && file_exist(image)) return image;
+    if (!content_layout_grid_forced(&config)) return image;
+
+    const char *name = items[index].glyph_icon;
+    if (!name && content_art && content_art->glyph) name = content_art->glyph(index);
+
+    return name && get_glyph_file(mux_module, name, glyph, size) ? glyph : image;
+}
+
+static void update_grid_item_images(lv_obj_t *ui_pnl_item, const int index) {
+    lv_obj_t *cell_image = lv_obj_get_child(ui_pnl_item, 0);
+    lv_obj_t *cell_image_focused = lv_obj_get_child(ui_pnl_item, 2);
+    const int cover = items[index].grid_cover;
+
+    char glyph[MAX_BUFFER_SIZE];
+    char glyph_focused[MAX_BUFFER_SIZE];
+    const char *image = grid_image_or_glyph(index, items[index].grid_image, glyph, sizeof(glyph));
+    const char *focused =
+        cover ? "" : grid_image_or_glyph(index, items[index].grid_image_focused, glyph_focused, sizeof(glyph_focused));
+    update_grid_image(cell_image, image, cover, image == glyph);
+    update_grid_image(cell_image_focused, focused, 0, focused == glyph_focused);
+    if (items[index].glyph_icon) cell_art_item(ui_pnl_item, items[index].glyph_icon);
 }
 
 static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {
@@ -253,9 +355,7 @@ static void update_grid_item(lv_obj_t *ui_pnl_item, const int index) {
         update_grid_image_paths(index);
     }
 
-    update_grid_image(cell_image, items[index].grid_image);
-    update_grid_image(cell_image_focused, items[index].grid_image_focused);
-    if (items[index].glyph_icon) cell_art_item(ui_pnl_item, items[index].glyph_icon);
+    update_grid_item_images(ui_pnl_item, index);
 
     lv_obj_clear_flag(ui_pnl_item, LV_OBJ_FLAG_HIDDEN);
 
@@ -436,6 +536,7 @@ gen_grid_item_common(const int item_index, const int panel_index, const int focu
     );
 
     if (layout.found) place_grid_layout(cell_panel, &layout, panel_index - focus_index);
+    if (content_layout_grid_forced(&config)) update_grid_item_images(cell_panel, item_index);
 
     if (is_carousel_grid_mode() && focus_index != panel_index && theme.grid.carousel_fade > 0) {
         const int distance = abs(panel_index - focus_index);
@@ -515,7 +616,8 @@ static void init_grid_common(const int count) {
     load_font_section(FONT_PANEL_DIR, ui_lbl_grid_current_item);
 }
 
-void init_grid_dynamic(const char *prev_dir, int *sys_index) {
+void init_grid_dynamic(const char *prev_dir, int *sys_index, const grid_content_art *art) {
+    content_art = art;
     init_grid_common((int) item_count);
 
     if (item_count == 0) return;
@@ -539,6 +641,7 @@ void init_grid_dynamic(const char *prev_dir, int *sys_index) {
 }
 
 int init_grid_static(const int count, char *item_labels[], char *item_grid_labels[], char *glyph_names[]) {
+    content_art = NULL;
     init_grid_common(count);
 
     char prev_dir[MAX_BUFFER_SIZE];

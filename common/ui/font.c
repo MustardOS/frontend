@@ -408,6 +408,10 @@ static int configured_font_path(char *out, const size_t out_size) {
     return file_exist_nocase(out, out, out_size);
 }
 
+int font_custom_file(char *out, const size_t out_size) {
+    return effective_type() == 3 && configured_font_path(out, out_size);
+}
+
 static lv_font_t *create_language_font(const int size) {
     const char *curr_lang = config.settings.general.language;
     const char *name = config.settings.font.name;
@@ -1349,8 +1353,17 @@ void load_font_section_scaled(const char *section, lv_obj_t *element, const int 
     section_percent = 100;
 }
 
+static uint32_t font_generation;
+
+void font_context_bump(void) {
+    font_generation++;
+}
+
 int font_context_changed(void) {
     uint32_t h = fnv_hash_str(config.theme.active);
+
+    h ^= font_generation;
+    h *= 16777619u;
 
     h ^= fnv_hash_str(config.settings.general.language);
     h *= 16777619u;

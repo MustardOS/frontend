@@ -24,6 +24,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <common/base/options.h>
 #include <common/base/totp.h>
 #include <common/base/image_ext.h>
 #include <common/content/core/state_preview.h>
@@ -6995,6 +6996,1330 @@ static void handle_content_tool(
     send_text(connection, 200, "application/json", "{\"ok\":true}");
 }
 
+static const char *const studio_theme_keys[] = {
+    "colour_highlight",
+    "colour_highlight_text",
+    "colour_highlight_shadow",
+    "colour_background",
+    "colour_text",
+    "colour_text_shadow",
+    "colour_glyphs",
+    "colour_border",
+    "colour_header_background",
+    "colour_header_text",
+    "colour_status_icons",
+    "colour_footer_background",
+    "colour_footer_text",
+    "colour_dialogue_background",
+    "colour_dialogue_text",
+    "colour_help_background",
+    "colour_help_text",
+    "colour_keyboard_background",
+    "colour_keyboard_text",
+    "colour_progress_bar",
+};
+
+static const char *const studio_font_keys[] = {"list_size", "header_size", "footer_size", "panel_size", "scale"};
+
+static const char *const studio_volume_keys[] = {"soundvol", "bgmvol"};
+
+static int studio_key_allowed(const char *key) {
+    static const char general_prefix[] = "settings/general/";
+    if (strncmp(key, general_prefix, sizeof(general_prefix) - 1) == 0) {
+        for (size_t i = 0; i < sizeof(studio_volume_keys) / sizeof(studio_volume_keys[0]); i++)
+            if (strcmp(key + sizeof(general_prefix) - 1, studio_volume_keys[i]) == 0) return 1;
+        return 0;
+    }
+
+    static const char theme_prefix[] = "settings/theme/";
+    static const char font_prefix[] = "settings/font/";
+
+    if (strncmp(key, font_prefix, sizeof(font_prefix) - 1) == 0) {
+        for (size_t i = 0; i < sizeof(studio_font_keys) / sizeof(studio_font_keys[0]); i++)
+            if (strcmp(key + sizeof(font_prefix) - 1, studio_font_keys[i]) == 0) return 1;
+        return 0;
+    }
+
+    if (strncmp(key, theme_prefix, sizeof(theme_prefix) - 1) == 0) {
+        for (size_t i = 0; i < sizeof(studio_theme_keys) / sizeof(studio_theme_keys[0]); i++)
+            if (strcmp(key + sizeof(theme_prefix) - 1, studio_theme_keys[i]) == 0) return 1;
+        return 0;
+    }
+
+    return 0;
+}
+
+static int studio_value_valid(const char *value) {
+    if (strlen(value) > 32) return 0;
+    for (const char *c = value; *c; c++) {
+        if (!isalnum((unsigned char) *c) && *c != ':' && *c != '-') return 0;
+    }
+    return 1;
+}
+
+static int studio_read(const char *key, char *out, const size_t size) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), CONF_CONFIG_PATH "%s", key);
+
+    out[0] = '\0';
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
+
+    if (!fgets(out, (int) size, file)) out[0] = '\0';
+    fclose(file);
+    out[strcspn(out, "\r\n")] = '\0';
+    return 1;
+}
+
+static int studio_write(const char *key, const char *value) {
+    char path[PATH_MAX / 2];
+    char temporary[PATH_MAX];
+    snprintf(path, sizeof(path), CONF_CONFIG_PATH "%s", key);
+    snprintf(temporary, sizeof(temporary), "%s.studio", path);
+
+    FILE *file = fopen(temporary, "w");
+    if (!file) return 0;
+
+    const int written = fputs(value, file) >= 0;
+    if (fclose(file) != 0 || !written) {
+        unlink(temporary);
+        return 0;
+    }
+
+    return rename(temporary, path) == 0;
+}
+
+static void studio_value(struct buffer *out, const char *key, int *first) {
+    char value[64];
+    studio_read(key, value, sizeof(value));
+    if (!*first) buffer_puts(out, ",");
+    json_field(out, key, value);
+    *first = 0;
+}
+
+static void studio_pairs(struct buffer *out, const char *path) {
+    buffer_puts(out, "{");
+
+    FILE *file = fopen(path, "r");
+    if (file) {
+        char line[MAX_BUFFER_SIZE];
+        int first = 1;
+        while (fgets(line, sizeof(line), file)) {
+            line[strcspn(line, "\r\n")] = '\0';
+            char *equals = strchr(line, '=');
+            if (!equals || equals == line) continue;
+            *equals = '\0';
+            if (!studio_value_valid(equals + 1)) continue;
+
+            if (!first) buffer_puts(out, ",");
+            json_field(out, line, equals + 1);
+            first = 0;
+        }
+        fclose(file);
+    }
+
+    buffer_puts(out, "}");
+}
+
+static void studio_themes(struct buffer *out) {
+    buffer_puts(out, "[");
+
+    buffer_puts(out, "{");
+    json_field(out, "folder", "MustardOS");
+    buffer_puts(out, ",");
+    json_number(out, "own", 0);
+    buffer_puts(out, "}");
+    int first = 0;
+
+    DIR *dir = opendir(RUN_STORAGE_PATH "theme");
+    if (dir) {
+        const struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            const char *name = entry->d_name;
+            if (name[0] == '.' || strcmp(name, "active") == 0 || strcmp(name, "override") == 0) continue;
+            if (strcasecmp(name, "MustardOS") == 0) continue;
+
+            char path[PATH_MAX / 2];
+            snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s", name);
+            struct stat info;
+            if (stat(path, &info) != 0 || !S_ISDIR(info.st_mode)) continue;
+
+            char marker[PATH_MAX];
+            snprintf(marker, sizeof(marker), "%s/lab.txt", path);
+
+            if (!first) buffer_puts(out, ",");
+            buffer_puts(out, "{");
+            json_field(out, "folder", name);
+            buffer_puts(out, ",");
+            json_number(out, "own", access(marker, F_OK) == 0);
+            buffer_puts(out, "}");
+            first = 0;
+        }
+        closedir(dir);
+    }
+
+    buffer_puts(out, "]");
+}
+
+static const char *const studio_wall_slots[] = {
+    "default", "muxlaunch", "muxplore", "muxcollect", "muxhistory", "muxapp",      "muxconfig",
+    "muxinfo", "muxcharge", "bootlogo", "reboot",     "shutdown",   "screensaver", "kiosk",
+};
+
+static int studio_lab_file(const char *name) {
+    static const char *const exts[] = {"png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "mp4"};
+    const char *dot = strrchr(name, '.');
+    if (name[0] == '.' || !dot) return 0;
+
+    for (size_t i = 0; i < sizeof(exts) / sizeof(exts[0]); i++) {
+        if (strcasecmp(dot + 1, exts[i]) == 0) return 1;
+    }
+    return 0;
+}
+
+static void studio_real_path(const char *path, char *out, const size_t size) {
+    snprintf(out, size, "%s", path);
+
+    FILE *map = fopen(RUN_STORAGE_PATH "bindmap", "r");
+    if (!map) return;
+
+    char line[PATH_MAX / 2];
+    while (fgets(line, sizeof(line), map)) {
+        line[strcspn(line, "\r\n")] = '\0';
+        char *bar = strchr(line, '|');
+        const char *source = strrchr(line, '|');
+        if (!bar || !source) continue;
+        *bar = '\0';
+
+        char prefix[PATH_MAX];
+        snprintf(prefix, sizeof(prefix), RUN_STORAGE_PATH "%s", line);
+        const size_t length = strlen(prefix);
+        if (strncmp(path, prefix, length) == 0 && (path[length] == '/' || path[length] == '\0')) {
+            snprintf(out, size, "%s%s", source + 1, path + length);
+            break;
+        }
+    }
+    fclose(map);
+}
+
+static int studio_root_of(const char *path, const char **root_id, const char **relative) {
+    static char real[PATH_MAX];
+    studio_real_path(path, real, sizeof(real));
+
+    for (size_t i = 0; i < file_root_count; i++) {
+        const size_t length = strlen(file_roots[i].path);
+        if (strncmp(real, file_roots[i].path, length) == 0 && real[length] == '/') {
+            *root_id = file_roots[i].id;
+            *relative = real + length + 1;
+            return 1;
+        }
+    }
+
+    *root_id = "";
+    *relative = "";
+    return 0;
+}
+
+static void studio_dim(char *out, size_t size);
+
+static int studio_overlay_steps(const char *set, const char *type) {
+    static const char *const exts[] = {"png", "jpg", "jpeg", "bmp", "gif", "webp", "svg"};
+    int found = 0;
+
+    for (int n = 0; n <= 10; n++) {
+        char step[64];
+        if (n == 10) {
+            snprintf(step, sizeof(step), "default");
+        } else {
+            snprintf(step, sizeof(step), "%s_%d", type, n);
+        }
+
+        int hit = 0;
+        for (size_t e = 0; e < sizeof(exts) / sizeof(exts[0]) && !hit; e++) {
+            char path[PATH_MAX];
+            snprintf(path, sizeof(path), RUN_STORAGE_PATH "lab/overlay/%s/%s/%s.%s", set, type, step, exts[e]);
+            hit = access(path, F_OK) == 0;
+            if (!hit && n < 10) {
+                snprintf(path, sizeof(path), RUN_STORAGE_PATH "lab/overlay/%s/%s.%s", set, step, exts[e]);
+                hit = access(path, F_OK) == 0;
+            }
+        }
+        found += hit;
+    }
+    return found;
+}
+
+static void studio_line(const char *path, char *out, const size_t size) {
+    out[0] = '\0';
+    FILE *file = fopen(path, "r");
+    if (!file) return;
+    if (fgets(out, (int) size, file)) out[strcspn(out, "\r\n")] = '\0';
+    fclose(file);
+}
+
+static void studio_json_value(const char *path, const char *key, char *out, const size_t size) {
+    out[0] = '\0';
+    FILE *file = fopen(path, "r");
+    if (!file) return;
+
+    char text[2048];
+    const size_t got = fread(text, 1, sizeof(text) - 1, file);
+    fclose(file);
+    text[got] = '\0';
+
+    char quoted[64];
+    snprintf(quoted, sizeof(quoted), "\"%s\"", key);
+    const char *at = strstr(text, quoted);
+    if (!at) return;
+    at = strchr(at + strlen(quoted), ':');
+    if (!at) return;
+    at++;
+    while (isspace((unsigned char) *at) || *at == '"')
+        at++;
+
+    size_t length = 0;
+    while (at[length] && at[length] != '"' && at[length] != ',' && at[length] != '}'
+           && !isspace((unsigned char) at[length]))
+        length++;
+    snprintf(out, size, "%.*s", (int) (length < size ? length : size - 1), at);
+}
+
+static int studio_variant_name(const char *filename, char *name, const size_t size) {
+    static const char *const exts[] = {".json", ".ini", ".muxalt"};
+    static const char *const splashes[] = {"_bootlogo", "_reboot", "_shutdown"};
+    const char *dot = strrchr(filename, '.');
+    if (filename[0] == '.' || !dot || dot == filename) return 0;
+
+    int known = 0;
+    for (size_t i = 0; i < sizeof(exts) / sizeof(exts[0]); i++)
+        known |= strcasecmp(dot, exts[i]) == 0;
+    if (!known) return 0;
+
+    const size_t length = (size_t) (dot - filename);
+    for (size_t i = 0; strcasecmp(dot, ".json") == 0 && i < sizeof(splashes) / sizeof(splashes[0]); i++) {
+        const size_t suffix = strlen(splashes[i]);
+        if (length > suffix && strncasecmp(filename + length - suffix, splashes[i], suffix) == 0) return 0;
+    }
+
+    snprintf(name, size, "%.*s", (int) length, filename);
+    return 1;
+}
+
+static int studio_variant_exists(const char *theme, const char *name) {
+    static const char *const exts[] = {"json", "ini", "muxalt"};
+    for (size_t i = 0; i < sizeof(exts) / sizeof(exts[0]); i++) {
+        char path[PATH_MAX];
+        char leaf[NAME_MAX + 1];
+        char found[NAME_MAX + 1];
+        snprintf(leaf, sizeof(leaf), "%s.%s", name, exts[i]);
+        snprintf(path, sizeof(path), "%s/alternate/%s", theme, leaf);
+        if (studio_variant_name(leaf, found, sizeof(found)) && access(path, F_OK) == 0) return 1;
+    }
+    return 0;
+}
+
+static int studio_count_inis(const char *folder, const int depth) {
+    DIR *dir = opendir(folder);
+    if (!dir) return 0;
+
+    int count = 0;
+    const struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') continue;
+
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), "%s/%s", folder, entry->d_name);
+        const char *dot = strrchr(entry->d_name, '.');
+        if (dot && strcasecmp(dot, ".ini") == 0) {
+            count++;
+        } else if (depth > 0) {
+            struct stat st;
+            if (stat(path, &st) == 0 && S_ISDIR(st.st_mode)) count += studio_count_inis(path, depth - 1);
+        }
+    }
+    closedir(dir);
+    return count;
+}
+
+static void studio_variants(struct buffer *out, const char *active) {
+    char theme[PATH_MAX / 2] = "";
+    if (active[0] && !strchr(active, '/')) snprintf(theme, sizeof(theme), RUN_STORAGE_PATH "theme/%s", active);
+
+    char path[PATH_MAX];
+    char current[NAME_MAX + 1] = "";
+    if (theme[0]) {
+        snprintf(path, sizeof(path), "%s/active.txt", theme);
+        studio_line(path, current, sizeof(current));
+        if (!current[0] || strchr(current, '/') || !studio_variant_exists(theme, current)) current[0] = '\0';
+    }
+
+    char inis[32];
+    snprintf(inis, sizeof(inis), ",\"inis\":%d", theme[0] ? studio_count_inis(theme, 4) : 0);
+    buffer_puts(out, inis);
+
+    buffer_puts(out, ",\"dims\":[");
+    DIR *dims = theme[0] ? opendir(theme) : NULL;
+    if (dims) {
+        int first = 1;
+        const struct dirent *entry;
+        while ((entry = readdir(dims)) != NULL) {
+            int width = 0;
+            int height = 0;
+            char tail = '\0';
+            if (sscanf(entry->d_name, "%dx%d%c", &width, &height, &tail) != 2 || width <= 0 || height <= 0) continue;
+            if (!first) buffer_puts(out, ",");
+            json_string(out, entry->d_name);
+            first = 0;
+        }
+        closedir(dims);
+    }
+    const char *theme_root = "";
+    const char *theme_path = "";
+    if (theme[0]) studio_root_of(theme, &theme_root, &theme_path);
+    buffer_puts(out, "],");
+    json_field(out, "themeroot", theme_root);
+    buffer_puts(out, ",");
+    json_field(out, "themepath", theme_path);
+
+    char device_dim[MAX_BUFFER_SIZE];
+    studio_dim(device_dim, sizeof(device_dim));
+    device_dim[strcspn(device_dim, "/")] = '\0';
+    buffer_puts(out, ",");
+    json_field(out, "devicedim", device_dim);
+
+    buffer_puts(out, ",\"variants\":[");
+    snprintf(path, sizeof(path), "%s/alternate", theme);
+    DIR *dir = theme[0] ? opendir(path) : NULL;
+    if (dir) {
+        static char names[64][NAME_MAX + 1];
+        int count = 0;
+        const struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL && count < 64) {
+            char name[NAME_MAX + 1];
+            if (!studio_variant_name(entry->d_name, name, sizeof(name))) continue;
+            int seen = 0;
+            for (int i = 0; i < count; i++)
+                seen |= strcmp(names[i], name) == 0;
+            if (!seen) snprintf(names[count++], NAME_MAX + 1, "%s", name);
+        }
+        for (int i = 0; i < count; i++) {
+            if (i) buffer_puts(out, ",");
+            json_string(out, names[i]);
+        }
+        closedir(dir);
+    }
+    buffer_puts(out, "],");
+    json_field(out, "variant", current);
+
+    char folder[PATH_MAX / 2];
+    if (current[0])
+        snprintf(folder, sizeof(folder), "%s/alternate/rgb/%s", theme, current);
+    else
+        snprintf(folder, sizeof(folder), "%s/rgb", theme);
+
+    char value[64];
+    buffer_puts(out, ",\"lights\":{");
+    snprintf(path, sizeof(path), "%s/colour_l", folder);
+    studio_line(path, value, sizeof(value));
+    json_field(out, "l", theme[0] ? value : "");
+    buffer_puts(out, ",");
+    snprintf(path, sizeof(path), "%s/colour_r", folder);
+    studio_line(path, value, sizeof(value));
+    json_field(out, "r", theme[0] ? value : "");
+
+    if (current[0])
+        snprintf(path, sizeof(path), "%s/alternate/%s_bootlogo.json", theme, current);
+    else
+        snprintf(path, sizeof(path), "%s/bootlogo.json", theme);
+    static const char *const splash[][2] = {
+        {"background", "background_colour"},
+        {"gradient", "background_gradient_colour"},
+        {"tint", "png_recolour"},
+        {"tintalpha", "png_recolour_alpha"},
+    };
+    buffer_puts(out, "},\"splash\":{");
+    for (size_t i = 0; i < sizeof(splash) / sizeof(splash[0]); i++) {
+        studio_json_value(path, splash[i][1], value, sizeof(value));
+        if (i) buffer_puts(out, ",");
+        json_field(out, splash[i][0], theme[0] ? value : "");
+    }
+    buffer_puts(out, "}");
+}
+
+static void studio_overlays(struct buffer *out, const char *active) {
+    static const char *const types[] = {"battery", "bright", "volume"};
+    static const char *const slots[] = {"screen", "game", "battery", "bright", "volume"};
+
+    buffer_puts(out, ",\"overlayfiles\":[");
+    struct buffer sets = {0};
+
+    DIR *dir = opendir(RUN_STORAGE_PATH "lab/overlay");
+    if (dir) {
+        int first = 1;
+        int first_set = 1;
+        const struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (entry->d_name[0] == '.') continue;
+
+            char path[PATH_MAX];
+            struct stat st;
+            snprintf(path, sizeof(path), RUN_STORAGE_PATH "lab/overlay/%s", entry->d_name);
+            if (stat(path, &st) != 0) continue;
+
+            if (S_ISDIR(st.st_mode)) {
+                if (!first_set) buffer_puts(&sets, ",");
+                buffer_puts(&sets, "{");
+                json_field(&sets, "name", entry->d_name);
+                for (size_t t = 0; t < sizeof(types) / sizeof(types[0]); t++) {
+                    char count[32];
+                    snprintf(
+                        count, sizeof(count), ",\"%s\":%d", types[t], studio_overlay_steps(entry->d_name, types[t])
+                    );
+                    buffer_puts(&sets, count);
+                }
+                buffer_puts(&sets, "}");
+                first_set = 0;
+            } else if (studio_lab_file(entry->d_name) && strcasecmp(strrchr(entry->d_name, '.'), ".mp4") != 0) {
+                if (!first) buffer_puts(out, ",");
+                json_string(out, entry->d_name);
+                first = 0;
+            }
+        }
+        closedir(dir);
+    }
+
+    buffer_puts(out, "],\"overlaysets\":[");
+    if (sets.data) buffer_puts(out, sets.data);
+    free(sets.data);
+
+    buffer_puts(out, "],\"overlays\":{");
+    for (size_t i = 0; i < sizeof(slots) / sizeof(slots[0]); i++) {
+        char path[PATH_MAX];
+        char value[NAME_MAX + 2] = "";
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/.lab/overlay/%s.txt", active, slots[i]);
+
+        FILE *file = active[0] && !strchr(active, '/') ? fopen(path, "r") : NULL;
+        if (file) {
+            if (fgets(value, sizeof(value), file)) value[strcspn(value, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        if (i) buffer_puts(out, ",");
+        json_field(out, slots[i], value);
+    }
+    buffer_puts(out, "}");
+}
+
+static void studio_lab(struct buffer *out, const char *active) {
+    mkdir(RUN_STORAGE_PATH "lab", 0755);
+    mkdir(RUN_STORAGE_PATH "lab/glyph", 0755);
+    mkdir(RUN_STORAGE_PATH "lab/art", 0755);
+    mkdir(RUN_STORAGE_PATH "lab/font", 0755);
+    mkdir(RUN_STORAGE_PATH "lab/share", 0755);
+    mkdir(RUN_STORAGE_PATH "lab/media", 0755);
+    mkdir(RUN_STORAGE_PATH "lab/overlay", 0755);
+
+    const char *root_id;
+    const char *relative;
+    studio_root_of(RUN_STORAGE_PATH "lab", &root_id, &relative);
+
+    buffer_puts(out, "{");
+    json_field(out, "root", root_id);
+    buffer_puts(out, ",");
+    json_field(out, "path", relative);
+    buffer_puts(out, ",\"files\":[");
+
+    DIR *dir = opendir(RUN_STORAGE_PATH "lab");
+    if (dir) {
+        int first = 1;
+        const struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (!studio_lab_file(entry->d_name)) continue;
+            if (!first) buffer_puts(out, ",");
+            json_string(out, entry->d_name);
+            first = 0;
+        }
+        closedir(dir);
+    }
+
+    buffer_puts(out, "],\"fontfiles\":[");
+    static char fonts[128][NAME_MAX + 1];
+    int font_count = 0;
+    DIR *font_dir = opendir(RUN_STORAGE_PATH "lab/font");
+    if (font_dir) {
+        static const char *const font_exts[] = {"ttf", "otf", "ttc", "pcf", "bdf"};
+        const struct dirent *entry;
+        while (font_count < 128 && (entry = readdir(font_dir)) != NULL) {
+            const char *dot = strrchr(entry->d_name, '.');
+            if (entry->d_name[0] == '.' || !dot) continue;
+            for (size_t e = 0; e < sizeof(font_exts) / sizeof(font_exts[0]); e++) {
+                if (strcasecmp(dot + 1, font_exts[e]) == 0) {
+                    snprintf(fonts[font_count++], NAME_MAX + 1, "%s", entry->d_name);
+                    break;
+                }
+            }
+        }
+        closedir(font_dir);
+    }
+    for (int i = 0; i < font_count; i++) {
+        if (i) buffer_puts(out, ",");
+        json_string(out, fonts[i]);
+    }
+
+    buffer_puts(out, "],\"mediafiles\":[");
+    DIR *media_dir = opendir(RUN_STORAGE_PATH "lab/media");
+    if (media_dir) {
+        int first = 1;
+        const struct dirent *entry;
+        while ((entry = readdir(media_dir)) != NULL) {
+            const char *dot = strrchr(entry->d_name, '.');
+            static const char *const media_exts[] = {".wav", ".ogg", ".mp3", ".flac", ".opus"};
+            int known = 0;
+            for (size_t e = 0; dot && e < sizeof(media_exts) / sizeof(media_exts[0]); e++)
+                known |= strcasecmp(dot, media_exts[e]) == 0;
+            if (entry->d_name[0] == '.' || !known) continue;
+            if (!first) buffer_puts(out, ",");
+            json_string(out, entry->d_name);
+            first = 0;
+        }
+        closedir(media_dir);
+    }
+
+    buffer_puts(out, "],\"music\":[");
+    char music_path[PATH_MAX];
+    snprintf(music_path, sizeof(music_path), RUN_STORAGE_PATH "theme/%s/.lab/media/music.txt", active);
+    FILE *music_file = active[0] && !strchr(active, '/') ? fopen(music_path, "r") : NULL;
+    if (music_file) {
+        char track[NAME_MAX + 1];
+        int first = 1;
+        while (fgets(track, sizeof(track), music_file)) {
+            track[strcspn(track, "\r\n")] = '\0';
+            if (!track[0]) continue;
+            if (!first) buffer_puts(out, ",");
+            json_string(out, track);
+            first = 0;
+        }
+        fclose(music_file);
+    }
+
+    static const char *const media_slots[] = {"confirm", "back",     "keypress", "navigate",  "error",      "muos",
+                                              "reboot",  "shutdown", "startup",  "info_open", "info_close", "option"};
+    buffer_puts(out, "],\"media\":{");
+    for (size_t i = 0; i < sizeof(media_slots) / sizeof(media_slots[0]); i++) {
+        char value[NAME_MAX + 1] = "";
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/.lab/media/%s.txt", active, media_slots[i]);
+        FILE *file = active[0] && !strchr(active, '/') ? fopen(path, "r") : NULL;
+        if (file) {
+            if (fgets(value, sizeof(value), file)) value[strcspn(value, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        const char *root_id = "";
+        const char *relative = "";
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/sound/%s.wav", active, media_slots[i]);
+        if (active[0] && !strchr(active, '/') && access(path, F_OK) == 0) studio_root_of(path, &root_id, &relative);
+
+        if (i) buffer_puts(out, ",");
+        buffer_puts(out, "\"");
+        buffer_puts(out, media_slots[i]);
+        buffer_puts(out, "\":{");
+        json_field(out, "set", value);
+        buffer_puts(out, ",");
+        json_field(out, "root", root_id);
+        buffer_puts(out, ",");
+        json_field(out, "path", relative);
+        buffer_puts(out, "}");
+    }
+
+    buffer_puts(out, "},\"shots\":[");
+    DIR *shot_dir = opendir(RUN_STORAGE_PATH "screenshot");
+    if (shot_dir) {
+        int first = 1;
+        const struct dirent *entry;
+        while ((entry = readdir(shot_dir)) != NULL) {
+            const char *dot = strrchr(entry->d_name, '.');
+            if (entry->d_name[0] == '.' || !dot || !is_image_ext(dot + 1)) continue;
+            if (!first) buffer_puts(out, ",");
+            json_string(out, entry->d_name);
+            first = 0;
+        }
+        closedir(shot_dir);
+    }
+
+    char dim[MAX_BUFFER_SIZE];
+    studio_dim(dim, sizeof(dim));
+    static const char *const preview_names[] = {"preview", "preview.0", "preview.1"};
+    buffer_puts(out, "],\"previews\":[");
+    for (size_t i = 0; i < sizeof(preview_names) / sizeof(preview_names[0]); i++) {
+        char value[NAME_MAX + 1] = "";
+        char path[PATH_MAX];
+        const int safe = active[0] && !strchr(active, '/');
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/.lab/preview/%zu.txt", active, i);
+        FILE *file = safe ? fopen(path, "r") : NULL;
+        if (file) {
+            if (fgets(value, sizeof(value), file)) value[strcspn(value, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        const char *root_id = "";
+        const char *relative = "";
+        const char *places[] = {dim, "", "640x480/"};
+        for (size_t p = 0; p < sizeof(places) / sizeof(places[0]) && safe && !root_id[0]; p++) {
+            snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/%s%s.png", active, places[p], preview_names[i]);
+            if (access(path, F_OK) == 0) studio_root_of(path, &root_id, &relative);
+        }
+
+        if (i) buffer_puts(out, ",");
+        buffer_puts(out, "{");
+        json_field(out, "set", value);
+        buffer_puts(out, ",");
+        json_field(out, "root", root_id);
+        buffer_puts(out, ",");
+        json_field(out, "path", relative);
+        buffer_puts(out, "}");
+    }
+
+    buffer_puts(out, "],\"packages\":[");
+    DIR *share_dir = opendir(RUN_STORAGE_PATH "lab/share");
+    if (share_dir) {
+        int first = 1;
+        const struct dirent *entry;
+        while ((entry = readdir(share_dir)) != NULL) {
+            const char *dot = strrchr(entry->d_name, '.');
+            if (entry->d_name[0] == '.' || !dot || strcasecmp(dot, ".muxthm") != 0) continue;
+            if (!first) buffer_puts(out, ",");
+            json_string(out, entry->d_name);
+            first = 0;
+        }
+        closedir(share_dir);
+    }
+
+    char credit[MAX_BUFFER_SIZE] = "";
+    char credit_path[PATH_MAX];
+    snprintf(credit_path, sizeof(credit_path), RUN_STORAGE_PATH "theme/%s/credits.txt", active);
+    FILE *credit_file = active[0] && !strchr(active, '/') ? fopen(credit_path, "r") : NULL;
+    if (credit_file) {
+        if (fgets(credit, sizeof(credit), credit_file)) credit[strcspn(credit, "\r\n")] = '\0';
+        fclose(credit_file);
+    }
+
+    buffer_puts(out, "],");
+    json_field(out, "credit", credit);
+    buffer_puts(out, ",\"fonts\":{");
+    static const char *const font_slots[] = {"default", "header", "footer", "panel"};
+    for (size_t i = 0; i < sizeof(font_slots) / sizeof(font_slots[0]); i++) {
+        char path[PATH_MAX];
+        char value[NAME_MAX + 1] = "";
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/.lab/font/%s.txt", active, font_slots[i]);
+
+        FILE *file = active[0] && !strchr(active, '/') ? fopen(path, "r") : NULL;
+        if (file) {
+            if (fgets(value, sizeof(value), file)) value[strcspn(value, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        if (i) buffer_puts(out, ",");
+        json_field(out, font_slots[i], value);
+    }
+
+    buffer_puts(out, "},\"walls\":{");
+    for (size_t i = 0; i < sizeof(studio_wall_slots) / sizeof(studio_wall_slots[0]); i++) {
+        char path[PATH_MAX];
+        char value[NAME_MAX + 1] = "";
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "theme/%s/.lab/wall/%s.txt", active, studio_wall_slots[i]);
+
+        FILE *file = active[0] && !strchr(active, '/') ? fopen(path, "r") : NULL;
+        if (file) {
+            if (fgets(value, sizeof(value), file)) value[strcspn(value, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        if (i) buffer_puts(out, ",");
+        json_field(out, studio_wall_slots[i], value);
+    }
+    buffer_puts(out, "}");
+
+    studio_overlays(out, active);
+    studio_variants(out, active);
+    buffer_puts(out, "}");
+}
+
+#define STUDIO_SCREENS    RUN_PATH "lab_screens"
+#define STUDIO_GLYPHS_MAX 256
+
+static int studio_safe_name(const char *name) {
+    return name && *name && name[0] != '.' && !strchr(name, '/') && strlen(name) < NAME_MAX;
+}
+
+static void studio_send_screens(struct connection *connection) {
+    struct buffer out = {0};
+    buffer_puts(&out, "{\"screens\":[");
+
+    FILE *file = fopen(STUDIO_SCREENS, "r");
+    if (file) {
+        char line[MAX_BUFFER_SIZE];
+        int first = 1;
+        while (fgets(line, sizeof(line), file)) {
+            line[strcspn(line, "\r\n")] = '\0';
+            char *bar = strchr(line, '|');
+            if (!bar || strncmp(line, "dim|", 4) == 0) continue;
+            *bar = '\0';
+
+            if (!first) buffer_puts(&out, ",");
+            buffer_puts(&out, "{");
+            json_field(&out, "folder", line);
+            buffer_puts(&out, ",");
+            json_field(&out, "title", bar + 1);
+            buffer_puts(&out, "}");
+            first = 0;
+        }
+        fclose(file);
+    }
+
+    buffer_puts(&out, "]}");
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static void studio_dim(char *out, const size_t size) {
+    out[0] = '\0';
+
+    FILE *file = fopen(STUDIO_SCREENS, "r");
+    if (!file) return;
+
+    char line[MAX_BUFFER_SIZE];
+    if (fgets(line, sizeof(line), file) && strncmp(line, "dim|", 4) == 0) {
+        line[strcspn(line, "\r\n")] = '\0';
+        snprintf(out, size, "%s", line + 4);
+    }
+    fclose(file);
+}
+
+static int studio_add_names(char (*names)[NAME_MAX + 1], int count, const char *folder, const int strip) {
+    DIR *dir = opendir(folder);
+    if (!dir) return count;
+
+    const struct dirent *entry;
+    while (count < STUDIO_GLYPHS_MAX && (entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') continue;
+
+        char name[NAME_MAX + 1];
+        snprintf(name, sizeof(name), "%s", entry->d_name);
+        if (strip) {
+            char *dot = strrchr(name, '.');
+            if (!dot || !is_image_ext(dot + 1)) continue;
+            *dot = '\0';
+        } else {
+            const char *dot = strrchr(name, '.');
+            if (!dot || !is_image_ext(dot + 1)) continue;
+        }
+
+        int seen = 0;
+        for (int i = 0; i < count && !seen; i++)
+            seen = strcmp(names[i], name) == 0;
+        if (!seen) snprintf(names[count++], NAME_MAX + 1, "%s", name);
+    }
+
+    closedir(dir);
+    return count;
+}
+
+static int studio_compare_names(const void *a, const void *b) {
+    return strcasecmp((const char *) a, (const char *) b);
+}
+
+static int studio_glyph_file(
+    const char *theme, const char *dim, const char *screen, const char *name, char *out, const size_t size
+) {
+    const char *bases[] = {theme, OPT_PATH "share/theme/MustardOS"};
+    int ext_count;
+    const char **exts = image_ext_list(&ext_count);
+
+    for (size_t b = 0; b < sizeof(bases) / sizeof(bases[0]); b++) {
+        if (!bases[b][0]) continue;
+
+        for (int e = 0; e < ext_count; e++) {
+            for (int with_dim = 1; with_dim >= 0; with_dim--) {
+                const int written =
+                    snprintf(out, size, "%s/%sglyph/%s/%s.%s", bases[b], with_dim ? dim : "", screen, name, exts[e]);
+                if (written > 0 && (size_t) written < size && access(out, F_OK) == 0) return 1;
+            }
+        }
+    }
+
+    out[0] = '\0';
+    return 0;
+}
+
+static void studio_send_glyphs(struct connection *connection, const char *screen) {
+    if (!studio_safe_name(screen)) {
+        send_error(connection, 400, "Choose a screen");
+        return;
+    }
+
+    char active[MAX_BUFFER_SIZE];
+    char dim[MAX_BUFFER_SIZE];
+    studio_read("theme/active", active, sizeof(active));
+    studio_dim(dim, sizeof(dim));
+
+    char theme[PATH_MAX / 2] = "";
+    if (studio_safe_name(active)) snprintf(theme, sizeof(theme), RUN_STORAGE_PATH "theme/%s", active);
+
+    static char names[STUDIO_GLYPHS_MAX][NAME_MAX + 1];
+    char folder[PATH_MAX];
+    snprintf(folder, sizeof(folder), OPT_PATH "share/theme/MustardOS/glyph/%s", screen);
+    int count = studio_add_names(names, 0, folder, 1);
+    if (theme[0]) {
+        snprintf(folder, sizeof(folder), "%s/glyph/%s", theme, screen);
+        count = studio_add_names(names, count, folder, 1);
+        snprintf(folder, sizeof(folder), "%s/%sglyph/%s", theme, dim, screen);
+        count = studio_add_names(names, count, folder, 1);
+    }
+    qsort(names, (size_t) count, NAME_MAX + 1, studio_compare_names);
+
+    struct buffer out = {0};
+    buffer_puts(&out, "{\"glyphs\":[");
+    for (int i = 0; i < count; i++) {
+        char path[PATH_MAX];
+        const char *root_id = "";
+        const char *relative = "";
+        if (studio_glyph_file(theme, dim, screen, names[i], path, sizeof(path))) {
+            studio_root_of(path, &root_id, &relative);
+        }
+
+        char state[PATH_MAX];
+        char set[NAME_MAX + 1] = "";
+        const int written = snprintf(state, sizeof(state), "%s/.lab/glyph/%s/%s.txt", theme, screen, names[i]);
+        FILE *file = theme[0] && written > 0 && (size_t) written < sizeof(state) ? fopen(state, "r") : NULL;
+        if (file) {
+            if (fgets(set, sizeof(set), file)) set[strcspn(set, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        if (i) buffer_puts(&out, ",");
+        buffer_puts(&out, "{");
+        json_field(&out, "name", names[i]);
+        buffer_puts(&out, ",");
+        json_field(&out, "root", root_id);
+        buffer_puts(&out, ",");
+        json_field(&out, "path", relative);
+        buffer_puts(&out, ",");
+        json_field(&out, "set", set);
+        buffer_puts(&out, "}");
+    }
+
+    static char files[STUDIO_GLYPHS_MAX][NAME_MAX + 1];
+    const int file_count = studio_add_names(files, 0, RUN_STORAGE_PATH "lab/glyph", 0);
+    qsort(files, (size_t) file_count, NAME_MAX + 1, studio_compare_names);
+
+    buffer_puts(&out, "],\"files\":[");
+    for (int i = 0; i < file_count; i++) {
+        if (i) buffer_puts(&out, ",");
+        json_string(&out, files[i]);
+    }
+    buffer_puts(&out, "]}");
+
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static int studio_add_name(char (*names)[NAME_MAX + 1], int count, const char *name) {
+    if (!studio_safe_name(name) || count >= STUDIO_GLYPHS_MAX) return count;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(names[i], name) == 0) return count;
+    }
+    snprintf(names[count], NAME_MAX + 1, "%s", name);
+    return count + 1;
+}
+
+static int studio_add_folders(char (*names)[NAME_MAX + 1], int count, const char *folder) {
+    DIR *dir = opendir(folder);
+    if (!dir) return count;
+
+    const struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), "%s/%s", folder, entry->d_name);
+        struct stat info;
+        if (entry->d_name[0] != '.' && stat(path, &info) == 0 && S_ISDIR(info.st_mode)) {
+            count = studio_add_name(names, count, entry->d_name);
+        }
+    }
+
+    closedir(dir);
+    return count;
+}
+
+static int studio_add_app_icons(char (*names)[NAME_MAX + 1], int count) {
+    count = studio_add_names(names, count, OPT_PATH "share/theme/MustardOS/glyph/muxapp", 1);
+
+    DIR *dir = opendir(RUN_STORAGE_PATH "application");
+    if (!dir) return count;
+
+    const struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') continue;
+
+        char path[PATH_MAX];
+        snprintf(path, sizeof(path), RUN_STORAGE_PATH "application/%s/mux_launch.sh", entry->d_name);
+        FILE *file = fopen(path, "r");
+        if (!file) continue;
+
+        char line[MAX_BUFFER_SIZE];
+        while (fgets(line, sizeof(line), file)) {
+            if (strncmp(line, "# ICON: ", 8) != 0) continue;
+            line[strcspn(line, "\r\n")] = '\0';
+            count = studio_add_name(names, count, line + 8);
+            break;
+        }
+        fclose(file);
+    }
+
+    closedir(dir);
+    return count;
+}
+
+static int studio_art_file(
+    const char *theme, const char *dim, const char *kind, const char *type, const char *name, char *out,
+    const size_t size
+) {
+    char dim_clean[MAX_BUFFER_SIZE];
+    snprintf(dim_clean, sizeof(dim_clean), "%s", dim);
+    const size_t length = strlen(dim_clean);
+    if (length && dim_clean[length - 1] == '/') dim_clean[length - 1] = '\0';
+
+    int ext_count;
+    const char **exts = image_ext_list(&ext_count);
+    for (int b = 0; b < 2; b++) {
+        if (!b && !theme[0]) continue;
+
+        char base[PATH_MAX / 2];
+        if (b) {
+            snprintf(base, sizeof(base), RUN_STORAGE_PATH "info/catalogue/%s/%s", kind, type);
+        } else {
+            snprintf(base, sizeof(base), "%s/catalogue/%s/%s", theme, kind, type);
+        }
+
+        for (int e = 0; e < ext_count; e++) {
+            for (int with_dim = 1; with_dim >= 0; with_dim--) {
+                if (with_dim && !dim_clean[0]) continue;
+                const int written = with_dim ? snprintf(out, size, "%s/%s/%s.%s", base, dim_clean, name, exts[e])
+                                             : snprintf(out, size, "%s/%s.%s", base, name, exts[e]);
+                if (written > 0 && (size_t) written < size && access(out, F_OK) == 0) return 1;
+            }
+        }
+    }
+
+    out[0] = '\0';
+    return 0;
+}
+
+static void studio_send_art(struct connection *connection, const char *request) {
+    char route[MAX_BUFFER_SIZE];
+    snprintf(route, sizeof(route), "%s", request);
+    char *type = strchr(route, '/');
+    if (type) *type++ = '\0';
+
+    const char *kinds[] = {"Folder", "Application", "Collection"};
+    int kind_ok = 0;
+    for (size_t i = 0; i < sizeof(kinds) / sizeof(kinds[0]); i++)
+        kind_ok |= strcmp(route, kinds[i]) == 0;
+    if (!kind_ok || !type || (strcmp(type, "grid") != 0 && strcmp(type, "box") != 0)) {
+        send_error(connection, 400, "Choose what the art is for");
+        return;
+    }
+
+    char active[MAX_BUFFER_SIZE];
+    char dim[MAX_BUFFER_SIZE];
+    studio_read("theme/active", active, sizeof(active));
+    studio_dim(dim, sizeof(dim));
+
+    char theme[PATH_MAX / 4] = "";
+    if (studio_safe_name(active)) snprintf(theme, sizeof(theme), RUN_STORAGE_PATH "theme/%s", active);
+
+    static char names[STUDIO_GLYPHS_MAX][NAME_MAX + 1];
+    int count = 0;
+    if (strcmp(route, "Folder") == 0) {
+        for (size_t i = 0; i < file_root_count; i++) {
+            char roms[PATH_MAX];
+            snprintf(roms, sizeof(roms), "%s/ROMS", file_roots[i].path);
+            count = studio_add_folders(names, count, roms);
+        }
+    } else if (strcmp(route, "Application") == 0) {
+        count = studio_add_app_icons(names, count);
+    } else {
+        count = studio_add_folders(names, count, RUN_STORAGE_PATH "info/collection");
+        count = studio_add_names(names, count, RUN_STORAGE_PATH "info/collection", 1);
+    }
+
+    if (theme[0]) {
+        char folder[PATH_MAX];
+        snprintf(folder, sizeof(folder), "%s/catalogue/%s/%s", theme, route, type);
+        count = studio_add_names(names, count, folder, 1);
+    }
+    qsort(names, (size_t) count, NAME_MAX + 1, studio_compare_names);
+
+    struct buffer out = {0};
+    buffer_puts(&out, "{\"names\":[");
+    int first = 1;
+    for (int i = 0; i < count; i++) {
+        const size_t length = strlen(names[i]);
+        if (length > 8 && strcmp(names[i] + length - 8, "_focused") == 0) continue;
+
+        char path[PATH_MAX];
+        const char *root_id = "";
+        const char *relative = "";
+        if (studio_art_file(theme, dim, route, type, names[i], path, sizeof(path))) {
+            studio_root_of(path, &root_id, &relative);
+        }
+
+        char state[PATH_MAX];
+        char set[NAME_MAX + 1] = "";
+        const int written = snprintf(state, sizeof(state), "%s/.lab/art/%s/%s/%s.txt", theme, route, type, names[i]);
+        FILE *file = theme[0] && written > 0 && (size_t) written < sizeof(state) ? fopen(state, "r") : NULL;
+        if (file) {
+            if (fgets(set, sizeof(set), file)) set[strcspn(set, "\r\n")] = '\0';
+            fclose(file);
+        }
+
+        if (!first) buffer_puts(&out, ",");
+        buffer_puts(&out, "{");
+        json_field(&out, "name", names[i]);
+        buffer_puts(&out, ",");
+        json_field(&out, "root", root_id);
+        buffer_puts(&out, ",");
+        json_field(&out, "path", relative);
+        buffer_puts(&out, ",");
+        json_field(&out, "set", set);
+        buffer_puts(&out, "}");
+        first = 0;
+    }
+
+    static char files[STUDIO_GLYPHS_MAX][NAME_MAX + 1];
+    const int file_count = studio_add_names(files, 0, RUN_STORAGE_PATH "lab/art", 0);
+    qsort(files, (size_t) file_count, NAME_MAX + 1, studio_compare_names);
+
+    buffer_puts(&out, "],\"files\":[");
+    for (int i = 0; i < file_count; i++) {
+        if (i) buffer_puts(&out, ",");
+        json_string(&out, files[i]);
+    }
+    buffer_puts(&out, "]}");
+
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static void studio_send_state(struct connection *connection) {
+    struct buffer out = {0};
+    int first = 1;
+
+    buffer_puts(&out, "{\"values\":{");
+    for (size_t i = 0; i < sizeof(studio_theme_keys) / sizeof(studio_theme_keys[0]); i++) {
+        char key[128];
+        snprintf(key, sizeof(key), "settings/theme/%s", studio_theme_keys[i]);
+        studio_value(&out, key, &first);
+    }
+    for (size_t i = 0; i < sizeof(studio_font_keys) / sizeof(studio_font_keys[0]); i++) {
+        char key[128];
+        snprintf(key, sizeof(key), "settings/font/%s", studio_font_keys[i]);
+        studio_value(&out, key, &first);
+    }
+    for (size_t i = 0; i < sizeof(studio_volume_keys) / sizeof(studio_volume_keys[0]); i++) {
+        char key[128];
+        snprintf(key, sizeof(key), "settings/general/%s", studio_volume_keys[i]);
+        studio_value(&out, key, &first);
+    }
+
+    char active[MAX_BUFFER_SIZE];
+    studio_read("theme/active", active, sizeof(active));
+    buffer_puts(&out, "},");
+    json_field(&out, "active", active);
+    buffer_puts(&out, ",");
+    json_number(&out, "creating", access(THEME_CREATE_REQ, F_OK) == 0);
+    buffer_puts(&out, ",\"theme\":");
+    studio_pairs(&out, THEME_COLOURS);
+    buffer_puts(&out, ",\"themes\":");
+    studio_themes(&out);
+    buffer_puts(&out, ",\"lab\":");
+    studio_lab(&out, active);
+    buffer_puts(&out, "}");
+
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static void studio_send_result(struct connection *connection) {
+    char result[MAX_BUFFER_SIZE] = "";
+    FILE *file = fopen(THEME_CREATE_DONE, "r");
+    if (file) {
+        if (!fgets(result, sizeof(result), file)) result[0] = '\0';
+        fclose(file);
+    }
+    result[strcspn(result, "\r\n")] = '\0';
+
+    const char *space = strchr(result, ' ');
+    char status[32];
+    snprintf(status, sizeof(status), "%.*s", space ? (int) (space - result) : (int) strlen(result), result);
+
+    struct buffer out = {0};
+    buffer_puts(&out, "{");
+    json_field(&out, "status", access(THEME_CREATE_REQ, F_OK) == 0 ? "working" : status[0] ? status : "none");
+    buffer_puts(&out, ",");
+    json_field(&out, "folder", space ? space + 1 : "");
+    buffer_puts(&out, "}");
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static void studio_send_scheme(struct connection *connection) {
+    FILE *file = fopen(RUN_PATH "lab_scheme.json", "r");
+    if (!file) {
+        send_error(connection, 404, "Read the settings first");
+        return;
+    }
+
+    struct buffer out = {0};
+    char chunk[4096];
+    size_t got;
+    while ((got = fread(chunk, 1, sizeof(chunk), file)) > 0)
+        buffer_append(&out, chunk, got);
+    fclose(file);
+
+    send_json(connection, &out);
+    buffer_free(&out);
+}
+
+static int studio_body(const char *body, const size_t length, char *out, const size_t size) {
+    if (length >= size) return 0;
+
+    for (size_t i = 0; i < length; ++i) {
+        const unsigned char c = (unsigned char) body[i];
+        if (c < 0x20 && c != '\n' && c != '\r') return 0;
+    }
+
+    memcpy(out, body, length);
+    out[length] = '\0';
+    return 1;
+}
+
+static void handle_studio_api(
+    struct connection *connection, const char *method, const char *path, const char *body, const size_t body_length
+) {
+    if (strcmp(method, "GET") == 0) {
+        if (!*path)
+            studio_send_state(connection);
+        else if (strcmp(path, "create") == 0)
+            studio_send_result(connection);
+        else if (strcmp(path, "scheme") == 0)
+            studio_send_scheme(connection);
+        else if (strcmp(path, "glyphs") == 0)
+            studio_send_screens(connection);
+        else if (strncmp(path, "glyphs/", 7) == 0)
+            studio_send_glyphs(connection, path + 7);
+        else if (strncmp(path, "art/", 4) == 0)
+            studio_send_art(connection, path + 4);
+        else
+            send_error(connection, 404, "Not found");
+        return;
+    }
+
+    if (strcmp(method, "POST") != 0) {
+        send_error(connection, 405, "Method not allowed");
+        return;
+    }
+    if (!write_allowed(connection)) return;
+
+    char text[8192];
+    if (!studio_body(body, body_length, text, sizeof(text))) {
+        send_error(connection, 400, "The request could not be read");
+        return;
+    }
+
+    if (strcmp(path, "set") == 0) {
+        static const char *const screens[] = {"launcher", "explore", "collection", "history"};
+        const char *show = "";
+        int changed = 0;
+        for (char *line = strtok(text, "\n"); line; line = strtok(NULL, "\n")) {
+            line[strcspn(line, "\r")] = '\0';
+            char *equals = strchr(line, '=');
+            if (!equals) continue;
+            *equals = '\0';
+
+            if (strcmp(line, "show") == 0) {
+                for (size_t i = 0; i < sizeof(screens) / sizeof(screens[0]); i++) {
+                    if (strcmp(equals + 1, screens[i]) == 0) show = screens[i];
+                }
+                continue;
+            }
+
+            if (!studio_key_allowed(line) || !studio_value_valid(equals + 1)) {
+                send_error(connection, 400, "That setting cannot be changed from the Theme Lab");
+                return;
+            }
+            if (!studio_write(line, equals + 1)) {
+                send_error(connection, 500, "Could not save the setting");
+                return;
+            }
+            changed++;
+        }
+
+        if (changed || *show) {
+            FILE *live = fopen(THEME_LIVE, "w");
+            if (live) {
+                fputs(show, live);
+                fclose(live);
+            }
+        }
+
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (strcmp(path, "show") == 0) {
+        static const char *const screens[] = {"launcher", "explore", "collection", "history"};
+        text[strcspn(text, "\r\n")] = '\0';
+
+        for (size_t i = 0; i < sizeof(screens) / sizeof(screens[0]); i++) {
+            if (strcmp(text, screens[i]) != 0) continue;
+
+            FILE *live = fopen(THEME_LIVE, "w");
+            if (live) {
+                fputs(text, live);
+                fclose(live);
+            }
+            send_text(connection, 200, "application/json", "{\"ok\":true}");
+            return;
+        }
+
+        send_error(connection, 400, "That screen cannot be shown from the Theme Lab");
+        return;
+    }
+
+    if (strcmp(path, "create") == 0) {
+        if (access(THEME_CREATE_REQ, F_OK) == 0) {
+            send_error(connection, 409, "A theme is already being created");
+            return;
+        }
+
+        unlink(THEME_CREATE_DONE);
+        FILE *request = fopen(THEME_CREATE_REQ ".part", "w");
+        if (!request) {
+            send_error(connection, 500, "Could not start creating the theme");
+            return;
+        }
+        fputs(text, request);
+        fclose(request);
+        rename(THEME_CREATE_REQ ".part", THEME_CREATE_REQ);
+
+        send_text(connection, 202, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    send_error(connection, 404, "Not found");
+}
+
 static void handle_tools_api(
     struct connection *connection, const char *method, char *path, const char *body, const size_t body_length
 ) {
@@ -7511,6 +8836,11 @@ static void handle_request(struct connection *connection) {
         handle_collection_api(connection, method, target + (target[15] == '/' ? 16 : 15), body, body_length);
         return;
     }
+    if (strncmp(target, "/api/studio", 11) == 0 && (target[11] == '\0' || target[11] == '/')) {
+        handle_studio_api(connection, method, target + (target[11] == '/' ? 12 : 11), body, body_length);
+        return;
+    }
+
     if (strncmp(target, "/api/tools", 10) == 0 && (target[10] == '\0' || target[10] == '/')) {
         handle_tools_api(connection, method, target + (target[10] == '/' ? 11 : 10), body, body_length);
         return;

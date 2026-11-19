@@ -52,6 +52,7 @@ struct theme_config {
         struct {
             int16_t count;
             int16_t height;
+            int16_t spacing;
             int16_t panel;
         } item;
     } mux;
@@ -310,6 +311,7 @@ struct theme_config {
             int16_t text_padding_side;
             int16_t text_padding_bottom;
             int16_t text_line_spacing;
+            int16_t label_long_mode;
         } cell;
         struct {
             uint32_t background;
@@ -561,6 +563,8 @@ enum colour_role {
     colour_role_count
 };
 
+extern const char *const colour_role_keys[colour_role_count];
+
 double colour_contrast(uint32_t a, uint32_t b);
 
 uint32_t theme_role_colour(int role);
@@ -590,6 +594,8 @@ int get_alt_base_path(char *alt_base, size_t alt_base_size);
 void load_theme(struct theme_config *theme, const struct mux_config *config, struct mux_device *device);
 
 void set_label_long_mode(const struct theme_config *theme, lv_obj_t *ui_lbl_item, int scroll_mode);
+
+void set_label_scroll_always(lv_obj_t *ui_lbl_item);
 
 void apply_text_long_dot(const struct theme_config *theme, lv_obj_t *ui_lbl_item);
 
@@ -640,3 +646,33 @@ void init_glyph_style(const struct theme_config *theme);
 int get_theme_preview_path(
     char *base_path, char *base_file_name, char *image_path, size_t image_path_size, int preview_index
 );
+
+struct theme_field_info {
+    const char *section;
+    const char *key;
+    const char *type;
+    int has_min;
+    int min;
+    int has_max;
+    int max;
+};
+
+int theme_field_count(void);
+
+int theme_field_find(const char *section, const char *key);
+
+void theme_field_info(int index, struct theme_field_info *info);
+
+void theme_field_snapshot(const char *module, const struct mux_device *device);
+
+size_t theme_field_value(int index, char *out, size_t size);
+
+size_t theme_scheme_diff(const struct theme_config *from, const struct theme_config *to, char *out, size_t size);
+
+void theme_scheme_overlay(struct theme_config *target, const struct theme_config *from, const struct theme_config *to);
+
+void theme_alternate_disable(int disabled);
+
+void theme_export_colours(void);
+
+int theme_variant_file(const char *filename, char *name, size_t size);
