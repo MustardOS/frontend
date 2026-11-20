@@ -88,7 +88,7 @@ LIB_FILE = libmuxcom.so
 
 all: $(LIB_DIR)/$(LIB_FILE)
 
-$(LIB_DIR)/$(LIB_FILE): $(OBJS)
+$(LIB_DIR)/$(LIB_FILE): $(OBJS) $(COMMON_EXTERNAL_ARCHIVES)
 	@printf "Linking objects into %s\n" "$@"
 	@mkdir -p $(LIB_DIR)
 	@$(CC) $(OBJS) $(LDFLAGS) -o $@

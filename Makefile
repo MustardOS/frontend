@@ -6,7 +6,7 @@ LIB_DIR = $(BIN_DIR)/lib
 MODULE_DIR = module
 MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn muxcharge muxfrontend muxmessage muremap
 
-MODULE_DAEMONS = mudns mulink muweb
+MODULE_DAEMONS = muaudio mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
 SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen mucpu mustick mutop

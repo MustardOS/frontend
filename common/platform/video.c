@@ -1199,6 +1199,8 @@ static void wallpaper_open(void) {
 
             video_dec->thread_count = 2;
             video_dec->thread_type = FF_THREAD_SLICE;
+            video_dec->flags2 |= AV_CODEC_FLAG2_FAST;
+            video_dec->skip_loop_filter = AVDISCARD_NONREF;
 
             if (avcodec_open2(video_dec, dec, NULL) < 0) {
                 avcodec_free_context(&video_dec);
