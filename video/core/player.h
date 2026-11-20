@@ -1,5 +1,9 @@
 #pragma once
 
+#include <signal.h>
+
+extern volatile sig_atomic_t video_player_terminate;
+
 #include <stddef.h>
 #include "../content/library.h"
 
@@ -29,6 +33,8 @@ typedef struct {
     int audio_rate;
     int audio_channels;
     int queued_video;
+    unsigned frames_shown;
+    unsigned frames_dropped;
     int queued_audio;
     double position;
     double duration;

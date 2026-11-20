@@ -819,7 +819,7 @@ int main(const int argc, char **argv) {
 
     osk_free();
     vt_free();
-    sdl_cleanup();
+    sdl_cleanup_exit();
     TTF_Quit();
     return EXIT_SUCCESS;
 }

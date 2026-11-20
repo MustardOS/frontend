@@ -3592,6 +3592,7 @@ static const lang_field lang_fields[] = {
     {"muxmedia", LANG_OFF(muxmedia.overlay_grid), lang_specific, "Grid"},
     {"muxmedia", LANG_OFF(muxmedia.resolution), lang_specific, "Resolution"},
     {"muxmedia", LANG_OFF(muxmedia.queued_frames), lang_specific, "Queued Frames"},
+    {"muxmedia", LANG_OFF(muxmedia.dropped_frames), lang_specific, "Dropped Frames"},
     {"muxmedia", LANG_OFF(muxmedia.audio_output), lang_specific, "Output"},
     {"muxmedia", LANG_OFF(muxmedia.channels), lang_specific, "Channels"},
     {"muxmedia", LANG_OFF(wasabi_live_tv_quality), lang_specific, "Live TV Quality"},

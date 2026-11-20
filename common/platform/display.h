@@ -10,6 +10,8 @@ void sdl_init(void);
 
 void sdl_cleanup(void);
 
+void sdl_cleanup_exit(void);
+
 void preview_saver(int type, int speed);
 
 void display_saver_reload(void);

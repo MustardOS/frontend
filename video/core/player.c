@@ -103,6 +103,8 @@ typedef struct {
     int video_head;
     int video_tail;
     int video_count;
+    unsigned frames_shown;
+    unsigned frames_dropped;
     int video_queue_limit;
     int video_stream;
     int audio_stream;
@@ -308,6 +310,8 @@ static void resume_playback(void);
 static double playback_clock(void);
 static void remote_tick(void);
 static void stop_playback(void);
+
+volatile sig_atomic_t video_player_terminate = 0;
 static void switch_playlist(size_t index);
 static void switch_folder(size_t index);
 static int audio_available(void);
@@ -1802,6 +1806,8 @@ void video_player_get_information(video_player_info *information) {
     if (player.lock) {
         SDL_LockMutex(player.lock);
         information->queued_video = player.video_count;
+        information->frames_shown = player.frames_shown;
+        information->frames_dropped = player.frames_dropped;
         SDL_UnlockMutex(player.lock);
     }
     SDL_LockAudio();
@@ -2152,6 +2158,12 @@ static void update_audio_transport(void) {
 
 static void present_tick(lv_timer_t *timer __attribute__((unused))) {
     if (SDL_AtomicGet(&player.stop)) return;
+    if (video_player_terminate) {
+        player.explicit_stop = 1;
+        player.quit_deadline = 0;
+        stop_playback();
+        return;
+    }
     const uint32_t now = SDL_GetTicks();
     const uint64_t degauss_mask = BIT(mux_input_start) | BIT(mux_input_select);
     const int degauss_held = (mux_input_source_pressed_mask(0) & degauss_mask) == degauss_mask;
@@ -2294,6 +2306,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             AVFrame *next = player.video_queue[(player.video_head + 1) % player.video_queue_limit];
             const double next_timestamp = normalise_position(frame_seconds(next, player.video_time_base));
             if (next_timestamp <= clock + PRESENT_EARLY_SECONDS) {
+                if (!paused) player.frames_dropped++;
                 av_frame_unref(head);
                 player.video_head = (player.video_head + 1) % player.video_queue_limit;
                 player.video_count--;
@@ -2318,6 +2331,7 @@ static void present_tick(lv_timer_t *timer __attribute__((unused))) {
             uploaded = video_render_promote_next();
         if (!uploaded) uploaded = video_render_upload(player.present_frame);
         if (uploaded) {
+            player.frames_shown++;
             player.presented_timestamp = player.position;
             player.present_dirty = 1;
         }
@@ -3146,6 +3160,8 @@ static void remote_tick(void) {
         .uri = player.uri,
         .position = player.position,
         .duration = player.duration,
+        .frames_shown = player.frames_shown,
+        .frames_dropped = player.frames_dropped,
     };
     wasabi_remote_publish(&state, changed);
 
@@ -3757,6 +3773,8 @@ static int player_open(const char *uri, const char *title, const video_player_op
     player.history_save_deadline = SDL_GetTicks() + 30000;
     player.frame_blend = should_blend_frames();
     player.present_interval = player.frame_blend ? PRESENT_INTERVAL_BLEND_MS : preferred_present_interval();
+    player.frames_shown = 0;
+    player.frames_dropped = 0;
     player.presented_timestamp = -1.0;
     player.blend_timestamp = -1.0;
     player.present_timer = lv_timer_create(present_tick, player.present_interval, NULL);

@@ -151,7 +151,7 @@ static const struct int_script_hash int_scripts[] = {
     { "/opt/muos/script/mux/idle.sh", "837c1399ba4a4965" },
     { "/opt/muos/script/mux/install.sh", "448fabbdc41b831d" },
     { "/opt/muos/script/mux/lab.sh", "ce5d46cd88c67347" },
-    { "/opt/muos/script/mux/launch.sh", "f432ef132950a91c" },
+    { "/opt/muos/script/mux/launch.sh", "c7c1e1ff59dec6b6" },
     { "/opt/muos/script/mux/metacut.sh", "5724342720e6e3cb" },
     { "/opt/muos/script/mux/migrate.sh", "e35366a4b2d359c0" },
     { "/opt/muos/script/mux/overlay.sh", "f7be791891b959e8" },

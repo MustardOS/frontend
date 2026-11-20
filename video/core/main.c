@@ -38,6 +38,18 @@ static char selected_title[PATH_MAX];
 static int selected_live;
 static double selected_start;
 static int launch_requested;
+
+static void handle_terminate(const int signal_number) {
+    (void) signal_number;
+    video_player_terminate = 1;
+}
+
+static void watch_terminate(lv_timer_t *timer) {
+    (void) timer;
+    if (!video_player_terminate) return;
+    launch_requested = 0;
+    mux_input_stop();
+}
 static video_library_entry *playlist_entries;
 static size_t playlist_entry_count;
 static size_t playlist_window_start;
@@ -727,6 +739,10 @@ static void initialise_ui(void) {
     inotify_init();
     battery_init();
     init_timer(NULL, NULL);
+
+    signal(SIGTERM, handle_terminate);
+    signal(SIGINT, handle_terminate);
+    lv_timer_create(watch_terminate, 100, NULL);
 }
 
 static int playlist_history_selection(const char *path, size_t *selected) {
@@ -802,6 +818,7 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     orientation_introduce(mux_module, lang.muxmedia.title, lang.muxmedia.overview);
     do {
+        if (video_player_terminate) break;
         if (history_launch) {
             history_launch = 0;
             launch_requested = 1;
@@ -825,13 +842,13 @@ static int run_playlist_ui(const char *path, const int channels, const int resum
                 toast_message(lang.muxmedia.playback_failed, tst_wait_m);
             }
         }
-    } while (launch_requested);
+    } while (launch_requested && !video_player_terminate);
 
     free_items(&items, &item_count);
     video_library_free(playlist_entries, playlist_entry_count);
     playlist_entries = NULL;
     playlist_entry_count = 0;
-    sdl_cleanup();
+    sdl_cleanup_exit();
     return content_switch_requested ? video_player_content_switch : video_player_stopped;
 }
 
@@ -977,7 +994,7 @@ int main(const int argc, char **argv) {
         };
         initialise_ui();
         const int result = live || remote ? video_player_run(uri, title, &options) : play_folder(uri, title, &options);
-        sdl_cleanup();
+        sdl_cleanup_exit();
         free(link_value);
         if (result == video_player_content_switch) return CONTENT_SWITCH_EXIT_STATUS;
         return result >= video_player_stopped ? EXIT_SUCCESS : EXIT_FAILURE;

@@ -994,6 +994,20 @@ static int ensure_frame_tex(const int want_w, const int want_h, const Uint32 wan
     return 1;
 }
 
+static void upload_frame_tex(const void *pixels, const int width, const int height, const size_t pitch) {
+    const size_t row = (size_t) width * raw_frame_bpp;
+    void *target;
+    int target_pitch;
+    if (pitch == row || SDL_LockTexture(frame_tex, NULL, &target, &target_pitch) != 0) {
+        SDL_UpdateTexture(frame_tex, NULL, pixels, (int) pitch);
+        return;
+    }
+
+    for (int y = 0; y < height; y++)
+        memcpy((uint8_t *) target + (size_t) y * target_pitch, (const uint8_t *) pixels + (size_t) y * pitch, row);
+    SDL_UnlockTexture(frame_tex);
+}
+
 static void upload_frame(void) {
     if (!raw_frame_valid || !raw_frame_buf || frame_w == 0 || frame_h == 0) return;
 
@@ -1003,7 +1017,7 @@ static void upload_frame(void) {
     if (!ensure_frame_tex(want_w, want_h, sdl_format_for_pixel_format(raw_frame_format))) return;
 
     if (!cpu_filter_active) {
-        SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
+        upload_frame_tex(raw_frame_buf, tex_w, tex_h, raw_frame_pitch);
         return;
     }
 
@@ -1372,7 +1386,7 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
     if (!session_settings.anti_flicker && !cpu_filter_active) {
         raw_frame_valid = 0;
         if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(pixel_format))) {
-            SDL_UpdateTexture(frame_tex, NULL, data, (int) pitch);
+            upload_frame_tex(data, tex_w, tex_h, pitch);
             direct_upload_frames++;
         }
         perf_end(perf_stage_video_upload, upload_start);
@@ -1405,7 +1419,7 @@ static void video_refresh_apply(const void *data, const unsigned width, const un
     }
 
     if (ensure_frame_tex(frame_w, frame_h, sdl_format_for_pixel_format(pixel_format)))
-        SDL_UpdateTexture(frame_tex, NULL, raw_frame_buf, (int) raw_frame_pitch);
+        upload_frame_tex(raw_frame_buf, tex_w, tex_h, raw_frame_pitch);
 
     perf_end(perf_stage_video_upload, upload_start);
 }

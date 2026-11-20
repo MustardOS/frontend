@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -233,8 +234,9 @@ double core_get_target_fps(void) {
     return target_fps;
 }
 
-static void precache_content(const char *content_path) {
-    const int budget_mb = session_settings_content_precache_mb(session_settings.content_precache);
+#define CONTENT_READAHEAD_MB 8
+
+static void precache_content(const char *content_path, const int budget_mb) {
     if (budget_mb <= 0) return;
 
     const int fd = open(content_path, O_RDONLY | O_CLOEXEC);
@@ -252,6 +254,30 @@ static void precache_content(const char *content_path) {
     }
 
     close(fd);
+}
+
+static void *readahead_content(void *path) {
+    const int fd = open(path, O_RDONLY | O_CLOEXEC);
+    if (fd >= 0) {
+        static char chunk[256 * 1024];
+        size_t total = 0;
+        ssize_t got;
+        while (total < (size_t) CONTENT_READAHEAD_MB * 1024 * 1024 && (got = read(fd, chunk, sizeof(chunk))) > 0)
+            total += (size_t) got;
+        close(fd);
+    }
+    free(path);
+    return NULL;
+}
+
+static void start_content_readahead(const char *content_path) {
+    char *path = strdup(content_path);
+    pthread_t thread;
+    if (!path || pthread_create(&thread, NULL, readahead_content, path) != 0) {
+        free(path);
+        return;
+    }
+    pthread_detach(thread);
 }
 
 static int hard_sync_enabled(void) {
@@ -764,6 +790,7 @@ int main(const int argc, char *argv[]) {
 
     const char *core_path_arg = startup.core_path;
     const char *content_path = startup.content_path;
+    if (content_path && *content_path) start_content_readahead(content_path);
     const char *startup_message = startup.restarting ? lang.muxretro.content_restarting : lang.muxretro.content_loading;
     const uint64_t startup_start = SDL_GetPerformanceCounter();
     uint64_t startup_stage = startup_start;
@@ -851,7 +878,8 @@ int main(const int argc, char *argv[]) {
                      && gamestate_find_most_recent(resume_path, sizeof(resume_path), &load_blocked) == 0;
     loading_startup_progress(has_resume ? lang.muxretro.content_resuming : startup_message, show_startup_messages);
 
-    precache_content(content_path);
+    const int precache_mb = session_settings_content_precache_mb(session_settings.content_precache);
+    if (precache_mb > CONTENT_READAHEAD_MB) precache_content(content_path, precache_mb);
 
     if (startup.subsystem_ident[0]) {
         const char *slots[SUBSYSTEM_ROM_MAX];
@@ -1007,8 +1035,6 @@ int main(const int argc, char *argv[]) {
         startup_log_stage("resume selection (no compatible state)", &startup_stage);
     }
 
-    governor_boost_end();
-
     pause_menu_init();
     loading_message_hide();
 
@@ -1060,6 +1086,8 @@ int main(const int argc, char *argv[]) {
     } else if (show_startup_messages && optimised_status() == optimised_state_applied) {
         pause_menu_show_toast_timed(lang.muxretro.settings_screen.optimised_applied, tst_wait_s);
     }
+
+    governor_boost_end();
 
     LOG_SUCCESS(mux_module, "Running content at %.2f fps / %.0f Hz audio", target_fps, av_info.timing.sample_rate);
     LOG_INFO(mux_module, "Startup: ready in %.2f ms total", startup_elapsed_ms(startup_start));
@@ -1454,6 +1482,16 @@ int main(const int argc, char *argv[]) {
             if (core_ran) perf_note_present();
 
             if (core_ran) frame_pacer_after_present();
+
+            static uint64_t last_present_counter = 0;
+            const uint64_t present_counter = SDL_GetPerformanceCounter();
+            if (core_ran && last_present_counter && !ui_visible && speed_multiplier > 0.9999
+                && speed_multiplier < 1.0001 && !netplay_is_active() && target_fps > 0.0)
+                governor_boost_gameplay_cadence(
+                    (double) (present_counter - last_present_counter) * 1000.0 / (double) SDL_GetPerformanceFrequency(),
+                    1000.0 / target_fps
+                );
+            last_present_counter = core_ran ? present_counter : 0;
         }
         if (cheevo_needs_present_tick()) cheevo_present_tick();
 
@@ -1508,7 +1546,11 @@ int main(const int argc, char *argv[]) {
     if (dir_exist(RETRO_EXT_PATH)) remove_directory_recursive(RETRO_EXT_PATH);
 
     mux_input_close();
-    sdl_cleanup();
+    if (core_restart_requested) {
+        sdl_cleanup();
+    } else {
+        sdl_cleanup_exit();
+    }
 
     remove(IDLE_GAME_INHIBIT);
 

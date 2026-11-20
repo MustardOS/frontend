@@ -128,7 +128,7 @@ static void cleanup_all(void) {
 
     if (preserve_exit_frame) display_mirror_to_fb();
 
-    sdl_cleanup();
+    sdl_cleanup_exit();
 }
 
 static void quit_watchdog(lv_timer_t *timer __attribute__((unused))) {
@@ -142,7 +142,8 @@ static void quit_watchdog(lv_timer_t *timer __attribute__((unused))) {
         safe_quit(0);
 
         cleanup_all();
-        exit(0);
+        fflush(NULL);
+        _exit(0);
     }
 }
 
@@ -952,7 +953,7 @@ int main(void) {
             if (action[0]) write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, action);
         }
     }
-
     cleanup_all();
-    return 0;
+    fflush(NULL);
+    _exit(0);
 }

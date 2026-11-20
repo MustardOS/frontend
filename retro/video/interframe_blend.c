@@ -137,11 +137,23 @@ static void blend_xrgb8888_rows(
             changed = vorr_u8(changed, vmvn_u8(vceq_u8(curr.val[2], prior.val[2])));
             const uint8x8_t old_hold = vld1_u8(&hold[x]);
             const uint8x8_t held = vcgt_u8(old_hold, vdup_n_u8(0));
-            const uint8x8_t untracked_changed = vand_u8(changed, vmvn_u8(held));
-            if (!neon_mask_any_u8(untracked_changed) && !neon_mask_any_u8(held)) continue;
+            if (!neon_mask_any_u8(changed) && !neon_mask_any_u8(held)) continue;
             uint8x8_t repeats = vceq_u8(curr.val[0], prior2.val[0]);
             repeats = vand_u8(repeats, vceq_u8(curr.val[1], prior2.val[1]));
             repeats = vand_u8(repeats, vceq_u8(curr.val[2], prior2.val[2]));
+            uint8x8_t follows = vand_u8(changed, repeats);
+            if (prev3 && neon_mask_any_u8(held)) {
+                const uint8x8x4_t prior3 = vld4_u8((const uint8_t *) &prev3[x]);
+                uint8x8_t match3 = vceq_u8(curr.val[0], prior3.val[0]);
+                match3 = vand_u8(match3, vceq_u8(curr.val[1], prior3.val[1]));
+                match3 = vand_u8(match3, vceq_u8(curr.val[2], prior3.val[2]));
+                uint8x8_t steady23 = vceq_u8(prior2.val[0], prior3.val[0]);
+                steady23 = vand_u8(steady23, vceq_u8(prior2.val[1], prior3.val[1]));
+                steady23 = vand_u8(steady23, vceq_u8(prior2.val[2], prior3.val[2]));
+                follows = vorr_u8(follows, vbsl_u8(changed, match3, vorr_u8(match3, steady23)));
+            }
+            const uint8x8_t held_valid = vand_u8(held, follows);
+            const uint8x8_t untracked_changed = vand_u8(changed, vmvn_u8(held_valid));
             uint8x8_t exact_repeat = vand_u8(repeats, untracked_changed);
             if (prev3 && prev4 && neon_mask_any_u8(untracked_changed)) {
                 const uint8x8x4_t prior3 = vld4_u8((const uint8_t *) &prev3[x]);
@@ -162,11 +174,12 @@ static void blend_xrgb8888_rows(
                 const uint8x8_t prior_contrast = neon_colour_contrast_xrgb8888(curr, prior);
                 confirmed = vand_u8(exact_repeat, prior_contrast);
             }
-            const uint8x8_t blend = vorr_u8(confirmed, held);
-            const uint8x8_t next_hold =
-                vbsl_u8(confirmed, vdup_n_u8(FLICKER_HOLD_FRAMES), vqsub_u8(old_hold, vdup_n_u8(1)));
+            const uint8x8_t blend = vorr_u8(confirmed, held_valid);
+            const uint8x8_t next_hold = vbsl_u8(
+                confirmed, vdup_n_u8(FLICKER_HOLD_FRAMES), vand_u8(vqsub_u8(old_hold, vdup_n_u8(1)), held_valid)
+            );
             if (neon_mask_any_u8(blend)) {
-                const uint8x8_t use_prior = vorr_u8(confirmed, vand_u8(held, changed));
+                const uint8x8_t use_prior = vorr_u8(confirmed, vand_u8(held_valid, changed));
                 const uint8x8_t reference0 = vbsl_u8(use_prior, prior.val[0], prior2.val[0]);
                 const uint8x8_t reference1 = vbsl_u8(use_prior, prior.val[1], prior2.val[1]);
                 const uint8x8_t reference2 = vbsl_u8(use_prior, prior.val[2], prior2.val[2]);
@@ -180,12 +193,16 @@ static void blend_xrgb8888_rows(
 #endif
         for (; x < width; x++) {
             if (hold[x]) {
-                if (((dst[x] ^ prev[x]) & 0x00ffffffU) != 0)
-                    dst[x] = average_xrgb8888(dst[x], prev[x]);
-                else
-                    dst[x] = average_xrgb8888(dst[x], prev2[x]);
-                hold[x]--;
-                continue;
+                const int moved = ((dst[x] ^ prev[x]) & 0x00ffffffU) != 0;
+                const int match2 = ((dst[x] ^ prev2[x]) & 0x00ffffffU) == 0;
+                const int match3 = prev3 && ((dst[x] ^ prev3[x]) & 0x00ffffffU) == 0;
+                const int steady23 = prev3 && ((prev2[x] ^ prev3[x]) & 0x00ffffffU) == 0;
+                if (moved ? match2 || match3 : match3 || steady23) {
+                    dst[x] = average_xrgb8888(dst[x], moved ? prev[x] : prev2[x]);
+                    hold[x]--;
+                    continue;
+                }
+                hold[x] = 0;
             }
             const int changed = ((dst[x] ^ prev[x]) & 0x00ffffffU) != 0;
             const int cadence1 = ((dst[x] ^ prev2[x]) & 0x00ffffffU) == 0;
@@ -227,8 +244,15 @@ static void blend_rgb565_rows(
             const uint16x8_t changed = vmvnq_u16(vceqq_u16(curr, prior));
             const uint8x8_t old_hold = vld1_u8(&hold[x]);
             const uint16x8_t held = vcgtq_u16(vmovl_u8(old_hold), vdupq_n_u16(0));
-            const uint16x8_t untracked_changed = vandq_u16(changed, vmvnq_u16(held));
-            if (!neon_mask_any_u16(untracked_changed) && !neon_mask_any_u16(held)) continue;
+            if (!neon_mask_any_u16(changed) && !neon_mask_any_u16(held)) continue;
+            uint16x8_t follows = vandq_u16(changed, vceqq_u16(curr, prior2));
+            if (prev3 && neon_mask_any_u16(held)) {
+                const uint16x8_t prior3 = vld1q_u16(&prev3[x]);
+                const uint16x8_t match3 = vceqq_u16(curr, prior3);
+                follows = vorrq_u16(follows, vbslq_u16(changed, match3, vorrq_u16(match3, vceqq_u16(prior2, prior3))));
+            }
+            const uint16x8_t held_valid = vandq_u16(held, follows);
+            const uint16x8_t untracked_changed = vandq_u16(changed, vmvnq_u16(held_valid));
             uint16x8_t exact_repeat = vandq_u16(vceqq_u16(curr, prior2), untracked_changed);
             if (prev3 && prev4 && neon_mask_any_u16(untracked_changed)) {
                 const uint16x8_t prior3 = vld1q_u16(&prev3[x]);
@@ -242,12 +266,14 @@ static void blend_rgb565_rows(
                 const uint16x8_t prior_contrast = neon_colour_contrast_rgb565(curr, prior);
                 confirmed = vandq_u16(exact_repeat, prior_contrast);
             }
-            const uint16x8_t blend = vorrq_u16(confirmed, held);
+            const uint16x8_t blend = vorrq_u16(confirmed, held_valid);
             const uint8x8_t confirmed_bytes = vmovn_u16(confirmed);
-            const uint8x8_t next_hold =
-                vbsl_u8(confirmed_bytes, vdup_n_u8(FLICKER_HOLD_FRAMES), vqsub_u8(old_hold, vdup_n_u8(1)));
+            const uint8x8_t next_hold = vbsl_u8(
+                confirmed_bytes, vdup_n_u8(FLICKER_HOLD_FRAMES),
+                vand_u8(vqsub_u8(old_hold, vdup_n_u8(1)), vmovn_u16(held_valid))
+            );
             if (neon_mask_any_u16(blend)) {
-                const uint16x8_t use_prior = vorrq_u16(confirmed, vandq_u16(held, changed));
+                const uint16x8_t use_prior = vorrq_u16(confirmed, vandq_u16(held_valid, changed));
                 const uint16x8_t reference = vbslq_u16(use_prior, prior, prior2);
                 const uint16x8_t average = vaddq_u16(
                     vandq_u16(curr, reference),
@@ -260,12 +286,15 @@ static void blend_rgb565_rows(
 #endif
         for (; x < width; x++) {
             if (hold[x]) {
-                if (dst[x] != prev[x])
-                    dst[x] = average_rgb565(dst[x], prev[x]);
-                else
-                    dst[x] = average_rgb565(dst[x], prev2[x]);
-                hold[x]--;
-                continue;
+                const int moved = dst[x] != prev[x];
+                const int match3 = prev3 && dst[x] == prev3[x];
+                const int steady23 = prev3 && prev2[x] == prev3[x];
+                if (moved ? dst[x] == prev2[x] || match3 : match3 || steady23) {
+                    dst[x] = average_rgb565(dst[x], moved ? prev[x] : prev2[x]);
+                    hold[x]--;
+                    continue;
+                }
+                hold[x] = 0;
             }
             const int cadence1 = dst[x] == prev2[x];
             const int cadence2 = prev3 && prev4 && dst[x] == prev3[x] && prev3[x] == prev4[x] && prev[x] == prev2[x];
@@ -308,8 +337,17 @@ static void blend_xrgb1555_rows(
             const uint16x8_t changed = vmvnq_u16(vceqq_u16(curr_colour, prior_colour));
             const uint8x8_t old_hold = vld1_u8(&hold[x]);
             const uint16x8_t held = vcgtq_u16(vmovl_u8(old_hold), vdupq_n_u16(0));
-            const uint16x8_t untracked_changed = vandq_u16(changed, vmvnq_u16(held));
-            if (!neon_mask_any_u16(untracked_changed) && !neon_mask_any_u16(held)) continue;
+            if (!neon_mask_any_u16(changed) && !neon_mask_any_u16(held)) continue;
+            uint16x8_t follows = vandq_u16(changed, vceqq_u16(curr_colour, prior2_colour));
+            if (prev3 && neon_mask_any_u16(held)) {
+                const uint16x8_t prior3_held = vandq_u16(vld1q_u16(&prev3[x]), colour_mask);
+                const uint16x8_t match3 = vceqq_u16(curr_colour, prior3_held);
+                follows = vorrq_u16(
+                    follows, vbslq_u16(changed, match3, vorrq_u16(match3, vceqq_u16(prior2_colour, prior3_held)))
+                );
+            }
+            const uint16x8_t held_valid = vandq_u16(held, follows);
+            const uint16x8_t untracked_changed = vandq_u16(changed, vmvnq_u16(held_valid));
             uint16x8_t exact_repeat = vandq_u16(vceqq_u16(curr_colour, prior2_colour), untracked_changed);
             if (prev3 && prev4 && neon_mask_any_u16(untracked_changed)) {
                 const uint16x8_t prior3_colour = vandq_u16(vld1q_u16(&prev3[x]), colour_mask);
@@ -325,12 +363,14 @@ static void blend_xrgb1555_rows(
                 const uint16x8_t prior_contrast = neon_colour_contrast_xrgb1555(curr, prior);
                 confirmed = vandq_u16(exact_repeat, prior_contrast);
             }
-            const uint16x8_t blend = vorrq_u16(confirmed, held);
+            const uint16x8_t blend = vorrq_u16(confirmed, held_valid);
             const uint8x8_t confirmed_bytes = vmovn_u16(confirmed);
-            const uint8x8_t next_hold =
-                vbsl_u8(confirmed_bytes, vdup_n_u8(FLICKER_HOLD_FRAMES), vqsub_u8(old_hold, vdup_n_u8(1)));
+            const uint8x8_t next_hold = vbsl_u8(
+                confirmed_bytes, vdup_n_u8(FLICKER_HOLD_FRAMES),
+                vand_u8(vqsub_u8(old_hold, vdup_n_u8(1)), vmovn_u16(held_valid))
+            );
             if (neon_mask_any_u16(blend)) {
-                const uint16x8_t use_prior = vorrq_u16(confirmed, vandq_u16(held, changed));
+                const uint16x8_t use_prior = vorrq_u16(confirmed, vandq_u16(held_valid, changed));
                 const uint16x8_t reference = vbslq_u16(use_prior, prior, prior2);
                 uint16x8_t average = vaddq_u16(
                     vandq_u16(curr, reference),
@@ -344,12 +384,16 @@ static void blend_xrgb1555_rows(
 #endif
         for (; x < width; x++) {
             if (hold[x]) {
-                if (((dst[x] ^ prev[x]) & 0x7fffU) != 0)
-                    dst[x] = average_xrgb1555(dst[x], prev[x]);
-                else
-                    dst[x] = average_xrgb1555(dst[x], prev2[x]);
-                hold[x]--;
-                continue;
+                const int moved = ((dst[x] ^ prev[x]) & 0x7fffU) != 0;
+                const int match2 = ((dst[x] ^ prev2[x]) & 0x7fffU) == 0;
+                const int match3 = prev3 && ((dst[x] ^ prev3[x]) & 0x7fffU) == 0;
+                const int steady23 = prev3 && ((prev2[x] ^ prev3[x]) & 0x7fffU) == 0;
+                if (moved ? match2 || match3 : match3 || steady23) {
+                    dst[x] = average_xrgb1555(dst[x], moved ? prev[x] : prev2[x]);
+                    hold[x]--;
+                    continue;
+                }
+                hold[x] = 0;
             }
             const int changed = ((dst[x] ^ prev[x]) & 0x7fffU) != 0;
             const int cadence1 = ((dst[x] ^ prev2[x]) & 0x7fffU) == 0;

@@ -42,6 +42,8 @@ typedef struct {
     const char *uri;
     double position;
     double duration;
+    unsigned frames_shown;
+    unsigned frames_dropped;
 } wasabi_remote_state;
 
 void wasabi_remote_open(void);

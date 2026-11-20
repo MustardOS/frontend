@@ -206,6 +206,6 @@ int main(void) {
     init_input(&input_opts, 0);
     mux_input_task(&input_opts);
 
-    sdl_cleanup();
+    sdl_cleanup_exit();
     return 0;
 }

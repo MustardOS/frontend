@@ -8,6 +8,8 @@ void governor_boost_gameplay_update(double observed_fps, double target_fps, int 
 
 void governor_boost_gameplay_pressure(double core_ms, double frame_budget_ms);
 
+void governor_boost_gameplay_cadence(double interval_ms, double budget_ms);
+
 void governor_boost_gameplay_idle(void);
 
 void governor_boost_shutdown(void);

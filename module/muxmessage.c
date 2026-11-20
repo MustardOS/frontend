@@ -180,7 +180,7 @@ int main(const int argc, char *argv[]) {
     }
 
     message_free(&set);
-    sdl_cleanup();
+    sdl_cleanup_exit();
 
     FILE *released = fopen(RELEASED_FILE, "w");
     if (released) fclose(released);

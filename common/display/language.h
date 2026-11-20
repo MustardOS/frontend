@@ -3819,6 +3819,7 @@ struct mux_lang {
         char overlay_grid[MAX_BUFFER_SIZE];
         char resolution[MAX_BUFFER_SIZE];
         char queued_frames[MAX_BUFFER_SIZE];
+        char dropped_frames[MAX_BUFFER_SIZE];
         char audio_output[MAX_BUFFER_SIZE];
         char channels[MAX_BUFFER_SIZE];
         char episodes[MAX_BUFFER_SIZE];

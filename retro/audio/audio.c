@@ -203,7 +203,16 @@ static void ui_settle(void) {
     ui_only = 0;
 }
 
+static SDL_Thread *ui_sound_loader = NULL;
+
+static void ui_sounds_wait(void) {
+    if (!ui_sound_loader) return;
+    SDL_WaitThread(ui_sound_loader, NULL);
+    ui_sound_loader = NULL;
+}
+
 static void ui_sounds_free(void) {
+    ui_sounds_wait();
     audio_set_sound_hook(NULL);
     fe_snd = 0;
 
@@ -214,10 +223,8 @@ static void ui_sounds_free(void) {
     }
 }
 
-static void ui_sounds_load(void) {
-    ui_sounds_free();
-    if (!ui_sound_type || !opened_freq) return;
-
+static int ui_sounds_decode(void *unused) {
+    (void) unused;
     int loaded = 0;
     for (int i = 0; i < sound_total; i++) {
         char path[MAX_BUFFER_SIZE];
@@ -238,8 +245,10 @@ static void ui_sounds_load(void) {
             if (build == 0) cvt.len_cvt = cvt.len;
 
             if (build == 0 || SDL_ConvertAudio(&cvt) == 0) {
+                SDL_LockAudioDevice(audio_dev);
                 ui_sound_data[i] = (int16_t *) cvt.buf;
                 ui_sound_frames[i] = (uint32_t) cvt.len_cvt / (2 * sizeof(int16_t));
+                SDL_UnlockAudioDevice(audio_dev);
                 loaded++;
             } else {
                 free(cvt.buf);
@@ -249,9 +258,18 @@ static void ui_sounds_load(void) {
         SDL_FreeWAV(wav);
     }
 
-    fe_snd = loaded > 0;
-    audio_set_sound_hook(fe_snd ? ui_sound_play : NULL);
     LOG_INFO(mux_module, "Loaded %d interface sound(s) at %d Hz", loaded, opened_freq);
+    return 0;
+}
+
+static void ui_sounds_load(void) {
+    ui_sounds_free();
+    if (!ui_sound_type || !opened_freq) return;
+
+    fe_snd = 1;
+    audio_set_sound_hook(ui_sound_play);
+    ui_sound_loader = SDL_CreateThread(ui_sounds_decode, "ui-sounds", NULL);
+    if (!ui_sound_loader) ui_sounds_decode(NULL);
 }
 
 void audio_bridge_load_ui_sounds(const int sound_type) {
@@ -719,6 +737,7 @@ int audio_bridge_open(const double core_sample_rate) {
 }
 
 static void close_device(void) {
+    ui_sounds_wait();
     if (audio_dev) {
         SDL_CloseAudioDevice(audio_dev);
         audio_dev = 0;

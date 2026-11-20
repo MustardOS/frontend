@@ -957,7 +957,7 @@ void sdl_init(void) {
     reload_saver();
 }
 
-void sdl_cleanup(void) {
+static void release_display(void) {
     image_async_shutdown();
     anim_unload();
     if (active_saver == saver_type_video && video_saver_running) {
@@ -1000,7 +1000,15 @@ void sdl_cleanup(void) {
     if (monitor.window) SDL_DestroyWindow(monitor.window);
 
     IMG_Quit();
+}
+
+void sdl_cleanup(void) {
+    release_display();
     SDL_Quit();
+}
+
+void sdl_cleanup_exit(void) {
+    release_display();
 }
 
 static void drain_saver_launch_input(void) {

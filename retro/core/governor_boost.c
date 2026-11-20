@@ -7,6 +7,7 @@
 #include <common/storage/fileio.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
+#include <common/platform/cpu_profile.h>
 #include "governor_boost.h"
 
 #define GOVERNOR_NAME_MAX 64
@@ -18,6 +19,11 @@
 #define GAMEPLAY_CORE_PRESSURE_RATIO  0.75
 #define GAMEPLAY_CORE_PRESSURE_FRAMES 4
 
+#define CADENCE_WINDOW_FRAMES 120
+#define CADENCE_LATE_RATIO    1.15
+#define CADENCE_RAISE_LATE    6
+#define CADENCE_LOWER_WINDOWS 4
+
 static unsigned boost_depth = 0;
 static int governor_changed = 0;
 static int cleanup_registered = 0;
@@ -26,6 +32,15 @@ static int gameplay_boost_active = 0;
 static unsigned gameplay_miss_windows = 0;
 static unsigned gameplay_stable_windows = 0;
 static unsigned gameplay_pressure_frames = 0;
+
+static struct cpu_policy cadence_policies[CPU_POLICY_MAX];
+static unsigned cadence_saved_min[CPU_POLICY_MAX];
+static unsigned cadence_saved_max[CPU_POLICY_MAX];
+static int cadence_policy_count = -1;
+static int cadence_step = -1;
+static unsigned cadence_frames = 0;
+static unsigned cadence_late = 0;
+static unsigned cadence_quiet_windows = 0;
 
 static int read_governor(char out[GOVERNOR_NAME_MAX]) {
     out[0] = '\0';
@@ -163,7 +178,92 @@ void governor_boost_gameplay_pressure(const double core_ms, const double frame_b
     governor_boost_begin("sustained core pressure");
 }
 
+static unsigned read_khz(const struct cpu_policy *policy, const char *name) {
+    char path[CPU_PATH_MAX + 32];
+    snprintf(path, sizeof(path), "%s/%s", policy->path, name);
+    return (unsigned) read_line_int_from(path, 1);
+}
+
+static void write_min_khz(const struct cpu_policy *policy, const unsigned khz) {
+    char path[CPU_PATH_MAX + 32];
+    snprintf(path, sizeof(path), "%s/scaling_min_freq", policy->path);
+    write_text_to_file(path, "w", INT, (int) khz);
+}
+
+static void cadence_apply(const int step) {
+    for (int i = 0; i < cadence_policy_count; i++) {
+        const struct cpu_policy *policy = &cadence_policies[i];
+        if (step < 0 || !policy->freq_count) {
+            write_min_khz(policy, cadence_saved_min[i]);
+            continue;
+        }
+
+        const int index = step < policy->freq_count ? step : policy->freq_count - 1;
+        unsigned khz = policy->freq[index];
+        if (khz > cadence_saved_max[i]) khz = cadence_saved_max[i];
+        if (khz < cadence_saved_min[i]) khz = cadence_saved_min[i];
+        write_min_khz(policy, khz);
+    }
+}
+
+static void cadence_reset(void) {
+    cadence_frames = 0;
+    cadence_late = 0;
+    cadence_quiet_windows = 0;
+    if (cadence_step < 0) return;
+
+    cadence_step = -1;
+    cadence_apply(-1);
+    LOG_INFO(mux_module, "Pacing floor removed");
+}
+
+void governor_boost_gameplay_cadence(const double interval_ms, const double budget_ms) {
+    if (interval_ms <= 0.0 || budget_ms <= 0.0 || gameplay_boost_active) return;
+
+    if (cadence_policy_count < 0) {
+        cadence_policy_count = cpu_policies_load(cadence_policies, CPU_POLICY_MAX);
+        for (int i = 0; i < cadence_policy_count; i++) {
+            cadence_saved_min[i] = read_khz(&cadence_policies[i], "scaling_min_freq");
+            cadence_saved_max[i] = read_khz(&cadence_policies[i], "scaling_max_freq");
+        }
+    }
+    if (cadence_policy_count <= 0 || cadence_policies[0].freq_count < 2) return;
+
+    cadence_frames++;
+    if (interval_ms > budget_ms * CADENCE_LATE_RATIO) cadence_late++;
+    if (cadence_frames < CADENCE_WINDOW_FRAMES) return;
+
+    const int first = cadence_policies[0].freq_count / 2;
+    const int top = cadence_policies[0].freq_count - 1;
+    const unsigned late = cadence_late;
+    cadence_frames = 0;
+    cadence_late = 0;
+
+    if (late >= CADENCE_RAISE_LATE) {
+        cadence_quiet_windows = 0;
+        if (cadence_step >= top) return;
+        cadence_step = cadence_step < 0 ? first : cadence_step + 1;
+        cadence_apply(cadence_step);
+        LOG_INFO(
+            mux_module, "Pacing floor raised to %u kHz after %u late frames", cadence_policies[0].freq[cadence_step],
+            late
+        );
+        return;
+    }
+
+    if (late || cadence_step < 0 || ++cadence_quiet_windows < CADENCE_LOWER_WINDOWS) return;
+
+    cadence_quiet_windows = 0;
+    if (cadence_step <= first) {
+        cadence_reset();
+        return;
+    }
+    cadence_apply(--cadence_step);
+    LOG_INFO(mux_module, "Pacing floor lowered to %u kHz", cadence_policies[0].freq[cadence_step]);
+}
+
 void governor_boost_gameplay_idle(void) {
+    cadence_reset();
     gameplay_miss_windows = 0;
     gameplay_stable_windows = 0;
     gameplay_pressure_frames = 0;

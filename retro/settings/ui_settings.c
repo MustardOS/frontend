@@ -853,7 +853,16 @@ static void build_rows(void) {
     def.frame_count = settings_frame_count;
 }
 
+static int settings_built = 0;
+
 void settings_menu_init(void) {
+    settings_built = 0;
+}
+
+static void settings_menu_build(void) {
+    if (settings_built) return;
+    settings_built = 1;
+
     static const char *profile_scope_options[3];
     profile_scope_options[0] = lang.muxretro.settings_screen.profile_scope_content;
     profile_scope_options[1] = lang.muxretro.settings_screen.profile_scope_core;
@@ -906,106 +915,126 @@ void settings_menu_init(void) {
 }
 
 void settings_menu_open(void) {
+    settings_menu_build();
     build_rows();
     submenu_open(&self);
 }
 
 void settings_menu_reopen_core_options(void) {
+    settings_menu_build();
     build_rows();
     const int row = row_for_special(settings_special_core_options);
     if (row >= 0) submenu_reopen_at(&self, row);
 }
 
 int settings_menu_is_active(void) {
-    return submenu_is_active(&self);
+    return settings_built && submenu_is_active(&self);
 }
 
 void settings_menu_tick(void) {
-    submenu_tick(&self);
+    if (settings_built) submenu_tick(&self);
 }
 
 void settings_menu_reopen_video(void) {
+    settings_menu_build();
     settings_menu_reopen_video_at(0);
 }
 
 void settings_menu_reopen_video_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(video_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_visuals(void) {
+    settings_menu_build();
     settings_menu_reopen_visuals_at(0);
 }
 
 void settings_menu_reopen_visuals_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(visuals_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_overlay(void) {
+    settings_menu_build();
     settings_menu_reopen_overlay_at(0);
 }
 
 void settings_menu_reopen_overlay_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(overlay_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_viewport_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(viewport_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_sound(void) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(sound_menu_definition(), 0));
 }
 
 void settings_menu_reopen_input(void) {
+    settings_menu_build();
     settings_menu_reopen_input_at(0);
 }
 
 void settings_menu_reopen_input_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(input_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_performance(void) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(performance_menu_definition(), 0));
 }
 
 void settings_menu_reopen_content_clock(void) {
+    settings_menu_build();
     build_rows();
     const int row = row_for_special(settings_special_content_clock);
     if (row >= 0) submenu_reopen_at(&self, row);
 }
 
 void settings_menu_reopen_video_diagnostics(void) {
+    settings_menu_build();
     build_rows();
     const int row = row_for_special(settings_special_video_diagnostics);
     if (row >= 0) submenu_reopen_at(&self, row);
 }
 
 void settings_menu_reopen_hud(void) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(hud_menu_definition(), 0));
 }
 
 void settings_menu_reopen_storage(void) {
+    settings_menu_build();
     settings_menu_reopen_storage_at(0);
 }
 
 void settings_menu_reopen_storage_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     submenu_reopen_at(&self, row_for_definition(storage_menu_definition(), local_index));
 }
 
 void settings_menu_reopen_cheevo(void) {
+    settings_menu_build();
     settings_menu_reopen_cheevo_at(0);
 }
 
 void settings_menu_reopen_cheevo_at(const int local_index) {
+    settings_menu_build();
     build_rows();
     const int row = row_for_definition(cheevo_settings_definition(), local_index);
     if (row >= 0) submenu_reopen_at(&self, row);

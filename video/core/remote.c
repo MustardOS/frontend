@@ -97,9 +97,11 @@ void wasabi_remote_publish(const wasabi_remote_state *state, const int force) {
     fprintf(
         file,
         "\"live\":%d,\"audio\":%d,\"paused\":%d,\"seek\":%d,\"index\":%d,\"count\":%d,\"channels\":%d,"
-        "\"volume\":%d,\"shuffle\":%d,\"repeat\":%d,\"position\":%.2f,\"duration\":%.2f,\"updated\":%lld}\n",
+        "\"volume\":%d,\"shuffle\":%d,\"repeat\":%d,\"position\":%.2f,\"duration\":%.2f,\"shown\":%u,"
+        "\"dropped\":%u,\"updated\":%lld}\n",
         state->live, state->audio, state->paused, state->can_seek, state->index, state->count, state->channels,
-        state->volume, state->shuffle, state->repeat, state->position, state->duration, (long long) time(NULL)
+        state->volume, state->shuffle, state->repeat, state->position, state->duration, state->frames_shown,
+        state->frames_dropped, (long long) time(NULL)
     );
     if (fclose(file) == 0) file_rename(REMOTE_STATE_TEMP, REMOTE_STATE);
 }

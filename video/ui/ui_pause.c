@@ -1401,6 +1401,11 @@ static void build_information(void) {
         );
         snprintf(value, sizeof(value), "%d", information.queued_video);
         add_information_row("video", lang.muxmedia.queued_frames, value);
+        snprintf(
+            value, sizeof(value), "%u / %u", information.frames_dropped,
+            information.frames_dropped + information.frames_shown
+        );
+        add_information_row("fps", lang.muxmedia.dropped_frames, value);
         information_frames[frame++] =
             (list_frame) {lang.muxretro.information_screen.section_video, video_first, information_count - video_first};
     } else {
