@@ -4,8 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <common/storage/inotify.h>
+#include <common/runtime/log.h>
 
-#define INOTIFY_MAX_TRACKED 8
+#define INOTIFY_MAX_TRACKED 16
 
 inotify_status *ino_proc = NULL;
 
@@ -76,7 +77,10 @@ static int ensure_dir_watch(const inotify_status *proc, const char *dir, int *wd
 
 int inotify_track(inotify_status *proc, const char *dir, const char *name, int *exists_out, unsigned *changes_out) {
     if (!proc || !dir || !name || !exists_out) return -1;
-    if (proc->count >= INOTIFY_MAX_TRACKED) return -1;
+    if (proc->count >= INOTIFY_MAX_TRACKED) {
+        LOG_WARN("inotify", "Cannot watch '%s/%s', all %d slots are in use", dir, name, INOTIFY_MAX_TRACKED);
+        return -1;
+    }
     if (strchr(name, '/')) return -1;
 
     char *dir_copy = strdup(dir);
