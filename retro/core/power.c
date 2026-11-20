@@ -89,8 +89,10 @@ int power_session_poll(void) {
         power_save_prepared = 0;
         unlink(power_save_ready_path);
 
+        audio_bridge_apply_sample_rate();
         if (menu_opened_for_sleep && pause_menu_at_top_level() && pause_menu_input_serial() == input_serial_at_sleep)
             pause_menu_toggle();
+        if (pause_menu_is_active()) audio_bridge_set_paused(1);
         menu_opened_for_sleep = 0;
         redraw_after_wake();
     }

@@ -242,7 +242,7 @@ clear_files(const char *theme_folder, char relative[][MAX_BUFFER_SIZE], const in
         snprintf(backup, sizeof(backup), RUN_STORAGE_PATH "theme/%s/.lab/original/%s", theme_folder, relative[i]);
         if (!lab_written(relative[i], lab_paths) && !file_exist(backup)) {
             create_directories(backup, 1);
-            if (rename(path, backup) == 0) continue;
+            if (file_rename(path, backup) == 0) continue;
         }
         remove(path);
     }
@@ -257,7 +257,7 @@ static void restore_files(const char *theme_folder, char relative[][MAX_BUFFER_S
         char path[PATH_MAX];
         theme_file(path, sizeof(path), theme_folder, relative[i]);
         create_directories(path, 1);
-        rename(backup, path);
+        file_rename(backup, path);
     }
 }
 
@@ -279,7 +279,7 @@ static int save_png(SDL_Surface *source, const SDL_Rect *crop, const char *to, c
 
     char temporary[PATH_MAX];
     snprintf(temporary, sizeof(temporary), "%s.part", to);
-    ok = ok && IMG_SavePNG(output, temporary) == 0 && rename(temporary, to) == 0;
+    ok = ok && IMG_SavePNG(output, temporary) == 0 && file_rename(temporary, to) == 0;
     if (!ok) remove(temporary);
 
     SDL_FreeSurface(output);
@@ -588,7 +588,7 @@ void lab_export_screens(void) {
     for (int i = 0; i < count; i++)
         fprintf(file, "%s|%s\n", folders[i], lab_screen_title(folders[i]));
 
-    if (fclose(file) == 0 && rename(LAB_SCREENS ".part", LAB_SCREENS) == 0) {
+    if (fclose(file) == 0 && file_rename(LAB_SCREENS ".part", LAB_SCREENS) == 0) {
         snprintf(written_language, sizeof(written_language), "%s", config.settings.general.language);
     }
 }
@@ -2038,7 +2038,7 @@ static void put_back_original(const char *theme_folder, const char *relative) {
 
     if (file_exist(backup)) {
         create_directories(path, 1);
-        rename(backup, path);
+        file_rename(backup, path);
     } else if (file_exist(none)) {
         remove(path);
         remove(none);

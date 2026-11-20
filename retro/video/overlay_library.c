@@ -102,7 +102,7 @@ int overlay_library_write_offsets(const char *image_path, const int x_offset, co
     if (okay) okay = fsync(fd) == 0;
     const int close_result = close(fd);
     if (okay) okay = close_result == 0;
-    if (okay) okay = rename(temporary, path) == 0;
+    if (okay) okay = file_rename(temporary, path) == 0;
     if (!okay) {
         unlink(temporary);
     }

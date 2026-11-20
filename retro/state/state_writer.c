@@ -11,6 +11,7 @@
 #include <common/base/options.h>
 #include "state_format.h"
 #include "state_writer.h"
+#include <common/storage/fileio.h>
 
 struct state_write_job {
     char path[MAX_BUFFER_SIZE];
@@ -61,7 +62,7 @@ static int atomic_write(const char *path, const void *data, const size_t size) {
         return -1;
     }
 
-    if (rename(temporary, path) != 0) {
+    if (file_rename(temporary, path) != 0) {
         LOG_ERROR(mux_module, "Failed to rename '%s' to '%s'", temporary, path);
         remove(temporary);
         return -1;

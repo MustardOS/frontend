@@ -190,6 +190,10 @@ void mux_input_watch_fd(int fd);
 
 void mux_input_task(const mux_input_options *opts);
 
+uint32_t mux_input_quiet_ms(void);
+
+void mux_input_set_wait(uint32_t ms);
+
 void mux_input_open(void);
 
 void mux_input_close(void);

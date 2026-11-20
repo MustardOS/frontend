@@ -367,7 +367,7 @@ static void package_complete(const int result) {
     }
     if (valid) {
         create_directories(target, 1);
-        valid = rename(package_path, target) == 0;
+        valid = file_rename(package_path, target) == 0;
         if (valid && active_kind == wasabi_asset_overlay && package_variant >= 0) {
             const catalogue_variant *variant = &item->variants[package_variant];
             valid = wasabi_asset_write_viewport(target, variant->x_offset, variant->y_offset);

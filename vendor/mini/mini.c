@@ -36,6 +36,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <errno.h>
+#include <common/storage/fileio.h>
 
 /* === UTF8 <-> Wchar === */
 #ifdef _WIN32
@@ -431,7 +432,7 @@ int mini_save(const mini_t *mini, int flags) {
     if (fflush(fp) != 0 || fsync(descriptor) != 0) result = MINI_ACCESS_DENIED;
     if (fclose(fp) != 0) result = MINI_ACCESS_DENIED;
 
-    if (result != MINI_OK || rename(tmp, mini->path) != 0) {
+    if (result != MINI_OK || file_rename(tmp, mini->path) != 0) {
         unlink(tmp);
         return MINI_ACCESS_DENIED;
     }

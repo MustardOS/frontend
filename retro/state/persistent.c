@@ -132,7 +132,7 @@ static int atomic_write_file(const char *path, const void *data, const size_t si
         return -1;
     }
 
-    if (rename(temporary, path) != 0) {
+    if (file_rename(temporary, path) != 0) {
         LOG_ERROR(mux_module, "Could not publish persistent-memory file '%s': %s", path, strerror(errno));
         unlink(temporary);
         return -1;
@@ -272,8 +272,8 @@ static void rotate_backups(const char *path) {
             || !str_format_checked(source_sum, sizeof(source_sum), "%s.bk%d.sum", path, index)
             || !str_format_checked(destination_sum, sizeof(destination_sum), "%s.bk%d.sum", path, index + 1))
             return;
-        rename(source, destination);
-        rename(source_sum, destination_sum);
+        file_rename(source, destination);
+        file_rename(source_sum, destination_sum);
     }
 
     if (!file_exist(path)) return;
@@ -285,8 +285,8 @@ static void rotate_backups(const char *path) {
         || !str_format_checked(newest_sum, sizeof(newest_sum), "%s.bk0.sum", path)
         || !checksum_path(path, path_sum, sizeof(path_sum)))
         return;
-    rename(path, newest);
-    rename(path_sum, newest_sum);
+    file_rename(path, newest);
+    file_rename(path_sum, newest_sum);
 }
 
 static void restore_rotated_primary(const char *path) {
@@ -302,12 +302,12 @@ static void restore_rotated_primary(const char *path) {
 
     if (access(newest, F_OK) != 0) return;
 
-    if (rename(newest, path) != 0) {
+    if (file_rename(newest, path) != 0) {
         LOG_ERROR(mux_module, "Could not restore the previous persistent-memory file '%s': %s", path, strerror(errno));
         return;
     }
 
-    if (access(path_sum, F_OK) != 0 && access(newest_sum, F_OK) == 0 && rename(newest_sum, path_sum) != 0)
+    if (access(path_sum, F_OK) != 0 && access(newest_sum, F_OK) == 0 && file_rename(newest_sum, path_sum) != 0)
         LOG_WARN(mux_module, "Could not restore the previous checksum '%s': %s", path_sum, strerror(errno));
     synchronise_parent_directory(path);
 }
@@ -336,14 +336,14 @@ static int publish_snapshot(const persistent_region *region, const persistent_sn
     // Only move the previous primary into the recovery chain after the complete
     // replacement and its checksum are safely staged on the same filesystem.
     rotate_backups(region->path);
-    if (rename(staged, region->path) != 0) {
+    if (file_rename(staged, region->path) != 0) {
         LOG_ERROR(mux_module, "Could not publish %s '%s': %s", region->name, region->path, strerror(errno));
         restore_rotated_primary(region->path);
         unlink(staged);
         unlink(staged_sum);
         return -1;
     }
-    if (rename(staged_sum, path_sum) != 0) {
+    if (file_rename(staged_sum, path_sum) != 0) {
         // The raw save is already durable and remains compatible with imported
         // RetroArch files. Do not let a stale sidecar invalidate it on launch.
         unlink(path_sum);

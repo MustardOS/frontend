@@ -1556,7 +1556,7 @@ void display_process_screenshot_request(void) {
             unlink(temp_path);
 
             if (display_capture_clean_frame(temp_path) == 0) {
-                if (rename(temp_path, path) != 0) unlink(temp_path);
+                if (file_rename(temp_path, path) != 0) unlink(temp_path);
             } else {
                 unlink(temp_path);
             }

@@ -23,6 +23,7 @@
 #include <common/base/strutil.h>
 #include <common/storage/fileio.h>
 #include <common/platform/audio.h>
+#include <common/platform/input.h>
 #include <common/ui/orientation.h>
 #include <common/storage/inotify.h>
 #include <common/display/language.h>
@@ -1786,11 +1787,8 @@ void ui_common_handle_idle(void) {
 
     anim_process();
 
-    if (need_update) {
-        lv_task_handler();
-    } else {
-        lv_timer_handler();
-    }
+    const uint32_t wait = need_update ? lv_task_handler() : lv_timer_handler();
+    mux_input_set_wait(wait < LOOP_QUIET_MS ? wait : LOOP_QUIET_MS);
 }
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, const struct theme_config *theme) {

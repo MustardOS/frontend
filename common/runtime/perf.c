@@ -227,7 +227,7 @@ int fe_perf_export_support(const char *path) {
 
     const int flushed = fflush(f) == 0;
     const int closed = fclose(f) == 0;
-    const int ok = flushed && closed && rename(temp, path) == 0;
+    const int ok = flushed && closed && file_rename(temp, path) == 0;
     if (!ok) remove(temp);
     return ok ? 0 : -1;
 }

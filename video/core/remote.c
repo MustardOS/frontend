@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include <common/runtime/remote.h>
+#include <common/storage/fileio.h>
 
 #define REMOTE_DIR        "/run/muos/wasabi"
 #define REMOTE_FIFO       REMOTE_DIR "/control"
@@ -100,7 +101,7 @@ void wasabi_remote_publish(const wasabi_remote_state *state, const int force) {
         state->live, state->audio, state->paused, state->can_seek, state->index, state->count, state->channels,
         state->volume, state->shuffle, state->repeat, state->position, state->duration, (long long) time(NULL)
     );
-    if (fclose(file) == 0) rename(REMOTE_STATE_TEMP, REMOTE_STATE);
+    if (fclose(file) == 0) file_rename(REMOTE_STATE_TEMP, REMOTE_STATE);
 }
 
 void wasabi_remote_publish_list(const video_library_entry *entries, const size_t count) {
@@ -120,5 +121,5 @@ void wasabi_remote_publish_list(const video_library_entry *entries, const size_t
         fprintf(file, "\"index\":%zu}", index);
     }
     fputs("]}\n", file);
-    if (fclose(file) == 0) rename(REMOTE_LIST_TEMP, REMOTE_LIST);
+    if (fclose(file) == 0) file_rename(REMOTE_LIST_TEMP, REMOTE_LIST);
 }

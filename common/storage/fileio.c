@@ -285,7 +285,7 @@ int write_text_to_file_atomic(const char *filename, const int type, ...) {
 
     if (fclose(f) != 0) ok = 0;
 
-    if (!ok || rename(tmp, filename) != 0) {
+    if (!ok || file_rename(tmp, filename) != 0) {
         unlink(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, filename);
         return 0;

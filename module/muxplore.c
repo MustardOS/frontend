@@ -4,6 +4,7 @@
 #include <common/ui/empty_state.h>
 #include <common/ui/orientation.h>
 #include <common/ui/more.h>
+#include <common/storage/fileio.h>
 
 #define LARGE_CONTENT_LOAD 512
 #define GROUP_CONTENT_GO   "/tmp/group_go"
@@ -1063,7 +1064,7 @@ static void fwd_hist_set(const char *dir, const int index) {
     if (!found) fprintf(out, "%s = %d\n", rel, index);
 
     fclose(out);
-    rename(FWD_HIST_FILE ".tmp", FWD_HIST_FILE);
+    file_rename(FWD_HIST_FILE ".tmp", FWD_HIST_FILE);
 }
 
 static int fwd_hist_get(const char *dir) {

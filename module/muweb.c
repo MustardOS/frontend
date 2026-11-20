@@ -31,6 +31,7 @@
 #include <common/content/lookup.h>
 #include <common/storage/mount.h>
 #include <miniz/miniz.h>
+#include <common/storage/fileio.h>
 
 #define MUWEB_VERSION "0.1.0"
 
@@ -572,7 +573,7 @@ static int write_file_atomic(const char *path, const char *data, const size_t le
         return 0;
     }
 
-    if (rename(temporary, path) < 0) {
+    if (file_rename(temporary, path) < 0) {
         unlink(temporary);
         return 0;
     }
@@ -2754,7 +2755,7 @@ static void file_log_rewrite(void) {
     for (size_t i = file_log_count; i > 0; --i)
         file_log_entry_write(file, &file_log[(file_log_next + MUWEB_FILE_LOG - i) % MUWEB_FILE_LOG]);
     file_log_close(file);
-    if (rename(temporary, MUWEB_FILE_LOG_PATH) == 0)
+    if (file_rename(temporary, MUWEB_FILE_LOG_PATH) == 0)
         file_log_lines = file_log_count;
     else
         unlink(temporary);
@@ -3594,7 +3595,7 @@ static void file_archive_build(
                  : file_archive_zip(token, root, items, count, pending);
 
     struct stat info;
-    if (ok) ok = rename(pending, archive) == 0 && stat(archive, &info) == 0;
+    if (ok) ok = file_rename(pending, archive) == 0 && stat(archive, &info) == 0;
     if (ok)
         file_archive_status(token, "ready", "", count, count, info.st_size, NULL);
     else {
@@ -3921,7 +3922,7 @@ static int file_copy_regular(const char *source, const char *target) {
     }
     if (got < 0 || fsync(output) < 0) ok = 0;
     if (close(input) < 0 || close(output) < 0) ok = 0;
-    if (ok && rename(temporary, target) == 0) return 1;
+    if (ok && file_rename(temporary, target) == 0) return 1;
     unlink(temporary);
     return 0;
 }
@@ -4233,7 +4234,7 @@ static void file_api(
             send_error(connection, 400, "A folder cannot be copied into itself");
             return;
         }
-        const int ok = copied ? file_copy_tree(source, target) : rename(source, target) == 0;
+        const int ok = copied ? file_copy_tree(source, target) : file_rename(source, target) == 0;
         if (!ok) {
             send_error(connection, 500, copied ? "Could not copy that item" : "Could not move that item");
             return;
@@ -5274,7 +5275,7 @@ static void pointer_rename_content(
         return;
     }
 
-    if (rename(source, target) < 0) {
+    if (file_rename(source, target) < 0) {
         pointer_rename_remove_targets(changes, change_count);
         free(changes);
         send_error(connection, 500, "Could not rename the content file");
@@ -5286,7 +5287,7 @@ static void pointer_rename_content(
         if (unlink(changes[i].source) < 0 && errno != ENOENT) removed = 0;
     }
     if (!removed) {
-        if (rename(target, source) == 0) {
+        if (file_rename(target, source) == 0) {
             pointer_rename_remove_targets(changes, change_count);
             pointer_rename_restore_sources(changes, change_count);
         }
@@ -5598,7 +5599,7 @@ static void handle_collection_api(
             );
             return;
         }
-        if (rename(source, target) < 0) {
+        if (file_rename(source, target) < 0) {
             send_error(connection, 500, "Could not move that entry");
             return;
         }
@@ -7086,7 +7087,7 @@ static int studio_write(const char *key, const char *value) {
         return 0;
     }
 
-    return rename(temporary, path) == 0;
+    return file_rename(temporary, path) == 0;
 }
 
 static void studio_value(struct buffer *out, const char *key, int *first) {
@@ -8311,7 +8312,7 @@ static void handle_studio_api(
         }
         fputs(text, request);
         fclose(request);
-        rename(THEME_CREATE_REQ ".part", THEME_CREATE_REQ);
+        file_rename(THEME_CREATE_REQ ".part", THEME_CREATE_REQ);
 
         send_text(connection, 202, "application/json", "{\"ok\":true}");
         return;
@@ -8498,7 +8499,7 @@ static int file_upload_sync(const int descriptor) {
 static int file_upload_rename(const char *source, const char *target) {
     int result;
     do {
-        result = rename(source, target);
+        result = file_rename(source, target);
     } while (result < 0 && errno == EINTR);
     return result;
 }

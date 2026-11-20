@@ -66,7 +66,7 @@ void create_controller_profile(char *controller_profile_path) {
     const int ok = fflush(file) == 0 && fsync(fileno(file)) == 0;
     fclose(file);
 
-    if (!ok || rename(tmp, controller_profile_path) != 0) {
+    if (!ok || file_rename(tmp, controller_profile_path) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "Failed to write controller profile: %s", controller_profile_path);
     }

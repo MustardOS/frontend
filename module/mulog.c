@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <common/base/options.h>
 #include <common/runtime/log.h>
+#include <common/storage/fileio.h>
 
 #define LOG_DIR  "/opt/muos/log"
 #define LOG_SCK  "/run/muos/arborist.sock"
@@ -339,7 +340,7 @@ static int open_log_file(const char *path, off_t *size) {
         if (written < 0 || (size_t) written >= sizeof(previous)) return -1;
 
         unlink(previous);
-        if (rename(path, previous) != 0 && errno != ENOENT) return -1;
+        if (file_rename(path, previous) != 0 && errno != ENOENT) return -1;
 
         fd = open(path, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC | O_NOFOLLOW, 0644);
         if (fd < 0) return -1;

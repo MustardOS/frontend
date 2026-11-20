@@ -9,11 +9,12 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = muaudio mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen mucpu mustick mutop
+SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen mucpu muexfat muidle mustick mutop
 EXTERNAL_TOOLS = muadb mumtp
 TOOLS = $(SOURCE_TOOLS) $(EXTERNAL_TOOLS)
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
 
+RENAME_SRC = common/storage/file_rename.c
 mulink_SRC = common/platform/usb_link.c
 muweb_SRC = common/base/image_ext.c common/base/totp.c common/content/lookup.c \
             common/content/core/state_preview.c common/storage/mount.c vendor/miniz/miniz.c
@@ -24,7 +25,8 @@ musplash_LDLIBS = $(FFMPEG_LIBS)
 
 muvarctl_SRC = common/config/var_store.c
 mucpu_SRC = common/platform/cpu_profile.c
-mustick_SRC = common/platform/stickpoll.c
+mustick_SRC = common/platform/h700.c common/platform/stickpoll.c
+muidle_SRC = common/platform/h700.c
 
 murgb_SRC = common/tooling/rgb_args.c common/config/config.c common/config/config_value.c \
             common/display/colour.c common/storage/fileio_lite.c common/base/strpath.c \
@@ -178,7 +180,7 @@ $(MODULES):
 $(MODULE_DAEMONS):
 	@echo "Building Daemon: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $($@_CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $($@_CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) $(RENAME_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 $(INPUT_DAEMON):
@@ -191,7 +193,7 @@ $(INPUT_DAEMON):
 $(SOURCE_TOOLS):
 	@echo "Building Tool: $@"
 	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) -o $(BIN_DIR)/$@ \
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) $(RENAME_SRC) -o $(BIN_DIR)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 muadb:

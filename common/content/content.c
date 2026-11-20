@@ -305,7 +305,7 @@ static int write_content_loader_file(
     const int ok = fflush(fp) == 0 && fsync(fileno(fp)) == 0;
     fclose(fp);
 
-    if (!ok || rename(tmp, content_loader_file) != 0) {
+    if (!ok || file_rename(tmp, content_loader_file) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_write, content_loader_file);
         return 0;
@@ -640,7 +640,7 @@ int load_content(int add_collection, char *file_path) {
                     if (file_exist(new_history)) {
                         remove(old_file);
                     } else {
-                        rename(old_file, new_history);
+                        file_rename(old_file, new_history);
                     }
 
                     free(line1);
@@ -832,7 +832,7 @@ void rewrite_launch_file(const char *file, const char *new_path) {
     const int ok = fflush(fp) == 0 && fsync(fileno(fp)) == 0;
     fclose(fp);
 
-    if (!ok || rename(tmp, file) != 0) remove(tmp);
+    if (!ok || file_rename(tmp, file) != 0) remove(tmp);
 
     free(line1);
     free(line2);
@@ -856,7 +856,7 @@ void migrate_history_entry(const char *old_file, const char *new_path, const cha
         return;
     }
 
-    rename(old_file, new_file);
+    file_rename(old_file, new_file);
     mark_history_dirty();
 }
 

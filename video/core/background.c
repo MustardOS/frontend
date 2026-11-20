@@ -294,7 +294,7 @@ static void announce_track(void) {
         file, "%u\n%s\n%s\n", ++serial, information.title[0] ? information.title : current_title, information.artist
     );
     fclose(file);
-    rename(temporary, WASABI_BACKGROUND_TRACK);
+    file_rename(temporary, WASABI_BACKGROUND_TRACK);
 }
 
 static void publish(const int force) {

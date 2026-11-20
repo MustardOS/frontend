@@ -366,7 +366,7 @@ int theme_rename(const char *folder, const char *name, char *out, const size_t o
     if (theme_reserved(safe)) return theme_create_exists;
     if (strcmp(folder, safe) != 0) {
         if (dir_exist(target)) return theme_create_exists;
-        if (rename(from, target) != 0) return theme_create_failed;
+        if (file_rename(from, target) != 0) return theme_create_failed;
     }
 
     if (!write_text(target, "name.txt", name)) return theme_create_failed;

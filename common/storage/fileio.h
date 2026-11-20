@@ -34,6 +34,8 @@ int write_text_to_file(const char *filename, const char *mode, int type, ...);
 
 int write_text_to_file_atomic(const char *filename, int type, ...);
 
+int file_rename(const char *source, const char *target);
+
 void create_directories(const char *path, int parent_only);
 
 void increment_counter_file(const char *path);

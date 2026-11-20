@@ -726,12 +726,12 @@ static int trash_absorb(const struct gamestate_slot *source, const char *group_i
     entry->index = index;
     trash_paths(index, entry->state_path, entry->thumb_path);
 
-    if (rename(source->state_path, entry->state_path) != 0) {
+    if (file_rename(source->state_path, entry->state_path) != 0) {
         LOG_ERROR(mux_module, "Could not move '%s' into the bin", source->state_path);
         return -1;
     }
 
-    if (rename(source->thumb_path, entry->thumb_path) != 0) entry->thumb_path[0] = '\0';
+    if (file_rename(source->thumb_path, entry->thumb_path) != 0) entry->thumb_path[0] = '\0';
 
     char trash_group[32];
     snprintf(trash_group, sizeof(trash_group), "trash_%d", index);
@@ -756,12 +756,12 @@ int gamestate_trash_restore(const int index) {
     slot->index = next_free_index();
     slot_paths(slot->index, slot->state_path, slot->thumb_path);
 
-    if (rename(entry->state_path, slot->state_path) != 0) {
+    if (file_rename(entry->state_path, slot->state_path) != 0) {
         LOG_ERROR(mux_module, "Could not bring '%s' back out of the bin", entry->state_path);
         return -1;
     }
 
-    if (entry->thumb_path[0]) rename(entry->thumb_path, slot->thumb_path);
+    if (entry->thumb_path[0]) file_rename(entry->thumb_path, slot->thumb_path);
 
     write_manifest_entry(slot->index, slot->name, slot->created, slot);
 

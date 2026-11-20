@@ -51,6 +51,8 @@ void refresh_screen(const lv_obj_t *screen, int flush);
 
 lv_timer_t *mux_get_refresh_timer(void);
 
+void mux_refresh_wake(void);
+
 void safe_quit(int exit_status);
 
 void init_module(const char *module);

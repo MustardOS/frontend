@@ -17,6 +17,7 @@
 #include "../netplay/netplay.h"
 #include "../settings/settings.h"
 #include "../state/gamestate.h"
+#include <common/storage/fileio.h>
 
 #define REMOTE_DIR        "/run/muos/pickles"
 #define REMOTE_FIFO       REMOTE_DIR "/control"
@@ -135,7 +136,7 @@ static void publish(const int menu_open, const int force) {
         menu_open, hotkeys_is_content_paused(), netplay_is_active(), state_saves_allowed() && state_saves_supported(),
         gamestate_quicksave_exists, remote_fps, (unsigned long long) (remote_played_ms / 1000), (long long) time(NULL)
     );
-    if (fclose(file) == 0) rename(REMOTE_STATE_TEMP, REMOTE_STATE);
+    if (fclose(file) == 0) file_rename(REMOTE_STATE_TEMP, REMOTE_STATE);
 }
 
 void pickles_remote_task(const int menu_open) {

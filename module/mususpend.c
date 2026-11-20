@@ -313,6 +313,27 @@ static int process_matches(const pid_t process_id, const char *const *names, con
     for (size_t index = 0; index < name_count; ++index) {
         if (strcmp(base, names[index]) == 0) return 1;
     }
+
+    char command_path[64];
+    snprintf(command_path, sizeof(command_path), "/proc/%ld/cmdline", (long) process_id);
+
+    const int descriptor = open(command_path, O_RDONLY | O_CLOEXEC);
+    if (descriptor < 0) return 0;
+
+    char command[PATH_MAX];
+    const ssize_t used = read(descriptor, command, sizeof(command) - 1);
+    close(descriptor);
+    if (used <= 0) return 0;
+    command[used] = '\0';
+
+    const size_t first = strlen(command) + 1;
+    if ((ssize_t) first >= used) return 0;
+
+    const char *script = strrchr(command + first, '/');
+    script = script ? script + 1 : command + first;
+    for (size_t index = 0; index < name_count; ++index) {
+        if (strcmp(script, names[index]) == 0) return 1;
+    }
     return 0;
 }
 
@@ -347,20 +368,24 @@ quiesce_processes(struct optimisation_snapshot *snapshot, const char *const *nam
     if (!processes) return;
 
     const pid_t own_process = getpid();
-    struct dirent *entry;
-    while ((entry = readdir(processes)) != NULL && snapshot->quiesced_count < MAX_QUIESCED_PROCESSES) {
-        if (!isdigit((unsigned char) entry->d_name[0])) continue;
+    for (size_t name = 0; name < name_count; ++name) {
+        rewinddir(processes);
 
-        char *end = NULL;
-        const long parsed = strtol(entry->d_name, &end, 10);
-        if (!end || *end != '\0' || parsed <= 1 || parsed > INT_MAX) continue;
+        struct dirent *entry;
+        while ((entry = readdir(processes)) != NULL && snapshot->quiesced_count < MAX_QUIESCED_PROCESSES) {
+            if (!isdigit((unsigned char) entry->d_name[0])) continue;
 
-        const pid_t process_id = (pid_t) parsed;
-        if (process_id == own_process || process_is_stopped(process_id)) continue;
-        if (!process_matches(process_id, names, name_count)) continue;
+            char *end = NULL;
+            const long parsed = strtol(entry->d_name, &end, 10);
+            if (!end || *end != '\0' || parsed <= 1 || parsed > INT_MAX) continue;
 
-        if (kill(process_id, SIGSTOP) == 0) {
-            snapshot->quiesced_processes[snapshot->quiesced_count++] = process_id;
+            const pid_t process_id = (pid_t) parsed;
+            if (process_id == own_process || process_is_stopped(process_id)) continue;
+            if (!process_matches(process_id, &names[name], 1)) continue;
+
+            if (kill(process_id, SIGSTOP) == 0) {
+                snapshot->quiesced_processes[snapshot->quiesced_count++] = process_id;
+            }
         }
     }
 
@@ -512,8 +537,8 @@ static void restore_optimisation(const struct optimisation_snapshot *snapshot) {
         write_text(device->maximum_path, device->maximum);
     }
 
-    for (size_t index = 0; index < snapshot->quiesced_count; ++index) {
-        kill(snapshot->quiesced_processes[index], SIGCONT);
+    for (size_t index = snapshot->quiesced_count; index > 0; --index) {
+        kill(snapshot->quiesced_processes[index - 1], SIGCONT);
     }
 }
 

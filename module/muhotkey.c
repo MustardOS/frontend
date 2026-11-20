@@ -26,6 +26,7 @@
 #define SEQ_BUF_SIZE     32
 #define MAX_SEQUENCE     16
 #define HOTKEY_IDLE_MS   50
+#define HOTKEY_QUIET_MS  250
 #define INHIBIT_CHECK_MS 250
 
 #define SAFE_BIT(i)  ((uint64_t) 1 << ((i) & 63))
@@ -360,14 +361,20 @@ static void run_combo_action(combo_config *c, const mux_input_action action) {
     spawn_command(c);
 }
 
-static void pending_command_task(void) {
+static int pending_command_task(void) {
+    int pending = 0;
     for (int i = 0; i < combo_count; ++i) {
         combo_config *c = &combo[i];
-        if (!c->exec_pending || command_running(c)) continue;
+        if (!c->exec_pending) continue;
+
+        pending = 1;
+        if (command_running(c)) continue;
 
         c->exec_pending--;
         if (combo_allowed(c)) spawn_command(c);
     }
+
+    return pending;
 }
 
 // Finds the first non-sequence combo matching `type_bit` whose negate_mask isn't currently held.
@@ -745,8 +752,11 @@ static void handle_idle(void) {
     if (vol_fd >= 0) handle_raw_volume();
     if (pwr_fd >= 0) handle_raw_power();
 
-    pending_command_task();
+    const int pending = pending_command_task();
     if (lid_fd >= 0) handle_raw_lid();
+
+    const int busy = pending || raw_power_pressed || raw_vol_up_pressed || raw_vol_down_pressed;
+    mux_input_set_wait(busy ? HOTKEY_IDLE_MS : HOTKEY_QUIET_MS);
 
     const int vol_up_due = raw_vol_up_pressed && raw_vol_up_next_repeat && global_tick >= raw_vol_up_next_repeat;
     const int vol_down_due =

@@ -300,7 +300,7 @@ static int write_entries(const char *path, const video_state_entry *entries, con
     if (fflush(file) != 0) result = -1;
     if (fclose(file) != 0) result = -1;
 
-    if (result == 0 && rename(temporary, path) != 0) result = -1;
+    if (result == 0 && file_rename(temporary, path) != 0) result = -1;
     if (result < 0) unlink(temporary);
     return result;
 }

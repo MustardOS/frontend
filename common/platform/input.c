@@ -1601,8 +1601,24 @@ void append_combo(mux_input_options *opts, const mux_input_combo combo) {
     opts->combo[opts->combo_count++] = combo;
 }
 
+static uint32_t input_activity_tick;
+static uint32_t idle_wait_ms;
+
+uint32_t mux_input_quiet_ms(void) {
+    return (uint32_t) mux_tick() - input_activity_tick;
+}
+
+void mux_input_set_wait(const uint32_t ms) {
+    idle_wait_ms = ms ? ms : 1;
+}
+
 static void dispatch_input_event(const SDL_Event *ev, uint32_t *next_retry_tick, int *retry_count) {
     static const uint32_t retry_interval_fast_ms = 750U;
+
+    if (ev->type != SDL_USEREVENT) {
+        input_activity_tick = (uint32_t) mux_tick();
+        mux_refresh_wake();
+    }
 
     switch (ev->type) {
         case SDL_CONTROLLERBUTTONDOWN:
@@ -1893,7 +1909,7 @@ void mux_input_task(const mux_input_options *opts) {
         const uint32_t retry_interval_slow_ms = 5000U;
         const int retry_fast_count = 5;
         const uint32_t now = (uint32_t) mux_tick();
-        int timeout = timeout_idle;
+        int timeout = idle_wait_ms ? (int) idle_wait_ms : timeout_idle;
         if (held) {
             timeout = timeout_to_deadline(now, input_repeat_deadline, timeout);
             timeout = timeout_to_deadline(now, combo_repeat_deadline, timeout);

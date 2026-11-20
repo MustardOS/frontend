@@ -10,6 +10,7 @@
 #include <common/runtime/perf.h>
 #include <common/ui/modal.h>
 #include <common/platform/input.h>
+#include <common/platform/video.h>
 #include <common/storage/inotify.h>
 #include <common/ui/font.h>
 #include <common/ui/cache.h>
@@ -17,6 +18,7 @@
 #include <common/ui/common.h>
 #include <common/ui/nav.h>
 #include <common/ui/notify.h>
+#include <common/display/anim.h>
 #include <common/ui/orientation.h>
 #include <common/display/language.h>
 #include <common/base/options.h>
@@ -470,7 +472,29 @@ void redraw_after_wake(void) {
     lv_obj_invalidate(lv_layer_sys());
 }
 
+static void refresh_pace(const uint32_t period) {
+    if (timer_ui_refresh && timer_ui_refresh->period != period) lv_timer_set_period(timer_ui_refresh, period);
+
+    lv_timer_t *display_timer = mux_get_refresh_timer();
+    if (display_timer && !display_timer->paused && display_timer->period != period)
+        lv_timer_set_period(display_timer, period);
+}
+
+void mux_refresh_wake(void) {
+    video_wallpaper_freeze(0);
+    if (!timer_ui_refresh || timer_ui_refresh->period == TIMER_REFRESH) return;
+
+    refresh_pace(TIMER_REFRESH);
+    lv_timer_ready(timer_ui_refresh);
+}
+
 static void ui_refresh_tick(lv_timer_t *timer) {
+    const uint32_t quiet = mux_input_quiet_ms();
+    video_wallpaper_freeze(quiet > WALLPAPER_FREEZE_MS);
+
+    const int slow = quiet > INPUT_QUIET_MS && !lv_anim_count_running() && !anim_is_active() && !video_playing();
+    refresh_pace(slow ? TIMER_REFRESH_QUIET : TIMER_REFRESH);
+
     static int64_t suspended_ns = -1;
     if (system_woke(&suspended_ns)) {
         LOG_INFO(mux_module, "Woke from sleep, redrawing the screen");

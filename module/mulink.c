@@ -25,6 +25,7 @@
 
 #include <common/base/options.h>
 #include <common/platform/usb_link.h>
+#include <common/storage/fileio.h>
 
 #define LINK_ETHERTYPE  0x88B5
 #define LINK_MAGIC      "MUOSLINK"
@@ -268,7 +269,7 @@ static void write_state(const struct link_state *state, const int carrier) {
 
     int okay = fflush(file) == 0 && fsync(descriptor) == 0;
     if (fclose(file) != 0) okay = 0;
-    if (!okay || rename(temporary, LINK_STATE_FILE) != 0) unlink(temporary);
+    if (!okay || file_rename(temporary, LINK_STATE_FILE) != 0) unlink(temporary);
 }
 
 static int open_beacon_socket(const char *iface, const int control_fd) {

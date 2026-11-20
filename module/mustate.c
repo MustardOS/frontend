@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <zlib.h>
 #include <zstd.h>
+#include <common/storage/fileio.h>
 
 #define RZIP_HEADER_SIZE 20U
 #define RZIP_CHUNK_LIMIT (64U * 1024U * 1024U)
@@ -201,7 +202,7 @@ write_atomic(const char *path, const void *header, const size_t header_size, con
     if (descriptor < 0) return 0;
     int ok = write_all(descriptor, header, header_size) && write_all(descriptor, data, size) && fsync(descriptor) == 0;
     if (close(descriptor) < 0) ok = 0;
-    if (ok && rename(temporary, path) < 0) ok = 0;
+    if (ok && file_rename(temporary, path) < 0) ok = 0;
     if (!ok) unlink(temporary);
     return ok;
 }

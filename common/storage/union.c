@@ -824,7 +824,7 @@ int union_rewrite_file_paths(const char *file) {
                 const int ok =
                     fwrite(data, 1, strlen(data), fp) == strlen(data) && fflush(fp) == 0 && fsync(fileno(fp)) == 0;
                 fclose(fp);
-                if (!ok || rename(tmp, file) != 0) remove(tmp);
+                if (!ok || file_rename(tmp, file) != 0) remove(tmp);
             }
         }
     }

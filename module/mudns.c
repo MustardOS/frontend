@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include <mdns/mdns.h>
+#include <common/storage/fileio.h>
 
 #define MUDNS_VERSION       "0.2.0"
 #define MUDNS_MAX_ENDPOINTS 32
@@ -705,7 +706,7 @@ static int write_name_file(const struct server *server) {
         unlink(temporary);
         return 0;
     }
-    if (rename(temporary, server->name_file) < 0) {
+    if (file_rename(temporary, server->name_file) < 0) {
         unlink(temporary);
         return 0;
     }
@@ -848,7 +849,7 @@ static int write_discovery_file(struct server *server) {
     }
     if (ok) ok = fputs("]}\n", file) >= 0;
     if (fclose(file) != 0) ok = 0;
-    if (!ok || rename(temporary, server->discovery_file) < 0) {
+    if (!ok || file_rename(temporary, server->discovery_file) < 0) {
         unlink(temporary);
         return 0;
     }

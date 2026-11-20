@@ -476,7 +476,7 @@ static int rewrite_managed(const MuxtermConfig *cfg, const int append_values) {
     int failed = fflush(output) != 0;
     if (!failed) failed = fsync(fd) != 0;
     if (fclose(output) != 0) failed = 1;
-    if (!failed && rename(temporary, path) != 0) failed = 1;
+    if (!failed && file_rename(temporary, path) != 0) failed = 1;
     if (failed) {
         unlink(temporary);
         return 0;

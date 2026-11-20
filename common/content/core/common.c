@@ -120,7 +120,7 @@ static void write_cfg_file(
     const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
-    if (!ok || rename(tmp, path) != 0) {
+    if (!ok || file_rename(tmp, path) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
@@ -149,7 +149,7 @@ static void write_gov_file(char *path, char *gov, const char *rom_name) {
     const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
-    if (!ok || rename(tmp, path) != 0) {
+    if (!ok || file_rename(tmp, path) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
@@ -178,7 +178,7 @@ static void write_con_file(char *path, char *con, const char *rom_name) {
     const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
-    if (!ok || rename(tmp, path) != 0) {
+    if (!ok || file_rename(tmp, path) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }
@@ -207,7 +207,7 @@ static void write_rac_file(char *path, char *rac, const char *rom_name) {
     const int ok = fflush(f) == 0 && fsync(fileno(f)) == 0;
     fclose(f);
 
-    if (!ok || rename(tmp, path) != 0) {
+    if (!ok || file_rename(tmp, path) != 0) {
         remove(tmp);
         LOG_ERROR(mux_module, "%s: %s", lang.system.fail_file_open, path);
     }

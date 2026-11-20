@@ -187,7 +187,7 @@ static int extract_entry_to_file(const char *zip_path, const char *entry_name, c
 
         fclose(out);
 
-        if (ok && remaining == 0 && rename(tmp_path, dest_path) == 0) {
+        if (ok && remaining == 0 && file_rename(tmp_path, dest_path) == 0) {
             result = 0;
         } else {
             LOG_ERROR(mux_module, "vfs_cache: failed to extract '%s' from '%s'", entry_name, zip_path);
@@ -419,7 +419,7 @@ static int vfs_remove(const char *path) {
 }
 
 static int vfs_rename(const char *old_path, const char *new_path) {
-    return rename(old_path, new_path) == 0 ? 0 : -1;
+    return file_rename(old_path, new_path) == 0 ? 0 : -1;
 }
 
 static int vfs_stat(const char *path, int32_t *size) {

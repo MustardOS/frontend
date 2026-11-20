@@ -1,6 +1,7 @@
 #include "muxshare.h"
 #include <common/ui/orientation.h>
 #include <common/ui/empty_state.h>
+#include <common/storage/fileio.h>
 
 static int wired_network(void) {
     return strcasecmp(device.network.type, "ethernet") == 0;
@@ -46,7 +47,7 @@ static void migrate_incompatible_profiles(void) {
         char dest_file[MAX_BUFFER_SIZE];
         snprintf(dest_file, sizeof(dest_file), STORAGE_NETWORK "/migrate/%s", base_name);
 
-        if (rename(profile_file, dest_file) == 0) {
+        if (file_rename(profile_file, dest_file) == 0) {
             LOG_WARN(mux_module, "Migrated incompatible network profile '%s'", base_name);
         }
     }

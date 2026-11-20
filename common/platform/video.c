@@ -70,6 +70,7 @@ static int dim_alpha = 0;
 static int fade_step = 0;
 static int has_frame = 0;
 static int is_wallpaper = 0;
+static int wallpaper_frozen = 0;
 static int preview_embedded = 0;
 static int preview_alpha = 255;
 static int64_t clip_start_ms = 0;
@@ -498,7 +499,7 @@ static int ensure_texture(const AVFrame *f) {
         int tex_w = w, tex_h = h;
 
         switch (config.visual.background_scale) {
-            case 1: //Scale to fit width
+            case 1: // Scale to fit width
                 tex_w = dw;
                 tex_h = h * dw / w;
                 if (tex_h > dh) {
@@ -506,7 +507,7 @@ static int ensure_texture(const AVFrame *f) {
                     tex_w = w * dh / h;
                 }
                 break;
-            case 2: //Stretch to fit both width and height
+            case 2: // Stretch to fit both width and height
                 tex_w = dw;
                 tex_h = dh;
                 break;
@@ -919,6 +920,7 @@ static void cleanup(void) {
     has_frame = 0;
     fade_step = 0;
     is_wallpaper = 0;
+    wallpaper_frozen = 0;
     preview_embedded = 0;
     preview_alpha = 255;
     clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
@@ -1294,6 +1296,22 @@ void video_wallpaper_stop(void) {
 
 int video_wallpaper_active(void) {
     return is_wallpaper && present_timer != NULL;
+}
+
+void video_wallpaper_freeze(const int frozen) {
+    if (!video_wallpaper_active() || wallpaper_frozen == frozen) return;
+
+    wallpaper_frozen = frozen;
+    if (frozen) {
+        lv_timer_pause(present_timer);
+    } else {
+        lv_timer_resume(present_timer);
+        lv_timer_ready(present_timer);
+    }
+}
+
+int video_playing(void) {
+    return (video_wallpaper_active() && !wallpaper_frozen) || video_preview_active();
 }
 
 void video_preview_arm_image(const char *path, lv_obj_t *image, const video_size_cb size) {

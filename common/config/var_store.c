@@ -10,6 +10,7 @@
 #include <sys/file.h>
 #include <dirent.h>
 #include <common/config/var_store.h>
+#include <common/storage/fileio.h>
 
 #define VS_MAX_WALK_DEPTH 16
 
@@ -340,7 +341,7 @@ static int atomic_write_file(const char *path, const char *value, const int dura
         return -1;
     }
 
-    if (rename(tmp, path) != 0) {
+    if (file_rename(tmp, path) != 0) {
         unlink(tmp);
         return -1;
     }

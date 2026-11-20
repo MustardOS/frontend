@@ -505,7 +505,7 @@ static int publish_package(void) {
     }
 
     create_directories(destination, 1);
-    if (rename(package_path, destination) != 0) return 0;
+    if (file_rename(package_path, destination) != 0) return 0;
 
     if (package_variant >= 0 && package_variant < item->variant_count) {
         const catalogue_variant *variant = &item->variants[package_variant];

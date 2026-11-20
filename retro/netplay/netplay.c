@@ -441,7 +441,7 @@ static int hash_content(const char *path, uint8_t digest[SHA256_DIGEST_LENGTH]) 
         const int written = write(output, record, sizeof(record)) == (ssize_t) sizeof(record) && fsync(output) == 0;
         close(output);
         if (written) {
-            if (rename(temporary, cache_path) != 0) unlink(temporary);
+            if (file_rename(temporary, cache_path) != 0) unlink(temporary);
         } else {
             unlink(temporary);
         }
