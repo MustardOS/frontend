@@ -37,7 +37,6 @@ void load_device(struct mux_device *device) {
     DEV_INT_RANGE(device->board.has_portmaster, "portmaster", 0, 0, 1);
     DEV_INT_RANGE(device->board.has_lid, "lid", 0, 0, 1);
     DEV_INT_RANGE(device->board.has_hdmi, "hdmi", 0, 0, 1);
-    DEV_INT_RANGE(device->board.has_event, "event", 0, 0, 32);
     DEV_INT_RANGE(device->board.has_debugfs, "debugfs", 0, 0, 1);
     DEV_INT_RANGE(device->board.has_stick, "stick", 0, 0, 4);
     DEV_INT_RANGE(device->board.has_touch, "touch", 0, 0, 1);
@@ -95,7 +94,6 @@ void load_device(struct mux_device *device) {
     DEV_STR(device->network.name, "name");
     DEV_STR(device->network.type, "type");
     DEV_STR(device->network.interface, "iface");
-    DEV_STR(device->network.state, "state");
 
     cfg_dir_scan(&d, CONF_DEVICE_PATH "screen");
     DEV_INT_RANGE(device->screen.bright, "bright", 0, 1, INT16_MAX);

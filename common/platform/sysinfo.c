@@ -20,8 +20,11 @@
 static int scan_ipv4_address(const char *wanted, char *output, size_t output_size);
 
 int is_network_connected(void) {
-    if (file_exist(device.network.state)) {
-        char *state = read_all_char_from(device.network.state);
+    char state_path[128];
+    snprintf(state_path, sizeof(state_path), "/sys/class/net/%.64s/operstate", device.network.interface);
+
+    if (file_exist(state_path)) {
+        char *state = read_all_char_from(state_path);
         const int up = strcasecmp("up", state) == 0;
         free(state);
 

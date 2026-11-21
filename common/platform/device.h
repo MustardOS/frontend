@@ -13,7 +13,6 @@ struct mux_device {
         int16_t has_portmaster;
         int16_t has_lid;
         int16_t has_hdmi;
-        int16_t has_event;
         int16_t has_debugfs;
         int16_t has_rgb;
         int16_t has_stick;
@@ -98,7 +97,6 @@ struct mux_device {
         char name[MAX_BUFFER_SIZE];
         char type[MAX_BUFFER_SIZE];
         char interface[MAX_BUFFER_SIZE];
-        char state[MAX_BUFFER_SIZE];
     } network;
 
     struct {
