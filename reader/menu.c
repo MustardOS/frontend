@@ -27,6 +27,7 @@ typedef enum {
     page_settings,
     page_font,
     page_contents,
+    page_bookmarks,
 } menu_page;
 
 typedef enum {
@@ -35,6 +36,7 @@ typedef enum {
     root_goto,
     root_settings,
     root_quit,
+    root_bookmarks,
     root_total,
 } root_item;
 
@@ -51,6 +53,9 @@ typedef enum {
     set_transition,
     set_status,
     set_awake,
+    set_trim,
+    set_contrast,
+    set_auto_turn,
     set_total,
 } setting_item;
 
@@ -188,6 +193,28 @@ static const char *transition_name(const int value) {
     }
 }
 
+static const char *status_name(const int value) {
+    switch (value) {
+        case reader_status_page:
+            return lang.muxreader.status_page;
+        case reader_status_full:
+            return lang.muxreader.status_full;
+        default:
+            return lang.generic.disabled;
+    }
+}
+
+static const char *contrast_name(const int value) {
+    switch (value) {
+        case reader_contrast_high:
+            return lang.generic.high;
+        case reader_contrast_max:
+            return lang.generic.maximum;
+        default:
+            return lang.generic.normal;
+    }
+}
+
 static const char *rotation_name(const int value) {
     switch (value) {
         case reader_rotation_right:
@@ -242,7 +269,19 @@ static void setting_value(const setting_item item, char *out, const size_t size)
             snprintf(out, size, "%s", transition_name(settings.transition));
             break;
         case set_status:
-            snprintf(out, size, "%s", toggle_text(settings.page_status));
+            snprintf(out, size, "%s", status_name(settings.page_status));
+            break;
+        case set_trim:
+            snprintf(out, size, "%s", toggle_text(settings.trim));
+            break;
+        case set_contrast:
+            snprintf(out, size, "%s", contrast_name(settings.contrast));
+            break;
+        case set_auto_turn:
+            if (reader_auto_turn_steps[settings.auto_turn] == 0)
+                snprintf(out, size, "%s", lang.generic.disabled);
+            else
+                snprintf(out, size, lang.muxreader.auto_turn_seconds, reader_auto_turn_steps[settings.auto_turn]);
             break;
         case set_awake:
             snprintf(out, size, "%s", toggle_text(settings.stay_awake));
@@ -369,7 +408,15 @@ static void footer_prepare(void) {
 static void show_nav(void) {
     footer_prepare();
 
-    if (page == page_font || page == page_contents) {
+    if (page == page_bookmarks && reader_bookmark_count() > 0) {
+        setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
+                                      {ui_lbl_nav_a, lang.generic.select, 0},
+                                      {ui_lbl_nav_x_glyph, "", 0},
+                                      {ui_lbl_nav_x, lang.generic.remove, 0},
+                                      {ui_lbl_nav_b_glyph, "", 0},
+                                      {ui_lbl_nav_b, lang.generic.back, 0},
+                                      {NULL, NULL, 0}});
+    } else if (page == page_font || page == page_contents || page == page_bookmarks) {
         setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
                                       {ui_lbl_nav_a, lang.generic.select, 0},
                                       {ui_lbl_nav_b_glyph, "", 0},
@@ -396,15 +443,16 @@ static void remember_root(void) {
 }
 
 static void open_root(const int focus_item) {
-    const doc_toc_entry *entries = NULL;
-    const int toc_count = reader_toc(&entries);
+    /* Only asks whether there is an outline, resolving every entry can lay out the whole book */
+    const int has_toc = reader_has_toc();
 
     begin_page(page_root);
     goto_target = reader_page();
 
     char value[MAX_BUFFER_SIZE];
     add_row(root_resume, "resume", lang.muxreader.resume, "");
-    if (toc_count > 0) add_row(root_contents, "contents", lang.muxreader.contents, "");
+    if (has_toc) add_row(root_contents, "contents", lang.muxreader.contents, "");
+    add_row(root_bookmarks, "bookmark", lang.muxreader.bookmarks, "");
     root_value(root_goto, value, sizeof(value));
     add_row(root_goto, "page", lang.muxreader.go_to_page, value);
     add_row(root_settings, "settings", lang.muxreader.settings, "");
@@ -420,16 +468,19 @@ static void open_settings(const int focus_item) {
 
     char value[MAX_BUFFER_SIZE];
     const setting_item layout_rows[] = {set_font, set_text_size, set_margins, set_spacing};
-    const setting_item page_rows[] = {set_fit, set_zoom, set_order};
+    const setting_item page_rows[] = {set_fit, set_zoom, set_trim, set_order};
     const setting_item *first = reader_reflowable() ? layout_rows : page_rows;
     const int first_count = reader_reflowable() ? (int) A_SIZE(layout_rows) : (int) A_SIZE(page_rows);
 
-    static const char *glyphs[set_total] = {"font",  "fontsize", "margin", "spacing",    "fit",    "zoom",
-                                            "order", "theme",    "rotate", "transition", "status", "awake"};
+    static const char *glyphs[set_total] = {
+        "font",   "fontsize",   "margin", "spacing", "fit",  "zoom",     "order",    "theme",
+        "rotate", "transition", "status", "awake",   "trim", "contrast", "autoturn",
+    };
     const char *labels[set_total] = {
-        lang.muxreader.font,     lang.muxreader.text_size,  lang.muxreader.margins,     lang.muxreader.line_spacing,
-        lang.muxreader.page_fit, lang.muxreader.zoom,       lang.muxreader.page_order,  lang.muxreader.theme,
-        lang.muxreader.rotation, lang.muxreader.transition, lang.muxreader.page_status, lang.muxreader.stay_awake,
+        lang.muxreader.font,         lang.muxreader.text_size,  lang.muxreader.margins,     lang.muxreader.line_spacing,
+        lang.muxreader.page_fit,     lang.muxreader.zoom,       lang.muxreader.page_order,  lang.muxreader.theme,
+        lang.muxreader.rotation,     lang.muxreader.transition, lang.muxreader.page_status, lang.muxreader.stay_awake,
+        lang.muxreader.trim_margins, lang.muxreader.contrast,   lang.muxreader.auto_turn,
     };
 
     for (int i = 0; i < first_count; i++) {
@@ -437,7 +488,8 @@ static void open_settings(const int focus_item) {
         add_row(first[i], glyphs[first[i]], labels[first[i]], value);
     }
 
-    const setting_item reading_rows[] = {set_theme, set_rotation, set_transition, set_status, set_awake};
+    const setting_item reading_rows[] = {set_theme,  set_contrast,  set_rotation, set_transition,
+                                         set_status, set_auto_turn, set_awake};
     for (size_t i = 0; i < A_SIZE(reading_rows); i++) {
         if (reading_rows[i] == set_theme && reader_plain()) continue;
         setting_value(reading_rows[i], value, sizeof(value));
@@ -508,6 +560,48 @@ static void open_contents_page(const int from_root) {
 
     chrome_show(lang.muxreader.contents);
     focus_plain(focus);
+    show_nav();
+}
+
+static void open_bookmarks(const int focus_row) {
+    remember_root();
+    begin_page(page_bookmarks);
+
+    const int here = reader_bookmark_find(reader_page());
+    add_row(-1, "bookmark", here >= 0 ? lang.muxreader.bookmark_remove : lang.muxreader.bookmark_add, "");
+
+    /* Listed in reading order whatever order they were added in */
+    int order[READER_BOOKMARK_MAX];
+    int pages[READER_BOOKMARK_MAX];
+    const int count = reader_bookmark_count();
+    for (int i = 0; i < count; i++) {
+        int at = i;
+        const int target = reader_bookmark_page(i);
+        while (at > 0 && pages[at - 1] > target) {
+            order[at] = order[at - 1];
+            pages[at] = pages[at - 1];
+            at--;
+        }
+        order[at] = i;
+        pages[at] = target;
+    }
+
+    char label[MAX_BUFFER_SIZE];
+    char value[32];
+    for (int i = 0; i < count; i++) {
+        const char *title = reader_chapter_title(pages[i]);
+        if (title && title[0]) {
+            snprintf(label, sizeof(label), "%s", title);
+            snprintf(value, sizeof(value), "%d", pages[i] + 1);
+        } else {
+            snprintf(label, sizeof(label), lang.muxreader.bookmark_page, pages[i] + 1);
+            value[0] = '\0';
+        }
+        add_row(order[i], "", label, value);
+    }
+
+    chrome_show(lang.muxreader.bookmarks);
+    focus_plain(focus_row < row_total ? focus_row : row_total - 1);
     show_nav();
 }
 
@@ -600,7 +694,16 @@ static int adjust_setting(const setting_item item, const int direction) {
             view_set_transition(settings.transition);
             break;
         case set_status:
-            reader_toggle_status();
+            reader_cycle_status(direction);
+            break;
+        case set_trim:
+            reader_toggle_trim();
+            break;
+        case set_contrast:
+            reader_cycle_contrast(direction);
+            break;
+        case set_auto_turn:
+            reader_cycle_auto_turn(direction);
             break;
         case set_awake:
             settings.stay_awake = !settings.stay_awake;
@@ -698,6 +801,9 @@ void menu_accept(void) {
                     remember_root();
                     open_settings(-1);
                     break;
+                case root_bookmarks:
+                    open_bookmarks(0);
+                    break;
                 case root_quit:
                     reader_quit();
                     break;
@@ -713,6 +819,24 @@ void menu_accept(void) {
             reader_set_font(row_item[row] < 0 ? "" : fonts[row_item[row]].path);
             open_settings(set_font);
             break;
+        case page_bookmarks: {
+            if (row < 0) return;
+            if (row_item[row] < 0) {
+                const int result = reader_bookmark_toggle();
+                toast_message(
+                    result > 0    ? lang.muxreader.bookmark_added
+                    : result == 0 ? lang.muxreader.bookmark_removed
+                                  : lang.muxreader.bookmark_full,
+                    1500
+                );
+                open_bookmarks(0);
+                break;
+            }
+            const int target = reader_bookmark_page(row_item[row]);
+            menu_close();
+            reader_go_to(target);
+            break;
+        }
         case page_contents: {
             if (row < 0) return;
             const doc_toc_entry *entries = NULL;
@@ -735,6 +859,9 @@ void menu_back(void) {
         case page_font:
             open_settings(set_font);
             break;
+        case page_bookmarks:
+            open_root(root_bookmarks);
+            break;
         case page_contents:
             if (contents_from_root)
                 open_root(root_contents);
@@ -745,4 +872,16 @@ void menu_back(void) {
             menu_close();
             break;
     }
+}
+
+int menu_action_x(void) {
+    if (page != page_bookmarks) return 0;
+
+    const int row = current_row();
+    if (row < 0 || row_item[row] < 0) return 0;
+
+    reader_bookmark_remove(row_item[row]);
+    toast_message(lang.muxreader.bookmark_removed, 1500);
+    open_bookmarks(row);
+    return 1;
 }

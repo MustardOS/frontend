@@ -20,4 +20,6 @@ void menu_accept(void);
 
 void menu_back(void);
 
+int menu_action_x(void);
+
 void menu_refresh_values(void);

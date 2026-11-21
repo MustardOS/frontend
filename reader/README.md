@@ -26,7 +26,16 @@ The reading position of each document and the reading settings are stored below:
 /run/muos/storage/chutney
 ```
 
-Positions in EPUB and TXT documents are kept as a place within a chapter, so they survive changes to the text size, margins, line spacing and rotation.
+Positions in EPUB and TXT documents are kept as a place within a chapter, so they survive changes to the text size, margins, line spacing and rotation. The position is saved a few seconds after each page turn as well as on exit, so a flat battery loses almost nothing. Bookmarks are kept beside it in `bookmark/`, in the same form.
+
+The page breaks of an EPUB are saved in `layout/` once it has been laid out, so the next time it opens with the same font, text size, margins, line spacing and rotation it shows straight away instead of laying out every chapter again. The saved breaks are tied to the document's size and modification time, the chosen font and the interface language, and are rebuilt when any of these change.
+
+## Performance
+
+- Once the screen settles, the pages either side of the current one are drawn ahead in the direction of reading and kept with the current page, so turning forwards or back shows a page that is already drawn. Up to 24 MB of drawn pages is kept, and very large zoomed pages are not drawn ahead.
+- The menu only checks whether a document has contents when it opens. Working out the page of every entry happens when Contents is opened.
+- Crossfade is blended by the renderer from two textures. Slide and Page Turn only work out the pixels around the moving edge.
+- Rotated pages are copied to the screen in small tiles, and the text in the page status is drawn once and reused until it changes.
 
 ## Controls
 
@@ -42,12 +51,22 @@ Positions in EPUB and TXT documents are kept as a place within a chapter, so the
 
 When the page is rotated, the directions follow the rotated page.
 
-The Chutney Menu holds Resume, Contents, Go to Page, Settings and Quit, and opens on the row used last. Quit is never remembered, so pressing `A` straight after opening the menu cannot close Chutney. Go to Page moves by one page with `LEFT` and `RIGHT` and by ten pages with `L1` and `R1`, then `A` jumps there.
+The Chutney Menu holds Resume, Contents, Bookmarks, Go to Page, Settings and Quit, and opens on the row used last. Quit is never remembered, so pressing `A` straight after opening the menu cannot close Chutney. Go to Page moves by one page with `LEFT` and `RIGHT` and by ten pages with `L1` and `R1`, then `A` jumps there.
+
+Bookmarks starts with Bookmark This Page, which becomes Remove Bookmark on a page that is already marked. Below it are the bookmarks in reading order, named by chapter where the document has contents. `A` jumps to a bookmark and `X` removes it. Up to 64 bookmarks are kept for each document.
 
 Settings is split into two sections, moved between with `LEFT` and `RIGHT` on the section bar or `L1` and `R1` anywhere:
 
-- Layout holds Font, Text Size, Margins and Line Spacing for EPUB and TXT documents, or Page Fit, Zoom and Page Order for PDF, CBZ and CBT documents.
-- Reading holds Theme, Rotation, Transition, Page Status and Stay Awake. Theme is left out for comics.
+- Layout holds Font, Text Size, Margins and Line Spacing for EPUB and TXT documents, or Page Fit, Zoom, Trim Margins and Page Order for PDF, CBZ and CBT documents.
+- Reading holds Theme, Contrast, Rotation, Transition, Page Status, Auto Turn and Stay Awake. Theme is left out for comics.
+
+Trim Margins crops the blank border around the content of each page, so the text of a PDF with wide margins fills the screen. Pages with little or no content are shown whole.
+
+Contrast is Normal, High or Maximum. High and Maximum turn grey paper whiter and grey ink blacker, and darken thin text, which helps faint scans. It applies to every theme and to comics.
+
+Page Status is Disabled, Page Number or Full. Page Number shows the page centred at the bottom. Full shows the clock at the top left and the battery at the top right, with the chapter at the bottom left and the page at the bottom right. A `+` after the battery means it is charging. The clock and battery are refreshed every second.
+
+Auto Turn moves on by itself after 10 to 120 seconds without a button press. A page taller than the screen is scrolled a screen at a time before the next page, and it stops at the last page.
 
 Page Order reads a PDF or comic from its last page to its first, for manga stored in that order. It is kept for each document in its position file, written as the file page followed by `1` for reversed, so other documents are not affected. The page number, Go to Page and Contents follow the reversed order, and switching on the first page moves to the new first page.
 

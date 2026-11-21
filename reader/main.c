@@ -11,6 +11,7 @@
 #include <common/config/config.h>
 #include <common/display/datetime.h>
 #include <common/platform/audio.h>
+#include <common/platform/battery.h>
 #include <common/platform/board.h>
 #include <common/platform/device.h>
 #include <common/platform/display.h>
@@ -35,6 +36,10 @@
 #define SCROLL_DIV      6
 #define TOAST_MS        1500
 #define GOTO_JUMP       10
+#define CACHE_SLOTS     3
+#define PREFETCH_IDLE   150
+#define POSITION_DELAY  4000
+#define AUTO_OVERLAP    12
 
 typedef enum {
     dir_up,
@@ -72,6 +77,19 @@ static int toc_loaded = 0;
 static int inhibit_published = 0;
 static int reversed = 0;
 
+static int travel = 1;
+static uint32_t last_activity = 0;
+static uint32_t auto_deadline = 0;
+static int position_pending = 0;
+static uint32_t position_deadline = 0;
+static int saved_position = -1;
+static int saved_reversed = -1;
+static char clock_text[MAX_BUFFER_SIZE];
+static char battery_text[16];
+
+static int bookmarks[READER_BOOKMARK_MAX];
+static int bookmark_count = 0;
+
 static void handle_terminate(const int signal_number) {
     (void) signal_number;
     terminate_requested = 1;
@@ -100,12 +118,17 @@ static void logical_size(int *width, int *height) {
     view_logical_size(width, height);
 }
 
+/* Page Number has a band at the bottom, Full adds a second band at the top for the clock and battery */
+static int status_bands(const int mode) {
+    return mode == reader_status_full ? 2 : mode == reader_status_page ? 1 : 0;
+}
+
 static int reading_height(void) {
     int width = 0;
     int height = 0;
     logical_size(&width, &height);
-    const int band = settings.page_status ? view_status_height() : 0;
-    return height - band > 1 ? height - band : height;
+    const int bands = status_bands(settings.page_status) * view_status_height();
+    return height - bands > 1 ? height - bands : height;
 }
 
 static int reading_width(void) {
@@ -153,22 +176,95 @@ static void clamp_scroll(void) {
     if (scroll_y < 0) scroll_y = 0;
 }
 
+static void ensure_toc(void) {
+    if (toc_loaded || !doc) return;
+    toc_count = doc_toc(doc, &toc);
+    for (int i = 0; i < toc_count; i++)
+        toc[i].page = file_page(toc[i].page);
+    toc_loaded = 1;
+}
+
+static void battery_status(char *out, const size_t size) {
+    if (!battery_is_available()) {
+        out[0] = '\0';
+        return;
+    }
+    snprintf(out, size, "%d%%%s", battery_get_capacity(), battery_is_charging() ? " +" : "");
+}
+
+static const char *chapter_title(const int at) {
+    ensure_toc();
+
+    const char *title = NULL;
+    int best = -1;
+    for (int i = 0; i < toc_count; i++) {
+        if (toc[i].page > at || toc[i].page < best) continue;
+        best = toc[i].page;
+        title = toc[i].title;
+    }
+    return title;
+}
+
 static void compose(void) {
-    char status[64] = "";
-    if (settings.page_status && page_count > 0) snprintf(status, sizeof(status), "%d / %d", page + 1, page_count);
+    char counter[64] = "";
+    view_status status = {0};
+    status.top = settings.page_status == reader_status_full;
+
+    if (settings.page_status && page_count > 0) {
+        snprintf(counter, sizeof(counter), "%d / %d", page + 1, page_count);
+
+        if (settings.page_status == reader_status_full) {
+            snprintf(clock_text, sizeof(clock_text), "%s", get_datetime());
+            battery_status(battery_text, sizeof(battery_text));
+            status.top_left = clock_text;
+            status.top_right = battery_text;
+            status.left = chapter_title(page);
+            status.right = counter;
+        } else {
+            status.centre = counter;
+        }
+    }
 
     clamp_scroll();
     view_compose(
-        has_image ? &image : NULL, scroll_x, scroll_y, settings.theme, plain(), settings.page_status ? status : NULL
+        has_image ? &image : NULL, scroll_x, scroll_y, settings.theme, plain(), settings.contrast,
+        settings.page_status ? &status : NULL
     );
     dirty = 1;
 }
 
+static doc_view current_view(void) {
+    return (doc_view) {reading_width(), reading_height(), settings.fit_page, reader_zoom_steps[settings.zoom],
+                       settings.trim};
+}
+
 static int render(void) {
-    const doc_view view = {reading_width(), reading_height(), settings.fit_page, reader_zoom_steps[settings.zoom]};
+    const doc_view view = current_view();
     has_image = doc_render(doc, file_page(page), &view, &image);
     if (!has_image) toast_message(lang.muxreader.page_failed, TOAST_MS);
     return has_image;
+}
+
+static void save_position(void) {
+    position_pending = 0;
+    if (!doc || page_count <= 0) return;
+
+    const int position = doc_position(doc, file_page(page));
+    if (position == saved_position && reversed == saved_reversed) return;
+
+    reader_position_save(document_path, position, reversed);
+    saved_position = position;
+    saved_reversed = reversed;
+}
+
+/* Saved a little after the last page turn so a flat battery loses almost nothing */
+static void schedule_position(void) {
+    position_pending = 1;
+    position_deadline = SDL_GetTicks() + POSITION_DELAY;
+}
+
+static void reset_auto_turn(const uint32_t now) {
+    auto_deadline = now + (uint32_t) reader_auto_turn_steps[settings.auto_turn] * 1000u;
 }
 
 static void show_page(const int target, const int at_end) {
@@ -177,12 +273,14 @@ static void show_page(const int target, const int at_end) {
     const int next = clamp_page(target);
     if (next == page && has_image) return;
 
-    view_prepare_transition(next > page ? 1 : -1);
+    travel = next > page ? 1 : -1;
+    view_prepare_transition(travel);
     page = next;
     render();
     scroll_x = 0;
     scroll_y = at_end ? INT_MAX : 0;
     compose();
+    schedule_position();
 }
 
 static void relayout_keep(void) {
@@ -288,9 +386,46 @@ static void toggle_fit(void) {
     compose();
 }
 
-static void toggle_status(void) {
-    settings.page_status = !settings.page_status;
-    relayout_keep();
+static void cycle_status(const int delta) {
+    const int bands = status_bands(settings.page_status);
+    settings.page_status = (settings.page_status + reader_status_count + delta) % reader_status_count;
+
+    /* The page only needs laying out again when the room left for it changes */
+    if (status_bands(settings.page_status) != bands)
+        relayout_keep();
+    else
+        compose();
+}
+
+static void toggle_trim(void) {
+    settings.trim = !settings.trim;
+    if (reflowable()) return;
+
+    render();
+    scroll_x = 0;
+    scroll_y = 0;
+    compose();
+}
+
+static void cycle_contrast(const int delta) {
+    settings.contrast = (settings.contrast + reader_contrast_count + delta) % reader_contrast_count;
+    compose();
+}
+
+static void cycle_auto_turn(const int delta) {
+    settings.auto_turn = (settings.auto_turn + reader_auto_turn_count + delta) % reader_auto_turn_count;
+    reset_auto_turn(SDL_GetTicks());
+}
+
+/* Auto Turn moves on by a screen at a time, so tall pages are scrolled before the next page */
+static void advance_screen(void) {
+    const int view_h = reading_height();
+    if (has_image && scroll_y < image.height - view_h) {
+        scroll_y += view_h - view_h / AUTO_OVERLAP;
+        compose();
+        return;
+    }
+    if (page < page_count - 1) show_page(page + 1, 0);
 }
 
 static void scroll_page(const int delta) {
@@ -328,14 +463,6 @@ static void pan_page(const int delta) {
     if (step < 1) step = 1;
     scroll_x += delta * step;
     compose();
-}
-
-static void ensure_toc(void) {
-    if (toc_loaded) return;
-    toc_count = doc_toc(doc, &toc);
-    for (int i = 0; i < toc_count; i++)
-        toc[i].page = file_page(toc[i].page);
-    toc_loaded = 1;
 }
 
 static void publish_inhibit(void) {
@@ -420,6 +547,11 @@ static void handle_input(void) {
     previous = mask;
     const uint32_t now = SDL_GetTicks();
 
+    if (mask) {
+        last_activity = now;
+        reset_auto_turn(now);
+    }
+
     if (edge & (BIT(mux_input_menu) | BIT(mux_input_start))) {
         if (menu_active()) {
             play_sound(snd_info_close);
@@ -469,6 +601,12 @@ static void handle_input(void) {
         return;
     }
 
+    if ((edge & BIT(mux_input_x)) && menu_action_x()) {
+        play_sound(snd_confirm);
+        dirty = 1;
+        return;
+    }
+
     if (edge & BIT(mux_input_b)) {
         play_sound(snd_back);
         menu_back();
@@ -498,6 +636,14 @@ const char *reader_title(void) {
 
 void reader_go_to(const int target) {
     show_page(target, 0);
+}
+
+int reader_has_toc(void) {
+    return toc_loaded ? toc_count > 0 : doc_has_toc(doc);
+}
+
+const char *reader_chapter_title(const int at) {
+    return chapter_title(at);
 }
 
 int reader_toc(const doc_toc_entry **entries) {
@@ -530,8 +676,56 @@ void reader_toggle_fit(void) {
     toggle_fit();
 }
 
-void reader_toggle_status(void) {
-    toggle_status();
+void reader_cycle_status(const int delta) {
+    cycle_status(delta);
+}
+
+void reader_toggle_trim(void) {
+    toggle_trim();
+}
+
+void reader_cycle_contrast(const int delta) {
+    cycle_contrast(delta);
+}
+
+void reader_cycle_auto_turn(const int delta) {
+    cycle_auto_turn(delta);
+}
+
+int reader_bookmark_count(void) {
+    return bookmark_count;
+}
+
+int reader_bookmark_page(const int index) {
+    if (index < 0 || index >= bookmark_count) return 0;
+    return clamp_page(file_page(doc_position_page(doc, bookmarks[index])));
+}
+
+int reader_bookmark_find(const int at) {
+    for (int i = 0; i < bookmark_count; i++)
+        if (reader_bookmark_page(i) == at) return i;
+    return -1;
+}
+
+void reader_bookmark_remove(const int index) {
+    if (index < 0 || index >= bookmark_count) return;
+
+    memmove(&bookmarks[index], &bookmarks[index + 1], (size_t) (bookmark_count - index - 1) * sizeof(*bookmarks));
+    bookmark_count--;
+    reader_bookmarks_save(document_path, bookmarks, bookmark_count);
+}
+
+int reader_bookmark_toggle(void) {
+    const int found = reader_bookmark_find(page);
+    if (found >= 0) {
+        reader_bookmark_remove(found);
+        return 0;
+    }
+    if (bookmark_count >= READER_BOOKMARK_MAX) return -1;
+
+    bookmarks[bookmark_count++] = doc_position(doc, file_page(page));
+    reader_bookmarks_save(document_path, bookmarks, bookmark_count);
+    return 1;
 }
 
 void reader_set_font(const char *path) {
@@ -568,7 +762,7 @@ void reader_toggle_reversed(void) {
     reversed = !reversed;
     forget_toc();
     page = at_start ? 0 : file_page(shown);
-    reader_position_save(document_path, doc_position(doc, file_page(page)), reversed);
+    save_position();
     if (at_start) render();
     scroll_x = 0;
     scroll_y = 0;
@@ -670,15 +864,22 @@ int main(const int argc, char **argv) {
     present(1);
     fade_in_screen();
 
-    doc = doc_open(document_path, reader_spacing_steps[settings.line_spacing]);
     if (settings.font[0] && !file_exist(settings.font)) settings.font[0] = '\0';
-    if (doc && settings.font[0]) doc_set_font(doc, settings.font);
+
+    /* The layout cache keeps the page breaks of an EPUB so it opens without laying out every chapter */
+    char accel[PATH_MAX];
+    reader_layout_cache_path(document_path, settings.font, accel, sizeof(accel));
+    const int accel_missing = !file_exist(accel);
+
+    doc = doc_open_full(document_path, reader_spacing_steps[settings.line_spacing], settings.font, accel);
+    if (doc) doc_set_cache(doc, CACHE_SLOTS);
     if (doc && reflowable()) {
         toast_message(lang.muxreader.loading, tst_wait_f);
         present(1);
     }
 
     if (doc) layout();
+    if (doc && reflowable() && page_count > 0 && accel_missing) doc_save_accelerator(doc, accel);
 
     if (!doc || page_count <= 0) {
         LOG_ERROR(mux_module, "Chutney: unable to open '%s'", document_path);
@@ -697,10 +898,15 @@ int main(const int argc, char **argv) {
     const int saved = reader_position_load(document_path, &reversed);
     if (reflowable()) reversed = 0;
     page = file_page(doc_position_page(doc, saved));
+    saved_position = saved;
+    saved_reversed = reversed;
+    bookmark_count = reader_bookmarks_load(document_path, bookmarks, READER_BOOKMARK_MAX);
     render();
     compose();
 
     uint32_t datetime_deadline = 0;
+    last_activity = SDL_GetTicks();
+    reset_auto_turn(last_activity);
 
     while (running) {
         if (terminate_requested) running = 0;
@@ -714,7 +920,20 @@ int main(const int argc, char **argv) {
         if (SDL_TICKS_PASSED(now, datetime_deadline)) {
             datetime_task(NULL);
             datetime_deadline = now + 1000;
+            if (settings.page_status == reader_status_full && !view_animating()) {
+                char battery[sizeof(battery_text)];
+                battery_status(battery, sizeof(battery));
+                if (strcmp(clock_text, get_datetime()) != 0 || strcmp(battery_text, battery) != 0) compose();
+            }
         }
+
+        if (menu_active()) reset_auto_turn(now);
+        if (settings.auto_turn && !view_animating() && SDL_TICKS_PASSED(now, auto_deadline)) {
+            reset_auto_turn(now);
+            advance_screen();
+        }
+
+        if (position_pending && !view_animating() && SDL_TICKS_PASSED(now, position_deadline)) save_position();
 
         if (view_tick()) dirty = 1;
 
@@ -722,11 +941,25 @@ int main(const int argc, char **argv) {
         dirty = 0;
         present(redraw);
 
+        /* Once the screen is settled the pages either side are drawn ahead so turning is instant */
+        if (!redraw && !menu_active() && !view_animating() && page_count > 1
+            && SDL_TICKS_PASSED(SDL_GetTicks(), last_activity + PREFETCH_IDLE)) {
+            const doc_view view = current_view();
+            const int ahead = clamp_page(page + travel);
+            const int behind = clamp_page(page - travel);
+            if (!(ahead != page && doc_prefetch(doc, file_page(ahead), &view)) && behind != page)
+                doc_prefetch(doc, file_page(behind), &view);
+        }
+
         SDL_Delay(redraw || menu_active() || view_animating() ? 16 : 33);
     }
 
-    reader_position_save(document_path, doc_position(doc, file_page(page)), reversed);
+    save_position();
     reader_settings_save(&settings);
+    if (reflowable()) {
+        reader_layout_cache_path(document_path, settings.font, accel, sizeof(accel));
+        doc_save_accelerator(doc, accel);
+    }
     running = 0;
     publish_inhibit();
 

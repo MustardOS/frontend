@@ -12,6 +12,8 @@
 #define READER_MARGIN_MAX  48
 #define READER_MARGIN_STEP 4
 
+#define READER_BOOKMARK_MAX 64
+
 typedef enum {
     reader_theme_light,
     reader_theme_sepia,
@@ -27,6 +29,20 @@ typedef enum {
     reader_rotation_upside,
     reader_rotation_count,
 } reader_rotation;
+
+typedef enum {
+    reader_status_off,
+    reader_status_page,
+    reader_status_full,
+    reader_status_count,
+} reader_status;
+
+typedef enum {
+    reader_contrast_normal,
+    reader_contrast_high,
+    reader_contrast_max,
+    reader_contrast_count,
+} reader_contrast;
 
 typedef enum {
     reader_transition_instant,
@@ -48,6 +64,9 @@ typedef struct {
     int stay_awake;
     int menu_item;
     int transition;
+    int trim;
+    int contrast;
+    int auto_turn;
     char font[PATH_MAX];
 } reader_settings;
 
@@ -55,6 +74,8 @@ extern const int reader_zoom_steps[];
 extern const int reader_zoom_count;
 extern const int reader_spacing_steps[];
 extern const int reader_spacing_count;
+extern const int reader_auto_turn_steps[];
+extern const int reader_auto_turn_count;
 
 void reader_settings_defaults(reader_settings *settings);
 
@@ -65,3 +86,9 @@ void reader_settings_save(const reader_settings *settings);
 int reader_position_load(const char *document, int *reversed);
 
 void reader_position_save(const char *document, int position, int reversed);
+
+int reader_bookmarks_load(const char *document, int *positions, int max);
+
+void reader_bookmarks_save(const char *document, const int *positions, int count);
+
+void reader_layout_cache_path(const char *document, const char *font, char *path, size_t size);

@@ -3847,6 +3847,19 @@ struct mux_lang {
         char page_failed[MAX_BUFFER_SIZE];
         char page_count[MAX_BUFFER_SIZE];
         char loading[MAX_BUFFER_SIZE];
+        char bookmarks[MAX_BUFFER_SIZE];
+        char bookmark_add[MAX_BUFFER_SIZE];
+        char bookmark_remove[MAX_BUFFER_SIZE];
+        char bookmark_added[MAX_BUFFER_SIZE];
+        char bookmark_removed[MAX_BUFFER_SIZE];
+        char bookmark_full[MAX_BUFFER_SIZE];
+        char bookmark_page[MAX_BUFFER_SIZE];
+        char trim_margins[MAX_BUFFER_SIZE];
+        char contrast[MAX_BUFFER_SIZE];
+        char auto_turn[MAX_BUFFER_SIZE];
+        char auto_turn_seconds[MAX_BUFFER_SIZE];
+        char status_page[MAX_BUFFER_SIZE];
+        char status_full[MAX_BUFFER_SIZE];
     } muxreader;
 
     struct {
