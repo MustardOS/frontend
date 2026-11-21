@@ -3831,6 +3831,15 @@ struct mux_lang {
         char transition_crossfade[MAX_BUFFER_SIZE];
         char transition_slide[MAX_BUFFER_SIZE];
         char transition_page_turn[MAX_BUFFER_SIZE];
+        char resume[MAX_BUFFER_SIZE];
+        char settings[MAX_BUFFER_SIZE];
+        char font[MAX_BUFFER_SIZE];
+        char font_default[MAX_BUFFER_SIZE];
+        char font_current[MAX_BUFFER_SIZE];
+        char section_layout[MAX_BUFFER_SIZE];
+        char section_reading[MAX_BUFFER_SIZE];
+        char page_order[MAX_BUFFER_SIZE];
+        char order_reversed[MAX_BUFFER_SIZE];
         char page_status[MAX_BUFFER_SIZE];
         char stay_awake[MAX_BUFFER_SIZE];
         char quit[MAX_BUFFER_SIZE];

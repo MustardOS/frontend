@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits.h>
 #include <common/base/options.h>
 
 #define CHUTNEY_PATH RUN_STORAGE_PATH "chutney/"
@@ -47,6 +48,7 @@ typedef struct {
     int stay_awake;
     int menu_item;
     int transition;
+    char font[PATH_MAX];
 } reader_settings;
 
 extern const int reader_zoom_steps[];
@@ -60,6 +62,6 @@ void reader_settings_load(reader_settings *settings);
 
 void reader_settings_save(const reader_settings *settings);
 
-int reader_position_load(const char *document);
+int reader_position_load(const char *document, int *reversed);
 
-void reader_position_save(const char *document, int position);
+void reader_position_save(const char *document, int position, int reversed);

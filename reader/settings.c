@@ -57,8 +57,14 @@ void reader_settings_load(reader_settings *settings) {
     FILE *file = fopen(SETTINGS_FILE, "r");
     if (!file) return;
 
-    char line[128];
+    char line[PATH_MAX + 16];
     while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, "font=", 5) == 0) {
+            snprintf(settings->font, sizeof(settings->font), "%s", line + 5);
+            settings->font[strcspn(settings->font, "\r\n")] = '\0';
+            continue;
+        }
+
         char key[64];
         int value = 0;
         if (sscanf(line, "%63[^=]=%d", key, &value) != 2) continue;
@@ -85,6 +91,7 @@ void reader_settings_save(const reader_settings *settings) {
 
     for (size_t i = 0; i < A_SIZE(fields); i++)
         fprintf(file, "%s=%d\n", fields[i].key, *(const int *) ((const char *) settings + fields[i].offset));
+    fprintf(file, "font=%s\n", settings->font);
 
     if (fclose(file) == 0) file_rename(temp, SETTINGS_FILE);
 }
@@ -98,7 +105,9 @@ static void position_path(const char *document, char *path, const size_t size) {
     snprintf(path, size, "%s%016llx.pos", POSITION_DIR, (unsigned long long) hash);
 }
 
-int reader_position_load(const char *document) {
+int reader_position_load(const char *document, int *reversed) {
+    *reversed = 0;
+
     char path[PATH_MAX];
     position_path(document, path, sizeof(path));
 
@@ -106,13 +115,15 @@ int reader_position_load(const char *document) {
     if (!file) return 0;
 
     int value = 0;
-    const int got = fscanf(file, "%d", &value);
+    int order = 0;
+    const int got = fscanf(file, "%d %d", &value, &order);
     fclose(file);
 
-    return got == 1 && value >= 0 ? value : 0;
+    if (got == 2) *reversed = order == 1;
+    return got >= 1 && value >= 0 ? value : 0;
 }
 
-void reader_position_save(const char *document, const int position) {
+void reader_position_save(const char *document, const int position, const int reversed) {
     char path[PATH_MAX];
     position_path(document, path, sizeof(path));
     create_directories(path, 1);
@@ -120,6 +131,6 @@ void reader_position_save(const char *document, const int position) {
     FILE *file = fopen(path, "w");
     if (!file) return;
 
-    fprintf(file, "%d\n", position);
+    fprintf(file, "%d %d\n", position, reversed ? 1 : 0);
     fclose(file);
 }

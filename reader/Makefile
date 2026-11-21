@@ -8,7 +8,7 @@ CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -I. -I.. -I../module -I../module/ui -
 LDFLAGS := $(COMMON_LIBS) $(MUPDF_LIBS) $(EXTERNAL_HIDE) $(BIN_LDFLAGS)
 LDLIBS  := -L$(LIB_DIR) -lui -lmuxcom -lmuxmod -lplutosvg
 
-SRC := main.c list.c settings.c view.c engine/document.c
+SRC := main.c menu.c settings.c view.c engine/document.c
 OBJ := $(SRC:.c=.o)
 
 .PHONY: all clean

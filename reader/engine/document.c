@@ -12,18 +12,21 @@
 #include <common/runtime/log.h>
 #include "document.h"
 
-#define DOC_STORE      (32 << 20)
-#define DOC_MAX_PIXELS (12.0f * 1024.0f * 1024.0f)
-#define DOC_MIN_LAYOUT 64
-#define DOC_CJK_COUNT  4
-#define DOC_FONT_PATH  OPT_PATH "share/font/internal/"
-#define DOC_POSITION   100000
+#define DOC_STORE       (32 << 20)
+#define DOC_MAX_PIXELS  (12.0f * 1024.0f * 1024.0f)
+#define DOC_MIN_LAYOUT  64
+#define DOC_CJK_COUNT   4
+#define DOC_FONT_PATH   OPT_PATH "share/font/internal/"
+#define DOC_POSITION    100000
+#define DOC_USER_FAMILY "ChutneyFont"
 
 struct doc_engine {
     fz_context *ctx;
     fz_document *doc;
     fz_pixmap *pix;
     fz_font *cjk[DOC_CJK_COUNT];
+    fz_font *user[4];
+    char font_path[PATH_MAX];
     char path[PATH_MAX];
     int reflowable;
     int comic;
@@ -89,14 +92,62 @@ static fz_font *cjk_font(fz_context *ctx, const int ordering) {
     return fz_keep_font(ctx, engine->cjk[ordering]);
 }
 
+static int font_variant_path(const char *base, const int bold, const int italic, char *out, const size_t size) {
+    const char *dot = strrchr(base, '.');
+    const char *slash = strrchr(base, '/');
+    if (!dot || (slash && dot < slash)) return 0;
+
+    static const char *bold_italic[] = {"-BoldItalic", "-Bold Italic", " Bold Italic", "-BoldOblique", NULL};
+    static const char *bold_only[] = {"-Bold", " Bold", NULL};
+    static const char *italic_only[] = {"-Italic", " Italic", "-Oblique", NULL};
+    const char **suffixes = bold && italic ? bold_italic : bold ? bold_only : italic_only;
+
+    const int stem = (int) (dot - base);
+    for (int i = 0; suffixes[i]; i++) {
+        snprintf(out, size, "%.*s%s%s", stem, base, suffixes[i], dot);
+        FILE *probe = fopen(out, "rb");
+        if (probe) {
+            fclose(probe);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static fz_font *user_font(fz_context *ctx, const int bold, const int italic) {
+    doc_engine *engine = fz_user_context(ctx);
+    if (!engine || !engine->font_path[0]) return NULL;
+
+    const int slot = (bold ? 2 : 0) | (italic ? 1 : 0);
+    if (!engine->user[slot]) {
+        char variant[PATH_MAX];
+        const int exact = slot ? font_variant_path(engine->font_path, bold, italic, variant, sizeof(variant)) : 0;
+        const char *file = exact ? variant : engine->font_path;
+
+        fz_try(ctx) {
+            engine->user[slot] = fz_new_font_from_file(ctx, NULL, file, 0, 0);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            LOG_WARN(mux_module, "Document: could not load font '%s'", file);
+            return NULL;
+        }
+
+        if (!exact) {
+            fz_font_flags(engine->user[slot])->fake_bold = bold ? 1 : 0;
+            fz_font_flags(engine->user[slot])->fake_italic = italic ? 1 : 0;
+        }
+    }
+
+    return fz_keep_font(ctx, engine->user[slot]);
+}
+
 static fz_font *
 load_system_font(fz_context *ctx, const char *name, const int bold, const int italic, const int needs_exact_metrics) {
-    (void) ctx;
-    (void) name;
-    (void) bold;
-    (void) italic;
     (void) needs_exact_metrics;
-    return NULL;
+    if (!name || strcmp(name, DOC_USER_FAMILY) != 0) return NULL;
+    return user_font(ctx, bold, italic);
 }
 
 static fz_font *load_cjk_font(fz_context *ctx, const char *name, const int ordering, const int serif) {
@@ -137,20 +188,24 @@ static fz_font *load_fallback_font(
 }
 
 static void user_css(const doc_engine *engine, char *css, const size_t size) {
-    if (engine->line_spacing > 0)
+    int used = snprintf(css, size, "@page{margin:0 !important}body{margin:0 !important}");
+
+    if (engine->line_spacing > 0 && used > 0 && (size_t) used < size)
+        used += snprintf(css + used, size - (size_t) used, "body{line-height:%d%% !important}", engine->line_spacing);
+
+    if (engine->font_path[0] && used > 0 && (size_t) used < size)
         snprintf(
-            css, size, "@page{margin:0 !important}body{margin:0 !important;line-height:%d%% !important}",
-            engine->line_spacing
+            css + used, size - (size_t) used,
+            "body,p,div,span,pre,li,td,th,blockquote,a,em,strong,b,i,h1,h2,h3,h4,h5,h6{font-family:%s !important}",
+            DOC_USER_FAMILY
         );
-    else
-        snprintf(css, size, "@page{margin:0 !important}body{margin:0 !important}");
 }
 
 static int open_document(doc_engine *engine) {
     fz_document *document = NULL;
     fz_var(document);
 
-    char css[256];
+    char css[512];
     user_css(engine, css, sizeof(css));
 
     fz_try(engine->ctx) {
@@ -224,6 +279,8 @@ void doc_close(doc_engine *engine) {
         fz_drop_document(engine->ctx, engine->doc);
         for (int i = 0; i < DOC_CJK_COUNT; i++)
             fz_drop_font(engine->ctx, engine->cjk[i]);
+        for (int i = 0; i < 4; i++)
+            fz_drop_font(engine->ctx, engine->user[i]);
         fz_drop_context(engine->ctx);
     }
 
@@ -238,15 +295,11 @@ int doc_is_comic(const doc_engine *engine) {
     return engine && engine->comic;
 }
 
-int doc_set_line_spacing(doc_engine *engine, const int line_spacing) {
-    if (!engine || !engine->reflowable || engine->line_spacing == line_spacing) return 1;
-
+static int restyle(doc_engine *engine) {
     fz_drop_pixmap(engine->ctx, engine->pix);
     engine->pix = NULL;
 
-    engine->line_spacing = line_spacing;
-
-    char css[256];
+    char css[512];
     user_css(engine, css, sizeof(css));
 
     fz_try(engine->ctx) {
@@ -258,6 +311,28 @@ int doc_set_line_spacing(doc_engine *engine, const int line_spacing) {
     }
 
     return 1;
+}
+
+int doc_set_line_spacing(doc_engine *engine, const int line_spacing) {
+    if (!engine || !engine->reflowable || engine->line_spacing == line_spacing) return 1;
+
+    engine->line_spacing = line_spacing;
+    return restyle(engine);
+}
+
+int doc_set_font(doc_engine *engine, const char *font_path) {
+    if (!engine) return 0;
+
+    const char *wanted = font_path ? font_path : "";
+    if (strcmp(engine->font_path, wanted) == 0) return 1;
+
+    for (int i = 0; i < 4; i++) {
+        fz_drop_font(engine->ctx, engine->user[i]);
+        engine->user[i] = NULL;
+    }
+    snprintf(engine->font_path, sizeof(engine->font_path), "%s", wanted);
+
+    return !engine->doc || !engine->reflowable || restyle(engine);
 }
 
 int doc_layout(doc_engine *engine, const int view_w, const int view_h, const doc_reflow *reflow) {

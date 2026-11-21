@@ -43,6 +43,8 @@ int doc_is_comic(const doc_engine *doc);
 
 int doc_set_line_spacing(doc_engine *doc, int line_spacing);
 
+int doc_set_font(doc_engine *doc, const char *font_path);
+
 int doc_layout(doc_engine *doc, int view_w, int view_h, const doc_reflow *reflow);
 
 int doc_page_count(const doc_engine *doc);

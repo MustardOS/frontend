@@ -23,7 +23,8 @@
 #include <common/ui/notify.h>
 #include <module/muxshare.h>
 #include "engine/document.h"
-#include "list.h"
+#include "menu.h"
+#include "reader.h"
 #include "settings.h"
 #include "view.h"
 
@@ -34,29 +35,6 @@
 #define SCROLL_DIV      6
 #define TOAST_MS        1500
 #define GOTO_JUMP       10
-
-typedef enum {
-    mode_read,
-    mode_menu,
-    mode_contents,
-} reader_mode;
-
-typedef enum {
-    item_contents,
-    item_goto,
-    item_text_size,
-    item_margins,
-    item_spacing,
-    item_fit,
-    item_zoom,
-    item_theme,
-    item_rotation,
-    item_transition,
-    item_status,
-    item_awake,
-    item_quit,
-    item_total,
-} menu_item;
 
 typedef enum {
     dir_up,
@@ -73,7 +51,7 @@ typedef struct {
 
 static volatile sig_atomic_t terminate_requested = 0;
 
-static reader_settings settings;
+reader_settings settings;
 static doc_engine *doc = NULL;
 static char document_path[PATH_MAX];
 static char document_title[MAX_BUFFER_SIZE];
@@ -87,16 +65,12 @@ static int has_image = 0;
 static int dirty = 0;
 static int running = 1;
 
-static reader_mode mode = mode_read;
-static int menu_items[item_total];
-static int menu_count = 0;
-static int goto_target = 0;
-
 static doc_toc_entry *toc = NULL;
 static int toc_count = 0;
 static int toc_loaded = 0;
 
 static int inhibit_published = 0;
+static int reversed = 0;
 
 static void handle_terminate(const int signal_number) {
     (void) signal_number;
@@ -148,6 +122,10 @@ static void forget_toc(void) {
     toc_loaded = 0;
 }
 
+static int file_page(const int value) {
+    return reversed && !reflowable() && page_count > 0 ? page_count - 1 - value : value;
+}
+
 static int clamp_page(const int value) {
     if (value < 0) return 0;
     if (value >= page_count) return page_count > 0 ? page_count - 1 : 0;
@@ -188,7 +166,7 @@ static void compose(void) {
 
 static int render(void) {
     const doc_view view = {reading_width(), reading_height(), settings.fit_page, reader_zoom_steps[settings.zoom]};
-    has_image = doc_render(doc, page, &view, &image);
+    has_image = doc_render(doc, file_page(page), &view, &image);
     if (!has_image) toast_message(lang.muxreader.page_failed, TOAST_MS);
     return has_image;
 }
@@ -355,11 +333,13 @@ static void pan_page(const int delta) {
 static void ensure_toc(void) {
     if (toc_loaded) return;
     toc_count = doc_toc(doc, &toc);
+    for (int i = 0; i < toc_count; i++)
+        toc[i].page = file_page(toc[i].page);
     toc_loaded = 1;
 }
 
 static void publish_inhibit(void) {
-    const int want = settings.stay_awake && mode == mode_read && running;
+    const int want = settings.stay_awake && !menu_active() && running;
     if (want == inhibit_published) return;
 
     inhibit_published = want;
@@ -367,293 +347,6 @@ static void publish_inhibit(void) {
         write_text_to_file(IDLE_GAME_INHIBIT, "w", INT, (int) getpid());
     } else if (read_line_int_from(IDLE_GAME_INHIBIT, 1) == (int) getpid()) {
         remove(IDLE_GAME_INHIBIT);
-    }
-}
-
-static const char *toggle_text(const int value) {
-    return value ? lang.generic.enabled : lang.generic.disabled;
-}
-
-static const char *theme_name(const int value) {
-    switch (value) {
-        case reader_theme_sepia:
-            return lang.muxreader.theme_sepia;
-        case reader_theme_dark:
-            return lang.muxreader.theme_dark;
-        case reader_theme_night:
-            return lang.muxreader.theme_night;
-        default:
-            return lang.muxreader.theme_light;
-    }
-}
-
-static const char *transition_name(const int value) {
-    switch (value) {
-        case reader_transition_crossfade:
-            return lang.muxreader.transition_crossfade;
-        case reader_transition_slide:
-            return lang.muxreader.transition_slide;
-        case reader_transition_page_turn:
-            return lang.muxreader.transition_page_turn;
-        default:
-            return lang.muxreader.transition_instant;
-    }
-}
-
-static const char *rotation_name(const int value) {
-    switch (value) {
-        case reader_rotation_right:
-            return lang.muxreader.rotation_right;
-        case reader_rotation_left:
-            return lang.muxreader.rotation_left;
-        case reader_rotation_upside:
-            return lang.muxreader.rotation_upside;
-        default:
-            return lang.muxreader.rotation_none;
-    }
-}
-
-static void menu_text(
-    const int index, char *label, const size_t label_size, char *value, const size_t value_size, const char **glyph
-) {
-    const menu_item item = (menu_item) menu_items[index];
-    const char *name = "";
-
-    switch (item) {
-        case item_contents:
-            name = lang.muxreader.contents;
-            *glyph = "contents";
-            break;
-        case item_goto:
-            name = lang.muxreader.go_to_page;
-            *glyph = "page";
-            snprintf(value, value_size, "%d / %d", goto_target + 1, page_count);
-            break;
-        case item_text_size:
-            name = lang.muxreader.text_size;
-            *glyph = "fontsize";
-            snprintf(value, value_size, "%d px", settings.text_size);
-            break;
-        case item_margins:
-            name = lang.muxreader.margins;
-            *glyph = "margin";
-            snprintf(value, value_size, "%d px", settings.margin);
-            break;
-        case item_spacing:
-            name = lang.muxreader.line_spacing;
-            *glyph = "spacing";
-            if (reader_spacing_steps[settings.line_spacing] == 0)
-                snprintf(value, value_size, "%s", lang.generic.normal);
-            else
-                snprintf(value, value_size, "%d%%", reader_spacing_steps[settings.line_spacing]);
-            break;
-        case item_fit:
-            name = lang.muxreader.page_fit;
-            *glyph = "fit";
-            snprintf(value, value_size, "%s", settings.fit_page ? lang.muxreader.fit_page : lang.muxreader.fit_width);
-            break;
-        case item_zoom:
-            name = lang.muxreader.zoom;
-            *glyph = "zoom";
-            snprintf(value, value_size, "%d%%", reader_zoom_steps[settings.zoom]);
-            break;
-        case item_theme:
-            name = lang.muxreader.theme;
-            *glyph = "theme";
-            snprintf(value, value_size, "%s", theme_name(settings.theme));
-            break;
-        case item_rotation:
-            name = lang.muxreader.rotation;
-            *glyph = "rotate";
-            snprintf(value, value_size, "%s", rotation_name(settings.rotation));
-            break;
-        case item_transition:
-            name = lang.muxreader.transition;
-            *glyph = "transition";
-            snprintf(value, value_size, "%s", transition_name(settings.transition));
-            break;
-        case item_status:
-            name = lang.muxreader.page_status;
-            *glyph = "status";
-            snprintf(value, value_size, "%s", toggle_text(settings.page_status));
-            break;
-        case item_awake:
-            name = lang.muxreader.stay_awake;
-            *glyph = "awake";
-            snprintf(value, value_size, "%s", toggle_text(settings.stay_awake));
-            break;
-        case item_quit:
-        default:
-            name = lang.muxreader.quit;
-            *glyph = "quit";
-            break;
-    }
-
-    snprintf(label, label_size, "%s", name);
-}
-
-static void contents_text(
-    const int index, char *label, const size_t label_size, char *value, const size_t value_size, const char **glyph
-) {
-    const doc_toc_entry *entry = &toc[index];
-    const int indent = entry->depth > 6 ? 6 : entry->depth;
-
-    snprintf(label, label_size, "%*s%s", indent * 2, "", entry->title);
-    snprintf(value, value_size, "%d", entry->page + 1);
-    *glyph = "";
-}
-
-static void build_menu(void) {
-    menu_count = 0;
-    ensure_toc();
-
-    if (toc_count > 0) menu_items[menu_count++] = item_contents;
-    menu_items[menu_count++] = item_goto;
-    if (reflowable()) {
-        menu_items[menu_count++] = item_text_size;
-        menu_items[menu_count++] = item_margins;
-        menu_items[menu_count++] = item_spacing;
-    } else {
-        menu_items[menu_count++] = item_fit;
-        menu_items[menu_count++] = item_zoom;
-    }
-    if (!plain()) menu_items[menu_count++] = item_theme;
-    menu_items[menu_count++] = item_rotation;
-    menu_items[menu_count++] = item_transition;
-    menu_items[menu_count++] = item_status;
-    menu_items[menu_count++] = item_awake;
-    menu_items[menu_count++] = item_quit;
-}
-
-static void show_menu_nav(void) {
-    nav_hide_all();
-    lv_obj_set_align(ui_pnl_footer, LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_style_bg_color(ui_pnl_footer, lv_color_hex(theme.footer.background), MU_OBJ_MAIN_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnl_footer, theme.footer.background_alpha, MU_OBJ_MAIN_DEFAULT);
-
-    if (mode == mode_contents) {
-        setup_nav((struct nav_bar[]) {{ui_lbl_nav_a_glyph, "", 0},
-                                      {ui_lbl_nav_a, lang.generic.open, 0},
-                                      {ui_lbl_nav_b_glyph, "", 0},
-                                      {ui_lbl_nav_b, lang.generic.back, 0},
-                                      {NULL, NULL, 0}});
-    } else {
-        setup_nav((struct nav_bar[]) {{ui_lbl_nav_lr_glyph, "", 0},
-                                      {ui_lbl_nav_lr, lang.generic.change, 0},
-                                      {ui_lbl_nav_a_glyph, "", 0},
-                                      {ui_lbl_nav_a, lang.generic.select, 0},
-                                      {ui_lbl_nav_b_glyph, "", 0},
-                                      {ui_lbl_nav_b, lang.generic.close, 0},
-                                      {NULL, NULL, 0}});
-    }
-
-    lv_obj_clear_flag(ui_pnl_footer, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_move_foreground(ui_pnl_footer);
-}
-
-static int menu_index_of(const menu_item item) {
-    for (int i = 0; i < menu_count; i++)
-        if (menu_items[i] == (int) item) return i;
-    return 0;
-}
-
-static void remember_menu_item(const int item) {
-    if (item != item_quit) settings.menu_item = item;
-}
-
-static void open_menu(void) {
-    build_menu();
-    goto_target = page;
-    mode = mode_menu;
-    list_show(document_title, menu_count, menu_index_of((menu_item) settings.menu_item), menu_text);
-    show_menu_nav();
-}
-
-static void close_menu(void) {
-    if (mode == mode_menu) remember_menu_item(menu_items[list_selected()]);
-    mode = mode_read;
-    list_hide();
-    reader_settings_save(&settings);
-}
-
-static void open_contents(void) {
-    ensure_toc();
-    if (toc_count <= 0) {
-        toast_message(lang.muxreader.no_contents, TOAST_MS);
-        return;
-    }
-
-    int current = 0;
-    for (int i = 0; i < toc_count; i++)
-        if (toc[i].page <= page) current = i;
-
-    mode = mode_contents;
-    list_show(lang.muxreader.contents, toc_count, current, contents_text);
-    show_menu_nav();
-}
-
-static int menu_adjust(const int delta) {
-    switch ((menu_item) menu_items[list_selected()]) {
-        case item_goto: {
-            const int next = clamp_page(goto_target + delta);
-            if (next == goto_target) return 0;
-            goto_target = next;
-            break;
-        }
-        case item_text_size:
-        case item_zoom:
-            change_size(delta);
-            break;
-        case item_margins:
-            change_margin(delta);
-            break;
-        case item_spacing:
-            change_spacing(delta);
-            break;
-        case item_fit:
-            toggle_fit();
-            break;
-        case item_theme:
-            cycle_theme(delta);
-            break;
-        case item_rotation:
-            cycle_rotation(delta);
-            break;
-        case item_transition:
-            settings.transition = (settings.transition + reader_transition_count + delta) % reader_transition_count;
-            view_set_transition(settings.transition);
-            break;
-        case item_status:
-            toggle_status();
-            break;
-        case item_awake:
-            settings.stay_awake = !settings.stay_awake;
-            break;
-        default:
-            return 0;
-    }
-
-    if (menu_items[list_selected()] != item_goto) goto_target = page;
-    list_refresh();
-    return 1;
-}
-
-static void menu_activate(void) {
-    switch ((menu_item) menu_items[list_selected()]) {
-        case item_contents:
-            remember_menu_item(item_contents);
-            open_contents();
-            break;
-        case item_goto:
-            close_menu();
-            show_page(goto_target, 0);
-            break;
-        case item_quit:
-            running = 0;
-            break;
-        default:
-            menu_adjust(1);
-            break;
     }
 }
 
@@ -681,7 +374,7 @@ static int repeat_step(repeat_state *state, const int down, const uint32_t now) 
 }
 
 static direction logical_direction(const direction physical) {
-    if (mode != mode_read || settings.rotation == reader_rotation_none) return physical;
+    if (menu_active() || settings.rotation == reader_rotation_none) return physical;
 
     static const direction right_map[dir_count] = {dir_left, dir_right, dir_down, dir_up};
     static const direction left_map[dir_count] = {dir_right, dir_left, dir_up, dir_down};
@@ -695,38 +388,23 @@ static direction logical_direction(const direction physical) {
 static void handle_direction(const direction physical) {
     const direction where = logical_direction(physical);
 
-    if (mode == mode_read) {
-        if (where == dir_up) scroll_page(-1);
-        if (where == dir_down) scroll_page(1);
-        if (where == dir_left) pan_page(-1);
-        if (where == dir_right) pan_page(1);
+    if (menu_active()) {
+        if (where == dir_up || where == dir_down) menu_move(where == dir_up ? -1 : 1);
+        if (where == dir_left || where == dir_right) menu_change(where == dir_left ? -1 : 1);
         return;
     }
 
-    if (where == dir_up || where == dir_down) {
-        list_move(where == dir_up ? -1 : 1, mode == mode_menu);
-        play_sound(snd_navigate);
-    } else if (mode == mode_menu && menu_adjust(where == dir_left ? -1 : 1)) {
-        play_sound(snd_option);
-    }
+    if (where == dir_up) scroll_page(-1);
+    if (where == dir_down) scroll_page(1);
+    if (where == dir_left) pan_page(-1);
+    if (where == dir_right) pan_page(1);
 }
 
 static void handle_shoulder(const int delta) {
-    if (mode == mode_read) {
+    if (menu_active())
+        menu_shoulder(delta);
+    else
         show_page(page + delta, 0);
-        return;
-    }
-
-    if (mode == mode_menu && menu_items[list_selected()] == item_goto) {
-        goto_target = clamp_page(goto_target + delta * GOTO_JUMP);
-        list_refresh();
-        play_sound(snd_option);
-        return;
-    }
-
-    int rows = theme.mux.item.count > 0 ? theme.mux.item.count : 8;
-    list_move(delta * rows, 0);
-    play_sound(snd_navigate);
 }
 
 static void handle_input(void) {
@@ -743,13 +421,14 @@ static void handle_input(void) {
     const uint32_t now = SDL_GetTicks();
 
     if (edge & (BIT(mux_input_menu) | BIT(mux_input_start))) {
-        if (mode == mode_read) {
-            play_sound(snd_info_open);
-            open_menu();
-        } else {
+        if (menu_active()) {
             play_sound(snd_info_close);
-            close_menu();
+            menu_close();
+        } else {
+            play_sound(snd_info_open);
+            menu_open();
         }
+        dirty = 1;
         return;
     }
 
@@ -769,16 +448,14 @@ static void handle_input(void) {
     const int a_step = repeat_step(&repeat_a, (mask & BIT(mux_input_a)) != 0, now);
     const int b_step = repeat_step(&repeat_b, (mask & BIT(mux_input_b)) != 0, now);
 
-    if (mode == mode_read) {
+    if (!menu_active()) {
         if (a_step) show_page(page + 1, 0);
         if (b_step) show_page(page - 1, 0);
         if (edge & BIT(mux_input_l2)) change_size(-1);
         if (edge & BIT(mux_input_r2)) change_size(1);
         if (edge & BIT(mux_input_x)) {
             play_sound(snd_info_open);
-            open_menu();
-            open_contents();
-            if (mode != mode_contents) close_menu();
+            menu_open_contents();
         }
         if ((edge & BIT(mux_input_y)) && !plain()) cycle_theme(1);
         if (edge & BIT(mux_input_select)) cycle_rotation(1);
@@ -787,26 +464,119 @@ static void handle_input(void) {
 
     if (edge & BIT(mux_input_a)) {
         play_sound(snd_confirm);
-        if (mode == mode_contents) {
-            const int target = toc[list_selected()].page;
-            close_menu();
-            show_page(target, 0);
-        } else {
-            menu_activate();
-        }
+        menu_accept();
+        dirty = 1;
         return;
     }
 
     if (edge & BIT(mux_input_b)) {
         play_sound(snd_back);
-        if (mode == mode_contents && menu_count > 0) {
-            mode = mode_menu;
-            list_show(document_title, menu_count, menu_index_of(item_contents), menu_text);
-            show_menu_nav();
-        } else {
-            close_menu();
-        }
+        menu_back();
+        dirty = 1;
     }
+}
+
+int reader_page(void) {
+    return page;
+}
+
+int reader_page_count(void) {
+    return page_count;
+}
+
+int reader_reflowable(void) {
+    return reflowable();
+}
+
+int reader_plain(void) {
+    return plain();
+}
+
+const char *reader_title(void) {
+    return document_title;
+}
+
+void reader_go_to(const int target) {
+    show_page(target, 0);
+}
+
+int reader_toc(const doc_toc_entry **entries) {
+    ensure_toc();
+    *entries = toc;
+    return toc_count;
+}
+
+void reader_change_size(const int delta) {
+    change_size(delta);
+}
+
+void reader_change_margin(const int delta) {
+    change_margin(delta);
+}
+
+void reader_change_spacing(const int delta) {
+    change_spacing(delta);
+}
+
+void reader_cycle_theme(const int delta) {
+    cycle_theme(delta);
+}
+
+void reader_cycle_rotation(const int delta) {
+    cycle_rotation(delta);
+}
+
+void reader_toggle_fit(void) {
+    toggle_fit();
+}
+
+void reader_toggle_status(void) {
+    toggle_status();
+}
+
+void reader_set_font(const char *path) {
+    snprintf(settings.font, sizeof(settings.font), "%s", path ? path : "");
+    if (!reflowable()) {
+        doc_set_font(doc, settings.font);
+        return;
+    }
+
+    const int position = doc_position(doc, page);
+    if (!doc_set_font(doc, settings.font)) {
+        toast_message(lang.muxreader.open_failed, TOAST_MS);
+        return;
+    }
+
+    layout();
+    forget_toc();
+    page = doc_position_page(doc, position);
+    render();
+    scroll_x = 0;
+    scroll_y = 0;
+    compose();
+}
+
+int reader_reversed(void) {
+    return reversed;
+}
+
+void reader_toggle_reversed(void) {
+    if (reflowable() || page_count <= 0) return;
+
+    const int at_start = page == 0;
+    const int shown = file_page(page);
+    reversed = !reversed;
+    forget_toc();
+    page = at_start ? 0 : file_page(shown);
+    reader_position_save(document_path, doc_position(doc, file_page(page)), reversed);
+    if (at_start) render();
+    scroll_x = 0;
+    scroll_y = 0;
+    compose();
+}
+
+void reader_quit(void) {
+    running = 0;
 }
 
 static void print_help(const char *program) {
@@ -880,7 +650,7 @@ int main(const int argc, char **argv) {
     lv_obj_add_flag(ui_pnl_wall, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_pnl_grid, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
-    list_init();
+    menu_init();
     lv_label_set_text(ui_lbl_datetime, get_datetime());
 
     struct sigaction action;
@@ -901,6 +671,8 @@ int main(const int argc, char **argv) {
     fade_in_screen();
 
     doc = doc_open(document_path, reader_spacing_steps[settings.line_spacing]);
+    if (settings.font[0] && !file_exist(settings.font)) settings.font[0] = '\0';
+    if (doc && settings.font[0]) doc_set_font(doc, settings.font);
     if (doc && reflowable()) {
         toast_message(lang.muxreader.loading, tst_wait_f);
         present(1);
@@ -922,7 +694,9 @@ int main(const int argc, char **argv) {
 
     lv_obj_add_flag(ui_pnl_message, LV_OBJ_FLAG_HIDDEN);
     derive_title();
-    page = doc_position_page(doc, reader_position_load(document_path));
+    const int saved = reader_position_load(document_path, &reversed);
+    if (reflowable()) reversed = 0;
+    page = file_page(doc_position_page(doc, saved));
     render();
     compose();
 
@@ -948,15 +722,15 @@ int main(const int argc, char **argv) {
         dirty = 0;
         present(redraw);
 
-        SDL_Delay(redraw || mode != mode_read || view_animating() ? 16 : 33);
+        SDL_Delay(redraw || menu_active() || view_animating() ? 16 : 33);
     }
 
-    reader_position_save(document_path, doc_position(doc, page));
+    reader_position_save(document_path, doc_position(doc, file_page(page)), reversed);
     reader_settings_save(&settings);
     running = 0;
     publish_inhibit();
 
-    list_hide();
+    menu_close();
     forget_toc();
     mux_input_close();
     display_clear_video_background();
