@@ -1363,6 +1363,8 @@ static const char *assigned_runtime(const char *path, const char *core) {
     const char *runtime;
     if (strcmp(core, "ext-video") == 0) {
         runtime = "wasabi";
+    } else if (strcmp(core, "ext-reader") == 0) {
+        runtime = "chutney";
     } else if (launch && strncmp(launch, "mu-", 3) == 0) {
         runtime = "pickles";
     } else if (strncmp(core, "ext-", 4) == 0 || (launch && strncmp(launch, "ext-", 4) == 0)) {
@@ -1443,6 +1445,7 @@ static const char *choose_runtime(void) {
     const char *assigned = getenv("TRACK_RUNTIME");
 
     if (strcmp(track_core, "ext-video") == 0) return "wasabi";
+    if (strcmp(track_core, "ext-reader") == 0) return "chutney";
     if (assigned
         && (strcmp(assigned, "pickles") == 0 || strcmp(assigned, "retroarch") == 0 || strcmp(assigned, "external") == 0
             || strcmp(assigned, "app") == 0)) {

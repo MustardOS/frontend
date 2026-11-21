@@ -1184,6 +1184,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(
         -1, visual, element_transition, lang.muxvisual.elementtransition, "elementtransition", element_transition, 14
     );
+    INIT_OPTION_ITEM(-1, visual, menu_transition, lang.muxvisual.menutransition, "menutransition", disabled_enabled, 2);
     INIT_OPTION_ITEM(
         -1, visual, selection_animation, lang.muxvisual.selectionanimation, "selectionanimation", selection_animation, 6
     );
@@ -1689,6 +1690,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, tag_order, "visual/tagorder", INT, 0);
     CHECK_AND_SAVE_STD(visual, header_title, "visual/headertitle", INT, 0);
     CHECK_AND_SAVE_STD(visual, element_transition, "visual/elementtransition", INT, 0);
+    CHECK_AND_SAVE_STD(visual, menu_transition, "visual/menutransition", INT, 0);
     CHECK_AND_SAVE_STD(visual, name, "visual/name", INT, 0);
     CHECK_AND_SAVE_STD(visual, dash, "visual/dash", INT, 0);
     CHECK_AND_SAVE_STD(visual, friendly_folder, "visual/friendlyfolder", INT, 0);
@@ -2006,6 +2008,8 @@ static int16_t kiosk_pass = 0;
     ROW(visual, header_title, "headertitle", header, menu_option, NULL, NULL, &kiosk.setting.visual, NULL, change)     \
     ROW(visual, element_transition, "elementtransition", appearance, menu_option, NULL, NULL, &kiosk.setting.visual,   \
         NULL, change)                                                                                                  \
+    ROW(visual, menu_transition, "menutransition", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,   \
+        change)                                                                                                        \
     ROW(visual, selection_animation, "selectionanimation", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, \
         NULL, change)                                                                                                  \
     ROW(visual, selection_style, "selectionstyle", appearance, menu_option, NULL, NULL, &kiosk.setting.visual, NULL,   \

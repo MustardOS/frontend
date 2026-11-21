@@ -66,6 +66,7 @@ static void update_storage_info(void) {
     add_storage(&sp, STORE_LOC_SAVE, ui_val_save_storage);
     add_storage(&sp, STORE_LOC_PICK, ui_val_pickles_storage);
     add_storage(&sp, STORE_LOC_WASA, ui_val_wasabi_storage);
+    add_storage(&sp, STORE_LOC_CHUT, ui_val_chutney_storage);
     add_storage(&sp, STORE_LOC_SCRS, ui_val_screenshot_storage);
     add_storage(&sp, STORE_LOC_TRAK, ui_val_track_storage);
     add_storage(&sp, STORE_LOC_HIST, ui_val_history_storage);

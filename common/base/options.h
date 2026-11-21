@@ -57,7 +57,9 @@
 #define LOOP_QUIET_MS       100
 #define WALLPAPER_FREEZE_MS 30000
 
-#define FADE_TIME 192
+#define FADE_TIME      192
+#define MENU_FADE_TIME 140
+#define MENU_FADE_HOLD 400
 
 #define OPTION_COLUMN_PCT     50
 #define OPTION_LABEL_ONLY_PCT 95
@@ -200,6 +202,7 @@
 #define STORE_LOC_SAVE MUOS_BASE_PATH "/save"
 #define STORE_LOC_PICK MUOS_BASE_PATH "/pickles"
 #define STORE_LOC_WASA MUOS_BASE_PATH "/wasabi"
+#define STORE_LOC_CHUT MUOS_BASE_PATH "/chutney"
 #define STORE_LOC_SCRS MUOS_BASE_PATH "/screenshot"
 #define STORE_LOC_THEM MUOS_BASE_PATH "/theme"
 #define STORE_LOC_COLR MUOS_BASE_PATH "/colour"

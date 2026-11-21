@@ -34,6 +34,12 @@ void display_finish_startup_transition(void);
 
 void display_composite_frame(void);
 
+void display_capture_menu_fade(void);
+
+void display_start_menu_fade(void);
+
+void display_cancel_menu_fade(void);
+
 uint64_t display_present_serial(void);
 
 void display_set_ui_hidden(int hidden);

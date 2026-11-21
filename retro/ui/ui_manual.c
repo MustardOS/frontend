@@ -1,3 +1,5 @@
+#include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +16,7 @@
 #include "../core/muxretro.h"
 #include "../input/nav_repeat.h"
 #include "../state/manual.h"
+#include "../../reader/engine/document.h"
 
 #define MANUAL_FONT_FILE OPT_PATH "share/font/muterm.ttf"
 
@@ -28,6 +31,10 @@
 #define MANUAL_SCROLLBAR_MIN_H 6
 
 #define MANUAL_MAX_VISIBLE_ROWS 128
+
+#define MANUAL_PDF_STEP_DIV   6
+#define MANUAL_DOC_MARGIN     12
+#define MANUAL_PDF_PAGE_TOAST 1200
 
 static int active = 0;
 static uint64_t prev_nav_mask = 0;
@@ -80,6 +87,19 @@ static int line_count = 0;
 static int line_cap = 0;
 static int current_line = 0;
 static int current_col_px = 0;
+
+static const int pdf_zoom_steps[] = {100, 125, 150, 200, 250, 300};
+
+static int pdf_mode = 0;
+static doc_engine *pdf_doc = NULL;
+static doc_image pdf_img = {0};
+static int pdf_has_img = 0;
+static int pdf_page_count = 0;
+static int pdf_page = 0;
+static int pdf_fit_page = 0;
+static int pdf_zoom = 0;
+static int pdf_scroll_x = 0;
+static int pdf_scroll_y = 0;
 
 static uint64_t current_nav_mask(void) {
     uint64_t mask = nav_mask_standard();
@@ -428,12 +448,10 @@ static void blit_surface_swap_rb(
     }
 }
 
-static void update_scrollbar(void) {
-    if (!ui_bar_thumb || line_count == 0) return;
+static void set_scrollbar(const double frac_start, const double frac_span) {
+    if (!ui_bar_thumb) return;
 
     const int content_h = lv_obj_get_height(ui_pnl_content);
-    const double frac_start = (double) current_line / (double) line_count;
-    const double frac_span = (double) visible_rows() / (double) line_count;
 
     lv_coord_t thumb_h = (lv_coord_t) (frac_span * content_h);
     if (thumb_h < MANUAL_SCROLLBAR_MIN_H) thumb_h = MANUAL_SCROLLBAR_MIN_H;
@@ -445,6 +463,12 @@ static void update_scrollbar(void) {
 
     lv_obj_set_height(ui_bar_thumb, thumb_h);
     lv_obj_align(ui_bar_thumb, LV_ALIGN_TOP_RIGHT, 0, thumb_y);
+}
+
+static void update_scrollbar(void) {
+    if (line_count == 0) return;
+
+    set_scrollbar((double) current_line / (double) line_count, (double) visible_rows() / (double) line_count);
 }
 
 static void render_view(void) {
@@ -518,6 +542,242 @@ static void render_view(void) {
     canvas_invalidate_gpu_texture(ui_canvas_manual);
 
     update_scrollbar();
+}
+
+static int ensure_canvas_buf(const size_t needed) {
+    if (needed <= canvas_buf_cap) return 1;
+
+    free(canvas_buf);
+    canvas_buf = malloc(needed);
+    canvas_buf_cap = canvas_buf ? needed : 0;
+
+    return canvas_buf != NULL;
+}
+
+static int view_height(void) {
+    return lv_obj_get_height(ui_pnl_content);
+}
+
+static void pdf_close_doc(void) {
+    doc_close(pdf_doc);
+
+    pdf_doc = NULL;
+    pdf_img = (doc_image) {0};
+    pdf_has_img = 0;
+    pdf_page_count = 0;
+    pdf_page = 0;
+    pdf_scroll_x = 0;
+    pdf_scroll_y = 0;
+}
+
+static int pdf_layout(void) {
+    const doc_reflow reflow = {manual_font_size, MANUAL_DOC_MARGIN, 0};
+    pdf_page_count = doc_layout(pdf_doc, content_wrap_width(), view_height(), &reflow);
+    return pdf_page_count > 0;
+}
+
+static int pdf_open_doc(void) {
+    pdf_doc = doc_open(manual_get_path(), 0);
+    if (!pdf_doc) return 0;
+
+    if (doc_is_reflowable(pdf_doc)) {
+        int size = manual_load_font_size(MANUAL_FONT_DEF);
+        if (size < MANUAL_FONT_MIN) size = MANUAL_FONT_MIN;
+        if (size > MANUAL_FONT_MAX) size = MANUAL_FONT_MAX;
+        manual_font_size = size;
+    }
+
+    if (!pdf_layout()) {
+        pdf_close_doc();
+        return 0;
+    }
+
+    LOG_INFO(mux_module, "Manual: opened document with %d pages", pdf_page_count);
+    return 1;
+}
+
+static int pdf_render_page(void) {
+    if (!pdf_doc) return 0;
+
+    const doc_view view = {content_wrap_width(), view_height(), pdf_fit_page, pdf_zoom_steps[pdf_zoom]};
+    pdf_has_img = doc_render(pdf_doc, pdf_page, &view, &pdf_img);
+    return pdf_has_img;
+}
+
+static void pdf_clamp_scroll(void) {
+    if (!pdf_has_img) return;
+
+    const int max_x = pdf_img.width - content_wrap_width();
+    const int max_y = pdf_img.height - view_height();
+
+    if (pdf_scroll_x > max_x) pdf_scroll_x = max_x;
+    if (pdf_scroll_y > max_y) pdf_scroll_y = max_y;
+    if (pdf_scroll_x < 0) pdf_scroll_x = 0;
+    if (pdf_scroll_y < 0) pdf_scroll_y = 0;
+}
+
+static void pdf_blit(void) {
+    if (!ui_canvas_manual || !pdf_has_img) return;
+
+    const int view_w = content_wrap_width();
+    const int view_h = view_height();
+    if (view_w <= 0 || view_h <= 0) return;
+
+    if (!ensure_canvas_buf((size_t) view_w * (size_t) view_h * 4)) return;
+
+    pdf_clamp_scroll();
+
+    const int pix_w = pdf_img.width;
+    const int pix_h = pdf_img.height;
+    const int comps = pdf_img.components;
+    const int stride = pdf_img.stride;
+    const unsigned char *samples = pdf_img.samples;
+
+    const int copy_w = pix_w < view_w ? pix_w : view_w;
+    const int copy_h = pix_h < view_h ? pix_h : view_h;
+    const int dst_x = pix_w < view_w ? (view_w - pix_w) / 2 : 0;
+    const int dst_y = pix_h < view_h ? (view_h - pix_h) / 2 : 0;
+
+    memset(canvas_buf, 0, (size_t) view_w * (size_t) view_h * 4);
+
+    for (int y = 0; y < copy_h; y++) {
+        const unsigned char *src =
+            samples + (size_t) (pdf_scroll_y + y) * (size_t) stride + (size_t) pdf_scroll_x * comps;
+        uint8_t *dst = canvas_buf + ((size_t) (dst_y + y) * (size_t) view_w + (size_t) dst_x) * 4;
+
+        for (int x = 0; x < copy_w; x++) {
+            dst[0] = src[2];
+            dst[1] = src[1];
+            dst[2] = src[0];
+            dst[3] = 0xFF;
+            dst += 4;
+            src += comps;
+        }
+    }
+
+    lv_canvas_set_buffer(ui_canvas_manual, canvas_buf, view_w, view_h, LV_IMG_CF_TRUE_COLOR_ALPHA);
+    lv_obj_set_size(ui_canvas_manual, view_w, view_h);
+    canvas_invalidate_gpu_texture(ui_canvas_manual);
+
+    const double page_frac = 1.0 / (double) pdf_page_count;
+    const double shown = pix_h > view_h ? (double) view_h / (double) pix_h : 1.0;
+    const double offset = pix_h > 0 ? (double) pdf_scroll_y / (double) pix_h : 0.0;
+    set_scrollbar(((double) pdf_page + offset) * page_frac, shown * page_frac);
+}
+
+static void pdf_show_page(const int page, const int at_end) {
+    if (!pdf_doc || page < 0 || page >= pdf_page_count) return;
+
+    const int changed = page != pdf_page;
+    const int previous = pdf_page;
+
+    pdf_page = page;
+    if (!pdf_render_page()) {
+        pdf_page = previous;
+        pdf_render_page();
+        pause_menu_show_toast(lang.muxretro.manual_screen.open_failed);
+        pdf_blit();
+        return;
+    }
+
+    pdf_scroll_x = 0;
+    pdf_scroll_y = at_end ? INT_MAX : 0;
+    pdf_blit();
+
+    if (changed) {
+        char message[MAX_BUFFER_SIZE];
+        snprintf(message, sizeof(message), lang.muxretro.manual_screen.page, pdf_page + 1, pdf_page_count);
+        pause_menu_show_toast_timed(message, MANUAL_PDF_PAGE_TOAST);
+    }
+}
+
+static void pdf_scroll(const int delta) {
+    if (!pdf_has_img) return;
+
+    const int view_h = view_height();
+    const int max_y = pdf_img.height - view_h;
+
+    if (delta > 0 && pdf_scroll_y >= max_y) {
+        pdf_show_page(pdf_page + 1, 0);
+        return;
+    }
+
+    if (delta < 0 && pdf_scroll_y <= 0) {
+        pdf_show_page(pdf_page - 1, 1);
+        return;
+    }
+
+    int step = view_h / MANUAL_PDF_STEP_DIV;
+    if (step < 1) step = 1;
+
+    pdf_scroll_y += delta * step;
+    pdf_blit();
+}
+
+static void pdf_pan(const int delta) {
+    if (!pdf_has_img) return;
+
+    const int view_w = content_wrap_width();
+    if (pdf_img.width <= view_w) {
+        pdf_show_page(pdf_page + delta, 0);
+        return;
+    }
+
+    int step = view_w / MANUAL_PDF_STEP_DIV;
+    if (step < 1) step = 1;
+
+    pdf_scroll_x += delta * step;
+    pdf_blit();
+}
+
+static void pdf_rescale(void) {
+    if (!pdf_has_img) return;
+
+    const int view_w = content_wrap_width();
+    const int view_h = view_height();
+    const double fx = ((double) pdf_scroll_x + view_w / 2.0) / (double) pdf_img.width;
+    const double fy = ((double) pdf_scroll_y + view_h / 2.0) / (double) pdf_img.height;
+
+    if (!pdf_render_page()) return;
+
+    pdf_scroll_x = (int) (fx * pdf_img.width - view_w / 2.0);
+    pdf_scroll_y = (int) (fy * pdf_img.height - view_h / 2.0);
+    pdf_blit();
+}
+
+static void pdf_change_font(const int delta) {
+    const int next = manual_font_size + delta;
+    if (next < MANUAL_FONT_MIN || next > MANUAL_FONT_MAX) return;
+
+    const int64_t mark = doc_bookmark(pdf_doc, pdf_page);
+    manual_font_size = next;
+    if (!pdf_layout()) return;
+
+    pdf_page = doc_bookmark_page(pdf_doc, mark);
+    pdf_scroll_x = 0;
+    pdf_scroll_y = 0;
+    if (pdf_render_page()) pdf_blit();
+}
+
+static void pdf_change_zoom(const int delta) {
+    if (doc_is_reflowable(pdf_doc)) {
+        pdf_change_font(delta);
+        return;
+    }
+
+    const int next = pdf_zoom + delta;
+    if (next < 0 || next >= (int) A_SIZE(pdf_zoom_steps)) return;
+
+    pdf_zoom = next;
+    pdf_rescale();
+}
+
+static void pdf_toggle_fit(void) {
+    pdf_fit_page = !pdf_fit_page;
+    pdf_scroll_x = 0;
+    pdf_scroll_y = 0;
+
+    if (pdf_render_page()) pdf_blit();
 }
 
 static void move_line(const int delta) {
@@ -630,11 +890,36 @@ static void build_txt_view(void) {
     render_view();
 }
 
-static void close_manual(void) {
-    manual_save_position((int) current_text_offset());
-    manual_save_font_size(manual_font_size);
-    manual_save_wrap_enabled(wrap_enabled);
+static int build_pdf_view(void) {
+    lv_obj_clean(ui_pnl_content);
 
+    ui_canvas_manual = lv_canvas_create(ui_pnl_content);
+    lv_obj_clear_flag(ui_canvas_manual, LV_OBJ_FLAG_SCROLLABLE);
+
+    create_scrollbar();
+
+    if (!pdf_open_doc()) return 0;
+
+    pdf_fit_page = manual_load_pdf_fit();
+
+    pdf_zoom = manual_load_pdf_zoom(0);
+    if (pdf_zoom >= (int) A_SIZE(pdf_zoom_steps)) pdf_zoom = (int) A_SIZE(pdf_zoom_steps) - 1;
+
+    pdf_page = doc_position_page(pdf_doc, manual_load_position());
+
+    pdf_scroll_x = 0;
+    pdf_scroll_y = 0;
+
+    if (!pdf_render_page()) {
+        pdf_page = 0;
+        if (!pdf_render_page()) return 0;
+    }
+
+    pdf_blit();
+    return 1;
+}
+
+static void teardown_manual(void) {
     lv_obj_clean(ui_pnl_content);
     ui_canvas_manual = NULL;
     ui_bar_track = NULL;
@@ -647,6 +932,9 @@ static void close_manual(void) {
     manual_text_len = 0;
 
     free_lines();
+
+    pdf_close_doc();
+    pdf_mode = 0;
 
     current_line = 0;
     current_col_px = 0;
@@ -662,6 +950,21 @@ static void close_manual(void) {
     pause_menu_toggle();
 }
 
+static void close_manual(void) {
+    if (pdf_mode) {
+        manual_save_position(doc_position(pdf_doc, pdf_page));
+        manual_save_pdf_fit(pdf_fit_page);
+        manual_save_pdf_zoom(pdf_zoom);
+        if (doc_is_reflowable(pdf_doc)) manual_save_font_size(manual_font_size);
+    } else {
+        manual_save_position((int) current_text_offset());
+        manual_save_font_size(manual_font_size);
+        manual_save_wrap_enabled(wrap_enabled);
+    }
+
+    teardown_manual();
+}
+
 void manual_menu_init(void) {
 }
 
@@ -673,7 +976,17 @@ void manual_menu_open(void) {
     prev_l2 = mux_input_pressed(mux_input_l2);
     prev_r2 = mux_input_pressed(mux_input_r2);
 
-    build_txt_view();
+    pdf_mode = manual_is_document();
+
+    if (pdf_mode) {
+        if (!build_pdf_view()) {
+            teardown_manual();
+            pause_menu_show_toast(lang.muxretro.manual_screen.open_failed);
+            return;
+        }
+    } else {
+        build_txt_view();
+    }
 
     nav_show_a(0, "");
     setup_nav((struct nav_bar[]) {{ui_lbl_nav_b_glyph, "", 0},
@@ -681,7 +994,8 @@ void manual_menu_open(void) {
                                   {ui_lbl_nav_x_glyph, "", 0},
                                   {ui_lbl_nav_x, lang.generic.top, 0},
                                   {ui_lbl_nav_y_glyph, "", 0},
-                                  {ui_lbl_nav_y, lang.muxretro.manual_screen.wrap, 0},
+                                  {ui_lbl_nav_y,
+                                   pdf_mode ? lang.muxretro.manual_screen.fit : lang.muxretro.manual_screen.wrap, 0},
                                   {NULL, NULL, 0}});
 
     pause_menu_fix_nav_order();
@@ -701,7 +1015,10 @@ void manual_menu_tick(void) {
 
     if (menu_tap) {
         play_sound(snd_info_open);
-        show_info_box(lang.muxretro.hotkeys_screen.manual, lang.muxretro.help.screen.manual, 0);
+        show_info_box(
+            lang.muxretro.hotkeys_screen.manual,
+            pdf_mode ? lang.muxretro.help.screen.manual_pdf : lang.muxretro.help.screen.manual, 0
+        );
         return;
     }
 
@@ -729,13 +1046,24 @@ void manual_menu_tick(void) {
 
     if (x_edge) {
         play_sound(snd_option);
-        jump_top();
+        if (pdf_mode)
+            pdf_show_page(0, 0);
+        else
+            jump_top();
         return;
     }
 
     if (y_edge) {
         play_sound(snd_option);
-        toggle_wrap();
+        if (pdf_mode)
+            pdf_toggle_fit();
+        else
+            toggle_wrap();
+        return;
+    }
+
+    if (pdf_mode && (l2_edge || r2_edge)) {
+        pdf_change_zoom(r2_edge ? 1 : -1);
         return;
     }
 
@@ -757,6 +1085,23 @@ void manual_menu_tick(void) {
     const int do_right = nav_repeat_step(&rpt_right, edge & BIT(3), mask & BIT(3), 1, now);
     const int do_l1 = nav_repeat_step(&rpt_l1, edge & NAV_PAGE_UP_BIT, mask & NAV_PAGE_UP_BIT, 1, now);
     const int do_r1 = nav_repeat_step(&rpt_r1, edge & NAV_PAGE_DOWN_BIT, mask & NAV_PAGE_DOWN_BIT, 1, now);
+
+    if (pdf_mode) {
+        if (do_up) {
+            pdf_scroll(-1);
+        } else if (do_down) {
+            pdf_scroll(1);
+        } else if (do_left) {
+            pdf_pan(-1);
+        } else if (do_right) {
+            pdf_pan(1);
+        } else if (do_l1) {
+            pdf_show_page(pdf_page - 1, 0);
+        } else if (do_r1) {
+            pdf_show_page(pdf_page + 1, 0);
+        }
+        return;
+    }
 
     if (do_up) {
         move_line(-1);

@@ -553,6 +553,7 @@ const char *format_core_name(const char *core, const int use_lang, const int is_
     static char buf[CORE_BUFFER];
 
     if (core && strcmp(core, "ext-video") == 0) return "Wasabi";
+    if (core && strcmp(core, "ext-reader") == 0) return "Chutney";
 
     const char *ext = format_external_core(core);
     if (ext) {
@@ -573,6 +574,7 @@ const char *core_assigned_name(const char *system, const char *tag, const char *
     static char buf[CORE_BUFFER];
 
     if (core_file && strcmp(core_file, "ext-video") == 0) return "Wasabi";
+    if (core_file && strcmp(core_file, "ext-reader") == 0) return "Chutney";
 
     struct coredb_core core;
     enum core_runtime runtime = core_runtime_count;
@@ -591,6 +593,7 @@ const char *core_assigned_name(const char *system, const char *tag, const char *
 
     if (runtime == core_runtime_count || !core.name[0]) return format_core_name(core_file, 0, is_muxretro);
     if (strcmp(core.core, "ext-video") == 0) return "Wasabi";
+    if (strcmp(core.core, "ext-reader") == 0) return "Chutney";
 
     snprintf(buf, sizeof(buf), "%s (%s)", core.name, coredb_runtime_label(runtime));
     return buf;

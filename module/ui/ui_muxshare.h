@@ -61,6 +61,7 @@
     BACKUP(save, "save")                                                                                               \
     BACKUP(pickles, "pickles")                                                                                         \
     BACKUP(wasabi, "wasabi")                                                                                           \
+    BACKUP(chutney, "chutney")                                                                                         \
     BACKUP(screenshot, "screenshot")                                                                                   \
     BACKUP(track, "track")                                                                                             \
     BACKUP(history, "history")                                                                                         \
@@ -613,6 +614,7 @@
     STORAGE(save, "save")                                                                                              \
     STORAGE(pickles, "pickles")                                                                                        \
     STORAGE(wasabi, "wasabi")                                                                                          \
+    STORAGE(chutney, "chutney")                                                                                        \
     STORAGE(screenshot, "screenshot")                                                                                  \
     STORAGE(track, "track")                                                                                            \
     STORAGE(history, "history")                                                                                        \
@@ -769,6 +771,7 @@
     VISUAL(tag_order, "tagorder")                                                                                      \
     VISUAL(header_title, "headertitle")                                                                                \
     VISUAL(element_transition, "elementtransition")                                                                    \
+    VISUAL(menu_transition, "menutransition")                                                                          \
     VISUAL(selection_animation, "selectionanimation")                                                                  \
     VISUAL(selection_style, "selectionstyle")                                                                          \
     VISUAL(list_glyph, "listglyph")                                                                                    \

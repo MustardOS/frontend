@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <common/content/catalogue.h>
 #include <common/content/core/common.h>
 #include <common/storage/fileio.h>
@@ -70,6 +71,11 @@ int manual_is_available(void) {
 
 const char *manual_get_path(void) {
     return manual_path;
+}
+
+int manual_is_document(void) {
+    const char *dot = strrchr(manual_path, '.');
+    return dot && strcasecmp(dot, ".txt") != 0;
 }
 
 int manual_load_position(void) {
@@ -157,4 +163,48 @@ void manual_save_wrap_enabled(const int value) {
 
     fprintf(f, "%d", value ? 1 : 0);
     fclose(f);
+}
+
+static int load_pref(const char *name, int *value) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/%s", RETRO_MAN_PATH, name);
+
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+
+    const int got = fscanf(f, "%d", value);
+    fclose(f);
+
+    return got == 1;
+}
+
+static void save_pref(const char *name, const int value) {
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/%s", RETRO_MAN_PATH, name);
+
+    create_directories(path, 1);
+
+    FILE *f = fopen(path, "w");
+    if (!f) return;
+
+    fprintf(f, "%d", value);
+    fclose(f);
+}
+
+int manual_load_pdf_fit(void) {
+    int value = 0;
+    return load_pref("pdffit", &value) && value == 1 ? 1 : 0;
+}
+
+void manual_save_pdf_fit(const int value) {
+    save_pref("pdffit", value ? 1 : 0);
+}
+
+int manual_load_pdf_zoom(const int default_step) {
+    int value = 0;
+    return load_pref("pdfzoom", &value) && value >= 0 ? value : default_step;
+}
+
+void manual_save_pdf_zoom(const int value) {
+    save_pref("pdfzoom", value);
 }

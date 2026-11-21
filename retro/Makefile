@@ -40,7 +40,7 @@ SRC := $(wildcard coredef/*.c) $(wildcard coreinfo/*.c) \
        ui/ui_pause.c ui/ui_advisory.c ui/ui_loading.c ui/options.c ui/ui_options.c ui/ui_information.c \
        ui/ui_diskcontrol.c ui/cheats.c ui/ui_cheats.c ui/ui_patch.c ui/ui_manual.c
 
-OBJ := $(SRC:.c=.o)
+OBJ := $(SRC:.c=.o) ui/doc_engine.o
 
 state/content_hash.o state/patch.o state/persistent.o state/vfs.o: CFLAGS += -DMINIZ_NO_ZLIB_COMPATIBLE_NAMES
 
@@ -60,6 +60,9 @@ $(shell mkdir -p $(DEPDIR))
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -MF $(call DEP_NAME,retro,$*)
+
+ui/doc_engine.o: ../reader/engine/document.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -MF $(call DEP_NAME,retro,ui/doc_engine)
 
 clean:
 	rm -f $(OBJ)

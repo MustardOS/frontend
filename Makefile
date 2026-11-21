@@ -73,7 +73,7 @@ CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
 .PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard clean notify info \
-        dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal dep-video dep-mugl
+        dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal dep-video dep-reader dep-mugl
 
 .DEFAULT_GOAL := all
 
@@ -112,6 +112,7 @@ dep-module: dep-common dep-lvgl
 dep-retro: dep-module
 dep-terminal: dep-module
 dep-video: dep-module
+dep-reader: dep-module
 
 dep-stage:
 	@echo "Building Stage Overlay: libmustage.so"
@@ -145,7 +146,11 @@ dep-video:
 	@echo "Building Wasabi: muxmedia"
 	$(VERBOSE)$(MAKE) -C video DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
 
-prebuild: dep-stage dep-retro dep-terminal dep-video $(MUGL_DEP)
+dep-reader:
+	@echo "Building Chutney: muxreader"
+	$(VERBOSE)$(MAKE) -C reader DEVICE="$(DEVICE)" DEBUG="$(DEBUG)" $(QUIET) || exit 1
+
+prebuild: dep-stage dep-retro dep-terminal dep-video dep-reader $(MUGL_DEP)
 
 clean:
 	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build mugl/.gen \

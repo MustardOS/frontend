@@ -547,6 +547,7 @@ GEN_THIRDPARTY() {
 		printf '%s\t%s\n' "MiniC" "6229658b"
 		printf '%s\t%s\n' "Miniz" "$(GEN_STRING_VERSION "$FRONTEND_DIR/vendor/miniz/miniz.h" MZ_VERSION)"
 		printf '%s\t%s\n' "Mojibake" "$(GEN_EXTERNAL_VERSION mojibake)"
+		printf '%s\t%s\n' "MuPDF" "$(GEN_EXTERNAL_VERSION mupdf)"
 		printf '%s\t%s\n' "OpenSSL" "$(GEN_EXTERNAL_VERSION openssl)"
 		printf '%s\t%s\n' "Pluto SVG" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/plutosvg/source/plutosvg.h" PLUTOSVG_VERSION_MAJOR PLUTOSVG_VERSION_MINOR PLUTOSVG_VERSION_MICRO)"
 		printf '%s\t%s\n' "Pluto Vector Graphics" "$(GEN_MACRO_VERSION "$FRONTEND_DIR/vendor/plutosvg/plutovg/include/plutovg.h" PLUTOVG_VERSION_MAJOR PLUTOVG_VERSION_MINOR PLUTOVG_VERSION_MICRO)"

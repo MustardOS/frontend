@@ -19,6 +19,7 @@ static const struct third_party_lib third_party_libs[] = {
     {"MiniC", "6229658b"},
     {"Miniz", "11.3.0"},
     {"Mojibake", "0.3.6"},
+    {"MuPDF", "1.28.6"},
     {"OpenSSL", "3.5.7"},
     {"Pluto SVG", "0.0.8"},
     {"Pluto Vector Graphics", "1.3.3"},

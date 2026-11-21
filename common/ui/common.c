@@ -560,6 +560,8 @@ static void fade_step(const int start, const int end, const int keep) {
 }
 
 void fade_in_screen(void) {
+    display_start_menu_fade();
+
     if (display_startup_transition_active()) {
         fade_in_done = 1;
 

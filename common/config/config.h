@@ -204,6 +204,7 @@ struct mux_config {
         int16_t theme;
         int16_t track;
         int16_t wasabi;
+        int16_t chutney;
         int16_t start;
         int16_t target;
     } backup;
@@ -558,6 +559,7 @@ struct mux_config {
         int16_t network;
         int16_t header_title;
         int16_t element_transition;
+        int16_t menu_transition;
         int16_t bluetooth;
         int16_t clock;
         int16_t sort_order;

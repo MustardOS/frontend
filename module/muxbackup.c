@@ -97,6 +97,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, backup, save, lang.muxbackup.save, "save", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, pickles, lang.muxbackup.pickles, "pickles", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, wasabi, lang.muxbackup.wasabi, "wasabi", excluded_included, 2);
+    INIT_OPTION_ITEM(-1, backup, chutney, lang.muxbackup.chutney, "chutney", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, screenshot, lang.muxbackup.screenshot, "screenshot", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, track, lang.muxbackup.track, "track", excluded_included, 2);
     INIT_OPTION_ITEM(-1, backup, history, lang.muxbackup.history, "history", excluded_included, 2);

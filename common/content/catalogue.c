@@ -320,31 +320,30 @@ int load_manual_catalogue(
     const char *catalogue_name, const char *program, const char *program_alt, char *manual_path, const size_t path_size
 ) {
     const char *programs[] = {program, program_alt};
+    const char *extensions[] = {"pdf", "epub", "cbz", "txt"};
 
     if (manual_path && path_size > 0) manual_path[0] = '\0';
 
     if (!catalogue_name || !catalogue_name[0] || !manual_path || path_size == 0) return 0;
 
-    for (size_t i = 0; i < A_SIZE(programs); i++) {
-        if (!programs[i] || programs[i][0] == '\0') continue;
+    char dir[MAX_BUFFER_SIZE];
+    const int dw = snprintf(dir, sizeof(dir), "%s/%s/manual", INFO_CAT_PATH, catalogue_name);
+    if (dw < 0 || (size_t) dw >= sizeof(dir)) return 0;
 
-        char dir[MAX_BUFFER_SIZE];
-        const int dw = snprintf(dir, sizeof(dir), "%s/%s/manual", INFO_CAT_PATH, catalogue_name);
-        if (dw < 0 || (size_t) dw >= sizeof(dir)) continue;
+    for (size_t e = 0; e < A_SIZE(extensions); e++) {
+        for (size_t i = 0; i < A_SIZE(programs); i++) {
+            if (!programs[i] || programs[i][0] == '\0') continue;
 
-        char filename[MAX_BUFFER_SIZE];
-        const int fw = snprintf(filename, sizeof(filename), "%s.txt", programs[i]);
-        if (fw < 0 || (size_t) fw >= sizeof(filename)) continue;
+            char full_path[MAX_BUFFER_SIZE];
+            const int pw = snprintf(full_path, sizeof(full_path), "%s/%s.%s", dir, programs[i], extensions[e]);
+            if (pw < 0 || (size_t) pw >= sizeof(full_path)) continue;
 
-        char full_path[MAX_BUFFER_SIZE];
-        const int pw = snprintf(full_path, sizeof(full_path), "%s/%s", dir, filename);
-        if (pw < 0 || (size_t) pw >= sizeof(full_path)) continue;
+            if (!file_exist_nocase(full_path, full_path, sizeof(full_path))) continue;
 
-        if (!file_exist_nocase(full_path, full_path, sizeof(full_path))) continue;
-
-        snprintf(manual_path, path_size, "%s", full_path);
-        LOG_DEBUG(mux_module, "Catalogue manual found: %s", manual_path);
-        return 1;
+            snprintf(manual_path, path_size, "%s", full_path);
+            LOG_DEBUG(mux_module, "Catalogue manual found: %s", manual_path);
+            return 1;
+        }
     }
 
     return 0;

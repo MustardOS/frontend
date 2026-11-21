@@ -414,6 +414,7 @@ struct mux_lang {
         char save[MAX_BUFFER_SIZE];
         char pickles[MAX_BUFFER_SIZE];
         char wasabi[MAX_BUFFER_SIZE];
+        char chutney[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
@@ -445,6 +446,7 @@ struct mux_lang {
             char save[MAX_BUFFER_SIZE];
             char pickles[MAX_BUFFER_SIZE];
             char wasabi[MAX_BUFFER_SIZE];
+            char chutney[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
@@ -3068,6 +3070,9 @@ struct mux_lang {
         struct {
             char not_found[MAX_BUFFER_SIZE];
             char wrap[MAX_BUFFER_SIZE];
+            char fit[MAX_BUFFER_SIZE];
+            char page[MAX_BUFFER_SIZE];
+            char open_failed[MAX_BUFFER_SIZE];
         } manual_screen;
         struct {
             char brightness[MAX_BUFFER_SIZE];
@@ -3472,6 +3477,7 @@ struct mux_lang {
                 char information[MAX_BUFFER_SIZE];
                 char patches[MAX_BUFFER_SIZE];
                 char manual[MAX_BUFFER_SIZE];
+                char manual_pdf[MAX_BUFFER_SIZE];
                 char macros[MAX_BUFFER_SIZE];
                 char colour_filter[MAX_BUFFER_SIZE];
                 char overlay_image[MAX_BUFFER_SIZE];
@@ -3679,6 +3685,7 @@ struct mux_lang {
         char save[MAX_BUFFER_SIZE];
         char pickles[MAX_BUFFER_SIZE];
         char wasabi[MAX_BUFFER_SIZE];
+        char chutney[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
         char syncthing[MAX_BUFFER_SIZE];
         char manifest[MAX_BUFFER_SIZE];
@@ -3707,6 +3714,7 @@ struct mux_lang {
             char save[MAX_BUFFER_SIZE];
             char pickles[MAX_BUFFER_SIZE];
             char wasabi[MAX_BUFFER_SIZE];
+            char chutney[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
             char syncthing[MAX_BUFFER_SIZE];
             char manifest[MAX_BUFFER_SIZE];
@@ -3795,6 +3803,42 @@ struct mux_lang {
             char dark_brown[MAX_BUFFER_SIZE];
         } colour;
     } muxterm;
+
+    struct {
+        char title[MAX_BUFFER_SIZE];
+        char contents[MAX_BUFFER_SIZE];
+        char no_contents[MAX_BUFFER_SIZE];
+        char go_to_page[MAX_BUFFER_SIZE];
+        char text_size[MAX_BUFFER_SIZE];
+        char margins[MAX_BUFFER_SIZE];
+        char line_spacing[MAX_BUFFER_SIZE];
+        char page_fit[MAX_BUFFER_SIZE];
+        char fit_width[MAX_BUFFER_SIZE];
+        char fit_page[MAX_BUFFER_SIZE];
+        char zoom[MAX_BUFFER_SIZE];
+        char theme[MAX_BUFFER_SIZE];
+        char theme_light[MAX_BUFFER_SIZE];
+        char theme_sepia[MAX_BUFFER_SIZE];
+        char theme_dark[MAX_BUFFER_SIZE];
+        char theme_night[MAX_BUFFER_SIZE];
+        char rotation[MAX_BUFFER_SIZE];
+        char rotation_none[MAX_BUFFER_SIZE];
+        char rotation_right[MAX_BUFFER_SIZE];
+        char rotation_left[MAX_BUFFER_SIZE];
+        char rotation_upside[MAX_BUFFER_SIZE];
+        char transition[MAX_BUFFER_SIZE];
+        char transition_instant[MAX_BUFFER_SIZE];
+        char transition_crossfade[MAX_BUFFER_SIZE];
+        char transition_slide[MAX_BUFFER_SIZE];
+        char transition_page_turn[MAX_BUFFER_SIZE];
+        char page_status[MAX_BUFFER_SIZE];
+        char stay_awake[MAX_BUFFER_SIZE];
+        char quit[MAX_BUFFER_SIZE];
+        char open_failed[MAX_BUFFER_SIZE];
+        char page_failed[MAX_BUFFER_SIZE];
+        char page_count[MAX_BUFFER_SIZE];
+        char loading[MAX_BUFFER_SIZE];
+    } muxreader;
 
     struct {
         char title[MAX_BUFFER_SIZE];
@@ -4269,6 +4313,7 @@ struct mux_lang {
         char tagorder[MAX_BUFFER_SIZE];
         char headertitle[MAX_BUFFER_SIZE];
         char elementtransition[MAX_BUFFER_SIZE];
+        char menutransition[MAX_BUFFER_SIZE];
         char dash[MAX_BUFFER_SIZE];
         char friendlyfolder[MAX_BUFFER_SIZE];
         char thetitleformat[MAX_BUFFER_SIZE];
@@ -4366,6 +4411,7 @@ struct mux_lang {
             char tag_order[MAX_BUFFER_SIZE];
             char header_title[MAX_BUFFER_SIZE];
             char element_transition[MAX_BUFFER_SIZE];
+            char menu_transition[MAX_BUFFER_SIZE];
             char dash[MAX_BUFFER_SIZE];
             char friendly_folder[MAX_BUFFER_SIZE];
             char the_title_format[MAX_BUFFER_SIZE];
