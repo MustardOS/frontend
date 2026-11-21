@@ -69,6 +69,12 @@ typedef struct {
 
     size_t hour_time[24];
     size_t day_time[7];
+
+    size_t battery_used;
+    size_t battery_time;
+    double temperature_sum;
+    int temperature_count;
+    size_t problem_count;
 } activity_item_t;
 
 typedef struct {
@@ -107,6 +113,10 @@ typedef struct {
     int active_hour;   // 0-23, -1 if unknown
     int favourite_day; // 0-6 (Sun-Sat), -1 if unknown
 
+    size_t today_time;
+    size_t week_time;
+    int streak;
+
     global_playstyle_t global_playstyle;
 } global_stats_t;
 
@@ -125,6 +135,10 @@ static size_t activity_count = 0;
 static size_t activity_capacity = 0;
 
 #define ACT_ROW 1024
+
+#define ACT_DAILY       "daily.json"
+#define ACT_BATTERY_MIN 300
+#define ACT_STREAK_MAX  3660
 
 #define CORE_MAP_MAX   256
 #define DEVICE_MAP_MAX 256
@@ -458,7 +472,7 @@ static void migrate_legacy_activity(void) {
 
     LOG_INFO(mux_module, "Migrating legacy activity data");
 
-    const char *args[] = {OPT_PATH "script/mux/track.sh", "migrate", NULL};
+    const char *args[] = {TRACK_BIN, "migrate", NULL};
     run_exec(args, A_SIZE(args), 0, 1, NULL, NULL);
 }
 
@@ -505,6 +519,39 @@ static void normalise_json_values(char *dst, const size_t dst_size, const char *
         dst[i] = (char) tolower((unsigned char) src[i]);
 
     dst[n] = '\0';
+}
+
+static size_t daily_time(const struct json days, const time_t now, const int days_back) {
+    struct tm day;
+    if (!localtime_r(&now, &day)) return 0;
+
+    day.tm_mday -= days_back;
+    day.tm_hour = 12;
+    const time_t when = mktime(&day);
+    if (when == (time_t) -1 || !localtime_r(&when, &day)) return 0;
+
+    char date[16];
+    strftime(date, sizeof(date), "%Y-%m-%d", &day);
+    return json_size_positive(json_object_get(json_object_get(days, date), "time"));
+}
+
+static void load_daily_stats(global_stats_t *gs) {
+    char *data = read_all_char_from(INFO_ACT_PATH "/" ACT_DAILY);
+    if (!data) return;
+
+    if (json_valid(data)) {
+        const struct json days = json_object_get(json_parse(data), "days");
+        const time_t now = time(NULL);
+
+        gs->today_time = daily_time(days, now, 0);
+        for (int i = 0; i < 7; i++)
+            gs->week_time += daily_time(days, now, i);
+
+        for (int i = gs->today_time ? 0 : 1; i < ACT_STREAK_MAX && daily_time(days, now, i); i++)
+            gs->streak++;
+    }
+
+    free(data);
 }
 
 static void compute_global_stats(global_stats_t *gs) {
@@ -729,6 +776,8 @@ static void compute_global_stats(global_stats_t *gs) {
     gs->average_time = gs->total_launches > 0 ? gs->total_time / gs->total_launches : 0;
 
     gs->global_playstyle = resolve_global_playstyle(gs);
+
+    load_daily_stats(gs);
 }
 
 static void bucket_activity_time(activity_item_t *it, const int epoch, const size_t seconds) {
@@ -755,10 +804,22 @@ static void load_session_buckets(activity_item_t *it, const struct json sessions
         for (struct json session = json_first(sessions); json_exists(session); session = json_next(session)) {
             const int start = json_epoch_or_zero(json_object_get(session, "start"));
             const size_t length = json_size_positive(json_object_get(session, "length"));
+            const struct json battery = json_object_get(session, "battery");
+            const struct json temperature = json_object_get(session, "temperature");
 
             if (start > 0 && length > 0) {
                 bucket_activity_time(it, start, length);
                 bucketed = 1;
+            }
+
+            if (json_type(battery) == JSON_NUMBER && length >= ACT_BATTERY_MIN) {
+                it->battery_used += json_size_positive(battery);
+                it->battery_time += length;
+            }
+
+            if (json_type(temperature) == JSON_NUMBER) {
+                it->temperature_sum += json_double(temperature);
+                it->temperature_count++;
             }
         }
     }
@@ -824,6 +885,10 @@ static int load_activity_record(activity_item_t *it, const char *record) {
     it->mode_count = read_launch_count(json_object_get(val, "modes"), it->mode);
 
     load_session_buckets(it, json_object_get(val, "sessions"));
+
+    const struct json endings = json_object_get(val, "endings");
+    it->problem_count =
+        json_size_positive(json_object_get(endings, "error")) + json_size_positive(json_object_get(endings, "lost"));
 
     free(data);
     return it->launch_count > 0;
@@ -947,6 +1012,9 @@ static void show_detail_view(const activity_item_t *it) {
         detail_total,
         detail_last,
         detail_longest,
+        detail_battery,
+        detail_temperature,
+        detail_problem,
         detail_playstyle,
         detail_count
     };
@@ -1029,6 +1097,30 @@ static void show_detail_view(const activity_item_t *it) {
                 format_total_time(detail_value, sizeof(detail_value), it->longest_session);
                 snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_last");
                 break;
+            case detail_battery:
+                if (!it->battery_time) continue;
+
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.detail.battery);
+                snprintf(
+                    detail_value, sizeof(detail_value), "%zu%%/h",
+                    (it->battery_used * 3600 + it->battery_time / 2) / it->battery_time
+                );
+                snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_device");
+                break;
+            case detail_temperature:
+                if (!it->temperature_count) continue;
+
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.detail.temperature);
+                snprintf(detail_value, sizeof(detail_value), "%.1f C", it->temperature_sum / it->temperature_count);
+                snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_core");
+                break;
+            case detail_problem:
+                if (!it->problem_count) continue;
+
+                snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.detail.problem);
+                snprintf(detail_value, sizeof(detail_value), "%zu", it->problem_count);
+                snprintf(detail_glyph, sizeof(detail_glyph), "%s", "detail_last");
+                break;
             case detail_playstyle:
                 snprintf(detail_label, sizeof(detail_label), "%s", lang.muxactivity.style.local.label);
 
@@ -1101,6 +1193,9 @@ static void show_global_view(void) {
         global_unique_cores,
         global_active_time,
         global_favourite_day,
+        global_today,
+        global_week,
+        global_streak,
         global_count
     };
 
@@ -1198,6 +1293,23 @@ static void show_global_view(void) {
             case global_favourite_day:
                 snprintf(global_label, sizeof(global_label), "%s", lang.muxactivity.global.favourite_day);
                 weekday_label(global_value, sizeof(global_value), gs.favourite_day);
+                snprintf(global_glyph, sizeof(global_glyph), "%s", "global_day");
+                break;
+            case global_today:
+                snprintf(global_label, sizeof(global_label), "%s", lang.muxactivity.global.today);
+                format_total_time(global_value, sizeof(global_value), gs.today_time);
+                snprintf(global_glyph, sizeof(global_glyph), "%s", "global_total");
+                break;
+            case global_week:
+                snprintf(global_label, sizeof(global_label), "%s", lang.muxactivity.global.week);
+                format_total_time(global_value, sizeof(global_value), gs.week_time);
+                snprintf(global_glyph, sizeof(global_glyph), "%s", "global_average");
+                break;
+            case global_streak:
+                if (!gs.streak) continue;
+
+                snprintf(global_label, sizeof(global_label), "%s", lang.muxactivity.global.streak);
+                snprintf(global_value, sizeof(global_value), "%dd", gs.streak);
                 snprintf(global_glyph, sizeof(global_glyph), "%s", "global_day");
                 break;
             default:

@@ -829,3 +829,38 @@ Upload body is longer than declared
 Upload body was not streamed
 Upload path is too long
 Use a three-digit permission mode
+Applications
+%s of play time
+No play
+%s launch
+%s played in the last year
+%s launch in the last year
+%s launches in the last year
+Showing %s
+Session details are not available for this day.
+Nothing was played on this day.
+Play calendar
+Calendar measure
+Show all
+Select a day to see what was played.
+Less
+More
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+Sun
+Mon
+Tue
+Wed
+Thu
+Fri
+Sat

@@ -6,7 +6,7 @@ CFLAGS   = $(BASE_CFLAGS) $(STRICT_CFLAGS) -I.. -I../vendor \
 LDFLAGS  = $(COMMON_LIBS) $(COMMON_EXTERNAL_LDFLAGS) $(LIB_LDFLAGS) $(SHARED_PIC) -L../bin/lib -lplutosvg
 
 BASE_SRCS = \
-    base/image_ext.c base/message.c base/randname.c base/strpath.c base/strutil.c base/totp.c base/util.c
+    base/image_ext.c base/json_tree.c base/message.c base/randname.c base/strpath.c base/strutil.c base/totp.c base/util.c
 
 RUNTIME_SRCS = \
     runtime/debug.c runtime/exec.c runtime/init.c runtime/log.c runtime/perf.c runtime/remote.c \
@@ -26,7 +26,7 @@ STORAGE_SRCS = \
     storage/inotify.c storage/union.c storage/verify.c
 
 CONTENT_SRCS = \
-    content/catalogue.c content/content.c content/launch.c content/lookup.c content/manifest.c content/switcher.c \
+    content/activity_record.c content/catalogue.c content/content.c content/launch.c content/lookup.c content/manifest.c content/switcher.c \
     content/core/common.c content/core/coredb.c \
     content/core/state_preview.c \
     content/collection/common.c content/collection/order.c \

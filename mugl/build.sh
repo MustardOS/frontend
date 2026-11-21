@@ -44,7 +44,7 @@ HARDEN="-pipe -ffunction-sections -fdata-sections -fstack-protector-strong -fsta
 HARDEN64="$HARDEN -D_FORTIFY_SOURCE=3"
 HARDEN32="$HARDEN -D_FORTIFY_SOURCE=2"
 
-mkdir -p "$OUT" "$GEN"
+mkdir -p "$OUT/daemon" "$GEN"
 python3 "$HERE/gen.py" "$SYS64/usr/include/GLES2/gl2.h" "$GEN" >/dev/null
 
 # WARN and HARDEN64 deliberately expand into separate compiler arguments.
@@ -52,7 +52,7 @@ python3 "$HERE/gen.py" "$SYS64/usr/include/GLES2/gl2.h" "$GEN" >/dev/null
 "$CC64" -O2 -mcpu=cortex-a53 $WARN $HARDEN64 -fPIE -DGL_GLEXT_PROTOTYPES -I"$HERE" -I"$GEN" \
 	-Wl,--gc-sections -pie -Wl,-z,relro,-z,now \
 	-Wl,--strip-all \
-	-o "$OUT/mugl-server" "$HERE/server.c" "$HERE/server_frame.c" "$HERE/server_overlay.c" "$GEN/server_gen.c" -lSDL2 -lpthread
+	-o "$OUT/daemon/mugl-server" "$HERE/server.c" "$HERE/server_frame.c" "$HERE/server_overlay.c" "$GEN/server_gen.c" -lSDL2 -lpthread
 
 if [ -z "$CC32" ] || [ ! -x "$CC32" ]; then
 	printf 'mugl: no ARM hard-float compiler found under %s; skipping the 32-bit client\n' "$XTOOL"

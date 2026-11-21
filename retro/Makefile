@@ -2,7 +2,7 @@ include ../common.mk
 
 BIN_DIR := ../bin
 LIB_DIR := $(BIN_DIR)/lib
-TARGET  := $(BIN_DIR)/muxretro
+TARGET  := $(BIN_DIR)/module/muxretro
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -DRC_CLIENT_SUPPORTS_HASH -fPIE -pthread
 LDFLAGS := $(COMMON_LIBS) -lcurl $(RETRO_EXTERNAL_LDFLAGS) $(BIN_LDFLAGS) -ldl -pthread -Wl,--export-dynamic-symbol=eglGetProcAddress \
@@ -49,7 +49,7 @@ state/content_hash.o state/patch.o state/persistent.o state/vfs.o: CFLAGS += -DM
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(dir $(TARGET))
 	$(CC) $(OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
 
 DEPDIR := $(DEP_ROOT)/retro

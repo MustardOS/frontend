@@ -90,8 +90,14 @@
 #define INPUT_TEST_VOL_DOWN RUN_PATH "input_test_vol_down"
 #define INPUT_RESUME        RUN_PATH "input_resume"
 
-#define RGBLED_BIN  OPT_PATH "frontend/murgb"
-#define VERIFY_BIN  OPT_PATH "frontend/muverify"
+#define FRONTEND_PATH   OPT_PATH "frontend/"
+#define MODULE_BIN_PATH FRONTEND_PATH "module/"
+#define DAEMON_BIN_PATH FRONTEND_PATH "daemon/"
+#define TOOL_BIN_PATH   FRONTEND_PATH "tool/"
+
+#define RGBLED_BIN  TOOL_BIN_PATH "murgb"
+#define VERIFY_BIN  TOOL_BIN_PATH "muverify"
+#define TRACK_BIN   TOOL_BIN_PATH "mutrack"
 #define DEV_SCRIPT  OPT_PATH "script/device/"
 #define FUNC_SCRIPT OPT_PATH "script/var/func.sh"
 

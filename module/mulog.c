@@ -23,7 +23,7 @@
 #define LOG_SCK  "/run/muos/arborist.sock"
 #define LOG_PID  "/run/muos/arborist.pid"
 #define LOG_LOCK "/run/muos/arborist.lock"
-#define MSG_BIN  "/opt/muos/frontend/muxmessage"
+#define MSG_BIN  MODULE_BIN_PATH "muxmessage"
 
 #define SYS_DEBUG_FILE "/opt/muos/config/system/debug_mode"
 #define VERBOSE_FILE   "/opt/muos/config/settings/advanced/verbose"

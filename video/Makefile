@@ -2,7 +2,7 @@ include ../common.mk
 
 BIN_DIR := ../bin
 LIB_DIR := $(BIN_DIR)/lib
-TARGET  := $(BIN_DIR)/muxmedia
+TARGET  := $(BIN_DIR)/module/muxmedia
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) $(VIDEO_FFMPEG_CFLAGS) -I. -I.. -I../module -I../module/ui -I../vendor \
            -Icore -Icontent -Isettings -Istate -Iui -Ivideo
@@ -22,7 +22,7 @@ OBJ := $(SRC:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJ) $(VIDEO_FFMPEG_ARCHIVES)
-	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(dir $(TARGET))
 	$(CC) $(OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
 
 DEPDIR := $(DEP_ROOT)/video

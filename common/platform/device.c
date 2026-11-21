@@ -44,8 +44,6 @@ void load_device(struct mux_device *device) {
     DEV_STR(device->board.sdl_map, "sdl_map");
     DEV_STR(device->board.joy_hall, "hall");
     DEV_STR(device->board.led, "led");
-    DEV_STR(device->board.rtc_clock, "rtc_clock");
-    DEV_STR(device->board.rtc_wake, "rtc_wake");
     DEV_STR(device->board.rumble, "rumble");
     DEV_STR(device->board.vol_name, "vol_name");
 

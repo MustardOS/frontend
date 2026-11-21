@@ -201,7 +201,7 @@ static void check_server(void) {
 
 static const char *server_path(void) {
     const char *path = getenv("MUGL_SERVER");
-    return path && *path ? path : "/opt/muos/frontend/mugl-server";
+    return path && *path ? path : "/opt/muos/frontend/daemon/mugl-server";
 }
 
 static char **server_environment(void) {

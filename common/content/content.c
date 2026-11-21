@@ -401,20 +401,6 @@ uint32_t fnv_hash_str(const char *str) {
     return hash;
 }
 
-uint32_t activity_key_hash(const char *content_path) {
-    const char *key = strstr(content_path, "/ROMS/");
-    key = key ? key + 6 : content_path;
-
-    uint32_t hash = 2166136261U;
-
-    for (const char *p = key; *p; p++) {
-        hash ^= (uint8_t) tolower((unsigned char) *p);
-        hash *= 16777619;
-    }
-
-    return hash;
-}
-
 static size_t activity_number(const struct json value) {
     const int number = json_int(value);
     return number > 0 ? (size_t) number : 0;

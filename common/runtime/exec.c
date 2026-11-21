@@ -97,7 +97,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     if (!exec) return NULL;
 
     size_t i = 0;
-    exec[i++] = OPT_PATH "frontend/muxterm";
+    exec[i++] = MODULE_BIN_PATH "muxterm";
     exec[i++] = "-ro";
     exec[i++] = "-s";
     exec[i++] = (char *) theme.terminal.font_size;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <common/base/options.h>
+#include <common/content/activity_record.h>
 
 /* The following enums start at 1 because the values are used to
  * reference specific line numbers in associated core content files.
@@ -58,8 +59,6 @@ typedef struct {
     size_t launches;
     long last_played;
 } activity_summary;
-
-uint32_t activity_key_hash(const char *content_path);
 
 int activity_summary_read(uint32_t hash, activity_summary *summary);
 

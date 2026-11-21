@@ -9,10 +9,15 @@ MODULES = mubattery mucredits mufbset muhotkey mulog mulookup musplash muwarn mu
 MODULE_DAEMONS = muaudio mudns mulink muweb
 INPUT_DAEMON = muinput
 DAEMONS = $(MODULE_DAEMONS) $(INPUT_DAEMON)
-SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen mucpu muexfat muidle mustick mutop
+SOURCE_TOOLS = muvarctl mudisp murgb musftpjail mustate mususpend muswitch muverify muscreen mucpu muexfat muidle mustick mutop mutrack
 EXTERNAL_TOOLS = muadb mumtp
 TOOLS = $(SOURCE_TOOLS) $(EXTERNAL_TOOLS)
 CURSOR_LIB = $(LIB_DIR)/libmucursor.so
+
+MODULE_BINS = muxfrontend muxcharge muxmessage mucredits muwarn musplash
+DAEMON_BINS = mubattery muhotkey muaudio mudns mulink muweb muinput muadb mumtp
+BIN_ROLE = $(if $(filter $1,$(MODULE_BINS)),module,$(if $(filter $1,$(DAEMON_BINS)),daemon,tool))
+BIN_DEST = $(BIN_DIR)/$(call BIN_ROLE,$1)
 
 RENAME_SRC = common/storage/file_rename.c
 mulink_SRC = common/platform/usb_link.c
@@ -27,6 +32,8 @@ muvarctl_SRC = common/config/var_store.c
 mucpu_SRC = common/platform/cpu_profile.c
 mustick_SRC = common/platform/h700.c common/platform/stickpoll.c
 muidle_SRC = common/platform/h700.c
+mutrack_SRC = common/base/json_tree.c common/content/activity_record.c vendor/json/json.c
+mutrack_LDLIBS = -lm
 
 murgb_SRC = common/tooling/rgb_args.c common/config/config.c common/config/config_value.c \
             common/display/colour.c common/storage/fileio_lite.c common/base/strpath.c \
@@ -61,11 +68,11 @@ $(shell mkdir -p $(DEPDIR))
 
 COMPILER_TARGET  := $(shell $(CC) -dumpmachine 2>/dev/null)
 COMPILER_VERSION := $(shell $(CC) -dumpfullversion -dumpversion 2>/dev/null)
-CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)|$(PGO)|$(PGO_PATH)|$(PGO_GENERATE_PATH)|$(CROSS_COMPILE)|$(COMPILER_TARGET)|$(COMPILER_VERSION)
+CONFIG_ID    := $(DEVICE)|$(BUILD)|$(OPT_LEVEL)|$(DEBUGSYM)|$(CROSS_COMPILE)|$(COMPILER_TARGET)|$(COMPILER_VERSION)
 CONFIG_STAMP := .build-config
 DEP_READY_STAMP := $(DEP_ROOT)/.ready
 
-.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard pgo-check clean notify info \
+.PHONY: all $(MODULES) $(DAEMONS) $(TOOLS) cursor prebuild vendor-external generated config-guard clean notify info \
         dep-stage dep-plutosvg dep-lvgl dep-common dep-module dep-retro dep-terminal dep-video dep-mugl
 
 .DEFAULT_GOAL := all
@@ -83,16 +90,7 @@ info:
 	@echo "Tools: $(TOOLS)"
 	@echo "Dependencies: $(DEPENDENCIES)"
 
-pgo-check:
-	$(VERBOSE)if [ "$(PGO)" = "use" ]; then \
-		if [ ! -d "$(PGO_PATH)" ] || ! find "$(PGO_PATH)" -type f -name '*.gcda' -print -quit 2>/dev/null | grep -q .; then \
-			printf 'No collected PGO profiles were found in %s\n' "$(PGO_PATH)" >&2; \
-			printf 'Run ./build.sh pgo-generate and train it on the target, or set PGO=off explicitly.\n' >&2; \
-			exit 1; \
-		fi; \
-	fi
-
-vendor-external: pgo-check
+vendor-external:
 	@echo "Building External Dependencies"
 	$(VERBOSE)DEVICE="$(DEVICE)" EXT_ARCH_FLAGS="$(ARCH)" $(EXTERNAL_BUILD) $(QUIET) || exit 1
 
@@ -153,7 +151,7 @@ clean:
 	$(VERBOSE)rm -rf $(BIN_DIR) $(CONFIG_STAMP) $(DEP_ROOT) vendor/lvgl/build mugl/.gen \
 		common/generated/language.json common/generated/thirdparty.h
 	$(VERBOSE)find . \( -name "*.o" -o -name "*.d" -o -name "*.gcno" -o -name "*.gcda" \) \
-		-not -path "./.git/*" -not -path "./.pgo/*" -not -path "./external/*" -exec rm -f {} +
+		-not -path "./.git/*" -not -path "./external/*" -exec rm -f {} +
 
 
 %.o: $(MODULE_DIR)/%.c
@@ -175,37 +173,37 @@ $(MODULES):
 	fi; \
 	$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $$UI_OBJ -o $@ \
 		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(LDLIBS) $(LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }; \
-	mkdir -p $(BIN_DIR); mv $@ $(BIN_DIR) || { echo "Error moving $@ to $(BIN_DIR)"; exit 1; }
+	mkdir -p $(call BIN_DEST,$@); mv $@ $(call BIN_DEST,$@) || { echo "Error moving $@ to $(call BIN_DEST,$@)"; exit 1; }
 
 $(MODULE_DAEMONS):
 	@echo "Building Daemon: $@"
-	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $($@_CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) $(RENAME_SRC) -o $(BIN_DIR)/$@ \
+	@mkdir -p $(DEPDIR) $(call BIN_DEST,$@)
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $($@_CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) $(RENAME_SRC) -o $(call BIN_DEST,$@)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 $(INPUT_DAEMON):
 	@echo "Building Input Service: $@"
-	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(call BIN_DEST,$@)
 	$(VERBOSE)$(MAKE) -C input CC="$(CC)" CFLAGS="$(CFLAGS)" \
-		LDFLAGS="$(BIN_LDFLAGS)" BUILDDIR="$(abspath $(DEP_ROOT)/input)" $(QUIET) || exit 1
-	$(VERBOSE)cp "$(DEP_ROOT)/input/bin/$(INPUT_DAEMON)" "$(BIN_DIR)/$(INPUT_DAEMON)"
+		LDFLAGS="$(subst $$,\$$\$$,$(BIN_LDFLAGS))" BUILDDIR="$(abspath $(DEP_ROOT)/input)" $(QUIET) || exit 1
+	$(VERBOSE)cp "$(DEP_ROOT)/input/bin/$(INPUT_DAEMON)" "$(call BIN_DEST,$@)/$(INPUT_DAEMON)"
 
 $(SOURCE_TOOLS):
 	@echo "Building Tool: $@"
-	@mkdir -p $(DEPDIR) $(BIN_DIR)
-	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) $(RENAME_SRC) -o $(BIN_DIR)/$@ \
+	@mkdir -p $(DEPDIR) $(call BIN_DEST,$@)
+	$(VERBOSE)$(CC) -D$(DEVICE) $(CFLAGS) $(INCLUDES) $(MODULE_DIR)/$@.c $($@_SRC) $(RENAME_SRC) -o $(call BIN_DEST,$@)/$@ \
 		-MF $(DEP_ROOT)/root/$@.d $($@_LDLIBS) $(BIN_LDFLAGS) $(QUIET) || { echo "Error building $@"; exit 1; }
 
 muadb:
 	@echo "Installing Tool: $@"
-	@mkdir -p $(BIN_DIR) $(BIN_DIR)/license
-	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/bin/muadb" "$(BIN_DIR)/muadb"
+	@mkdir -p $(call BIN_DEST,$@) $(BIN_DIR)/license
+	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/bin/muadb" "$(call BIN_DEST,$@)/muadb"
 	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/share/licenses/muadb/copyright" "$(BIN_DIR)/license/Android-tools.txt"
 
 mumtp:
 	@echo "Installing Tool: $@"
-	@mkdir -p $(BIN_DIR) $(BIN_DIR)/license
-	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/bin/mumtp" "$(BIN_DIR)/mumtp"
+	@mkdir -p $(call BIN_DEST,$@) $(BIN_DIR)/license
+	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/bin/mumtp" "$(call BIN_DEST,$@)/mumtp"
 	$(VERBOSE)cp "$(EXTERNAL_PREFIX)/share/licenses/umtprd/LICENSE" "$(BIN_DIR)/license/uMTP-Responder.txt"
 
 cursor: $(CURSOR_LIB)

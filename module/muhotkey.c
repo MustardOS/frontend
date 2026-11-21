@@ -28,6 +28,8 @@
 #define HOTKEY_IDLE_MS   50
 #define HOTKEY_QUIET_MS  250
 #define INHIBIT_CHECK_MS 250
+#define IDLE_WATCH_MS    5000
+#define LOCAL_ACTIVITY   "/run/muinput/local_activity"
 
 #define SAFE_BIT(i)  ((uint64_t) 1 << ((i) & 63))
 #define SEQUENCE_WIN (400 + 150 * seq_buf.count)
@@ -189,6 +191,12 @@ static uint32_t inhibit_check_tick = 0;
 static int game_inhibit_cached = 0;
 static int sleep_inhibit_cached = 0;
 static int idle_inhibit_cached = idle_inhibit_none;
+static uint32_t idle_watch_tick = 0;
+static int idle_watch_cached = 0;
+static int local_activity_cached = 0;
+static unsigned long long local_activity_seen = 0;
+
+static const char *idle_watch_procs[] = {"mucredits", "muxterm", "muxcharge", "muxmessage"};
 
 static int in_idle_state(void) {
     return idle_state_exists;
@@ -658,6 +666,54 @@ static int sleep_idle_inhibited(void) {
     return pid > 0 && kill(pid, 0) == 0;
 }
 
+static int idle_watch_enabled(void) {
+    return !read_line_int_from(CONF_CONFIG_PATH "boot/factory_reset", 1)
+           && !read_line_int_from(CONF_CONFIG_PATH "boot/device_mode", 1);
+}
+
+static int watched_process_running(void) {
+    DIR *dir = opendir("/proc");
+    if (!dir) return 0;
+
+    int found = 0;
+    const struct dirent *entry;
+    while (!found && (entry = readdir(dir))) {
+        if (entry->d_name[0] < '1' || entry->d_name[0] > '9') continue;
+
+        char path[64];
+        snprintf(path, sizeof(path), "/proc/%.20s/comm", entry->d_name);
+
+        FILE *file = fopen(path, "r");
+        if (!file) continue;
+
+        char comm[32] = {0};
+        if (fgets(comm, sizeof(comm), file)) {
+            comm[strcspn(comm, "\n")] = '\0';
+            for (size_t i = 0; i < A_SIZE(idle_watch_procs); i++) {
+                if (strcmp(comm, idle_watch_procs[i]) == 0) found = 1;
+            }
+        }
+        fclose(file);
+    }
+
+    closedir(dir);
+    return found;
+}
+
+static int watched_idle_inhibit(void) {
+    if (watched_process_running()) return idle_inhibit_both;
+    if (device.battery.charger[0] && read_line_int_from(device.battery.charger, 1) == 1) return idle_inhibit_sleep;
+    return idle_inhibit_none;
+}
+
+static int local_activity_moved(void) {
+    const unsigned long long stamp = read_all_long_from(LOCAL_ACTIVITY);
+    if (!stamp || stamp == local_activity_seen) return 0;
+
+    local_activity_seen = stamp;
+    return 1;
+}
+
 static void check_idle(idle_timer *timer, const uint32_t timeout_ms, const int idle_governor) {
     const uint32_t idle_ms = global_tick - timer->tick;
 
@@ -784,7 +840,12 @@ static void handle_idle(void) {
     if (!inhibit_check_tick || global_tick >= inhibit_check_tick) {
         game_inhibit_cached = game_idle_inhibited();
         sleep_inhibit_cached = sleep_idle_inhibited();
-        idle_inhibit_cached = read_line_int_from(CONF_CONFIG_PATH "system/idle_inhibit", 1);
+        if (!idle_watch_tick || global_tick >= idle_watch_tick) {
+            idle_watch_cached = idle_watch_enabled();
+            idle_inhibit_cached = idle_watch_cached ? watched_idle_inhibit() : idle_inhibit_none;
+            idle_watch_tick = global_tick + IDLE_WATCH_MS;
+        }
+        local_activity_cached = idle_watch_cached && local_activity_moved();
         inhibit_check_tick = global_tick + INHIBIT_CHECK_MS;
     }
     const int game_inhibit = game_inhibit_cached;
@@ -793,9 +854,7 @@ static void handle_idle(void) {
     if (sleep_inhibit) idle_sleep.tick = global_tick;
 
     if (idle_display.tick != global_tick) {
-        // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
-        // conditions here, but it's more flexible to leave that externally controllable.)
-        switch (idle_inhibit_cached) {
+        switch (local_activity_cached ? idle_inhibit_both : idle_inhibit_cached) {
             case idle_inhibit_both:
                 idle_display.tick = global_tick;
                 // fallthrough

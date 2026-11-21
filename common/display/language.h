@@ -253,6 +253,9 @@ struct mux_lang {
             char total[MAX_BUFFER_SIZE];
             char last[MAX_BUFFER_SIZE];
             char longest[MAX_BUFFER_SIZE];
+            char battery[MAX_BUFFER_SIZE];
+            char temperature[MAX_BUFFER_SIZE];
+            char problem[MAX_BUFFER_SIZE];
         } detail;
         struct {
             char top_time[MAX_BUFFER_SIZE];
@@ -270,6 +273,9 @@ struct mux_lang {
             char unique_core[MAX_BUFFER_SIZE];
             char active_time[MAX_BUFFER_SIZE];
             char favourite_day[MAX_BUFFER_SIZE];
+            char today[MAX_BUFFER_SIZE];
+            char week[MAX_BUFFER_SIZE];
+            char streak[MAX_BUFFER_SIZE];
         } global;
         struct {
             struct {

@@ -2,7 +2,7 @@ include ../common.mk
 
 BIN_DIR := ../bin
 LIB_DIR := $(BIN_DIR)/lib
-TARGET  := $(BIN_DIR)/muxterm
+TARGET  := $(BIN_DIR)/module/muxterm
 
 CFLAGS  := $(BASE_CFLAGS) $(STRICT_CFLAGS) -I.. -I../module -I../module/ui -I../vendor
 LDFLAGS := $(COMMON_LIBS) $(BIN_LDFLAGS) -lutil
@@ -16,7 +16,7 @@ OBJ := $(SRC:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(dir $(TARGET))
 	$(CC) $(OBJ) -o $@ $(LDLIBS) $(LDFLAGS)
 
 DEPDIR := $(DEP_ROOT)/terminal
