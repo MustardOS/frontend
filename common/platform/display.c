@@ -104,12 +104,6 @@ static int monitor_blend_configured = 0;
 static int renderer_software = 0;
 static double panel_refresh_hz = 0.0;
 static SDL_Texture *startup_splash = NULL;
-static SDL_Texture *menu_fade_tex[2] = {NULL, NULL};
-static int menu_fade_slot = 0;
-static int menu_fade_state = 0;
-static int menu_fade_capturing = 0;
-static uint32_t menu_fade_started = 0;
-static lv_timer_t *menu_fade_timer = NULL;
 static uint8_t startup_splash_alpha = 255;
 
 double display_panel_refresh_hz(void) {
@@ -964,12 +958,6 @@ void sdl_init(void) {
 }
 
 static void release_display(void) {
-    for (int slot = 0; slot < 2; slot++) {
-        if (menu_fade_tex[slot]) SDL_DestroyTexture(menu_fade_tex[slot]);
-        menu_fade_tex[slot] = NULL;
-    }
-    menu_fade_state = 0;
-
     image_async_shutdown();
     anim_unload();
     if (active_saver == saver_type_video && video_saver_running) {
@@ -1368,16 +1356,6 @@ static void finish_present(const uint64_t timing_start, const uint64_t draw_done
     SDL_SetRenderTarget(monitor.renderer, monitor.texture);
 }
 
-static void menu_fade_tick(lv_timer_t *timer) {
-    if (menu_fade_state != 0) {
-        if (!composite_suppressed) display_composite_frame();
-        return;
-    }
-
-    lv_timer_del(timer);
-    menu_fade_timer = NULL;
-}
-
 static void composite_to(SDL_Texture *target, const int present) {
     if (!monitor.renderer || !monitor.texture) return;
 
@@ -1466,23 +1444,6 @@ static void composite_to(SDL_Texture *target, const int present) {
 
     if (video_overlay_fn_ptr) video_overlay_fn_ptr(monitor.renderer);
 
-    if (menu_fade_state == 1 && SDL_GetTicks() - menu_fade_started >= MENU_FADE_HOLD) display_start_menu_fade();
-
-    if (menu_fade_state == 1 && (present || menu_fade_capturing)) {
-        SDL_SetTextureAlphaMod(menu_fade_tex[menu_fade_slot], 255);
-        SDL_RenderCopy(monitor.renderer, menu_fade_tex[menu_fade_slot], NULL, NULL);
-    } else if (menu_fade_state == 2 && (present || menu_fade_capturing)) {
-        const uint32_t elapsed = SDL_GetTicks() - menu_fade_started;
-        if (elapsed >= MENU_FADE_TIME) {
-            menu_fade_state = 0;
-        } else {
-            const int remain = (int) (MENU_FADE_TIME - elapsed);
-            const int alpha = 255 * remain * remain / (MENU_FADE_TIME * MENU_FADE_TIME);
-            SDL_SetTextureAlphaMod(menu_fade_tex[menu_fade_slot], (uint8_t) alpha);
-            SDL_RenderCopy(monitor.renderer, menu_fade_tex[menu_fade_slot], NULL, NULL);
-        }
-    }
-
     if (display_fade_alpha > 0) {
         SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, display_fade_alpha);
@@ -1500,70 +1461,6 @@ static void composite_to(SDL_Texture *target, const int present) {
     const uint64_t draw_done = timing_start ? SDL_GetPerformanceCounter() : 0;
 
     finish_present(timing_start, draw_done);
-}
-
-static SDL_Texture *menu_fade_texture(const int slot) {
-    static int fade_w = 0;
-    static int fade_h = 0;
-
-    if (fade_w != device.screen.width || fade_h != device.screen.height) {
-        for (int i = 0; i < 2; i++) {
-            if (menu_fade_tex[i]) SDL_DestroyTexture(menu_fade_tex[i]);
-            menu_fade_tex[i] = NULL;
-        }
-        fade_w = device.screen.width;
-        fade_h = device.screen.height;
-    }
-
-    if (!menu_fade_tex[slot]) {
-        menu_fade_tex[slot] = SDL_CreateTexture(
-            monitor.renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_TARGET, device.screen.width,
-            device.screen.height
-        );
-        if (!menu_fade_tex[slot]) {
-            LOG_ERROR("video", "Failed to create menu fade texture: %s", SDL_GetError());
-            return NULL;
-        }
-        SDL_SetTextureBlendMode(menu_fade_tex[slot], SDL_BLENDMODE_BLEND);
-    }
-
-    return menu_fade_tex[slot];
-}
-
-void display_capture_menu_fade(void) {
-    if (!monitor.renderer || !monitor.texture || composite_suppressed || ui_layer_hidden || startup_splash) return;
-
-    const int slot = menu_fade_state == 2 ? !menu_fade_slot : menu_fade_slot;
-    SDL_Texture *texture = menu_fade_texture(slot);
-    if (!texture) return;
-
-    SDL_SetRenderTarget(monitor.renderer, texture);
-    SDL_SetRenderDrawBlendMode(monitor.renderer, SDL_BLENDMODE_NONE);
-    SDL_SetRenderDrawColor(monitor.renderer, 0, 0, 0, 255);
-    SDL_RenderClear(monitor.renderer);
-
-    menu_fade_capturing = 1;
-    composite_to(texture, 0);
-    menu_fade_capturing = 0;
-
-    SDL_RenderFlush(monitor.renderer);
-    SDL_SetRenderTarget(monitor.renderer, monitor.texture);
-
-    menu_fade_slot = slot;
-    menu_fade_state = 1;
-    menu_fade_started = SDL_GetTicks();
-}
-
-void display_start_menu_fade(void) {
-    if (menu_fade_state != 1) return;
-
-    menu_fade_state = 2;
-    menu_fade_started = SDL_GetTicks();
-    if (!menu_fade_timer) menu_fade_timer = lv_timer_create(menu_fade_tick, 16, NULL);
-}
-
-void display_cancel_menu_fade(void) {
-    menu_fade_state = 0;
 }
 
 void display_composite_frame(void) {

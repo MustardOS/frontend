@@ -771,7 +771,6 @@
     VISUAL(tag_order, "tagorder")                                                                                      \
     VISUAL(header_title, "headertitle")                                                                                \
     VISUAL(element_transition, "elementtransition")                                                                    \
-    VISUAL(menu_transition, "menutransition")                                                                          \
     VISUAL(selection_animation, "selectionanimation")                                                                  \
     VISUAL(selection_style, "selectionstyle")                                                                          \
     VISUAL(list_glyph, "listglyph")                                                                                    \

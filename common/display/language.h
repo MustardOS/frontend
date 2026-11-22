@@ -4335,7 +4335,6 @@ struct mux_lang {
         char tagorder[MAX_BUFFER_SIZE];
         char headertitle[MAX_BUFFER_SIZE];
         char elementtransition[MAX_BUFFER_SIZE];
-        char menutransition[MAX_BUFFER_SIZE];
         char dash[MAX_BUFFER_SIZE];
         char friendlyfolder[MAX_BUFFER_SIZE];
         char thetitleformat[MAX_BUFFER_SIZE];
@@ -4433,7 +4432,6 @@ struct mux_lang {
             char tag_order[MAX_BUFFER_SIZE];
             char header_title[MAX_BUFFER_SIZE];
             char element_transition[MAX_BUFFER_SIZE];
-            char menu_transition[MAX_BUFFER_SIZE];
             char dash[MAX_BUFFER_SIZE];
             char friendly_folder[MAX_BUFFER_SIZE];
             char the_title_format[MAX_BUFFER_SIZE];

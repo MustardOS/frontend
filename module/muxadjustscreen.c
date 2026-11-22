@@ -184,11 +184,10 @@ static void folder_samples(void) {
     char **dir_paths = NULL;
     char **file_names = NULL;
     char **file_paths = NULL;
-    int *dir_counts = NULL;
     int dirs = 0;
     int files = 0;
 
-    union_collect(adjust_folder, &dir_names, &dir_paths, &dirs, &file_names, &file_paths, &files, &dir_counts);
+    union_collect(adjust_folder, &dir_names, &dir_paths, &dirs, &file_names, &file_paths, &files, NULL);
 
     const char *folder_file = config.visual.friendly_folder ? resolve_info_path("name/folder.json") : NULL;
     char *folder_json = folder_file ? read_all_char_from(folder_file) : NULL;
@@ -221,7 +220,6 @@ static void folder_samples(void) {
 
     free_items(&found, &found_count);
     free(folder_json);
-    free(dir_counts);
     free_names(dir_names, dirs);
     free_names(dir_paths, dirs);
     free_names(file_names, files);

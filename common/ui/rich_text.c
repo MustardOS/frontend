@@ -169,12 +169,7 @@ static int rich_text_known_code(const char code) {
 }
 
 int rich_text_has_codes(const char *text) {
-    if (!text) return 0;
-
-    for (const char *cursor = text; *cursor; cursor++)
-        if (rich_text_sign(cursor)) return 1;
-
-    return 0;
+    return text && strstr(text, "\xC2\xA7") != NULL;
 }
 
 void rich_text_strip(const char *text, char *out, const size_t out_size) {

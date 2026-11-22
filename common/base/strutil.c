@@ -17,16 +17,44 @@
 #include <common/config/config.h>
 #include <common/config/skip.h>
 
-struct pattern skip_pattern_list = {NULL, 0, 0};
-int skip_patterns_loaded = 0;
+typedef enum { skip_glob, skip_exact, skip_prefix, skip_contains } skip_match;
 
-static void free_skip_patterns(void) {
-    for (size_t i = 0; i < skip_pattern_list.count; i++)
-        free(skip_pattern_list.patterns[i]);
-    free(skip_pattern_list.patterns);
-    skip_pattern_list.patterns = NULL;
-    skip_pattern_list.count = 0;
-    skip_pattern_list.capacity = 0;
+typedef struct {
+    char *text;
+    size_t length;
+    skip_match match;
+    int dir_only;
+} skip_pattern;
+
+static skip_pattern *skip_patterns;
+static size_t skip_pattern_count;
+static int skip_patterns_loaded;
+
+static skip_pattern prepare_skip_pattern(const char *line) {
+    skip_pattern pattern = {.dir_only = line[0] == '/'};
+    const char *text = line + pattern.dir_only;
+    const size_t len = strlen(text);
+    const int leading_star = text[0] == '*';
+    const int trailing_star = len && text[len - 1] == '*';
+    size_t start = 0;
+    size_t length = len;
+    if (!strpbrk(text, "?[\\")) {
+        if (!strchr(text, '*')) {
+            pattern.match = skip_exact;
+        } else if (trailing_star && len > (size_t) leading_star
+                   && strcspn(text + leading_star, "*") == len - leading_star - 1) {
+            start = leading_star;
+            length = len - start - 1;
+            pattern.match = leading_star ? skip_contains : skip_prefix;
+        }
+    }
+    pattern.text = strndup(text + start, length);
+    if (pattern.text) {
+        pattern.length = length;
+        for (char *p = pattern.text; *p; p++)
+            *p = (char) tolower((unsigned char) *p);
+    }
+    return pattern;
 }
 
 void load_skip_patterns(void) {
@@ -45,12 +73,7 @@ void load_skip_patterns(void) {
         return;
     }
 
-    free_skip_patterns();
-
-    skip_pattern_list.patterns = NULL;
-    skip_pattern_list.count = 0;
-    skip_pattern_list.capacity = 0;
-
+    size_t capacity = 0;
     char line[MAX_BUFFER_SIZE];
     while (fgets(line, sizeof(line), file)) {
         size_t len = strlen(line);
@@ -58,48 +81,51 @@ void load_skip_patterns(void) {
             line[--len] = '\0';
         if (len == 0 || line[0] == '#') continue;
 
-        if (skip_pattern_list.count >= skip_pattern_list.capacity) {
-            const size_t newcap = skip_pattern_list.capacity ? skip_pattern_list.capacity * 2 : 8;
-            char **newptr = realloc(skip_pattern_list.patterns, newcap * sizeof(char *));
-            if (!newptr) break;
-            skip_pattern_list.patterns = newptr;
-            skip_pattern_list.capacity = newcap;
+        if (skip_pattern_count == capacity) {
+            const size_t newcap = capacity ? capacity * 2 : 8;
+            skip_pattern *grown = realloc(skip_patterns, newcap * sizeof(*grown));
+            if (!grown) break;
+            skip_patterns = grown;
+            capacity = newcap;
         }
-
-        char *stored = mux_strdup(line);
-        for (char *p = stored; *p; p++)
-            *p = (char) tolower((unsigned char) *p);
-
-        skip_pattern_list.patterns[skip_pattern_list.count++] = stored;
+        skip_pattern pattern = prepare_skip_pattern(line);
+        if (!pattern.text) break;
+        skip_patterns[skip_pattern_count++] = pattern;
     }
 
     fclose(file);
-    LOG_INFO(mux_module, "Loaded skip patterns: %zu", skip_pattern_list.count);
+    LOG_INFO(mux_module, "Loaded skip patterns: %zu", skip_pattern_count);
 }
 
 int should_skip(const char *name, const int is_dir) {
-    if (!name || !*name) return 0;
+    if (!skip_pattern_count || !name || !*name) return 0;
 
-    char name_l[MAX_BUFFER_SIZE];
-    snprintf(name_l, sizeof(name_l), "%s", name);
-    for (char *p = name_l; *p; p++)
-        *p = (char) tolower((unsigned char) *p);
-
-    for (size_t i = 0; i < skip_pattern_list.count; i++) {
-        const char *pat = skip_pattern_list.patterns[i];
-        if (!pat || !*pat) continue;
-
-        int dir_only = 0;
-        if (pat[0] == '/') {
-            dir_only = 1;
-            pat++;
-            if (!*pat) continue;
-        }
-
-        if (dir_only && !is_dir) continue;
-        if (fnmatch(pat, name_l, 0) == 0) return 1;
+    char folded[MAX_BUFFER_SIZE];
+    size_t len = 0;
+    while (len < sizeof(folded) - 1 && name[len]) {
+        folded[len] = (char) tolower((unsigned char) name[len]);
+        len++;
     }
+    folded[len] = '\0';
 
+    for (size_t i = 0; i < skip_pattern_count; i++) {
+        const skip_pattern *p = &skip_patterns[i];
+        if (p->dir_only && !is_dir) continue;
+        switch (p->match) {
+            case skip_exact:
+                if (p->length == len && !memcmp(p->text, folded, len)) return 1;
+                break;
+            case skip_prefix:
+                if (p->length <= len && !memcmp(p->text, folded, p->length)) return 1;
+                break;
+            case skip_contains:
+                if (strstr(folded, p->text)) return 1;
+                break;
+            case skip_glob:
+                if (fnmatch(p->text, folded, 0) == 0) return 1;
+                break;
+        }
+    }
     return 0;
 }
 
@@ -156,7 +182,8 @@ static const mjb_result *cached_text_key(struct str_sort_cache *cache, const cha
     char folded[MAX_BUFFER_SIZE];
     size_t size = sizeof(folded);
     if (mjb_map_case_into(text, length, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded, &size)
-        != MJB_STATUS_OK) return NULL;
+        != MJB_STATUS_OK)
+        return NULL;
 
     struct text_key *entry = calloc(1, sizeof(*entry));
     if (!entry) return NULL;
@@ -193,8 +220,8 @@ static int next_ascii_weight(const char **text, const char *end) {
 
 // Unicode-aware, case-insensitive comparison of a run of non-digit text, so accented Latin,
 // Cyrillic, CJK, etc. sort in proper collation order rather than raw byte order.
-static int text_run_compare(const char *a, const size_t a_len, const char *b, const size_t b_len,
-                            struct str_sort_cache *cache) {
+static int
+text_run_compare(const char *a, const size_t a_len, const char *b, const size_t b_len, struct str_sort_cache *cache) {
     if (a_len == b_len && memcmp(a, b, a_len) == 0) return 0;
     if (simple_collation_run(a, a_len) && simple_collation_run(b, b_len)) {
         const char *left = a, *right = b;

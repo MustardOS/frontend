@@ -44,6 +44,8 @@ content_item *add_item(
 
 void remove_item(content_item **content_items, size_t *count, size_t index);
 
+void filter_items(content_item **items, size_t *count, int (*keep)(const content_item *));
+
 int item_exists(const content_item *content_items, size_t count, const char *name);
 
 void sort_items(content_item *content_items, size_t count);

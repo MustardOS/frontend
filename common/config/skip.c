@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +9,7 @@
 static size_t skip_hash(const char *key, const size_t cap) {
     uint32_t h = 2166136261u;
     for (const unsigned char *p = (const unsigned char *) key; *p; p++) {
-        h = (h ^ (unsigned char) *p) * 16777619u;
+        h = (h ^ (unsigned char) tolower(*p)) * 16777619u;
     }
 
     return (size_t) h & (cap - 1);
@@ -38,8 +39,8 @@ void init_skiplist(skip_list *sl) {
     sl->count = 0;
     sl->capacity = 0;
 
-    sl->bucket_cap = 512;
-    sl->buckets = calloc(sl->bucket_cap, sizeof(char *));
+    sl->bucket_cap = 0;
+    sl->buckets = NULL;
 }
 
 void free_skiplist(skip_list *sl) {
@@ -60,7 +61,8 @@ void free_skiplist(skip_list *sl) {
 }
 
 void add_to_skiplist(skip_list *sl, const char *dir, const char *name) {
-    if (!sl || !sl->buckets || !dir || !name) return;
+    if (!sl || !dir || !name) return;
+    if (!sl->buckets && !resize_buckets(sl, 512)) return;
 
     char full_path[MAX_BUFFER_SIZE];
     snprintf(full_path, sizeof(full_path), "%s/%s", dir, name);

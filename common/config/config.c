@@ -388,7 +388,6 @@ static const cfg_field cfg_fields[] = {
     {CONF_CONFIG_PATH "visual", "network", CFG_OFF(visual.network), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "headertitle", CFG_OFF(visual.header_title), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "elementtransition", CFG_OFF(visual.element_transition), 0, {.i = 13}, 1, 0, 13},
-    {CONF_CONFIG_PATH "visual", "menutransition", CFG_OFF(visual.menu_transition), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "bluetooth", CFG_OFF(visual.bluetooth), 0, {.i = 0}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "clock", CFG_OFF(visual.clock), 0, {.i = 1}, 1, 0, 1},
     {CONF_CONFIG_PATH "visual", "sortorder", CFG_OFF(visual.sort_order), 0, {.i = 1}, 1, 0, 1},

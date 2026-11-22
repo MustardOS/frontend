@@ -90,9 +90,6 @@ static void cleanup_screen(void) {
     if (screen_clean) return;
     screen_clean = 1;
 
-    if (config.visual.menu_transition && config.visual.reduce_motion != 2 && !shutting_down)
-        display_capture_menu_fade();
-
     SAFE_DELETE(toast_timer, lv_timer_del);
     SAFE_DELETE(counter_timer, lv_timer_del);
     SAFE_DELETE(key_entry, lv_obj_del);

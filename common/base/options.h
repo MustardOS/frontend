@@ -57,9 +57,7 @@
 #define LOOP_QUIET_MS       100
 #define WALLPAPER_FREEZE_MS 30000
 
-#define FADE_TIME      192
-#define MENU_FADE_TIME 140
-#define MENU_FADE_HOLD 400
+#define FADE_TIME 192
 
 #define OPTION_COLUMN_PCT     50
 #define OPTION_LABEL_ONLY_PCT 95

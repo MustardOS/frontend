@@ -2,15 +2,6 @@
 
 #include <stddef.h>
 
-struct pattern {
-    char **patterns;
-    size_t count;
-    size_t capacity;
-};
-
-extern struct pattern skip_pattern_list;
-extern int skip_patterns_loaded;
-
 void load_skip_patterns(void);
 
 int should_skip(const char *name, int is_dir);

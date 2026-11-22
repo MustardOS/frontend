@@ -62,8 +62,11 @@ content_item *add_item(
     item->sort_name = item->name + name_size;
     item->extra_data = item->sort_name + sort_size;
     memcpy(item->name, name, name_size);
-    memcpy(item->sort_name, sort_name, sort_size);
-    rich_text_strip(item->sort_name, item->sort_name, sort_size);
+    if (rich_text_has_codes(sort_name)) {
+        rich_text_strip(sort_name, item->sort_name, sort_size);
+    } else {
+        memcpy(item->sort_name, sort_name, sort_size);
+    }
     memcpy(item->extra_data, extra_data, extra_size);
     item->content_type = content_type;
     item->use_module = mux_module;
@@ -103,6 +106,23 @@ void remove_item(content_item **content_items, size_t *count, const size_t index
         free(*content_items);
         *content_items = NULL;
     }
+}
+
+void filter_items(content_item **items, size_t *count, int (*keep)(const content_item *)) {
+    size_t kept = 0;
+    for (size_t i = 0; i < *count; i++) {
+        if (!keep(&(*items)[i])) {
+            free_item_fields(&(*items)[i]);
+            continue;
+        }
+        if (kept != i) (*items)[kept] = (*items)[i];
+        kept++;
+    }
+    if (!kept) {
+        free(*items);
+        *items = NULL;
+    }
+    *count = kept;
 }
 
 int content_item_compare(const void *a, const void *b) {

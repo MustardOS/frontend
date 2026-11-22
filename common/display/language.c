@@ -22,8 +22,20 @@ struct lang_stamp {
 static struct lang_stamp lang_loaded_base;
 static struct lang_stamp lang_loaded_theme;
 static int lang_loaded;
-static char *language_json;
-static char *theme_language_json;
+typedef struct {
+    struct json key;
+    struct json value;
+} lang_section;
+
+typedef struct {
+    char *content;
+    lang_section *sections;
+    size_t count;
+    int indexed;
+} lang_file;
+
+static lang_file base_language;
+static lang_file theme_language;
 static struct json translation_specific;
 static struct json translation_theme;
 
@@ -45,11 +57,18 @@ static void clear_translation_cache(void) {
     translation_cache_count = 0;
 }
 
+static struct json find_lang_section(const lang_file *file) {
+    if (!file->indexed) return json_object_get(json_parse(file->content), mux_module);
+    for (size_t i = 0; i < file->count; i++) {
+        if (json_string_compare(file->sections[i].key, mux_module) == 0) return file->sections[i].value;
+    }
+    return (struct json) {0};
+}
+
 static void select_translation_section(void) {
     clear_translation_cache();
-    translation_specific = language_json ? json_object_get(json_parse(language_json), mux_module) : (struct json) {0};
-    translation_theme =
-        theme_language_json ? json_object_get(json_parse(theme_language_json), mux_module) : (struct json) {0};
+    translation_specific = find_lang_section(&base_language);
+    translation_theme = find_lang_section(&theme_language);
 }
 
 char *translate_specific(char *key) {
@@ -4041,7 +4060,6 @@ static const lang_field lang_fields[] = {
     {"muxvisual", LANG_OFF(muxvisual.bluetooth), lang_specific, "Bluetooth"},
     {"muxvisual", LANG_OFF(muxvisual.headertitle), lang_specific, "Screen Title"},
     {"muxvisual", LANG_OFF(muxvisual.elementtransition), lang_specific, "Element Transition"},
-    {"muxvisual", LANG_OFF(muxvisual.menutransition), lang_specific, "Menu Transition"},
     {"muxvisual", LANG_OFF(muxvisual.clock), lang_specific, "Clock"},
     {"muxvisual", LANG_OFF(muxvisual.sortorder), lang_specific, "Sort Order"},
     {"muxvisual", LANG_OFF(muxvisual.tagorder), lang_specific, "Tag Order"},
@@ -4110,7 +4128,6 @@ static const lang_field lang_fields[] = {
     {"muxvisual", LANG_OFF(muxvisual.help.tag_order), lang_specific, "Whether an item's tag glyph is shown beside it."},
     {"muxvisual", LANG_OFF(muxvisual.help.header_title), lang_specific, "Whether the name of the current screen appears along the top."},
     {"muxvisual", LANG_OFF(muxvisual.help.element_transition), lang_specific, "Select the animation used when dialogues, toast messages and help boxes appear"},
-    {"muxvisual", LANG_OFF(muxvisual.help.menu_transition), lang_specific, "Whether one menu briefly fades into the next as you move between screens, rather than changing at once."},
     {"muxvisual", LANG_OFF(muxvisual.help.clock), lang_specific, "Whether the time appears in the header."},
     {"muxvisual", LANG_OFF(muxvisual.help.overlay_image), lang_specific, "An image laid over the frontend, usually to imitate a screen grille or add a border.\n\nThis covers the menus only, not your content."},
     {"muxvisual", LANG_OFF(muxvisual.help.overlay_transparency), lang_specific, "How strongly the frontend overlay shows through.\n\nLower it if the overlay is fighting with what is underneath."},
@@ -4401,27 +4418,42 @@ static int lang_stamp_same(const struct lang_stamp *a, const struct lang_stamp *
     return strcmp(a->path, b->path) == 0 && a->mtime == b->mtime && a->size == b->size;
 }
 
-static char *apply_lang_file(struct mux_lang *lang, const char *path) {
+static void reload_lang_file(lang_file *file, struct mux_lang *lang, const char *path) {
+    free(file->content);
+    free(file->sections);
+    *file = (lang_file) {.indexed = 1};
+    if (!path) return;
     char *content = read_all_char_from(path);
     if (!json_valid(content)) {
         LOG_WARN(mux_module, "Ignoring invalid language file: %s", path);
         free(content);
-        return NULL;
+        return;
     }
 
+    file->content = content;
+    size_t capacity = 0;
     char section[MAX_BUFFER_SIZE];
     const struct json root = json_parse(content);
     for (struct json name = json_first(root); json_exists(name); name = json_next(json_next(name))) {
         const struct json object = json_next(name);
         if (!json_exists(object)) break;
+        if (file->indexed && file->count == capacity) {
+            size_t next = capacity ? capacity * 2 : 32;
+            lang_section *sections = realloc(file->sections, next * sizeof(*sections));
+            if (sections) {
+                file->sections = sections;
+                capacity = next;
+            } else {
+                file->indexed = 0;
+            }
+        }
+        if (file->indexed) file->sections[file->count++] = (lang_section) {name, object};
         if (json_type(object) != JSON_OBJECT) continue;
         if (json_string_copy(name, section, sizeof(section)) >= sizeof(section)) continue;
         if (strcmp(section, "system") == 0) continue;
 
         apply_lang_section(lang, section, object);
     }
-
-    return content;
 }
 
 void load_lang(struct mux_lang *lang) {
@@ -4448,10 +4480,8 @@ void load_lang(struct mux_lang *lang) {
         snprintf((char *) lang + f->offset, MAX_BUFFER_SIZE, "%s", f->default_str);
     }
 
-    free(language_json);
-    free(theme_language_json);
-    language_json = found ? apply_lang_file(lang, path) : NULL;
-    theme_language_json = theme_found ? apply_lang_file(lang, theme_path) : NULL;
+    reload_lang_file(&base_language, lang, found ? path : NULL);
+    reload_lang_file(&theme_language, lang, theme_found ? theme_path : NULL);
     select_translation_section();
 
     lang_loaded_base = base;

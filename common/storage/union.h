@@ -17,6 +17,11 @@ int union_collect(
     int *file_count, int **dir_item_counts
 );
 
+int union_collect_limited(
+    const char *base_dir, char ***dir_names, char ***dir_paths, int *dir_count, char ***file_names, char ***file_paths,
+    int *file_count, int **dir_item_counts, int count_limit
+);
+
 void union_get_roms_root(char *out, size_t out_size);
 
 char *union_get_title_root(char *path, char *out, size_t out_size);

@@ -19737,27 +19737,6 @@
       ]
     },
     {
-      "key": "visual/menutransition",
-      "group": "visual",
-      "type": "int",
-      "default": "1",
-      "min": 0,
-      "max": 1,
-      "label": "Menu Transition",
-      "module": "muxcustom",
-      "help": "Whether one menu briefly fades into the next as you move between screens, rather than changing at once.",
-      "options": [
-        {
-          "value": "0",
-          "label": "Disabled"
-        },
-        {
-          "value": "1",
-          "label": "Enabled"
-        }
-      ]
-    },
-    {
       "key": "visual/mixedcontent",
       "group": "visual",
       "type": "int",
@@ -21362,7 +21341,6 @@
       "settings": {
         "visual/reducemotion": "2",
         "visual/elementtransition": "13",
-        "visual/menutransition": "0",
         "visual/boxarttransition": "13",
         "visual/selectionanimation": "0",
         "visual/blackfade": "0",

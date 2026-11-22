@@ -57,63 +57,85 @@ static const char *path_extension(const char *path, size_t *length) {
     return NULL;
 }
 
-static int path_extension_in(const char *path, const char *const extensions[]) {
-    size_t length = 0;
-    const char *dot = path_extension(path, &length);
-    if (!dot) return 0;
-    for (size_t index = 0; extensions[index]; index++)
-        if (strlen(extensions[index]) == length && strncasecmp(dot, extensions[index], length) == 0) return 1;
+// Each backend's extensions are sorted in case-insensitive lexical order.
+static int extension_in(const char *dot, const size_t length, const char *const extensions[], size_t count) {
+    size_t first = 0;
+    while (first < count) {
+        const size_t mid = first + (count - first) / 2;
+        const char *ext = extensions[mid];
+        const int result = strncasecmp(dot, ext, length);
+        if (!result && !ext[length]) return 1;
+        if (result > 0)
+            first = mid + 1;
+        else
+            count = mid;
+    }
     return 0;
 }
 
-static const char *const sequenced_extensions[] = {".kar", ".mid", ".midi", ".rmi", NULL};
+static const char *const sequenced_extensions[] = {
+    ".kar",
+    ".mid",
+    ".midi",
+    ".rmi",
+};
 
-static const char *const chiptune_extensions[] = {".ay",   ".gbs", ".gym", ".hes", ".kss", ".nsf",
-                                                  ".nsfe", ".sap", ".spc", ".vgm", ".vgz", NULL};
+static const char *const chiptune_extensions[] = {
+    ".ay", ".gbs", ".gym", ".hes", ".kss", ".nsf", ".nsfe", ".sap", ".spc", ".vgm", ".vgz",
+};
 
-static const char *const sid_extensions[] = {".sid", NULL};
+static const char *const sid_extensions[] = {
+    ".sid",
+};
 
 static const char *const game_extensions[] = {
     ".acb", ".acm",  ".aud", ".bcwav", ".bfwav", ".bg00", ".binka", ".bns",  ".bnsf", ".brwav", ".bwav",
     ".dsp", ".genh", ".hps", ".idsp",  ".mca",   ".mic",  ".musc",  ".npsf", ".rwav", ".spsd",  ".swav",
-    ".sxd", ".vas",  ".vgs", ".vig",   ".wavm",  ".wsi",  ".xa",    ".xmu",  ".xwb",  NULL,
+    ".sxd", ".vas",  ".vgs", ".vig",   ".wavm",  ".wsi",  ".xa",    ".xmu",  ".xwb",
 };
 
 static const char *const stream_extensions[] = {
-    ".667",   ".669",  ".amf",  ".ams",  ".c67",  ".cba",    ".dbm",   ".digi",  ".dmf",   ".dsm",    ".dsym", ".dtm",
-    ".etx",   ".far",  ".fc",   ".fc13", ".fc14", ".fmt",    ".fst",   ".ftm",   ".gdm",   ".gmc",    ".gt2",  ".gtk",
-    ".ice",   ".imf",  ".ims",  ".it",   ".j2b",  ".m15",    ".mdl",   ".med",   ".mmcmp", ".mms",    ".mod",  ".mptm",
-    ".mt2",   ".mtm",  ".mus",  ".nst",  ".okt",  ".plm",    ".ppm",   ".psm",   ".pt36",  ".ptm",    ".puma", ".rtm",
-    ".s3m",   ".sfx",  ".sfx2", ".smod", ".st26", ".stk",    ".stm",   ".stp",   ".stx",   ".symmod", ".tcb",  ".ult",
-    ".umx",   ".unic", ".wow",  ".xm",   ".xmf",  ".xpk",    ".3ga",   ".aa3",   ".aac",   ".ac3",    ".adp",  ".ads",
-    ".adts",  ".adx",  ".aea",  ".afc",  ".aif",  ".aifc",   ".aiff",  ".aix",   ".alac",  ".amr",    ".apc",  ".ape",
-    ".ast",   ".at3",  ".at9",  ".au",   ".awb",  ".bcstm",  ".bfstm", ".brstm", ".caf",   ".dsf",    ".dtk",  ".dts",
-    ".dtshd", ".eac3", ".ec3",  ".flac", ".fsb",  ".g723_1", ".g729",  ".hca",   ".ircam", ".latm",   ".loas", ".m2a",
-    ".m4a",   ".m4b",  ".m4r",  ".mka",  ".mlp",  ".mp+",    ".mp1",   ".mp2",   ".mp3",   ".mpa",    ".mpc",  ".mpp",
-    ".msf",   ".nist", ".nsp",  ".oga",  ".ogg",  ".oma",    ".omg",   ".opus",  ".pvf",   ".qcp",    ".qoa",  ".ra",
-    ".rsd",   ".sds",  ".sdx",  ".sf",   ".shn",  ".sln",    ".snd",   ".sox",   ".sph",   ".spx",    ".ss2",  ".svag",
-    ".svs",   ".tak",  ".thd",  ".tta",  ".vag",  ".voc",    ".vpk",   ".w64",   ".wav",   ".wave",   ".weba", ".wma",
-    ".wsd",   ".wv",   ".xmd",  ".xvag", ".xwma", NULL,
+    ".3ga",  ".667",  ".669",  ".aa3",   ".aac",    ".ac3",   ".adp",   ".ads",    ".adts", ".adx",  ".aea",  ".afc",
+    ".aif",  ".aifc", ".aiff", ".aix",   ".alac",   ".amf",   ".amr",   ".ams",    ".apc",  ".ape",  ".ast",  ".at3",
+    ".at9",  ".au",   ".awb",  ".bcstm", ".bfstm",  ".brstm", ".c67",   ".caf",    ".cba",  ".dbm",  ".digi", ".dmf",
+    ".dsf",  ".dsm",  ".dsym", ".dtk",   ".dtm",    ".dts",   ".dtshd", ".eac3",   ".ec3",  ".etx",  ".far",  ".fc",
+    ".fc13", ".fc14", ".flac", ".fmt",   ".fsb",    ".fst",   ".ftm",   ".g723_1", ".g729", ".gdm",  ".gmc",  ".gt2",
+    ".gtk",  ".hca",  ".ice",  ".imf",   ".ims",    ".ircam", ".it",    ".j2b",    ".latm", ".loas", ".m15",  ".m2a",
+    ".m4a",  ".m4b",  ".m4r",  ".mdl",   ".med",    ".mka",   ".mlp",   ".mmcmp",  ".mms",  ".mod",  ".mp+",  ".mp1",
+    ".mp2",  ".mp3",  ".mpa",  ".mpc",   ".mpp",    ".mptm",  ".msf",   ".mt2",    ".mtm",  ".mus",  ".nist", ".nsp",
+    ".nst",  ".oga",  ".ogg",  ".okt",   ".oma",    ".omg",   ".opus",  ".plm",    ".ppm",  ".psm",  ".pt36", ".ptm",
+    ".puma", ".pvf",  ".qcp",  ".qoa",   ".ra",     ".rsd",   ".rtm",   ".s3m",    ".sds",  ".sdx",  ".sf",   ".sfx",
+    ".sfx2", ".shn",  ".sln",  ".smod",  ".snd",    ".sox",   ".sph",   ".spx",    ".ss2",  ".st26", ".stk",  ".stm",
+    ".stp",  ".stx",  ".svag", ".svs",   ".symmod", ".tak",   ".tcb",   ".thd",    ".tta",  ".ult",  ".umx",  ".unic",
+    ".vag",  ".voc",  ".vpk",  ".w64",   ".wav",    ".wave",  ".weba",  ".wma",    ".wow",  ".wsd",  ".wv",   ".xm",
+    ".xmd",  ".xmf",  ".xpk",  ".xvag",  ".xwma",
 };
 
 content_audio_backend content_path_audio_backend(const char *path) {
     static const struct {
         content_audio_backend backend;
         const char *const *extensions;
+        size_t count;
     } backends[] = {
-        {content_audio_sequenced, sequenced_extensions},
-        {content_audio_chiptune, chiptune_extensions},
-        {content_audio_sid, sid_extensions},
-        {content_audio_game, game_extensions},
-        {content_audio_stream, stream_extensions},
+        {content_audio_sequenced, sequenced_extensions, A_SIZE(sequenced_extensions)},
+        {content_audio_chiptune, chiptune_extensions, A_SIZE(chiptune_extensions)},
+        {content_audio_sid, sid_extensions, A_SIZE(sid_extensions)},
+        {content_audio_game, game_extensions, A_SIZE(game_extensions)},
+        {content_audio_stream, stream_extensions, A_SIZE(stream_extensions)},
     };
+    size_t length = 0;
+    const char *dot = path_extension(path, &length);
+    if (!dot) return content_audio_none;
     for (size_t index = 0; index < A_SIZE(backends); index++)
-        if (path_extension_in(path, backends[index].extensions)) return backends[index].backend;
+        if (extension_in(dot, length, backends[index].extensions, backends[index].count))
+            return backends[index].backend;
     return content_audio_none;
 }
 
 int content_path_is_sequenced(const char *path) {
-    return content_path_audio_backend(path) == content_audio_sequenced;
+    size_t length = 0;
+    const char *dot = path_extension(path, &length);
+    return dot && extension_in(dot, length, sequenced_extensions, A_SIZE(sequenced_extensions));
 }
 
 int content_path_is_audio(const char *path) {
@@ -145,8 +167,12 @@ static void path_set_build(path_set_t *s, char **items, const int count) {
     }
 }
 
-static int path_set_contains(const path_set_t *s, const char *path) {
-    if (!s->slots) return 0;
+static int path_set_contains(const path_set_t *s, const char *path, char **paths, const int count) {
+    if (!s->slots) {
+        for (int i = 0; i < count; i++)
+            if (strcasecmp(paths[i], path) == 0) return 1;
+        return 0;
+    }
 
     int h = (int) (path_hash(path) & (uint32_t) (s->cap - 1));
     while (s->slots[h]) {
@@ -376,16 +402,16 @@ void populate_collection_items(void) {
 }
 
 int history_set_contains(const char *path) {
-    return path_set_contains(&history_set, path);
+    return path_set_contains(&history_set, path, history_items, history_item_count);
 }
 
 int collection_set_contains(const char *path) {
-    return path_set_contains(&collection_set, path);
+    return path_set_contains(&collection_set, path, collection_items, collection_item_count);
 }
 
 char *get_content_explorer_glyph_name(const char *file_path) {
-    if (config.visual.content_collect == 0 && path_set_contains(&collection_set, file_path)) return "collection";
-    if (config.visual.content_history == 0 && path_set_contains(&history_set, file_path)) return "history";
+    if (config.visual.content_collect == 0 && collection_set_contains(file_path)) return "collection";
+    if (config.visual.content_history == 0 && history_set_contains(file_path)) return "history";
 
     return "rom";
 }

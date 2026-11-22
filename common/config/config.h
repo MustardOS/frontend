@@ -559,7 +559,6 @@ struct mux_config {
         int16_t network;
         int16_t header_title;
         int16_t element_transition;
-        int16_t menu_transition;
         int16_t bluetooth;
         int16_t clock;
         int16_t sort_order;
