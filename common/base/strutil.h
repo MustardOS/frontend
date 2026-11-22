@@ -15,6 +15,14 @@ void load_skip_patterns(void);
 
 int should_skip(const char *name, int is_dir);
 
+struct str_sort_cache;
+
+struct str_sort_cache *str_sort_cache_create(size_t count);
+
+void str_sort_cache_free(struct str_sort_cache *cache);
+
+int str_compare_cached(const char *a, const char *b, struct str_sort_cache *cache);
+
 int str_compare(const void *a, const void *b);
 
 int str_startswith(const char *a, const char *b);

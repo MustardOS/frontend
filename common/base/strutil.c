@@ -115,10 +115,106 @@ static int ascii_run_compare(const char *a, const size_t a_len, const char *b, c
     return (int) a_len - (int) b_len;
 }
 
+struct text_key {
+    const char *text;
+    size_t length;
+    mjb_result key;
+    struct text_key *next;
+};
+
+struct str_sort_cache {
+    size_t count;
+    struct text_key *buckets[];
+};
+
+struct str_sort_cache *str_sort_cache_create(const size_t count) {
+    if (!count || count > (SIZE_MAX - sizeof(struct str_sort_cache)) / sizeof(struct text_key *)) return NULL;
+    struct str_sort_cache *cache = calloc(1, sizeof(*cache) + count * sizeof(*cache->buckets));
+    if (cache) cache->count = count;
+    return cache;
+}
+
+void str_sort_cache_free(struct str_sort_cache *cache) {
+    if (!cache) return;
+    for (size_t i = 0; i < cache->count; i++) {
+        struct text_key *entry = cache->buckets[i];
+        while (entry) {
+            struct text_key *next = entry->next;
+            mjb_result_free(&entry->key);
+            free(entry);
+            entry = next;
+        }
+    }
+    free(cache);
+}
+
+static const mjb_result *cached_text_key(struct str_sort_cache *cache, const char *text, const size_t length) {
+    const size_t bucket = (((uintptr_t) text >> 3) ^ length) % cache->count;
+    for (struct text_key *entry = cache->buckets[bucket]; entry; entry = entry->next)
+        if (entry->text == text && entry->length == length) return &entry->key;
+
+    char folded[MAX_BUFFER_SIZE];
+    size_t size = sizeof(folded);
+    if (mjb_map_case_into(text, length, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded, &size)
+        != MJB_STATUS_OK) return NULL;
+
+    struct text_key *entry = calloc(1, sizeof(*entry));
+    if (!entry) return NULL;
+    if (mjb_collation_key(folded, size, MJB_ENC_UTF_8, MJB_COLLATION_SHIFTED, MJB_COLLATION_TERTIARY, &entry->key)
+        != MJB_STATUS_OK) {
+        free(entry);
+        return NULL;
+    }
+
+    entry->text = text;
+    entry->length = length;
+    entry->next = cache->buckets[bucket];
+    cache->buckets[bucket] = entry;
+    return &entry->key;
+}
+
+static int simple_collation_run(const char *text, size_t length) {
+    if (length >= MAX_BUFFER_SIZE) return 0;
+    for (size_t i = 0; i < length; i++) {
+        const unsigned char c = text[i];
+        if (c < ' ' || c > '~' || c == '$') return 0;
+    }
+    return 1;
+}
+
+static int next_ascii_weight(const char **text, const char *end) {
+    while (*text < end) {
+        const char c = *(*text)++;
+        if (c >= 'A' && c <= 'Z') return c + ('a' - 'A');
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) return c;
+    }
+    return 0;
+}
+
 // Unicode-aware, case-insensitive comparison of a run of non-digit text, so accented Latin,
 // Cyrillic, CJK, etc. sort in proper collation order rather than raw byte order.
-static int text_run_compare(const char *a, const size_t a_len, const char *b, const size_t b_len) {
-    if (a_len == 0 && b_len == 0) return 0;
+static int text_run_compare(const char *a, const size_t a_len, const char *b, const size_t b_len,
+                            struct str_sort_cache *cache) {
+    if (a_len == b_len && memcmp(a, b, a_len) == 0) return 0;
+    if (simple_collation_run(a, a_len) && simple_collation_run(b, b_len)) {
+        const char *left = a, *right = b;
+        int x, y;
+        do {
+            x = next_ascii_weight(&left, a + a_len);
+            y = next_ascii_weight(&right, b + b_len);
+        } while (x && x == y);
+        return (x > y) - (x < y);
+    }
+    if (cache) {
+        const mjb_result *left = cached_text_key(cache, a, a_len);
+        const mjb_result *right = cached_text_key(cache, b, b_len);
+        if (left && right) {
+            const size_t common = left->output_size < right->output_size ? left->output_size : right->output_size;
+            const int cmp = common ? memcmp(left->output, right->output, common) : 0;
+            if (cmp) return cmp < 0 ? -1 : 1;
+            return (left->output_size > right->output_size) - (left->output_size < right->output_size);
+        }
+    }
 
     char folded_a[MAX_BUFFER_SIZE];
     char folded_b[MAX_BUFFER_SIZE];
@@ -244,9 +340,7 @@ static const char *natural_name_end(const char *text) {
     return end;
 }
 
-int str_compare(const void *a, const void *b) {
-    const char *str1 = *(const char **) a;
-    const char *str2 = *(const char **) b;
+int str_compare_cached(const char *str1, const char *str2, struct str_sort_cache *cache) {
     const char *start1 = str1;
     const char *start2 = str2;
     const char *end1 = natural_name_end(str1);
@@ -281,13 +375,17 @@ int str_compare(const void *a, const void *b) {
             str2++;
         }
 
-        const int order = text_run_compare(run1, (size_t) (str1 - run1), run2, (size_t) (str2 - run2));
+        const int order = text_run_compare(run1, (size_t) (str1 - run1), run2, (size_t) (str2 - run2), cache);
         if (order != 0) return order;
     }
 
     if (str1 < end1) return 1;
     if (str2 < end2) return -1;
-    return text_run_compare(start1, strlen(start1), start2, strlen(start2));
+    return text_run_compare(start1, strlen(start1), start2, strlen(start2), cache);
+}
+
+int str_compare(const void *a, const void *b) {
+    return str_compare_cached(*(const char *const *) a, *(const char *const *) b, NULL);
 }
 
 char *str_nonew(char *text) {

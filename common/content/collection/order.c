@@ -383,7 +383,8 @@ static int compare_missing(const long a, const long b) {
     return 0;
 }
 
-static int compare_rule(const content_item *a, const content_item *b, const order_method method, const int variant) {
+static int compare_rule(const content_item *a, const content_item *b, const order_method method, const int variant,
+                        struct str_sort_cache *cache) {
     const char *name_a = a->sort_name ? a->sort_name : "";
     const char *name_b = b->sort_name ? b->sort_name : "";
 
@@ -407,7 +408,7 @@ static int compare_rule(const content_item *a, const content_item *b, const orde
         case order_feeling_lucky:
             switch (variant) {
                 case 1:
-                    return -str_compare(&name_a, &name_b);
+                    return -str_compare_cached(name_a, name_b, cache);
                 case 2:
                     return compare_size(a->order.vowels, b->order.vowels, 0);
                 case 3:
@@ -423,7 +424,7 @@ static int compare_rule(const content_item *a, const content_item *b, const orde
                     return a->order.shuffle < b->order.shuffle ? -1 : 1;
             }
         case order_natural: {
-            const int result = str_compare(&name_a, &name_b);
+            const int result = str_compare_cached(name_a, name_b, cache);
             return variant == 0 ? result : -result;
         }
         case order_count:
@@ -432,7 +433,7 @@ static int compare_rule(const content_item *a, const content_item *b, const orde
     }
 }
 
-static int order_compare(const void *a, const void *b) {
+static int order_compare(const void *a, const void *b, void *cache) {
     const content_item *item_a = a;
     const content_item *item_b = b;
 
@@ -441,17 +442,19 @@ static int order_compare(const void *a, const void *b) {
 
     if (item_a->sort_bucket != item_b->sort_bucket) return item_b->sort_bucket - item_a->sort_bucket;
 
-    const int result = compare_rule(item_a, item_b, order_active, order_variants[order_active]);
-    if (result != 0) return result;
+    const int result = compare_rule(item_a, item_b, order_active, order_variants[order_active], cache);
+    if (result != 0 || order_active == order_natural) return result;
 
     const char *name_a = item_a->sort_name ? item_a->sort_name : "";
     const char *name_b = item_b->sort_name ? item_b->sort_name : "";
 
-    return str_compare(&name_a, &name_b);
+    return str_compare_cached(name_a, name_b, cache);
 }
 
 void order_apply(content_item *content_items, const size_t count) {
     if (!content_items || count < 2U) return;
 
-    qsort(content_items, count, sizeof(content_item), order_compare);
+    struct str_sort_cache *cache = str_sort_cache_create(count);
+    qsort_r(content_items, count, sizeof(content_item), order_compare, cache);
+    str_sort_cache_free(cache);
 }
