@@ -487,6 +487,7 @@
 
 #define POWER_ELEMENTS                                                                                                 \
     POWER(shutdown, "shutdown")                                                                                        \
+    POWER(sleep_mode, "sleep_mode")                                                                                    \
     POWER(battery, "battery")                                                                                          \
     POWER(idle_sleep, "idle_sleep")                                                                                    \
     POWER(idle_display, "idle_display")                                                                                \

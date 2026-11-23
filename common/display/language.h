@@ -2262,11 +2262,18 @@ struct mux_lang {
             char t30_m[MAX_BUFFER_SIZE];
         } sleep;
         struct {
+            char title[MAX_BUFFER_SIZE];
+            char kernel[MAX_BUFFER_SIZE];
+            char userspace[MAX_BUFFER_SIZE];
+            char warn_desc[MAX_BUFFER_SIZE];
+        } sleep_mode;
+        struct {
             char dflt[MAX_BUFFER_SIZE];
             char idle[MAX_BUFFER_SIZE];
         } gov;
         struct {
             char shutdown[MAX_BUFFER_SIZE];
+            char sleep_mode[MAX_BUFFER_SIZE];
             char battery[MAX_BUFFER_SIZE];
             char idle_sleep[MAX_BUFFER_SIZE];
             char idle_display[MAX_BUFFER_SIZE];

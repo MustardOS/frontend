@@ -10,7 +10,13 @@ static mux_dialogue wr_dlg;
 
 static mux_dialogue sleep_dlg;
 
+static mux_dialogue sleep_mode_dlg;
+
 static int options_pending;
+
+static int sleep_mode_warn_pending;
+
+#define SLEEP_MODE_USERSPACE 1
 
 #define POWER(NAME, UDATA) 1,
 enum { ui_count_dynamic = E_SIZE(POWER_ELEMENTS) };
@@ -157,6 +163,7 @@ static void restore_power_options(void) {
     int16_t *config_values[2] = {&config.settings.power.idle.display, &config.settings.power.idle.sleep};
 
     map_drop_down_to_index(ui_dro_shutdown_power, config.settings.power.shutdown, shutdown_values, SHUTDOWN_COUNT, 0);
+    lv_dropdown_set_selected(ui_dro_sleep_mode_power, config.settings.power.sleep_mode);
 
     lv_dropdown_set_selected(ui_dro_battery_power, int_to_pct(config.settings.power.low_battery, 0, 100));
     lv_dropdown_set_selected(ui_dro_idle_mute_power, config.settings.power.idle.mute);
@@ -198,6 +205,15 @@ static void restore_power_options(void) {
     check_focus();
 }
 
+static void open_sleep_mode_warning(void) {
+    dialogue_init_accept(
+        &sleep_mode_dlg, &theme, ui_screen, lang.muxpower.sleep.warn_title, lang.muxpower.sleep_mode.warn_desc,
+        lang.generic.confirm
+    );
+    dialogue_open(&sleep_mode_dlg, &theme);
+    msgbox_active = 1;
+}
+
 static int save_power_options(void) {
     const int idx_idle_display =
         map_drop_down_to_value(lv_dropdown_get_selected(ui_dro_idle_display_power), idle_values, IDLE_COUNT, 0);
@@ -223,6 +239,11 @@ static int save_power_options(void) {
         is_modified++;
         if (!write_text_to_file_atomic(CONF_CONFIG_PATH "settings/power/shutdown", INT, idx_shutdown)) save_failed++;
     }
+
+    const int sleep_mode_changed = lv_dropdown_get_selected(ui_dro_sleep_mode_power) != sleep_mode_original;
+    CHECK_AND_SAVE_STD(power, sleep_mode, "settings/power/sleep_mode", INT, 0);
+    const int sleep_mode_warn =
+        sleep_mode_changed && lv_dropdown_get_selected(ui_dro_sleep_mode_power) == SLEEP_MODE_USERSPACE;
 
     const int idx_battery = pct_to_int(lv_dropdown_get_selected(ui_dro_battery_power), 0, 100);
     if (lv_dropdown_get_selected(ui_dro_battery_power) != battery_original) {
@@ -292,6 +313,7 @@ static int save_power_options(void) {
     REPORT_SAVE_FAILURE();
 
     if (idx_shutdown == -1 && lv_dropdown_get_selected(ui_dro_shutdown_power) != shutdown_original && !save_failed) {
+        sleep_mode_warn_pending = sleep_mode_warn;
         dialogue_init_accept(
             &sleep_dlg, &theme, ui_screen, lang.muxpower.sleep.warn_title, lang.muxpower.sleep.warn_desc,
             lang.generic.confirm
@@ -299,6 +321,11 @@ static int save_power_options(void) {
         dialogue_open(&sleep_dlg, &theme);
         msgbox_active = 1;
 
+        return 0;
+    }
+
+    if (sleep_mode_warn && !save_failed) {
+        open_sleep_mode_warning();
         return 0;
     }
 
@@ -331,6 +358,8 @@ static void init_navigation_group(void) {
                            lang.muxpower.sleep.t10_s, lang.muxpower.sleep.t30_s,   lang.muxpower.sleep.t60_s,
                            lang.muxpower.sleep.t2_m,  lang.muxpower.sleep.t5_m,    lang.muxpower.sleep.t10_m,
                            lang.muxpower.sleep.t15_m, lang.muxpower.sleep.t30_m};
+
+    char *sleep_mode[] = {lang.muxpower.sleep_mode.kernel, lang.muxpower.sleep_mode.userspace};
 
     char *idle_timer[] = {lang.generic.disabled,    lang.muxpower.idle.t10_s, lang.muxpower.idle.t30_s,
                           lang.muxpower.idle.t60_s, lang.muxpower.idle.t2_m,  lang.muxpower.idle.t5_m,
@@ -370,6 +399,7 @@ static void init_navigation_group(void) {
         gov_labels[i] = (char *) cpu_profile_label(i);
 
     INIT_OPTION_ITEM(-1, power, shutdown, lang.muxpower.sleep.title, "shutdown", sleep_timer, SHUTDOWN_COUNT);
+    INIT_OPTION_ITEM(-1, power, sleep_mode, lang.muxpower.sleep_mode.title, "sleep_mode", sleep_mode, 2);
     INIT_OPTION_ITEM(-1, power, battery, lang.muxpower.low_battery, "battery", NULL, 0);
     INIT_OPTION_ITEM(-1, power, idle_sleep, lang.muxpower.idle.sleep, "idle_sleep", idle_timer, IDLE_COUNT);
     INIT_OPTION_ITEM(-1, power, idle_display, lang.muxpower.idle.display, "idle_display", idle_timer, IDLE_COUNT);
@@ -431,11 +461,18 @@ static void handle_option_next(void) {
 }
 
 static void handle_a(void) {
-    if (dialogue_active(&sleep_dlg)) {
-        dialogue_mark_silent(&sleep_dlg);
-        dialogue_dismiss(&sleep_dlg);
+    if (dialogue_active(&sleep_dlg) || dialogue_active(&sleep_mode_dlg)) {
+        mux_dialogue *dialogue = dialogue_active(&sleep_dlg) ? &sleep_dlg : &sleep_mode_dlg;
+        dialogue_mark_silent(dialogue);
+        dialogue_dismiss(dialogue);
         play_sound(snd_back);
         msgbox_active = 0;
+
+        if (sleep_mode_warn_pending) {
+            sleep_mode_warn_pending = 0;
+            open_sleep_mode_warning();
+            return;
+        }
 
         if (options_pending) {
             options_pending = 0;
@@ -463,7 +500,7 @@ static void handle_a(void) {
 
         if (opt == mux_unsaved_save) {
             if (!save_power_options()) {
-                if (!dialogue_active(&sleep_dlg)) options_pending = 0;
+                if (!dialogue_active(&sleep_dlg) && !dialogue_active(&sleep_mode_dlg)) options_pending = 0;
                 return;
             }
         }
@@ -493,7 +530,7 @@ static void handle_b(void) {
         return;
     }
 
-    if (dialogue_active(&wr_dlg) || dialogue_active(&sleep_dlg)) return;
+    if (dialogue_active(&wr_dlg) || dialogue_active(&sleep_dlg) || dialogue_active(&sleep_mode_dlg)) return;
 
     if (msgbox_active) {
         handle_msgbox_dismiss();

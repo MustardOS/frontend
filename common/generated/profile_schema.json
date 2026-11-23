@@ -14933,6 +14933,27 @@
       "help": "What a short press of the power button does, whether that is sleeping, shutting down, or nothing at all.\n\nHolding the button down shuts the device off regardless."
     },
     {
+      "key": "settings/power/sleep_mode",
+      "group": "power",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 1,
+      "label": "Sleep Mode",
+      "module": "muxpower",
+      "help": "How the device sleeps when the power button is pressed, the lid is closed, or the idle timer runs out.\n\nKernel puts the whole system to sleep and uses the least battery. Userspace keeps it partly awake and drains the battery much faster, so only use it if the device does not wake properly from Kernel sleep.",
+      "options": [
+        {
+          "value": "0",
+          "label": "Kernel"
+        },
+        {
+          "value": "1",
+          "label": "Userspace"
+        }
+      ]
+    },
+    {
       "key": "settings/saver/blockfall_colour",
       "group": "saver",
       "type": "int",

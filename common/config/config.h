@@ -456,6 +456,7 @@ struct mux_config {
         struct {
             int16_t low_battery;
             int16_t shutdown;
+            int16_t sleep_mode;
             int16_t saver_type;
             int16_t saver_speed;
             struct {
