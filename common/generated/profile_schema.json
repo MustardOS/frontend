@@ -1042,9 +1042,9 @@
       "default": "0",
       "min": 0,
       "max": 1,
-      "label": "RetroArch Startup Cache",
+      "label": "Startup Cache",
       "module": "muxtweakadv",
-      "help": "Prepares part of RetroArch while the device starts so it opens faster the first time you use it.\n\nThis adds roughly three seconds to boot in exchange for a quicker first launch. Worth it if you play through RetroArch often, less so if you rarely do.",
+      "help": "Reads Pickles, RetroArch and their libraries into memory in the background after the device starts, so the first content you open loads faster.\n\nIt runs after the frontend appears and at low priority, but it does keep the storage busy for a few seconds after boot. Worth it if you open content soon after starting the device.",
       "options": [
         {
           "value": "0",
@@ -1063,9 +1063,9 @@
       "default": "0",
       "min": 0,
       "max": 1,
-      "label": "RetroArch Network Wait",
+      "label": "Network Wait",
       "module": "muxtweakadv",
-      "help": "Holds RetroArch back until the device has joined a network.\n\nOnly worth having on if you rely on netplay or other online features the moment content opens. It adds a wait to every launch, so leave it off otherwise.",
+      "help": "When the device resumes content at boot, holds it back until the device has joined a network.\n\nOnly worth having on if you rely on achievements, netplay or other online features the moment content opens. It adds a wait to every resume, so leave it off otherwise.",
       "options": [
         {
           "value": "0",

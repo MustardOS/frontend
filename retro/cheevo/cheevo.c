@@ -35,6 +35,7 @@
 #include "cheevo.h"
 #include "spool.h"
 #include "../state/vfs.h"
+#include "../state/content_hash.h"
 #include <rc_client.h>
 #include <rc_error.h>
 #include <rc_hash.h>
@@ -49,6 +50,7 @@
 #define CHEEVO_LEADERBOARD_CAP       10
 #define CHEEVO_MEMORY_DESCRIPTOR_CAP 256
 #define CHEEVO_MEMORY_WAIT_FRAMES    120
+#define CHEEVO_HASH_WAIT_MS          8000
 #define CHEEVO_UNLOCK_TOAST_MS       3192
 #define CHEEVO_FRAME_COMPLETIONS     1
 #define CHEEVO_STARTUP_COMPLETIONS   4
@@ -164,6 +166,8 @@ static int token_login_pending;
 static int memory_available;
 static int memory_initialisation_deferred;
 static int memory_wait_frames;
+static uint32_t hash_wait_until;
+static int hash_load_active;
 static rc_client_async_handle_t *leaderboard_fetch_handle;
 static rc_client_async_handle_t *media_change_handle;
 static cheevo_leaderboard_state leaderboard_state;
@@ -176,6 +180,7 @@ static uint32_t leaderboard_id;
 
 static void leaderboard_reset(void);
 static void begin_game(void);
+static void game_loaded(int result, const char *error, rc_client_t *unused, void *userdata);
 
 static int text_safe(const char *value) {
     return value && !strchr(value, '\n') && !strchr(value, '\r');
@@ -825,9 +830,61 @@ read_memory(const uint32_t address, uint8_t *buffer, const uint32_t bytes, rc_cl
     return rc_libretro_memory_read(&memory_regions, address, buffer, bytes);
 }
 
+static int content_data_usable(void);
+
+static int cached_hash_valid(const char *hash) {
+    if (!hash || strlen(hash) != 32) return 0;
+    for (int i = 0; i < 32; i++)
+        if (!((hash[i] >= '0' && hash[i] <= '9') || (hash[i] >= 'a' && hash[i] <= 'f'))) return 0;
+    return 1;
+}
+
+static void identify_by_content(void) {
+    hash_wait_until = 0;
+    hash_load_active = 0;
+    rc_client_begin_identify_and_load_game(
+        client, RC_CONSOLE_UNKNOWN, content_file, content_data_usable() ? content_data : NULL,
+        content_data_usable() ? content_data_size : 0, game_loaded, NULL
+    );
+}
+
+static void identify_start(void) {
+    if (content_data) {
+        identify_by_content();
+        return;
+    }
+
+    if (!content_hash_is_ready(content_hash_cheevo)) {
+        const uint32_t now = SDL_GetTicks();
+        if (!hash_wait_until) hash_wait_until = (now + CHEEVO_HASH_WAIT_MS) | 1U;
+        if ((int32_t) (now - hash_wait_until) < 0) return;
+
+        LOG_WARN(mux_module, "cheevo: content hash was not ready in time, hashing the content now");
+        identify_by_content();
+        return;
+    }
+
+    const char *hash = content_hash_get(content_hash_cheevo);
+    if (!cached_hash_valid(hash)) {
+        identify_by_content();
+        return;
+    }
+
+    hash_wait_until = 0;
+    hash_load_active = 1;
+    rc_client_begin_load_game(client, hash, game_loaded, NULL);
+}
+
 static void game_loaded(const int result, const char *error, rc_client_t *unused, void *userdata) {
     (void) unused;
     (void) userdata;
+    if (result == RC_NO_GAME_LOADED && hash_load_active) {
+        LOG_INFO(mux_module, "cheevo: cached content hash was not recognised, identifying from the content");
+        rc_client_unload_game(client);
+        identify_by_content();
+        return;
+    }
+    hash_load_active = 0;
     has_entries_cache = -1;
     cache_refresh_pending = 0;
     if (result != RC_OK) {
@@ -903,11 +960,9 @@ static void begin_game_now(void) {
     memory_available = 0;
     memory_initialisation_deferred = 0;
     memory_wait_frames = 0;
+    hash_wait_until = 0;
     status = cheevo_status_identifying;
-    rc_client_begin_identify_and_load_game(
-        client, RC_CONSOLE_UNKNOWN, content_file, content_data_usable() ? content_data : NULL,
-        content_data_usable() ? content_data_size : 0, game_loaded, NULL
-    );
+    identify_start();
 }
 
 static void begin_game(void) {
@@ -1218,6 +1273,8 @@ static void runtime_stop(void) {
     spool_retry_count = 0;
     recovery_clear();
     token_login_pending = 0;
+    hash_wait_until = 0;
+    hash_load_active = 0;
     if (client && media_change_handle) rc_client_abort_async(client, media_change_handle);
     media_change_handle = NULL;
     leaderboard_reset();
@@ -1244,6 +1301,8 @@ int cheevo_init(const char *content_path) {
     spool_retry_count = 0;
     recovery_clear();
     token_login_pending = 0;
+    hash_wait_until = 0;
+    hash_load_active = 0;
     failure[0] = '\0';
     snprintf(content_file, sizeof(content_file), "%s", content_path ? content_path : "");
     status = enabled ? cheevo_status_signed_out : cheevo_status_disabled;
@@ -1436,6 +1495,7 @@ static void memory_wait_tick(void) {
 void cheevo_do_frame(void) {
     if (!client || netplay_active) return;
 
+    if (hash_wait_until) identify_start();
     memory_wait_tick();
     recovery_tick();
 
@@ -1453,8 +1513,8 @@ void cheevo_do_frame(void) {
 
 int cheevo_needs_frame(void) {
     if (!client || netplay_active) return 0;
-    return memory_wait_frames > 0 || recovery_action != cheevo_recovery_none || status == cheevo_status_active
-           || status == cheevo_status_offline;
+    return memory_wait_frames > 0 || hash_wait_until || recovery_action != cheevo_recovery_none
+           || status == cheevo_status_active || status == cheevo_status_offline;
 }
 
 void cheevo_idle(void) {

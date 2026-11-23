@@ -30,6 +30,7 @@ static int option_selected;
 
 static int folder_mode;
 static int folder_source;
+static int folder_theme_grid;
 
 static char schemes[SCHEME_LIMIT][MAX_BUFFER_SIZE];
 static int scheme_total;
@@ -82,18 +83,55 @@ static void load_schemes(void) {
     }
 }
 
-static void build_rows(void) {
-    row_total = 0;
-    if (folder_mode) {
-        row_ids[row_total++] = ROW_COLOUR;
-        row_ids[row_total++] = ROW_SOURCE;
-    }
+static int option_visible(const int field, const int style) {
+    const int strip = field == content_field_strip_columns || field == content_field_strip_size;
+    if (!folder_mode) return !strip || adjust_screen != content_layout_history;
 
-    for (int i = 0; i < content_field_count; i++) {
-        const int strip = i == content_field_strip_columns || i == content_field_strip_size;
-        if (strip && adjust_screen == content_layout_history) continue;
-        row_ids[row_total++] = i;
+    const int mixed = style == content_style_grid_list || style == content_style_carousel_list;
+    const int grid =
+        style == content_style_grid || style == content_style_carousel || style == content_style_carousel_vertical;
+    if (strip) return mixed;
+    switch (field) {
+        case content_field_columns:
+        case content_field_size:
+        case content_field_side:
+        case content_field_offset_x:
+        case content_field_offset_y:
+            return grid;
+        case content_field_rows:
+            return style == content_style_grid;
+        case content_field_names:
+            return grid || mixed;
+        case content_field_count_items:
+        case content_field_spacing:
+            return !grid && (style != content_style_theme || !grid_mode_enabled);
+        default:
+            return 1;
     }
+}
+
+static void build_rows(void) {
+    static int previous_style;
+    static int previous_grid;
+    const int style = current_layout()->style;
+    if (row_total && previous_style == style && previous_grid == grid_mode_enabled) return;
+    previous_style = style;
+    previous_grid = grid_mode_enabled;
+
+    const int selected = row_total ? row_ids[option_selected] : (folder_mode ? ROW_COLOUR : content_field_style);
+    row_total = 0;
+    option_selected = 0;
+    for (int field = folder_mode ? ROW_COLOUR : content_field_style; field < content_field_count; field++) {
+        lv_obj_t *row = panel_rows[field - ROW_COLOUR];
+        if (!option_visible(field, style)) {
+            lv_obj_add_flag(row, LV_OBJ_FLAG_HIDDEN);
+            continue;
+        }
+        lv_obj_clear_flag(row, LV_OBJ_FLAG_HIDDEN);
+        if (field == selected) option_selected = row_total;
+        row_ids[row_total++] = field;
+    }
+    lv_obj_set_height(panel_list, (lv_coord_t) (LV_MIN(row_total, PANEL_VISIBLE) * row_height));
 }
 
 static const char *option_name(const int option) {
@@ -188,6 +226,9 @@ static void folder_samples(void) {
     int files = 0;
 
     union_collect(adjust_folder, &dir_names, &dir_paths, &dirs, &file_names, &file_paths, &files, NULL);
+
+    folder_theme_grid =
+        !disable_grid_file_exists(adjust_folder) && (files ? config.visual.grid_mode_content : dirs > 0);
 
     const char *folder_file = config.visual.friendly_folder ? resolve_info_path("name/folder.json") : NULL;
     char *folder_json = folder_file ? read_all_char_from(folder_file) : NULL;
@@ -315,7 +356,10 @@ static void sample_build(void) {
     grid_mode_enabled = 0;
     ui_count_static = sample_count;
 
-    if (theme.grid.enabled && (config.visual.grid_mode_content || content_layout_grid_forced(&config))) {
+    const int use_grid = folder_mode && current_layout()->style == content_style_theme
+                             ? folder_theme_grid
+                             : config.visual.grid_mode_content || content_layout_grid_forced(&config);
+    if (theme.grid.enabled && use_grid) {
         lv_obj_add_flag(ui_pnl_content, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnl_grid, LV_OBJ_FLAG_HIDDEN);
         init_grid_static(sample_count, sample_labels, sample_labels, sample_glyphs);
@@ -395,19 +439,21 @@ static int panel_shown(void) {
 }
 
 static void panel_paint(void) {
+    build_rows();
     for (int i = 0; i < row_total; i++) {
+        const int slot = row_ids[i] - ROW_COLOUR;
         const int selected = i == option_selected;
 
         char value[MAX_BUFFER_SIZE];
         option_text(value, sizeof(value), row_ids[i]);
-        lv_label_set_text(panel_values[i], value);
+        lv_label_set_text(panel_values[slot], value);
 
         lv_obj_set_style_bg_opa(
-            panel_rows[i], selected ? (lv_opa_t) theme.dialogue.selection_alpha : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT
+            panel_rows[slot], selected ? (lv_opa_t) theme.dialogue.selection_alpha : LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT
         );
 
         const lv_color_t text = lv_color_hex(selected ? theme.dialogue.option : theme.dialogue.content);
-        lv_obj_t *labels[] = {lv_obj_get_child(panel_rows[i], 0), panel_values[i]};
+        lv_obj_t *labels[] = {lv_obj_get_child(panel_rows[slot], 0), panel_values[slot]};
         for (size_t j = 0; j < A_SIZE(labels); j++) {
             lv_obj_set_style_text_color(labels[j], text, MU_OBJ_MAIN_DEFAULT);
             if (selected) {
@@ -434,8 +480,10 @@ static void panel_colours(void) {
     lv_obj_set_style_border_color(panel_heading, lv_color_hex(theme.dialogue.border), MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_style_border_opa(panel_heading, (lv_opa_t) theme.dialogue.border_alpha, MU_OBJ_MAIN_DEFAULT);
 
-    for (int i = 0; i < row_total; i++)
-        lv_obj_set_style_bg_color(panel_rows[i], lv_color_hex(theme.dialogue.selection), MU_OBJ_MAIN_DEFAULT);
+    for (int field = folder_mode ? ROW_COLOUR : content_field_style; field < content_field_count; field++)
+        lv_obj_set_style_bg_color(
+            panel_rows[field - ROW_COLOUR], lv_color_hex(theme.dialogue.selection), MU_OBJ_MAIN_DEFAULT
+        );
 }
 
 static void panel_create(void) {
@@ -480,12 +528,12 @@ static void panel_create(void) {
     panel_list = lv_obj_create(panel);
     lv_obj_remove_style_all(panel_list);
     lv_obj_set_width(panel_list, LV_PCT(100));
-    lv_obj_set_height(panel_list, (lv_coord_t) (LV_MIN(row_total, PANEL_VISIBLE) * row_height));
     lv_obj_set_flex_flow(panel_list, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(panel_list, 2, MU_OBJ_MAIN_DEFAULT);
     lv_obj_set_scrollbar_mode(panel_list, LV_SCROLLBAR_MODE_OFF);
 
-    for (int i = 0; i < row_total; i++) {
+    for (int field = folder_mode ? ROW_COLOUR : content_field_style; field < content_field_count; field++) {
+        const int i = field - ROW_COLOUR;
         lv_obj_t *row = lv_obj_create(panel_list);
         lv_obj_remove_style_all(row);
         lv_obj_set_size(row, LV_PCT(100), (lv_coord_t) (row_height - 2));
@@ -494,7 +542,7 @@ static void panel_create(void) {
         lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
 
         lv_obj_t *name = lv_label_create(row);
-        lv_label_set_text(name, option_name(row_ids[i]));
+        lv_label_set_text(name, option_name(field));
         lv_obj_align(name, LV_ALIGN_LEFT_MID, 0, 0);
 
         panel_values[i] = lv_label_create(row);
@@ -788,7 +836,7 @@ int muxadjustscreen_main(void) {
         folder_custom_load(NULL);
     }
 
-    build_rows();
+    row_total = 0;
     layout_saved = *current_layout();
     panel = NULL;
     option_selected = 0;

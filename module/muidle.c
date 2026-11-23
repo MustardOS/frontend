@@ -44,36 +44,96 @@ static uint64_t text_phys;
 static uint64_t ram_phys;
 static uint64_t ram_size;
 
-static int symbol_addresses(const char *name, uint64_t *out, const int max) {
-    FILE *file = fopen(KALLSYMS, "r");
-    if (!file) return 0;
+typedef struct {
+    uint64_t address;
+    const char *name;
+} kernel_symbol;
 
-    int count = 0;
-    char line[256];
-    while (count < max && fgets(line, sizeof(line), file)) {
-        unsigned long long address;
-        char type;
-        char symbol[200];
-        if (sscanf(line, "%llx %c %199s", &address, &type, symbol) != 3) continue;
-        if (strcmp(symbol, name) == 0 && address) out[count++] = address;
+static char *kallsyms_text;
+static kernel_symbol *symbols;
+static size_t symbol_count;
+
+static char *read_kallsyms(size_t *size) {
+    FILE *file = fopen(KALLSYMS, "r");
+    if (!file) return NULL;
+
+    char *text = NULL;
+    size_t used = 0;
+    size_t capacity = 0;
+    char chunk[65536];
+    size_t got;
+    while ((got = fread(chunk, 1, sizeof(chunk), file)) > 0) {
+        if (used + got + 1 > capacity) {
+            size_t grown = capacity ? capacity * 2 : 4u << 20;
+            if (grown < used + got + 1) grown = used + got + 1;
+            char *bigger = realloc(text, grown);
+            if (!bigger) {
+                free(text);
+                fclose(file);
+                return NULL;
+            }
+            text = bigger;
+            capacity = grown;
+        }
+        memcpy(text + used, chunk, got);
+        used += got;
+    }
+    fclose(file);
+
+    if (text) text[used] = '\0';
+    *size = used;
+    return text;
+}
+
+static int load_symbols(void) {
+    if (symbols) return 1;
+
+    size_t size = 0;
+    kallsyms_text = read_kallsyms(&size);
+    if (!kallsyms_text) return 0;
+
+    size_t lines = 0;
+    for (size_t i = 0; i < size; i++)
+        lines += kallsyms_text[i] == '\n';
+
+    symbols = calloc(lines + 1, sizeof(*symbols));
+    if (!symbols) return 0;
+
+    char *cursor = kallsyms_text;
+    while (*cursor) {
+        char *line_end = strchr(cursor, '\n');
+        if (line_end) *line_end = '\0';
+
+        char *after = NULL;
+        const unsigned long long address = strtoull(cursor, &after, 16);
+        if (after != cursor && after[0] == ' ' && after[1] && after[2] == ' ') {
+            char *name = after + 3;
+            name[strcspn(name, " \t")] = '\0';
+            symbols[symbol_count++] = (kernel_symbol) {address, name};
+        }
+
+        if (!line_end) break;
+        cursor = line_end + 1;
     }
 
-    fclose(file);
+    return 1;
+}
+
+static int symbol_addresses(const char *name, uint64_t *out, const int max) {
+    if (!load_symbols()) return 0;
+
+    int count = 0;
+    for (size_t i = 0; i < symbol_count && count < max; i++)
+        if (symbols[i].address && strcmp(symbols[i].name, name) == 0) out[count++] = symbols[i].address;
     return count;
 }
 
 static uint64_t symbol_end(const uint64_t start) {
-    FILE *file = fopen(KALLSYMS, "r");
-    if (!file) return start;
+    if (!load_symbols()) return start;
 
     uint64_t end = UINT64_MAX;
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        unsigned long long address;
-        if (sscanf(line, "%llx", &address) == 1 && address > start && address < end) end = address;
-    }
-
-    fclose(file);
+    for (size_t i = 0; i < symbol_count; i++)
+        if (symbols[i].address > start && symbols[i].address < end) end = symbols[i].address;
     return end == UINT64_MAX ? start : end;
 }
 
@@ -176,13 +236,26 @@ static void apply_patches(const enum patch_state state) {
     }
 }
 
+static int read_block(const uint64_t phys, void *out, const size_t len) {
+    const uint64_t page = phys & ~0xfffULL;
+    const size_t span = (size_t) ((phys - page + len + 0xfffULL) & ~0xfffULL);
+    uint8_t *map = mmap(NULL, span, PROT_READ, MAP_SHARED, mem_fd, (off_t) page);
+    if (map == MAP_FAILED) return 0;
+
+    memcpy(out, map + (phys - page), len);
+    munmap(map, span);
+    return 1;
+}
+
 static int polldev_matches(
     const uint64_t virt, const uint64_t *opens, const int open_count, const uint64_t *polls, const int poll_count
 ) {
     if (!linear_virt(virt)) return 0;
 
-    uint64_t open_fn, poll_fn;
-    if (!read64(linear_phys(virt) + 0x08, &open_fn) || !read64(linear_phys(virt) + 0x18, &poll_fn)) return 0;
+    uint64_t fields[4];
+    if (!read_block(linear_phys(virt), fields, sizeof(fields))) return 0;
+    const uint64_t open_fn = fields[1];
+    const uint64_t poll_fn = fields[3];
 
     int open_ok = 0, poll_ok = 0;
     for (int i = 0; i < open_count; i++)
@@ -203,13 +276,15 @@ static uint64_t find_polldev(void) {
     uint64_t node;
     if (!read64(image_phys(list), &node)) return 0;
 
+    uint64_t window[0x800 / 8];
     for (int guard = 0; guard < 64 && node != list && linear_virt(node); guard++) {
-        for (uint64_t at = node - 0x600; at < node + 0x200; at += 8) {
-            uint64_t candidate;
-            if (read64(linear_phys(at), &candidate) && polldev_matches(candidate, opens, open_count, polls, poll_count))
-                return linear_phys(candidate);
+        if (!linear_virt(node - 0x600) || !read_block(linear_phys(node - 0x600), window, sizeof(window))) break;
+
+        for (size_t i = 0; i < sizeof(window) / sizeof(window[0]); i++) {
+            if (polldev_matches(window[i], opens, open_count, polls, poll_count)) return linear_phys(window[i]);
         }
-        if (!read64(linear_phys(node), &node)) break;
+
+        node = window[0x600 / 8];
     }
 
     return 0;
