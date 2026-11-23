@@ -29,12 +29,13 @@ typedef struct {
     const char *symbol;
     uint32_t original;
     uint32_t value[2];
+    uint32_t previous;
 } code_patch;
 
 static const code_patch patches[] = {
-    {"pktgen_thread_worker", MOVZ(20, 10), {MOVZ(20, 6000), MOVZ(20, 6000)}},
-    {"allen_my_led_poll", MOVZ(3, 50), {MOVZ(3, 200), MOVZ(3, 500)}},
-    {"axp2202_usb_power_monitor", MOVZ(3, 50), {MOVZ(3, 50), MOVZ(3, 500)}},
+    {"pktgen_thread_worker", MOVZ(20, 10), {MOVZ(20, 100), MOVZ(20, 100)}, MOVZ(20, 6000)},
+    {"allen_my_led_poll", MOVZ(3, 50), {MOVZ(3, 200), MOVZ(3, 500)}, MOVZ(3, 50)},
+    {"axp2202_usb_power_monitor", MOVZ(3, 50), {MOVZ(3, 50), MOVZ(3, 500)}, MOVZ(3, 50)},
 };
 
 static int mem_fd = -1;
@@ -135,7 +136,8 @@ static void sync_code(volatile void *address) {
 }
 
 static int patch_word(const code_patch *patch, const uint32_t word) {
-    return word == patch->original || word == patch->value[patch_awake] || word == patch->value[patch_asleep];
+    return word == patch->original || word == patch->previous || word == patch->value[patch_awake]
+           || word == patch->value[patch_asleep];
 }
 
 static void apply_patches(const enum patch_state state) {
