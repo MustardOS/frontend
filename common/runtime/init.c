@@ -510,6 +510,83 @@ static void ui_refresh_tick(lv_timer_t *timer) {
     focus_scroll_tick();
 }
 
+#define NETWORK_CONNECTING RUN_PATH "network_connecting"
+#define BLUETOOTH_STATE    RUN_PATH "bluetooth_state"
+#define GLYPH_BLINK_MS     600
+
+typedef struct {
+    lv_obj_t *glyph;
+    int blinking;
+} glyph_blink;
+
+static glyph_blink network_blink = {0};
+static glyph_blink bluetooth_blink = {0};
+
+static void glyph_blink_cb(void *object, const int32_t value) {
+    lv_obj_set_style_opa(object, (lv_opa_t) value, MU_OBJ_MAIN_DEFAULT);
+}
+
+static int
+set_glyph_blink(glyph_blink *blink, lv_obj_t *glyph, const int active, const uint32_t colour, const int16_t alpha) {
+    if (!glyph || !lv_obj_is_valid(glyph)) return 0;
+
+    if (blink->glyph != glyph) {
+        blink->glyph = glyph;
+        blink->blinking = 0;
+    }
+
+    if (blink->blinking && !lv_anim_get(glyph, glyph_blink_cb)) blink->blinking = 0;
+
+    if (active) {
+        lv_obj_set_style_img_recolor(glyph, lv_color_hex(colour), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(glyph, (lv_opa_t) alpha, MU_OBJ_MAIN_DEFAULT);
+    }
+
+    if (blink->blinking == active) return 0;
+
+    blink->blinking = active;
+    lv_anim_del(glyph, glyph_blink_cb);
+
+    if (!active) {
+        lv_obj_set_style_opa(glyph, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+        return 1;
+    }
+
+    lv_anim_t anim;
+    lv_anim_init(&anim);
+    lv_anim_set_var(&anim, glyph);
+    lv_anim_set_exec_cb(&anim, glyph_blink_cb);
+    lv_anim_set_values(&anim, LV_OPA_COVER, LV_OPA_20);
+    lv_anim_set_time(&anim, GLYPH_BLINK_MS);
+    lv_anim_set_playback_time(&anim, GLYPH_BLINK_MS);
+    lv_anim_set_repeat_count(&anim, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&anim);
+    return 0;
+}
+
+static int bluetooth_starting(void) {
+    char *state = read_line_char_from(BLUETOOTH_STATE, 1);
+    const int starting = state && strcmp(state, "starting") == 0;
+    free(state);
+    return starting;
+}
+
+static void connecting_tick(void) {
+    if (device.board.has_network && config.visual.network
+        && set_glyph_blink(
+            &network_blink, ui_sta_network, file_exist(NETWORK_CONNECTING), theme.status.network.active,
+            theme.status.network.active_alpha
+        ))
+        update_network_status(ui_sta_network, &theme, 0);
+
+    if (device.board.has_bluetooth && config.visual.bluetooth
+        && set_glyph_blink(
+            &bluetooth_blink, ui_sta_bluetooth, bluetooth_starting(), theme.status.bluetooth.active,
+            theme.status.bluetooth.active_alpha
+        ))
+        update_bluetooth_status(ui_sta_bluetooth, &theme);
+}
+
 static void status_tick(lv_timer_t *timer) {
     static unsigned ticks = 0;
     ticks++;
@@ -518,6 +595,7 @@ static void status_tick(lv_timer_t *timer) {
     if (status_sysinfo_cb && ticks % 2u == 1) status_sysinfo_cb(timer);
 
     footer_nav_check_scroll();
+    connecting_tick();
 
     if (ticks % 4u == 0 && device.board.has_network && config.visual.network) network_task(timer);
     if (ticks % 4u == 2 && device.board.has_bluetooth && config.visual.bluetooth) bluetooth_task(timer);

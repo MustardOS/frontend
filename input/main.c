@@ -184,6 +184,13 @@ static int daemonise_process(void) {
     return 0;
 }
 
+static void protect_from_oom(void) {
+    FILE *file = fopen("/proc/self/oom_score_adj", "w");
+    if (!file) return;
+    fputs("-1000\n", file);
+    fclose(file);
+}
+
 static void handle_signal(int signal_number) {
     (void) signal_number;
     g_running = 0;
@@ -337,6 +344,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     install_signal_handlers();
+    if (!options.test_mode) protect_from_oom();
 
     struct gamepad *gamepad = gamepad_initialise(backend->gamepad);
     if (!gamepad) {

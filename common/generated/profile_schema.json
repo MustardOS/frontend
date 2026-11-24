@@ -18105,7 +18105,7 @@
       "key": "visual/blackfade",
       "group": "visual",
       "type": "int",
-      "default": "1",
+      "default": "0",
       "min": 0,
       "max": 1,
       "label": "Black Fade Animation",
