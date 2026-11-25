@@ -1537,7 +1537,9 @@ static int content_muxretro_core(const char *resolved, char *core_name, const si
     return 1;
 }
 
-static int content_uses_muxmedia(const char *resolved) {
+enum { content_external_none, content_external_muxmedia, content_external_chutney };
+
+static int content_external_player(const char *resolved) {
     static char cached_path[PATH_MAX];
     static int cached_is_muxmedia;
     static int cached_valid;
@@ -1545,7 +1547,7 @@ static int content_uses_muxmedia(const char *resolved) {
     if (cached_valid && strcmp(cached_path, resolved) == 0) return cached_is_muxmedia;
 
     cached_valid = 1;
-    cached_is_muxmedia = 0;
+    cached_is_muxmedia = content_external_none;
     snprintf(cached_path, sizeof(cached_path), "%s", resolved);
 
     char *sys_dir = get_content_path(resolved);
@@ -1563,8 +1565,10 @@ static int content_uses_muxmedia(const char *resolved) {
     free(sys_dir);
 
     if (count <= launch_index || !lines[core_index][0] || !lines[launch_index][0]) return 0;
-    cached_is_muxmedia =
-        strcasecmp(lines[core_index], "ext-video") == 0 || strcasecmp(lines[launch_index], "ext-video.sh") == 0;
+    if (strcasecmp(lines[core_index], "ext-video") == 0 || strcasecmp(lines[launch_index], "ext-video.sh") == 0)
+        cached_is_muxmedia = content_external_muxmedia;
+    else if (strcasecmp(lines[core_index], "ext-reader") == 0 || strcasecmp(lines[launch_index], "ext-chutney") == 0)
+        cached_is_muxmedia = content_external_chutney;
     return cached_is_muxmedia;
 }
 
@@ -1586,6 +1590,14 @@ static int muxmedia_latest_image(const char *content_path, char *out, const size
     return written > 0 && (size_t) written < out_size && file_exist(out);
 }
 
+static int chutney_latest_image(const char *content_path, char *out, const size_t out_size) {
+    const int written = snprintf(
+        out, out_size, RUN_STORAGE_PATH "chutney/state/%016llx/exit.png",
+        (unsigned long long) muxmedia_uri_key(content_path)
+    );
+    return written > 0 && (size_t) written < out_size && file_exist(out);
+}
+
 int content_save_image(const char *content_path, const int scope, char *out, const size_t out_size) {
     if (!content_path || !*content_path || !out) return 0;
     if (!(config.visual.save_screenshot & scope)) return 0;
@@ -1594,7 +1606,9 @@ int content_save_image(const char *content_path, const int scope, char *out, con
     if (!union_resolve_to_real(content_path, resolved, sizeof(resolved)))
         snprintf(resolved, sizeof(resolved), "%s", content_path);
 
-    if (content_uses_muxmedia(resolved)) return muxmedia_latest_image(resolved, out, out_size);
+    const int external = content_external_player(resolved);
+    if (external == content_external_muxmedia) return muxmedia_latest_image(resolved, out, out_size);
+    if (external == content_external_chutney) return chutney_latest_image(resolved, out, out_size);
 
     char core_name[MAX_BUFFER_SIZE];
     if (!content_muxretro_core(resolved, core_name, sizeof(core_name))) return 0;

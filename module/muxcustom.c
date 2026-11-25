@@ -46,6 +46,8 @@ static int16_t font_footer_size_saved;
 static int16_t font_panel_size_saved;
 static int16_t font_scale_saved;
 static const int text_scale_values[] = {75, 85, 100, 115, 130, 145, 160, 175, 200};
+static const int power_off_values[] = {1, 2, 3, 0};
+static const int video_wallpaper_values[] = {1, 2, 0};
 static int has_theme_type;
 static int dropdown_to_canonical[4];
 static int has_custom_type;
@@ -1283,7 +1285,10 @@ static void init_navigation_group(void) {
         -1, visual, pickles_startup_messages, lang.muxcustom.pickles_startup_messages, "picklesstartupmessages",
         disabled_enabled, 2
     );
-    INIT_OPTION_ITEM(-1, visual, power_off, lang.muxcustom.power_off, "blackfade", disabled_enabled, 2);
+    char *power_off_options[] = {
+        lang.muxcustom.power.both, lang.muxcustom.power.startup, lang.muxcustom.power.exit, lang.generic.disabled
+    };
+    INIT_OPTION_ITEM(-1, visual, power_off, lang.muxcustom.power_off, "blackfade", power_off_options, 4);
     INIT_OPTION_ITEM(-1, custom, black_fade, lang.muxcustom.blackfade, "blackfade", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, catalogue, lang.muxcustom.catalogue, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, config, lang.muxcustom.config, "config", NULL, 0);
@@ -1305,7 +1310,12 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, glyph_header, lang.muxthemeopt.glyph_header, "glyphheader", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, glyph_footer, lang.muxthemeopt.glyph_footer, "glyphfooter", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, glyph_grid, lang.muxthemeopt.glyph_grid, "glyphgrid", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, video_wallpaper, lang.muxcustom.videowallpaper, "videowallpaper", disabled_enabled, 2);
+    char *video_wallpaper_options[] = {
+        lang.muxcustom.wallpaper.animated, lang.muxcustom.wallpaper.still, lang.generic.disabled
+    };
+    INIT_OPTION_ITEM(
+        -1, custom, video_wallpaper, lang.muxcustom.videowallpaper, "videowallpaper", video_wallpaper_options, 3
+    );
     INIT_OPTION_ITEM(
         -1, custom, background_scale, lang.muxcustom.backgroundscale, "backgroundscale", background_scale_options, 3
     );
@@ -1622,6 +1632,9 @@ static void restore_custom_options(void) {
 #define VISUAL(NAME, UDATA) lv_dropdown_set_selected(ui_dro_##NAME##_visual, config.visual.NAME);
     VISUAL_CONFIG_ELEMENTS
 #undef VISUAL
+    map_drop_down_to_index(
+        ui_dro_power_off_visual, config.visual.power_off, power_off_values, A_SIZE(power_off_values), 0
+    );
 
     {
         const int ddr = overlay_config_to_dropdown(config.visual.overlay_image);
@@ -1653,7 +1666,10 @@ static void restore_custom_options(void) {
     const int32_t option_index = lv_dropdown_get_option_index(ui_dro_theme_alternate_custom, theme_alt_original);
     if (option_index >= 0) lv_dropdown_set_selected(ui_dro_theme_alternate_custom, option_index);
 
-    lv_dropdown_set_selected(ui_dro_video_wallpaper_custom, config.visual.video_wallpaper);
+    map_drop_down_to_index(
+        ui_dro_video_wallpaper_custom, config.visual.video_wallpaper, video_wallpaper_values,
+        A_SIZE(video_wallpaper_values), 0
+    );
     lv_dropdown_set_selected(ui_dro_background_scale_custom, config.visual.background_scale);
     lv_dropdown_set_selected(ui_dro_black_fade_custom, config.visual.blackfade);
     lv_dropdown_set_selected(ui_dro_music_custom, config.settings.general.bgm);
@@ -1742,7 +1758,7 @@ static int save_custom_options(void) {
     CHECK_AND_SAVE_STD(visual, group_content, "visual/groupcontent", INT, 0);
     CHECK_AND_SAVE_STD(visual, launchsplash, "visual/launchsplash", INT, 0);
     CHECK_AND_SAVE_STD(visual, pickles_startup_messages, "visual/pickles_startup_messages", INT, 0);
-    CHECK_AND_SAVE_STD(visual, power_off, "visual/power_off", INT, 0);
+    CHECK_AND_SAVE_MAP(visual, power_off, "visual/power_off", power_off_values, A_SIZE(power_off_values), 0);
     CHECK_AND_SAVE_STD(visual, grid_mode_content, "visual/gridmodecontent", INT, 0);
 
     // Stored the other way round to how it reads on screen
@@ -1824,7 +1840,9 @@ static int save_custom_options(void) {
 
     if (is_modified != modified_before_font) refresh_resolution = 1;
 
-    CHECK_AND_SAVE_STD(custom, video_wallpaper, "visual/video_wallpaper", INT, 0);
+    CHECK_AND_SAVE_MAP(
+        custom, video_wallpaper, "visual/video_wallpaper", video_wallpaper_values, A_SIZE(video_wallpaper_values), 0
+    );
     CHECK_AND_SAVE_STD(custom, background_scale, "visual/background_scale", INT, 0);
     CHECK_AND_SAVE_STD(custom, music, "settings/general/bgm", INT, 0);
     CHECK_AND_SAVE_PCT(custom, music_volume, "settings/general/bgmvol", INT, 0, 100);

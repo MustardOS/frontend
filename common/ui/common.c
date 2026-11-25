@@ -2210,7 +2210,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
                     w > 0 && (size_t) w < sizeof(mp4_path) && file_exist_nocase(mp4_path, mp4_path, sizeof(mp4_path));
                 LOG_DEBUG(mux_module, "Wallpaper video check: %s (%s)", mp4_path, exists ? "yes" : "no");
                 if (exists) {
-                    video_wallpaper_play(mp4_path);
+                    video_wallpaper_play_still(mp4_path, config.visual.video_wallpaper == 2);
                     lv_img_set_src(ui_img_wall, &ui_img_blank);
                     lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
                     set_video_wallpaper_background(video_wallpaper_active());

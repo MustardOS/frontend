@@ -41,6 +41,7 @@
 
 static char video_path[MAX_BUFFER_SIZE];
 static char saved_wall_path[MAX_BUFFER_SIZE];
+static int saved_wall_still = 0;
 static char preview_pending_path[MAX_BUFFER_SIZE];
 static const lv_obj_t *preview_pending_container = NULL;
 static const lv_obj_t *preview_pending_box = NULL;
@@ -71,6 +72,7 @@ static int fade_step = 0;
 static int has_frame = 0;
 static int is_wallpaper = 0;
 static int wallpaper_frozen = 0;
+static int wallpaper_still = 0;
 static int preview_embedded = 0;
 static int preview_alpha = 255;
 static int64_t clip_start_ms = 0;
@@ -855,6 +857,14 @@ static void present_cb(lv_timer_t *t __attribute__((unused))) {
     video_upload(present_frame);
 
     if (has_frame && !preview_image) display_composite_frame();
+
+    if (is_wallpaper && wallpaper_still && has_frame) {
+        SDL_LockMutex(vq_lock);
+        decode_run = 0;
+        SDL_CondSignal(vq_cond);
+        SDL_UnlockMutex(vq_lock);
+        lv_timer_pause(present_timer);
+    }
 }
 
 static int start_decode_thread(void) {
@@ -921,6 +931,7 @@ static void cleanup(void) {
     fade_step = 0;
     is_wallpaper = 0;
     wallpaper_frozen = 0;
+    wallpaper_still = 0;
     preview_embedded = 0;
     preview_alpha = 255;
     clip_start_ms = clip_end_ms = clip_fade_in_ms = clip_fade_out_ms = 0;
@@ -1281,12 +1292,17 @@ fail:
     cleanup();
 }
 
-void video_wallpaper_play(const char *path) {
-    if (video_wallpaper_active() && strcmp(video_path, path) == 0) return;
+void video_wallpaper_play_still(const char *path, const int still) {
+    if (video_wallpaper_active() && strcmp(video_path, path) == 0 && wallpaper_still == !!still) return;
 
     cleanup();
     snprintf(video_path, sizeof(video_path), "%s", path);
     wallpaper_open();
+    if (video_wallpaper_active()) wallpaper_still = !!still;
+}
+
+void video_wallpaper_play(const char *path) {
+    video_wallpaper_play_still(path, 0);
 }
 
 void video_wallpaper_stop(void) {
@@ -1299,7 +1315,7 @@ int video_wallpaper_active(void) {
 }
 
 void video_wallpaper_freeze(const int frozen) {
-    if (!video_wallpaper_active() || wallpaper_frozen == frozen) return;
+    if (!video_wallpaper_active() || wallpaper_still || wallpaper_frozen == frozen) return;
 
     wallpaper_frozen = frozen;
     if (frozen) {
@@ -1311,7 +1327,7 @@ void video_wallpaper_freeze(const int frozen) {
 }
 
 int video_playing(void) {
-    return (video_wallpaper_active() && !wallpaper_frozen) || video_preview_active();
+    return (video_wallpaper_active() && !wallpaper_frozen && !wallpaper_still) || video_preview_active();
 }
 
 void video_preview_arm_image(const char *path, lv_obj_t *image, const video_size_cb size) {
@@ -1339,6 +1355,7 @@ void video_preview_arm(const char *path, const int delay_ms, const lv_obj_t *con
 
     if (is_wallpaper && video_path[0] && !saved_wall_path[0]) {
         snprintf(saved_wall_path, sizeof(saved_wall_path), "%s", video_path);
+        saved_wall_still = wallpaper_still;
     }
 
     snprintf(preview_pending_path, sizeof(preview_pending_path), "%s", path);
@@ -1384,6 +1401,7 @@ void video_preview_cancel(void) {
         snprintf(video_path, sizeof(video_path), "%s", saved_wall_path);
         saved_wall_path[0] = '\0';
         wallpaper_open();
+        if (video_wallpaper_active()) wallpaper_still = saved_wall_still;
         return;
     }
 

@@ -32,17 +32,38 @@ typedef enum {
 
 typedef enum {
     reader_status_off,
-    reader_status_page,
-    reader_status_full,
+    reader_status_clock,
+    reader_status_battery,
+    reader_status_both,
     reader_status_count,
 } reader_status;
 
 typedef enum {
-    reader_contrast_normal,
-    reader_contrast_high,
-    reader_contrast_max,
-    reader_contrast_count,
-} reader_contrast;
+    reader_sharpness_normal,
+    reader_sharpness_high,
+    reader_sharpness_max,
+    reader_sharpness_count,
+} reader_sharpness;
+
+typedef enum {
+    reader_hotkey_quit,
+    reader_hotkey_bookmark,
+    reader_hotkey_filter,
+    reader_hotkey_status,
+    reader_hotkey_sharpness,
+    reader_hotkey_auto_turn,
+    reader_hotkey_brightness_down,
+    reader_hotkey_brightness_up,
+    reader_hotkey_contrast_down,
+    reader_hotkey_contrast_up,
+    reader_hotkey_jump_back,
+    reader_hotkey_jump_forward,
+    reader_hotkey_chapter_back,
+    reader_hotkey_chapter_forward,
+    reader_hotkey_count,
+} reader_hotkey;
+
+#define READER_HOTKEY_UNBOUND (-1)
 
 typedef enum {
     reader_transition_instant,
@@ -61,12 +82,21 @@ typedef struct {
     int theme;
     int rotation;
     int page_status;
+    int page_number;
+    int readtime;
     int stay_awake;
     int menu_item;
     int transition;
     int trim;
-    int contrast;
+    int sharpness;
     int auto_turn;
+    int brightness;
+    int contrast;
+    int saturation;
+    int hue_shift;
+    int gamma;
+    int hotkey[reader_hotkey_count];
+    char filter[MAX_BUFFER_SIZE];
     char font[PATH_MAX];
 } reader_settings;
 
@@ -76,12 +106,35 @@ extern const int reader_spacing_steps[];
 extern const int reader_spacing_count;
 extern const int reader_auto_turn_steps[];
 extern const int reader_auto_turn_count;
+extern const int reader_hotkey_defaults[];
+
+#define READER_COLOUR_STEP 5
+
+typedef enum {
+    reader_scope_content,
+    reader_scope_directory,
+    reader_scope_count,
+} reader_scope;
 
 void reader_settings_defaults(reader_settings *settings);
 
 void reader_settings_load(reader_settings *settings);
 
 void reader_settings_save(const reader_settings *settings);
+
+void reader_settings_clamp(reader_settings *settings);
+
+void reader_scope_open(const char *document);
+
+void reader_scope_apply(reader_settings *settings);
+
+int reader_scope_save(const reader_settings *settings, reader_scope scope);
+
+int reader_scope_exists(reader_scope scope);
+
+int reader_settings_same(const reader_settings *left, const reader_settings *right);
+
+void reader_settings_copy_scoped(reader_settings *target, const reader_settings *source);
 
 int reader_position_load(const char *document, int *reversed);
 
@@ -92,3 +145,5 @@ int reader_bookmarks_load(const char *document, int *positions, int max);
 void reader_bookmarks_save(const char *document, const int *positions, int count);
 
 void reader_layout_cache_path(const char *document, const char *font, char *path, size_t size);
+
+int reader_thumbnail_path(const char *document, int bookmark, int position, char *path, size_t size);

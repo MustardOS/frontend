@@ -476,6 +476,26 @@ No save state image
 Nothing on the card is named %s, so none of this is drawn.
 not on the card
 Pickles Saves
+All content
+Content Override: %s
+Directory Override: %s
+Pickles will use the wider settings for %s again.
+Remove override
+%s overrides
+%s Override: %s
+Pickles Override
+Override saved
+Override removed
+Type
+That is not a Pickles override
+No such override
+Could not read that override
+Overrides must be plain text of 64 KB or less
+Could not write that override
+Could not read the overrides
+No overrides yet. Use More Options on content or a folder in File Management to add one.
+Overrides
+Directory
 Preview image
 Preview save state
 Preview video

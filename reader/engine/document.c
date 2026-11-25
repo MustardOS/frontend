@@ -47,6 +47,7 @@ struct doc_engine {
     fz_font *cjk[DOC_CJK_COUNT];
     fz_font *user[4];
     char font_path[PATH_MAX];
+    int font_generation;
     char path[PATH_MAX];
     int reflowable;
     int comic;
@@ -166,7 +167,7 @@ static fz_font *user_font(fz_context *ctx, const int bold, const int italic) {
 static fz_font *
 load_system_font(fz_context *ctx, const char *name, const int bold, const int italic, const int needs_exact_metrics) {
     (void) needs_exact_metrics;
-    if (!name || strcmp(name, DOC_USER_FAMILY) != 0) return NULL;
+    if (!name || strncmp(name, DOC_USER_FAMILY, sizeof(DOC_USER_FAMILY) - 1) != 0) return NULL;
     return user_font(ctx, bold, italic);
 }
 
@@ -216,8 +217,8 @@ static void user_css(const doc_engine *engine, char *css, const size_t size) {
     if (engine->font_path[0] && used > 0 && (size_t) used < size)
         snprintf(
             css + used, size - (size_t) used,
-            "body,p,div,span,pre,li,td,th,blockquote,a,em,strong,b,i,h1,h2,h3,h4,h5,h6{font-family:%s !important}",
-            DOC_USER_FAMILY
+            "body,p,div,span,pre,li,td,th,blockquote,a,em,strong,b,i,h1,h2,h3,h4,h5,h6{font-family:%s%d !important}",
+            DOC_USER_FAMILY, engine->font_generation
         );
 }
 
@@ -470,6 +471,7 @@ int doc_set_font(doc_engine *engine, const char *font_path) {
         engine->user[i] = NULL;
     }
     snprintf(engine->font_path, sizeof(engine->font_path), "%s", wanted);
+    engine->font_generation++;
 
     return !engine->doc || !engine->reflowable || restyle(engine);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 void menu_init(void);
 
 int menu_active(void);
@@ -22,4 +24,14 @@ void menu_back(void);
 
 int menu_action_x(void);
 
+int menu_action_y(void);
+
 void menu_refresh_values(void);
+
+void menu_hotkey_feedback(int hotkey);
+
+void menu_tick(void);
+
+void menu_peek(int peeking);
+
+int menu_dialogue_input(uint64_t edge);

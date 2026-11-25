@@ -2,48 +2,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <SDL2/SDL_ttf.h>
 #include <common/base/options.h>
+#include <common/display/screenshot.h>
 #include <common/platform/display.h>
 #include <common/runtime/init.h>
 #include <common/runtime/log.h>
 #include "settings.h"
 #include "view.h"
 
-#define VIEW_STATUS_FONT OPT_PATH "share/font/NotoSans/NotoSans-SemiBold.ttf"
 #define VIEW_PLAIN_BG    0x000000
 #define VIEW_PLAIN_PAPER 0xF2F0EA
-#define VIEW_PLAIN_INK   0xC0C0C0
 #define VIEW_TILE        32
-#define VIEW_TEXT_MAX    256
-#define VIEW_ELLIPSIS    "\xE2\x80\xA6"
+#define COLOUR_SHIFT     10
+#define COLOUR_ONE       (1 << COLOUR_SHIFT)
 
 typedef struct {
     uint32_t paper;
     uint32_t ink;
 } view_palette;
-
-typedef struct {
-    int low;
-    int high;
-    float gamma;
-} view_curve;
-
-typedef enum {
-    text_left,
-    text_centre,
-    text_right,
-    text_top_left,
-    text_top_right,
-    text_count,
-} text_slot_id;
-
-typedef struct {
-    char text[VIEW_TEXT_MAX];
-    uint32_t ink;
-    int limit;
-    SDL_Surface *surface;
-} text_slot;
 
 typedef enum {
     turn_from,
@@ -58,26 +34,23 @@ static const view_palette palettes[reader_theme_count] = {
     {0x000000, 0xFFB347},
 };
 
-/* Contrast stretches the levels so grey paper turns white and grey ink turns black,
- * then darkens the mid tones a little so thin and faint text gets heavier */
-static const view_curve curves[reader_contrast_count] = {
-    {0, 255, 1.0f},
-    {16, 235, 1.3f},
-    {40, 215, 1.6f},
-};
+static const int sharpen_gain[reader_sharpness_count] = {0, 3, 6};
 
 static SDL_Texture *texture = NULL;
 static SDL_Texture *texture_prev = NULL;
-static TTF_Font *status_font = NULL;
 static uint32_t *logical = NULL;
 static uint32_t *previous = NULL;
 static uint32_t *frame = NULL;
 static uint8_t *turn_kinds = NULL;
 static uint32_t *turn_levels = NULL;
 static int *turn_sources = NULL;
-static text_slot texts[text_count];
-static uint8_t curve_table[reader_contrast_count][256];
-static int curves_ready = 0;
+static uint8_t *sharp_row = NULL;
+static size_t sharp_size = 0;
+static uint8_t theme_lut[3][256];
+static int pre_lut[3][256];
+static uint8_t gamma_lut[COLOUR_ONE + 1];
+static int colour_matrix[9];
+static int colour_cross = 0;
 static int transition = reader_transition_instant;
 static int pending = 0;
 static int animating = 0;
@@ -92,22 +65,6 @@ static uint32_t anim_paper = 0xFFFFFFFFu;
 static int screen_w = 0;
 static int screen_h = 0;
 static int rotation = reader_rotation_none;
-
-static void build_curves(void) {
-    if (curves_ready) return;
-    curves_ready = 1;
-
-    for (int c = 0; c < reader_contrast_count; c++) {
-        const view_curve curve = curves[c];
-        for (int v = 0; v < 256; v++) {
-            float x = (float) (v - curve.low) / (float) (curve.high - curve.low);
-            if (x < 0.0f) x = 0.0f;
-            if (x > 1.0f) x = 1.0f;
-            if (curve.gamma != 1.0f) x = powf(x, curve.gamma);
-            curve_table[c][v] = (uint8_t) lrintf(x * 255.0f);
-        }
-    }
-}
 
 int view_init(SDL_Renderer *renderer, const int width, const int height) {
     screen_w = width;
@@ -134,41 +91,24 @@ int view_init(SDL_Renderer *renderer, const int width, const int height) {
     turn_sources = malloc(longest * sizeof(*turn_sources));
     if (!logical || !previous || !frame || !turn_kinds || !turn_levels || !turn_sources) return 0;
 
-    build_curves();
-
-    if (!TTF_WasInit() && TTF_Init() != 0) LOG_WARN(mux_module, "Chutney: TTF_Init failed: %s", TTF_GetError());
-
-    const int short_side = width < height ? width : height;
-    int size = short_side / 30;
-    if (size < 12) size = 12;
-    status_font = TTF_OpenFont(VIEW_STATUS_FONT, size);
-    if (!status_font) LOG_WARN(mux_module, "Chutney: no status font: %s", TTF_GetError());
-
     return 1;
 }
 
-static void forget_texts(void) {
-    for (int i = 0; i < text_count; i++) {
-        if (texts[i].surface) SDL_FreeSurface(texts[i].surface);
-        texts[i] = (text_slot) {0};
-    }
-}
-
 void view_free(void) {
-    forget_texts();
     if (texture) SDL_DestroyTexture(texture);
     if (texture_prev) SDL_DestroyTexture(texture_prev);
-    if (status_font) TTF_CloseFont(status_font);
     free(logical);
     free(previous);
     free(frame);
     free(turn_kinds);
     free(turn_levels);
     free(turn_sources);
+    free(sharp_row);
+    sharp_row = NULL;
+    sharp_size = 0;
 
     texture = NULL;
     texture_prev = NULL;
-    status_font = NULL;
     logical = NULL;
     previous = NULL;
     frame = NULL;
@@ -191,10 +131,6 @@ void view_logical_size(int *width, int *height) {
     }
 }
 
-int view_status_height(void) {
-    return status_font ? TTF_FontLineSkip(status_font) + 4 : 0;
-}
-
 static uint8_t mix(const uint32_t ink, const uint32_t paper, const int shift, const unsigned char value) {
     const int from = (int) ((ink >> shift) & 0xFF);
     const int to = (int) ((paper >> shift) & 0xFF);
@@ -207,154 +143,6 @@ static void fill_rows(const uint32_t colour, const int width, const int from, co
     const uint32_t *end = logical + (size_t) to * (size_t) width;
     while (cursor < end)
         *cursor++ = pixel;
-}
-
-static int text_width(const char *text) {
-    int w = 0;
-    int h = 0;
-    return TTF_SizeUTF8(status_font, text, &w, &h) == 0 ? w : 0;
-}
-
-/* Cuts the text on a character boundary and adds an ellipsis so it fits in the limit */
-static void fit_text(const char *text, const int limit, char *out, const size_t size) {
-    snprintf(out, size, "%s", text);
-    if (limit <= 0 || text_width(out) <= limit) return;
-
-    int bounds[VIEW_TEXT_MAX];
-    int count = 0;
-    for (int i = 1; out[i - 1] && i < (int) size && count < VIEW_TEXT_MAX; i++)
-        if ((out[i] & 0xC0) != 0x80) bounds[count++] = i;
-
-    char trial[VIEW_TEXT_MAX + 4];
-    int low = 0;
-    int high = count - 1;
-    int best = -1;
-    while (low <= high) {
-        const int mid = (low + high) / 2;
-        snprintf(trial, sizeof(trial), "%.*s" VIEW_ELLIPSIS, bounds[mid], out);
-        if (text_width(trial) <= limit) {
-            best = mid;
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-
-    if (best < 0) {
-        out[0] = '\0';
-        return;
-    }
-    snprintf(trial, sizeof(trial), "%.*s" VIEW_ELLIPSIS, bounds[best], out);
-    snprintf(out, size, "%s", trial);
-}
-
-/* The status band is drawn on every scroll step, so each piece of text is rendered once and kept */
-static SDL_Surface *status_text(const text_slot_id id, const char *text, const uint32_t ink, const int limit) {
-    text_slot *slot = &texts[id];
-    if (!text || !text[0] || !status_font) return NULL;
-    if (slot->surface && slot->ink == ink && slot->limit == limit && strcmp(slot->text, text) == 0)
-        return slot->surface;
-
-    if (slot->surface) SDL_FreeSurface(slot->surface);
-    slot->surface = NULL;
-    snprintf(slot->text, sizeof(slot->text), "%s", text);
-    slot->ink = ink;
-    slot->limit = limit;
-
-    char fitted[VIEW_TEXT_MAX];
-    fit_text(text, limit, fitted, sizeof(fitted));
-    if (!fitted[0]) return NULL;
-
-    const SDL_Color colour = {(ink >> 16) & 0xFF, (ink >> 8) & 0xFF, ink & 0xFF, 255};
-    SDL_Surface *rendered = TTF_RenderUTF8_Blended(status_font, fitted, colour);
-    if (!rendered) return NULL;
-
-    slot->surface = SDL_ConvertSurfaceFormat(rendered, SDL_PIXELFORMAT_ARGB8888, 0);
-    SDL_FreeSurface(rendered);
-    return slot->surface;
-}
-
-static void blend_text(const SDL_Surface *surface, const int left, const int top, const int width, const int height) {
-    if (!surface) return;
-
-    for (int y = 0; y < surface->h; y++) {
-        const int dy = top + y;
-        if (dy < 0 || dy >= height) continue;
-
-        const uint32_t *src = (const uint32_t *) ((const uint8_t *) surface->pixels + (size_t) y * surface->pitch);
-        uint32_t *row = logical + (size_t) dy * (size_t) width;
-        for (int x = 0; x < surface->w; x++) {
-            const int dx = left + x;
-            if (dx < 0 || dx >= width) continue;
-
-            const uint32_t s = src[x];
-            const uint32_t alpha = s >> 24;
-            if (!alpha) continue;
-
-            uint32_t *d = &row[dx];
-            const uint32_t r = (((s >> 16) & 0xFF) * alpha + ((*d >> 16) & 0xFF) * (255 - alpha)) / 255;
-            const uint32_t g = (((s >> 8) & 0xFF) * alpha + ((*d >> 8) & 0xFF) * (255 - alpha)) / 255;
-            const uint32_t b = ((s & 0xFF) * alpha + (*d & 0xFF) * (255 - alpha)) / 255;
-            *d = 0xFF000000u | (r << 16) | (g << 8) | b;
-        }
-    }
-}
-
-/* One band of text: an optional centre piece, then left and right pieces sharing what room is left.
- * Without a centre piece the right one is placed first, so only the left one is ever shortened */
-static void blend_band(
-    const int top, const int width, const int height, const uint32_t ink, const text_slot_id left_id,
-    const char *left_text, const text_slot_id centre_id, const char *centre_text, const text_slot_id right_id,
-    const char *right_text
-) {
-    const int band = view_status_height();
-    const int pad = band / 2;
-    const int y = top + 2;
-
-    const SDL_Surface *centre = centre_text ? status_text(centre_id, centre_text, ink, width - pad * 2) : NULL;
-    if (centre) {
-        const int centre_w = centre->w;
-        blend_text(centre, (width - centre_w) / 2, y, width, height);
-
-        const int side = (width - centre_w) / 2 - pad * 2;
-        if (side <= 0) return;
-
-        const SDL_Surface *right = status_text(right_id, right_text, ink, side);
-        if (right) blend_text(right, width - pad - right->w, y, width, height);
-
-        const SDL_Surface *left = status_text(left_id, left_text, ink, side);
-        if (left) blend_text(left, pad, y, width, height);
-        return;
-    }
-
-    const SDL_Surface *right = status_text(right_id, right_text, ink, width - pad * 2);
-    const int right_w = right ? right->w : 0;
-    if (right) blend_text(right, width - pad - right_w, y, width, height);
-
-    const int room = width - pad * 2 - (right_w ? right_w + pad * 2 : 0);
-    if (room <= 0) return;
-
-    const SDL_Surface *left = status_text(left_id, left_text, ink, room);
-    if (left) blend_text(left, pad, y, width, height);
-}
-
-static void
-blend_status(const view_status *status, const int width, const int height, const uint32_t paper, const uint32_t ink) {
-    if (!status || !status_font) return;
-
-    const int band = view_status_height();
-    const int bottom = height - band > 0 ? height - band : 0;
-    fill_rows(paper, width, bottom, height);
-    blend_band(
-        bottom, width, height, ink, text_left, status->left, text_centre, status->centre, text_right, status->right
-    );
-
-    if (!status->top) return;
-
-    fill_rows(paper, width, 0, band < height ? band : height);
-    blend_band(
-        0, width, height, ink, text_top_left, status->top_left, text_count, NULL, text_top_right, status->top_right
-    );
 }
 
 static void upload(SDL_Texture *target, const uint32_t *source, const int width, const int height) {
@@ -405,26 +193,137 @@ static void upload(SDL_Texture *target, const uint32_t *source, const int width,
     SDL_UnlockTexture(target);
 }
 
-static void
-build_luts(const view_palette palette, const int plain, const int contrast, uint8_t *r, uint8_t *g, uint8_t *b) {
-    const uint8_t *curve = curve_table[contrast >= 0 && contrast < reader_contrast_count ? contrast : 0];
-    for (int v = 0; v < 256; v++) {
-        const uint8_t c = curve[v];
-        r[v] = plain ? c : mix(palette.ink, palette.paper, 16, c);
-        g[v] = plain ? c : mix(palette.ink, palette.paper, 8, c);
-        b[v] = plain ? c : mix(palette.ink, palette.paper, 0, c);
-    }
+static uint8_t clamp_byte(const int value) {
+    return (uint8_t) (value < 0 ? 0 : value > 255 ? 255 : value);
 }
 
-static int luts_identity(const uint8_t *r, const uint8_t *g, const uint8_t *b) {
+static void matrix_multiply(float left[3][3], float right[3][3], float out[3][3]) {
+    float result[3][3];
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            result[i][j] = left[i][0] * right[0][j] + left[i][1] * right[1][j] + left[i][2] * right[2][j];
+    memcpy(out, result, sizeof(result));
+}
+
+static void build_colour(const view_palette palette, const int plain, const view_colour *colour) {
+    const float brightness = colour ? (float) colour->brightness / 100.0f : 0.0f;
+    const float contrast = colour ? (float) colour->contrast / 100.0f : 1.0f;
+    const float saturation = colour ? (float) colour->saturation / 100.0f : 1.0f;
+    const float hue = colour ? (float) colour->hue_shift * 0.01745329251994329577f : 0.0f;
+    const float gamma = colour && colour->gamma > 0 ? 100.0f / (float) colour->gamma : 1.0f;
+
+    for (int v = 0; v < 256; v++) {
+        const unsigned char c = (unsigned char) v;
+        theme_lut[0][v] = plain ? c : mix(palette.ink, palette.paper, 16, c);
+        theme_lut[1][v] = plain ? c : mix(palette.ink, palette.paper, 8, c);
+        theme_lut[2][v] = plain ? c : mix(palette.ink, palette.paper, 0, c);
+        const float level = ((float) v / 255.0f + brightness - 0.5f) * contrast + 0.5f;
+        pre_lut[0][v] = pre_lut[1][v] = pre_lut[2][v] = (int) lrintf(level * (float) COLOUR_ONE);
+    }
+
+    for (int v = 0; v <= COLOUR_ONE; v++)
+        gamma_lut[v] = (uint8_t) lrintf(powf((float) v / (float) COLOUR_ONE, gamma) * 255.0f);
+
+    static const float luma[3] = {0.2126f, 0.7152f, 0.0722f};
+    float combined[3][3];
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            combined[i][j] = (i == j ? saturation : 0.0f) + (1.0f - saturation) * luma[j];
+
+    const float cs = cosf(hue);
+    const float sn = sinf(hue);
+    const float hue_columns[9] = {
+        0.299f + 0.701f * cs + 0.168f * sn, 0.587f - 0.587f * cs + 0.330f * sn, 0.114f - 0.114f * cs - 0.497f * sn,
+        0.299f - 0.299f * cs - 0.328f * sn, 0.587f + 0.413f * cs + 0.035f * sn, 0.114f - 0.114f * cs + 0.292f * sn,
+        0.299f - 0.300f * cs + 1.250f * sn, 0.587f - 0.588f * cs - 1.050f * sn, 0.114f + 0.886f * cs - 0.203f * sn,
+    };
+    float stage[3][3];
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            stage[i][j] = hue_columns[j * 3 + i];
+    matrix_multiply(stage, combined, combined);
+
+    if (colour && colour->filter_active) {
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                stage[i][j] = colour->matrix[j * 3 + i];
+        matrix_multiply(stage, combined, combined);
+    }
+
+    colour_cross = 0;
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++) {
+            colour_matrix[i * 3 + j] = (int) lrintf(combined[i][j] * (float) COLOUR_ONE);
+            if (colour_matrix[i * 3 + j] != (i == j ? COLOUR_ONE : 0)) colour_cross = 1;
+        }
+}
+
+static uint8_t colour_out(const int value) {
+    return gamma_lut[value < 0 ? 0 : value > COLOUR_ONE ? COLOUR_ONE : value];
+}
+
+static uint32_t shade_pixel(const uint8_t sr, const uint8_t sg, const uint8_t sb) {
+    const int r = pre_lut[0][theme_lut[0][sr]];
+    const int g = pre_lut[1][theme_lut[1][sg]];
+    const int b = pre_lut[2][theme_lut[2][sb]];
+    const int *m = colour_matrix;
+    return 0xFF000000u | ((uint32_t) colour_out((m[0] * r + m[1] * g + m[2] * b) >> COLOUR_SHIFT) << 16)
+           | ((uint32_t) colour_out((m[3] * r + m[4] * g + m[5] * b) >> COLOUR_SHIFT) << 8)
+           | colour_out((m[6] * r + m[7] * g + m[8] * b) >> COLOUR_SHIFT);
+}
+
+static uint32_t shade_colour(const uint32_t rgb) {
+    const int r = pre_lut[0][(rgb >> 16) & 0xFF];
+    const int g = pre_lut[1][(rgb >> 8) & 0xFF];
+    const int b = pre_lut[2][rgb & 0xFF];
+    const int *m = colour_matrix;
+    return ((uint32_t) colour_out((m[0] * r + m[1] * g + m[2] * b) >> COLOUR_SHIFT) << 16)
+           | ((uint32_t) colour_out((m[3] * r + m[4] * g + m[5] * b) >> COLOUR_SHIFT) << 8)
+           | colour_out((m[6] * r + m[7] * g + m[8] * b) >> COLOUR_SHIFT);
+}
+
+static int colour_identity(const uint8_t *r, const uint8_t *g, const uint8_t *b) {
+    if (colour_cross) return 0;
     for (int v = 0; v < 256; v++)
         if (r[v] != v || g[v] != v || b[v] != v) return 0;
     return 1;
 }
 
+static const uint8_t *
+sharpen_row(const doc_image *image, const int row, const int from_x, const int count, const int gain) {
+    const size_t need = (size_t) count * 3;
+    if (need > sharp_size) {
+        uint8_t *grown = realloc(sharp_row, need);
+        if (!grown) return NULL;
+        sharp_row = grown;
+        sharp_size = need;
+    }
+
+    const int components = image->components;
+    const int above = row > 0 ? row - 1 : row;
+    const int below = row + 1 < image->height ? row + 1 : row;
+    const unsigned char *line = image->samples + (size_t) row * (size_t) image->stride;
+    const unsigned char *up = image->samples + (size_t) above * (size_t) image->stride;
+    const unsigned char *down = image->samples + (size_t) below * (size_t) image->stride;
+
+    for (int i = 0; i < count; i++) {
+        const int x = from_x + i;
+        const int left = (x > 0 ? x - 1 : x) * components;
+        const int right = (x + 1 < image->width ? x + 1 : x) * components;
+        const int at = x * components;
+        for (int ch = 0; ch < 3; ch++) {
+            const int c = line[at + ch];
+            const int edge = 4 * c - line[left + ch] - line[right + ch] - up[at + ch] - down[at + ch];
+            sharp_row[i * 3 + ch] = clamp_byte(c + edge * gain / 8);
+        }
+    }
+
+    return sharp_row;
+}
+
 void view_compose(
     const doc_image *image, const int scroll_x, const int scroll_y, const int theme, const int plain,
-    const int contrast, const view_status *status
+    const view_colour *colour
 ) {
     if (!texture || !logical) return;
 
@@ -433,12 +332,13 @@ void view_compose(
     view_logical_size(&width, &height);
 
     const view_palette palette = palettes[theme >= 0 && theme < reader_theme_count ? theme : 0];
-    const uint32_t backdrop = plain ? VIEW_PLAIN_BG : palette.paper;
-    anim_paper = 0xFF000000u | (plain ? VIEW_PLAIN_PAPER : palette.paper);
+    build_colour(palette, plain, colour);
+    const uint32_t backdrop = shade_colour(plain ? VIEW_PLAIN_BG : palette.paper);
+    anim_paper = 0xFF000000u | shade_colour(plain ? VIEW_PLAIN_PAPER : palette.paper);
+    const int sharpness = colour ? colour->sharpness : reader_sharpness_normal;
+    const int gain = sharpen_gain[sharpness >= 0 && sharpness < reader_sharpness_count ? sharpness : 0];
 
-    const int band = status && status_font ? view_status_height() : 0;
-    const int top = band && status->top ? band : 0;
-    const int area = height - band - top > 1 ? height - band - top : height;
+    const int area = height;
 
     int copy_w = 0;
     int copy_h = 0;
@@ -448,7 +348,7 @@ void view_compose(
         copy_w = image->width < width ? image->width : width;
         copy_h = image->height < area ? image->height : area;
         dst_x = image->width < width ? (width - image->width) / 2 : 0;
-        dst_y = top + (image->height < area ? (area - image->height) / 2 : 0);
+        dst_y = image->height < area ? (area - image->height) / 2 : 0;
     }
 
     /* Only the strips around the page need the backdrop, the page itself overwrites the rest */
@@ -459,14 +359,20 @@ void view_compose(
         uint8_t lut_r[256];
         uint8_t lut_g[256];
         uint8_t lut_b[256];
-        build_luts(palette, plain, contrast, lut_r, lut_g, lut_b);
-        const int identity = luts_identity(lut_r, lut_g, lut_b);
+        for (int v = 0; v < 256; v++) {
+            lut_r[v] = colour_out(pre_lut[0][theme_lut[0][v]]);
+            lut_g[v] = colour_out(pre_lut[1][theme_lut[1][v]]);
+            lut_b[v] = colour_out(pre_lut[2][theme_lut[2][v]]);
+        }
+        const int identity = colour_identity(lut_r, lut_g, lut_b);
         const uint32_t edge = 0xFF000000u | backdrop;
-        const int components = image->components;
 
         for (int y = 0; y < copy_h; y++) {
-            const unsigned char *src = image->samples + (size_t) (scroll_y + y) * (size_t) image->stride
-                                       + (size_t) scroll_x * (size_t) components;
+            const uint8_t *sharpened = gain ? sharpen_row(image, scroll_y + y, scroll_x, copy_w, gain) : NULL;
+            const int components = sharpened ? 3 : image->components;
+            const unsigned char *src = sharpened ? sharpened
+                                                 : image->samples + (size_t) (scroll_y + y) * (size_t) image->stride
+                                                       + (size_t) scroll_x * (size_t) components;
             uint32_t *line = logical + (size_t) (dst_y + y) * (size_t) width;
             uint32_t *dst = line + dst_x;
 
@@ -478,6 +384,9 @@ void view_compose(
             if (identity) {
                 for (int x = 0; x < copy_w; x++, src += components)
                     dst[x] = 0xFF000000u | ((uint32_t) src[0] << 16) | ((uint32_t) src[1] << 8) | src[2];
+            } else if (colour_cross) {
+                for (int x = 0; x < copy_w; x++, src += components)
+                    dst[x] = shade_pixel(src[0], src[1], src[2]);
             } else {
                 for (int x = 0; x < copy_w; x++, src += components)
                     dst[x] = 0xFF000000u | ((uint32_t) lut_r[src[0]] << 16) | ((uint32_t) lut_g[src[1]] << 8)
@@ -485,8 +394,6 @@ void view_compose(
             }
         }
     }
-
-    blend_status(status, width, height, backdrop, plain ? VIEW_PLAIN_INK : palette.ink);
 
     if (pending && transition != reader_transition_instant) {
         pending = 0;
@@ -513,6 +420,29 @@ void view_compose(
     animating = 0;
     gpu_fade = 0;
     upload(texture, logical, width, height);
+}
+
+int view_save_png(const char *path) {
+    if (!logical || !path || !path[0]) return 0;
+
+    int width = 0;
+    int height = 0;
+    view_logical_size(&width, &height);
+    if (width <= 0 || height <= 0) return 0;
+
+    uint8_t *rgb = malloc((size_t) width * (size_t) height * 3U);
+    if (!rgb) return 0;
+
+    const size_t pixels = (size_t) width * (size_t) height;
+    for (size_t i = 0; i < pixels; i++) {
+        rgb[i * 3] = (uint8_t) (logical[i] >> 16);
+        rgb[i * 3 + 1] = (uint8_t) (logical[i] >> 8);
+        rgb[i * 3 + 2] = (uint8_t) logical[i];
+    }
+
+    const int result = screenshot_write_rgb(path, rgb, (uint32_t) width, (uint32_t) height);
+    free(rgb);
+    return result == 0;
 }
 
 void view_draw(SDL_Renderer *renderer) {

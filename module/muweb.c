@@ -4387,6 +4387,147 @@ static void handle_catalogue_api(
     send_error(connection, 405, "Method not allowed");
 }
 
+static const char *const override_kinds[] = {"core", "directory", "content"};
+
+static int override_relative(const char *rest, char *out, const size_t size) {
+    const size_t length = strlen(rest);
+    if (length < 5 || strcmp(rest + length - 4, ".ini") != 0) return 0;
+
+    for (size_t i = 0; i < sizeof(override_kinds) / sizeof(override_kinds[0]); i++) {
+        const size_t kind_length = strlen(override_kinds[i]);
+        if (strncmp(rest, override_kinds[i], kind_length) == 0 && rest[kind_length] == '/' && rest[kind_length + 1])
+            return (size_t) snprintf(out, size, "settings/%s", rest) < size;
+    }
+    return 0;
+}
+
+static int overrides_walk(
+    struct buffer *out, const char *kind, const char *directory, const char *relative, int *first, const int depth
+) {
+    if (depth > 8) return 1;
+
+    DIR *handle = opendir(directory);
+    if (!handle) return 1;
+
+    int ok = 1;
+    const struct dirent *entry;
+    while (ok && (entry = readdir(handle))) {
+        if (entry->d_name[0] == '.') continue;
+
+        char child[PATH_MAX];
+        char child_relative[PATH_MAX];
+        if ((size_t) snprintf(child, sizeof(child), "%s/%s", directory, entry->d_name) >= sizeof(child)
+            || (size_t) snprintf(
+                   child_relative, sizeof(child_relative), "%s%s%s", relative, relative[0] ? "/" : "", entry->d_name
+               ) >= sizeof(child_relative))
+            continue;
+
+        struct stat info;
+        if (lstat(child, &info) != 0) continue;
+        if (S_ISDIR(info.st_mode)) {
+            ok = overrides_walk(out, kind, child, child_relative, first, depth + 1);
+            continue;
+        }
+
+        const size_t length = strlen(entry->d_name);
+        if (!S_ISREG(info.st_mode) || length < 5 || strcmp(entry->d_name + length - 4, ".ini") != 0) continue;
+
+        char path[PATH_MAX];
+        if ((size_t) snprintf(path, sizeof(path), "%s/%s", kind, child_relative) >= sizeof(path)) continue;
+        ok = buffer_puts(out, *first ? "{" : ",{") && json_field(out, "kind", kind) && buffer_puts(out, ",")
+             && json_field(out, "path", path) && buffer_puts(out, ",")
+             && json_number(out, "bytes", (long long) info.st_size) && buffer_puts(out, ",")
+             && json_number(out, "modified", (long long) info.st_mtime) && buffer_puts(out, "}");
+        *first = 0;
+    }
+
+    closedir(handle);
+    return ok;
+}
+
+static int pickles_overrides_json(struct buffer *out) {
+    if (!buffer_puts(out, "{\"overrides\":[")) return 0;
+
+    int first = 1;
+    for (size_t i = 0; i < sizeof(override_kinds) / sizeof(override_kinds[0]); i++) {
+        char directory[PATH_MAX];
+        if ((size_t) snprintf(directory, sizeof(directory), "%s/settings/%s", pickles_root, override_kinds[i])
+            >= sizeof(directory))
+            continue;
+        if (!overrides_walk(out, override_kinds[i], directory, "", &first, 0)) return 0;
+    }
+
+    return buffer_puts(out, "]}");
+}
+
+static void handle_pickles_override(
+    struct connection *connection, const char *method, const char *rest, const char *body, const size_t body_length
+) {
+    char relative[PATH_MAX];
+    if (!override_relative(rest, relative, sizeof(relative))) {
+        send_error(connection, 400, "That is not a Pickles override");
+        return;
+    }
+
+    char target[PATH_MAX];
+    if (strcmp(method, "GET") == 0) {
+        struct buffer content = {0};
+        if (!resolve_within(pickles_root, relative, target, sizeof(target)) || !read_whole_file(target, &content)
+            || !buffer_append(&content, "", 1)) {
+            buffer_free(&content);
+            send_error(connection, 404, "No such override");
+            return;
+        }
+
+        struct buffer out = {0};
+        if (buffer_puts(&out, "{") && json_field(&out, "text", content.data) && buffer_puts(&out, "}"))
+            send_json(connection, &out);
+        else
+            send_error(connection, 500, "Could not read that override");
+        buffer_free(&out);
+        buffer_free(&content);
+        return;
+    }
+
+    if (strcmp(method, "PUT") == 0 || strcmp(method, "POST") == 0) {
+        if (!write_allowed(connection)) return;
+        if (body_length > 65536 || memchr(body ? body : "", '\0', body_length)) {
+            send_error(connection, 400, "Overrides must be plain text of 64 KB or less");
+            return;
+        }
+        if (!resolve_target(pickles_root, relative, 1, target, sizeof(target))
+            || !write_file_atomic(target, body ? body : "", body_length)) {
+            send_error(connection, 500, "Could not write that override");
+            return;
+        }
+
+        log_verbose("saved override %s", rest);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    if (strcmp(method, "DELETE") == 0) {
+        if (!write_allowed(connection)) return;
+        if (!resolve_within(pickles_root, relative, target, sizeof(target)) || unlink(target) < 0) {
+            send_error(connection, 404, "No such override");
+            return;
+        }
+
+        static const char *const sidecars[] = {".known_good", ".launching"};
+        for (size_t i = 0; i < sizeof(sidecars) / sizeof(sidecars[0]); i++) {
+            char sidecar[PATH_MAX];
+            if ((size_t) snprintf(sidecar, sizeof(sidecar), "%s%s", target, sidecars[i]) < sizeof(sidecar))
+                unlink(sidecar);
+        }
+
+        log_verbose("removed override %s", rest);
+        send_text(connection, 200, "application/json", "{\"ok\":true}");
+        return;
+    }
+
+    send_error(connection, 405, "Method not allowed");
+}
+
 static void handle_pickles_api(
     struct connection *connection, const char *method, const char *path, const char *body, const size_t body_length
 ) {
@@ -4417,12 +4558,32 @@ static void handle_pickles_api(
         return;
     }
 
+    if (strcmp(path, "overrides") == 0) {
+        if (strcmp(method, "GET") != 0) {
+            send_error(connection, 405, "Method not allowed");
+            return;
+        }
+
+        struct buffer out = {0};
+        if (pickles_overrides_json(&out))
+            send_json(connection, &out);
+        else
+            send_error(connection, 500, "Could not read the overrides");
+        buffer_free(&out);
+        return;
+    }
+
     char *rest = strchr(path, '/');
     if (rest) *rest++ = '\0';
     const char *section = path;
 
     if (!rest || !*rest || !safe_relative_path(rest)) {
         send_error(connection, 400, "Invalid path");
+        return;
+    }
+
+    if (strcmp(section, "override") == 0) {
+        handle_pickles_override(connection, method, rest, body, body_length);
         return;
     }
 

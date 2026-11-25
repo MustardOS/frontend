@@ -177,7 +177,7 @@ void video_render_set_content(const char *content_path, const int live) {
     crt_off_start = 0;
     crt_on_start = 0;
     crt_degauss_start = 0;
-    crt_on_pending = !crt_on_done && !crt_enabled && config.visual.power_off && !config.visual.reduce_motion
+    crt_on_pending = !crt_on_done && !crt_enabled && power_effect_startup() && !config.visual.reduce_motion
                      && file_exist(MUOS_SPL_LOAD);
     catalogue_overlay_path[0] = '\0';
     if (live || !content_path || !content_path[0]) return;
@@ -1365,7 +1365,7 @@ static int capture_crt_snapshot(void) {
 }
 
 int video_render_crt_power_off(void) {
-    if (!renderer || !config.visual.power_off || config.visual.reduce_motion || !capture_crt_snapshot()) return 0;
+    if (!renderer || !power_effect_exit() || config.visual.reduce_motion || !capture_crt_snapshot()) return 0;
 
     crt_degauss_start = 0;
     crt_off_start = SDL_GetTicks();

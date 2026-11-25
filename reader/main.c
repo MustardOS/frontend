@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <locale.h>
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,10 +21,15 @@
 #include <common/runtime/log.h>
 #include <common/storage/fileio.h>
 #include <common/ui/common.h>
+#include <common/ui/font.h>
+#include <common/ui/glyph.h>
+#include <common/ui/image.h>
 #include <common/ui/nav.h>
 #include <common/ui/notify.h>
 #include <module/muxshare.h>
 #include "engine/document.h"
+#include "../video/settings/assets.h"
+#include "../video/settings/catalogue.h"
 #include "menu.h"
 #include "reader.h"
 #include "settings.h"
@@ -35,6 +41,7 @@
 #define REPEAT_RATE_MS  90
 #define SCROLL_DIV      6
 #define TOAST_MS        1500
+#define MENU_PEEK_MS    250
 #define GOTO_JUMP       10
 #define CACHE_SLOTS     3
 #define PREFETCH_IDLE   150
@@ -57,6 +64,14 @@ typedef struct {
 static volatile sig_atomic_t terminate_requested = 0;
 
 reader_settings settings;
+static reader_settings global_settings;
+static reader_settings baseline_settings;
+static view_colour filter_colour;
+static lv_obj_t *page_panel = NULL;
+static lv_obj_t *page_label = NULL;
+static lv_obj_t *readtime_panel = NULL;
+static lv_obj_t *readtime_label = NULL;
+static uint32_t readtime_started = 0;
 static doc_engine *doc = NULL;
 static char document_path[PATH_MAX];
 static char document_title[MAX_BUFFER_SIZE];
@@ -84,8 +99,6 @@ static int position_pending = 0;
 static uint32_t position_deadline = 0;
 static int saved_position = -1;
 static int saved_reversed = -1;
-static char clock_text[MAX_BUFFER_SIZE];
-static char battery_text[16];
 
 static int bookmarks[READER_BOOKMARK_MAX];
 static int bookmark_count = 0;
@@ -118,17 +131,11 @@ static void logical_size(int *width, int *height) {
     view_logical_size(width, height);
 }
 
-/* Page Number has a band at the bottom, Full adds a second band at the top for the clock and battery */
-static int status_bands(const int mode) {
-    return mode == reader_status_full ? 2 : mode == reader_status_page ? 1 : 0;
-}
-
 static int reading_height(void) {
     int width = 0;
     int height = 0;
     logical_size(&width, &height);
-    const int bands = status_bands(settings.page_status) * view_status_height();
-    return height - bands > 1 ? height - bands : height;
+    return height;
 }
 
 static int reading_width(void) {
@@ -184,14 +191,6 @@ static void ensure_toc(void) {
     toc_loaded = 1;
 }
 
-static void battery_status(char *out, const size_t size) {
-    if (!battery_is_available()) {
-        out[0] = '\0';
-        return;
-    }
-    snprintf(out, size, "%d%%%s", battery_get_capacity(), battery_is_charging() ? " +" : "");
-}
-
 static const char *chapter_title(const int at) {
     ensure_toc();
 
@@ -205,31 +204,139 @@ static const char *chapter_title(const int at) {
     return title;
 }
 
-static void compose(void) {
-    char counter[64] = "";
-    view_status status = {0};
-    status.top = settings.page_status == reader_status_full;
+static int header_shows_clock(void) {
+    return settings.page_status == reader_status_clock || settings.page_status == reader_status_both;
+}
 
-    if (settings.page_status && page_count > 0) {
-        snprintf(counter, sizeof(counter), "%d / %d", page + 1, page_count);
+static int header_shows_battery(void) {
+    return settings.page_status == reader_status_battery || settings.page_status == reader_status_both;
+}
 
-        if (settings.page_status == reader_status_full) {
-            snprintf(clock_text, sizeof(clock_text), "%s", get_datetime());
-            battery_status(battery_text, sizeof(battery_text));
-            status.top_left = clock_text;
-            status.top_right = battery_text;
-            status.left = chapter_title(page);
-            status.right = counter;
-        } else {
-            status.centre = counter;
-        }
+static void show_if(lv_obj_t *object, const int visible) {
+    if (visible)
+        lv_obj_clear_flag(object, LV_OBJ_FLAG_HIDDEN);
+    else
+        lv_obj_add_flag(object, LV_OBJ_FLAG_HIDDEN);
+}
+
+static lv_obj_t *corner_panel(const lv_align_t align, const lv_coord_t x, const char *glyph_name, lv_obj_t **label) {
+    lv_obj_t *panel = lv_obj_create(ui_screen);
+    lv_obj_set_size(panel, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(0x000000), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(panel, 140, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_all(panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_pad_column(panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_radius(panel, 4, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_border_width(panel, 0, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_align(panel, align, x, -4);
+
+    lv_obj_t *glyph = lv_img_create(panel);
+    char embed[MAX_BUFFER_SIZE];
+    if (get_glyph_path(mux_module, glyph_name, embed, sizeof(embed))) {
+        set_footer_glyph_image(glyph, embed);
+        lv_obj_set_style_img_opa(glyph, (lv_opa_t) theme.list_default.glyph_alpha, MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor(glyph, lv_color_hex(theme.list_default.glyph_recolour), MU_OBJ_MAIN_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(
+            glyph, (lv_opa_t) theme.list_default.glyph_recolour_alpha, MU_OBJ_MAIN_DEFAULT
+        );
+    } else {
+        lv_obj_add_flag(glyph, LV_OBJ_FLAG_HIDDEN);
     }
 
+    load_font_section(FONT_FOOTER_DIR, panel);
+    *label = lv_label_create(panel);
+    lv_obj_set_style_text_color(*label, lv_color_hex(theme.footer.text), MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_text_opa(*label, theme.footer.text_alpha, MU_OBJ_MAIN_DEFAULT);
+    lv_label_set_text(*label, "");
+    lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
+    return panel;
+}
+
+static void format_readtime(const uint32_t seconds, char *out, const size_t size) {
+    const uint32_t hours = seconds / 3600;
+    const uint32_t minutes = seconds / 60 % 60;
+    if (hours > 0)
+        snprintf(out, size, "%02u:%02u:%02u", hours, minutes, seconds % 60);
+    else
+        snprintf(out, size, "%02u:%02u", minutes, seconds % 60);
+}
+
+void reader_corners_update(void) {
+    if (!page_panel || !readtime_panel) return;
+    const int reading = !menu_active();
+
+    show_if(page_panel, reading && settings.page_number && page_count > 0);
+    if (settings.page_number && page_count > 0) {
+        char counter[64];
+        snprintf(counter, sizeof(counter), "%d / %d", page + 1, page_count);
+        if (strcmp(lv_label_get_text(page_label), counter) != 0) lv_label_set_text(page_label, counter);
+    }
+
+    show_if(readtime_panel, reading && settings.readtime);
+    if (settings.readtime) {
+        char elapsed[32];
+        format_readtime((SDL_GetTicks() - readtime_started) / 1000, elapsed, sizeof(elapsed));
+        if (strcmp(lv_label_get_text(readtime_label), elapsed) != 0) lv_label_set_text(readtime_label, elapsed);
+    }
+
+    if (reading) {
+        lv_obj_move_foreground(page_panel);
+        lv_obj_move_foreground(readtime_panel);
+    }
+    dirty = 1;
+}
+
+void reader_corners_init(void) {
+    page_panel = corner_panel(LV_ALIGN_BOTTOM_LEFT, 4, "page", &page_label);
+    readtime_panel = corner_panel(LV_ALIGN_BOTTOM_RIGHT, -4, "playtime", &readtime_label);
+    readtime_started = SDL_GetTicks();
+}
+
+void reader_header_apply(void) {
+    if (menu_active()) return;
+
+    reader_corners_update();
+
+    if (!settings.page_status) {
+        lv_obj_add_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+        dirty = 1;
+        return;
+    }
+
+    lv_obj_set_style_opa(ui_pnl_header, LV_OPA_COVER, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnl_header, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
+    lv_obj_add_flag(ui_sta_bluetooth, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_sta_network, LV_OBJ_FLAG_HIDDEN);
+    show_if(ui_lbl_datetime, header_shows_clock());
+    lv_obj_add_flag(ui_lbl_title, LV_OBJ_FLAG_HIDDEN);
+
+    const int battery = header_shows_battery();
+    show_if(ui_sta_capacity, battery && (config.visual.battery == 0 || config.visual.battery == 2));
+    show_if(ui_lbl_battery_percent, battery && (config.visual.battery == 1 || config.visual.battery == 2));
+
+    if (header_shows_clock()) datetime_task(NULL);
+    if (battery) battery_capacity_task(NULL);
+    lv_obj_clear_flag(ui_pnl_header, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(ui_pnl_header);
+    dirty = 1;
+}
+
+static void compose(void) {
+    if (!menu_active()) reader_corners_update();
+
+    view_colour colour = filter_colour;
+    colour.brightness = settings.brightness;
+    colour.contrast = settings.contrast;
+    colour.saturation = settings.saturation;
+    colour.hue_shift = settings.hue_shift;
+    colour.gamma = settings.gamma;
+    colour.sharpness = settings.sharpness;
+
     clamp_scroll();
-    view_compose(
-        has_image ? &image : NULL, scroll_x, scroll_y, settings.theme, plain(), settings.contrast,
-        settings.page_status ? &status : NULL
-    );
+    view_compose(has_image ? &image : NULL, scroll_x, scroll_y, settings.theme, plain(), &colour);
     dirty = 1;
 }
 
@@ -387,14 +494,8 @@ static void toggle_fit(void) {
 }
 
 static void cycle_status(const int delta) {
-    const int bands = status_bands(settings.page_status);
     settings.page_status = (settings.page_status + reader_status_count + delta) % reader_status_count;
-
-    /* The page only needs laying out again when the room left for it changes */
-    if (status_bands(settings.page_status) != bands)
-        relayout_keep();
-    else
-        compose();
+    reader_header_apply();
 }
 
 static void toggle_trim(void) {
@@ -407,9 +508,123 @@ static void toggle_trim(void) {
     compose();
 }
 
-static void cycle_contrast(const int delta) {
-    settings.contrast = (settings.contrast + reader_contrast_count + delta) % reader_contrast_count;
+static void cycle_sharpness(const int delta) {
+    settings.sharpness = (settings.sharpness + reader_sharpness_count + delta) % reader_sharpness_count;
     compose();
+}
+
+static int save_global(void) {
+    global_settings.menu_item = settings.menu_item;
+    memcpy(global_settings.hotkey, settings.hotkey, sizeof(global_settings.hotkey));
+    reader_settings_save(&global_settings);
+    return 1;
+}
+
+void reader_save_state(void) {
+    save_global();
+}
+
+static void save_on_exit(void) {
+    if (reader_settings_same(&settings, &baseline_settings)) return;
+
+    if (reader_scope_exists(reader_scope_content))
+        reader_scope_save(&settings, reader_scope_content);
+    else if (reader_scope_exists(reader_scope_directory))
+        reader_scope_save(&settings, reader_scope_directory);
+    else
+        reader_settings_copy_scoped(&global_settings, &settings);
+}
+
+static void load_filter_key(const char *key) {
+    char wanted[sizeof(config.video.colour_filter)];
+    snprintf(wanted, sizeof(wanted), "%s", key);
+    snprintf(config.video.colour_filter, sizeof(config.video.colour_filter), "%s", wanted);
+    wasabi_assets_refresh(wasabi_asset_filter);
+
+    filter_colour = (view_colour) {0};
+    for (int i = 0; i < 9; i++)
+        filter_colour.matrix[i] = i % 4 == 0 ? 1.0f : 0.0f;
+
+    const int selected = wasabi_asset_selected(wasabi_asset_filter);
+    const char *path = wasabi_asset_path(wasabi_asset_filter, selected);
+    if (selected <= 0 || !path || !path[0]) return;
+
+    FILE *file = fopen(path, "r");
+    if (!file) return;
+
+    char line[128];
+    float parsed[9] = {0};
+    int in_matrix = 0;
+    int row = 0;
+    while (row < 3 && fgets(line, sizeof(line), file)) {
+        line[strcspn(line, "\r\n")] = '\0';
+        if (!line[0] || line[0] == '#') continue;
+        if (line[0] == '[') {
+            in_matrix = strcmp(line, "[matrix]") == 0;
+            continue;
+        }
+        if (!in_matrix) continue;
+
+        char *cursor = line;
+        for (int column = 0; column < 3; column++) {
+            char *end = NULL;
+            const float value = strtof(cursor, &end);
+            if (end == cursor || !isfinite(value)) {
+                fclose(file);
+                return;
+            }
+            parsed[row * 3 + column] = value < -2.0f ? -2.0f : value > 2.0f ? 2.0f : value;
+            cursor = end;
+        }
+        row++;
+    }
+    fclose(file);
+
+    if (row != 3) return;
+    memcpy(filter_colour.matrix, parsed, sizeof(parsed));
+    filter_colour.filter_active = 1;
+}
+
+static void load_filter(void) {
+    load_filter_key(settings.filter);
+}
+
+static void cycle_filter(const int delta) {
+    const int count = wasabi_assets_count(wasabi_asset_filter);
+    if (count <= 0) return;
+
+    const int next = (wasabi_asset_selected(wasabi_asset_filter) + count + delta) % count;
+    if (!wasabi_asset_select(wasabi_asset_filter, next)) return;
+
+    snprintf(settings.filter, sizeof(settings.filter), "%s", config.video.colour_filter);
+    load_filter();
+    compose();
+}
+
+static int step_value(int *value, const int delta, const int low, const int high) {
+    int next = *value + delta * READER_COLOUR_STEP;
+    if (next < low) next = low;
+    if (next > high) next = high;
+    if (next == *value) return 0;
+
+    *value = next;
+    compose();
+    return 1;
+}
+
+static int jump_chapter(const int direction) {
+    ensure_toc();
+
+    int target = -1;
+    for (int i = 0; i < toc_count; i++) {
+        const int at = toc[i].page;
+        if (direction > 0 && at > page && (target < 0 || at < target)) target = at;
+        if (direction < 0 && at < page && at > target) target = at;
+    }
+
+    if (target < 0) return 0;
+    show_page(target, 0);
+    return 1;
 }
 
 static void cycle_auto_turn(const int delta) {
@@ -534,6 +749,100 @@ static void handle_shoulder(const int delta) {
         show_page(page + delta, 0);
 }
 
+#define HOTKEY_JUMP 10
+
+static void run_hotkey(const reader_hotkey hotkey) {
+    static int auto_turn_last = 3;
+
+    switch (hotkey) {
+        case reader_hotkey_quit:
+            reader_quit();
+            return;
+        case reader_hotkey_bookmark: {
+            const int result = reader_bookmark_toggle();
+            toast_message(
+                result > 0    ? lang.muxreader.bookmark_added
+                : result == 0 ? lang.muxreader.bookmark_removed
+                              : lang.muxreader.bookmark_full,
+                TOAST_MS
+            );
+            return;
+        }
+        case reader_hotkey_filter:
+            cycle_filter(1);
+            break;
+        case reader_hotkey_status:
+            cycle_status(1);
+            break;
+        case reader_hotkey_sharpness:
+            cycle_sharpness(1);
+            break;
+        case reader_hotkey_auto_turn:
+            if (settings.auto_turn) auto_turn_last = settings.auto_turn;
+            settings.auto_turn = settings.auto_turn ? 0 : auto_turn_last;
+            reset_auto_turn(SDL_GetTicks());
+            break;
+        case reader_hotkey_brightness_down:
+        case reader_hotkey_brightness_up:
+            reader_step_brightness(hotkey == reader_hotkey_brightness_up ? 1 : -1);
+            break;
+        case reader_hotkey_contrast_down:
+        case reader_hotkey_contrast_up:
+            reader_step_contrast(hotkey == reader_hotkey_contrast_up ? 1 : -1);
+            break;
+        case reader_hotkey_jump_back:
+        case reader_hotkey_jump_forward:
+            show_page(page + (hotkey == reader_hotkey_jump_forward ? HOTKEY_JUMP : -HOTKEY_JUMP), 0);
+            return;
+        case reader_hotkey_chapter_back:
+        case reader_hotkey_chapter_forward:
+            if (!jump_chapter(hotkey == reader_hotkey_chapter_forward ? 1 : -1))
+                toast_message(lang.muxreader.no_contents, TOAST_MS);
+            return;
+        default:
+            return;
+    }
+
+    play_sound(snd_option);
+    menu_hotkey_feedback(hotkey);
+}
+
+static int handle_hotkeys(const uint64_t mask, const uint64_t edge) {
+    static int armed = 0;
+    static int used = 0;
+
+    if (menu_active()) {
+        armed = 0;
+        return 0;
+    }
+
+    if (edge & BIT(mux_input_menu)) {
+        armed = 1;
+        used = 0;
+    }
+    if (!armed) return 0;
+
+    if (!(mask & BIT(mux_input_menu))) {
+        armed = 0;
+        if (!used) {
+            play_sound(snd_info_open);
+            menu_open();
+            dirty = 1;
+        }
+        return 1;
+    }
+
+    for (int hotkey = 0; hotkey < reader_hotkey_count; hotkey++) {
+        const int button = settings.hotkey[hotkey];
+        if (button < 0 || button == mux_input_menu || !(edge & BIT(button))) continue;
+        used = 1;
+        run_hotkey((reader_hotkey) hotkey);
+        dirty = 1;
+    }
+
+    return 1;
+}
+
 static void handle_input(void) {
     static uint64_t previous = 0;
     static repeat_state repeats[dir_count];
@@ -550,6 +859,43 @@ static void handle_input(void) {
     if (mask) {
         last_activity = now;
         reset_auto_turn(now);
+    }
+
+    if (menu_active() && menu_dialogue_input(edge)) {
+        dirty = 1;
+        return;
+    }
+
+    if (handle_hotkeys(mask, edge)) return;
+
+    static uint32_t menu_held_at = 0;
+    static int peeking = 0;
+
+    if (menu_active() && menu_held_at) {
+        if (mask & BIT(mux_input_menu)) {
+            if (!peeking && SDL_TICKS_PASSED(now, menu_held_at + MENU_PEEK_MS)) {
+                peeking = 1;
+                menu_peek(1);
+                dirty = 1;
+            }
+            return;
+        }
+
+        menu_held_at = 0;
+        if (peeking) {
+            peeking = 0;
+            menu_peek(0);
+        } else {
+            play_sound(snd_info_close);
+            menu_close();
+        }
+        dirty = 1;
+        return;
+    }
+
+    if (menu_active() && (edge & BIT(mux_input_menu))) {
+        menu_held_at = now ? now : 1;
+        return;
     }
 
     if (edge & (BIT(mux_input_menu) | BIT(mux_input_start))) {
@@ -603,6 +949,11 @@ static void handle_input(void) {
 
     if ((edge & BIT(mux_input_x)) && menu_action_x()) {
         play_sound(snd_confirm);
+        dirty = 1;
+        return;
+    }
+
+    if ((edge & BIT(mux_input_y)) && menu_action_y()) {
         dirty = 1;
         return;
     }
@@ -684,8 +1035,88 @@ void reader_toggle_trim(void) {
     toggle_trim();
 }
 
-void reader_cycle_contrast(const int delta) {
-    cycle_contrast(delta);
+void reader_cycle_sharpness(const int delta) {
+    cycle_sharpness(delta);
+}
+
+void reader_cycle_filter(const int delta) {
+    cycle_filter(delta);
+}
+
+int reader_step_brightness(const int delta) {
+    return step_value(&settings.brightness, delta, -100, 100);
+}
+
+int reader_step_contrast(const int delta) {
+    return step_value(&settings.contrast, delta, 0, 200);
+}
+
+int reader_step_saturation(const int delta) {
+    return step_value(&settings.saturation, delta, 0, 200);
+}
+
+int reader_step_hue(const int delta) {
+    return step_value(&settings.hue_shift, delta, -180, 180);
+}
+
+int reader_step_gamma(const int delta) {
+    return step_value(&settings.gamma, delta, 50, 200);
+}
+
+void reader_filter_preview(void) {
+    load_filter_key(config.video.colour_filter);
+    compose();
+}
+
+void reader_filter_restore(void) {
+    if (strcmp(config.video.colour_filter, settings.filter) == 0) return;
+    load_filter();
+    compose();
+}
+
+void reader_filter_changed(void) {
+    snprintf(settings.filter, sizeof(settings.filter), "%s", config.video.colour_filter);
+    load_filter();
+    compose();
+}
+
+int reader_settings_dirty(void) {
+    return !reader_settings_same(&settings, &baseline_settings);
+}
+
+static void reapply_settings(void) {
+    view_set_rotation(settings.rotation);
+    view_set_transition(settings.transition);
+    doc_set_font(doc, settings.font);
+    doc_set_line_spacing(doc, reader_spacing_steps[settings.line_spacing]);
+    load_filter();
+    relayout_keep();
+    reset_auto_turn(SDL_GetTicks());
+}
+
+int reader_settings_store(const reader_save_choice choice) {
+    int okay = 1;
+    switch (choice) {
+        case reader_save_content:
+            okay = reader_scope_save(&settings, reader_scope_content);
+            break;
+        case reader_save_directory:
+            okay = reader_scope_save(&settings, reader_scope_directory);
+            break;
+        case reader_save_global:
+            reader_settings_copy_scoped(&global_settings, &settings);
+            okay = save_global();
+            break;
+        case reader_save_session:
+            break;
+        case reader_save_discard:
+            reader_settings_copy_scoped(&settings, &baseline_settings);
+            reapply_settings();
+            return 1;
+    }
+
+    if (okay) baseline_settings = settings;
+    return okay;
 }
 
 void reader_cycle_auto_turn(const int delta) {
@@ -707,8 +1138,22 @@ int reader_bookmark_find(const int at) {
     return -1;
 }
 
+static void save_thumbnail(const int bookmark, const int position) {
+    if (!has_image) return;
+    char path[PATH_MAX];
+    if (reader_thumbnail_path(document_path, bookmark, position, path, sizeof(path))) view_save_png(path);
+}
+
+int reader_bookmark_thumbnail(const int index, char *path, const size_t size) {
+    if (index < 0 || index >= bookmark_count) return 0;
+    return reader_thumbnail_path(document_path, 1, bookmarks[index], path, size) && file_exist(path);
+}
+
 void reader_bookmark_remove(const int index) {
     if (index < 0 || index >= bookmark_count) return;
+
+    char path[PATH_MAX];
+    if (reader_thumbnail_path(document_path, 1, bookmarks[index], path, sizeof(path))) remove(path);
 
     memmove(&bookmarks[index], &bookmarks[index + 1], (size_t) (bookmark_count - index - 1) * sizeof(*bookmarks));
     bookmark_count--;
@@ -725,6 +1170,7 @@ int reader_bookmark_toggle(void) {
 
     bookmarks[bookmark_count++] = doc_position(doc, file_page(page));
     reader_bookmarks_save(document_path, bookmarks, bookmark_count);
+    save_thumbnail(1, bookmarks[bookmark_count - 1]);
     return 1;
 }
 
@@ -826,7 +1272,12 @@ int main(const int argc, char **argv) {
     init_display();
     init_navigation_sound();
 
-    reader_settings_load(&settings);
+    reader_settings_load(&global_settings);
+    settings = global_settings;
+    reader_scope_open(document_path);
+    reader_scope_apply(&settings);
+    baseline_settings = settings;
+    load_filter();
     view_set_rotation(settings.rotation);
     view_set_transition(settings.transition);
 
@@ -845,6 +1296,8 @@ int main(const int argc, char **argv) {
     lv_obj_add_flag(ui_pnl_grid, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_pnl_box, LV_OBJ_FLAG_HIDDEN);
     menu_init();
+    reader_corners_init();
+    reader_header_apply();
     lv_label_set_text(ui_lbl_datetime, get_datetime());
 
     struct sigaction action;
@@ -913,6 +1366,9 @@ int main(const int argc, char **argv) {
 
         mux_input_poll();
         handle_input();
+        wasabi_catalogue_tick();
+        menu_tick();
+        image_async_tick();
         publish_inhibit();
 
         const uint32_t now = SDL_GetTicks();
@@ -920,10 +1376,10 @@ int main(const int argc, char **argv) {
         if (SDL_TICKS_PASSED(now, datetime_deadline)) {
             datetime_task(NULL);
             datetime_deadline = now + 1000;
-            if (settings.page_status == reader_status_full && !view_animating()) {
-                char battery[sizeof(battery_text)];
-                battery_status(battery, sizeof(battery));
-                if (strcmp(clock_text, get_datetime()) != 0 || strcmp(battery_text, battery) != 0) compose();
+            if (!menu_active()) {
+                if (settings.page_status && header_shows_battery()) battery_capacity_task(NULL);
+                if (settings.page_status || settings.readtime) dirty = 1;
+                if (settings.readtime) reader_corners_update();
             }
         }
 
@@ -955,7 +1411,9 @@ int main(const int argc, char **argv) {
     }
 
     save_position();
-    reader_settings_save(&settings);
+    save_thumbnail(0, 0);
+    save_on_exit();
+    save_global();
     if (reflowable()) {
         reader_layout_cache_path(document_path, settings.font, accel, sizeof(accel));
         doc_save_accelerator(doc, accel);

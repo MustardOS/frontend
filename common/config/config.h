@@ -668,3 +668,11 @@ struct mux_config {
 };
 
 void load_config(struct mux_config *config);
+
+static inline int power_effect_startup(void) {
+    return config.visual.power_off == 1 || config.visual.power_off == 2;
+}
+
+static inline int power_effect_exit(void) {
+    return config.visual.power_off == 1 || config.visual.power_off == 3;
+}

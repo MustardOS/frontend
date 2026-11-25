@@ -47,24 +47,62 @@ The page breaks of an EPUB are saved in `layout/` once it has been laid out, so 
 - `X`: contents
 - `Y`: next colour theme
 - `SELECT`: next rotation, turning clockwise through Landscape, Portrait Right, Upside Down and Portrait Left
-- `MENU` or `START`: open or close the menu
+- `MENU` or `START`: open or close the menu, with `MENU` opening it when let go on its own
+- `MENU` held with another button: a hotkey from the Hotkeys section of Settings
 
 When the page is rotated, the directions follow the rotated page.
 
 The Chutney Menu holds Resume, Contents, Bookmarks, Go to Page, Settings and Quit, and opens on the row used last. Quit is never remembered, so pressing `A` straight after opening the menu cannot close Chutney. Go to Page moves by one page with `LEFT` and `RIGHT` and by ten pages with `L1` and `R1`, then `A` jumps there.
 
+Quitting saves a picture of the page on screen as `state/<hash>/exit.png`, and each bookmark saves `state/<hash>/bookmark_<position>.png`, named by a hash of the document path as Wasabi does. History and Explore show the quit picture the same way they show a Pickles save state or a Wasabi exit frame, following the Save Screenshot setting. The Bookmarks list shows the picture of the selected bookmark in the corner, and removing a bookmark removes its picture.
+
 Bookmarks starts with Bookmark This Page, which becomes Remove Bookmark on a page that is already marked. Below it are the bookmarks in reading order, named by chapter where the document has contents. `A` jumps to a bookmark and `X` removes it. Up to 64 bookmarks are kept for each document.
 
-Settings is split into two sections, moved between with `LEFT` and `RIGHT` on the section bar or `L1` and `R1` anywhere:
+Settings is split into four sections, moved between with `LEFT` and `RIGHT` on the section bar or `L1` and `R1` anywhere:
 
 - Layout holds Font, Text Size, Margins and Line Spacing for EPUB and TXT documents, or Page Fit, Zoom, Trim Margins and Page Order for PDF, CBZ and CBT documents.
-- Reading holds Theme, Contrast, Rotation, Transition, Page Status, Auto Turn and Stay Awake. Theme is left out for comics.
+- Reading holds Theme, Rotation, Transition, Header Visibility, Page Number, Current Readtime, Auto Turn and Stay Awake. Theme is left out for comics.
+- Display holds Colour Filter, Brightness, Contrast, Saturation, Hue Shift, Gamma and Sharpness.
+- Hotkeys holds the `MENU` button combinations.
 
 Trim Margins crops the blank border around the content of each page, so the text of a PDF with wide margins fills the screen. Pages with little or no content are shown whole.
 
-Contrast is Normal, High or Maximum. High and Maximum turn grey paper whiter and grey ink blacker, and darken thin text, which helps faint scans. It applies to every theme and to comics.
+Display settings match Wasabi and apply to every theme and to comics, and to the page status bands as well as the page:
 
-Page Status is Disabled, Page Number or Full. Page Number shows the page centred at the bottom. Full shows the clock at the top left and the battery at the top right, with the chapter at the bottom left and the page at the bottom right. A `+` after the battery means it is charging. The clock and battery are refreshed every second.
+- Colour Filter opens the same filter browser as Wasabi: Downloads, Collection, None, the bundled MustardOS filters and any downloaded filters, which are kept in `chutney/filter`. `X` adds a filter to the Collection and `Y` removes a downloaded filter. `A` on the row opens the browser; `LEFT` and `RIGHT` do nothing there. Moving through the browser previews each filter on the page once the cursor settles for a quarter of a second, `A` keeps it, and `B` anywhere in the browser or closing the menu goes back to the filter in use.
+- Brightness runs from -100% to +100%, Contrast, Saturation and Gamma from 0% (Gamma from 50%) to 200%, and Hue Shift from -180° to +180°, all in steps of 5.
+- Sharpness is Normal, High or Maximum. High and Maximum sharpen edges, which helps soft scans and thin text. A `contrast=` value saved by an older Chutney is read as Sharpness.
+
+The colour maths follow the Wasabi colour shader, so a filter looks the same in both.
+
+## Saved settings
+
+Leaving Settings after a change asks where it applies, as Pickles and Wasabi do: This Content, This Directory, All Content, This Session Only or Discard. Content and directory settings are kept in `settings/content/` and `settings/directory/`, named by a hash of the document or folder path, and are applied over the global `settings.ini` when a document opens. Hotkeys and the remembered menu row are always global. Changes made without being asked, such as text size with `L2` and `R2`, are saved on exit to the content settings when the document has them, then the directory settings, otherwise globally.
+
+## Hotkeys
+
+Hotkeys are `MENU` plus a button. `LEFT` and `RIGHT` on a row move through the buttons and Unbound, and a button taken by another hotkey is unbound there. They are saved in `settings.ini` as `hotkey_<name>=<button>`, with `-1` for unbound:
+
+| Hotkey | Default |
+|---|---|
+| Quick Quit (saves the position) | `MENU` + `START` |
+| Toggle Bookmark | `MENU` + `A` |
+| Next Colour Filter | `MENU` + `X` |
+| Next Header Visibility | `MENU` + `Y` |
+| Next Sharpness | `MENU` + `SELECT` |
+| Toggle Auto Turn (back to the last time used) | `MENU` + `B` |
+| Brightness Down and Up | `MENU` + `DOWN` and `UP` |
+| Contrast Down and Up | `MENU` + `L2` and `R2` |
+| Back and Forward Ten Pages | `MENU` + `LEFT` and `RIGHT` |
+| Previous and Next Chapter | `MENU` + `L1` and `R1` |
+
+Previous Chapter goes to the start of the current chapter first. Changes made by a hotkey show briefly as a message.
+
+Header Visibility is None, Clock, Battery or Clock and Battery. It uses the theme's own header over the page with a transparent background, so the page keeps the whole screen, and the battery follows the theme's battery style.
+
+Page Number shows the page in a small panel at the bottom left, and Current Readtime shows how long the document has been open at the bottom right, both styled like the FPS and Current Playtime panels in Pickles. Neither takes space from the page. An older `page_status` setting of Page Number turns Page Number on, and Full also turns on Clock and Battery.
+
+While any menu is open, holding `MENU` hides it to preview the page, as in Pickles and Wasabi, and letting go brings it back. A short press still closes the menu.
 
 Auto Turn moves on by itself after 10 to 120 seconds without a button press. A page taller than the screen is scrolled a screen at a time before the next page, and it stops at the last page.
 
@@ -74,4 +112,4 @@ Transition chooses how a new page appears: Instant, Crossfade, Slide or Page Tur
 
 ## Fonts
 
-Font opens a list of Book Default, the fonts in `/opt/muos/share/font/internal` and the user fonts in `MUOS/font` on each storage device, loose or one folder deep. Book Default keeps the fonts the document asks for. Any other choice is applied to EPUB and TXT documents through a reserved `ChutneyFont` family that the engine answers from the chosen file. Files ending in `-Bold`, `-Italic` or `-BoldItalic` beside the font are used for bold and italic text, and MuPDF draws bold and italic itself when they are missing. Chinese, Japanese and Korean glyphs the font lacks still come from the Noto Sans fonts. The chosen font is saved as a path and falls back to Book Default if the file is removed.
+Font opens a list of Book Default, the fonts in `/opt/muos/share/font/internal` and the user fonts in `MUOS/font` on each storage device, loose or one folder deep. Book Default keeps the fonts the document asks for. Any other choice is applied to EPUB and TXT documents through a reserved `ChutneyFont` family that the engine answers from the chosen file. Files ending in `-Bold`, `-Italic` or `-BoldItalic` beside the font are used for bold and italic text, and MuPDF draws bold and italic itself when they are missing. Chinese, Japanese and Korean glyphs the font lacks still come from the Noto Sans fonts. The chosen font is saved as a path and falls back to Book Default if the file is removed. Moving through the list previews each font on the page once the cursor settles for a quarter of a second, `A` keeps it and `B` goes back to the font used before the list opened.

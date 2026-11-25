@@ -716,7 +716,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
         return wall_image_embed;
     }
 
-    if (config.visual.video_wallpaper) {
+    {
         const char *ad_dims[] = {mux_dim, ""};
 
         char alt_base[MAX_BUFFER_SIZE];
@@ -730,7 +730,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
                         snprintf(wall_image_path, sizeof(wall_image_path), "%s/%s%s", alt_base, ad_dims[dim_idx], leaf);
                     if (alt_w > 0 && (size_t) alt_w < sizeof(wall_image_path)
                         && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
-                        TRY_EMBED(wall_image_path);
+                        if (config.visual.video_wallpaper) TRY_EMBED(wall_image_path);
                         return wall_image_embed;
                     }
                 }
@@ -745,7 +745,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
             );
             if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path)
                 && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
-                TRY_EMBED(wall_image_path);
+                if (config.visual.video_wallpaper) TRY_EMBED(wall_image_path);
                 return wall_image_embed;
             }
             mp4_w = snprintf(
@@ -753,7 +753,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, const int wa
             );
             if (mp4_w > 0 && (size_t) mp4_w < sizeof(wall_image_path)
                 && file_exist_nocase(wall_image_path, wall_image_path, sizeof(wall_image_path))) {
-                TRY_EMBED(wall_image_path);
+                if (config.visual.video_wallpaper) TRY_EMBED(wall_image_path);
                 return wall_image_embed;
             }
         }
@@ -818,7 +818,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_img_
             if (wall_is_mp4) {
                 const char *mp4_path = new_wall + 2;
                 LOG_DEBUG(mux_module, "Wallpaper video chosen: %s", mp4_path);
-                video_wallpaper_play(mp4_path);
+                video_wallpaper_play_still(mp4_path, config.visual.video_wallpaper == 2);
                 lv_img_set_src(ui_img_wall, &ui_img_blank);
                 lv_obj_set_style_bg_opa(ui_screen_container, LV_OPA_TRANSP, MU_OBJ_MAIN_DEFAULT);
                 set_video_wallpaper_background(video_wallpaper_active());

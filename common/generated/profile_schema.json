@@ -20420,20 +20420,28 @@
       "type": "int",
       "default": "1",
       "min": 0,
-      "max": 1,
+      "max": 3,
       "label": "Power Effects",
       "module": "muxcustom",
       "options": [
         {
-          "value": "0",
-          "label": "Disabled"
+          "value": "1",
+          "label": "Both"
         },
         {
-          "value": "1",
-          "label": "Enabled"
+          "value": "2",
+          "label": "Startup Only"
+        },
+        {
+          "value": "3",
+          "label": "Exit Only"
+        },
+        {
+          "value": "0",
+          "label": "Disabled"
         }
       ],
-      "help": "Collapse the content picture like an old television when leaving Pickles or Wasabi, and open it back up when content starts after a launch splash. Reduce Motion disables these effects."
+      "help": "Collapse the content picture like an old television when leaving Pickles or Wasabi, and open it back up when content starts after a launch splash.\n\nBoth plays the two effects, Startup Only and Exit Only play just one, and Disabled turns them off. Reduce Motion disables these effects."
     },
     {
       "key": "visual/reducemotion",
@@ -20690,18 +20698,22 @@
       "type": "int",
       "default": "1",
       "min": 0,
-      "max": 1,
+      "max": 2,
       "label": "Video Wallpaper",
       "module": "muxcustom",
-      "help": "Plays the theme's video wallpaper behind the menus, where the theme provides one.\n\nIt costs a little battery, so turn it off if you would rather keep that.",
+      "help": "Plays the theme's video wallpaper behind the menus, where the theme provides one.\n\nAnimated plays it in motion, Static shows only its first frame to save battery, and Disabled hides it so the theme's gradient or solid colour shows instead.",
       "options": [
+        {
+          "value": "1",
+          "label": "Animated"
+        },
+        {
+          "value": "2",
+          "label": "Static"
+        },
         {
           "value": "0",
           "label": "Disabled"
-        },
-        {
-          "value": "1",
-          "label": "Enabled"
         }
       ]
     },

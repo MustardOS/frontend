@@ -5,6 +5,8 @@
 
 void video_wallpaper_play(const char *path);
 
+void video_wallpaper_play_still(const char *path, int still);
+
 void video_wallpaper_stop(void);
 
 int video_wallpaper_active(void);

@@ -1071,7 +1071,7 @@ static int capture_crt_snapshot(SDL_Renderer *renderer) {
 }
 
 int video_bridge_power_on(void) {
-    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start || crt_power_on_start) return 0;
+    if (!power_effect_startup() || config.visual.reduce_motion || crt_power_off_start || crt_power_on_start) return 0;
     if (!frame_tex && !hw_render_bridge_active()) return -1;
 
     SDL_Renderer *renderer = display_get_renderer();
@@ -1094,7 +1094,7 @@ int video_bridge_power_on(void) {
 }
 
 int video_bridge_power_off(void) {
-    if (!config.visual.power_off || config.visual.reduce_motion || crt_power_off_start) return 0;
+    if (!power_effect_exit() || config.visual.reduce_motion || crt_power_off_start) return 0;
     if (!frame_tex && !hw_render_bridge_active()) return 0;
 
     SDL_Renderer *renderer = display_get_renderer();

@@ -902,6 +902,15 @@ struct mux_lang {
             char theme[MAX_BUFFER_SIZE];
         } sound;
         struct {
+            char animated[MAX_BUFFER_SIZE];
+            char still[MAX_BUFFER_SIZE];
+        } wallpaper;
+        struct {
+            char both[MAX_BUFFER_SIZE];
+            char startup[MAX_BUFFER_SIZE];
+            char exit[MAX_BUFFER_SIZE];
+        } power;
+        struct {
             char title[MAX_BUFFER_SIZE];
             char press_a[MAX_BUFFER_SIZE];
             char hold_a[MAX_BUFFER_SIZE];
@@ -3272,6 +3281,8 @@ struct mux_lang {
                 char storage[MAX_BUFFER_SIZE];
                 char cheevo[MAX_BUFFER_SIZE];
                 char save_all[MAX_BUFFER_SIZE];
+                char save_desc[MAX_BUFFER_SIZE];
+                char readtime[MAX_BUFFER_SIZE];
                 char reset[MAX_BUFFER_SIZE];
                 char advanced[MAX_BUFFER_SIZE];
             } settings;
@@ -3847,7 +3858,6 @@ struct mux_lang {
         char section_reading[MAX_BUFFER_SIZE];
         char page_order[MAX_BUFFER_SIZE];
         char order_reversed[MAX_BUFFER_SIZE];
-        char page_status[MAX_BUFFER_SIZE];
         char stay_awake[MAX_BUFFER_SIZE];
         char quit[MAX_BUFFER_SIZE];
         char open_failed[MAX_BUFFER_SIZE];
@@ -3866,7 +3876,29 @@ struct mux_lang {
         char auto_turn[MAX_BUFFER_SIZE];
         char auto_turn_seconds[MAX_BUFFER_SIZE];
         char status_page[MAX_BUFFER_SIZE];
-        char status_full[MAX_BUFFER_SIZE];
+        char sharpness[MAX_BUFFER_SIZE];
+        char colour_filter[MAX_BUFFER_SIZE];
+        char brightness[MAX_BUFFER_SIZE];
+        char saturation[MAX_BUFFER_SIZE];
+        char section_display[MAX_BUFFER_SIZE];
+        char section_hotkeys[MAX_BUFFER_SIZE];
+        char save_all[MAX_BUFFER_SIZE];
+        char save_desc[MAX_BUFFER_SIZE];
+        char readtime[MAX_BUFFER_SIZE];
+        char hotkey_quit[MAX_BUFFER_SIZE];
+        char hotkey_bookmark[MAX_BUFFER_SIZE];
+        char hotkey_filter[MAX_BUFFER_SIZE];
+        char hotkey_status[MAX_BUFFER_SIZE];
+        char hotkey_sharpness[MAX_BUFFER_SIZE];
+        char hotkey_auto_turn[MAX_BUFFER_SIZE];
+        char hotkey_brightness_down[MAX_BUFFER_SIZE];
+        char hotkey_brightness_up[MAX_BUFFER_SIZE];
+        char hotkey_contrast_down[MAX_BUFFER_SIZE];
+        char hotkey_contrast_up[MAX_BUFFER_SIZE];
+        char hotkey_jump_back[MAX_BUFFER_SIZE];
+        char hotkey_jump_forward[MAX_BUFFER_SIZE];
+        char hotkey_chapter_back[MAX_BUFFER_SIZE];
+        char hotkey_chapter_forward[MAX_BUFFER_SIZE];
     } muxreader;
 
     struct {
