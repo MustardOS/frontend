@@ -399,7 +399,7 @@ struct mux_lang {
         char collection[MAX_BUFFER_SIZE];
         char content[MAX_BUFFER_SIZE];
         char history[MAX_BUFFER_SIZE];
-        char init[MAX_BUFFER_SIZE];
+        char hook[MAX_BUFFER_SIZE];
         char music[MAX_BUFFER_SIZE];
         char retroarch[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
@@ -416,7 +416,6 @@ struct mux_lang {
         char wasabi[MAX_BUFFER_SIZE];
         char chutney[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
-        char syncthing[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
         char colour[MAX_BUFFER_SIZE];
         char lab[MAX_BUFFER_SIZE];
@@ -431,7 +430,7 @@ struct mux_lang {
             char collection[MAX_BUFFER_SIZE];
             char content[MAX_BUFFER_SIZE];
             char history[MAX_BUFFER_SIZE];
-            char init[MAX_BUFFER_SIZE];
+            char hook[MAX_BUFFER_SIZE];
             char music[MAX_BUFFER_SIZE];
             char retroarch[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
@@ -448,7 +447,6 @@ struct mux_lang {
             char wasabi[MAX_BUFFER_SIZE];
             char chutney[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
-            char syncthing[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
             char colour[MAX_BUFFER_SIZE];
             char lab[MAX_BUFFER_SIZE];
@@ -3692,7 +3690,7 @@ struct mux_lang {
         char catalogue[MAX_BUFFER_SIZE];
         char collection[MAX_BUFFER_SIZE];
         char history[MAX_BUFFER_SIZE];
-        char init[MAX_BUFFER_SIZE];
+        char hook[MAX_BUFFER_SIZE];
         char music[MAX_BUFFER_SIZE];
         char name[MAX_BUFFER_SIZE];
         char launch[MAX_BUFFER_SIZE];
@@ -3705,7 +3703,6 @@ struct mux_lang {
         char wasabi[MAX_BUFFER_SIZE];
         char chutney[MAX_BUFFER_SIZE];
         char screenshot[MAX_BUFFER_SIZE];
-        char syncthing[MAX_BUFFER_SIZE];
         char manifest[MAX_BUFFER_SIZE];
         char override[MAX_BUFFER_SIZE];
         char theme[MAX_BUFFER_SIZE];
@@ -3721,7 +3718,7 @@ struct mux_lang {
             char catalogue[MAX_BUFFER_SIZE];
             char collection[MAX_BUFFER_SIZE];
             char history[MAX_BUFFER_SIZE];
-            char init[MAX_BUFFER_SIZE];
+            char hook[MAX_BUFFER_SIZE];
             char music[MAX_BUFFER_SIZE];
             char name[MAX_BUFFER_SIZE];
             char launch[MAX_BUFFER_SIZE];
@@ -3734,7 +3731,6 @@ struct mux_lang {
             char wasabi[MAX_BUFFER_SIZE];
             char chutney[MAX_BUFFER_SIZE];
             char screenshot[MAX_BUFFER_SIZE];
-            char syncthing[MAX_BUFFER_SIZE];
             char manifest[MAX_BUFFER_SIZE];
             char override[MAX_BUFFER_SIZE];
             char theme[MAX_BUFFER_SIZE];
@@ -4521,7 +4517,6 @@ struct mux_lang {
         char mdns[MAX_BUFFER_SIZE];
         char landing[MAX_BUFFER_SIZE];
         char ttyd[MAX_BUFFER_SIZE];
-        char syncthing[MAX_BUFFER_SIZE];
         char sshd[MAX_BUFFER_SIZE];
         char sftp[MAX_BUFFER_SIZE];
         char service[MAX_BUFFER_SIZE];
@@ -4550,7 +4545,6 @@ struct mux_lang {
             char mdns[MAX_BUFFER_SIZE];
             char landing[MAX_BUFFER_SIZE];
             char ttyd[MAX_BUFFER_SIZE];
-            char syncthing[MAX_BUFFER_SIZE];
             char sshd[MAX_BUFFER_SIZE];
             char sftp[MAX_BUFFER_SIZE];
             char service[MAX_BUFFER_SIZE];

@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 ATTRIBUTES = {"placeholder", "aria-label", "title", "alt"}
 SKIPPED_TAGS = {"script", "style", "code", "pre", "kbd", "samp"}
 BUTTONS = re.compile(r"^(A|B|X|Y|[LR][1-3])$")
-NAMES = {"MustardOS", "Pickles", "Wasabi", "RetroArch", "Discord", "IRC", "Syncthing", "muos.local"}
+NAMES = {"MustardOS", "Pickles", "Wasabi", "RetroArch", "Discord", "IRC", "muos.local"}
 HELPERS = re.compile(r'(?:\b(?:showToast|action)\(|\blabel: )"([^"]*)"')
 SERVER = re.compile(r'\bsend_error\([^,]+,\s*\d+,\s*"([^"]*)"')
 

@@ -41,7 +41,7 @@ REFUSED_REASONS = [
     ("web/ttyd_pass", "Login details cannot be set by a profile"),
     ("network/interface", "The network interface depends on the device and cannot be set by a profile"),
     ("settings/advanced/passcode", "The passcode cannot be set by a profile"),
-    ("settings/advanced/user_init", "User start up scripts cannot be turned on by a profile"),
+    ("settings/advanced/user_init", "User hook scripts cannot be turned on by a profile"),
     ("kiosk/", "Kiosk restrictions cannot be set by a profile"),
     ("network/", "Network settings cannot be set by a profile"),
     ("settings/network/", "Network settings cannot be set by a profile"),
@@ -152,8 +152,6 @@ HELP_KEYS = {
     "web/sftp_port": "muxwebserv.help.port",
     "web/ttyd": "muxwebserv.help.service",
     "web/ttyd_port": "muxwebserv.help.port",
-    "web/syncthing": "muxwebserv.help.syncthing",
-    "web/syncthing_port": "muxwebserv.help.web_port",
     "settings/advanced/bt_scan_timeout": "muxtweakadv.help.bt_scan_timeout",
     "settings/advanced/font": "muxfont.help.type",
     "settings/advanced/overdrive": "muxtweakadv.help.overdrive",
@@ -261,7 +259,7 @@ FIXED_OPTIONS["web/remote_view"] = [("0", "lang.generic.disabled"), ("1", "30s")
 FIXED_OPTIONS["web/live_fps"] = [(str(v), str(v)) for v in range(5, 61, 5)]
 FIXED_OPTIONS["web/live_quality"] = [(str(v), f"{v}%") for v in range(20, 101, 5)]
 
-for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "sftp", "ttyd", "syncthing"):
+for _service in ("mdns", "landing", "landing_auth", "remote_privacy", "sshd", "sftp", "ttyd"):
     FIXED_OPTIONS[f"web/{_service}"] = DISABLED_ENABLED
 FIXED_OPTIONS["web/remote_control"] = [("0", "lang.generic.disabled"), ("1", "lang.generic.enabled"),
                                        ("2", "lang.muxwebserv.remote_sticks")]
@@ -325,8 +323,6 @@ LABEL_KEYS = {
     "web/sftp_port": "{lang.muxwebserv.sftp} {lang.muxwebserv.port}",
     "web/ttyd": "lang.muxwebserv.ttyd",
     "web/ttyd_port": "{lang.muxwebserv.ttyd} {lang.muxwebserv.port}",
-    "web/syncthing": "lang.muxwebserv.syncthing",
-    "web/syncthing_port": "{lang.muxwebserv.syncthing} {lang.muxwebserv.web_port}",
 }
 HELP_TEXT = {
     "settings/colour/sunrise_temp": (

@@ -13,7 +13,6 @@ enum web_service {
     web_service_sshd,
     web_service_sftp,
     web_service_ttyd,
-    web_service_syncthing,
     web_service_count
 };
 
@@ -53,7 +52,7 @@ static char editing_local_name[64];
 static mux_dialogue save_dlg;
 
 static const char *service_key(const enum web_service service) {
-    static const char *keys[web_service_count] = {"mdns", "landing", "sshd", "sftp", "ttyd", "syncthing"};
+    static const char *keys[web_service_count] = {"mdns", "landing", "sshd", "sftp", "ttyd"};
     return service >= 0 && service < web_service_count ? keys[service] : "";
 }
 
@@ -69,8 +68,6 @@ static const char *service_title(const enum web_service service) {
             return lang.muxwebserv.sftp;
         case web_service_ttyd:
             return lang.muxwebserv.ttyd;
-        case web_service_syncthing:
-            return lang.muxwebserv.syncthing;
         default:
             return lang.muxwebserv.title;
     }
@@ -88,8 +85,6 @@ static int16_t *service_enabled(const enum web_service service) {
             return &config.web.sftp;
         case web_service_ttyd:
             return &config.web.ttyd;
-        case web_service_syncthing:
-            return &config.web.syncthing;
         default:
             return NULL;
     }
@@ -105,8 +100,6 @@ static char *service_port(const enum web_service service) {
             return config.web.sftp_port;
         case web_service_ttyd:
             return config.web.ttyd_port;
-        case web_service_syncthing:
-            return config.web.syncthing_port;
         default:
             return NULL;
     }
@@ -122,8 +115,6 @@ static const char *service_default_port(const enum web_service service) {
             return "2022";
         case web_service_ttyd:
             return "8080";
-        case web_service_syncthing:
-            return "7070";
         default:
             return "";
     }
@@ -207,10 +198,6 @@ static void show_main_view(void) {
     set_row(2, lang.muxwebserv.sshd, "sshd", config.web.sshd ? lang.generic.enabled : lang.generic.disabled, "sshd");
     set_row(3, lang.muxwebserv.sftp, "sftp", config.web.sftp ? lang.generic.enabled : lang.generic.disabled, "sftp");
     set_row(4, lang.muxwebserv.ttyd, "ttyd", config.web.ttyd ? lang.generic.enabled : lang.generic.disabled, "ttyd");
-    set_row(
-        5, lang.muxwebserv.syncthing, "syncthing", config.web.syncthing ? lang.generic.enabled : lang.generic.disabled,
-        "syncthing"
-    );
 
     setup_service_nav();
     rebuild_groups(web_service_count, main_service_index);
@@ -328,7 +315,7 @@ static void build_detail_rows(const enum web_service service, const int focus_re
         set_row(count++, lang.muxwebserv.local_name, "local_name", local_address, "local_name");
     }
     if (service_port(service)) {
-        const int web_port = service == web_service_landing || service == web_service_syncthing;
+        const int web_port = service == web_service_landing;
         set_row(
             count++, web_port ? lang.muxwebserv.web_port : lang.muxwebserv.port, "port", editing_port,
             web_port ? "web_port" : "port"
@@ -533,9 +520,11 @@ static int save_service(void) {
 static void show_help(void) {
     if (selected_service == web_service_none) {
         const struct help_msg help_messages[] = {
-            {"mdns", lang.muxwebserv.help.mdns}, {"landing", lang.muxwebserv.help.landing},
-            {"sshd", lang.muxwebserv.help.sshd}, {"sftp", lang.muxwebserv.help.sftp},
-            {"ttyd", lang.muxwebserv.help.ttyd}, {"syncthing", lang.muxwebserv.help.syncthing}
+            {"mdns", lang.muxwebserv.help.mdns},
+            {"landing", lang.muxwebserv.help.landing},
+            {"sshd", lang.muxwebserv.help.sshd},
+            {"sftp", lang.muxwebserv.help.sftp},
+            {"ttyd", lang.muxwebserv.help.ttyd}
         };
         gen_help(current_item_index, help_messages, A_SIZE(help_messages), ui_group, items);
         return;
@@ -980,10 +969,11 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, webserv, sshd, lang.muxwebserv.sshd, "sshd", "");
     INIT_VALUE_ITEM(-1, webserv, sftp, lang.muxwebserv.sftp, "sftp", "");
     INIT_VALUE_ITEM(-1, webserv, ttyd, lang.muxwebserv.ttyd, "ttyd", "");
-    INIT_VALUE_ITEM(-1, webserv, syncthing, lang.muxwebserv.syncthing, "syncthing", "");
     INIT_VALUE_ITEM(-1, webserv, spare, "", "landing", "");
     INIT_VALUE_ITEM(-1, webserv, spare_extra, "", "landing", "");
     INIT_VALUE_ITEM(-1, webserv, spare_final, "", "landing", "");
+    INIT_VALUE_ITEM(-1, webserv, spare_more, "", "landing", "");
+    INIT_VALUE_ITEM(-1, webserv, spare_last, "", "landing", "");
 
     show_main_view();
 }

@@ -2201,11 +2201,14 @@ int adjust_wallpaper_element(lv_group_t *ui_group, const int starter_image, cons
         int video_played = 0;
         if (config.visual.video_wallpaper) {
             const char *program = lv_obj_get_user_data(ui_screen);
+            const char *programs[] = {program, program && strcmp(program, "muxinstall") == 0 ? "muxlaunch" : NULL};
             char mp4_path[MAX_BUFFER_SIZE];
             const char *ad_dims[] = {mux_dim, ""};
-            for (size_t i = 0; i < 2 && !video_played; i++) {
-                const int w =
-                    snprintf(mp4_path, sizeof(mp4_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[i], program);
+            for (size_t i = 0; i < 2 * A_SIZE(programs) && !video_played; i++) {
+                if (!programs[i / 2]) continue;
+                const int w = snprintf(
+                    mp4_path, sizeof(mp4_path), "%s/%simage/wall/%s.mp4", theme_base, ad_dims[i % 2], programs[i / 2]
+                );
                 const int exists =
                     w > 0 && (size_t) w < sizeof(mp4_path) && file_exist_nocase(mp4_path, mp4_path, sizeof(mp4_path));
                 LOG_DEBUG(mux_module, "Wallpaper video check: %s (%s)", mp4_path, exists ? "yes" : "no");

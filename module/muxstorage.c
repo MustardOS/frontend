@@ -79,8 +79,7 @@ static void update_storage_info(void) {
     add_storage(&sp, STORE_LOC_BIOS, ui_val_bios_storage);
     add_storage(&sp, STORE_LOC_PROF, ui_val_profile_storage);
     add_storage(&sp, STORE_LOC_NETW, ui_val_network_storage);
-    add_storage(&sp, STORE_LOC_SYCT, ui_val_syncthing_storage);
-    add_storage(&sp, STORE_LOC_INIT, ui_val_init_storage);
+    add_storage(&sp, STORE_LOC_HOOK, ui_val_hook_storage);
     add_storage(&sp, STORE_LOC_MANI, ui_val_manifest_storage);
     add_storage(&sp, STORE_LOC_APPS, ui_val_apps_storage);
     add_storage(&sp, STORE_LOC_PACK, ui_val_package_storage);

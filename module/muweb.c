@@ -3293,7 +3293,7 @@ static int file_sensitive(const struct file_root *root, const char *relative) {
         return path_at_or_below(relative, "config/system/landing_secret")
                || path_at_or_below(relative, "config/web/ttyd_pass") || path_at_or_below(relative, "config/network")
                || path_at_or_below(relative, "config/terminal") || path_at_or_below(relative, "log/web_files.tsv");
-    return path_at_or_below(relative, "MUOS/network") || path_at_or_below(relative, "MUOS/syncthing");
+    return path_at_or_below(relative, "MUOS/network");
 }
 
 static int file_resolve_existing(const struct file_root *root, const char *relative, char *out, const size_t out_size) {

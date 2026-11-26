@@ -565,6 +565,17 @@ static int find_user_wallpaper_video(char *path, const size_t path_size) {
     return 0;
 }
 
+static int find_theme_launch_video(char *path, const size_t path_size) {
+    const char *dims[] = {mux_dim, ""};
+
+    for (size_t i = 0; i < A_SIZE(dims); i++) {
+        const int written = snprintf(path, path_size, "%s/%simage/wall/muxlaunch.mp4", theme_base, dims[i]);
+        if (written > 0 && (size_t) written < path_size && file_exist_nocase(path, path, path_size)) return 1;
+    }
+
+    return 0;
+}
+
 static void reload_saver(void) {
     if (active_saver == saver_type_video && video_saver_running) {
         video_saver_restore();
@@ -644,7 +655,8 @@ static void reload_saver(void) {
                 snprintf(video_saver_theme, sizeof(video_saver_theme), "%s", saver_video);
             } else {
                 snprintf(saver_video, sizeof(saver_video), "%s/image/screensaver.mp4", theme_base);
-                if (file_exist_nocase(saver_video, saver_video, sizeof(saver_video)))
+                if (file_exist_nocase(saver_video, saver_video, sizeof(saver_video))
+                    || find_theme_launch_video(saver_video, sizeof(saver_video)))
                     snprintf(video_saver_theme, sizeof(video_saver_theme), "%s", saver_video);
                 else if (!find_user_wallpaper_video(saver_video, sizeof(saver_video)))
                     saver_video[0] = '\0';

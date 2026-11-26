@@ -182,7 +182,7 @@ struct mux_config {
         int16_t colour;
         int16_t content;
         int16_t history;
-        int16_t init;
+        int16_t hook;
         int16_t lab;
         int16_t launch;
         int16_t layout;
@@ -200,7 +200,6 @@ struct mux_config {
         int16_t settings;
         int16_t save;
         int16_t screenshot;
-        int16_t syncthing;
         int16_t theme;
         int16_t track;
         int16_t wasabi;
@@ -619,7 +618,6 @@ struct mux_config {
         int16_t sshd;
         int16_t sftp;
         int16_t ttyd;
-        int16_t syncthing;
         int16_t landing_auth;
         int16_t remote_view;
         int16_t remote_privacy;
@@ -635,7 +633,6 @@ struct mux_config {
         char ttyd_port[MAX_BUFFER_SIZE];
         char ttyd_user[MAX_BUFFER_SIZE];
         char ttyd_pass[MAX_BUFFER_SIZE];
-        char syncthing_port[MAX_BUFFER_SIZE];
     } web;
 
     struct {

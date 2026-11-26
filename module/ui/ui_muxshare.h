@@ -80,8 +80,7 @@
     BACKUP(settings, "settings")                                                                                       \
     BACKUP(profile, "profile")                                                                                         \
     BACKUP(network, "network")                                                                                         \
-    BACKUP(syncthing, "syncthing")                                                                                     \
-    BACKUP(init, "init")                                                                                               \
+    BACKUP(hook, "hook")                                                                                               \
     BACKUP(manifest, "manifest")
 
 #define BACKUP_CUSTOM_ELEMENTS                                                                                         \
@@ -632,8 +631,7 @@
 #define STORAGE_SYSTEM_ELEMENTS                                                                                        \
     STORAGE(profile, "profile")                                                                                        \
     STORAGE(network, "network")                                                                                        \
-    STORAGE(syncthing, "syncthing")                                                                                    \
-    STORAGE(init, "init")                                                                                              \
+    STORAGE(hook, "hook")                                                                                              \
     STORAGE(manifest, "manifest")
 
 #define STORAGE_CUSTOM_ELEMENTS                                                                                        \
@@ -830,7 +828,8 @@
     WEBSERV(sshd, "sshd")                                                                                              \
     WEBSERV(sftp, "sftp")                                                                                              \
     WEBSERV(ttyd, "ttyd")                                                                                              \
-    WEBSERV(syncthing, "syncthing")                                                                                    \
     WEBSERV(spare, "spare")                                                                                            \
     WEBSERV(spare_extra, "spare_extra")                                                                                \
-    WEBSERV(spare_final, "spare_final")
+    WEBSERV(spare_final, "spare_final")                                                                                \
+    WEBSERV(spare_more, "spare_more")                                                                                  \
+    WEBSERV(spare_last, "spare_last")
