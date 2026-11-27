@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="r2117"
-SHA256="b9ad0ffabb5919e1c9ec2912416e3ce37916417a8c410196822ce6c610dcde66"
+VERSION="r2168"
+SHA256="6390ac616c4a248616f1b9bf6352fe949fcf2350a84844ba9416feac94f02225"
 TARBALL="vgmstream-$VERSION.tar.gz"
 SOURCE="vgmstream-$VERSION"
 URL="https://github.com/vgmstream/vgmstream/archive/refs/tags/$VERSION.tar.gz"

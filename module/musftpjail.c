@@ -18,21 +18,10 @@
 
 extern char **environ;
 
-#define JAIL_SOURCE "/opt/muos"
 #define JAIL_ROOT   "/opt/muos/browse"
 #define JAIL_GROUP  "muos"
 
-#if defined(__aarch64__)
-static const char *const server_paths[] = {JAIL_SOURCE "/bin/aarch64/sftp-server"};
-#elif defined(__x86_64__)
-static const char *const server_paths[] = {
-    "/usr/lib/openssh/sftp-server",
-    "/usr/lib/ssh/sftp-server",
-    "/usr/libexec/sftp-server",
-};
-#else
-static const char *const server_paths[] = {JAIL_SOURCE "/bin/aarch64/sftp-server"};
-#endif
+static const char *const server_paths[] = {"/usr/libexec/sftp-server"};
 
 static int fail(const char *what) {
     fprintf(stderr, "musftpjail: %s: %s\n", what, strerror(errno));

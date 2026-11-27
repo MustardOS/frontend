@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="3.5.7"
-SHA256="a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8"
+VERSION="4.1.0"
+SHA256="50c17baf54cb008f6ce42d50deb4b28050a1aad711636cabd4b241c7e90cc2fd"
 TARBALL="openssl-$VERSION.tar.gz"
 URL="https://github.com/openssl/openssl/releases/download/openssl-$VERSION/$TARBALL"
 
@@ -68,10 +68,11 @@ CROSS_ARG=""
 printf 'Configuring OpenSSL %s for %s\n' "$VERSION" "$DEVICE"
 
 cd "$EXT_WORK/openssl" || exit 1
+cp -a "$EXT_SRC/openssl-$VERSION/." .
 
 # shellcheck disable=SC2086
 env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS -u AR -u RANLIB -u NM -u LD -u STRIP \
-	"$PERL_BIN" "$EXT_SRC/openssl-$VERSION/Configure" \
+	"$PERL_BIN" ./Configure \
 	"$TARGET" \
 	$CROSS_ARG \
 	--prefix="$EXT_PREFIX" \
@@ -83,7 +84,6 @@ env -u CC -u CFLAGS -u CPPFLAGS -u CXXFLAGS -u LDFLAGS -u AR -u RANLIB -u NM -u 
 	no-docs \
 	no-comp \
 	no-zlib \
-	no-ssl3 \
 	no-weak-ssl-ciphers \
 	$EXT_CFLAGS
 

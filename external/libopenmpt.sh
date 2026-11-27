@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="0.8.9"
-SHA256="d7ce84fd05d686c4bcf66af40eae857afa371442db60eeda3f874bd6cf6fc318"
+VERSION="0.8.10"
+SHA256="976d259288c40cd285771f77d09eff3d02514511d5677ecfcfb53be5013317e2"
 TARBALL="libopenmpt-$VERSION+release.autotools.tar.gz"
 SOURCE="libopenmpt-$VERSION+release.autotools"
 URL="https://lib.openmpt.org/files/libopenmpt/src/$TARBALL"

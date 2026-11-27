@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="3.1.1"
-SHA256="12b79190593bf480b2d11481b5c2de62bac07f344437a66cd8d887329875c626"
+VERSION="3.1.2"
+SHA256="6d16c20e523ac4d3e385531dafe247a830b59bcb4eb73a557f15cf4e7ae6da84"
 TARBALL="libsidplayfp-$VERSION.tar.gz"
 SOURCE="libsidplayfp-$VERSION"
 URL="https://github.com/libsidplayfp/libsidplayfp/releases/download/v$VERSION/$TARBALL"

@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="0.3.6"
-SHA256="156bb5c0c1f1265c5d75f4ef53ff4aab09c368e358b05f4f780ba6ec2575fed3"
+VERSION="0.8.0"
+SHA256="c4ecdbc413d5752ebc5be59be0c6c2a9dd7e3dec4a0abbed22aa4a68d04d1627"
 TARBALL="mojibake-$VERSION.tar.gz"
 URL="https://github.com/zaerl/mojibake/archive/refs/tags/v$VERSION.tar.gz"
 

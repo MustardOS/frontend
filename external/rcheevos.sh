@@ -4,9 +4,9 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="12.4.0"
-COMMIT="2ad0b8672f68a48148620164510b963039e49eb1"
-SHA256="b8e3e834d15c327085154315c49dea85b081ad48592ba1740f323ac953e1bfec"
+VERSION="12.5.0"
+COMMIT="1433173220a7eaede6a9ed7a18e94117be1821e0"
+SHA256="da635153d2dab228f3a3ef672bae56a7a6e5f57f1aacd420133521c5d3768cec"
 TARBALL="rcheevos-$COMMIT.tar.gz"
 URL="https://github.com/RetroAchievements/rcheevos/archive/$COMMIT.tar.gz"
 

@@ -37,7 +37,7 @@ static int fs_offer[FS_CHOICE_COUNT];
 static int fs_offered = 0;
 
 static int mkfs_exists(const char *type) {
-    if (strncmp(type, "ext", 3) == 0 && access(OPT_PATH "bin/mke2fs", X_OK) == 0) return 1;
+    if (strncmp(type, "ext", 3) == 0 && access("/usr/sbin/mke2fs", X_OK) == 0) return 1;
 
     static const char *dirs[] = {"/sbin/", "/usr/sbin/", "/bin/", "/usr/bin/"};
 

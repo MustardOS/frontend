@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="9.0.1"
-SHA256="cf38e0e28c7e5605942c4a77755349b0145804a397af37eb1fb4c77cb237f635"
+VERSION="9.1"
+SHA256="1a4d394ae63d190a526cd052eb4415c156b5c5e2df37efab41a7de0b8fde2433"
 TARBALL="ffmpeg-$VERSION.tar.xz"
 URL="https://ffmpeg.org/releases/$TARBALL"
 

@@ -2,8 +2,8 @@
 
 . "$(dirname -- "$0")/common.sh"
 
-VERSION="3.8.9"
-SHA256="888c934f9d95648ecb9163dc8e23ab80a476ecb81a8f1154704a227b5b676dde"
+VERSION="3.8.11"
+SHA256="a3dc0872b1b39da34dc18ef1b944f0f11ffd37425d70ae04be679279f1cf43d2"
 TARBALL="libarchive-$VERSION.tar.xz"
 URL="https://github.com/libarchive/libarchive/releases/download/v$VERSION/$TARBALL"
 
