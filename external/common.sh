@@ -41,6 +41,7 @@ if [ -z "$EXT_TRIPLE" ]; then
 fi
 
 EXT_ARCH=${EXT_TRIPLE%%-*}
+EXT_TOOLCHAIN_ID="$EXT_TRIPLE|$("$EXT_CC" -dumpfullversion 2>/dev/null)|$(command -v "$EXT_CC")"
 
 EXT_PTR_SIZE=$(echo | "$EXT_CC" -E -dM - 2>/dev/null | awk '/__SIZEOF_POINTER__/{print $3}')
 [ -n "$EXT_PTR_SIZE" ] || EXT_PTR_SIZE=8
@@ -60,14 +61,14 @@ EXT_UP_TO_DATE() {
 
 	[ -f "$STAMP_FILE" ] || return 1
 	[ -e "$STAMP_MARKER" ] || return 1
-	[ "$(cat "$STAMP_FILE")" = "$3" ] || return 1
+	[ "$(cat "$STAMP_FILE")" = "$3|$EXT_TOOLCHAIN_ID" ] || return 1
 
 	printf '%s already built for %s\n' "$1" "$DEVICE"
 	return 0
 }
 
 EXT_STAMP() {
-	printf '%s' "$2" >"$EXT_PREFIX/.stamp-$1"
+	printf '%s|%s' "$2" "$EXT_TOOLCHAIN_ID" >"$EXT_PREFIX/.stamp-$1"
 }
 
 EXT_FETCH() {
