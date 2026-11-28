@@ -174,20 +174,28 @@ void str_sort_cache_free(struct str_sort_cache *cache) {
     free(cache);
 }
 
+static int fold_text_run(const char *text, size_t length, char *storage, size_t capacity, mjb_text *folded) {
+    const mjb_text input = mjb_text_utf8(text, length);
+    mjb_buffer output = mjb_buffer_make(storage, capacity, MJB_ENC_UTF_8);
+    if (mjb_map_case_into(&input, MJB_MALFORMED_STOP, MJB_CASE_CASEFOLD, MJB_LOCALE_NOT_SET, &output, NULL)
+        != MJB_STATUS_OK)
+        return 0;
+    *folded = mjb_text_utf8(storage, output.size);
+    return 1;
+}
+
 static const mjb_result *cached_text_key(struct str_sort_cache *cache, const char *text, const size_t length) {
     const size_t bucket = (((uintptr_t) text >> 3) ^ length) % cache->count;
     for (struct text_key *entry = cache->buckets[bucket]; entry; entry = entry->next)
         if (entry->text == text && entry->length == length) return &entry->key;
 
-    char folded[MAX_BUFFER_SIZE];
-    size_t size = sizeof(folded);
-    if (mjb_map_case_into(text, length, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded, &size)
-        != MJB_STATUS_OK)
-        return NULL;
+    char storage[MAX_BUFFER_SIZE];
+    mjb_text folded;
+    if (!fold_text_run(text, length, storage, sizeof(storage), &folded)) return NULL;
 
     struct text_key *entry = calloc(1, sizeof(*entry));
     if (!entry) return NULL;
-    if (mjb_collation_key(folded, size, MJB_ENC_UTF_8, MJB_COLLATION_SHIFTED, MJB_COLLATION_TERTIARY, &entry->key)
+    if (mjb_collation_key(&folded, MJB_MALFORMED_STOP, MJB_COLLATION_SHIFTED, MJB_COLLATION_TERTIARY, &entry->key, NULL)
         != MJB_STATUS_OK) {
         free(entry);
         return NULL;
@@ -243,22 +251,16 @@ text_run_compare(const char *a, const size_t a_len, const char *b, const size_t 
         }
     }
 
-    char folded_a[MAX_BUFFER_SIZE];
-    char folded_b[MAX_BUFFER_SIZE];
-    size_t folded_a_size = sizeof(folded_a);
-    size_t folded_b_size = sizeof(folded_b);
-
-    if (mjb_map_case_into(a, a_len, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded_a, &folded_a_size)
-            != MJB_STATUS_OK
-        || mjb_map_case_into(b, b_len, MJB_ENC_UTF_8, MJB_CASE_CASEFOLD, MJB_ENC_UTF_8, folded_b, &folded_b_size)
-               != MJB_STATUS_OK) {
+    char storage_a[MAX_BUFFER_SIZE], storage_b[MAX_BUFFER_SIZE];
+    mjb_text folded_a, folded_b;
+    if (!fold_text_run(a, a_len, storage_a, sizeof(storage_a), &folded_a)
+        || !fold_text_run(b, b_len, storage_b, sizeof(storage_b), &folded_b)) {
         return ascii_run_compare(a, a_len, b, b_len);
     }
 
     int order = 0;
     if (mjb_collation_compare(
-            folded_a, folded_a_size, MJB_ENC_UTF_8, folded_b, folded_b_size, MJB_ENC_UTF_8, MJB_COLLATION_SHIFTED,
-            MJB_COLLATION_TERTIARY, &order
+            &folded_a, &folded_b, MJB_MALFORMED_STOP, MJB_COLLATION_SHIFTED, MJB_COLLATION_TERTIARY, &order, NULL, NULL
         )
         != MJB_STATUS_OK) {
         return ascii_run_compare(a, a_len, b, b_len);
